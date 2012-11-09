@@ -174,7 +174,10 @@ public:
   }
 
   // placeholder methods
-  void SetPlaceholderClass(bool aVisible, bool aNotify);
+  void UpdatePlaceholderVisibility(bool aNotify);
+  bool GetPlaceholderVisibility() {
+    return mPlaceholderVisibility;
+  }
   void UpdatePlaceholderText(bool aNotify); 
 
   /**
@@ -278,6 +281,7 @@ private:
   bool mSelectionCached; // Whether mSelectionProperties is valid
   mutable bool mSelectionRestoreEagerInit; // Whether we're eager initing because of selection restore
   SelectionProperties mSelectionProperties;
+  bool mPlaceholderVisibility;
 };
 
 #endif

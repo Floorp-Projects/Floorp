@@ -53,7 +53,7 @@
 #include "nsDebugImpl.h"
 #include "nsLayoutStylesheetCache.h"
 
-#include "History.h"
+#include "IHistory.h"
 #include "nsDocShellCID.h"
 #include "nsNetUtil.h"
 
@@ -115,7 +115,6 @@ using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::net;
-using namespace mozilla::places;
 #if defined(MOZ_WIDGET_GONK)
 using namespace mozilla::system;
 #endif
@@ -335,6 +334,10 @@ ContentChild::InitXPCOM()
     mConsoleListener = new ConsoleListener(this);
     if (NS_FAILED(svc->RegisterListener(mConsoleListener)))
         NS_WARNING("Couldn't register console listener for child process");
+
+    bool isOffline;
+    SendGetXPCOMProcessAttributes(&isOffline);
+    RecvSetOffline(isOffline);
 }
 
 PMemoryReportRequestChild*
@@ -898,7 +901,10 @@ ContentChild::RecvNotifyVisited(const URIParams& aURI)
     if (!newURI) {
         return false;
     }
-    History::GetService()->NotifyVisited(newURI);
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    if (history) {
+      history->NotifyVisited(newURI);
+    }
     return true;
 }
 

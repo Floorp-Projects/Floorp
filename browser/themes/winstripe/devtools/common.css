@@ -158,7 +158,8 @@
   display: none;
 }
 
-.devtools-searchinput > .textbox-input-box > .textbox-input:-moz-placeholder {
+.devtools-searchinput > .textbox-input-box > .textbox-input::-moz-placeholder {
+  opacity: 1.0;
   color: hsl(208,10%,66%);
 }
 

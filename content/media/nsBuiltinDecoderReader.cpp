@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GonkIOSurfaceImage.h"
-#include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderReader.h"
+#include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderStateMachine.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
@@ -342,6 +342,39 @@ nsresult nsBuiltinDecoderReader::ResetDecode()
   return res;
 }
 
+VideoData* nsBuiltinDecoderReader::DecodeToFirstVideoData()
+{
+  bool eof = false;
+  while (!eof && mVideoQueue.GetSize() == 0) {
+    {
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+      if (mDecoder->GetStateMachine()->IsShutdown()) {
+        return nullptr;
+      }
+    }
+    bool keyframeSkip = false;
+    eof = !DecodeVideoFrame(keyframeSkip, 0);
+  }
+  VideoData* d = nullptr;
+  return (d = mVideoQueue.PeekFront()) ? d : nullptr;
+}
+
+AudioData* nsBuiltinDecoderReader::DecodeToFirstAudioData()
+{
+  bool eof = false;
+  while (!eof && mAudioQueue.GetSize() == 0) {
+    {
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+      if (mDecoder->GetStateMachine()->IsShutdown()) {
+        return nullptr;
+      }
+    }
+    eof = !DecodeAudioData();
+  }
+  AudioData* d = nullptr;
+  return (d = mAudioQueue.PeekFront()) ? d : nullptr;
+}
+
 VideoData* nsBuiltinDecoderReader::FindStartTime(int64_t& aOutStartTime)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
@@ -354,15 +387,13 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(int64_t& aOutStartTime)
   VideoData* videoData = nullptr;
 
   if (HasVideo()) {
-    videoData = DecodeToFirstData(&nsBuiltinDecoderReader::DecodeVideoFrame,
-                                  mVideoQueue);
+    videoData = DecodeToFirstVideoData();
     if (videoData) {
       videoStartTime = videoData->mTime;
     }
   }
   if (HasAudio()) {
-    AudioData* audioData = DecodeToFirstData(&nsBuiltinDecoderReader::DecodeAudioData,
-                                             mAudioQueue);
+    AudioData* audioData = DecodeToFirstAudioData();
     if (audioData) {
       audioStartTime = audioData->mTime;
     }
@@ -389,7 +420,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
         eof = !DecodeVideoFrame(skip, 0);
         {
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+          if (mDecoder->GetStateMachine()->IsShutdown()) {
             return NS_ERROR_FAILURE;
           }
         }
@@ -416,7 +447,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
     }
     {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+      if (mDecoder->GetStateMachine()->IsShutdown()) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -431,7 +462,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
         eof = !DecodeAudioData();
         {
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+          if (mDecoder->GetStateMachine()->IsShutdown()) {
             return NS_ERROR_FAILURE;
           }
         }

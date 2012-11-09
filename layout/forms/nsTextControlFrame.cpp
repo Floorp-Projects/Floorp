@@ -378,8 +378,18 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     nsIContent* placeholderNode = txtCtrl->CreatePlaceholderNode();
     NS_ENSURE_TRUE(placeholderNode, NS_ERROR_OUT_OF_MEMORY);
 
-    if (!aElements.AppendElement(placeholderNode))
+    // Associate ::-moz-placeholder pseudo-element with the placeholder node.
+    nsCSSPseudoElements::Type pseudoType =
+      nsCSSPseudoElements::ePseudo_mozPlaceholder;
+
+    nsRefPtr<nsStyleContext> placeholderStyleContext =
+      PresContext()->StyleSet()->ResolvePseudoElementStyle(
+          mContent->AsElement(), pseudoType, GetStyleContext());
+
+    if (!aElements.AppendElement(ContentInfo(placeholderNode,
+                                 placeholderStyleContext))) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   rv = UpdateValueDisplay(false);
@@ -638,6 +648,12 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   // Revoke the previous scroll event if one exists
   mScrollEvent.Revoke();
 
+  // If 'dom.placeholeder.show_on_focus' preference is 'false', focusing or
+  // blurring the frame can have an impact on the placeholder visibility.
+  if (mUsePlaceholder) {
+    txtCtrl->UpdatePlaceholderVisibility(true);
+  }
+
   if (!aOn) {
     return;
   }
@@ -744,19 +760,6 @@ nsTextControlFrame::GetEditor(nsIEditor **aEditor)
   NS_ASSERTION(txtCtrl, "Content not a text control element");
   *aEditor = txtCtrl->GetTextEditor();
   NS_IF_ADDREF(*aEditor);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::GetTextLength(int32_t* aTextLength)
-{
-  NS_ENSURE_ARG_POINTER(aTextLength);
-
-  nsAutoString   textContents;
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  NS_ASSERTION(txtCtrl, "Content not a text control element");
-  txtCtrl->GetTextEditorValue(textContents, false);   // this is expensive!
-  *aTextLength = textContents.Length();
   return NS_OK;
 }
 
@@ -1303,11 +1306,8 @@ nsTextControlFrame::SetValueChanged(bool aValueChanged)
   NS_ASSERTION(txtCtrl, "Content not a text control element");
 
   if (mUsePlaceholder) {
-    int32_t textLength;
-    GetTextLength(&textLength);
-
     nsWeakFrame weakFrame(this);
-    txtCtrl->SetPlaceholderClass(!textLength, true);
+    txtCtrl->UpdatePlaceholderVisibility(true);
     if (!weakFrame.IsAlive()) {
       return;
     }
@@ -1365,7 +1365,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   if (mUsePlaceholder && !aBeforeEditorInit)
   {
     nsWeakFrame weakFrame(this);
-    txtCtrl->SetPlaceholderClass(value.IsEmpty(), aNotify);
+    txtCtrl->UpdatePlaceholderVisibility(aNotify);
     NS_ENSURE_STATE(weakFrame.IsAlive());
   }
 
@@ -1455,3 +1455,38 @@ nsTextControlFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
+{
+  /*
+   * The implementation of this method is equivalent as:
+   * nsContainerFrame::BuildDisplayList()
+   * with the difference that we filter-out the placeholder frame when it
+   * should not be visible.
+   */
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsTextControlFrame");
+
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  NS_ASSERTION(txtCtrl, "Content not a text control element!");
+
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame* kid = mFrames.FirstChild();
+  nsDisplayListSet set(aLists, aLists.Content());
+
+  while (kid) {
+    // If the frame is the placeholder frame, we should only show it if the
+    // placeholder has to be visible.
+    if (kid->GetContent() != txtCtrl->GetPlaceholderNode() ||
+        txtCtrl->GetPlaceholderVisibility()) {
+      nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, 0);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    kid = kid->GetNextSibling();
+  }
+
+  return NS_OK;
+}

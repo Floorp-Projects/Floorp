@@ -1,0 +1,8 @@
+@namespace url('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul');
+@namespace html url('http://www.w3.org/1999/xhtml');
+
+/* We need to have a non-transparent placeholder so we can test it. */
+html|input::-moz-placeholder {
+  opacity: 1.0;
+  color: graytext;
+}

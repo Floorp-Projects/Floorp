@@ -230,8 +230,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = NS_RGB(0xA3,0xA3,0xA3);
       break;          
     case eColorID__moz_mac_menutextdisable:
-      aColor = nsCocoaFeatures::OnSnowLeopardOrLater() ?
-                 NS_RGB(0x88,0x88,0x88) : NS_RGB(0x98,0x98,0x98);
+      aColor = NS_RGB(0x88,0x88,0x88);
       break;      
     case eColorID__moz_mac_menutextselect:
       aColor = GetColorFromNSColor([NSColor selectedMenuItemTextColor]);
