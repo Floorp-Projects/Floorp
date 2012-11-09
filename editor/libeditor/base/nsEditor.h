@@ -742,6 +742,10 @@ public:
   // Get the focused content, if we're focused.  Returns null otherwise.
   virtual already_AddRefed<nsIContent> GetFocusedContent();
 
+  // Get the focused content for the argument of some nsIMEStateManager's
+  // methods.
+  virtual already_AddRefed<nsIContent> GetFocusedContentForIME();
+
   // Whether the editor is active on the DOM window.  Note that when this
   // returns true but GetFocusedContent() returns null, it means that this editor was
   // focused when the DOM window was active.
