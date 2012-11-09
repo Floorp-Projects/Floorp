@@ -517,15 +517,6 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
   return JS_WrapValue(cx, vp);
 }
 
-// Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <typename> class SmartPtr, class T>
-inline bool
-WrapNewBindingObject(JSContext* cx, JSObject* scope, const SmartPtr<T>& value,
-                     JS::Value* vp)
-{
-  return WrapNewBindingObject(cx, scope, value.get(), vp);
-}
-
 template <class T>
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx, JSObject* scope, T* value,
@@ -781,7 +772,7 @@ WrapObject(JSContext* cx, JSObject* scope, T* p, JS::Value* vp)
 
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JSObject* scope, nsCOMPtr<T> &p, const nsIID* iid,
+WrapObject(JSContext* cx, JSObject* scope, const nsCOMPtr<T> &p, const nsIID* iid,
            JS::Value* vp)
 {
   return WrapObject(cx, scope, p.get(), iid, vp);
@@ -789,14 +780,14 @@ WrapObject(JSContext* cx, JSObject* scope, nsCOMPtr<T> &p, const nsIID* iid,
 
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JSObject* scope, nsCOMPtr<T> &p, JS::Value* vp)
+WrapObject(JSContext* cx, JSObject* scope, const nsCOMPtr<T> &p, JS::Value* vp)
 {
   return WrapObject(cx, scope, p, NULL, vp);
 }
 
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JSObject* scope, nsRefPtr<T> &p, const nsIID* iid,
+WrapObject(JSContext* cx, JSObject* scope, const nsRefPtr<T> &p, const nsIID* iid,
            JS::Value* vp)
 {
   return WrapObject(cx, scope, p.get(), iid, vp);
@@ -804,7 +795,7 @@ WrapObject(JSContext* cx, JSObject* scope, nsRefPtr<T> &p, const nsIID* iid,
 
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JSObject* scope, nsRefPtr<T> &p, JS::Value* vp)
+WrapObject(JSContext* cx, JSObject* scope, const nsRefPtr<T> &p, JS::Value* vp)
 {
   return WrapObject(cx, scope, p, NULL, vp);
 }
@@ -820,6 +811,22 @@ WrapObject<JSObject>(JSContext* cx, JSObject* scope, JSObject* p, JS::Value* vp)
 bool
 WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports* callback,
                       JS::Value* vp);
+
+static inline bool
+WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports& callback,
+                      JS::Value* vp)
+{
+  return WrapCallbackInterface(cx, scope, &callback, vp);
+}
+
+// Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
+template <template <typename> class SmartPtr, class T>
+inline bool
+WrapCallbackInterface(JSContext* cx, JSObject* scope, const SmartPtr<T>& value,
+                      JS::Value* vp)
+{
+  return WrapCallbackInterface(cx, scope, value.get(), vp);
+}
 
 template<typename T>
 static inline JSObject*
@@ -933,6 +940,38 @@ WrapCallThisObject(JSContext* cx, JSObject* scope, const T& p)
   return obj;
 }
 
+// Helper for calling WrapNewBindingObject with smart pointers
+// (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
+HAS_MEMBER(get)
+
+template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+struct WrapNewBindingObjectHelper
+{
+  static inline bool Wrap(JSContext* cx, JSObject* scope, const T& value,
+                          JS::Value* vp)
+  {
+    return WrapNewBindingObject(cx, scope, value.get(), vp);
+  }
+};
+
+template <class T>
+struct WrapNewBindingObjectHelper<T, false>
+{
+  static inline bool Wrap(JSContext* cx, JSObject* scope, T& value,
+                          JS::Value* vp)
+  {
+    return WrapNewBindingObject(cx, scope, &value, vp);
+  }
+};
+
+template<class T>
+inline bool
+WrapNewBindingObject(JSContext* cx, JSObject* scope, T& value,
+                     JS::Value* vp)
+{
+  return WrapNewBindingObjectHelper<T>::Wrap(cx, scope, value, vp);
+}
+
 static inline bool
 InternJSString(JSContext* cx, jsid& id, const char* chars)
 {
@@ -1034,6 +1073,13 @@ public:
     return ptr;
   }
 
+  // Make us work with smart-ptr helpers that expect a get()
+  T* get() const {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr);
+    return ptr;
+  }
+
 protected:
   T* ptr;
 #ifdef DEBUG
@@ -1072,6 +1118,13 @@ public:
     return ptr.forget();
   }
 
+  // Make us work with smart-ptr helpers that expect a get()
+  T* get() const {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr);
+    return ptr;
+  }
+
 protected:
   template<typename U>
   void init(U t) {
@@ -1087,15 +1140,6 @@ protected:
   bool inited;
 #endif
 };
-
-// Helper for OwningNonNull
-template <class T>
-inline bool
-WrapNewBindingObject(JSContext* cx, JSObject* scope, OwningNonNull<T>& value,
-                     JS::Value* vp)
-{
-  return WrapNewBindingObject(cx, scope, &static_cast<T&>(value), vp);
-}
 
 // A struct that has the same layout as an nsDependentString but much
 // faster constructor and destructor behavior

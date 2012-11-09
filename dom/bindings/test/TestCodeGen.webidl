@@ -34,7 +34,7 @@ callback TestIntegerReturn = long();
 callback TestNullableIntegerReturn = long?();
 callback TestBooleanReturn = boolean();
 callback TestFloatReturn = float();
-callback TestStringReturn = DOMString();
+callback TestStringReturn = DOMString(long arg);
 callback TestEnumReturn = TestEnum();
 callback TestInterfaceReturn = TestInterface();
 callback TestNullableInterfaceReturn = TestInterface?();
@@ -50,6 +50,31 @@ callback TestTypedArrayReturn = ArrayBuffer();
 callback TestNullableTypedArrayReturn = ArrayBuffer?();
 callback TestSequenceReturn = sequence<boolean>();
 callback TestNullableSequenceReturn = sequence<boolean>?();
+// Callback argument tests
+callback TestIntegerArguments = sequence<long>(long arg1, long? arg2,
+                                               sequence<long> arg3,
+                                               sequence<long?>? arg4);
+callback TestInterfaceArguments = void(TestInterface arg1, TestInterface? arg2,
+                                       TestExternalInterface arg3,
+                                       TestExternalInterface? arg4,
+                                       TestCallbackInterface arg5,
+                                       TestCallbackInterface? arg6,
+                                       sequence<TestInterface> arg7,
+                                       sequence<TestInterface?>? arg8,
+                                       sequence<TestExternalInterface> arg9,
+                                       sequence<TestExternalInterface?>? arg10,
+                                       sequence<TestCallbackInterface> arg11,
+                                       sequence<TestCallbackInterface?>? arg12);
+callback TestStringEnumArguments = void(DOMString myString, DOMString? nullString,
+                                        TestEnum myEnum);
+callback TestObjectArguments = void(object anObj, object? anotherObj,
+                                    ArrayBuffer buf, ArrayBuffer? buf2);
+callback TestOptionalArguments = void(optional DOMString aString,
+                                      optional object something,
+                                      optional sequence<TestInterface> aSeq,
+                                      optional TestInterface? anInterface,
+                                      optional TestInterface anotherInterface,
+                                      optional long aLong);
 
 TestInterface implements ImplementedInterface;
 
@@ -344,6 +369,7 @@ interface TestInterface {
 
   void passDictContainingDict(optional DictContainingDict arg);
   void passDictContainingSequence(optional DictContainingSequence arg);
+  DictContainingSequence receiveDictContainingSequence();
 
   // EnforceRange/Clamp tests
   void dontEnforceRangeOrClamp(byte arg);
@@ -443,6 +469,7 @@ dictionary DictContainingDict {
 
 dictionary DictContainingSequence {
   sequence<long> ourSequence;
+  sequence<TestInterface> ourSequence2;
 };
 
 interface TestIndexedGetterInterface {

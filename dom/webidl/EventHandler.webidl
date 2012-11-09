@@ -14,6 +14,7 @@
 callback EventHandlerNonNull = any (Event event);
 typedef EventHandlerNonNull? EventHandler;
 
-[TreatNonCallableAsNull]
-callback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, DOMString source, unsigned long lineno, unsigned long column);
-typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;
+// We don't support JS-wrapping of unions yet
+//[TreatNonCallableAsNull]
+//callback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, DOMString source, unsigned long lineno, unsigned long column);
+//typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;
