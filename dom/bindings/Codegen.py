@@ -1872,10 +1872,11 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
     """
     As CastableObjectUnwrapper, but defaulting to throwing if unwrapping fails
     """
-    def __init__(self, descriptor, source, target):
-        CastableObjectUnwrapper.__init__(self, descriptor, source, target,
-            "return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE," +
-              '"%s");' % descriptor.name)
+    def __init__(self, descriptor, source, target, exceptionCode):
+        CastableObjectUnwrapper.__init__(
+            self, descriptor, source, target,
+            'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");\n'
+            '%s' % (descriptor.name, exceptionCode))
 
 class CallbackObjectUnwrapper:
     """
@@ -1884,11 +1885,12 @@ class CallbackObjectUnwrapper:
     |source| is the JSObject we want to use in native code.
     |target| is an nsCOMPtr of the appropriate type in which we store the result.
     """
-    def __init__(self, descriptor, source, target, codeOnFailure=None):
+    def __init__(self, descriptor, source, target, exceptionCode,
+                 codeOnFailure=None):
         if codeOnFailure is None:
-            codeOnFailure = ("return ThrowErrorMessage(cx," +
-              'MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' %
-              descriptor.name)
+            codeOnFailure = (
+                'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");\n'
+                '%s' % (descriptor.name, exceptionCode))
         self.descriptor = descriptor
         self.substitution = { "nativeType" : descriptor.nativeType,
                               "source" : source,
@@ -1957,7 +1959,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     treatUndefinedAs="Default",
                                     isEnforceRange=False,
                                     isClamp=False,
-                                    isNullOrUndefined=False):
+                                    isNullOrUndefined=False,
+                                    exceptionCode=None):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -1966,7 +1969,10 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     value need to use failureCode instead of throwing exceptions.  Failures to
     convert that are due to JS exceptions (from toString or valueOf methods) or
     out of memory conditions need to throw exceptions no matter what
-    failureCode is.
+    failureCode is.  However what actually happens when throwing an exception
+    can be controlled by exceptionCode.  The only requirement on that is that
+    exceptionCode must end up doing a return, and every return from this
+    function must happen via exceptionCode if exceptionCode is not None.
 
     If isDefinitelyObject is True, that means we know the value
     isObject() and we have no need to recheck that.
@@ -2032,20 +2038,33 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     # And we can't both be an object and be null or undefined
     assert not isDefinitelyObject or not isNullOrUndefined
 
+    # If exceptionCode is not set, we'll just rethrow the exception we got.
+    # Note that we can't just set failureCode to exceptionCode, because setting
+    # failureCode will prevent pending exceptions from being set in cases when
+    # they really should be!
+    if exceptionCode is None:
+        exceptionCode = "return false;"
+    # We often want exceptionCode to be indented, since it often appears in an
+    # if body.
+    exceptionCodeIndented = CGIndenter(CGGeneric(exceptionCode))
+
     # Helper functions for dealing with failures due to the JS value being the
     # wrong type of value
     def onFailureNotAnObject(failureCode):
         return CGWrapper(CGGeneric(
                 failureCode or
-                'return ThrowErrorMessage(cx, MSG_NOT_OBJECT);'), post="\n")
+                ('ThrowErrorMessage(cx, MSG_NOT_OBJECT);\n'
+                 '%s' % exceptionCode)), post="\n")
     def onFailureBadType(failureCode, typeName):
         return CGWrapper(CGGeneric(
                 failureCode or
-                'return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % typeName), post="\n")
+                ('ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");'
+                 '%s' % (typeName, exceptionCode))), post="\n")
     def onFailureNotCallable(failureCode):
         return CGWrapper(CGGeneric(
                 failureCode or
-                'return ThrowErrorMessage(cx, MSG_NOT_CALLABLE);'), post="\n")
+                ('ThrowErrorMessage(cx, MSG_NOT_CALLABLE);\n'
+                 '%s' % exceptionCode)), post="\n")
 
     # A helper function for handling default values.  Takes a template
     # body and the C++ code to set the default value and wraps the
@@ -2110,7 +2129,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         assert not isEnforceRange and not isClamp
 
         if failureCode is None:
-            notSequence = "return ThrowErrorMessage(cx, MSG_NOT_SEQUENCE);"
+            notSequence = ("ThrowErrorMessage(cx, MSG_NOT_SEQUENCE);\n"
+                           "%s" % exceptionCode)
         else:
             notSequence = failureCode
 
@@ -2139,7 +2159,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
         (elementTemplate, elementDeclType,
          elementHolderType, dealWithOptional) = getJSToNativeConversionTemplate(
-            elementType, descriptorProvider, isMember=True)
+            elementType, descriptorProvider, isMember=True,
+            exceptionCode=exceptionCode)
         if dealWithOptional:
             raise TypeError("Shouldn't have optional things in sequences")
         if elementHolderType is not None:
@@ -2163,22 +2184,25 @@ if (!IsArrayLike(cx, seq)) {
 uint32_t length;
 // JS_GetArrayLength actually works on all objects
 if (!JS_GetArrayLength(cx, seq, &length)) {
-  return false;
+%s
 }
 Sequence< %s > &arr = const_cast< Sequence< %s >& >(%s);
 if (!arr.SetCapacity(length)) {
   JS_ReportOutOfMemory(cx);
-  return false;
+%s
 }
 for (uint32_t i = 0; i < length; ++i) {
   jsval temp;
   if (!JS_GetElement(cx, seq, i, &temp)) {
-    return false;
+%s
   }
 """ % (CGIndenter(CGGeneric(notSequence)).define(),
+       exceptionCodeIndented.define(),
        elementDeclType.define(),
        elementDeclType.define(),
-       arrayRef))
+       arrayRef,
+       exceptionCodeIndented.define(),
+       CGIndenter(exceptionCodeIndented).define()))
 
         templateBody += CGIndenter(CGGeneric(
                 string.Template(elementTemplate).substitute(
@@ -2346,11 +2370,14 @@ for (uint32_t i = 0; i < length; ++i) {
 
         templateBody = CGWrapper(templateBody, pre="bool done = false, failed = false, tryNext;\n")
         throw = CGGeneric("if (failed) {\n"
-                          "  return false;\n"
+                          "%s\n"
                           "}\n"
                           "if (!done) {\n"
-                          "  return ThrowErrorMessage(cx, MSG_NOT_IN_UNION, \"%s\");\n"
-                          "}" % ", ".join(names))
+                          "  ThrowErrorMessage(cx, MSG_NOT_IN_UNION, \"%s\");\n"
+                          "%s\n"
+                          "}" % (exceptionCodeIndented.define(),
+                                 ", ".join(names),
+                                 exceptionCodeIndented.define()))
         templateBody = CGWrapper(CGIndenter(CGList([templateBody, throw], "\n")), pre="{\n", post="\n}")
 
         typeName = type.name
@@ -2466,12 +2493,14 @@ for (uint32_t i = 0; i < length; ++i) {
                 templateBody += str(FailureFatalCastableObjectUnwrapper(
                         descriptor,
                         "&${val}.toObject()",
-                        "${declName}"))
+                        "${declName}",
+                        exceptionCode))
         elif descriptor.interface.isCallback():
             templateBody += str(CallbackObjectUnwrapper(
                     descriptor,
                     "&${val}.toObject()",
                     "${declName}",
+                    exceptionCode,
                     codeOnFailure=failureCode))
         elif descriptor.workers:
             templateBody += "${declName} = &${val}.toObject();"
@@ -2597,8 +2626,9 @@ for (uint32_t i = 0; i < length; ++i) {
         def getConversionCode(varName):
             conversionCode = (
                 "if (!ConvertJSValueToString(cx, ${val}, ${valPtr}, %s, %s, %s)) {\n"
-                "  return false;\n"
-                "}" % (nullBehavior, undefinedBehavior, varName))
+                "%s\n"
+                "}" % (nullBehavior, undefinedBehavior, varName,
+                       exceptionCodeIndented.define()))
             if defaultValue is None:
                 return conversionCode
 
@@ -2648,6 +2678,7 @@ for (uint32_t i = 0; i < length; ++i) {
         if invalidEnumValueFatal:
             handleInvalidEnumValueCode = "  MOZ_ASSERT(index >= 0);\n"
         else:
+            assert exceptionCode == "return false;"
             handleInvalidEnumValueCode = (
                 "  if (index < 0) {\n"
                 "    return true;\n"
@@ -2658,14 +2689,15 @@ for (uint32_t i = 0; i < length; ++i) {
             "  bool ok;\n"
             "  int index = FindEnumStringIndex<%(invalidEnumValueFatal)s>(cx, ${val}, %(values)s, \"%(enumtype)s\", &ok);\n"
             "  if (!ok) {\n"
-            "    return false;\n"
+            "%(exceptionCode)s\n"
             "  }\n"
             "%(handleInvalidEnumValueCode)s"
             "  ${declName} = static_cast<%(enumtype)s>(index);\n"
             "}" % { "enumtype" : enum,
                       "values" : enum + "Values::strings",
        "invalidEnumValueFatal" : toStringBool(invalidEnumValueFatal),
-  "handleInvalidEnumValueCode" : handleInvalidEnumValueCode })
+  "handleInvalidEnumValueCode" : handleInvalidEnumValueCode,
+               "exceptionCode" : CGIndenter(exceptionCodeIndented).define() })
 
         if defaultValue is not None:
             assert(defaultValue.type.tag() == IDLType.Tags.domstring)
@@ -2771,8 +2803,8 @@ for (uint32_t i = 0; i < length; ++i) {
             val = "${val}"
 
         template = ("if (!%s.Init(cx, %s)) {\n"
-                    "  return false;\n"
-                    "}" % (selfRef, val))
+                    "%s\n"
+                    "}" % (selfRef, val, exceptionCodeIndented.define()))
 
         return (template, declType, None, False)
 
@@ -2800,16 +2832,18 @@ for (uint32_t i = 0; i < length; ++i) {
             "if (%s) {\n"
             "  const_cast< %s >(${declName}).SetNull();\n"
             "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
-            "  return false;\n"
-            "}" % (nullCondition, mutableType, typeName, conversionBehavior, dataLoc))
+            "%s\n"
+            "}" % (nullCondition, mutableType, typeName, conversionBehavior, dataLoc,
+                   exceptionCodeIndented.define()))
     else:
         assert(defaultValue is None or
                not isinstance(defaultValue, IDLNullValue))
         dataLoc = "${declName}"
         template = (
             "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
-            "  return false;\n"
-            "}" % (typeName, conversionBehavior, dataLoc))
+            "%s\n"
+            "}" % (typeName, conversionBehavior, dataLoc,
+                   exceptionCodeIndented.define()))
         declType = CGGeneric(typeName)
     if (defaultValue is not None and
         # We already handled IDLNullValue, so just deal with the other ones
@@ -3913,7 +3947,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # Our descriptor might claim that we're not castable, simply because
         # we're someone's consequential interface.  But for this-unwrapping, we
         # know that we're the real deal.  So fake a descriptor here for
-        # consumption by FailureFatalCastableObjectUnwrapper.
+        # consumption by CastableObjectUnwrapper.
         getThis = CGGeneric("""js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
 if (!obj) {
   return false;
