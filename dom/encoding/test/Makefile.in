@@ -21,6 +21,7 @@ MOCHITEST_FILES = \
   test_TextEncoder.html \
   test_TextEncoder.js \
   test_stringencoding.html \
+  test_submit_euckr.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

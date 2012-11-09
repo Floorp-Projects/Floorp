@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test for euc-kr encoded form submission</title>
+  <script type="text/javascript" src="/resources/testharness.js"></script>
+  <script type="text/javascript" src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<iframe name="ifr"></iframe>
+<form accept-charset="euc-kr" action="abc" target="ifr">
+<input type="hidden" name="a" value="&#xAC02;">
+</form>
+<script>
+
+runTest();
+
+function runTest() {
+  var t = async_test("Test for euc-kr encoded form submission");
+  var f = document.forms[0];
+  var ifr = frames.ifr;
+  ifr.onload = function() {
+    t.step(function() {
+      assert_equals("".split.call(ifr.location, "?")[1], "a=%81A");
+    });
+    t.done();
+  };
+  f.submit();
+}
+
+</script>
+</body>
+</html>
