@@ -192,6 +192,7 @@ public:
     mTarget = nullptr;
   }
 
+  // Can return null if we already have a handler.
   JSObject* GetEventScope() const
   {
     return xpc_UnmarkGrayObject(mScopeObject);
@@ -214,7 +215,7 @@ public:
   {
     mHandler.SetHandler(aHandler);
     mContext = aContext;
-    mScopeObject = aScopeObject;
+    UpdateScopeObject(aScopeObject);
   }
   void SetHandler(mozilla::dom::EventHandlerNonNull* aHandler)
   {
@@ -255,6 +256,11 @@ protected:
   {
     NS_ASSERTION(!mTarget, "Should have called Disconnect()!");
   }
+
+  // Update our mScopeObject; we have to make sure we properly handle
+  // the hold/drop stuff, so have to do it in nsJSEventListener.
+  virtual void UpdateScopeObject(JSObject* aScopeObject) = 0;
+
   nsCOMPtr<nsIScriptContext> mContext;
   JSObject* mScopeObject;
   nsISupports* mTarget;
