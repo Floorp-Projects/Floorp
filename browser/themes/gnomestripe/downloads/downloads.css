@@ -194,18 +194,11 @@ toolbar[iconsize="large"] #downloads-indicator-icon {
                               16, 32, 32, 16) center no-repeat;
 }
 
-toolbar[iconsize="small"] #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+#downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar-small.png"),
                               0, 16, 16, 0) center no-repeat;
   background-size: 12px;
 }
-
-toolbar[iconsize="large"] #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 24, 24, 0) center no-repeat;
-  background-size: 24px;
-}
-
 
 #downloads-indicator:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background-image: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
