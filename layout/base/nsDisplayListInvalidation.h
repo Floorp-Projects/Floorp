@@ -10,7 +10,7 @@
 
 class nsDisplayItem;
 class nsDisplayListBuilder;
-class nsDisplayBackground;
+class nsDisplayBackgroundImage;
 
 /**
  * This stores the geometry of an nsDisplayItem, and the area
@@ -76,7 +76,7 @@ public:
 class nsDisplayBackgroundGeometry : public nsDisplayItemGeometry
 {
 public:
-  nsDisplayBackgroundGeometry(nsDisplayBackground* aItem, nsDisplayListBuilder* aBuilder);
+  nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder);
 
   virtual void MoveBy(const nsPoint& aOffset);
 
