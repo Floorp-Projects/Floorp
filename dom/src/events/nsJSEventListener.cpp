@@ -53,11 +53,9 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
                                      const nsEventHandler& aHandler)
   : nsIJSEventListener(aContext, aScopeObject, aTarget, aType, aHandler)
 {
-  // aScopeObject is the inner window's JS object, which we need to lock
-  // until we are done with it.
-  NS_ASSERTION(aScopeObject,
-               "EventListener with no context or scope?");
-  NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
+  if (mScopeObject) {
+    NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
+  }
 }
 
 nsJSEventListener::~nsJSEventListener() 
@@ -65,6 +63,18 @@ nsJSEventListener::~nsJSEventListener()
   if (mScopeObject) {
     NS_DROP_JS_OBJECTS(this, nsJSEventListener);
   }
+}
+
+/* virtual */
+void
+nsJSEventListener::UpdateScopeObject(JSObject* aScopeObject)
+{
+  if (mScopeObject && !aScopeObject) {
+    NS_DROP_JS_OBJECTS(this, nsJSEventListener);
+  } else if (aScopeObject && !mScopeObject) {
+    NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
+  }
+  mScopeObject = aScopeObject;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
