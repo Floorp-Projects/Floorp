@@ -74,6 +74,7 @@ def main():
     generate_file(config, 'RegisterBindings', 'define')
 
     generate_file(config, 'UnionTypes', 'declare')
+    generate_file(config, 'UnionTypes', 'define')
     generate_file(config, 'UnionConversions', 'declare')
 
 if __name__ == '__main__':

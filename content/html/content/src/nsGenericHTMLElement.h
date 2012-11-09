@@ -1527,4 +1527,16 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Unknown)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Video)
 #endif
 
+inline nsISupports*
+ToSupports(nsGenericHTMLElement* aHTMLElement)
+{
+  return aHTMLElement;
+}
+
+inline nsISupports*
+ToCanonicalSupports(nsGenericHTMLElement* aHTMLElement)
+{
+  return aHTMLElement;
+}
+
 #endif /* nsGenericHTMLElement_h___ */
