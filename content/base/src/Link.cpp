@@ -90,17 +90,19 @@ Link::LinkState() const
     }
 
     // We have a good href, so register with History.
-    nsresult rv = mHistory->RegisterVisitedCallback(hrefURI, self);
-    if (NS_SUCCEEDED(rv)) {
-      self->mRegistered = true;
+    if (mHistory) {
+      nsresult rv = mHistory->RegisterVisitedCallback(hrefURI, self);
+      if (NS_SUCCEEDED(rv)) {
+        self->mRegistered = true;
 
-      // Assume that we are not visited until we are told otherwise.
-      self->mLinkState = eLinkState_Unvisited;
+        // Assume that we are not visited until we are told otherwise.
+        self->mLinkState = eLinkState_Unvisited;
 
-      // And make sure we are in the document's link map.
-      nsIDocument *doc = element->GetCurrentDoc();
-      if (doc) {
-        doc->AddStyleRelevantLink(self);
+        // And make sure we are in the document's link map.
+        nsIDocument *doc = element->GetCurrentDoc();
+        if (doc) {
+          doc->AddStyleRelevantLink(self);
+        }
       }
     }
   }
@@ -468,10 +470,12 @@ Link::UnregisterFromHistory()
   NS_ASSERTION(mCachedURI, "mRegistered is true, but we have no cached URI?!");
 
   // And tell History to stop tracking us.
-  nsresult rv = mHistory->UnregisterVisitedCallback(mCachedURI, this);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
-  if (NS_SUCCEEDED(rv)) {
-    mRegistered = false;
+  if (mHistory) {
+    nsresult rv = mHistory->UnregisterVisitedCallback(mCachedURI, this);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
+    if (NS_SUCCEEDED(rv)) {
+      mRegistered = false;
+    }
   }
 }
 
