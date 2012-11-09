@@ -1028,6 +1028,12 @@ public:
     return &ptr;
   }
 
+  T* Ptr() {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
+    return ptr;
+  }
+
 protected:
   T* ptr;
 #ifdef DEBUG
@@ -1057,6 +1063,13 @@ public:
 
   void operator=(const already_AddRefed<T>& t) {
     init(t);
+  }
+
+  already_AddRefed<T> forget() {
+#ifdef DEBUG
+    inited = false;
+#endif
+    return ptr.forget();
   }
 
 protected:
