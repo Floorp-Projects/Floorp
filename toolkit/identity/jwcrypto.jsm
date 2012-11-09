@@ -126,4 +126,4 @@ jwcryptoClass.prototype = {
 };
 
 this.jwcrypto = new jwcryptoClass();
-jwcrypto.ALGORITHMS = ALGORITHMS;
+this.jwcrypto.ALGORITHMS = ALGORITHMS;
