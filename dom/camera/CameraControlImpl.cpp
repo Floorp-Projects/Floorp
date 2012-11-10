@@ -9,6 +9,7 @@
 #include "CameraCommon.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 CameraControlImpl::CameraControlImpl(uint32_t aCameraId, nsIThread* aCameraThread, uint64_t aWindowId)
   : mCameraId(aCameraId)

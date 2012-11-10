@@ -12,12 +12,10 @@
 #include "nsDOMMediaStream.h"
 #include "CameraCommon.h"
 
-using namespace mozilla;
-using namespace mozilla::layers;
 
 namespace mozilla {
 
-typedef void (*FrameBuilder)(Image* aImage, void* aBuffer, uint32_t aWidth, uint32_t aHeight);
+typedef void (*FrameBuilder)(mozilla::layers::Image* aImage, void* aBuffer, uint32_t aWidth, uint32_t aHeight);
 
 /**
  * DOMCameraPreview is only exposed to the DOM as an nsDOMMediaStream,
@@ -30,7 +28,7 @@ protected:
 
 public:
   DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint32_t aFramesPerSecond = 30);
-  bool ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder);
+  bool ReceiveFrame(void* aBuffer, ImageFormat aFormat, mozilla::FrameBuilder aBuilder);
   bool HaveEnoughBuffered();
 
   NS_IMETHODIMP
@@ -63,7 +61,7 @@ protected:
   uint32_t mHeight;
   uint32_t mFramesPerSecond;
   SourceMediaStream* mInput;
-  nsRefPtr<ImageContainer> mImageContainer;
+  nsRefPtr<mozilla::layers::ImageContainer> mImageContainer;
   VideoSegment mVideoSegment;
   uint32_t mFrameCount;
   nsRefPtr<ICameraControl> mCameraControl;
