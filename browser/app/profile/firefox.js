@@ -1047,8 +1047,10 @@ pref("devtools.debugger.remote-timeout", 20000);
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.height", 250);
-pref("devtools.debugger.ui.remote-win.width", 900);
-pref("devtools.debugger.ui.remote-win.height", 400);
+pref("devtools.debugger.ui.win-x", 0);
+pref("devtools.debugger.ui.win-y", 0);
+pref("devtools.debugger.ui.win-width", 900);
+pref("devtools.debugger.ui.win-height", 400);
 pref("devtools.debugger.ui.stackframes-width", 200);
 pref("devtools.debugger.ui.variables-width", 300);
 pref("devtools.debugger.ui.panes-visible-on-startup", false);

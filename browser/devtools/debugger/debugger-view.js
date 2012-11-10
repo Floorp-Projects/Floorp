@@ -29,6 +29,12 @@ let DebuggerView = {
    */
   initialize: function DV_initialize(aCallback) {
     dumpn("Initializing the DebuggerView");
+
+    if (window._isRemoteDebugger || window._isChromeDebugger) {
+      window.moveTo(Prefs.windowX, Prefs.windowY);
+      window.resizeTo(Prefs.windowWidth, Prefs.windowHeight);
+    }
+
     this.Toolbar.initialize();
     this.Options.initialize();
     this.ChromeGlobals.initialize();
@@ -47,7 +53,7 @@ let DebuggerView = {
     this.Variables.lazyEmpty = true;
 
     this._initializePanes();
-    this._initializeEditor(aCallback)
+    this._initializeEditor(aCallback);
   },
 
   /**
@@ -58,6 +64,14 @@ let DebuggerView = {
    */
   destroy: function DV_destroy(aCallback) {
     dumpn("Destroying the DebuggerView");
+
+    if (window._isRemoteDebugger || window._isChromeDebugger) {
+      Prefs.windowX = window.screenX;
+      Prefs.windowY = window.screenY;
+      Prefs.windowWidth = window.outerWidth;
+      Prefs.windowHeight = window.outerHeight;
+    }
+
     this.Toolbar.destroy();
     this.Options.destroy();
     this.ChromeGlobals.destroy();
