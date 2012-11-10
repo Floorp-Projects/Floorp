@@ -51,6 +51,7 @@
 #include "mozilla/Attributes.h"
 #include "FrameMetrics.h"
 #include "ProcessUtils.h"
+#include "mozilla/dom/TabContext.h"
 
 struct gfxMatrix;
 
@@ -149,7 +150,8 @@ class TabChild : public PBrowserChild,
                  public nsIDialogCreator,
                  public nsITabChild,
                  public nsIObserver,
-                 public mozilla::dom::ipc::MessageManagerCallback
+                 public ipc::MessageManagerCallback,
+                 public TabContext
 {
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
@@ -164,11 +166,9 @@ public:
 
     /** Return a TabChild with the given attributes. */
     static already_AddRefed<TabChild> 
-    Create(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
+    Create(const TabContext& aContext, uint32_t aChromeFlags);
 
     virtual ~TabChild();
-
-    uint32_t GetAppId() { return mAppId; }
 
     bool IsRootContentDocument();
 
@@ -320,15 +320,21 @@ private:
     /**
      * Create a new TabChild object.
      *
-     * |aIsBrowserElement| indicates whether the tab is inside an <iframe mozbrowser>.
-     * |aAppId| is the app id of the app containing this tab. If the tab isn't
-     * contained in an app, aAppId will be nsIScriptSecurityManager::NO_APP_ID.
+     * |aOwnOrContainingAppId| is the app-id of our frame or of the closest app
+     * frame in the hierarchy which contains us.
+     *
+     * |aIsBrowserElement| indicates whether we're a browser (but not an app).
      */
-    TabChild(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
+    TabChild(const TabContext& aContext, uint32_t aChromeFlags);
 
     nsresult Init();
 
-    void SetAppBrowserConfig(bool aIsBrowserElement, uint32_t aAppId);
+    // Notify others that our TabContext has been updated.  (At the moment, this
+    // sets the appropriate app-id and is-browser flags on our docshell.)
+    //
+    // You should call this after calling TabContext::SetTabContext().  We also
+    // call this during Init().
+    void NotifyTabContextUpdated();
 
     bool UseDirectCompositor();
 
@@ -392,9 +398,7 @@ private:
     float mOldViewportWidth;
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;
-    uint32_t mAppId;
     bool mDidFakeShow;
-    bool mIsBrowserElement;
     bool mNotified;
     bool mContentDocumentIsDisplayed;
     bool mTriedBrowserInit;

@@ -231,13 +231,11 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
 ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
- :
-   mID(uint64_t(-1))
+ : TabContext()
+ , mID(uint64_t(-1))
 #ifdef ANDROID
    ,mScreenSize(0, 0)
 #endif
-   , mIsForApp(false)
-   , mIsForBrowser(false)
 {
     // This process is a content process, so it's clearly running in
     // multiprocess mode!
@@ -301,7 +299,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
         startBackground ? hal::PROCESS_PRIORITY_BACKGROUND:
                           hal::PROCESS_PRIORITY_FOREGROUND);
     if (mIsForApp && !mIsForBrowser) {
-        SetProcessName(NS_LITERAL_STRING("(App)"));
+        SetProcessName(NS_LITERAL_STRING("(Preallocated app)"));
     } else {
         SetProcessName(NS_LITERAL_STRING("Browser"));
     }
@@ -489,8 +487,8 @@ static void FirstIdle(void)
 }
 
 PBrowserChild*
-ContentChild::AllocPBrowser(const uint32_t& aChromeFlags,
-                            const bool& aIsBrowserElement, const AppId& aApp)
+ContentChild::AllocPBrowser(const IPCTabContext& aContext,
+                            const uint32_t& aChromeFlags)
 {
     static bool firstIdleTaskPosted = false;
     if (!firstIdleTaskPosted) {
@@ -498,8 +496,12 @@ ContentChild::AllocPBrowser(const uint32_t& aChromeFlags,
         firstIdleTaskPosted = true;
     }
 
-    nsRefPtr<TabChild> child =
-        TabChild::Create(aChromeFlags, aIsBrowserElement, aApp.get_uint32_t());
+    // We'll happily accept any kind of IPCTabContext here; we don't need to
+    // check that it's of a certain type for security purposes, because we
+    // believe whatever the parent process tells us.
+
+    nsRefPtr<TabChild> child = TabChild::Create(TabContext(aContext), aChromeFlags);
+
     // The ref here is released below.
     return child.forget().get();
 }
