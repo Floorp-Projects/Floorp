@@ -128,7 +128,12 @@ int main(int argc, char *argv[])
   WebGLElementArrayCache b;
 
   for (int maxBufferSize = 1; maxBufferSize <= 4096; maxBufferSize *= 2) {
-    int repeat = std::min(maxBufferSize, 20);
+    // See bug 800612. We originally had | repeat = min(maxBufferSize, 20) |
+    // and a real bug was only caught on Windows and not on Linux due to rand()
+    // producing different values. In that case, the minimum value by which to replace
+    // this 20 to reproduce the bug on Linux, was 25. Replacing it with 64 should give
+    // us some comfort margin.
+    int repeat = std::min(maxBufferSize, 64);
     for (int i = 0; i < repeat; i++) {
       size_t size = RandomInteger<size_t>(1, maxBufferSize);
       MakeRandomVector(v, size);
