@@ -32,6 +32,8 @@
 #define GIHM_TIMING_RECEIVEFRAME    0
 #define GIHM_TIMING_OVERALL         1
 
+using namespace mozilla;
+using namespace android;
 
 namespace mozilla {
 

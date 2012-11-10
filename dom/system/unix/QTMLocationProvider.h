@@ -10,6 +10,7 @@
 #include "nsIGeolocationProvider.h"
 #include "nsCOMPtr.h"
 
+using namespace QtMobility;
 
 class QTMLocationProvider : public QObject,
                             public nsIGeolocationProvider

@@ -44,7 +44,6 @@ extern const PRUnichar* kFlashFullscreenClass;
 #endif // defined(XP_MACOSX)
 
 using namespace mozilla::plugins;
-using namespace mozilla::layers;
 
 bool
 StreamNotifyParent::RecvRedirectNotifyResponse(const bool& allow)
