@@ -97,14 +97,15 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
   mDelayedDisconnect(false), mOwner(aOwner), mChromeMessageManager(aChrome)
 {
 
-  // If owner corresponds to an <iframe mozbrowser>, we'll have to tweak our
-  // PreHandleEvent implementation.
+  // If owner corresponds to an <iframe mozbrowser> or <iframe mozapp>, we'll
+  // have to tweak our PreHandleEvent implementation.
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwner);
-  bool isBrowser = false;
   if (browserFrame) {
-    browserFrame->GetReallyIsBrowser(&isBrowser);
+    mIsBrowserOrAppFrame = browserFrame->GetReallyIsBrowserOrApp();
   }
-  mIsBrowserFrame = isBrowser;
+  else {
+    mIsBrowserOrAppFrame = false;
+  }
 }
 
 nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
@@ -268,7 +269,7 @@ nsInProcessTabChildGlobal::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
 
-  if (mIsBrowserFrame &&
+  if (mIsBrowserOrAppFrame &&
       (!mOwner || !nsContentUtils::IsInChromeDocshell(mOwner->OwnerDoc()))) {
     if (mOwner) {
       nsPIDOMWindow* innerWindow = mOwner->OwnerDoc()->GetInnerWindow();
