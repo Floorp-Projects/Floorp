@@ -96,13 +96,19 @@ const bool kUseNativeRole = false;
  * This means it either isn't mean't to be exposed as an object attribute, or
  * that it should, but is already handled in other code.
  */
-const uint8_t ATTR_BYPASSOBJ  = 0x0001;
+const uint8_t ATTR_BYPASSOBJ = 0x1 << 0;
 
 /**
  * This mask indicates the attribute is expected to have an NMTOKEN or bool value.
  * (See for example usage in Accessible::Attributes())
  */
-const uint8_t ATTR_VALTOKEN   = 0x0010;
+const uint8_t ATTR_VALTOKEN = 0x1 << 1;
+
+/**
+ * Indicate the attribute is global state or property (refer to
+ * http://www.w3.org/TR/wai-aria/states_and_properties#global_states).
+ */
+const uint8_t ATTR_GLOBAL = 0x1 << 2;
 
 /**
  * Small footprint storage of persistent aria attribute characteristics.

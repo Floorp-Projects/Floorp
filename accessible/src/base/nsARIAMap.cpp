@@ -600,40 +600,40 @@ static const EStateRule sWAIUnivStateMap[] = {
  * @note ARIA attributes that don't have any flags are not included here
  */
 nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
-  {&nsGkAtoms::aria_activedescendant,  ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_atomic,                             ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_busy,                               ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN }, /* exposes checkable obj attr */
-  {&nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_disabled,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_dropeffect,                         ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_expanded,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_flowto,            ATTR_BYPASSOBJ                 },  
-  {&nsGkAtoms::aria_grabbed,                            ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_haspopup,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_hidden,                             ATTR_VALTOKEN },/* always expose obj attr */
-  {&nsGkAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_label,             ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_labelledby,        ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_level,             ATTR_BYPASSOBJ                 }, /* handled via groupPosition */
-  {&nsGkAtoms::aria_live,                               ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_multiline,         ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_multiselectable,   ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_owns,              ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_orientation,                        ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_posinset,          ATTR_BYPASSOBJ                 }, /* handled via groupPosition */
-  {&nsGkAtoms::aria_pressed,           ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_relevant,          ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_required,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_selected,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_setsize,           ATTR_BYPASSOBJ                 }, /* handled via groupPosition */
-  {&nsGkAtoms::aria_sort,                               ATTR_VALTOKEN },
-  {&nsGkAtoms::aria_valuenow,          ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_valuemin,          ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_valuemax,          ATTR_BYPASSOBJ                 },
-  {&nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                 }
+  {&nsGkAtoms::aria_activedescendant,  ATTR_BYPASSOBJ                               },
+  {&nsGkAtoms::aria_atomic,                             ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               }, /* exposes checkable obj attr */
+  {&nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_disabled,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_dropeffect,                         ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_expanded,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_flowto,            ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_grabbed,                            ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_haspopup,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_hidden,                             ATTR_VALTOKEN | ATTR_GLOBAL },/* always expose obj attr */
+  {&nsGkAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_label,             ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_labelledby,        ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_level,             ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
+  {&nsGkAtoms::aria_live,                               ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_multiline,         ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_multiselectable,   ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_owns,              ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_orientation,                        ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_posinset,          ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
+  {&nsGkAtoms::aria_pressed,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_relevant,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_required,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_selected,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_setsize,           ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
+  {&nsGkAtoms::aria_sort,                               ATTR_VALTOKEN               },
+  {&nsGkAtoms::aria_valuenow,          ATTR_BYPASSOBJ                               },
+  {&nsGkAtoms::aria_valuemin,          ATTR_BYPASSOBJ                               },
+  {&nsGkAtoms::aria_valuemax,          ATTR_BYPASSOBJ                               },
+  {&nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                               }
 };
 
 uint32_t
