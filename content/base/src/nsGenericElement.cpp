@@ -488,15 +488,14 @@ nsGenericElement::GetStyledFrame()
   return frame ? nsLayoutUtils::GetStyleFrame(frame) : nullptr;
 }
 
-void
-nsGenericElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
+nsGenericElement*
+nsGenericElement::GetOffsetRect(nsRect& aRect)
 {
-  *aOffsetParent = nullptr;
   aRect = nsRect();
 
   nsIFrame* frame = GetStyledFrame();
   if (!frame) {
-    return;
+    return nullptr;
   }
 
   nsPoint origin = frame->GetPosition();
@@ -511,6 +510,8 @@ nsGenericElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, parent);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
+
+  return nullptr;
 }
 
 nsIntSize

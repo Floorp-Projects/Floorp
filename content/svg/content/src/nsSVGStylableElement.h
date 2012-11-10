@@ -27,7 +27,7 @@ public:
   // nsIContent
   virtual const nsAttrValue* DoGetClasses() const;
 
-  nsIDOMCSSStyleDeclaration* GetStyle(nsresult* retval)
+  nsICSSDeclaration* GetStyle(nsresult* retval)
   {
     return nsSVGStylableElementBase::GetStyle(retval);
   }

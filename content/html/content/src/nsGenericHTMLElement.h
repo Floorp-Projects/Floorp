@@ -13,6 +13,8 @@
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/ErrorResult.h"
+#include "nsContentUtils.h"
+#include "nsIDOMHTMLMenuElement.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -21,6 +23,7 @@ class nsIFrame;
 class nsIStyleRule;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
+class nsHTMLMenuElement;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsIFormControlFrame;
@@ -35,6 +38,12 @@ class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
 class nsIDOMHTMLPropertiesCollection;
+class nsIDOMDOMStringMap;
+namespace mozilla {
+namespace dom {
+class HTMLPropertiesCollection;
+}
+}
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
@@ -69,7 +78,76 @@ public:
   // From nsGenericElement
   nsresult CopyInnerTo(nsGenericElement* aDest);
 
-  // WebIDL HTMLElement
+  void GetTitle(nsAString& aTitle) const
+  {
+    GetHTMLAttr(nsGkAtoms::title, aTitle);
+  }
+  void SetTitle(const nsAString& aTitle)
+  {
+    SetHTMLAttr(nsGkAtoms::title, aTitle);
+  }
+  void GetLang(nsAString& aLang) const
+  {
+    GetHTMLAttr(nsGkAtoms::lang, aLang);
+  }
+  void SetLang(const nsAString& aLang)
+  {
+    SetHTMLAttr(nsGkAtoms::lang, aLang);
+  }
+  void GetDir(nsAString& aDir) const
+  {
+    GetHTMLEnumAttr(nsGkAtoms::dir, aDir);
+  }
+  void SetDir(const nsAString& aDir, mozilla::ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::dir, aDir, aError);
+  }
+  already_AddRefed<nsDOMStringMap> Dataset();
+  bool ItemScope() const
+  {
+    return GetBoolAttr(nsGkAtoms::itemscope);
+  }
+  void SetItemScope(bool aItemScope, mozilla::ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::itemscope, aItemScope, aError);
+  }
+  nsDOMSettableTokenList* ItemType()
+  {
+    return GetTokenList(nsGkAtoms::itemtype);
+  }
+  void GetItemId(nsAString& aItemId) const
+  {
+    GetHTMLURIAttr(nsGkAtoms::itemid, aItemId);
+  }
+  void SetItemId(const nsAString& aItemID, mozilla::ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::itemid, aItemID, aError);
+  }
+  nsDOMSettableTokenList* ItemRef()
+  {
+    return GetTokenList(nsGkAtoms::itemref);
+  }
+  nsDOMSettableTokenList* ItemProp()
+  {
+    return GetTokenList(nsGkAtoms::itemprop);
+  }
+  mozilla::dom::HTMLPropertiesCollection* Properties();
+  JS::Value GetItemValue(JSContext* aCx, JSObject* aScope,
+                         mozilla::ErrorResult& aError);
+  JS::Value GetItemValue(JSContext* aCx, mozilla::ErrorResult& aError)
+  {
+    return GetItemValue(aCx, GetWrapperPreserveColor(), aError);
+  }
+  void SetItemValue(JSContext* aCx, JS::Value aValue,
+                    mozilla::ErrorResult& aError);
+  bool Hidden() const
+  {
+    return GetBoolAttr(nsGkAtoms::hidden);
+  }
+  void SetHidden(bool aHidden, mozilla::ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::hidden, aHidden, aError);
+  }
   virtual void Click();
   virtual int32_t TabIndexDefault()
   {
@@ -81,9 +159,19 @@ public:
   }
   void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError)
   {
-    aError = SetIntAttr(nsGkAtoms::tabindex, aTabIndex);
+    SetHTMLIntAttr(nsGkAtoms::tabindex, aTabIndex, aError);
   }
   virtual void Focus(mozilla::ErrorResult& aError);
+  void Blur(mozilla::ErrorResult& aError);
+  void GetAccessKey(nsAString& aAccessKey) const
+  {
+    GetHTMLAttr(nsGkAtoms::accesskey, aAccessKey);
+  }
+  void SetAccessKey(const nsAString& aAccessKey, mozilla::ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::accesskey, aAccessKey, aError);
+  }
+  void GetAccessKeyLabel(nsAString& aAccessKeyLabel);
   virtual bool Draggable() const
   {
     return AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
@@ -91,127 +179,139 @@ public:
   }
   void SetDraggable(bool aDraggable, mozilla::ErrorResult& aError)
   {
-    aError = SetAttrHelper(nsGkAtoms::draggable,
-                           aDraggable ? NS_LITERAL_STRING("true")
-                                      : NS_LITERAL_STRING("false"));
+    SetHTMLAttr(nsGkAtoms::draggable,
+                aDraggable ? NS_LITERAL_STRING("true")
+                           : NS_LITERAL_STRING("false"),
+                aError);
   }
-
+  void GetContentEditable(nsAString& aContentEditable) const
+  {
+    ContentEditableTristate value = GetContentEditableValue();
+    if (value == eTrue) {
+      aContentEditable.AssignLiteral("true");
+    } else if (value == eFalse) {
+      aContentEditable.AssignLiteral("false");
+    } else {
+      aContentEditable.AssignLiteral("inherit");
+    }
+  }
+  void SetContentEditable(const nsAString& aContentEditable,
+                          mozilla::ErrorResult& aError)
+  {
+    if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "inherit")) {
+      UnsetHTMLAttr(nsGkAtoms::contenteditable, aError);
+    } else if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "true")) {
+      SetHTMLAttr(nsGkAtoms::contenteditable, NS_LITERAL_STRING("true"), aError);
+    } else if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "false")) {
+      SetHTMLAttr(nsGkAtoms::contenteditable, NS_LITERAL_STRING("false"), aError);
+    } else {
+      aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    }
+  }
+  bool IsContentEditable()
+  {
+    for (nsIContent* node = this; node; node = node->GetParent()) {
+      nsGenericHTMLElement* element = FromContent(node);
+      if (element) {
+        ContentEditableTristate value = element->GetContentEditableValue();
+        if (value != eInherit) {
+          return value == eTrue;
+        }
+      }
+    }
+    return false;
+  }
+  nsHTMLMenuElement* GetContextMenu() const;
+  bool Spellcheck();
+  void SetSpellcheck(bool aSpellcheck, mozilla::ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::spellcheck,
+                aSpellcheck ? NS_LITERAL_STRING("true")
+                            : NS_LITERAL_STRING("false"),
+                aError);
+  }
+  nsICSSDeclaration* GetStyle(mozilla::ErrorResult& aError)
+  {
+    nsresult rv;
+    nsICSSDeclaration* style = nsMappedAttributeElement::GetStyle(&rv);
+    if (NS_FAILED(rv)) {
+      aError.Throw(rv);
+    }
+    return style;
+  }
+  void GetClassName(nsAString& aClassName)
+  {
+    GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
+  }
+  void SetClassName(const nsAString& aClassName)
+  {
+    SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName, true);
+  }
   virtual void GetInnerHTML(nsAString& aInnerHTML,
                             mozilla::ErrorResult& aError);
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
                             mozilla::ErrorResult& aError);
+  void GetOuterHTML(nsAString& aOuterHTML, mozilla::ErrorResult& aError);
+  void SetOuterHTML(const nsAString& aOuterHTML, mozilla::ErrorResult& aError);
+  void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
+                          mozilla::ErrorResult& aError);
+  nsGenericElement* GetOffsetParent()
+  {
+    nsRect rcFrame;
+    return GetOffsetRect(rcFrame);
+  }
+  int32_t OffsetTop()
+  {
+    nsRect rcFrame;
+    GetOffsetRect(rcFrame);
+
+    return rcFrame.y;
+  }
+  int32_t OffsetLeft()
+  {
+    nsRect rcFrame;
+    GetOffsetRect(rcFrame);
+
+    return rcFrame.x;
+  }
+  int32_t OffsetWidth()
+  {
+    nsRect rcFrame;
+    GetOffsetRect(rcFrame);
+
+    return rcFrame.width;
+  }
+  int32_t OffsetHeight()
+  {
+    nsRect rcFrame;
+    GetOffsetRect(rcFrame);
+
+    return rcFrame.height;
+  }
 
   // nsIDOMHTMLElement methods. Note that these are non-virtual
   // methods, implementations are expected to forward calls to these
   // methods.
-  nsresult GetId(nsAString& aId);
-  nsresult SetId(const nsAString& aId);
-  nsresult GetTitle(nsAString& aTitle);
-  nsresult SetTitle(const nsAString& aTitle);
-  nsresult GetLang(nsAString& aLang);
-  nsresult SetLang(const nsAString& aLang);
-  NS_IMETHOD GetDir(nsAString& aDir);
-  NS_IMETHOD SetDir(const nsAString& aDir);
-  nsresult GetClassName(nsAString& aClassName);
-  nsresult SetClassName(const nsAString& aClassName);
-
-  nsresult DOMClick()
-  {
-    Click();
-    return NS_OK;
-  }
-  nsresult GetTabIndex(int32_t* aTabIndex)
-  {
-    *aTabIndex = TabIndex();
-    return NS_OK;
-  }
-  nsresult SetTabIndex(int32_t aTabIndex)
-  {
-    mozilla::ErrorResult rv;
-    SetTabIndex(aTabIndex, rv);
-    return rv.ErrorCode();
-  }
-  nsresult DOMFocus() {
-    mozilla::ErrorResult rv;
-    Focus(rv);
-    return rv.ErrorCode();
-  }
-  nsresult GetDraggable(bool* aDraggable)
-  {
-    *aDraggable = Draggable();
-    return NS_OK;
-  }
-  nsresult SetDraggable(bool aDraggable)
-  {
-    mozilla::ErrorResult rv;
-    SetDraggable(aDraggable, rv);
-    return rv.ErrorCode();
-  }
-
-  nsresult GetDOMInnerHTML(nsAString& aInnerHTML)
-  {
-    mozilla::ErrorResult rv;
-    GetInnerHTML(aInnerHTML, rv);
-    return rv.ErrorCode();
-  }
-  nsresult SetDOMInnerHTML(const nsAString& aInnerHTML)
-  {
-    mozilla::ErrorResult rv;
-    SetInnerHTML(aInnerHTML, rv);
-    return rv.ErrorCode();
-  }
-
-  nsresult GetOffsetTop(int32_t* aOffsetTop);
-  nsresult GetOffsetLeft(int32_t* aOffsetLeft);
-  nsresult GetOffsetWidth(int32_t* aOffsetWidth);
-  nsresult GetOffsetHeight(int32_t* aOffsetHeight);
-  nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
-  NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML);
-  NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML);
   NS_IMETHOD InsertAdjacentHTML(const nsAString& aPosition,
                                 const nsAString& aText);
-  nsresult ScrollIntoView(bool aTop, uint8_t optional_argc);
-  // Declare Blur(), GetHidden(), SetHidden(), GetSpellcheck(), and
-  // SetSpellcheck() such that classes that inherit interfaces with those
-  // methods properly override them.
-  NS_IMETHOD Blur();
-  NS_IMETHOD GetHidden(bool* aHidden);
-  NS_IMETHOD SetHidden(bool aHidden);
-  NS_IMETHOD GetSpellcheck(bool* aSpellcheck);
-  NS_IMETHOD SetSpellcheck(bool aSpellcheck);
-  NS_IMETHOD GetItemScope(bool* aItemScope);
-  NS_IMETHOD SetItemScope(bool aItemScope);
   NS_IMETHOD GetItemValue(nsIVariant** aValue);
-  JS::Value GetItemValue(JSContext* aCx, JSObject* aScope,
-                         mozilla::ErrorResult& error);
   NS_IMETHOD SetItemValue(nsIVariant* aValue);
 protected:
+  void GetProperties(nsIDOMHTMLPropertiesCollection** aProperties);
+  void GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu) const;
+
   // These methods are used to implement element-specific behavior of Get/SetItemValue
   // when an element has @itemprop but no @itemscope.
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
   nsDOMSettableTokenList* GetTokenList(nsIAtom* aAtom);
+  void GetTokenList(nsIAtom* aAtom, nsIVariant** aResult);
+  nsresult SetTokenList(nsIAtom* aAtom, nsIVariant* aValue);
 public:
-  NS_IMETHOD GetItemType(nsIVariant** aType);
-  NS_IMETHOD SetItemType(nsIVariant* aType);
-  NS_IMETHOD GetItemId(nsAString& aId);
-  NS_IMETHOD SetItemId(const nsAString& aId);
-  NS_IMETHOD GetItemRef(nsIVariant** aRef);
-  NS_IMETHOD SetItemRef(nsIVariant* aValue);
-  NS_IMETHOD GetItemProp(nsIVariant** aProp);
-  NS_IMETHOD SetItemProp(nsIVariant* aValue);
-  NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn);
-  NS_IMETHOD GetAccessKey(nsAString &aAccessKey);
-  NS_IMETHOD SetAccessKey(const nsAString& aAccessKey);
-  NS_IMETHOD GetAccessKeyLabel(nsAString& aLabel);
-  nsresult GetContentEditable(nsAString& aContentEditable);
-  nsresult GetIsContentEditable(bool* aContentEditable);
   nsresult SetContentEditable(const nsAString &aContentEditable);
   nsresult GetDataset(nsISupports** aDataset);
-  already_AddRefed<nsDOMStringMap> Dataset();
   // Callback for destructor of of dataset to ensure to null out weak pointer.
   nsresult ClearDataset();
-  nsresult GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu);
 
   /**
    * Get width and height, using given image request if attributes are unset.
@@ -591,7 +691,7 @@ public:
    * @param aBaseAttr  name of base attribute.
    * @param aResult    result value [out]
    */
-  NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult);
+  NS_HIDDEN_(void) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult) const;
 
   /**
    * Gets the absolute URI values of an attribute, by resolving any relative
@@ -684,6 +784,47 @@ protected:
     GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer);
 
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
+
+  void GetHTMLAttr(nsIAtom* aName, nsAString& aResult) const
+  {
+    GetAttr(kNameSpaceID_None, aName, aResult);
+  }
+  void GetHTMLEnumAttr(nsIAtom* aName, nsAString& aResult) const
+  {
+    GetEnumAttr(aName, nullptr, aResult);
+  }
+  void GetHTMLURIAttr(nsIAtom* aName, nsAString& aResult) const
+  {
+    GetURIAttr(aName, nullptr, aResult);
+  }
+
+  void SetHTMLAttr(nsIAtom* aName, const nsAString& aValue)
+  {
+    SetAttr(kNameSpaceID_None, aName, aValue, true);
+  }
+  void SetHTMLAttr(nsIAtom* aName, const nsAString& aValue, mozilla::ErrorResult& aError)
+  {
+    aError = SetAttr(kNameSpaceID_None, aName, aValue, true);
+  }
+  void UnsetHTMLAttr(nsIAtom* aName, mozilla::ErrorResult& aError)
+  {
+    aError = UnsetAttr(kNameSpaceID_None, aName, true);
+  }
+  void SetHTMLBoolAttr(nsIAtom* aName, bool aValue, mozilla::ErrorResult& aError)
+  {
+    if (aValue) {
+      SetHTMLAttr(aName, EmptyString(), aError);
+    } else {
+      UnsetHTMLAttr(aName, aError);
+    }
+  }
+  void SetHTMLIntAttr(nsIAtom* aName, int32_t aValue, mozilla::ErrorResult& aError)
+  {
+    nsAutoString value;
+    value.AppendInt(aValue);
+
+    SetHTMLAttr(aName, value, aError);
+  }
 
   /**
    * Helper method for NS_IMPL_STRING_ATTR macro.
@@ -795,9 +936,9 @@ protected:
    * @param aDefault  the default value if the attribute is missing or invalid.
    * @param aResult   string corresponding to the value [out].
    */
-  NS_HIDDEN_(nsresult) GetEnumAttr(nsIAtom* aAttr,
-                                   const char* aDefault,
-                                   nsAString& aResult);
+  NS_HIDDEN_(void) GetEnumAttr(nsIAtom* aAttr,
+                               const char* aDefault,
+                               nsAString& aResult) const;
 
   /**
    * Locates the nsIEditor associated with this node.  In general this is
@@ -811,12 +952,11 @@ protected:
 
   /**
    * Get the frame's offset information for offsetTop/Left/Width/Height.
+   * Returns the parent the offset is relative to.
    * @note This method flushes pending notifications (Flush_Layout).
    * @param aRect the offset information [OUT]
-   * @param aOffsetParent the parent the offset is relative to (offsetParent)
-   *        [OUT]
    */
-  virtual void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
+  virtual nsGenericElement* GetOffsetRect(nsRect& aRect);
 
   /**
    * Returns true if this is the current document's body element
@@ -1170,7 +1310,8 @@ protected:
   NS_IMETHODIMP                                                     \
   _class::Get##_method(nsAString& aValue)                           \
   {                                                                 \
-    return GetURIAttr(nsGkAtoms::_atom, nullptr, aValue);          \
+    GetURIAttr(nsGkAtoms::_atom, nullptr, aValue);                  \
+    return NS_OK;                                                   \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
@@ -1182,7 +1323,8 @@ protected:
   NS_IMETHODIMP                                                              \
   _class::Get##_method(nsAString& aValue)                                    \
   {                                                                          \
-    return GetURIAttr(nsGkAtoms::_atom, nsGkAtoms::_base_atom, aValue);  \
+    GetURIAttr(nsGkAtoms::_atom, nsGkAtoms::_base_atom, aValue);             \
+    return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP                                                              \
   _class::Set##_method(const nsAString& aValue)                              \
@@ -1200,10 +1342,10 @@ protected:
   _class::Get##_method(nsAString& aValue)                           \
   {                                                                 \
     GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue);           \
-    if (aValue.IsEmpty()) {                                         \
-      return NS_OK;                                                 \
+    if (!aValue.IsEmpty()) {                                        \
+      GetURIAttr(nsGkAtoms::_atom, nullptr, aValue);                 \
     }                                                               \
-    return GetURIAttr(nsGkAtoms::_atom, nullptr, aValue);            \
+    return NS_OK;                                                   \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
@@ -1246,7 +1388,8 @@ protected:
   NS_IMETHODIMP                                                           \
   _class::Get##_method(nsAString& aValue)                                 \
   {                                                                       \
-    return GetEnumAttr(nsGkAtoms::_atom, _default, aValue);               \
+    GetEnumAttr(nsGkAtoms::_atom, _default, aValue);                      \
+    return NS_OK;                                                         \
   }                                                                       \
   NS_IMETHODIMP                                                           \
   _class::Set##_method(const nsAString& aValue)                           \
@@ -1408,6 +1551,241 @@ protected:
     NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
     NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
   NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC                                \
+  NS_IMETHOD GetId(nsAString& aId) MOZ_FINAL {                                 \
+    nsGenericElement::GetId(aId);                                              \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetId(const nsAString& aId) MOZ_FINAL {                           \
+    nsGenericElement::SetId(aId);                                              \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetTitle(nsAString& aTitle) MOZ_FINAL {                           \
+    nsGenericHTMLElement::GetTitle(aTitle);                                    \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetTitle(const nsAString& aTitle) MOZ_FINAL {                     \
+    nsGenericHTMLElement::SetTitle(aTitle);                                    \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetLang(nsAString& aLang) MOZ_FINAL {                             \
+    nsGenericHTMLElement::GetLang(aLang);                                      \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetLang(const nsAString& aLang) MOZ_FINAL {                       \
+    nsGenericHTMLElement::SetLang(aLang);                                      \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetDir(nsAString& aDir) MOZ_FINAL {                               \
+    nsGenericHTMLElement::GetDir(aDir);                                        \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetDir(const nsAString& aDir) MOZ_FINAL {                         \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetDir(aDir, rv);                                    \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetClassName(nsAString& aClassName) MOZ_FINAL {                   \
+    nsGenericHTMLElement::GetClassName(aClassName);                            \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetClassName(const nsAString& aClassName) MOZ_FINAL {             \
+    nsGenericHTMLElement::SetClassName(aClassName);                            \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetDataset(nsISupports** aDataset) MOZ_FINAL {                    \
+    return nsGenericHTMLElement::GetDataset(aDataset);                         \
+  }                                                                            \
+  NS_IMETHOD GetHidden(bool* aHidden) MOZ_FINAL {                              \
+    *aHidden = nsGenericHTMLElement::Hidden();                                 \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetHidden(bool aHidden) MOZ_FINAL {                               \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetHidden(aHidden, rv);                              \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD DOMBlur() MOZ_FINAL {                                             \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::Blur(rv);                                            \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetItemScope(bool* aItemScope) MOZ_FINAL {                        \
+    *aItemScope = nsGenericHTMLElement::ItemScope();                           \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetItemScope(bool aItemScope) MOZ_FINAL {                         \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetItemScope(aItemScope, rv);                        \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetItemType(nsIVariant** aType) MOZ_FINAL {                       \
+    GetTokenList(nsGkAtoms::itemtype, aType);                                  \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetItemType(nsIVariant* aType) MOZ_FINAL {                        \
+    return nsGenericHTMLElement::SetTokenList(nsGkAtoms::itemtype, aType);     \
+  }                                                                            \
+  NS_IMETHOD GetItemId(nsAString& aId) MOZ_FINAL {                             \
+    nsGenericHTMLElement::GetItemId(aId);                                      \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetItemId(const nsAString& aId) MOZ_FINAL {                       \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetItemId(aId, rv);                                  \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn)           \
+      MOZ_FINAL {                                                              \
+    nsGenericHTMLElement::GetProperties(aReturn);                              \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetItemValue(nsIVariant** aValue) MOZ_FINAL {                     \
+    return nsGenericHTMLElement::GetItemValue(aValue);                         \
+  }                                                                            \
+  NS_IMETHOD SetItemValue(nsIVariant* aValue) MOZ_FINAL {                      \
+    return nsGenericHTMLElement::SetItemValue(aValue);                         \
+  }                                                                            \
+  NS_IMETHOD GetItemRef(nsIVariant** aRef) MOZ_FINAL {                         \
+    GetTokenList(nsGkAtoms::itemref, aRef);                                    \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetItemRef(nsIVariant* aRef) MOZ_FINAL {                          \
+    return nsGenericHTMLElement::SetTokenList(nsGkAtoms::itemref, aRef);       \
+  }                                                                            \
+  NS_IMETHOD GetItemProp(nsIVariant** aProp) MOZ_FINAL {                       \
+    GetTokenList(nsGkAtoms::itemprop, aProp);                                  \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetItemProp(nsIVariant* aProp) MOZ_FINAL {                        \
+    return nsGenericHTMLElement::SetTokenList(nsGkAtoms::itemprop, aProp);     \
+  }                                                                            \
+  NS_IMETHOD GetAccessKey(nsAString& aAccessKey) MOZ_FINAL {                   \
+    nsGenericHTMLElement::GetAccessKey(aAccessKey);                            \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetAccessKey(const nsAString& aAccessKey) MOZ_FINAL {             \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetAccessKey(aAccessKey, rv);                        \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetAccessKeyLabel(nsAString& aAccessKeyLabel) MOZ_FINAL {         \
+    nsGenericHTMLElement::GetAccessKeyLabel(aAccessKeyLabel);                  \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetDraggable(bool aDraggable) MOZ_FINAL {                         \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetDraggable(aDraggable, rv);                        \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetContentEditable(nsAString& aContentEditable) MOZ_FINAL {       \
+    nsGenericHTMLElement::GetContentEditable(aContentEditable);                \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetContentEditable(const nsAString& aContentEditable) MOZ_FINAL { \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetContentEditable(aContentEditable, rv);            \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetIsContentEditable(bool* aIsContentEditable) MOZ_FINAL {        \
+    *aIsContentEditable = nsGenericHTMLElement::IsContentEditable();           \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu) MOZ_FINAL {  \
+    nsGenericHTMLElement::GetContextMenu(aContextMenu);                        \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetSpellcheck(bool* aSpellcheck) MOZ_FINAL {                      \
+    *aSpellcheck = nsGenericHTMLElement::Spellcheck();                         \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD SetSpellcheck(bool aSpellcheck) MOZ_FINAL {                       \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetSpellcheck(aSpellcheck, rv);                      \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML) MOZ_FINAL {                   \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::GetOuterHTML(aOuterHTML, rv);                        \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML) MOZ_FINAL {             \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetOuterHTML(aOuterHTML, rv);                        \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD InsertAdjacentHTML(const nsAString& position,                     \
+                                const nsAString& text) MOZ_FINAL {             \
+    return nsGenericHTMLElement::InsertAdjacentHTML(position, text);           \
+  }                                                                            \
+  NS_IMETHOD ScrollIntoView(bool top, uint8_t _argc) MOZ_FINAL {               \
+    if (!_argc) {                                                              \
+      top = true;                                                              \
+    }                                                                          \
+    nsGenericElement::ScrollIntoView(top);                                     \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) MOZ_FINAL {        \
+    nsGenericElement* offsetParent = nsGenericHTMLElement::GetOffsetParent();  \
+    if (!offsetParent) {                                                       \
+      *aOffsetParent = nullptr;                                                \
+      return NS_OK;                                                            \
+    }                                                                          \
+    return CallQueryInterface(offsetParent, aOffsetParent);                    \
+  }                                                                            \
+  NS_IMETHOD GetOffsetTop(int32_t* aOffsetTop) MOZ_FINAL {                     \
+    *aOffsetTop = nsGenericHTMLElement::OffsetTop();                           \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetOffsetLeft(int32_t* aOffsetLeft) MOZ_FINAL {                   \
+    *aOffsetLeft = nsGenericHTMLElement::OffsetLeft();                         \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetOffsetWidth(int32_t* aOffsetWidth) MOZ_FINAL {                 \
+    *aOffsetWidth = nsGenericHTMLElement::OffsetWidth();                       \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetOffsetHeight(int32_t* aOffsetHeight) MOZ_FINAL {               \
+    *aOffsetHeight = nsGenericHTMLElement::OffsetHeight();                     \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD DOMClick() MOZ_FINAL {                                            \
+    Click();                                                                   \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) MOZ_FINAL {                       \
+    *aTabIndex = TabIndex();                                                   \
+    return NS_OK;                                                              \
+  }                                                                            \
+  using nsGenericHTMLElement::SetTabIndex;                                     \
+  NS_IMETHOD SetTabIndex(int32_t aTabIndex) MOZ_FINAL {                        \
+    mozilla::ErrorResult rv;                                                   \
+    nsGenericHTMLElement::SetTabIndex(aTabIndex, rv);                          \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  using nsGenericHTMLElement::Focus;                                           \
+  NS_IMETHOD Focus() MOZ_FINAL {                                               \
+    mozilla::ErrorResult rv;                                                   \
+    Focus(rv);                                                                 \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  NS_IMETHOD GetDraggable(bool* aDraggable) MOZ_FINAL {                        \
+    *aDraggable = Draggable();                                                 \
+    return NS_OK;                                                              \
+  }                                                                            \
+  using nsGenericHTMLElement::GetInnerHTML;                                    \
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) MOZ_FINAL {                   \
+    mozilla::ErrorResult rv;                                                   \
+    GetInnerHTML(aInnerHTML, rv);                                              \
+    return rv.ErrorCode();                                                     \
+  }                                                                            \
+  using nsGenericHTMLElement::SetInnerHTML;                                    \
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) MOZ_FINAL {             \
+    mozilla::ErrorResult rv;                                                   \
+    SetInnerHTML(aInnerHTML, rv);                                              \
+    return rv.ErrorCode();                                                     \
+  }
 
 /**
  * A macro to declare the NS_NewHTMLXXXElement() functions.

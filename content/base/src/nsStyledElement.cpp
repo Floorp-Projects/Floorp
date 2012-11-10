@@ -191,7 +191,7 @@ nsStyledElementNotElementCSSInlineStyle::GetInlineStyleRule()
 // ---------------------------------------------------------------
 // Others and helpers
 
-nsIDOMCSSStyleDeclaration*
+nsICSSDeclaration*
 nsStyledElementNotElementCSSInlineStyle::GetStyle(nsresult* retval)
 {
   nsGenericElement::nsDOMSlots *slots = DOMSlots();
