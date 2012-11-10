@@ -16,22 +16,21 @@ using mozilla::void_t;
 namespace mozilla {
 namespace jsipc {
 
-using namespace IPC;
 
 template <typename P>
 struct CPOWSingleton
 {
-    static void Write(Message*, const P&) {}
-    static bool Read(const Message*, void**, P*) { return true; }
+    static void Write(IPC::Message*, const P&) {}
+    static bool Read(const IPC::Message*, void**, P*) { return true; }
 };
 
 template <typename Type, typename As>
 struct CPOWConvertible
 {
-    static void Write(Message* m, const Type& t) {
+    static void Write(IPC::Message* m, const Type& t) {
         WriteParam(m, As(t));
     }
-    static bool Read(const Message* m, void** iter, Type* tp) {
+    static bool Read(const IPC::Message* m, void** iter, Type* tp) {
         As a;
         return (ReadParam(m, iter, &a) &&
                 (*tp = Type(a), true));
@@ -43,9 +42,8 @@ struct CPOWConvertible
 
 namespace IPC {
 
-using namespace mozilla::jsipc;
 
-template <> struct ParamTraits<JSType> : public CPOWConvertible<JSType, int> {};
+template <> struct ParamTraits<JSType> : public mozilla::jsipc::CPOWConvertible<JSType, int> {};
 
 }
 
