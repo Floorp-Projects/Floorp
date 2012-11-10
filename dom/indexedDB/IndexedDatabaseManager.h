@@ -30,6 +30,13 @@ class nsITimer;
 class nsPIDOMWindow;
 class nsEventChainPostVisitor;
 
+namespace mozilla {
+namespace dom {
+class TabContext;
+}
+}
+
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
@@ -204,13 +211,8 @@ public:
                     nsEventChainPostVisitor& aVisitor);
 
   static bool
-  OriginMatchesApp(const nsACString& aOrigin,
-                   uint32_t aAppId);
-
-  static bool
-  OriginMatchesApp(const nsACString& aOrigin,
-                   uint32_t aAppId,
-                   bool aInMozBrowser);
+  TabContextMayAccessOrigin(const TabContext& aContext,
+                            const nsACString& aOrigin);
 
 private:
   IndexedDatabaseManager();

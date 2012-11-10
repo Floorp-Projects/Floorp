@@ -895,17 +895,15 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
 
   // XXXbent Need to make sure we have a whitelist for chrome databases!
 
-  // Verify the appID in the origin first.
-  if (mOwnOrContainingApp && !aASCIIOrigin.EqualsLiteral("chrome")) {
-    uint32_t appId;
-    rv = mOwnOrContainingApp->GetLocalId(&appId);
-    NS_ENSURE_SUCCESS(rv, false);
+  // Verify that the child is requesting to access a database it's allowed to
+  // see.  (aASCIIOrigin here specifies a TabContext + a website origin, and
+  // we're checking that the TabContext may access it.)
+  if (!aASCIIOrigin.EqualsLiteral("chrome") &&
+      !IndexedDatabaseManager::TabContextMayAccessOrigin(*this, aASCIIOrigin)) {
 
-    if (!IndexedDatabaseManager::OriginMatchesApp(aASCIIOrigin, appId)) {
-      NS_WARNING("App attempted to open databases that it does not have "
-                 "permission to access!");
-      return false;
-    }
+    NS_WARNING("App attempted to open databases that it does not have "
+               "permission to access!");
+    return false;
   }
 
   nsCOMPtr<nsINode> node = do_QueryInterface(GetOwnerElement());
