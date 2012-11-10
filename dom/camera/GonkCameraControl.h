@@ -26,7 +26,6 @@
 #include "CameraCommon.h"
 #include "GonkRecorder.h"
 
-using namespace android;
 
 namespace mozilla {
 

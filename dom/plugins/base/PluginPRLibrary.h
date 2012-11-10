@@ -109,7 +109,7 @@ public:
     virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
 
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
-    virtual nsresult GetImageContainer(NPP instance, ImageContainer** aContainer);
+    virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
     virtual bool IsOOP() MOZ_OVERRIDE { return false; }
 #if defined(XP_MACOSX)
