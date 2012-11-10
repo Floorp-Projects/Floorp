@@ -94,7 +94,6 @@ using namespace mozilla::dom;
 #endif
 
 using namespace mozilla;
-using namespace mozilla::layers;
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the

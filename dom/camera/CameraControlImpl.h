@@ -16,6 +16,7 @@
 
 namespace mozilla {
 
+using namespace dom;
 
 class GetPreviewStreamTask;
 class StartPreviewTask;
@@ -47,14 +48,14 @@ class CameraControlImpl : public ICameraControl
 public:
   CameraControlImpl(uint32_t aCameraId, nsIThread* aCameraThread, uint64_t aWindowId);
 
-  nsresult GetPreviewStream(dom::CameraSize aSize, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsresult GetPreviewStream(CameraSize aSize, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult StartPreview(DOMCameraPreview* aDOMPreview);
   void StopPreview();
   nsresult AutoFocus(nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError);
-  nsresult TakePicture(dom::CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, dom::CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError);
-  nsresult StartRecording(dom::CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsresult TakePicture(CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsresult StartRecording(CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult StopRecording();
-  nsresult GetPreviewStreamVideoMode(dom::CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsresult GetPreviewStreamVideoMode(CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError);
 
   nsresult Set(uint32_t aKey, const nsAString& aValue);
   nsresult Get(uint32_t aKey, nsAString& aValue);
@@ -85,12 +86,12 @@ public:
   virtual const char* GetParameter(const char* aKey) = 0;
   virtual const char* GetParameterConstChar(uint32_t aKey) = 0;
   virtual double GetParameterDouble(uint32_t aKey) = 0;
-  virtual void GetParameter(uint32_t aKey, nsTArray<dom::CameraRegion>& aRegions) = 0;
+  virtual void GetParameter(uint32_t aKey, nsTArray<CameraRegion>& aRegions) = 0;
   virtual void SetParameter(const char* aKey, const char* aValue) = 0;
   virtual void SetParameter(uint32_t aKey, const char* aValue) = 0;
   virtual void SetParameter(uint32_t aKey, double aValue) = 0;
-  virtual void SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions) = 0;
-  virtual nsresult GetVideoSizes(nsTArray<dom::CameraSize>& aVideoSizes) = 0;
+  virtual void SetParameter(uint32_t aKey, const nsTArray<CameraRegion>& aRegions) = 0;
+  virtual nsresult GetVideoSizes(nsTArray<CameraSize>& aVideoSizes) = 0;
   virtual nsresult PushParameters() = 0;
   virtual void Shutdown();
 
@@ -216,7 +217,7 @@ protected:
 class GetPreviewStreamTask : public nsRunnable
 {
 public:
-  GetPreviewStreamTask(CameraControlImpl* aCameraControl, dom::CameraSize aSize, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
+  GetPreviewStreamTask(CameraControlImpl* aCameraControl, CameraSize aSize, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
     : mSize(aSize)
     , mCameraControl(aCameraControl)
     , mOnSuccessCb(onSuccess)
@@ -241,7 +242,7 @@ public:
     return rv;
   }
 
-  dom::CameraSize mSize;
+  CameraSize mSize;
   nsRefPtr<CameraControlImpl> mCameraControl;
   nsCOMPtr<nsICameraPreviewStreamCallback> mOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
@@ -349,7 +350,7 @@ protected:
 class TakePictureTask : public nsRunnable
 {
 public:
-  TakePictureTask(CameraControlImpl* aCameraControl, dom::CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, dom::CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
+  TakePictureTask(CameraControlImpl* aCameraControl, CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
     , mSize(aSize)
     , mRotation(aRotation)
@@ -380,10 +381,10 @@ public:
   }
 
   nsRefPtr<CameraControlImpl> mCameraControl;
-  dom::CameraSize mSize;
+  CameraSize mSize;
   int32_t mRotation;
   nsString mFileFormat;
-  dom::CameraPosition mPosition;
+  CameraPosition mPosition;
   nsCOMPtr<nsICameraTakePictureCallback> mOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };
@@ -418,7 +419,7 @@ protected:
 class StartRecordingTask : public nsRunnable
 {
 public:
-  StartRecordingTask(CameraControlImpl* aCameraControl, dom::CameraStartRecordingOptions aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
+  StartRecordingTask(CameraControlImpl* aCameraControl, CameraStartRecordingOptions aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
     : mCameraControl(aCameraControl)
     , mOptions(aOptions)
     , mFolder(aFolder)
@@ -456,7 +457,7 @@ public:
   }
 
   nsRefPtr<CameraControlImpl> mCameraControl;
-  dom::CameraStartRecordingOptions mOptions;
+  CameraStartRecordingOptions mOptions;
   nsCOMPtr<nsIFile> mFolder;
   nsString mFilename;
   nsCOMPtr<nsICameraStartRecordingCallback> mOnSuccessCb;
@@ -584,7 +585,7 @@ protected:
 class GetPreviewStreamVideoModeTask : public nsRunnable
 {
 public:
-  GetPreviewStreamVideoModeTask(CameraControlImpl* aCameraControl, dom::CameraRecorderOptions aOptions,  nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
+  GetPreviewStreamVideoModeTask(CameraControlImpl* aCameraControl, CameraRecorderOptions aOptions,  nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
     , mOptions(aOptions)
     , mOnSuccessCb(onSuccess)
@@ -605,7 +606,7 @@ public:
   }
 
   nsRefPtr<CameraControlImpl> mCameraControl;
-  dom::CameraRecorderOptions mOptions;
+  CameraRecorderOptions mOptions;
   nsCOMPtr<nsICameraPreviewStreamCallback> mOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };

@@ -16,6 +16,8 @@
 
 namespace mozilla {
 
+using namespace mozilla;
+using namespace dom;
 
 // Main camera control.
 class nsDOMCameraControl : public nsICameraControl

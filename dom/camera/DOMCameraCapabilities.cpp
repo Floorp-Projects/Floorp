@@ -13,7 +13,6 @@
 #include "CameraCommon.h"
 
 using namespace mozilla;
-using namespace mozilla::dom;
 
 DOMCI_DATA(CameraCapabilities, nsICameraCapabilities)
 

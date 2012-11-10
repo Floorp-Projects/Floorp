@@ -29,6 +29,7 @@ class ImageContainer;
 }
 }
 
+using namespace mozilla::layers;
 
 namespace mozilla {
 
@@ -67,7 +68,7 @@ public:
   virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& aResult) = 0;
 
   virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window) = 0;
-  virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer) = 0;
+  virtual nsresult GetImageContainer(NPP instance, ImageContainer** aContainer) = 0;
   virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize) = 0;
   virtual bool IsOOP() = 0;
 #if defined(XP_MACOSX)

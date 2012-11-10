@@ -83,7 +83,7 @@ public:
   bool ShouldCache();
   nsresult IsWindowless(bool* isWindowless);
   nsresult AsyncSetWindow(NPWindow* window);
-  nsresult GetImageContainer(mozilla::layers::ImageContainer **aContainer);
+  nsresult GetImageContainer(ImageContainer **aContainer);
   nsresult GetImageSize(nsIntSize* aSize);
   nsresult NotifyPainted(void);
   nsresult GetIsOOP(bool* aIsOOP);
