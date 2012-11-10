@@ -89,6 +89,14 @@ public:
     RST_FRAME_TOO_LARGE = 11
   };
 
+  enum goawayReason
+  {
+    OK = 0,
+    PROTOCOL_ERROR = 1,
+    INTERNAL_ERROR = 2,    // sometimes misdocumented as 11
+    NUM_STATUS_CODES = 3   // reserved by chromium but undocumented
+  };
+
   enum
   {
     SETTINGS_TYPE_UPLOAD_BW = 1, // kb/s
@@ -179,7 +187,7 @@ private:
   void        zlibInit();
   void        GeneratePing(uint32_t);
   void        GenerateRstStream(uint32_t, uint32_t);
-  void        GenerateGoAway();
+  void        GenerateGoAway(uint32_t);
   void        CleanupStream(SpdyStream3 *, nsresult, rstReason);
   void        CloseStream(SpdyStream3 *, nsresult);
   void        GenerateSettings();
