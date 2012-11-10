@@ -744,8 +744,7 @@ Accessible::NativeInteractiveState() const
 uint64_t
 Accessible::NativeLinkState() const
 {
-  // Expose linked state for simple xlink.
-  return nsCoreUtils::IsXLink(mContent) ? states::LINKED : 0;
+  return 0;
 }
 
 bool
@@ -1614,13 +1613,6 @@ Accessible::Value(nsString& aValue)
                         aValue);
     }
   }
-
-  if (!aValue.IsEmpty())
-    return;
-
-  // Check if it's a simple xlink.
-  if (nsCoreUtils::IsXLink(mContent))
-    nsContentUtils::GetLinkLocation(mContent->AsElement(), aValue);
 }
 
 // nsIAccessibleValue
@@ -1749,7 +1741,7 @@ Accessible::ARIATransformRole(role aRole)
 role
 Accessible::NativeRole()
 {
-  return nsCoreUtils::IsXLink(mContent) ? roles::LINK : roles::NOTHING;
+  return roles::NOTHING;
 }
 
 // readonly attribute uint8_t actionCount
@@ -2706,24 +2698,6 @@ already_AddRefed<nsIURI>
 Accessible::AnchorURIAt(uint32_t aAnchorIndex)
 {
   NS_PRECONDITION(IsLink(), "AnchorURIAt is called on not hyper link!");
-
-  if (aAnchorIndex != 0)
-    return nullptr;
-
-  // Check if it's a simple xlink.
-  if (nsCoreUtils::IsXLink(mContent)) {
-    nsAutoString href;
-    mContent->GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, href);
-
-    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-    nsCOMPtr<nsIDocument> document = mContent->OwnerDoc();
-    nsIURI* anchorURI = nullptr;
-    NS_NewURI(&anchorURI, href,
-              document ? document->GetDocumentCharacterSet().get() : nullptr,
-              baseURI);
-    return anchorURI;
-  }
-
   return nullptr;
 }
 
@@ -3093,10 +3067,6 @@ Accessible::GetActionRule()
 {
   if (!HasOwnContent() || (InteractiveState() & states::UNAVAILABLE))
     return eNoAction;
-
-  // Check if it's simple xlink.
-  if (nsCoreUtils::IsXLink(mContent))
-    return eJumpAction;
 
   // Return "click" action on elements that have an attached popup menu.
   if (mContent->IsXUL())

@@ -930,7 +930,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       (frame->IsFocusable() ||
        (isHTML && nsCoreUtils::HasClickListener(content)) ||
        HasUniversalAriaProperty(content) || roleMapEntry ||
-       HasRelatedContent(content) || nsCoreUtils::IsXLink(content))) {
+       HasRelatedContent(content))) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.
