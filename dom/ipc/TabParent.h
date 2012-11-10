@@ -12,6 +12,7 @@
 #include "jsapi.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
+#include "mozilla/dom/TabContext.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
@@ -50,11 +51,12 @@ class TabParent : public PBrowserParent
                 , public nsITabParent 
                 , public nsIAuthPromptProvider
                 , public nsISecureBrowserUI
+                , public TabContext
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
-    TabParent(mozIApplication* aApp, bool aIsBrowserElement);
+    TabParent(const TabContext& aContext);
     virtual ~TabParent();
     nsIDOMElement* GetOwnerElement() { return mFrameElement; }
     void SetOwnerElement(nsIDOMElement* aElement);
@@ -62,9 +64,6 @@ public:
     void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
- 
-    mozIApplication* GetApp() { return mApp; }
-    bool IsBrowserElement() { return mIsBrowserElement; }
 
     /**
      * Return the TabParent that has decided it wants to capture an
@@ -262,7 +261,6 @@ protected:
                                                   uint64_t* aLayersId) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 
-    nsCOMPtr<mozIApplication> mApp;
     // IME
     static TabParent *mIMETabParent;
     nsString mIMECacheText;
@@ -281,7 +279,6 @@ protected:
 
     nsIntSize mDimensions;
     float mDPI;
-    bool mIsBrowserElement;
     bool mShown;
 
 private:
@@ -289,9 +286,7 @@ private:
     already_AddRefed<nsIWidget> GetWidget() const;
     layout::RenderFrameParent* GetRenderFrame();
     void TryCacheDPI();
-    // Return true iff this TabParent was created for a mozbrowser
-    // frame.
-    bool IsForMozBrowser();
+
     // When true, we create a pan/zoom controller for our frame and
     // notify it of input events targeting us.
     bool UseAsyncPanZoom();

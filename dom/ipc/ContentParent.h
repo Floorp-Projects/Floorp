@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
+#include "mozilla/dom/TabContext.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/Attributes.h"
@@ -74,15 +75,9 @@ public:
     static ContentParent* GetNewOrUsed(bool aForBrowserElement = false);
 
     /**
-     * Get or create a content process for the given app descriptor,
-     * which may be null.  This function will assign processes to app
-     * or non-app browsers by internal heuristics.
-     *
-     * Currently apps are given their own process, and browser tabs
-     * share processes.
+     * Get or create a content process for the given TabContext.
      */
-    static TabParent* CreateBrowser(mozIApplication* aApp,
-                                    bool aIsBrowserFrame);
+    static TabParent* CreateBrowserOrApp(const TabContext& aContext);
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -189,9 +184,8 @@ private:
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline) MOZ_OVERRIDE;
 
-    virtual PBrowserParent* AllocPBrowser(const uint32_t& aChromeFlags,
-                                          const bool& aIsBrowserElement,
-                                          const AppId& aApp);
+    virtual PBrowserParent* AllocPBrowser(const IPCTabContext& aContext,
+                                          const uint32_t& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
     virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequest(const DeviceStorageParams&);
