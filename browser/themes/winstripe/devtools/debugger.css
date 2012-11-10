@@ -144,6 +144,7 @@
 
 #stackframes {
   background-color: white;
+  min-height: 30px;
 }
 
 .dbg-stackframe {
@@ -162,6 +163,12 @@
 
 #breakpoints {
   background-color: white;
+  min-height: 30px;
+}
+
+#breakpoints > vbox:not(:empty) {
+  min-height: 30px;
+  max-height: 200px;
 }
 
 .dbg-breakpoint-info {
