@@ -159,6 +159,9 @@ public:
 
 IndexedDBChild::IndexedDBChild(const nsCString& aASCIIOrigin)
 : mFactory(nullptr), mASCIIOrigin(aASCIIOrigin)
+#ifdef DEBUG
+  , mDisconnected(false)
+#endif
 {
   MOZ_COUNT_CTOR(IndexedDBChild);
 }
@@ -177,6 +180,21 @@ IndexedDBChild::SetFactory(IDBFactory* aFactory)
 
   aFactory->SetActor(this);
   mFactory = aFactory;
+}
+
+void
+IndexedDBChild::Disconnect()
+{
+#ifdef DEBUG
+  MOZ_ASSERT(!mDisconnected);
+  mDisconnected = true;
+#endif
+
+  const InfallibleTArray<PIndexedDBDatabaseChild*>& databases =
+    ManagedPIndexedDBDatabaseChild();
+  for (uint32_t i = 0; i < databases.Length(); ++i) {
+    static_cast<IndexedDBDatabaseChild*>(databases[i])->Disconnect();
+  }
 }
 
 void
@@ -244,6 +262,16 @@ IndexedDBDatabaseChild::SetRequest(IDBOpenDBRequest* aRequest)
   MOZ_ASSERT(!mRequest);
 
   mRequest = aRequest;
+}
+
+void
+IndexedDBDatabaseChild::Disconnect()
+{
+  const InfallibleTArray<PIndexedDBTransactionChild*>& transactions =
+    ManagedPIndexedDBTransactionChild();
+  for (uint32_t i = 0; i < transactions.Length(); ++i) {
+    static_cast<IndexedDBTransactionChild*>(transactions[i])->Disconnect();
+  }
 }
 
 bool
@@ -553,6 +581,16 @@ IndexedDBTransactionChild::SetTransaction(IDBTransaction* aTransaction)
 }
 
 void
+IndexedDBTransactionChild::Disconnect()
+{
+  const InfallibleTArray<PIndexedDBObjectStoreChild*>& objectStores =
+    ManagedPIndexedDBObjectStoreChild();
+  for (uint32_t i = 0; i < objectStores.Length(); ++i) {
+    static_cast<IndexedDBObjectStoreChild*>(objectStores[i])->Disconnect();
+  }
+}
+
+void
 IndexedDBTransactionChild::FireCompleteEvent(nsresult aRv)
 {
   MOZ_ASSERT(mTransaction);
@@ -652,6 +690,28 @@ IndexedDBObjectStoreChild::~IndexedDBObjectStoreChild()
 {
   MOZ_COUNT_DTOR(IndexedDBObjectStoreChild);
   MOZ_ASSERT(!mObjectStore);
+}
+
+void
+IndexedDBObjectStoreChild::Disconnect()
+{
+  const InfallibleTArray<PIndexedDBRequestChild*>& requests =
+    ManagedPIndexedDBRequestChild();
+  for (uint32_t i = 0; i < requests.Length(); ++i) {
+    static_cast<IndexedDBRequestChildBase*>(requests[i])->Disconnect();
+  }
+
+  const InfallibleTArray<PIndexedDBIndexChild*>& indexes =
+    ManagedPIndexedDBIndexChild();
+  for (uint32_t i = 0; i < indexes.Length(); ++i) {
+    static_cast<IndexedDBIndexChild*>(indexes[i])->Disconnect();
+  }
+
+  const InfallibleTArray<PIndexedDBCursorChild*>& cursors =
+    ManagedPIndexedDBCursorChild();
+  for (uint32_t i = 0; i < cursors.Length(); ++i) {
+    static_cast<IndexedDBCursorChild*>(cursors[i])->Disconnect();
+  }
 }
 
 void
@@ -758,6 +818,22 @@ IndexedDBIndexChild::~IndexedDBIndexChild()
 {
   MOZ_COUNT_DTOR(IndexedDBIndexChild);
   MOZ_ASSERT(!mIndex);
+}
+
+void
+IndexedDBIndexChild::Disconnect()
+{
+  const InfallibleTArray<PIndexedDBRequestChild*>& requests =
+    ManagedPIndexedDBRequestChild();
+  for (uint32_t i = 0; i < requests.Length(); ++i) {
+    static_cast<IndexedDBRequestChildBase*>(requests[i])->Disconnect();
+  }
+
+  const InfallibleTArray<PIndexedDBCursorChild*>& cursors =
+    ManagedPIndexedDBCursorChild();
+  for (uint32_t i = 0; i < cursors.Length(); ++i) {
+    static_cast<IndexedDBCursorChild*>(cursors[i])->Disconnect();
+  }
 }
 
 void
@@ -883,6 +959,16 @@ IndexedDBCursorChild::SetCursor(IDBCursor* aCursor)
 }
 
 void
+IndexedDBCursorChild::Disconnect()
+{
+  const InfallibleTArray<PIndexedDBRequestChild*>& requests =
+    ManagedPIndexedDBRequestChild();
+  for (uint32_t i = 0; i < requests.Length(); ++i) {
+    static_cast<IndexedDBRequestChildBase*>(requests[i])->Disconnect();
+  }
+}
+
+void
 IndexedDBCursorChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mCursor) {
@@ -926,7 +1012,24 @@ IndexedDBRequestChildBase::~IndexedDBRequestChildBase()
 IDBRequest*
 IndexedDBRequestChildBase::GetRequest() const
 {
-  return mHelper ? mHelper->GetRequest() : NULL;
+  return mHelper ? mHelper->GetRequest() : nullptr;
+}
+
+void
+IndexedDBRequestChildBase::Disconnect()
+{
+  if (mHelper) {
+    IDBRequest* request = mHelper->GetRequest();
+
+    if (request->IsPending()) {
+      request->SetError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      IDBTransaction* transaction = mHelper->GetTransaction();
+      if (transaction) {
+        transaction->OnRequestDisconnected();
+      }
+    }
+  }
 }
 
 bool

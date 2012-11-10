@@ -1648,6 +1648,12 @@ TabChild::RecvDestroy()
   observerService->RemoveObserver(this, BROWSER_ZOOM_TO_RECT);
   observerService->RemoveObserver(this, BEFORE_FIRST_PAINT);
 
+  const InfallibleTArray<PIndexedDBChild*>& idbActors =
+    ManagedPIndexedDBChild();
+  for (uint32_t i = 0; i < idbActors.Length(); ++i) {
+    static_cast<IndexedDBChild*>(idbActors[i])->Disconnect();
+  }
+
   // XXX what other code in ~TabChild() should we be running here?
   DestroyWindow();
 
