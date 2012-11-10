@@ -104,11 +104,14 @@ MOCHITEST_FILES = \
   test_setVersion_events.html \
   test_setVersion_exclusion.html \
   test_unique_index_update.html \
-  test_webapp_clearBrowserData.html \
+  test_webapp_clearBrowserData_inproc_oop.html \
+  test_webapp_clearBrowserData_oop_inproc.html \
+  test_webapp_clearBrowserData_inproc_inproc.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
   test_app_isolation_inproc.html \
   test_app_isolation_oop.html \
+  webapp_clearBrowserData.js \
   webapp_clearBrowserData_appFrame.html \
   webapp_clearBrowserData_browserFrame.html \
   $(NULL)
