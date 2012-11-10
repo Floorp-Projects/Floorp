@@ -1661,33 +1661,9 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
     return false;
 
   nsPresContext* presContext = mFrame->PresContext();
-  nsStyleContext* bgSC;
-  nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
-
-  bool drawBackgroundImage;
-  bool drawBackgroundColor;
-  nsCSSRendering::DetermineBackgroundColor(presContext,
-                                           bgSC,
-                                           mFrame,
-                                           drawBackgroundImage,
-                                           drawBackgroundColor);
-
-  // For now we don't know how to draw image layers with a background color.
-  if (!drawBackgroundImage || drawBackgroundColor)
-    return false;
-
-  const nsStyleBackground *bg = bgSC->GetStyleBackground();
-
-  // We could pretty easily support multiple image layers, but for now we
-  // just punt here.
-  if (bg->mLayers.Length() != 1)
-    return false;
-
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
-  nsPoint offset = ToReferenceFrame();
-  nsRect borderArea = nsRect(offset, mFrame->GetSize());
-
-  const nsStyleBackground::Layer &layer = bg->mLayers[0];
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  const nsStyleBackground::Layer &layer = mBackgroundStyle->mLayers[mLayer];
 
   if (layer.mAttachment != NS_STYLE_BG_ATTACHMENT_FIXED)
     return false;
@@ -1698,7 +1674,7 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
                                            flags,
                                            borderArea,
                                            aClipRect,
-                                           *bg,
+                                           *mBackgroundStyle,
                                            layer);
 
   nsImageRenderer* imageRenderer = &state.mImageRenderer;
@@ -1719,28 +1695,9 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
     return false;
 
   nsPresContext* presContext = mFrame->PresContext();
-  nsStyleContext* bgSC;
-  nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
-
-  bool drawBackgroundImage;
-  bool drawBackgroundColor;
-  nsCSSRendering::DetermineBackgroundColor(presContext,
-                                           bgSC,
-                                           mFrame,
-                                           drawBackgroundImage,
-                                           drawBackgroundColor);
-
-  // For now we don't know how to draw image layers with a background color.
-  if (!drawBackgroundImage || drawBackgroundColor)
-    return false;
-
-  const nsStyleBackground *bg = bgSC->GetStyleBackground();
-
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
-  nsPoint offset = ToReferenceFrame();
-  nsRect borderArea = nsRect(offset, mFrame->GetSize());
-
-  const nsStyleBackground::Layer &layer = bg->mLayers[mLayer];
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  const nsStyleBackground::Layer &layer = mBackgroundStyle->mLayers[mLayer];
 
   nsBackgroundLayerState state =
     nsCSSRendering::PrepareBackgroundLayer(presContext,
@@ -1748,7 +1705,7 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
                                            flags,
                                            borderArea,
                                            borderArea,
-                                           *bg,
+                                           *mBackgroundStyle,
                                            layer);
 
   nsImageRenderer* imageRenderer = &state.mImageRenderer;
