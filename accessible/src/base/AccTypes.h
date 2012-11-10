@@ -48,6 +48,7 @@ enum AccType {
    * Other accessible types.
    */
   eApplicationType,
+  eHTMLOptGroupType,
   eImageMapType,
   eMenuPopupType,
   eProgressType,
