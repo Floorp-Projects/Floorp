@@ -27,6 +27,8 @@ static int gNotOptimized;
 #define ALOG(args...) __android_log_print(ANDROID_LOG_INFO, "GeckoJavaEnv", ## args)
 #endif
 
+using namespace mozilla::layers;
+
 namespace mozilla {
 #ifdef MOZ_WIDGET_ANDROID
 nsresult

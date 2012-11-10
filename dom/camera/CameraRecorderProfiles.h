@@ -12,8 +12,6 @@
 #include "DictionaryHelpers.h"
 #include "CameraCommon.h"
 
-using namespace mozilla;
-using namespace dom;
 
 namespace mozilla {
 
