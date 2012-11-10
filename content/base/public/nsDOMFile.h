@@ -216,6 +216,19 @@ public:
     mFile->GetLeafName(mName);
   }
 
+  nsDOMFileFile(nsIFile *aFile, FileInfo *aFileInfo)
+    : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX),
+      mFile(aFile), mWholeFile(true), mStoredFile(true)
+  {
+    NS_ASSERTION(mFile, "must have file");
+    NS_ASSERTION(aFileInfo, "must have file info");
+    // Lazily get the content type and size
+    mContentType.SetIsVoid(true);
+    mFile->GetLeafName(mName);
+
+    mFileInfos.AppendElement(aFileInfo);
+  }
+
   // Create as a file
   nsDOMFileFile(const nsAString& aName, const nsAString& aContentType,
                 uint64_t aLength, nsIFile *aFile)

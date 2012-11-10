@@ -1507,7 +1507,7 @@ IDBObjectStore::ConvertBlobsToActors(
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
-      nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(nativeFile);
+      nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(nativeFile, file.mFileInfo);
 
       BlobParent* actor =
         aContentParent->GetOrCreateActorForBlob(blob);
