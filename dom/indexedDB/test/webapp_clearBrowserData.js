@@ -1,15 +1,10 @@
-<!--
-  Any copyright is dedicated to the Public Domain.
-  http://creativecommons.org/publicdomain/zero/1.0/
--->
-<html>
-<head>
-  <title>Indexed Database Clear Browser Data Test</title>
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+// This file has 4 leading spaces so that hg/git can tell that it's copied
+// from test_webapp_clearBrowserData.html.  We'll fix the indentation in
+// the next commit.
 
-  <script type="text/javascript;version=1.7">
     "use strict";
 
     const appDomain = "example.org";
@@ -21,6 +16,26 @@
       const objectStoreName = "foo";
       const testKey = 1;
       const testValue = objectStoreName;
+
+      // Determine whether the app and browser frames should be in or
+      // out-of-process.
+      let remote_app, remote_browser;
+      if (window.location.href.indexOf("inproc_oop") != -1) {
+        remote_app = false;
+        remote_browser = true;
+      }
+      else if (window.location.href.indexOf("oop_inproc") != -1) {
+        remote_app = true;
+        remote_browser = false;
+      }
+      else if (window.location.href.indexOf("inproc_inproc") != -1) {
+        remote_app = false;
+        remote_browser = false;
+      }
+      else {
+        ok(false, "Bad test filename!");
+        return;
+      }
 
       let request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
@@ -40,16 +55,23 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let srcURL =
-        location.protocol + "//" + appDomain +
-        location.pathname.replace("test_webapp_clearBrowserData.html",
-                                  "webapp_clearBrowserData_appFrame.html");
+      // We need to send both remote_browser and remote_app in the querystring
+      // because webapp_clearBrowserData_appFrame uses the path + querystring to
+      // create and open a database which it checks no other test has touched.  If
+      // we sent only remote_browser, then we wouldn't be able to test both
+      // (remote_app==false, remote_browser==false) and (remote_app==true,
+      // remote_browser==false).
+      let srcURL = location.protocol + "//" + appDomain +
+        location.pathname.substring(0, location.pathname.lastIndexOf('/')) +
+        "/webapp_clearBrowserData_appFrame.html?" +
+        "remote_browser=" + remote_browser + "&" +
+        "remote_app=" + remote_app;
 
       let iframe = document.createElement("iframe");
       iframe.setAttribute("mozbrowser", "");
       iframe.setAttribute("mozapp", manifestURL);
       iframe.setAttribute("src", srcURL);
-      iframe.setAttribute("remote", "true");
+      iframe.setAttribute("remote", remote_app);
       iframe.addEventListener("mozbrowsershowmodalprompt", function(event) {
         let message = JSON.parse(event.detail.message);
         switch (message.type) {
@@ -127,11 +149,3 @@
         "set": [["dom.mozBrowserFramesEnabled", true]]
       }, runTest);
     }
-  </script>
-
-  <script type="text/javascript;version=1.7" src="helpers.js"></script>
-</head>
-
-<body onload="start();"></body>
-
-</html>
