@@ -9,7 +9,7 @@
 #ifndef BASE_DEBUG_UTIL_H_
 #define BASE_DEBUG_UTIL_H_
 
-#include <ostream>
+#include <iostream>
 #include <vector>
 
 #include "base/basictypes.h"
