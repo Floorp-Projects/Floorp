@@ -668,12 +668,12 @@ protected:
 
   /**
    * Retrieve the rectangle for the offsetX properties, which
-   * are coordinates relative to the returned aOffsetParent.
+   * are coordinates relative to the returned element.
    *
    * @param aRect offset rectangle
    * @param aOffsetParent offset parent
    */
-  virtual void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
+  virtual nsGenericElement* GetOffsetRect(nsRect& aRect);
 
   /**
    * Retrieve the size of the padding rect of this element.
