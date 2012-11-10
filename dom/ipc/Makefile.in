@@ -42,7 +42,6 @@ EXPORTS_mozilla/dom = \
   StructuredCloneUtils.h \
   TabParent.h \
   TabChild.h \
-  TabContext.h \
   TabMessageUtils.h \
   $(NULL)
 
@@ -65,7 +64,6 @@ CPPSRCS = \
   StructuredCloneUtils.cpp \
   TabParent.cpp \
   TabChild.cpp \
-  TabContext.cpp \
   TabMessageUtils.cpp \
   $(NULL)
 

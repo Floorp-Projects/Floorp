@@ -1633,8 +1633,12 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
   // Disable CHROME_OPENAS_DIALOG if the window is inside <iframe mozbrowser>.
   // It's up to the embedder to interpret what dialog=1 means.
   nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
-  if (docshell && docshell->GetIsInBrowserOrApp()) {
-    chromeFlags &= ~nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
+  if (docshell) {
+    bool belowContentBoundary = false;
+    docshell->GetIsBelowContentBoundary(&belowContentBoundary);
+    if (belowContentBoundary) {
+      chromeFlags &= ~nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
+    }
   }
 
   return chromeFlags;

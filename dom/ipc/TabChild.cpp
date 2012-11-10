@@ -120,7 +120,8 @@ TabChild::PreloadSlowThings()
 {
     MOZ_ASSERT(!sPreallocatedTab);
 
-    nsRefPtr<TabChild> tab(new TabChild(TabContext(), /* chromeFlags */ 0));
+    nsRefPtr<TabChild> tab(new TabChild(0, false,
+                                        nsIScriptSecurityManager::NO_APP_ID));
     if (!NS_SUCCEEDED(tab->Init()) ||
         !tab->InitTabChildGlobal(DONT_LOAD_SCRIPTS)) {
         return;
@@ -132,37 +133,41 @@ TabChild::PreloadSlowThings()
 }
 
 /*static*/ already_AddRefed<TabChild>
-TabChild::Create(const TabContext &aContext, uint32_t aChromeFlags)
+TabChild::Create(uint32_t aChromeFlags,
+                 bool aIsBrowserElement, uint32_t aAppId)
 {
     if (sPreallocatedTab &&
         sPreallocatedTab->mChromeFlags == aChromeFlags &&
-        aContext.IsBrowserOrApp()) {
-
+        (aIsBrowserElement || 
+         aAppId != nsIScriptSecurityManager::NO_APP_ID)) {
         nsRefPtr<TabChild> child = sPreallocatedTab.get();
         sPreallocatedTab = nullptr;
 
         MOZ_ASSERT(!child->mTriedBrowserInit);
 
-        child->SetTabContext(aContext);
-        child->NotifyTabContextUpdated();
+        child->SetAppBrowserConfig(aIsBrowserElement, aAppId);
+
         return child.forget();
     }
 
-    nsRefPtr<TabChild> iframe = new TabChild(aContext, aChromeFlags);
+    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags, aIsBrowserElement,
+                                             aAppId);
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
 }
 
 
-TabChild::TabChild(const TabContext& aContext, uint32_t aChromeFlags)
-  : TabContext(aContext)
-  , mRemoteFrame(nullptr)
+TabChild::TabChild(uint32_t aChromeFlags, bool aIsBrowserElement,
+                   uint32_t aAppId)
+  : mRemoteFrame(nullptr)
   , mTabChildGlobal(nullptr)
   , mChromeFlags(aChromeFlags)
   , mOuterRect(0, 0, 0, 0)
   , mInnerSize(0, 0)
   , mOldViewportWidth(0.0f)
   , mLastBackgroundColor(NS_RGB(255, 255, 255))
+  , mAppId(aAppId)
   , mDidFakeShow(false)
+  , mIsBrowserElement(aIsBrowserElement)
   , mNotified(false)
   , mContentDocumentIsDisplayed(false)
   , mTriedBrowserInit(false)
@@ -525,7 +530,7 @@ TabChild::Init()
   baseWindow->InitWindow(0, mWidget, 0, 0, 0, 0);
   baseWindow->Create();
 
-  NotifyTabContextUpdated();
+  SetAppBrowserConfig(mIsBrowserElement, mAppId);
 
   // IPC uses a WebBrowser object for which DNS prefetching is turned off
   // by default. But here we really want it, so enable it explicitly
@@ -549,18 +554,18 @@ TabChild::Init()
 }
 
 void
-TabChild::NotifyTabContextUpdated()
+TabChild::SetAppBrowserConfig(bool aIsBrowserElement, uint32_t aAppId)
 {
+    mIsBrowserElement = aIsBrowserElement;
+    mAppId = aAppId;
+
     nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebNav);
     MOZ_ASSERT(docShell);
 
     if (docShell) {
-        // nsDocShell will do the right thing if we pass NO_APP_ID or
-        // UNKNOWN_APP_ID for aOwnOrContainingAppId.
-        if (IsBrowserElement()) {
-          docShell->SetIsBrowserInsideApp(BrowserOwnerAppId());
-        } else {
-          docShell->SetIsApp(OwnAppId());
+        docShell->SetAppId(mAppId);
+        if (mIsBrowserElement) {
+            docShell->SetIsBrowserElement();
         }
     }
 }
@@ -784,11 +789,11 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, uint32_t aChromeFlags,
 {
     *aReturn = nullptr;
 
-    // If aParent is inside an <iframe mozbrowser> or <iframe mozapp> and this
-    // isn't a request to open a modal-type window, we're going to create a new
-    // <iframe mozbrowser/mozapp> and return its window here.
+    // If aParent is inside an <iframe mozbrowser> and this isn't a request to
+    // open a modal-type window, we're going to create a new <iframe mozbrowser>
+    // and return its window here.
     nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
-    if (docshell && docshell->GetIsInBrowserOrApp() &&
+    if (docshell && docshell->GetIsBelowContentBoundary() &&
         !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                           nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                           nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
@@ -823,25 +828,16 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
 {
   *aReturn = nullptr;
 
-  nsRefPtr<TabChild> newChild =
-      new TabChild(/* TabContext */ *this, /* chromeFlags */ 0);
+  uint32_t chromeFlags = 0;
+  nsRefPtr<TabChild> newChild = new TabChild(chromeFlags,
+                                             mIsBrowserElement, mAppId);
   if (!NS_SUCCEEDED(newChild->Init())) {
       return NS_ERROR_ABORT;
   }
-
-  // We must use PopupIPCTabContext here; ContentParent will not accept the
-  // result of this->AsIPCTabContext() (which will be a
-  // BrowserFrameIPCTabContext or an AppFrameIPCTabContext), for security
-  // reasons.
-  PopupIPCTabContext context;
-  context.openerChild() = this;
-  context.isBrowserElement() = IsBrowserElement();
-
   unused << Manager()->SendPBrowserConstructor(
       // We release this ref in DeallocPBrowserChild
       nsRefPtr<TabChild>(newChild).forget().get(),
-      context, /* chromeFlags */ 0);
-
+      chromeFlags, mIsBrowserElement, this);
   nsAutoCString spec;
   if (aURI) {
     aURI->GetSpec(spec);
@@ -1002,13 +998,29 @@ TabChild::~TabChild()
 void
 TabChild::SetProcessNameToAppName()
 {
-  nsCOMPtr<mozIApplication> app = GetOwnApp();
-  if (!app) {
+  if (mIsBrowserElement || (mAppId == nsIScriptSecurityManager::NO_APP_ID)) {
     return;
   }
-
+  nsCOMPtr<nsIAppsService> appsService =
+    do_GetService(APPS_SERVICE_CONTRACTID);
+  if (!appsService) {
+    NS_WARNING("No AppsService");
+    return;
+  }
+  nsresult rv;
+  nsCOMPtr<mozIDOMApplication> domApp;
+  rv = appsService->GetAppByLocalId(mAppId, getter_AddRefs(domApp));
+  if (NS_FAILED(rv) || !domApp) {
+    NS_WARNING("GetAppByLocalId failed");
+    return;
+  }
+  nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
+  if (!app) {
+    NS_WARNING("app isn't a mozIApplication");
+    return;
+  }
   nsAutoString appName;
-  nsresult rv = app->GetName(appName);
+  rv = app->GetName(appName);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to retrieve app name");
     return;
@@ -1020,25 +1032,19 @@ TabChild::SetProcessNameToAppName()
 bool
 TabChild::IsRootContentDocument()
 {
-    // A TabChild is a "root content document" if it's
-    //
-    //  - <iframe mozapp> not inside another <iframe mozapp>,
-    //  - <iframe mozbrowser> (not mozapp), or
-    //  - a vanilla remote frame (<html:iframe remote=true> or <xul:browser
-    //    remote=true>).
-    //
-    // Put another way, an iframe is /not/ a "root content document" iff it's a
-    // mozapp inside a mozapp.  (This corresponds exactly to !HasAppOwnerApp.)
-    //
-    // Note that we're lying through our teeth here (thus the scare quotes).
-    // <html:iframe remote=true> or <xul:browser remote=true> inside another
-    // content iframe is not actually a root content document, but we say it is.
-    //
-    // We do this because we make a remote frame opaque iff
-    // IsRootContentDocument(), and making vanilla remote frames transparent
-    // breaks our remote reftests.
+    if (mIsBrowserElement || mAppId == nsIScriptSecurityManager::NO_APP_ID) {
+        // We're the child side of a browser element.  This always
+        // behaves like a root content document.
+        return true;
+    }
 
-    return !HasAppOwnerApp();
+    // Otherwise, we're the child side of an <html:app remote=true>
+    // embedded in an outer <html:app>.  These don't behave like root
+    // content documents in nested contexts.  Because of bug 761935,
+    // <html:browser remote> and <html:app remote> can't nest, so we
+    // assume this isn't the root.  When that bug is fixed, we need to
+    // revisit that assumption.
+    return false;
 }
 
 bool
@@ -1696,7 +1702,7 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
     mTriedBrowserInit = true;
     // Initialize the child side of the browser element machinery,
     // if appropriate.
-    if (IsBrowserOrApp()) {
+    if (mIsBrowserElement || mAppId != nsIScriptSecurityManager::NO_APP_ID) {
       RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT);
     }
   }
