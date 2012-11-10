@@ -249,7 +249,8 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLSelectElement
@@ -404,15 +405,16 @@ public:
   /**
    * Insert aElement before the node given by aBefore
    */
-  nsresult Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore = nullptr);
-  nsresult Add(nsIDOMHTMLElement* aElement, int32_t aIndex)
+  void Add(nsGenericHTMLElement& aElement, nsGenericHTMLElement* aBefore,
+           mozilla::ErrorResult& aError);
+  void Add(nsGenericHTMLElement& aElement, int32_t aIndex,
+           mozilla::ErrorResult& aError)
   {
     // If item index is out of range, insert to last.
     // (since beforeElement becomes null, it is inserted to last)
-    nsCOMPtr<nsIDOMHTMLElement> beforeElement =
-      do_QueryInterface(mOptions->GetElementAt(aIndex));
-
-    return Add(aElement, beforeElement);
+    nsIContent* beforeContent = mOptions->GetElementAt(aIndex);
+    return Add(aElement, nsGenericHTMLElement::FromContentOrNull(beforeContent),
+               aError);
   }
 
 protected:
@@ -660,19 +662,21 @@ nsHTMLOptionCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
                             const Nullable<HTMLElementOrLong>& aBefore,
                             mozilla::ErrorResult& aError)
 {
-  nsIDOMHTMLElement* element;
-  if (aElement.IsHTMLOptionElement()) {
-    element = aElement.GetAsHTMLOptionElement();
-  } else {
-    element = aElement.GetAsHTMLOptGroupElement();
-  }
+  nsGenericHTMLElement& element =
+    aElement.IsHTMLOptionElement() ?
+    static_cast<nsGenericHTMLElement&>(*aElement.GetAsHTMLOptionElement()) :
+    static_cast<nsGenericHTMLElement&>(*aElement.GetAsHTMLOptGroupElement());
 
   if (aBefore.IsNull()) {
-    aError = mSelect->Add(element, (nsIDOMHTMLElement*)nullptr);
+    mSelect->Add(element, (nsGenericHTMLElement*)nullptr, aError);
   } else if (aBefore.Value().IsHTMLElement()) {
-    aError = mSelect->Add(element, aBefore.Value().GetAsHTMLElement());
+    nsCOMPtr<nsIContent> content =
+      do_QueryInterface(aBefore.Value().GetAsHTMLElement());
+    nsGenericHTMLElement* before =
+      static_cast<nsGenericHTMLElement*>(content.get());
+    mSelect->Add(element, before, aError);
   } else {
-    aError = mSelect->Add(element, aBefore.Value().GetAsLong());
+    mSelect->Add(element, aBefore.Value().GetAsLong(), aError);
   }
 }
 
