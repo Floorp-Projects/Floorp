@@ -619,6 +619,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Browser.BookmarkColumns.TITLE, title);
         values.put(Bookmarks.URL, uri);
         values.put(Bookmarks.KEYWORD, keyword);
+        values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
 
         cr.update(mBookmarksUriWithProfile,
                   values,
