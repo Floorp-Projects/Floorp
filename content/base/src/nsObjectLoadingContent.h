@@ -106,7 +106,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     nsEventStates ObjectState() const;
 
-    ObjectType Type() { return mType; }
+    ObjectType Type() const { return mType; }
 
     void SetIsNetworkCreated(bool aNetworkCreated)
     {

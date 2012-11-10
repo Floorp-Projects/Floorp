@@ -480,7 +480,10 @@ customIncludes = [
     'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
-    'nsDOMStringMap.h'
+    'nsDOMStringMap.h',
+    'HTMLPropertiesCollection.h',
+    'nsHTMLMenuElement.h',
+    'nsICSSDeclaration.h'
     ]
 
 customReturnInterfaces = [
@@ -833,7 +836,7 @@ customMethodCalls = {
                 '    self->SetTabIndex(arg0, error);\n'
                 '    rv = error.ErrorCode();'
         },
-    'nsIDOMHTMLElement_DOMFocus': {
+    'nsIDOMHTMLElement_Focus': {
         'thisType' : 'nsGenericHTMLElement',
         'code': '    mozilla::ErrorResult error;\n'
                 '    self->Focus(error);\n'
@@ -879,7 +882,7 @@ customMethodCalls = {
         },
     'nsIDOMSVGStylable_GetStyle': {
         'thisType': 'nsSVGStylableElement',
-        'code': '    nsIDOMCSSStyleDeclaration* result = '
+        'code': '    nsICSSDeclaration* result = '
                 'self->GetStyle(&rv);'
         },
     'nsIDOMDocument_': {
@@ -1035,6 +1038,168 @@ customMethodCalls = {
     'nsIDOMElement_GetChildElements' : {
         'thisType' : 'nsGenericElement',
         'code': '    nsIHTMLCollection* result = self->Children();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetTitle': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetTitle': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetLang': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetLang': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetDir': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetDir': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetDir(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetItemScope': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    bool result = self->ItemScope();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetItemScope': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetItemScope(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetItemId': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetItemId': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetItemId(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetProperties': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    nsIDOMHTMLPropertiesCollection* result = self->Properties();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetHidden': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    bool result = self->Hidden();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetHidden': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetHidden(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetId': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetId': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetAccessKey': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetAccessKey': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetAccessKey(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetAccessKeyLabel': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetSpellcheck': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    bool result = self->Spellcheck();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetSpellcheck': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetSpellcheck(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetOuterHTML': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    nsString result;\n'
+                '    mozilla::ErrorResult error;\n'
+                '    self->GetOuterHTML(result, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_SetOuterHTML': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetOuterHTML(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetContentEditable': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetContentEditable': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::ErrorResult error;\n'
+                '    self->SetContentEditable(arg0, error);\n'
+                '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetIsContentEditable': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    bool result = self->IsContentEditable();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetContextMenu': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    mozilla::dom::Element* result = self->GetContextMenu();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetOffsetParent': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    nsGenericElement* result = self->GetOffsetParent();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetOffsetTop': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    uint32_t result = self->OffsetTop();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetOffsetLeft': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    uint32_t result = self->OffsetLeft();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetOffsetWidth': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    uint32_t result = self->OffsetWidth();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetOffsetHeight': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    uint32_t result = self->OffsetHeight();',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_GetClassName': {
+        'thisType' : 'nsGenericHTMLElement',
+        'canFail': False
+        },
+    'nsIDOMHTMLElement_SetClassName': {
+        'thisType' : 'nsGenericHTMLElement',
         'canFail': False
         },
     'nsIDOMWindow_GetOnmouseenter' : {

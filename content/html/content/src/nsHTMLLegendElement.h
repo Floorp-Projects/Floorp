@@ -30,7 +30,8 @@ public:
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
   virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   virtual void PerformAccesskey(bool aKeyCausesActivation,
