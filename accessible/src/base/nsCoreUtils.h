@@ -225,14 +225,6 @@ public:
                             int32_t *aUInt);
 
   /**
-   * Check if the given element is XLink.
-   *
-   * @param aContent  the given element
-   * @return          true if the given element is XLink
-   */
-  static bool IsXLink(nsIContent *aContent);
-
-  /**
    * Returns language for the given node.
    *
    * @param aContent     [in] the given node
