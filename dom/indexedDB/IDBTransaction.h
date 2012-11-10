@@ -101,6 +101,7 @@ public:
 
   void OnNewRequest();
   void OnRequestFinished();
+  void OnRequestDisconnected();
 
   void RemoveObjectStore(const nsAString& aName);
 
@@ -186,6 +187,12 @@ public:
   GetActorChild() const
   {
     return mActorChild;
+  }
+
+  IndexedDBTransactionParent*
+  GetActorParent() const
+  {
+    return mActorParent;
   }
 
   nsresult

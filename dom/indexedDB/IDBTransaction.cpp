@@ -220,6 +220,14 @@ IDBTransaction::OnRequestFinished()
 }
 
 void
+IDBTransaction::OnRequestDisconnected()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mPendingRequests, "Mismatched calls!");
+  --mPendingRequests;
+}
+
+void
 IDBTransaction::RemoveObjectStore(const nsAString& aName)
 {
   NS_ASSERTION(mMode == IDBTransaction::VERSION_CHANGE,

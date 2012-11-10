@@ -1769,10 +1769,8 @@ OriginClearRunnable::DeleteFiles(IndexedDatabaseManager* aManager)
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsISimpleEnumerator> entries;
-  rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  if (!entries) {
+  if (NS_FAILED(directory->GetDirectoryEntries(getter_AddRefs(entries))) ||
+      !entries) {
     return;
   }
 

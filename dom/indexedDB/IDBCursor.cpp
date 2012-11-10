@@ -768,6 +768,12 @@ CursorHelper::Dispatch(nsIEventTarget* aDatabaseThread)
     return AsyncConnectionHelper::Dispatch(aDatabaseThread);
   }
 
+  // If we've been invalidated then there's no point sending anything to the
+  // parent process.
+  if (mCursor->Transaction()->Database()->IsInvalidated()) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
   IndexedDBCursorChild* cursorActor = mCursor->GetActorChild();
   NS_ASSERTION(cursorActor, "Must have an actor here!");
 
@@ -918,7 +924,7 @@ ContinueHelper::SendResponseToChildProcess(nsresult aResultCode)
     response = continueResponse;
   }
 
-  if (!actor->Send__delete__(actor, response)) {
+  if (!actor->SendResponse(response)) {
     return Error;
   }
 
