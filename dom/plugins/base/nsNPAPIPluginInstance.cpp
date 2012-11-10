@@ -149,7 +149,6 @@ private:
 
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
-using namespace mozilla::layers;
 
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 

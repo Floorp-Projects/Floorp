@@ -6,7 +6,6 @@
 #include "CameraControlImpl.h"
 
 using namespace mozilla;
-using namespace mozilla::dom;
 
 namespace mozilla {
 class RecorderProfileManager;

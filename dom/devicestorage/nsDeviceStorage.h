@@ -39,6 +39,9 @@ class nsPIDOMWindow;
 #define POST_ERROR_EVENT_ILLEGAL_TYPE                "TypeMismatchError"
 #define POST_ERROR_EVENT_UNKNOWN                     "Unknown"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::dom::devicestorage;
 
 class DeviceStorageTypeChecker MOZ_FINAL
 {
@@ -98,23 +101,23 @@ private:
 class ContinueCursorEvent MOZ_FINAL : public nsRunnable
 {
 public:
-  ContinueCursorEvent(nsRefPtr<mozilla::dom::DOMRequest>& aRequest);
-  ContinueCursorEvent(mozilla::dom::DOMRequest* aRequest);
+  ContinueCursorEvent(nsRefPtr<DOMRequest>& aRequest);
+  ContinueCursorEvent(DOMRequest* aRequest);
   ~ContinueCursorEvent();
   void Continue();
 
   NS_IMETHOD Run();
 private:
   already_AddRefed<DeviceStorageFile> GetNextFile();
-  nsRefPtr<mozilla::dom::DOMRequest> mRequest;
+  nsRefPtr<DOMRequest> mRequest;
 };
 
 class nsDOMDeviceStorageCursor MOZ_FINAL
   : public nsIDOMDeviceStorageCursor
-  , public mozilla::dom::DOMRequest
+  , public DOMRequest
   , public nsIContentPermissionRequest
   , public PCOMContentPermissionRequestChild
-  , public mozilla::dom::devicestorage::DeviceStorageRequestChildCallback
+  , public DeviceStorageRequestChildCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

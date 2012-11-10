@@ -9,7 +9,6 @@
 #include "CameraCommon.h"
 
 using namespace mozilla;
-using namespace mozilla::layers;
 
 /**
  * 'PreviewControl' is a helper class that dispatches preview control

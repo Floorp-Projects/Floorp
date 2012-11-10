@@ -14,6 +14,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
 
+using namespace mozilla::dom;
 
 BEGIN_WORKERS_NAMESPACE
 

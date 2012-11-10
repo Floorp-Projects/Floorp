@@ -29,7 +29,7 @@
 #include "mozilla/dom/EncodingUtils.h"
 
 USING_WORKERS_NAMESPACE
-using namespace mozilla;
+using mozilla::ErrorResult;
 using mozilla::dom::Optional;
 
 NS_IMPL_ADDREF_INHERITED(FileReaderSync, DOMBindingBase)
