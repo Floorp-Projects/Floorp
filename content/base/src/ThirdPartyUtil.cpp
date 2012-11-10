@@ -115,9 +115,7 @@ ThirdPartyUtil::IsThirdPartyWindow(nsIDOMWindow* aWindow,
   nsCOMPtr<nsIDOMWindow> current = aWindow, parent;
   nsCOMPtr<nsIURI> parentURI;
   do {
-    // We use GetScriptableParent rather than GetParent because we consider
-    // <iframe mozbrowser/mozapp> to be a top-level frame.
-    rv = current->GetScriptableParent(getter_AddRefs(parent));
+    rv = current->GetParent(getter_AddRefs(parent));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (SameCOMIdentity(parent, current)) {
@@ -212,9 +210,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
   ctx->GetAssociatedWindow(getter_AddRefs(ourWin));
   if (!ourWin) return NS_ERROR_INVALID_ARG;
 
-  // We use GetScriptableParent rather than GetParent because we consider
-  // <iframe mozbrowser/mozapp> to be a top-level frame.
-  ourWin->GetScriptableParent(getter_AddRefs(parentWin));
+  ourWin->GetParent(getter_AddRefs(parentWin));
   NS_ENSURE_TRUE(parentWin, NS_ERROR_INVALID_ARG);
 
   // Check whether this is the document channel for this window (representing a
