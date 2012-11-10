@@ -1,22 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(nsHTMLVideoElement_h__)
-#define nsHTMLVideoElement_h__
+#ifndef nsHTMLDivElement_h___
+#define nsHTMLDivElement_h___
 
-#include "nsIDOMHTMLVideoElement.h"
-#include "nsHTMLMediaElement.h"
+#include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLDivElement.h"
 
-class nsHTMLVideoElement : public nsHTMLMediaElement,
-                           public nsIDOMHTMLVideoElement
+class nsHTMLDivElement : public nsGenericHTMLElement,
+                         public nsIDOMHTMLDivElement
 {
 public:
-  nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLVideoElement();
-
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLVideoElement, video)
+  nsHTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~nsHTMLDivElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,12 +27,29 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
-  // nsIDOMHTMLMediaElement
-  using nsHTMLMediaElement::GetPaused;
-  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(nsHTMLMediaElement::)
+  // nsIDOMHTMLDivElement
+  NS_IMETHOD GetAlign(nsAString& aAlign)
+  {
+    nsString align;
+    GetAlign(align);
+    aAlign = align;
+    return NS_OK;
+  }
+  NS_IMETHOD SetAlign(const nsAString& aAlign)
+  {
+    mozilla::ErrorResult rv;
+    SetAlign(aAlign, rv);
+    return rv.ErrorCode();
+  }
 
-  // nsIDOMHTMLVideoElement
-  NS_DECL_NSIDOMHTMLVIDEOELEMENT
+  void GetAlign(nsString& aAlign)
+  {
+    GetHTMLAttr(nsGkAtoms::align, aAlign);
+  }
+  void SetAlign(const nsAString& aAlign, mozilla::ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -43,22 +57,10 @@ public:
                                 nsAttrValue& aResult);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  // Set size with the current video frame's height and width.
-  // If there is no video frame, returns NS_ERROR_FAILURE.
-  nsresult GetVideoSize(nsIntSize* size);
-
-  virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);
-
   virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
-
-protected:
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
 };
 
-#endif
+#endif /* nsHTMLDivElement_h___ */
