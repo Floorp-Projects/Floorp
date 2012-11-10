@@ -12,8 +12,7 @@
   <script type="text/javascript;version=1.7">
   function testSteps()
   {
-    const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
-    const INDEX_KEY = 5;
+    info("Setting up test fixtures: create an IndexedDB database and object store.");
 
     let request = indexedDB.open(window.location.pathname, 1);
     request.onerror = errorHandler;
@@ -30,6 +29,11 @@
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
+
+    info("Let's create a blob and store it in IndexedDB twice.");
+
+    const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
+    const INDEX_KEY = 5;
     let blob = new Blob(BLOB_DATA, { type: "text/plain" });
     let data = { blob: blob, index: INDEX_KEY };
 
@@ -42,6 +46,9 @@
     objectStore.add(data).onsuccess = grabEventAndContinueHandler;
     event = yield;
 
+
+    info("Let's retrieve the blob again and verify the contents is the same.");
+
     objectStore = db.transaction("foo").objectStore("foo");
     objectStore.get(key).onsuccess = grabEventAndContinueHandler;
     event = yield;
@@ -53,7 +60,9 @@
 
     is(event.target.result, BLOB_DATA.join(""), "Correct text");
 
-    info("Trying blob url");
+
+    info("Let's retrieve it again, create an object URL for the blob, load" +
+         "it via an XMLHttpRequest, and verify the contents is the same.");
 
     objectStore = db.transaction("foo").objectStore("foo");
     objectStore.get(key).onsuccess = grabEventAndContinueHandler;
@@ -70,6 +79,9 @@
     URL.revokeObjectURL(blobURL);
 
     is(xhr.responseText, BLOB_DATA.join(""), "Correct responseText");
+
+
+    info("Retrieve both blob entries from the database and verify contents.");
 
     objectStore = db.transaction("foo").objectStore("foo");
     objectStore.mozGetAll().onsuccess = grabEventAndContinueHandler;
@@ -107,6 +119,9 @@
     event = yield;
 
     is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+
+    info("Retrieve blobs from database via index and verify contents.");
 
     let index = db.transaction("foo").objectStore("foo").index("foo");
     index.get(INDEX_KEY).onsuccess = grabEventAndContinueHandler;
@@ -163,6 +178,9 @@
 
     is(event.target.result, BLOB_DATA.join(""), "Correct text");
 
+
+    info("Slice the the retrieved blob and verify its contents.");
+
     let slice = cursorResults[1].blob.slice(0, BLOB_DATA[0].length);
 
     fileReader = new FileReader();
@@ -171,6 +189,9 @@
     event = yield;
 
     is(event.target.result, BLOB_DATA[0], "Correct text");
+
+
+    info("Send blob to a worker, read its contents there, and verify results.");
 
     function workerScript() {
       onmessage = function(event) {
@@ -195,6 +216,40 @@
     event = yield;
 
     is(event.data, BLOB_DATA[0][1], "Correct text");
+
+
+    info("Store a blob back in the database, and keep holding on to the " +
+         "blob, verifying that it still can be read.");
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.get(key).onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let blobFromDB = event.target.result.blob;
+    let txn = db.transaction("foo", "readwrite");
+    txn.objectStore("foo").put(event.target.result, key);
+    txn.oncomplete = grabEventAndContinueHandler;
+    event = yield;
+
+    let fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(blobFromDB);
+    event = yield;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+    let blobURL = URL.createObjectURL(blobFromDB);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", blobURL);
+    xhr.onload = grabEventAndContinueHandler;
+    xhr.send();
+    yield;
+
+    URL.revokeObjectURL(blobURL);
+
+    is(xhr.responseText, BLOB_DATA.join(""), "Correct responseText");
+
 
     finishTest();
     yield;
