@@ -278,8 +278,8 @@ nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
  * needs to have the right attributes, and its creator must have the right
  * permissions.)
  */
-/* [infallible] */ nsresult
-nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
+nsresult
+nsGenericHTMLFrameElement::GetReallyIsBrowser(bool *aOut)
 {
   *aOut = false;
 
@@ -289,9 +289,9 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
   }
 
   // Fail if this frame doesn't have the mozbrowser attribute.
-  bool hasMozbrowser = false;
-  GetMozbrowser(&hasMozbrowser);
-  if (!hasMozbrowser) {
+  bool isBrowser = false;
+  GetMozbrowser(&isBrowser);
+  if (!isBrowser) {
     return NS_OK;
   }
 
@@ -299,7 +299,7 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
   nsIPrincipal *principal = NodePrincipal();
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_OK);
+  NS_ENSURE_STATE(permMgr);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   nsresult rv = permMgr->TestPermissionFromPrincipal(principal, "browser", &permission);
@@ -308,7 +308,7 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP
+NS_IMETHODIMP
 nsGenericHTMLFrameElement::GetReallyIsApp(bool *aOut)
 {
   nsAutoString manifestURL;
@@ -324,7 +324,9 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
   aOut.Truncate();
 
   // At the moment, you can't be an app without being a browser.
-  if (!nsIMozBrowserFrame::GetReallyIsBrowserOrApp()) {
+  bool isBrowser = false;
+  GetReallyIsBrowser(&isBrowser);
+  if (!isBrowser) {
     return NS_OK;
   }
 
@@ -332,7 +334,7 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
   nsIPrincipal *principal = NodePrincipal();
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_OK);
+  NS_ENSURE_STATE(permMgr);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   nsresult rv = permMgr->TestPermissionFromPrincipal(principal,
@@ -350,10 +352,11 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
   }
 
   nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(appsService, NS_OK);
+  NS_ENSURE_STATE(appsService);
 
   nsCOMPtr<mozIDOMApplication> app;
   appsService->GetAppByManifestURL(manifestURL, getter_AddRefs(app));
+
   if (app) {
     aOut.Assign(manifestURL);
   }

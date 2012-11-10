@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/ipc/Blob.h"
 
 #include "nsTArray.h"
@@ -41,7 +40,6 @@ class PStorageChild;
 class ClonedMessageData;
 
 class ContentChild : public PContentChild
-                   , public TabContext
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -80,8 +78,9 @@ public:
     AllocPImageBridge(mozilla::ipc::Transport* aTransport,
                       base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
-    virtual PBrowserChild* AllocPBrowser(const IPCTabContext &aContext,
-                                         const uint32_t &chromeFlags);
+    virtual PBrowserChild* AllocPBrowser(const uint32_t& aChromeFlags,
+                                         const bool& aIsBrowserElement,
+                                         const AppId& aAppId);
     virtual bool DeallocPBrowser(PBrowserChild*);
 
     virtual PDeviceStorageRequestChild* AllocPDeviceStorageRequest(const DeviceStorageParams&);
@@ -195,6 +194,9 @@ public:
     nsString &GetIndexedDBPath();
 
     uint64_t GetID() { return mID; }
+
+    bool IsForApp() { return mIsForApp; }
+    bool IsForBrowser() { return mIsForBrowser; }
 
     BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 

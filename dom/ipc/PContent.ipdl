@@ -135,60 +135,9 @@ union BlobConstructorParams
   MysteryBlobConstructorParams;
 };
 
-// An IPCTabContext which corresponds to a PBrowser opened by a child when it
-// receives window.open().
-//
-// If isBrowserElement is false, this PopupIPCTabContext corresponds to an app
-// frame, and the frame's app-id and app-frame-owner-app-id will be equal to the
-// opener's values.
-//
-// If isBrowserElement is true, the frame's browserFrameOwnerAppId will be equal
-// to the opener's app-id.
-//
-// It's an error to set isBrowserElement == false if opener is a browser
-// element.  Such a PopupIPCTabContext should be rejected by code which receives
-// it.
-struct PopupIPCTabContext
-{
-  PBrowser opener;
-  bool isBrowserElement;
-};
-
-// An IPCTabContext which corresponds to an app frame.
-struct AppFrameIPCTabContext
-{
-  // The ID of the app this frame corresponds to.  May be NO_APP_ID.
-  uint32_t ownAppId;
-
-  // The ID of the app containing this frame.  May be NO_APP_ID.
-  uint32_t appFrameOwnerAppId;
-};
-
-// An IPCTabContext which corresponds to a browser frame.
-struct BrowserFrameIPCTabContext
-{
-  // The ID of the app which contains this browser frame.  May be NO_APP_ID.
-  uint32_t browserFrameOwnerAppId;
-};
-
-// This is equivalent to AppFrameIPCTabContext with all fields set to NO_APP_ID.
-struct VanillaFrameIPCTabContext
-{};
-
-// IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an
-// iframe/PBrowser's own and containing app-ids and tell you whether the
-// iframe/PBrowser is a browser frame.  But only IPCTabContext is allowed to
-// travel over IPC.
-//
-// We need IPCTabContext (specifically, PopupIPCTabContext) to prevent a
-// privilege escalation attack by a compromised child process.  See the comment
-// on AllocPBrowser for details.
-union IPCTabContext
-{
-  PopupIPCTabContext;
-  AppFrameIPCTabContext;
-  BrowserFrameIPCTabContext;
-  VanillaFrameIPCTabContext;
+union AppId {
+  uint32_t;
+  nullable PBrowser;
 };
 
 union PrefValue {
@@ -233,26 +182,16 @@ both:
     // created from either the child or parent process!
     //
     // The child creates the PBrowser as part of
-    // TabChild::BrowserFrameProvideWindow (which happens when the child's
-    // content calls window.open()), and the parent creates the PBrowser as part
-    // of ContentParent::CreateTab.
+    // TabChild::BrowserFrameProvideWindow, and the parent creates the
+    // PBrowser as part of ContentParent::CreateTab.
     //
-    // When the parent constructs a PBrowser, the child trusts the app token it
-    // receives from the parent.  In that case, context can be any of the
-    // IPCTabContext subtypes.
-    //
-    // When the child constructs a PBrowser, the parent doesn't trust the app
-    // token it receives from the child.  In this case, context must have type
-    // PopupIPCTabContext.  The browser created using a PopupIPCTabContext has
-    // the opener PBrowser's app-id and containing-app-id.  The parent checks
-    // that if the opener is a browser element, the context is also for a
-    // browser element.
-    //
-    // This allows the parent to prevent a malicious child from escalating its
-    // privileges by requesting a PBrowser corresponding to a highly-privileged
-    // app; the child can only request privileges for an app which the child has
-    // access to (in the form of a TabChild).
-    async PBrowser(IPCTabContext context, uint32_t chromeFlags);
+    // When the parent constructs a PBrowser, the app ID handed to the
+    // child side is trusted.  In that case, |appId| is uint32_t.
+    // However, when the child side constructs a PBrowser, for
+    // window.open(), the parent must validate the app ID used on the
+    // parent side.  To do so, the child process must pass a valid
+    // PBrowser as its |AppId|.
+    async PBrowser(uint32_t chromeFlags, bool isBrowserElement, AppId appId);
 
     async PBlob(BlobConstructorParams params);
 
