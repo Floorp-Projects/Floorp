@@ -18,7 +18,6 @@
   } while(0)
 #endif
 
-using namespace android;
 
 namespace android {
 class GonkRecorder;
