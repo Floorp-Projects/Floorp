@@ -7,7 +7,7 @@
 
 #include "build/build_config.h"
 
-#include <ostream>
+#include <iostream>
 
 #if defined(OS_WIN)
 typedef struct tagPOINT POINT;
