@@ -30,10 +30,8 @@ let DebuggerView = {
   initialize: function DV_initialize(aCallback) {
     dumpn("Initializing the DebuggerView");
 
-    if (window._isRemoteDebugger || window._isChromeDebugger) {
-      window.moveTo(Prefs.windowX, Prefs.windowY);
-      window.resizeTo(Prefs.windowWidth, Prefs.windowHeight);
-    }
+    this._initializeWindow();
+    this._initializePanes();
 
     this.Toolbar.initialize();
     this.Options.initialize();
@@ -52,7 +50,6 @@ let DebuggerView = {
     this.Variables.eval = DebuggerController.StackFrames.evaluate;
     this.Variables.lazyEmpty = true;
 
-    this._initializePanes();
     this._initializeEditor(aCallback);
   },
 
@@ -65,13 +62,6 @@ let DebuggerView = {
   destroy: function DV_destroy(aCallback) {
     dumpn("Destroying the DebuggerView");
 
-    if (window._isRemoteDebugger || window._isChromeDebugger) {
-      Prefs.windowX = window.screenX;
-      Prefs.windowY = window.screenY;
-      Prefs.windowWidth = window.outerWidth;
-      Prefs.windowHeight = window.outerHeight;
-    }
-
     this.Toolbar.destroy();
     this.Options.destroy();
     this.ChromeGlobals.destroy();
@@ -81,9 +71,45 @@ let DebuggerView = {
     this.Breakpoints.destroy();
     this.GlobalSearch.destroy();
 
+    this._destroyWindow();
     this._destroyPanes();
     this._destroyEditor();
     aCallback();
+  },
+
+  /**
+   * Initializes the UI for the window.
+   */
+  _initializeWindow: function DV__initializeWindow() {
+    dumpn("Initializing the DebuggerView window");
+
+    let isRemote = window._isRemoteDebugger;
+    let isChrome = window._isChromeDebugger;
+
+    if (isRemote || isChrome) {
+      window.moveTo(Prefs.windowX, Prefs.windowY);
+      window.resizeTo(Prefs.windowWidth, Prefs.windowHeight);
+
+      if (isRemote) {
+        document.title = L10N.getStr("remoteDebuggerWindowTitle");
+      } else {
+        document.title = L10N.getStr("chromeDebuggerWindowTitle");
+      }
+    }
+  },
+
+  /**
+   * Destroys the UI for the window.
+   */
+  _destroyWindow: function DV__initializeWindow() {
+    dumpn("Destroying the DebuggerView window");
+
+    if (window._isRemoteDebugger || window._isChromeDebugger) {
+      Prefs.windowX = window.screenX;
+      Prefs.windowY = window.screenY;
+      Prefs.windowWidth = window.outerWidth;
+      Prefs.windowHeight = window.outerHeight;
+    }
   },
 
   /**
