@@ -9,7 +9,7 @@
 
 interface nsITabParent;
 
-[scriptable, uuid(6f043e42-02c9-4e8f-8f8d-1b83c6102827)]
+[scriptable, builtinclass, uuid(929AED00-3E15-49B7-8CA2-75003715B7E7)]
 interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
 {
   /**
@@ -19,7 +19,7 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
    * nsIDOMMozBrowserFrame::mozbrowser attribute must be true, and the frame
    * may have to pass various security checks.
    */
-  readonly attribute boolean reallyIsBrowser;
+  [infallible] readonly attribute boolean reallyIsBrowserOrApp;
 
   /**
    * Gets whether this frame really is an app frame.
@@ -28,11 +28,13 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
    * frame (this requirement will go away eventually), and the frame's mozapp
    * attribute must point to the manifest of a valid app.
    */
-  readonly attribute boolean reallyIsApp;
+  [infallible] readonly attribute boolean reallyIsApp;
 
   /**
    * Gets this frame's app manifest URL, if the frame really is an app frame.
    * Otherwise, returns the empty string.
+   *
+   * This method is guaranteed not to fail.
    */
   readonly attribute AString appManifestURL;
 

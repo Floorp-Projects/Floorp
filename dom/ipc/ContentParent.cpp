@@ -55,7 +55,6 @@
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
-#include "nsIAppsService.h"
 #include "nsIClipboard.h"
 #include "nsIDOMApplicationRegistry.h"
 #include "nsIDOMGeoGeolocation.h"
@@ -317,26 +316,24 @@ AppNeedsInheritedOSPrivileges(mozIApplication* aApp)
 }
 
 /*static*/ TabParent*
-ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
+ContentParent::CreateBrowserOrApp(const TabContext& aContext)
 {
-    // We currently don't set the <app> ancestor for <browser> content
-    // correctly.  This assertion is to notify the person who fixes
-    // this code that they need to reevaluate places here where we may
-    // make bad assumptions based on that bug.
-    MOZ_ASSERT(!aApp || !aIsBrowserElement);
-
-    if (!aApp) {
-        if (ContentParent* cp = GetNewOrUsed(aIsBrowserElement)) {
-            nsRefPtr<TabParent> tp(new TabParent(aApp, aIsBrowserElement));
-            return static_cast<TabParent*>(
-                cp->SendPBrowserConstructor(
-                    // DeallocPBrowserParent() releases the ref we take here
-                    tp.forget().get(),
-                    /*chromeFlags*/0,
-                    aIsBrowserElement, nsIScriptSecurityManager::NO_APP_ID));
+    if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
+        if (ContentParent* cp = GetNewOrUsed(aContext.IsBrowserElement())) {
+            nsRefPtr<TabParent> tp(new TabParent(aContext));
+            PBrowserParent* browser = cp->SendPBrowserConstructor(
+                tp.forget().get(), // DeallocPBrowserParent() releases this ref.
+                aContext.AsIPCTabContext(),
+                /* chromeFlags */ 0);
+            return static_cast<TabParent*>(browser);
         }
         return nullptr;
     }
+
+    // If we got here, we have an app and we're not a browser element.  ownApp
+    // shouldn't be null, because we otherwise would have gone into the
+    // !HasOwnApp() branch above.
+    nsCOMPtr<mozIApplication> ownApp = aContext.GetOwnApp();
 
     if (!gAppContentParents) {
         gAppContentParents =
@@ -346,29 +343,15 @@ ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
 
     // Each app gets its own ContentParent instance.
     nsAutoString manifestURL;
-    if (NS_FAILED(aApp->GetManifestURL(manifestURL))) {
+    if (NS_FAILED(ownApp->GetManifestURL(manifestURL))) {
         NS_ERROR("Failed to get manifest URL");
-        return nullptr;
-    }
-
-    nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-    if (!appsService) {
-        NS_ERROR("Failed to get apps service");
-        return nullptr;
-    }
-
-    // Send the local app ID to the new TabChild so it knows what app
-    // it is.
-    uint32_t appId;
-    if (NS_FAILED(appsService->GetAppLocalIdByManifestURL(manifestURL, &appId))) {
-        NS_ERROR("Failed to get local app ID");
         return nullptr;
     }
 
     nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
     if (!p) {
-        if (AppNeedsInheritedOSPrivileges(aApp)) {
-            p = new ContentParent(manifestURL, aIsBrowserElement,
+        if (AppNeedsInheritedOSPrivileges(ownApp)) {
+            p = new ContentParent(manifestURL, /* isBrowserElement = */ false,
                                   base::PRIVILEGES_INHERIT);
             p->Init();
         } else {
@@ -377,7 +360,7 @@ ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
                 p->SetManifestFromPreallocated(manifestURL);
             } else {
                 NS_WARNING("Unable to use pre-allocated app process");
-                p = new ContentParent(manifestURL, aIsBrowserElement,
+                p = new ContentParent(manifestURL, /* isBrowserElement = */ false,
                                       base::PRIVILEGES_DEFAULT);
                 p->Init();
             }
@@ -385,12 +368,12 @@ ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
         gAppContentParents->Put(manifestURL, p);
     }
 
-    nsRefPtr<TabParent> tp(new TabParent(aApp, aIsBrowserElement));
-    return static_cast<TabParent*>(
-        // DeallocPBrowserParent() releases the ref we take here
-        p->SendPBrowserConstructor(tp.forget().get(),
-                                   /*chromeFlags*/0,
-                                   aIsBrowserElement, appId));
+    nsRefPtr<TabParent> tp = new TabParent(aContext);
+    PBrowserParent* browser = p->SendPBrowserConstructor(
+        tp.forget().get(), // DeallocPBrowserParent() releases this ref.
+        aContext.AsIPCTabContext(),
+        /* chromeFlags */ 0);
+    return static_cast<TabParent*>(browser);
 }
 
 static PLDHashOperator
@@ -1163,30 +1146,37 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline)
 }
 
 PBrowserParent*
-ContentParent::AllocPBrowser(const uint32_t& aChromeFlags,
-                             const bool& aIsBrowserElement, const AppId& aApp)
+ContentParent::AllocPBrowser(const IPCTabContext& aContext,
+                             const uint32_t &aChromeFlags)
 {
-    // We only use this Alloc() method when the content processes asks
-    // us to open a window.  In that case, we're expecting to see the
-    // opening PBrowser as its app descriptor, and we can trust the data
-    // associated with that PBrowser since it's fully owned by this
-    // process.
-    if (AppId::TPBrowserParent != aApp.type()) {
-        NS_ERROR("Content process attempting to forge app ID");
-        return nullptr;
-    }
-    TabParent* opener = static_cast<TabParent*>(aApp.get_PBrowserParent());
+    unused << aChromeFlags;
 
-    // Popup windows of isBrowser frames are isBrowser if the parent
-    // isBrowser.  Allocating a !isBrowser frame with same app ID
-    // would allow the content to access data it's not supposed to.
-    if (opener && opener->IsBrowserElement() && !aIsBrowserElement) {
-        NS_ERROR("Content process attempting to escalate data access privileges");
+    // We don't trust the IPCTabContext we receive from the child, so we'll bail
+    // if we receive an IPCTabContext that's not a PopupIPCTabContext.
+    // (PopupIPCTabContext lets the child process prove that it has access to
+    // the app it's trying to open.)
+    if (aContext.type() != IPCTabContext::TPopupIPCTabContext) {
+        NS_ERROR("Unexpected IPCTabContext type.  Aborting AllocPBrowser.");
         return nullptr;
     }
 
-    TabParent* parent = new TabParent(opener ? opener->GetApp() : nullptr,
-                                      aIsBrowserElement);
+    const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
+    TabParent* opener = static_cast<TabParent*>(popupContext.openerParent());
+    if (!opener) {
+        NS_ERROR("Got null opener from child; aborting AllocPBrowser.");
+        return nullptr;
+    }
+
+    // Popup windows of isBrowser frames must be isBrowser if the parent
+    // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
+    // the content to access data it's not supposed to.
+    if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
+        NS_ERROR("Child trying to escalate privileges!  Aborting AllocPBrowser.");
+        return nullptr;
+    }
+
+    TabParent* parent = new TabParent(TabContext(aContext));
+
     // We release this ref in DeallocPBrowser()
     NS_ADDREF(parent);
     return parent;
