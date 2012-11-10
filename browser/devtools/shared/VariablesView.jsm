@@ -9,7 +9,7 @@ const LAZY_EMPTY_DELAY = 150; // ms
 
 Components.utils.import('resource://gre/modules/Services.jsm');
 
-let EXPORTED_SYMBOLS = ["VariablesView", "create"];
+this.EXPORTED_SYMBOLS = ["VariablesView", "create"];
 
 /**
  * A tree view for inspecting scopes, objects and properties.
@@ -22,7 +22,7 @@ let EXPORTED_SYMBOLS = ["VariablesView", "create"];
  * @param nsIDOMNode aParentNode
  *        The parent node to hold this view.
  */
-function VariablesView(aParentNode) {
+this.VariablesView = function VariablesView(aParentNode) {
   this._store = new Map();
   this._prevHierarchy = new Map();
   this._currHierarchy = new Map();
