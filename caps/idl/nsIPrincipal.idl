@@ -21,7 +21,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, uuid(3a283dc9-f733-4618-a36f-e2b68c280ab7)]
+[scriptable, builtinclass, uuid(011966C0-8564-438D-B37A-08D7E1195E5A)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -159,78 +159,66 @@ interface nsIPrincipal : nsISerializable
     const short APP_STATUS_CERTIFIED     = 3;
 
     /**
-     * Shows the status of the app.
-     * Can be: APP_STATUS_NOT_INSTALLED, APP_STATUS_INSTALLED,
-     *         APP_STATUS_PRIVILEGED or APP_STATUS_CERTIFIED.
+     * Gets the principal's app status, which indicates whether the principal
+     * corresponds to "app code", and if it does, how privileged that code is.
+     * This method returns one of the APP_STATUS constants above.
+     *
+     * Note that a principal may have
+     *
+     *   appId != nsIScriptSecurityManager::NO_APP_ID &&
+     *   appId != nsIScriptSecurityManager::UNKNOWN_APP_ID
+     *
+     * and still have appStatus == APP_STATUS_NOT_INSTALLED.  That's because
+     * appId identifies the app that contains this principal, but a window
+     * might be contained in an app and not be running code that the app has
+     * vouched for.  For example, the window might be inside an <iframe
+     * mozbrowser>, or the window's origin might not match the app's origin.
+     *
+     * If you're doing a check to determine "does this principal correspond to
+     * app code?", you must check appStatus; checking appId != NO_APP_ID is not
+     * sufficient.
      */
-    readonly attribute unsigned short appStatus;
-
-    %{C++
-    uint16_t GetAppStatus()
-    {
-      uint16_t appStatus;
-      nsresult rv = GetAppStatus(&appStatus);
-      if (NS_FAILED(rv)) {
-        return APP_STATUS_NOT_INSTALLED;
-      }
-      return appStatus;
-    }
-    %}
+    [infallible] readonly attribute unsigned short appStatus;
 
     /**
-     * Returns the app id the principal is in, or returns
-     * nsIScriptSecurityManager::NO_APP_ID if this principal isn't part of an
-     * app.
+     * Gets the id of the app this principal is inside.  If this principal is
+     * not inside an app, returns nsIScriptSecurityManager::NO_APP_ID.
+     *
+     * Note that this principal does not necessarily have the permissions of
+     * the app identified by appId.  For example, this principal might
+     * correspond to an iframe whose origin differs from that of the app frame
+     * containing it.  In this case, the iframe will have the appId of its
+     * containing app frame, but the iframe must not run with the app's
+     * permissions.
+     *
+     * Similarly, this principal might correspond to an <iframe mozbrowser>
+     * inside an app frame; in this case, the content inside the iframe should
+     * not have any of the app's permissions, even if the iframe is at the same
+     * origin as the app.
+     *
+     * If you're doing a security check based on appId, you must check
+     * appStatus as well.
      */
-    readonly attribute unsigned long appId;
-
-    %{C++
-    uint32_t GetAppId()
-    {
-      uint32_t appId;
-      mozilla::DebugOnly<nsresult> rv = GetAppId(&appId);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      return appId;
-    }
-    %}
+    [infallible] readonly attribute unsigned long appId;
 
     /**
-     * Returns true iif the principal is inside a browser element.
+     * Returns true iff the principal is inside a browser element.  (<iframe
+     * mozbrowser mozapp> does not count as a browser element.)
      */
-    readonly attribute boolean isInBrowserElement;
-
-    %{C++
-    bool GetIsInBrowserElement()
-    {
-      bool isInBrowserElement;
-      mozilla::DebugOnly<nsresult> rv = GetIsInBrowserElement(&isInBrowserElement);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      return isInBrowserElement;
-    }
-    %}
+    [infallible] readonly attribute boolean isInBrowserElement;
 
     /**
      * Returns true if this principal has an unknown appId. This shouldn't
      * generally be used. We only expose it due to not providing the correct
      * appId everywhere where we construct principals.
      */
-    readonly attribute boolean unknownAppId;
-
-    %{C++
-    bool GetUnknownAppId()
-    {
-      bool unkwnownAppId;
-      mozilla::DebugOnly<nsresult> rv = GetUnknownAppId(&unkwnownAppId);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      return unkwnownAppId;
-    }
-    %}
+    [infallible] readonly attribute boolean unknownAppId;
 
     /**
      * Returns true iff this principal is a null principal (corresponding to an
      * unknown, hence assumed minimally privileged, security context).
      */
-    readonly attribute boolean isNullPrincipal;
+    [infallible] readonly attribute boolean isNullPrincipal;
 };
 
 /**
