@@ -2404,7 +2404,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 nsCOMPtr<nsIContent> radioContent =
                   do_QueryInterface(selectedRadioButton);
                 if (radioContent) {
-                  rv = selectedRadioButton->DOMFocus();
+                  rv = selectedRadioButton->Focus();
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
                     nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
