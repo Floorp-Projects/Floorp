@@ -43,8 +43,9 @@
       const objectStoreName = "foo";
       const testKey = 1;
       const testValue = objectStoreName;
+      const dbName = window.location.pathname + window.location.search;
 
-      let request = indexedDB.open(window.location.pathname, 1);
+      let request = indexedDB.open(dbName, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
@@ -73,7 +74,7 @@
 
       block();
 
-      request = indexedDB.open(window.location.pathname, 1);
+      request = indexedDB.open(dbName, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
