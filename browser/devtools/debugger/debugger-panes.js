@@ -101,7 +101,10 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
    */
   _onClick: function DVSF__onClick(e) {
     let item = this.getItemForElement(e.target);
-    DebuggerController.StackFrames.selectFrame(item.attachment.depth);
+    if (item) {
+      // The container is not empty and we clicked on an actual item.
+      DebuggerController.StackFrames.selectFrame(item.attachment.depth);
+    }
   },
 
   /**
@@ -512,6 +515,10 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
    */
   _onClick: function DVB__onClick(e) {
     let breakpointItem = this.getItemForElement(e.target);
+    if (!breakpointItem) {
+      // The container is empty or we didn't click on an actual item.
+      return;
+    }
     let { sourceLocation: url, lineNumber: line } = breakpointItem.attachment;
 
     DebuggerView.updateEditor(url, line, { noDebug: true });
@@ -522,12 +529,16 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
    * The click listener for a breakpoint checkbox.
    */
   _onCheckboxClick: function DVB__onCheckboxClick(e) {
+    let breakpointItem = this.getItemForElement(e.target);
+    if (!breakpointItem) {
+      // The container is empty or we didn't click on an actual item.
+      return;
+    }
+    let { sourceLocation: url, lineNumber: line, enabled } = breakpointItem.attachment;
+
     // Don't update the editor location.
     e.preventDefault();
     e.stopPropagation();
-
-    let breakpointItem = this.getItemForElement(e.target);
-    let { sourceLocation: url, lineNumber: line, enabled } = breakpointItem.attachment;
 
     this[enabled
       ? "disableBreakpoint"
