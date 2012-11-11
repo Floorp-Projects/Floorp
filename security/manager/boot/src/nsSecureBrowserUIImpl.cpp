@@ -1281,14 +1281,13 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
                                                     bool withUpdateTooltip)
 {
   lockIconState warnSecurityState = lis_no_security;
-  bool showWarning = false;
   nsresult rv = NS_OK;
 
   // both parameters are both input and outout
-  bool flagsChanged = UpdateMyFlags(showWarning, warnSecurityState);
+  bool flagsChanged = UpdateMyFlags(warnSecurityState);
 
   if (flagsChanged || withNewLocation || withUpdateStatus || withUpdateTooltip)
-    rv = TellTheWorld(showWarning, warnSecurityState, aRequest);
+    rv = TellTheWorld(warnSecurityState, aRequest);
 
   return rv;
 }
@@ -1296,7 +1295,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
 // must not fail, by definition, only trivial assignments
 // or string operations are allowed
 // returns true if our overall state has changed and we must send out notifications
-bool nsSecureBrowserUIImpl::UpdateMyFlags(bool &showWarning, lockIconState &warnSecurityState)
+bool nsSecureBrowserUIImpl::UpdateMyFlags(lockIconState &warnSecurityState)
 {
   ReentrantMonitorAutoEnter lock(mReentrantMonitor);
   bool mustTellTheWorld = false;
@@ -1338,23 +1337,8 @@ bool nsSecureBrowserUIImpl::UpdateMyFlags(bool &showWarning, lockIconState &warn
     mustTellTheWorld = true;
 
     // we'll treat "broken" exactly like "insecure",
-    // i.e. we do not show alerts when switching between broken and insecure
 
     /*
-      from                 to           shows alert
-    ------------------------------     ---------------
-
-    no or broken -> no or broken    => <NOTHING SHOWN>
-
-    no or broken -> mixed           => mixed alert
-    no or broken -> high            => high alert
-    
-    mixed, high  -> no, broken      => leaving secure
-
-    mixed        -> high            => high alert
-
-    high         -> mixed           => mixed
-    
       security    icon
       ----------------
     
@@ -1364,32 +1348,6 @@ bool nsSecureBrowserUIImpl::UpdateMyFlags(bool &showWarning, lockIconState &warn
       high        high
     */
 
-    showWarning = true;
-    
-    switch (mNotifiedSecurityState)
-    {
-      case lis_no_security:
-      case lis_broken_security:
-        switch (newSecurityState)
-        {
-          case lis_no_security:
-          case lis_broken_security:
-            showWarning = false;
-            break;
-          
-          default:
-            break;
-        }
-      
-      default:
-        break;
-    }
-
-    if (showWarning)
-    {
-      warnSecurityState = newSecurityState;
-    }
-    
     mNotifiedSecurityState = newSecurityState;
 
     if (lis_no_security == newSecurityState)
@@ -1407,8 +1365,7 @@ bool nsSecureBrowserUIImpl::UpdateMyFlags(bool &showWarning, lockIconState &warn
   return mustTellTheWorld;
 }
 
-nsresult nsSecureBrowserUIImpl::TellTheWorld(bool showWarning, 
-                                             lockIconState warnSecurityState, 
+nsresult nsSecureBrowserUIImpl::TellTheWorld(lockIconState warnSecurityState, 
                                              nsIRequest* aRequest)
 {
   nsCOMPtr<nsISecurityEventSink> temp_ToplevelEventSink;
@@ -1441,25 +1398,6 @@ nsresult nsSecureBrowserUIImpl::TellTheWorld(bool showWarning,
            ("SecureUI:%p: UpdateSecurityState: NO mToplevelEventSink!\n", this
             ));
 
-  }
-
-  if (showWarning)
-  {
-    switch (warnSecurityState)
-    {
-      case lis_no_security:
-      case lis_broken_security:
-        ConfirmLeavingSecure();
-        break;
-
-      case lis_mixed_security:
-        ConfirmMixedMode();
-        break;
-
-      case lis_high_security:
-        ConfirmEnteringSecure();
-        break;
-    }
   }
 
   return NS_OK; 
@@ -1704,8 +1642,6 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *formURL, nsIURI *actionURL, bool *okayT
   // posting to insecure webpage from a secure webpage.
   if (formSecure) {
     *okayToPost = ConfirmPostToInsecureFromSecure();
-  } else {
-    *okayToPost = ConfirmPostToInsecure();
   }
 
   return NS_OK;
@@ -1786,77 +1722,6 @@ nsSecureBrowserUIImpl::GetNSSDialogs(nsCOMPtr<nsISecurityWarningDialogs> & dialo
   ctx = new nsUIContext(window);
   
   return true;
-}
-
-bool nsSecureBrowserUIImpl::
-ConfirmEnteringSecure()
-{
-  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
-  nsCOMPtr<nsIInterfaceRequestor> ctx;
-
-  if (!GetNSSDialogs(dialogs, ctx)) {
-    return false; // Should this allow true for unimplemented?
-  }
-
-  bool confirms;
-  dialogs->ConfirmEnteringSecure(ctx, &confirms);
-
-  return confirms;
-}
-
-bool nsSecureBrowserUIImpl::
-ConfirmLeavingSecure()
-{
-  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
-  nsCOMPtr<nsIInterfaceRequestor> ctx;
-
-  if (!GetNSSDialogs(dialogs, ctx)) {
-    return false; // Should this allow true for unimplemented?
-  }
-
-  bool confirms;
-  dialogs->ConfirmLeavingSecure(ctx, &confirms);
-
-  return confirms;
-}
-
-bool nsSecureBrowserUIImpl::
-ConfirmMixedMode()
-{
-  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
-  nsCOMPtr<nsIInterfaceRequestor> ctx;
-
-  if (!GetNSSDialogs(dialogs, ctx)) {
-    return false; // Should this allow true for unimplemented?
-  }
-
-  bool confirms;
-  dialogs->ConfirmMixedMode(ctx, &confirms);
-
-  return confirms;
-}
-
-/**
- * ConfirmPostToInsecure - returns true if
- *   the user approves the submit (or doesn't care).
- *   returns false on errors.
- */
-bool nsSecureBrowserUIImpl::
-ConfirmPostToInsecure()
-{
-  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
-  nsCOMPtr<nsIInterfaceRequestor> ctx;
-
-  if (!GetNSSDialogs(dialogs, ctx)) {
-    return false; // Should this allow true for unimplemented?
-  }
-
-  bool result;
-
-  nsresult rv = dialogs->ConfirmPostToInsecure(ctx, &result);
-  if (NS_FAILED(rv)) return false;
-
-  return result;
 }
 
 /**
