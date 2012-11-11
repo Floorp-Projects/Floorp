@@ -54,10 +54,6 @@ pref("security.default_personal_cert",   "Ask Every Time");
 pref("security.remember_cert_checkbox_default_setting", true);
 pref("security.ask_for_password",        0);
 pref("security.password_lifetime",       30);
-pref("security.warn_entering_secure",    false);
-pref("security.warn_leaving_secure",     false);
-pref("security.warn_viewing_mixed",      true);
-pref("security.warn_submit_insecure",    false);
 
 pref("security.OCSP.enabled", 1);
 pref("security.OCSP.require", false);
