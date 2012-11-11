@@ -1272,13 +1272,13 @@ function runNextTest() {
   if (tests.length) {
     let test = tests.shift();
     test.setup();
-    waitForAsyncUpdates(function () {
+    promiseAsyncUpdates().then(function () {
       test.check();
       // sorting reversed, usually SORT_BY have ASC and DESC
       test.check_reverse();
       // Execute cleanup tasks
       remove_all_bookmarks();
-      waitForClearHistory(runNextTest);
+      promiseClearHistory().then(runNextTest);
     });
   }
   else {

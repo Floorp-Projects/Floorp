@@ -60,7 +60,7 @@ function run_test() {
     // 2. run the test-suite
     validate();
   
-    waitForAsyncUpdates(function testJsonExport() {
+    promiseAsyncUpdates().then(function testJsonExport() {
       // Test exporting a Places canonical json file.
       // 1. export to bookmarks.exported.json
       try {
@@ -79,7 +79,7 @@ function run_test() {
       validate();
       LOG("validated import");
   
-      waitForAsyncUpdates(do_test_finished);
+      promiseAsyncUpdates().then(do_test_finished);
     });
   }
 }

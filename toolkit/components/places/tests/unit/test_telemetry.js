@@ -60,7 +60,7 @@ function run_test() {
     .getService(Ci.nsIObserver)
     .observe(null, "gather-telemetry", null);
 
-  waitForAsyncUpdates(continue_test);
+  promiseAsyncUpdates().then(continue_test);
 }
 
 function continue_test() {

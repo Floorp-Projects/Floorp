@@ -89,7 +89,7 @@ add_test(function test_replaceFaviconDataFromDataURL_validHistoryURI() {
         pageURI, favicon.mimetype, favicon.data,
         function test_replaceFaviconDataFromDataURL_validHistoryURI_callback() {
           favicon.file.remove(false);
-          waitForClearHistory(run_next_test);
+          promiseClearHistory().then(run_next_test);
         });
     });
 });
@@ -114,7 +114,7 @@ add_test(function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
         function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon_callback() {
           firstFavicon.file.remove(false);
           secondFavicon.file.remove(false);
-          waitForClearHistory(run_next_test);
+          promiseClearHistory().then(run_next_test);
         });
     });
 });
@@ -142,7 +142,7 @@ add_test(function test_replaceFaviconDataFromDataURL_replaceExisting() {
             function test_replaceFaviconDataFromDataURL_replaceExisting_secondCallback() {
               firstFavicon.file.remove(false);
               secondFavicon.file.remove(false);
-              waitForClearHistory(run_next_test);
+              promiseClearHistory().then(run_next_test);
             });
         });
     });
@@ -168,7 +168,7 @@ add_test(function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
         function test_replaceFaviconDataFromDataURL_unrelatedReplace_callback() {
           favicon.file.remove(false);
           unrelatedFavicon.file.remove(false);
-          waitForClearHistory(run_next_test);
+          promiseClearHistory().then(run_next_test);
         });
     });
 });
@@ -197,7 +197,7 @@ add_test(function test_replaceFaviconDataFromDataURL_badInputs() {
   }
 
   favicon.file.remove(false);
-  waitForClearHistory(run_next_test);
+  promiseClearHistory().then(run_next_test);
 });
 
 add_test(function test_replaceFaviconDataFromDataURL_twiceReplace() {
@@ -222,7 +222,7 @@ add_test(function test_replaceFaviconDataFromDataURL_twiceReplace() {
         function test_replaceFaviconDataFromDataURL_twiceReplace_callback() {
           firstFavicon.file.remove(false);
           secondFavicon.file.remove(false);
-          waitForClearHistory(run_next_test);
+          promiseClearHistory().then(run_next_test);
         });
     });
 });
@@ -251,7 +251,7 @@ add_test(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
         function test_replaceFaviconDataFromDataURL_afterRegularAssign_callback() {
           firstFavicon.file.remove(false);
           secondFavicon.file.remove(false);
-          waitForClearHistory(run_next_test);
+          promiseClearHistory().then(run_next_test);
         });
     });
 });
@@ -280,7 +280,7 @@ add_test(function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
         function test_replaceFaviconDataFromDataURL_beforeRegularAssign_callback() {
           firstFavicon.file.remove(false);
           secondFavicon.file.remove(false);
-          waitForClearHistory(run_next_test);
+          promiseClearHistory().then(run_next_test);
         });
     });
 });

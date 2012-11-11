@@ -23,22 +23,18 @@ const TITLE_LENGTH_MAX = 4096;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "Services", function() {
-  Cu.import("resource://gre/modules/Services.jsm");
-  return Services;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/promise/core.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
-
-XPCOMUtils.defineLazyGetter(this, "FileUtils", function() {
-  Cu.import("resource://gre/modules/FileUtils.jsm");
-  return FileUtils;
-});
-
+// This imports various other objects in addition to PlacesUtils.
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "SMALLPNG_DATA_URI", function() {
   return NetUtil.newURI(
          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
@@ -375,23 +371,40 @@ function setPageTitle(aURI, aTitle) {
   PlacesUtils.history.setPageTitle(aURI, aTitle);
 }
 
+/**
+ * Allows waiting for an observer notification once.
+ *
+ * @param aTopic
+ *        Notification topic to observe.
+ *
+ * @return {Promise}
+ * @resolves The array [aSubject, aData] from the observed notification.
+ * @rejects Never.
+ */
+function promiseTopicObserved(aTopic)
+{
+  let deferred = Promise.defer();
+
+  Services.obs.addObserver(
+    function PTO_observe(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(PTO_observe, aTopic);
+      deferred.resolve([aSubject, aData]);
+    }, aTopic, false);
+
+  return deferred.promise;
+}
 
 /**
- * Clears history invoking callback when done.
+ * Clears history asynchronously.
  *
- * @param aCallback
- *        Callback function to be called once clear history has finished.
+ * @return {Promise}
+ * @resolves When history has been cleared.
+ * @rejects Never.
  */
-function waitForClearHistory(aCallback) {
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-      aCallback();
-    }
-  };
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-
+function promiseClearHistory() {
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
   PlacesUtils.bhistory.removeAllPages();
+  return promise;
 }
 
 
@@ -516,37 +529,6 @@ function check_JSON_backup() {
   return profileBookmarksJSONFile;
 }
 
-
-/**
- * Waits for a frecency update then calls back.
- *
- * @param aURI
- *        URI or spec of the page we are waiting frecency for.
- * @param aValidator
- *        Validator function for the current frecency. If it returns true we
- *        have the expected frecency, otherwise we wait for next update.
- * @param aCallback
- *        function invoked when frecency update finishes.
- * @param aCbScope
- *        "this" scope for the callback
- * @param aCbArguments
- *        array of arguments to be passed to the callback
- *
- * @note since frecency is something that can be changed by a bunch of stuff
- *       like adding and removing visits, bookmarks we use a polling strategy.
- */
-function waitForFrecency(aURI, aValidator, aCallback, aCbScope, aCbArguments) {
-  Services.obs.addObserver(function (aSubject, aTopic, aData) {
-    let frecency = frecencyForUrl(aURI);
-    if (!aValidator(frecency)) {
-      print("Has to wait for frecency...");
-      return;
-    }
-    Services.obs.removeObserver(arguments.callee, aTopic);
-    aCallback.apply(aCbScope, aCbArguments);
-  }, "places-frecency-updated", false);
-}
-
 /**
  * Returns the frecency of a url.
  *
@@ -561,12 +543,14 @@ function frecencyForUrl(aURI)
     "SELECT frecency FROM moz_places WHERE url = ?1"
   );
   stmt.bindByIndex(0, url);
-  if (!stmt.executeStep())
-    throw new Error("No result for frecency.");
-  let frecency = stmt.getInt32(0);
-  stmt.finalize();
-
-  return frecency;
+  try {
+    if (!stmt.executeStep()) {
+      throw new Error("No result for frecency.");
+    }
+    return stmt.getInt32(0);
+  } finally {
+    stmt.finalize();
+  }
 }
 
 /**
@@ -611,15 +595,11 @@ function is_time_ordered(before, after) {
 }
 
 /**
- * Waits for all pending async statements on the default connection, before
- * proceeding with aCallback.
+ * Waits for all pending async statements on the default connection.
  *
- * @param aCallback
- *        Function to be called when done.
- * @param aScope
- *        Scope for the callback.
- * @param aArguments
- *        Arguments array for the callback.
+ * @return {Promise}
+ * @resolves When all pending async statements finished.
+ * @rejects Never.
  *
  * @note The result is achieved by asynchronously executing a query requiring
  *       a write lock.  Since all statements on the same connection are
@@ -627,10 +607,10 @@ function is_time_ordered(before, after) {
  *       complete.  Note that WAL makes so that writers don't block readers, but
  *       this is a problem only across different connections.
  */
-function waitForAsyncUpdates(aCallback, aScope, aArguments)
+function promiseAsyncUpdates()
 {
-  let scope = aScope || this;
-  let args = aArguments || [];
+  let deferred = Promise.defer();
+
   let db = DBConn();
   let begin = db.createAsyncStatement("BEGIN EXCLUSIVE");
   begin.executeAsync();
@@ -638,14 +618,16 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments)
 
   let commit = db.createAsyncStatement("COMMIT");
   commit.executeAsync({
-    handleResult: function() {},
-    handleError: function() {},
+    handleResult: function () {},
+    handleError: function () {},
     handleCompletion: function(aReason)
     {
-      aCallback.apply(scope, args);
+      deferred.resolve();
     }
   });
   commit.finalize();
+
+  return deferred.promise;
 }
 
 /**
