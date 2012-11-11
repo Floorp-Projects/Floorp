@@ -5,6 +5,7 @@
 
 #include "nsAccDocManager.h"
 
+#include "Accessible-inl.h"
 #include "ApplicationAccessible.h"
 #include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"

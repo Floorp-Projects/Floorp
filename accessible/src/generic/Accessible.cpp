@@ -2731,20 +2731,6 @@ Accessible::AnchorURIAt(uint32_t aAnchorIndex)
 ////////////////////////////////////////////////////////////////////////////////
 // SelectAccessible
 
-bool
-Accessible::IsSelect()
-{
-  // If we have an ARIA role attribute present and the role allows multi
-  // selectable state, then we need to support SelectAccessible interface. If
-  // either attribute (role or multiselectable) change, then we'll destroy this
-  // accessible so that we can follow COM identity rules.
-
-  return mRoleMapEntry &&
-    (mRoleMapEntry->attributeMap1 == aria::eARIAMultiSelectable ||
-     mRoleMapEntry->attributeMap2 == aria::eARIAMultiSelectable ||
-     mRoleMapEntry->attributeMap3 == aria::eARIAMultiSelectable);
-}
-
 already_AddRefed<nsIArray>
 Accessible::SelectedItems()
 {
