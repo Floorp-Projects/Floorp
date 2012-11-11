@@ -4279,12 +4279,19 @@ var XULBrowserWindow = {
     const wpl = Components.interfaces.nsIWebProgressListener;
     const wpl_security_bits = wpl.STATE_IS_SECURE |
                               wpl.STATE_IS_BROKEN |
-                              wpl.STATE_IS_INSECURE;
+                              wpl.STATE_IS_INSECURE |
+                              wpl.STATE_SECURE_HIGH |
+                              wpl.STATE_SECURE_MED |
+                              wpl.STATE_SECURE_LOW;
     var level;
 
     switch (this._state & wpl_security_bits) {
-      case wpl.STATE_IS_SECURE:
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
         level = "high";
+        break;
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_MED:
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
+        level = "low";
         break;
       case wpl.STATE_IS_BROKEN:
         level = "broken";
@@ -6672,7 +6679,7 @@ var gIdentityHandler = {
       this.setMode(this.IDENTITY_MODE_CHROMEUI);
     else if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
-    else if (state & nsIWebProgressListener.STATE_IS_SECURE)
+    else if (state & nsIWebProgressListener.STATE_SECURE_HIGH)
       this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
     else if (state & nsIWebProgressListener.STATE_IS_BROKEN)
       this.setMode(this.IDENTITY_MODE_MIXED_CONTENT);
