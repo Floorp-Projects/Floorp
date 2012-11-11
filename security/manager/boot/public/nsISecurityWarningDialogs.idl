@@ -11,7 +11,7 @@ interface nsIInterfaceRequestor;
  * Functions that display warnings for transitions between secure
  * and insecure pages, posts to insecure servers etc.
  */
-[scriptable, uuid(1c399d06-1dd2-11b2-bc58-c87cbcacdb78)]
+[scriptable, uuid(ba1f7293-c633-4e4c-b3e8-ae2feedb3c09)]
 interface nsISecurityWarningDialogs : nsISupports
 {
   /**
@@ -25,19 +25,6 @@ interface nsISecurityWarningDialogs : nsISupports
    *  @return true if the user confirms to continue
    */
   boolean confirmEnteringSecure(in nsIInterfaceRequestor ctx);
-
-  /**
-   *  Inform the user that a transition 
-   *    from an insecure page 
-   *    or from a secure page
-   *    to a weak security page
-   *  is happening.
-   *
-   *  @param ctx A user interface context.
-   *
-   *  @return true if the user confirms to continue
-   */
-  boolean confirmEnteringWeak(in nsIInterfaceRequestor ctx);
 
   /**
    *  Inform the user that a transition 
