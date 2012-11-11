@@ -126,8 +126,6 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   , mNewToplevelIsEV(false)
   , mNewToplevelSecurityStateKnown(true)
   , mIsViewSource(false)
-  , mSubRequestsHighSecurity(0)
-  , mSubRequestsLowSecurity(0)
   , mSubRequestsBrokenSecurity(0)
   , mSubRequestsNoSecurity(0)
   , mRestoreSubrequests(false)
@@ -273,10 +271,6 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
 
     case lis_mixed_security:
       *aState = STATE_IS_BROKEN;
-      break;
-
-    case lis_low_security:
-      *aState = STATE_IS_SECURE | STATE_SECURE_LOW;
       break;
 
     case lis_high_security:
@@ -557,17 +551,7 @@ nsSecureBrowserUIImpl::UpdateSubrequestMembers(nsISupports *securityInfo)
   // the code above this line should run without a lock
   ReentrantMonitorAutoEnter lock(mReentrantMonitor);
 
-  if (reqState & STATE_IS_SECURE) {
-    if (reqState & STATE_SECURE_LOW || reqState & STATE_SECURE_MED) {
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-             ("SecureUI:%p: OnStateChange: subreq LOW\n", this));
-      ++mSubRequestsLowSecurity;
-    } else {
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-             ("SecureUI:%p: OnStateChange: subreq HIGH\n", this));
-      ++mSubRequestsHighSecurity;
-    }
-  } else if (reqState & STATE_IS_BROKEN) {
+  if (reqState & STATE_IS_BROKEN) {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: OnStateChange: subreq BROKEN\n", this));
     ++mSubRequestsBrokenSecurity;
@@ -934,18 +918,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   {
     f -= nsIWebProgressListener::STATE_SECURE_HIGH;
     info.Append("SECURE_HIGH ");
-  }
-  if (f & nsIWebProgressListener::STATE_SECURE_MED)
-  {
-    f -= nsIWebProgressListener::STATE_SECURE_MED;
-    info.Append("SECURE_MED ");
-  }
-  if (f & nsIWebProgressListener::STATE_SECURE_LOW)
-  {
-    f -= nsIWebProgressListener::STATE_SECURE_LOW;
-    info.Append("SECURE_LOW ");
-  }
-  if (f & nsIWebProgressListener::STATE_RESTORING)
+  }  if (f & nsIWebProgressListener::STATE_RESTORING)
   {
     f -= nsIWebProgressListener::STATE_RESTORING;
     info.Append("STATE_RESTORING ");
@@ -1037,14 +1010,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   {
     bool inProgress;
 
-    int32_t saveSubHigh;
-    int32_t saveSubLow;
     int32_t saveSubBroken;
     int32_t saveSubNo;
     nsCOMPtr<nsIAssociatedContentSecurity> prevContentSecurity;
 
-    int32_t newSubHigh = 0;
-    int32_t newSubLow = 0;
     int32_t newSubBroken = 0;
     int32_t newSubNo = 0;
 
@@ -1054,8 +1023,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
       if (allowSecurityStateChange && !inProgress)
       {
-        saveSubHigh = mSubRequestsHighSecurity;
-        saveSubLow = mSubRequestsLowSecurity;
         saveSubBroken = mSubRequestsBrokenSecurity;
         saveSubNo = mSubRequestsNoSecurity;
         prevContentSecurity = do_QueryInterface(mCurrentToplevelSecurityInfo);
@@ -1076,13 +1043,11 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   
         // before resetting our state, let's save information about
         // sub element loads, so we can restore it later
-        prevContentSecurity->SetCountSubRequestsHighSecurity(saveSubHigh);
-        prevContentSecurity->SetCountSubRequestsLowSecurity(saveSubLow);
         prevContentSecurity->SetCountSubRequestsBrokenSecurity(saveSubBroken);
         prevContentSecurity->SetCountSubRequestsNoSecurity(saveSubNo);
         prevContentSecurity->Flush();
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Saving subs in START to %p as %d,%d,%d,%d\n", 
-          this, prevContentSecurity.get(), saveSubHigh, saveSubLow, saveSubBroken, saveSubNo));      
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Saving subs in START to %p as %d,%d\n", 
+          this, prevContentSecurity.get(), saveSubBroken, saveSubNo));      
       }
 
       bool retrieveAssociatedState = false;
@@ -1112,12 +1077,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                  ("SecureUI:%p: OnStateChange: start, loading old sub state\n", this
                   ));
     
-          newContentSecurity->GetCountSubRequestsHighSecurity(&newSubHigh);
-          newContentSecurity->GetCountSubRequestsLowSecurity(&newSubLow);
           newContentSecurity->GetCountSubRequestsBrokenSecurity(&newSubBroken);
           newContentSecurity->GetCountSubRequestsNoSecurity(&newSubNo);
-          PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Restoring subs in START from %p to %d,%d,%d,%d\n", 
-            this, newContentSecurity.get(), newSubHigh, newSubLow, newSubBroken, newSubNo));      
+          PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Restoring subs in START from %p to %d,%d\n", 
+            this, newContentSecurity.get(), newSubBroken, newSubNo));      
         }
       }
       else
@@ -1137,8 +1100,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       if (allowSecurityStateChange && !inProgress)
       {
         ResetStateTracking();
-        mSubRequestsHighSecurity = newSubHigh;
-        mSubRequestsLowSecurity = newSubLow;
         mSubRequestsBrokenSecurity = newSubBroken;
         mSubRequestsNoSecurity = newSubNo;
         mNewToplevelSecurityStateKnown = false;
@@ -1243,25 +1204,19 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         mNewToplevelSecurityStateKnown = true;
       }
 
-      int32_t subHigh = 0;
-      int32_t subLow = 0;
       int32_t subBroken = 0;
       int32_t subNo = 0;
 
       if (currentContentSecurity)
       {
-        currentContentSecurity->GetCountSubRequestsHighSecurity(&subHigh);
-        currentContentSecurity->GetCountSubRequestsLowSecurity(&subLow);
         currentContentSecurity->GetCountSubRequestsBrokenSecurity(&subBroken);
         currentContentSecurity->GetCountSubRequestsNoSecurity(&subNo);
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Restoring subs in STOP from %p to %d,%d,%d,%d\n", 
-          this, currentContentSecurity.get(), subHigh, subLow, subBroken, subNo));      
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Restoring subs in STOP from %p to %d,%d\n", 
+          this, currentContentSecurity.get(), subBroken, subNo));      
       }
 
       {
         ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-        mSubRequestsHighSecurity = subHigh;
-        mSubRequestsLowSecurity = subLow;
         mSubRequestsBrokenSecurity = subBroken;
         mSubRequestsNoSecurity = subNo;
       }
@@ -1350,39 +1305,15 @@ bool nsSecureBrowserUIImpl::UpdateMyFlags(bool &showWarning, lockIconState &warn
 
   if (mNewToplevelSecurityState & STATE_IS_SECURE)
   {
-    if (mNewToplevelSecurityState & STATE_SECURE_LOW
+    if (mSubRequestsBrokenSecurity
         ||
-        mNewToplevelSecurityState & STATE_SECURE_MED)
+        mSubRequestsNoSecurity)
     {
-      if (mSubRequestsBrokenSecurity
-          ||
-          mSubRequestsNoSecurity)
-      {
-        newSecurityState = lis_mixed_security;
-      }
-      else
-      {
-        newSecurityState = lis_low_security;
-      }
+      newSecurityState = lis_mixed_security;
     }
     else
     {
-      // toplevel is high security
-
-      if (mSubRequestsBrokenSecurity
-          ||
-          mSubRequestsNoSecurity)
-      {
-        newSecurityState = lis_mixed_security;
-      }
-      else if (mSubRequestsLowSecurity)
-      {
-        newSecurityState = lis_low_security;
-      }
-      else
-      {
-        newSecurityState = lis_high_security;
-      }
+      newSecurityState = lis_high_security;
     }
   }
   else
@@ -1416,28 +1347,20 @@ bool nsSecureBrowserUIImpl::UpdateMyFlags(bool &showWarning, lockIconState &warn
     no or broken -> no or broken    => <NOTHING SHOWN>
 
     no or broken -> mixed           => mixed alert
-    no or broken -> low             => low alert
     no or broken -> high            => high alert
     
-    mixed, high, low -> no, broken  => leaving secure
+    mixed, high  -> no, broken      => leaving secure
 
-    mixed        -> low             => low alert
     mixed        -> high            => high alert
 
-    high         -> low             => low alert
     high         -> mixed           => mixed
     
-    low          -> high            => high
-    low          -> mixed           => mixed
-
-
       security    icon
       ----------------
     
       no          open
       mixed       broken
       broken      broken
-      low         low
       high        high
     */
 
@@ -1531,10 +1454,6 @@ nsresult nsSecureBrowserUIImpl::TellTheWorld(bool showWarning,
 
       case lis_mixed_security:
         ConfirmMixedMode();
-        break;
-
-      case lis_low_security:
-        ConfirmEnteringWeak();
         break;
 
       case lis_high_security:
@@ -1687,7 +1606,6 @@ nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
   switch (mNotifiedSecurityState)
   {
     case lis_mixed_security:
-    case lis_low_security:
     case lis_high_security:
       break;
 
@@ -1882,22 +1800,6 @@ ConfirmEnteringSecure()
 
   bool confirms;
   dialogs->ConfirmEnteringSecure(ctx, &confirms);
-
-  return confirms;
-}
-
-bool nsSecureBrowserUIImpl::
-ConfirmEnteringWeak()
-{
-  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
-  nsCOMPtr<nsIInterfaceRequestor> ctx;
-
-  if (!GetNSSDialogs(dialogs, ctx)) {
-    return false; // Should this allow true for unimplemented?
-  }
-
-  bool confirms;
-  dialogs->ConfirmEnteringWeak(ctx, &confirms);
 
   return confirms;
 }
