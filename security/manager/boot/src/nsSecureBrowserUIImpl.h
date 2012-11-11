@@ -102,8 +102,9 @@ protected:
   static nsresult MapInternalToExternalState(uint32_t* aState, lockIconState lock, bool ev);
   nsresult UpdateSecurityState(nsIRequest* aRequest, bool withNewLocation,
                                bool withUpdateStatus, bool withUpdateTooltip);
-  bool UpdateMyFlags(lockIconState &warnSecurityState);
-  nsresult TellTheWorld(lockIconState warnSecurityState, 
+  bool UpdateMyFlags(bool &showWarning, lockIconState &warnSecurityState);
+  nsresult TellTheWorld(bool showWarning, 
+                        lockIconState warnSecurityState, 
                         nsIRequest* aRequest);
 
   nsresult EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info,
