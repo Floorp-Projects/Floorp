@@ -36,7 +36,7 @@ XULTreeAccessible::
   XULTreeAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
-  mFlags |= eXULTreeAccessible;
+  mFlags |= eSelectAccessible | eXULTreeAccessible;
 
   mTree = nsCoreUtils::GetTreeBoxObject(aContent);
   NS_ASSERTION(mTree, "Can't get mTree!\n");
@@ -223,12 +223,6 @@ XULTreeAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeAccessible: SelectAccessible
-
-bool
-XULTreeAccessible::IsSelect()
-{
-  return true;
-}
 
 Accessible*
 XULTreeAccessible::CurrentItem()

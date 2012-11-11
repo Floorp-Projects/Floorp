@@ -306,13 +306,8 @@ public:
 
   /**
    * Set the ARIA role map entry for a new accessible.
-   * For a newly created accessible, specify which role map entry should be used.
-   *
-   * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or
-   *                      nullptr if none.
    */
-  void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
-    { mRoleMapEntry = aRoleMapEntry; }
+  void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
 
   /**
    * Update the children cache.
@@ -600,7 +595,7 @@ public:
    * Return true if the accessible is a select control containing selectable
    * items.
    */
-  virtual bool IsSelect();
+  bool IsSelect() const { return mFlags & eSelectAccessible; }
 
   /**
    * Return an array of selected items.
@@ -777,6 +772,7 @@ protected:
     eHasNumericValue = 1 << 6 // accessible has a numeric value
   };
 
+public: // XXX: a small hack to make these visible for nsARIAMap
   /**
    * Flags describing the type of this accessible.
    * @note keep these flags in sync with ChildrenFlags and StateFlags
@@ -797,10 +793,13 @@ protected:
     eMenuPopupAccessible = 1 << 19,
     eProgressAccessible = 1 << 20,
     eRootAccessible = 1 << 21,
-    eTextLeafAccessible = 1 << 22,
-    eXULDeckAccessible = 1 << 23,
-    eXULTreeAccessible = 1 << 24
+    eSelectAccessible = 1 << 22,
+    eTextLeafAccessible = 1 << 23,
+    eXULDeckAccessible = 1 << 24,
+    eXULTreeAccessible = 1 << 25
   };
+
+protected:
 
   //////////////////////////////////////////////////////////////////////////////
   // Miscellaneous helpers
