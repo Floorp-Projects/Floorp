@@ -6288,7 +6288,7 @@ var IdentityHandler = {
     if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       return this.IDENTITY_MODE_IDENTIFIED;
 
-    if (aState & Ci.nsIWebProgressListener.STATE_IS_SECURE)
+    if (aState & Ci.nsIWebProgressListener.STATE_SECURE_HIGH)
       return this.IDENTITY_MODE_DOMAIN_VERIFIED;
 
     return this.IDENTITY_MODE_UNKNOWN;

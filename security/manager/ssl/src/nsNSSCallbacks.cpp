@@ -810,8 +810,12 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   int32_t secStatus;
   if (sslStatus == SSL_SECURITY_STATUS_OFF)
     secStatus = nsIWebProgressListener::STATE_IS_BROKEN;
+  else if (encryptBits >= 90)
+    secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
+                 nsIWebProgressListener::STATE_SECURE_HIGH);
   else
-    secStatus = nsIWebProgressListener::STATE_IS_SECURE;
+    secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
+                 nsIWebProgressListener::STATE_SECURE_LOW);
 
   PRBool siteSupportsSafeRenego;
   if (SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn, &siteSupportsSafeRenego) != SECSuccess
