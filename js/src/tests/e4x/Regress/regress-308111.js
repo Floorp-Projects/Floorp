@@ -33,7 +33,6 @@ var xml = <prefs>
 <pref><name>security.ssl2.des_64</name></pref>
 <pref><name>print.always_cache_old_pres</name></pref>
 <pref><name>security.ssl3.rsa_des_sha</name></pref>
-<pref><name>security.warn_entering_weak.show_once</name></pref>
 <pref><name>network.proxy.http_port</name></pref>
 <pref><name>browser.display.use_document_colors</name></pref>
 <pref><name>browser.preferences.animateFadeIn</name></pref>
@@ -825,7 +824,6 @@ var xml = <prefs>
 <pref><name>network.proxy.gopher</name></pref>
 <pref><name>ui.key.saveLink.shift</name></pref>
 <pref><name>font.name.serif.ko</name></pref>
-<pref><name>security.warn_entering_weak</name></pref>
 <pref><name>font.name.sans-serif.th</name></pref>
 <pref><name>capability.policy.mailnews.*.substringData.get</name></pref>
 <pref><name>font.name.cursive.x-central-euro</name></pref>
