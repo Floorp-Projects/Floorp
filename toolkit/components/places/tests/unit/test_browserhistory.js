@@ -62,7 +62,7 @@ add_test(function test_removePages()
   
     // Cleanup.
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
-    waitForClearHistory(run_next_test);
+    promiseClearHistory().then(run_next_test);
   });
 });
 

@@ -76,7 +76,7 @@ add_test(function test_dh_is_from_places()
   // Test that this nsIDownloadHistory is the one places implements.
   do_check_true(gDownloadHistory instanceof Ci.mozIAsyncHistory);
 
-  waitForClearHistory(run_next_test);
+  promiseClearHistory().then(run_next_test);
 });
 
 add_test(function test_dh_addDownload()
@@ -87,7 +87,7 @@ add_test(function test_dh_addDownload()
     // Verify that the URI is already available in results at this time.
     uri_in_db(DOWNLOAD_URI, true);
 
-    waitForClearHistory(run_next_test);
+    promiseClearHistory().then(run_next_test);
   });
 
   gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
@@ -107,7 +107,7 @@ add_test(function test_dh_addDownload_referrer()
       // Verify that the URI is already available in results at this time.
       uri_in_db(DOWNLOAD_URI, true);
 
-      waitForClearHistory(run_next_test);
+      promiseClearHistory().then(run_next_test);
     });
 
     gDownloadHistory.addDownload(DOWNLOAD_URI, REFERRER_URI, Date.now() * 1000);
@@ -142,7 +142,7 @@ add_test(function test_dh_addDownload_privateBrowsing()
     uri_in_db(DOWNLOAD_URI, true);
     uri_in_db(PRIVATE_URI, false);
 
-    waitForClearHistory(run_next_test);
+    promiseClearHistory().then(run_next_test);
   });
 
   let pb = Cc["@mozilla.org/privatebrowsing;1"]
@@ -171,7 +171,7 @@ add_test(function test_dh_addDownload_disabledHistory()
     uri_in_db(DOWNLOAD_URI, true);
     uri_in_db(PRIVATE_URI, false);
 
-    waitForClearHistory(run_next_test);
+    promiseClearHistory().then(run_next_test);
   });
 
   Services.prefs.setBoolPref("places.history.enabled", false);
@@ -207,7 +207,7 @@ add_test(function test_dh_details()
       PlacesUtils.annotations.removeObserver(annoObserver);
       PlacesUtils.history.removeObserver(historyObserver);
 
-      waitForClearHistory(run_next_test);
+      promiseClearHistory().then(run_next_test);
     }
   };
 

@@ -166,7 +166,8 @@ function run_test() {
       // updates.
       // This is not a problem in real life, but autocomplete tests should
       // return reliable resultsets, thus we have to wait.
-      waitForAsyncUpdates(ensure_results, this, [searchString, expectedValue]);
+      promiseAsyncUpdates().then(function () ensure_results(searchString,
+                                                            expectedValue));
     })
   }, this);
 
@@ -180,7 +181,7 @@ function add_autocomplete_test(aTestData) {
 
 function waitForCleanup(aCallback) {
   remove_all_bookmarks();
-  waitForClearHistory(aCallback);
+  promiseClearHistory().then(aCallback);
 }
 
 function addBookmark(aBookmarkObj) {

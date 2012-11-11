@@ -602,7 +602,7 @@ function addVisit(aURI) {
  */
 function cleanDatabase(aCallback) {
   remove_all_bookmarks();
-  waitForClearHistory(aCallback);
+  promiseClearHistory().then(aCallback);
 }
 
 /**

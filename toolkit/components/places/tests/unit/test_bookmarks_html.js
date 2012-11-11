@@ -108,7 +108,7 @@ add_test(function setup() {
   try {
     BookmarkHTMLUtils.importFromFile(gBookmarksFileOld, true, function(success) {
       if (success) {
-        waitForAsyncUpdates(function () {
+        promiseAsyncUpdates().then(function () {
           testImportedBookmarks();
 
           // Prepare for next tests.
@@ -116,7 +116,7 @@ add_test(function setup() {
             exporter.exportHTMLToFile(gBookmarksFileNew);
           } catch(ex) { do_throw("couldn't export to file: " + ex); }
 
-          waitForAsyncUpdates(function () {
+          promiseAsyncUpdates().then(function () {
             remove_all_bookmarks();
             run_next_test();
           });
@@ -137,10 +137,10 @@ add_test(function test_import_new()
   try {
     BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true, function(success) {
       if (success) {
-        waitForAsyncUpdates(function () {
+        promiseAsyncUpdates().then(function () {
           testImportedBookmarks();
 
-          waitForAsyncUpdates(function () {
+          promiseAsyncUpdates().then(function () {
             remove_all_bookmarks();
             run_next_test();
           });
@@ -184,7 +184,7 @@ add_test(function test_emptytitle_export()
         try {
           BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true, function(success) {
            if (success) {
-              waitForAsyncUpdates(function () {
+              promiseAsyncUpdates().then(function () {
                 testImportedBookmarks();
 
                 // Cleanup.
@@ -195,7 +195,7 @@ add_test(function test_emptytitle_export()
                   exporter.exportHTMLToFile(gBookmarksFileNew);
                 } catch(ex) { do_throw("couldn't export to file: " + ex); }
 
-                waitForAsyncUpdates(function () {
+                promiseAsyncUpdates().then(function () {
                   remove_all_bookmarks();
                   run_next_test();
                 });
@@ -268,7 +268,7 @@ add_test(function test_import_chromefavicon()
                      if (!success) {
                         do_throw("couldn't import the exported file.");
                       }
-                      waitForAsyncUpdates(function () {
+                      promiseAsyncUpdates().then(function () {
                         testImportedBookmarks();
 
                         // Cleanup.
@@ -279,7 +279,7 @@ add_test(function test_import_chromefavicon()
                           exporter.exportHTMLToFile(gBookmarksFileNew);
                         } catch(ex) { do_throw("couldn't export to file: " + ex); }
 
-                        waitForAsyncUpdates(function () {
+                        promiseAsyncUpdates().then(function () {
                           remove_all_bookmarks();
                           run_next_test();
                         });
@@ -312,10 +312,10 @@ add_test(function test_import_ontop()
         try {
           BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true, function(success) {
             if (success) {
-              waitForAsyncUpdates(function () {
+              promiseAsyncUpdates().then(function () {
                 testImportedBookmarks();
 
-                waitForAsyncUpdates(function () {
+                promiseAsyncUpdates().then(function () {
                   remove_all_bookmarks();
                   run_next_test();
                 });

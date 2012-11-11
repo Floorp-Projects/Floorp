@@ -21,20 +21,20 @@ add_test(function changeuri_unvisited_bookmark()
                                                 TEST_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                 "bookmark title");
-  waitForAsyncUpdates(function ()
+  promiseAsyncUpdates().then(function ()
   {
     do_log_info("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     PlacesUtils.bookmarks.changeBookmarkURI(id, uri("http://example.com/2"));
 
-    waitForAsyncUpdates(function ()
+    promiseAsyncUpdates().then(function ()
     {
       do_log_info("Unvisited URI no longer bookmarked => frecency should = 0");
       do_check_eq(frecencyForUrl(TEST_URI), 0);
 
       remove_all_bookmarks();
-      waitForClearHistory(run_next_test);
+      promiseClearHistory().then(run_next_test);
     });
   });
 });
@@ -48,23 +48,23 @@ add_test(function changeuri_visited_bookmark()
                                                 TEST_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                 "bookmark title");
-  waitForAsyncUpdates(function ()
+  promiseAsyncUpdates().then(function ()
   {
     do_log_info("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     visit(TEST_URI);
 
-    waitForAsyncUpdates(function ()
+    promiseAsyncUpdates().then(function ()
     {
       PlacesUtils.bookmarks.changeBookmarkURI(id, uri("http://example.com/2"));
-      waitForAsyncUpdates(function ()
+      promiseAsyncUpdates().then(function ()
       {
         do_log_info("*Visited* URI no longer bookmarked => frecency should != 0");
         do_check_neq(frecencyForUrl(TEST_URI), 0);
 
         remove_all_bookmarks();
-        waitForClearHistory(run_next_test);
+        promiseClearHistory().then(run_next_test);
       });
     });
   });
@@ -84,19 +84,19 @@ add_test(function changeuri_bookmark_still_bookmarked()
                                                  TEST_URI,
                                                  PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                  "bookmark 2 title");
-  waitForAsyncUpdates(function ()
+  promiseAsyncUpdates().then(function ()
   {
     do_log_info("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     PlacesUtils.bookmarks.changeBookmarkURI(id1, uri("http://example.com/2"));
-    waitForAsyncUpdates(function ()
+    promiseAsyncUpdates().then(function ()
     {
       do_log_info("URI still bookmarked => frecency should != 0");
       do_check_neq(frecencyForUrl(TEST_URI), 0);
 
       remove_all_bookmarks();
-      waitForClearHistory(run_next_test);
+      promiseClearHistory().then(run_next_test);
     });
   });
 });
@@ -130,7 +130,7 @@ add_test(function changeuri_nonexistent_bookmark()
     tryChange(id);
 
     remove_all_bookmarks();
-    waitForClearHistory(run_next_test);
+    promiseClearHistory().then(run_next_test);
 });
 
 ///////////////////////////////////////////////////////////////////////////////
