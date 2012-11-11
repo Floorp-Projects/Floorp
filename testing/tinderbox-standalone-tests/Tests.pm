@@ -69,11 +69,6 @@ sub global_prefs {
         Prefs::set_pref($pref_file, 'camino.check_default_browser', 'false');
     }
 
-    # Suppress security warnings for QA test.
-    if ($Settings::QATest) {
-        Prefs::set_pref($pref_file, 'security.warn_submit_insecure', 'true');
-    }
-    
     #
     # Assume that we want to test modern skin for all tests.
     #
