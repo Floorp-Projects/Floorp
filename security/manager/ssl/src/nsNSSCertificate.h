@@ -21,6 +21,7 @@
 #include "nsIClassInfo.h"
 #include "certt.h"
 
+class nsAutoString;
 class nsINSSComponent;
 class nsIASN1Sequence;
 
