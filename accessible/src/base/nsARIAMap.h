@@ -174,6 +174,9 @@ struct nsRoleMapEntry
   // these object attributes if ARIA 'live' attribute is missed.
   ELiveAttrRule liveAttRule;
 
+  // Accessible types this role belongs to.
+  uint32_t accTypes;
+
   // Automatic state mapping rule: always include in nsIAccessibleStates
   uint64_t state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
 

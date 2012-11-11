@@ -273,14 +273,9 @@ nsXFormsSelectableAccessible::
   nsXFormsSelectableAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsXFormsEditableAccessible(aContent, aDoc), mIsSelect1Element(false)
 {
+  mFlags |= eSelectAccessible;
   mIsSelect1Element =
     mContent->NodeInfo()->Equals(nsGkAtoms::select1);
-}
-
-bool
-nsXFormsSelectableAccessible::IsSelect()
-{
-  return true;
 }
 
 already_AddRefed<nsIArray>
