@@ -24,6 +24,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSecurityWarningDialogs, nsISecurityWarningDialog
 #define STRING_BUNDLE_URL    "chrome://pipnss/locale/security.properties"
 
 #define ENTER_SITE_PREF      "security.warn_entering_secure"
+#define WEAK_SITE_PREF       "security.warn_entering_weak"
 #define LEAVE_SITE_PREF      "security.warn_leaving_secure"
 #define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 #define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
@@ -63,6 +64,21 @@ nsSecurityWarningDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, bool
                    NS_LITERAL_STRING("EnterSecureShowAgain").get(),
                    false,
                    nsISecurityUITelemetry::WARNING_ENTERING_SECURE_SITE);
+
+  *_retval = true;
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsSecurityWarningDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, bool *_retval)
+{
+  nsresult rv;
+
+  rv = AlertDialog(ctx, WEAK_SITE_PREF,
+                   NS_LITERAL_STRING("WeakSecureMessage").get(),
+                   NS_LITERAL_STRING("WeakSecureShowAgain").get(),
+                   false,
+                   nsISecurityUITelemetry::WARNING_ENTERING_WEAK_SITE);
 
   *_retval = true;
   return rv;

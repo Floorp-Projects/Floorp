@@ -45,6 +45,8 @@ namespace mozilla { namespace psm {
 TransportSecurityInfo::TransportSecurityInfo()
   : mMutex("TransportSecurityInfo::mMutex"),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
+    mSubRequestsHighSecurity(0),
+    mSubRequestsLowSecurity(0),
     mSubRequestsBrokenSecurity(0),
     mSubRequestsNoSecurity(0),
     mErrorCode(0),
@@ -134,6 +136,40 @@ nsresult
 TransportSecurityInfo::SetSecurityState(uint32_t aState)
 {
   mSecurityState = aState;
+  return NS_OK;
+}
+
+/* attribute unsigned long countSubRequestsHighSecurity; */
+NS_IMETHODIMP
+TransportSecurityInfo::GetCountSubRequestsHighSecurity(
+  int32_t *aSubRequestsHighSecurity)
+{
+  *aSubRequestsHighSecurity = mSubRequestsHighSecurity;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::SetCountSubRequestsHighSecurity(
+  int32_t aSubRequestsHighSecurity)
+{
+  mSubRequestsHighSecurity = aSubRequestsHighSecurity;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute unsigned long countSubRequestsLowSecurity; */
+NS_IMETHODIMP
+TransportSecurityInfo::GetCountSubRequestsLowSecurity(
+  int32_t *aSubRequestsLowSecurity)
+{
+  *aSubRequestsLowSecurity = mSubRequestsLowSecurity;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::SetCountSubRequestsLowSecurity(
+  int32_t aSubRequestsLowSecurity)
+{
+  mSubRequestsLowSecurity = aSubRequestsLowSecurity;
   return NS_OK;
 }
 
@@ -372,8 +408,8 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsISSLStatus*, status),
                               NS_GET_IID(nsISupports), true);
 
-  stream->Write32((uint32_t)0);
-  stream->Write32((uint32_t)0);
+  stream->Write32((uint32_t)mSubRequestsHighSecurity);
+  stream->Write32((uint32_t)mSubRequestsLowSecurity);
   stream->Write32((uint32_t)mSubRequestsBrokenSecurity);
   stream->Write32((uint32_t)mSubRequestsNoSecurity);
   return NS_OK;
@@ -475,13 +511,14 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
   }
 
   if (version >= 2) {
-    uint32_t dummySubRequests;
-    stream->Read32((uint32_t*)&dummySubRequests);
-    stream->Read32((uint32_t*)&dummySubRequests);
+    stream->Read32((uint32_t*)&mSubRequestsHighSecurity);
+    stream->Read32((uint32_t*)&mSubRequestsLowSecurity);
     stream->Read32((uint32_t*)&mSubRequestsBrokenSecurity);
     stream->Read32((uint32_t*)&mSubRequestsNoSecurity);
   }
   else {
+    mSubRequestsHighSecurity = 0;
+    mSubRequestsLowSecurity = 0;
     mSubRequestsBrokenSecurity = 0;
     mSubRequestsNoSecurity = 0;
   }
