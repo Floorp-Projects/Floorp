@@ -342,9 +342,20 @@ class ICStubCompiler
 
     virtual IonCode *generateStubCode() = 0;
     IonCode *getStubCode() {
-        // TODO: Check stubcode cache with getKey(), and if none present
-        //       then generate a new stub and store it in the cache.
-        return generateStubCode();
+        IonCompartment *ion = cx->compartment->ionCompartment();
+        uint32_t stubKey = getKey();
+        IonCode *stubCode = ion->getStubCode(stubKey);
+        if (stubCode)
+            return stubCode;
+
+        Rooted<IonCode *> newStubCode(cx, generateStubCode());
+        if (!newStubCode)
+            return NULL;
+
+        if (!ion->putStubCode(stubKey, newStubCode))
+            return NULL;
+
+        return newStubCode;
     }
 
     ICStubCompiler(JSContext *cx, ICStub::Kind kind)

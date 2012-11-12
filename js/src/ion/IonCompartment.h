@@ -30,6 +30,7 @@ typedef Vector<IonBuilder*, 0, SystemAllocPolicy> OffThreadCompilationVector;
 class IonCompartment
 {
     typedef WeakCache<const VMFunction *, ReadBarriered<IonCode> > VMWrapperMap;
+    typedef WeakValueCache<uint32_t, ReadBarriered<IonCode> > ICStubCodeMap;
 
     friend class IonActivation;
 
@@ -58,6 +59,9 @@ class IonCompartment
     // Map VMFunction addresses to the IonCode of the wrapper.
     VMWrapperMap *functionWrappers_;
 
+    // Map ICStub keys to ICStub shared code objects.
+    ICStubCodeMap *stubCodes_;
+
     // Any scripts for which off thread compilation has successfully finished,
     // failed, or been cancelled. All off thread compilations which are started
     // will eventually appear in this list asynchronously. Protected by the
@@ -78,6 +82,20 @@ class IonCompartment
 
   public:
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
+    IonCode *getStubCode(uint32_t key) {
+        ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
+        if (p)
+            return p->value;
+        return NULL;
+    }
+    bool putStubCode(uint32_t key, Handle<IonCode *> stubCode) {
+        // Make sure to do a lookupForAdd(key) and then insert into that slot, because
+        // that way if stubCode gets moved due to a GC caused by lookupForAdd, then
+        // we still write the correct pointer.
+        JS_ASSERT(!stubCodes_->has(key));
+        ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
+        return stubCodes_->add(p, key, stubCode.get());
+    }
 
     OffThreadCompilationVector &finishedOffThreadCompilations() {
         return finishedOffThreadCompilations_;
