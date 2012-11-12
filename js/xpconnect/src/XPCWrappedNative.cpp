@@ -511,7 +511,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     if (sciWrapper.GetFlags().WantPreCreate()) {
         // PreCreate may touch dead compartments.
-        js::AutoDeadCompartmentGC agc(parent);
+        js::AutoMaybeTouchDeadCompartments agc(parent);
 
         JSObject* plannedParent = parent;
         nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
@@ -1757,7 +1757,7 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
     parentObj = js::UnwrapObject(parentObj, /* stopAtOuter = */ false);
 
     // PreCreate may touch dead compartments.
-    js::AutoDeadCompartmentGC agc(parentobj);
+    js::AutoMaybeTouchDeadCompartments agc(parentObj);
 
     // There's one little nasty twist here. For reasons described in bug 752764,
     // we nuke SOW-ed objects after transplanting them. This means that nodes
@@ -3817,7 +3817,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     }
 
     // PreCreate may touch dead compartments.
-    js::AutoDeadCompartmentGC agc(parent);
+    js::AutoMaybeTouchDeadCompartments agc(parent);
 
     JSObject* plannedParent = parent;
     nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
