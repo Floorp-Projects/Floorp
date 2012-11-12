@@ -6,6 +6,10 @@
 #include "nsCOMPtr.h"
 #include "nsKeyModule.h"
 #include "nsString.h"
+#include "ScopedNSSTypes.h"
+
+using namespace mozilla;
+using namespace mozilla::psm;
 
 NS_IMPL_ISUPPORTS1(nsKeyObject, nsIKeyObject)
 
@@ -174,8 +178,7 @@ nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString & aKey,
   keyItem.data = (unsigned char*)flatKey.get();
   keyItem.len = flatKey.Length();
 
-  PK11SlotInfo *slot = nullptr;
-  slot = PK11_GetBestSlot(cipherMech, nullptr);
+  ScopedPK11SlotInfo slot(PK11_GetBestSlot(cipherMech, nullptr));
   if (!slot) {
     NS_ERROR("no slot");
     return NS_ERROR_FAILURE;
@@ -183,10 +186,6 @@ nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString & aKey,
 
   PK11SymKey* symKey = PK11_ImportSymKey(slot, cipherMech, PK11_OriginUnwrap,
                                          cipherOperation, &keyItem, nullptr);
-  // cleanup code
-  if (slot)
-    PK11_FreeSlot(slot);
-
   if (!symKey) {
     return NS_ERROR_FAILURE;
   }
