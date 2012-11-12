@@ -32,6 +32,7 @@ namespace ion {
 #define OPCODE_LIST(_)         \
     _(JSOP_NOP)                \
     _(JSOP_POP)                \
+    _(JSOP_DUP)                \
     _(JSOP_GOTO)               \
     _(JSOP_IFNE)               \
     _(JSOP_POS)                \

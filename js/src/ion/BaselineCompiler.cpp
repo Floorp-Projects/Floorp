@@ -196,6 +196,21 @@ BaselineCompiler::emit_JSOP_POP()
 }
 
 bool
+BaselineCompiler::emit_JSOP_DUP()
+{
+    // Keep top stack value in R0, sync the rest so that we can use R1. We use
+    // separate registers because every register can be used by at most one
+    // StackValue.
+    frame.popRegsAndSync(1);
+    masm.moveValue(R0, R1);
+
+    // inc/dec ops use DUP followed by ONE, ADD. Push R0 last to avoid a move.
+    frame.push(R1);
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GOTO()
 {
     frame.syncStack(0);
