@@ -18,7 +18,7 @@ let worker;
 let main = this;
 
 function test() {
-  ok(true, "test_osfile_front.xul: Starting test");
+  info("test_osfile_front.xul: Starting test");
 
   // Test OS.Constants.Path
 
@@ -34,7 +34,7 @@ function test() {
 
   worker = new ChromeWorker("worker_test_osfile_front.js");
   SimpleTest.waitForExplicitFinish();
-  ok(true, "test_osfile_front.xul: Chrome worker created");
+  info("test_osfile_front.xul: Chrome worker created");
   dump("MAIN: go\n");
   worker.onerror = function(error) {
     error.preventDefault();
@@ -48,6 +48,8 @@ function test() {
       return SimpleTest.isnot(msg.data.a, msg.data.b, msg.data.description);
     case "ok":
       return SimpleTest.ok(msg.data.condition, msg.data.description);
+    case "info":
+      return SimpleTest.info(msg.data.description);
     case "finish":
       worker.terminate();
       SimpleTest.finish();
