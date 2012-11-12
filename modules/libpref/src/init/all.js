@@ -3810,6 +3810,9 @@ pref("memory.low_memory_notification_interval_ms", 10000);
 // window to be collected via the GC/CC.
 pref("memory.ghost_window_timeout_seconds", 60);
 
+// Disable freeing dirty pages when minimizing memory.
+pref("memory.free_dirty_pages", false);
+
 pref("social.enabled", false);
 
 // Disable idle observer fuzz, because only privileged content can access idle
