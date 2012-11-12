@@ -26,6 +26,7 @@ this.EventManager = {
 
         if (Utils.MozBuildApp == 'b2g') {
           this.presenters.push(new SpeechPresenter());
+          this.presenters.push(new HapticPresenter());
         } else if (Utils.MozBuildApp == 'mobile/android') {
           this.presenters.push(new AndroidPresenter());
         }
