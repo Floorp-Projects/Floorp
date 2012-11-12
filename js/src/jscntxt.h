@@ -719,9 +719,10 @@ struct JSRuntime : js::RuntimeFriendFields
 
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,
-     * JS_TransplantObject).
+     * JS_TransplantObject) or some other operation that can manipulate
+     * dead compartments.
      */
-    bool                gcInTransplant;
+    bool                gcManipulatingDeadCompartments;
 
     /*
      * This field is incremented each time we mark an object inside a
