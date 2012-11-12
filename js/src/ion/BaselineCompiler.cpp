@@ -19,7 +19,8 @@ using namespace js;
 using namespace js::ion;
 
 BaselineCompiler::BaselineCompiler(JSContext *cx, JSScript *script)
-  : BaselineCompilerSpecific(cx, script)
+  : BaselineCompilerSpecific(cx, script),
+    return_(new HeapLabel())
 {
 }
 
@@ -132,7 +133,7 @@ BaselineCompiler::emitPrologue()
 bool
 BaselineCompiler::emitEpilogue()
 {
-    masm.bind(&return_);
+    masm.bind(return_);
 
     masm.mov(BaselineFrameReg, BaselineStackReg);
     masm.pop(BaselineFrameReg);
@@ -425,6 +426,15 @@ bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
     uint32_t local = GET_SLOTNO(pc);
+
+    if (local >= frame.nlocals()) {
+        // Destructuring assignments may use GETLOCAL to access stack values.
+        frame.syncStack(0);
+        masm.loadValue(Address(BaselineFrameReg, BaselineFrame::offsetOfLocal(local)), R0);
+        frame.push(R0);
+        return true;
+    }
+
     frame.pushLocal(local);
     return true;
 }
@@ -472,7 +482,7 @@ BaselineCompiler::emit_JSOP_RETURN()
     JS_ASSERT(frame.stackDepth() == 1);
 
     frame.popValue(JSReturnOperand);
-    masm.jump(&return_);
+    masm.jump(return_);
     return true;
 }
 
