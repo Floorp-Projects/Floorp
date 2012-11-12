@@ -233,6 +233,34 @@ BaselineCompiler::emit_JSOP_IFNE()
 }
 
 bool
+BaselineCompiler::emit_JSOP_POS()
+{
+    // Allocate IC entry and stub.
+    ICToNumber_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    if (!entry)
+        return false;
+
+    // Keep top stack value in R0.
+    frame.popRegsAndSync(1);
+
+    // Inline path for int32 and double.
+    Label done;
+    masm.branchTestNumber(Assembler::Equal, R0, &done);
+
+    // Call IC.
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    masm.bind(&done);
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_LOOPHEAD()
 {
     return true;
