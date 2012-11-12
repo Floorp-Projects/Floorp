@@ -292,6 +292,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(src, ScratchReg);
         return testDouble(cond, ScratchReg);
     }
+    Condition testNumber(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testNumber(cond, ScratchReg);
+    }
     Condition testNull(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testNull(cond, ScratchReg);
@@ -617,6 +621,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchTestObject(Condition cond, const ValueOperand &src, Label *label) {
         cond = testObject(cond, src);
+        j(cond, label);
+    }
+    void branchTestNumber(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testNumber(cond, src);
         j(cond, label);
     }
     template <typename T>

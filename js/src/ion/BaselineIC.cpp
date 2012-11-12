@@ -187,6 +187,41 @@ ICToBool_Bool::Compiler::generateStubCode()
     return linker.newCode(cx);
 }
 
+static bool
+DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, MutableHandleValue ret)
+{
+    ret.set(arg);
+    return ToNumber(cx, ret.address());
+}
+
+IonCode *
+ICToNumber_Fallback::Compiler::generateStubCode()
+{
+    MacroAssembler masm;
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Pop return address.
+    masm.pop(BaselineTailCallReg);
+
+    // Get VMFunction to call
+    typedef bool (*pf)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
+    static const VMFunction fun = FunctionInfo<pf>(DoToNumberFallback);
+
+    IonCode *wrapper = generateVMWrapper(fun);
+    if (!wrapper)
+        return NULL;
+
+    // Push arguments.
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    // Call.
+    EmitTailCall(wrapper, masm);
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
 //
 // BinaryArith_Fallback
 //
