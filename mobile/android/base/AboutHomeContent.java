@@ -327,10 +327,15 @@ public class AboutHomeContent extends ScrollView
     }
 
     private void updateTopSitesThumbnails(Map<String, Bitmap> thumbnails) {
-        for (int i = 0; i < mTopSitesGrid.getChildCount(); i++) {
+        for (int i = 0; i < mTopSitesAdapter.getCount(); i++) {
             final View view = mTopSitesGrid.getChildAt(i);
 
-            Cursor c = (Cursor) mTopSitesGrid.getItemAtPosition(i);
+            // The grid view might get temporarily out of sync with the
+            // adapter refreshes (e.g. on device rotation)
+            if (view == null)
+                continue;
+
+            Cursor c = (Cursor) mTopSitesAdapter.getItem(i);
             final String url = c.getString(c.getColumnIndex(URLColumns.URL));
 
             displayThumbnail(view, thumbnails.get(url));
