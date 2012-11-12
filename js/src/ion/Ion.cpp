@@ -146,6 +146,10 @@ IonCompartment::initialize(JSContext *cx)
     if (!functionWrappers_ || !functionWrappers_->init())
         return false;
 
+    stubCodes_ = cx->new_<ICStubCodeMap>(cx);
+    if (!stubCodes_ || !stubCodes_->init())
+        return false;
+
     return true;
 }
 
