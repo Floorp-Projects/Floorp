@@ -503,6 +503,11 @@ function BuildConditionSandbox(aURL) {
         sandbox.xulRuntime.XPCOMABI = "";
     }
 
+    var testRect = gBrowser.getBoundingClientRect();
+    sandbox.smallScreen = false;
+    if (gContainingWindow.innerWidth < 800 || gContainingWindow.innerHeight < 1000) {
+        sandbox.smallScreen = true;
+    }
 
 #if REFTEST_B2G
     // XXX nsIGfxInfo isn't available in B2G
