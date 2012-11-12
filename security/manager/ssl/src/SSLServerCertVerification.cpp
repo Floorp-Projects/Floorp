@@ -111,6 +111,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIConsoleService.h"
 #include "PSMRunnable.h"
+#include "ScopedNSSTypes.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -127,7 +128,6 @@ namespace {
 
 NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 
 // do not use a nsCOMPtr to avoid static initializer/destructor
@@ -615,11 +615,9 @@ private:
   SSLServerCertVerificationJob(const void * fdForLogging,
                                TransportSecurityInfo * infoObject, 
                                CERTCertificate * cert);
-  ~SSLServerCertVerificationJob();
-
   const void * const mFdForLogging;
   const RefPtr<TransportSecurityInfo> mInfoObject;
-  CERTCertificate * const mCert;
+  const ScopedCERTCertificate mCert;
 };
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
@@ -629,11 +627,6 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
   , mInfoObject(infoObject)
   , mCert(CERT_DupCertificate(cert))
 {
-}
-
-SSLServerCertVerificationJob::~SSLServerCertVerificationJob()
-{
-  CERT_DestroyCertificate(mCert);
 }
 
 SECStatus
@@ -818,10 +811,9 @@ BlockServerCertChangeForSpdy(nsNSSSocketInfo *infoObject,
             " Assuming spdy.\n"));
 
   // Check to see if the cert has actually changed
-  CERTCertificate * c = cert2->GetCert();
+  ScopedCERTCertificate c(cert2->GetCert());
   NS_ASSERTION(c, "very bad and hopefully impossible state");
   bool sameCert = CERT_CompareCerts(c, serverCert);
-  CERT_DestroyCertificate(c);
   if (sameCert)
     return SECSuccess;
 
@@ -887,8 +879,8 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
     nsc = nsNSSCertificate::Create(cert);
   }
 
-  CERTCertList *certList = nullptr;
-  certList = CERT_GetCertChainFromCert(cert, PR_Now(), certUsageSSLCA);
+  ScopedCERTCertList certList(CERT_GetCertChainFromCert(cert, PR_Now(),
+                                                        certUsageSSLCA));
   if (!certList) {
     rv = SECFailure;
   } else {
@@ -943,18 +935,13 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
       // We have found a signer cert that we want to remember.
       char* nickname = nsNSSCertificate::defaultServerNickname(node->cert);
       if (nickname && *nickname) {
-        PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+        ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
         if (slot) {
           PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE, 
                           nickname, false);
-          PK11_FreeSlot(slot);
         }
       }
       PR_FREEIF(nickname);
-    }
-
-    if (certList) {
-      CERT_DestroyCertList(certList);
     }
 
     // The connection may get terminated, for example, if the server requires
@@ -1125,8 +1112,7 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
     socketInfo->SetFirstServerHelloReceived();
   }
 
-  CERTCertificate *serverCert = SSL_PeerCertificate(fd);
-  CERTCertificateCleaner serverCertCleaner(serverCert);
+  ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
 
   if (!checkSig || isServer || !socketInfo || !serverCert) {
       PR_SetError(PR_INVALID_STATE_ERROR, 0);

@@ -59,6 +59,7 @@
 #include "secmod.h"
 #include "nsISaveAsCharset.h"
 #include "nsNativeCharsetUtils.h"
+#include "ScopedNSSTypes.h"
 
 #include "ssl.h" // For SSL_ClearSessionCache
 
@@ -69,12 +70,7 @@
 
 using namespace mozilla;
 
-NSSCleanupAutoPtrClass(SECKEYPrivateKey, SECKEY_DestroyPrivateKey)
-NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
-NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
-NSSCleanupAutoPtrClass(PK11SymKey, PK11_FreeSymKey)
 NSSCleanupAutoPtrClass_WithParam(PK11Context, PK11_DestroyContext, TrueParam, true)
-NSSCleanupAutoPtrClass_WithParam(SECItem, SECITEM_FreeItem, TrueParam, true)
 
 /*
  * These are the most common error strings that are returned
@@ -698,8 +694,7 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
   //       user's key3.db file.  Which the slot returned by
   //       PK11_GetInternalKeySlot has access to and PK11_GetInternalSlot
   //       does not.
-  PK11SlotInfo *intSlot = nullptr;
-  PK11SlotInfoCleaner siCleaner(intSlot);
+  ScopedPK11SlotInfo intSlot;
   
   if (willEscrow && !PK11_IsInternal(slot)) {
     intSlot = PK11_GetInternalSlot();
@@ -707,7 +702,6 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
     
     if (!PK11_DoesMechanism(intSlot, mechanism)) {
       // Set to null, and the subsequent code will not attempt to use it.
-      PK11_FreeSlot(intSlot);
       intSlot = nullptr;
     }
   }
@@ -832,23 +826,17 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
   //If we generated the key pair on the internal slot because the
   // keys were going to be escrowed, move the keys over right now.
   if (mustMoveKey) {
-    SECKEYPrivateKey *newPrivKey = PK11_LoadPrivKey(slot, 
+    ScopedSECKEYPrivateKey newPrivKey(PK11_LoadPrivKey(slot,
                                                     keyPairInfo->privKey,
                                                     keyPairInfo->pubKey,
-                                                    true, true);
-    SECKEYPrivateKeyCleaner pkCleaner(newPrivKey);
-
+                                                    true, true));
     if (!newPrivKey)
       return NS_ERROR_FAILURE;
 
     // The private key is stored on the selected slot now, and the copy we
     // ultimately use for escrowing when the time comes lives 
     // in the internal slot.  We will delete it from that slot
-    // after the requests are made.  This call only gives up
-    // our reference to the key object and does not actually 
-    // physically remove it from the card itself.
-    // The actual delete calls are being made in the destructors
-    // of the cleaner helper instances.
+    // after the requests are made.
   }  
 
   return NS_OK;
@@ -1013,13 +1001,12 @@ nsSetEscrowAuthority(CRMFCertRequest *certReq, nsKeyPairInfo *keyInfo,
       CRMF_CertRequestIsControlPresent(certReq, crmfPKIArchiveOptionsControl)){
     return NS_ERROR_FAILURE;
   }
-  CERTCertificate *cert = wrappingCert->GetCert();
+  ScopedCERTCertificate cert(wrappingCert->GetCert());
   if (!cert)
     return NS_ERROR_FAILURE;
 
   CRMFEncryptedKey *encrKey = 
       CRMF_CreateEncryptedKeyWithEncryptedValue(keyInfo->privKey, cert);
-  CERT_DestroyCertificate(cert);
   if (!encrKey)
     return NS_ERROR_FAILURE;
 
@@ -1046,14 +1033,13 @@ nsSetDNForRequest(CRMFCertRequest *certReq, char *reqDN)
   if (!reqDN || CRMF_CertRequestIsFieldPresent(certReq, crmfSubject)) {
     return NS_ERROR_FAILURE;
   }
-  CERTName *subjectName = CERT_AsciiToName(reqDN);
+  ScopedCERTName subjectName(CERT_AsciiToName(reqDN));
   if (!subjectName) {
     return NS_ERROR_FAILURE;
   }
   SECStatus srv = CRMF_CertRequestSetTemplateField(certReq, crmfSubject,
                                                    static_cast<void*>
                                                               (subjectName));
-  CERT_DestroyName(subjectName);
   return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -1488,8 +1474,7 @@ nsSet_EC_DHMAC_ProofOfPossession(CRMFCertReqMsg *certReqMsg,
   // allows multiple requests to be sent in one step.
 
   unsigned long der_request_len = 0;
-  SECItem *der_request = nullptr;
-  SECItemCleanerTrueParam der_request_cleaner(der_request);
+  ScopedSECItem der_request;
 
   if (SECSuccess != CRMF_EncodeCertRequest(certReq, 
                                            nsCRMFEncoderItemCount, 
@@ -1516,17 +1501,10 @@ nsSet_EC_DHMAC_ProofOfPossession(CRMFCertReqMsg *certReqMsg,
   //  issuer names in the CA's certificate as follows:
   //  K = SHA1(DER-encoded-subjectName | Kec | DER-encoded-issuerName)"
 
-  PK11SymKey *shared_secret = nullptr;
-  PK11SymKeyCleaner shared_secret_cleaner(shared_secret);
-
-  PK11SymKey *subject_and_secret = nullptr;
-  PK11SymKeyCleaner subject_and_secret_cleaner(subject_and_secret);
-
-  PK11SymKey *subject_and_secret_and_issuer = nullptr;
-  PK11SymKeyCleaner subject_and_secret_and_issuer_cleaner(subject_and_secret_and_issuer);
-
-  PK11SymKey *sha1_of_subject_and_secret_and_issuer = nullptr;
-  PK11SymKeyCleaner sha1_of_subject_and_secret_and_issuer_cleaner(sha1_of_subject_and_secret_and_issuer);
+  ScopedPK11SymKey shared_secret;
+  ScopedPK11SymKey subject_and_secret;
+  ScopedPK11SymKey subject_and_secret_and_issuer;
+  ScopedPK11SymKey sha1_of_subject_and_secret_and_issuer;
 
   shared_secret = 
     PK11_PubDeriveWithKDF(keyInfo->privKey, // SECKEYPrivateKey *privKey
@@ -1615,23 +1593,18 @@ nsSet_EC_DHMAC_ProofOfPossession(CRMFCertReqMsg *certReqMsg,
       PK11_DigestOp(context, der_request->data, der_request->len))
     return NS_ERROR_FAILURE;
 
-  SECItem *result_hmac_sha1_item = nullptr;
-  SECItemCleanerTrueParam result_hmac_sha1_item_cleaner(result_hmac_sha1_item);
-
-  result_hmac_sha1_item = SECITEM_AllocItem(nullptr, nullptr, SHA1_LENGTH);
-  if (!result_hmac_sha1_item)
-    return NS_ERROR_FAILURE;
+  ScopedAutoSECItem result_hmac_sha1_item(SHA1_LENGTH);
 
   if (SECSuccess !=
       PK11_DigestFinal(context, 
-                       result_hmac_sha1_item->data, 
-                       &result_hmac_sha1_item->len, 
+                       result_hmac_sha1_item.data, 
+                       &result_hmac_sha1_item.len, 
                        SHA1_LENGTH))
     return NS_ERROR_FAILURE;
 
   if (SECSuccess !=
       CRMF_CertReqMsgSetKeyAgreementPOP(certReqMsg, crmfDHMAC,
-                                        crmfNoSubseqMess, result_hmac_sha1_item))
+                                        crmfNoSubseqMess, &result_hmac_sha1_item))
     return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -1950,14 +1923,13 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     if (srv != SECSuccess) {
       return NS_ERROR_FAILURE;
     }
-    CERTCertificate *cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                                    &certDer, nullptr, false,
-                                                    true);
+    ScopedCERTCertificate cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                                       &certDer, nullptr,
+                                                       false, true));
     if (!cert)
       return NS_ERROR_FAILURE;
 
     escrowCert = nsNSSCertificate::Create(cert);
-    CERT_DestroyCertificate(cert);
     nssCert = escrowCert;
     if (!nssCert)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2217,10 +2189,9 @@ static bool
 nsCertAlreadyExists(SECItem *derCert)
 {
   CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
-  CERTCertificate *cert;
   bool retVal = false;
 
-  cert = CERT_FindCertByDERCert(handle, derCert);
+  ScopedCERTCertificate cert(CERT_FindCertByDERCert(handle, derCert));
   if (cert) {
     if (cert->isperm && !cert->nickname && !cert->emailAddr) {
       //If the cert doesn't have a nickname or email addr, it is
@@ -2229,7 +2200,6 @@ nsCertAlreadyExists(SECItem *derCert)
     } else if (cert->isperm) {
       retVal = true;
     }
-    CERT_DestroyCertificate(cert);
   }
   return retVal;
 }
@@ -2270,7 +2240,6 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   nsAutoCString localNick;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsresult rv = NS_OK;
-  CERTCertList *caPubs = nullptr;
   nsCOMPtr<nsIPK11Token> token;
 
   nickname = ToNewCString(aNickname);
@@ -2382,7 +2351,8 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   //That would be a good thing.
 
   //Import the root chain into the cert db.
-  caPubs = CMMF_CertRepContentGetCAPubs(certRepContent);
+ {
+  ScopedCERTCertList caPubs(CMMF_CertRepContentGetCAPubs(certRepContent));
   if (caPubs) {
     int32_t numCAs = nsCertListCount(caPubs);
     
@@ -2405,9 +2375,8 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       nsNSSCertificateDB::ImportValidCACerts(numCAs, derCerts, ctx);
       nsMemory::Free(derCerts);
     }
-    
-    CERT_DestroyCertList(caPubs);
   }
+ }
 
   if (aDoForcedBackup) {
     // I can't pop up a file picker from the depths of JavaScript,
@@ -2639,15 +2608,13 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
     ++numberOfCerts;
   }
 
-  CERTCertNicknames* nicknames = getNSSCertNicknamesFromCertList(certList);
+  ScopedCERTCertNicknames nicknames(getNSSCertNicknamesFromCertList(certList));
 
   if (!nicknames) {
     aResult.Append(internalError);
 
     return NS_OK;
   }
-
-  CERTCertNicknamesCleaner cnc(nicknames);
 
   NS_ASSERTION(nicknames->numnicknames == numberOfCerts,
                "nicknames->numnicknames != numberOfCerts");
