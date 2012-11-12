@@ -6,6 +6,7 @@
 const modules = [
   "healthreporter.jsm",
   "policy.jsm",
+  "providers.jsm",
 ];
 
 const test_modules = [
