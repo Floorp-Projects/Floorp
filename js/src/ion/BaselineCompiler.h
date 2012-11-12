@@ -34,6 +34,7 @@ namespace ion {
     _(JSOP_POP)                \
     _(JSOP_GOTO)               \
     _(JSOP_IFNE)               \
+    _(JSOP_POS)                \
     _(JSOP_LOOPHEAD)           \
     _(JSOP_LOOPENTRY)          \
     _(JSOP_ZERO)               \

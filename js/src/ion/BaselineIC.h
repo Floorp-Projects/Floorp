@@ -152,6 +152,8 @@ class ICEntry
     _(ToBool_Fallback)          \
     _(ToBool_Bool)              \
                                 \
+    _(ToNumber_Fallback)        \
+                                \
     _(BinaryArith_Fallback)     \
     _(BinaryArith_Int32)
 
@@ -482,6 +484,34 @@ class ICToBool_Bool : public ICStub
 
         ICStub *getStub() {
             return ICToBool_Bool::New(getStubCode());
+        }
+    };
+};
+
+// ToNumber_Fallback - shared fallback stub for:
+//     JSOP_POS
+
+class ICToNumber_Fallback : public ICFallbackStub
+{
+    ICToNumber_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::ToNumber_Fallback, stubCode) {}
+
+  public:
+    static inline ICToNumber_Fallback *New(IonCode *code) {
+        return new ICToNumber_Fallback(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        IonCode *generateStubCode();
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::ToNumber_Fallback) {}
+
+        ICStub *getStub() {
+            return ICToNumber_Fallback::New(getStubCode());
         }
     };
 };
