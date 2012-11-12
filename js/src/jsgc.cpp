@@ -3249,9 +3249,10 @@ InCrossCompartmentMap(JSObject *src, Cell *dst, JSGCTraceKind dstKind)
 
     if (dstKind == JSTRACE_OBJECT) {
         Value key = ObjectValue(*static_cast<JSObject *>(dst));
-        WrapperMap::Ptr p = srccomp->crossCompartmentWrappers.lookup(key);
-        if (*p->value.unsafeGet() == ObjectValue(*src))
-            return true;
+        if (WrapperMap::Ptr p = srccomp->crossCompartmentWrappers.lookup(key)) {
+            if (*p->value.unsafeGet() == ObjectValue(*src))
+                return true;
+        }
     }
 
     /*
