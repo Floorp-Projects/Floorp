@@ -368,6 +368,18 @@
 |       <option>
 
 #data
+<!doctype html><dd><optgroup><dd>
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <dd>
+|       <optgroup>
+|     <dd>
+
+#data
 <!doctype html><p><math><mi><p><h1>
 #errors
 #document

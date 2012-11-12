@@ -1988,10 +1988,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                             pop();
                                         }
                                         break;
-                                    } else if (node.isScoping()
-                                            || (node.isSpecial()
-                                                    && node.name != "p"
-                                                    && node.name != "address" && node.name != "div")) {
+                                    } else if (node.isSpecial()
+                                            && node.name != "p"
+                                            && node.name != "address"
+                                            && node.name != "div") {
                                         break;
                                     }
                                     eltPos--;
