@@ -39,18 +39,21 @@ function isnot(a, b, description) {
   let outcome = a != b; // Need to decide outcome here, as not everything can be serialized
   send({kind: "isnot", outcome: outcome, description: description, a:""+a, b:""+b});
 }
+function info(description) {
+  send({kind: "info", description:description});
+}
 
 function test_init() {
-  ok(true, "Starting test_init");
+  info("Starting test_init");
   importScripts("resource://gre/modules/osfile.jsm");
 }
 
 function test_open_close() {
-  ok(true, "Starting test_open_close");
+  info("Starting test_open_close");
   is(typeof OS.Unix.File.open, "function", "OS.Unix.File.open is a function");
   let file = OS.Unix.File.open("chrome/toolkit/components/osfile/tests/mochi/worker_test_osfile_unix.js", OS.Constants.libc.O_RDONLY, 0);
   isnot(file, -1, "test_open_close: opening succeeded");
-  ok(true, "Close: "+OS.Unix.File.close.toSource());
+  info("Close: "+OS.Unix.File.close.toSource());
   let result = OS.Unix.File.close(file);
   is(result, 0, "test_open_close: close succeeded");
 
@@ -61,7 +64,7 @@ function test_open_close() {
 
 function test_create_file()
 {
-  ok(true, "Starting test_create_file");
+  info("Starting test_create_file");
   let file = OS.Unix.File.open("test.tmp", OS.Constants.libc.O_RDWR
                                | OS.Constants.libc.O_CREAT
                                | OS.Constants.libc.O_TRUNC,
@@ -72,7 +75,7 @@ function test_create_file()
 
 function test_access()
 {
-  ok(true, "Starting test_access");
+  info("Starting test_access");
   let file = OS.Unix.File.open("test1.tmp", OS.Constants.libc.O_RDWR
                                | OS.Constants.libc.O_CREAT
                                | OS.Constants.libc.O_TRUNC,
@@ -86,7 +89,7 @@ function test_access()
                                | OS.Constants.libc.O_TRUNC,
                                OS.Constants.libc.S_IWUSR);
 
-  ok(true, "test_access: preparing second call to access()");
+  info("test_access: preparing second call to access()");
   result = OS.Unix.File.access("test2.tmp", OS.Constants.libc.R_OK
                         | OS.Constants.libc.W_OK
                         | OS.Constants.libc.X_OK
@@ -150,15 +153,15 @@ function test_read_write()
     }
     total += write_from;
   }
-  ok(true, "test_read_write: copy complete " + total);
+  info("test_read_write: copy complete " + total);
 
   // Compare files
   let result;
-  ok(true, "SEEK_SET: " + OS.Constants.libc.SEEK_SET);
-  ok(true, "Input: " + input + "(" + input.toSource() + ")");
-  ok(true, "Output: " + output + "(" + output.toSource() + ")");
+  info("SEEK_SET: " + OS.Constants.libc.SEEK_SET);
+  info("Input: " + input + "(" + input.toSource() + ")");
+  info("Output: " + output + "(" + output.toSource() + ")");
   result = OS.Unix.File.lseek(input, 0, OS.Constants.libc.SEEK_SET);
-  ok(true, "Result of lseek: " + result);
+  info("Result of lseek: " + result);
   isnot(result, -1, "test_read_write: input seek succeeded " + ctypes.errno);
   result = OS.Unix.File.lseek(output, 0, OS.Constants.libc.SEEK_SET);
   isnot(result, -1, "test_read_write: output seek succeeded " + ctypes.errno);
@@ -194,19 +197,19 @@ function test_read_write()
       }
     }
   }
-  ok(true, "test_read_write test complete");
+  info("test_read_write test complete");
   result = OS.Unix.File.close(input);
   isnot(result, -1, "test_read_write: input close succeeded");
   result = OS.Unix.File.close(output);
   isnot(result, -1, "test_read_write: output close succeeded");
   result = OS.Unix.File.unlink(output_name);
   isnot(result, -1, "test_read_write: input remove succeeded");
-  ok(true, "test_read_write cleanup complete");
+  info("test_read_write cleanup complete");
 }
 
 function test_path()
 {
-  ok(true, "test_path: starting");
+  info("test_path: starting");
   is(OS.Unix.Path.basename("a/b"), "b", "basename of a/b");
   is(OS.Unix.Path.basename("a/b/"), "", "basename of a/b/");
   is(OS.Unix.Path.basename("abc"), "abc", "basename of abc");
@@ -229,5 +232,5 @@ function test_path()
   ok(error, "cannot normalize /a/b/c/../../../../d/e/f");
   is(OS.Unix.Path.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
   is(OS.Unix.Path.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");
-  ok(true, "test_path: complete");
+  info("test_path: complete");
 }
