@@ -55,6 +55,7 @@
 #include "jsxml.h"
 
 #include "builtin/Eval.h"
+#include "builtin/Intl.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/ParallelArray.h"
@@ -1793,6 +1794,9 @@ static JSStdName standard_class_atoms[] = {
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
     {js_InitParallelArrayClass,         EAGER_CLASS_ATOM(ParallelArray), &js::ParallelArrayObject::class_},
     {js_InitProxyClass,                 EAGER_ATOM_AND_CLASP(Proxy)},
+#if ENABLE_INTL_API
+    {js_InitIntlClass,                  EAGER_ATOM_AND_CLASP(Intl)},
+#endif
     {NULL,                              0, NULL}
 };
 
