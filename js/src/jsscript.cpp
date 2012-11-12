@@ -34,6 +34,7 @@
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "ion/IonCode.h"
+#include "ion/BaselineJIT.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
 #include "vm/Xdr.h"
@@ -2601,6 +2602,8 @@ JSScript::markChildren(JSTracer *trc)
 #ifdef JS_ION
     if (hasIonScript())
         ion::IonScript::Trace(trc, ion);
+    if (hasBaselineScript())
+        ion::BaselineScript::Trace(trc, baseline);
 #endif
 }
 
