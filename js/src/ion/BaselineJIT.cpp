@@ -183,6 +183,11 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
 MethodStatus
 ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
 {
+    if (cx->compartment->debugMode()) {
+        IonSpew(IonSpew_Abort, "BASELINE FIXME: Not compiling in debug mode!");
+        return Method_CantCompile;
+    }
+
     if (!CheckFrame(fp))
         return Method_CantCompile;
 

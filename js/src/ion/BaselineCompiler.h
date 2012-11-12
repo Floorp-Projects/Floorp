@@ -57,7 +57,7 @@ namespace ion {
 class BaselineCompiler : public BaselineCompilerSpecific
 {
     FixedList<Label> labels_;
-    Label return_;
+    HeapLabel *return_;
 
     Label *labelOf(jsbytecode *pc) {
         return &labels_[pc - script->code];
