@@ -259,6 +259,10 @@ let FormAssistant = {
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
+    if (element.contentEditable && element.contentEditable == "true") {
+      return true;
+    }
+
     if (element instanceof HTMLSelectElement ||
         element instanceof HTMLTextAreaElement)
       return true;
@@ -273,7 +277,8 @@ let FormAssistant = {
 
   isTextInputElement: function fa_isTextInputElement(element) {
     return element instanceof HTMLInputElement ||
-           element instanceof HTMLTextAreaElement;
+           element instanceof HTMLTextAreaElement ||
+           (element.contentEditable && element.contentEditable == "true");
   },
 
   tryShowIme: function(element) {
@@ -294,6 +299,13 @@ FormAssistant.init();
 
 function getJSON(element) {
   let type = element.type || "";
+  let value = element.value || ""
+
+  // Treat contenteditble element as a special text field
+  if (element.contentEditable && element.contentEditable == "true") {
+    type = "text";
+    value = element.textContent;
+  }
 
   // Until the input type=date/datetime/time have been implemented
   // let's return their real type even if the platform returns 'text'
@@ -329,7 +341,7 @@ function getJSON(element) {
   return {
     "type": type.toLowerCase(),
     "choices": getListForElement(element),
-    "value": element.value,
+    "value": value,
     "inputmode": inputmode,
     "selectionStart": element.selectionStart,
     "selectionEnd": element.selectionEnd
