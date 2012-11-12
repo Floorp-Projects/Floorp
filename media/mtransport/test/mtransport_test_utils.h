@@ -91,6 +91,13 @@ MtransportTestUtils *mtransport_test_utils;
 #define SETUP_MTRANSPORT_TEST_UTILS() \
   MtransportTestUtils utils_; mtransport_test_utils = &utils_
 
+#define CHECK_ENVIRONMENT_FLAG(envname) \
+  char *test_flag = getenv(envname); \
+  if (!test_flag || strcmp(test_flag, "1")) { \
+    printf("To run this test set %s=1 in your environment\n", envname); \
+    exit(0); \
+  } \
+
 
 #endif
 
