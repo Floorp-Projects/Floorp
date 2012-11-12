@@ -123,6 +123,7 @@ CPPSRCS		= \
 		BytecodeCompiler.cpp \
 		BytecodeEmitter.cpp \
 		FoldConstants.cpp \
+		Intl.cpp \
 		NameFunctions.cpp \
 		ParallelArray.cpp \
 		ParseMaps.cpp \
