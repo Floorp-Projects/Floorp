@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=796179
+-->
+<window title="Mozilla Bug 796179"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- Detect severe performance and memory issues when large amounts of errors
+       are reported from CSS embedded in a file with a long data URI. Addressed
+       by 786108 for issues internal to the style system and by 796179 for issues
+       related to the error console. This error console test should finish quickly
+       with those patches and run for a very long time or OOM otherwise. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=796179"
+      target="_blank">Mozilla Bug 796179</a>
+    <div id="badSVG" style="max-width: 1; max-height: 1; overflow: hidden"></div>
+  </body>
+
+  <!-- display the error console so we can test its reaction to the test -->
+  <iframe id="errorConsoleFrame"  height="400" src="chrome://global/content/console.xul"></iframe>
+
+  <!-- test code -->
+  <script type="application/javascript">
+  <![CDATA[
+    function RunTest()
+    {
+      // Create the bad SVG and add it to the document.
+      var img = new Array;
+      img.push('<img src="data:image/svg+xml,');
+      img.push(encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300px" height="300px">'));
+
+      for (var i = 0 ; i < 10000 ; i++)
+        img.push(encodeURIComponent('<circle cx="0" cy="0" r="1" style="xxx-invalid-property: 0;"/>'));
+
+      img.push(encodeURIComponent('</svg>'));
+      img.push('" />');
+
+      document.getElementById('badSVG').innerHTML = img.join('');
+
+      // We yield control of the thread, allowing the error console to render.
+      // If we get control back without timing out or OOMing then the test passed.
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.executeSoon(function() {
+                               // Clean up.
+                               var elem = document.getElementById('errorConsoleFrame');
+                               elem.parentNode.removeChild(elem);
+                               elem = document.getElementById('badSVG');
+                               elem.parentNode.removeChild(elem);
+                               elem = null;
+
+                               // Finish the test with a pass.
+                               ok(true, 'Error console rendered OK.');
+                               SimpleTest.finish();
+                             }, 0);
+    }
+  ]]>
+  </script>
+</window>
