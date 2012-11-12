@@ -23,6 +23,12 @@
       <field name="limit" readonly="true">
         250
       </field>
+
+      <field name="hrefMaxLength" readonly="true">
+        <!-- Limit displayed script error source URL to avoid performance issues. (Bug 796179) -->
+        200
+      </field>
+
       <field name="_showChromeErrors">-1</field>
 
       <property name="showChromeErrors">
@@ -192,7 +198,7 @@
           
           // Is this error actually just a non-fatal warning?
           var warning = aObject.flags & nsIScriptError.warningFlag != 0;
-  
+
           var typetext = warning ? "typeWarning" : "typeError";
           row.setAttribute("typetext", this.mStrBundle.getString(typetext));
           row.setAttribute("type", warning ? "warning" : "error");
@@ -200,7 +206,12 @@
           row.setAttribute("category", aObject.category);
           row.setAttribute("time", this.properFormatTime(aObject.timeStamp));
           if (aObject.lineNumber || aObject.sourceName) {
-            row.setAttribute("href", aObject.sourceName);
+            if (aObject.sourceName.length <= this.hrefMaxLength) {
+              row.setAttribute("href", aObject.sourceName);
+            } else {
+              row.setAttribute("href", aObject.sourceName.substring(0, this.hrefMaxLength) + '…');
+            }
+            row.mSourceName = aObject.sourceName;
             row.setAttribute("line", aObject.lineNumber);
           } else {
             row.setAttribute("hideSource", "true");
@@ -310,10 +321,11 @@
       <method name="filterElement">
         <parameter name="aRow" />
         <body><![CDATA[
-          let anyMatch = ["msg", "href", "line", "code"].some(function (key) {
-            return (aRow.hasAttribute(key) && 
+          let anyMatch = ["msg", "line", "code"].some(function (key) {
+            return (aRow.hasAttribute(key) &&
                     this.stringMatchesFilters(aRow.getAttribute(key), this.mFilter));
-          }, this);
+          }, this) || (aRow.mSourceName &&
+                       this.stringMatchesFilters(aRow.mSourceName, this.mFilter));
 
           if (anyMatch) {
             aRow.classList.remove("filtered-by-string")
@@ -444,6 +456,8 @@
     </content>
 
     <implementation>
+      <field name="mSourceName">null</field>
+
       <method name="toString">
         <body><![CDATA[
           let msg = "";
@@ -454,9 +468,9 @@
 
           msg += this.getAttribute("typetext") + " " + this.getAttribute("msg");
 
-          if (this.hasAttribute("line") && this.hasAttribute("href")) {
+          if (this.hasAttribute("line") && this.mSourceName) {
             msg += "\n" + strBundle.getFormattedString("errFile",
-                                        [this.getAttribute("href")]) + "\n";
+                                        [this.mSourceName]) + "\n";
             if (this.hasAttribute("col")) {
               msg += strBundle.getFormattedString("errLineCol",
                          [this.getAttribute("line"), this.getAttribute("col")]);
@@ -499,13 +513,13 @@
 
   <binding id="console-error-source" extends="xul:box">
     <content>
-      <xul:label class="text-link" xbl:inherits="href,value=href" crop="right"/>
+      <xul:label class="text-link" xbl:inherits="value=href" crop="right"/>
     </content>
 
     <handlers>
       <handler event="click" phase="capturing" button="0" preventdefault="true">
         <![CDATA[
-          var url = this.getAttribute("href");
+          var url = document.getBindingParent(this).mSourceName;
           url = url.substring(url.lastIndexOf(" ") + 1);
           var line = getAttribute("line");
           gViewSourceUtils.viewSource(url, null, null, line);
