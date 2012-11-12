@@ -206,8 +206,21 @@ public class testBookmarksTab extends BaseTest {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("Bookmarks");
 
-        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
-        return (ListView)tabHost.getCurrentView();
+        final ArrayList<ListView> views = mSolo.getCurrentListViews();
+
+        list = null;
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+               for (ListView view : views) {
+                   if (view.getTag() == "bookmarks") {
+                       list = view;
+                       return true;
+                   }
+               }
+               return false;
+            }
+        }, WAIT_FOR_CHILD_TIMEOUT);
+        return list;
     }
 
     private long addBookmark(String title, String url) {

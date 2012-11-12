@@ -28,9 +28,9 @@ abstract public class AwesomeBarTab {
     abstract public String getTag();
     abstract public int getTitleStringId();
     abstract public void destroy();
-    abstract public TabContentFactory getFactory();
     abstract public boolean   onBackPressed();
     abstract public ContextMenuSubject getSubject(ContextMenu menu, View view, ContextMenuInfo menuInfo);
+    abstract public View getView();
 
     protected View mView = null;
     protected View.OnTouchListener mListListener;

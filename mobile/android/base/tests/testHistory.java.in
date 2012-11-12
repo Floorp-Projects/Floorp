@@ -7,11 +7,13 @@ import android.app.Activity;
 import java.util.ArrayList;
 import android.widget.TabHost;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ListView;
 import android.util.Log;
 
 public class testHistory extends PixelTest {
     private View mFirstChild;
+    private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
 
     @Override
     protected int getTestType() {
@@ -32,13 +34,38 @@ public class testHistory extends PixelTest {
         loadAndPaint(url3);
         verifyPageTitle("Browser Blank Page 03");
 
-        ListView hList = openHistoryList();
+        final ListView hList = openHistoryList();
         mAsserter.ok(hList != null, "checking history exists", "history exists");
 
         // Click on the history item and wait for the page to load
+        // wait for the history list to be populated
         mFirstChild = null;
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+                mFirstChild = hList.getChildAt(1);
+                if (mFirstChild == null) {
+                    return false;
+                }
+                if (mFirstChild instanceof android.view.ViewGroup) {
+                    ViewGroup group = (ViewGroup)mFirstChild;
+                    if (group.getChildCount() < 1) {
+                        return false;
+                    }
+                    for (int i = 0; i < group.getChildCount(); i++) {
+                        View grandChild = group.getChildAt(i);
+                        if (grandChild instanceof android.widget.TextView) {
+                            mAsserter.ok(true, "found TextView:", ((android.widget.TextView)grandChild).getText().toString());
+                        }
+                    }
+                } else {
+                    mAsserter.dumpLog("first child not a ViewGroup: "+mFirstChild);
+                    return false;
+                }
+                return true;
+            }
+        }, WAIT_FOR_CHILD_TIMEOUT);
+
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-        mFirstChild = hList.getChildAt(1);
         mAsserter.isnot(mFirstChild, null, "Got history item");
         mSolo.clickOnView(mFirstChild);
         contentEventExpecter.blockForEvent();
@@ -49,7 +76,11 @@ public class testHistory extends PixelTest {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("History");
 
-        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
-        return (ListView)tabHost.getCurrentView();
+        ArrayList<ListView> views = mSolo.getCurrentListViews();
+        for (ListView view : views) {
+            if (view.getTag() == "history")
+                return view;
+        }
+        return null;
     }
 }
