@@ -3425,7 +3425,7 @@ BeginMarkPhase(JSRuntime *rt)
      * gcObjectsMarkedInDeadCompartment counter) and redo any ongoing GCs after
      * the JS_TransplantObject function has finished. This ensures that the dead
      * compartments will be cleaned up. See AutoMarkInDeadCompartment and
-     * AutoTransplantGC for details.
+     * AutoMaybeTouchDeadCompartments for details.
      */
 
     /* Set the maybeAlive flag based on cross-compartment edges. */
@@ -5883,23 +5883,32 @@ PurgeJITCaches(JSCompartment *c)
 #endif
 }
 
-AutoTransplantGC::AutoTransplantGC(JSContext *cx)
+AutoMaybeTouchDeadCompartments::AutoMaybeTouchDeadCompartments(JSContext *cx)
   : runtime(cx->runtime),
     markCount(runtime->gcObjectsMarkedInDeadCompartments),
     inIncremental(IsIncrementalGCInProgress(runtime)),
-    inTransplant(runtime->gcInTransplant)
+    manipulatingDeadCompartments(runtime->gcManipulatingDeadCompartments)
 {
-    runtime->gcInTransplant = true;
+    runtime->gcManipulatingDeadCompartments = true;
 }
 
-AutoTransplantGC::~AutoTransplantGC()
+AutoMaybeTouchDeadCompartments::AutoMaybeTouchDeadCompartments(JSObject *obj)
+  : runtime(obj->compartment()->rt),
+    markCount(runtime->gcObjectsMarkedInDeadCompartments),
+    inIncremental(IsIncrementalGCInProgress(runtime)),
+    manipulatingDeadCompartments(runtime->gcManipulatingDeadCompartments)
+{
+    runtime->gcManipulatingDeadCompartments = true;
+}
+
+AutoMaybeTouchDeadCompartments::~AutoMaybeTouchDeadCompartments()
 {
     if (inIncremental && runtime->gcObjectsMarkedInDeadCompartments != markCount) {
         PrepareForFullGC(runtime);
         js::GC(runtime, GC_NORMAL, gcreason::TRANSPLANT);
     }
 
-    runtime->gcInTransplant = inTransplant;
+    runtime->gcManipulatingDeadCompartments = manipulatingDeadCompartments;
 }
 
 } /* namespace js */

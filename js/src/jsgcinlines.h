@@ -26,8 +26,8 @@ struct Shape;
 
 /*
  * This auto class should be used around any code that might cause a mark bit to
- * be set on an object in a dead compartment. See AutoTransplantGC for more
- * details.
+ * be set on an object in a dead compartment. See AutoMaybeTouchDeadCompartments
+ * for more details.
  */
 struct AutoMarkInDeadCompartment
 {
@@ -35,7 +35,7 @@ struct AutoMarkInDeadCompartment
       : compartment(comp),
         scheduled(comp->scheduledForDestruction)
     {
-        if (comp->rt->gcInTransplant && comp->scheduledForDestruction) {
+        if (comp->rt->gcManipulatingDeadCompartments && comp->scheduledForDestruction) {
             comp->rt->gcObjectsMarkedInDeadCompartments++;
             comp->scheduledForDestruction = false;
         }
