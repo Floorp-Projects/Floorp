@@ -12,6 +12,7 @@
  *          be malicious.
  */
 
+#include "ScopedNSSTypes.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string>
@@ -21,18 +22,17 @@
 #include "prinit.h"
 #include "prerror.h"
 #include "prenv.h"
-#include "prio.h"
 #include "prnetdb.h"
 #include "prtpool.h"
 #include "prtypes.h"
 #include "nsAlgorithm.h"
 #include "nss.h"
-#include "pk11func.h"
 #include "key.h"
-#include "keyt.h"
 #include "ssl.h"
 #include "plhash.h"
 
+using namespace mozilla;
+using namespace mozilla::psm;
 using std::string;
 using std::vector;
 
@@ -204,44 +204,6 @@ struct relayBuffer
   size_t present() { return buffertail - bufferhead; }
 };
 
-// A couple of stack classes for managing NSS/NSPR resources
-class AutoCert {
-public:
-  AutoCert(CERTCertificate* cert) { cert_ = cert; }
-  ~AutoCert() { if (cert_) CERT_DestroyCertificate(cert_); }
-  operator CERTCertificate*() { return cert_; }
-private:
-  CERTCertificate* cert_;
-};
-
-class AutoKey {
-public:
-  AutoKey(SECKEYPrivateKey* key) { key_ = key; }
-  ~AutoKey() { if (key_)   SECKEY_DestroyPrivateKey(key_); }
-  operator SECKEYPrivateKey*() { return key_; }
-private:
-  SECKEYPrivateKey* key_;
-};
-
-class AutoFD {
-public:
-  AutoFD(PRFileDesc* fd) { fd_ = fd; }
-  ~AutoFD() {
-    if (fd_) {
-      PR_Shutdown(fd_, PR_SHUTDOWN_BOTH);
-      PR_Close(fd_);
-    }
-  }
-  operator PRFileDesc*() { return fd_; }
-  PRFileDesc* reset(PRFileDesc* newfd) {
-    PRFileDesc* oldfd = fd_;
-    fd_ = newfd;
-    return oldfd;
-  }
-private:
-  PRFileDesc* fd_;
-};
-
 // These numbers are multiplied by the number of listening ports (actual
 // servers running).  According the thread pool implementation there is no
 // need to limit the number of threads initially, threads are allocated
@@ -361,14 +323,13 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
   const char* certnick = certificate.empty() ?
       si->cert_nickname.c_str() : certificate.c_str();
 
-  AutoCert cert(PK11_FindCertFromNickname(
-      certnick, NULL));
+  ScopedCERTCertificate cert(PK11_FindCertFromNickname(certnick, NULL));
   if (!cert) {
     LOG_ERROR(("Failed to find cert %s\n", certnick));
     return false;
   }
 
-  AutoKey privKey(PK11_FindKeyByAnyCert(cert, NULL));
+  ScopedSECKEYPrivateKey privKey(PK11_FindKeyByAnyCert(cert, NULL));
   if (!privKey) {
     LOG_ERROR(("Failed to find private key\n"));
     return false;
@@ -577,7 +538,7 @@ void HandleConnection(void* data)
   connection_info_t* ci = static_cast<connection_info_t*>(data);
   PRIntervalTime connect_timeout = PR_SecondsToInterval(30);
 
-  AutoFD other_sock(PR_NewTCPSocket());
+  ScopedPRFileDesc other_sock(PR_NewTCPSocket());
   bool client_done = false;
   bool client_error = false;
   bool connect_accepted = !do_http_proxy;
@@ -917,7 +878,7 @@ void StartServer(void* data)
   server_info_t* si = static_cast<server_info_t*>(data);
 
   //TODO: select ciphers?
-  AutoFD listen_socket(PR_NewTCPSocket());
+  ScopedPRFileDesc listen_socket(PR_NewTCPSocket());
   if (!listen_socket) {
     LOG_ERROR(("failed to create socket\n"));
     SignalShutdown();
