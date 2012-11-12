@@ -114,6 +114,12 @@ class IonFrameIterator
     bool isScripted() const {
         return type_ == IonFrame_BaselineJS || type_ == IonFrame_OptimizedJS;
     }
+    bool isBaselineJS() const {
+        return type_ == IonFrame_BaselineJS;
+    }
+    bool isOptimizedJS() const {
+        return type_ == IonFrame_OptimizedJS;
+    }
     bool isNative() const;
     bool isOOLNativeGetter() const;
     bool isOOLPropertyOp() const;
