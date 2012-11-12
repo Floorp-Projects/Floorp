@@ -71,6 +71,8 @@ public:
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget);
 
+    virtual cairo_scaled_font_t *GetCairoScaledFont();
+
 protected:
     friend class gfxDWriteShaper;
 
@@ -83,8 +85,6 @@ protected:
     bool HasBitmapStrikeForSize(uint32_t aSize);
 
     cairo_font_face_t *CairoFontFace();
-
-    cairo_scaled_font_t *CairoScaledFont();
 
     gfxFloat MeasureGlyphWidth(uint16_t aGlyph);
 
