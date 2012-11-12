@@ -240,7 +240,7 @@ html[dir='rtl'] #sidebarContent {
 
 #toolbarSidebar {
   width: 200px;
-  height: 29px;
+  height: 32px;
   background-image: url(images/texture.png),
                     -webkit-linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
   background-image: url(images/texture.png),
@@ -251,11 +251,11 @@ html[dir='rtl'] #sidebarContent {
                     -o-linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
   background-image: url(images/texture.png),
                     linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
-  box-shadow: inset -2px 0 0 hsla(0,0%,100%,.08),
-              inset 0 1px 1px hsla(0,0%,0%,.15),
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25),
+              
               inset 0 -1px 0 hsla(0,0%,100%,.05),
               0 1px 0 hsla(0,0%,0%,.15),
-              0 1px 1px hsla(0,0%,0%,.1);
+              0 0 1px hsla(0,0%,0%,.1);
 }
 
 #toolbarViewer, .findbar {
@@ -271,7 +271,6 @@ html[dir='rtl'] #sidebarContent {
                     -o-linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
   background-image: url(images/texture.png),
                     linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
-  border-left: 1px solid hsla(0,0%,0%,.5);
   box-shadow: inset 1px 0 0 hsla(0,0%,100%,.08),
               inset 0 1px 1px hsla(0,0%,0%,.15),
               inset 0 -1px 0 hsla(0,0%,100%,.05),
@@ -1042,7 +1041,7 @@ canvas {
   height: 1056px;
   margin: 10px auto;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   -webkit-box-shadow: 0px 4px 10px #000;
   -moz-box-shadow: 0px 4px 10px #000;
   box-shadow: 0px 4px 10px #000;
@@ -1195,30 +1194,30 @@ canvas {
 ::selection { background:rgba(0,0,255,0.3); }
 ::-moz-selection { background:rgba(0,0,255,0.3); }
 
-.annotComment > div {
+.annotText > div {
+  z-index: 200;
   position: absolute;
-}
-
-.annotComment > img {
-  position: absolute;
-}
-
-.annotComment > img:hover {
-  cursor: pointer;
-  opacity: 0.7;
-}
-
-.annotComment > div {
-  padding: 0.2em;
+  padding: 0.6em;
   max-width: 20em;
-  background-color: #F1E47B;
+  background-color: #FFFF99;
   -webkit-box-shadow: 0px 2px 10px #333;
   -moz-box-shadow: 0px 2px 10px #333;
   box-shadow: 0px 2px 10px #333;
+  border-radius: 7px;
+  -moz-border-radius: 7px;
 }
 
-.annotComment > div > h1 {
-  font-weight: normal;
+.annotText > img {
+  position: absolute;
+  opacity: 0.6;
+}
+
+.annotText > img:hover {
+  cursor: pointer;
+  opacity: 1;
+}
+
+.annotText > div > h1 {
   font-size: 1.2em;
   border-bottom: 1px solid #000000;
   margin: 0px;
@@ -1388,9 +1387,6 @@ canvas {
   #sidebarContent {
     top: 32px;
     background-color: hsla(0,0%,0%,.7);
-  }
-  #thumbnailView, #outlineView {
-    top: 66px;
   }
 
   html[dir='ltr'] #outerContainer.sidebarOpen > #mainContainer {
