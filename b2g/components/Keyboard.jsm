@@ -35,7 +35,7 @@ let Keyboard = {
   },
 
   init: function keyboardInit() {
-    Services.obs.addObserver(this, 'in-process-browser-frame-shown', false);
+    Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
 
     for (let name of this._messageNames)
