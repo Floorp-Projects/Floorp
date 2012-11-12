@@ -4286,7 +4286,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
 
     RootedValue nvp(cx, *vp);
 
-    int32_t sample = cx->runtime->propertyRemovals;
+    uint32_t sample = cx->runtime->propertyRemovals;
     if (!shape->set(cx, obj, receiver, strict, &nvp))
         return false;
 
