@@ -820,13 +820,12 @@ var WifiManager = (function() {
         notify("passwordmaybeincorrect");
       }
 
-      // This is ugly, but we need to grab the SSID here. While we're at it,
-      // we grab the BSSID as well.
-      var match = /Trying to associate with ([^ ]+) \(SSID='([^']+)' freq=\d+ MHz\)/.exec(event);
+      // This is ugly, but we need to grab the SSID here. BSSID is not guaranteed
+      // to be provided, so don't grab BSSID here.
+      var match = /Trying to associate with.*SSID[ =]'(.*)'/.exec(event);
       if (match) {
-        debug("Matched: " + match[1] + " and " + match[2]);
-        manager.connectionInfo.bssid = match[1];
-        manager.connectionInfo.ssid = match[2];
+        debug("Matched: " + match[1] + "\n");
+        manager.connectionInfo.ssid = match[1];
       }
       return true;
     }
@@ -904,6 +903,11 @@ var WifiManager = (function() {
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-CONNECTED") === 0) {
+      // Format: CTRL-EVENT-CONNECTED - Connection to 00:1e:58:ec:d5:6d completed (reauth) [id=1 id_str=]
+      var bssid = event.split(" ")[4];
+      var id = event.substr(event.indexOf("id=")).split(" ")[0];
+      // Read current BSSID here, it will always being provided.
+      manager.connectionInfo.bssid = bssid;
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-SCAN-RESULTS") === 0) {
@@ -1837,6 +1841,8 @@ function WifiWorker() {
         self._fireEvent("onassociate", { network: netToDOM(self.currentNetwork) });
         break;
       case "CONNECTED":
+        // BSSID is read after connected, update it.
+        self.currentNetwork.bssid = WifiManager.connectionInfo.bssid;
         break;
       case "DISCONNECTED":
         self._fireEvent("ondisconnect", {});
