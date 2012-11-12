@@ -40,7 +40,6 @@ ICCompare_Int32::Compiler::generateStubCode()
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
     // Compare payload regs of R0 and R1.
-    Register scratchReg = BaselineTailCallReg;
     masm.cmpl(R0.payloadReg(), R1.payloadReg());
     masm.setCC(cond, R0.payloadReg());
     masm.movzxbl(R0.payloadReg(), R0.payloadReg());
