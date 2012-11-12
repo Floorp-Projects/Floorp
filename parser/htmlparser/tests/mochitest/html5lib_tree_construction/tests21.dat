@@ -117,6 +117,42 @@
 |       "]>a"
 
 #data
+<!DOCTYPE html><svg><![CDATA[foo]]]>
+#errors
+36: End of file in a foreign namespace context.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|       "foo]"
+
+#data
+<!DOCTYPE html><svg><![CDATA[foo]]]]>
+#errors
+36: End of file in a foreign namespace context.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|       "foo]]"
+
+#data
+<!DOCTYPE html><svg><![CDATA[foo]]]]]>
+#errors
+36: End of file in a foreign namespace context.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|       "foo]]]"
+
+#data
 <svg><foreignObject><div><![CDATA[foo]]>
 #errors
 #document
