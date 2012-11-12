@@ -230,6 +230,18 @@ BaselineScript::New(JSContext *cx, size_t icEntries)
     return script;
 }
 
+void
+BaselineScript::trace(JSTracer *trc)
+{
+    MarkIonCode(trc, &method_, "baseline-method");
+}
+
+void
+BaselineScript::Trace(JSTracer *trc, BaselineScript *script)
+{
+    script->trace(trc);
+}
+
 ICEntry &
 BaselineScript::icEntry(size_t index)
 {
