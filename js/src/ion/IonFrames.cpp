@@ -313,7 +313,7 @@ ion::HandleException(ResumeFromException *rfe)
 
     IonFrameIterator iter(cx->runtime->ionTop);
     while (!iter.isEntry()) {
-        if (iter.isScripted()) {
+        if (iter.isOptimizedJS()) {
             // Search each inlined frame for live iterator objects, and close
             // them.
             InlineFrameIterator frames(&iter);
