@@ -922,7 +922,7 @@ var SocialToolbar = {
 
     let imageId = aToolbarButtonBox.getAttribute("id") + "-image";
     let toolbarButtonImage = document.getElementById(imageId);
-    panel.openPopup(toolbarButtonImage, "bottomcenter topleft", 0, 0, false, false);
+    panel.openPopup(toolbarButtonImage, "bottomcenter topright", 0, 0, false, false);
   },
 
   setPanelErrorMessage: function SocialToolbar_setPanelErrorMessage(aNotificationFrame) {
