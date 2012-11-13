@@ -303,6 +303,11 @@ class Assembler : public AssemblerX86Shared
         return label;
     }
 
+    CodeOffsetLabel movWithPatch(const ImmWord &word, const Register &dest) {
+        movq(word, dest);
+        return masm.currentOffset();
+    }
+
     void movq(ImmWord word, const Register &dest) {
         masm.movq_i64r(word.value, dest.code());
     }
