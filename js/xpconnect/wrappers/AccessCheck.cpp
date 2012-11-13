@@ -231,11 +231,6 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
 
     JSObject *obj = Wrapper::wrappedObject(wrapper);
 
-    // PUNCTURE Is always denied for cross-origin access.
-    if (act == Wrapper::PUNCTURE) {
-        return false;
-    }
-
     const char *name;
     js::Class *clasp = js::GetObjectClass(obj);
     NS_ASSERTION(Jsvalify(clasp) != &XrayUtils::HolderClass, "shouldn't have a holder here");
@@ -344,9 +339,6 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 
     if (act == Wrapper::CALL)
         return true;
-
-    if (act == Wrapper::PUNCTURE)
-        return false;
 
     jsid exposedPropsId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS);
 
