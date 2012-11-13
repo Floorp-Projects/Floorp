@@ -160,12 +160,15 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       }
       var previousFocusedElement = gFM.focusedElement;
       var element = document.getElementById(aTest.id);
+      var focusEventTarget = element;
       var subDocument = null;
       if (element.contentDocument) {
+        focusEventTarget = element.contentDocument;
         subDocument = element.contentDocument;
         element = element.contentDocument.documentElement;
       }
 
+      focusEventTarget.addEventListener("focus", aFocusEventHandler, true);
       document.addEventListener("MozIMEFocusIn", aFocusEventHandler, true);
       document.addEventListener("MozIMEFocusOut", aFocusEventHandler, true);
       if (subDocument) {
@@ -175,6 +178,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
 
       element.focus();
 
+      focusEventTarget.removeEventListener("focus", aFocusEventHandler, true);
       document.removeEventListener("MozIMEFocusIn", aFocusEventHandler, true);
       document.removeEventListener("MozIMEFocusOut", aFocusEventHandler, true);
       if (element.contentDocument) {
@@ -215,6 +219,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     // IME Enabled state testing
     var enabled = gUtils.IME_STATUS_ENABLED;
     if (kIMEEnabledSupported) {
+      var focusEventCount = 0;
       var mozIMEFocusInCount = 0;
       var mozIMEFocusOutCount = 0;
       var IMEHasFocus = false;
@@ -222,6 +227,11 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       function onFocus(aEvent)
       {
         switch (aEvent.type) {
+          case "focus":
+            focusEventCount++;
+            is(gUtils.IMEStatus, aTest.expectedEnabled,
+               aDescription + ": " + aTest.description + ", wrong enabled state at focus event");
+            break;
           case "MozIMEFocusIn":
             mozIMEFocusInCount++;
             IMEHasFocus = true;
@@ -245,36 +255,25 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
 
       if (aTest.focusable) {
         if (!aTest.focusEventNotFired) {
+          ok(focusEventCount > 0,
+             aDescription + ": " + aTest.description + ", focus event is never fired");
           if (aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED || aTest.expectedEnabled == gUtils.IME_STATUS_PASSWORD) {
+            ok(mozIMEFocusInCount > 0,
+               aDescription + ": " + aTest.description + ", MozIMEFocusIn event should be fired");
             var toDesignModeEditor = (document.activeElement.contentDocument &&
                                       (document.activeElement.contentDocument.designMode == "on"));
-            if (aInDesignMode && toDesignModeEditor) {
+            if (aInDesignMode && !toDesignModeEditor) {
               is(mozIMEFocusOutCount, 0,
                  aDescription + ": " + aTest.description +
                    ", MozIMEFocusOut event shouldn't be fired in designMode since focus isn't moved from another editor");
-              todo(mozIMEFocusInCount > 0,
-                   aDescription + ": " + aTest.description + ", MozIMEFocusIn event should be fired"); // bug 805766
             } else {
               ok(mozIMEFocusOutCount > 0,
                  aDescription + ": " + aTest.description +
                    ", MozIMEFocusOut event should be fired for the previous focused editor");
-              if (toDesignModeEditor) {
-                todo(mozIMEFocusInCount > 0,
-                     aDescription + ": " + aTest.description + ", MozIMEFocusIn event should be fired"); // bug 805766
-              } else {
-                ok(mozIMEFocusInCount > 0,
-                   aDescription + ": " + aTest.description + ", MozIMEFocusIn event should be fired");
-              }
             }
-            if (aInDesignMode || toDesignModeEditor) { // bug 805766
-              todo(IMEHasFocus,
-                   aDescription + ": " + aTest.description +
-                     ", The latest MozIMEFocus* event must be MozIMEFocusIn");
-            } else {
-              ok(IMEHasFocus,
-                 aDescription + ": " + aTest.description +
-                   ", The latest MozIMEFocus* event must be MozIMEFocusIn");
-            }
+            ok(IMEHasFocus,
+               aDescription + ": " + aTest.description +
+                 ", The latest MozIMEFocus* event must be MozIMEFocusIn");
           } else {
             is(mozIMEFocusInCount, 0,
                aDescription + ": " + aTest.description +
@@ -287,8 +286,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
                  ", The latest MozIMEFocus* event must be MozIMEFocusOut");
           }
         } else {
-          todo(false, aDescription + ": " + aTest.description +
-               ", In this case, focus event isn't fired, it's a bug, so, couldn't test it");
+          todo(focusEventCount > 0,
+               aDescription + ": " + aTest.description + ", focus event should be fired");
         }
       } else {
         is(mozIMEFocusInCount, 0,
