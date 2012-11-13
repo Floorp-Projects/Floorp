@@ -160,6 +160,7 @@ js::IsCrossCompartmentWrapper(RawObject wrapper)
 
 Wrapper::Wrapper(unsigned flags, bool hasPrototype) : DirectProxyHandler(&sWrapperFamily)
                                                     , mFlags(flags)
+                                                    , mSafeToUnwrap(true)
 {
     setHasPrototype(hasPrototype);
 }
@@ -796,7 +797,9 @@ CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 template <class Base>
 SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
   : Base(flags)
-{}
+{
+    Base::setSafeToUnwrap(false);
+}
 
 template <class Base>
 bool
