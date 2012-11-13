@@ -156,7 +156,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   JSObject* tsrc = NULL;
 
   // Allow either Float32Array or plain JS Array
-  if (JS_IsFloat32Array(darray, aCx)) {
+  if (JS_IsFloat32Array(darray)) {
     tsrc = darray;
   } else if (JS_IsArrayObject(aCx, darray)) {
     JSObject* nobj = JS_NewFloat32ArrayFromArray(aCx, darray);
@@ -169,7 +169,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   }
   tvr.setObject(tsrc);
 
-  uint32_t dataLength = JS_GetTypedArrayLength(tsrc, aCx);
+  uint32_t dataLength = JS_GetTypedArrayLength(tsrc);
 
   // Make sure that we are going to write the correct amount of data based
   // on number of channels.
@@ -180,7 +180,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   // Don't write more than can be written without blocking.
   uint32_t writeLen = NS_MIN(mAudioStream->Available(), dataLength / mChannels);
 
-  float* frames = JS_GetFloat32ArrayData(tsrc, aCx);
+  float* frames = JS_GetFloat32ArrayData(tsrc);
   // Convert the samples back to integers as we are using fixed point audio in
   // the nsAudioStream.
   // This could be optimized to avoid allocation and memcpy when
