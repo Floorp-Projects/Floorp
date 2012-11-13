@@ -467,7 +467,7 @@ MarkBaselineJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     // Read the frame size in bytes. Note that we can't use frame.frameSize()
     // here because it includes the VMFunction arguments.
-    uint32_t size = *reinterpret_cast<uint32_t *>(base + BaselineFrame::reverseOffsetOfFrameSize());
+    size_t size = *reinterpret_cast<size_t *>(base + BaselineFrame::reverseOffsetOfFrameSize());
     JS_ASSERT(size >= BaselineFrame::FramePointerOffset + BaselineFrame::Size());
     JS_ASSERT(size <= frame.frameSize());
 

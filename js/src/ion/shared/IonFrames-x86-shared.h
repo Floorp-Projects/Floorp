@@ -442,7 +442,7 @@ class InvalidationBailoutStack
 //        stack values
 class BaselineFrame
 {
-    uint32_t frameSize;
+    size_t frameSize;
 
   public:
     // Distance between the frame pointer and the frame header (return address).
