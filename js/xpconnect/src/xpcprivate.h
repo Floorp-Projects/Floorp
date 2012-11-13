@@ -3368,7 +3368,8 @@ public:
                                  uint32_t count, const nsXPTType& type,
                                  const nsID* iid, nsresult* pErr);
 
-    static JSBool JSTypedArray2Native(void** d,
+    static JSBool JSTypedArray2Native(JSContext* cx,
+                                      void** d,
                                       JSObject* jsarray,
                                       uint32_t count,
                                       const nsXPTType& type,
