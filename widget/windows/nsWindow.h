@@ -176,6 +176,7 @@ public:
   NS_IMETHOD              OnIMEFocusChange(bool aFocus);
   NS_IMETHOD              OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd);
   NS_IMETHOD              OnIMESelectionChange(void);
+  virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 #endif // NS_ENABLE_TSF
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
