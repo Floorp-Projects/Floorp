@@ -20,6 +20,8 @@ import sys
 import parseManifest
 import writeMakefile
 
+HEADERS_SUFFIX = "^headers^"
+
 def parseManifestFile(dest, dir):
   subdirs, mochitests, _, __, supportfiles = parseManifest.parseManifestFile("hg-%s/%s/MANIFEST" % (dest, dir))
   return subdirs, mochitests, supportfiles
@@ -54,6 +56,13 @@ def makePath(a, b):
     return a
   return "%s/%s" % (a, b)
 
+def copyTest(source, dest):
+  """Copy the file at source to dest, as well as any ^headers^ file associated
+  with it."""
+  shutil.copy(source, dest)
+  if os.path.exists(source + HEADERS_SUFFIX):
+    shutil.copy(source + HEADERS_SUFFIX, dest + HEADERS_SUFFIX)
+
 def copy(thissrcdir, dest, directories):
   """Copy mochitests and support files from the external HG directory to their
   place in mozilla-central.
@@ -66,9 +75,9 @@ def copy(thissrcdir, dest, directories):
     os.makedirs(destdir)
 
     for mochitest in mochitests:
-      shutil.copy("%s/%s" % (sourcedir, mochitest), "%s/test_%s" % (destdir, mochitest))
+      copyTest("%s/%s" % (sourcedir, mochitest), "%s/test_%s" % (destdir, mochitest))
     for support in supportfiles:
-      shutil.copy("%s/%s" % (sourcedir, support), "%s/%s" % (destdir, support))
+      copyTest("%s/%s" % (sourcedir, support), "%s/%s" % (destdir, support))
 
     if len(subdirs):
       if d:
@@ -102,6 +111,7 @@ def printMakefiles(thissrcdir, dest, directories):
 
     files = ["test_%s" % (mochitest, ) for mochitest in mochitests]
     files.extend(supportfiles)
+    files.extend(f for f in os.listdir(path) if f.endswith(HEADERS_SUFFIX))
 
     result = writeMakefile.substMakefile("importTestsuite.py", subdirs, files)
 
