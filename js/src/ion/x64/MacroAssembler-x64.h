@@ -186,6 +186,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         boxValue(type, reg, ScratchReg);
         push(ScratchReg);
     }
+    void pushValue(const Address &addr) {
+        push(Operand(addr));
+    }
 
     void movePtr(Operand op, const Register &dest) {
         movq(op, dest);
