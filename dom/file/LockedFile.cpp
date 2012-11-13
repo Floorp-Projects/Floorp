@@ -218,9 +218,9 @@ GetInputStreamForJSVal(const jsval& aValue, JSContext* aCx,
 
   if (!JSVAL_IS_PRIMITIVE(aValue)) {
     JSObject* obj = JSVAL_TO_OBJECT(aValue);
-    if (JS_IsArrayBufferObject(obj)) {
-      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj));
-      uint32_t length = JS_GetArrayBufferByteLength(obj);
+    if (JS_IsArrayBufferObject(obj, aCx)) {
+      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj, aCx));
+      uint32_t length = JS_GetArrayBufferByteLength(obj, aCx);
 
       rv = NS_NewByteInputStream(aInputStream, data, length,
                                  NS_ASSIGNMENT_COPY);
