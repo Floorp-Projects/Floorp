@@ -1655,13 +1655,15 @@ MarionetteDriverActor.prototype = {
                                    .getInterface(Ci.nsIDOMWindowUtils)
                                    .getOuterWindowWithId(message.json.value);
 
-        if ((listenerWindow.location.href != message.json.href) &&
+        if (!listenerWindow || (listenerWindow.location.href != message.json.href) &&
             (this.currentRemoteFrame !== null)) {
-          // If there is a mismatch between the calculated href and the one
-          // sent from the frame script, it means that the frame script is
-          // running in a separate process.  Currently this only happens
+          // The outerWindowID from an OOP frame will not be meaningful to
+          // the parent process here, since each process maintains its own
+          // independent window list.  So, it will either be null (!listenerWindow)
+          // or it will point to some random window, which will hopefully 
+          // cause an href mistmach.  Currently this only happens
           // in B2G for OOP frames registered in Marionette:switchToFrame, so
-          //  we'll acknowledge the switchToFrame message here.
+          // we'll acknowledge the switchToFrame message here.
           // XXX: Should have a better way of determining that this message
           // is from a remote frame.
           this.sendOk();

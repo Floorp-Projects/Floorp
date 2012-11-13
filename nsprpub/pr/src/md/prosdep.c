@@ -9,9 +9,6 @@
 #ifdef XP_UNIX
 #include <unistd.h>
 #endif
-#ifdef SUNOS4
-#include "md/sunos4.h"
-#endif
 #ifdef _WIN32
 #include <windows.h>
 #endif 

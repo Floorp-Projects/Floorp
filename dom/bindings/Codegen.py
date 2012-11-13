@@ -5441,6 +5441,7 @@ class CGProxyIndexedPresenceChecker(CGProxyIndexedGetter):
     """
     def __init__(self, descriptor):
         CGProxyIndexedGetter.__init__(self, descriptor)
+        self.cgRoot.append(CGGeneric("(void)result;"))
 
 class CGProxyIndexedSetter(CGProxyIndexedOperation):
     """
@@ -5494,6 +5495,7 @@ class CGProxyNamedPresenceChecker(CGProxyNamedGetter):
     """
     def __init__(self, descriptor):
         CGProxyNamedGetter.__init__(self, descriptor)
+        self.cgRoot.append(CGGeneric("(void)result;"))
 
 class CGProxyNamedSetter(CGProxyNamedOperation):
     """

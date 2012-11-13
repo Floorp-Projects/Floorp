@@ -61,32 +61,14 @@ PR_BEGIN_EXTERN_C
 #elif defined(DARWIN)
 #include "md/_darwin.h"
 
-#elif defined(NEXTSTEP)
-#include "md/_nextstep.h"
-
 #elif defined(SOLARIS)
 #include "md/_solaris.h"
-
-#elif defined(SUNOS4)
-#include "md/_sunos4.h"
-
-#elif defined(SNI)
-#include "md/_reliantunix.h"
-
-#elif defined(SONY)
-#include "md/_sony.h"
-
-#elif defined(NEC)
-#include "md/_nec.h"
 
 #elif defined(SCO)
 #include "md/_scoos.h"
 
 #elif defined(UNIXWARE)
 #include "md/_unixware.h"
-
-#elif defined(NCR)
-#include "md/_ncr.h"
 
 #elif defined(DGUX)
 #include "md/_dgux.h"

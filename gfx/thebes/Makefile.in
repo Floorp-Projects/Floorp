@@ -54,6 +54,7 @@ EXPORTS	= \
 	gfxSharedQuartzSurface.h \
 	gfxReusableSurfaceWrapper.h \
 	gfxSVGGlyphs.h \
+	RoundedRect.h \
 	$(NULL)
 
 # gfxSVGGlyphs needs nsDOMParser.h

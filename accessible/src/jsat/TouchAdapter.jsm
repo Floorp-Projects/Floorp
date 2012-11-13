@@ -207,8 +207,8 @@ this.TouchAdapter = {
  * of one single touch.
  */
 function TouchPoint(aTouch, aTime, aDPI) {
-  this.startX = aTouch.screenX;
-  this.startY = aTouch.screenY;
+  this.startX = this.x = aTouch.screenX;
+  this.startY = this.y = aTouch.screenY;
   this.startTime = aTime;
   this.distanceTraveled = 0;
   this.dpi = aDPI;
@@ -223,8 +223,7 @@ TouchPoint.prototype = {
     this.y = aTouch.screenY;
     this.time = aTime;
 
-    if (lastX != undefined && lastY != undefined)
-      this.distanceTraveled += this.getDistanceToCoord(lastX, lastY);
+    this.distanceTraveled += this.getDistanceToCoord(lastX, lastY);
   },
 
   getDistanceToCoord: function TouchPoint_getDistanceToCoord(aX, aY) {
