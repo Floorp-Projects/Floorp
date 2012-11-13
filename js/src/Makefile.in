@@ -722,6 +722,10 @@ Compiler.$(OBJ_SUFFIX): CXXFLAGS += -GL-
 # Ditto (Bug 772303)
 RegExp.$(OBJ_SUFFIX): CXXFLAGS += -GL-
 endif
+# Ditto (Bug 810661)
+ifeq ($(CPU_ARCH),x86_64)
+CTypes.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+endif
 endif # _MSC_VER
 
 ifeq ($(OS_ARCH),FreeBSD)

@@ -510,6 +510,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     mozilla::Maybe<JSAutoCompartment> ac;
 
     if (sciWrapper.GetFlags().WantPreCreate()) {
+        // PreCreate may touch dead compartments.
+        js::AutoMaybeTouchDeadCompartments agc(parent);
+
         JSObject* plannedParent = parent;
         nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
                                                           parent, &parent);
@@ -1753,6 +1756,9 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
         return NS_OK; // Global object. We're done.
     parentObj = js::UnwrapObject(parentObj, /* stopAtOuter = */ false);
 
+    // PreCreate may touch dead compartments.
+    js::AutoMaybeTouchDeadCompartments agc(parentObj);
+
     // There's one little nasty twist here. For reasons described in bug 752764,
     // we nuke SOW-ed objects after transplanting them. This means that nodes
     // parented to an element (such as XUL elements), can end up with a nuked proxy
@@ -2468,12 +2474,12 @@ CallMethodHelper::Call()
 
     mCallContext.GetXPCContext()->SetLastResult(invokeResult);
 
-    if (NS_FAILED(invokeResult)) {
-        ThrowBadResult(invokeResult, mCallContext);
+    if (JS_IsExceptionPending(mCallContext)) {
         return false;
     }
 
-    if (JS_IsExceptionPending(mCallContext)) {
+    if (NS_FAILED(invokeResult)) {
+        ThrowBadResult(invokeResult, mCallContext);
         return false;
     }
 
@@ -3809,6 +3815,9 @@ ConstructSlimWrapper(XPCCallContext &ccx,
 
         return false;
     }
+
+    // PreCreate may touch dead compartments.
+    js::AutoMaybeTouchDeadCompartments agc(parent);
 
     JSObject* plannedParent = parent;
     nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
