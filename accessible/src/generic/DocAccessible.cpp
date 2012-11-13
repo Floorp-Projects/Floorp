@@ -1572,9 +1572,7 @@ DocAccessible::DoInitialUpdate()
   // this document may be fired prior to this reorder event. If this is
   // a problem then consider to keep event processing per tab document.
   if (!IsRoot()) {
-    nsRefPtr<AccEvent> reorderEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, Parent(), eAutoDetect,
-                   AccEvent::eCoalesceFromSameSubtree);
+    nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(Parent());
     ParentDocument()->FireDelayedAccessibleEvent(reorderEvent);
   }
 }
@@ -1786,74 +1784,52 @@ DocAccessible::FireDelayedAccessibleEvent(AccEvent* aEvent)
 }
 
 void
-DocAccessible::ProcessPendingEvent(AccEvent* aEvent)
-{
-  uint32_t eventType = aEvent->GetEventType();
-  if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
-    HyperTextAccessible* hyperText = aEvent->GetAccessible()->AsHyperText();
-    int32_t caretOffset;
-    if (hyperText &&
-        NS_SUCCEEDED(hyperText->GetCaretOffset(&caretOffset))) {
-      nsRefPtr<AccEvent> caretMoveEvent =
-        new AccCaretMoveEvent(hyperText, caretOffset);
-      nsEventShell::FireEvent(caretMoveEvent);
-
-      int32_t selectionCount;
-      hyperText->GetSelectionCount(&selectionCount);
-      if (selectionCount) {  // There's a selection so fire selection change as well
-        nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
-                                hyperText);
-      }
-    }
-  }
-  else {
-    nsEventShell::FireEvent(aEvent);
-
-    // Post event processing
-    if (eventType == nsIAccessibleEvent::EVENT_HIDE)
-      ShutdownChildrenInSubtree(aEvent->GetAccessible());
-  }
-}
-
-void
 DocAccessible::ProcessContentInserted(Accessible* aContainer,
                                       const nsTArray<nsCOMPtr<nsIContent> >* aInsertedContent)
 {
-  // Process the notification if the container accessible is still in tree.
+  // Process insertions if the container accessible is still in tree.
   if (!HasAccessible(aContainer->GetNode()))
     return;
 
-  if (aContainer == this) {
-    // If new root content has been inserted then update it.
-    nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
-    if (rootContent != mContent)
-      mContent = rootContent;
+  bool containerNotUpdated = true;
 
-    // Continue to update the tree even if we don't have root content.
-    // For example, elements may be inserted under the document element while
-    // there is no HTML body element.
-  }
-
-  // XXX: Invalidate parent-child relations for container accessible and its
-  // children because there's no good way to find insertion point of new child
-  // accessibles into accessible tree. We need to invalidate children even
-  // there's no inserted accessibles in the end because accessible children
-  // are created while parent recaches child accessibles.
-  aContainer->UpdateChildren();
-
-  // The container might be changed, for example, because of the subsequent
-  // overlapping content insertion (i.e. other content was inserted between this
-  // inserted content and its container or the content was reinserted into
-  // different container of unrelated part of tree). These cases result in
-  // double processing, however generated events are coalesced and we don't
-  // harm an AT.
-  // Theoretically the element might be not in tree at all at this point what
-  // means there's no container.
   for (uint32_t idx = 0; idx < aInsertedContent->Length(); idx++) {
-    Accessible* directContainer =
+    // The container might be changed, for example, because of the subsequent
+    // overlapping content insertion (i.e. other content was inserted between
+    // this inserted content and its container or the content was reinserted
+    // into different container of unrelated part of tree). To avoid a double
+    // processing of the content insertion ignore this insertion notification.
+    // Note, the inserted content might be not in tree at all at this point what
+    // means there's no container. Ignore the insertion too.
+
+    Accessible* presentContainer =
       GetContainerAccessible(aInsertedContent->ElementAt(idx));
-    if (directContainer)
-      UpdateTree(directContainer, aInsertedContent->ElementAt(idx), true);
+    if (presentContainer != aContainer)
+      continue;
+
+    if (containerNotUpdated) {
+      containerNotUpdated = false;
+
+      if (aContainer == this) {
+        // If new root content has been inserted then update it.
+        nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
+        if (rootContent != mContent)
+          mContent = rootContent;
+
+        // Continue to update the tree even if we don't have root content.
+        // For example, elements may be inserted under the document element while
+        // there is no HTML body element.
+      }
+
+      // XXX: Invalidate parent-child relations for container accessible and its
+      // children because there's no good way to find insertion point of new child
+      // accessibles into accessible tree. We need to invalidate children even
+      // there's no inserted accessibles in the end because accessible children
+      // are created while parent recaches child accessibles.
+      aContainer->UpdateChildren();
+    }
+
+    UpdateTree(aContainer, aInsertedContent->ElementAt(idx), true);
   }
 }
 
@@ -1880,15 +1856,17 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
   }
 #endif
 
+  nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
+
   if (child) {
-    updateFlags |= UpdateTreeInternal(child, aIsInsert);
+    updateFlags |= UpdateTreeInternal(child, aIsInsert, reorderEvent);
 
   } else {
     nsAccTreeWalker walker(this, aChildNode,
                            aContainer->CanHaveAnonChildren(), true);
 
     while ((child = walker.NextChild()))
-      updateFlags |= UpdateTreeInternal(child, aIsInsert);
+      updateFlags |= UpdateTreeInternal(child, aIsInsert, reorderEvent);
   }
 
   // Content insertion/removal is not cause of accessible tree change.
@@ -1903,8 +1881,9 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
     Accessible* ancestor = aContainer;
     while (ancestor) {
       if (ancestor->ARIARole() == roles::ALERT) {
-        FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_ALERT,
-                                   ancestor->GetNode());
+        nsRefPtr<AccEvent> alertEvent =
+          new AccEvent(nsIAccessibleEvent::EVENT_ALERT, ancestor);
+        FireDelayedAccessibleEvent(alertEvent);
         break;
       }
 
@@ -1920,15 +1899,12 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
 
   // Fire reorder event so the MSAA clients know the children have changed. Also
   // the event is used internally by MSAA layer.
-  nsRefPtr<AccEvent> reorderEvent =
-    new AccEvent(nsIAccessibleEvent::EVENT_REORDER, aContainer->GetNode(),
-                 eAutoDetect, AccEvent::eCoalesceFromSameSubtree);
-  if (reorderEvent)
-    FireDelayedAccessibleEvent(reorderEvent);
+  FireDelayedAccessibleEvent(reorderEvent);
 }
 
 uint32_t
-DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert)
+DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
+                                  AccReorderEvent* aReorderEvent)
 {
   uint32_t updateFlags = eAccessible;
 
@@ -1950,34 +1926,34 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert)
     if (aChild->ARIARole() == roles::MENUPOPUP) {
       nsRefPtr<AccEvent> event =
         new AccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END, aChild);
-
-      if (event)
-        FireDelayedAccessibleEvent(event);
+      FireDelayedAccessibleEvent(event);
     }
   }
 
   // Fire show/hide event.
-  nsRefPtr<AccEvent> event;
+  nsRefPtr<AccMutationEvent> event;
   if (aIsInsert)
     event = new AccShowEvent(aChild, node);
   else
     event = new AccHideEvent(aChild, node);
 
-  if (event)
-    FireDelayedAccessibleEvent(event);
+  FireDelayedAccessibleEvent(event);
+  aReorderEvent->AddSubMutationEvent(event);
 
   if (aIsInsert) {
     roles::Role ariaRole = aChild->ARIARole();
     if (ariaRole == roles::MENUPOPUP) {
       // Fire EVENT_MENUPOPUP_START if ARIA menu appears.
-      FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
-                                 node, AccEvent::eRemoveDupes);
+      nsRefPtr<AccEvent> event =
+        new AccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START, aChild);
+      FireDelayedAccessibleEvent(event);
 
     } else if (ariaRole == roles::ALERT) {
       // Fire EVENT_ALERT if ARIA alert appears.
       updateFlags = eAlertAccessible;
-      FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_ALERT, node,
-                                 AccEvent::eRemoveDupes);
+      nsRefPtr<AccEvent> event =
+        new AccEvent(nsIAccessibleEvent::EVENT_ALERT, aChild);
+      FireDelayedAccessibleEvent(event);
     }
 
     // If focused node has been shown then it means its frame was recreated
