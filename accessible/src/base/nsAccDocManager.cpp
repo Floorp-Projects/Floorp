@@ -398,9 +398,10 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     // the tree. The reorder event is delivered after the document tree is
     // constructed because event processing and tree construction are done by
     // the same document.
+    // Note: don't use AccReorderEvent to avoid coalsecense and special reorder
+    // events processing.
     nsRefPtr<AccEvent> reorderEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, ApplicationAcc(),
-                   eAutoDetect, AccEvent::eCoalesceFromSameSubtree);
+      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, ApplicationAcc());
     docAcc->FireDelayedAccessibleEvent(reorderEvent);
 
   } else {

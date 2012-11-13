@@ -214,7 +214,6 @@ AccStateChangeEvent::CreateXPCOMObject()
 // we are ready to fire the event and so we will no longer assert at that point
 // if the node was removed from the document. Either way, the AT won't work with
 // a defunct accessible so the behaviour should be equivalent.
-// XXX revisit this when coalescence is faster (eCoalesceFromSameSubtree)
 AccTextChangeEvent::
   AccTextChangeEvent(Accessible* aAccessible, int32_t aStart,
                      const nsAString& aModifiedText, bool aIsInserted,
@@ -243,17 +242,23 @@ AccTextChangeEvent::CreateXPCOMObject()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// AccMutationEvent
+// AccReorderEvent
 ////////////////////////////////////////////////////////////////////////////////
 
-AccMutationEvent::
-  AccMutationEvent(uint32_t aEventType, Accessible* aTarget,
-                   nsINode* aTargetNode) :
-  AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceFromSameSubtree)
+uint32_t
+AccReorderEvent::IsShowHideEventTarget(const Accessible* aTarget) const
 {
-  mNode = aTargetNode;
-}
+  uint32_t count = mDependentEvents.Length();
+  for (uint32_t index = count - 1; index < count; index--) {
+    if (mDependentEvents[index]->mAccessible == aTarget &&
+        mDependentEvents[index]->mEventType == nsIAccessibleEvent::EVENT_SHOW ||
+        mDependentEvents[index]->mEventType == nsIAccessibleEvent::EVENT_HIDE) {
+      return mDependentEvents[index]->mEventType;
+    }
+  }
 
+  return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // AccHideEvent
@@ -263,7 +268,6 @@ AccHideEvent::
   AccHideEvent(Accessible* aTarget, nsINode* aTargetNode) :
   AccMutationEvent(::nsIAccessibleEvent::EVENT_HIDE, aTarget, aTargetNode)
 {
-  mParent = mAccessible->Parent();
   mNextSibling = mAccessible->NextSibling();
   mPrevSibling = mAccessible->PrevSibling();
 }

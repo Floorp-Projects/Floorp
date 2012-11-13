@@ -503,9 +503,11 @@ function eventQueue(aEventType)
   {
     // Create unified event sequence concatenating expected and unexpected
     // events.
-    this.mEventSeq = ("eventSeq" in aInvoker) ?
-      aInvoker.eventSeq :
-      [ new invokerChecker(this.mDefEventType, aInvoker.DOMNode) ];
+    this.mEventSeq = ("eventSeq" in aInvoker) ? aInvoker.eventSeq : [ ];
+    if (!this.mEventSeq.length && this.mDefEventType) {
+      this.mEventSeq.push(new invokerChecker(this.mDefEventType,
+                                             aInvoker.DOMNode));
+    }
 
     var len = this.mEventSeq.length;
     for (var idx = 0; idx < len; idx++) {

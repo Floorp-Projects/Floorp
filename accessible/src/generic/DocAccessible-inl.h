@@ -49,7 +49,7 @@ DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible)
       new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
                    eAutoDetect, AccEvent::eRemoveDupes);
     FireDelayedAccessibleEvent(valueChangeEvent);
-    }
   }
+}
 
 #endif
