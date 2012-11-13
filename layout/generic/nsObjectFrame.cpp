@@ -1033,7 +1033,7 @@ nsDisplayPluginVideo::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  *aSnap = false;
+  *aSnap = true;
   return GetDisplayItemBounds(aBuilder, this, mFrame);
 }
 
