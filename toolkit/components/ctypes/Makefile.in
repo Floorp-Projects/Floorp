@@ -26,6 +26,10 @@ CPPSRCS = \
     ctypes.cpp \
     $(NULL)
 
+LOCAL_INCLUDES := \
+  -I$(topsrcdir)/js/xpconnect/loader \
+  $(NULL)
+
 TEST_DIRS += tests
 
 include $(topsrcdir)/config/rules.mk
