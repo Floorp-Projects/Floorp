@@ -179,13 +179,6 @@ SmsIPCService::MarkMessageRead(int32_t aMessageId,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-SmsIPCService::GetThreadList(nsISmsRequest* aRequest)
-{
-  SendRequest(GetThreadListRequest(), aRequest);
-  return NS_OK;
-}
-
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
