@@ -18,6 +18,10 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_cookieacceptdialog.js \
 		browser_privatebrowsing_crh.js \
 		browser_privatebrowsing_lastpbcontextexited.js \
+		browser_privatebrowsing_downloadLastDir.js \
+		browser_privatebrowsing_downloadLastDir_c.js \
+		browser_privatebrowsing_downloadLastDir_toggle.js \
+		browser_privatebrowsing_DownloadLastDirWithCPS.js \
 		browser_privatebrowsing_opendir.js \
 		browser_privatebrowsing_theming.js \
 		$(NULL)
