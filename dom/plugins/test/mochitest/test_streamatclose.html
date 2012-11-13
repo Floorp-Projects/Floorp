@@ -20,13 +20,6 @@
   var p = document.getElementById('embedtest');
 
   function startTest() {
-    // Skip in debug builds because of frequent leaks, bug 766886
-    if (SpecialPowers.isDebugBuild) {
-      todo(false, "test_streamatclose.html should stop leaking");
-      SimpleTest.finish();
-      return;
-    }
-
     ok(p.streamTest("neverending.sjs", false, null, null,
                     function(r, t) {
                       is(r, 2, "Stream should have failed");
