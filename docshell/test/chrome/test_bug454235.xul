@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=454235
     /** Test for Bug 454235 **/
 SimpleTest.waitForExplicitFinish();
 
-addLoadEvent(doTest);
+SimpleTest.waitForFocus(doTest);
 
 function doTest() {
   var shownBrowser = document.getElementById("shownBrowser");
