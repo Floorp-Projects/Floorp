@@ -98,6 +98,9 @@ this.AccessFu = {
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
     this.chromeWin.addEventListener('TabOpen', this);
     this.chromeWin.addEventListener('TabSelect', this);
+
+    if (this.readyCallback)
+      this.readyCallback();
   },
 
   /**
