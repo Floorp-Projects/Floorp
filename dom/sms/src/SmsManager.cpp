@@ -303,6 +303,20 @@ SmsManager::MarkMessageRead(int32_t aId, bool aValue,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsManager::GetThreadList(nsIDOMMozSmsRequest** aRequest)
+{
+  nsCOMPtr<nsIDOMMozSmsRequest> req = SmsRequest::Create(this);
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsISmsRequest> forwarder =
+    new SmsRequestForwarder(static_cast<SmsRequest*>(req.get()));
+  smsDBService->GetThreadList(forwarder);
+  req.forget(aRequest);
+  return NS_OK;
+}
+
 nsresult
 SmsManager::DispatchTrustedSmsEventToSelf(const nsAString& aEventName, nsIDOMMozSmsMessage* aMessage)
 {
