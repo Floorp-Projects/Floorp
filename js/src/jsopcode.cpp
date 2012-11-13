@@ -1113,7 +1113,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->fun = fun;
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
-    if (fun && fun->isInterpreted()) {
+    if (fun && fun->hasScript()) {
         if (!SetPrinterLocalNames(cx, fun->script().unsafeGet(), jp)) {
             js_DestroyPrinter(jp);
             return NULL;

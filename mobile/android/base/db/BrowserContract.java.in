@@ -53,10 +53,13 @@ public class BrowserContract {
         public static final String _ID = "_id";
     }
 
-    public interface SyncColumns {
-        public static final String GUID = "guid";
+    public interface DateSyncColumns {
         public static final String DATE_CREATED = "created";
         public static final String DATE_MODIFIED = "modified";
+    }
+
+    public interface SyncColumns extends DateSyncColumns {
+        public static final String GUID = "guid";
         public static final String IS_DELETED = "deleted";
     }
 
@@ -65,9 +68,10 @@ public class BrowserContract {
         public static final String TITLE = "title";
     }
 
-    public interface ImageColumns {
+    public interface FaviconColumns {
         public static final String FAVICON = "favicon";
-        public static final String THUMBNAIL = "thumbnail";
+        public static final String FAVICON_ID = "favicon_id";
+        public static final String FAVICON_URL = "favicon_url";
     }
 
     public interface HistoryColumns {
@@ -81,15 +85,26 @@ public class BrowserContract {
         public static final String TIME_DELETED = "timeDeleted";
     }
 
-    public static final class Images implements CommonColumns, ImageColumns, SyncColumns {
-        private Images() {}
-        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "images");
+    public static final class Favicons implements CommonColumns, DateSyncColumns {
+        private Favicons() {}
 
-        public static final String URL = "url_key";
-        public static final String FAVICON_URL = "favicon_url";
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "favicons");
+
+        public static final String URL = "url";
+        public static final String DATA = "data";
+        public static final String PAGE_URL = "page_url";
     }
 
-    public static final class Bookmarks implements CommonColumns, URLColumns, ImageColumns, SyncColumns {
+    public static final class Thumbnails implements CommonColumns {
+        private Thumbnails() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "thumbnails");
+
+        public static final String URL = "url";
+        public static final String DATA = "data";
+    }
+
+    public static final class Bookmarks implements CommonColumns, URLColumns, FaviconColumns, SyncColumns {
         private Bookmarks() {}
 
         public static final int FIXED_ROOT_ID = 0;
@@ -127,7 +142,7 @@ public class BrowserContract {
         public static final String KEYWORD = "keyword";
     }
 
-    public static final class History implements CommonColumns, URLColumns, HistoryColumns, ImageColumns, SyncColumns {
+    public static final class History implements CommonColumns, URLColumns, HistoryColumns, FaviconColumns, SyncColumns {
         private History() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "history");
         public static final Uri CONTENT_OLD_URI = Uri.withAppendedPath(AUTHORITY_URI, "history/old");
@@ -136,7 +151,7 @@ public class BrowserContract {
     }
 
     // Combined bookmarks and history
-    public static final class Combined implements CommonColumns, URLColumns, HistoryColumns, ImageColumns  {
+    public static final class Combined implements CommonColumns, URLColumns, HistoryColumns, FaviconColumns  {
         private Combined() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "combined");
 

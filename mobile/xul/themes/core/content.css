@@ -313,15 +313,6 @@ textarea:active {
   background-color: rgba(141, 184, 216, 0.5) !important;
 }
 
-/* 
- * Generate an additional space after the anonymous div to make it easier to
- * to position the caret at the end of the text
- */
-input > .anonymous-div:after {
-  content: "";
-  margin: 16px;
-}
-
 /*
  * Enforce nearest scaling for video in order not to lose too much performance
  * after fixing bug 598736 ("Use higher-quality imageinterpolation on mobile")
