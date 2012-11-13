@@ -31,6 +31,7 @@ namespace ion {
 
 #define OPCODE_LIST(_)         \
     _(JSOP_NOP)                \
+    _(JSOP_LABEL)              \
     _(JSOP_POP)                \
     _(JSOP_DUP)                \
     _(JSOP_GOTO)               \
@@ -38,12 +39,20 @@ namespace ion {
     _(JSOP_POS)                \
     _(JSOP_LOOPHEAD)           \
     _(JSOP_LOOPENTRY)          \
+    _(JSOP_VOID)               \
+    _(JSOP_UNDEFINED)          \
+    _(JSOP_HOLE)               \
+    _(JSOP_NULL)               \
+    _(JSOP_TRUE)               \
+    _(JSOP_FALSE)              \
     _(JSOP_ZERO)               \
     _(JSOP_ONE)                \
     _(JSOP_INT8)               \
     _(JSOP_INT32)              \
     _(JSOP_UINT16)             \
     _(JSOP_UINT24)             \
+    _(JSOP_DOUBLE)             \
+    _(JSOP_STRING)             \
     _(JSOP_ADD)                \
     _(JSOP_LT)                 \
     _(JSOP_GT)                 \

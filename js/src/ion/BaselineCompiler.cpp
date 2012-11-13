@@ -190,6 +190,12 @@ BaselineCompiler::emit_JSOP_NOP()
 }
 
 bool
+BaselineCompiler::emit_JSOP_LABEL()
+{
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_POP()
 {
     frame.pop();
@@ -289,6 +295,49 @@ BaselineCompiler::emit_JSOP_LOOPENTRY()
 }
 
 bool
+BaselineCompiler::emit_JSOP_VOID()
+{
+    frame.pop();
+    frame.push(UndefinedValue());
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_UNDEFINED()
+{
+    frame.push(UndefinedValue());
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_HOLE()
+{
+    frame.push(MagicValue(JS_ARRAY_HOLE));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_NULL()
+{
+    frame.push(NullValue());
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_TRUE()
+{
+    frame.push(BooleanValue(true));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_FALSE()
+{
+    frame.push(BooleanValue(false));
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_ZERO()
 {
     frame.push(Int32Value(0));
@@ -327,6 +376,20 @@ bool
 BaselineCompiler::emit_JSOP_UINT24()
 {
     frame.push(Int32Value(GET_UINT24(pc)));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_DOUBLE()
+{
+    frame.push(script->getConst(GET_UINT32_INDEX(pc)));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_STRING()
+{
+    frame.push(StringValue(script->getAtom(GET_UINT32_INDEX(pc))));
     return true;
 }
 
