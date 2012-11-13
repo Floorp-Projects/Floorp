@@ -131,13 +131,11 @@ js::UnwrapOneChecked(JSContext *cx, HandleObject obj)
     }
 
     Wrapper *handler = Wrapper::wrapperHandler(obj);
-    bool rvOnFailure;
-    if (!handler->enter(cx, obj, JSID_VOID, Wrapper::PUNCTURE, &rvOnFailure))
-        return rvOnFailure ? (JSObject*) obj : NULL;
-    JSObject *ret = Wrapper::wrappedObject(obj);
-    JS_ASSERT(ret);
-
-    return ret;
+    if (!handler->isSafeToUnwrap()) {
+        JS_ReportError(cx, "Permission denied to access object");
+        return NULL;
+    }
+    return Wrapper::wrappedObject(obj);
 }
 
 bool
@@ -222,25 +220,22 @@ Wrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 }
 
 /*
- * Ordinarily, the convert trap would require a PUNCTURE. However, the default
+ * Ordinarily, the convert trap would require unwrapping. However, the default
  * implementation of convert, JS_ConvertStub, obtains a default value by calling
- * the toString/valueOf method on the wrapper, if any. Doing a PUNCTURE in this
- * case would be overly conservative. To make matters worse, XPConnect sometimes
+ * the toString/valueOf method on the wrapper, if any. Throwing if we can't unwrap
+ * in this case would be overly conservative. To make matters worse, XPConnect sometimes
  * installs a custom convert trap that obtains a default value by calling the
  * toString method on the wrapper. Doing a puncture in this case would be overly
- * conservative as well. We deal with these anomalies by clearing the pending
- * exception and falling back to the DefaultValue algorithm whenever the
- * PUNCTURE fails.
+ * conservative as well. We deal with these anomalies by falling back to the DefaultValue
+ * algorithm whenever unwrapping is forbidden.
  */
 bool
 Wrapper::defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint, Value *vp)
 {
     RootedObject wrapper(cx, wrapper_);
 
-    bool status;
-    if (!enter(cx, wrapper_, JSID_VOID, PUNCTURE, &status)) {
+    if (!wrapperHandler(wrapper)->isSafeToUnwrap()) {
         RootedValue v(cx);
-        JS_ClearPendingException(cx);
         if (!DefaultValue(cx, wrapper, hint, &v))
             return false;
         *vp = v;
