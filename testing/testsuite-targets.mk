@@ -48,6 +48,7 @@ RUN_MOCHITEST_REMOTE = \
   $(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
     --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+    --testing-modules-dir=$(call core_abspath,_tests/modules) \
     $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 RUN_MOCHITEST_ROBOTIUM = \
@@ -269,6 +270,7 @@ REMOTE_XPCSHELL = \
 	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --no-logfiles \
+	  --testing-modules-dir=$(call core_abspath,_tests/modules) \
 	  --dm_trans=$(DM_TRANS) \
 	  --deviceIP=${TEST_DEVICE} \
 	  --objdir=$(DEPTH) \
