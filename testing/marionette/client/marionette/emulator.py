@@ -433,7 +433,7 @@ waitFor(
                 self._restart_b2g(marionette)
                 break
             except MarionetteException, TimeoutException:
-                if retry == restart_attmempts:
+                if retry == restart_attempts:
                     raise
 
 
