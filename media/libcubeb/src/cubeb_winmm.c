@@ -33,6 +33,7 @@ struct cubeb {
   PSLIST_HEADER work;
   CRITICAL_SECTION lock;
   unsigned int active_streams;
+  int minimum_latency;
 };
 
 struct cubeb_stream {
@@ -190,6 +191,34 @@ cubeb_buffer_callback(HWAVEOUT waveout, UINT msg, DWORD_PTR user_ptr, DWORD_PTR 
   SetEvent(stm->context->event);
 }
 
+static int
+calculate_minimum_latency(void)
+{
+  OSVERSIONINFOEX osvi;
+  DWORDLONG mask;
+
+  /* Vista's WinMM implementation underruns when less than 200ms of audio is buffered. */
+  memset(&osvi, 0, sizeof(OSVERSIONINFOEX));
+  osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  osvi.dwMajorVersion = 6;
+  osvi.dwMinorVersion = 0;
+
+  mask = 0;
+  VER_SET_CONDITION(mask, VER_MAJORVERSION, VER_EQUAL);
+  VER_SET_CONDITION(mask, VER_MINORVERSION, VER_EQUAL);
+
+  if (VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION, mask) != 0) {
+    return 200;
+  }
+
+  /* Running under Terminal Services results in underruns with low latency. */
+  if (GetSystemMetrics(SM_REMOTESESSION) == TRUE) {
+    return 500;
+  }
+
+  return 0;
+}
+
 int
 cubeb_init(cubeb ** context, char const * context_name)
 {
@@ -221,6 +250,8 @@ cubeb_init(cubeb ** context, char const * context_name)
 
   InitializeCriticalSection(&ctx->lock);
   ctx->active_streams = 0;
+
+  ctx->minimum_latency = calculate_minimum_latency();
 
   *context = ctx;
 
@@ -341,6 +372,10 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
+
+  if (latency < context->minimum_latency) {
+    latency = context->minimum_latency;
+  }
 
   bufsz = (size_t) (stm->params.rate / 1000.0 * latency * bytes_per_frame(stm->params) / NBUFS);
   if (bufsz % bytes_per_frame(stm->params) != 0) {
