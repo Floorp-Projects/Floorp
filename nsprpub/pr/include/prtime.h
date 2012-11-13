@@ -246,17 +246,6 @@ NSPR_API(PRStatus) PR_ParseTimeString (
 	PRBool default_to_gmt,
 	PRTime *result);
 
-/*
- * FIXME: should we also have a formatting function, such as asctime, ctime,
- * and strftime in standard C library?  But this would involve
- * internationalization issues.  Might want to provide a US English version.
- */
-
-/**********************************************************************/
-/*********************** OLD COMPATIBILITYFUNCTIONS *******************/
-/**********************************************************************/
-#ifndef NO_NSPR_10_SUPPORT
-
 /* Format a time value into a buffer. Same semantics as strftime() */
 NSPR_API(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt,
                                            const PRExplodedTime *tm);
@@ -267,8 +256,6 @@ NSPR_API(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt,
 NSPR_API(PRUint32)
 PR_FormatTimeUSEnglish( char* buf, PRUint32 bufSize,
                         const char* format, const PRExplodedTime* tm );
-
-#endif /* NO_NSPR_10_SUPPORT */
 
 PR_END_EXTERN_C
 

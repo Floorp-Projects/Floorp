@@ -5,8 +5,43 @@
 
 #include "primpl.h"
 
+#include <mach/mach_time.h>
+
 void _MD_EarlyInit(void)
 {
+}
+
+/*
+ * The multiplier (as a fraction) for converting the Mach absolute time
+ * unit to nanoseconds.
+ */
+static mach_timebase_info_data_t machTimebaseInfo;
+
+void _PR_Mach_IntervalInit(void)
+{
+    kern_return_t rv;
+
+    rv = mach_timebase_info(&machTimebaseInfo);
+    PR_ASSERT(rv == KERN_SUCCESS);
+}
+
+PRIntervalTime _PR_Mach_GetInterval(void)
+{
+    uint64_t time;
+
+    /*
+     * mach_absolute_time returns the time in the Mach absolute time unit.
+     * Convert it to milliseconds. See Mac Technical Q&A QA1398.
+     */
+    time = mach_absolute_time();
+    time = time * machTimebaseInfo.numer / machTimebaseInfo.denom /
+           PR_NSEC_PER_MSEC;
+    return (PRIntervalTime)time;
+}  /* _PR_Mach_GetInterval */
+
+PRIntervalTime _PR_Mach_TicksPerSecond(void)
+{
+    return 1000;
 }
 
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)

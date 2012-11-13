@@ -158,8 +158,7 @@ struct _MDCPU {
 #define _MD_IOQ_LOCK()
 #define _MD_IOQ_UNLOCK()
 
-#define _MD_GET_INTERVAL		_PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC		_PR_UNIX_TicksPerSecond
+#define _MD_INTERVAL_USE_GTOD
 #define _MD_EARLY_INIT			_MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit
 #define _MD_INIT_RUNNING_CPU(cpu)	_MD_unix_init_running_cpu(cpu)
