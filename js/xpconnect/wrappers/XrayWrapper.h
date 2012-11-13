@@ -93,13 +93,7 @@ class XrayWrapper : public Base {
                    JS::AutoIdVector &props);
 };
 
-typedef XrayWrapper<js::CrossCompartmentWrapper, XPCWrappedNativeXrayTraits > PermissiveXrayXPCWN;
-typedef XrayWrapper<js::CrossCompartmentSecurityWrapper, XPCWrappedNativeXrayTraits > SecurityXrayXPCWN;
-typedef XrayWrapper<js::CrossCompartmentWrapper, DOMXrayTraits > PermissiveXrayDOM;
-typedef XrayWrapper<js::CrossCompartmentSecurityWrapper, DOMXrayTraits > SecurityXrayDOM;
-typedef XrayWrapper<js::SameCompartmentSecurityWrapper, XPCWrappedNativeXrayTraits > SCSecurityXrayXPCWN;
-typedef XrayWrapper<js::Wrapper, XPCWrappedNativeXrayTraits > SCPermissiveXrayXPCWN;
-typedef XrayWrapper<js::Wrapper, DOMXrayTraits > SCPermissiveXrayDOM;
+typedef XrayWrapper<js::CrossCompartmentWrapper, DOMXrayTraits > XrayDOM;
 
 class SandboxProxyHandler : public js::Wrapper {
 public:
