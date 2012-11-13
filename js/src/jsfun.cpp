@@ -326,7 +326,8 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         RootedValue v(cx);
         if (JSID_IS_ATOM(id, cx->names().length)) {
-            uint16_t defaults = fun->isInterpreted() ? fun->script()->ndefaults : 0;
+            //FIXME: bug 810715 - deal with lazy interpreted functions with default args
+            uint16_t defaults = fun->hasScript() ? fun->script()->ndefaults : 0;
             v.setInt32(fun->nargs - defaults - fun->hasRest());
         } else {
             v.setString(fun->atom() == NULL ?  cx->runtime->emptyString : fun->atom());
@@ -483,6 +484,18 @@ js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleF
     return clone;
 }
 
+bool
+js::InitializeLazyFunctionScript(JSContext *cx, HandleFunction fun)
+{
+    JS_ASSERT(fun->isLazy());
+    JSFunctionSpec *fs = static_cast<JSFunctionSpec *>(fun->getExtendedSlot(0).toPrivate());
+    RootedAtom funAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
+    if (!funAtom)
+        return false;
+    Rooted<PropertyName *> funName(cx, funAtom->asPropertyName());
+    return cx->runtime->cloneSelfHostedFunctionScript(cx, funName, fun);
+}
+
 /*
  * [[HasInstance]] internal method for Function objects: fetch the .prototype
  * property of its 'this' parameter, and walks the prototype chain of v (only
@@ -533,7 +546,7 @@ JSFunction::trace(JSTracer *trc)
         MarkString(trc, &atom_, "atom");
 
     if (isInterpreted()) {
-        if (u.i.script_)
+        if (hasScript())
             MarkScriptUnbarriered(trc, &u.i.script_, "script");
         if (u.i.env_)
             MarkObjectUnbarriered(trc, &u.i.env_, "fun_callscope");
@@ -624,16 +637,17 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
     StringBuffer out(cx);
     RootedScript script(cx);
 
-    if (fun->isInterpreted())
+    if (fun->hasScript()) {
         script = fun->script();
-
-    if (fun->isInterpreted() && script->isGeneratorExp) {
-        if ((!bodyOnly && !out.append("function genexp() {")) ||
-            !out.append("\n    [generator expression]\n") ||
-            (!bodyOnly && !out.append("}"))) {
-            return NULL;
+        if (script->isGeneratorExp) {
+            if ((!bodyOnly && !out.append("function genexp() {")) ||
+                !out.append("\n    [generator expression]\n") ||
+                (!bodyOnly && !out.append("}")))
+            {
+                return NULL;
+            }
+            return out.finishString();
         }
-        return out.finishString();
     }
     if (!bodyOnly) {
         // If we're not in pretty mode, put parentheses around lambda functions.
@@ -1124,7 +1138,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
     }
 
     bool result = false;
-    if (fun->isInterpreted()) {
+    if (fun->hasScript()) {
         RawScript script = fun->script().get(nogc);
         JS_ASSERT(script->length != 0);
         result = script->isGenerator;
@@ -1530,7 +1544,6 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
          */
         if (clone->isInterpreted()) {
             RootedScript script(cx, clone->script());
-            JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT_IF(script->compartment() != cx->compartment,
                          !script->enclosingStaticScope());
@@ -1558,7 +1571,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
 JSFunction *
 js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
-                  unsigned nargs, unsigned flags, Handle<PropertyName*> selfHostedName, AllocKind kind)
+                  unsigned nargs, unsigned flags, AllocKind kind)
 {
     PropertyOp gop;
     StrictPropertyOp sop;
@@ -1580,23 +1593,13 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         sop = NULL;
     }
 
-    /*
-     * To support specifying both native and self-hosted functions using
-     * JSFunctionSpec, js_DefineFunction can be invoked with either native
-     * or selfHostedName set. It is assumed that selfHostedName is set if
-     * native isn't.
-     */
-    if (native) {
-        JS_ASSERT(!selfHostedName);
-        RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
-        JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-        fun = js_NewFunction(cx, NullPtr(), native, nargs,
-                             funFlags, obj, atom, kind);
-    } else {
-        JS_ASSERT(!cx->runtime->isSelfHostedGlobal(cx->global()));
-        fun = cx->runtime->getSelfHostedFunction(cx, selfHostedName);
-        fun->initAtom(JSID_TO_ATOM(id));
-    }
+    JSFunction::Flags funFlags;
+    if (!native)
+        funFlags = JSFunction::INTERPRETED;
+    else
+        funFlags = JSAPIToJSFunctionFlags(flags);
+    RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
+    fun = js_NewFunction(cx, NullPtr(), native, nargs, funFlags, obj, atom, kind);
     if (!fun)
         return NULL;
 
