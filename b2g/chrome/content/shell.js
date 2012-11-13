@@ -141,6 +141,11 @@ var shell = {
    },
 
   start: function shell_start() {
+    // This forces the initialization of the cookie service before we hit the
+    // network.
+    // See bug 810209
+    let cookies = Cc["@mozilla.org/cookieService;1"];
+
     try {
       let cr = Cc["@mozilla.org/xre/app-info;1"]
                  .getService(Ci.nsICrashReporter);
