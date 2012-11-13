@@ -440,6 +440,50 @@ ReadAllocation(const IonFrameIterator &frame, const LAllocation *a)
 }
 
 static void
+MarkActualArguments(JSTracer *trc, const IonFrameIterator &frame)
+{
+    IonJSFrameLayout *layout = frame.jsFrame();
+    JS_ASSERT(CalleeTokenIsFunction(layout->calleeToken()));
+
+    size_t nargs = frame.numActualArgs();
+
+    // Trace function arguments. Note + 1 for thisv.
+    Value *argv = layout->argv();
+    for (size_t i = 0; i < nargs + 1; i++)
+        gc::MarkValueRoot(trc, &argv[i], "ion-argv");
+}
+
+static void
+MarkBaselineJSFrame(JSTracer *trc, const IonFrameIterator &frame)
+{
+    IonJSFrameLayout *layout = frame.jsFrame();
+    MarkCalleeToken(trc, layout->calleeToken());
+
+    if (CalleeTokenIsFunction(layout->calleeToken()))
+        MarkActualArguments(trc, frame);
+
+    // Compute the start of the BaselineFrame.
+    uint8_t *base = frame.fp() - BaselineFrame::FramePointerOffset;
+
+    // Read the frame size in bytes. Note that we can't use frame.frameSize()
+    // here because it includes the VMFunction arguments.
+    uint32_t size = *reinterpret_cast<uint32_t *>(base + BaselineFrame::reverseOffsetOfFrameSize());
+    JS_ASSERT(size >= BaselineFrame::FramePointerOffset + BaselineFrame::Size());
+    JS_ASSERT(size <= frame.frameSize());
+
+    // Subtract BaselineFrame size to get size of locals and stack values.
+    size -= BaselineFrame::FramePointerOffset + BaselineFrame::Size();
+    JS_ASSERT((size % sizeof(Value)) == 0);
+
+    size_t nvalues = size / sizeof(Value);
+    if (nvalues > 0) {
+        // The stack grows down, so start at the last Value.
+        Value *last = reinterpret_cast<Value *>(base + BaselineFrame::reverseOffsetOfLocal(nvalues - 1));
+        gc::MarkValueRootRange(trc, nvalues, last, "baseline-stack");
+    }
+}
+
+static void
 MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
     IonJSFrameLayout *layout = (IonJSFrameLayout *)frame.fp();
@@ -458,16 +502,8 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
         ionScript = CalleeTokenToScript(layout->calleeToken())->ion;
     }
 
-    if (CalleeTokenIsFunction(layout->calleeToken())) {
-        // (NBP) We do not need to mark formal arguments since they are covered
-        // by the safepoint.
-        size_t nargs = frame.numActualArgs();
-
-        // Trace function arguments. Note + 1 for thisv.
-        Value *argv = layout->argv();
-        for (size_t i = 0; i < nargs + 1; i++)
-            gc::MarkValueRoot(trc, &argv[i], "ion-argv");
-    }
+    if (CalleeTokenIsFunction(layout->calleeToken()))
+        MarkActualArguments(trc, frame);
 
     const SafepointIndex *si = ionScript->getSafepointIndex(frame.returnAddressToFp());
 
@@ -642,6 +678,9 @@ MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
         switch (frames.type()) {
           case IonFrame_Exit:
             MarkIonExitFrame(trc, frames);
+            break;
+          case IonFrame_BaselineJS:
+            MarkBaselineJSFrame(trc, frames);
             break;
           case IonFrame_OptimizedJS:
             MarkIonJSFrame(trc, frames);

@@ -17,6 +17,18 @@
 namespace js {
 namespace ion {
 
+bool
+ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
+{
+    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCode *code = ion->generateVMWrapper(cx, fun);
+    if (!code)
+        return false;
+
+    uint32_t argSize = fun.explicitStackSlots() * sizeof(void *);
+    EmitTailCall(code, masm, argSize);
+    return true;
+}
 
 //
 // Compare_Fallback
@@ -90,17 +102,14 @@ ICCompare_Fallback::Compiler::generateStubCode()
                        MutableHandleValue);
     static const VMFunction fun = FunctionInfo<pf>(DoCompareFallback);
 
-    IonCode *wrapper = generateVMWrapper(fun);
-    if (!wrapper)
-        return NULL;
-
     // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
     // Call.
-    EmitTailCall(wrapper, masm);
+    if (!callVM(fun, masm))
+        return NULL;
 
     Linker linker(masm);
     return linker.newCode(cx);
@@ -150,16 +159,13 @@ ICToBool_Fallback::Compiler::generateStubCode()
     typedef bool (*pf)(JSContext *, ICToBool_Fallback *, HandleValue, MutableHandleValue);
     static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback);
 
-    IonCode *wrapper = generateVMWrapper(fun);
-    if (!wrapper)
-        return NULL;
-
     // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
     // Call.
-    EmitTailCall(wrapper, masm);
+    if (!callVM(fun, masm))
+        return NULL;
 
     Linker linker(masm);
     return linker.newCode(cx);
@@ -207,16 +213,13 @@ ICToNumber_Fallback::Compiler::generateStubCode()
     typedef bool (*pf)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
     static const VMFunction fun = FunctionInfo<pf>(DoToNumberFallback);
 
-    IonCode *wrapper = generateVMWrapper(fun);
-    if (!wrapper)
-        return NULL;
-
     // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
     // Call.
-    EmitTailCall(wrapper, masm);
+    if (!callVM(fun, masm))
+        return NULL;
 
     Linker linker(masm);
     return linker.newCode(cx);
@@ -283,17 +286,14 @@ ICBinaryArith_Fallback::Compiler::generateStubCode()
                        MutableHandleValue);
     static const VMFunction fun = FunctionInfo<pf>(DoBinaryArithFallback);
 
-    IonCode *wrapper = generateVMWrapper(fun);
-    if (!wrapper)
-        return NULL;
-
     // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
     // Call.
-    EmitTailCall(wrapper, masm);
+    if (!callVM(fun, masm))
+        return NULL;
 
     Linker linker(masm);
     return linker.newCode(cx);
