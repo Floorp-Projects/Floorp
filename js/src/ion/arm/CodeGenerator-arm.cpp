@@ -1029,6 +1029,14 @@ CodeGeneratorARM::ToOutValue(LInstruction *ins)
     return ValueOperand(typeReg, payloadReg);
 }
 
+ValueOperand
+CodeGeneratorARM::ToTempValue(LInstruction *ins, size_t pos)
+{
+    Register typeReg = ToRegister(ins->getTemp(pos + TYPE_INDEX));
+    Register payloadReg = ToRegister(ins->getTemp(pos + PAYLOAD_INDEX));
+    return ValueOperand(typeReg, payloadReg);
+}
+
 bool
 CodeGeneratorARM::visitValue(LValue *value)
 {
