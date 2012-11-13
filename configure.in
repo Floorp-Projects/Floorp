@@ -1935,7 +1935,7 @@ case "$target" in
     fi
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
-    STRIP="$STRIP -x -S"
+    STRIP_FLAGS="$STRIP_FLAGS -x -S"
     # Check whether we're targeting OS X or iOS
     AC_CACHE_CHECK(for iOS target,
                    ac_cv_ios_target,
