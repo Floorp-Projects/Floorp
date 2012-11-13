@@ -202,6 +202,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyWakeLockChanged = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyWakeLockChanged", "(Ljava/lang/String;Ljava/lang/String;)V");
 
     jGetGfxInfoData = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getGfxInfoData", "()Ljava/lang/String;");
+    jGetProxyForURI = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getProxyForURI", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;");
     jRegisterSurfaceTextureFrameListener = jEnv->GetStaticMethodID(jGeckoAppShellClass, "registerSurfaceTextureFrameListener", "(Ljava/lang/Object;I)V");
     jUnregisterSurfaceTextureFrameListener = jEnv->GetStaticMethodID(jGeckoAppShellClass, "unregisterSurfaceTextureFrameListener", "(Ljava/lang/Object;)V");
 
@@ -2398,6 +2399,36 @@ AndroidBridge::GetGfxInfoData(nsACString& aRet)
     nsJNIString jniStr(jstrRet, env);
     CopyUTF16toUTF8(jniStr, aRet);
 }
+
+#define CREATE_JAVA_STRING(name) jstring j##name = NewJavaStringUTF(&jniFrame, nsPromiseFlatCString(a##name).get())
+
+nsresult
+AndroidBridge::GetProxyForURI(const nsACString & aSpec,
+                              const nsACString & aScheme,
+                              const nsACString & aHost,
+                              const int32_t      aPort,
+                              nsACString & aResult)
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env)
+        return NS_ERROR_FAILURE;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    CREATE_JAVA_STRING(Spec);
+    CREATE_JAVA_STRING(Scheme);
+    CREATE_JAVA_STRING(Host);
+    jstring jstrRet = static_cast<jstring>
+        (env->CallStaticObjectMethod(mGeckoAppShellClass, jGetProxyForURI, jSpec, jScheme, jHost, aPort));
+
+    if (jniFrame.CheckForException())
+        return NS_ERROR_FAILURE;
+
+    nsJNIString jniStr(jstrRet, env);
+    CopyUTF16toUTF8(jniStr, aResult);
+    return NS_OK;
+}
+
 
 /* attribute nsIAndroidBrowserApp browserApp; */
 NS_IMETHODIMP nsAndroidBridge::GetBrowserApp(nsIAndroidBrowserApp * *aBrowserApp)
