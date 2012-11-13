@@ -36,6 +36,7 @@ EXTRA_PP_COMPONENTS = \
 EXTRA_JS_MODULES = \
 	Keyboard.jsm \
 	TelURIParser.jsm \
+	SignInToWebsite.jsm \
 	$(NULL)
 
 TEST_DIRS = \

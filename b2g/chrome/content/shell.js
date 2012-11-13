@@ -22,6 +22,10 @@ Cu.import('resource://gre/modules/Keyboard.jsm');
 Cu.import('resource://gre/modules/NetworkStatsService.jsm');
 #endif
 
+// identity
+Cu.import('resource://gre/modules/SignInToWebsite.jsm');
+SignInToWebsiteController.init();
+
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
                                    'nsIEnvironment');
