@@ -50,10 +50,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     // ModuleLoader
     const mozilla::Module* LoadModule(mozilla::FileLocation &aFile);
 
-    nsresult FindTargetObject(JSContext* aCx, JSObject** aTargetObject);
-
-    static mozJSComponentLoader* Get() { return sSelf; }
-
  protected:
     static mozJSComponentLoader* sSelf;
 
@@ -140,7 +136,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
     nsDataHashtable<nsCStringHashKey, ModuleEntry*> mInProgressImports;
-    nsDataHashtable<nsPtrHashKey<JSScript>, JSObject*> mThisObjects;
 
     bool mInitialized;
     bool mReuseLoaderGlobal;
