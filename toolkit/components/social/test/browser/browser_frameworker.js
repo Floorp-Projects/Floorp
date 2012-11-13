@@ -512,6 +512,11 @@ let tests = {
   },
 
   testWorkerConnectError: function(cbnext) {
+    let run = function () {
+      onconnect = function(e) {
+        throw new Error("worker failure");
+      }
+    }
     let worker = getFrameWorkerHandle(makeWorkerUrl(run),
                                       undefined, "testWorkerConnectError");
     Services.obs.addObserver(function handleError() {
@@ -520,11 +525,6 @@ let tests = {
         worker.terminate();
         cbnext();
     }, 'social:frameworker-error', false);
-    let run = function () {
-      onconnect = function(e) {
-        throw new Error("worker failure");
-      }
-    }
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
       cbnext();
