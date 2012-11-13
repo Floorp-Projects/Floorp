@@ -182,10 +182,8 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     if (!targetObj) {
         // If the user didn't provide an object to eval onto, find one.
         mozJSComponentLoader* loader = mozJSComponentLoader::Get();
-        if (loader) {
-            rv = loader->FindTargetObject(cx, &targetObj);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
+        rv = loader->FindTargetObject(cx, &targetObj);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // Remember an object out of the calling compartment so that we
