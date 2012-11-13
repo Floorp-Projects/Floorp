@@ -545,6 +545,7 @@ let tests = {
                                            undefined, "testReloadAndNewPort");
         worker2.port.onmessage = function(e) {
           if (e.data.topic == "ready") {
+            worker2.terminate();
             cbnext();
           }
         }
