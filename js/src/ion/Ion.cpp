@@ -1597,11 +1597,13 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
           case IonFrame_Exit:
             IonSpew(IonSpew_Invalidate, "#%d exit frame @ %p", frameno, it.fp());
             break;
+          case IonFrame_BaselineJS:
           case IonFrame_OptimizedJS:
           {
             JS_ASSERT(it.isScripted());
-            IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
-                    frameno, it.fp(), it.script()->filename, it.script()->lineno,
+            const char *type = it.isOptimizedJS() ? "Optimized" : "Baseline";
+            IonSpew(IonSpew_Invalidate, "#%d %s JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
+                    frameno, type, it.fp(), it.script()->filename, it.script()->lineno,
                     it.maybeCallee(), it.script(), it.returnAddressToFp());
             break;
           }
@@ -1623,7 +1625,7 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
         }
 #endif
 
-        if (!it.isScripted())
+        if (!it.isOptimizedJS())
             continue;
 
         // See if the frame has already been invalidated.

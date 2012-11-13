@@ -430,7 +430,7 @@ BaselineCompiler::emit_JSOP_GETLOCAL()
     if (local >= frame.nlocals()) {
         // Destructuring assignments may use GETLOCAL to access stack values.
         frame.syncStack(0);
-        masm.loadValue(Address(BaselineFrameReg, BaselineFrame::offsetOfLocal(local)), R0);
+        masm.loadValue(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(local)), R0);
         frame.push(R0);
         return true;
     }
