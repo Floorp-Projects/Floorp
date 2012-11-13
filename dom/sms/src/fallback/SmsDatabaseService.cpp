@@ -90,13 +90,6 @@ SmsDatabaseService::MarkMessageRead(int32_t aMessageId,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-SmsDatabaseService::GetThreadList(nsISmsRequest* aRequest)
-{
-  NS_ERROR("We should not be here!");
-  return NS_OK;
-}
-
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
