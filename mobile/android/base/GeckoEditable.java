@@ -53,6 +53,7 @@ final class GeckoEditable
     private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoEditable";
     private static final int NOTIFY_IME_REPLY_EVENT = 1;
+    private static final int NOTIFY_IME_FOCUSCHANGE = 3;
 
     // Filters to implement Editable's filtering functionality
     private InputFilter[] mFilters;
@@ -464,6 +465,11 @@ final class GeckoEditable
             public void run() {
                 // Make sure there are no other things going on
                 mActionQueue.syncWithGecko();
+                if (type == NOTIFY_IME_FOCUSCHANGE && state != 0) {
+                    // Unmask events on the Gecko side
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
+                            GeckoEvent.IME_ACKNOWLEDGE_FOCUS));
+                }
                 if (mListener != null) {
                     mListener.notifyIME(type, state);
                 }
