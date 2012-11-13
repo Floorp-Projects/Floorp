@@ -2014,33 +2014,6 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   return n;
 }
 
-#define EVENT_HELPER(name_, handlerClass_)                                   \
-  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
-    handlerClass_* h = GetOn##name_();                                       \
-    vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
-    return NS_OK;                                                            \
-  }                                                                          \
-  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const jsval &v) {       \
-    JSObject *obj = GetWrapper();                                            \
-    if (!obj) {                                                              \
-      /* Just silently do nothing */                                         \
-      return NS_OK;                                                          \
-    }                                                                        \
-    nsRefPtr<handlerClass_> handler;                                         \
-    JSObject *callable;                                                      \
-    if (v.isObject() &&                                                      \
-        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      bool ok;                                                               \
-      handler = new handlerClass_(cx, obj, callable, &ok);                   \
-      if (!ok) {                                                             \
-        return NS_ERROR_OUT_OF_MEMORY;                                       \
-      }                                                                      \
-    }                                                                        \
-    ErrorResult rv;                                                          \
-    SetOn##name_(handler, rv);                                               \
-    return rv.ErrorCode();                                                   \
-  }
-
 #define EVENT(name_, id_, type_, struct_)                                    \
   EventHandlerNonNull* nsINode::GetOn##name_() {                             \
     nsEventListenerManager *elm = GetListenerManager(false);                 \
@@ -2055,30 +2028,37 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
       error.Throw(NS_ERROR_OUT_OF_MEMORY);                                   \
     }                                                                        \
   }                                                                          \
-  EVENT_HELPER(name_, EventHandlerNonNull)
+  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
+    EventHandlerNonNull* h = GetOn##name_();                                 \
+    vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
+    return NS_OK;                                                            \
+  }                                                                          \
+  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const jsval &v) {       \
+    JSObject *obj = GetWrapper();                                            \
+    if (!obj) {                                                              \
+      /* Just silently do nothing */                                         \
+      return NS_OK;                                                          \
+    }                                                                        \
+    nsRefPtr<EventHandlerNonNull> handler;                                   \
+    JSObject *callable;                                                      \
+    if (v.isObject() &&                                                      \
+        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
+      bool ok;                                                               \
+      handler = new EventHandlerNonNull(cx, obj, callable, &ok);             \
+      if (!ok) {                                                             \
+        return NS_ERROR_OUT_OF_MEMORY;                                       \
+      }                                                                      \
+    }                                                                        \
+    ErrorResult rv;                                                          \
+    SetOn##name_(handler, rv);                                               \
+    return rv.ErrorCode();                                                   \
+  }
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
-#define ERROR_EVENT(name_, id_, type_, struct_)                              \
-  OnErrorEventHandlerNonNull* nsINode::GetOn##name_() {                      \
-    nsEventListenerManager *elm = GetListenerManager(false);                 \
-    return elm ? elm->GetOnErrorEventHandler() : nullptr;                    \
-  }                                                                          \
-  void nsINode::SetOn##name_(OnErrorEventHandlerNonNull* handler,            \
-                             ErrorResult& error) {                           \
-    nsEventListenerManager *elm = GetListenerManager(true);                  \
-    if (elm) {                                                               \
-      error = elm->SetEventHandler(handler);                                 \
-    } else {                                                                 \
-      error.Throw(NS_ERROR_OUT_OF_MEMORY);                                   \
-    }                                                                        \
-  }                                                                          \
-  EVENT_HELPER(name_, OnErrorEventHandlerNonNull)
 #include "nsEventNameList.h"
-#undef ERROR_EVENT  
 #undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT
-#undef EVENT_HELPER
 
 bool
 nsINode::Contains(const nsINode* aOther) const
