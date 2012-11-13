@@ -186,12 +186,12 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
 /**
  * Preference for receiving IME updates
  *
- * If mWantUpdates is true, PuppetWidget will forward
- * nsIWidget::OnIMETextChange and nsIWidget::OnIMESelectionChange to the chrome
- * process. This incurs overhead from observers and IPDL. If the IME
- * implementation on a particular platform doesn't care about OnIMETextChange
- * and OnIMESelectionChange from content processes, they should set
- * mWantUpdates to false to avoid these overheads.
+ * If mWantUpdates is true, nsTextStateManager will observe text change and
+ * selection change and call nsIWidget::OnIMETextChange() and
+ * nsIWidget::OnIMESelectionChange(). The observing cost is very expensive.
+ * If the IME implementation on a particular platform doesn't care about
+ * OnIMETextChange and OnIMESelectionChange, they should set mWantUpdates to
+ * false to avoid the cost.
  *
  * If mWantHints is true, PuppetWidget will forward the content of text fields
  * to the chrome process to be cached. This way we return the cached content
