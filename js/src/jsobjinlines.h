@@ -1204,11 +1204,13 @@ JSObject::isWrapper() const
 inline js::GlobalObject &
 JSObject::global() const
 {
+#ifdef DEBUG
     JSObject *obj = const_cast<JSObject *>(this);
     while (JSObject *parent = obj->getParent())
         obj = parent;
     JS_ASSERT(&obj->asGlobal() == compartment()->maybeGlobal());
-    return obj->asGlobal();
+#endif
+    return *compartment()->maybeGlobal();
 }
 
 static inline bool
