@@ -6,7 +6,15 @@
 
 interface nsIDOMMozSmsMessage;
 
-[scriptable, builtinclass, uuid(97067327-64b9-4e26-848b-59e443c55db9)]
+dictionary SmsThreadListItem
+{
+  DOMString senderOrReceiver;
+  unsigned long long timestamp;
+  DOMString body;
+  unsigned long long unreadCount;
+};
+
+[scriptable, builtinclass, uuid(82a6d16d-cf33-4745-8662-8b5d441f512f)]
 interface nsISmsRequest : nsISupports
 {
   /**
@@ -37,4 +45,8 @@ interface nsISmsRequest : nsISupports
 
   void notifyMessageMarkedRead(in boolean read);
   void notifyMarkMessageReadFailed(in long error);
+
+  [implicit_jscontext]
+  void notifyThreadList(in jsval threadList);
+  void notifyThreadListFailed(in long error);
 };
