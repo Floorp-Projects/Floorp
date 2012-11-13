@@ -163,8 +163,7 @@ struct _MDCPU {
 #define	_MD_RESUME_THREAD(thread)
 #define _MD_CLEAN_THREAD(_thread)
 
-#define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
+#define _MD_INTERVAL_USE_GTOD
 
 #define _MD_SELECT		_select
 #define _MD_POLL		_poll

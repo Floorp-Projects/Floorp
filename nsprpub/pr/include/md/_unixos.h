@@ -294,9 +294,22 @@ extern void		_MD_FreeSegment(PRSegment *seg);
 
 /************************************************************************/
 
-#if !defined(HPUX_LW_TIMER)
+#ifdef _MD_INTERVAL_USE_GTOD
+extern PRIntervalTime   _PR_UNIX_GetInterval(void);
+extern PRIntervalTime   _PR_UNIX_TicksPerSecond(void);
 #define _MD_INTERVAL_INIT()
+#define _MD_GET_INTERVAL		_PR_UNIX_GetInterval
+#define _MD_INTERVAL_PER_SEC		_PR_UNIX_TicksPerSecond
 #endif
+
+#ifdef HAVE_CLOCK_MONOTONIC
+extern PRIntervalTime   _PR_UNIX_GetInterval2(void);
+extern PRIntervalTime   _PR_UNIX_TicksPerSecond2(void);
+#define _MD_INTERVAL_INIT()
+#define _MD_GET_INTERVAL		_PR_UNIX_GetInterval2
+#define _MD_INTERVAL_PER_SEC		_PR_UNIX_TicksPerSecond2
+#endif
+
 #define _MD_INTERVAL_PER_MILLISEC()	(_PR_MD_INTERVAL_PER_SEC() / 1000)
 #define _MD_INTERVAL_PER_MICROSEC()	(_PR_MD_INTERVAL_PER_SEC() / 1000000)
 

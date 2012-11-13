@@ -110,6 +110,7 @@ struct _md_sockaddr_in6 {
 #endif
 
 #include "prinrval.h"
+#define _MD_INTERVAL_INIT()
 NSPR_API(PRIntervalTime) _MD_Solaris_GetInterval(void);
 #define _MD_GET_INTERVAL                  _MD_Solaris_GetInterval
 NSPR_API(PRIntervalTime) _MD_Solaris_TicksPerSecond(void);
@@ -439,9 +440,7 @@ struct _MDCPU {
 	struct _MDCPU_Unix md_unix;
 };
 
-#ifndef _PR_PTHREADS
 #define _MD_INIT_LOCKS()
-#endif
 #define _MD_NEW_LOCK(lock)				PR_SUCCESS
 #define _MD_FREE_LOCK(lock)
 #define _MD_LOCK(lock)
@@ -466,11 +465,6 @@ extern void     _MD_SET_PRIORITY(struct _MDThread *thread,
 extern PRStatus _MD_CREATE_THREAD(PRThread *thread, void (*start) (void *),
 	PRThreadPriority priority, PRThreadScope scope, PRThreadState state,
         PRUint32 stackSize);
-
-NSPR_API(PRIntervalTime)				_MD_Solaris_GetInterval(void);
-#define _MD_GET_INTERVAL				_MD_Solaris_GetInterval
-NSPR_API(PRIntervalTime)				_MD_Solaris_TicksPerSecond(void);
-#define _MD_INTERVAL_PER_SEC			_MD_Solaris_TicksPerSecond
 
 /* The following defines the unwrapped versions of select() and poll(). */
 extern int _select(int nfds, fd_set *readfds, fd_set *writefds,

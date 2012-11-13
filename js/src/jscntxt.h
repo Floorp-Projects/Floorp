@@ -719,9 +719,10 @@ struct JSRuntime : js::RuntimeFriendFields
 
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,
-     * JS_TransplantObject).
+     * JS_TransplantObject) or some other operation that can manipulate
+     * dead compartments.
      */
-    bool                gcInTransplant;
+    bool                gcManipulatingDeadCompartments;
 
     /*
      * This field is incremented each time we mark an object inside a
@@ -2193,6 +2194,7 @@ class RuntimeAllocPolicy
     RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
     RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
     void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
+    void *calloc_(size_t bytes) { return runtime->calloc_(bytes); }
     void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}
@@ -2209,6 +2211,7 @@ class ContextAllocPolicy
     ContextAllocPolicy(JSContext *cx) : cx(cx) {}
     JSContext *context() const { return cx; }
     void *malloc_(size_t bytes) { return cx->malloc_(bytes); }
+    void *calloc_(size_t bytes) { return cx->calloc_(bytes); }
     void *realloc_(void *p, size_t oldBytes, size_t bytes) { return cx->realloc_(p, oldBytes, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const { js_ReportAllocationOverflow(cx); }
