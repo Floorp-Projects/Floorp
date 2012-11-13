@@ -3276,19 +3276,19 @@ JSObject::setLastProperty(JSContext *cx, HandleObject obj, js::Shape *shape)
     return true;
 }
 
-/* static */ bool
-JSObject::setSlotSpan(JSContext *cx, HandleObject obj, uint32_t span)
+bool
+JSObject::setSlotSpan(JSContext *cx, uint32_t span)
 {
-    AssertCanGC();
-    JS_ASSERT(obj->inDictionaryMode());
-    Rooted<BaseShape*> base(cx, obj->lastProperty()->base());
+    JS_ASSERT(inDictionaryMode());
+    js::BaseShape *base = lastProperty()->base();
 
     size_t oldSpan = base->slotSpan();
 
     if (oldSpan == span)
         return true;
 
-    if (!JSObject::updateSlotsForSpan(cx, obj, oldSpan, span))
+    RootedObject self(cx, this);
+    if (!JSObject::updateSlotsForSpan(cx, self, oldSpan, span))
         return false;
 
     base->setSlotSpan(span);
@@ -3721,7 +3721,6 @@ js_FindClassObject(JSContext *cx, JSProtoKey protoKey, MutableHandleValue vp, Cl
 bool
 JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
 {
-    AssertCanGC();
     uint32_t slot = slotSpan();
     JS_ASSERT(slot >= JSSLOT_FREE(getClass()));
 
@@ -3730,7 +3729,6 @@ JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
      * shape table's slot-number freelist.
      */
     if (inDictionaryMode()) {
-        AutoAssertNoGC nogc;
         ShapeTable &table = lastProperty()->table();
         uint32_t last = table.freelist;
         if (last != SHAPE_INVALID_SLOT) {
@@ -3756,8 +3754,7 @@ JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
 
     *slotp = slot;
 
-    RootedObject self(cx, this);
-    if (inDictionaryMode() && !setSlotSpan(cx, self, slot + 1))
+    if (inDictionaryMode() && !setSlotSpan(cx, slot + 1))
         return false;
 
     return true;
