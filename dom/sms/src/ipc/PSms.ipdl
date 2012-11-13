@@ -53,10 +53,6 @@ struct MarkMessageReadRequest
   bool value;
 };
 
-struct GetThreadListRequest
-{
-};
-
 union IPCSmsRequest
 {
   SendMessageRequest;
@@ -65,7 +61,6 @@ union IPCSmsRequest
   CreateMessageListRequest;
   GetNextMessageInListRequest;
   MarkMessageReadRequest;
-  GetThreadListRequest;
 };
 
 sync protocol PSms {
