@@ -20,7 +20,6 @@ DIRS	= \
   hittest \
   hyperlink \
   hypertext \
-  jsat \
   name \
   pivot \
   relations \
