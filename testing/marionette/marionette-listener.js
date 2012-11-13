@@ -187,6 +187,9 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
   this.elementManager.reset();
+  // reset frame to the top-most frame
+  curWindow = content;
+  curWindow.focus();
   try {
     importedScripts.remove(false);
   }
@@ -243,7 +246,7 @@ function sendError(message, status, trace, command_id) {
 function resetValues() {
   sandbox = null;
   marionetteTimeout = null;
-  curWin = content;
+  curWindow = content;
 }
 
 /**
