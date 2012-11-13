@@ -10,7 +10,6 @@
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozJSComponentLoader.h"
 
 #define JSCTYPES_CONTRACTID \
   "@mozilla.org/jsctypes;1"
@@ -70,11 +69,6 @@ SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
   if (!JS_GetProperty(cx, parent, name, &prop))
     return false;
 
-  if (prop.isUndefined()) {
-    // Pretend we sealed the object.
-    return true;
-  }
-
   JSObject* obj = JSVAL_TO_OBJECT(prop);
   if (!JS_GetProperty(cx, obj, "prototype", &prop))
     return false;
@@ -96,6 +90,10 @@ InitAndSealCTypesClass(JSContext* cx, JSObject* global)
     return false;
 
   JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &sCallbacks);
+
+  // Can't freeze our global if it's shared.
+  if (Preferences::GetBool("jsloader.reuseGlobal"))
+    return true;
 
   // Seal up Object, Function, Array and Error and their prototypes.  (This
   // single object instance is shared amongst everyone who imports the ctypes
@@ -120,14 +118,11 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
              jsval* vp,
              bool* _retval)
 {
-  bool reusingGlobal = Preferences::GetBool("jsloader.reuseGlobal");
-  JSObject* targetObj = nullptr;
+  JSObject* global = JS_GetGlobalForScopeChain(cx);
+  if (!global)
+    return NS_ERROR_NOT_AVAILABLE;
 
-  mozJSComponentLoader* loader = mozJSComponentLoader::Get();
-  nsresult rv = loader->FindTargetObject(cx, &targetObj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_retval = InitAndSealCTypesClass(cx, targetObj);
+  *_retval = InitAndSealCTypesClass(cx, global);
   return NS_OK;
 }
 
