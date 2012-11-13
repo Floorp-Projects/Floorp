@@ -97,6 +97,9 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
+import java.net.ProxySelector;
+import java.net.Proxy;
+import java.net.URI;
 
 public class GeckoAppShell
 {
@@ -2232,5 +2235,45 @@ public class GeckoAppShell
             return true;
         }
         return false;
+    }
+
+    public static String getProxyForURI(String spec, String scheme, String host, int port) {
+        URI uri = null;
+        try {
+            uri = new URI(spec);
+        } catch(java.net.URISyntaxException uriEx) {
+            try {
+                uri = new URI(scheme, null, host, port, null, null, null);
+            } catch(java.net.URISyntaxException uriEx2) {
+                Log.d("GeckoProxy", "Failed to create uri from spec", uriEx);
+                Log.d("GeckoProxy", "Failed to create uri from parts", uriEx2);
+            }
+        }
+        if (uri != null) {
+            ProxySelector ps = ProxySelector.getDefault();
+            if (ps != null) {
+                List<Proxy> proxies = ps.select(uri);
+                if (proxies != null && !proxies.isEmpty()) {
+                    Proxy proxy = proxies.get(0);
+                    if (!Proxy.NO_PROXY.equals(proxy)) {
+                        final String proxyStr;
+                        switch (proxy.type()) {
+                        case HTTP:
+                            proxyStr = "PROXY " + proxy.address().toString();
+                            break;
+                        case SOCKS:
+                            proxyStr = "SOCKS " + proxy.address().toString();
+                            break;
+                        case DIRECT:
+                        default:
+                            proxyStr = "DIRECT";
+                            break;
+                        }
+                        return proxyStr;
+                    }
+                }
+            }
+        }
+        return "DIRECT";
     }
 }
