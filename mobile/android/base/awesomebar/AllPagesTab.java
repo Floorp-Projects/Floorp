@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.util.GeckoAsyncTask;
@@ -767,8 +766,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             Favicons favicons = GeckoApp.mAppContext.getFavicons();
 
             do {
-                final String url = c.getString(c.getColumnIndexOrThrow(Images.URL));
-                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Images.FAVICON));
+                final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
+                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Combined.FAVICON));
                 if (b == null)
                     continue;
 
