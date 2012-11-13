@@ -181,6 +181,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "NodeList.prototype manipulation via an Xray shouldn't throw" + e);
       }
 
+      try {
+        var url = Components.utils.evalInSandbox("URL", sandbox);
+        for (var i in url) {
+          url[i];
+        }
+        ok(true, "We didn't crash!");
+      } catch (e) {
+        ok(false, "URL interface object manipulation via an Xray shouldn't throw" + e);
+      }
+
       SimpleTest.finish();
     }
 
