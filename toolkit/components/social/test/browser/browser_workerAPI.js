@@ -137,6 +137,10 @@ let tests = {
           port.postMessage({topic: "test-reload-init"});
           break;
         case "test-pending-response":
+          // now we've been reloaded, check that we got the pending message
+          // and that our worker is still the same
+          let newWorker = fw.getFrameWorkerHandle(provider.workerURL, undefined, "testWorkerReload");
+          is(worker._worker, newWorker._worker, "worker is the same after reload");
           ok(true, "worker reloaded and testPort was reconnected");
           next();
           break;
