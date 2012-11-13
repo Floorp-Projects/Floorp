@@ -5283,7 +5283,7 @@ dumpValue(const Value &v)
         } else {
             fputs("<unnamed function", stderr);
         }
-        if (fun->isInterpreted()) {
+        if (fun->hasScript()) {
             JSScript *script = fun->script().get(nogc);
             fprintf(stderr, " (%s:%u)",
                     script->filename ? script->filename : "", script->lineno);
