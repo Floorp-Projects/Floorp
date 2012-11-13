@@ -746,11 +746,10 @@ nsGeolocationService::HandleMozsettingValue(const bool aValue)
     }
 
     if (sGeoInitPending) {
+      sGeoInitPending = false;
       for (uint32_t i = 0, length = mGeolocators.Length(); i < length; ++i) {
         mGeolocators[i]->ServiceReady();
       }
-
-      sGeoInitPending = false;
     }
 }
 
