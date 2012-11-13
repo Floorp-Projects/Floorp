@@ -1370,9 +1370,7 @@ StackIter::settleOnNewState()
                 }
 
                 state_ = ION;
-                ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
-                pc_ = ionInlineFrames_.pc();
-                script_ = ionInlineFrames_.script();
+                nextIonFrame();
                 return;
             }
 #endif /* JS_ION */
@@ -1469,12 +1467,25 @@ StackIter::StackIter(const StackIter &other)
 
 #ifdef JS_ION
 void
+StackIter::nextIonFrame()
+{
+    if (ionFrames_.isOptimizedJS()) {
+        ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
+        pc_ = ionInlineFrames_.pc();
+        script_ = ionInlineFrames_.script();
+    } else {
+        JS_ASSERT(ionFrames_.isBaselineJS());
+        ionFrames_.baselineScriptAndPc(&script_, &pc_);
+    }
+}
+
+void
 StackIter::popIonFrame()
 {
     AutoAssertNoGC nogc;
     // Keep fp which describes all ion frames.
     poisonRegs();
-    if (ionFrames_.isScripted() && ionInlineFrames_.more()) {
+    if (ionFrames_.isOptimizedJS() && ionInlineFrames_.more()) {
         ++ionInlineFrames_;
         pc_ = ionInlineFrames_.pc();
         script_ = ionInlineFrames_.script();
@@ -1484,9 +1495,7 @@ StackIter::popIonFrame()
             ++ionFrames_;
 
         if (!ionFrames_.done()) {
-            ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
-            pc_ = ionInlineFrames_.pc();
-            script_ = ionInlineFrames_.script();
+            nextIonFrame();
             return;
         }
 

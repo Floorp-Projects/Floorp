@@ -56,6 +56,7 @@ struct BaselineScript
 
     ICEntry &icEntry(size_t index);
     ICEntry &icEntryFromReturnOffset(CodeOffsetLabel returnOffset);
+    ICEntry &icEntryFromReturnAddress(uint8_t *returnAddr);
 
     size_t numICEntries() const {
         return icEntries_;

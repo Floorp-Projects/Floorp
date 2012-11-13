@@ -10,6 +10,8 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jsfun.h"
+#include "BaselineJIT.h"
+#include "BaselineIC.h"
 #include "IonCompartment.h"
 #include "IonFrames-inl.h"
 #include "IonFrameIterator-inl.h"
@@ -163,6 +165,16 @@ IonFrameIterator::script() const
     RawScript script = ScriptFromCalleeToken(calleeToken());
     JS_ASSERT(script);
     return script;
+}
+
+void
+IonFrameIterator::baselineScriptAndPc(MutableHandleScript scriptRes, jsbytecode **pcRes) const
+{
+    AutoAssertNoGC nogc;
+    JS_ASSERT(isBaselineJS());
+    scriptRes.set(script());
+    uint8_t *retAddr = returnAddressToFp();
+    *pcRes = scriptRes->baseline->icEntryFromReturnAddress(retAddr).pc(scriptRes);
 }
 
 Value *
@@ -696,16 +708,23 @@ ion::GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRe
 
     // Lookup failed: undertake expensive process to recover the innermost inlined frame.
     ++it; // Skip exit frame.
-    InlineFrameIterator ifi(&it);
+    jsbytecode *pc = NULL;
 
-    // Set the result.
-    scriptRes.set(ifi.script());
+    if (it.isOptimizedJS()) {
+        InlineFrameIterator ifi(&it);
+        scriptRes.set(ifi.script());
+        pc = ifi.pc();
+    } else {
+        JS_ASSERT(it.isBaselineJS());
+        it.baselineScriptAndPc(scriptRes, &pc);
+    }
+
     if (pcRes)
-        *pcRes = ifi.pc();
+        *pcRes = pc;
 
     // Add entry to cache.
     if (rt->ionPcScriptCache)
-        rt->ionPcScriptCache->add(hash, retAddr, ifi.pc(), ifi.script());
+        rt->ionPcScriptCache->add(hash, retAddr, pc, scriptRes);
 }
 
 void
