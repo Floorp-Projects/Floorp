@@ -13,6 +13,7 @@
 #include "jsnum.h"
 #include "jsmath.h"
 #include "jsinterpinlines.h"
+#include "ExecutionModeInlines.h"
 
 #include "vm/StringObject-inl.h"
 
@@ -798,6 +799,17 @@ CodeGenerator::emitCallInvokeFunction(LInstruction *call, Register calleereg,
     return true;
 }
 
+static inline int32_t ionOffset(ExecutionMode executionMode)
+{
+    switch (executionMode) {
+      case SequentialExecution: return offsetof(JSScript, ion);
+      case ParallelExecution: return offsetof(JSScript, parallelIon);
+    }
+
+    JS_ASSERT(false);
+    return offsetof(JSScript, ion);
+}
+
 bool
 CodeGenerator::visitCallGeneric(LCallGeneric *call)
 {
@@ -831,7 +843,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
+    ExecutionMode executionMode = gen->info().executionMode();
+    masm.movePtr(Address(objreg, ionOffset(executionMode)), objreg);
 
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
@@ -889,6 +902,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 bool
 CodeGenerator::visitCallKnown(LCallKnown *call)
 {
+    JSContext *cx = GetIonContext()->cx;
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
     uint32 unusedStack = StackOffsetOfPassedArg(call->argslot());
@@ -903,7 +917,9 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.checkStackAlignment();
 
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
-    if (target->script()->ion == ION_DISABLED_SCRIPT) {
+    ExecutionMode executionMode = gen->info().executionMode();
+    RootedScript targetScript(cx, target->script());
+    if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT) {
         if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))
             return false;
 
@@ -920,7 +936,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
+    masm.movePtr(Address(objreg, ionOffset(executionMode)), objreg);
 
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
@@ -1088,6 +1104,8 @@ CodeGenerator::emitPopArguments(LApplyArgsGeneric *apply, Register extraStackSpa
 bool
 CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 {
+    JSContext *cx = GetIonContext()->cx;
+
     // Holds the function object.
     Register calleereg = ToRegister(apply->getFunction());
 
@@ -1112,14 +1130,15 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     masm.checkStackAlignment();
 
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
-    if (apply->hasSingleTarget() &&
-        (!apply->getSingleTarget()->isInterpreted() ||
-         apply->getSingleTarget()->script()->ion == ION_DISABLED_SCRIPT))
-    {
-        if (!emitCallInvokeFunction(apply, copyreg))
-            return false;
-        emitPopArguments(apply, copyreg);
-        return true;
+    ExecutionMode executionMode = gen->info().executionMode();
+    if (apply->hasSingleTarget()) {
+        RootedFunction target(cx, apply->getSingleTarget());
+        if (!CanIonCompile(cx, target, executionMode)) {
+            if (!emitCallInvokeFunction(apply, copyreg))
+                return false;
+            emitPopArguments(apply, copyreg);
+            return true;
+        }
     }
 
     Label end, invoke;
@@ -1134,7 +1153,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
+    masm.movePtr(Address(objreg, ionOffset(executionMode)), objreg);
 
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
@@ -2985,7 +3004,8 @@ CodeGenerator::generate()
     encodeSafepoints();
 
     RootedScript script(cx, gen->info().script());
-    JS_ASSERT(!script->hasIonScript());
+    ExecutionMode executionMode = gen->info().executionMode();
+    JS_ASSERT(!HasIonScript(script, executionMode));
 
     uint32 scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_
@@ -2996,48 +3016,51 @@ CodeGenerator::generate()
     if (cx->compartment->types.compiledInfo.compilerOutput(cx)->isInvalidated())
         return true;
 
-    script->ion = IonScript::New(cx, slots, scriptFrameSize, snapshots_.size(),
-                                 bailouts_.length(), graph.numConstants(),
-                                 safepointIndices_.length(), osiIndices_.length(),
-                                 cacheList_.length(), barrierOffsets_.length(),
-                                 safepoints_.size(), graph.mir().numScripts());
-    if (!script->ion)
+    IonScript *ionScript =
+      IonScript::New(cx, slots, scriptFrameSize, snapshots_.size(),
+                     bailouts_.length(), graph.numConstants(),
+                     safepointIndices_.length(), osiIndices_.length(),
+                     cacheList_.length(), barrierOffsets_.length(),
+                     safepoints_.size(), graph.mir().numScripts());
+    SetIonScript(script, executionMode, ionScript);
+
+    if (!ionScript)
         return false;
     invalidateEpilogueData_.fixup(&masm);
     Assembler::patchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
-                                       ImmWord(uintptr_t(script->ion)),
+                                       ImmWord(uintptr_t(ionScript)),
                                        ImmWord(uintptr_t(-1)));
 
     IonSpew(IonSpew_Codegen, "Created IonScript %p (raw %p)",
-            (void *) script->ion, (void *) code->raw());
+            (void *) ionScript, (void *) code->raw());
 
-    script->ion->setInvalidationEpilogueDataOffset(invalidateEpilogueData_.offset());
-    script->ion->setOsrPc(gen->info().osrPc());
-    script->ion->setOsrEntryOffset(getOsrEntryOffset());
+    ionScript->setInvalidationEpilogueDataOffset(invalidateEpilogueData_.offset());
+    ionScript->setOsrPc(gen->info().osrPc());
+    ionScript->setOsrEntryOffset(getOsrEntryOffset());
     ptrdiff_t real_invalidate = masm.actualOffset(invalidate_.offset());
-    script->ion->setInvalidationEpilogueOffset(real_invalidate);
+    ionScript->setInvalidationEpilogueOffset(real_invalidate);
 
-    script->ion->setMethod(code);
-    script->ion->setDeoptTable(deoptTable_);
+    ionScript->setMethod(code);
+    ionScript->setDeoptTable(deoptTable_);
     if (snapshots_.size())
-        script->ion->copySnapshots(&snapshots_);
+        ionScript->copySnapshots(&snapshots_);
     if (bailouts_.length())
-        script->ion->copyBailoutTable(&bailouts_[0]);
+        ionScript->copyBailoutTable(&bailouts_[0]);
     if (graph.numConstants())
-        script->ion->copyConstants(graph.constantPool());
+        ionScript->copyConstants(graph.constantPool());
     if (safepointIndices_.length())
-        script->ion->copySafepointIndices(&safepointIndices_[0], masm);
+        ionScript->copySafepointIndices(&safepointIndices_[0], masm);
     if (osiIndices_.length())
-        script->ion->copyOsiIndices(&osiIndices_[0], masm);
+        ionScript->copyOsiIndices(&osiIndices_[0], masm);
     if (cacheList_.length())
-        script->ion->copyCacheEntries(&cacheList_[0], masm);
+        ionScript->copyCacheEntries(&cacheList_[0], masm);
     if (barrierOffsets_.length())
-        script->ion->copyPrebarrierEntries(&barrierOffsets_[0], masm);
+        ionScript->copyPrebarrierEntries(&barrierOffsets_[0], masm);
     if (safepoints_.size())
-        script->ion->copySafepoints(&safepoints_);
+        ionScript->copySafepoints(&safepoints_);
 
     JS_ASSERT(graph.mir().numScripts() > 0);
-    script->ion->copyScriptEntries(graph.mir().scripts());
+    ionScript->copyScriptEntries(graph.mir().scripts());
 
     linkAbsoluteLabels();
 
@@ -3045,7 +3068,7 @@ CodeGenerator::generate()
     // since a GC can occur during code generation. All barriers are emitted
     // off-by-default, and are toggled on here if necessary.
     if (cx->compartment->needsBarrier())
-        script->ion->toggleBarriers(true);
+        ionScript->toggleBarriers(true);
 
     return true;
 }

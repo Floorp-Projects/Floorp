@@ -268,6 +268,11 @@ static inline bool IsEnabled(JSContext *cx)
 void ForbidCompilation(JSContext *cx, JSScript *script);
 uint32_t UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc);
 
+void PurgeCaches(JSScript *script, JSCompartment *c);
+size_t MemoryUsed(JSScript *script, JSMallocSizeOfFun mallocSizeOf);
+void DestroyIonScripts(FreeOp *fop, JSScript *script);
+void TraceIonScripts(JSTracer* trc, JSScript *script);
+
 } // namespace ion
 } // namespace js
 
