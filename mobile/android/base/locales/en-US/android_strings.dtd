@@ -71,7 +71,12 @@
 <!ENTITY pref_do_not_track "Tell sites not to track me">
 <!ENTITY pref_telemetry "Send performance data">
 <!ENTITY pref_remember_signons "Remember passwords">
-<!ENTITY pref_cookies "Enable cookies">
+
+<!ENTITY pref_cookies "Cookies">
+<!ENTITY pref_cookies_accept_all "Enabled">
+<!ENTITY pref_cookies_not_accept_foreign "Enabled, excluding 3rd party">
+<!ENTITY pref_cookies_disabled "Disabled">
+
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">
 <!ENTITY pref_char_encoding_off "Don\'t show menu">
