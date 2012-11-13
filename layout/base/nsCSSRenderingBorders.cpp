@@ -27,6 +27,7 @@
 #include "nsBlockFrame.h"
 #include "sampler.h"
 #include "nsExpirationTracker.h"
+#include "RoundedRect.h"
 
 #include "gfxContext.h"
 
@@ -1801,7 +1802,6 @@ nsCSSBorderRenderer::DrawBorders()
   }
 
   bool allBordersSolid;
-  bool noCornerOutsideCenter = true;
 
   // First there's a couple of 'special cases' that have specifically optimized
   // drawing paths, when none of these can be used we move on to the generalized
@@ -1848,40 +1848,34 @@ nsCSSBorderRenderer::DrawBorders()
 
   
   if (allBordersSame &&
-      allBordersSameWidth &&
       mCompositeColors[0] == NULL &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
-      !mAvoidStroke)
+      !mAvoidStroke &&
+      !mNoBorderRadius)
   {
-    NS_FOR_CSS_CORNERS(i) {
-      if (mBorderRadii[i].width <= mBorderWidths[0]) {
-        noCornerOutsideCenter = false;
-      }
-      if (mBorderRadii[i].height <= mBorderWidths[0]) {
-        noCornerOutsideCenter = false;
-      }
-    }
+    // Relatively simple case.
+    SetupStrokeStyle(NS_SIDE_TOP);
 
-    // We can only do a stroke here if all border radii centers are inside the
-    // inner rect, otherwise we get rendering artifacts.
+    RoundedRect borderInnerRect(mOuterRect, mBorderRadii);
+    borderInnerRect.Deflate(mBorderWidths[NS_SIDE_TOP],
+                      mBorderWidths[NS_SIDE_BOTTOM],
+                      mBorderWidths[NS_SIDE_LEFT],
+                      mBorderWidths[NS_SIDE_RIGHT]);
 
-    if (noCornerOutsideCenter) {
-      // Relatively simple case.
-      SetupStrokeStyle(NS_SIDE_TOP);
-      mOuterRect.Deflate(mBorderWidths[0] / 2.0);
-      NS_FOR_CSS_CORNERS(corner) {
-        if (mBorderRadii.sizes[corner].height == 0 || mBorderRadii.sizes[corner].width == 0) {
-          continue;
-        }
-        mBorderRadii.sizes[corner].width -= mBorderWidths[0] / 2;
-        mBorderRadii.sizes[corner].height -= mBorderWidths[0] / 2;
-      }
-
-      mContext->NewPath();
-      mContext->RoundedRectangle(mOuterRect, mBorderRadii);
-      mContext->Stroke();
-      return;
-    }
+    // Instead of stroking we just use two paths: an inner and an outer.
+    // This allows us to draw borders that we couldn't when stroking. For example,
+    // borders with a border width >= the border radius. (i.e. when there are
+    // square corners on the inside)
+    //
+    // Further, this approach can be more efficient because the backend
+    // doesn't need to compute an offset curve to stroke the path. We know that
+    // the rounded parts are elipses we can offset exactly and can just compute
+    // a new cubic approximation.
+    mContext->NewPath();
+    mContext->RoundedRectangle(mOuterRect, mBorderRadii, true);
+    mContext->RoundedRectangle(borderInnerRect.rect, borderInnerRect.corners, false);
+    mContext->Fill();
+    return;
   }
 
   bool hasCompositeColors;
