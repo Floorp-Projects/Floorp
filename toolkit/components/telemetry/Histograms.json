@@ -457,7 +457,7 @@
     "kind": "boolean",
     "description": "Did the browser start after a successful shutdown"
   },
-  "IMAGE_DECODE_LATENCY": {
+  "IMAGE_DECODE_LATENCY_US": {
     "kind": "exponential",
     "low": 50,
     "high": "5000000",
