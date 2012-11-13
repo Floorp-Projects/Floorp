@@ -164,8 +164,7 @@ nsWindow::nsWindow() :
     mIMEComposing(false),
     mIMEMaskSelectionUpdate(false),
     mIMEMaskTextUpdate(false),
-    // Mask IME events initially because there is no focused editors yet
-    mIMEMaskEvents(true)
+    mIMEMaskEvents(true) // Mask IME events since there's no focus yet
 {
 }
 
@@ -1886,10 +1885,11 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     if (ae->Action() == AndroidGeckoEvent::IME_ACKNOWLEDGE_FOCUS) {
         mIMEMaskEvents = false;
         return;
-    } else if (mIMEMaskEvents) {
+    }
+    if (mIMEMaskEvents) {
         // Still reply to events, but don't do anything else
         if (ae->Action() == AndroidGeckoEvent::IME_SYNCHRONIZE ||
-                ae->Action() == AndroidGeckoEvent::IME_REPLACE_TEXT) {
+            ae->Action() == AndroidGeckoEvent::IME_REPLACE_TEXT) {
             AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
         }
         return;
