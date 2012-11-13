@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.util.GeckoAsyncTask;
@@ -352,8 +352,8 @@ public class AboutHomeContent extends ScrollView
                 return thumbnails;
 
             do {
-                final String url = c.getString(c.getColumnIndexOrThrow(Images.URL));
-                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Images.THUMBNAIL));
+                final String url = c.getString(c.getColumnIndexOrThrow(Thumbnails.URL));
+                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Thumbnails.DATA));
                 if (b == null)
                     continue;
 
