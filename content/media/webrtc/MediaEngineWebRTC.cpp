@@ -88,12 +88,12 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
                                                 sizeof(deviceName), uniqueId,
                                                 sizeof(uniqueId));
 
-#ifdef DEBUG
     if (error) {
       LOG((" VieCapture:GetCaptureDevice: Failed %d",
            ptrViEBase->LastError() ));
       continue;
     }
+#ifdef DEBUG
     LOG(("  Capture Device Index %d, Name %s", i, deviceName));
 
     webrtc::CaptureCapability cap;
@@ -108,6 +108,12 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
            cap.rawType, cap.width, cap.height, cap.maxFPS ));
     }
 #endif
+
+    if (uniqueId[0] == '\0') {
+      // In case a device doesn't set uniqueId!
+      strncpy(uniqueId, deviceName, sizeof(uniqueId));
+	  uniqueId[sizeof(uniqueId)-1] = '\0'; // strncpy isn't safe
+    }
 
     nsRefPtr<MediaEngineWebRTCVideoSource> vSource;
     NS_ConvertUTF8toUTF16 uuid(uniqueId);
@@ -169,7 +175,19 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
     deviceName[0] = '\0';
     uniqueId[0] = '\0';
 
-    ptrVoEHw->GetRecordingDeviceName(i, deviceName, uniqueId);
+    int error = ptrVoEHw->GetRecordingDeviceName(i, deviceName, uniqueId);
+    if (error) {
+      LOG((" VoEHardware:GetRecordingDeviceName: Failed %d",
+           ptrVoEBase->LastError() ));
+      continue;
+    }
+
+    LOG(("  Capture Device Index %d, Name %s Uuid %s", i, deviceName, uniqueId));
+    if (uniqueId[0] == '\0') {
+      // Mac and Linux don't set uniqueId!
+      MOZ_ASSERT(sizeof(deviceName) == sizeof(uniqueId)); // total paranoia
+      strcpy(uniqueId,deviceName); // safe given assert and initialization/error-check
+    }
 
     nsRefPtr<MediaEngineWebRTCAudioSource> aSource;
     NS_ConvertUTF8toUTF16 uuid(uniqueId);
