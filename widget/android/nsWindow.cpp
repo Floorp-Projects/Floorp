@@ -2163,13 +2163,13 @@ nsWindow::OnIMEFocusChange(bool aFocus)
 {
     ALOGIME("IME: OnIMEFocusChange: f=%d", aFocus);
 
-    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 
-                             int(aFocus));
-
     if (aFocus) {
         OnIMETextChange(0, INT32_MAX, INT32_MAX);
         OnIMESelectionChange();
     }
+
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE,
+                             int(aFocus));
 
     return NS_OK;
 }
