@@ -73,22 +73,22 @@ ShapeTable::init(JSRuntime *rt, Shape *lastProp)
     return true;
 }
 
-/* static */ bool
-Shape::makeOwnBaseShape(JSContext *cx, HandleShape shape)
+bool
+Shape::makeOwnBaseShape(JSContext *cx)
 {
-    JS_ASSERT(!shape->base()->isOwned());
-    assertSameCompartment(cx, shape->compartment());
+    JS_ASSERT(!base()->isOwned());
+    assertSameCompartment(cx, compartment());
 
-    Return<BaseShape*> nbase = js_NewGCBaseShape(cx);
+    RootedShape self(cx, this);
+
+    BaseShape *nbase = js_NewGCBaseShape(cx);
     if (!nbase)
         return false;
 
-    AutoAssertNoGC nogc;
+    new (nbase) BaseShape(StackBaseShape(self));
+    nbase->setOwned(self->base()->toUnowned());
 
-    new (nbase.get(nogc)) BaseShape(StackBaseShape(shape));
-    nbase->setOwned(shape->base()->toUnowned());
-
-    shape->base_ = nbase.get(nogc);
+    self->base_ = nbase;
 
     return true;
 }
@@ -96,7 +96,6 @@ Shape::makeOwnBaseShape(JSContext *cx, HandleShape shape)
 void
 Shape::handoffTableTo(Shape *shape)
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT(inDictionary() && shape->inDictionary());
 
     if (this == shape)
@@ -104,7 +103,7 @@ Shape::handoffTableTo(Shape *shape)
 
     JS_ASSERT(base()->isOwned() && !shape->base()->isOwned());
 
-    RawBaseShape nbase = base().get(nogc);
+    BaseShape *nbase = base();
 
     JS_ASSERT_IF(shape->hasSlot(), nbase->slotSpan() > shape->slot());
 
@@ -114,26 +113,27 @@ Shape::handoffTableTo(Shape *shape)
     shape->base_ = nbase;
 }
 
-/* static */ bool
-Shape::hashify(JSContext *cx, HandleShape shape)
+bool
+Shape::hashify(JSContext *cx)
 {
-    AssertCanGC();
-    JS_ASSERT(!shape->hasTable());
+    JS_ASSERT(!hasTable());
 
-    if (!shape->ensureOwnBaseShape(cx))
+    RootedShape self(cx, this);
+
+    if (!ensureOwnBaseShape(cx))
         return false;
 
     JSRuntime *rt = cx->runtime;
-    ShapeTable *table = rt->new_<ShapeTable>(shape->entryCount());
+    ShapeTable *table = rt->new_<ShapeTable>(self->entryCount());
     if (!table)
         return false;
 
-    if (!table->init(rt, shape)) {
+    if (!table->init(rt, self)) {
         js_free(table);
         return false;
     }
 
-    shape->base()->setTable(table);
+    self->base()->setTable(table);
     return true;
 }
 
@@ -354,7 +354,7 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, StackShape &child)
         if (!shape)
             return NULL;
         if (child.hasSlot() && child.slot() >= self->lastProperty()->base()->slotSpan()) {
-            if (!JSObject::setSlotSpan(cx, self, child.slot() + 1))
+            if (!self->setSlotSpan(cx, child.slot() + 1))
                 return NULL;
         }
         shape->initDictionaryShape(child, self->numFixedSlots(), &self->shape_);
@@ -414,7 +414,7 @@ JSObject::toDictionaryMode(JSContext *cx)
         shape = shape->previous();
     }
 
-    if (!Shape::hashify(cx, root)) {
+    if (!root->hashify(cx)) {
         js_ReportOutOfMemory(cx);
         return false;
     }
@@ -821,11 +821,10 @@ JSObject::removeProperty(JSContext *cx, jsid id_)
             RootedShape previous(cx, self->lastProperty()->parent);
             StackBaseShape base(self->lastProperty()->base());
             base.updateGetterSetter(previous->attrs, previous->getter(), previous->setter());
-            Return<BaseShape*> nbase = BaseShape::getUnowned(cx, base);
+            BaseShape *nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
                 return false;
-            AutoAssertNoGC nogc;
-            previous->base_ = nbase.get(nogc);
+            previous->base_ = nbase;
         }
     }
 
@@ -1131,15 +1130,12 @@ BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
 
     StackBaseShape::AutoRooter root(cx, &base);
 
-    Return<BaseShape*> nbase_ = js_NewGCBaseShape(cx);
+    BaseShape *nbase_ = js_NewGCBaseShape(cx);
     if (!nbase_)
         return NULL;
+    new (nbase_) BaseShape(base);
 
-    AutoAssertNoGC nogc;
-
-    new (nbase_.get(nogc)) BaseShape(base);
-
-    UnownedBaseShape *nbase = static_cast<UnownedBaseShape *>(nbase_.get(nogc));
+    UnownedBaseShape *nbase = static_cast<UnownedBaseShape *>(nbase_);
 
     if (!table.relookupOrAdd(p, &base, nbase))
         return NULL;
