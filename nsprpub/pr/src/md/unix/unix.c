@@ -3017,6 +3017,13 @@ PR_Now(void)
     return s;
 }
 
+#if defined(_MD_INTERVAL_USE_GTOD)
+/*
+ * This version of interval times is based on the time of day
+ * capability offered by the system. This isn't valid for two reasons:
+ * 1) The time of day is neither linear nor montonically increasing
+ * 2) The units here are milliseconds. That's not appropriate for our use.
+ */
 PRIntervalTime _PR_UNIX_GetInterval()
 {
     struct timeval time;
@@ -3026,12 +3033,35 @@ PRIntervalTime _PR_UNIX_GetInterval()
     ticks = (PRUint32)time.tv_sec * PR_MSEC_PER_SEC;  /* that's in milliseconds */
     ticks += (PRUint32)time.tv_usec / PR_USEC_PER_MSEC;  /* so's that */
     return ticks;
-}  /* _PR_SUNOS_GetInterval */
+}  /* _PR_UNIX_GetInterval */
 
 PRIntervalTime _PR_UNIX_TicksPerSecond()
 {
     return 1000;  /* this needs some work :) */
 }
+#endif
+
+#if defined(HAVE_CLOCK_MONOTONIC)
+PRIntervalTime _PR_UNIX_GetInterval2()
+{
+    struct timespec time;
+    PRIntervalTime ticks;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &time) != 0) {
+        fprintf(stderr, "clock_gettime failed: %d\n", errno);
+        abort();
+    }
+
+    ticks = (PRUint32)time.tv_sec * PR_MSEC_PER_SEC;
+    ticks += (PRUint32)time.tv_nsec / PR_NSEC_PER_MSEC;
+    return ticks;
+}
+
+PRIntervalTime _PR_UNIX_TicksPerSecond2()
+{
+    return 1000;
+}
+#endif
 
 #if !defined(_PR_PTHREADS)
 /*

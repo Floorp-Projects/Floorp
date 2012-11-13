@@ -13,10 +13,6 @@
 #include <limits.h>
 #include <sys/types.h>
 
-#if SUNOS4
-#include "../pr/include/md/sunos4.h"
-#endif
-
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif

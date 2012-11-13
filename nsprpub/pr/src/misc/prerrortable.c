@@ -25,9 +25,6 @@ provided "as is" without express or implied warranty.
 */
 
 #include <string.h>
-#ifdef SUNOS4
-#include "md/sunos4.h"  /* for strerror */
-#endif
 #include <assert.h>
 #include <errno.h>
 #include "prmem.h"

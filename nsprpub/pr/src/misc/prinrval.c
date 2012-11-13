@@ -32,13 +32,6 @@ void _PR_InitClock(void)
 #endif /* DEBUG */
 }
 
-/*
- * This version of interval times is based on the time of day
- * capability offered by system. This isn't valid for two reasons:
- * 1) The time of day is neither linear nor montonically increasing
- * 2) The units here are milliseconds. That's not appropriate for our use.
- */
-
 PR_IMPLEMENT(PRIntervalTime) PR_IntervalNow(void)
 {
     if (!_pr_initialized) _PR_ImplicitInitialization();
