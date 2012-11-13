@@ -140,6 +140,9 @@ public class BrowserDB {
     }
 
     public static void expireHistory(ContentResolver cr, ExpirePriority priority) {
+        if (sDb == null)
+            return;
+
         if (priority == null)
             priority = ExpirePriority.NORMAL;
         sDb.expireHistory(cr, priority);
