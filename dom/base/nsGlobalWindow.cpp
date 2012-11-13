@@ -519,7 +519,7 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 class nsOuterWindowProxy : public js::Wrapper
 {
 public:
-  nsOuterWindowProxy() : js::Wrapper(0) {}
+  nsOuterWindowProxy() : js::Wrapper(0) { setSafeToUnwrap(false); }
 
   virtual bool isOuterWindow() {
     return true;
