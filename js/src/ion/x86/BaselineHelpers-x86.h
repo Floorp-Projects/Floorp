@@ -36,12 +36,21 @@ EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 }
 
 inline void
-EmitTailCall(IonCode *target, MacroAssembler &masm)
+EmitTailCall(IonCode *target, MacroAssembler &masm, uint32_t argSize)
 {
-    // We an assume during this that R0 and R1 have been pushed.
+    // We assume during this that R0 and R1 have been pushed.
+
+    // Compute frame size.
     masm.movl(BaselineFrameReg, eax);
+    masm.addl(Imm32(BaselineFrame::FramePointerOffset), eax);
     masm.subl(BaselineStackReg, eax);
-    masm.addl(Imm32(4), eax);
+
+    // Store frame size without VMFunction arguments for GC marking.
+    masm.movl(eax, ebx);
+    masm.subl(Imm32(argSize), ebx);
+    masm.store32(ebx, Operand(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+
+    // Push frame descriptor and perform the tail call.
     masm.makeFrameDescriptor(eax, IonFrame_BaselineJS);
     masm.push(eax);
     masm.push(BaselineTailCallReg);

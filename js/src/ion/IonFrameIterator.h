@@ -97,7 +97,7 @@ class IonFrameIterator
     inline uint8 *returnAddress() const;
 
     IonJSFrameLayout *jsFrame() const {
-        JS_ASSERT(type() == IonFrame_OptimizedJS);
+        JS_ASSERT(isScripted());
         return (IonJSFrameLayout *) fp();
     }
 
