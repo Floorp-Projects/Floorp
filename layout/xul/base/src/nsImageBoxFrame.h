@@ -132,6 +132,11 @@ public:
 
   virtual already_AddRefed<ImageContainer> GetContainer() MOZ_OVERRIDE;
   virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) MOZ_OVERRIDE;
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+  {
+    *aSnap = true;
+    return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
+  }
 
   // Doesn't handle HitTest because nsLeafBoxFrame already creates an
   // event receiver for us
