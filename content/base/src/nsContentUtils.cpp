@@ -4512,24 +4512,23 @@ nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
 }
 
 /* static */
-nsresult
+void
 nsContentUtils::HoldJSObjects(void* aScriptObjectHolder,
                               nsScriptObjectTracer* aTracer)
 {
-  NS_ENSURE_TRUE(sXPConnect, NS_ERROR_UNEXPECTED);
-
-  return sXPConnect->AddJSHolder(aScriptObjectHolder, aTracer);
+  MOZ_ASSERT(sXPConnect, "Tried to HoldJSObjects when there was no XPConnect");
+  if (sXPConnect) {
+    sXPConnect->AddJSHolder(aScriptObjectHolder, aTracer);
+  }
 }
 
 /* static */
-nsresult
+void
 nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 {
-  if (!sXPConnect) {
-    return NS_OK;
+  if (sXPConnect) {
+    sXPConnect->RemoveJSHolder(aScriptObjectHolder);
   }
-
-  return sXPConnect->RemoveJSHolder(aScriptObjectHolder);
 }
 
 #ifdef DEBUG
@@ -4537,9 +4536,7 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 bool
 nsContentUtils::AreJSObjectsHeld(void* aScriptHolder)
 {
-  bool isHeld = false;
-  sXPConnect->TestJSHolder(aScriptHolder, &isHeld);
-  return isHeld;
+  return sXPConnect->TestJSHolder(aScriptHolder);
 }
 #endif
 

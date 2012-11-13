@@ -246,7 +246,7 @@ CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
     JS_SetCompartmentPrivate(compartment, nullptr);
 }
 
-nsresult
+void
 XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
     MOZ_ASSERT(aTracer->Trace, "AddJSHolder needs a non-null Trace function");
@@ -255,8 +255,6 @@ XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
     if (wasEmpty && mJSHolders.Count() == 1) {
       nsLayoutStatics::AddRef();
     }
-
-    return NS_OK;
 }
 
 #ifdef DEBUG
@@ -276,7 +274,7 @@ XPCJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
 }
 #endif
 
-nsresult
+void
 XPCJSRuntime::RemoveJSHolder(void* aHolder)
 {
 #ifdef DEBUG
@@ -293,16 +291,12 @@ XPCJSRuntime::RemoveJSHolder(void* aHolder)
     if (hadOne && mJSHolders.Count() == 0) {
       nsLayoutStatics::Release();
     }
-
-    return NS_OK;
 }
 
-nsresult
-XPCJSRuntime::TestJSHolder(void* aHolder, bool* aRetval)
+bool
+XPCJSRuntime::TestJSHolder(void* aHolder)
 {
-    *aRetval = mJSHolders.Get(aHolder, nullptr);
-
-    return NS_OK;
+    return mJSHolders.Get(aHolder, nullptr);
 }
 
 // static
