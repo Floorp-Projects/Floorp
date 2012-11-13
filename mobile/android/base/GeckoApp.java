@@ -812,7 +812,6 @@ abstract public class GeckoApp
 
     void handleClearHistory() {
         BrowserDB.clearHistory(getContentResolver());
-        getFavicons().clearFavicons();
     }
 
     /**
