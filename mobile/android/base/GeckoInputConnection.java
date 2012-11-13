@@ -39,16 +39,6 @@ class GeckoInputConnection
     private static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoInputConnection";
 
-    // IME stuff
-    public static final int IME_STATE_DISABLED = 0;
-    public static final int IME_STATE_ENABLED = 1;
-    public static final int IME_STATE_PASSWORD = 2;
-    public static final int IME_STATE_PLUGIN = 3;
-
-    private static final int NOTIFY_IME_RESETINPUTSTATE = 0;
-    private static final int NOTIFY_IME_CANCELCOMPOSITION = 2;
-    private static final int NOTIFY_IME_FOCUSCHANGE = 3;
-
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
