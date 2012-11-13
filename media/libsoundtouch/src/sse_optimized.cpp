@@ -23,10 +23,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date: 2012-04-01 12:49:30 -0700 (Sun, 01 Apr 2012) $
+// Last changed  : $Date$
 // File revision : $Revision: 4 $
 //
-// $Id: sse_optimized.cpp 137 2012-04-01 19:49:30Z oparviai $
+// $Id$
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -93,7 +93,7 @@ double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2) const
 
     #define _MM_LOAD    _mm_load_ps
 
-    if (((ulong)pV1) & 15) return -1e50;    // skip unaligned locations
+    if (((ulongptr)pV1) & 15) return -1e50;    // skip unaligned locations
 
 #else
     // No cheating allowed, use unaligned load & take the resulting
@@ -218,7 +218,7 @@ void FIRFilterSSE::setCoefficients(const float *coeffs, uint newLength, uint uRe
     // Ensure that filter coeffs array is aligned to 16-byte boundary
     delete[] filterCoeffsUnalign;
     filterCoeffsUnalign = new float[2 * newLength + 4];
-    filterCoeffsAlign = (float *)(((unsigned long)filterCoeffsUnalign + 15) & (ulong)-16);
+    filterCoeffsAlign = (float *)SOUNDTOUCH_ALIGN_POINTER_16(filterCoeffsUnalign);
 
     fDivider = (float)resultDivider;
 
@@ -246,7 +246,7 @@ uint FIRFilterSSE::evaluateFilterStereo(float *dest, const float *source, uint n
     assert(dest != NULL);
     assert((length % 8) == 0);
     assert(filterCoeffsAlign != NULL);
-    assert(((ulong)filterCoeffsAlign) % 16 == 0);
+    assert(((ulongptr)filterCoeffsAlign) % 16 == 0);
 
     // filter is evaluated for two stereo samples with each iteration, thus use of 'j += 2'
     for (j = 0; j < count; j += 2)
