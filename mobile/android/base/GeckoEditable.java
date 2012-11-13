@@ -553,14 +553,14 @@ final class GeckoEditable
             }
         } else {
             mText.replace(start, oldEnd, text, 0, text.length());
-            geckoPostToUI(new Runnable() {
-                public void run() {
-                    if (mListener != null) {
-                        mListener.onTextChange(text, start, oldEnd, newEnd);
-                    }
-                }
-            });
         }
+        geckoPostToUI(new Runnable() {
+            public void run() {
+                if (mListener != null) {
+                    mListener.onTextChange(text, start, oldEnd, newEnd);
+                }
+            }
+        });
     }
 
     // InvocationHandler interface
@@ -640,9 +640,7 @@ final class GeckoEditable
         }
         // Okay to remove immediately
         mText.removeSpan(what);
-        if (mUpdateGecko) {
-            mActionQueue.offer(new Action(Action.TYPE_REMOVE_SPAN));
-        }
+        mActionQueue.offer(new Action(Action.TYPE_REMOVE_SPAN));
     }
 
     @Override
