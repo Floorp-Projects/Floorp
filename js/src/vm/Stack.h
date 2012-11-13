@@ -1741,6 +1741,7 @@ class StackIter
     void popFrame();
     void popCall();
 #ifdef JS_ION
+    void nextIonFrame();
     void popIonFrame();
 #endif
     void settleOnNewSegment();

@@ -268,6 +268,14 @@ BaselineScript::icEntryFromReturnOffset(CodeOffsetLabel returnOffset)
     return icEntry(0);
 }
 
+ICEntry &
+BaselineScript::icEntryFromReturnAddress(uint8_t *returnAddr)
+{
+    JS_ASSERT(returnAddr > method_->raw());
+    CodeOffsetLabel offset(returnAddr - method_->raw());
+    return icEntryFromReturnOffset(offset);
+}
+
 void
 BaselineScript::copyICEntries(const ICEntry *entries, MacroAssembler &masm)
 {

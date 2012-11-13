@@ -138,6 +138,7 @@ class IonFrameIterator
     JSFunction *maybeCallee() const;
     unsigned numActualArgs() const;
     JSScript *script() const;
+    void baselineScriptAndPc(MutableHandleScript scriptRes, jsbytecode **pcRes) const;
     Value *nativeVp() const;
     Value *actualArgs() const;
 
