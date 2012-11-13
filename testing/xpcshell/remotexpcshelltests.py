@@ -7,6 +7,7 @@
 import re, sys, os
 import subprocess
 import runxpcshelltests as xpcshell
+import tempfile
 from automationutils import *
 from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
 
@@ -108,8 +109,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.pushFile(self.options.localAPK, remoteFile)
 
         self.pushLibs()
-
-        self.device.chmodDir(self.remoteBinDir)
 
     def pushLibs(self):
         if self.options.localAPK:
@@ -231,6 +230,28 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
     def setLD_LIBRARY_PATH(self, env):
         env["LD_LIBRARY_PATH"]=self.remoteBinDir
 
+    def pushWrapper(self):
+        # Rather than executing xpcshell directly, this wrapper script is
+        # used. By setting environment variables and the cwd in the script,
+        # the length of the per-test command line is shortened. This is
+        # often important when using ADB, as there is a limit to the length
+        # of the ADB command line.
+        localWrapper = tempfile.mktemp()
+        f = open(localWrapper, "w")
+        f.write("#!/system/bin/sh\n")
+        for envkey, envval in self.env.iteritems():
+            f.write("export %s=%s\n" % (envkey, envval))
+        f.write("cd $1\n")
+        f.write("echo xpcw: cd $1\n")
+        f.write("shift\n")
+        f.write("echo xpcw: xpcshell \"$@\"\n")
+        f.write("%s/xpcshell \"$@\"\n" % self.remoteBinDir)
+        f.close()
+        remoteWrapper = self.remoteJoin(self.remoteBinDir, "xpcw")
+        self.device.pushFile(localWrapper, remoteWrapper)
+        os.remove(localWrapper)
+        self.device.chmodDir(self.remoteBinDir)
+
     def buildEnvironment(self):
         self.env = {}
         self.setLD_LIBRARY_PATH(self.env)
@@ -240,12 +261,14 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
         self.env["TMPDIR"]=self.remoteTmpDir
         self.env["HOME"]=self.profileDir
+        self.pushWrapper()
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
-        cmd[0] = self.remoteJoin(self.remoteBinDir, "xpcshell")
+        cmd[0] = self.remoteJoin(self.remoteBinDir, "xpcw")
+        cmd.insert(1, self.remoteHere)
         outputFile = "xpcshelloutput"
         f = open(outputFile, "w+")
-        self.shellReturnCode = self.device.shell(cmd, f, cwd=self.remoteHere, env=env)
+        self.shellReturnCode = self.device.shell(cmd, f)
         f.close()
         # The device manager may have timed out waiting for xpcshell.
         # Guard against an accumulation of hung processes by killing
