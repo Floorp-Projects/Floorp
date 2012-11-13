@@ -3983,7 +3983,7 @@ mjit::Compiler::ionCompileHelper()
     // We cannot inline a JM -> Ion constructing call.
     // Compiling this function is pointless and would disable the JM -> JM fastpath.
     // This function will start running in Ion, when caller runs in Ion/Interpreter.
-    if (isConstructing)
+    if (isConstructing && outerScript->code == PC)
         return;
 
     // If we don't want to do a recompileCheck for Ion, then this just needs to
