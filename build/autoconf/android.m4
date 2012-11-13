@@ -252,7 +252,7 @@ case "$target" in
     AC_SUBST(ANDROID_SDK)
     AC_SUBST(ANDROID_COMPAT_LIB)
     if ! test -e $ANDROID_COMPAT_LIB ; then
-        AC_MSG_ERROR([You must download the andrioid support library when targeting Android. See https://developer.android.com/tools/extras/support-library.html])
+        AC_MSG_ERROR([You must download the Android support library when targeting Android.   Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_COMPAT_LIB)])
     fi
     AC_SUBST(ANDROID_PLATFORM_TOOLS)
     ;;
