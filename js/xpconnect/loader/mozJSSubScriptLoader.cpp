@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozJSSubScriptLoader.h"
-#include "mozJSComponentLoader.h"
 #include "mozJSLoaderUtils.h"
 
 #include "nsIServiceManager.h"
@@ -180,10 +179,23 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
 
     if (!targetObj) {
-        // If the user didn't provide an object to eval onto, find one.
-        mozJSComponentLoader* loader = mozJSComponentLoader::Get();
-        rv = loader->FindTargetObject(cx, &targetObj);
-        NS_ENSURE_SUCCESS(rv, rv);
+        // If the user didn't provide an object to eval onto, find the global
+        // object by walking the parent chain of the calling object.
+        nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+        NS_ENSURE_TRUE(xpc, NS_ERROR_FAILURE);
+
+        nsAXPCNativeCallContext *cc = nullptr;
+        rv = xpc->GetCurrentNativeCallContext(&cc);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIXPConnectWrappedNative> wn;
+        rv = cc->GetCalleeWrapper(getter_AddRefs(wn));
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+        rv = wn->GetJSObject(&targetObj);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+        targetObj = JS_GetGlobalForObject(cx, targetObj);
     }
 
     // Remember an object out of the calling compartment so that we
