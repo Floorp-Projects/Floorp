@@ -60,7 +60,7 @@ function test()
     if (uri.spec != FINAL_URL)
       return;
     gBrowser.removeCurrentTab();
-    waitForClearHistory(finish);
+    promiseClearHistory().then(finish);
   });
 
   content.location.href = INITIAL_URL;

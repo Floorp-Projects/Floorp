@@ -76,9 +76,7 @@ protected:
   virtual bool RecvCancel(const nsresult& status);
   virtual bool RecvRedirect2Verify(const nsresult& result,
                                    const RequestHeaderTuples& changedHeaders);
-  virtual bool RecvUpdateAssociatedContentSecurity(const int32_t& high,
-                                                   const int32_t& low,
-                                                   const int32_t& broken,
+  virtual bool RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                    const int32_t& no);
   virtual bool RecvDocumentChannelCleanup();
   virtual bool RecvMarkOfflineCacheEntryAsForeign();

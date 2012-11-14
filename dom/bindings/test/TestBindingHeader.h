@@ -353,16 +353,16 @@ public:
   void SetEnumAttribute(TestEnum);
 
   // Callback types
-  void PassCallback(JSContext*, JSObject&);
-  void PassNullableCallback(JSContext*, JSObject*);
-  void PassOptionalCallback(JSContext*, const Optional<NonNull<JSObject> >&);
-  void PassOptionalNullableCallback(JSContext*, const Optional<JSObject*>&);
-  void PassOptionalNullableCallbackWithDefaultValue(JSContext*, JSObject*);
-  JSObject* ReceiveCallback(JSContext*);
-  JSObject* ReceiveNullableCallback(JSContext*);
-  void PassNullableTreatAsNullCallback(JSContext*, JSObject*);
-  void PassOptionalNullableTreatAsNullCallback(JSContext*, const Optional<JSObject*>&);
-  void PassOptionalNullableTreatAsNullCallbackWithDefaultValue(JSContext*, JSObject*);
+  void PassCallback(TestCallback&);
+  void PassNullableCallback(TestCallback*);
+  void PassOptionalCallback(const Optional<OwningNonNull<TestCallback> >&);
+  void PassOptionalNullableCallback(const Optional<nsRefPtr<TestCallback> >&);
+  void PassOptionalNullableCallbackWithDefaultValue(TestCallback*);
+  already_AddRefed<TestCallback> ReceiveCallback();
+  already_AddRefed<TestCallback> ReceiveNullableCallback();
+  void PassNullableTreatAsNullCallback(TestTreatAsNullCallback*);
+  void PassOptionalNullableTreatAsNullCallback(const Optional<nsRefPtr<TestTreatAsNullCallback> >&);
+  void PassOptionalNullableTreatAsNullCallbackWithDefaultValue(TestTreatAsNullCallback*);
 
   // Any types
   void PassAny(JSContext*, JS::Value);
@@ -403,7 +403,7 @@ public:
   void PassUnionWithArrayBuffer(const ArrayBufferOrLong&);
   void PassUnionWithString(JSContext*, const StringOrObject&);
   //void PassUnionWithEnum(JSContext*, const TestEnumOrObject&);
-  void PassUnionWithCallback(JSContext*, const TestCallbackOrLong&);
+  //void PassUnionWithCallback(JSContext*, const TestCallbackOrLong&);
   void PassUnionWithObject(JSContext*, const ObjectOrLong&);
 
   // binaryNames tests
@@ -422,6 +422,7 @@ public:
   void PassDictionaryOrLong(int32_t);
   void PassDictContainingDict(const DictContainingDict&);
   void PassDictContainingSequence(const DictContainingSequence&);
+  void ReceiveDictContainingSequence(DictContainingSequence&);
 
   // Typedefs
   void ExerciseTypedefInterfaces1(TestInterface&);
@@ -443,6 +444,13 @@ public:
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
   TestInterface* PutForwardsAttr3();
+  void ThrowingMethod(ErrorResult& aRv);
+  bool GetThrowingAttr(ErrorResult& aRv) const;
+  void SetThrowingAttr(bool arg, ErrorResult& aRv);
+  bool GetThrowingGetterAttr(ErrorResult& aRv) const;
+  void SetThrowingGetterAttr(bool arg);
+  bool ThrowingSetterAttr() const;
+  void SetThrowingSetterAttr(bool arg, ErrorResult& aRv);
 
   // Methods and properties imported via "implements"
   bool ImplementedProperty();

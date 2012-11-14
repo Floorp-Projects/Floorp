@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(39823a45-dd9e-4f8b-9b0a-0ad144eb0db6)]
+[scriptable, uuid(d5c7d771-53a7-40e5-8247-fb6a8795cae8)]
 
 interface nsISecurityUITelemetry : nsISupports {
 
@@ -28,18 +28,18 @@ const uint32_t WARNING_CONFIRM_ADDON_INSTALL_CLICK_THROUGH  = 4;
  * modal dialogs/warnings 
  */
 
-const uint32_t WARNING_ENTERING_SECURE_SITE = 5;
-const uint32_t WARNING_ENTERING_WEAK_SITE = 6;
-const uint32_t WARNING_LEAVING_SECURE_SITE = 7;
-const uint32_t WARNING_MIXED_CONTENT  = 8;
+//     removed WARNING_ENTERING_SECURE_SITE = 5;
+//     removed WARNING_ENTERING_WEAK_SITE = 6;
+//     removed WARNING_LEAVING_SECURE_SITE = 7;
+//     removed WARNING_MIXED_CONTENT  = 8;
 
 // For confirmation dialogs, the clickthrough constant needs to be 1
 // more than the dialog constant so that
 // WARNING_CONFIRM_<X> + 1 == WARNING_CONFIRM_<X>_CLICK_THROUGH
 const uint32_t WARNING_CONFIRM_POST_TO_INSECURE_FROM_SECURE = 9;
 const uint32_t WARNING_CONFIRM_POST_TO_INSECURE_FROM_SECURE_CLICK_THROUGH = 10;
-const uint32_t WARNING_CONFIRM_POST_TO_INSECURE_FROM_INSECURE = 11;
-const uint32_t WARNING_CONFIRM_POST_TO_INSECURE_FROM_INSECURE_CLICK_THROUGH = 12;
+//     removed WARNING_CONFIRM_POST_TO_INSECURE_FROM_INSECURE = 11;
+//     removed WARNING_CONFIRM_POST_TO_INSECURE_FROM_INSECURE_CLICK_THROUGH = 12;
 
 /*
  * Phishing / Malware page warnings

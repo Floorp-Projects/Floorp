@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.util.GeckoAsyncTask;
@@ -77,6 +76,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private boolean mAnimateSuggestions;
     private View mSuggestionsOptInPrompt;
     private Handler mHandler;
+    private ListView mListView;
 
     private static final int MESSAGE_LOAD_FAVICONS = 1;
     private static final int MESSAGE_UPDATE_FAVICONS = 2;
@@ -101,19 +101,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         return false;
     }
 
-    public TabContentFactory getFactory() {
-        return new TabContentFactory() {
-           public View createTabContent(String tag) {
-               getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                   public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        handleItemClick(parent, view, position, id);
-                   }
-               });
-               return getAllPagesView();
-           }
-      };
-    }
-
     public int getTitleStringId() {
         return R.string.awesomebar_all_pages_title;
     }
@@ -122,28 +109,35 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         return TAG;
     }
 
-    private LinearLayout getAllPagesView() {
-        if (mAllPagesView == null) {
-            mAllPagesView = (LinearLayout) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_allpages_list, null));
+    private ListView getListView() {
+        if (mListView == null && mView != null) {
+            mListView = (ListView) mView.findViewById(R.id.awesomebar_list);
         }
-        return mAllPagesView;
+        return mListView;
     }
 
-    public ListView getListView() {
+    public View getView() {
         if (mView == null) {
-            mView = getAllPagesView().findViewById(R.id.awesomebar_list);
-            ((Activity)mContext).registerForContextMenu(mView);
+            mView = (LinearLayout) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_allpages_list, null));
             mView.setTag(TAG);
-            AwesomeBarCursorAdapter adapter = getCursorAdapter();
 
-            ListView listView = (ListView) mView;
-            listView.setAdapter(adapter);
-            listView.setOnTouchListener(mListListener);
+            ListView list = getListView();
+            list.setTag(TAG);
+            ((Activity)mContext).registerForContextMenu(list);
+            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                     handleItemClick(parent, view, position, id);
+                }
+            });
+
+            AwesomeBarCursorAdapter adapter = getCursorAdapter();
+            list.setAdapter(adapter);
+            list.setOnTouchListener(mListListener);
 
             mHandler = new AllPagesHandler();
         }
 
-        return (ListView)mView;
+        return mView;
     }
 
     public void destroy() {
@@ -595,7 +589,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     }
 
     private void showSuggestionsOptIn() {
-        mSuggestionsOptInPrompt = LayoutInflater.from(mContext).inflate(R.layout.awesomebar_suggestion_prompt, getAllPagesView(), false);
+        mSuggestionsOptInPrompt = LayoutInflater.from(mContext).inflate(R.layout.awesomebar_suggestion_prompt, (LinearLayout)getView(), false);
         ((TextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title))
                 .setText(getResources().getString(R.string.suggestions_prompt, mSearchEngines.get(0).name));
         mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes).setOnClickListener(new OnClickListener() {
@@ -609,7 +603,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             }
         });
         mSuggestionsOptInPrompt.setVisibility(View.GONE);
-        getAllPagesView().addView(mSuggestionsOptInPrompt, 0);
+        ((LinearLayout)getView()).addView(mSuggestionsOptInPrompt, 0);
     }
 
     private void setSuggestionsEnabled(final boolean enabled) {
@@ -629,12 +623,13 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         anim2.setDuration(ANIMATION_DURATION);
         anim2.setFillAfter(true);
         anim2.setStartOffset(anim1.getDuration());
+        final LinearLayout view = (LinearLayout)getView();
         anim2.setAnimationListener(new Animation.AnimationListener() {
             public void onAnimationStart(Animation a) {
                 // Increase the height of the view so a gap isn't shown during animation
-                getAllPagesView().getLayoutParams().height = getAllPagesView().getHeight() +
+                view.getLayoutParams().height = view.getHeight() +
                         mSuggestionsOptInPrompt.getHeight();
-                getAllPagesView().requestLayout();
+                view.requestLayout();
             }
             public void onAnimationRepeat(Animation a) {}
             public void onAnimationEnd(Animation a) {
@@ -642,15 +637,15 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 // dispatchDraw(), possibly because this callback executes
                 // before drawing is finished. Posting this as a Runnable fixes
                 // the issue.
-                getAllPagesView().post(new Runnable() {
+                view.post(new Runnable() {
                     public void run() {
-                        getAllPagesView().removeView(mSuggestionsOptInPrompt);
+                        view.removeView(mSuggestionsOptInPrompt);
                         getListView().clearAnimation();
                         mSuggestionsOptInPrompt = null;
 
                         if (enabled) {
                             // Reset the view height
-                            getAllPagesView().getLayoutParams().height = LayoutParams.FILL_PARENT;
+                            view.getLayoutParams().height = LayoutParams.FILL_PARENT;
 
                             mSuggestionsEnabled = enabled;
                             mAnimateSuggestions = true;
@@ -771,8 +766,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             Favicons favicons = GeckoApp.mAppContext.getFavicons();
 
             do {
-                final String url = c.getString(c.getColumnIndexOrThrow(Images.URL));
-                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Images.FAVICON));
+                final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
+                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Combined.FAVICON));
                 if (b == null)
                     continue;
 
@@ -815,7 +810,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     }
 
     private void updateFavicons() {
-        ListView listView = (ListView) mView;
+        ListView listView = getListView();
         for (int i = 0; i < listView.getChildCount(); i++) {
             final View view = listView.getChildAt(i);
             final Object tag = view.getTag();

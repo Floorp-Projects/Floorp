@@ -643,13 +643,16 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
     return WRITE_ERROR;
   }
 
-  void* buffer = malloc(ss.st_size);
+  // This block size was chosen pretty arbitrarily but seems like a reasonable
+  // compromise. For example, the optimal block size on a modern OS X machine
+  // is 100k */
+  const int blockSize = 32 * 1024;
+  void* buffer = malloc(blockSize);
   if (!buffer)
     return UPDATER_MEM_ERROR;
 
-  size_t left = ss.st_size;
-  while (left) {
-    size_t read = fread(buffer, 1, left, infile);
+  while (!feof(infile.get())) {
+    size_t read = fread(buffer, 1, blockSize, infile);
     if (ferror(infile.get())) {
       LOG(("ensure_copy: failed to read the file: " LOG_S ", err: %d",
            path, errno));
@@ -657,7 +660,6 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
       return READ_ERROR;
     }
 
-    left -= read;
     size_t written = 0;
 
     while (written < read) {

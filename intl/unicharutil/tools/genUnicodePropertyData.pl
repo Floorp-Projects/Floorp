@@ -34,10 +34,8 @@
 # (2) Run this tool using a command line of the form
 #
 #         perl genUnicodePropertyData.pl \
-#                 /path/to/hb-common.h   \
+#                 /path/to/harfbuzz/src  \
 #                 /path/to/UCD-directory
-#
-#     (where hb-common.h is found in the gfx/harfbuzz/src directory).
 #
 #     This will generate (or overwrite!) the files
 #
@@ -282,6 +280,7 @@ my @xidmod;
 my @numericvalue;
 my @hanVariant;
 my @bidicategory;
+my @fullWidth;
 for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
     $category[$i] = $catCode{"UNASSIGNED"};
@@ -291,6 +290,7 @@ for (my $i = 0; $i < 0x110000; ++$i) {
     $numericvalue[$i] = -1;
     $hanVariant[$i] = 0;
     $bidicategory[$i] = $bidicategoryCode{"L"};
+    $fullWidth[$i] = 0;
 }
 
 # blocks where the default for bidi category is not L
@@ -406,6 +406,16 @@ while (<FH>) {
         }
         if ($fields[1] =~ /CJK/) {
           @hanVariant[$usv] = 3;
+        }
+        if ($fields[5] =~ /^<narrow>/) {
+          my $wideChar = hex(substr($fields[5], 9));
+          die "didn't expect supplementary-plane values here" if $usv > 0xffff || $wideChar > 0xffff;
+          $fullWidth[$usv] = $wideChar;
+        }
+        elsif ($fields[5] =~ /^<wide>/) {
+          my $narrowChar = hex(substr($fields[5], 7));
+          die "didn't expect supplementary-plane values here" if $usv > 0xffff || $narrowChar > 0xffff;
+          $fullWidth[$narrowChar] = $usv;
         }
     }
 }
@@ -686,6 +696,13 @@ sub sprintHanVariants
 }
 &genTables("HanVariant", "", "uint8_t", 9, 7, \&sprintHanVariants, 2, 1, 4);
 
+sub sprintFullWidth
+{
+  my $usv = shift;
+  return sprintf("0x%04x,", $fullWidth[$usv]);
+}
+&genTables("FullWidth", "", "uint16_t", 10, 6, \&sprintFullWidth, 0, 2, 1);
+
 sub sprintCasemap
 {
   my $usv = shift;
@@ -752,11 +769,16 @@ sub genTables
   my $chCount = scalar @char;
   my $pmBits = $chCount > 255 ? 16 : 8;
   my $pmCount = scalar @pageMap;
-  print DATA_TABLES "static const uint${pmBits}_t s${prefix}Pages[$pmCount][$indexLen] = {\n";
+  if ($maxPlane == 0) {
+    die "there should only be one pageMap entry!" if $pmCount > 1;
+    print DATA_TABLES "static const uint${pmBits}_t s${prefix}Pages[$indexLen] = {\n";
+  } else {
+    print DATA_TABLES "static const uint${pmBits}_t s${prefix}Pages[$pmCount][$indexLen] = {\n";
+  }
   for (my $i = 0; $i < scalar @pageMap; ++$i) {
-    print DATA_TABLES "  {";
+    print DATA_TABLES $maxPlane > 0 ? "  {" : "  ";
     print DATA_TABLES join(',', map { sprintf("%d", $_) } unpack('S*', $pageMap[$i]));
-    print DATA_TABLES $i < $#pageMap ? "},\n" : "}\n";
+    print DATA_TABLES $maxPlane > 0 ? ($i < $#pageMap ? "},\n" : "}\n") : "\n";
   }
   print DATA_TABLES "};\n\n";
 

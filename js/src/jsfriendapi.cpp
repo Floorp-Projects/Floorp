@@ -371,6 +371,25 @@ js::IsOriginalScriptFunction(JSFunction *fun)
     return fun->script()->function() == fun;
 }
 
+JS_FRIEND_API(JSScript *)
+js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx)
+{
+    if (!cx->hasfp())
+        return NULL;
+
+    StackFrame *fp = cx->fp();
+    if (!fp->isFunctionFrame())
+        return NULL;
+
+    JSFunction *scriptedCaller = fp->fun();
+    RootedScript outermost(cx, scriptedCaller->script());
+    for (StaticScopeIter i(scriptedCaller); !i.done(); i++) {
+        if (i.type() == StaticScopeIter::FUNCTION)
+            outermost = i.funScript();
+    }
+    return outermost;
+}
+
 JS_FRIEND_API(JSFunction *)
 js::DefineFunctionWithReserved(JSContext *cx, JSObject *objArg, const char *name, JSNative call,
                                unsigned nargs, unsigned attrs)
@@ -882,7 +901,12 @@ IncrementalReferenceBarrier(void *ptr)
 {
     if (!ptr)
         return;
-    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->isHeapBusy());
+
+    gc::Cell *cell = static_cast<gc::Cell *>(ptr);
+    JS_ASSERT(!cell->compartment()->rt->isHeapBusy());
+
+    AutoMarkInDeadCompartment amn(cell->compartment());
+
     uint32_t kind = gc::GetGCThingTraceKind(ptr);
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre((JSObject *) ptr);

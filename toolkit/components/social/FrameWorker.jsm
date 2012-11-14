@@ -102,10 +102,12 @@ FrameWorker.prototype = {
       this.pendingPorts.push(port);
     }
     this.ports = {};
+    // Mark the provider as unloaded now, so that any new ports created after
+    // this point but before the unload has fired are properly queued up.
+    this.loaded = false;
     // reset the iframe to about:blank - this will fire the unload event
     // but not remove the iframe from the DOM.  Our unload handler will
-    // (a) set this.loaded to false then (b) see this.reloading is true and
-    // reload for us.
+    // see this.reloading is true and reload for us.
     this.reloading = true;
     this.frame.setAttribute("src", "about:blank");
   },
@@ -247,7 +249,6 @@ FrameWorker.prototype = {
     // window unloading as part of shutdown.
     workerWindow.addEventListener("unload", function unloadListener() {
       workerWindow.removeEventListener("unload", unloadListener);
-      delete workerCache[worker.url];
       // closing the port also removes it from this.ports via port-close
       for (let [portid, port] in Iterator(worker.ports)) {
         // port may have been closed as a side-effect from closing another port

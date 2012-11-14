@@ -18,8 +18,8 @@ EXPORTS_NAMESPACES = soundtouch
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
-RCFILE  = $(srcdir)/soundtouch.rc
-RESFILE  = $(srcdir)/soundtouch.res
+RCFILE  = soundtouch.rc
+RESFILE = soundtouch.res
 endif
 endif
 

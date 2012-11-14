@@ -49,7 +49,6 @@ public:
   virtual uint32_t ChildCount() const;
 
   // SelectAccessible
-  virtual bool IsSelect();
   virtual already_AddRefed<nsIArray> SelectedItems();
   virtual uint32_t SelectedItemCount();
   virtual Accessible* GetSelectedItem(uint32_t aIndex);

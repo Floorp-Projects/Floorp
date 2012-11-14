@@ -208,13 +208,10 @@ struct _MDCPU {
 #endif /* ! _PR_PTHREADS */
 
 extern void _MD_EarlyInit(void);
-extern PRIntervalTime _PR_UNIX_GetInterval(void);
-extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit
-#define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
+#define _MD_INTERVAL_USE_GTOD
 
 /*
  * We wrapped the select() call.  _MD_SELECT refers to the built-in,

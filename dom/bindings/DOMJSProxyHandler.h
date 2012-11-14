@@ -68,6 +68,8 @@ extern jsid s_length_id;
 
 int32_t IdToInt32(JSContext* cx, jsid id);
 
+// XXXbz this should really return uint32_t, with the maximum value
+// meaning "not an index"...
 inline int32_t
 GetArrayIndexFromId(JSContext* cx, jsid id)
 {
@@ -88,6 +90,12 @@ GetArrayIndexFromId(JSContext* cx, jsid id)
     return js::StringIsArrayIndex(str, &i) ? i : -1;
   }
   return IdToInt32(cx, id);
+}
+
+inline bool
+IsArrayIndex(int32_t index)
+{
+  return index >= 0;
 }
 
 inline void

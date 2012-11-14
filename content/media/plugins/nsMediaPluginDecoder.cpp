@@ -12,7 +12,7 @@ nsMediaPluginDecoder::nsMediaPluginDecoder(const nsACString& aType) : mType(aTyp
 {
 }
 
-nsDecoderStateMachine* nsMediaPluginDecoder::CreateStateMachine()
+nsBuiltinDecoderStateMachine* nsMediaPluginDecoder::CreateStateMachine()
 {
   return new nsBuiltinDecoderStateMachine(this, new nsMediaPluginReader(this));
 }

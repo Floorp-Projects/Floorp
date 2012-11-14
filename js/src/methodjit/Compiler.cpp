@@ -3980,6 +3980,12 @@ mjit::Compiler::ionCompileHelper()
     uint32_t *useCountAddress = script_->addressOfUseCount();
     masm.add32(Imm32(1), AbsoluteAddress(useCountAddress));
 
+    // We cannot inline a JM -> Ion constructing call.
+    // Compiling this function is pointless and would disable the JM -> JM fastpath.
+    // This function will start running in Ion, when caller runs in Ion/Interpreter.
+    if (isConstructing && outerScript->code == PC)
+        return;
+
     // If we don't want to do a recompileCheck for Ion, then this just needs to
     // increment the useCount so that we know when to recompile this function
     // from an Ion call.  No need to call out to recompiler stub.

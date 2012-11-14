@@ -201,18 +201,9 @@ private:
   void CoalesceEvents();
 
   /**
-   * Apply aEventRule to same type event that from sibling nodes of aDOMNode.
-   * @param aEventsToFire    array of pending events
-   * @param aStart           start index of pending events to be scanned
-   * @param aEnd             end index to be scanned (not included)
-   * @param aEventType       target event type
-   * @param aDOMNode         target are siblings of this node
-   * @param aEventRule       the event rule to be applied
-   *                         (should be eDoNotEmit or eAllowDupes)
+   * Coalesce events from the same subtree.
    */
-  void ApplyToSiblings(uint32_t aStart, uint32_t aEnd,
-                       uint32_t aEventType, nsINode* aNode,
-                       AccEvent::EEventRule aEventRule);
+  void CoalesceReorderEvents(AccEvent* aTailEvent);
 
   /**
    * Coalesce two selection change events within the same select control.
@@ -230,11 +221,18 @@ private:
                                    AccShowEvent* aThisEvent);
 
   /**
-   * Create text change event caused by hide or show event. When a node is
-   * hidden/removed or shown/appended, the text in an ancestor hyper text will
-   * lose or get new characters.
+    * Create text change event caused by hide or show event. When a node is
+    * hidden/removed or shown/appended, the text in an ancestor hyper text will
+    * lose or get new characters.
+    */
+   void CreateTextChangeEventFor(AccMutationEvent* aEvent);
+
+  // Event queue processing
+
+  /**
+   * Process events from the queue and fires events.
    */
-  void CreateTextChangeEventFor(AccMutationEvent* aEvent);
+  void ProcessEventQueue();
 
 private:
   /**

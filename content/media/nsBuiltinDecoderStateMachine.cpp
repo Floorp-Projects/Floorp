@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsBuiltinDecoderStateMachine.h"
 #include <limits>
 #include "nsAudioStream.h"
 #include "nsTArray.h"
 #include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderReader.h"
-#include "nsBuiltinDecoderStateMachine.h"
 #include "mozilla/mozalloc.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
@@ -118,7 +118,7 @@ private:
 public:
   nsAudioMetadataEventRunner(nsBuiltinDecoder* aDecoder, uint32_t aChannels,
                              uint32_t aRate, bool aHasAudio,
-                             nsHTMLMediaElement::MetadataTags* aTags) :
+                             MetadataTags* aTags) :
     mDecoder(aDecoder),
     mChannels(aChannels),
     mRate(aRate),
@@ -136,7 +136,7 @@ public:
   const uint32_t mChannels;
   const uint32_t mRate;
   const bool mHasAudio;
-  nsHTMLMediaElement::MetadataTags* mTags;
+  MetadataTags* mTags;
 };
 
 // Owns the global state machine thread and counts of
@@ -1215,7 +1215,7 @@ uint32_t nsBuiltinDecoderStateMachine::PlayFromAudioQueue(uint64_t aFrameOffset,
   return frames;
 }
 
-nsresult nsBuiltinDecoderStateMachine::Init(nsDecoderStateMachine* aCloneDonor)
+nsresult nsBuiltinDecoderStateMachine::Init(nsBuiltinDecoderStateMachine* aCloneDonor)
 {
   nsBuiltinDecoderReader* cloneReader = nullptr;
   if (aCloneDonor) {
@@ -1308,15 +1308,15 @@ void nsBuiltinDecoderStateMachine::ClearPositionChangeFlag()
   mPositionChangeQueued = false;
 }
 
-nsHTMLMediaElement::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameStatus()
+nsMediaDecoder::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameStatus()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (IsBuffering() || IsSeeking()) {
-    return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+    return nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING;
   } else if (HaveNextFrameData()) {
-    return nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
+    return nsMediaDecoder::NEXT_FRAME_AVAILABLE;
   }
-  return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
+  return nsMediaDecoder::NEXT_FRAME_UNAVAILABLE;
 }
 
 void nsBuiltinDecoderStateMachine::SetVolume(double volume)
@@ -1726,7 +1726,7 @@ nsresult nsBuiltinDecoderStateMachine::DecodeMetadata()
   LOG(PR_LOG_DEBUG, ("%p Decoding Media Headers", mDecoder.get()));
   nsresult res;
   nsVideoInfo info;
-  nsHTMLMediaElement::MetadataTags* tags;
+  MetadataTags* tags;
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     res = mReader->ReadMetadata(&info, &tags);
@@ -2389,13 +2389,13 @@ void nsBuiltinDecoderStateMachine::UpdateReadyState() {
 
   nsCOMPtr<nsIRunnable> event;
   switch (GetNextFrameStatus()) {
-    case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+    case nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameUnavailableBuffering);
       break;
-    case nsHTMLMediaElement::NEXT_FRAME_AVAILABLE:
+    case nsMediaDecoder::NEXT_FRAME_AVAILABLE:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameAvailable);
       break;
-    case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE:
+    case nsMediaDecoder::NEXT_FRAME_UNAVAILABLE:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameUnavailable);
       break;
     default:
@@ -2613,3 +2613,10 @@ void nsBuiltinDecoderStateMachine::NotifyAudioAvailableListener()
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   mEventManager.NotifyAudioAvailableListener();
 }
+
+bool nsBuiltinDecoderStateMachine::IsShutdown()
+{
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+  return GetState() == DECODER_STATE_SHUTDOWN;
+}
+

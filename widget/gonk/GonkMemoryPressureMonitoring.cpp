@@ -34,8 +34,10 @@ public:
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
+      // We use low-memory-no-forward because each process has its own watcher
+      // and thus there is no need for the main process to forward this event.
       os->NotifyObservers(nullptr, "memory-pressure",
-                          NS_LITERAL_STRING("low-memory").get());
+                          NS_LITERAL_STRING("low-memory-no-forward").get());
     }
     return NS_OK;
   }

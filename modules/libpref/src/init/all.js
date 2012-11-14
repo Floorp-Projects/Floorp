@@ -1025,6 +1025,7 @@ pref("network.IDN.whitelist.es", true);
 pref("network.IDN.whitelist.fi", true);
 pref("network.IDN.whitelist.fr", true);
 pref("network.IDN.whitelist.gr", true);
+pref("network.IDN.whitelist.gt", true);
 pref("network.IDN.whitelist.hu", true);
 pref("network.IDN.whitelist.il", true);
 pref("network.IDN.whitelist.io", true);
@@ -1096,8 +1097,11 @@ pref("network.IDN.whitelist.xn--kprw13d", true);  // Simplified
 pref("network.IDN.whitelist.asia", true);
 pref("network.IDN.whitelist.biz", true);
 pref("network.IDN.whitelist.cat", true);
+pref("network.IDN.whitelist.com", true);
 pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
+pref("network.IDN.whitelist.name", true);
+pref("network.IDN.whitelist.net", true);
 pref("network.IDN.whitelist.org", true);
 pref("network.IDN.whitelist.tel", true);
 
@@ -3834,3 +3838,6 @@ pref("jsloader.reuseGlobal", false);
 // When we're asked to take a screenshot, don't wait more than 2000ms for the
 // event loop to become idle before actually taking the screenshot.
 pref("dom.browserElement.maxScreenshotDelayMS", 2000);
+
+// Whether we should show the placeholder when the element is focused but empty.
+pref("dom.placeholder.show_on_focus", true);

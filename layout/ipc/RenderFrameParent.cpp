@@ -538,6 +538,23 @@ public:
     }
   }
 
+  virtual void HandleLongTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
+  {
+    if (MessageLoop::current() != mUILoop) {
+      // We have to send this message from the "UI thread" (main
+      // thread).
+      mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &RemoteContentController::HandleLongTap,
+                          aPoint));
+      return;
+    }
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      browser->HandleLongTap(aPoint);
+    }
+  }
+
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
 private:

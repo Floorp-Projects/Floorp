@@ -28,7 +28,6 @@ webidl_files = \
   DOMSettableTokenList.webidl \
   DOMStringMap.webidl \
   DynamicsCompressorNode.webidl \
-  Function.webidl \
   EventHandler.webidl \
   EventListener.webidl \
   EventTarget.webidl \

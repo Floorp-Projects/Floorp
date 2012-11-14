@@ -27,7 +27,7 @@ AssertAppProcessPermission(PBrowserParent* aActor, const char* aPermission)
   }
 
   TabParent* tab = static_cast<TabParent*>(aActor);
-  nsCOMPtr<mozIApplication> app = tab->GetApp();
+  nsCOMPtr<mozIApplication> app = tab->GetOwnOrContainingApp();
   bool hasPermission = false;
 
   // isBrowser frames inherit their app descriptor to identify their

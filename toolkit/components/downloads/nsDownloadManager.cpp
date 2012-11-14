@@ -883,6 +883,8 @@ nsDownloadManager::Init()
   (void)mObserverService->AddObserver(this, "offline-requested", true);
   (void)mObserverService->AddObserver(this, "sleep_notification", true);
   (void)mObserverService->AddObserver(this, "wake_notification", true);
+  (void)mObserverService->AddObserver(this, "suspend_process_notification", true);
+  (void)mObserverService->AddObserver(this, "resume_process_notification", true);
   (void)mObserverService->AddObserver(this, "profile-before-change", true);
   (void)mObserverService->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, true);
   (void)mObserverService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, true);
@@ -2028,10 +2030,12 @@ nsDownloadManager::Observe(nsISupports *aSubject,
       do_GetService("@mozilla.org/download-manager-ui;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     return dmui->Show(nullptr, 0, nsIDownloadManagerUI::REASON_USER_INTERACTED);
-  } else if (strcmp(aTopic, "sleep_notification") == 0) {
+  } else if (strcmp(aTopic, "sleep_notification") == 0 ||
+             strcmp(aTopic, "suspend_process_notification") == 0) {
     // Pause downloads if we're sleeping, and mark the downloads as auto-resume
     (void)PauseAllDownloads(true);
-  } else if (strcmp(aTopic, "wake_notification") == 0) {
+  } else if (strcmp(aTopic, "wake_notification") == 0 ||
+             strcmp(aTopic, "resume_process_notification") == 0) {
     int32_t resumeOnWakeDelay = 10000;
     nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (pref)

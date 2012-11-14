@@ -8,7 +8,7 @@
 #include "nsOggReader.h"
 #include "nsOggDecoder.h"
 
-nsDecoderStateMachine* nsOggDecoder::CreateStateMachine()
+nsBuiltinDecoderStateMachine* nsOggDecoder::CreateStateMachine()
 {
   return new nsBuiltinDecoderStateMachine(this, new nsOggReader(this));
 }

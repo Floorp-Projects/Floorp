@@ -129,6 +129,7 @@ protected:
   static nsPresContext* sPresContext;
   static bool           sInstalledMenuKeyboardListener;
   static bool           sInSecureInputMode;
+  static bool           sIsTestingIME;
 
   static nsTextStateManager* sTextStateObserver;
 

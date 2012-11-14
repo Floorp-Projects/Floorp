@@ -20,6 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549170
 <textarea id='t'
   onmouseup="mouseHandler(event);"
   onmousedown="mouseHandler(event);"></textarea>
+<input id='ip' placeholder='foo'
+  onmouseup="mouseHandler(event);"
+  onmousedown="mouseHandler(event);">
+<textarea id='tp' placeholder='foo'
+  onmouseup="mouseHandler(event);"
+  onmousedown="mouseHandler(event);"></textarea>
 <pre id="test">
 
 <script type="application/javascript">
@@ -38,8 +44,7 @@ function mouseHandler(aEvent)
 
   is(nodeName, "DIV", "An inner div should be the target of the event");
 
-  ok(classList.contains("anonymous-div") && !classList.contains("placeholder"),
-    "The target div class doesn't correcspond to the editor div class");
+  ok(classList.contains("anonymous-div"), "the target div should be the editor div");
 }
 
 function checkMouseEvents(element)
@@ -61,6 +66,8 @@ function runTests()
 {
   checkMouseEvents(document.getElementById('i'));
   checkMouseEvents(document.getElementById('t'));
+  checkMouseEvents(document.getElementById('ip'));
+  checkMouseEvents(document.getElementById('tp'));
 
   SimpleTest.finish();
 }

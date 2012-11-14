@@ -126,6 +126,7 @@
 #include "mozilla/CORSMode.h"
 
 #include "nsStyledElement.h"
+#include "nsXBLService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -306,211 +307,178 @@ Element::ClearStyleStateLocks()
   NotifyStyleStateChange(locks);
 }
 
-nsIContent*
-nsGenericElement::GetFirstElementChild()
+bool
+Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
 {
-  nsAttrAndChildArray& children = mAttrsAndChildren;
-  uint32_t i, count = children.ChildCount();
+  // If we have a frame the frame has already loaded the binding.  And
+  // otherwise, don't do anything else here unless we're dealing with
+  // XUL or an HTML element that may have a plugin-related overlay
+  // (i.e. object, embed, or applet).
+  bool isXULorPluginElement = (IsXUL() ||
+                               IsHTML(nsGkAtoms::object) ||
+                               IsHTML(nsGkAtoms::embed) ||
+                               IsHTML(nsGkAtoms::applet));
+  nsIPresShell *shell = aDocument->GetShell();
+  if (!shell || GetPrimaryFrame() || !isXULorPluginElement) {
+    *aResult = nullptr;
+
+    return true;
+  }
+
+  // Get the computed -moz-binding directly from the style context
+  nsPresContext *pctx = shell->GetPresContext();
+  NS_ENSURE_TRUE(pctx, false);
+
+  nsRefPtr<nsStyleContext> sc = pctx->StyleSet()->ResolveStyleFor(this,
+                                                                  nullptr);
+  NS_ENSURE_TRUE(sc, false);
+
+  *aResult = sc->GetStyleDisplay()->mBinding;
+
+  return true;
+}
+
+JSObject*
+nsGenericElement::WrapObject(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap)
+{
+  JSObject* obj = nsINode::WrapObject(aCx, aScope, aTriedToWrap);
+  if (!obj) {
+    return nullptr;
+  }
+
+  nsIDocument* doc;
+  if (HasFlag(NODE_FORCE_XBL_BINDINGS)) {
+    doc = OwnerDoc();
+  }
+  else {
+    doc = GetCurrentDoc();
+  }
+
+  if (!doc) {
+    // There's no baseclass that cares about this call so we just
+    // return here.
+    return obj;
+  }
+
+  // We must ensure that the XBL Binding is installed before we hand
+  // back this object.
+
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) &&
+      doc->BindingManager()->GetBinding(this)) {
+    // There's already a binding for this element so nothing left to
+    // be done here.
+
+    // In theory we could call ExecuteAttachedHandler here when it's safe to
+    // run script if we also removed the binding from the PAQ queue, but that
+    // seems like a scary change that would mosly just add more
+    // inconsistencies.
+    return obj;
+  }
+
+  // Make sure the style context goes away _before_ we load the binding
+  // since that can destroy the relevant presshell.
+  mozilla::css::URLValue *bindingURL;
+  bool ok = GetBindingURL(doc, &bindingURL);
+  if (!ok) {
+    dom::Throw<true>(aCx, NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (!bindingURL) {
+    // No binding, nothing left to do here.
+    return obj;
+  }
+
+  nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
+  nsCOMPtr<nsIPrincipal> principal = bindingURL->mOriginPrincipal;
+
+  // We have a binding that must be installed.
+  bool dummy;
+
+  nsXBLService* xblService = nsXBLService::GetInstance();
+  if (!xblService) {
+    dom::Throw<true>(aCx, NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  nsRefPtr<nsXBLBinding> binding;
+  xblService->LoadBindings(this, uri, principal, false, getter_AddRefs(binding),
+                           &dummy);
+  
+  if (binding) {
+    if (nsContentUtils::IsSafeToRunScript()) {
+      binding->ExecuteAttachedHandler();
+    }
+    else {
+      nsContentUtils::AddScriptRunner(
+        NS_NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
+    }
+  }
+
+  return obj;
+}
+
+nsGenericElement*
+nsGenericElement::GetFirstElementChild() const
+{
+  uint32_t i, count = mAttrsAndChildren.ChildCount();
   for (i = 0; i < count; ++i) {
-    nsIContent* child = children.ChildAt(i);
+    nsIContent* child = mAttrsAndChildren.ChildAt(i);
     if (child->IsElement()) {
-      return child;
+      return static_cast<nsGenericElement*>(child);
     }
   }
   
   return nullptr;
 }
 
-nsIContent*
-nsGenericElement::GetLastElementChild()
+nsGenericElement*
+nsGenericElement::GetLastElementChild() const
 {
-  nsAttrAndChildArray& children = mAttrsAndChildren;
-  uint32_t i = children.ChildCount();
+  uint32_t i = mAttrsAndChildren.ChildCount();
   while (i > 0) {
-    nsIContent* child = children.ChildAt(--i);
+    nsIContent* child = mAttrsAndChildren.ChildAt(--i);
     if (child->IsElement()) {
-      return child;
+      return static_cast<nsGenericElement*>(child);
     }
   }
   
   return nullptr;
-}
-
-nsIContent*
-nsGenericElement::GetPreviousElementSibling()
-{
-  nsIContent* parent = GetParent();
-  if (!parent) {
-    return nullptr;
-  }
-
-  NS_ASSERTION(parent->IsElement() ||
-               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
-               "Parent content must be an element or a doc fragment");
-
-  nsAttrAndChildArray& children =
-    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
-  int32_t index = children.IndexOfChild(this);
-  if (index < 0) {
-    return nullptr;
-  }
-
-  uint32_t i = index;
-  while (i > 0) {
-    nsIContent* child = children.ChildAt((uint32_t)--i);
-    if (child->IsElement()) {
-      return child;
-    }
-  }
-  
-  return nullptr;
-}
-
-nsIContent*
-nsGenericElement::GetNextElementSibling()
-{
-  nsIContent* parent = GetParent();
-  if (!parent) {
-    return nullptr;
-  }
-
-  NS_ASSERTION(parent->IsElement() ||
-               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
-               "Parent content must be an element or a doc fragment");
-
-  nsAttrAndChildArray& children =
-    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
-  int32_t index = children.IndexOfChild(this);
-  if (index < 0) {
-    return nullptr;
-  }
-
-  uint32_t i, count = children.ChildCount();
-  for (i = (uint32_t)index + 1; i < count; ++i) {
-    nsIContent* child = children.ChildAt(i);
-    if (child->IsElement()) {
-      return child;
-    }
-  }
-  
-  return nullptr;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetChildElementCount(uint32_t* aResult)
-{
-  *aResult = GetChildrenList()->Length(true);
-  return NS_OK;
-}
-
-// readonly attribute nsIDOMNodeList children
-NS_IMETHODIMP
-nsGenericElement::GetChildElements(nsIDOMNodeList** aResult)
-{
-  NS_ADDREF(*aResult = GetChildrenList());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetFirstElementChild(nsIDOMElement** aResult)
-{
-  *aResult = nullptr;
-
-  nsIContent *result = GetFirstElementChild();
-
-  return result ? CallQueryInterface(result, aResult) : NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetLastElementChild(nsIDOMElement** aResult)
-{
-  *aResult = nullptr;
-
-  nsIContent *result = GetLastElementChild();
-
-  return result ? CallQueryInterface(result, aResult) : NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetPreviousElementSibling(nsIDOMElement** aResult)
-{
-  *aResult = nullptr;
-
-  nsIContent *result = GetPreviousElementSibling();
-
-  return result ? CallQueryInterface(result, aResult) : NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetNextElementSibling(nsIDOMElement** aResult)
-{
-  *aResult = nullptr;
-
-  nsIContent *result = GetNextElementSibling();
-
-  return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 nsDOMTokenList*
-nsGenericElement::GetClassList(nsresult *aResult)
+nsGenericElement::ClassList()
 {
-  *aResult = NS_ERROR_OUT_OF_MEMORY;
-
   nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mClassList) {
     nsCOMPtr<nsIAtom> classAttr = GetClassAttributeName();
-    if (!classAttr) {
-      *aResult = NS_OK;
-
-      return nullptr;
+    if (classAttr) {
+      slots->mClassList = new nsDOMTokenList(this, classAttr);
     }
-
-    slots->mClassList = new nsDOMTokenList(this, classAttr);
   }
-
-  *aResult = NS_OK;
 
   return slots->mClassList;
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetClassList(nsIDOMDOMTokenList** aResult)
+void
+nsGenericElement::GetClassList(nsIDOMDOMTokenList** aClassList)
 {
-  *aResult = nullptr;
-
-  nsresult rv;
-  nsIDOMDOMTokenList* list = GetClassList(&rv);
-  NS_ENSURE_TRUE(list, rv);
-
-  NS_ADDREF(*aResult = list);
-
-  return NS_OK;
+  NS_IF_ADDREF(*aClassList = ClassList());
 }
 
-NS_IMETHODIMP
-nsGenericElement::SetCapture(bool aRetargetToElement)
+already_AddRefed<nsIHTMLCollection>
+nsGenericElement::GetElementsByTagName(const nsAString& aLocalName)
 {
-  // If there is already an active capture, ignore this request. This would
-  // occur if a splitter, frame resizer, etc had already captured and we don't
-  // want to override those.
-  if (nsIPresShell::GetCapturingContent())
-    return NS_OK;
-
-  nsIPresShell::SetCapturingContent(this, CAPTURE_PREVENTDRAG |
-    (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
-
-  return NS_OK;
+  return NS_GetContentList(this, kNameSpaceID_Unknown, aLocalName);
 }
 
-NS_IMETHODIMP
-nsGenericElement::ReleaseCapture()
+void
+nsGenericElement::GetElementsByTagName(const nsAString& aLocalName,
+                                       nsIDOMHTMLCollection** aResult)
 {
-  if (nsIPresShell::GetCapturingContent() == this) {
-    nsIPresShell::SetCapturingContent(nullptr, 0);
-  }
-
-  return NS_OK;
+  *aResult = GetElementsByTagName(aLocalName).get();
 }
 
 nsIFrame*
@@ -603,58 +571,33 @@ nsGenericElement::GetScrollFrame(nsIFrame **aStyledFrame)
   return nullptr;
 }
 
-int32_t
-nsGenericElement::GetScrollTop()
+void
+nsGenericElement::ScrollIntoView(bool aTop)
 {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  return sf ? sf->GetScrollPositionCSSPixels().y : 0;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetScrollTop(int32_t* aScrollTop)
-{
-  *aScrollTop = GetScrollTop();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::SetScrollTop(int32_t aScrollTop)
-{
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    sf->ScrollToCSSPixels(nsIntPoint(sf->GetScrollPositionCSSPixels().x, aScrollTop));
+  nsIDocument *document = GetCurrentDoc();
+  if (!document) {
+    return;
   }
-  return NS_OK;
-}
 
-int32_t
-nsGenericElement::GetScrollLeft()
-{
-  nsIScrollableFrame* sf = GetScrollFrame();
-  return sf ? sf->GetScrollPositionCSSPixels().x : 0;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetScrollLeft(int32_t* aScrollLeft)
-{
-  *aScrollLeft = GetScrollLeft();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::SetScrollLeft(int32_t aScrollLeft)
-{
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    sf->ScrollToCSSPixels(nsIntPoint(aScrollLeft, sf->GetScrollPositionCSSPixels().y));
+  // Get the presentation shell
+  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
+  if (!presShell) {
+    return;
   }
-  return NS_OK;
+
+  int16_t vpercent = aTop ? nsIPresShell::SCROLL_TOP :
+    nsIPresShell::SCROLL_BOTTOM;
+
+  presShell->ScrollContentIntoView(this,
+                                   nsIPresShell::ScrollAxis(
+                                     vpercent,
+                                     nsIPresShell::SCROLL_ALWAYS),
+                                   nsIPresShell::ScrollAxis(),
+                                   nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
 int32_t
-nsGenericElement::GetScrollHeight()
+nsGenericElement::ScrollHeight()
 {
   if (IsSVG())
     return 0;
@@ -668,16 +611,8 @@ nsGenericElement::GetScrollHeight()
   return nsPresContext::AppUnitsToIntCSSPixels(height);
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetScrollHeight(int32_t* aScrollHeight)
-{
-  *aScrollHeight = GetScrollHeight();
-
-  return NS_OK;
-}
-
 int32_t
-nsGenericElement::GetScrollWidth()
+nsGenericElement::ScrollWidth()
 {
   if (IsSVG())
     return 0;
@@ -689,52 +624,6 @@ nsGenericElement::GetScrollWidth()
 
   nscoord width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
   return nsPresContext::AppUnitsToIntCSSPixels(width);
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetScrollWidth(int32_t *aScrollWidth)
-{
-  *aScrollWidth = GetScrollWidth();
-
-  return NS_OK;
-}
-
-int32_t
-nsGenericElement::GetScrollLeftMax()
-{
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return 0;
-  }
-
-  return nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().XMost());
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetScrollLeftMax(int32_t *aScrollLeftMax)
-{
-  *aScrollLeftMax = GetScrollLeftMax();
-
-  return NS_OK;
-}
-
-int32_t
-nsGenericElement::GetScrollTopMax()
-{
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return 0;
-  }
-
-  return nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().YMost());
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetScrollTopMax(int32_t *aScrollTopMax)
-{
-  *aScrollTopMax = GetScrollTopMax();
-
-  return NS_OK;
 }
 
 nsRect
@@ -759,84 +648,44 @@ nsGenericElement::GetClientAreaRect()
   return nsRect(0, 0, 0, 0);
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetClientTop(int32_t *aClientTop)
+already_AddRefed<nsClientRect>
+nsGenericElement::GetBoundingClientRect()
 {
-  *aClientTop = GetClientTop();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetClientLeft(int32_t *aClientLeft)
-{
-  *aClientLeft = GetClientLeft();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetClientHeight(int32_t *aClientHeight)
-{
-  *aClientHeight = GetClientHeight();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetClientWidth(int32_t *aClientWidth)
-{
-  *aClientWidth = GetClientWidth();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetBoundingClientRect(nsIDOMClientRect** aResult)
-{
-  // Weak ref, since we addref it below
-  nsClientRect* rect = new nsClientRect();
-  NS_ADDREF(*aResult = rect);
+  nsRefPtr<nsClientRect> rect = new nsClientRect();
   
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   if (!frame) {
     // display:none, perhaps? Return the empty rect
-    return NS_OK;
+    return rect.forget();
   }
 
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
           nsLayoutUtils::GetContainingBlockForClientRect(frame),
           nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
   rect->SetLayoutRect(r);
-  return NS_OK;
+  return rect.forget();
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetElementsByClassName(const nsAString& aClasses,
-                                         nsIDOMHTMLCollection** aReturn)
+already_AddRefed<nsClientRectList>
+nsGenericElement::GetClientRects(ErrorResult& aError)
 {
-  *aReturn = nsContentUtils::GetElementsByClassName(this, aClasses).get();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
-{
-  *aResult = nullptr;
-
   nsRefPtr<nsClientRectList> rectList = new nsClientRectList(this);
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   if (!frame) {
     // display:none, perhaps? Return an empty list
-    *aResult = rectList.forget().get();
-    return NS_OK;
+    return rectList.forget();
   }
 
   nsLayoutUtils::RectListBuilder builder(rectList);
   nsLayoutUtils::GetAllInFlowRects(frame,
           nsLayoutUtils::GetContainingBlockForClientRect(frame), &builder,
           nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
-  if (NS_FAILED(builder.mRV))
-    return builder.mRV;
-  *aResult = rectList.forget().get();
-  return NS_OK;
+  if (NS_FAILED(builder.mRV)) {
+    aError.Throw(builder.mRV);
+    return nullptr;
+  }
+  return rectList.forget();
 }
 
 
@@ -852,16 +701,8 @@ nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   SetIsElement();
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetTagName(nsAString& aTagName)
-{
-  aTagName = NodeName();
-  return NS_OK;
-}
-
-nsresult
-nsGenericElement::GetAttribute(const nsAString& aName,
-                               nsAString& aReturn)
+void
+nsGenericElement::GetAttribute(const nsAString& aName, nsString& aReturn)
 {
   const nsAttrValue* val =
     mAttrsAndChildren.GetAttr(aName,
@@ -878,32 +719,47 @@ nsGenericElement::GetAttribute(const nsAString& aName,
       SetDOMStringToNull(aReturn);
     }
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsGenericElement::SetAttribute(const nsAString& aName,
-                               const nsAString& aValue)
+                               const nsAString& aValue,
+                               ErrorResult& aError)
 {
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
   if (!name) {
-    nsresult rv = nsContentUtils::CheckQName(aName, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aError = nsContentUtils::CheckQName(aName, false);
+    if (aError.Failed()) {
+      return;
+    }
 
-    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
-    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
-
-    return SetAttr(kNameSpaceID_None, nameAtom, aValue, true);
+    nsCOMPtr<nsIAtom> nameAtom;
+    if (IsHTML() && IsInHTMLDocument()) {
+      nsAutoString lower;
+      nsresult rv = nsContentUtils::ASCIIToLower(aName, lower);
+      if (NS_SUCCEEDED(rv)) {
+        nameAtom = do_GetAtom(lower);
+      }
+    }
+    else {
+      nameAtom = do_GetAtom(aName);
+    }
+    if (!nameAtom) {
+      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    aError = SetAttr(kNameSpaceID_None, nameAtom, aValue, true);
+    return;
   }
 
-  return SetAttr(name->NamespaceID(), name->LocalName(), name->GetPrefix(),
-                 aValue, true);
+  aError = SetAttr(name->NamespaceID(), name->LocalName(), name->GetPrefix(),
+                   aValue, true);
+  return;
 }
 
-nsresult
-nsGenericElement::RemoveAttribute(const nsAString& aName)
+void
+nsGenericElement::RemoveAttribute(const nsAString& aName, ErrorResult& aError)
 {
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
@@ -911,7 +767,7 @@ nsGenericElement::RemoveAttribute(const nsAString& aName)
     // If there is no canonical nsAttrName for this attribute name, then the
     // attribute does not exist and we can't get its namespace ID and
     // local name below, so we return early.
-    return NS_OK;
+    return;
   }
 
   // Hold a strong reference here so that the atom or nodeinfo doesn't go
@@ -919,101 +775,71 @@ nsGenericElement::RemoveAttribute(const nsAString& aName)
   // dangling pointer as argument without knowing it.
   nsAttrName tmp(*name);
 
-  return UnsetAttr(name->NamespaceID(), name->LocalName(), true);
+  aError = UnsetAttr(name->NamespaceID(), name->LocalName(), true);
 }
 
-nsresult
-nsGenericElement::GetAttributeNode(const nsAString& aName,
-                                   nsIDOMAttr** aReturn)
+nsIDOMAttr*
+nsGenericElement::GetAttributeNode(const nsAString& aName)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nullptr;
-
-  nsIDocument* document = OwnerDoc();
-  if (document) {
-    document->WarnOnceAbout(nsIDocument::eGetAttributeNode);
-  }
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNode);
 
   nsDOMAttributeMap* map = GetAttributes();
-  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = map->GetNamedItem(aName, getter_AddRefs(node));
-
-  if (NS_SUCCEEDED(rv) && node) {
-    rv = CallQueryInterface(node, aReturn);
+  if (!map) {
+    return nullptr;
   }
 
-  return rv;
+  return map->GetNamedItem(aName);
 }
 
-nsresult
-nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
-                                   nsIDOMAttr** aReturn)
+already_AddRefed<nsIDOMAttr>
+nsGenericElement::SetAttributeNode(nsIDOMAttr* aNewAttr, ErrorResult& aError)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  NS_ENSURE_ARG_POINTER(aAttribute);
-
-  *aReturn = nullptr;
-
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNode);
 
   nsDOMAttributeMap* map = GetAttributes();
-  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMNode> returnNode;
-  nsresult rv = map->SetNamedItem(aAttribute, getter_AddRefs(returnNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (returnNode) {
-    rv = CallQueryInterface(returnNode, aReturn);
+  if (!map) {
+    // XXX Throw?
+    return nullptr;
   }
 
-  return rv;
+  nsCOMPtr<nsIDOMNode> returnNode;
+  aError = map->SetNamedItem(aNewAttr, getter_AddRefs(returnNode));
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  return static_cast<nsIDOMAttr*>(returnNode.forget().get());
 }
 
-nsresult
+already_AddRefed<nsIDOMAttr>
 nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
-                                      nsIDOMAttr** aReturn)
+                                      ErrorResult& aError)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  NS_ENSURE_ARG_POINTER(aAttribute);
-
-  *aReturn = nullptr;
-
   OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
 
   nsDOMAttributeMap* map = GetAttributes();
-  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
+  if (!map) {
+    // XXX Throw?
+    return nullptr;
+  }
 
   nsAutoString name;
 
-  nsresult rv = aAttribute->GetName(name);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMNode> node;
-    rv = map->RemoveNamedItem(name, getter_AddRefs(node));
-
-    if (NS_SUCCEEDED(rv) && node) {
-      rv = CallQueryInterface(node, aReturn);
-    }
+  aError = aAttribute->GetName(name);
+  if (aError.Failed()) {
+    return nullptr;
   }
 
-  return rv;
+  nsCOMPtr<nsIDOMNode> node;
+  aError = map->RemoveNamedItem(name, getter_AddRefs(node));
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  return static_cast<nsIDOMAttr*>(node.forget().get());
 }
 
-nsresult
-nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
-                                       nsIDOMHTMLCollection** aReturn)
-{
-  nsContentList *list = NS_GetContentList(this, kNameSpaceID_Unknown, 
-                                          aTagname).get();
-
-  // transfer ref to aReturn
-  *aReturn = list;
-  return NS_OK;
-}
-
-nsresult
+void
 nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
                                  const nsAString& aLocalName,
                                  nsAString& aReturn)
@@ -1024,7 +850,7 @@ nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attribute.
     SetDOMStringToNull(aReturn);
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(aLocalName);
@@ -1032,30 +858,32 @@ nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
   if (!hasAttr) {
     SetDOMStringToNull(aReturn);
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsGenericElement::SetAttributeNS(const nsAString& aNamespaceURI,
                                  const nsAString& aQualifiedName,
-                                 const nsAString& aValue)
+                                 const nsAString& aValue,
+                                 ErrorResult& aError)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  nsresult rv =
+  aError =
     nsContentUtils::GetNodeInfoFromQName(aNamespaceURI, aQualifiedName,
                                          mNodeInfo->NodeInfoManager(),
                                          nsIDOMNode::ATTRIBUTE_NODE,
                                          getter_AddRefs(ni));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aError.Failed()) {
+    return;
+  }
 
-  return SetAttr(ni->NamespaceID(), ni->NameAtom(), ni->GetPrefixAtom(),
-                 aValue, true);
+  aError = SetAttr(ni->NamespaceID(), ni->NameAtom(), ni->GetPrefixAtom(),
+                   aValue, true);
 }
 
-nsresult
+void
 nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
-                                    const nsAString& aLocalName)
+                                    const nsAString& aLocalName,
+                                    ErrorResult& aError)
 {
   nsCOMPtr<nsIAtom> name = do_GetAtom(aLocalName);
   int32_t nsid =
@@ -1065,129 +893,99 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
     // If the namespace ID is unknown, it means there can't possibly be an
     // existing attribute. We would need a known namespace ID to pass into
     // UnsetAttr, so we return early if we don't have one.
-    return NS_OK;
+    return;
   }
 
-  UnsetAttr(nsid, name, true);
-
-  return NS_OK;
+  aError = UnsetAttr(nsid, name, true);
 }
 
-nsresult
+nsIDOMAttr*
 nsGenericElement::GetAttributeNodeNS(const nsAString& aNamespaceURI,
                                      const nsAString& aLocalName,
-                                     nsIDOMAttr** aReturn)
+                                     ErrorResult& aError)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nullptr;
-
   OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNodeNS);
 
-  return GetAttributeNodeNSInternal(aNamespaceURI, aLocalName, aReturn);
+  return GetAttributeNodeNSInternal(aNamespaceURI, aLocalName, aError);
 }
 
-nsresult
+nsIDOMAttr*
 nsGenericElement::GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
                                              const nsAString& aLocalName,
-                                             nsIDOMAttr** aReturn)
+                                             ErrorResult& aError)
 {
   nsDOMAttributeMap* map = GetAttributes();
-  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = map->GetNamedItemNS(aNamespaceURI, aLocalName,
-                                    getter_AddRefs(node));
-
-  if (NS_SUCCEEDED(rv) && node) {
-    rv = CallQueryInterface(node, aReturn);
+  if (!map) {
+    return nullptr;
   }
 
-  return rv;
+  return map->GetNamedItemNS(aNamespaceURI, aLocalName, aError);
 }
 
-nsresult
+already_AddRefed<nsIDOMAttr>
 nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
-                                     nsIDOMAttr** aReturn)
+                                     ErrorResult& aError)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  NS_ENSURE_ARG_POINTER(aNewAttr);
-  *aReturn = nullptr;
-
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNodeNS);
 
   nsDOMAttributeMap* map = GetAttributes();
-  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMNode> returnNode;
-  nsresult rv = map->SetNamedItemNS(aNewAttr, getter_AddRefs(returnNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (returnNode) {
-    rv = CallQueryInterface(returnNode, aReturn);
+  if (!map) {
+    return nullptr;
   }
 
-  return rv;
+  return map->SetNamedItemNS(aNewAttr, aError);
 }
 
-nsresult
+already_AddRefed<nsIHTMLCollection>
 nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                          const nsAString& aLocalName,
-                                         nsIDOMHTMLCollection** aReturn)
+                                         ErrorResult& aError)
 {
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsresult rv =
+    aError =
       nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
                                                             nameSpaceId);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aError.Failed()) {
+      return nullptr;
+    }
   }
 
   NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
 
-  nsContentList *list = NS_GetContentList(this, nameSpaceId, aLocalName).get();
-
-  // transfer ref to aReturn
-  *aReturn = list;
-  return NS_OK;
+  return NS_GetContentList(this, nameSpaceId, aLocalName);
 }
 
 nsresult
-nsGenericElement::HasAttribute(const nsAString& aName, bool* aReturn)
+nsGenericElement::GetElementsByTagNameNS(const nsAString& namespaceURI,
+                                         const nsAString& localName,
+                                         nsIDOMHTMLCollection** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  const nsAttrValue* val =
-    mAttrsAndChildren.GetAttr(aName,
-                              IsHTML() && IsInHTMLDocument() ?
-                                eIgnoreCase : eCaseMatters);
-  *aReturn = (val != nullptr);
-
+  mozilla::ErrorResult rv;
+  nsCOMPtr<nsIHTMLCollection> list =
+    GetElementsByTagNameNS(namespaceURI, localName, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+  list.forget(aResult);
   return NS_OK;
 }
 
-nsresult
+bool
 nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
-                                 const nsAString& aLocalName,
-                                 bool* aReturn)
+                                 const nsAString& aLocalName) const
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-
   int32_t nsid =
     nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...
-
-    *aReturn = false;
-
-    return NS_OK;
+    return false;
   }
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(aLocalName);
-  *aReturn = HasAttr(nsid, name);
-
-  return NS_OK;
+  return HasAttr(nsid, name);
 }
 
 static nsXBLBinding*
@@ -1241,6 +1039,20 @@ BindNodesInInsertPoints(nsXBLBinding* aBinding, nsIContent* aInsertParent,
     }
   }
 
+  return NS_OK;
+}
+
+already_AddRefed<nsIHTMLCollection>
+nsGenericElement::GetElementsByClassName(const nsAString& aClassNames)
+{
+  return nsContentUtils::GetElementsByClassName(this, aClassNames);
+}
+
+nsresult
+nsGenericElement::GetElementsByClassName(const nsAString& aClassNames,
+                                         nsIDOMHTMLCollection** aResult)
+{
+  *aResult = nsContentUtils::GetElementsByClassName(this, aClassNames).get();
   return NS_OK;
 }
 
@@ -2068,11 +1880,11 @@ nsGenericElement::SetAttrAndNotify(int32_t aNamespaceID,
   if (aFireMutation) {
     nsMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
 
-    nsCOMPtr<nsIDOMAttr> attrNode;
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
-    GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName),
-                               getter_AddRefs(attrNode));
+    ErrorResult rv;
+    nsIDOMAttr* attrNode =
+      GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName), rv);
     mutation.mRelatedNode = attrNode;
 
     mutation.mAttrName = aName;
@@ -2251,8 +2063,8 @@ nsGenericElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   if (hasMutationListeners) {
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
-    GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName),
-                               getter_AddRefs(attrNode));
+    ErrorResult rv;
+    attrNode = GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName), rv);
   }
 
   // Clear binding to nsIDOMNamedNodeMap
@@ -2706,35 +2518,24 @@ ParseSelectorList(nsINode* aNode,
 
 
 bool
-nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResult)
+nsGenericElement::MozMatchesSelector(const nsAString& aSelector,
+                                     ErrorResult& aError)
 {
   nsAutoPtr<nsCSSSelectorList> selectorList;
-  bool matches = false;
 
-  *aResult = ParseSelectorList(this, aSelector, getter_Transfers(selectorList));
+  aError = ParseSelectorList(this, aSelector, getter_Transfers(selectorList));
 
-  if (NS_SUCCEEDED(*aResult)) {
-    OwnerDoc()->FlushPendingLinkUpdates();
-    TreeMatchContext matchingContext(false,
-                                     nsRuleWalker::eRelevantLinkUnvisited,
-                                     OwnerDoc(),
-                                     TreeMatchContext::eNeverMatchVisited);
-    matches = nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
-                                                      selectorList);
+  if (aError.Failed()) {
+    return false;
   }
 
-  return matches;
-}
-
-NS_IMETHODIMP
-nsGenericElement::MozMatchesSelector(const nsAString& aSelector, bool* aReturn)
-{
-  NS_PRECONDITION(aReturn, "Null out param?");
-
-  nsresult rv;
-  *aReturn = MozMatchesSelector(aSelector, &rv);
-
-  return rv;
+  OwnerDoc()->FlushPendingLinkUpdates();
+  TreeMatchContext matchingContext(false,
+                                   nsRuleWalker::eRelevantLinkUnvisited,
+                                   OwnerDoc(),
+                                   TreeMatchContext::eNeverMatchVisited);
+  return nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
+                                                 selectorList);
 }
 
 static const nsAttrValue::EnumTable kCORSAttributeTable[] = {
@@ -2779,37 +2580,6 @@ nsGenericElement::AttrValueToCORSMode(const nsAttrValue* aValue)
   return CORSMode(aValue->GetEnumValue());
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetOnmouseenter(JSContext* cx, JS::Value* vp)
-{
-  return nsINode::GetOnmouseenter(cx, vp);
-}
-
-NS_IMETHODIMP
-nsGenericElement::SetOnmouseenter(JSContext* cx, const JS::Value& v)
-{
-  return nsINode::SetOnmouseenter(cx, v);
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetOnmouseleave(JSContext* cx, JS::Value* vp)
-{
-  return nsINode::GetOnmouseleave(cx, vp);
-}
-
-NS_IMETHODIMP
-nsGenericElement::SetOnmouseleave(JSContext* cx, const JS::Value& v)
-{
-  return nsINode::SetOnmouseleave(cx, v);
-}
-
-NS_IMETHODIMP
-nsGenericElement::MozRequestPointerLock()
-{
-  OwnerDoc()->RequestPointerLock(this);
-  return NS_OK;
-}
-
 static const char*
 GetFullScreenError(nsIDocument* aDoc)
 {
@@ -2833,7 +2603,8 @@ GetFullScreenError(nsIDocument* aDoc)
   return nullptr;
 }
 
-nsresult nsGenericElement::MozRequestFullScreen()
+void
+nsGenericElement::MozRequestFullScreen()
 {
   // Only grant full-screen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
@@ -2854,10 +2625,10 @@ nsresult nsGenericElement::MozRequestFullScreen()
                           true,
                           false);
     e->PostDOMEvent();
-    return NS_OK;
+    return;
   }
 
   OwnerDoc()->AsyncRequestFullScreen(this);
 
-  return NS_OK;
+  return;
 }

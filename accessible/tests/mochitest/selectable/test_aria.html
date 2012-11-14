@@ -37,6 +37,15 @@
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
+      // role="tablist"
+
+      id = "tablist";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      testSelectableSelection(id, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
       // role="listbox"
 
       id = "listbox1";
@@ -117,21 +126,31 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=530014"
      title="ARIA single selectable widget should implement nsIAccessibleSelectable">
     Mozilla Bug 530014
-  </a><br>
+  </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=566551"
      title="ARIA grid and accessible selectable methods shouldn't use GetNextSibling">
     Mozilla Bug 566551
-  </a><br>
+  </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=590176"
      title="add pseudo SelectAccessible interface">
     Mozilla Bug 590176
-  </a><br>
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=804040"
+     title="Selection event not fired when selection of ARIA tab changes">
+    Mozilla Bug 804040
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
+
+  <div role="tablist" id="tablist">
+    <div role="tab">tab1</div>
+    <div role="tab">tab2</div>
+  </div>
 
   <div role="listbox" id="listbox1">
     <div role="option">item1</div>

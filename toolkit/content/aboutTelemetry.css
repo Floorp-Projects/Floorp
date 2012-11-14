@@ -1,0 +1,130 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.hidden {
+  display: none;
+}
+
+html {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  font: message-box;
+}
+
+body {
+  padding: 0px;
+  margin: 0px;
+}
+
+h2 {
+  font-size: medium;
+}
+
+#page-description {
+  background-color: LightGray;
+  border: 1px solid threedshadow;
+  margin: 0px;
+  padding: 10px;
+}
+
+#description-enabled > span {
+  color: green;
+}
+
+#description-disabled > span {
+  color: red;
+}
+
+.data-section {
+  background-color: WhiteSmoke;
+  border-top: 1px solid threedshadow;
+  border-bottom: 1px solid threedshadow;
+  margin: 0px;
+  padding: 10px;
+}
+
+.section-name {
+  font-size: x-large;
+  display: inline;
+  cursor: pointer;
+}
+
+.data {
+  margin: 15px;
+}
+
+.toggle-caption {
+  font-style: italic;
+  cursor: pointer;
+}
+
+.empty-caption {
+  font-style: italic;
+}
+
+.hang-title {
+  font-size: medium;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+#histograms, #addon-histograms {
+  overflow: hidden;
+}
+
+.histogram {
+  float: left;
+  border: 1px solid gray;
+  white-space: nowrap;
+  padding: 10px;
+}
+
+body[dir="rtl"] .histogram {
+  float: right;
+}
+
+.histogram-title {
+  text-overflow: ellipsis;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.bar {
+  width: 2em;
+  margin: 2px;
+  text-align: center;
+  float: left;
+  font-family: monospace;
+}
+
+body[dir="rtl"] .bar {
+  float: right;
+}
+
+.bar-inner {
+  background-color: DeepSkyBlue;
+  border: 1px solid #0000b0;
+}
+
+th {
+  font-weight: bold;
+  white-space: nowrap;
+  text-align: left;
+}
+
+body[dir="rtl"] th {
+  text-align: right;
+}
+
+caption {
+  font-weight: bold;
+  white-space: nowrap;
+  text-align: left;
+  font-size: large;
+}
+
+body[dir="rtl"] caption {
+  text-align: right;
+}

@@ -632,11 +632,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(WebSocket, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(WebSocket, nsDOMEventTargetHelper)
 
-NS_IMPL_EVENT_HANDLER(WebSocket, open)
-NS_IMPL_EVENT_HANDLER(WebSocket, error)
-NS_IMPL_EVENT_HANDLER(WebSocket, message)
-NS_IMPL_EVENT_HANDLER(WebSocket, close)
-
 void
 WebSocket::DisconnectFromOwner()
 {

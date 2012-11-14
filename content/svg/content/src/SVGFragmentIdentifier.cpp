@@ -50,7 +50,8 @@ SVGFragmentIdentifier::RestoreOldPreserveAspectRatio(nsSVGSVGElement *root)
   if (oldPARPtr) {
     root->mPreserveAspectRatio.SetBaseValue(*oldPARPtr, root);
   } else if (root->mPreserveAspectRatio.IsExplicitlySet()) {
-    root->RemoveAttribute(NS_LITERAL_STRING("preserveAspectRatio"));
+    mozilla::ErrorResult error;
+    root->RemoveAttribute(NS_LITERAL_STRING("preserveAspectRatio"), error);
   }
 }
 
@@ -69,7 +70,8 @@ SVGFragmentIdentifier::RestoreOldViewBox(nsSVGSVGElement *root)
   if (oldViewBoxPtr) {
     root->mViewBox.SetBaseValue(*oldViewBoxPtr, root);
   } else if (root->mViewBox.IsExplicitlySet()) {
-    root->RemoveAttribute(NS_LITERAL_STRING("viewBox"));
+    mozilla::ErrorResult error;
+    root->RemoveAttribute(NS_LITERAL_STRING("viewBox"), error);
   }
 }
 
@@ -88,7 +90,8 @@ SVGFragmentIdentifier::RestoreOldZoomAndPan(nsSVGSVGElement *root)
   if (oldZoomAndPan != nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_UNKNOWN) {
     root->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].SetBaseValue(oldZoomAndPan, root);
   } else if (root->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].IsExplicitlySet()) {
-    root->RemoveAttribute(NS_LITERAL_STRING("zoomAndPan"));
+    mozilla::ErrorResult error;
+    root->RemoveAttribute(NS_LITERAL_STRING("zoomAndPan"), error);
   }
 }
 

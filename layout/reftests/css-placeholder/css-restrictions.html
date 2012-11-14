@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    :-moz-any(input, textarea)::-moz-placeholder {
+      visibility: hidden;
+      padding: 20px;
+      float: right;
+      overflow: visible;
+      white-space: pre;
+
+      /*
+       * This list could be endless given that all non-whitelisted properties
+       * are restricted.
+       */
+    }
+  </style>
+  <body>
+    <input placeholder='foo'>
+    <textarea placeholder='foo'></textarea>
+    <!-- for overflow and white-space -->
+    <input placeholder='this is a quitelongetextforasmallelement'>
+    <textarea placeholder='this is a quitelongetextforasmallelement'></textarea>
+  </body>
+</html>

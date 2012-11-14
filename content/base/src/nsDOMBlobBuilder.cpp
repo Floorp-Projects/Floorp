@@ -184,14 +184,14 @@ nsDOMMultipartFile::InitInternal(JSContext* aCx,
   if (aArgc > 1) {
     if (NS_IsMainThread()) {
       BlobPropertyBag d;
-      if (!d.Init(aCx, aArgv[1])) {
+      if (!d.Init(aCx, nullptr, aArgv[1])) {
         return NS_ERROR_TYPE_ERR;
       }
       mContentType = d.type;
       nativeEOL = d.endings == EndingTypesValues::Native;
     } else {
       BlobPropertyBagWorkers d;
-      if (!d.Init(aCx, aArgv[1])) {
+      if (!d.Init(aCx, nullptr, aArgv[1])) {
         return NS_ERROR_TYPE_ERR;
       }
       mContentType = d.type;

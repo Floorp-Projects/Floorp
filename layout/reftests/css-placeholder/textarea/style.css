@@ -1,17 +1,5 @@
-textarea:-moz-placeholder,
+textarea::-moz-placeholder,
 textarea.ref {
-  -moz-appearance: none;
-  color: -moz-FieldText;
-  background-color: green;
-}
-
-textarea:-moz-placeholder.complex,
-textarea.complex-ref {
-  -moz-appearance: none;
   color: green;
-  background-color: #c7c7c7;
-  font-style: italic;
-  border: 2px solid green;
-  height: 300px;
-  width: 300px;
+  opacity: 1.0;
 }

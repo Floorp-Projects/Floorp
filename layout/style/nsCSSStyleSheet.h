@@ -294,7 +294,7 @@ protected:
   nsCSSStyleSheet*      mParent;    // weak ref
   mozilla::css::ImportRule* mOwnerRule; // weak ref
 
-  CSSRuleListImpl*      mRuleCollection;
+  nsRefPtr<CSSRuleListImpl> mRuleCollection;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsIDOMNode*           mOwningNode; // weak ref
   bool                  mDisabled;

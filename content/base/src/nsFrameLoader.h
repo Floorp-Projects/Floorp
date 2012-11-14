@@ -33,6 +33,7 @@ class nsITabParent;
 class nsIDocShellTreeItem;
 class nsIDocShellTreeOwner;
 class nsIDocShellTreeNode;
+class mozIApplication;
 
 namespace mozilla {
 namespace dom {
@@ -313,9 +314,9 @@ private:
   /**
    * Is this a frameloader for a bona fide <iframe mozbrowser> or
    * <iframe mozapp>?  (I.e., does the frame return true for
-   * nsIMozBrowserFrame::GetReallyIsBrowser()?)
+   * nsIMozBrowserFrame::GetReallyIsBrowserOrApp()?)
    */
-  bool OwnerIsBrowserFrame();
+  bool OwnerIsBrowserOrAppFrame();
 
   /**
    * Is this a frameloader for a bona fide <iframe mozapp>?  (I.e., does the
@@ -324,10 +325,27 @@ private:
   bool OwnerIsAppFrame();
 
   /**
+   * Is this a frame loader for a bona fide <iframe mozbrowser>?
+   */
+  bool OwnerIsBrowserFrame();
+
+  /**
    * Get our owning element's app manifest URL, or return the empty string if
    * our owning element doesn't have an app manifest URL.
    */
   void GetOwnerAppManifestURL(nsAString& aOut);
+
+  /**
+   * Get the app for our frame.  This is the app whose manifest is returned by
+   * GetOwnerAppManifestURL.
+   */
+  already_AddRefed<mozIApplication> GetOwnApp();
+
+  /**
+   * Get the app which contains this frame.  This is the app associated with
+   * the frame element's principal.
+   */
+  already_AddRefed<mozIApplication> GetContainingApp();
 
   /**
    * If we are an IPC frame, set mRemoteFrame. Otherwise, create and

@@ -8,7 +8,7 @@ gBrowser.selectedTab = gBrowser.addTab();
 function finishAndCleanUp()
 {
   gBrowser.removeCurrentTab();
-  waitForClearHistory(finish);
+  promiseClearHistory().then(finish);
 }
 
 /**

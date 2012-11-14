@@ -16,11 +16,20 @@
 
 #include "mozilla/GuardObjects.h"
 
+/*
+ * This macro checks if the stack pointer has exceeded a given limit. If
+ * |tolerance| is non-zero, it returns true only if the stack pointer has
+ * exceeded the limit by more than |tolerance| bytes.
+ */
 #if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) < limit)
+# define JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, sp, tolerance)  \
+    ((uintptr_t)(sp) < (limit)+(tolerance))
 #else
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) > limit)
+# define JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, sp, tolerance)  \
+    ((uintptr_t)(sp) > (limit)-(tolerance))
 #endif
+
+#define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
 
 extern JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
@@ -389,6 +398,18 @@ NotifyAnimationActivity(RawObject obj);
 JS_FRIEND_API(bool)
 IsOriginalScriptFunction(JSFunction *fun);
 
+/*
+ * Return the outermost enclosing function (script) of the scripted caller.
+ * This function returns NULL in several cases:
+ *  - no script is running on the context
+ *  - the caller is in global or eval code
+ * In particular, this function will "stop" its outermost search at eval() and
+ * thus it will really return the outermost enclosing function *since the
+ * innermost eval*.
+ */
+JS_FRIEND_API(JSScript *)
+GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx);
+
 JS_FRIEND_API(JSFunction *)
 DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
                            unsigned nargs, unsigned attrs);
@@ -528,10 +549,28 @@ GetNativeStackLimit(const JSRuntime *rt)
     return RuntimeFriendFields::get(rt)->nativeStackLimit;
 }
 
-#define JS_CHECK_RECURSION(cx, onerror)                                         \
+/*
+ * These macros report a stack overflow and run |onerror| if we are close to
+ * using up the C stack. The JS_CHECK_CHROME_RECURSION variant gives us a little
+ * extra space so that we can ensure that crucial code is able to run.
+ */
+
+#define JS_CHECK_RECURSION(cx, onerror)                              \
     JS_BEGIN_MACRO                                                              \
         int stackDummy_;                                                        \
         if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(js::GetRuntime(cx)), &stackDummy_)) { \
+            js_ReportOverRecursed(cx);                                          \
+            onerror;                                                            \
+        }                                                                       \
+    JS_END_MACRO
+
+#define JS_CHECK_CHROME_RECURSION(cx, onerror)                                  \
+    JS_BEGIN_MACRO                                                              \
+        int stackDummy_;                                                        \
+        if (!JS_CHECK_STACK_SIZE_WITH_TOLERANCE(js::GetNativeStackLimit(js::GetRuntime(cx)), \
+                                                &stackDummy_,                   \
+                                                1024 * sizeof(size_t)))         \
+        {                                                                       \
             js_ReportOverRecursed(cx);                                          \
             onerror;                                                            \
         }                                                                       \

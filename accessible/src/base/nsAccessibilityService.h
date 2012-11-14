@@ -8,7 +8,6 @@
 
 #include "nsIAccessibilityService.h"
 
-#include "a11yGeneric.h"
 #include "nsAccDocManager.h"
 
 #include "mozilla/a11y/FocusManager.h"
@@ -230,15 +229,6 @@ private:
    * Indicates whether accessibility service was shutdown.
    */
   static bool gIsShutdown;
-
-  /**
-   * Does this content node have a universal ARIA property set on it?
-   * A universal ARIA property is one that can be defined on any element even if there is no role.
-   *
-   * @param aContent The content node to test
-   * @return true if there is a universal ARIA property set on the node
-   */
-  bool HasUniversalAriaProperty(nsIContent *aContent);
 
   friend nsAccessibilityService* GetAccService();
   friend mozilla::a11y::FocusManager* mozilla::a11y::FocusMgr();

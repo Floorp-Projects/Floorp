@@ -261,16 +261,17 @@ protected:
   nsListenerStruct* FindEventHandler(uint32_t aEventType, nsIAtom* aTypeAtom);
 
   /**
-   * Set the "inline" event listener for aName to aHandler.  aHandler
-   * may be null to indicate that we should lazily get and compile the
-   * string for this listener.  The nsListenerStruct that results, if
-   * any, is returned in aListenerStruct.
+   * Set the "inline" event listener for aName to aHandler.  aHandler may be
+   * have no actual handler set to indicate that we should lazily get and
+   * compile the string for this listener, but in that case aContext and
+   * aScopeGlobal must be non-null.  Otherwise, aContext and aScopeGlobal are
+   * allowed to be null.  The nsListenerStruct that results, if any, is returned
+   * in aListenerStruct.
    */
   nsresult SetEventHandlerInternal(nsIScriptContext *aContext,
-                                   JSContext* aCx,
                                    JSObject* aScopeGlobal,
                                    nsIAtom* aName,
-                                   JSObject *aHandler,
+                                   const nsEventHandler& aHandler,
                                    bool aPermitUntrustedEvents,
                                    nsListenerStruct **aListenerStruct);
 
@@ -280,23 +281,47 @@ protected:
 
 public:
   /**
-   * Set the "inline" event listener for aEventName to |v|.  This
-   * might actually remove the event listener, depending on the value
-   * of |v|.  Note that on entry to this function cx and aScope might
-   * not be in the same compartment, though cx and v are guaranteed to
-   * be in the same compartment.  If aExpectScriptContext is false,
-   * not finding an nsIScriptContext does not cause failure.
+   * Set the "inline" event listener for aEventName to aHandler.  If
+   * aHandler is null, this will actually remove the event listener
    */
-  nsresult SetEventHandlerToJsval(nsIAtom* aEventName, JSContext* cx,
-                                  JSObject* aScope, const jsval& v,
-                                  bool aExpectScriptContext);
+  nsresult SetEventHandler(nsIAtom* aEventName,
+                           mozilla::dom::EventHandlerNonNull* aHandler);
+  nsresult SetEventHandler(mozilla::dom::OnErrorEventHandlerNonNull* aHandler);
+  nsresult SetEventHandler(mozilla::dom::BeforeUnloadEventHandlerNonNull* aHandler);
+
   /**
    * Get the value of the "inline" event listener for aEventName.
    * This may cause lazy compilation if the listener is uncompiled.
+   *
+   * Note: It's the caller's responsibility to make sure to call the right one
+   * of these methods.  In particular, "onerror" events use
+   * OnErrorEventHandlerNonNull for some event targets and EventHandlerNonNull
+   * for others.
    */
-  void GetEventHandler(nsIAtom *aEventName, jsval *vp);
+  mozilla::dom::EventHandlerNonNull* GetEventHandler(nsIAtom *aEventName)
+  {
+    const nsEventHandler* handler = GetEventHandlerInternal(aEventName);
+    return handler ? handler->EventHandler() : nullptr;
+  }
+  mozilla::dom::OnErrorEventHandlerNonNull* GetOnErrorEventHandler()
+  {
+    const nsEventHandler* handler = GetEventHandlerInternal(nsGkAtoms::onerror);
+    return handler ? handler->OnErrorEventHandler() : nullptr;
+  }
+  mozilla::dom::BeforeUnloadEventHandlerNonNull* GetOnBeforeUnloadEventHandler()
+  {
+    const nsEventHandler* handler =
+      GetEventHandlerInternal(nsGkAtoms::onbeforeunload);
+    return handler ? handler->BeforeUnloadEventHandler() : nullptr;
+  }
 
 protected:
+  /**
+   * Helper method for implementing the various Get*EventHandler above.  Will
+   * return null if we don't have an event handler for this event name.
+   */
+  const nsEventHandler* GetEventHandlerInternal(nsIAtom* aEventName);
+
   void AddEventListener(nsIDOMEventListener *aListener, 
                         uint32_t aType,
                         nsIAtom* aTypeAtom,

@@ -1,10 +1,16 @@
 chrome.manifest
 components/PdfStreamConverter.js
+content/build/pdf.js
 content/PdfJs.jsm
 content/web/debugger.js
 content/web/images/annotation-check.svg
 content/web/images/annotation-comment.svg
-content/web/images/annotation-text.svg
+content/web/images/annotation-help.svg
+content/web/images/annotation-insert.svg
+content/web/images/annotation-key.svg
+content/web/images/annotation-newparagraph.svg
+content/web/images/annotation-note.svg
+content/web/images/annotation-paragraph.svg
 content/web/images/findbarButton-next-rtl.png
 content/web/images/findbarButton-next.png
 content/web/images/findbarButton-previous-rtl.png

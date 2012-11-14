@@ -33,7 +33,6 @@ var xml = <prefs>
 <pref><name>security.ssl2.des_64</name></pref>
 <pref><name>print.always_cache_old_pres</name></pref>
 <pref><name>security.ssl3.rsa_des_sha</name></pref>
-<pref><name>security.warn_entering_weak.show_once</name></pref>
 <pref><name>network.proxy.http_port</name></pref>
 <pref><name>browser.display.use_document_colors</name></pref>
 <pref><name>browser.preferences.animateFadeIn</name></pref>
@@ -109,7 +108,6 @@ var xml = <prefs>
 <pref><name>browser.tabs.opentabfor.middleclick</name></pref>
 <pref><name>font.size.variable.x-tamil</name></pref>
 <pref><name>layout.word_select.eat_space_to_next_word</name></pref>
-<pref><name>security.warn_submit_insecure</name></pref>
 <pref><name>network.negotiate-auth.gsslib</name></pref>
 <pref><name>mousewheel.withaltkey.action</name></pref>
 <pref><name>capability.policy.default.Window.top</name></pref>
@@ -273,7 +271,6 @@ var xml = <prefs>
 <pref><name>font.name.sans-serif.zh-HK</name></pref>
 <pref><name>dom.disable_window_open_feature.toolbar</name></pref>
 <pref><name>dom.popup_maximum</name></pref>
-<pref><name>security.warn_entering_secure</name></pref>
 <pref><name>mousewheel.horizscroll.withaltkey.numlines</name></pref>
 <pref><name>browser.tabs.warnOnCloseOther</name></pref>
 <pref><name>intl.accept_charsets</name></pref>
@@ -295,7 +292,6 @@ var xml = <prefs>
 <pref><name>font.name-list.serif.x-beng</name></pref>
 <pref><name>dom.event.contextmenu.enabled</name></pref>
 <pref><name>browser.urlbar.clickSelectsAll</name></pref>
-<pref><name>security.warn_entering_secure.show_once</name></pref>
 <pref><name>font.size.fixed.zh-HK</name></pref>
 <pref><name>capability.policy.mailnews.SOAPCall.invoke</name></pref>
 <pref><name>capability.policy.default.SOAPCall.invokeVerifySourceHeader</name></pref>
@@ -540,7 +536,6 @@ var xml = <prefs>
 <pref><name>svg.enabled</name></pref>
 <pref><name>capability.policy.default.Window.location</name></pref>
 <pref><name>dom.disable_window_flip</name></pref>
-<pref><name>security.warn_submit_insecure.show_once</name></pref>
 <pref><name>font.size.variable.x-cyrillic</name></pref>
 <pref><name>font.size.fixed.x-western</name></pref>
 <pref><name>font.size.variable.x-devanagari</name></pref>
@@ -825,7 +820,6 @@ var xml = <prefs>
 <pref><name>network.proxy.gopher</name></pref>
 <pref><name>ui.key.saveLink.shift</name></pref>
 <pref><name>font.name.serif.ko</name></pref>
-<pref><name>security.warn_entering_weak</name></pref>
 <pref><name>font.name.sans-serif.th</name></pref>
 <pref><name>capability.policy.mailnews.*.substringData.get</name></pref>
 <pref><name>font.name.cursive.x-central-euro</name></pref>

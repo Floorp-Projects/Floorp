@@ -666,17 +666,17 @@ final class GeckoEditable
 
     @Override
     public Editable append(CharSequence text) {
-        return replace(length(), length(), text, 0, text.length());
+        return replace(mProxy.length(), mProxy.length(), text, 0, text.length());
     }
 
     @Override
     public Editable append(CharSequence text, int start, int end) {
-        return replace(length(), length(), text, start, end);
+        return replace(mProxy.length(), mProxy.length(), text, start, end);
     }
 
     @Override
     public Editable append(char text) {
-        return replace(length(), length(), String.valueOf(text), 0, 1);
+        return replace(mProxy.length(), mProxy.length(), String.valueOf(text), 0, 1);
     }
 
     // Editable interface
@@ -731,7 +731,7 @@ final class GeckoEditable
 
     @Override
     public void clear() {
-        replace(0, length(), "", 0, 0);
+        replace(0, mProxy.length(), "", 0, 0);
     }
 
     @Override
@@ -759,57 +759,60 @@ final class GeckoEditable
 
     @Override
     public void getChars(int start, int end, char[] dest, int destoff) {
-        throw new UnsupportedOperationException();
+        /* overridden Editable interface methods in GeckoEditable must not be called directly
+           outside of GeckoEditable. Instead, the call must go through mProxy, which ensures
+           that Java is properly synchronized with Gecko */
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     /* Spanned interface */
 
     @Override
     public int getSpanEnd(Object tag) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     public int getSpanFlags(Object tag) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     public int getSpanStart(Object tag) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     public <T> T[] getSpans(int start, int end, Class<T> type) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     @SuppressWarnings("rawtypes") // nextSpanTransition uses raw Class in its Android declaration
     public int nextSpanTransition(int start, int limit, Class type) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     /* CharSequence interface */
 
     @Override
     public char charAt(int index) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     public int length() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     public CharSequence subSequence(int start, int end) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     public String toString() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("method must be called through mProxy");
     }
 }
 

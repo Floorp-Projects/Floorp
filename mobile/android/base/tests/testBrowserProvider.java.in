@@ -38,14 +38,14 @@ public class testBrowserProvider extends ContentProviderTest {
     private Uri mBookmarksPositionUri;
     private Uri mHistoryUri;
     private Uri mHistoryOldUri;
-    private Uri mImagesUri;
     private Uri mCombinedUri;
+    private Uri mFaviconsUri;
+    private Uri mThumbnailsUri;
 
     private String mBookmarksIdCol;
     private String mBookmarksTitleCol;
     private String mBookmarksUrlCol;
     private String mBookmarksFaviconCol;
-    private String mBookmarksThumbnailCol;
     private String mBookmarksParentCol;
     private String mBookmarksTypeCol;
     private String mBookmarksPositionCol;
@@ -65,16 +65,11 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mHistoryUrlCol;
     private String mHistoryVisitsCol;
     private String mHistoryFaviconCol;
-    private String mHistoryThumbnailCol;
     private String mHistoryLastVisitedCol;
     private String mHistoryGuidCol;
     private String mHistoryIsDeletedCol;
     private String mHistoryDateCreatedCol;
     private String mHistoryDateModifiedCol;
-
-    private String mImagesThumbnailCol;
-    private String mImagesFaviconCol;
-    private String mImagesUrlCol;
 
     private String mCombinedIdCol;
     private String mCombinedBookmarkIdCol;
@@ -85,9 +80,15 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mCombinedVisitsCol;
     private String mCombinedLastVisitedCol;
     private String mCombinedFaviconCol;
-    private String mCombinedThumbnailCol;
     private int mCombinedDisplayNormal;
     private int mCombinedDisplayReader;
+
+    private String mFaviconsUrlCol;
+    private String mFaviconsPageUrlCol;
+    private String mFaviconsDataCol;
+
+    private String mThumbnailsUrlCol;
+    private String mThumbnailsDataCol;
 
     @Override
     protected int getTestType() {
@@ -98,8 +99,9 @@ public class testBrowserProvider extends ContentProviderTest {
         mBookmarksUri = getContentUri("Bookmarks");
         mHistoryUri = getContentUri("History");
         mHistoryOldUri = getUriColumn("History", "CONTENT_OLD_URI");
-        mImagesUri = getContentUri("Images");
         mCombinedUri = getContentUri("Combined");
+        mFaviconsUri = getContentUri("Favicons");
+        mThumbnailsUri = getContentUri("Thumbnails");
 
         mBookmarksPositionUri = getUriColumn("Bookmarks", "POSITIONS_CONTENT_URI");
 
@@ -115,7 +117,6 @@ public class testBrowserProvider extends ContentProviderTest {
         mBookmarksTitleCol = getStringColumn("Bookmarks", "TITLE");
         mBookmarksUrlCol = getStringColumn("Bookmarks", "URL");
         mBookmarksFaviconCol = getStringColumn("Bookmarks", "FAVICON");
-        mBookmarksThumbnailCol = getStringColumn("Bookmarks", "THUMBNAIL");
         mBookmarksParentCol = getStringColumn("Bookmarks", "PARENT");
         mBookmarksTypeCol = getStringColumn("Bookmarks", "TYPE");
         mBookmarksPositionCol = getStringColumn("Bookmarks", "POSITION");
@@ -136,15 +137,10 @@ public class testBrowserProvider extends ContentProviderTest {
         mHistoryVisitsCol = getStringColumn("History", "VISITS");
         mHistoryLastVisitedCol = getStringColumn("History", "DATE_LAST_VISITED");
         mHistoryFaviconCol = getStringColumn("History", "FAVICON");
-        mHistoryThumbnailCol = getStringColumn("History", "THUMBNAIL");
         mHistoryGuidCol = getStringColumn("History", "GUID");
         mHistoryIsDeletedCol = getStringColumn("History", "IS_DELETED");
         mHistoryDateCreatedCol = getStringColumn("History", "DATE_CREATED");
         mHistoryDateModifiedCol = getStringColumn("History", "DATE_MODIFIED");
-
-        mImagesUrlCol = getStringColumn("Images", "URL");
-        mImagesFaviconCol = getStringColumn("Images", "FAVICON");
-        mImagesThumbnailCol = getStringColumn("Images", "THUMBNAIL");
 
         mCombinedIdCol = getStringColumn("Combined", "_ID");
         mCombinedBookmarkIdCol = getStringColumn("Combined", "BOOKMARK_ID");
@@ -155,10 +151,16 @@ public class testBrowserProvider extends ContentProviderTest {
         mCombinedVisitsCol = getStringColumn("Combined", "VISITS");
         mCombinedLastVisitedCol = getStringColumn("Combined", "DATE_LAST_VISITED");
         mCombinedFaviconCol = getStringColumn("Combined", "FAVICON");
-        mCombinedThumbnailCol = getStringColumn("Combined", "THUMBNAIL");
 
         mCombinedDisplayNormal = getIntColumn("Combined", "DISPLAY_NORMAL");
         mCombinedDisplayReader = getIntColumn("Combined", "DISPLAY_READER");
+
+        mFaviconsUrlCol = getStringColumn("Favicons", "URL");
+        mFaviconsPageUrlCol = getStringColumn("Favicons", "PAGE_URL");
+        mFaviconsDataCol = getStringColumn("Favicons", "DATA");
+
+        mThumbnailsUrlCol = getStringColumn("Thumbnails", "URL");
+        mThumbnailsDataCol = getStringColumn("Thumbnails", "DATA");
     }
 
     private void loadMobileFolderId() throws Exception {
@@ -196,9 +198,11 @@ public class testBrowserProvider extends ContentProviderTest {
         c = mProvider.query(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 0, "All history entries were deleted");
 
-        mProvider.delete(appendUriParam(mImagesUri, "PARAM_IS_SYNC", "1"), null, null);
-        c = mProvider.query(appendUriParam(mImagesUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
-        mAsserter.is(c.getCount(), 0, "All images were deleted");
+        mProvider.delete(mFaviconsUri, null, null);
+        mAsserter.is(c.getCount(), 0, "All favicons were deleted");
+
+        mProvider.delete(mThumbnailsUri, null, null);
+        mAsserter.is(c.getCount(), 0, "All thumbnails were deleted");
     }
 
     private ContentValues createBookmark(String title, String url, long parentId,
@@ -267,6 +271,25 @@ public class testBrowserProvider extends ContentProviderTest {
         return historyEntry;
     }
 
+    private ContentValues createFaviconEntry(String pageUrl, String data) throws Exception {
+        ContentValues faviconEntry = new ContentValues();
+
+        faviconEntry.put(mFaviconsPageUrlCol, pageUrl);
+        faviconEntry.put(mFaviconsUrlCol, pageUrl + "/favicon.ico");
+        faviconEntry.put(mFaviconsDataCol, data.getBytes("UTF8"));
+
+        return faviconEntry;
+    }
+
+    private ContentValues createThumbnailEntry(String pageUrl, String data) throws Exception {
+        ContentValues thumbnailEntry = new ContentValues();
+
+        thumbnailEntry.put(mThumbnailsUrlCol, pageUrl);
+        thumbnailEntry.put(mThumbnailsDataCol, data.getBytes("UTF8"));
+
+        return thumbnailEntry;
+    }
+
     private ContentValues createOneHistoryEntry() throws Exception {
         return createHistoryEntry("Example", "http://example.com", 10, System.currentTimeMillis());
     }
@@ -290,9 +313,16 @@ public class testBrowserProvider extends ContentProviderTest {
                                null);
     }
 
-    private Cursor getImagesByUrl(String url) throws Exception {
-        return mProvider.query(mImagesUri, null,
-                               mImagesUrlCol + " = ?",
+    private Cursor getFaviconsByUrl(String url) throws Exception {
+        return mProvider.query(mCombinedUri, null,
+                               mCombinedUrlCol + " = ?",
+                               new String[] { url },
+                               null);
+    }
+
+    private Cursor getThumbnailByUrl(String url) throws Exception {
+        return mProvider.query(mThumbnailsUri, null,
+                               mThumbnailsUrlCol + " = ?",
                                new String[] { url },
                                null);
     }
@@ -304,20 +334,23 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestSpecialFolders());
 
         mTests.add(new TestInsertBookmarks());
-        mTests.add(new TestInsertBookmarksImages());
+        mTests.add(new TestInsertBookmarksFavicons());
         mTests.add(new TestDeleteBookmarks());
-        mTests.add(new TestDeleteBookmarksImages());
+        mTests.add(new TestDeleteBookmarksFavicons());
         mTests.add(new TestUpdateBookmarks());
-        mTests.add(new TestUpdateBookmarksImages());
+        mTests.add(new TestUpdateBookmarksFavicons());
         mTests.add(new TestPositionBookmarks());
 
         mTests.add(new TestInsertHistory());
-        mTests.add(new TestInsertHistoryImages());
+        mTests.add(new TestInsertHistoryFavicons());
         mTests.add(new TestDeleteHistory());
-        mTests.add(new TestDeleteHistoryImages());
+        mTests.add(new TestDeleteHistoryFavicons());
         mTests.add(new TestUpdateHistory());
-        mTests.add(new TestUpdateHistoryImages());
+        mTests.add(new TestUpdateHistoryFavicons());
         mTests.add(new TestUpdateOrInsertHistory());
+        mTests.add(new TestInsertHistoryThumbnails());
+        mTests.add(new TestUpdateHistoryThumbnails());
+        mTests.add(new TestDeleteHistoryThumbnails());
 
         mTests.add(new TestBatchOperations());
 
@@ -435,29 +468,25 @@ public class testBrowserProvider extends ContentProviderTest {
         }
 
         // Force a Constraint error, see if later operations still apply correctly
-        public void testApplyBatchErrors() {
+        public void testApplyBatchErrors() throws Exception {
             ArrayList<ContentProviderOperation> mOperations
                 = new ArrayList<ContentProviderOperation>();
 
             // Test a bunch of inserts with applyBatch
-            ContentValues values = new ContentValues();
             ContentProviderOperation.Builder builder = null;
-
-            values.clear();
-            values.put(mImagesUrlCol, "http://www.test.org");
-            values.put(mImagesFaviconCol, "http://www.test.org/favicon.ico");
-            builder = ContentProviderOperation.newInsert(mImagesUri);
+            ContentValues values = createFaviconEntry("http://www.test.org", "FAVICON");
+            builder = ContentProviderOperation.newInsert(mFaviconsUri);
             builder.withValues(values);
             mOperations.add(builder.build());
 
             // Make a duplicate, this will fail because of a UNIQUE constraint
-            builder = ContentProviderOperation.newInsert(mImagesUri);
+            builder = ContentProviderOperation.newInsert(mFaviconsUri);
             builder.withValues(values);
             mOperations.add(builder.build());
 
             // This is valid and should be in the table afterwards
-            values.put(mImagesUrlCol, "http://www.test.org/valid");
-            builder = ContentProviderOperation.newInsert(mImagesUri);
+            values.put(mFaviconsUrlCol, "http://www.test.org/valid.ico");
+            builder = ContentProviderOperation.newInsert(mFaviconsUri);
             builder.withValues(values);
             mOperations.add(builder.build());
 
@@ -471,13 +500,13 @@ public class testBrowserProvider extends ContentProviderTest {
             }
 
             // This test may need to go away if Bug 717428 is fixed.
-            mAsserter.is(seenException, true, "Expected failure in images table");
+            mAsserter.is(seenException, true, "Expected failure in favicons table");
 
             boolean allFound = true;
-            Cursor cursor = mProvider.query(mImagesUri,
+            Cursor cursor = mProvider.query(mFaviconsUri,
                                             null,
-                                            mImagesUrlCol + " = ?",
-                                            new String[] { "http://www.test.org/valid" },
+                                            mFaviconsUrlCol + " = ?",
+                                            new String[] { "http://www.test.org/valid.ico" },
                                             null);
 
             if (!cursor.moveToFirst())
@@ -618,11 +647,11 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(new Long(id), new Long(-1),
                          "Should not be able to insert bookmark with null type");
 
-            b = createOneBookmark();
-            b.put(mBookmarksParentCol, -1);
-            id = -1;
-
             if (Build.VERSION.SDK_INT >= 8) {
+                b = createOneBookmark();
+                b.put(mBookmarksParentCol, -1);
+                id = -1;
+
                 try {
                     id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
                 } catch (Exception e) {}
@@ -643,33 +672,30 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
-    class TestInsertBookmarksImages extends Test {
+    class TestInsertBookmarksFavicons extends Test {
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
 
             final String favicon = "FAVICON";
-            final String thumbnail = "THUMBNAIL";
-
-            b.put(mBookmarksFaviconCol, favicon.getBytes("UTF8"));
-            b.put(mBookmarksThumbnailCol, thumbnail.getBytes("UTF8"));
+            final String pageUrl = b.getAsString(mBookmarksUrlCol);
 
             long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
-            Cursor c = getBookmarkById(id, new String[] { mBookmarksFaviconCol, mBookmarksThumbnailCol });
+
+            // Insert the favicon into the favicons table
+            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, favicon));
+
+            Cursor c = getBookmarkById(id, new String[] { mBookmarksFaviconCol });
 
             mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
 
             mAsserter.is(new String(c.getBlob(c.getColumnIndex(mBookmarksFaviconCol)), "UTF8"),
                          favicon, "Inserted bookmark has corresponding favicon image");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mBookmarksThumbnailCol)), "UTF8"),
-                         thumbnail, "Inserted bookmark has corresponding thumbnail image");
 
-            c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+            c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
 
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
-                         favicon, "Inserted image has corresponding favicon image");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesThumbnailCol)), "UTF8"),
-                         thumbnail, "Inserted image has corresponding thumbnail image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                         favicon, "Inserted favicon has corresponding favicon image");
         }
     }
 
@@ -742,20 +768,23 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
-    class TestDeleteBookmarksImages extends Test {
+    class TestDeleteBookmarksFavicons extends Test {
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
-            b.put(mBookmarksFaviconCol, new String("FAVICON").getBytes("UTF8"));
 
+            final String pageUrl = b.getAsString(mBookmarksUrlCol);
             long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
 
-            Cursor c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+            // Insert the favicon into the favicons table
+            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, "FAVICON"));
+
+            Cursor c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
 
             mProvider.delete(ContentUris.withAppendedId(mBookmarksUri, id), null, null);
 
-            c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
-            mAsserter.is(c.moveToFirst(), false, "Image is deleted with last reference to it");
+            c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), false, "Favicon is deleted with last reference to it");
         }
     }
 
@@ -847,32 +876,34 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
-    class TestUpdateBookmarksImages extends Test {
+    class TestUpdateBookmarksFavicons extends Test {
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
 
             final String favicon = "FAVICON";
-            b.put(mBookmarksFaviconCol, favicon.getBytes("UTF8"));
-
-            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
-
-            Cursor c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
-
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
-                         favicon, "Inserted image has corresponding favicon image");
-
-            ContentValues u = new ContentValues();
             final String newFavicon = "NEW_FAVICON";
-            u.put(mBookmarksFaviconCol, newFavicon.getBytes("UTF8"));
+            final String pageUrl = b.getAsString(mBookmarksUrlCol);
 
-            mProvider.update(ContentUris.withAppendedId(mBookmarksUri, id), u, null, null);
+            mProvider.insert(mBookmarksUri, b);
 
-            c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Updated images found");
+            // Insert the favicon into the favicons table
+            ContentValues f = createFaviconEntry(pageUrl, favicon);
+            long faviconId = ContentUris.parseId(mProvider.insert(mFaviconsUri, f));
 
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
-                         newFavicon, "Updated image has corresponding favicon image");
+            Cursor c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                         favicon, "Inserted favicon has corresponding favicon image");
+
+            ContentValues u = createFaviconEntry(pageUrl, newFavicon);
+            mProvider.update(mFaviconsUri, u, null, null);
+
+            c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Updated favicon found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                         newFavicon, "Updated favicon has corresponding favicon image");
         }
     }
 
@@ -1003,33 +1034,30 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
-    class TestInsertHistoryImages extends Test {
+    class TestInsertHistoryFavicons extends Test {
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
             final String favicon = "FAVICON";
-            final String thumbnail = "THUMBNAIL";
-
-            h.put(mHistoryFaviconCol, favicon.getBytes("UTF8"));
-            h.put(mHistoryThumbnailCol, thumbnail.getBytes("UTF8"));
+            final String pageUrl = h.getAsString(mHistoryUrlCol);
 
             long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
-            Cursor c = getHistoryEntryById(id, new String[] { mHistoryFaviconCol, mHistoryThumbnailCol });
+
+            // Insert the favicon into the favicons table
+            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, favicon));
+
+            Cursor c = getHistoryEntryById(id, new String[] { mHistoryFaviconCol });
 
             mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
 
             mAsserter.is(new String(c.getBlob(c.getColumnIndex(mHistoryFaviconCol)), "UTF8"),
                          favicon, "Inserted history entry has corresponding favicon image");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mHistoryThumbnailCol)), "UTF8"),
-                         thumbnail, "Inserted history entry has corresponding thumbnail image");
 
-            c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+            c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
 
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
-                         favicon, "Inserted image has corresponding favicon image");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesThumbnailCol)), "UTF8"),
-                         thumbnail, "Inserted image has corresponding thumbnail image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                         favicon, "Inserted favicon has corresponding favicon image");
         }
     }
 
@@ -1077,20 +1105,23 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
-    class TestDeleteHistoryImages extends Test {
+    class TestDeleteHistoryFavicons extends Test {
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
-            h.put(mHistoryFaviconCol, new String("FAVICON").getBytes("UTF8"));
 
             long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            final String pageUrl = h.getAsString(mHistoryUrlCol);
 
-            Cursor c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+            // Insert the favicon into the favicons table
+            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, "FAVICON"));
+
+            Cursor c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
 
             mProvider.delete(ContentUris.withAppendedId(mHistoryUri, id), null, null);
 
-            c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
-            mAsserter.is(c.moveToFirst(), false, "Image is deleted with last reference to it");
+            c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), false, "Favicon is deleted with last reference to it");
         }
     }
 
@@ -1173,32 +1204,34 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
-    class TestUpdateHistoryImages extends Test {
+    class TestUpdateHistoryFavicons extends Test {
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
             final String favicon = "FAVICON";
-            h.put(mHistoryFaviconCol, favicon.getBytes("UTF8"));
-
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
-
-            Cursor c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
-
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
-                         favicon, "Inserted image has corresponding favicon image");
-
-            ContentValues u = new ContentValues();
             final String newFavicon = "NEW_FAVICON";
-            u.put(mHistoryFaviconCol, newFavicon.getBytes("UTF8"));
+            final String pageUrl = h.getAsString(mHistoryUrlCol);
 
-            mProvider.update(ContentUris.withAppendedId(mHistoryUri, id), u, null, null);
+            mProvider.insert(mHistoryUri, h);
 
-            c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
-            mAsserter.is(c.moveToFirst(), true, "Updated images found");
+            // Insert the favicon into the favicons table
+            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, favicon));
 
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
-                         newFavicon, "Updated image has corresponding favicon image");
+            Cursor c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                         favicon, "Inserted favicon has corresponding favicon image");
+
+            ContentValues u = createFaviconEntry(pageUrl, newFavicon);
+
+            mProvider.update(mFaviconsUri, u, null, null);
+
+            c = getFaviconsByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Updated favicon found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
+                         newFavicon, "Updated favicon has corresponding favicon image");
         }
     }
 
@@ -1317,6 +1350,77 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
+    class TestInsertHistoryThumbnails extends Test {
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+
+            final String thumbnail = "THUMBNAIL";
+            final String pageUrl = h.getAsString(mHistoryUrlCol);
+
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+
+            // Insert the thumbnail into the thumbnails table
+            mProvider.insert(mThumbnailsUri, createThumbnailEntry(pageUrl, thumbnail));
+
+            Cursor c = getThumbnailByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted thumbnail found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mThumbnailsDataCol)), "UTF8"),
+                         thumbnail, "Inserted thumbnail has corresponding thumbnail image");
+        }
+    }
+
+    class TestUpdateHistoryThumbnails extends Test {
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+
+            final String thumbnail = "THUMBNAIL";
+            final String newThumbnail = "NEW_THUMBNAIL";
+            final String pageUrl = h.getAsString(mHistoryUrlCol);
+
+            mProvider.insert(mHistoryUri, h);
+
+            // Insert the thumbnail into the thumbnails table
+            mProvider.insert(mThumbnailsUri, createThumbnailEntry(pageUrl, thumbnail));
+
+            Cursor c = getThumbnailByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted thumbnail found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mThumbnailsDataCol)), "UTF8"),
+                         thumbnail, "Inserted thumbnail has corresponding thumbnail image");
+
+            ContentValues u = createThumbnailEntry(pageUrl, newThumbnail);
+
+            mProvider.update(mThumbnailsUri, u, null, null);
+
+            c = getThumbnailByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Updated thumbnail found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mThumbnailsDataCol)), "UTF8"),
+                         newThumbnail, "Updated thumbnail has corresponding thumbnail image");
+        }
+    }
+
+    class TestDeleteHistoryThumbnails extends Test {
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            final String pageUrl = h.getAsString(mHistoryUrlCol);
+
+            // Insert the thumbnail into the thumbnails table
+            mProvider.insert(mThumbnailsUri, createThumbnailEntry(pageUrl, "THUMBNAIL"));
+
+            Cursor c = getThumbnailByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), true, "Inserted thumbnail found");
+
+            mProvider.delete(ContentUris.withAppendedId(mHistoryUri, id), null, null);
+
+            c = getThumbnailByUrl(pageUrl);
+            mAsserter.is(c.moveToFirst(), false, "Thumbnail is deleted with last reference to it");
+        }
+    }
+
     class TestCombinedView extends Test {
         public void test() throws Exception {
             final String TITLE_1 = "Test Page 1";
@@ -1329,45 +1433,30 @@ public class testBrowserProvider extends ContentProviderTest {
             final String URL_2 = "http://example2.com";
             final String URL_3 = "http://example3.com";
 
-            final String HISTORY_FAVICON = "HISTORY_FAVICON";
-            final String HISTORY_THUMBNAIL = "HISTORY_THUMBNAIL";
-            final String BOOKMARK_FAVICON = "BOOKMARK_FAVICON";
-            final String BOOKMARK_THUMBNAIL = "BOOKMARK_THUMBNAIL";
-
             final int VISITS = 10;
             final long LAST_VISITED = System.currentTimeMillis();
 
-            // Create a basic history entry with images
+            // Create a basic history entry
             ContentValues basicHistory = createHistoryEntry(TITLE_1, URL_1, VISITS, LAST_VISITED);
-            basicHistory.put(mHistoryFaviconCol, HISTORY_FAVICON.getBytes("UTF8"));
-            basicHistory.put(mHistoryThumbnailCol, HISTORY_THUMBNAIL.getBytes("UTF8"));
             long basicHistoryId = ContentUris.parseId(mProvider.insert(mHistoryUri, basicHistory));
 
-            // Create a basic bookmark entry with images
+            // Create a basic bookmark entry
             ContentValues basicBookmark = createBookmark(TITLE_2, URL_2, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            basicBookmark.put(mBookmarksFaviconCol, BOOKMARK_FAVICON.getBytes("UTF8"));
-            basicBookmark.put(mBookmarksThumbnailCol, BOOKMARK_THUMBNAIL.getBytes("UTF8"));
             long basicBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, basicBookmark));
 
             // Create a history entry and bookmark entry with the same URL to
             // represent a visited bookmark
             ContentValues combinedHistory = createHistoryEntry(TITLE_3_HISTORY, URL_3, VISITS, LAST_VISITED);
-            combinedHistory.put(mHistoryFaviconCol, HISTORY_FAVICON.getBytes("UTF8"));
-            combinedHistory.put(mHistoryThumbnailCol, HISTORY_THUMBNAIL.getBytes("UTF8"));
             long combinedHistoryId = ContentUris.parseId(mProvider.insert(mHistoryUri, combinedHistory));
 
 
             ContentValues combinedBookmark = createBookmark(TITLE_3_BOOKMARK, URL_3, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            combinedBookmark.put(mBookmarksFaviconCol, BOOKMARK_FAVICON.getBytes("UTF8"));
-            combinedBookmark.put(mBookmarksThumbnailCol, BOOKMARK_THUMBNAIL.getBytes("UTF8"));
             long combinedBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark));
 
             ContentValues combinedBookmark2 = createBookmark(TITLE_3_BOOKMARK2, URL_3, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            combinedBookmark2.put(mBookmarksFaviconCol, BOOKMARK_FAVICON.getBytes("UTF8"));
-            combinedBookmark2.put(mBookmarksThumbnailCol, BOOKMARK_THUMBNAIL.getBytes("UTF8"));
             long combinedBookmarkId2 = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark2));
 
             // Create a bookmark folder to make sure it _doesn't_ show up in the results
@@ -1397,10 +1486,6 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Basic history entry has correct number of visits");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedLastVisitedCol))), new Long(LAST_VISITED),
                          "Basic history entry has correct last visit time");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
-                          HISTORY_FAVICON, "Basic history entry has corresponding favicon image");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedThumbnailCol)), "UTF8"),
-                          HISTORY_THUMBNAIL, "Basic history entry has corresponding thumbnail image");
 
             // Second combined entry is basic bookmark entry
             mAsserter.is(c.moveToNext(), true, "Found basic bookmark entry");
@@ -1417,11 +1502,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getInt(c.getColumnIndex(mCombinedVisitsCol)), -1,
                          "Visits should be -1 for basic bookmark entry");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedLastVisitedCol))), new Long(-1),
-                         "Last visited should be -1 for basic bookmark entry");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
-                          BOOKMARK_FAVICON, "Basic bookmark entry has corresponding favicon image");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedThumbnailCol)), "UTF8"),
-                          BOOKMARK_THUMBNAIL, "Basic bookmark entry has corresponding thumbnail image");
+                         "Basic entry has correct last visit time");
 
             // Third combined entry is a combined history/bookmark entry
             mAsserter.is(c.moveToNext(), true, "Found third combined entry");
@@ -1443,10 +1524,6 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Combined entry has correct number of visits");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedLastVisitedCol))), new Long(LAST_VISITED),
                          "Combined entry has correct last visit time");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedFaviconCol)), "UTF8"),
-                          BOOKMARK_FAVICON, "Combined entry has bookmark favicon image");
-            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedThumbnailCol)), "UTF8"),
-                          BOOKMARK_THUMBNAIL, "Combined entry has bookmark thumbnail image");
         }
     }
 
@@ -1623,15 +1700,14 @@ public class testBrowserProvider extends ContentProviderTest {
             allVals = new ContentValues[count];
             for (int i = 0; i < count; i++) {
                 allVals[i] = new ContentValues();
-                allVals[i].put(mImagesThumbnailCol, i);
-                allVals[i].put(mImagesUrlCol, "http://www.test.org/" + i);
-                allVals[i].put(mImagesFaviconCol, i);
+                allVals[i].put(mThumbnailsDataCol, i);
+                allVals[i].put(mThumbnailsUrlCol, "http://www.test.org/" + i);
             }
 
-            inserts = mProvider.bulkInsert(mImagesUri, allVals);
+            inserts = mProvider.bulkInsert(mThumbnailsUri, allVals);
             mAsserter.is(inserts, count, "Expected number of inserts matches");
 
-            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            c = mProvider.query(mThumbnailsUri, null, null, null, null);
             mAsserter.is(c.getCount(), count, count + " thumbnails entries found");
         }
 
@@ -1649,7 +1725,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getCount(), count, count + " history entries found");
 
             // expiring with a normal priority should delete all but 10 thumbnails
-            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            c = mProvider.query(mThumbnailsUri, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
 
             ensureEmptyDatabase();
@@ -1663,7 +1739,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getCount(), 500, "500 history entries found");
 
             // expiring with a aggressive priority should delete all but 10 thumbnails
-            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            c = mProvider.query(mThumbnailsUri, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
 
             ensureEmptyDatabase();
@@ -1679,7 +1755,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getCount(), 2000, "2000 history entries found");
 
             // expiring with a normal priority should delete all but 10 thumbnails
-            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            c = mProvider.query(mThumbnailsUri, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
 
             ensureEmptyDatabase();
@@ -1695,7 +1771,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getCount(), 500, "500 history entries found");
 
             // expiring with a aggressive priority should delete all but 10 thumbnails
-            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            c = mProvider.query(mThumbnailsUri, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
         }
     }

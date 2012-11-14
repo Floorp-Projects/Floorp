@@ -18,6 +18,7 @@ EXPORTS = \
   AudioSampleFormat.h \
   AudioSegment.h \
   FileBlockCache.h \
+  MediaDecoderOwner.h \
   MediaResource.h \
   MediaSegment.h \
   MediaStreamGraph.h \

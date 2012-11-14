@@ -48,7 +48,7 @@ public:
   // Waits for metadata bytes to be downloaded, then reads and parses them.
   // Called on the decode thread only.
   nsresult ReadMetadata(nsVideoInfo* aInfo,
-                        nsHTMLMediaElement::MetadataTags** aTags);
+                        MetadataTags** aTags);
 
   // Waits for |ReadyToReadMetadata| or |NotifyDecoderShuttingDown|
   // notification, whichever comes first. Ensures no attempt to read metadata

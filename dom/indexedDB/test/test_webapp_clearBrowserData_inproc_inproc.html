@@ -1,0 +1,33 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!--
+  We have three similar tests here which each check that indexedDB data for a
+  browser inside an app is cleared upon request:
+
+    1) test_webapp_clearBrowserData_inproc_oop.html,
+    2) test_webapp_clearBrowserData_oop_inproc.html, and
+    3) test_webapp_clearBrowserData_inproc_inproc.html.
+
+  The only difference between these is that the first constructs an in-process
+  app frame which contains an out-of-process browser frame, the second
+  constructs an out-of-process app frame which contains an in-process browser
+  frame, and the third has both frames in process.
+
+  The tests share all their JS code.  webapp_clearBrowserData.js determines
+  which frames are in- and out-of-process by looking at the test's filename.
+-->
+
+<html>
+<head>
+  <title>Indexed Database Clear Browser Data Test inproc/inproc</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript;version=1.7" src="webapp_clearBrowserData.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+<body onload="start();">
+</body>
+</html>

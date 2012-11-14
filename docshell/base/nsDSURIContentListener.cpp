@@ -326,7 +326,7 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
            parentDocShellItem) {
 
         nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface(curDocShellItem);
-        if (curDocShell && curDocShell->GetIsContentBoundary()) {
+        if (curDocShell && curDocShell->GetIsBrowserOrApp()) {
           break;
         }
 
