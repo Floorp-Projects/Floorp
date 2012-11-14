@@ -16,9 +16,6 @@
 
     throw new Error("osfile_unix_front.jsm cannot be used from the main thread yet");
   }
-  importScripts("resource://gre/modules/osfile/osfile_unix_back.jsm");
-  importScripts("resource://gre/modules/osfile/ospath_unix_back.jsm");
-  importScripts("resource://gre/modules/osfile/osfile_shared_front.jsm");
   (function(exports) {
      "use strict";
 

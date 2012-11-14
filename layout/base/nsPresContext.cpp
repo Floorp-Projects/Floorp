@@ -2617,7 +2617,13 @@ nsRootPresContext::ComputePluginGeometryUpdates(nsIFrame* aFrame,
     aList->ComputeVisibilityForRoot(aBuilder, &region);
   }
 
+#ifdef XP_MACOSX
+  // We control painting of Mac plugins, so just apply geometry updates now.
+  // This is not happening during a paint event.
+  ApplyPluginGeometryUpdates();
+#else
   InitApplyPluginGeometryTimer();
+#endif
 }
 
 static void

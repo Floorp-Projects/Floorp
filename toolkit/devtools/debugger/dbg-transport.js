@@ -14,7 +14,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
  *
  * @param aInput nsIInputStream
  *        The input stream.
- * @param aOutput nsIOutputStream
+ * @param aOutput nsIAsyncOutputStream
  *        The output stream.
  *
  * Given a DebuggerTransport instance dt:

@@ -730,7 +730,6 @@ nsDocShell::nsDocShell():
     mCharsetReloadState(eCharsetReloadInit),
     mChildOffset(0),
     mBusyFlags(BUSY_FLAGS_NONE),
-    mFrameType(eFrameTypeRegular),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mLoadType(0),
     mMarginWidth(-1),
@@ -768,6 +767,7 @@ nsDocShell::nsDocShell():
 #ifdef DEBUG
     mInEnsureScriptEnv(false),
 #endif
+    mFrameType(eFrameTypeRegular),
     mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID),
     mParentCharsetSource(0)
 {

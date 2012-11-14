@@ -1870,7 +1870,7 @@ SpdySession3::Close(nsresult aReason)
   mStreamTransactionHash.Clear();
 
   if (NS_SUCCEEDED(aReason))
-    GenerateGoAway(goawayReason::OK);
+    GenerateGoAway(OK);
   mConnection = nullptr;
   mSegmentReader = nullptr;
   mSegmentWriter = nullptr;

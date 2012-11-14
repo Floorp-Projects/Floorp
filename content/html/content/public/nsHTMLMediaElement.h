@@ -22,6 +22,7 @@
 #include "nsDOMMediaStream.h"
 #include "mozilla/Mutex.h"
 #include "nsTimeRanges.h"
+#include "nsIDOMWakeLock.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -387,6 +388,19 @@ public:
 protected:
   class MediaLoadListener;
   class StreamListener;
+
+  class WakeLockBoolWrapper {
+  public:
+    WakeLockBoolWrapper(bool val = false) : mValue(val), mOuter(NULL), mWakeLock(NULL) {}
+    void SetOuter(nsHTMLMediaElement* outer) { mOuter = outer; }
+    operator bool() { return mValue; }
+    WakeLockBoolWrapper& operator=(bool val);
+    bool operator !() const { return !mValue; }
+  private:
+    bool mValue;
+    nsHTMLMediaElement* mOuter;
+    nsCOMPtr<nsIDOMMozWakeLock> mWakeLock;
+  };
 
   /**
    * Logs a warning message to the web console to report various failures.
@@ -814,7 +828,7 @@ protected:
 
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
-  bool mPaused;
+  WakeLockBoolWrapper mPaused;
 
   // True if the sound is muted.
   bool mMuted;
