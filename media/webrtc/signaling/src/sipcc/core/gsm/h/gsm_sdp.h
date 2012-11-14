@@ -50,7 +50,7 @@ static const gsmsdp_key_table_entry_t constraints_table[] = {
 };
 
 cc_causes_t gsmsdp_create_local_sdp(fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
-                                    boolean audio, boolean video, boolean data);
+                                    boolean audio, boolean video, boolean data, boolean offer);
 void gsmsdp_create_options_sdp(cc_sdp_t **sdp_pp);
 void gsmsdp_reset_local_sdp_media(fsmdef_dcb_t *dcb, fsmdef_media_t *media,
                                   boolean hold);
@@ -67,8 +67,8 @@ cc_causes_t gsmsdp_process_offer_sdp(fsm_fcb_t *fcb,
                                      cc_msgbody_info_t *msg_body,
                                      boolean init);
 cc_causes_t
-gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p,
-                              boolean initial_offer, boolean offer, boolean notify_stream_added);
+gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial_offer,
+                              boolean offer, boolean notify_stream_added, boolean create_answer);
 
 boolean gsmsdp_sdp_differs_from_previous_sdp(boolean rcv_only,
                                              fsmdef_media_t *media);
@@ -90,7 +90,8 @@ extern sdp_transport_e gsmsdp_negotiate_media_transport(fsmdef_dcb_t *dcb_p,
                                                         cc_sdp_t *cc_sdp_p,
                                                         boolean offer,
                                                         fsmdef_media_t *media,
-                                                        uint16_t *inst_num);
+                                                        uint16_t *inst_num,
+                                                        uint16 level);
 extern void gsmsdp_update_local_sdp_media_transport(fsmdef_dcb_t *dcb_p,
                                                     void *sdp_p,
                                                     fsmdef_media_t *media,
@@ -100,7 +101,8 @@ extern void gsmsdp_update_negotiated_transport(fsmdef_dcb_t *dcb_p,
                                                cc_sdp_t *cc_sdp_p,
                                                fsmdef_media_t *media,
                                                uint16_t crypto_inst,
-                                               sdp_transport_e transport);
+                                               sdp_transport_e transport,
+                                               uint16 level);
 extern void gsmsdp_update_crypto_transmit_key(fsmdef_dcb_t *dcb_p,
                                               fsmdef_media_t *media,
                                               boolean offer,
@@ -132,6 +134,6 @@ cc_causes_t gsmsdp_find_level_from_mid(fsmdef_dcb_t * dcb, const char * mid, uin
 void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb, const cc_media_constraints_t* constraints);
 cc_causes_t
 gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_audio, boolean *has_video, boolean *has_data);
-
+fsmdef_media_t* gsmsdp_find_media_by_media_type(fsmdef_dcb_t *dcb, sdp_media_e 	media_type);
 #endif
 
