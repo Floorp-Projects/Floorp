@@ -75,7 +75,8 @@ LogHeaders(const char *lineStart)
 //-----------------------------------------------------------------------------
 
 nsHttpTransaction::nsHttpTransaction()
-    : mRequestSize(0)
+    : mCallbacksLock("transaction mCallbacks lock")
+    , mRequestSize(0)
     , mConnection(nullptr)
     , mConnInfo(nullptr)
     , mRequestHead(nullptr)
@@ -391,9 +392,24 @@ void
 nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb,
                                         nsIEventTarget        **target)
 {
+    MutexAutoLock lock(mCallbacksLock);
     NS_IF_ADDREF(*cb = mCallbacks);
     if (target)
         NS_IF_ADDREF(*target = mConsumerTarget);
+}
+
+void
+nsHttpTransaction::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                        nsIEventTarget* aCallbackTarget)
+{
+    {
+        MutexAutoLock lock(mCallbacksLock);
+        mCallbacks = aCallbacks;
+        mConsumerTarget = aCallbackTarget;
+    }
+    if (mConnection) {
+        mConnection->SetSecurityCallbacks(aCallbacks, mConsumerTarget);
+    }
 }
 
 void
