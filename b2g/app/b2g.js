@@ -269,7 +269,7 @@ pref("widget.ime.android.fullscreen_threshold", 250); // in hundreths of inches
 
 // optimize images' memory usage
 pref("image.mem.decodeondraw", true);
-pref("content.image.allow_locking", false);
+pref("content.image.allow_locking", true);
 pref("image.mem.min_discard_timeout_ms", 10000);
 pref("image.mem.max_decoded_image_kb", 5120); /* 5MB */
 
