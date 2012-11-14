@@ -2366,7 +2366,7 @@ LambdaIsGetElem(JSObject &lambda)
         return NULL;
 
     JSFunction *fun = lambda.toFunction();
-    if (!fun->hasScript())
+    if (!fun->isInterpreted())
         return NULL;
 
     RawScript script = fun->script().get(nogc);
