@@ -21,7 +21,7 @@ class Element;
 class nsIAtom;
 
 // nsISupports must be on the primary inheritance chain 
-// because nsDOMSettableTokenList is traversed by nsGenericElement.
+// because nsDOMSettableTokenList is traversed by Element.
 class nsDOMSettableTokenList : public nsDOMTokenList,
                                public nsIDOMDOMSettableTokenList
 {

@@ -13,6 +13,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHTMLFormElement.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLOutputElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLOutputElement,
@@ -120,8 +121,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLOutputElement,
                                                        nsDOMTokenList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOutputElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLOutputElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLOutputElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLOutputElement, Element)
 
 DOMCI_NODE_DATA(HTMLOutputElement, nsHTMLOutputElement)
 

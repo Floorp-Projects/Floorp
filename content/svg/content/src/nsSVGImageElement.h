@@ -63,7 +63,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   void MaybeLoadSVGImage();
 

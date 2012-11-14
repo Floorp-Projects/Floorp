@@ -75,8 +75,8 @@ public:
   nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement, REFNSIID aIID,
                              void **aInstancePtr);
 
-  // From nsGenericElement
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  // From Element
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   void GetTitle(nsAString& aTitle) const
   {
@@ -255,7 +255,7 @@ public:
   void SetOuterHTML(const nsAString& aOuterHTML, mozilla::ErrorResult& aError);
   void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
                           mozilla::ErrorResult& aError);
-  nsGenericElement* GetOffsetParent()
+  mozilla::dom::Element* GetOffsetParent()
   {
     nsRect rcFrame;
     return GetOffsetRect(rcFrame);
@@ -956,7 +956,7 @@ protected:
    * @note This method flushes pending notifications (Flush_Layout).
    * @param aRect the offset information [OUT]
    */
-  virtual nsGenericElement* GetOffsetRect(nsRect& aRect);
+  virtual mozilla::dom::Element* GetOffsetRect(nsRect& aRect);
 
   /**
    * Returns true if this is the current document's body element
@@ -1554,11 +1554,11 @@ protected:
 
 #define NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC                                \
   NS_IMETHOD GetId(nsAString& aId) MOZ_FINAL {                                 \
-    nsGenericElement::GetId(aId);                                              \
+    mozilla::dom::Element::GetId(aId);                                         \
     return NS_OK;                                                              \
   }                                                                            \
   NS_IMETHOD SetId(const nsAString& aId) MOZ_FINAL {                           \
-    nsGenericElement::SetId(aId);                                              \
+    mozilla::dom::Element::SetId(aId);                                         \
     return NS_OK;                                                              \
   }                                                                            \
   NS_IMETHOD GetTitle(nsAString& aTitle) MOZ_FINAL {                           \
@@ -1723,11 +1723,12 @@ protected:
     if (!_argc) {                                                              \
       top = true;                                                              \
     }                                                                          \
-    nsGenericElement::ScrollIntoView(top);                                     \
+    mozilla::dom::Element::ScrollIntoView(top);                                \
     return NS_OK;                                                              \
   }                                                                            \
   NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) MOZ_FINAL {        \
-    nsGenericElement* offsetParent = nsGenericHTMLElement::GetOffsetParent();  \
+    mozilla::dom::Element* offsetParent =                                      \
+      nsGenericHTMLElement::GetOffsetParent();                                 \
     if (!offsetParent) {                                                       \
       *aOffsetParent = nullptr;                                                \
       return NS_OK;                                                            \

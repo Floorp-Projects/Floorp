@@ -648,8 +648,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLInputElement,
   //XXX should unlink more?
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
                                                               
-NS_IMPL_ADDREF_INHERITED(nsHTMLInputElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLInputElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLInputElement, nsHTMLInputElement)

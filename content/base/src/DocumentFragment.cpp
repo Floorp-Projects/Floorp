@@ -8,7 +8,7 @@
  */
 
 #include "mozilla/dom/DocumentFragment.h"
-#include "nsGenericElement.h" // for DOMCI_NODE_DATA
+#include "mozilla/dom/Element.h" // for DOMCI_NODE_DATA
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"

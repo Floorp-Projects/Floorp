@@ -142,8 +142,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLSelectElement,
                                                        nsIDOMHTMLCollection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLSelectElement, nsHTMLSelectElement)
@@ -2143,7 +2143,7 @@ nsHTMLOptionCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-nsGenericElement*
+Element*
 nsHTMLOptionCollection::GetElementAt(uint32_t aIndex)
 {
   return ItemAsOption(aIndex);

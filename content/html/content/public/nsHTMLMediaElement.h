@@ -358,7 +358,7 @@ public:
    */
   bool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   /**
    * Sets the Accept header on the HTTP channel to the required

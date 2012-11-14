@@ -22,6 +22,7 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 class nsHTMLTableRowElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLTableRowElement
@@ -82,8 +83,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTableRowElement,
                                                        nsIDOMNodeList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableRowElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableRowElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableRowElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableRowElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLTableRowElement, nsHTMLTableRowElement)

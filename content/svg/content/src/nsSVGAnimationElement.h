@@ -45,7 +45,7 @@ public:
 
   virtual bool IsNodeOfType(uint32_t aFlags) const;
 
-  // nsGenericElement specializations
+  // Element specializations
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,

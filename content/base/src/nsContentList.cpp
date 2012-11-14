@@ -14,7 +14,7 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsContentUtils.h"
 #include "nsCCUncollectableMarker.h"
@@ -66,7 +66,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsBaseContentList)
       if (c->IsPurple()) {
         c->RemovePurple();
       }
-      nsGenericElement::MarkNodeChildren(c);
+      Element::MarkNodeChildren(c);
     }
     return true;
   }
@@ -700,10 +700,10 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-nsGenericElement*
+Element*
 nsContentList::GetElementAt(uint32_t aIndex)
 {
-  return static_cast<nsGenericElement*>(Item(aIndex, true));
+  return static_cast<Element*>(Item(aIndex, true));
 }
 
 nsIContent*

@@ -154,7 +154,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(Element* aDest);
 
   /**
    * Called when an attribute is about to be changed
@@ -311,8 +311,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTextAreaElement,
   tmp->mState.Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLTextAreaElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLTextAreaElement, nsHTMLTextAreaElement)
@@ -1278,7 +1278,7 @@ nsHTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest)
+nsHTMLTextAreaElement::CopyInnerTo(Element* aDest)
 {
   nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);

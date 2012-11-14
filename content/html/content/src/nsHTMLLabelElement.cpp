@@ -43,8 +43,8 @@ nsHTMLLabelElement::~nsHTMLLabelElement()
 // nsISupports 
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLLabelElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLLabelElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLLabelElement, nsHTMLLabelElement)

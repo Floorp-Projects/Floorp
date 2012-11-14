@@ -54,7 +54,7 @@ public:
 
   virtual nsresult UnsetAttr(int32_t aNamespaceID, nsIAtom* aAttribute,
                              bool aNotify);
-  // nsGenericElement specializations
+  // Element specializations
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
