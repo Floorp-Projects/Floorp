@@ -7117,7 +7117,7 @@ let Reader = {
   // Version of the cache database schema
   DB_VERSION: 1,
 
-  DEBUG: 1,
+  DEBUG: 0,
 
   // Don't try to parse the page if it has too many elements (for memory and
   // performance reasons)
