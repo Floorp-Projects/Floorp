@@ -42,7 +42,7 @@
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -1505,7 +1505,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDocument,
                                               nsNodeUtils::LastRelease(this))
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
-  if (nsGenericElement::CanSkip(tmp, aRemovingAllowed)) {
+  if (Element::CanSkip(tmp, aRemovingAllowed)) {
     nsEventListenerManager* elm = tmp->GetListenerManager(false);
     if (elm) {
       elm->MarkForCC();
@@ -1515,11 +1515,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsDocument)
-  return nsGenericElement::CanSkipInCC(tmp);
+  return Element::CanSkipInCC(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDocument)
-  return nsGenericElement::CanSkipThis(tmp);
+  return Element::CanSkipThis(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 static PLDHashOperator
@@ -5708,7 +5708,7 @@ static void
 BlastSubtreeToPieces(nsINode *aNode)
 {
   if (aNode->IsElement()) {
-    nsGenericElement *element = static_cast<nsGenericElement*>(aNode);
+    Element *element = aNode->AsElement();
     const nsDOMAttributeMap *map = element->GetAttributeMap();
     if (map) {
       nsCOMPtr<nsIAttribute> attr;
@@ -7465,7 +7465,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
   }
 
   nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-  switch (nsGenericElement::StringToCORSMode(aCrossOriginAttr)) {
+  switch (Element::StringToCORSMode(aCrossOriginAttr)) {
   case CORS_NONE:
     // Nothing to do
     break;
@@ -7549,7 +7549,7 @@ nsDocument::PreloadStyle(nsIURI* uri, const nsAString& charset,
   CSSLoader()->LoadSheet(uri, NodePrincipal(),
                          NS_LossyConvertUTF16toASCII(charset),
                          obs,
-                         nsGenericElement::StringToCORSMode(aCrossOriginAttr));
+                         Element::StringToCORSMode(aCrossOriginAttr));
 }
 
 nsresult
@@ -8311,7 +8311,7 @@ nsDocument::MozCancelFullScreen()
 // to ensure we only call nsGlobalWindow::SetFullScreen() when it's safe to
 // run script. nsGlobalWindow::SetFullScreen() dispatches a synchronous event
 // (handled in chome code) which is unsafe to run if this is called in
-// nsGenericElement::UnbindFromTree().
+// Element::UnbindFromTree().
 class nsSetWindowFullScreen : public nsRunnable {
 public:
   nsSetWindowFullScreen(nsIDocument* aDoc, bool aValue)

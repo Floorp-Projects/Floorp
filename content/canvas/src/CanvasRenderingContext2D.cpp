@@ -502,12 +502,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(CanvasRenderingContext2D)
  if (nsCCUncollectableMarker::sGeneration && tmp->IsBlack()) {
-    nsGenericElement* canvasElement = tmp->mCanvasElement;
+   dom::Element* canvasElement = tmp->mCanvasElement;
     if (canvasElement) {
       if (canvasElement->IsPurple()) {
         canvasElement->RemovePurple();
       }
-      nsGenericElement::MarkNodeChildren(canvasElement);
+      dom::Element::MarkNodeChildren(canvasElement);
     }
     return true;
   }

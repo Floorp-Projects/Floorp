@@ -20,6 +20,7 @@
 #include "mozAutoDocUpdate.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // nsISupports methods:
@@ -111,12 +112,12 @@ nsMathMLElement::ParseAttribute(int32_t aNamespaceID,
                                              aValue, aResult);
 }
 
-static nsGenericElement::MappedAttributeEntry sMtableStyles[] = {
+static Element::MappedAttributeEntry sMtableStyles[] = {
   { &nsGkAtoms::width },
   { nullptr }
 };
 
-static nsGenericElement::MappedAttributeEntry sTokenStyles[] = {
+static Element::MappedAttributeEntry sTokenStyles[] = {
   { &nsGkAtoms::mathsize_ },
   { &nsGkAtoms::fontsize_ },
   { &nsGkAtoms::color },
@@ -124,7 +125,7 @@ static nsGenericElement::MappedAttributeEntry sTokenStyles[] = {
   { nullptr }
 };
 
-static nsGenericElement::MappedAttributeEntry sEnvironmentStyles[] = {
+static Element::MappedAttributeEntry sEnvironmentStyles[] = {
   { &nsGkAtoms::scriptlevel_ },
   { &nsGkAtoms::scriptminsize_ },
   { &nsGkAtoms::scriptsizemultiplier_ },
@@ -132,7 +133,7 @@ static nsGenericElement::MappedAttributeEntry sEnvironmentStyles[] = {
   { nullptr }
 };
 
-static nsGenericElement::MappedAttributeEntry sCommonPresStyles[] = {
+static Element::MappedAttributeEntry sCommonPresStyles[] = {
   { &nsGkAtoms::mathcolor_ },
   { &nsGkAtoms::mathbackground_ },
   { nullptr }
@@ -605,7 +606,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
 nsresult
 nsMathMLElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  nsresult rv = nsGenericElement::PreHandleEvent(aVisitor);
+  nsresult rv = Element::PreHandleEvent(aVisitor);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return PreHandleEventForLinks(aVisitor);

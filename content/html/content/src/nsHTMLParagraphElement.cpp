@@ -14,6 +14,7 @@
 #include "nsRuleData.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // XXX missing nav attributes
 
@@ -67,8 +68,8 @@ nsHTMLParagraphElement::~nsHTMLParagraphElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLParagraphElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLParagraphElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, Element)
 
 DOMCI_NODE_DATA(HTMLParagraphElement, nsHTMLParagraphElement)
 

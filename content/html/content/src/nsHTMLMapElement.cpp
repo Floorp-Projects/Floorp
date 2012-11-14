@@ -10,6 +10,7 @@
 #include "nsContentList.h"
 #include "nsCOMPtr.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLMapElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMapElement
@@ -60,8 +61,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLMapElement,
                                                        nsIDOMNodeList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLMapElement, nsHTMLMapElement)

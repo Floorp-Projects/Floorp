@@ -87,7 +87,7 @@ public:
   virtual void PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent);
 
-  // nsGenericElement specializations:
+  // Element specializations:
   using nsXMLElement::GetAttribute;
   using nsXMLElement::RemoveAttribute;
   using nsXMLElement::HasAttribute;

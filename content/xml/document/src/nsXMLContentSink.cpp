@@ -34,7 +34,6 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "nsRect.h"
-#include "nsGenericElement.h"
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"
 #include "nsScriptLoader.h"

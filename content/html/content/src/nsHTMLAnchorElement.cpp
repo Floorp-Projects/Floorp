@@ -25,8 +25,8 @@ class nsHTMLAnchorElement : public nsGenericHTMLElement,
                             public Link
 {
 public:
-  using nsGenericElement::GetText;
-  using nsGenericElement::SetText;
+  using Element::GetText;
+  using Element::SetText;
 
   nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLAnchorElement();
@@ -131,8 +131,8 @@ nsHTMLAnchorElement::~nsHTMLAnchorElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLAnchorElement, nsHTMLAnchorElement)

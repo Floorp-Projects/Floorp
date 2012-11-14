@@ -13,6 +13,8 @@
 #include "nsEventDispatcher.h"
 #include "nsHTMLSelectElement.h"
 
+using namespace mozilla::dom;
+
 /**
  * The implementation of &lt;optgroup&gt;
  */
@@ -32,8 +34,8 @@ nsHTMLOptGroupElement::~nsHTMLOptGroupElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLOptGroupElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLOptGroupElement, nsHTMLOptGroupElement)

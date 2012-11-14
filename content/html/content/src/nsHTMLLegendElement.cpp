@@ -30,8 +30,8 @@ nsHTMLLegendElement::~nsHTMLLegendElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLLegendElement, nsHTMLLegendElement)

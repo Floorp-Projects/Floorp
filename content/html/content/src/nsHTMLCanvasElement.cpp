@@ -189,8 +189,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLCanvasElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalCanvas)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLCanvasElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLCanvasElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLCanvasElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLCanvasElement, Element)
 
 DOMCI_NODE_DATA(HTMLCanvasElement, nsHTMLCanvasElement)
 
@@ -314,7 +314,7 @@ nsHTMLCanvasElement::GetOriginalCanvas()
 }
 
 nsresult
-nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest)
+nsHTMLCanvasElement::CopyInnerTo(Element* aDest)
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);

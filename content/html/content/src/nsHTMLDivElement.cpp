@@ -11,6 +11,7 @@
 #include "nsMappedAttributes.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 
@@ -25,8 +26,8 @@ nsHTMLDivElement::~nsHTMLDivElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLDivElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLDivElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, Element)
 
 DOMCI_NODE_DATA(HTMLDivElement, nsHTMLDivElement)
 

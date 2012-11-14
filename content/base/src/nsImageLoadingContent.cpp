@@ -26,7 +26,6 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsAsyncDOMEvent.h"
-#include "nsGenericElement.h"
 #include "nsImageFrame.h"
 
 #include "nsIPresShell.h"

@@ -14,7 +14,7 @@
 #define __NS_STYLEDELEMENT_H_
 
 #include "nsString.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 
 namespace mozilla {
 namespace css {
@@ -22,7 +22,7 @@ class StyleRule;
 }
 }
 
-typedef nsGenericElement nsStyledElementBase;
+typedef mozilla::dom::Element nsStyledElementBase;
 
 class nsStyledElementNotElementCSSInlineStyle : public nsStyledElementBase
 {

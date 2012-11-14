@@ -6,8 +6,9 @@
 #include "nsHTMLFrameSetElement.h"
 #include "jsapi.h"
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
+using namespace mozilla::dom;
 
+NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
 nsHTMLFrameSetElement::nsHTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mNumRows(0), mNumCols(0),
@@ -20,8 +21,8 @@ nsHTMLFrameSetElement::~nsHTMLFrameSetElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFrameSetElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLFrameSetElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLFrameSetElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLFrameSetElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLFrameSetElement, nsHTMLFrameSetElement)

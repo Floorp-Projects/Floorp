@@ -21,6 +21,7 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // XXX nav4 has type= start= (same as OL/UL)
 extern nsAttrValue::EnumTable kListTypeTable[];
@@ -121,8 +122,8 @@ nsHTMLSharedElement::~nsHTMLSharedElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSharedElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLSharedElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLSharedElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSharedElement, Element)
 
 
 DOMCI_DATA(HTMLParamElement, nsHTMLSharedElement)

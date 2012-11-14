@@ -58,8 +58,8 @@ nsHTMLElement::~nsHTMLElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLElement, Element)
 
 DOMCI_NODE_DATA(HTMLElement, nsHTMLElement)
 

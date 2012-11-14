@@ -8,7 +8,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsGenericElement.h" // DOMCI_NODE_DATA
+#include "mozilla/dom/Element.h" // DOMCI_NODE_DATA
 #include "Comment.h"
 
 using namespace mozilla;

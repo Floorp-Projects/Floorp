@@ -150,7 +150,7 @@ HTMLPropertiesCollection::NamedItem(JSContext* cx, const nsAString& name,
   return nullptr;
 }
 
-nsGenericElement*
+Element*
 HTMLPropertiesCollection::GetElementAt(uint32_t aIndex)
 {
   EnsureFresh();
