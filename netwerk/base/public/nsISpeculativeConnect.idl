@@ -7,9 +7,8 @@
 
 interface nsIURI;
 interface nsIInterfaceRequestor;
-interface nsIEventTarget;
 
-[scriptable, uuid(b3c53863-1313-480a-90a2-5b0da651ee5e)]
+[scriptable, uuid(fa580a8d-f4a4-47c5-8ade-4f9786e8d1de)]
 interface nsISpeculativeConnect : nsISupports
 {
     /**
@@ -24,13 +23,10 @@ interface nsISpeculativeConnect : nsISupports
      * @param aURI the URI of the hinted transaction
      * @param aCallbacks any security callbacks for use with SSL for interfaces
      *        such as nsIBadCertListener. May be null.
-     * @param aTarget the thread on which the release of the callbacks will
-     *        occur. May be null for "any thread".
      *
      */
     void speculativeConnect(in nsIURI aURI,
-                            in nsIInterfaceRequestor aCallbacks,
-                            in nsIEventTarget aTarget);
+                            in nsIInterfaceRequestor aCallbacks);
 
 };
 
