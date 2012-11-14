@@ -23,13 +23,14 @@
   <script type="application/javascript">
     //gA11yEventDumpToConsole = true; // debug stuff
 
+    var gLinkWindow = null;
     function closeDocChecker()
     {
       this.__proto__ = new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE);
 
       this.check = function closeDocChecker_check(aEvent)
       {
-        aEvent.accessible.rootDocument.window.close();
+        gLinkWindow = aEvent.accessible.rootDocument.window;
       }
 
       this.match = function closeDocChecker_match(aEvent)
@@ -55,8 +56,6 @@
         return "link + '" + aID + "' clicked.";
       }
     }
-
-gA11yEventDumpToConsole = true;
 
     var gQueue = null;
     function doTest()
@@ -89,6 +88,7 @@ gA11yEventDumpToConsole = true;
       // a: traversed state
       gQueue = new eventQueue();
       gQueue.push(new clickLink("link_traversed"));
+      gQueue.onFinish = function() { gLinkWindow.close(); }
       gQueue.invoke(); // will call SimpleTest.finsih();
     }
 
