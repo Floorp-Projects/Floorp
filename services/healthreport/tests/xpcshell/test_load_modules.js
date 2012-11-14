@@ -4,6 +4,7 @@
 "use strict";
 
 const modules = [
+  "healthreporter.jsm",
   "policy.jsm",
 ];
 
