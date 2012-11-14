@@ -44,9 +44,6 @@ addLoadEvent(function() {
   near(panner.coneOuterAngle, 360, "Correct default value for cone outer angle");
   near(panner.coneOuterGain, 0, "Correct default value for cone outer gain");
 
-  ok("coneGain" in panner, "panner.coneGain exists");
-  ok("distanceGain in panner", "panner.distanceGain exists");
-
   panner.setPosition(1, 1, 1);
   panner.setOrientation(1, 1, 1);
   panner.setVelocity(1, 1, 1);
