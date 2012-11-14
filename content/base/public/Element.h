@@ -570,26 +570,26 @@ public:
                            ErrorResult& aError);
   already_AddRefed<nsIHTMLCollection>
     GetElementsByClassName(const nsAString& aClassNames);
-  nsGenericElement* GetFirstElementChild() const;
-  nsGenericElement* GetLastElementChild() const;
-  nsGenericElement* GetPreviousElementSibling() const
+  Element* GetFirstElementChild() const;
+  Element* GetLastElementChild() const;
+  Element* GetPreviousElementSibling() const
   {
     nsIContent* previousSibling = GetPreviousSibling();
     while (previousSibling) {
       if (previousSibling->IsElement()) {
-        return static_cast<nsGenericElement*>(previousSibling);
+        return previousSibling->AsElement();
       }
       previousSibling = previousSibling->GetPreviousSibling();
     }
 
     return nullptr;
   }
-  nsGenericElement* GetNextElementSibling() const
+  Element* GetNextElementSibling() const
   {
     nsIContent* nextSibling = GetNextSibling();
     while (nextSibling) {
       if (nextSibling->IsElement()) {
-        return static_cast<nsGenericElement*>(nextSibling);
+        return nextSibling->AsElement();
       }
       nextSibling = nextSibling->GetNextSibling();
     }
@@ -920,7 +920,7 @@ protected:
                                     nsresult* aRetval);
 
   /**
-   * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
+   * Hook that is called by Element::SetAttr to allow subclasses to
    * deal with attribute sets.  This will only be called after we verify that
    * we're actually doing an attr set and will be called before
    * AttributeWillChange and before ParseAttribute and hence before we've set
@@ -943,7 +943,7 @@ protected:
   }
 
   /**
-   * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
+   * Hook that is called by Element::SetAttr to allow subclasses to
    * deal with attribute sets.  This will only be called after we have called
    * SetAndTakeAttr and AttributeChanged (that is, after we have actually set
    * the attr).  It will always be called under a scriptblocker.
@@ -980,7 +980,7 @@ protected:
    *
    * @param aRect offset rectangle
    */
-  virtual nsGenericElement* GetOffsetRect(nsRect& aRect);
+  virtual Element* GetOffsetRect(nsRect& aRect);
 
   /**
    * Retrieve the size of the padding rect of this element.
@@ -1182,17 +1182,18 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
   }
 
 #define NS_FORWARD_NSIDOMELEMENT_TO_GENERIC                                   \
+typedef mozilla::dom::Element Element;                                        \
 NS_IMETHOD GetTagName(nsAString& aTagName) MOZ_FINAL                          \
 {                                                                             \
-  nsGenericElement::GetTagName(aTagName);                                     \
+  Element::GetTagName(aTagName);                                              \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetClassList(nsIDOMDOMTokenList** aClassList) MOZ_FINAL            \
 {                                                                             \
-  nsGenericElement::GetClassList(aClassList);                                 \
+  Element::GetClassList(aClassList);                                          \
   return NS_OK;                                                               \
 }                                                                             \
-using nsGenericElement::GetAttribute;                                         \
+using Element::GetAttribute;                                                  \
 NS_IMETHOD GetAttribute(const nsAString& name, nsAString& _retval) MOZ_FINAL  \
 {                                                                             \
   nsString attr;                                                              \
@@ -1204,14 +1205,14 @@ NS_IMETHOD GetAttributeNS(const nsAString& namespaceURI,                      \
                           const nsAString& localName,                         \
                           nsAString& _retval) MOZ_FINAL                       \
 {                                                                             \
-  nsGenericElement::GetAttributeNS(namespaceURI, localName, _retval);         \
+  Element::GetAttributeNS(namespaceURI, localName, _retval);                  \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD SetAttribute(const nsAString& name,                                \
                         const nsAString& value)                               \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  nsGenericElement::SetAttribute(name, value, rv);                            \
+  Element::SetAttribute(name, value, rv);                                     \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD SetAttributeNS(const nsAString& namespaceURI,                      \
@@ -1219,10 +1220,10 @@ NS_IMETHOD SetAttributeNS(const nsAString& namespaceURI,                      \
                           const nsAString& value) MOZ_FINAL                   \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  nsGenericElement::SetAttributeNS(namespaceURI, qualifiedName, value, rv);   \
+  Element::SetAttributeNS(namespaceURI, qualifiedName, value, rv);            \
   return rv.ErrorCode();                                                      \
 }                                                                             \
-using nsGenericElement::RemoveAttribute;                                      \
+using Element::RemoveAttribute;                                               \
 NS_IMETHOD RemoveAttribute(const nsAString& name) MOZ_FINAL                   \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
@@ -1233,10 +1234,10 @@ NS_IMETHOD RemoveAttributeNS(const nsAString& namespaceURI,                   \
                              const nsAString& localName) MOZ_FINAL            \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  nsGenericElement::RemoveAttributeNS(namespaceURI, localName, rv);           \
+  Element::RemoveAttributeNS(namespaceURI, localName, rv);                    \
   return rv.ErrorCode();                                                      \
 }                                                                             \
-using nsGenericElement::HasAttribute;                                         \
+using Element::HasAttribute;                                                  \
 NS_IMETHOD HasAttribute(const nsAString& name,                                \
                            bool* _retval) MOZ_FINAL                           \
 {                                                                             \
@@ -1247,13 +1248,13 @@ NS_IMETHOD HasAttributeNS(const nsAString& namespaceURI,                      \
                           const nsAString& localName,                         \
                           bool* _retval) MOZ_FINAL                            \
 {                                                                             \
-  *_retval = nsGenericElement::HasAttributeNS(namespaceURI, localName);       \
+  *_retval = Element::HasAttributeNS(namespaceURI, localName);                \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetAttributeNode(const nsAString& name,                            \
                             nsIDOMAttr** _retval) MOZ_FINAL                   \
 {                                                                             \
-  NS_IF_ADDREF(*_retval = nsGenericElement::GetAttributeNode(name));          \
+  NS_IF_ADDREF(*_retval = Element::GetAttributeNode(name));                   \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD SetAttributeNode(nsIDOMAttr* newAttr,                              \
@@ -1263,7 +1264,7 @@ NS_IMETHOD SetAttributeNode(nsIDOMAttr* newAttr,                              \
     return NS_ERROR_INVALID_POINTER;                                          \
   }                                                                           \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = nsGenericElement::SetAttributeNode(newAttr, rv).get();           \
+  *_retval = Element::SetAttributeNode(newAttr, rv).get();                    \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
@@ -1273,7 +1274,7 @@ NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
     return NS_ERROR_INVALID_POINTER;                                          \
   }                                                                           \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = nsGenericElement::RemoveAttributeNode(oldAttr, rv).get();        \
+  *_retval = Element::RemoveAttributeNode(oldAttr, rv).get();                 \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
@@ -1281,35 +1282,35 @@ NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
                               nsIDOMAttr** _retval) MOZ_FINAL                 \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  NS_IF_ADDREF(*_retval = nsGenericElement::GetAttributeNodeNS(namespaceURI,  \
-                                                               localName,     \
-                                                               rv));          \
+  NS_IF_ADDREF(*_retval = Element::GetAttributeNodeNS(namespaceURI,           \
+                                                      localName,              \
+                                                      rv));                   \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* newAttr,                            \
                               nsIDOMAttr** _retval) MOZ_FINAL                 \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = nsGenericElement::SetAttributeNodeNS(newAttr, rv).get();         \
+  *_retval = Element::SetAttributeNodeNS(newAttr, rv).get();                  \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD GetElementsByTagName(const nsAString& name,                        \
                                 nsIDOMHTMLCollection** _retval) MOZ_FINAL     \
 {                                                                             \
-  nsGenericElement::GetElementsByTagName(name, _retval);                      \
+  Element::GetElementsByTagName(name, _retval);                               \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetElementsByTagNameNS(const nsAString& namespaceURI,              \
                                   const nsAString& localName,                 \
                                   nsIDOMHTMLCollection** _retval) MOZ_FINAL   \
 {                                                                             \
-  return nsGenericElement::GetElementsByTagNameNS(namespaceURI, localName,    \
-                                                  _retval);                   \
+  return Element::GetElementsByTagNameNS(namespaceURI, localName,             \
+                                         _retval);                            \
 }                                                                             \
 NS_IMETHOD GetElementsByClassName(const nsAString& classes,                   \
                                   nsIDOMHTMLCollection** _retval) MOZ_FINAL   \
 {                                                                             \
-  return nsGenericElement::GetElementsByClassName(classes, _retval);          \
+  return Element::GetElementsByClassName(classes, _retval);                   \
 }                                                                             \
 NS_IMETHOD GetChildElements(nsIDOMNodeList** aChildElements) MOZ_FINAL        \
 {                                                                             \
@@ -1318,7 +1319,7 @@ NS_IMETHOD GetChildElements(nsIDOMNodeList** aChildElements) MOZ_FINAL        \
 }                                                                             \
 NS_IMETHOD GetFirstElementChild(nsIDOMElement** aFirstElementChild) MOZ_FINAL \
 {                                                                             \
-  nsGenericElement* element = nsGenericElement::GetFirstElementChild();       \
+  Element* element = Element::GetFirstElementChild();                         \
   if (!element) {                                                             \
     *aFirstElementChild = nullptr;                                            \
     return NS_OK;                                                             \
@@ -1327,7 +1328,7 @@ NS_IMETHOD GetFirstElementChild(nsIDOMElement** aFirstElementChild) MOZ_FINAL \
 }                                                                             \
 NS_IMETHOD GetLastElementChild(nsIDOMElement** aLastElementChild) MOZ_FINAL   \
 {                                                                             \
-  nsGenericElement* element = nsGenericElement::GetLastElementChild();        \
+  Element* element = Element::GetLastElementChild();                          \
   if (!element) {                                                             \
     *aLastElementChild = nullptr;                                             \
     return NS_OK;                                                             \
@@ -1337,7 +1338,7 @@ NS_IMETHOD GetLastElementChild(nsIDOMElement** aLastElementChild) MOZ_FINAL   \
 NS_IMETHOD GetPreviousElementSibling(nsIDOMElement** aPreviousElementSibling) \
   MOZ_FINAL                                                                   \
 {                                                                             \
-  nsGenericElement* element = nsGenericElement::GetPreviousElementSibling();  \
+  Element* element = Element::GetPreviousElementSibling();                    \
   if (!element) {                                                             \
     *aPreviousElementSibling = nullptr;                                       \
     return NS_OK;                                                             \
@@ -1347,7 +1348,7 @@ NS_IMETHOD GetPreviousElementSibling(nsIDOMElement** aPreviousElementSibling) \
 NS_IMETHOD GetNextElementSibling(nsIDOMElement** aNextElementSibling)         \
   MOZ_FINAL                                                                   \
 {                                                                             \
-  nsGenericElement* element = nsGenericElement::GetNextElementSibling();      \
+  Element* element = Element::GetNextElementSibling();                        \
   if (!element) {                                                             \
     *aNextElementSibling = nullptr;                                           \
     return NS_OK;                                                             \
@@ -1356,123 +1357,123 @@ NS_IMETHOD GetNextElementSibling(nsIDOMElement** aNextElementSibling)         \
 }                                                                             \
 NS_IMETHOD GetChildElementCount(uint32_t* aChildElementCount) MOZ_FINAL       \
 {                                                                             \
-  *aChildElementCount = nsGenericElement::ChildElementCount();                \
+  *aChildElementCount = Element::ChildElementCount();                         \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetOnmouseenter(JSContext* cx, JS::Value* aOnmouseenter) MOZ_FINAL \
 {                                                                             \
-  return nsGenericElement::GetOnmouseenter(cx, aOnmouseenter);                \
+  return Element::GetOnmouseenter(cx, aOnmouseenter);                         \
 }                                                                             \
 NS_IMETHOD SetOnmouseenter(JSContext* cx,                                     \
                            const JS::Value& aOnmouseenter) MOZ_FINAL          \
 {                                                                             \
-  return nsGenericElement::SetOnmouseenter(cx, aOnmouseenter);                \
+  return Element::SetOnmouseenter(cx, aOnmouseenter);                         \
 }                                                                             \
 NS_IMETHOD GetOnmouseleave(JSContext* cx, JS::Value* aOnmouseleave) MOZ_FINAL \
 {                                                                             \
-  return nsGenericElement::GetOnmouseleave(cx, aOnmouseleave);                \
+  return Element::GetOnmouseleave(cx, aOnmouseleave);                         \
 }                                                                             \
 NS_IMETHOD SetOnmouseleave(JSContext* cx,                                     \
                            const JS::Value& aOnmouseleave) MOZ_FINAL          \
 {                                                                             \
-  return nsGenericElement::SetOnmouseleave(cx, aOnmouseleave);                \
+  return Element::SetOnmouseleave(cx, aOnmouseleave);                         \
 }                                                                             \
 NS_IMETHOD GetClientRects(nsIDOMClientRectList** _retval) MOZ_FINAL           \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = nsGenericElement::GetClientRects(rv).get();                      \
+  *_retval = Element::GetClientRects(rv).get();                               \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD GetBoundingClientRect(nsIDOMClientRect** _retval) MOZ_FINAL        \
 {                                                                             \
-  *_retval = nsGenericElement::GetBoundingClientRect().get();                 \
+  *_retval = Element::GetBoundingClientRect().get();                          \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetScrollTop(int32_t* aScrollTop) MOZ_FINAL                        \
 {                                                                             \
-  *aScrollTop = nsGenericElement::ScrollTop();                                \
+  *aScrollTop = Element::ScrollTop();                                         \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD SetScrollTop(int32_t aScrollTop) MOZ_FINAL                         \
 {                                                                             \
-  nsGenericElement::SetScrollTop(aScrollTop);                                 \
+  Element::SetScrollTop(aScrollTop);                                          \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetScrollLeft(int32_t* aScrollLeft) MOZ_FINAL                      \
 {                                                                             \
-  *aScrollLeft = nsGenericElement::ScrollLeft();                              \
+  *aScrollLeft = Element::ScrollLeft();                                       \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD SetScrollLeft(int32_t aScrollLeft) MOZ_FINAL                       \
 {                                                                             \
-  nsGenericElement::SetScrollLeft(aScrollLeft);                               \
+  Element::SetScrollLeft(aScrollLeft);                                        \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetScrollWidth(int32_t* aScrollWidth) MOZ_FINAL                    \
 {                                                                             \
-  *aScrollWidth = nsGenericElement::ScrollWidth();                            \
+  *aScrollWidth = Element::ScrollWidth();                                     \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetScrollHeight(int32_t* aScrollHeight) MOZ_FINAL                  \
 {                                                                             \
-  *aScrollHeight = nsGenericElement::ScrollHeight();                          \
+  *aScrollHeight = Element::ScrollHeight();                                   \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetClientTop(int32_t* aClientTop) MOZ_FINAL                        \
 {                                                                             \
-  *aClientTop = nsGenericElement::ClientTop();                                \
+  *aClientTop = Element::ClientTop();                                         \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetClientLeft(int32_t* aClientLeft) MOZ_FINAL                      \
 {                                                                             \
-  *aClientLeft = nsGenericElement::ClientLeft();                              \
+  *aClientLeft = Element::ClientLeft();                                       \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetClientWidth(int32_t* aClientWidth) MOZ_FINAL                    \
 {                                                                             \
-  *aClientWidth = nsGenericElement::ClientWidth();                            \
+  *aClientWidth = Element::ClientWidth();                                     \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetClientHeight(int32_t* aClientHeight) MOZ_FINAL                  \
 {                                                                             \
-  *aClientHeight = nsGenericElement::ClientHeight();                          \
+  *aClientHeight = Element::ClientHeight();                                   \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetScrollLeftMax(int32_t* aScrollLeftMax) MOZ_FINAL                \
 {                                                                             \
-  *aScrollLeftMax = nsGenericElement::ScrollLeftMax();                        \
+  *aScrollLeftMax = Element::ScrollLeftMax();                                 \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetScrollTopMax(int32_t* aScrollTopMax) MOZ_FINAL                  \
 {                                                                             \
-  *aScrollTopMax = nsGenericElement::ScrollTopMax();                          \
+  *aScrollTopMax = Element::ScrollTopMax();                                   \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD MozMatchesSelector(const nsAString& selector,                      \
                               bool* _retval) MOZ_FINAL                        \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = nsGenericElement::MozMatchesSelector(selector, rv);              \
+  *_retval = Element::MozMatchesSelector(selector, rv);                       \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD SetCapture(bool retargetToElement) MOZ_FINAL                       \
 {                                                                             \
-  nsGenericElement::SetCapture(retargetToElement);                            \
+  Element::SetCapture(retargetToElement);                                     \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD ReleaseCapture(void) MOZ_FINAL                                     \
 {                                                                             \
-  nsGenericElement::ReleaseCapture();                                         \
+  Element::ReleaseCapture();                                                  \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD MozRequestFullScreen(void) MOZ_FINAL                               \
 {                                                                             \
-  nsGenericElement::MozRequestFullScreen();                                   \
+  Element::MozRequestFullScreen();                                            \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD MozRequestPointerLock(void) MOZ_FINAL                              \
 {                                                                             \
-  nsGenericElement::MozRequestPointerLock();                                  \
+  Element::MozRequestPointerLock();                                           \
   return NS_OK;                                                               \
 }
 
