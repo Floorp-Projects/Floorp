@@ -1375,12 +1375,17 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
 }
 
 MethodStatus
-ion::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script)
+ion::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs)
 {
     JS_ASSERT(ion::IsEnabled(cx));
 
     // Skip if the code is expected to result in a bailout.
     if (!script->hasIonScript() || script->ion->bailoutExpected())
+        return Method_Skipped;
+
+    // Don't handle arguments underflow, to make this work we would have to pad
+    // missing arguments with |undefined|.
+    if (numActualArgs < script->function()->nargs)
         return Method_Skipped;
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))
@@ -1583,11 +1588,12 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
     EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
     void *calleeToken = CalleeToToken(fun);
 
-    Value result = Int32Value(fun->nargs);
+    Value result = Int32Value(args.length());
+    JS_ASSERT(args.length() >= fun->nargs);
 
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
     args.setActive();
-    enter(jitcode, args.length() + 1, &args[0] - 1, fp, calleeToken, &result);
+    enter(jitcode, args.length() + 1, args.array() - 1, fp, calleeToken, &result);
     args.setInactive();
 
     if (clearCallingIntoIon)
