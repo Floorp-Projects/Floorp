@@ -8,18 +8,28 @@
 
 interface nsIArray;
 interface nsIX509Cert;
+interface nsIX509Cert3;
 interface nsIFile;
 interface nsIInterfaceRequestor;
+interface nsIZipReader;
 
 %{C++
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
 %}
 
+[scriptable, function, uuid(48411e2d-85a9-4b16-bec8-e30cde801f9e)]
+interface nsIOpenSignedJARFileCallback : nsISupports
+{
+  void openSignedJARFileFinished(in nsresult rv,
+                                 in nsIZipReader aZipReader,
+                                 in nsIX509Cert3 aSignerCert);
+};
+
 /**
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(eb426311-69cd-4a74-a7db-a4a215854c78)]
+[scriptable, uuid(735d0363-e219-4387-b5c6-72e800c3ea0b)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -253,5 +263,33 @@ interface nsIX509CertDB : nsISupports {
    *  @return The new certificate object.
    */
   nsIX509Cert constructX509FromBase64(in string base64);
-};
 
+  /**
+   *  Verifies the signature on the given JAR file to verify that it has a
+   *  valid signature.  To be considered valid, there must be exactly one
+   *  signature on the JAR file and that signature must have signed every
+   *  entry. Further, the signature must come from a certificate that
+   *  is trusted for code signing.
+   *
+   *  On success, NS_OK, a nsIZipReader, and the trusted certificate that
+   *  signed the JAR are returned.
+   *
+   *  On failure, an error code is returned.
+   *
+   *  This method returns a nsIZipReader, instead of taking an nsIZipReader
+   *  as input, to encourage users of the API to verify the signature as the
+   *  first step in opening the JAR.
+   */
+  void openSignedJARFileAsync(in nsIFile aJarFile,
+                              in nsIOpenSignedJARFileCallback callback);
+
+  /* 
+   * Add a cert to a cert DB from a binary string.
+   *
+   * @param certDER The raw DER encoding of a certificate.
+   * @param aTrust decoded by CERT_DecodeTrustString. 3 comma separated characters,
+   *                indicating SSL, Email, and Obj signing trust
+   * @param aName name of the cert for display purposes.
+   */
+  void addCert(in ACString certDER, in string aTrust, in string aName);
+};

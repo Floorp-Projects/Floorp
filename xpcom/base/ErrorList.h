@@ -859,6 +859,19 @@
   ERROR(NS_ERROR_DOM_FILEHANDLE_READ_ONLY_ERR,            FAILURE(5)),
 #undef MODULE
 
+  /* ======================================================================= */
+  /* 35: NS_ERROR_MODULE_SIGNED_JAR */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_SIGNED_JAR
+  ERROR(NS_ERROR_SIGNED_JAR_NOT_SIGNED,                   FAILURE(1)),
+  ERROR(NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY,               FAILURE(2)),
+  ERROR(NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,               FAILURE(3)),
+  ERROR(NS_ERROR_SIGNED_JAR_ENTRY_MISSING,                FAILURE(4)),
+  ERROR(NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE,              FAILURE(5)),
+  ERROR(NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE,              FAILURE(6)),
+  ERROR(NS_ERROR_SIGNED_JAR_ENTRY_INVALID,                FAILURE(7)),
+  ERROR(NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,             FAILURE(8)),
+#undef MODULE
 
   /* ======================================================================= */
   /* 51: NS_ERROR_MODULE_GENERAL */
