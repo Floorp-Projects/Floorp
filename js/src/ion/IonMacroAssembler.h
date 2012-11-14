@@ -381,18 +381,15 @@ class MacroAssembler : public MacroAssemblerSpecific
         JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
         Label done;
 
-        JSContext *cx = GetIonContext()->cx;
-        IonCode *preBarrier = cx->compartment->ionCompartment()->preBarrier(cx);
-        if (!preBarrier) {
-            enoughMemory_ = false;
-            return;
-        }
-
         if (type == MIRType_Value)
             branchTestGCThing(Assembler::NotEqual, address, &done);
 
         Push(PreBarrierReg);
         computeEffectiveAddress(address, PreBarrierReg);
+
+        JSCompartment *compartment = GetIonContext()->compartment;
+        IonCode *preBarrier = compartment->ionCompartment()->preBarrier();
+
         call(preBarrier);
         Pop(PreBarrierReg);
 

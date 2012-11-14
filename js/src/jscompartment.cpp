@@ -157,6 +157,29 @@ JSCompartment::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
 }
 
 #ifdef JS_ION
+ion::IonRuntime *
+JSRuntime::createIonRuntime(JSContext *cx)
+{
+    ionRuntime_ = cx->new_<ion::IonRuntime>();
+
+    if (!ionRuntime_)
+        return NULL;
+
+    if (!ionRuntime_->initialize(cx)) {
+        js_delete(ionRuntime_);
+        ionRuntime_ = NULL;
+
+        if (cx->runtime->atomsCompartment->ionCompartment_) {
+            js_delete(cx->runtime->atomsCompartment->ionCompartment_);
+            cx->runtime->atomsCompartment->ionCompartment_ = NULL;
+        }
+
+        return NULL;
+    }
+
+    return ionRuntime_;
+}
+
 bool
 JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 {
@@ -164,15 +187,15 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
     if (ionCompartment_)
         return true;
 
-    /* Set the compartment early, so linking works. */
-    ionCompartment_ = cx->new_<IonCompartment>();
-
-    if (!ionCompartment_ || !ionCompartment_->initialize(cx)) {
-        if (ionCompartment_)
-            delete ionCompartment_;
-        ionCompartment_ = NULL;
+    IonRuntime *ionRuntime = cx->runtime->getIonRuntime(cx);
+    if (!ionRuntime)
         return false;
-    }
+
+    /* Set the compartment early, so linking works. */
+    ionCompartment_ = cx->new_<IonCompartment>(ionRuntime);
+
+    if (!ionCompartment_)
+        return false;
 
     return true;
 }
