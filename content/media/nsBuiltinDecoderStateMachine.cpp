@@ -1308,15 +1308,15 @@ void nsBuiltinDecoderStateMachine::ClearPositionChangeFlag()
   mPositionChangeQueued = false;
 }
 
-nsMediaDecoder::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameStatus()
+nsBuiltinDecoder::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameStatus()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (IsBuffering() || IsSeeking()) {
-    return nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+    return nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING;
   } else if (HaveNextFrameData()) {
-    return nsMediaDecoder::NEXT_FRAME_AVAILABLE;
+    return nsBuiltinDecoder::NEXT_FRAME_AVAILABLE;
   }
-  return nsMediaDecoder::NEXT_FRAME_UNAVAILABLE;
+  return nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE;
 }
 
 void nsBuiltinDecoderStateMachine::SetVolume(double volume)
@@ -2389,13 +2389,13 @@ void nsBuiltinDecoderStateMachine::UpdateReadyState() {
 
   nsCOMPtr<nsIRunnable> event;
   switch (GetNextFrameStatus()) {
-    case nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+    case nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameUnavailableBuffering);
       break;
-    case nsMediaDecoder::NEXT_FRAME_AVAILABLE:
+    case nsBuiltinDecoder::NEXT_FRAME_AVAILABLE:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameAvailable);
       break;
-    case nsMediaDecoder::NEXT_FRAME_UNAVAILABLE:
+    case nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameUnavailable);
       break;
     default:
@@ -2443,7 +2443,7 @@ void nsBuiltinDecoderStateMachine::StartBuffering()
   LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING to BUFFERING, decoded for %.3lfs",
                      mDecoder.get(), decodeDuration.ToSeconds()));
 #ifdef PR_LOGGING
-  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+  nsBuiltinDecoder::Statistics stats = mDecoder->GetStatistics();
 #endif
   LOG(PR_LOG_DEBUG, ("%p Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
     mDecoder.get(),

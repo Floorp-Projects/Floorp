@@ -8,7 +8,7 @@
 
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"
-#include "nsMediaDecoder.h"
+#include "nsBuiltinDecoder.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
@@ -47,7 +47,7 @@ static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
 
 using namespace mozilla;
 
-ChannelMediaResource::ChannelMediaResource(nsMediaDecoder* aDecoder,
+ChannelMediaResource::ChannelMediaResource(nsBuiltinDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI)
   : MediaResource(aDecoder, aChannel, aURI),
     mOffset(0), mSuspendCount(0),
@@ -684,7 +684,7 @@ bool ChannelMediaResource::CanClone()
   return mCacheStream.IsAvailableForSharing();
 }
 
-MediaResource* ChannelMediaResource::CloneData(nsMediaDecoder* aDecoder)
+MediaResource* ChannelMediaResource::CloneData(nsBuiltinDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
@@ -932,14 +932,14 @@ ChannelMediaResource::CacheClientNotifyDataReceived()
 
 class DataEnded : public nsRunnable {
 public:
-  DataEnded(nsMediaDecoder* aDecoder, nsresult aStatus) :
+  DataEnded(nsBuiltinDecoder* aDecoder, nsresult aStatus) :
     mDecoder(aDecoder), mStatus(aStatus) {}
   NS_IMETHOD Run() {
     mDecoder->NotifyDownloadEnded(mStatus);
     return NS_OK;
   }
 private:
-  nsRefPtr<nsMediaDecoder> mDecoder;
+  nsRefPtr<nsBuiltinDecoder> mDecoder;
   nsresult                 mStatus;
 };
 
@@ -1156,7 +1156,7 @@ ChannelMediaResource::PossiblyResume()
 class FileMediaResource : public MediaResource
 {
 public:
-  FileMediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  FileMediaResource(nsBuiltinDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     MediaResource(aDecoder, aChannel, aURI),
     mSize(-1),
     mLock("FileMediaResource.mLock"),
@@ -1174,7 +1174,7 @@ public:
   virtual void     Resume() {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   virtual bool     CanClone();
-  virtual MediaResource* CloneData(nsMediaDecoder* aDecoder);
+  virtual MediaResource* CloneData(nsBuiltinDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
 
   // These methods are called off the main thread.
@@ -1268,7 +1268,7 @@ private:
 class LoadedEvent : public nsRunnable
 {
 public:
-  LoadedEvent(nsMediaDecoder* aDecoder) :
+  LoadedEvent(nsBuiltinDecoder* aDecoder) :
     mDecoder(aDecoder)
   {
     MOZ_COUNT_CTOR(LoadedEvent);
@@ -1284,7 +1284,7 @@ public:
   }
 
 private:
-  nsRefPtr<nsMediaDecoder> mDecoder;
+  nsRefPtr<nsBuiltinDecoder> mDecoder;
 };
 
 void FileMediaResource::EnsureSizeInitialized()
@@ -1404,7 +1404,7 @@ bool FileMediaResource::CanClone()
   return true;
 }
 
-MediaResource* FileMediaResource::CloneData(nsMediaDecoder* aDecoder)
+MediaResource* FileMediaResource::CloneData(nsBuiltinDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -1495,7 +1495,7 @@ int64_t FileMediaResource::Tell()
 }
 
 MediaResource*
-MediaResource::Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel)
+MediaResource::Create(nsBuiltinDecoder* aDecoder, nsIChannel* aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "MediaResource::Open called on non-main thread");

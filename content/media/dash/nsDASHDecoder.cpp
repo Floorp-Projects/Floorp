@@ -39,7 +39,7 @@
  *
  * Media element creates new |nsDASHDecoder| object:
  *   member var initialization to default values, including a/v sub-decoders.
- *   nsBuiltinDecoder and nsMediaDecoder constructors are called.
+ *   nsBuiltinDecoder and nsBuiltinDecoder constructors are called.
  *   nsBuiltinDecoder::Init() is called.
  *
  * Media element creates new |ChannelMediaResource|:
@@ -128,6 +128,8 @@
 #include "nsDASHRepDecoder.h"
 #include "nsDASHDecoder.h"
 
+using mozilla::ReentrantMonitorAutoEnter;
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(msg, ...) PR_LOG(gBuiltinDecoderLog, PR_LOG_DEBUG, \
@@ -185,7 +187,7 @@ nsDASHDecoder::ReleaseStateMachine()
 nsresult
 nsDASHDecoder::Load(MediaResource* aResource,
                     nsIStreamListener** aStreamListener,
-                    nsMediaDecoder* aCloneDonor)
+                    nsBuiltinDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -238,8 +240,8 @@ nsDASHDecoder::NotifyDownloadEnded(nsresult aStatus)
     }
   } else if (aStatus == NS_BINDING_ABORTED) {
     LOG("MPD download has been cancelled by the user: aStatus [%x].", aStatus);
-    if (mElement) {
-      mElement->LoadAborted();
+    if (mOwner) {
+      mOwner->LoadAborted();
     }
     return;
   } else if (aStatus != NS_BASE_STREAM_CLOSED) {
@@ -433,11 +435,11 @@ nsDASHDecoder::CreateAudioRepDecoder(nsIURI* aUrl,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ENSURE_ARG(aUrl);
   NS_ENSURE_ARG(aRep);
-  NS_ENSURE_TRUE(mElement, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mOwner, NS_ERROR_NOT_INITIALIZED);
 
   // Create subdecoder and init with media element.
   nsDASHRepDecoder* audioDecoder = new nsDASHRepDecoder(this);
-  NS_ENSURE_TRUE(audioDecoder->Init(mElement), NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(audioDecoder->Init(mOwner), NS_ERROR_NOT_INITIALIZED);
 
   if (!mAudioRepDecoder) {
     mAudioRepDecoder = audioDecoder;
@@ -453,7 +455,7 @@ nsDASHDecoder::CreateAudioRepDecoder(nsIURI* aUrl,
 
   // Create media resource with URL and connect to sub-decoder.
   MediaResource* audioResource
-    = CreateAudioSubResource(aUrl, static_cast<nsMediaDecoder*>(audioDecoder));
+    = CreateAudioSubResource(aUrl, static_cast<nsBuiltinDecoder*>(audioDecoder));
   NS_ENSURE_TRUE(audioResource, NS_ERROR_NOT_INITIALIZED);
 
   audioDecoder->SetResource(audioResource);
@@ -469,11 +471,11 @@ nsDASHDecoder::CreateVideoRepDecoder(nsIURI* aUrl,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ENSURE_ARG(aUrl);
   NS_ENSURE_ARG(aRep);
-  NS_ENSURE_TRUE(mElement, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mOwner, NS_ERROR_NOT_INITIALIZED);
 
   // Create subdecoder and init with media element.
   nsDASHRepDecoder* videoDecoder = new nsDASHRepDecoder(this);
-  NS_ENSURE_TRUE(videoDecoder->Init(mElement), NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(videoDecoder->Init(mOwner), NS_ERROR_NOT_INITIALIZED);
 
   if (!mVideoRepDecoder) {
     mVideoRepDecoder = videoDecoder;
@@ -489,7 +491,7 @@ nsDASHDecoder::CreateVideoRepDecoder(nsIURI* aUrl,
 
   // Create media resource with URL and connect to sub-decoder.
   MediaResource* videoResource
-    = CreateVideoSubResource(aUrl, static_cast<nsMediaDecoder*>(videoDecoder));
+    = CreateVideoSubResource(aUrl, static_cast<nsBuiltinDecoder*>(videoDecoder));
   NS_ENSURE_TRUE(videoResource, NS_ERROR_NOT_INITIALIZED);
 
   videoDecoder->SetResource(videoResource);
@@ -500,7 +502,7 @@ nsDASHDecoder::CreateVideoRepDecoder(nsIURI* aUrl,
 
 mozilla::MediaResource*
 nsDASHDecoder::CreateAudioSubResource(nsIURI* aUrl,
-                                      nsMediaDecoder* aAudioDecoder)
+                                      nsBuiltinDecoder* aAudioDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ENSURE_TRUE(aUrl, nullptr);
@@ -521,7 +523,7 @@ nsDASHDecoder::CreateAudioSubResource(nsIURI* aUrl,
 
 mozilla::MediaResource*
 nsDASHDecoder::CreateVideoSubResource(nsIURI* aUrl,
-                                      nsMediaDecoder* aVideoDecoder)
+                                      nsBuiltinDecoder* aVideoDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ENSURE_TRUE(aUrl, nullptr);
@@ -546,14 +548,19 @@ nsDASHDecoder::CreateSubChannel(nsIURI* aUrl, nsIChannel** aChannel)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ENSURE_ARG(aUrl);
 
-  nsCOMPtr<nsILoadGroup> loadGroup = mElement->GetDocumentLoadGroup();
+  NS_ENSURE_TRUE(mOwner, NS_ERROR_NULL_POINTER);
+  nsHTMLMediaElement* element = mOwner->GetMediaElement();
+  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsILoadGroup> loadGroup =
+    element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
   // Check for a Content Security Policy to pass down to the channel
   // created to load the media content.
   nsCOMPtr<nsIChannelPolicy> channelPolicy;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = mElement->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  nsresult rv = element->NodePrincipal()->GetCsp(getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv,rv);
   if (csp) {
     channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
@@ -653,8 +660,8 @@ nsDASHDecoder::NotifyDownloadEnded(nsDASHRepDecoder* aRepDecoder,
     return;
   } else if (aStatus == NS_BINDING_ABORTED) {
     LOG("MPD download has been cancelled by the user: aStatus [%x].", aStatus);
-    if (mElement) {
-      mElement->LoadAborted();
+    if (mOwner) {
+      mOwner->LoadAborted();
     }
     return;
   } else if (aStatus != NS_BASE_STREAM_CLOSED) {
@@ -668,8 +675,8 @@ nsDASHDecoder::LoadAborted()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  if (!mNotifiedLoadAborted && mElement) {
-    mElement->LoadAborted();
+  if (!mNotifiedLoadAborted && mOwner) {
+    mOwner->LoadAborted();
     mNotifiedLoadAborted = true;
     LOG1("Load Aborted! Notifying media element.");
   }

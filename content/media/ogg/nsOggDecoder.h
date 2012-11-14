@@ -11,7 +11,7 @@
 class nsOggDecoder : public nsBuiltinDecoder
 {
 public:
-  virtual nsMediaDecoder* Clone() {
+  virtual nsBuiltinDecoder* Clone() {
     if (!IsOggEnabled()) {
       return nullptr;
     }

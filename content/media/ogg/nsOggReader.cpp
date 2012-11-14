@@ -80,7 +80,7 @@ nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
     mTheoraState(nullptr),
     mVorbisState(nullptr),
     mOpusState(nullptr),
-    mOpusEnabled(nsMediaDecoder::IsOpusEnabled()),
+    mOpusEnabled(nsBuiltinDecoder::IsOpusEnabled()),
     mSkeletonState(nullptr),
     mVorbisSerial(0),
     mOpusSerial(0),
@@ -669,7 +669,7 @@ bool nsOggReader::DecodeVideoFrame(bool &aKeyframeSkip,
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   uint32_t parsed = 0, decoded = 0;
-  nsMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  nsBuiltinDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
   // Read the next data packet. Skip any non-data packets we encounter.
   ogg_packet* packet = 0;

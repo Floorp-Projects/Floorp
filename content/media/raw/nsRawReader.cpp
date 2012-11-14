@@ -150,7 +150,7 @@ bool nsRawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   uint32_t parsed = 0, decoded = 0;
-  nsMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  nsBuiltinDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
   if (!mFrameSize)
     return false; // Metadata read failed.  We should refuse to play.

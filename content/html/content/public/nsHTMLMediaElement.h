@@ -33,6 +33,8 @@ typedef uint16_t nsMediaReadyState;
 namespace mozilla {
 class MediaResource;
 }
+class nsBuiltinDecoder;
+
 #ifdef MOZ_DASH
 class nsDASHDecoder;
 #endif
@@ -215,7 +217,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void UpdateReadyStateForData(nsBuiltinDecoder::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
 
   // Use this method to change the mReadyState member, so required
   // events can be fired.
@@ -441,14 +443,14 @@ protected:
    * Create a decoder for the given aMIMEType. Returns null if we
    * were unable to create the decoder.
    */
-  already_AddRefed<nsMediaDecoder> CreateDecoder(const nsACString& aMIMEType);
+  already_AddRefed<nsBuiltinDecoder> CreateDecoder(const nsACString& aMIMEType);
 
   /**
    * Initialize a decoder as a clone of an existing decoder in another
    * element.
    * mLoadingSrc must already be set.
    */
-  nsresult InitializeDecoderAsClone(nsMediaDecoder* aOriginal);
+  nsresult InitializeDecoderAsClone(nsBuiltinDecoder* aOriginal);
 
   /**
    * Initialize a decoder to load the given channel. The decoder's stream
@@ -462,10 +464,10 @@ protected:
    * Finish setting up the decoder after Load() has been called on it.
    * Called by InitializeDecoderForChannel/InitializeDecoderAsClone.
    */
-  nsresult FinishDecoderSetup(nsMediaDecoder* aDecoder,
+  nsresult FinishDecoderSetup(nsBuiltinDecoder* aDecoder,
                               MediaResource* aStream,
                               nsIStreamListener **aListener,
-                              nsMediaDecoder* aCloneDonor);
+                              nsBuiltinDecoder* aCloneDonor);
 
   /**
    * Call this after setting up mLoadingSrc and mDecoder.
@@ -658,7 +660,7 @@ protected:
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
-  nsRefPtr<nsMediaDecoder> mDecoder;
+  nsRefPtr<nsBuiltinDecoder> mDecoder;
 
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
