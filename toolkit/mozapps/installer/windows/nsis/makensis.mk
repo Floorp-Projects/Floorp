@@ -69,8 +69,8 @@ installer::
 	cat $(CONFIG_DIR)/7zSD.sfx $(CONFIG_DIR)/app.tag $(CONFIG_DIR)/app.7z > "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 	chmod 0755 "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 ifdef MOZ_STUB_INSTALLER
-	cp $(CONFIG_DIR)/stub.exe "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)-stub.exe"
-	chmod 0755 "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)-stub.exe"
+	cp $(CONFIG_DIR)/stub.exe "$(DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe"
+	chmod 0755 "$(DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe"
 endif
 ifdef MOZ_EXTERNAL_SIGNING_FORMAT
 	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
