@@ -291,19 +291,19 @@ public:
    */
   virtual nsIAtom *GetClassAttributeName() const;
 
-  inline mozilla::directionality::Directionality GetDirectionality() const {
+  inline directionality::Directionality GetDirectionality() const {
     if (HasFlag(NODE_HAS_DIRECTION_RTL)) {
-      return mozilla::directionality::eDir_RTL;
+      return directionality::eDir_RTL;
     }
 
     if (HasFlag(NODE_HAS_DIRECTION_LTR)) {
-      return mozilla::directionality::eDir_LTR;
+      return directionality::eDir_LTR;
     }
 
-    return mozilla::directionality::eDir_NotSet;
+    return directionality::eDir_NotSet;
   }
 
-  inline void SetDirectionality(mozilla::directionality::Directionality aDir,
+  inline void SetDirectionality(directionality::Directionality aDir,
                                 bool aNotify) {
     UnsetFlags(NODE_ALL_DIRECTION_FLAGS);
     if (!aNotify) {
@@ -311,14 +311,14 @@ public:
     }
 
     switch (aDir) {
-      case (mozilla::directionality::eDir_RTL):
+      case (directionality::eDir_RTL):
         SetFlags(NODE_HAS_DIRECTION_RTL);
         if (!aNotify) {
           AddStatesSilently(NS_EVENT_STATE_RTL);
         }
         break;
 
-      case(mozilla::directionality::eDir_LTR):
+      case(directionality::eDir_LTR):
         SetFlags(NODE_HAS_DIRECTION_LTR);
         if (!aNotify) {
           AddStatesSilently(NS_EVENT_STATE_LTR);
@@ -546,16 +546,16 @@ public:
                       const nsAString& aLocalName,
                       nsAString& aReturn);
   void SetAttribute(const nsAString& aName, const nsAString& aValue,
-                    mozilla::ErrorResult& aError);
+                    ErrorResult& aError);
   void SetAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aLocalName,
                       const nsAString& aValue,
-                      mozilla::ErrorResult& aError);
+                      ErrorResult& aError);
   virtual void RemoveAttribute(const nsAString& aName,
-                               mozilla::ErrorResult& aError);
+                               ErrorResult& aError);
   void RemoveAttributeNS(const nsAString& aNamespaceURI,
                          const nsAString& aLocalName,
-                         mozilla::ErrorResult& aError);
+                         ErrorResult& aError);
   virtual bool HasAttribute(const nsAString& aName) const
   {
     return InternalGetExistingAttrNameFromQName(aName) != nullptr;
@@ -567,7 +567,7 @@ public:
   already_AddRefed<nsIHTMLCollection>
     GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                            const nsAString& aLocalName,
-                           mozilla::ErrorResult& aError);
+                           ErrorResult& aError);
   already_AddRefed<nsIHTMLCollection>
     GetElementsByClassName(const nsAString& aClassNames);
   nsGenericElement* GetFirstElementChild() const;
@@ -601,7 +601,7 @@ public:
     return Children()->Length();
   }
   bool MozMatchesSelector(const nsAString& aSelector,
-                          mozilla::ErrorResult& aError);
+                          ErrorResult& aError);
   void SetCapture(bool aRetargetToElement)
   {
     // If there is already an active capture, ignore this request. This would
@@ -625,16 +625,16 @@ public:
   }
   nsIDOMAttr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<nsIDOMAttr> SetAttributeNode(nsIDOMAttr* aNewAttr,
-                                                mozilla::ErrorResult& aError);
+                                                ErrorResult& aError);
   already_AddRefed<nsIDOMAttr> RemoveAttributeNode(nsIDOMAttr* aOldAttr,
-                                                   mozilla::ErrorResult& aError);
+                                                   ErrorResult& aError);
   nsIDOMAttr* GetAttributeNodeNS(const nsAString& aNamespaceURI,
                                  const nsAString& aLocalName,
-                                 mozilla::ErrorResult& aError);
+                                 ErrorResult& aError);
   already_AddRefed<nsIDOMAttr> SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
-                                                  mozilla::ErrorResult& aError);
+                                                  ErrorResult& aError);
 
-  already_AddRefed<nsClientRectList> GetClientRects(mozilla::ErrorResult& aError);
+  already_AddRefed<nsClientRectList> GetClientRects(ErrorResult& aError);
   already_AddRefed<nsClientRect> GetBoundingClientRect();
   void ScrollIntoView(bool aTop);
   int32_t ScrollTop()
@@ -816,13 +816,13 @@ public:
   /**
    * Return the CORS mode for a given string
    */
-  static mozilla::CORSMode StringToCORSMode(const nsAString& aValue);
+  static CORSMode StringToCORSMode(const nsAString& aValue);
   
   /**
    * Return the CORS mode for a given nsAttrValue (which may be null,
    * but if not should have been parsed via ParseCORSValue).
    */
-  static mozilla::CORSMode AttrValueToCORSMode(const nsAttrValue* aValue);
+  static CORSMode AttrValueToCORSMode(const nsAttrValue* aValue);
 
   // These are just used to implement nsIDOMElement using
   // NS_FORWARD_NSIDOMELEMENT_TO_GENERIC and for quickstubs.
@@ -991,14 +991,14 @@ protected:
 
   nsIFrame* GetStyledFrame();
 
-  virtual mozilla::dom::Element* GetNameSpaceElement()
+  virtual Element* GetNameSpaceElement()
   {
     return this;
   }
 
   nsIDOMAttr* GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
                                          const nsAString& aLocalName,
-                                         mozilla::ErrorResult& aError);
+                                         ErrorResult& aError);
 
   void RegisterFreezableElement() {
     OwnerDoc()->RegisterFreezableElement(this);
