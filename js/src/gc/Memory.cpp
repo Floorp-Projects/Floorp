@@ -390,7 +390,7 @@ GetPageFaultCount()
     int err = getrusage(RUSAGE_SELF, &usage);
     if (err)
         return 0;
-    return usage.ru_minflt + usage.ru_majflt;
+    return usage.ru_majflt;
 }
 
 #else
