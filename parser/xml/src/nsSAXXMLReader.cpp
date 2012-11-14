@@ -179,8 +179,8 @@ nsSAXXMLReader::HandleStartDTD(const PRUnichar *aName,
   mPublicId = aPublicId;
   if (mLexicalHandler) {
     return mLexicalHandler->StartDTD(nsDependentString(aName),
-                                     nsDependentString(aSystemId),
-                                     nsDependentString(aPublicId));
+                                     nsDependentString(aPublicId),
+                                     nsDependentString(aSystemId));
   }
 
   return NS_OK;

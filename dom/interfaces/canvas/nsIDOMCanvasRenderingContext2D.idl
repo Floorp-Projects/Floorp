@@ -4,14 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIVariant.idl"
-
-interface nsIDOMWindow;
-interface nsIDOMElement;
-interface nsIDOMHTMLElement;
-interface nsIDOMHTMLImageElement;
-interface nsIDOMHTMLCanvasElement;
-interface nsIDOMXULElement;
 
 [scriptable, uuid(bbb20a59-524e-4662-981e-5e142814b20c)]
 interface nsIDOMCanvasGradient : nsISupports
@@ -30,178 +22,17 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(438fe14d-6501-40ab-b6c2-130fa38bd2c9)]
+/**
+ * This interface remains only for the constants, for a context, use the
+ * WebIDL/Paris bindings instead (CanvasRenderingContext2D.webidl).
+ * The constants are used by CanvasRenderingContext2D::DrawWindow and are
+ * used in WindowsPreviewPerTab.jsm and some extensions. The constants can
+ * be referenced directly via a canvas context 2d rather than this interface,
+ * and that should be preferred in new code. 
+ */
+[scriptable, uuid(4417cab7-c7eb-4e0c-b00a-c43842f0cba8)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
-  // back-reference to the canvas element for which
-  // this context was created
-  readonly attribute nsIDOMHTMLCanvasElement canvas;
-
-  // state
-  [binaryname(MozSave)]
-  void save();
-  [binaryname(MozRestore)]
-  void restore();
-
-  // transformations
-  void scale(in float x, in float y);
-  void rotate(in float angle);
-  void translate(in float x, in float y);
-  void transform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
-  void setTransform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
-  [implicit_jscontext]
-  attribute jsval mozCurrentTransform; // [ m11, m12, m21, m22, dx, dy ], i.e. row major
-  [implicit_jscontext]
-  attribute jsval mozCurrentTransformInverse;
-
-  // compositing
-  attribute float globalAlpha; /* default 1.0 -- opaque */
-  attribute DOMString globalCompositeOperation; /* default "over" */
-
-  // Colors and Styles
-
-  // These attributes work, but are quickstubbed for JS code.  Native
-  // code should use the _multi variants below.
-  attribute nsIVariant strokeStyle;
-  attribute nsIVariant fillStyle;
-
-  // These do the actual work.  Use these from c++ -- only one of str or iface
-  // should be specified; the one that's not null/void is used.  For the getter,
-  // ifaceType is 0 if it's a string, 1 if it's a pattern, or 2 if it's a gradient
-%{C++
-enum CanvasMultiGetterType {
-      CMG_STYLE_STRING = 0,
-      CMG_STYLE_PATTERN = 1,
-      CMG_STYLE_GRADIENT = 2
-};
-%}
-  [noscript] void setStrokeStyle_multi(in DOMString str, in nsISupports iface);
-  [noscript] void getStrokeStyle_multi(out DOMString str, out nsISupports iface, out long type);
-  [noscript] void setFillStyle_multi(in DOMString str, in nsISupports iface);
-  [noscript] void getFillStyle_multi(out DOMString str, out nsISupports iface, out long type);
-
-  //attribute DOMString fillRule;
-  attribute DOMString mozFillRule; /* "evenodd", "nonzero" (default) */
-
-  nsIDOMCanvasGradient createLinearGradient (in float x0, in float y0, in float x1, in float y1);
-  nsIDOMCanvasGradient createRadialGradient(in float x0, in float y0, in float r0, in float x1, in float y1, in float r1);
-  nsIDOMCanvasPattern createPattern(in nsIDOMHTMLElement image, in DOMString repetition);
-  attribute float lineWidth; /* default 1 */
-  [binaryname(MozLineCap)]
-  attribute DOMString lineCap; /* "butt", "round", "square" (default) */
-  [binaryname(MozLineJoin)]
-  attribute DOMString lineJoin; /* "round", "bevel", "miter" (default) */
-  attribute float miterLimit; /* default 10 */
-
-  [implicit_jscontext]
-  attribute jsval mozDash; /* default |null| */
-  attribute float mozDashOffset; /* default 0.0 */
-
-  // shadows
-  attribute float shadowOffsetX;
-  attribute float shadowOffsetY;
-  attribute float shadowBlur;
-  [binaryname(MozShadowColor)]
-  attribute DOMString shadowColor;
-
-  // rects
-  void clearRect(in float x, in float y, in float w, in float h);
-  void fillRect(in float x, in float y, in float w, in float h);
-  void strokeRect(in float x, in float y, in float w, in float h);
-
-  // path API
-  [binaryname(MozBeginPath)]
-  void beginPath();
-  [binaryname(MozClosePath)]
-  void closePath();
-
-  void moveTo(in float x, in float y);
-  void lineTo(in float x, in float y);
-  void quadraticCurveTo(in float cpx, in float cpy, in float x, in float y);
-  void bezierCurveTo(in float cp1x, in float cp1y, in float cp2x, in float cp2y, in float x, in float y);
-  void arcTo(in float x1, in float y1, in float x2, in float y2, in float radius);
-  void arc(in float x, in float y, in float r, in float startAngle, in float endAngle, [optional] in boolean anticlockwise);
-  void rect(in float x, in float y, in float w, in float h);
-
-  [binaryname(MozFill)]
-  void fill();
-  [binaryname(MozStroke)]
-  void stroke();
-  [binaryname(MozClip)]
-  void clip();
-
-  // text api
-  [binaryname(MozFont)]
-  attribute DOMString font; /* default "10px sans-serif" */
-  [binaryname(MozTextAlign)]
-  attribute DOMString textAlign; /* "start" (default), "end", "left", "right",
-                                 "center" */
-  [binaryname(MozTextBaseline)]
-  attribute DOMString textBaseline; /* "alphabetic" (default), "top", "hanging",
-                                    "middle", "ideographic", "bottom" */
-
-  void fillText(in DOMString text, in float x, in float y, [optional] in float maxWidth);
-  void strokeText(in DOMString text, in float x, in float y, [optional] in float maxWidth);
-  nsIDOMTextMetrics measureText(in DOMString text);
-
-  [binaryname(TextStyle)]
-  attribute DOMString mozTextStyle;
-
-  // image api
-
-  [optional_argc] void drawImage(in nsIDOMElement image,
-                                 in float a1, in float a2,
-                                 [optional] in float a3,
-                                 [optional] in float a4,
-                                 [optional] in float a5,
-                                 [optional] in float a6,
-                                 [optional] in float a7,
-                                 [optional] in float a8);
-
-/*
-  void drawImage(in HTMLImageElement image, in float dx, in float dy);
-  void drawImage(in HTMLImageElement image, in float dx, in float dy, in float sw, in float sh);
-  void drawImage(in HTMLImageElement image, in float sx, in float sy, in float sw, in float sh, in float dx, in float dy, in float dw, in float dh);
-*/
-
-  // point-membership test
-  boolean isPointInPath(in float x, in float y);
-  boolean mozIsPointInStroke(in float x, in float y);
-
-  // pixel manipulation
-  // ImageData getImageData (in float x, in float y, in float width, in float height);
-  // void putImageData (in ImageData d, in float x, in float y);
-  // ImageData = { width: #, height: #, data: [r, g, b, a, ...] }
-
-  // nsISupports is OK, because the binding code will deal correctly
-  [implicit_jscontext]
-  nsISupports getImageData(in double sx, in double sy, in double sw, in double sh);
-
-
-  // void putImageData(ImageData imagedata, double dx, double dy);
-  // void putImageDataHD(ImageData imagedata, double dx, double dy, double dirtyX, double dirtyY, double dirtyWidth, double dirtyHeight);
-  // We use jsval for the imageData because that's what our C++ code wants
-  [implicit_jscontext, optional_argc]
-  void putImageData(in jsval imageData, in double dx, in double dy,
-                    [optional] in double dirtyX, [optional] in double dirtyY,
-                    [optional] in double dirtyWidth,
-                    [optional] in double dirtyHeight);
-
-  // dataLen must be == width*height*4 in this call
-  [noscript] void putImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
-                                        [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen, in boolean hasDirtyRect,
-                                        in long dirtyX, in long dirtyY, in long dirtyWidth, in long dirtyHeight);
-
-  // ImageData createImageData(double w, double h);
-  // ImageData createImageData(ImageData data);
-  // nsISupports is OK, because the binding code will deal correctly
-  [implicit_jscontext, optional_argc]
-  nsISupports createImageData(in jsval arg1, [optional] in jsval arg2);
-
-  // image smoothing mode -- if disabled, images won't be smoothed
-  // if scaled.
-  attribute boolean mozImageSmoothingEnabled;
-
   // Show the caret if appropriate when drawing
   const unsigned long DRAWWINDOW_DRAW_CARET   = 0x01;
   // Don't flush pending layout notifications that could otherwise
@@ -216,46 +47,4 @@ enum CanvasMultiGetterType {
   const unsigned long DRAWWINDOW_USE_WIDGET_LAYERS = 0x08;
   // Don't synchronously decode images - draw what we have
   const unsigned long DRAWWINDOW_ASYNC_DECODE_IMAGES = 0x10;
-
-  /**
-   * Renders a region of a window into the canvas.  The contents of
-   * the window's viewport are rendered, ignoring viewport clipping
-   * and scrolling.
-   *
-   * @param x
-   * @param y
-   * @param w
-   * @param h specify the area of the window to render, in CSS
-   * pixels.
-   *
-   * @param backgroundColor the canvas is filled with this color
-   * before we render the window into it. This color may be
-   * transparent/translucent. It is given as a CSS color string
-   * (e.g., rgb() or rgba()).
-   *
-   * @param flags Used to better control the drawWindow call.
-   * Flags can be ORed together.
-   *
-   * Of course, the rendering obeys the current scale, transform and
-   * globalAlpha values.
-   *
-   * Hints:
-   * -- If 'rgba(0,0,0,0)' is used for the background color, the
-   * drawing will be transparent wherever the window is transparent.
-   * -- Top-level browsed documents are usually not transparent
-   * because the user's background-color preference is applied,
-   * but IFRAMEs are transparent if the page doesn't set a background.
-   * -- If an opaque color is used for the background color, rendering
-   * will be faster because we won't have to compute the window's
-   * transparency.
-   *
-   * This API cannot currently be used by Web content. It is chrome
-   * only.
-   */
-  void drawWindow(in nsIDOMWindow window, in float x, in float y,
-                  in float w, in float h, in DOMString bgColor,
-                  [optional] in unsigned long flags);
-  void asyncDrawXULElement(in nsIDOMXULElement elem, in float x, in float y,
-                  in float w, in float h, in DOMString bgColor,
-                  [optional] in unsigned long flags);
 };

@@ -149,6 +149,7 @@ MOCHITEST_FILES =	\
 		test_bug761572.html \
 		test_bug770106.html \
 		test_maxLineBoxWidth.html \
+		test_remote_frame.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208

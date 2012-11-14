@@ -1755,6 +1755,8 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // if switching to a new document, first fire the focus event on the
   // document and then the window.
   if (aIsNewDocument) {
+    nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
+                                     GetFocusMoveActionCause(aFlags));
     nsIDocument* doc = aWindow->GetExtantDoc();
     if (doc)
       SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,

@@ -8,6 +8,7 @@
 
 #if JS_ION
 # include "ion/IonBuilder.h"
+# include "ion/ExecutionModeInlines.h"
 #endif
 
 using namespace js;
@@ -294,7 +295,8 @@ WorkerThread::threadLoop()
 
         ionBuilder = state.ionWorklist.popCopy();
 
-        JS_ASSERT(ionBuilder->script()->ion == ION_COMPILING_SCRIPT);
+        ion::ExecutionMode executionMode = ionBuilder->info().executionMode();
+        JS_ASSERT(GetIonScript(ionBuilder->script().unsafeGet(), executionMode) == ION_COMPILING_SCRIPT);
 
         state.unlock();
 

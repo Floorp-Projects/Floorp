@@ -22,13 +22,14 @@ namespace dom {
 class ContentPermissionRequestParent : public PContentPermissionRequestParent
 {
  public:
-  ContentPermissionRequestParent(const nsACString& type, nsIDOMElement *element, const IPC::Principal& principal);
+  ContentPermissionRequestParent(const nsACString& type, const nsACString& access, nsIDOMElement *element, const IPC::Principal& principal);
   virtual ~ContentPermissionRequestParent();
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIDOMElement>    mElement;
   nsCOMPtr<nsContentPermissionRequestProxy> mProxy;
   nsCString mType;
+  nsCString mAccess;
 
  private:
   virtual bool Recvprompt();
@@ -44,7 +45,7 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
   nsContentPermissionRequestProxy();
   virtual ~nsContentPermissionRequestProxy();
 
-  nsresult Init(const nsACString& type, mozilla::dom::ContentPermissionRequestParent* parent);
+  nsresult Init(const nsACString& type, const nsACString& access, mozilla::dom::ContentPermissionRequestParent* parent);
   void OnParentDestroyed();
 
   NS_DECL_ISUPPORTS
@@ -54,6 +55,7 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
   // Non-owning pointer to the ContentPermissionRequestParent object which owns this proxy.
   mozilla::dom::ContentPermissionRequestParent* mParent;
   nsCString mType;
+  nsCString mAccess;
 };
 #endif // nsContentPermissionHelper_h
 

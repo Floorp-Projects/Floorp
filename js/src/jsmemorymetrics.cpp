@@ -20,6 +20,7 @@
 #include "jsobjinlines.h"
 
 #include "ion/IonCode.h"
+#include "ion/Ion.h"
 
 namespace js {
 
@@ -232,8 +233,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 #ifdef JS_METHODJIT
         cStats->jaegerData += script->sizeOfJitScripts(rtStats->mallocSizeOf);
 # ifdef JS_ION
-        if (script->hasIonScript())
-            cStats->ionData += script->ion->sizeOfIncludingThis(rtStats->mallocSizeOf);
+        cStats->ionData += ion::MemoryUsed(script, rtStats->mallocSizeOf);
 # endif
 #endif
 

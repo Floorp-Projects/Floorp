@@ -15,6 +15,7 @@
 
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
+#include "ExecutionModeInlines.h"
 
 #ifdef JS_THREADSAFE
 # include "prthread.h"
@@ -204,8 +205,8 @@ IonBuilder::canInlineTarget(JSFunction *target)
     }
 
     RootedScript inlineScript(cx, target->script());
-
-    if (!inlineScript->canIonCompile()) {
+    ExecutionMode executionMode = info().executionMode();
+    if (!CanIonCompile(inlineScript, executionMode)) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to disable Ion compilation");
         return false;
     }
@@ -2829,7 +2830,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     // lifetime.
     RootedScript calleeScript(cx, callee->script());
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(calleeScript.get(), callee,
-                                                              (jsbytecode *)NULL, constructing);
+                                                              (jsbytecode *)NULL, constructing,
+                                                              SequentialExecution);
     if (!info)
         return false;
 
