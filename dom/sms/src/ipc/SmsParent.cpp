@@ -203,6 +203,8 @@ SmsParent::RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
       return actor->DoRequest(aRequest.get_GetNextMessageInListRequest());
     case IPCSmsRequest::TMarkMessageReadRequest:
       return actor->DoRequest(aRequest.get_MarkMessageReadRequest());
+    case IPCSmsRequest::TGetThreadListRequest:
+      return actor->DoRequest(aRequest.get_GetThreadListRequest());
     default:
       MOZ_NOT_REACHED("Unknown type!");
       return false;
@@ -342,6 +344,21 @@ SmsRequestParent::DoRequest(const MarkMessageReadRequest& aRequest)
   mSmsRequest = SmsRequest::Create(this);
   nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
   nsresult rv = smsDBService->MarkMessageRead(aRequest.messageId(), aRequest.value(), forwarder);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+SmsRequestParent::DoRequest(const GetThreadListRequest& aRequest)
+{
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+
+  NS_ENSURE_TRUE(smsDBService, true);
+  mSmsRequest = SmsRequest::Create(this);
+  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsresult rv = smsDBService->GetThreadList(forwarder);
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;
