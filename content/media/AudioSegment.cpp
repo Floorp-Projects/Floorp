@@ -5,7 +5,7 @@
 
 #include "AudioSegment.h"
 
-#include "nsAudioStream.h"
+#include "AudioStream.h"
 
 namespace mozilla {
 
@@ -95,7 +95,7 @@ AudioSegment::ApplyVolume(float aVolume)
 static const int STATIC_AUDIO_SAMPLES = 10000;
 
 void
-AudioSegment::WriteTo(nsAudioStream* aOutput)
+AudioSegment::WriteTo(AudioStream* aOutput)
 {
   NS_ASSERTION(mChannels == aOutput->GetChannels(), "Wrong number of channels");
   nsAutoTArray<AudioDataValue,STATIC_AUDIO_SAMPLES> buf;

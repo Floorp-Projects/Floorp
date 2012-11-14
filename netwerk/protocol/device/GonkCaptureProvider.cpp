@@ -23,7 +23,7 @@
 #include "nsXULAppAPI.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
-#include "nsRawStructs.h"
+#include "RawStructs.h"
 #include "prinit.h"
 
 #define USE_GS2_LIBCAMERA
@@ -235,7 +235,7 @@ CameraHardwareInterface* CameraHardwareInterface::openCamera(uint32_t aCamera)  
 NS_IMPL_THREADSAFE_ISUPPORTS2(GonkCameraInputStream, nsIInputStream, nsIAsyncInputStream)
 
 GonkCameraInputStream::GonkCameraInputStream() :
-  mAvailable(sizeof(nsRawVideoHeader)), mWidth(0), mHeight(0), mFps(30), mCamera(0), 
+  mAvailable(sizeof(RawVideoHeader)), mWidth(0), mHeight(0), mFps(30), mCamera(0), 
   mHeaderSent(false), mClosed(true), mIs420p(false), mFrameSize(0), mMonitor("GonkCamera.Monitor")
 {
 
@@ -354,27 +354,27 @@ GonkCameraInputStream::ReceiveFrame(char* frame, uint32_t length) {
     }
   }
 
-  mFrameSize = sizeof(nsRawPacketHeader) + length;
+  mFrameSize = sizeof(RawPacketHeader) + length;
 
   char* fullFrame = (char*)moz_malloc(mFrameSize);
 
   if (!fullFrame)
     return;
 
-  nsRawPacketHeader* header = reinterpret_cast<nsRawPacketHeader*> (fullFrame);
+  RawPacketHeader* header = reinterpret_cast<RawPacketHeader*> (fullFrame);
   header->packetID = 0xFF;
   header->codecID = RAW_ID;
 
   if (mIs420p) {
-    memcpy(fullFrame + sizeof(nsRawPacketHeader), frame, length);
+    memcpy(fullFrame + sizeof(RawPacketHeader), frame, length);
   } else {
     // we copy the Y plane, and de-interlace the CrCb
     uint32_t yFrameSize = mWidth * mHeight;
     uint32_t uvFrameSize = yFrameSize / 4;
-    memcpy(fullFrame + sizeof(nsRawPacketHeader), frame, yFrameSize);
+    memcpy(fullFrame + sizeof(RawPacketHeader), frame, yFrameSize);
 
-    char* uFrame = fullFrame + sizeof(nsRawPacketHeader) + yFrameSize;
-    char* vFrame = fullFrame + sizeof(nsRawPacketHeader) + yFrameSize + uvFrameSize;
+    char* uFrame = fullFrame + sizeof(RawPacketHeader) + yFrameSize;
+    char* vFrame = fullFrame + sizeof(RawPacketHeader) + yFrameSize + uvFrameSize;
     const char* yFrame = frame + yFrameSize;
     for (uint32_t i = 0; i < uvFrameSize; i++) {
       uFrame[i] = yFrame[2 * i + 1];
@@ -423,7 +423,7 @@ NS_IMETHODIMP GonkCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, voi
     aCount = mAvailable;
 
   if (!mHeaderSent) {
-    nsRawVideoHeader header;
+    RawVideoHeader header;
     header.headerPacketID = 0;
     header.codecID = RAW_ID;
     header.majorVersion = 0;
@@ -443,14 +443,14 @@ NS_IMETHODIMP GonkCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, voi
     header.framerateNumerator = mFps;
     header.framerateDenominator = 1;
 
-    rv = aWriter(this, aClosure, (const char*)&header, 0, sizeof(nsRawVideoHeader), aRead);
+    rv = aWriter(this, aClosure, (const char*)&header, 0, sizeof(RawVideoHeader), aRead);
    
     if (NS_FAILED(rv))
       return NS_OK;
     
     mHeaderSent = true;
-    aCount -= sizeof(nsRawVideoHeader);
-    mAvailable -= sizeof(nsRawVideoHeader);
+    aCount -= sizeof(RawVideoHeader);
+    mAvailable -= sizeof(RawVideoHeader);
   }
   
   {
@@ -466,7 +466,7 @@ NS_IMETHODIMP GonkCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, voi
         return NS_OK;
       }
 
-      // nsRawReader does a copy when calling VideoData::Create()
+      // RawReader does a copy when calling VideoData::Create()
       free(frame);
 
       if (NS_FAILED(rv))
@@ -502,7 +502,7 @@ void GonkCameraInputStream::doClose() {
 void GonkCameraInputStream::NotifyListeners() {
   ReentrantMonitorAutoEnter enter(mMonitor);
   
-  if (mCallback && (mAvailable > sizeof(nsRawVideoHeader))) {
+  if (mCallback && (mAvailable > sizeof(RawVideoHeader))) {
     nsCOMPtr<nsIInputStreamCallback> callback;
     if (mCallbackTarget) {
       NS_NewInputStreamReadyEvent(getter_AddRefs(callback), mCallback, mCallbackTarget);

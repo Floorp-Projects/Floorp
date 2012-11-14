@@ -127,7 +127,7 @@ nsHTMLAudioElement::MozSetup(uint32_t aChannels, uint32_t aRate)
     mAudioStream->Shutdown();
   }
 
-  mAudioStream = nsAudioStream::AllocateStream();
+  mAudioStream = AudioStream::AllocateStream();
   nsresult rv = mAudioStream->Init(aChannels, aRate);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
@@ -182,7 +182,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
 
   float* frames = JS_GetFloat32ArrayData(tsrc);
   // Convert the samples back to integers as we are using fixed point audio in
-  // the nsAudioStream.
+  // the AudioStream.
   // This could be optimized to avoid allocation and memcpy when
   // AudioDataValue is 'float', but it's not worth it for this deprecated API.
   nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[writeLen * mChannels]);

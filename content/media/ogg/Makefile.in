@@ -16,14 +16,14 @@ LIBXUL_LIBRARY 	= 1
 
 
 EXPORTS		+= \
-		nsOggDecoder.h \
-		nsOggCodecState.h \
+		OggDecoder.h \
+		OggCodecState.h \
 		$(NULL)
 
 CPPSRCS		= \
-		nsOggDecoder.cpp \
-		nsOggCodecState.cpp \
-		nsOggReader.cpp \
+		OggDecoder.cpp \
+		OggCodecState.cpp \
+		OggReader.cpp \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1
