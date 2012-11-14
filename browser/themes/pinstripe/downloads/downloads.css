@@ -260,7 +260,8 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-image: -moz-linear-gradient(#5ab9ff, #37a4ff);
+  background-color: rgb(90, 185, 255);
+  background-image: linear-gradient(transparent 1px, rgba(255, 255, 255, 0.4) 1px, rgba(255, 255, 255, 0.4) 2px, transparent 2px);
   border: 1px solid;
   border-color: rgba(0,43,86,.6) rgba(0,43,86,.4) rgba(0,43,86,.4);
   border-radius: 2px 0 0 2px;
@@ -278,7 +279,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-bar {
-  background-image: -moz-linear-gradient(#dce651, #dae631);
+  background-color: rgb(220, 230, 81);
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
