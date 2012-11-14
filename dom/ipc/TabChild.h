@@ -258,16 +258,19 @@ public:
 #ifdef DEBUG
     virtual PContentPermissionRequestChild* SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
                                                                                      const nsCString& aType,
+                                                                                     const nsCString& aAccess,
                                                                                      const IPC::Principal& aPrincipal)
     {
       PCOMContentPermissionRequestChild* child = static_cast<PCOMContentPermissionRequestChild*>(aActor);
-      PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aType, aPrincipal);
+      PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aType, aAccess, aPrincipal);
       child->mIPCOpen = true;
       return request;
     }
 #endif /* DEBUG */
 
-    virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::Principal& aPrincipal);
+    virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType,
+                                                                           const nsCString& aAccess,
+                                                                           const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
 
     virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(

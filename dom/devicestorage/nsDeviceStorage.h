@@ -43,6 +43,14 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::devicestorage;
 
+enum DeviceStorageRequestType {
+    DEVICE_STORAGE_REQUEST_READ,
+    DEVICE_STORAGE_REQUEST_WRITE,
+    DEVICE_STORAGE_REQUEST_DELETE,
+    DEVICE_STORAGE_REQUEST_WATCH,
+    DEVICE_STORAGE_REQUEST_STAT
+};
+
 class DeviceStorageTypeChecker MOZ_FINAL
 {
 public:
@@ -57,6 +65,7 @@ public:
   bool Check(const nsAString& aType, nsIFile* aFile);
 
   static nsresult GetPermissionForType(const nsAString& aType, nsACString& aPermissionResult);
+  static nsresult GetAccessForRequest(const DeviceStorageRequestType aRequestType, nsACString& aAccessResult);
 
 private:
   nsString mPicturesExtensions;
