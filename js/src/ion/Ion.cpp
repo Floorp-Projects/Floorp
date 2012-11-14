@@ -1515,14 +1515,13 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     // Caller must construct |this| before invoking the Ion function.
     JS_ASSERT_IF(fp->isConstructing(), fp->functionThis().isObject());
-
     Value result = Int32Value(numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, cx->compartment, NULL);
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
-
+        AutoFlushInhibitor afi(cx->compartment->ionCompartment());
         // Single transition point from Interpreter to Ion.
         enter(jitcode, maxArgc, maxArgv, fp, calleeToken, &result);
     }
@@ -2012,6 +2011,31 @@ AutoFlushCache::AutoFlushCache(const char *nonce, IonCompartment *comp)
     }
     myCompartment_ = comp;
 }
+
+AutoFlushInhibitor::AutoFlushInhibitor(IonCompartment *ic) : ic_(ic), afc(NULL)
+{
+    if (!ic)
+        return;
+    afc = ic->flusher();
+    // Ensure that called functions get a fresh flusher
+    ic->setFlusher(NULL);
+    // Ensure the current flusher has been flushed
+    if (afc) {
+        afc->flushAnyway();
+        IonSpewCont(IonSpew_CacheFlush, "}");
+    }
+}
+AutoFlushInhibitor::~AutoFlushInhibitor()
+{
+    if (!ic_)
+        return;
+    JS_ASSERT(ic_->flusher() == NULL);
+    // Ensure any future modifications are recorded
+    ic_->setFlusher(afc);
+    if (afc)
+        IonSpewCont(IonSpew_CacheFlush, "{");
+}
+
 int js::ion::LabelBase::id_count = 0;
 
 void
