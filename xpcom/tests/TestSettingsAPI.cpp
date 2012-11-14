@@ -58,7 +58,7 @@ public:
 
   SettingsServiceCallback() { }
 
-  NS_IMETHOD Handle(const nsAString &name, const JS::Value &result, JSContext *cx) {
+  NS_IMETHOD Handle(const nsAString &name, const JS::Value &result) {
     if (callbackCount == 9) {
       CHECK(JSVAL_IS_BOOLEAN(result));
       CHECK(JSVAL_TO_BOOLEAN(result) == true);
@@ -87,7 +87,7 @@ public:
     return NS_OK;
   };
 
-  NS_IMETHOD HandleError(const nsAString &name, JSContext *cx) {
+  NS_IMETHOD HandleError(const nsAString &name) {
     fprintf(stderr, "HANDLE Error! %s\n", NS_LossyConvertUTF16toASCII(name).get());
     errors++;
     return NS_OK;
