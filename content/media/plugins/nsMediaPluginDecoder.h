@@ -9,6 +9,8 @@
 #include "nsBuiltinDecoder.h"
 #include "nsMediaPluginDecoder.h"
 
+namespace mozilla {
+
 class nsMediaPluginDecoder : public nsBuiltinDecoder
 {
   nsCString mType;
@@ -23,5 +25,7 @@ public:
   virtual nsBuiltinDecoder* Clone() { return new nsMediaPluginDecoder(mType); }
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
+
+} // namespace mozilla
 
 #endif

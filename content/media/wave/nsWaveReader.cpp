@@ -13,7 +13,7 @@
 
 #include "mozilla/StandardInteger.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
@@ -542,3 +542,5 @@ nsWaveReader::GetPosition()
 {
   return mDecoder->GetResource()->Tell();
 }
+
+} // namespace mozilla

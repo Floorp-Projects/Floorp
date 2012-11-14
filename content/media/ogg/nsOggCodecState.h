@@ -36,6 +36,8 @@
 #include <map>
 #endif
 
+namespace mozilla {
+
 // Deallocates a packet, used in nsPacketQueue below.
 class OggPacketDeallocator : public nsDequeFunctor {
   virtual void* operator() (void* aPacket) {
@@ -514,6 +516,8 @@ private:
   nsClassHashtable<nsUint32HashKey, nsKeyFrameIndex> mIndex;
 };
 
+} // namespace mozilla
+
 // This allows the use of nsAutoRefs for an ogg_packet that properly free the
 // contents of the packet.
 template <>
@@ -521,8 +525,9 @@ class nsAutoRefTraits<ogg_packet> : public nsPointerRefTraits<ogg_packet>
 {
 public:
   static void Release(ogg_packet* aPacket) {
-    nsOggCodecState::ReleasePacket(aPacket);
+    mozilla::nsOggCodecState::ReleasePacket(aPacket);
   }
 };
+
 
 #endif

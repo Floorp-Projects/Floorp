@@ -12,7 +12,7 @@
 #include "nsMediaPluginHost.h"
 #include "nsBuiltinDecoderStateMachine.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 nsMediaPluginReader::nsMediaPluginReader(nsBuiltinDecoder *aDecoder) :
   nsBuiltinDecoderReader(aDecoder),
@@ -307,3 +307,5 @@ nsresult nsMediaPluginReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStar
   
   return NS_OK;
 }
+
+} // namespace mozilla

@@ -17,9 +17,11 @@
 #include "nsOggCodecState.h"
 #include "VideoUtils.h"
 
+class nsTimeRanges;
+
+namespace mozilla {
 
 class nsBuiltinDecoder;
-class nsTimeRanges;
 
 class nsOggReader : public nsBuiltinDecoderReader
 {
@@ -275,5 +277,7 @@ private:
   // a Theora video track.
   nsIntRect mPicture;
 };
+
+} // namespace mozilla
 
 #endif

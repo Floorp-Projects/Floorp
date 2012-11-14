@@ -17,7 +17,6 @@ class ChannelMediaResource;
 class MediaByteRange;
 class MediaResource;
 class ReentrantMonitorAutoEnter;
-}
 
 /**
  * Media applications want fast, "on demand" random access to media data,
@@ -181,11 +180,6 @@ class nsMediaCache;
  */
 class nsMediaCacheStream {
 public:
-  typedef mozilla::ChannelMediaResource ChannelMediaResource;
-  typedef mozilla::MediaByteRange MediaByteRange;
-  typedef mozilla::MediaResource MediaResource;
-  typedef mozilla::ReentrantMonitorAutoEnter ReentrantMonitorAutoEnter;
-
   enum {
     // This needs to be a power of two
     BLOCK_SIZE = 32768
@@ -505,5 +499,7 @@ private:
   // Use int64_t so that the data is well-aligned.
   int64_t           mPartialBlockBuffer[BLOCK_SIZE/sizeof(int64_t)];
 };
+
+} // namespace mozilla
 
 #endif

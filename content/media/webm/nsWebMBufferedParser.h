@@ -11,7 +11,8 @@
 #include "mozilla/ReentrantMonitor.h"
 
 class nsTimeRanges;
-using mozilla::ReentrantMonitor;
+
+namespace mozilla {
 
 // Stores a stream byte offset and the scaled timecode of the block at
 // that offset.  The timecode must be scaled by the stream's timecode
@@ -207,5 +208,7 @@ private:
   // Sorted (by offset) live parser instances.  Main thread only.
   nsTArray<nsWebMBufferedParser> mRangeParsers;
 };
+
+} // namespace mozilla
 
 #endif

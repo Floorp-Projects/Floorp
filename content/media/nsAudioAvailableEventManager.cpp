@@ -8,9 +8,10 @@
 #include "nsAudioAvailableEventManager.h"
 #include "VideoUtils.h"
 
-static const nsTArray< nsCOMPtr<nsIRunnable> >::size_type MAX_PENDING_EVENTS = 100;
 
-using namespace mozilla;
+namespace mozilla {
+
+static const nsTArray< nsCOMPtr<nsIRunnable> >::size_type MAX_PENDING_EVENTS = 100;
 
 class nsAudioAvailableEventRunner : public nsRunnable
 {
@@ -243,3 +244,6 @@ void nsAudioAvailableEventManager::NotifyAudioAvailableListener()
 
   mHasListener = true;
 }
+
+} // namespace mozilla
+

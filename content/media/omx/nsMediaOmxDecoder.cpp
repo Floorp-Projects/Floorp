@@ -8,6 +8,8 @@
 #include "nsMediaOmxReader.h"
 #include "nsBuiltinDecoderStateMachine.h"
 
+namespace mozilla {
+
 nsMediaOmxDecoder::nsMediaOmxDecoder() :
   nsBuiltinDecoder()
 {
@@ -26,3 +28,6 @@ nsBuiltinDecoderStateMachine* nsMediaOmxDecoder::CreateStateMachine()
 nsMediaOmxDecoder::~nsMediaOmxDecoder()
 {
 }
+
+} // namespace mozilla
+

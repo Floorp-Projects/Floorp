@@ -21,8 +21,9 @@
 #include "nsError.h"
 #include "mozilla/Preferences.h"
 
-using namespace mozilla;
 using namespace mozilla::layers;
+
+namespace mozilla {
 
 // Number of milliseconds between progress events as defined by spec
 static const uint32_t PROGRESS_MS = 350;
@@ -38,9 +39,6 @@ static const uint32_t STALL_MS = 3000;
 // fluctuating bitrates.
 static const int64_t CAN_PLAY_THROUGH_MARGIN = 10;
 
-
-using namespace mozilla;
-
 #ifdef PR_LOGGING
 PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(type, msg) PR_LOG(gBuiltinDecoderLog, type, msg)
@@ -48,7 +46,6 @@ PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(type, msg)
 #endif
 
-namespace mozilla {
 class MediaMemoryReporter
 {
   MediaMemoryReporter();
@@ -104,8 +101,6 @@ public:
     return result;
   }
 };
-
-} //namespace mozilla
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsBuiltinDecoder, nsIObserver)
 
@@ -1559,8 +1554,6 @@ nsBuiltinDecoder::IsDASHEnabled()
 }
 #endif
 
-namespace mozilla {
-
 MediaMemoryReporter* MediaMemoryReporter::sUniqueInstance;
 
 NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedVideoMemory,
@@ -1592,3 +1585,4 @@ MediaMemoryReporter::~MediaMemoryReporter()
 }
 
 } // namespace mozilla
+

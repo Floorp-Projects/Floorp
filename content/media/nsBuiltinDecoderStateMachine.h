@@ -84,6 +84,7 @@ hardware (via nsAudioStream and libsydneyaudio).
 #include "AudioSegment.h"
 #include "VideoSegment.h"
 
+namespace mozilla {
 
 class nsBuiltinDecoderReader;
 
@@ -102,17 +103,10 @@ class nsBuiltinDecoderReader;
 class nsBuiltinDecoderStateMachine : public nsRunnable
 {
 public:
-  typedef mozilla::ReentrantMonitor ReentrantMonitor;
-  typedef mozilla::TimeStamp TimeStamp;
-  typedef mozilla::TimeDuration TimeDuration;
-  typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef nsBuiltinDecoder::DecodedStreamData DecodedStreamData;
-  typedef mozilla::SourceMediaStream SourceMediaStream;
-  typedef mozilla::AudioSegment AudioSegment;
-  typedef mozilla::VideoSegment VideoSegment;
-  typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
-
-  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader, bool aRealTime = false);
+  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder,
+                               nsBuiltinDecoderReader* aReader,
+                               bool aRealTime = false);
   ~nsBuiltinDecoderStateMachine();
 
   // nsDecoderStateMachine interface
@@ -336,7 +330,7 @@ private:
       {
         // Don't let Run() (called by media stream graph thread) race with
         // Revoke() (called by decoder state machine thread)
-        mozilla::MutexAutoLock lock(mMutex);
+        MutexAutoLock lock(mMutex);
         if (!mStateMachine)
           return NS_OK;
         stateMachine = mStateMachine;
@@ -346,11 +340,11 @@ private:
     }
     void Revoke()
     {
-      mozilla::MutexAutoLock lock(mMutex);
+      MutexAutoLock lock(mMutex);
       mStateMachine = nullptr;
     }
 
-    mozilla::Mutex mMutex;
+    Mutex mMutex;
     // Protected by mMutex.
     // We don't use an owning pointer here, because keeping mStateMachine alive
     // would mean in some cases we'd have to destroy mStateMachine from this
@@ -760,4 +754,5 @@ private:
   nsVideoInfo mInfo;
 };
 
+} // namespace mozilla;
 #endif
