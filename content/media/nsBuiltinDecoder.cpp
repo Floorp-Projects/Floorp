@@ -17,6 +17,27 @@
 #include "nsTimeRanges.h"
 #include "nsContentUtils.h"
 #include "ImageContainer.h"
+#include "MediaResource.h"
+#include "nsError.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+using namespace mozilla::layers;
+
+// Number of milliseconds between progress events as defined by spec
+static const uint32_t PROGRESS_MS = 350;
+
+// Number of milliseconds of no data before a stall event is fired as defined by spec
+static const uint32_t STALL_MS = 3000;
+
+// Number of estimated seconds worth of data we need to have buffered
+// ahead of the current playback position before we allow the media decoder
+// to report that it can play through the entire media without the decode
+// catching up with the download. Having this margin make the
+// nsBuiltinDecoder::CanPlayThrough() calculation more stable in the case of
+// fluctuating bitrates.
+static const int64_t CAN_PLAY_THROUGH_MARGIN = 10;
+
 
 using namespace mozilla;
 
@@ -26,6 +47,65 @@ PRLogModuleInfo* gBuiltinDecoderLog;
 #else
 #define LOG(type, msg)
 #endif
+
+namespace mozilla {
+class MediaMemoryReporter
+{
+  MediaMemoryReporter();
+  ~MediaMemoryReporter();
+  static MediaMemoryReporter* sUniqueInstance;
+
+  static MediaMemoryReporter* UniqueInstance() {
+    if (!sUniqueInstance) {
+      sUniqueInstance = new MediaMemoryReporter;
+    }
+    return sUniqueInstance;
+  }
+
+  typedef nsTArray<nsBuiltinDecoder*> DecodersArray;
+  static DecodersArray& Decoders() {
+    return UniqueInstance()->mDecoders;
+  }
+
+  DecodersArray mDecoders;
+
+  nsCOMPtr<nsIMemoryReporter> mMediaDecodedVideoMemory;
+  nsCOMPtr<nsIMemoryReporter> mMediaDecodedAudioMemory;
+
+public:
+  static void AddMediaDecoder(nsBuiltinDecoder* aDecoder) {
+    Decoders().AppendElement(aDecoder);
+  }
+
+  static void RemoveMediaDecoder(nsBuiltinDecoder* aDecoder) {
+    DecodersArray& decoders = Decoders();
+    decoders.RemoveElement(aDecoder);
+    if (decoders.IsEmpty()) {
+      delete sUniqueInstance;
+      sUniqueInstance = nullptr;
+    }
+  }
+
+  static int64_t GetDecodedVideoMemory() {
+    DecodersArray& decoders = Decoders();
+    int64_t result = 0;
+    for (size_t i = 0; i < decoders.Length(); ++i) {
+      result += decoders[i]->VideoQueueMemoryInUse();
+    }
+    return result;
+  }
+
+  static int64_t GetDecodedAudioMemory() {
+    DecodersArray& decoders = Decoders();
+    int64_t result = 0;
+    for (size_t i = 0; i < decoders.Length(); ++i) {
+      result += decoders[i]->AudioQueueMemoryInUse();
+    }
+    return result;
+  }
+};
+
+} //namespace mozilla
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsBuiltinDecoder, nsIObserver)
 
@@ -229,10 +309,15 @@ nsBuiltinDecoder::nsBuiltinDecoder() :
   mResourceLoaded(false),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
-  mTriggerPlaybackEndedWhenSourceStreamFinishes(false)
+  mTriggerPlaybackEndedWhenSourceStreamFinishes(false),
+  mOwner(nullptr),
+  mFrameBufferLength(0),
+  mPinnedForSeek(false),
+  mShuttingDown(false)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoder);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  MediaMemoryReporter::AddMediaDecoder(this);
 #ifdef PR_LOGGING
   if (!gBuiltinDecoderLog) {
     gBuiltinDecoderLog = PR_NewLogModule("nsBuiltinDecoder");
@@ -243,9 +328,8 @@ nsBuiltinDecoder::nsBuiltinDecoder() :
 bool nsBuiltinDecoder::Init(MediaDecoderOwner* aOwner)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  if (!nsMediaDecoder::Init(aOwner))
-    return false;
-
+  mOwner = aOwner;
+  mVideoFrameContainer = aOwner->GetVideoFrameContainer();
   nsContentUtils::RegisterShutdownObserver(this);
   return true;
 }
@@ -278,7 +362,9 @@ void nsBuiltinDecoder::Shutdown()
   }
 
   ChangeState(PLAY_STATE_SHUTDOWN);
-  nsMediaDecoder::Shutdown();
+
+  StopProgress();
+  mOwner = nullptr;
 
   nsContentUtils::UnregisterShutdownObserver(this);
 }
@@ -286,6 +372,7 @@ void nsBuiltinDecoder::Shutdown()
 nsBuiltinDecoder::~nsBuiltinDecoder()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  MediaMemoryReporter::RemoveMediaDecoder(this);
   UnpinForSeek();
   MOZ_COUNT_DTOR(nsBuiltinDecoder);
 }
@@ -318,7 +405,7 @@ nsresult nsBuiltinDecoder::OpenResource(MediaResource* aResource,
 
 nsresult nsBuiltinDecoder::Load(MediaResource* aResource,
                                 nsIStreamListener** aStreamListener,
-                                nsMediaDecoder* aCloneDonor)
+                                nsBuiltinDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -334,7 +421,7 @@ nsresult nsBuiltinDecoder::Load(MediaResource* aResource,
   return InitializeStateMachine(aCloneDonor);
 }
 
-nsresult nsBuiltinDecoder::InitializeStateMachine(nsMediaDecoder* aCloneDonor)
+nsresult nsBuiltinDecoder::InitializeStateMachine(nsBuiltinDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -364,14 +451,16 @@ nsresult nsBuiltinDecoder::InitializeStateMachine(nsMediaDecoder* aCloneDonor)
 
 nsresult nsBuiltinDecoder::RequestFrameBufferLength(uint32_t aLength)
 {
-  nsresult res = nsMediaDecoder::RequestFrameBufferLength(aLength);
-  NS_ENSURE_SUCCESS(res,res);
+  if (aLength < FRAMEBUFFER_LENGTH_MIN || aLength > FRAMEBUFFER_LENGTH_MAX) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+  mFrameBufferLength = aLength;
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mDecoderStateMachine) {
       mDecoderStateMachine->SetFrameBufferLength(aLength);
   }
-  return res;
+  return NS_OK;
 }
 
 nsresult nsBuiltinDecoder::ScheduleStateMachineThread()
@@ -735,7 +824,7 @@ NS_IMETHODIMP nsBuiltinDecoder::Observe(nsISupports *aSubjet,
   return NS_OK;
 }
 
-nsMediaDecoder::Statistics
+nsBuiltinDecoder::Statistics
 nsBuiltinDecoder::GetStatistics()
 {
   NS_ASSERTION(NS_IsMainThread() || OnStateMachineThread(),
@@ -878,7 +967,7 @@ void nsBuiltinDecoder::NextFrameUnavailableBuffering()
   if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
 
-  mOwner->UpdateReadyStateForData(nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING);
+  mOwner->UpdateReadyStateForData(nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING);
 }
 
 void nsBuiltinDecoder::NextFrameAvailable()
@@ -887,7 +976,7 @@ void nsBuiltinDecoder::NextFrameAvailable()
   if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
 
-  mOwner->UpdateReadyStateForData(nsMediaDecoder::NEXT_FRAME_AVAILABLE);
+  mOwner->UpdateReadyStateForData(nsBuiltinDecoder::NEXT_FRAME_AVAILABLE);
 }
 
 void nsBuiltinDecoder::NextFrameUnavailable()
@@ -895,7 +984,7 @@ void nsBuiltinDecoder::NextFrameUnavailable()
   NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
   if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
-  mOwner->UpdateReadyStateForData(nsMediaDecoder::NEXT_FRAME_UNAVAILABLE);
+  mOwner->UpdateReadyStateForData(nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE);
 }
 
 void nsBuiltinDecoder::UpdateReadyStateForData()
@@ -1220,6 +1309,18 @@ ReentrantMonitor& nsBuiltinDecoder::GetReentrantMonitor() {
   return mReentrantMonitor.GetReentrantMonitor();
 }
 
+ImageContainer* nsBuiltinDecoder::GetImageContainer()
+{
+  return mVideoFrameContainer ? mVideoFrameContainer->GetImageContainer() : nullptr;
+}
+
+void nsBuiltinDecoder::Invalidate()
+{
+  if (mVideoFrameContainer) {
+    mVideoFrameContainer->Invalidate();
+  }
+}
+
 // Constructs the time ranges representing what segments of the media
 // are buffered and playable.
 nsresult nsBuiltinDecoder::GetBuffered(nsTimeRanges* aBuffered) {
@@ -1264,3 +1365,230 @@ void nsBuiltinDecoder::ReleaseStateMachine() {
   mDecoderStateMachine = nullptr;
 }
 
+MediaDecoderOwner* nsBuiltinDecoder::GetMediaOwner() const
+{
+  return mOwner;
+}
+
+static void ProgressCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsBuiltinDecoder* decoder = static_cast<nsBuiltinDecoder*>(aClosure);
+  decoder->Progress(true);
+}
+
+void nsBuiltinDecoder::Progress(bool aTimer)
+{
+  if (!mOwner)
+    return;
+
+  TimeStamp now = TimeStamp::Now();
+
+  if (!aTimer) {
+    mDataTime = now;
+  }
+
+  // If PROGRESS_MS has passed since the last progress event fired and more
+  // data has arrived since then, fire another progress event.
+  if ((mProgressTime.IsNull() ||
+       now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS)) &&
+      !mDataTime.IsNull() &&
+      now - mDataTime <= TimeDuration::FromMilliseconds(PROGRESS_MS)) {
+    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
+    mProgressTime = now;
+  }
+
+  if (!mDataTime.IsNull() &&
+      now - mDataTime >= TimeDuration::FromMilliseconds(STALL_MS)) {
+    mOwner->DownloadStalled();
+    // Null it out
+    mDataTime = TimeStamp();
+  }
+}
+
+nsresult nsBuiltinDecoder::StartProgress()
+{
+  if (mProgressTimer)
+    return NS_OK;
+
+  mProgressTimer = do_CreateInstance("@mozilla.org/timer;1");
+  return mProgressTimer->InitWithFuncCallback(ProgressCallback,
+                                              this,
+                                              PROGRESS_MS,
+                                              nsITimer::TYPE_REPEATING_SLACK);
+}
+
+nsresult nsBuiltinDecoder::StopProgress()
+{
+  if (!mProgressTimer)
+    return NS_OK;
+
+  nsresult rv = mProgressTimer->Cancel();
+  mProgressTimer = nullptr;
+
+  return rv;
+}
+
+void nsBuiltinDecoder::FireTimeUpdate()
+{
+  if (!mOwner)
+    return;
+  mOwner->FireTimeUpdate(true);
+}
+
+void nsBuiltinDecoder::PinForSeek()
+{
+  MediaResource* resource = GetResource();
+  if (!resource || mPinnedForSeek) {
+    return;
+  }
+  mPinnedForSeek = true;
+  resource->Pin();
+}
+
+void nsBuiltinDecoder::UnpinForSeek()
+{
+  MediaResource* resource = GetResource();
+  if (!resource || !mPinnedForSeek) {
+    return;
+  }
+  mPinnedForSeek = false;
+  resource->Unpin();
+}
+
+bool nsBuiltinDecoder::CanPlayThrough()
+{
+  Statistics stats = GetStatistics();
+  if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {
+    return false;
+  }
+  int64_t bytesToDownload = stats.mTotalBytes - stats.mDownloadPosition;
+  int64_t bytesToPlayback = stats.mTotalBytes - stats.mPlaybackPosition;
+  double timeToDownload = bytesToDownload / stats.mDownloadRate;
+  double timeToPlay = bytesToPlayback / stats.mPlaybackRate;
+
+  if (timeToDownload > timeToPlay) {
+    // Estimated time to download is greater than the estimated time to play.
+    // We probably can't play through without having to stop to buffer.
+    return false;
+  }
+
+  // Estimated time to download is less than the estimated time to play.
+  // We can probably play through without having to buffer, but ensure that
+  // we've got a reasonable amount of data buffered after the current
+  // playback position, so that if the bitrate of the media fluctuates, or if
+  // our download rate or decode rate estimation is otherwise inaccurate,
+  // we don't suddenly discover that we need to buffer. This is particularly
+  // required near the start of the media, when not much data is downloaded.
+  int64_t readAheadMargin =
+    static_cast<int64_t>(stats.mPlaybackRate * CAN_PLAY_THROUGH_MARGIN);
+  return stats.mTotalBytes == stats.mDownloadPosition ||
+         stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
+}
+
+#ifdef MOZ_RAW
+bool
+nsBuiltinDecoder::IsRawEnabled()
+{
+  return Preferences::GetBool("media.raw.enabled");
+}
+#endif
+
+#ifdef MOZ_OGG
+bool
+nsBuiltinDecoder::IsOpusEnabled()
+{
+#ifdef MOZ_OPUS
+  return Preferences::GetBool("media.opus.enabled");
+#else
+  return false;
+#endif
+}
+
+bool
+nsBuiltinDecoder::IsOggEnabled()
+{
+  return Preferences::GetBool("media.ogg.enabled");
+}
+#endif
+
+#ifdef MOZ_WAVE
+bool
+nsBuiltinDecoder::IsWaveEnabled()
+{
+  return Preferences::GetBool("media.wave.enabled");
+}
+#endif
+
+#ifdef MOZ_WEBM
+bool
+nsBuiltinDecoder::IsWebMEnabled()
+{
+  return Preferences::GetBool("media.webm.enabled");
+}
+#endif
+
+#ifdef MOZ_GSTREAMER
+bool
+nsBuiltinDecoder::IsGStreamerEnabled()
+{
+  return Preferences::GetBool("media.gstreamer.enabled");
+}
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+bool
+nsBuiltinDecoder::IsOmxEnabled()
+{
+  return Preferences::GetBool("media.omx.enabled", false);
+}
+#endif
+
+#ifdef MOZ_MEDIA_PLUGINS
+bool
+nsBuiltinDecoder::IsMediaPluginsEnabled()
+{
+  return Preferences::GetBool("media.plugins.enabled");
+}
+#endif
+
+#ifdef MOZ_DASH
+bool
+nsBuiltinDecoder::IsDASHEnabled()
+{
+  return Preferences::GetBool("media.dash.enabled");
+}
+#endif
+
+namespace mozilla {
+
+MediaMemoryReporter* MediaMemoryReporter::sUniqueInstance;
+
+NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedVideoMemory,
+  "explicit/media/decoded-video",
+  KIND_HEAP,
+  UNITS_BYTES,
+  MediaMemoryReporter::GetDecodedVideoMemory,
+  "Memory used by decoded video frames.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedAudioMemory,
+  "explicit/media/decoded-audio",
+  KIND_HEAP,
+  UNITS_BYTES,
+  MediaMemoryReporter::GetDecodedAudioMemory,
+  "Memory used by decoded audio chunks.")
+
+MediaMemoryReporter::MediaMemoryReporter()
+  : mMediaDecodedVideoMemory(new NS_MEMORY_REPORTER_NAME(MediaDecodedVideoMemory))
+  , mMediaDecodedAudioMemory(new NS_MEMORY_REPORTER_NAME(MediaDecodedAudioMemory))
+{
+  NS_RegisterMemoryReporter(mMediaDecodedVideoMemory);
+  NS_RegisterMemoryReporter(mMediaDecodedAudioMemory);
+}
+
+MediaMemoryReporter::~MediaMemoryReporter()
+{
+  NS_UnregisterMemoryReporter(mMediaDecodedVideoMemory);
+  NS_UnregisterMemoryReporter(mMediaDecodedAudioMemory);
+}
+
+} // namespace mozilla

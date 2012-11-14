@@ -172,6 +172,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsSandboxFlags.h"
 #include "nsSVGFeatures.h"
+#include "nsBuiltinDecoder.h"
 
 #include "nsWrapperCacheInlines.h"
 
@@ -6657,7 +6658,7 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
-  if (nsMediaDecoder::IsMediaPluginsEnabled() &&
+  if (nsBuiltinDecoder::IsMediaPluginsEnabled() &&
       nsHTMLMediaElement::IsMediaPluginsType(nsDependentCString(aType))) {
     docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
     if (docFactory && aLoaderType) {

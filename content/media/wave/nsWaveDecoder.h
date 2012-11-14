@@ -23,7 +23,7 @@
 class nsWaveDecoder : public nsBuiltinDecoder
 {
 public:
-  virtual nsMediaDecoder* Clone() {
+  virtual nsBuiltinDecoder* Clone() {
     if (!IsWaveEnabled()) {
       return nullptr;
     }

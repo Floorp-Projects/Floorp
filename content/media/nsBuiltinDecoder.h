@@ -138,7 +138,7 @@ player SHUTDOWN  decoder SHUTDOWN
 
 The general sequence of events is:
 
-1) The video element calls Load on nsMediaDecoder. This creates the
+1) The video element calls Load on nsBuiltinDecoder. This creates the
    state machine and starts the channel for downloading the
    file. It instantiates and schedules the nsBuiltinDecoderStateMachine. The
    high level LOADING state is entered, which results in the decode
@@ -163,7 +163,7 @@ The general sequence of events is:
    While the play state is PLAYING, the decode thread will decode
    data, and the audio thread will push audio data to the hardware to
    be played. The state machine will run periodically on the shared
-   state machine thread to ensure video frames are played at the 
+   state machine thread to ensure video frames are played at the
    correct time; i.e. the state machine manages A/V sync.
 
 The Shutdown method on nsBuiltinDecoder closes the download channel, and
@@ -178,8 +178,6 @@ destroying the nsBuiltinDecoder object.
 #if !defined(nsBuiltinDecoder_h_)
 #define nsBuiltinDecoder_h_
 
-#include "nsMediaDecoder.h"
-
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
@@ -191,28 +189,58 @@ destroying the nsBuiltinDecoder object.
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "MediaResource.h"
-#include "nsMediaDecoder.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "MediaStreamGraph.h"
 
 namespace mozilla {
 namespace layers {
 class Image;
 } //namespace
+class nsMediaByteRange;
+class VideoFrameContainer;
+class MediaDecoderOwner;
 } //namespace
-
-typedef mozilla::layers::Image Image;
 
 class nsAudioStream;
 class nsBuiltinDecoderStateMachine;
+class nsIStreamListener;
+class nsTimeRanges;
+class nsIMemoryReporter;
+class nsIPrincipal;
+class nsITimer;
+
+// The size to use for audio data frames in MozAudioAvailable events.
+// This value is per channel, and is chosen to give ~43 fps of events,
+// for example, 44100 with 2 channels, 2*1024 = 2048.
+static const uint32_t FRAMEBUFFER_LENGTH_PER_CHANNEL = 1024;
+
+// The total size of the framebuffer used for MozAudioAvailable events
+// has to be within the following range.
+static const uint32_t FRAMEBUFFER_LENGTH_MIN = 512;
+static const uint32_t FRAMEBUFFER_LENGTH_MAX = 16384;
 
 static inline bool IsCurrentThread(nsIThread* aThread) {
   return NS_GetCurrentThread() == aThread;
 }
 
-class nsBuiltinDecoder : public nsMediaDecoder
+typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
+
+class nsBuiltinDecoder : public nsIObserver
 {
 public:
   typedef mozilla::MediaChannelStatistics MediaChannelStatistics;
+  typedef mozilla::MediaResource MediaResource;
+  typedef mozilla::MediaByteRange MediaByteRange;
+  typedef mozilla::ReentrantMonitor ReentrantMonitor;
+  typedef mozilla::SourceMediaStream SourceMediaStream;
+  typedef mozilla::ProcessedMediaStream ProcessedMediaStream;
+  typedef mozilla::MediaInputPort MediaInputPort;
+  typedef mozilla::MainThreadMediaStreamListener MainThreadMediaStreamListener;
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
+  typedef mozilla::VideoFrameContainer VideoFrameContainer;
+  typedef mozilla::layers::Image Image;
+
   class DecodedStreamMainThreadListener;
 
   NS_DECL_ISUPPORTS
@@ -230,40 +258,84 @@ public:
   };
 
   nsBuiltinDecoder();
-  ~nsBuiltinDecoder();
+  virtual ~nsBuiltinDecoder();
 
+  // Create a new decoder of the same type as this one.
+  // Subclasses must implement this.
+  virtual nsBuiltinDecoder* Clone() = 0;
+  // Create a new state machine to run this decoder.
+  // Subclasses must implement this.
+  virtual nsBuiltinDecoderStateMachine* CreateStateMachine() = 0;
+
+  // Call on the main thread only.
+  // Perform any initialization required for the decoder.
+  // Return true on successful initialisation, false
+  // on failure.
   virtual bool Init(mozilla::MediaDecoderOwner* aOwner);
 
-  // This method must be called by the owning object before that
-  // object disposes of this decoder object.
+  // Cleanup internal data structures. Must be called on the main
+  // thread by the owning object before that object disposes of this object.
   virtual void Shutdown();
 
-  virtual double GetCurrentTime();
-
+  // Start downloading the media. Decode the downloaded data up to the
+  // point of the first frame of data.
+  // aResource is the media stream to use. Ownership of aResource passes to
+  // the decoder, even if Load returns an error.
+  // This is called at most once per decoder, after Init().
   virtual nsresult Load(MediaResource* aResource,
                         nsIStreamListener** aListener,
-                        nsMediaDecoder* aCloneDonor);
+                        nsBuiltinDecoder* aCloneDonor);
 
   // Called in |Load| to open the media resource.
   nsresult OpenResource(MediaResource* aResource,
                         nsIStreamListener** aStreamListener);
 
-  virtual nsBuiltinDecoderStateMachine* CreateStateMachine() = 0;
+  // Called when the video file has completed downloading.
+  virtual void ResourceLoaded();
+
+  // Called if the media file encounters a network error.
+  virtual void NetworkError();
+
+  // Get the current MediaResource being used. Its URI will be returned
+  // by currentSrc. Returns what was passed to Load(), if Load() has been called.
+  virtual MediaResource* GetResource() { return mResource; }
+
+  // Return the principal of the current URI being played or downloaded.
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+
+  // Return the time position in the video stream being
+  // played measured in seconds.
+  virtual double GetCurrentTime();
+
+  // Seek to the time position in (seconds) from the start of the video.
+  virtual nsresult Seek(double aTime);
+
+  // Enables decoders to supply an enclosing byte range for a seek offset.
+  // E.g. used by ChannelMediaResource to download a whole cluster for
+  // DASH-WebM.
+  virtual nsresult GetByteRangeForSeek(int64_t const aOffset,
+                                       MediaByteRange &aByteRange) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Initialize state machine and schedule it.
-  nsresult InitializeStateMachine(nsMediaDecoder* aCloneDonor);
+  nsresult InitializeStateMachine(nsBuiltinDecoder* aCloneDonor);
 
   // Start playback of a video. 'Load' must have previously been
   // called.
   virtual nsresult Play();
 
-  // Seek to the time position in (seconds) from the start of the video.
-  virtual nsresult Seek(double aTime);
-
+  // Called by the element when the playback rate has been changed.
+  // Adjust the speed of the playback, optionally with pitch correction,
+  // when this is called.
   virtual nsresult PlaybackRateChanged();
 
+  // Pause video playback.
   virtual void Pause();
+  // Adjust the speed of the playback, optionally with pitch correction,
   virtual void SetVolume(double aVolume);
+  // Sets whether audio is being captured. If it is, we won't play any
+  // of our audio.
   virtual void SetAudioCaptured(bool aCaptured);
 
   // All MediaStream-related data is protected by mReentrantMonitor.
@@ -365,31 +437,53 @@ public:
     nsBuiltinDecoder* mDecoder;
   };
 
+  // Add an output stream. All decoder output will be sent to the stream.
+  // The stream is initially blocked. The decoder is responsible for unblocking
+  // it while it is playing back.
   virtual void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
 
+  // Return the duration of the video in seconds.
   virtual double GetDuration();
 
+  // A media stream is assumed to be infinite if the metadata doesn't
+  // contain the duration, and range requests are not supported, and
+  // no headers give a hint of a possible duration (Content-Length,
+  // Content-Duration, and variants), and we cannot seek in the media
+  // stream to determine the duration.
+  //
+  // When the media stream ends, we can know the duration, thus the stream is
+  // no longer considered to be infinite.
   virtual void SetInfinite(bool aInfinite);
+
+  // Return true if the stream is infinite (see SetInfinite).
   virtual bool IsInfinite();
 
-  virtual MediaResource* GetResource() { return mResource; }
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
-
+  // Called by MediaResource when the "cache suspended" status changes.
+  // If MediaResource::IsSuspendedByCache returns true, then the decoder
+  // should stop buffering or otherwise waiting for download progress and
+  // start consuming data, if possible, because the cache is full.
   virtual void NotifySuspendedStatusChanged();
+
+  // Called by MediaResource when some data has been received.
+  // Call on the main thread only.
   virtual void NotifyBytesDownloaded();
+
+  // Called by nsChannelToPipeListener or MediaResource when the
+  // download has ended. Called on the main thread only. aStatus is
+  // the result from OnStopRequest.
   virtual void NotifyDownloadEnded(nsresult aStatus);
+
+  // Called as data arrives on the stream and is read into the cache.  Called
+  // on the main thread only.
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+
+  // Called by MediaResource when the principal of the resource has
+  // changed. Called on main thread only.
   virtual void NotifyPrincipalChanged();
+
   // Called by the decode thread to keep track of the number of bytes read
   // from the resource.
   void NotifyBytesConsumed(int64_t aBytes);
-
-  // Called when the video file has completed downloading.
-  // Call on the main thread only.
-  void ResourceLoaded();
-
-  // Called if the media file encounters a network error.
-  // Call on the main thread only.
-  virtual void NetworkError();
 
   // Return true if we are currently seeking in the media resource.
   // Call on the main thread only.
@@ -410,26 +504,44 @@ public:
   // Return true if seeking is supported.
   virtual bool IsSeekable();
 
+  // Return the time ranges that can be seeked into.
   virtual nsresult GetSeekable(nsTimeRanges* aSeekable);
 
   // Set the end time of the media resource. When playback reaches
   // this point the media pauses. aTime is in seconds.
   virtual void SetEndTime(double aTime);
 
-  virtual Statistics GetStatistics();
+  // Invalidate the frame.
+  void Invalidate();
 
   // Suspend any media downloads that are in progress. Called by the
-  // media element when it is sent to the bfcache. Call on the main
-  // thread only.
+  // media element when it is sent to the bfcache, or when we need
+  // to throttle the download. Call on the main thread only. This can
+  // be called multiple times, there's an internal "suspend count".
   virtual void Suspend();
 
   // Resume any media downloads that have been suspended. Called by the
-  // media element when it is restored from the bfcache. Call on the
-  // main thread only.
+  // media element when it is restored from the bfcache, or when we need
+  // to stop throttling the download. Call on the main thread only.
+  // The download will only actually resume once as many Resume calls
+  // have been made as Suspend calls. When aForceBuffering is true,
+  // we force the decoder to go into buffering state before resuming
+  // playback.
   virtual void Resume(bool aForceBuffering);
 
-  // Tells our MediaResource to put all loads in the background.
+  // Moves any existing channel loads into the background, so that they don't
+  // block the load event. This is called when we stop delaying the load
+  // event. Any new loads initiated (for example to seek) will also be in the
+  // background. Implementations of this must call MoveLoadsToBackground() on
+  // their MediaResource.
   virtual void MoveLoadsToBackground();
+
+  // Returns a weak reference to the media decoder owner.
+  mozilla::MediaDecoderOwner* GetMediaOwner() const;
+
+  // Returns the current size of the framebuffer used in
+  // MozAudioAvailable events.
+  uint32_t GetFrameBufferLength() { return mFrameBufferLength; }
 
   void AudioAvailable(float* aFrameBuffer, uint32_t aFrameBufferLength, float aTime);
 
@@ -449,11 +561,13 @@ public:
   // are buffered and playable.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered);
 
+  // Returns the size, in bytes, of the heap memory used by the currently
+  // queued decoded video and audio data.
   virtual int64_t VideoQueueMemoryInUse();
-
   virtual int64_t AudioQueueMemoryInUse();
 
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+  VideoFrameContainer* GetVideoFrameContainer() { return mVideoFrameContainer; }
+  virtual mozilla::layers::ImageContainer* GetImageContainer();
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.
   // The new size must be between 512 and 16384.
@@ -464,6 +578,16 @@ public:
   PlayState GetState() {
     return mPlayState;
   }
+
+  // Fire progress events if needed according to the time and byte
+  // constraints outlined in the specification. aTimer is true
+  // if the method is called as a result of the progress timer rather
+  // than the result of downloaded data.
+  void Progress(bool aTimer);
+
+  // Fire timeupdate events if needed according to the time constraints
+  // outlined in the specification.
+  void FireTimeUpdate();
 
   // Stop updating the bytes downloaded for progress notifications. Called
   // when seeking to prevent wild changes to the progress notification.
@@ -480,6 +604,10 @@ public:
 
   // The actual playback rate computation. The monitor must be held.
   double ComputePlaybackRate(bool* aReliable);
+
+  // Returns true if we can play the entire media through without stopping
+  // to buffer, given the current download and playback rates.
+  bool CanPlayThrough();
 
   // Make the decoder state machine update the playback position. Called by
   // the reader on the decoder thread (Assertions for this checked by
@@ -556,16 +684,180 @@ public:
   // Drop reference to state machine.  Only called during shutdown dance.
   virtual void ReleaseStateMachine();
 
-   // Called when a "MozAudioAvailable" event listener is added to the media
-   // element. Called on the main thread.
-   virtual void NotifyAudioAvailableListener();
+  // Called when a "MozAudioAvailable" event listener is added. This enables
+  // the decoder to only dispatch "MozAudioAvailable" events when a
+  // handler exists, reducing overhead. Called on the main thread.
+  virtual void NotifyAudioAvailableListener();
 
   // Notifies the element that decoding has failed.
   virtual void DecodeError();
 
+  // The status of the next frame which might be available from the decoder
+  enum NextFrameStatus {
+    // The next frame of audio/video is available
+    NEXT_FRAME_AVAILABLE,
+    // The next frame of audio/video is unavailable because the decoder
+    // is paused while it buffers up data
+    NEXT_FRAME_UNAVAILABLE_BUFFERING,
+    // The next frame of audio/video is unavailable for some other reasons
+    NEXT_FRAME_UNAVAILABLE
+  };
+
+#ifdef MOZ_RAW
+  static bool IsRawEnabled();
+#endif
+
+#ifdef MOZ_OGG
+  static bool IsOggEnabled();
+  static bool IsOpusEnabled();
+#endif
+
+#ifdef MOZ_WAVE
+  static bool IsWaveEnabled();
+#endif
+
+#ifdef MOZ_WEBM
+  static bool IsWebMEnabled();
+#endif
+
+#ifdef MOZ_GSTREAMER
+  static bool IsGStreamerEnabled();
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+  static bool IsOmxEnabled();
+#endif
+
+#ifdef MOZ_MEDIA_PLUGINS
+  static bool IsMediaPluginsEnabled();
+#endif
+
+#ifdef MOZ_DASH
+  static bool IsDASHEnabled();
+#endif
+
   // Schedules the state machine to run one cycle on the shared state
   // machine thread. Main thread only.
   nsresult ScheduleStateMachineThread();
+
+  struct Statistics {
+    // Estimate of the current playback rate (bytes/second).
+    double mPlaybackRate;
+    // Estimate of the current download rate (bytes/second). This
+    // ignores time that the channel was paused by Gecko.
+    double mDownloadRate;
+    // Total length of media stream in bytes; -1 if not known
+    int64_t mTotalBytes;
+    // Current position of the download, in bytes. This is the offset of
+    // the first uncached byte after the decoder position.
+    int64_t mDownloadPosition;
+    // Current position of decoding, in bytes (how much of the stream
+    // has been consumed)
+    int64_t mDecoderPosition;
+    // Current position of playback, in bytes
+    int64_t mPlaybackPosition;
+    // If false, then mDownloadRate cannot be considered a reliable
+    // estimate (probably because the download has only been running
+    // a short time).
+    bool mDownloadRateReliable;
+    // If false, then mPlaybackRate cannot be considered a reliable
+    // estimate (probably because playback has only been running
+    // a short time).
+    bool mPlaybackRateReliable;
+  };
+
+  // Return statistics. This is used for progress events and other things.
+  // This can be called from any thread. It's only a snapshot of the
+  // current state, since other threads might be changing the state
+  // at any time.
+  Statistics GetStatistics();
+
+  // Frame decoding/painting related performance counters.
+  // Threadsafe.
+  class FrameStatistics {
+  public:
+
+    FrameStatistics() :
+        mReentrantMonitor("nsBuiltinDecoder::FrameStats"),
+        mParsedFrames(0),
+        mDecodedFrames(0),
+        mPresentedFrames(0) {}
+
+    // Returns number of frames which have been parsed from the media.
+    // Can be called on any thread.
+    uint32_t GetParsedFrames() {
+      mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      return mParsedFrames;
+    }
+
+    // Returns the number of parsed frames which have been decoded.
+    // Can be called on any thread.
+    uint32_t GetDecodedFrames() {
+      mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      return mDecodedFrames;
+    }
+
+    // Returns the number of decoded frames which have been sent to the rendering
+    // pipeline for painting ("presented").
+    // Can be called on any thread.
+    uint32_t GetPresentedFrames() {
+      mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      return mPresentedFrames;
+    }
+
+    // Increments the parsed and decoded frame counters by the passed in counts.
+    // Can be called on any thread.
+    void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) {
+      if (aParsed == 0 && aDecoded == 0)
+        return;
+      mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      mParsedFrames += aParsed;
+      mDecodedFrames += aDecoded;
+    }
+
+    // Increments the presented frame counters.
+    // Can be called on any thread.
+    void NotifyPresentedFrame() {
+      mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      ++mPresentedFrames;
+    }
+
+  private:
+
+    // ReentrantMonitor to protect access of playback statistics.
+    ReentrantMonitor mReentrantMonitor;
+
+    // Number of frames parsed and demuxed from media.
+    // Access protected by mStatsReentrantMonitor.
+    uint32_t mParsedFrames;
+
+    // Number of parsed frames which were actually decoded.
+    // Access protected by mStatsReentrantMonitor.
+    uint32_t mDecodedFrames;
+
+    // Number of decoded frames which were actually sent down the rendering
+    // pipeline to be painted ("presented"). Access protected by mStatsReentrantMonitor.
+    uint32_t mPresentedFrames;
+  };
+
+  // Stack based class to assist in notifying the frame statistics of
+  // parsed and decoded frames. Use inside video demux & decode functions
+  // to ensure all parsed and decoded frames are reported on all return paths.
+  class AutoNotifyDecoded {
+  public:
+    AutoNotifyDecoded(nsBuiltinDecoder* aDecoder, uint32_t& aParsed, uint32_t& aDecoded)
+      : mDecoder(aDecoder), mParsed(aParsed), mDecoded(aDecoded) {}
+    ~AutoNotifyDecoded() {
+      mDecoder->GetFrameStatistics().NotifyDecodedFrames(mParsed, mDecoded);
+    }
+  private:
+    nsBuiltinDecoder* mDecoder;
+    uint32_t& mParsed;
+    uint32_t& mDecoded;
+  };
+
+  // Return the frame decode/paint related statistics.
+  FrameStatistics& GetFrameStatistics() { return mFrameStats; }
 
   /******
    * The following members should be accessed with the decoder lock held.
@@ -708,6 +1000,57 @@ public:
   // True if NotifyDecodedStreamMainThreadStateChanged should retrigger
   // PlaybackEnded when mDecodedStream->mStream finishes.
   bool mTriggerPlaybackEndedWhenSourceStreamFinishes;
+
+protected:
+
+  // Start timer to update download progress information.
+  nsresult StartProgress();
+
+  // Stop progress information timer.
+  nsresult StopProgress();
+
+  // Ensures our media stream has been pinned.
+  void PinForSeek();
+
+  // Ensures our media stream has been unpinned.
+  void UnpinForSeek();
+
+  // Timer used for updating progress events
+  nsCOMPtr<nsITimer> mProgressTimer;
+
+  // This should only ever be accessed from the main thread.
+  // It is set in Init and cleared in Shutdown when the element goes away.
+  // The decoder does not add a reference the element.
+  mozilla::MediaDecoderOwner* mOwner;
+
+  // Counters related to decode and presentation of frames.
+  FrameStatistics mFrameStats;
+
+  nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
+
+  // Time that the last progress event was fired. Read/Write from the
+  // main thread only.
+  TimeStamp mProgressTime;
+
+  // Time that data was last read from the media resource. Used for
+  // computing if the download has stalled and to rate limit progress events
+  // when data is arriving slower than PROGRESS_MS. A value of null indicates
+  // that a stall event has already fired and not to fire another one until
+  // more data is received. Read/Write from the main thread only.
+  TimeStamp mDataTime;
+
+  // The framebuffer size to use for audioavailable events.
+  uint32_t mFrameBufferLength;
+
+  // True when our media stream has been pinned. We pin the stream
+  // while seeking.
+  bool mPinnedForSeek;
+
+  // True if the decoder is being shutdown. At this point all events that
+  // are currently queued need to return immediately to prevent javascript
+  // being run that operates on the element and decoder during shutdown.
+  // Read/Write from the main thread only.
+  bool mShuttingDown;
 };
 
 #endif

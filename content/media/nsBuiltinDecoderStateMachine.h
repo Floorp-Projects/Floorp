@@ -164,7 +164,7 @@ public:
     return IsCurrentThread(mAudioThread);
   }
 
-  nsMediaDecoder::NextFrameStatus GetNextFrameStatus();
+  nsBuiltinDecoder::NextFrameStatus GetNextFrameStatus();
 
   // Cause state transitions. These methods obtain the decoder monitor
   // to synchronise the change of state, and to notify other threads

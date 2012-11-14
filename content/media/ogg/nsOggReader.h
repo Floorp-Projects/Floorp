@@ -18,7 +18,7 @@
 #include "VideoUtils.h"
 
 
-class nsMediaDecoder;
+class nsBuiltinDecoder;
 class nsTimeRanges;
 
 class nsOggReader : public nsBuiltinDecoderReader
@@ -33,7 +33,7 @@ public:
 
   // If the Theora granulepos has not been captured, it may read several packets
   // until one with a granulepos has been captured, to ensure that all packets
-  // read have valid time info.  
+  // read have valid time info.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   int64_t aTimeThreshold);
 

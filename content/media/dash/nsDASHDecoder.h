@@ -46,7 +46,7 @@ public:
   ~nsDASHDecoder();
 
   // Clone not supported; just return nullptr.
-  nsMediaDecoder* Clone() { return nullptr; }
+  nsBuiltinDecoder* Clone() { return nullptr; }
 
   // Creates a single state machine for all stream decoders.
   // Called from Load on the main thread only.
@@ -56,7 +56,7 @@ public:
   // Called from the main thread only.
   nsresult Load(MediaResource* aResource,
                 nsIStreamListener** aListener,
-                nsMediaDecoder* aCloneDonor);
+                nsBuiltinDecoder* aCloneDonor);
 
   // Notifies download of MPD file has ended.
   // Called on the main thread only.
@@ -111,9 +111,9 @@ private:
   // Creates audio/video resources for individual |Representation|s.
   // On the main thread.
   MediaResource* CreateAudioSubResource(nsIURI* aUrl,
-                                        nsMediaDecoder* aAudioDecoder);
+                                        nsBuiltinDecoder* aAudioDecoder);
   MediaResource* CreateVideoSubResource(nsIURI* aUrl,
-                                        nsMediaDecoder* aVideoDecoder);
+                                        nsBuiltinDecoder* aVideoDecoder);
 
   // Creates an http channel for a |Representation|.
   // On the main thread.

@@ -28,7 +28,6 @@ EXPORTS = \
   nsBuiltinDecoderReader.h \
   nsDOMMediaStream.h \
   nsMediaCache.h \
-  nsMediaDecoder.h \
   SharedBuffer.h \
   StreamBuffer.h \
   TimeVarying.h \
@@ -49,7 +48,6 @@ CPPSRCS = \
   nsBuiltinDecoderReader.cpp \
   nsDOMMediaStream.cpp \
   nsMediaCache.cpp \
-  nsMediaDecoder.cpp \
   StreamBuffer.cpp \
   VideoFrameContainer.cpp \
   VideoSegment.cpp \

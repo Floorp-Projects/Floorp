@@ -10,10 +10,10 @@
 class nsRawDecoder : public nsBuiltinDecoder
 {
 public:
-  virtual nsMediaDecoder* Clone() { 
+  virtual nsBuiltinDecoder* Clone() {
     if (!IsRawEnabled()) {
       return nullptr;
-    }    
+    }
     return new nsRawDecoder();
   }
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();

@@ -49,7 +49,7 @@ public:
   }
 
   // Clone not supported; just return nullptr.
-  virtual nsMediaDecoder* Clone() { return nullptr; }
+  virtual nsBuiltinDecoder* Clone() { return nullptr; }
 
   // Called by the main decoder at creation time; points to the main state
   // machine managed by the main decoder. Called on the main thread only.
@@ -72,7 +72,7 @@ public:
   // Called from nsDASHDecoder on main thread; Starts media stream download.
   nsresult Load(MediaResource* aResource = nullptr,
                 nsIStreamListener** aListener = nullptr,
-                nsMediaDecoder* aCloneDonor = nullptr);
+                nsBuiltinDecoder* aCloneDonor = nullptr);
 
   // Loads the next byte range (or first one on first call). Called on the main
   // thread only.

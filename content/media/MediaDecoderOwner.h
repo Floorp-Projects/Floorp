@@ -6,7 +6,7 @@
 #ifndef MediaDecoderOwner_h_
 #define MediaDecoderOwner_h_
 
-#include "nsMediaDecoder.h"
+#include "nsBuiltinDecoder.h"
 
 namespace mozilla {
 
@@ -120,7 +120,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame) = 0;
+  virtual void UpdateReadyStateForData(nsBuiltinDecoder::NextFrameStatus aNextFrame) = 0;
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
