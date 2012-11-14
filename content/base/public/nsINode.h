@@ -46,7 +46,6 @@ class nsIURI;
 class nsNodeSupportsWeakRefTearoff;
 class nsNodeWeakReference;
 class nsXPCClassInfo;
-class nsGenericElement;
 
 namespace mozilla {
 namespace dom {
@@ -1079,8 +1078,8 @@ public:
     SetTextContentInternal(aTextContent, aError);
   }
 
-  nsGenericElement* QuerySelector(const nsAString& aSelector,
-                                  mozilla::ErrorResult& aResult);
+  mozilla::dom::Element* QuerySelector(const nsAString& aSelector,
+                                       mozilla::ErrorResult& aResult);
   already_AddRefed<nsINodeList> QuerySelectorAll(const nsAString& aSelector,
                                                  mozilla::ErrorResult& aResult);
 
@@ -1421,7 +1420,7 @@ public:
     aNodeName = NodeName();
   }
   void GetBaseURI(nsAString& aBaseURI) const;
-  nsGenericElement* GetParentElement() const;
+  mozilla::dom::Element* GetParentElement() const;
   bool HasChildNodes() const
   {
     return HasChildren();

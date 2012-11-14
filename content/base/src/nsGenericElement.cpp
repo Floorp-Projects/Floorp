@@ -693,15 +693,6 @@ nsGenericElement::GetClientRects(ErrorResult& aError)
 //----------------------------------------------------------------------
 
 
-nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : Element(aNodeInfo)
-{
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE,
-                    "Bad NodeType in aNodeInfo");
-
-  SetIsElement();
-}
-
 void
 nsGenericElement::GetAttribute(const nsAString& aName, nsString& aReturn)
 {
