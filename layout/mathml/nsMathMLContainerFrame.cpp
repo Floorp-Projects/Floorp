@@ -1438,7 +1438,7 @@ nsMathMLContainerFrame::DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop)
         DidReflowChildren(grandchild, nullptr);
 
       frame->DidReflow(frame->PresContext(), nullptr,
-                       NS_FRAME_REFLOW_FINISHED);
+                       nsDidReflowStatus::FINISHED);
     }
   }
 }

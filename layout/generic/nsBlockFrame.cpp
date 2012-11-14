@@ -5813,7 +5813,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   }
   // Pass floatRS so the frame hierarchy can be used (redoFloatRS has the same hierarchy)  
   aFloat->DidReflow(aState.mPresContext, &floatRS,
-                        NS_FRAME_REFLOW_FINISHED);
+                    nsDidReflowStatus::FINISHED);
 
 #ifdef NOISY_FLOAT
   printf("end ReflowFloat %p, sized to %d,%d\n",
@@ -6786,7 +6786,7 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   nscoord y = aState.mContentArea.y;
   aBulletFrame->SetRect(nsRect(x, y, aMetrics.width, aMetrics.height));
   aBulletFrame->DidReflow(aState.mPresContext, &aState.mReflowState,
-                          NS_FRAME_REFLOW_FINISHED);
+                          nsDidReflowStatus::FINISHED);
 }
 
 // This is used to scan frames for any float placeholders, add their
