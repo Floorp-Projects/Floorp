@@ -86,7 +86,7 @@ nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, jsval* aResult)
     NS_DROP_JS_OBJECTS(this, nsDOMNotifyAudioAvailableEvent);
     return NS_ERROR_FAILURE;
   }
-  memcpy(JS_GetFloat32ArrayData(mCachedArray, aCx), mFrameBuffer.get(), mFrameBufferLength * sizeof(float));
+  memcpy(JS_GetFloat32ArrayData(mCachedArray), mFrameBuffer.get(), mFrameBufferLength * sizeof(float));
 
   *aResult = OBJECT_TO_JSVAL(mCachedArray);
   return NS_OK;

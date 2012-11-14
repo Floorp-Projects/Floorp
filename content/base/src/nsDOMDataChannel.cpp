@@ -317,9 +317,9 @@ nsDOMDataChannel::GetSendParams(nsIVariant* aData, nsCString& aStringOut,
     nsresult rv = aData->GetAsJSVal(&realVal);
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal) &&
         (obj = JSVAL_TO_OBJECT(realVal)) &&
-        (JS_IsArrayBufferObject(obj, aCx))) {
-      int32_t len = JS_GetArrayBufferByteLength(obj, aCx);
-      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj, aCx));
+        (JS_IsArrayBufferObject(obj))) {
+      int32_t len = JS_GetArrayBufferByteLength(obj);
+      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj));
 
       aStringOut.Assign(data, len);
       aIsBinary = true;
