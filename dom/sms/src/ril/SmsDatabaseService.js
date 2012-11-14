@@ -183,7 +183,7 @@ SmsDatabaseService.prototype = {
             break;
           case 3:
             if (DEBUG) debug("Upgrade to version 4. Add quick threads view.")
-            self.upgradeSchema3(event.target.transaction);
+            self.upgradeSchema3(db, event.target.transaction);
             break;
           default:
             event.target.transaction.abort();
@@ -290,7 +290,7 @@ SmsDatabaseService.prototype = {
     }
   },
 
-  upgradeSchema3: function upgradeSchema2(transaction) {
+  upgradeSchema3: function upgradeSchema3(db, transaction) {
     // Delete redundant "id" index.
     let objectStore = transaction.objectStore(STORE_NAME);
     if (objectStore.indexNames.contains("id")) {
