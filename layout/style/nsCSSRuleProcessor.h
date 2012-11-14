@@ -121,9 +121,6 @@ public:
   bool AppendKeyframesRules(nsPresContext* aPresContext,
                             nsTArray<nsCSSKeyframesRule*>& aArray);
 
-  bool AppendPageRules(nsPresContext* aPresContext,
-                       nsTArray<nsCSSPageRule*>& aArray);
-
 #ifdef DEBUG
   void AssertQuirksChangeOK() {
     NS_ASSERTION(!mRuleCascades, "can't toggle quirks style sheet without "
