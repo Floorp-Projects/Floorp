@@ -84,8 +84,10 @@ public:
     nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nullptr; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
 
-    nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
     nsIEventTarget        *ConsumerTarget() { return mConsumerTarget; }
+
+    void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks,
+                              nsIEventTarget* aCallbackTarget);
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.
@@ -134,6 +136,8 @@ private:
     bool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 
 private:
+    mozilla::Mutex mCallbacksLock;
+
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsITransportEventSink> mTransportSink;
     nsCOMPtr<nsIEventTarget>        mConsumerTarget;
