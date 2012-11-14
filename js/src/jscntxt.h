@@ -514,6 +514,9 @@ struct JSRuntime : js::RuntimeFriendFields
         JS_ASSERT(execAlloc_);
         return *execAlloc_;
     }
+    JSC::ExecutableAllocator *maybeExecAlloc() {
+        return execAlloc_;
+    }
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
     }

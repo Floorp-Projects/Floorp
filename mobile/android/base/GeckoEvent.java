@@ -86,6 +86,7 @@ public class GeckoEvent {
     public static final int IME_ADD_COMPOSITION_RANGE = 3;
     public static final int IME_UPDATE_COMPOSITION = 4;
     public static final int IME_REMOVE_COMPOSITION = 5;
+    public static final int IME_ACKNOWLEDGE_FOCUS = 6;
 
     public static final int IME_RANGE_CARETPOSITION = 1;
     public static final int IME_RANGE_RAWINPUT = 2;

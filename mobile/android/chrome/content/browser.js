@@ -875,8 +875,8 @@ var BrowserApp = {
         // preferences to be actual booleans.
         switch (prefName) {
           case "network.cookie.cookieBehavior":
-            pref.type = "bool";
-            pref.value = pref.value == 0;
+            pref.type = "string";
+            pref.value = pref.value.toString();
             break;
           case "font.size.inflation.minTwips":
             pref.type = "string";
@@ -923,7 +923,7 @@ var BrowserApp = {
     switch (json.name) {
       case "network.cookie.cookieBehavior":
         json.type = "int";
-        json.value = (json.value ? 0 : 2);
+        json.value = parseInt(json.value);
         break;
       case "font.size.inflation.minTwips":
         json.type = "int";
@@ -7117,7 +7117,7 @@ let Reader = {
   // Version of the cache database schema
   DB_VERSION: 1,
 
-  DEBUG: 1,
+  DEBUG: 0,
 
   // Don't try to parse the page if it has too many elements (for memory and
   // performance reasons)

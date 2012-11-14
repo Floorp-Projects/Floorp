@@ -632,6 +632,7 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
     image/decoders/icon/android/Makefile
     netwerk/system/android/Makefile
     widget/android/Makefile
+    toolkit/system/androidproxy/Makefile
   "
   if [ "$MOZ_BUILD_APP" = "mobile/xul" -o "$MOZ_BUILD_APP" = "b2g" ]; then
     add_makefiles "

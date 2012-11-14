@@ -10,10 +10,9 @@
 namespace mozilla {
 namespace AvailableMemoryTracker {
 
-// The AvailableMemoryTracker is implemented only on Windows.  But to make
-// callers' lives easier, we stub out empty calls for all its public functions.
-// So you can always initialize the AvailableMemoryTracker; it just might not
-// do anything.
+// The AvailableMemoryTracker launches a memory pressure watcher on all
+// platforms to react to low-memory situations and on Windows it implements
+// the full functionality used to monitor how much memory is available.
 //
 // Init() must be called before any other threads have started, because it
 // modifies the in-memory implementations of some DLL functions in
@@ -22,13 +21,8 @@ namespace AvailableMemoryTracker {
 // The hooks don't do anything until Activate() is called.  It's an error to
 // call Activate() without first calling Init().
 
-#if defined(XP_WIN)
 void Init();
 void Activate();
-#else
-void Init() {}
-void Activate() {}
-#endif
 
 } // namespace AvailableMemoryTracker
 } // namespace mozilla

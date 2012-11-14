@@ -775,6 +775,8 @@ nsTextStateManager::Destroy(void)
                          false, false))->RunDOMEventWhenSafe();
   }
   mWidget->OnIMEFocusChange(false);
+  // Even if there are some pending notification, it'll never notify the widget.
+  mWidget = nullptr;
   if (mObserving && mSel) {
     nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
     if (selPrivate)
@@ -786,7 +788,6 @@ nsTextStateManager::Destroy(void)
   }
   mRootContent = nullptr;
   mEditableNode = nullptr;
-  mWidget = nullptr;
   mObserving = false;
 }
 
@@ -811,21 +812,21 @@ NS_IMPL_ISUPPORTS2(nsTextStateManager,
 // Helper class, used for selection change notification
 class SelectionChangeEvent : public nsRunnable {
 public:
-  SelectionChangeEvent(nsIWidget *widget)
-    : mWidget(widget)
+  SelectionChangeEvent(nsTextStateManager *aDispatcher)
+    : mDispatcher(aDispatcher)
   {
-    MOZ_ASSERT(mWidget);
+    MOZ_ASSERT(mDispatcher);
   }
 
   NS_IMETHOD Run() {
-    if(mWidget) {
-        mWidget->OnIMESelectionChange();
+    if (mDispatcher->mWidget) {
+      mDispatcher->mWidget->OnIMESelectionChange();
     }
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<nsIWidget> mWidget;
+  nsRefPtr<nsTextStateManager> mDispatcher;
 };
 
 nsresult
@@ -837,7 +838,7 @@ nsTextStateManager::NotifySelectionChanged(nsIDOMDocument* aDoc,
   nsresult rv = aSel->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   if (count > 0 && mWidget) {
-    nsContentUtils::AddScriptRunner(new SelectionChangeEvent(mWidget));
+    nsContentUtils::AddScriptRunner(new SelectionChangeEvent(this));
   }
   return NS_OK;
 }
@@ -845,25 +846,25 @@ nsTextStateManager::NotifySelectionChanged(nsIDOMDocument* aDoc,
 // Helper class, used for text change notification
 class TextChangeEvent : public nsRunnable {
 public:
-  TextChangeEvent(nsIWidget *widget,
+  TextChangeEvent(nsTextStateManager* aDispatcher,
                   uint32_t start, uint32_t oldEnd, uint32_t newEnd)
-    : mWidget(widget)
+    : mDispatcher(aDispatcher)
     , mStart(start)
     , mOldEnd(oldEnd)
     , mNewEnd(newEnd)
   {
-    MOZ_ASSERT(mWidget);
+    MOZ_ASSERT(mDispatcher);
   }
 
   NS_IMETHOD Run() {
-    if(mWidget) {
-        mWidget->OnIMETextChange(mStart, mOldEnd, mNewEnd);
+    if (mDispatcher->mWidget) {
+      mDispatcher->mWidget->OnIMETextChange(mStart, mOldEnd, mNewEnd);
     }
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<nsIWidget> mWidget;
+  nsRefPtr<nsTextStateManager> mDispatcher;
   uint32_t mStart, mOldEnd, mNewEnd;
 };
 
@@ -885,7 +886,7 @@ nsTextStateManager::CharacterDataChanged(nsIDocument* aDocument,
   uint32_t newEnd = offset + aInfo->mReplaceLength;
 
   nsContentUtils::AddScriptRunner(
-      new TextChangeEvent(mWidget, offset, oldEnd, newEnd));
+      new TextChangeEvent(this, offset, oldEnd, newEnd));
 }
 
 void
@@ -907,7 +908,7 @@ nsTextStateManager::NotifyContentAdded(nsINode* aContainer,
   // fire notification
   if (newOffset)
     nsContentUtils::AddScriptRunner(
-        new TextChangeEvent(mWidget, offset, offset, offset + newOffset));
+        new TextChangeEvent(this, offset, offset, offset + newOffset));
 }
 
 void
@@ -956,7 +957,7 @@ nsTextStateManager::ContentRemoved(nsIDocument* aDocument,
   // fire notification
   if (childOffset)
     nsContentUtils::AddScriptRunner(
-        new TextChangeEvent(mWidget, offset, offset + childOffset, offset));
+        new TextChangeEvent(this, offset, offset + childOffset, offset));
 }
 
 bool

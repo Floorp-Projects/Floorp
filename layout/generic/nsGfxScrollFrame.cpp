@@ -1455,6 +1455,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   , mUpdateScrollbarAttributes(false)
   , mCollapsedResizer(false)
   , mShouldBuildLayer(false)
+  , mHasBeenScrolled(false)
 {
   mScrollingActive = IsAlwaysActive();
 
@@ -1740,11 +1741,23 @@ bool nsGfxScrollFrameInner::ShouldClampScrollPosition() const
 
 bool nsGfxScrollFrameInner::IsAlwaysActive() const
 {
-  // The root scrollframe for a non-chrome document which is the direct
-  // child of a chrome document is always treated as "active".
-  // XXX maybe we should extend this so that IFRAMEs which are fill the
-  // entire viewport (like GMail!) are always active
-  return mIsRoot && mOuter->PresContext()->IsRootContentDocument();
+  // Unless this is the root scrollframe for a non-chrome document 
+  // which is the direct child of a chrome document, we default to not
+  // being "active".
+  if (!(mIsRoot && mOuter->PresContext()->IsRootContentDocument())) {
+     return false;
+  }
+
+  // If we have scrolled before, then we should stay active.
+  if (mHasBeenScrolled) {
+   return true;
+  }
+ 
+  // If we're overflow:hidden, then start as inactive until
+  // we get scrolled manually.
+  ScrollbarStyles styles = GetScrollbarStylesFromFrame();
+  return (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
+          styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
 }
 
 void nsGfxScrollFrameInner::MarkInactive()
@@ -1774,6 +1787,12 @@ void nsGfxScrollFrameInner::MarkActive()
 
 void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
 {
+  // Mark this frame as having been scrolled. If this is the root
+  // scroll frame of a content document, then IsAlwaysActive()
+  // will return true from now on and MarkInactive() won't
+  // have any effect.
+  mHasBeenScrolled = true;
+
   AdjustViews(mScrolledFrame);
   // We need to call this after fixing up the view positions
   // to be consistent with the frame hierarchy.

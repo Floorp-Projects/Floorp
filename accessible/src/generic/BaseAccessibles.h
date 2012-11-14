@@ -34,6 +34,10 @@ public:
   // Accessible
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
+  
+  virtual bool AppendChild(Accessible* aChild) MOZ_OVERRIDE MOZ_FINAL;
+  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) MOZ_OVERRIDE MOZ_FINAL;
+  virtual bool RemoveChild(Accessible* aChild) MOZ_OVERRIDE MOZ_FINAL;
 
 protected:
 

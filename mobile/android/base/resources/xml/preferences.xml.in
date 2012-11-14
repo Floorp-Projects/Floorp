@@ -77,9 +77,11 @@
                             android:defaultValue="true"
                             android:persistent="false" />
 
-        <CheckBoxPreference android:key="network.cookie.cookieBehavior"
-                            android:title="@string/pref_cookies"
-                            android:persistent="false" />
+        <ListPreference android:key="network.cookie.cookieBehavior"
+                        android:title="@string/pref_cookies"
+                        android:entries="@array/pref_cookies_entries"
+                        android:entryValues="@array/pref_cookies_values"
+                        android:persistent="false" />
 
 #ifdef MOZ_TELEMETRY_REPORTING
         <CheckBoxPreference android:key="toolkit.telemetry.enabled"

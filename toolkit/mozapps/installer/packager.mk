@@ -557,7 +557,10 @@ UNMAKE_PACKAGE	= $(INNER_UNMAKE_PACKAGE)
 endif # def MOZ_OMNIJAR
 
 ifdef MOZ_INTERNAL_SIGNING_FORMAT
-MOZ_SIGN_PREPARED_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_INTERNAL_SIGNING_FORMAT),-f $(f)) $(foreach i,$(SIGN_INCLUDES),-i $(i)) $(foreach x,$(SIGN_EXCLUDES),-x $(x)) --nsscmd "$(SIGN_CMD)"
+MOZ_SIGN_PREPARED_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_INTERNAL_SIGNING_FORMAT),-f $(f)) $(foreach i,$(SIGN_INCLUDES),-i $(i)) $(foreach x,$(SIGN_EXCLUDES),-x $(x))
+ifeq (WINNT,$(OS_ARCH))
+MOZ_SIGN_PREPARED_PACKAGE_CMD += --nsscmd "$(SIGN_CMD)"
+endif
 endif
 
 # For final GPG / authenticode signing / dmg signing if required
