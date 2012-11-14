@@ -21,6 +21,22 @@ using namespace js::ion;
 namespace js {
 namespace ion {
 
+// Don't explicitly initialize, it's not guaranteed that this initializer will
+// run before the constructors for static VMFunctions.
+/* static */ VMFunction *VMFunction::functions;
+
+void
+VMFunction::addToFunctions()
+{
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
+        functions = NULL;
+    }
+    this->next = functions;
+    functions = this;
+}
+
 static inline bool
 ShouldMonitorReturnType(JSFunction *fun)
 {

@@ -638,11 +638,8 @@ MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
             JS_NOT_REACHED("invalid");
             break;
           case IonFrame_Rectifier:
-          case IonFrame_Bailed_Rectifier: {
-            IonCompartment *ionCompartment = activations.activation()->compartment()->ionCompartment();
-            MarkIonCodeRoot(trc, ionCompartment->getArgumentsRectifierAddr(), "Arguments Rectifier");
+          case IonFrame_Bailed_Rectifier:
             break;
-          }
           case IonFrame_Osr:
             // The callee token will be marked by the callee JS frame;
             // otherwise, it does not need to be marked, since the frame is
