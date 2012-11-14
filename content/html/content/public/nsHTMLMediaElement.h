@@ -16,7 +16,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
-#include "nsAudioStream.h"
+#include "AudioStream.h"
 #include "VideoFrameContainer.h"
 #include "mozilla/CORSMode.h"
 #include "nsDOMMediaStream.h"
@@ -32,9 +32,9 @@ typedef uint16_t nsMediaReadyState;
 
 namespace mozilla {
 class MediaResource;
-class nsBuiltinDecoder;
+class MediaDecoder;
 #ifdef MOZ_DASH
-class nsDASHDecoder;
+class DASHDecoder;
 #endif
 }
 
@@ -50,11 +50,11 @@ public:
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
   typedef mozilla::MetadataTags MetadataTags;
-  typedef mozilla::nsAudioStream nsAudioStream;
-  typedef mozilla::nsBuiltinDecoder nsBuiltinDecoder;
+  typedef mozilla::AudioStream AudioStream;
+  typedef mozilla::MediaDecoder MediaDecoder;
 
 #ifdef MOZ_DASH
-  friend class nsDASHDecoder;
+  friend class DASHDecoder;
 #endif
 
   enum CanPlayStatus {
@@ -442,14 +442,14 @@ protected:
    * Create a decoder for the given aMIMEType. Returns null if we
    * were unable to create the decoder.
    */
-  already_AddRefed<nsBuiltinDecoder> CreateDecoder(const nsACString& aMIMEType);
+  already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aMIMEType);
 
   /**
    * Initialize a decoder as a clone of an existing decoder in another
    * element.
    * mLoadingSrc must already be set.
    */
-  nsresult InitializeDecoderAsClone(nsBuiltinDecoder* aOriginal);
+  nsresult InitializeDecoderAsClone(MediaDecoder* aOriginal);
 
   /**
    * Initialize a decoder to load the given channel. The decoder's stream
@@ -463,10 +463,10 @@ protected:
    * Finish setting up the decoder after Load() has been called on it.
    * Called by InitializeDecoderForChannel/InitializeDecoderAsClone.
    */
-  nsresult FinishDecoderSetup(nsBuiltinDecoder* aDecoder,
+  nsresult FinishDecoderSetup(MediaDecoder* aDecoder,
                               MediaResource* aStream,
                               nsIStreamListener **aListener,
-                              nsBuiltinDecoder* aCloneDonor);
+                              MediaDecoder* aCloneDonor);
 
   /**
    * Call this after setting up mLoadingSrc and mDecoder.
@@ -659,7 +659,7 @@ protected:
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
-  nsRefPtr<nsBuiltinDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
 
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
@@ -792,7 +792,7 @@ protected:
   nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
-  nsRefPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<AudioStream> mAudioStream;
 
   // Range of time played.
   nsTimeRanges mPlayed;

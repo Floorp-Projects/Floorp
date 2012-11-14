@@ -21,7 +21,7 @@
  * DASH is an adaptive bitrate streaming technology where a multimedia file is
  * partitioned into one or more segments and delivered to a client using HTTP.
  *
- * (see nsDASHDecoder.cpp for info on DASH interaction with the media engine).
+ * (see DASHDecoder.cpp for info on DASH interaction with the media engine).
  *
  * Media Presentation Description (MPD) Parser.
  *
