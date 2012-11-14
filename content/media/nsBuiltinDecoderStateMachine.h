@@ -110,6 +110,7 @@ public:
   typedef mozilla::SourceMediaStream SourceMediaStream;
   typedef mozilla::AudioSegment AudioSegment;
   typedef mozilla::VideoSegment VideoSegment;
+  typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
 
   nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader, bool aRealTime = false);
   ~nsBuiltinDecoderStateMachine();
@@ -164,7 +165,7 @@ public:
     return IsCurrentThread(mAudioThread);
   }
 
-  nsBuiltinDecoder::NextFrameStatus GetNextFrameStatus();
+  MediaDecoderOwner::NextFrameStatus GetNextFrameStatus();
 
   // Cause state transitions. These methods obtain the decoder monitor
   // to synchronise the change of state, and to notify other threads

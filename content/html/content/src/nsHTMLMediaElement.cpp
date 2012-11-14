@@ -2653,8 +2653,8 @@ public:
   {
     if (mElement && mHaveCurrentData) {
       mElement->UpdateReadyStateForData(
-        mBlocked ? nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING :
-                   nsBuiltinDecoder::NEXT_FRAME_AVAILABLE);
+        mBlocked ? MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING :
+                   MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
     }
   }
   void DoNotifyBlocked()
@@ -3057,7 +3057,7 @@ bool nsHTMLMediaElement::ShouldCheckAllowOrigin()
   return mCORSMode != CORS_NONE;
 }
 
-void nsHTMLMediaElement::UpdateReadyStateForData(nsBuiltinDecoder::NextFrameStatus aNextFrame)
+void nsHTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame)
 {
   if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
     // aNextFrame might have a next frame because the decoder can advance
@@ -3082,9 +3082,9 @@ void nsHTMLMediaElement::UpdateReadyStateForData(nsBuiltinDecoder::NextFrameStat
     return;
   }
 
-  if (aNextFrame != nsBuiltinDecoder::NEXT_FRAME_AVAILABLE) {
+  if (aNextFrame != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
-    if (!mWaitingFired && aNextFrame == nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING) {
+    if (!mWaitingFired && aNextFrame == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       FireTimeUpdate(false);
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
       mWaitingFired = true;
@@ -3696,3 +3696,10 @@ void nsHTMLMediaElement::NotifyAudioAvailableListener()
     mDecoder->NotifyAudioAvailableListener();
   }
 }
+
+ImageContainer* nsHTMLMediaElement::GetImageContainer()
+{
+  VideoFrameContainer* container = GetVideoFrameContainer();
+  return container ? container->GetImageContainer() : nullptr;
+}
+

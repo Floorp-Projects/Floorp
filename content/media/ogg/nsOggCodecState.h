@@ -73,6 +73,7 @@ public:
 // converting granulepos to timestamps.
 class nsOggCodecState {
 public:
+  typedef mozilla::MetadataTags MetadataTags;
   // Ogg types we know about
   enum CodecType {
     TYPE_VORBIS=0,
