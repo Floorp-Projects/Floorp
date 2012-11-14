@@ -17,12 +17,63 @@
 #include "nsChangeHint.h"                  // for enum
 #include "nsEventStates.h"                 // for member
 #include "mozilla/dom/DirectionalityUtils.h"
+#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocumentFragment.h"
+#include "nsILinkHandler.h"
+#include "nsNodeUtils.h"
+#include "nsAttrAndChildArray.h"
+#include "mozFlushType.h"
+#include "nsDOMAttributeMap.h"
+#include "nsIWeakReference.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDocument.h"
+#include "nsIDOMNodeSelector.h"
+#include "nsIDOMXPathNSResolver.h"
+#include "nsPresContext.h"
+#include "nsDOMClassInfoID.h" // DOMCI_DATA
+#include "nsIDOMTouchEvent.h"
+#include "nsIInlineEventHandlers.h"
+#include "mozilla/CORSMode.h"
+#include "mozilla/Attributes.h"
+#include "nsContentUtils.h"
+#include "nsINodeList.h"
+#include "mozilla/ErrorResult.h"
+#include "nsIScrollableFrame.h"
+#include "nsIDOMAttr.h"
+#include "nsISMILAttr.h"
+#include "nsClientRect.h"
+#include "nsIDOMDOMTokenList.h"
 
+class nsIDOMEventListener;
+class nsIFrame;
+class nsIDOMNamedNodeMap;
+class nsIDOMCSSStyleDeclaration;
+class nsIURI;
+class nsINodeInfo;
+class nsIControllers;
+class nsEventChainVisitor;
+class nsEventListenerManager;
+class nsIScrollableFrame;
+class nsAttrValueOrString;
+class ContentUnbinder;
+class nsClientRect;
+class nsClientRectList;
+class nsIHTMLCollection;
+class nsContentList;
+class nsDOMTokenList;
+struct nsRect;
 class nsEventStateManager;
 class nsFocusManager;
 class nsGlobalWindow;
 class nsICSSDeclaration;
 class nsISMILAttr;
+
+already_AddRefed<nsContentList>
+NS_GetContentList(nsINode* aRootNode,
+                  int32_t  aMatchNameSpaceId,
+                  const nsAString& aTagname);
 
 #define ELEMENT_FLAG_BIT(n_) NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
@@ -343,79 +394,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
 
 } // namespace dom
 } // namespace mozilla
-
-inline mozilla::dom::Element* nsINode::AsElement()
-{
-  MOZ_ASSERT(IsElement());
-  return static_cast<mozilla::dom::Element*>(this);
-}
-
-inline const mozilla::dom::Element* nsINode::AsElement() const
-{
-  MOZ_ASSERT(IsElement());
-  return static_cast<const mozilla::dom::Element*>(this);
-}
-
-inline bool nsINode::HasAttributes() const
-{
-  return IsElement() && AsElement()->GetAttrCount() > 0;
-}
-
-#include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
-#include "mozilla/dom/FragmentOrElement.h"
-#include "mozilla/dom/Element.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMDocumentFragment.h"
-#include "nsILinkHandler.h"
-#include "nsNodeUtils.h"
-#include "nsAttrAndChildArray.h"
-#include "mozFlushType.h"
-#include "nsDOMAttributeMap.h"
-#include "nsIWeakReference.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsIDocument.h"
-#include "nsIDOMNodeSelector.h"
-#include "nsIDOMXPathNSResolver.h"
-#include "nsPresContext.h"
-#include "nsDOMClassInfoID.h" // DOMCI_DATA
-#include "nsIDOMTouchEvent.h"
-#include "nsIInlineEventHandlers.h"
-#include "mozilla/CORSMode.h"
-#include "mozilla/Attributes.h"
-#include "nsContentUtils.h"
-#include "nsINodeList.h"
-#include "mozilla/ErrorResult.h"
-#include "nsIScrollableFrame.h"
-#include "nsIDOMAttr.h"
-#include "nsISMILAttr.h"
-#include "nsClientRect.h"
-#include "nsIDOMDOMTokenList.h"
-
-class nsIDOMEventListener;
-class nsIFrame;
-class nsIDOMNamedNodeMap;
-class nsICSSDeclaration;
-class nsIDOMCSSStyleDeclaration;
-class nsIURI;
-class nsINodeInfo;
-class nsIControllers;
-class nsEventChainVisitor;
-class nsEventListenerManager;
-class nsIScrollableFrame;
-class nsAttrValueOrString;
-class ContentUnbinder;
-class nsClientRect;
-class nsClientRectList;
-class nsIHTMLCollection;
-class nsContentList;
-class nsDOMTokenList;
-struct nsRect;
-
-already_AddRefed<nsContentList>
-NS_GetContentList(nsINode* aRootNode,
-                  int32_t  aMatchNameSpaceId,
-                  const nsAString& aTagname);
 
 /**
  * A generic base class for DOM elements, implementing many nsIContent,
@@ -1120,6 +1098,23 @@ private:
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr);
 };
+
+inline mozilla::dom::Element* nsINode::AsElement()
+{
+  MOZ_ASSERT(IsElement());
+  return static_cast<mozilla::dom::Element*>(this);
+}
+
+inline const mozilla::dom::Element* nsINode::AsElement() const
+{
+  MOZ_ASSERT(IsElement());
+  return static_cast<const mozilla::dom::Element*>(this);
+}
+
+inline bool nsINode::HasAttributes() const
+{
+  return IsElement() && AsElement()->GetAttrCount() > 0;
+}
 
 /**
  * Macros to implement Clone(). _elementName is the class for which to implement
