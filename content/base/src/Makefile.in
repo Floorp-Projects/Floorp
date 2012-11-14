@@ -84,7 +84,7 @@ CPPSRCS		= \
 		nsDOMSettableTokenList.cpp \
 		nsDocument.cpp \
 		nsDocumentEncoder.cpp \
-		nsDocumentFragment.cpp \
+		DocumentFragment.cpp \
 		nsFrameLoader.cpp \
 		nsFormData.cpp \
 		nsGenConImageContent.cpp \
