@@ -15,8 +15,6 @@
 # libs-%
 #   This target should call into the various libs targets that this
 #   application depends on.
-#   Make sure to set BOTH_MANIFESTS=1, as this will be called only once
-#   for both packages and language packs.
 # installer-%
 #   This target should list all required targets, a typical rule would be
 #	installers-%: clobber-% langpack-% repackage-zip-%
@@ -171,7 +169,7 @@ langpack-%: libs-%
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) -I$(TK_DEFINES) -I$(APP_DEFINES) $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest -x chrome/$(AB_CD).manifest
+	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest
 
 
 # This variable is to allow the wget-en-US target to know which ftp server to download from

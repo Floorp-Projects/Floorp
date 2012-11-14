@@ -28,12 +28,13 @@ public:
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsHTMLMediaElement::)
+  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsHTMLMediaElement::)
 
   // nsIDOMHTMLMediaElement
+  using nsHTMLMediaElement::GetPaused;
   NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(nsHTMLMediaElement::)
 
   // nsIDOMHTMLAudioElement

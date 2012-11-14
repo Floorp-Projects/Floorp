@@ -129,20 +129,9 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 {
   mFirstLineRule = new nsEmptyStyleRule;
   mFirstLetterRule = new nsEmptyStyleRule;
-  if (!mFirstLineRule || !mFirstLetterRule) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (!BuildDefaultStyleData(aPresContext)) {
-    mDefaultStyleData.Destroy(0, aPresContext);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  mPlaceholderRule = new nsEmptyStyleRule;
 
   mRuleTree = nsRuleNode::CreateRootNode(aPresContext);
-  if (!mRuleTree) {
-    mDefaultStyleData.Destroy(0, aPresContext);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   GatherRuleProcessors(eAnimationSheet);
   GatherRuleProcessors(eTransitionSheet);
@@ -916,39 +905,6 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   (*aFunc)(mRuleProcessors[eTransitionSheet], aData);
 }
 
-bool nsStyleSet::BuildDefaultStyleData(nsPresContext* aPresContext)
-{
-  NS_ASSERTION(!mDefaultStyleData.mResetData &&
-               !mDefaultStyleData.mInheritedData,
-               "leaking default style data");
-  mDefaultStyleData.mResetData = new (aPresContext) nsResetStyleData;
-  if (!mDefaultStyleData.mResetData)
-    return false;
-  mDefaultStyleData.mInheritedData = new (aPresContext) nsInheritedStyleData;
-  if (!mDefaultStyleData.mInheritedData)
-    return false;
-
-#define SSARG_PRESCONTEXT aPresContext
-
-#define CREATE_DATA(name, type, args) \
-  if (!(mDefaultStyleData.m##type##Data->mStyleStructs[eStyleStruct_##name] = \
-          new (aPresContext) nsStyle##name args)) \
-    return false;
-
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
-  CREATE_DATA(name, Inherited, ctor_args)
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
-  CREATE_DATA(name, Reset, ctor_args)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_INHERITED
-#undef STYLE_STRUCT_RESET
-#undef SSARG_PRESCONTEXT
-
-  return true;
-}
-
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleFor(Element* aElement,
                             nsStyleContext* aParentContext)
@@ -1065,6 +1021,8 @@ nsStyleSet::WalkRestrictionRule(nsCSSPseudoElements::Type aPseudoType,
     aRuleWalker->Forward(mFirstLetterRule);
   else if (aPseudoType == nsCSSPseudoElements::ePseudo_firstLine)
     aRuleWalker->Forward(mFirstLineRule);
+  else if (aPseudoType == nsCSSPseudoElements::ePseudo_mozPlaceholder)
+    aRuleWalker->Forward(mPlaceholderRule);
 }
 
 already_AddRefed<nsStyleContext>
@@ -1305,8 +1263,6 @@ nsStyleSet::Shutdown(nsPresContext* aPresContext)
     mOldRuleTrees[i]->Destroy();
   }
   mOldRuleTrees.Clear();
-
-  mDefaultStyleData.Destroy(0, aPresContext);
 }
 
 static const uint32_t kGCInterval = 300;

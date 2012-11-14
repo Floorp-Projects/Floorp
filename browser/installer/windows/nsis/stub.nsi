@@ -358,6 +358,10 @@ Function .onGUIEnd
   ; Try to send a ping if a download was attempted
   ${If} $IsDownloadFinished != ""
   ${AndIf} $CheckboxSendPing == 1
+    ${If} $IsDownloadFinished == "false"
+      ; Cancel the download in progress
+      InetBgDL::Get /RESET /END
+    ${EndIf}
     System::Int64Op $DownloadedAmount / 1024
     Pop $DownloadedAmount
     InetBgDL::Get "${BaseURLStubPing}${Channel}/${AB_CD}/$ExitCode/$FirefoxLaunch/$SecondsToDownload/$DownloadedAmount/$ExistingProfile/$ExistingInstall/" \

@@ -122,9 +122,10 @@ protected:
   bool mLoadingScript;
   bool mDelayedDisconnect;
 
-  // Is this the message manager for an in-process <iframe mozbrowser>?  This
-  // affects where events get sent, so it affects PreHandleEvent.
-  bool mIsBrowserFrame;
+  // Is this the message manager for an in-process <iframe mozbrowser> or
+  // <iframe mozapp>?  This affects where events get sent, so it affects
+  // PreHandleEvent.
+  bool mIsBrowserOrAppFrame;
 public:
   nsIContent* mOwner;
   nsFrameMessageManager* mChromeMessageManager;

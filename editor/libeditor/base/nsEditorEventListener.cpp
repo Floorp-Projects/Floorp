@@ -902,14 +902,10 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 
   mEditor->OnFocus(target);
 
-  nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContent();
-  NS_ENSURE_TRUE(focusedContent, NS_OK);
-  nsIDocument* currentDoc = focusedContent->GetCurrentDoc();
-  NS_ENSURE_TRUE(currentDoc, NS_OK);
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_OK);
-  nsIMEStateManager::OnFocusInEditor(ps->GetPresContext(),
-    currentDoc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent);
+  nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContentForIME();
+  nsIMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent);
 
   return NS_OK;
 }

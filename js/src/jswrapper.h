@@ -46,6 +46,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto,
                          JSObject *parent, Wrapper *handler);
 
+    static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, Wrapper *handler);
+
     static Wrapper *wrapperHandler(RawObject wrapper);
 
     static JSObject *wrappedObject(RawObject wrapper);
@@ -235,7 +237,8 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
 };
 
 extern JSObject *
-TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
+TransparentObjectWrapper(JSContext *cx, JSObject *existing, JSObject *obj,
+                         JSObject *wrappedProto, JSObject *parent,
                          unsigned flags);
 
 // Proxy family for wrappers. Public so that IsWrapper() can be fully inlined by
@@ -270,6 +273,9 @@ UnwrapOneChecked(JSContext *cx, HandleObject obj);
 JS_FRIEND_API(bool)
 IsCrossCompartmentWrapper(RawObject obj);
 
+bool
+IsDeadProxyObject(RawObject obj);
+
 JSObject *
 NewDeadProxyObject(JSContext *cx, JSObject *parent);
 
@@ -288,6 +294,34 @@ RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
 JS_FRIEND_API(bool)
 RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                   const CompartmentFilter &targetFilter);
+
+/*
+ * This auto class should be used around any code, such as brain transplants,
+ * that may touch dead compartments. Brain transplants can cause problems
+ * because they operate on all compartments, whether live or dead. A brain
+ * transplant can cause a formerly dead object to be "reanimated" by causing a
+ * read or write barrier to be invoked on it during the transplant. In this way,
+ * a compartment becomes a zombie, kept alive by repeatedly consuming
+ * (transplanted) brains.
+ *
+ * To work around this issue, we observe when mark bits are set on objects in
+ * dead compartments. If this happens during a brain transplant, we do a full,
+ * non-incremental GC at the end of the brain transplant. This will clean up any
+ * objects that were improperly marked.
+ */
+struct JS_FRIEND_API(AutoMaybeTouchDeadCompartments)
+{
+    // The version that takes an object just uses it for its runtime.
+    AutoMaybeTouchDeadCompartments(JSContext *cx);
+    AutoMaybeTouchDeadCompartments(JSObject *obj);
+    ~AutoMaybeTouchDeadCompartments();
+
+  private:
+    JSRuntime *runtime;
+    unsigned markCount;
+    bool inIncremental;
+    bool manipulatingDeadCompartments;
+};
 
 } /* namespace js */
 

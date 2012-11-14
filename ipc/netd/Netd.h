@@ -38,7 +38,7 @@ class NetdWriteTask : public Task
   virtual void Run();
 };
 
-class NetdClient : public MessageLoopForIO::Watcher,
+class NetdClient : public MessageLoopForIO::LineWatcher,
                    public RefCounted<NetdClient>
 {
 public:
@@ -51,8 +51,8 @@ public:
 
 private:
   void WriteNetdCommand();
-  void Restart();
-  virtual void OnFileCanReadWithoutBlocking(int aFd);
+  virtual void OnError();
+  virtual void OnLineRead(int aFd, nsDependentCSubstring& aMessage);
   virtual void OnFileCanWriteWithoutBlocking(int aFd);
   bool OpenSocket();
 
@@ -61,10 +61,8 @@ private:
   MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;
   ScopedClose mSocket;
   NetdCommandQueue mOutgoingQ;
-  char mReceiveBuffer[MAX_COMMAND_SIZE];
   nsAutoPtr<NetdCommand> mCurrentNetdCommand;
   size_t mCurrentWriteOffset;
-  size_t mReceivedIndex;
   size_t mReConnectTimes;
 };
 

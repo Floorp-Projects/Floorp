@@ -499,17 +499,6 @@ nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr, int32_t *aUInt)
   return false;
 }
 
-bool
-nsCoreUtils::IsXLink(nsIContent *aContent)
-{
-  if (!aContent)
-    return false;
-
-  return aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
-                               nsGkAtoms::simple, eCaseMatters) &&
-    aContent->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href);
-}
-
 void
 nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
                             nsAString& aLanguage)

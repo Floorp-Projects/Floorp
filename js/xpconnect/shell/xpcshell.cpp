@@ -459,8 +459,12 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
                            filename.ptr());
             return false;
         }
-        JSScript *script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename.ptr(),
-                                                                 file, gJSPrincipals);
+        JS::CompileOptions options(cx);
+        options.setUTF8(true)
+               .setFileAndLine(filename.ptr(), 1)
+               .setPrincipals(gJSPrincipals);
+        js::RootedObject rootedObj(cx, obj);
+        JSScript *script = JS::Compile(cx, rootedObj, options, file);
         fclose(file);
         if (!script)
             return false;
@@ -791,6 +795,24 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static JSBool
+Atob(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (!argc)
+        return true;
+
+    return xpc::Base64Decode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
+}
+
+static JSBool
+Btoa(JSContext *cx, unsigned argc, jsval *vp)
+{
+  if (!argc)
+      return true;
+
+  return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
+}
+
 static JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
@@ -805,12 +827,14 @@ static JSFunctionSpec glob_functions[] = {
     JS_FS("gczeal",          GCZeal,         1,0),
 #endif
     JS_FS("options",         Options,        0,0),
-    JS_FN("parent",     Parent,         1,0),
+    JS_FN("parent",          Parent,         1,0),
 #ifdef DEBUG
     JS_FS("dumpHeap",        DumpHeap,       5,0),
 #endif
     JS_FS("sendCommand",     SendCommand,    1,0),
     JS_FS("getChildGlobalObject", GetChildGlobalObject, 0,0),
+    JS_FS("atob",            Atob,           1,0),
+    JS_FS("btoa",            Btoa,           1,0),
     JS_FS_END
 };
 
@@ -1008,9 +1032,12 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         ungetc(ch, file);
         DoBeginRequest(cx);
 
-        script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename, file,
-                                                       gJSPrincipals);
-
+        JS::CompileOptions options(cx);
+        options.setUTF8(true)
+               .setFileAndLine(filename, 1)
+               .setPrincipals(gJSPrincipals);
+        js::RootedObject rootedObj(cx, obj);
+        script = JS::Compile(cx, rootedObj, options, file);
         if (script && !compileOnly)
             (void)JS_ExecuteScript(cx, obj, script, &result);
         DoEndRequest(cx);

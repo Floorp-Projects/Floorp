@@ -133,11 +133,6 @@ select option, select optgroup {
   pointer-events: none;
 }
 
-input:-moz-placeholder,
-textarea:-moz-placeholder {
-  color: GrayText;
-}
-
 select:not([size]):not([multiple]),
 select[size="0"],
 select[size="1"],
@@ -316,15 +311,6 @@ select:active,
 label:active,
 textarea:active {
   background-color: rgba(141, 184, 216, 0.5) !important;
-}
-
-/* 
- * Generate an additional space after the anonymous div to make it easier to
- * to position the caret at the end of the text
- */
-input > .anonymous-div:after {
-  content: "";
-  margin: 16px;
 }
 
 /*

@@ -16,6 +16,10 @@
 #include "nsIScriptGlobalObject.h"
 #include "xpcpublic.h"
 
+#ifdef XP_WIN
+#undef GetClassName
+#endif
+
 namespace mozilla {
 class DOMSVGLengthList;
 class DOMSVGNumberList;

@@ -33,16 +33,11 @@ fi
 if [ -d $VENV_DIR ]
 then
   echo "Using virtual environment in $VENV_DIR"
-  . $VENV_DIR/bin/activate
 else
   echo "Creating a virtual environment in $VENV_DIR"
   curl https://raw.github.com/pypa/virtualenv/develop/virtualenv.py | ${PYTHON} - $VENV_DIR
-  . $VENV_DIR/bin/activate
-
-  # set up mozbase
-  git clone git://github.com/mozilla/mozbase.git $VENV_DIR/mozbase
-  python $VENV_DIR/mozbase/setup_development.py
 fi
+. $VENV_DIR/bin/activate
 
 # Updating the marionette_client needs us to change into its package folder.
 # Otherwise the call to setup.py will hang

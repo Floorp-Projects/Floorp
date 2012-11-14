@@ -21,7 +21,7 @@ function test() {
         is(aFrecency, 0, "Frecency should be 0");
         fieldForUrl(aURI, "hidden", function (aHidden) {
           is(aHidden, 0, "Page should not be hidden");
-          waitForClearHistory(finish);
+          promiseClearHistory().then(finish);
         });
       });
     },

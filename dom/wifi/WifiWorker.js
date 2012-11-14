@@ -820,13 +820,12 @@ var WifiManager = (function() {
         notify("passwordmaybeincorrect");
       }
 
-      // This is ugly, but we need to grab the SSID here. While we're at it,
-      // we grab the BSSID as well.
-      var match = /Trying to associate with ([^ ]+) \(SSID='([^']+)' freq=\d+ MHz\)/.exec(event);
+      // This is ugly, but we need to grab the SSID here. BSSID is not guaranteed
+      // to be provided, so don't grab BSSID here.
+      var match = /Trying to associate with.*SSID[ =]'(.*)'/.exec(event);
       if (match) {
-        debug("Matched: " + match[1] + " and " + match[2]);
-        manager.connectionInfo.bssid = match[1];
-        manager.connectionInfo.ssid = match[2];
+        debug("Matched: " + match[1] + "\n");
+        manager.connectionInfo.ssid = match[1];
       }
       return true;
     }
@@ -904,6 +903,11 @@ var WifiManager = (function() {
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-CONNECTED") === 0) {
+      // Format: CTRL-EVENT-CONNECTED - Connection to 00:1e:58:ec:d5:6d completed (reauth) [id=1 id_str=]
+      var bssid = event.split(" ")[4];
+      var id = event.substr(event.indexOf("id=")).split(" ")[0];
+      // Read current BSSID here, it will always being provided.
+      manager.connectionInfo.bssid = bssid;
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-SCAN-RESULTS") === 0) {
@@ -1325,6 +1329,73 @@ var WifiManager = (function() {
 
   return manager;
 })();
+
+// Get unique key for a network, now the key is created by escape(SSID)+Security.
+// So networks of same SSID but different security mode can be identified.
+function getNetworkKey(network)
+{
+  var ssid = "",
+      encryption = "OPEN";
+
+  if ("capabilities" in network) {
+    // manager network object, represents an AP
+    // object structure
+    // {
+    //   .ssid           : SSID of AP
+    //   .capabilities[] : "WPA-PSK" for WPA-PSK
+    //                     "WPA-EAP" for WPA-EAP
+    //                     "WEP" for WEP
+    //                     "" for OPEN
+    //   other keys
+    // }
+
+    var capabilities = network.capabilities;
+    ssid = network.ssid;
+
+    for (let j = 0; j < capabilities.length; j++) {
+      if (capabilities[j] === "WPA-PSK") {
+        encryption = "WPA-PSK";
+        break;
+      } else if (capabilities[j] === "WPA-EAP") {
+        encryption = "WPA-EAP";
+        break;
+      } else if (capabilities[j] === "WEP") {
+        encryption = "WEP";
+        break;
+      }
+    }
+  } else if ("key_mgmt" in network) {
+    // configure network object, represents a network
+    // object structure
+    // {
+    //   .ssid           : SSID of network, quoted
+    //   .key_mgmt       : Encryption type
+    //                     "WPA-PSK" for WPA-PSK
+    //                     "WPA-EAP" for WPA-EAP
+    //                     "NONE" for WEP/OPEN
+    //   .auth_alg       : Encryption algorithm(WEP mode only)
+    //                     "OPEN_SHARED" for WEP
+    //   other keys
+    // }
+    var key_mgmt = network.key_mgmt,
+        auth_alg = network.auth_alg;
+    ssid = dequote(network.ssid);
+
+    if (key_mgmt == "WPA-PSK") {
+      encryption = "WPA-PSK";
+    } else if (key_mgmt == "WPA-EAP") {
+      encryption = "WPA-EAP";
+    } else if (key_mgmt == "NONE" && auth_alg === "OPEN SHARED") {
+      encryption = "WEP";
+    }
+  }
+
+  // ssid here must be dequoted, and it's safer to esacpe it.
+  // encryption won't be empty and always be assigned one of the followings :
+  // "OPEN"/"WEP"/"WPA-PSK"/"WPA-EAP".
+  // So for a invalid network object, the returned key will be "OPEN"
+  return escape(ssid) + encryption;
+}
 
 function getKeyManagement(flags) {
   var types = [];
@@ -1770,6 +1841,8 @@ function WifiWorker() {
         self._fireEvent("onassociate", { network: netToDOM(self.currentNetwork) });
         break;
       case "CONNECTED":
+        // BSSID is read after connected, update it.
+        self.currentNetwork.bssid = WifiManager.connectionInfo.bssid;
         break;
       case "DISCONNECTED":
         self._fireEvent("ondisconnect", {});
@@ -1877,36 +1950,37 @@ function WifiWorker() {
       WifiManager.setScanMode("inactive", function() {});
       let lines = r.split("\n");
       // NB: Skip the header line.
-      self.networks = Object.create(null);
+      self.networksArray = [];
       for (let i = 1; i < lines.length; ++i) {
         // bssid / frequency / signal level / flags / ssid
         var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i]);
 
         if (match && match[5]) {
-          let ssid = match[5];
+          let ssid = match[5],
+              bssid = match[1],
+              signalLevel = match[3],
+              flags = match[4];
 
           // If this is the first time that we've seen this SSID in the scan
           // results, add it to the list along with any other information.
           // Also, we use the highest signal strength that we see.
-          let network = self.networks[ssid];
-          if (!network) {
-            network = self.networks[ssid] =
-              new ScanResult(ssid, match[1], match[4], match[3]);
+          let network = new ScanResult(ssid, bssid, flags, signalLevel);
+          self.networksArray.push(network);
 
-            if (ssid in self.configuredNetworks) {
-              let known = self.configuredNetworks[ssid];
-              network.known = true;
+          let networkKey = getNetworkKey(network);
+          if (networkKey in self.configuredNetworks) {
+            let known = self.configuredNetworks[networkKey];
+            network.known = true;
 
-              if ("identity" in known && known.identity)
-                network.identity = dequote(known.identity);
+            if ("identity" in known && known.identity)
+              network.identity = dequote(known.identity);
 
-              // Note: we don't hand out passwords here! The * marks that there
-              // is a password that we're hiding.
-              if (("psk" in known && known.psk) ||
-                  ("password" in known && known.password) ||
-                  ("wep_key0" in known && known.wep_key0)) {
-                network.password = "*";
-              }
+            // Note: we don't hand out passwords here! The * marks that there
+            // is a password that we're hiding.
+            if (("psk" in known && known.psk) ||
+                ("password" in known && known.password) ||
+                ("wep_key0" in known && known.wep_key0)) {
+              network.password = "*";
             }
           }
 
@@ -1921,7 +1995,7 @@ function WifiWorker() {
         }
       }
 
-      self.wantScanResults.forEach(function(callback) { callback(self.networks) });
+      self.wantScanResults.forEach(function(callback) { callback(self.networksArray) });
       self.wantScanResults = [];
     });
   };
@@ -2097,7 +2171,9 @@ WifiWorker.prototype = {
 
         if (network.priority && network.priority > this._highestPriority)
           this._highestPriority = network.priority;
-        networks[dequote(network.ssid)] = network;
+
+        let networkKey = getNetworkKey(network);
+        networks[networkKey] = network;
         delete networks[net];
       }
 
@@ -2355,9 +2431,9 @@ WifiWorker.prototype = {
         return;
       }
 
-      var networks = {};
-      for (let ssid in this.configuredNetworks) {
-        networks[ssid] = netToDOM(this.configuredNetworks[ssid]);
+      var networks = [];
+      for (let networkKey in this.configuredNetworks) {
+        networks.push(netToDOM(this.configuredNetworks[networkKey]));
       }
 
       this._sendMessage(message, true, networks, msg);
@@ -2487,10 +2563,11 @@ WifiWorker.prototype = {
     }
 
     let ssid = privnet.ssid;
+    let networkKey = getNetworkKey(privnet);
     let configured;
 
-    if (ssid in this.configuredNetworks)
-      configured = this.configuredNetworks[ssid];
+    if (networkKey in this.configuredNetworks)
+      configured = this.configuredNetworks[networkKey];
 
     netFromDOM(privnet, configured);
 
@@ -2517,7 +2594,7 @@ WifiWorker.prototype = {
           return;
         }
 
-        this.configuredNetworks[ssid] = privnet;
+        this.configuredNetworks[networkKey] = privnet;
         networkReady();
       }).bind(this));
     }
@@ -2532,13 +2609,15 @@ WifiWorker.prototype = {
     }
 
     let ssid = network.ssid;
-    if (!(ssid in this.configuredNetworks)) {
+    let networkKey = getNetworkKey(network);
+
+    if (!(networkKey in this.configuredNetworks)) {
       this._sendMessage(message, false, "Trying to forget an unknown network", msg);
       return;
     }
 
     let self = this;
-    let configured = this.configuredNetworks[ssid];
+    let configured = this.configuredNetworks[networkKey];
     this._reconnectOnDisconnect = (this.currentNetwork &&
                                    (this.currentNetwork.ssid === ssid));
     WifiManager.removeNetwork(configured.netId, function(ok) {

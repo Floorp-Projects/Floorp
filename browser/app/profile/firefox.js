@@ -578,13 +578,6 @@ pref("network.protocol-handler.expose.news", false);
 pref("network.protocol-handler.expose.snews", false);
 pref("network.protocol-handler.expose.nntp", false);
 
-// Default security warning dialogs to show once.
-pref("security.warn_entering_secure.show_once", false);
-pref("security.warn_entering_weak.show_once", true);
-pref("security.warn_leaving_secure.show_once", false);
-pref("security.warn_viewing_mixed.show_once", true);
-pref("security.warn_submit_insecure.show_once", false);
-
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.linksonly", false);
@@ -1003,11 +996,6 @@ pref("services.sync.prefs.sync.security.OCSP.require", true);
 pref("services.sync.prefs.sync.security.default_personal_cert", true);
 pref("services.sync.prefs.sync.security.enable_ssl3", true);
 pref("services.sync.prefs.sync.security.enable_tls", true);
-pref("services.sync.prefs.sync.security.warn_entering_secure", true);
-pref("services.sync.prefs.sync.security.warn_entering_weak", true);
-pref("services.sync.prefs.sync.security.warn_leaving_secure", true);
-pref("services.sync.prefs.sync.security.warn_submit_insecure", true);
-pref("services.sync.prefs.sync.security.warn_viewing_mixed", true);
 pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
@@ -1047,11 +1035,14 @@ pref("devtools.debugger.remote-timeout", 20000);
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.height", 250);
-pref("devtools.debugger.ui.remote-win.width", 900);
-pref("devtools.debugger.ui.remote-win.height", 400);
+pref("devtools.debugger.ui.win-x", 0);
+pref("devtools.debugger.ui.win-y", 0);
+pref("devtools.debugger.ui.win-width", 900);
+pref("devtools.debugger.ui.win-height", 400);
 pref("devtools.debugger.ui.stackframes-width", 200);
 pref("devtools.debugger.ui.variables-width", 300);
 pref("devtools.debugger.ui.panes-visible-on-startup", false);
+pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-non-enum-visible", true);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
 

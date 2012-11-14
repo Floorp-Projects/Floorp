@@ -1660,8 +1660,7 @@ NS_IMETHODIMP nsChildView::OnIMEFocusChange(bool aFocus)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mTextInputHandler->OnFocusChangeInGecko(aFocus);
-  // XXX Return NS_ERROR_NOT_IMPLEMENTED, see bug 496360.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NSView<mozView>* nsChildView::GetEditorView()
@@ -3700,8 +3699,7 @@ static int32_t RoundUp(double aDouble)
   nsMouseEvent_base* mouseEvent =
     static_cast<nsMouseEvent_base*>(outGeckoEvent);
   mouseEvent->buttons = 0;
-  NSUInteger mouseButtons =
-    nsCocoaFeatures::OnSnowLeopardOrLater() ? [NSEvent pressedMouseButtons] : 0;
+  NSUInteger mouseButtons = [NSEvent pressedMouseButtons];
 
   if (mouseButtons & 0x01) {
     mouseEvent->buttons |= nsMouseEvent::eLeftButtonFlag;

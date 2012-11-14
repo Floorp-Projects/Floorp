@@ -161,14 +161,37 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
 };
 
 /**
+ * Before the OS goes to sleep, this topic is notified.
+ */
+#define NS_WIDGET_SLEEP_OBSERVER_TOPIC "sleep_notification"
+
+/**
+ * After the OS wakes up, this topic is notified.
+ */
+#define NS_WIDGET_WAKE_OBSERVER_TOPIC "wake_notification"
+
+/**
+ * Before the OS suspends the current process, this topic is notified.  Some
+ * OS will kill processes that are suspended instead of resuming them.
+ * For that reason this topic may be useful to safely close down resources.
+ */
+#define NS_WIDGET_SUSPEND_PROCESS_OBSERVER_TOPIC "suspend_process_notification"
+
+/**
+ * After the current process resumes from being suspended, this topic is
+ * notified.
+ */
+#define NS_WIDGET_RESUME_PROCESS_OBSERVER_TOPIC "resume_process_notification"
+
+/**
  * Preference for receiving IME updates
  *
- * If mWantUpdates is true, PuppetWidget will forward
- * nsIWidget::OnIMETextChange and nsIWidget::OnIMESelectionChange to the chrome
- * process. This incurs overhead from observers and IPDL. If the IME
- * implementation on a particular platform doesn't care about OnIMETextChange
- * and OnIMESelectionChange from content processes, they should set
- * mWantUpdates to false to avoid these overheads.
+ * If mWantUpdates is true, nsTextStateManager will observe text change and
+ * selection change and call nsIWidget::OnIMETextChange() and
+ * nsIWidget::OnIMESelectionChange(). The observing cost is very expensive.
+ * If the IME implementation on a particular platform doesn't care about
+ * OnIMETextChange and OnIMESelectionChange, they should set mWantUpdates to
+ * false to avoid the cost.
  *
  * If mWantHints is true, PuppetWidget will forward the content of text fields
  * to the chrome process to be cached. This way we return the cached content
@@ -1494,9 +1517,6 @@ class nsIWidget : public nsISupports {
      *  is receiving or giving up focus
      * aFocus is true if node is receiving focus
      * aFocus is false if node is giving up focus (blur)
-     *
-     * If this returns NS_ERROR_*, OnIMETextChange and OnIMESelectionChange
-     * will be never called.
      */
     NS_IMETHOD OnIMEFocusChange(bool aFocus) = 0;
 

@@ -9,6 +9,7 @@
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzImageSurface.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/QuartzSupport.h"
 
 #include "gfxMacPlatformFontList.h"
 #include "gfxMacFont.h"
@@ -375,6 +376,27 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
     }
 
     return threshold;
+}
+
+already_AddRefed<gfxASurface>
+gfxPlatformMac::CreateThebesSurfaceAliasForDrawTarget_hack(mozilla::gfx::DrawTarget *aTarget)
+{
+  if (aTarget->GetType() == BACKEND_COREGRAPHICS) {
+    CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT));
+    unsigned char* data = (unsigned char*)CGBitmapContextGetData(cg);
+    size_t bpp = CGBitmapContextGetBitsPerPixel(cg);
+    size_t stride = CGBitmapContextGetBytesPerRow(cg);
+    gfxIntSize size(aTarget->GetSize().width, aTarget->GetSize().height);
+    nsRefPtr<gfxImageSurface> imageSurface = new gfxImageSurface(data, size, stride, bpp == 2
+                                                                                     ? gfxImageFormat::ImageFormatRGB16_565
+                                                                                     : gfxImageFormat::ImageFormatARGB32);
+    // Here we should return a gfxQuartzImageSurface but quartz will assumes that image surfaces
+    // don't change which wont create a proper alias to the draw target, therefore we have to
+    // return a plain image surface.
+    return imageSurface.forget();
+  } else {
+    return GetThebesSurfaceForDrawTarget(aTarget);
+  }
 }
 
 already_AddRefed<gfxASurface>

@@ -603,11 +603,14 @@ StackFrames.prototype = {
     if (!aVariables) {
       return;
     }
-    // Sort all of the variables before adding them.
-    let sortedVariableNames = Object.keys(aVariables).sort();
+    let variableNames = Object.keys(aVariables);
 
+    // Sort all of the variables before adding them if preferred.
+    if (Prefs.variablesSortingEnabled) {
+      variableNames.sort();
+    }
     // Add the sorted variables to the specified scope.
-    for (let name of sortedVariableNames) {
+    for (let name of variableNames) {
       let paramVar = aScope.addVar(name, aVariables[name]);
       let paramVal = aVariables[name].value;
       this._addExpander(paramVar, paramVal);
@@ -1247,201 +1250,67 @@ XPCOMUtils.defineLazyGetter(L10N, "ellipsis", function() {
   return Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 });
 
-const STACKFRAMES_WIDTH = "devtools.debugger.ui.stackframes-width";
-const VARIABLES_WIDTH = "devtools.debugger.ui.variables-width";
-const PANES_VISIBLE_ON_STARTUP = "devtools.debugger.ui.panes-visible-on-startup";
-const VARIABLES_NON_ENUM_VISIBLE = "devtools.debugger.ui.variables-non-enum-visible";
-const VARIABLES_SEARCHBOX_VISIBLE = "devtools.debugger.ui.variables-searchbox-visible";
-const REMOTE_HOST = "devtools.debugger.remote-host";
-const REMOTE_PORT = "devtools.debugger.remote-port";
-const REMOTE_AUTO_CONNECT = "devtools.debugger.remote-autoconnect";
-const REMOTE_CONNECTION_RETRIES = "devtools.debugger.remote-connection-retries";
-const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
-
 /**
  * Shortcuts for accessing various debugger preferences.
  */
 let Prefs = {
   /**
-   * Gets the preferred stackframes pane width.
-   * @return number
+   * Helper method for getting a pref value.
+   *
+   * @param string aType
+   * @param string aPrefName
+   * @return any
    */
-  get stackframesWidth() {
-    if (this._stackframesWidth === undefined) {
-      this._stackframesWidth = Services.prefs.getIntPref(STACKFRAMES_WIDTH);
+  _get: function P__get(aType, aPrefName) {
+    if (this[aPrefName] === undefined) {
+      this[aPrefName] = Services.prefs["get" + aType + "Pref"](aPrefName);
     }
-    return this._stackframesWidth;
+    return this[aPrefName];
   },
 
   /**
-   * Sets the preferred stackframes pane width.
-   * @param number value
+   * Helper method for setting a pref value.
+   *
+   * @param string aType
+   * @param string aPrefName
+   * @param any aValue
    */
-  set stackframesWidth(value) {
-    Services.prefs.setIntPref(STACKFRAMES_WIDTH, value);
-    this._stackframesWidth = value;
+  _set: function P__set(aType, aPrefName, aValue) {
+    Services.prefs["set" + aType + "Pref"](aPrefName, aValue);
+    this[aPrefName] = aValue;
   },
 
   /**
-   * Gets the preferred variables pane width.
-   * @return number
+   * Maps a property name to a pref, defining lazy getters and setters.
+   *
+   * @param string aType
+   * @param string aPropertyName
+   * @param string aPrefName
    */
-  get variablesWidth() {
-    if (this._variablesWidth === undefined) {
-      this._variablesWidth = Services.prefs.getIntPref(VARIABLES_WIDTH);
-    }
-    return this._variablesWidth;
-  },
-
-  /**
-   * Sets the preferred variables pane width.
-   * @param number value
-   */
-  set variablesWidth(value) {
-    Services.prefs.setIntPref(VARIABLES_WIDTH, value);
-    this._variablesWidth = value;
-  },
-
-  /**
-   * Gets the preferred panes visibility state on startup.
-   * @return boolean
-   */
-  get panesVisibleOnStartup() {
-    if (this._panesVisible === undefined) {
-      this._panesVisible = Services.prefs.getBoolPref(PANES_VISIBLE_ON_STARTUP);
-    }
-    return this._panesVisible;
-  },
-
-  /**
-   * Sets the preferred panes visibility state on startup.
-   * @param boolean value
-   */
-  set panesVisibleOnStartup(value) {
-    Services.prefs.setBoolPref(PANES_VISIBLE_ON_STARTUP, value);
-    this._panesVisible = value;
-  },
-
-  /**
-   * Gets a flag specifying if the debugger should show non-enumerable
-   * properties and variables in the scope view.
-   * @return boolean
-   */
-  get variablesNonEnumVisible() {
-    if (this._varNonEnum === undefined) {
-      this._varNonEnum = Services.prefs.getBoolPref(VARIABLES_NON_ENUM_VISIBLE);
-    }
-    return this._varNonEnum;
-  },
-
-  /**
-   * Sets a flag specifying if the debugger should show non-enumerable
-   * properties and variables in the scope view.
-   * @param boolean value
-   */
-  set variablesNonEnumVisible(value) {
-    Services.prefs.setBoolPref(VARIABLES_NON_ENUM_VISIBLE, value);
-    this._varNonEnum = value;
-  },
-
-  /**
-   * Gets a flag specifying if the a variables searchbox should be shown.
-   * @return boolean
-   */
-  get variablesSearchboxVisible() {
-    if (this._varSearchbox === undefined) {
-      this._varSearchbox = Services.prefs.getBoolPref(VARIABLES_SEARCHBOX_VISIBLE);
-    }
-    return this._varSearchbox;
-  },
-
-  /**
-   * Sets a flag specifying if the a variables searchbox should be shown.
-   * @param boolean value
-   */
-  set variablesSearchboxVisible(value) {
-    Services.prefs.setBoolPref(VARIABLES_SEARCHBOX_VISIBLE, value);
-    this._varSearchbox = value;
-  },
-
-  /**
-   * Gets the preferred default remote debugging host.
-   * @return string
-   */
-  get remoteHost() {
-    if (this._remoteHost === undefined) {
-      this._remoteHost = Services.prefs.getCharPref(REMOTE_HOST);
-    }
-    return this._remoteHost;
-  },
-
-  /**
-   * Sets the preferred default remote debugging host.
-   * @param string value
-   */
-  set remoteHost(value) {
-    Services.prefs.setCharPref(REMOTE_HOST, value);
-    this._remoteHost = value;
-  },
-
-  /**
-   * Gets the preferred default remote debugging port.
-   * @return number
-   */
-  get remotePort() {
-    if (this._remotePort === undefined) {
-      this._remotePort = Services.prefs.getIntPref(REMOTE_PORT);
-    }
-    return this._remotePort;
-  },
-
-  /**
-   * Sets the preferred default remote debugging port.
-   * @param number value
-   */
-  set remotePort(value) {
-    Services.prefs.setIntPref(REMOTE_PORT, value);
-    this._remotePort = value;
-  },
-
-  /**
-   * Gets a flag specifying if the debugger should automatically connect to
-   * the default host and port number.
-   * @return boolean
-   */
-  get remoteAutoConnect() {
-    if (this._autoConnect === undefined) {
-      this._autoConnect = Services.prefs.getBoolPref(REMOTE_AUTO_CONNECT);
-    }
-    return this._autoConnect;
-  },
-
-  /**
-   * Sets a flag specifying if the debugger should automatically connect to
-   * the default host and port number.
-   * @param boolean value
-   */
-  set remoteAutoConnect(value) {
-    Services.prefs.setBoolPref(REMOTE_AUTO_CONNECT, value);
-    this._autoConnect = value;
+  map: function P_map(aType, aPropertyName, aPrefName) {
+    Object.defineProperty(this, aPropertyName, {
+      get: function() this._get(aType, aPrefName),
+      set: function(aValue) this._set(aType, aPrefName, aValue)
+    });
   }
 };
 
-/**
- * Gets the max number of attempts to reconnect to a remote server.
- * @return number
- */
-XPCOMUtils.defineLazyGetter(Prefs, "remoteConnectionRetries", function() {
-  return Services.prefs.getIntPref(REMOTE_CONNECTION_RETRIES);
-});
-
-/**
- * Gets the remote debugging connection timeout (in milliseconds).
- * @return number
- */
-XPCOMUtils.defineLazyGetter(Prefs, "remoteTimeout", function() {
-  return Services.prefs.getIntPref(REMOTE_TIMEOUT);
-});
+Prefs.map("Int", "height", "devtools.debugger.ui.height");
+Prefs.map("Int", "windowX", "devtools.debugger.ui.win-x");
+Prefs.map("Int", "windowY", "devtools.debugger.ui.win-y");
+Prefs.map("Int", "windowWidth", "devtools.debugger.ui.win-width");
+Prefs.map("Int", "windowHeight", "devtools.debugger.ui.win-height");
+Prefs.map("Int", "stackframesWidth", "devtools.debugger.ui.stackframes-width");
+Prefs.map("Int", "variablesWidth", "devtools.debugger.ui.variables-width");
+Prefs.map("Bool", "panesVisibleOnStartup", "devtools.debugger.ui.panes-visible-on-startup");
+Prefs.map("Bool", "variablesSortingEnabled", "devtools.debugger.ui.variables-sorting-enabled");
+Prefs.map("Bool", "variablesNonEnumVisible", "devtools.debugger.ui.variables-non-enum-visible");
+Prefs.map("Bool", "variablesSearchboxVisible", "devtools.debugger.ui.variables-searchbox-visible");
+Prefs.map("Char", "remoteHost", "devtools.debugger.remote-host");
+Prefs.map("Int", "remotePort", "devtools.debugger.remote-port");
+Prefs.map("Bool", "remoteAutoConnect", "devtools.debugger.remote-autoconnect");
+Prefs.map("Int", "remoteConnectionRetries", "devtools.debugger.remote-connection-retries");
+Prefs.map("Int", "remoteTimeout", "devtools.debugger.remote-timeout");
 
 /**
  * Returns true if this is a remote debugger instance.

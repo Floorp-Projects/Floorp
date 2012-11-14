@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <!--
+    This test checks that a few allowed CSS properties have an effect when
+    applied to ::-moz-placeholder.
+  -->
+  <style>
+    /*
+     * We need to set some properties on the <input> because its size will
+     * depend on its font.
+     */
+    input, textarea {
+      font: -moz-list;
+      font-family: mono;
+      font-style: italic;
+    }
+
+    :-moz-any(input, textarea)::-moz-placeholder {
+      opacity: 1.0;
+      font: -moz-list;
+      font-family: mono;
+      font-style: italic;
+      color: blue;
+      word-spacing: 5px;
+      text-shadow: 1px 1px 1px red;
+    }
+  </style>
+  <body>
+    <input placeholder='foo bar'>
+    <textarea placeholder='foo bar'></textarea>
+  </body>
+</html>

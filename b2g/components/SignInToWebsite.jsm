@@ -69,7 +69,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["SignInToWebsiteController"];
+this.EXPORTED_SYMBOLS = ["SignInToWebsiteController"];
 
 const Ci = Components.interfaces;
 const Cu = Components.utils;
@@ -253,7 +253,7 @@ let Pipe = {
  * controller into IdentityService and DOM, and ultimately up to the
  * Relying Party, which is open in a different window context.
  */
-let SignInToWebsiteController = {
+this.SignInToWebsiteController = {
 
   /*
    * Initialize the controller.  To use a different gaia communication pipe,

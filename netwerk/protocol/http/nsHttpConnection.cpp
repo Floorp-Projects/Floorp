@@ -483,8 +483,27 @@ nsHttpConnection::Close(nsresult reason)
             EndIdleMonitoring();
 
         if (mSocketTransport) {
-            mSocketTransport->SetSecurityCallbacks(nullptr);
             mSocketTransport->SetEventSink(nullptr, nullptr);
+
+            // If there are bytes sitting in the input queue then read them
+            // into a junk buffer to avoid generating a tcp rst by closing a
+            // socket with data pending. TLS is a classic case of this where
+            // a Alert record might be superfulous to a clean HTTP/SPDY shutdown.
+            // Never block to do this and limit it to a small amount of data.
+            if (mSocketIn) {
+                char buffer[4000];
+                uint32_t count, total = 0;
+                nsresult rv;
+                do {
+                    rv = mSocketIn->Read(buffer, 4000, &count);
+                    if (NS_SUCCEEDED(rv))
+                        total += count;
+                }
+                while (NS_SUCCEEDED(rv) && count > 0 && total < 64000);
+                LOG(("nsHttpConnection::Close drained %d bytes\n", total));
+            }
+            
+            mSocketTransport->SetSecurityCallbacks(nullptr);
             mSocketTransport->Close(reason);
             if (mSocketOut)
                 mSocketOut->AsyncWait(nullptr, 0, 0, nullptr);

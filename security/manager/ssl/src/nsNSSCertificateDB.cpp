@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// XXX: This must be done prior to including cert.h (directly or indirectly).
+// CERT_AddTempCertToPerm is exposed as __CERT_AddTempCertToPerm, but it is
+// only exported so PSM can use it for this specific purpose.
+#define CERT_AddTempCertToPerm __CERT_AddTempCertToPerm
+
 #include "nsNSSComponent.h"
 #include "nsNSSCertificateDB.h"
 #include "nsCOMPtr.h"
@@ -15,7 +20,6 @@
 #include "nsIFile.h"
 #include "nsPKCS12Blob.h"
 #include "nsPK11TokenDB.h"
-#include "nsOCSPResponder.h"
 #include "nsReadableUtils.h"
 #include "nsIMutableArray.h"
 #include "nsArrayUtils.h"
@@ -379,9 +383,9 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
                    !!(trustBits & nsIX509CertDB::TRUSTED_EMAIL),
                    !!(trustBits & nsIX509CertDB::TRUSTED_OBJSIGN));
 
-  SECStatus srv = CERT_AddTempCertToPerm(tmpCert, 
-                                         const_cast<char*>(nickname.get()), 
-                                         trust.GetTrust()); 
+  SECStatus srv = __CERT_AddTempCertToPerm(tmpCert,
+                                           const_cast<char*>(nickname.get()),
+                                           trust.GetTrust());
 
   if (srv != SECSuccess)
     return NS_ERROR_FAILURE;
@@ -1207,85 +1211,6 @@ nsNSSCertificateDB::ExportPKCS12File(nsISupports     *aToken,
   return blob.ExportToFile(aFile, certs, count);
 }
 
-
-static SECStatus 
-GetOCSPResponders (CERTCertificate *aCert,
-                   SECItem         *aDBKey,
-                   void            *aArg)
-{
-  nsIMutableArray *array = static_cast<nsIMutableArray*>(aArg);
-  PRUnichar* nn = nullptr;
-  PRUnichar* url = nullptr;
-  char *serviceURL = nullptr;
-  char *nickname = nullptr;
-  uint32_t i, count;
-
-  // Are we interested in this cert //
-  if (!nsOCSPResponder::IncludeCert(aCert)) {
-    return SECSuccess;
-  }
-
-  // Get the AIA and nickname //
-  serviceURL = CERT_GetOCSPAuthorityInfoAccessLocation(aCert);
-  if (serviceURL) {
-    url = ToNewUnicode(NS_ConvertUTF8toUTF16(serviceURL));
-    PORT_Free(serviceURL);
-  }
-
-  nickname = aCert->nickname;
-  nn = ToNewUnicode(NS_ConvertUTF8toUTF16(nickname));
-
-  nsCOMPtr<nsIOCSPResponder> new_entry = new nsOCSPResponder(nn, url);
-  nsMemory::Free(nn);
-  nsMemory::Free(url);
-
-  // Sort the items according to nickname //
-  array->GetLength(&count);
-  for (i=0; i < count; ++i) {
-    nsCOMPtr<nsIOCSPResponder> entry = do_QueryElementAt(array, i);
-    if (nsOCSPResponder::CompareEntries(new_entry, entry) < 0) {
-      array->InsertElementAt(new_entry, i, false);
-      break;
-    }
-  }
-  if (i == count) {
-    array->AppendElement(new_entry, false);
-  }
-  return SECSuccess;
-}
-
-
-
-/*
- * getOCSPResponders
- *
- * Export a set of certs and keys from the database to a PKCS#12 file.
-*/
-NS_IMETHODIMP 
-nsNSSCertificateDB::GetOCSPResponders(nsIArray ** aResponders)
-{
-  nsNSSShutDownPreventionLock locker;
-  SECStatus sec_rv;
-  nsCOMPtr<nsIMutableArray> respondersArray =
-    do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (!respondersArray) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  sec_rv = PK11_TraverseSlotCerts(::GetOCSPResponders,
-                                  respondersArray,
-                                  nullptr);
-  if (sec_rv != SECSuccess) {
-    goto loser;
-  }
-
-  *aResponders = respondersArray;
-  NS_IF_ADDREF(*aResponders);
-  return NS_OK;
-loser:
-  return NS_ERROR_FAILURE;
-}
-
 /*
  * NSS Helper Routines (private to nsNSSCertificateDB)
  */
@@ -1735,9 +1660,9 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nickname.get()));
 
-  SECStatus srv = CERT_AddTempCertToPerm(tmpCert, 
-                                         const_cast<char*>(nickname.get()), 
-                                         trust.GetTrust()); 
+  SECStatus srv = __CERT_AddTempCertToPerm(tmpCert,
+                                           const_cast<char*>(nickname.get()),
+                                           trust.GetTrust());
 
 
   return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;

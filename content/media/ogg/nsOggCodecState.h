@@ -98,7 +98,7 @@ public:
   }
 
   // Build a hash table with tag metadata parsed from the stream.
-  virtual nsHTMLMediaElement::MetadataTags* GetTags() {
+  virtual MetadataTags* GetTags() {
     return nullptr;
   }
 
@@ -200,7 +200,7 @@ protected:
   // Utility method to parse and add a vorbis-style comment
   // to a metadata hash table. Most Ogg-encapsulated codecs
   // use the vorbis comment format for metadata.
-  static bool AddVorbisComment(nsHTMLMediaElement::MetadataTags* aTags,
+  static bool AddVorbisComment(MetadataTags* aTags,
                         const char* aComment,
                         uint32_t aLength);
 };
@@ -219,7 +219,7 @@ public:
   nsresult PageIn(ogg_page* aPage); 
 
   // Return a hash table with tag metadata.
-  nsHTMLMediaElement::MetadataTags* GetTags();
+  MetadataTags* GetTags();
 
   // Returns the end time that a granulepos represents.
   static int64_t Time(vorbis_info* aInfo, int64_t aGranulePos); 
@@ -357,7 +357,7 @@ public:
   int64_t mPrevPacketGranulepos;
 
   // Construct and return a table of tags from the metadata header.
-  nsHTMLMediaElement::MetadataTags* GetTags();
+  MetadataTags* GetTags();
 
 private:
 

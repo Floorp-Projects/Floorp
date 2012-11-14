@@ -630,7 +630,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
             if (replacer->isDenseArray())
                 len = Min(len, replacer->getDenseArrayCapacity());
 
-            HashSet<jsid> idSet(cx);
+            HashSet<jsid, JsidHasher> idSet(cx);
             if (!idSet.init(len))
                 return false;
 
@@ -667,7 +667,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                 }
 
                 /* Step 4b(iv)(6). */
-                HashSet<jsid>::AddPtr p = idSet.lookupForAdd(id);
+                HashSet<jsid, JsidHasher>::AddPtr p = idSet.lookupForAdd(id);
                 if (!p) {
                     /* Step 4b(iv)(6)(a). */
                     if (!idSet.add(p, id) || !propertyList.append(id))

@@ -78,13 +78,14 @@ hardware (via nsAudioStream and libsydneyaudio).
 
 #include "nsThreadUtils.h"
 #include "nsBuiltinDecoder.h"
-#include "nsBuiltinDecoderReader.h"
 #include "nsAudioAvailableEventManager.h"
-#include "nsHTMLMediaElement.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsITimer.h"
 #include "AudioSegment.h"
 #include "VideoSegment.h"
+
+
+class nsBuiltinDecoderReader;
 
 /*
   The state machine class. This manages the decoding and seeking in the
@@ -98,7 +99,7 @@ hardware (via nsAudioStream and libsydneyaudio).
 
   See nsBuiltinDecoder.h for more details.
 */
-class nsBuiltinDecoderStateMachine : public nsDecoderStateMachine
+class nsBuiltinDecoderStateMachine : public nsRunnable
 {
 public:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
@@ -114,30 +115,92 @@ public:
   ~nsBuiltinDecoderStateMachine();
 
   // nsDecoderStateMachine interface
-  virtual nsresult Init(nsDecoderStateMachine* aCloneDonor);
-  State GetState()
-  { 
+  nsresult Init(nsBuiltinDecoderStateMachine* aCloneDonor);
+
+  // Enumeration for the valid decoding states
+  enum State {
+    DECODER_STATE_DECODING_METADATA,
+    DECODER_STATE_DECODING,
+    DECODER_STATE_SEEKING,
+    DECODER_STATE_BUFFERING,
+    DECODER_STATE_COMPLETED,
+    DECODER_STATE_SHUTDOWN
+  };
+
+  State GetState() {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-    return mState; 
-  }
-  virtual void SetVolume(double aVolume);
-  virtual void SetAudioCaptured(bool aCapture);
-  virtual void Shutdown();
-  virtual int64_t GetDuration();
-  virtual void SetDuration(int64_t aDuration);
-  void SetEndTime(int64_t aEndTime);
-  virtual bool OnDecodeThread() const {
-    return IsCurrentThread(mDecodeThread);
+    return mState;
   }
 
-  virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
-  virtual void Play();
-  virtual void Seek(double aTime);
-  virtual double GetCurrentTime() const;
-  virtual void ClearPositionChangeFlag();
-  virtual void SetSeekable(bool aSeekable);
-  virtual void UpdatePlaybackPosition(int64_t aTime);
-  virtual void StartBuffering();
+  // Set the audio volume. The decoder monitor must be obtained before
+  // calling this.
+  void SetVolume(double aVolume);
+  void SetAudioCaptured(bool aCapture);
+  void Shutdown();
+
+  // Called from the main thread to get the duration. The decoder monitor
+  // must be obtained before calling this. It is in units of microseconds.
+  int64_t GetDuration();
+
+  // Called from the main thread to set the duration of the media resource
+  // if it is able to be obtained via HTTP headers. Called from the
+  // state machine thread to set the duration if it is obtained from the
+  // media metadata. The decoder monitor must be obtained before calling this.
+  // aDuration is in microseconds.
+  void SetDuration(int64_t aDuration);
+
+  // Called while decoding metadata to set the end time of the media
+  // resource. The decoder monitor must be obtained before calling this.
+  // aEndTime is in microseconds.
+  void SetEndTime(int64_t aEndTime);
+
+  // Functions used by assertions to ensure we're calling things
+  // on the appropriate threads.
+  bool OnDecodeThread() const {
+    return IsCurrentThread(mDecodeThread);
+  }
+  bool OnStateMachineThread() const;
+  bool OnAudioThread() const {
+    return IsCurrentThread(mAudioThread);
+  }
+
+  nsMediaDecoder::NextFrameStatus GetNextFrameStatus();
+
+  // Cause state transitions. These methods obtain the decoder monitor
+  // to synchronise the change of state, and to notify other threads
+  // that the state has changed.
+  void Play();
+
+  // Seeks to aTime in seconds.
+  void Seek(double aTime);
+
+  // Returns the current playback position in seconds.
+  // Called from the main thread to get the current frame time. The decoder
+  // monitor must be obtained before calling this.
+  double GetCurrentTime() const;
+
+  // Clear the flag indicating that a playback position change event
+  // is currently queued. This is called from the main thread and must
+  // be called with the decode monitor held.
+  void ClearPositionChangeFlag();
+
+  // Called from the main thread to set whether the media resource can
+  // seek into unbuffered ranges. The decoder monitor must be obtained
+  // before calling this.
+  void SetSeekable(bool aSeekable);
+
+  // Update the playback position. This can result in a timeupdate event
+  // and an invalidate of the frame being dispatched asynchronously if
+  // there is no such event currently queued.
+  // Only called on the decoder thread. Must be called with
+  // the decode monitor held.
+  void UpdatePlaybackPosition(int64_t aTime);
+
+  // Causes the state machine to switch to buffering state, and to
+  // immediately stop playback and buffer downloaded data. Must be called
+  // with the decode monitor held. Called on the state machine thread and
+  // the main thread.
+  void StartBuffering();
 
   // State machine thread run function. Defers to RunStateMachine().
   NS_IMETHOD Run();
@@ -163,24 +226,16 @@ public:
   bool IsBuffering() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-    return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_BUFFERING;
+    return mState == DECODER_STATE_BUFFERING;
   }
 
   // Must be called with the decode monitor held.
   bool IsSeeking() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-    return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_SEEKING;
+    return mState == DECODER_STATE_SEEKING;
   }
 
-  // Functions used by assertions to ensure we're calling things
-  // on the appropriate threads.
-  bool OnAudioThread() const {
-    return IsCurrentThread(mAudioThread);
-  }
-
-  bool OnStateMachineThread() const;
- 
   nsresult GetBuffered(nsTimeRanges* aBuffered);
 
   int64_t VideoQueueMemoryInUse() {
@@ -209,6 +264,7 @@ public:
     return mSeekable;
   }
 
+  // Return true if the media is seekable using only buffered ranges.
   bool IsSeekableInBufferedRanges() {
     if (mReader) {
       return mReader->IsSeekableInBufferedRanges();
@@ -218,7 +274,7 @@ public:
 
   // Sets the current frame buffer length for the MozAudioAvailable event.
   // Accessed on the main and state machine threads.
-  virtual void SetFrameBufferLength(uint32_t aLength);
+  void SetFrameBufferLength(uint32_t aLength);
 
   // Returns the shared state machine thread.
   static nsIThread* GetStateMachineThread();
@@ -264,7 +320,11 @@ public:
   bool HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs);
   bool HaveEnoughDecodedVideo();
 
-protected:
+  // Returns true if the state machine has shutdown or is in the process of
+  // shutting down. The decoder monitor must be held while calling this.
+  bool IsShutdown();
+
+private:
   class WakeDecoderRunnable : public nsRunnable {
   public:
     WakeDecoderRunnable(nsBuiltinDecoderStateMachine* aSM)
@@ -360,7 +420,7 @@ protected:
   // Pushes the image down the rendering pipeline. Called on the shared state
   // machine thread. The decoder monitor must *not* be held when calling this.
   void RenderVideoFrame(VideoData* aData, TimeStamp aTarget);
- 
+
   // If we have video, display a video frame if it's time for display has
   // arrived, otherwise sleep until it's time for the next frame. Update the
   // current frame time as appropriate, and trigger ready state update.  The
@@ -590,7 +650,7 @@ protected:
   // The presentation end time of the last video frame which has been displayed
   // in microseconds. Accessed from the state machine thread.
   int64_t mVideoFrameEndTime;
-  
+
   // Volume of playback. 0.0 = muted. 1.0 = full volume. Read/Written
   // from the state machine and main threads. Synchronised via decoder
   // monitor.
@@ -633,7 +693,7 @@ protected:
   // True if mDuration has a value obtained from an HTTP header, or from
   // the media index/metadata. Accessed on the state machine thread.
   bool mGotDurationFromMetaData;
-    
+
   // False while decode thread should be running. Accessed state machine
   // and decode threads. Syncrhonised by decoder monitor.
   bool mStopDecodeThread;
@@ -688,8 +748,7 @@ protected:
   // True if we've requested a new decode thread, but it has not yet been
   // created. Synchronized by the decoder monitor.
   bool mRequestedNewDecodeThread;
-  
-private:
+
   // Manager for queuing and dispatching MozAudioAvailable events.  The
   // event manager is accessed from the state machine and audio threads,
   // and takes care of synchronizing access to its internal queue.

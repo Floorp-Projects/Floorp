@@ -131,20 +131,17 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
     return;
   }
 
-  if (InSandbox()) {
-    hal_sandbox::Vibrate(pattern, id);
-  }
-  else {
-    if (!gLastIDToVibrate)
+  if (!InSandbox()) {
+    if (!gLastIDToVibrate) {
       InitLastIDToVibrate();
+    }
     *gLastIDToVibrate = id.AsArray();
-
-    HAL_LOG(("Vibrate: Forwarding to hal_impl."));
-
-    // hal_impl doesn't need |id|. Send it an empty id, which will
-    // assert if it's used.
-    hal_impl::Vibrate(pattern, WindowIdentifier());
   }
+
+  // Don't forward our ID if we are not in the sandbox, because hal_impl 
+  // doesn't need it, and we don't want it to be tempted to read it.  The
+  // empty identifier will assert if it's used.
+  PROXY_IF_SANDBOXED(Vibrate(pattern, InSandbox() ? id : WindowIdentifier()));
 }
 
 void
@@ -175,15 +172,11 @@ CancelVibrate(const WindowIdentifier &id)
   // to start a vibration, and only accepts cancellation requests from
   // the same window.  All other cancellation requests are ignored.
 
-  if (InSandbox()) {
-    hal_sandbox::CancelVibrate(id);
-  }
-  else if (gLastIDToVibrate && *gLastIDToVibrate == id.AsArray()) {
-    // Don't forward our ID to hal_impl. It doesn't need it, and we
-    // don't want it to be tempted to read it.  The empty identifier
-    // will assert if it's used.
-    HAL_LOG(("CancelVibrate: Forwarding to hal_impl."));
-    hal_impl::CancelVibrate(WindowIdentifier());
+  if (InSandbox() || (gLastIDToVibrate && *gLastIDToVibrate == id.AsArray())) {
+    // Don't forward our ID if we are not in the sandbox, because hal_impl 
+    // doesn't need it, and we don't want it to be tempted to read it.  The
+    // empty identifier will assert if it's used.
+    PROXY_IF_SANDBOXED(CancelVibrate(InSandbox() ? id : WindowIdentifier()));
   }
 }
 

@@ -108,6 +108,7 @@ const DownloadsPanel = {
                                                function DP_I_callback() {
       DownloadsViewController.initialize();
       DownloadsCommon.data.addView(DownloadsView);
+      DownloadsPanel._attachEventListeners();
       aCallback();
     });
   },
@@ -130,6 +131,7 @@ const DownloadsPanel = {
 
     DownloadsViewController.terminate();
     DownloadsCommon.data.removeView(DownloadsView);
+    this._unattachEventListeners();
 
     this._state = this.kStateUninitialized;
   },
@@ -275,6 +277,67 @@ const DownloadsPanel = {
   //// Internal functions
 
   /**
+   * Attach event listeners to a panel element. These listeners should be
+   * removed in _unattachEventListeners. This is called automatically after the
+   * panel has successfully loaded.
+   */
+  _attachEventListeners: function DP__attachEventListeners()
+  {
+    this.panel.addEventListener("keydown", this._onKeyDown.bind(this), false);
+  },
+
+  /**
+   * Unattach event listeners that were added in _attachEventListeners. This
+   * is called automatically on panel termination.
+   */
+  _unattachEventListeners: function DP__unattachEventListeners()
+  {
+    this.panel.removeEventListener("keydown", this._onKeyDown.bind(this),
+                                   false);
+  },
+
+  /**
+   * Keydown listener that listens for the accel-V "paste" event. Initiates a
+   * file download if the pasted item can be resolved to a URI.
+   */
+  _onKeyDown: function DP__onKeyDown(aEvent)
+  {
+    let pasting = aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_V &&
+#ifdef XP_MACOSX
+                  aEvent.metaKey;
+#else
+                  aEvent.ctrlKey;
+#endif
+
+    if (!pasting) {
+      return;
+    }
+
+    let trans = Cc["@mozilla.org/widget/transferable;1"]
+                  .createInstance(Ci.nsITransferable);
+    trans.init(null);
+    let flavors = ["text/x-moz-url", "text/unicode"];
+    flavors.forEach(trans.addDataFlavor);
+    Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
+    // Getting the data or creating the nsIURI might fail
+    try {
+      let data = {};
+      trans.getAnyTransferData({}, data, {});
+      let [url, name] = data.value
+                            .QueryInterface(Ci.nsISupportsString)
+                            .data
+                            .split("\n");
+      if (!url) {
+        return;
+      }
+
+      let uri = Services.io.newURI(url, null, null);
+      saveURL(uri.spec, name || uri.spec, null, true, true,
+              undefined, document);
+    } catch (ex) {}
+  },
+
+  /**
    * Move focus to the main element in the downloads panel, unless another
    * element in the panel is already focused.
    */
@@ -290,7 +353,11 @@ const DownloadsPanel = {
       element = element.parentNode;
     }
     if (!element) {
-      DownloadsView.richListBox.focus();
+      if (DownloadsView.richListBox.itemCount > 0) {
+        DownloadsView.richListBox.focus();
+      } else {
+        DownloadsView.downloadsHistory.focus();
+      }
     }
   },
 

@@ -12,8 +12,6 @@
 #include "nsNSSCertificate.h"
 
 #include "nspr.h"
-#include "nsNSSCertHeader.h"
-
 #include "secerr.h"
 
 using namespace mozilla;

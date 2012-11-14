@@ -605,14 +605,14 @@ nsSVGSVGElement::GetElementById(const nsAString & elementId, nsIDOMElement **_re
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
 
-  nsresult rv = NS_OK;
   nsAutoString selector(NS_LITERAL_STRING("#"));
   nsStyleUtil::AppendEscapedCSSIdent(PromiseFlatString(elementId), selector);
-  nsIContent* element = QuerySelector(selector, &rv);
-  if (NS_SUCCEEDED(rv) && element) {
+  ErrorResult rv;
+  nsIContent* element = QuerySelector(selector, rv);
+  if (!rv.Failed() && element) {
     return CallQueryInterface(element, _retval);
   }
-  return rv;
+  return rv.ErrorCode();
 }
 
 //----------------------------------------------------------------------

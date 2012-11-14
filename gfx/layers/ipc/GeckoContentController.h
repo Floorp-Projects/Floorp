@@ -38,6 +38,12 @@ public:
    */
   virtual void HandleSingleTap(const nsIntPoint& aPoint) = 0;
 
+  /**
+   * Requests handling a long tap. |aPoint| is in CSS pixels, relative to the
+   * current scroll offset.
+   */
+  virtual void HandleLongTap(const nsIntPoint& aPoint) = 0;
+
   GeckoContentController() {}
   virtual ~GeckoContentController() {}
 };

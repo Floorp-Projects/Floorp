@@ -120,7 +120,7 @@ BrowserElementParentFactory.prototype = {
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(this, 'remote-browser-frame-shown', /* ownsWeak = */ true);
-    os.addObserver(this, 'in-process-browser-frame-shown', /* ownsWeak = */ true);
+    os.addObserver(this, 'in-process-browser-or-app-frame-shown', /* ownsWeak = */ true);
   },
 
   _browserFramesPrefEnabled: function() {
@@ -161,7 +161,7 @@ BrowserElementParentFactory.prototype = {
     case 'remote-browser-frame-shown':
       this._observeRemoteBrowserFrameShown(subject);
       break;
-    case 'in-process-browser-frame-shown':
+    case 'in-process-browser-or-app-frame-shown':
       this._observeInProcessBrowserFrameShown(subject);
       break;
     case 'content-document-global-created':

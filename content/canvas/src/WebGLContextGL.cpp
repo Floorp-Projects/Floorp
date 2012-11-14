@@ -671,6 +671,10 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
 
     const char *info = sub ? "copyTexSubImage2D" : "copyTexImage2D";
 
+    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, info)) {
+        return;
+    }
+
     MakeContextCurrent();
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
@@ -4130,7 +4134,6 @@ WebGLContext::CompileShader(WebGLShader *shader)
     ShShaderOutput targetShaderSourceLanguage = gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
     bool useShaderSourceTranslation = true;
 
-#if defined(USE_ANGLE)
     if (shader->NeedsTranslation() && mShaderValidation) {
         ShHandle compiler = 0;
         ShBuiltInResources resources;
@@ -4299,7 +4302,6 @@ WebGLContext::CompileShader(WebGLShader *shader)
         gl->fGetShaderiv(shadername, LOCAL_GL_COMPILE_STATUS, &ok);
         shader->SetCompileStatus(ok);
     }
-#endif
 }
 
 void

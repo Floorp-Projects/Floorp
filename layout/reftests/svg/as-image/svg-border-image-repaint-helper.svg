@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg viewBox="0 0 40 20" version="1.1" xmlns="http://www.w3.org/2000/svg">
+<path fill="#000000" d=" M 0.00 0.00 L 20.00 0.00 C 20.00 6.67 20.00 13.33 20.00 20.00 C 13.33 20.00 6.67 20.00 0.00 20.00 L 0.00 0.00 Z" />
+<path fill="#ff0000" d=" M 20.00 0.00 L 40.00 0.00 C 40.00 6.67 40.00 13.33 40.00 20.00 C 33.33 20.00 26.67 20.00 20.00 20.00 C 20.00 13.33 20.00 6.67 20.00 0.00 Z" />
+</svg>

@@ -873,6 +873,10 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       }
       break;
 
+    case NS_STYLE_TEXT_TRANSFORM_FULLWIDTH:
+      ch = mozilla::unicode::GetFullWidth(ch);
+      break;
+
     default:
       break;
     }

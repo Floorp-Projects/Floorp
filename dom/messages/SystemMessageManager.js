@@ -124,6 +124,11 @@ SystemMessageManager.prototype = {
     if (this._isParentProcess) {
       Services.obs.removeObserver(this, kSystemMessageInternalReady);
     }
+
+    cpmm.sendAsyncMessage("SystemMessageManager:Unregister",
+                          { manifest: this._manifest,
+                            innerWindowID: this.innerWindowID
+                          });
   },
 
   receiveMessage: function sysMessMgr_receiveMessage(aMessage) {
@@ -174,7 +179,6 @@ SystemMessageManager.prototype = {
     let appsService = Cc["@mozilla.org/AppsService;1"]
                         .getService(Ci.nsIAppsService);
     this._manifest = appsService.getManifestURLByLocalId(principal.appId);
-    this._window = aWindow;
 
     // Two cases are valid to register the manifest for the current process:
     // 1. This is asked by a child process (parent process must be ready).
@@ -199,12 +203,16 @@ SystemMessageManager.prototype = {
     if (aTopic === kSystemMessageInternalReady) {
       this._registerManifest();
     }
+    //call the DOMRequestIpcHelper.observe method
+    this.__proto__.__proto__.observe.call(this, aSubject, aTopic, aData);
   },
 
   _registerManifest: function sysMessMgr_registerManifest() {
     if (!this._registerManifestReady) {
       cpmm.sendAsyncMessage("SystemMessageManager:Register",
-                            { manifest: this._manifest });
+                            { manifest: this._manifest,
+                              innerWindowID: this.innerWindowID
+                            });
       this._registerManifestReady = true;
     }
   },

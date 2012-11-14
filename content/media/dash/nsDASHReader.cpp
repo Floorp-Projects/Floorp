@@ -114,7 +114,7 @@ nsDASHReader::DecodeAudioData()
 
 nsresult
 nsDASHReader::ReadMetadata(nsVideoInfo* aInfo,
-                           nsHTMLMediaElement::MetadataTags** aTags)
+                           MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -274,18 +274,14 @@ nsDASHReader::FindStartTime(int64_t& aOutStartTime)
                                          mDecoder->GetReentrantMonitor());
   if (HasVideo()) {
     // Forward to video reader.
-    videoData
-       = mVideoReader->DecodeToFirstData(&nsBuiltinDecoderReader::DecodeVideoFrame,
-                                         VideoQueue());
+    videoData = mVideoReader->DecodeToFirstVideoData();
     if (videoData) {
       videoStartTime = videoData->mTime;
     }
   }
   if (HasAudio()) {
     // Forward to audio reader.
-    AudioData* audioData
-        = mAudioReader->DecodeToFirstData(&nsBuiltinDecoderReader::DecodeAudioData,
-                                          AudioQueue());
+    AudioData* audioData = mAudioReader->DecodeToFirstAudioData();
     if (audioData) {
       audioStartTime = audioData->mTime;
     }

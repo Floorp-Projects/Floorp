@@ -130,7 +130,7 @@ bool nsOggCodecState::IsValidVorbisTagName(nsCString& aName)
   return true;
 }
 
-bool nsOggCodecState::AddVorbisComment(nsHTMLMediaElement::MetadataTags* aTags,
+bool nsOggCodecState::AddVorbisComment(MetadataTags* aTags,
                                        const char* aComment,
                                        uint32_t aLength)
 {
@@ -654,13 +654,13 @@ nsVorbisState::IsHeader(ogg_packet* aPacket)
   return aPacket->bytes > 0 ? (aPacket->packet[0] & 0x1) : false;
 }
 
-nsHTMLMediaElement::MetadataTags*
+MetadataTags*
 nsVorbisState::GetTags()
 {
-  nsHTMLMediaElement::MetadataTags* tags;
+  MetadataTags* tags;
   NS_ASSERTION(mComment.user_comments, "no vorbis comment strings!");
   NS_ASSERTION(mComment.comment_lengths, "no vorbis comment lengths!");
-  tags = new nsHTMLMediaElement::MetadataTags;
+  tags = new MetadataTags;
   tags->Init();
   for (int i = 0; i < mComment.comments; i++) {
     AddVorbisComment(tags, mComment.user_comments[i],
@@ -1037,11 +1037,11 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
 }
 
 /* Construct and return a tags hashmap from our internal array */
-nsHTMLMediaElement::MetadataTags* nsOpusState::GetTags()
+MetadataTags* nsOpusState::GetTags()
 {
-  nsHTMLMediaElement::MetadataTags* tags;
+  MetadataTags* tags;
 
-  tags = new nsHTMLMediaElement::MetadataTags;
+  tags = new MetadataTags;
   tags->Init();
   for (uint32_t i = 0; i < mTags.Length(); i++) {
     AddVorbisComment(tags, mTags[i].Data(), mTags[i].Length());

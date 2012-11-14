@@ -35,7 +35,7 @@ nsresult nsRawReader::ResetDecode()
 }
 
 nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo,
-                                   nsHTMLMediaElement::MetadataTags** aTags)
+                                   MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(),
                "Should be on decode thread.");
@@ -258,8 +258,7 @@ nsresult nsRawReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, 
 
     {
       mozilla::ReentrantMonitorAutoEnter autoMonitor(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetDecodeState() ==
-          nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+      if (mDecoder->GetStateMachine()->IsShutdown()) {
         mCurrentFrame = frame;
         return NS_ERROR_FAILURE;
       }

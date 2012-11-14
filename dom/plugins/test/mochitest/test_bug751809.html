@@ -2,13 +2,18 @@
 <head>
   <title>Bug 751809</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+  SpecialPowers.setBoolPref("plugins.click_to_play", true);
+  </script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 
-<body>
+<body onload="go();">
+  <embed id="plugin" type="application/x-test" width="400" height="400" drawmode="solid" color="FF00FFFF"></embed>
+
   <script type="application/javascript">
-  
+
   SimpleTest.waitForExplicitFinish();
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
@@ -30,33 +35,25 @@
     }, 100);
     var moveOn = function() { clearInterval(interval); nextTest(); };
   }
-    
-  function startFocusTest() {
-    var plugin = document.getElementById('plugin');
-    ok(plugin, "Got plugin element.");
-    
-    var condition = function() plugin.getBoundingClientRect().width == 400;
-    waitForCondition(condition, afterPluginInsertion, "Waited too long for plugin to show up in page");
-  }
-    
-  function afterPluginInsertion() {
+
+  function go() {
     var plugin = document.getElementById('plugin');
     var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     ok(!objLoadingContent.activated, "plugin should not be activated");
     
     SimpleTest.waitForFocus(afterWindowFocus);
   }
-    
+
   function afterWindowFocus() {
     var plugin = document.getElementById('plugin');
     var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    
-    synthesizeMouseAtCenter(plugin, {}, window);
+
+    synthesizeMouseAtCenter(plugin, {});
     var condition = function() objLoadingContent.activated;
     waitForCondition(condition, afterPluginActivation, "Waited too long for plugin to activate");
   }
     
-  function afterPluginActivation() { 
+  function afterPluginActivation() {
     var plugin = document.getElementById('plugin');
     var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     ok(objLoadingContent.activated, "plugin should be activated now");
@@ -66,11 +63,11 @@
       ok(false, "plugin.getMouseUpEventCount() shouldn't throw");
     }
 
-    synthesizeMouseAtCenter(plugin, {}, window);
+    synthesizeMouseAtCenter(plugin, {});
     var condition = function() plugin.getMouseUpEventCount() > 0;
     waitForCondition(condition, afterFirstClick, "Waited too long for plugin to receive the mouse click");
   }
-  
+
   function afterFirstClick() {
     var plugin = document.getElementById('plugin');
     try {
@@ -83,10 +80,6 @@
     SimpleTest.finish();
   }
 
-  SpecialPowers.setBoolPref("plugins.click_to_play", true);
-  document.write('<embed id="plugin" type="application/x-test" width="400" height="400" drawmode="solid" color="FF00FFFF"></embed>');
-  SimpleTest.executeSoon(startFocusTest);
-                   
   </script>
 </body>
 </html>

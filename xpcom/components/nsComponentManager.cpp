@@ -38,6 +38,7 @@
 #include "nsIEnumerator.h"
 #include "xptiprivate.h"
 #include "nsIConsoleService.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIStringEnumerator.h"
@@ -231,6 +232,24 @@ CloneAndAppend(nsIFile* aBase, const nsACString& append)
 // nsComponentManagerImpl
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ComponentManagerMallocSizeOf,
+                                     "component-manager")
+
+static int64_t
+GetComponentManagerSize()
+{
+  MOZ_ASSERT(nsComponentManagerImpl::gComponentManager);
+  return nsComponentManagerImpl::gComponentManager->SizeOfIncludingThis(
+           ComponentManagerMallocSizeOf);
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(ComponentManager,
+    "explicit/xpcom/component-manager",
+    KIND_HEAP,
+    nsIMemoryReporter::UNITS_BYTES,
+    GetComponentManagerSize,
+    "Memory used for the XPCOM component manager.")
+
 nsresult
 nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
@@ -346,6 +365,15 @@ nsresult nsComponentManagerImpl::Init()
     RereadChromeManifests(false);
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
+
+    mReporter = new NS_MEMORY_REPORTER_NAME(ComponentManager);
+    (void)::NS_RegisterMemoryReporter(mReporter);
+
+    // Unfortunately, we can't register the nsCategoryManager memory reporter
+    // in its constructor (which is triggered by the GetSingleton() call
+    // above) because the memory reporter manager isn't initialized at that
+    // point.  So we wait until now.
+    nsCategoryManager::GetSingleton()->InitMemoryReporter();
 
     mStatus = NORMAL;
 
@@ -708,14 +736,15 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     // Shutdown the component manager
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Beginning Shutdown."));
 
+    (void)::NS_UnregisterMemoryReporter(mReporter);
+    mReporter = nullptr;
+
     // Release all cached factories
     mContractIDs.Clear();
     mFactories.Clear(); // XXX release the objects, don't just clear
     mLoaderMap.Clear();
     mKnownModules.Clear();
     mKnownStaticModules.Clear();
-
-    mLoaderData.Clear();
 
     delete sStaticModules;
     delete sModuleLocations;
@@ -1618,6 +1647,64 @@ nsComponentManagerImpl::ContractIDToCID(const char *aContractID,
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 
+static size_t
+SizeOfFactoriesEntryExcludingThis(nsIDHashKey::KeyType aKey,
+                                  nsFactoryEntry* const &aData,
+                                  nsMallocSizeOfFun aMallocSizeOf,
+                                  void* aUserArg)
+{
+    return aData->SizeOfIncludingThis(aMallocSizeOf);
+}
+
+static size_t
+SizeOfContractIDsEntryExcludingThis(nsCStringHashKey::KeyType aKey,
+                                    nsFactoryEntry* const &aData,
+                                    nsMallocSizeOfFun aMallocSizeOf,
+                                    void* aUserArg)
+{
+    // We don't measure the nsFactoryEntry data because its owned by mFactories
+    // (which measures them in SizeOfFactoriesEntryExcludingThis).
+    return aKey.SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+}
+
+size_t
+nsComponentManagerImpl::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+    size_t n = aMallocSizeOf(this);
+    n += mLoaderMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+    n += mFactories.SizeOfExcludingThis(SizeOfFactoriesEntryExcludingThis, aMallocSizeOf);
+    n += mContractIDs.SizeOfExcludingThis(SizeOfContractIDsEntryExcludingThis, aMallocSizeOf);
+
+    n += sStaticModules->SizeOfIncludingThis(aMallocSizeOf);
+    n += sModuleLocations->SizeOfIncludingThis(aMallocSizeOf);
+
+    n += mKnownStaticModules.SizeOfExcludingThis(aMallocSizeOf);
+    n += mKnownModules.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+
+    // The first PLArena is within the PLArenaPool, i.e. within |this|, so we
+    // don't measure it.  Subsequent PLArenas are by themselves and must be
+    // measured.
+    const PLArena *arena = mArena.first.next;
+    while (arena) {
+        n += aMallocSizeOf(arena);
+        arena = arena->next;
+    }
+
+    n += mPendingServices.SizeOfExcludingThis(aMallocSizeOf);
+
+    // Measurement of the following members may be added later if DMD finds it is
+    // worthwhile:
+    // - mLoaderMap's keys and values
+    // - mMon
+    // - sStaticModules' entries
+    // - sModuleLocations' entries
+    // - mNativeModuleLoader
+    // - mKnownStaticModules' entries?
+    // - mKnownModules' keys and values?
+
+    return n;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsFactoryEntry
 ////////////////////////////////////////////////////////////////////////////////
@@ -1679,6 +1766,21 @@ nsFactoryEntry::GetFactory()
     nsIFactory* factory = mFactory.get();
     NS_ADDREF(factory);
     return factory;
+}
+
+size_t
+nsFactoryEntry::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+    size_t n = aMallocSizeOf(this);
+
+    // Measurement of the following members may be added later if DMD finds it is
+    // worthwhile:
+    // - mCIDEntry;
+    // - mModule;
+    // - mFactory;
+    // - mServiceObject;
+
+    return n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

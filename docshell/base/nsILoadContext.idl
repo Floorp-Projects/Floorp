@@ -83,7 +83,7 @@ interface nsILoadContext : nsISupports
   [noscript] void SetPrivateBrowsing(in boolean aInPrivateBrowsing);
 
   /**
-   * Returns true iif the load is occurring inside a browser element.
+   * Returns true iff the load is occurring inside a browser element.
    */
   readonly attribute boolean isInBrowserElement;
 

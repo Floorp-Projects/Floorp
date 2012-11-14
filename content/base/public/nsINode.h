@@ -51,6 +51,8 @@ class nsGenericElement;
 namespace mozilla {
 namespace dom {
 class Element;
+class EventHandlerNonNull;
+class OnErrorEventHandlerNonNull;
 template<typename T> class Optional;
 } // namespace dom
 } // namespace mozilla
@@ -1077,13 +1079,10 @@ public:
     SetTextContentInternal(aTextContent, aError);
   }
 
-  /**
-   * Helper methods for implementing querySelector/querySelectorAll
-   */
-  nsIContent* QuerySelector(const nsAString& aSelector,
-                            nsresult *aResult);
-  nsresult QuerySelectorAll(const nsAString& aSelector,
-                            nsIDOMNodeList **aReturn);
+  nsGenericElement* QuerySelector(const nsAString& aSelector,
+                                  mozilla::ErrorResult& aResult);
+  already_AddRefed<nsINodeList> QuerySelectorAll(const nsAString& aSelector,
+                                                 mozilla::ErrorResult& aResult);
 
   /**
    * Associate an object aData to aKey on this node. If aData is null any
@@ -1615,8 +1614,11 @@ public:
      Note that we include DOCUMENT_ONLY_EVENT events here so that we
      can forward all the document stuff to this implementation.
   */
-#define EVENT(name_, id_, type_, struct_)                         \
-  NS_IMETHOD GetOn##name_(JSContext *cx, JS::Value *vp);          \
+#define EVENT(name_, id_, type_, struct_)                             \
+  mozilla::dom::EventHandlerNonNull* GetOn##name_();                  \
+  void SetOn##name_(mozilla::dom::EventHandlerNonNull* listener,      \
+                    mozilla::ErrorResult& error);                     \
+  NS_IMETHOD GetOn##name_(JSContext *cx, JS::Value *vp);              \
   NS_IMETHOD SetOn##name_(JSContext *cx, const JS::Value &v);
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT

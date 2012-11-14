@@ -121,7 +121,7 @@ function run_test() {
 
   // Add a visit, then check frecency ordering.
   add_visit(NetUtil.newURI("http://foo.tld/b"));
-  waitForAsyncUpdates(function () {
+  promiseAsyncUpdates().then(function () {
     result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
     checkOrder(id2, id3, id1);
     result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;

@@ -62,6 +62,8 @@ class Configuration:
 
         self.enums = [e for e in parseData if e.isEnum()]
         self.dictionaries = [d for d in parseData if d.isDictionary()]
+        self.callbacks = [c for c in parseData if
+                          c.isCallback() and not c.isInterface()]
 
         # Keep the descriptor list sorted for determinism.
         self.descriptors.sort(lambda x,y: cmp(x.name, y.name))
@@ -92,8 +94,14 @@ class Configuration:
         return curr
     def getEnums(self, webIDLFile):
         return filter(lambda e: e.filename() == webIDLFile, self.enums)
-    def getDictionaries(self, webIDLFile):
+    def getDictionaries(self, webIDLFile=None):
+        if not webIDLFile:
+            return self.dictionaries
         return filter(lambda d: d.filename() == webIDLFile, self.dictionaries)
+    def getCallbacks(self, webIDLFile=None):
+        if not webIDLFile:
+            return self.callbacks
+        return filter(lambda d: d.filename() == webIDLFile, self.callbacks)
     def getDescriptor(self, interfaceName, workers):
         """
         Gets the appropriate descriptor for the given interface name

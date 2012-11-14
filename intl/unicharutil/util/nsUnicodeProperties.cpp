@@ -226,6 +226,23 @@ GetHanVariant(uint32_t aCh)
     return HanVariantType((v >> ((aCh & 3) * 2)) & 3);
 }
 
+uint32_t
+GetFullWidth(uint32_t aCh)
+{
+    // full-width mappings only exist for BMP characters; all others are
+    // returned unchanged
+    if (aCh < UNICODE_BMP_LIMIT) {
+        uint32_t v =
+            sFullWidthValues[sFullWidthPages[aCh >> kFullWidthCharBits]]
+                            [aCh & ((1 << kFullWidthCharBits) - 1)];
+        if (v) {
+            // return the mapped value if non-zero; else return original char
+            return v;
+        }
+    }
+    return aCh;
+}
+
 bool
 IsClusterExtender(uint32_t aCh, uint8_t aCategory)
 {

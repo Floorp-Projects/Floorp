@@ -333,6 +333,18 @@ HeapSlot::set(JSCompartment *comp, JSObject *obj, uint32_t slot, const Value &v)
 }
 
 inline void
+HeapSlot::setCrossCompartment(JSObject *obj, uint32_t slot, const Value &v, JSCompartment *vcomp)
+{
+    JS_ASSERT_IF(!obj->isArray(), &const_cast<JSObject *>(obj)->getSlotRef(slot) == this);
+    JS_ASSERT_IF(obj->isDenseArray(), &obj->getDenseArrayElement(slot) == (const Value *)this);
+
+    pre();
+    JS_ASSERT(!IsPoisonedValue(v));
+    value = v;
+    post(vcomp, obj, slot);
+}
+
+inline void
 HeapSlot::writeBarrierPost(JSObject *obj, uint32_t slot)
 {
 #ifdef JSGC_GENERATIONAL

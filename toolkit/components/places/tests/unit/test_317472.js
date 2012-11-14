@@ -55,7 +55,7 @@ function run_test() {
   // get charset from bookmarked page
   do_check_eq(histsvc.getCharsetForURI(TEST_BOOKMARKED_URI), charset);
 
-  waitForClearHistory(continue_test);
+  promiseClearHistory().then(continue_test);
 
   do_test_pending();
 }

@@ -27,7 +27,7 @@ typedef void *cprThread_t;
  */
 typedef struct {
     const char *name;
-    uint16_t threadId;
+    uint32_t threadId;
     union {
         void *handlePtr;
         uint64_t handleInt;

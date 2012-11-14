@@ -14,7 +14,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 
-#define NS_CATEGORYMANAGER_CLASSNAME     "Category Manager"
+class nsIMemoryReporter;
 
 /* 16d222a6-1dd2-11b2-b693-f38b02c021b2 */
 #define NS_CATEGORYMANAGER_CID \
@@ -76,6 +76,8 @@ public:
   ~CategoryNode();
   void operator delete(void*) { }
 
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
 private:
   CategoryNode()
     : mLock("CategoryLeaf")
@@ -114,9 +116,13 @@ public:
                         char** aOldValue = NULL);
 
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  void InitMemoryReporter();
 
   static nsCategoryManager* GetSingleton();
   static void Destroy();
+
+  static int64_t GetCategoryManagerSize();
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
 private:
   static nsCategoryManager* gCategoryManager;
@@ -133,6 +139,8 @@ private:
   nsClassHashtable<nsDepCharHashKey, CategoryNode> mTable;
   mozilla::Mutex mLock;
   bool mSuppressNotifications;
+
+  nsIMemoryReporter* mReporter;
 };
 
 #endif

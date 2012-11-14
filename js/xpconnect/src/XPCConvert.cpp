@@ -1062,7 +1062,7 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
             return false;
 
         // Deal with slim wrappers here.
-        if (GetISupportsFromJSObject(src, &iface)) {
+        if (GetISupportsFromJSObject(inner ? inner : src, &iface)) {
             if (iface)
                 return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
 

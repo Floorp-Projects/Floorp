@@ -25,7 +25,7 @@ MOCHITEST_FILES = \
   file_app_isolation.js \
   helpers.js \
   leaving_page_iframe.html \
-  $(warning test_add_put.html is disabled for intermittent failures. Bug 783913) \
+  test_add_put.html \
   test_add_twice_failure.html \
   test_advance.html \
   test_autoIncrement_indexes.html \
@@ -62,6 +62,7 @@ MOCHITEST_FILES = \
   test_filehandle_serialization.html \
   test_filehandle_store_snapshot.html \
   test_getAll.html \
+  test_get_filehandle.html \
   test_global_data.html \
   test_index_empty_keyPath.html \
   test_index_getAll.html \
@@ -103,11 +104,14 @@ MOCHITEST_FILES = \
   test_setVersion_events.html \
   test_setVersion_exclusion.html \
   test_unique_index_update.html \
-  test_webapp_clearBrowserData.html \
+  test_webapp_clearBrowserData_inproc_oop.html \
+  test_webapp_clearBrowserData_oop_inproc.html \
+  test_webapp_clearBrowserData_inproc_inproc.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
   test_app_isolation_inproc.html \
   test_app_isolation_oop.html \
+  webapp_clearBrowserData.js \
   webapp_clearBrowserData_appFrame.html \
   webapp_clearBrowserData_browserFrame.html \
   $(NULL)
@@ -123,7 +127,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_permissionsPrompt.html \
   browser_permissionsPromptAllow.js \
   browser_permissionsPromptDeny.js \
-  browser_privateBrowsing.js \
   browser_quotaPrompt.html \
   browser_quotaPromptAllow.js \
   browser_quotaPromptDeny.js \
@@ -133,6 +136,17 @@ MOCHITEST_BROWSER_FILES = \
   browser_quotaPromptDelete.js \
   head.js \
   $(NULL)
+
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+  browser_perwindow_privateBrowsing.js \
+  $(NULL)
+else
+MOCHITEST_BROWSER_FILES += \
+  browser_privateBrowsing.js \
+  $(NULL)
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk

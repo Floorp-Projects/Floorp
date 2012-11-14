@@ -366,6 +366,11 @@ SpdySession3::NetworkRead(nsAHttpSegmentWriter *writer, char *buf,
 {
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
+  if (!count) {
+    *countWritten = 0;
+    return NS_OK;
+  }
+
   nsresult rv = writer->OnWriteSegment(buf, count, countWritten);
   if (NS_SUCCEEDED(rv) && *countWritten > 0)
     mLastReadEpoch = PR_IntervalNow();
@@ -599,26 +604,30 @@ SpdySession3::GenerateRstStream(uint32_t aStatusCode, uint32_t aID)
 }
 
 void
-SpdySession3::GenerateGoAway()
+SpdySession3::GenerateGoAway(uint32_t aStatusCode)
 {
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-  LOG3(("SpdySession3::GenerateGoAway %p\n", this));
+  LOG3(("SpdySession3::GenerateGoAway %p code=%X\n", this, aStatusCode));
 
-  EnsureBuffer(mOutputQueueBuffer, mOutputQueueUsed + 12,
+  EnsureBuffer(mOutputQueueBuffer, mOutputQueueUsed + 16,
                mOutputQueueUsed, mOutputQueueSize);
   char *packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
-  mOutputQueueUsed += 12;
+  mOutputQueueUsed += 16;
 
-  memset(packet, 0, 12);
+  memset(packet, 0, 16);
   packet[0] = kFlag_Control;
   packet[1] = kVersion;
   packet[3] = CONTROL_TYPE_GOAWAY;
-  packet[7] = 4;                                  /* data length */
+  packet[7] = 8;                                  /* data length */
   
   // last-good-stream-id are bytes 8-11, when we accept server push this will
   // need to be set non zero
 
-  LogIO(this, nullptr, "Generate GoAway", packet, 12);
+  // bytes 12-15 are the status code.
+  aStatusCode = PR_htonl(aStatusCode);
+  memcpy(packet + 12, &aStatusCode, 4);
+
+  LogIO(this, nullptr, "Generate GoAway", packet, 16);
   FlushOutputQueue();
 }
 
@@ -1326,6 +1335,7 @@ SpdySession3::HandleWindowUpdate(SpdySession3 *self)
   }
 
   self->ResetDownstreamState();
+  self->ResumeRecv();
   return NS_OK;
 }
 
@@ -1428,6 +1438,10 @@ SpdySession3::ReadSegments(nsAHttpSegmentReader *reader,
   // to flush.
   FlushOutputQueue();
 
+  // Allow new server reads - that might be data or control information
+  // (e.g. window updates or http replies) that are responses to these writes
+  ResumeRecv();
+
   if (stream->RequestBlockedOnRead()) {
     
     // We are blocked waiting for input - either more http headers or
@@ -1471,9 +1485,6 @@ SpdySession3::ReadSegments(nsAHttpSegmentReader *reader,
   LOG3(("SpdySession3::ReadSegments %p stream=%p stream send complete",
         this, stream));
   
-  /* we now want to recv data */
-  ResumeRecv();
-
   // call readsegments again if there are other streams ready
   // to go in this session
   SetWriteCallbacks();
@@ -1859,7 +1870,7 @@ SpdySession3::Close(nsresult aReason)
   mStreamTransactionHash.Clear();
 
   if (NS_SUCCEEDED(aReason))
-    GenerateGoAway();
+    GenerateGoAway(goawayReason::OK);
   mConnection = nullptr;
   mSegmentReader = nullptr;
   mSegmentWriter = nullptr;

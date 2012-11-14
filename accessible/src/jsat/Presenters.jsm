@@ -17,6 +17,7 @@ this.EXPORTED_SYMBOLS = ['VisualPresenter',
                          'AndroidPresenter',
                          'DummyAndroidPresenter',
                          'SpeechPresenter',
+                         'HapticPresenter',
                          'PresenterContext'];
 
 /**
@@ -111,7 +112,7 @@ Presenter.prototype = {
  * Visual presenter. Draws a box around the virtual cursor's position.
  */
 
-this.VisualPresenter = function VisualPresenter() {}
+this.VisualPresenter = function VisualPresenter() {};
 
 VisualPresenter.prototype = {
   __proto__: Presenter.prototype,
@@ -179,7 +180,7 @@ VisualPresenter.prototype = {
  * Android presenter. Fires Android a11y events.
  */
 
-this.AndroidPresenter = function AndroidPresenter() {}
+this.AndroidPresenter = function AndroidPresenter() {};
 
 AndroidPresenter.prototype = {
   __proto__: Presenter.prototype,
@@ -332,7 +333,7 @@ AndroidPresenter.prototype = {
  * A speech presenter for direct TTS output
  */
 
-this.SpeechPresenter = function SpeechPresenter() {}
+this.SpeechPresenter = function SpeechPresenter() {};
 
 SpeechPresenter.prototype = {
   __proto__: Presenter.prototype,
@@ -369,6 +370,24 @@ SpeechPresenter.prototype = {
         ]
       }
     };
+  }
+};
+
+/**
+ * A haptic presenter
+ */
+
+this.HapticPresenter = function HapticPresenter() {};
+
+HapticPresenter.prototype = {
+  __proto__: Presenter.prototype,
+
+  type: 'Haptic',
+
+  PIVOT_CHANGE_PATTHERN: [20],
+
+  pivotChanged: function HapticPresenter_pivotChanged(aContext, aReason) {
+    return { type: this.type, details: { pattern: this.PIVOT_CHANGE_PATTHERN } };
   }
 };
 

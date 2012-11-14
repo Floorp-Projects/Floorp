@@ -14,5 +14,9 @@ PARALLEL_DIRS	= public src
 
 TEST_DIRS += test
 
+ifdef ENABLE_TESTS
+TOOL_DIRS += compiledtest
+endif
+
 include $(topsrcdir)/config/rules.mk
 
