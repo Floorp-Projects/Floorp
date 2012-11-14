@@ -18,11 +18,11 @@
 #include "nsDOMString.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-class nsDocumentFragment : public FragmentOrElement,
-                           public nsIDOMDocumentFragment
+class DocumentFragment : public FragmentOrElement,
+                         public nsIDOMDocumentFragment
 {
 public:
   using FragmentOrElement::GetFirstChild;
@@ -36,8 +36,8 @@ public:
   // interface nsIDOMDocumentFragment
   // NS_DECL_NSIDOCUMENTFRAGMENT  Empty
 
-  nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsDocumentFragment()
+  DocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~DocumentFragment()
   {
   }
 
@@ -119,10 +119,15 @@ protected:
   nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
+} // namespace dom
+} // namespace mozilla
+
 nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                        nsNodeInfoManager *aNodeInfoManager)
 {
+  using namespace mozilla::dom;
+
   NS_ENSURE_ARG(aNodeInfoManager);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -131,17 +136,18 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                                            nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsDocumentFragment *it = new nsDocumentFragment(nodeInfo.forget());
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
+  DocumentFragment *it = new DocumentFragment(nodeInfo.forget());
   NS_ADDREF(*aInstancePtrResult = it);
 
   return NS_OK;
 }
 
-nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
+DOMCI_NODE_DATA(DocumentFragment, mozilla::dom::DocumentFragment)
+
+namespace mozilla {
+namespace dom {
+
+DocumentFragment::DocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
   : FragmentOrElement(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() ==
@@ -152,26 +158,26 @@ nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
 }
 
 bool
-nsDocumentFragment::IsNodeOfType(uint32_t aFlags) const
+DocumentFragment::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eDOCUMENT_FRAGMENT));
 }
 
 nsIAtom*
-nsDocumentFragment::DoGetID() const
+DocumentFragment::DoGetID() const
 {
   return nullptr;  
 }
 
 nsIAtom*
-nsDocumentFragment::GetIDAttributeName() const
+DocumentFragment::GetIDAttributeName() const
 {
   return nullptr;
 }
 
 #ifdef DEBUG
 void
-nsDocumentFragment::List(FILE* out, int32_t aIndent) const
+DocumentFragment::List(FILE* out, int32_t aIndent) const
 {
   int32_t indent;
   for (indent = aIndent; --indent >= 0; ) {
@@ -200,8 +206,8 @@ nsDocumentFragment::List(FILE* out, int32_t aIndent) const
 }
 
 void
-nsDocumentFragment::DumpContent(FILE* out, int32_t aIndent,
-                                bool aDumpAll) const
+DocumentFragment::DumpContent(FILE* out, int32_t aIndent,
+                              bool aDumpAll) const
 {
   int32_t indent;
   for (indent = aIndent; --indent >= 0; ) {
@@ -231,13 +237,10 @@ nsDocumentFragment::DumpContent(FILE* out, int32_t aIndent,
 }
 #endif
 
-
-DOMCI_NODE_DATA(DocumentFragment, nsDocumentFragment)
-
-// QueryInterface implementation for nsDocumentFragment
-NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
+// QueryInterface implementation for DocumentFragment
+NS_INTERFACE_MAP_BEGIN(DocumentFragment)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocumentFragment)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(DocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
@@ -255,7 +258,10 @@ NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DocumentFragment)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(nsDocumentFragment, FragmentOrElement)
-NS_IMPL_RELEASE_INHERITED(nsDocumentFragment, FragmentOrElement)
+NS_IMPL_ADDREF_INHERITED(DocumentFragment, FragmentOrElement)
+NS_IMPL_RELEASE_INHERITED(DocumentFragment, FragmentOrElement)
 
-NS_IMPL_ELEMENT_CLONE(nsDocumentFragment)
+NS_IMPL_ELEMENT_CLONE(DocumentFragment)
+
+} // namespace dom
+} // namespace mozilla
