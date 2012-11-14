@@ -989,7 +989,7 @@ void _MD_unix_map_connect_error(int err)
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
 		case EIO:
-#if defined(UNIXWARE) || defined(SNI) || defined(NEC)
+#if defined(UNIXWARE)
 			/*
 			 * On some platforms, if we connect to a port on
 			 * the local host (the loopback address) that no

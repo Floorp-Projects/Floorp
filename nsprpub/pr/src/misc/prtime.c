@@ -1695,7 +1695,7 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
          * additional fields: tm_zone and tm_gmtoff.
          */
 
-#if defined(SUNOS4) || (__GLIBC__ >= 2) || defined(XP_BEOS) \
+#if (__GLIBC__ >= 2) || defined(XP_BEOS) \
         || defined(NETBSD) || defined(OPENBSD) || defined(FREEBSD) \
         || defined(DARWIN) || defined(SYMBIAN) || defined(ANDROID)
         a.tm_zone = NULL;
