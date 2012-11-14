@@ -967,7 +967,7 @@ void nsBuiltinDecoder::NextFrameUnavailableBuffering()
   if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
 
-  mOwner->UpdateReadyStateForData(nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING);
+  mOwner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING);
 }
 
 void nsBuiltinDecoder::NextFrameAvailable()
@@ -976,7 +976,7 @@ void nsBuiltinDecoder::NextFrameAvailable()
   if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
 
-  mOwner->UpdateReadyStateForData(nsBuiltinDecoder::NEXT_FRAME_AVAILABLE);
+  mOwner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
 }
 
 void nsBuiltinDecoder::NextFrameUnavailable()
@@ -984,7 +984,7 @@ void nsBuiltinDecoder::NextFrameUnavailable()
   NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
   if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
-  mOwner->UpdateReadyStateForData(nsBuiltinDecoder::NEXT_FRAME_UNAVAILABLE);
+  mOwner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 }
 
 void nsBuiltinDecoder::UpdateReadyStateForData()
@@ -992,7 +992,7 @@ void nsBuiltinDecoder::UpdateReadyStateForData()
   NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
   if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
-  NextFrameStatus frameStatus =
+  MediaDecoderOwner::NextFrameStatus frameStatus =
     mDecoderStateMachine->GetNextFrameStatus();
   mOwner->UpdateReadyStateForData(frameStatus);
 }
