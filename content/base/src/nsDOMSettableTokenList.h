@@ -12,8 +12,12 @@
 #include "nsIDOMDOMSettableTokenList.h"
 #include "nsDOMTokenList.h"
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
-class nsGenericElement;
 class nsIAtom;
 
 // nsISupports must be on the primary inheritance chain 
@@ -27,7 +31,7 @@ public:
 
   NS_FORWARD_NSIDOMDOMTOKENLIST(nsDOMTokenList::);
 
-  nsDOMSettableTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom);
+  nsDOMSettableTokenList(mozilla::dom::Element* aElement, nsIAtom* aAttrAtom);
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);

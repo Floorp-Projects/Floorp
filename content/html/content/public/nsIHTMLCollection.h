@@ -11,11 +11,14 @@
 
 struct JSContext;
 struct JSObject;
-class nsGenericElement;
 class nsINode;
 namespace mozilla {
 class ErrorResult;
-}
+
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
@@ -44,14 +47,14 @@ public:
     GetLength(&length);
     return length;
   }
-  virtual nsGenericElement* GetElementAt(uint32_t index) = 0;
-  nsGenericElement* Item(uint32_t index)
+  virtual mozilla::dom::Element* GetElementAt(uint32_t index) = 0;
+  mozilla::dom::Element* Item(uint32_t index)
   {
     return GetElementAt(index);
   }
-  nsGenericElement* IndexedGetter(uint32_t index, bool& aFound)
+  mozilla::dom::Element* IndexedGetter(uint32_t index, bool& aFound)
   {
-    nsGenericElement* item = Item(index);
+    mozilla::dom::Element* item = Item(index);
     aFound = !!item;
     return item;
   }
