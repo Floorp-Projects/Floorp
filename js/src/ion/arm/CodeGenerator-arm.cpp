@@ -323,7 +323,7 @@ CodeGeneratorARM::visitNegD(LNegD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.as_vneg(input, input);
+    masm.ma_vneg(input, input);
     return true;
 }
 
@@ -332,7 +332,7 @@ CodeGeneratorARM::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.as_vabs(input, input);
+    masm.ma_vabs(input, input);
     return true;
 }
 
@@ -341,7 +341,7 @@ CodeGeneratorARM::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.as_vsqrt(input, input);
+    masm.ma_vsqrt(input, input);
     return true;
 }
 
@@ -778,13 +778,13 @@ CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
     // Masm.pow(-Infinity, 0.5) == Infinity.
     masm.ma_vimm(js_NegativeInfinity, ScratchFloatReg);
     masm.compareDouble(input, ScratchFloatReg);
-    masm.as_vneg(ScratchFloatReg, output, Assembler::Equal);
+    masm.ma_vneg(ScratchFloatReg, output, Assembler::Equal);
     masm.ma_b(&done, Assembler::Equal);
 
     // Math.pow(-0, 0.5) == 0 == Math.pow(0, 0.5). Adding 0 converts any -0 to 0.
     masm.ma_vimm(0.0, ScratchFloatReg);
     masm.ma_vadd(ScratchFloatReg, input, output);
-    masm.as_vsqrt(output, output);
+    masm.ma_vsqrt(output, output);
 
     masm.bind(&done);
     return true;
@@ -1074,8 +1074,9 @@ CodeGeneratorARM::visitBoxDouble(LBoxDouble *box)
     const LDefinition *type = box->getDef(TYPE_INDEX);
     const LAllocation *in = box->getOperand(0);
 
-    masm.as_vxfer(ToRegister(payload), ToRegister(type),
-                  VFPRegister(ToFloatRegister(in)), Assembler::FloatToCore);
+    //masm.as_vxfer(ToRegister(payload), ToRegister(type),
+    //              VFPRegister(ToFloatRegister(in)), Assembler::FloatToCore);
+    masm.ma_vxfer(VFPRegister(ToFloatRegister(in)), ToRegister(payload), ToRegister(type));
     return true;
 }
 
@@ -1145,7 +1146,7 @@ bool
 CodeGeneratorARM::visitTestDAndBranch(LTestDAndBranch *test)
 {
     const LAllocation *opd = test->input();
-    masm.as_vcmpz(VFPRegister(ToFloatRegister(opd)));
+    masm.ma_vcmpz(ToFloatRegister(opd));
     masm.as_vmrs(pc);
 
     LBlock *ifTrue = test->ifTrue()->lir();
