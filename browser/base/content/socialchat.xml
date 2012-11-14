@@ -279,8 +279,9 @@
 
       <method name="showChat">
         <parameter name="aChatbox"/>
+        <parameter name="aMode"/>
         <body><![CDATA[
-          if (aChatbox.minimized)
+          if ((aMode != "minimized") && aChatbox.minimized)
             aChatbox.minimized = false;
           if (this.selectedChat != aChatbox)
             this.selectedChat = aChatbox;
@@ -353,7 +354,7 @@
           if (cb) {
             cb = cb.get();
             if (cb.parentNode) {
-              this.showChat(cb);
+              this.showChat(cb, aMode);
               if (aCallback)
                 aCallback(cb.iframe.contentWindow);
               return;
