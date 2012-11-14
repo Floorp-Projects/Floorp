@@ -109,19 +109,18 @@ js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapObjectChecked(JSContext *cx, RawObject objArg)
+js::UnwrapObjectChecked(RawObject obj)
 {
-    RootedObject obj(cx, objArg);
     while (true) {
         JSObject *wrapper = obj;
-        obj = UnwrapOneChecked(cx, obj);
+        obj = UnwrapOneChecked(obj);
         if (!obj || obj == wrapper)
             return obj;
     }
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapOneChecked(JSContext *cx, HandleObject obj)
+js::UnwrapOneChecked(RawObject obj)
 {
     // Checked unwraps should never unwrap outer windows.
     if (!obj->isWrapper() ||
@@ -131,11 +130,7 @@ js::UnwrapOneChecked(JSContext *cx, HandleObject obj)
     }
 
     Wrapper *handler = Wrapper::wrapperHandler(obj);
-    if (!handler->isSafeToUnwrap()) {
-        JS_ReportError(cx, "Permission denied to access object");
-        return NULL;
-    }
-    return Wrapper::wrappedObject(obj);
+    return handler->isSafeToUnwrap() ? Wrapper::wrappedObject(obj) : NULL;
 }
 
 bool

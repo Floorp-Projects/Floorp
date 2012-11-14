@@ -3493,7 +3493,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     return NS_OK;
   }
 
-  uint8_t* data = JS_GetUint8ClampedArrayData(darray, aCx);
+  uint8_t* data = JS_GetUint8ClampedArrayData(darray);
 
   IntRect srcRect(0, 0, mWidth, mHeight);
   IntRect destRect(aX, aY, aWidth, aHeight);
@@ -3605,7 +3605,7 @@ CanvasRenderingContext2D::PutImageData(JSContext* cx,
     return;
   }
 
-  dom::Uint8ClampedArray arr(cx, imageData.GetDataObject());
+  dom::Uint8ClampedArray arr(imageData.GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData.Width(), imageData.Height(),
@@ -3625,7 +3625,7 @@ CanvasRenderingContext2D::PutImageData(JSContext* cx,
     return;
   }
 
-  dom::Uint8ClampedArray arr(cx, imageData.GetDataObject());
+  dom::Uint8ClampedArray arr(imageData.GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData.Width(), imageData.Height(),

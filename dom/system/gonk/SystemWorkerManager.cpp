@@ -89,12 +89,12 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
     data = abs.ptr();
   } else if (!JSVAL_IS_PRIMITIVE(v)) {
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    if (!JS_IsTypedArrayObject(obj, cx)) {
+    if (!JS_IsTypedArrayObject(obj)) {
       JS_ReportError(cx, "Object passed in wasn't a typed array");
       return false;
     }
 
-    uint32_t type = JS_GetTypedArrayType(obj, cx);
+    uint32_t type = JS_GetTypedArrayType(obj);
     if (type != js::ArrayBufferView::TYPE_INT8 &&
         type != js::ArrayBufferView::TYPE_UINT8 &&
         type != js::ArrayBufferView::TYPE_UINT8_CLAMPED) {
@@ -102,8 +102,8 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
       return false;
     }
 
-    size = JS_GetTypedArrayByteLength(obj, cx);
-    data = JS_GetArrayBufferViewData(obj, cx);
+    size = JS_GetTypedArrayByteLength(obj);
+    data = JS_GetArrayBufferViewData(obj);
   } else {
     JS_ReportError(cx,
                    "Incorrect argument. Expecting a string or a typed array");
@@ -175,7 +175,7 @@ RILReceiver::DispatchRILEvent::RunTask(JSContext *aCx)
     return false;
   }
 
-  memcpy(JS_GetArrayBufferViewData(array, aCx), mMessage->mData, mMessage->mSize);
+  memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
   jsval argv[] = { OBJECT_TO_JSVAL(array) };
   return JS_CallFunctionName(aCx, obj, "onRILMessage", NS_ARRAY_LENGTH(argv),
                              argv, argv);
@@ -217,12 +217,12 @@ DoNetdCommand(JSContext *cx, unsigned argc, jsval *vp)
     }
   } else if (!JSVAL_IS_PRIMITIVE(v)) {
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    if (!JS_IsTypedArrayObject(obj, cx)) {
+    if (!JS_IsTypedArrayObject(obj)) {
       JS_ReportError(cx, "Object passed in wasn't a typed array");
       return false;
     }
 
-    uint32_t type = JS_GetTypedArrayType(obj, cx);
+    uint32_t type = JS_GetTypedArrayType(obj);
     if (type != js::ArrayBufferView::TYPE_INT8 &&
         type != js::ArrayBufferView::TYPE_UINT8 &&
         type != js::ArrayBufferView::TYPE_UINT8_CLAMPED) {
@@ -230,13 +230,13 @@ DoNetdCommand(JSContext *cx, unsigned argc, jsval *vp)
       return false;
     }
 
-    size = JS_GetTypedArrayByteLength(obj, cx);
+    size = JS_GetTypedArrayByteLength(obj);
     if (!size) {
       JS_ReportError(cx, "Typed array byte length is zero");
       return false;
     }
 
-    data = JS_GetArrayBufferViewData(obj, cx);
+    data = JS_GetArrayBufferViewData(obj);
     if (!data) {
       JS_ReportError(cx, "Array buffer view data is NULL");
       return false;
@@ -322,7 +322,7 @@ NetdReceiver::DispatchNetdEvent::RunTask(JSContext *aCx)
     return false;
   }
 
-  memcpy(JS_GetUint8ArrayData(array, aCx), mMessage->mData, mMessage->mSize);
+  memcpy(JS_GetUint8ArrayData(array), mMessage->mData, mMessage->mSize);
   jsval argv[] = { OBJECT_TO_JSVAL(array) };
   return JS_CallFunctionName(aCx, obj, "onNetdMessage", NS_ARRAY_LENGTH(argv),
                              argv, argv);
