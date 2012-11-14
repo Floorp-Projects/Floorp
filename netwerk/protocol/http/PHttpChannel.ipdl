@@ -61,9 +61,7 @@ parent:
 
   SetCacheTokenCachedCharset(nsCString charset);
 
-  UpdateAssociatedContentSecurity(int32_t high,
-                                  int32_t low,
-                                  int32_t broken,
+  UpdateAssociatedContentSecurity(int32_t broken,
                                   int32_t no);
   Suspend();
   Resume();

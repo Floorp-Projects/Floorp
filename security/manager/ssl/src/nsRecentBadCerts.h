@@ -13,6 +13,7 @@
 #include "nsIRecentBadCertsService.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
+#include "cert.h"
 #include "secitem.h"
 
 class RecentBadCert

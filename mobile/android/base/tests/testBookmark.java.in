@@ -5,6 +5,7 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
 import android.database.Cursor;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -115,7 +116,8 @@ public class testBookmark extends PixelTest  {
  
         // Click on the bookmark we created and wait for the bookmarked page to load
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
-        mSolo.clickInList(1);
+        View child = bookmarksList.getChildAt(1);
+        mSolo.clickOnView(child);
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
 
         // Clean up the bookmark we created
@@ -172,8 +174,12 @@ public class testBookmark extends PixelTest  {
         // Click the "Bookmarks" tab to switch to bookmarks list
         mSolo.clickOnText("Bookmarks");
 
-        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
-        return (ListView)tabHost.getCurrentView();
+        ArrayList<ListView> views = mSolo.getCurrentListViews();
+        for (ListView view : views) {
+            if (view.getTag() == "bookmarks")
+                return view;
+        }
+        return null;
     }
 
     // This method opens the menu and selects the "Bookmark" menu item

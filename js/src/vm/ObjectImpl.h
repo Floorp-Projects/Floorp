@@ -1227,8 +1227,9 @@ class ObjectImpl : public gc::Cell
     inline const Value &nativeGetSlot(uint32_t slot) const;
 
     inline void setSlot(uint32_t slot, const Value &value);
+    inline void setCrossCompartmentSlot(uint32_t slot, const Value &value);
     inline void initSlot(uint32_t slot, const Value &value);
-    inline void initCrossCompartmentSlot(uint32_t slot, const js::Value &value);
+    inline void initCrossCompartmentSlot(uint32_t slot, const Value &value);
     inline void initSlotUnchecked(uint32_t slot, const Value &value);
 
     /* For slots which are known to always be fixed, due to the way they are allocated. */

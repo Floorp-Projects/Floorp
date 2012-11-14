@@ -12,10 +12,22 @@ function test() {
       "Shouldn't have a debugger pane for this tab yet.");
 
     let pane = DebuggerUI.toggleDebugger();
-    let someWidth1 = parseInt(Math.random() * 200) + 100;
-    let someWidth2 = parseInt(Math.random() * 200) + 100;
-
     ok(pane, "toggleDebugger() should return a pane.");
+
+    let preferredSfw = Services.prefs.getIntPref("devtools.debugger.ui.stackframes-width");
+    let preferredBpw = Services.prefs.getIntPref("devtools.debugger.ui.variables-width");
+    let someWidth1, someWidth2;
+
+    do {
+      someWidth1 = parseInt(Math.random() * 200) + 100;
+      someWidth2 = parseInt(Math.random() * 200) + 100;
+    } while (someWidth1 == preferredSfw ||
+             someWidth2 == preferredBpw)
+
+    info("Preferred stackframes width: " + preferredSfw);
+    info("Preferred variables width: " + preferredBpw);
+    info("Generated stackframes width: " + someWidth1);
+    info("Generated variables width: " + someWidth2);
 
     is(DebuggerUI.getDebugger(), pane,
       "getDebugger() should return the same pane as toggleDebugger().");

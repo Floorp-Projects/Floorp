@@ -32,6 +32,7 @@ try {
 const kMessages =["SystemMessageManager:GetPendingMessages",
                   "SystemMessageManager:HasPendingMessages",
                   "SystemMessageManager:Register",
+                  "SystemMessageManager:Unregister",
                   "SystemMessageManager:Message:Return:OK",
                   "SystemMessageManager:AskReadyToRegister",
                   "child-process-shutdown"]
@@ -81,14 +82,15 @@ SystemMessageInternal.prototype = {
     debug("Sending " + aType + " " + JSON.stringify(aMessage) +
       " for " + aPageURI.spec + " @ " + aManifestURI.spec);
     if (this._listeners[aManifestURI.spec]) {
-      this._listeners[aManifestURI.spec].forEach(function sendMsg(aListener) {
-        aListener.sendAsyncMessage("SystemMessageManager:Message",
-                                   { type: aType,
-                                     msg: aMessage,
-                                     manifest: aManifestURI.spec,
-                                     uri: aPageURI.spec,
-                                     msgID: messageID })
-      });
+      let manifest = this._listeners[aManifestURI.spec];
+      for (let winID in manifest) {
+        manifest[winID].sendAsyncMessage("SystemMessageManager:Message",
+                                         { type: aType,
+                                           msg: aMessage,
+                                           manifest: aManifestURI.spec,
+                                           uri: aPageURI.spec,
+                                           msgID: messageID });
+      }
     }
 
     let pagesToOpen = {};
@@ -130,14 +132,15 @@ SystemMessageInternal.prototype = {
     this._pages.forEach(function(aPage) {
       if (aPage.type == aType) {
         if (this._listeners[aPage.manifest]) {
-          this._listeners[aPage.manifest].forEach(function sendMsg(aListener) {
-            aListener.sendAsyncMessage("SystemMessageManager:Message",
-                                       { type: aType,
-                                         msg: aMessage,
-                                         manifest: aPage.manifest,
-                                         uri: aPage.uri,
-                                         msgID: messageID })
-          });
+          let manifest = this._listeners[aPage.manifest];
+          for (let winID in manifest) {
+            manifest[winID].sendAsyncMessage("SystemMessageManager:Message",
+                                             { type: aType,
+                                               msg: aMessage,
+                                               manifest: aPage.manifest,
+                                               uri: aPage.uri,
+                                               msgID: messageID });
+          }
         }
         // Queue this message in the corresponding pages.
         this._queueMessage(aPage, aMessage, messageID);
@@ -172,27 +175,34 @@ SystemMessageInternal.prototype = {
         break;
       case "SystemMessageManager:Register":
       {
-        let manifest = msg.manifest;
-        debug("Got Register from " + manifest);
-        if (!this._listeners[manifest]) {
-          this._listeners[manifest] = [];
+        debug("Got Register from " + msg.manifest);
+        if (!this._listeners[msg.manifest]) {
+          this._listeners[msg.manifest] = {};
         }
-        this._listeners[manifest].push(aMessage.target);
-        debug("listeners for " + manifest + " : " + this._listeners[manifest].length);
+        this._listeners[msg.manifest][msg.innerWindowID] = aMessage.target;
+        debug("listeners for " + msg.manifest + " innerWinID " + msg.innerWindowID);
         break;
       }
       case "child-process-shutdown":
       {
-        debug("Got Unregister from " + aMessage.target);
-        let mm = aMessage.target;
+        debug("Got child-process-shutdown from " + aMessage.target);
         for (let manifest in this._listeners) {
-          let index = this._listeners[manifest].indexOf(mm);
-          while (index != -1) {
-            debug("Removing " + mm + " at index " + index);
-            this._listeners[manifest].splice(index, 1);
-            index = this._listeners[manifest].indexOf(mm);
+          for (let winID in this._listeners[manifest]) {
+            if (aMessage.target === this._listeners[manifest][winID]) {
+              debug("remove " + manifest );
+              delete this._listeners[manifest];
+              return;
+            }
           }
         }
+        break;
+      }
+      case "SystemMessageManager:Unregister":
+      {
+        debug("Got Unregister from " + aMessage.target + "innerWinID " + msg.innerWindowID);
+        delete this._listeners[msg.manifest][msg.innerWindowID];
+        debug("Removing " + aMessage.target + "innerWinID " + msg.innerWindowID );
+
         break;
       }
       case "SystemMessageManager:GetPendingMessages":

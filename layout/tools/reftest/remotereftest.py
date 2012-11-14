@@ -15,7 +15,7 @@ from runreftest import RefTest
 from runreftest import ReftestOptions
 from automation import Automation
 import devicemanager, devicemanagerADB, devicemanagerSUT
-from remoteautomation import RemoteAutomation
+from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
 class RemoteOptions(ReftestOptions):
     def __init__(self, automation):
@@ -450,8 +450,8 @@ def main(args):
 
     reftest.stopWebServer(options)
     try:
-        logcat = dm.getLogcat()
-        print ''.join(logcat[-500:-1])
+        logcat = dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
+        print ''.join(logcat)
         print dm.getInfo()
     except devicemanager.DMError:
         print "WARNING: Error getting device information at end of test"

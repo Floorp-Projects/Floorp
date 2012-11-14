@@ -110,7 +110,7 @@ function test_remove_places()
     PlacesUtils.history.removePage(urls[idx].uri);
   }
 
-  waitForClearHistory(function (){
+  promiseClearHistory().then(function (){
     for (let idx in urls) {
       do_check_false(isHostInMozHosts(urls[idx].uri, urls[idx].typed, urls[idx].prefix));
     }
@@ -132,7 +132,7 @@ function test_bookmark_changes()
   // Change the hostname
   PlacesUtils.bookmarks.changeBookmarkURI(itemId, NetUtil.newURI(NEW_URL));
 
-  waitForClearHistory(function (){
+  promiseClearHistory().then(function (){
     let newUri = NetUtil.newURI(NEW_URL);
     do_check_true(isHostInMozPlaces(newUri));
     do_check_true(isHostInMozHosts(newUri, false, null));
@@ -147,7 +147,7 @@ function test_bookmark_removal()
                                                     PlacesUtils.bookmarks.DEFAULT_INDEX);
   let newUri = NetUtil.newURI(NEW_URL);
   PlacesUtils.bookmarks.removeItem(itemId);
-  waitForClearHistory(function (){
+  promiseClearHistory().then(function (){
     do_check_false(isHostInMozHosts(newUri, false, null));
     run_next_test();
   });
@@ -198,7 +198,7 @@ function test_moz_hosts_www_remove()
         PlacesUtils.history.removePage(aURIToRemove);
         let prefix = /www/.test(aURIToKeep.spec) ? "www." : null;
         do_check_true(isHostInMozHosts(aURIToKeep, false, prefix));
-        waitForClearHistory(aCallback);
+        promiseClearHistory().then(aCallback);
       }
     });
   }
@@ -207,7 +207,7 @@ function test_moz_hosts_www_remove()
   const TEST_WWW_URI = NetUtil.newURI("http://www.rem.mozilla.com");
   test_removal(TEST_URI, TEST_WWW_URI, function() {
     test_removal(TEST_WWW_URI, TEST_URI, function() {
-      waitForClearHistory(run_next_test);
+      promiseClearHistory().then(run_next_test);
     });
   });
 }

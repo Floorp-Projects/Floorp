@@ -28,6 +28,14 @@ Accessible::ARIARole()
   return ARIATransformRole(mRoleMapEntry->role);
 }
 
+inline void
+Accessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
+{
+  mRoleMapEntry = aRoleMapEntry;
+  if (mRoleMapEntry)
+    mFlags |= mRoleMapEntry->accTypes;
+}
+
 inline bool
 Accessible::HasNumericValue() const
 {

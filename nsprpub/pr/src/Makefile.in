@@ -133,6 +133,7 @@ endif
 else
 OS_LIBS		= -ldl
 endif
+OS_LIBS		+= -lrt
 endif
 
 ifeq ($(OS_ARCH),HP-UX)

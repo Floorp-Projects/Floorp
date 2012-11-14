@@ -23,6 +23,42 @@
   <script type="application/javascript">
     //gA11yEventDumpToConsole = true; // debug stuff
 
+    function closeDocChecker()
+    {
+      this.__proto__ = new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE);
+
+      this.check = function closeDocChecker_check(aEvent)
+      {
+        aEvent.accessible.rootDocument.window.close();
+      }
+
+      this.match = function closeDocChecker_match(aEvent)
+      {
+        return true;
+      }
+    }
+
+    function clickLink(aID)
+    {
+      this.eventSeq = [
+        new stateChangeChecker(STATE_TRAVERSED, false, true, "link_traversed"),
+        new closeDocChecker()
+      ];
+
+      this.invoke = function clickLink_invoke()
+      {
+        synthesizeMouse(getNode("link_traversed"), 1, 1, { shiftKey: true });
+      }
+
+      this.getID = function clickLink_getID()
+      {
+        return "link + '" + aID + "' clicked.";
+      }
+    }
+
+gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
     function doTest()
     {
       // a@href and its text node
@@ -47,27 +83,14 @@
       // a (no @href, no click event listener)
       testStates("link_notlink", 0, 0, STATE_LINKED);
 
-      // a: traversal state
+      // a: no traversed state
       testStates("link_traversed", 0, 0, STATE_TRAVERSED);
 
-      //enableLogging("docload"); // debug stuff
-      registerA11yEventListener(EVENT_DOCUMENT_LOAD_COMPLETE,
-                                traversedLinkTester);
-
-      synthesizeMouse(getNode("link_traversed"), 1, 1, { shiftKey: true });
+      // a: traversed state
+      gQueue = new eventQueue();
+      gQueue.push(new clickLink("link_traversed"));
+      gQueue.invoke(); // will call SimpleTest.finsih();
     }
-
-    var traversedLinkTester = {
-      handleEvent: function traversedLinkTester_handleEvent(aEvent) {
-        unregisterA11yEventListener(EVENT_DOCUMENT_LOAD_COMPLETE,
-                                    traversedLinkTester);
-        aEvent.accessible.rootDocument.window.close();
-
-        testStates("link_traversed", STATE_TRAVERSED);
-        //disableLogging();
-        SimpleTest.finish();
-      }
-    };
 
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTest);
@@ -86,6 +109,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=754830"
      title="Calculate link states separately">
     Mozilla Bug 754830
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=757774"
+     title="Fire state change event when link is traversed">
+    Mozilla Bug 757774
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>

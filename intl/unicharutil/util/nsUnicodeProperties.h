@@ -91,6 +91,8 @@ enum HanVariantType {
 
 HanVariantType GetHanVariant(uint32_t aCh);
 
+uint32_t GetFullWidth(uint32_t aCh);
+
 bool IsClusterExtender(uint32_t aCh, uint8_t aCategory);
 
 inline bool IsClusterExtender(uint32_t aCh) {

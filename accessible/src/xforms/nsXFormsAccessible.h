@@ -130,7 +130,6 @@ public:
   nsXFormsSelectableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // SelectAccessible
-  virtual bool IsSelect();
   virtual already_AddRefed<nsIArray> SelectedItems();
   virtual uint32_t SelectedItemCount();
   virtual Accessible* GetSelectedItem(uint32_t aIndex);

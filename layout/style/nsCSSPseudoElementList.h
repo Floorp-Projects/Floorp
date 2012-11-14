@@ -54,4 +54,4 @@ CSS_PSEUDO_ELEMENT(mozMathAnonymous, ":-moz-math-anonymous", 0)
 // HTML5 Forms pseudo elements
 CSS_PSEUDO_ELEMENT(mozProgressBar, ":-moz-progress-bar", 0)
 CSS_PSEUDO_ELEMENT(mozMeterBar, ":-moz-meter-bar", 0)
-
+CSS_PSEUDO_ELEMENT(mozPlaceholder, ":-moz-placeholder", 0)

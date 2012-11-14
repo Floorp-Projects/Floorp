@@ -904,4 +904,23 @@ inline nsIContent* nsINode::AsContent()
   return static_cast<nsIContent*>(this);
 }
 
+#define NS_IMPL_FROMCONTENT_HELPER(_class, _check)                             \
+  static _class* FromContent(nsIContent* aContent)                             \
+  {                                                                            \
+    return aContent->_check ? static_cast<_class*>(aContent) : nullptr;        \
+  }                                                                            \
+  static _class* FromContentOrNull(nsIContent* aContent)                       \
+  {                                                                            \
+    return aContent ? FromContent(aContent) : nullptr;                         \
+  }
+
+#define NS_IMPL_FROMCONTENT(_class, _nsid)                                     \
+  NS_IMPL_FROMCONTENT_HELPER(_class, IsInNamespace(_nsid))
+
+#define NS_IMPL_FROMCONTENT_WITH_TAG(_class, _nsid, _tag)                      \
+  NS_IMPL_FROMCONTENT_HELPER(_class, NodeInfo()->Equals(nsGkAtoms::_tag, _nsid))
+
+#define NS_IMPL_FROMCONTENT_HTML_WITH_TAG(_class, _tag)                        \
+  NS_IMPL_FROMCONTENT_WITH_TAG(_class, kNameSpaceID_XHTML, _tag)
+
 #endif /* nsIContent_h___ */

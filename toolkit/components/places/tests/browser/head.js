@@ -3,31 +3,51 @@
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/promise/core.js");
+
 /**
- * Waits for completion of a clear history operation, before
- * proceeding with aCallback.
+ * Allows waiting for an observer notification once.
  *
- * @param aCallback
- *        Function to be called when done.
+ * @param aTopic
+ *        Notification topic to observe.
+ *
+ * @return {Promise}
+ * @resolves The array [aSubject, aData] from the observed notification.
+ * @rejects Never.
  */
-function waitForClearHistory(aCallback) {
-  Services.obs.addObserver(function observeCH(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(observeCH, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-    aCallback();
-  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-  PlacesUtils.bhistory.removeAllPages();
+function promiseTopicObserved(aTopic)
+{
+  let deferred = Promise.defer();
+
+  Services.obs.addObserver(
+    function PTO_observe(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(PTO_observe, aTopic);
+      deferred.resolve([aSubject, aData]);
+    }, aTopic, false);
+
+  return deferred.promise;
 }
 
 /**
- * Waits for all pending async statements on the default connection, before
- * proceeding with aCallback.
+ * Clears history asynchronously.
  *
- * @param aCallback
- *        Function to be called when done.
- * @param aScope
- *        Scope for the callback.
- * @param aArguments
- *        Arguments array for the callback.
+ * @return {Promise}
+ * @resolves When history has been cleared.
+ * @rejects Never.
+ */
+function promiseClearHistory() {
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  PlacesUtils.bhistory.removeAllPages();
+  return promise;
+}
+
+/**
+ * Waits for all pending async statements on the default connection.
+ *
+ * @return {Promise}
+ * @resolves When all pending async statements finished.
+ * @rejects Never.
  *
  * @note The result is achieved by asynchronously executing a query requiring
  *       a write lock.  Since all statements on the same connection are
@@ -35,10 +55,10 @@ function waitForClearHistory(aCallback) {
  *       complete.  Note that WAL makes so that writers don't block readers, but
  *       this is a problem only across different connections.
  */
-function waitForAsyncUpdates(aCallback, aScope, aArguments)
+function promiseAsyncUpdates()
 {
-  let scope = aScope || this;
-  let args = aArguments || [];
+  let deferred = Promise.defer();
+
   let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                               .DBConnection;
   let begin = db.createAsyncStatement("BEGIN EXCLUSIVE");
@@ -51,10 +71,12 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments)
     handleError: function() {},
     handleCompletion: function(aReason)
     {
-      aCallback.apply(scope, args);
+      deferred.resolve();
     }
   });
   commit.finalize();
+
+  return deferred.promise;
 }
 
 /**
@@ -89,26 +111,4 @@ function fieldForUrl(aURI, aFieldName, aCallback)
     }
   });
   stmt.finalize();
-}
-
-function waitForAsyncUpdates(aCallback, aScope, aArguments)
-{
-  let scope = aScope || this;
-  let args = aArguments || [];
-  let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-  let begin = db.createAsyncStatement("BEGIN EXCLUSIVE");
-  begin.executeAsync();
-  begin.finalize();
-
-  let commit = db.createAsyncStatement("COMMIT");
-  commit.executeAsync({
-    handleResult: function() {},
-    handleError: function() {},
-    handleCompletion: function(aReason)
-    {
-      aCallback.apply(scope, args);
-    }
-  });
-  commit.finalize();
 }

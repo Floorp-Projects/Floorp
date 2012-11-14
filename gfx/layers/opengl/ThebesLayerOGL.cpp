@@ -587,108 +587,63 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
       // TEXTURE_2D.  This isn't the case on some older X1600-era Radeons.
       if (mOGLLayer->OGLManager()->FBOTextureTarget() == LOCAL_GL_TEXTURE_2D) {
         nsIntRect overlap;
-
-        // The buffer looks like:
-        //  ______
-        // |1  |2 |  Where the center point is offset by mBufferRotation from the top-left corner.
-        // |___|__|
-        // |3  |4 |
-        // |___|__|
-        //
-        // This is drawn to the screen as:
-        //  ______
-        // |4  |3 |  Where the center point is { width - mBufferRotation.x, height - mBufferRotation.y } from
-        // |___|__|  from the top left corner - rotationPoint.
-        // |2  |1 |
-        // |___|__|
-        //
-
-        // The basic idea below is to take all quadrant rectangles from the src and transform them into rectangles
-        // in the destination. Unfortunately, it seems it is overly complex and could perhaps be simplified.
-
-        nsIntRect srcBufferSpaceBottomRight(mBufferRotation.x, mBufferRotation.y, mBufferRect.width - mBufferRotation.x, mBufferRect.height - mBufferRotation.y);
-        nsIntRect srcBufferSpaceTopRight(mBufferRotation.x, 0, mBufferRect.width - mBufferRotation.x, mBufferRotation.y);
-        nsIntRect srcBufferSpaceTopLeft(0, 0, mBufferRotation.x, mBufferRotation.y);
-        nsIntRect srcBufferSpaceBottomLeft(0, mBufferRotation.y, mBufferRotation.x, mBufferRect.height - mBufferRotation.y);
-
         overlap.IntersectRect(mBufferRect, destBufferRect);
 
         nsIntRect srcRect(overlap), dstRect(overlap);
         srcRect.MoveBy(- mBufferRect.TopLeft() + mBufferRotation);
+        dstRect.MoveBy(- destBufferRect.TopLeft());
+        
+        if (mBufferRotation != nsIntPoint(0, 0)) {
+          // If mBuffer is rotated, then BlitTextureImage will only be copying the bottom-right section
+          // of the buffer. We need to invalidate the remaining sections so that they get redrawn too.
+          // Alternatively we could teach BlitTextureImage to rearrange the rotated segments onto
+          // the new buffer.
+          
+          // When the rotated buffer is reorganised, the bottom-right section will be drawn in the top left.
+          // Find the point where this content ends.
+          nsIntPoint rotationPoint(mBufferRect.x + mBufferRect.width - mBufferRotation.x, 
+                                   mBufferRect.y + mBufferRect.height - mBufferRotation.y);
 
-        nsIntRect srcRectDrawTopRight(srcRect);
-        nsIntRect srcRectDrawTopLeft(srcRect);
-        nsIntRect srcRectDrawBottomLeft(srcRect);
-        // transform into the different quadrants
-        srcRectDrawTopRight  .MoveBy(-nsIntPoint(0, mBufferRect.height));
-        srcRectDrawTopLeft   .MoveBy(-nsIntPoint(mBufferRect.width, mBufferRect.height));
-        srcRectDrawBottomLeft.MoveBy(-nsIntPoint(mBufferRect.width, 0));
+          // The buffer looks like:
+          //  ______
+          // |1  |2 |  Where the center point is offset by mBufferRotation from the top-left corner.
+          // |___|__|
+          // |3  |4 |
+          // |___|__|
+          //
+          // This is drawn to the screen as:
+          //  ______
+          // |4  |3 |  Where the center point is { width - mBufferRotation.x, height - mBufferRotation.y } from
+          // |___|__|  from the top left corner - rotationPoint. Since only quadrant 4 will actually be copied, 
+          // |2  |1 |  we need to invalidate the others.
+          // |___|__|
+          //
+          // Quadrants 2 and 1
+          nsIntRect bottom(mBufferRect.x, rotationPoint.y, mBufferRect.width, mBufferRotation.y);
+          // Quadrant 3
+          nsIntRect topright(rotationPoint.x, mBufferRect.y, mBufferRotation.x, rotationPoint.y - mBufferRect.y);
 
-        // Intersect with the quadrant
-        srcRect               = srcRect              .Intersect(srcBufferSpaceBottomRight);
-        srcRectDrawTopRight   = srcRectDrawTopRight  .Intersect(srcBufferSpaceTopRight);
-        srcRectDrawTopLeft    = srcRectDrawTopLeft   .Intersect(srcBufferSpaceTopLeft);
-        srcRectDrawBottomLeft = srcRectDrawBottomLeft.Intersect(srcBufferSpaceBottomLeft);
-
-        dstRect = srcRect;
-        nsIntRect dstRectDrawTopRight(srcRectDrawTopRight);
-        nsIntRect dstRectDrawTopLeft(srcRectDrawTopLeft);
-        nsIntRect dstRectDrawBottomLeft(srcRectDrawBottomLeft);
-
-        // transform back to src buffer space
-        dstRect              .MoveBy(-mBufferRotation);
-        dstRectDrawTopRight  .MoveBy(-mBufferRotation + nsIntPoint(0, mBufferRect.height));
-        dstRectDrawTopLeft   .MoveBy(-mBufferRotation + nsIntPoint(mBufferRect.width, mBufferRect.height));
-        dstRectDrawBottomLeft.MoveBy(-mBufferRotation + nsIntPoint(mBufferRect.width, 0));
-
-        // transform back to draw coordinates
-        dstRect              .MoveBy(mBufferRect.TopLeft());
-        dstRectDrawTopRight  .MoveBy(mBufferRect.TopLeft());
-        dstRectDrawTopLeft   .MoveBy(mBufferRect.TopLeft());
-        dstRectDrawBottomLeft.MoveBy(mBufferRect.TopLeft());
-
-        // transform to destBuffer space
-        dstRect              .MoveBy(-destBufferRect.TopLeft());
-        dstRectDrawTopRight  .MoveBy(-destBufferRect.TopLeft());
-        dstRectDrawTopLeft   .MoveBy(-destBufferRect.TopLeft());
-        dstRectDrawBottomLeft.MoveBy(-destBufferRect.TopLeft());
+          if (!bottom.IsEmpty()) {
+            nsIntRegion temp;
+            temp.And(destBufferRect, bottom);
+            result.mRegionToDraw.Or(result.mRegionToDraw, temp);
+          }
+          if (!topright.IsEmpty()) {
+            nsIntRegion temp;
+            temp.And(destBufferRect, topright);
+            result.mRegionToDraw.Or(result.mRegionToDraw, temp);
+          }
+        }
 
         destBuffer->Resize(destBufferRect.Size());
 
         gl()->BlitTextureImage(mTexImage, srcRect,
                                destBuffer, dstRect);
-        if (mBufferRotation != nsIntPoint(0, 0)) {
-          // Draw the remaining quadrants. We call BlitTextureImage 3 extra
-          // times instead of doing a single draw call because supporting that
-          // with a tiled source is quite tricky.
-          if (!srcRectDrawTopRight.IsEmpty())
-            gl()->BlitTextureImage(mTexImage, srcRectDrawTopRight,
-                                   destBuffer, dstRectDrawTopRight);
-          if (!srcRectDrawTopLeft.IsEmpty())
-            gl()->BlitTextureImage(mTexImage, srcRectDrawTopLeft,
-                                   destBuffer, dstRectDrawTopLeft);
-          if (!srcRectDrawBottomLeft.IsEmpty())
-            gl()->BlitTextureImage(mTexImage, srcRectDrawBottomLeft,
-                                   destBuffer, dstRectDrawBottomLeft);
-        }
         destBuffer->MarkValid();
         if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
           destBufferOnWhite->Resize(destBufferRect.Size());
           gl()->BlitTextureImage(mTexImageOnWhite, srcRect,
                                  destBufferOnWhite, dstRect);
-          if (mBufferRotation != nsIntPoint(0, 0)) {
-            // draw the remaining quadrants
-            if (!srcRectDrawTopRight.IsEmpty())
-              gl()->BlitTextureImage(mTexImage, srcRectDrawTopRight,
-                                     destBuffer, dstRectDrawTopRight);
-            if (!srcRectDrawTopLeft.IsEmpty())
-              gl()->BlitTextureImage(mTexImage, srcRectDrawTopLeft,
-                                     destBuffer, dstRectDrawTopLeft);
-            if (!srcRectDrawBottomLeft.IsEmpty())
-              gl()->BlitTextureImage(mTexImage, srcRectDrawBottomLeft,
-                                     destBuffer, dstRectDrawBottomLeft);
-          }
-
           destBufferOnWhite->MarkValid();
         }
       } else {

@@ -38,8 +38,7 @@ HashId(jsid id)
     return mozilla::HashGeneric(JSID_BITS(id));
 }
 
-template<>
-struct DefaultHasher<jsid>
+struct JsidHasher
 {
     typedef jsid Lookup;
     static HashNumber hash(const Lookup &l) {

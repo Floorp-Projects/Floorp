@@ -13,10 +13,9 @@ to the hardware. This thread is not created until playback starts, but
 currently is not destroyed when paused, only when playback ends.
 
 The decoder owns the resources for downloading the media file, and the
-high level state. It holds an owning reference to the state machine
-(a subclass of nsDecoderStateMachine; nsBuiltinDecoderStateMachine) that
+high level state. It holds an owning reference to the state machine that
 owns all the resources related to decoding data, and manages the low level
-decoding operations and A/V sync. 
+decoding operations and A/V sync.
 
 Each state machine runs on the shared state machine thread. Every time some
 action is required for a state machine, it is scheduled to run on the shared
@@ -35,7 +34,7 @@ The player states are the states requested by the client through the
 DOM API.  They represent the desired state of the player, while the
 decoder's state represents the actual state of the decoder.
 
-The high level state of the player is maintained via a PlayState value. 
+The high level state of the player is maintained via a PlayState value.
 It can have the following states:
 
 START
@@ -60,7 +59,7 @@ machine object to cause it to behave as required by the play state.
 State transitions will likely schedule the state machine to run to
 affect the change.
 
-An implementation of the nsDecoderStateMachine class is the event
+An implementation of the nsBuiltinDecoderStateMachine class is the event
 that gets dispatched to the state machine thread. Each time the event is run,
 the state machine must cycle the state machine once, and then return.
 
@@ -91,7 +90,7 @@ SHUTDOWN
 The following result in state transitions.
 
 Shutdown()
-  Clean up any resources the nsDecoderStateMachine owns.
+  Clean up any resources the nsBuiltinDecoderStateMachine owns.
 Play()
   Start decoding and playback of media data.
 Buffer
@@ -127,7 +126,7 @@ DECODING             |          |  |              |        |
                                 ------------>-----|
 
 The following represents the states that the nsBuiltinDecoder object
-can be in, and the valid states the nsDecoderStateMachine can be in at that
+can be in, and the valid states the nsBuiltinDecoderStateMachine can be in at that
 time:
 
 player LOADING   decoder DECODING_METADATA
@@ -141,7 +140,7 @@ The general sequence of events is:
 
 1) The video element calls Load on nsMediaDecoder. This creates the
    state machine and starts the channel for downloading the
-   file. It instantiates and schedules the nsDecoderStateMachine. The
+   file. It instantiates and schedules the nsBuiltinDecoderStateMachine. The
    high level LOADING state is entered, which results in the decode
    thread being created and starting to decode metadata. These are
    the headers that give the video size, framerate, etc. Load() returns
@@ -193,7 +192,6 @@ destroying the nsBuiltinDecoder object.
 #include "gfxRect.h"
 #include "MediaResource.h"
 #include "nsMediaDecoder.h"
-#include "nsHTMLMediaElement.h"
 #include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
@@ -205,128 +203,11 @@ class Image;
 typedef mozilla::layers::Image Image;
 
 class nsAudioStream;
+class nsBuiltinDecoderStateMachine;
 
 static inline bool IsCurrentThread(nsIThread* aThread) {
   return NS_GetCurrentThread() == aThread;
 }
-
-// Decoder backends must implement this class to perform the codec
-// specific parts of decoding the video/audio format.
-class nsDecoderStateMachine : public nsRunnable
-{
-public:
-  // Enumeration for the valid decoding states
-  enum State {
-    DECODER_STATE_DECODING_METADATA,
-    DECODER_STATE_DECODING,
-    DECODER_STATE_SEEKING,
-    DECODER_STATE_BUFFERING,
-    DECODER_STATE_COMPLETED,
-    DECODER_STATE_SHUTDOWN
-  };
-
-  // Initializes the state machine, returns NS_OK on success, or
-  // NS_ERROR_FAILURE on failure.
-  virtual nsresult Init(nsDecoderStateMachine* aCloneDonor) = 0;
-
-  // Return the current decode state. The decoder monitor must be
-  // obtained before calling this.
-  virtual State GetState() = 0;
-
-  // Set the audio volume. The decoder monitor must be obtained before
-  // calling this.
-  virtual void SetVolume(double aVolume) = 0;
-  virtual void SetAudioCaptured(bool aCapture) = 0;
-
-  virtual void Shutdown() = 0;
-
-  // Called from the main thread to get the duration. The decoder monitor
-  // must be obtained before calling this. It is in units of microseconds.
-  virtual int64_t GetDuration() = 0;
-
-  // Called from the main thread to set the duration of the media resource
-  // if it is able to be obtained via HTTP headers. Called from the 
-  // state machine thread to set the duration if it is obtained from the
-  // media metadata. The decoder monitor must be obtained before calling this.
-  // aDuration is in microseconds.
-  virtual void SetDuration(int64_t aDuration) = 0;
-
-  // Called while decoding metadata to set the end time of the media
-  // resource. The decoder monitor must be obtained before calling this.
-  // aEndTime is in microseconds.
-  virtual void SetEndTime(int64_t aEndTime) = 0;
-
-  // Set the media fragment end time. aEndTime is in microseconds.
-  virtual void SetFragmentEndTime(int64_t aEndTime) = 0;
-
-  // Functions used by assertions to ensure we're calling things
-  // on the appropriate threads.
-  virtual bool OnDecodeThread() const = 0;
-
-  // Returns true if the current thread is the state machine thread.
-  virtual bool OnStateMachineThread() const = 0;
-
-  virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus() = 0;
-
-  // Cause state transitions. These methods obtain the decoder monitor
-  // to synchronise the change of state, and to notify other threads
-  // that the state has changed.
-  virtual void Play() = 0;
-
-  // Seeks to aTime in seconds
-  virtual void Seek(double aTime) = 0;
-
-  // Returns the current playback position in seconds.
-  // Called from the main thread to get the current frame time. The decoder
-  // monitor must be obtained before calling this.
-  virtual double GetCurrentTime() const = 0;
-
-  // Clear the flag indicating that a playback position change event
-  // is currently queued. This is called from the main thread and must
-  // be called with the decode monitor held.
-  virtual void ClearPositionChangeFlag() = 0;
-
-  // Called from the main thread to set whether the media resource can
-  // seek into unbuffered ranges. The decoder monitor must be obtained
-  // before calling this.
-  virtual void SetSeekable(bool aSeekable) = 0;
-
-  // Returns true if the media resource can seek into unbuffered ranges,
-  // as set by SetSeekable(). The decoder monitor must be obtained before
-  // calling this.
-  virtual bool IsSeekable() = 0;
-
-  // Update the playback position. This can result in a timeupdate event
-  // and an invalidate of the frame being dispatched asynchronously if
-  // there is no such event currently queued.
-  // Only called on the decoder thread. Must be called with
-  // the decode monitor held.
-  virtual void UpdatePlaybackPosition(int64_t aTime) = 0;
-
-  virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
-
-  // Return true if the media is seekable using only buffered ranges.
-  virtual bool IsSeekableInBufferedRanges() = 0;
-
-  virtual int64_t VideoQueueMemoryInUse() = 0;
-  virtual int64_t AudioQueueMemoryInUse() = 0;
-
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) = 0;
-
-  // Causes the state machine to switch to buffering state, and to
-  // immediately stop playback and buffer downloaded data. Must be called
-  // with the decode monitor held. Called on the state machine thread and
-  // the main thread.
-  virtual void StartBuffering() = 0;
-
-  // Sets the current size of the framebuffer used in MozAudioAvailable events.
-  // Called on the state machine thread and the main thread.
-  virtual void SetFrameBufferLength(uint32_t aLength) = 0;
-
-  // Called when a "MozAudioAvailable" event listener is added to the media
-  // element. Called on the main thread.
-  virtual void NotifyAudioAvailableListener() = 0;
-};
 
 class nsBuiltinDecoder : public nsMediaDecoder
 {
@@ -350,13 +231,13 @@ public:
 
   nsBuiltinDecoder();
   ~nsBuiltinDecoder();
-  
-  virtual bool Init(nsHTMLMediaElement* aElement);
+
+  virtual bool Init(mozilla::MediaDecoderOwner* aOwner);
 
   // This method must be called by the owning object before that
   // object disposes of this decoder object.
   virtual void Shutdown();
-  
+
   virtual double GetCurrentTime();
 
   virtual nsresult Load(MediaResource* aResource,
@@ -367,7 +248,7 @@ public:
   nsresult OpenResource(MediaResource* aResource,
                         nsIStreamListener** aStreamListener);
 
-  virtual nsDecoderStateMachine* CreateStateMachine() = 0;
+  virtual nsBuiltinDecoderStateMachine* CreateStateMachine() = 0;
 
   // Initialize state machine and schedule it.
   nsresult InitializeStateMachine(nsMediaDecoder* aCloneDonor);
@@ -398,7 +279,7 @@ public:
     ~DecodedStreamData();
 
     // The following group of fields are protected by the decoder's monitor
-    // and can be read or written on any thread.    
+    // and can be read or written on any thread.
     int64_t mLastAudioPacketTime; // microseconds
     int64_t mLastAudioPacketEndTime; // microseconds
     // Count of audio frames written to the stream
@@ -558,44 +439,21 @@ public:
 
   virtual bool OnStateMachineThread() const;
 
-  virtual bool OnDecodeThread() const {
-    return mDecoderStateMachine->OnDecodeThread();
-  }
+  virtual bool OnDecodeThread() const;
 
   // Returns the monitor for other threads to synchronise access to
   // state.
-  virtual ReentrantMonitor& GetReentrantMonitor() {
-    return mReentrantMonitor.GetReentrantMonitor();
-  }
+  virtual ReentrantMonitor& GetReentrantMonitor();
 
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
-  virtual nsresult GetBuffered(nsTimeRanges* aBuffered) {
-    if (mDecoderStateMachine) {
-      return mDecoderStateMachine->GetBuffered(aBuffered);
-    }
-    return NS_ERROR_FAILURE;
-  }
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered);
 
-  virtual int64_t VideoQueueMemoryInUse() {
-    if (mDecoderStateMachine) {
-      return mDecoderStateMachine->VideoQueueMemoryInUse();
-    }
-    return 0;
-  }
+  virtual int64_t VideoQueueMemoryInUse();
 
-  virtual int64_t AudioQueueMemoryInUse() {
-    if (mDecoderStateMachine) {
-      return mDecoderStateMachine->AudioQueueMemoryInUse();
-    }
-    return 0;
-  }
+  virtual int64_t AudioQueueMemoryInUse();
 
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) {
-    if (mDecoderStateMachine) {
-      mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
-    }
-  }
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.
   // The new size must be between 512 and 16384.
@@ -624,15 +482,11 @@ public:
   double ComputePlaybackRate(bool* aReliable);
 
   // Make the decoder state machine update the playback position. Called by
-  // the reader on the decoder thread (Assertions for this checked by 
+  // the reader on the decoder thread (Assertions for this checked by
   // mDecoderStateMachine). This must be called with the decode monitor
   // held.
-  void UpdatePlaybackPosition(int64_t aTime)
-  {
-    mDecoderStateMachine->UpdatePlaybackPosition(aTime);
-  }
-
-  /****** 
+  void UpdatePlaybackPosition(int64_t aTime);
+  /******
    * The following methods must only be called on the main
    * thread.
    ******/
@@ -651,7 +505,7 @@ public:
   void MetadataLoaded(uint32_t aChannels,
                       uint32_t aRate,
                       bool aHasAudio,
-                      const nsHTMLMediaElement::MetadataTags* aTags);
+                      const MetadataTags* aTags);
 
   // Called when the first frame has been loaded.
   // Call on the main thread only.
@@ -697,14 +551,10 @@ public:
   void UpdatePlaybackOffset(int64_t aOffset);
 
   // Provide access to the state machine object
-  nsDecoderStateMachine* GetStateMachine() { return mDecoderStateMachine; }
-
-  // Return the current decode state. The decoder monitor must be
-  // obtained before calling this.
-  nsDecoderStateMachine::State GetDecodeState() { return mDecoderStateMachine->GetState(); }
+  nsBuiltinDecoderStateMachine* GetStateMachine();
 
   // Drop reference to state machine.  Only called during shutdown dance.
-  virtual void ReleaseStateMachine() { mDecoderStateMachine = nullptr; }
+  virtual void ReleaseStateMachine();
 
    // Called when a "MozAudioAvailable" event listener is added to the media
    // element. Called on the main thread.
@@ -774,7 +624,7 @@ public:
   // is synchronised on a monitor. The lifetime of this object is
   // after mPlayState is LOADING and before mPlayState is SHUTDOWN. It
   // is safe to access it during this period.
-  nsCOMPtr<nsDecoderStateMachine> mDecoderStateMachine;
+  nsCOMPtr<nsBuiltinDecoderStateMachine> mDecoderStateMachine;
 
   // Media data resource.
   nsAutoPtr<MediaResource> mResource;

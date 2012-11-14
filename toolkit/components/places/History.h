@@ -48,14 +48,6 @@ public:
   History();
 
   /**
-   * Notifies about the visited status of a given URI.
-   *
-   * @param aURI
-   *        The URI to notify about.
-   */
-  void NotifyVisited(nsIURI* aURI);
-
-  /**
    * Obtains the statement to use to check if a URI is visited or not.
    */
   mozIStorageAsyncStatement* GetIsVisitedStatement();

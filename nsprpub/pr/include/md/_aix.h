@@ -55,6 +55,8 @@
 
 /* Timer operations */
 #if defined(AIX_TIMERS)
+#define _MD_INTERVAL_INIT()
+
 extern PRIntervalTime _MD_AixGetInterval(void);
 #define _MD_GET_INTERVAL _MD_AixGetInterval
 
@@ -62,8 +64,7 @@ extern PRIntervalTime _MD_AixIntervalPerSec(void);
 #define _MD_INTERVAL_PER_SEC _MD_AixIntervalPerSec
 
 #else  /* defined(AIX_TIMERS) */
-#define _MD_GET_INTERVAL        _PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC    _PR_UNIX_TicksPerSecond
+#define _MD_INTERVAL_USE_GTOD
 #endif  /* defined(AIX_TIMERS) */
 
 #ifdef AIX_HAVE_ATOMIC_OP_H

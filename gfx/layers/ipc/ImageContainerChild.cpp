@@ -589,10 +589,29 @@ private:
   bool mAllocated;
 };
 
-already_AddRefed<Image> ImageContainerChild::CreateImage()
+already_AddRefed<Image> ImageContainerChild::CreateImage(const uint32_t *aFormats,
+                                                         uint32_t aNumFormats)
 {
-  nsRefPtr<Image> img = new SharedPlanarYCbCrImage(this);
-  return img.forget();
+  nsRefPtr<Image> img;
+#ifdef MOZ_WIDGET_GONK
+  for (uint32_t i = 0; i < aNumFormats; i++) {
+    switch (aFormats[i]) {
+      case PLANAR_YCBCR:
+#endif
+        img = new SharedPlanarYCbCrImage(this);
+        return img.forget();
+#ifdef MOZ_WIDGET_GONK
+      case GONK_IO_SURFACE:
+        img = new GonkIOSurfaceImage();
+        return img.forget();
+      case GRALLOC_PLANAR_YCBCR:
+        img = new GrallocPlanarYCbCrImage();
+        return img.forget();
+    }
+  }
+
+  return nullptr;
+#endif
 }
 
 SharedImage* ImageContainerChild::AsSharedImage(Image* aImage)

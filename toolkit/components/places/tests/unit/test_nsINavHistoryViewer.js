@@ -173,7 +173,7 @@ add_test(function check_history_query() {
     do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
     result.removeObserver(resultObserver);
     resultObserver.reset();
-    waitForAsyncUpdates(run_next_test);
+    promiseAsyncUpdates().then(run_next_test);
   });
 });
 
@@ -243,7 +243,7 @@ add_test(function check_bookmarks_query() {
   do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
   result.removeObserver(resultObserver);
   resultObserver.reset();
-  waitForAsyncUpdates(run_next_test);
+  promiseAsyncUpdates().then(run_next_test);
 });
 
 add_test(function check_mixed_query() {
@@ -278,5 +278,5 @@ add_test(function check_mixed_query() {
   do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
   result.removeObserver(resultObserver);
   resultObserver.reset();
-  waitForAsyncUpdates(run_next_test);
+  promiseAsyncUpdates().then(run_next_test);
 });

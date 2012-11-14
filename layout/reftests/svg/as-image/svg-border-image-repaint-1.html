@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=809181
+-->
+<html class="reftest-wait">
+  <head>
+    <script>
+      document.addEventListener('MozReftestInvalidate', function() {
+        document.getElementById('test').style.opacity = '1.0';
+        document.documentElement.removeAttribute('class');
+      }, false);
+    </script>
+  </head>
+  <body>
+    <iframe id="test" src="svg-border-image-repaint-iframe.html" style="opacity: 0.5"></iframe>
+  </body>
+</html>

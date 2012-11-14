@@ -3172,7 +3172,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "capitalize", "uppercase", "lowercase" ],
+		other_values: [ "capitalize", "uppercase", "lowercase", "full-width" ],
 		invalid_values: []
 	},
 	"top": {
@@ -4106,6 +4106,7 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 			"0 1",
 			"0.5",
 			"1.2 3.4",
+			"0 0 0",
 			"0 0 0px",
 			"0px 0 0",
 			"5px 0 0",
@@ -4120,7 +4121,6 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 			"-0"
 		],
 		invalid_values: [
-			"0 0 0",
 			"1 2px 3",
 			"1 auto 3",
 			"1px 2 3px",

@@ -3,13 +3,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "nsMediaPluginReader.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTimeRanges.h"
 #include "MediaResource.h"
 #include "VideoUtils.h"
-#include "nsMediaPluginReader.h"
 #include "nsMediaPluginDecoder.h"
 #include "nsMediaPluginHost.h"
+#include "nsBuiltinDecoderStateMachine.h"
 
 using namespace mozilla;
 
@@ -36,7 +37,7 @@ nsresult nsMediaPluginReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 }
 
 nsresult nsMediaPluginReader::ReadMetadata(nsVideoInfo* aInfo,
-                                           nsHTMLMediaElement::MetadataTags** aTags)
+                                           MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 

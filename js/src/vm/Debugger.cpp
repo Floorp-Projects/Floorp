@@ -2475,6 +2475,8 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+        c->scheduledForDestruction = false;
+
         GlobalObject *global = c->maybeGlobal();
         if (global) {
             Value globalValue(ObjectValue(*global));

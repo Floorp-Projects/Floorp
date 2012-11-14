@@ -26,7 +26,7 @@ let historyObserver = {
     {
       Services.obs.removeObserver(observeExpiration, aTopic, false);
 
-      waitForAsyncUpdates(function () {
+      promiseAsyncUpdates().then(function () {
         // Check that frecency for not cleared items (bookmarks) has been converted
         // to -MAX(visit_count, 1), so we will be able to recalculate frecency
         // starting from most frecent bookmarks.
@@ -160,8 +160,5 @@ function continue_test() {
   PlacesUtils.history.addVisit(uri("http://frecency.mozilla.org/"), Date.now(),
                                null, Ci.nsINavHistoryService.TRANSITION_LINK,
                                false, 0);
-  waitForFrecency("http://frecency.mozilla.org/", function (aFrecency) aFrecency > 0,
-                  function () {
-                    PlacesUtils.bhistory.removeAllPages();
-                  }, this, []);
+  promiseAsyncUpdates().then(function () PlacesUtils.bhistory.removeAllPages());
 }

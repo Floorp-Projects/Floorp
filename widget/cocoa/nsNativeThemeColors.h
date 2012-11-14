@@ -24,14 +24,6 @@ enum ColorName {
   toolbarBottomBorderGrey,
 };
 
-static const int sLeopardThemeColors[][2] = {
-  /* { active window, inactive window } */
-  // toolbar:
-  { 0xC0, 0xE2 }, // top separator line
-  { 0x96, 0xCA }, // fill color
-  { 0x42, 0x89 }, // bottom separator line
-};
-
 static const int sSnowLeopardThemeColors[][2] = {
   /* { active window, inactive window } */
   // toolbar:
@@ -54,10 +46,7 @@ static int NativeGreyColorAsInt(ColorName name, BOOL isMain)
   if (nsCocoaFeatures::OnLionOrLater())
     return sLionThemeColors[name][isMain ? 0 : 1];
 
-  if (nsCocoaFeatures::OnSnowLeopardOrLater())
-    return sSnowLeopardThemeColors[name][isMain ? 0 : 1];
-
-  return sLeopardThemeColors[name][isMain ? 0 : 1];
+  return sSnowLeopardThemeColors[name][isMain ? 0 : 1];
 }
 
 __attribute__((unused))

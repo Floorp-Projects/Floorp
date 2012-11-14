@@ -440,6 +440,8 @@ XULMenupopupAccessible::
 
   // May be the anonymous <menupopup> inside <menulist> (a combobox)
   mSelectControl = do_QueryInterface(mContent->GetParent());
+  if (!mSelectControl)
+    mFlags &= ~eSelectAccessible;
 }
 
 uint64_t

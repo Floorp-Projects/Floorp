@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Sun Oct  7 17:20:27 2012 from UCD data files with version info:
+ * Created on Sun Nov  4 13:48:45 2012 from UCD data files with version info:
  *
 
 # Date: 2012-09-24, 22:40:00 GMT [KW]

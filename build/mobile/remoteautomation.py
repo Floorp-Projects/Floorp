@@ -13,6 +13,10 @@ import subprocess
 from automation import Automation
 from devicemanager import NetworkTools, DMError
 
+# signatures for logcat messages that we don't care about much
+fennecLogcatFilters = [ "The character encoding of the HTML document was not declared",
+                           "Use of Mutation Events is deprecated. Use MutationObserver instead." ]
+
 class RemoteAutomation(Automation):
     _devicemanager = None
 

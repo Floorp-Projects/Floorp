@@ -65,11 +65,6 @@ private:
                                           // that we're restricted to using.
                                           // Otherwise, this is ignored.
 
-  nsIntSize      mLastRenderedSize;       // The viewport-size that we've
-                                          // most recently passed to
-                                          // mSVGDocumentWrapper as its
-                                          // viewport-bounds.
-
   bool           mIsInitialized:1;        // Have we been initalized?
   bool           mIsFullyLoaded:1;        // Has OnStopRequest been called?
   bool           mIsDrawing:1;            // Are we currently drawing?

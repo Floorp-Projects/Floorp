@@ -12,7 +12,6 @@
 
 #include "nsIAccessibleTypes.h"
 #include "nsINode.h"
-#include "a11yGeneric.h"
 
 class nsAccessNode;
 class DocAccessible;

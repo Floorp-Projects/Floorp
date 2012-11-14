@@ -26,7 +26,7 @@ var gTests = [
                          false,
                          0);
       }
-      waitForAsyncUpdates(this.continue_run, this);
+      promiseAsyncUpdates().then(this.continue_run, this);
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -54,7 +54,7 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      waitForAsyncUpdates(function () {
+      promiseAsyncUpdates().then(function () {
         print("Frecency should be positive.")
         do_check_true(frecencyForUrl(TEST_URI) > 0);
         run_next_test();
@@ -81,7 +81,7 @@ var gTests = [
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
 
-      waitForAsyncUpdates(this.continue_run, this);
+      promiseAsyncUpdates().then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -109,7 +109,7 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      waitForAsyncUpdates(function () {
+      promiseAsyncUpdates().then(function () {
         print("Frecency should be positive.")
         do_check_true(frecencyForUrl(TEST_URI) > 0);
         run_next_test();
@@ -129,7 +129,7 @@ var gTests = [
                          false,
                          0);
       }
-      waitForAsyncUpdates(this.continue_run, this);
+      promiseAsyncUpdates().then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -158,7 +158,7 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      waitForAsyncUpdates(function () {
+      promiseAsyncUpdates().then(function () {
         print("Frecency should be positive.")
         do_check_true(frecencyForUrl(TEST_URI) > 0);
         run_next_test();
@@ -184,7 +184,7 @@ var gTests = [
                            TEST_URI,
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
-      waitForAsyncUpdates(this.continue_run, this);
+      promiseAsyncUpdates().then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -213,7 +213,7 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      waitForAsyncUpdates(function () {
+      promiseAsyncUpdates().then(function () {
         print("Frecency should be positive.")
         do_check_true(frecencyForUrl(TEST_URI) > 0);
         run_next_test();
@@ -233,7 +233,7 @@ var gTests = [
                          false,
                          0);
       }
-      waitForAsyncUpdates(this.continue_run, this);
+      promiseAsyncUpdates().then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -272,7 +272,7 @@ var gTests = [
                          false,
                          0);
       }
-      waitForAsyncUpdates(this.continue_run, this);
+      promiseAsyncUpdates().then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -296,7 +296,7 @@ var gTests = [
       do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                        isVisited(PLACE_URI));
 
-      waitForAsyncUpdates(function () {
+      promiseAsyncUpdates().then(function () {
         print("Frecency should be zero.")
         do_check_eq(frecencyForUrl(PLACE_URL), 0);
         run_next_test();
@@ -322,7 +322,7 @@ var gTests = [
                            TEST_URI,
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
-      waitForAsyncUpdates(this.continue_run, this);
+      promiseAsyncUpdates().then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -349,7 +349,7 @@ var gTests = [
       print("nsINavBookmarksService.isBookmarked should return true.");
       do_check_true(bmsvc.isBookmarked(TEST_URI));
 
-      waitForAsyncUpdates(function () {
+      promiseAsyncUpdates().then(function () {
         print("Frecency should be negative.")
         do_check_true(frecencyForUrl(TEST_URI) < 0);
         run_next_test();
@@ -372,7 +372,7 @@ var gTests = [
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
 
-      waitForAsyncUpdates(function() {
+      promiseAsyncUpdates().then(function() {
         do_log_info("URI should still exist in moz_places.");
         do_check_true(page_in_database(TEST_URL));
         do_log_info("Frecency should be zero.")
@@ -395,7 +395,7 @@ function run_next_test() {
   if (gTests.length) {
     let test = gTests.shift();
     print("\n ***Test: " + test.desc);
-    waitForClearHistory(function() {
+    promiseClearHistory().then(function() {
       remove_all_bookmarks();
       DBConn().executeSimpleSQL("DELETE FROM moz_places");
       test.run.call(test);

@@ -32,6 +32,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsFocusManager.h"
 
+using namespace mozilla;
+
 nsXTFElementWrapper::nsXTFElementWrapper(already_AddRefed<nsINodeInfo> aNodeInfo,
                                          nsIXTFElement* aXTFElement)
     : nsXTFElementWrapperBase(aNodeInfo),
@@ -592,67 +594,65 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 //----------------------------------------------------------------------
 // nsIDOMElement methods:
 
-NS_IMETHODIMP
-nsXTFElementWrapper::GetAttribute(const nsAString& aName, nsAString& aReturn)
+void
+nsXTFElementWrapper::GetAttribute(const nsAString& aName, nsString& aReturn)
 {
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
   if (name) {
     GetAttr(name->NamespaceID(), name->LocalName(), aReturn);
-    return NS_OK;
+    return;
   }
 
   // Maybe this attribute is handled by our inner element:
   if (mAttributeHandler) {
     nsresult rv = nsContentUtils::CheckQName(aName, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return; // XXX
+    }
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
     if (HandledByInner(nameAtom)) {
       GetAttr(kNameSpaceID_None, nameAtom, aReturn);
-      return NS_OK;
+      return;
     }
   }
   
   SetDOMStringToNull(aReturn);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXTFElementWrapper::RemoveAttribute(const nsAString& aName)
+void
+nsXTFElementWrapper::RemoveAttribute(const nsAString& aName,
+                                     ErrorResult& aError)
 {
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
   if (name) {
     nsAttrName tmp(*name);
-    return UnsetAttr(name->NamespaceID(), name->LocalName(), true);
+    aError = UnsetAttr(name->NamespaceID(), name->LocalName(), true);
+    return;
   }
 
   // Maybe this attribute is handled by our inner element:
   if (mAttributeHandler) {
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
-    return UnsetAttr(kNameSpaceID_None, nameAtom, true);
+    aError = UnsetAttr(kNameSpaceID_None, nameAtom, true);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXTFElementWrapper::HasAttribute(const nsAString& aName, bool* aReturn)
+bool
+nsXTFElementWrapper::HasAttribute(const nsAString& aName) const
 {
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
   if (name) {
-    *aReturn = true;
-    return NS_OK;
+    return true;
   }
   
   // Maybe this attribute is handled by our inner element:
   if (mAttributeHandler) {
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
-    *aReturn = HasAttr(kNameSpaceID_None, nameAtom);
-    return NS_OK;
+    return HasAttr(kNameSpaceID_None, nameAtom);
   }
 
-  *aReturn = false;
-  return NS_OK;
+  return false;
 }
 
 

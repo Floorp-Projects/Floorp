@@ -22,7 +22,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
     Services.obs.removeObserver(waitImport, "bookmarks-restore-success");
     // Delay to test eventual smart bookmarks creation.
     do_execute_soon(function () {
-      waitForAsyncUpdates(aCallback);
+      promiseAsyncUpdates().then(aCallback);
     });
   }, "bookmarks-restore-success", false);
 }

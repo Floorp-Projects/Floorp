@@ -271,7 +271,9 @@ interface TestExampleInterface {
   void passUnionWithArrayBuffer((ArrayBuffer or long) arg);
   void passUnionWithString((DOMString or object) arg);
   //void passUnionWithEnum((TestEnum or object) arg);
-  void passUnionWithCallback((TestCallback or long) arg);
+  // Trying to use a callback in a union won't include the test
+  // headers, unfortunately, so won't compile.
+  //  void passUnionWithCallback((TestCallback or long) arg);
   void passUnionWithObject((object or long) arg);
   //void passUnionWithDict((Dict or long) arg);
 
@@ -314,6 +316,20 @@ interface TestExampleInterface {
   [PutForwards=writableByte] readonly attribute TestExampleInterface putForwardsAttr;
   [PutForwards=writableByte, LenientThis] readonly attribute TestExampleInterface putForwardsAttr2;
   [PutForwards=writableByte, ChromeOnly] readonly attribute TestExampleInterface putForwardsAttr3;
+  [Throws] void throwingMethod();
+  [Throws] attribute boolean throwingAttr;
+  [GetterThrows] attribute boolean throwingGetterAttr;
+  [SetterThrows] attribute boolean throwingSetterAttr;
 
   // If you add things here, add them to TestCodeGen as well
+};
+
+interface TestExampleProxyInterface {
+  getter long longIndexedGetter(unsigned long ix);
+  deleter void (unsigned long ix);
+  setter creator void longIndexedSetter(unsigned long y, long z);
+  stringifier DOMString myStringifier();
+  getter short shortNameGetter(DOMString nom);
+  deleter void (DOMString nomnom);
+  setter creator void shortNamedSetter(DOMString me, short value);
 };

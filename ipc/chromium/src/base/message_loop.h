@@ -509,6 +509,7 @@ class MessageLoopForIO : public MessageLoop {
   typedef base::MessagePumpLibevent::Watcher Watcher;
   typedef base::MessagePumpLibevent::FileDescriptorWatcher
       FileDescriptorWatcher;
+  typedef base::LineWatcher LineWatcher;
 
   enum Mode {
     WATCH_READ = base::MessagePumpLibevent::WATCH_READ,

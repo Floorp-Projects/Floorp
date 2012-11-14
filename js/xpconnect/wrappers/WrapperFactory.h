@@ -59,6 +59,7 @@ class WrapperFactory {
 
     // Rewrap an object that is about to cross compartment boundaries.
     static JSObject *Rewrap(JSContext *cx,
+                            JSObject *existing,
                             JSObject *obj,
                             JSObject *wrappedProto,
                             JSObject *parent,

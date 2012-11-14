@@ -333,6 +333,9 @@ template<typename T>
 void WebGLElementArrayCacheTree<T>::Invalidate(size_t firstByte, size_t lastByte)
 {
   lastByte = NS_MIN(lastByte, mNumLeaves * sElementsPerLeaf * sizeof(T) - 1);
+  if (firstByte > lastByte) {
+    return;
+  }
 
   size_t firstLeaf = LeafForByte(firstByte);
   size_t lastLeaf = LeafForByte(lastByte);

@@ -232,11 +232,11 @@ IDBRequest::GetReadyState(nsAString& aReadyState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mHaveResultOrErrorCode) {
-    aReadyState.AssignLiteral("done");
+  if (IsPending()) {
+    aReadyState.AssignLiteral("pending");
   }
   else {
-    aReadyState.AssignLiteral("pending");
+    aReadyState.AssignLiteral("done");
   }
 
   return NS_OK;

@@ -465,7 +465,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   // or anything like that?  We might need to, per the letter of the reflow
   // protocol, but things seem to work fine without it...  Is that just an
   // implementation detail of nsHTMLScrollFrame that we're depending on?
-  nsHTMLScrollFrame::DidReflow(aPresContext, &state, aStatus);
+  nsHTMLScrollFrame::DidReflow(aPresContext, &state,
+                               NS_FRAME_REFLOW_FINISHED);
 
   // Now compute the height we want to have
   nscoord computedHeight = CalcIntrinsicHeight(HeightOfARow(), length); 
@@ -546,7 +547,8 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
   // or anything like that?  We might need to, per the letter of the reflow
   // protocol, but things seem to work fine without it...  Is that just an
   // implementation detail of nsHTMLScrollFrame that we're depending on?
-  nsHTMLScrollFrame::DidReflow(aPresContext, &state, aStatus);
+  nsHTMLScrollFrame::DidReflow(aPresContext, &state,
+                               NS_FRAME_REFLOW_FINISHED);
 
   // Now compute the height we want to have.
   // Note: no need to apply min/max constraints, since we have no such

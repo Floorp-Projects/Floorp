@@ -19,9 +19,9 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
+#include "certt.h"
 
-#include "nsNSSCertHeader.h"
-
+class nsAutoString;
 class nsINSSComponent;
 class nsIASN1Sequence;
 

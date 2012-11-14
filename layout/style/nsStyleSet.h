@@ -67,10 +67,6 @@ class nsStyleSet
 
   nsresult Init(nsPresContext *aPresContext);
 
-  // For getting the cached default data in case we hit out-of-memory.
-  // To be used only by nsRuleNode.
-  nsCachedStyleData* DefaultStyleData() { return &mDefaultStyleData; }
-
   nsRuleNode* GetRuleTree() { return mRuleTree; }
 
   // enable / disable the Quirk style sheet
@@ -294,9 +290,6 @@ class nsStyleSet
   nsStyleSet(const nsStyleSet& aCopy) MOZ_DELETE;
   nsStyleSet& operator=(const nsStyleSet& aCopy) MOZ_DELETE;
 
-  // Returns false on out-of-memory.
-  bool BuildDefaultStyleData(nsPresContext* aPresContext);
-
   // Run mark-and-sweep GC on mRuleTree and mOldRuleTrees, based on mRoots.
   void GCRuleTrees();
 
@@ -364,11 +357,6 @@ class nsStyleSet
 
   nsRefPtr<nsBindingManager> mBindingManager;
 
-  // To be used only in case of emergency, such as being out of memory
-  // or operating on a deleted rule node.  The latter should never
-  // happen, of course.
-  nsCachedStyleData mDefaultStyleData;
-
   nsRuleNode* mRuleTree; // This is the root of our rule tree.  It is a
                          // lexicographic tree of matched rules that style
                          // contexts use to look up properties.
@@ -385,7 +373,7 @@ class nsStyleSet
 
   // Empty style rules to force things that restrict which properties
   // apply into different branches of the rule tree.
-  nsRefPtr<nsEmptyStyleRule> mFirstLineRule, mFirstLetterRule;
+  nsRefPtr<nsEmptyStyleRule> mFirstLineRule, mFirstLetterRule, mPlaceholderRule;
 
   // Style rule which sets all properties to their initial values for
   // determining when context-sensitive values are in use.

@@ -18,53 +18,20 @@
             dlgbuttons="accept,cancel"
             title="&ocspDialog.title;">
 
-  <prefpane id="OCSPDialogPane" onpaneload="gOCSPDialog.init();">
+  <prefpane id="OCSPDialogPane" onpaneload="gOCSPDialog._updateUI(0)">
     <script type="application/javascript" src="chrome://mozapps/content/preferences/ocsp.js"/>
 
     <preferences>
       <preference id="security.OCSP.enabled"    name="security.OCSP.enabled"   type="int"/>
-      <preference id="security.OCSP.signingCA"  name="security.OCSP.signingCA" type="string"/>
-      <preference id="security.OCSP.URL"        name="security.OCSP.URL"       type="string"/>
       <preference id="security.OCSP.require"    name="security.OCSP.require"   type="bool"/>
     </preferences>
     
-    <checkbox id="enableOCSPBox" label="&enableOCSP.label;" accesskey="&enableOCSP.accesskey;"
-              oncommand="gOCSPDialog._updateUI(1);"/>
-    <radiogroup id="securityOCSPEnabled" preference="security.OCSP.enabled"
-                onsyncfrompreference="return gOCSPDialog._updateUI(0);"
-                class="indent">
-      <radio value="0" hidden="true"/>
-      <radio id="certOCSP" value="1" label="&certOCSP2.label;"
-             accesskey="&certOCSP2.accesskey;"/>
-      <radio id="proxyOCSP" value="2" label="&proxyOCSP2.label;"
-             accesskey="&proxyOCSP2.accesskey;"/>
-
-      <grid class="indent" flex="1">
-        <columns>
-          <column/>
-          <column flex="1"/>
-        </columns>
-          
-        <rows>
-          <row align="center">
-            <label value="&signingCA.label;" accesskey="&signingCA.accesskey;" control="signingCA"/>
-            <hbox id="signingCABox" flex="1">
-              <menulist id="signingCA" flex="1"
-                        preference="security.OCSP.signingCA"
-                        oncommand="gOCSPDialog.chooseServiceURL()">
-                <menupopup/>
-              </menulist>
-            </hbox>            
-          </row>
-          <row align="center">
-            <label value="&serviceURL.label;" accesskey="&serviceURL.accesskey;" control="serviceURL"/>
-            <textbox id="serviceURL" preference="security.OCSP.URL"/>
-          </row>
-        </rows>
-      </grid>
-    </radiogroup>
-    <separator class="thin"/>
-    <checkbox id="requireWorkingOCSP" preference="security.OCSP.require" 
+    <checkbox id="enableOCSP"
+              label="&enableOCSP.label;"
+              accesskey="&enableOCSP.accesskey;"
+              oncommand="gOCSPDialog._updateUI(1)"/>
+    <checkbox id="requireOCSP"
+              preference="security.OCSP.require"
               label="&requireOCSP.label;"
               accesskey="&requireOCSP.accesskey;"/>
   </prefpane>

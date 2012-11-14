@@ -92,7 +92,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile)
     FILE *script_stream = tempScript.open(script_filename);
     CHECK(fputs(code, script_stream) != EOF);
     tempScript.close();
-    JSScript *script = JS_CompileUTF8File(cx, global, script_filename);
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(script_filename, 1);
+    JSScript *script = JS::Compile(cx, global, options, script_filename);
     tempScript.remove();
     return tryScript(global, script);
 }
@@ -104,7 +106,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
     static const char script_filename[] = "temp-bug438633_JS_CompileFile_empty";
     tempScript.open(script_filename);
     tempScript.close();
-    JSScript *script = JS_CompileUTF8File(cx, global, script_filename);
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(script_filename, 1);
+    JSScript *script = JS::Compile(cx, global, options, script_filename);
     tempScript.remove();
     return tryScript(global, script);
 }
@@ -112,21 +116,25 @@ END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
 
 BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
 {
+    const char *script_filename = "temporary file";
     TempFile tempScript;
     FILE *script_stream = tempScript.open("temp-bug438633_JS_CompileFileHandle");
     CHECK(fputs(code, script_stream) != EOF);
     CHECK(fseek(script_stream, 0, SEEK_SET) != EOF);
-    return tryScript(global, JS_CompileUTF8FileHandle(cx, global, "temporary file",
-                                                      script_stream));
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(script_filename, 1);
+    return tryScript(global, JS::Compile(cx, global, options, script_stream));
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
 
 BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
 {
+    const char *script_filename = "empty temporary file";
     TempFile tempScript;
     FILE *script_stream = tempScript.open("temp-bug438633_JS_CompileFileHandle_empty");
-    return tryScript(global, JS_CompileUTF8FileHandle(cx, global, "empty temporary file",
-                                              script_stream));
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(script_filename, 1);
+    return tryScript(global, JS::Compile(cx, global, options, script_stream));
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
 
@@ -136,8 +144,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincip
     FILE *script_stream = tempScript.open("temp-bug438633_JS_CompileFileHandleForPrincipals");
     CHECK(fputs(code, script_stream) != EOF);
     CHECK(fseek(script_stream, 0, SEEK_SET) != EOF);
-    return tryScript(global, JS_CompileUTF8FileHandleForPrincipals(cx, global,
-                                                                   "temporary file",
-                                                                   script_stream, NULL));
+    JS::CompileOptions options(cx);
+    options.setFileAndLine("temporary file", 1)
+           .setPrincipals(NULL);
+    return tryScript(global, JS::Compile(cx, global, options, script_stream));
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincipals)

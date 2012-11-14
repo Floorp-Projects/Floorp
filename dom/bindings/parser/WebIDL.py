@@ -2234,7 +2234,7 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
 
     def finish(self, scope):
         if not self._returnType.isComplete():
-            type = returnType.complete(scope)
+            type = self._returnType.complete(scope)
 
             assert not isinstance(type, IDLUnresolvedType)
             assert not isinstance(type, IDLTypedefType)

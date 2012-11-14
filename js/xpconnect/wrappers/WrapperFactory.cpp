@@ -292,7 +292,8 @@ GetWrappedNative(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
+WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
+                       JSObject *wrappedProto, JSObject *parent,
                        unsigned flags)
 {
     NS_ASSERTION(!IsWrapper(obj) ||
@@ -447,6 +448,9 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             }
         }
     }
+
+    if (existing && proxyProto == wrappedProto)
+        return Wrapper::Renew(cx, existing, obj, wrapper);
 
     return Wrapper::New(cx, obj, proxyProto, parent, wrapper);
 }
