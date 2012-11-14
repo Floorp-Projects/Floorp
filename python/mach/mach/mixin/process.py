@@ -62,7 +62,7 @@ class ProcessExecutionMixin(LoggingMixin):
         ignore_children is proxied to mozprocess's ignore_children.
 
         ensure_exit_code is used to ensure the exit code of a process matches
-        what is expected. If it is an integer, we raise an Exception is the
+        what is expected. If it is an integer, we raise an Exception if the
         exit code does not match this value. If it is True, we ensure the exit
         code is 0. If it is False, we don't perform any exit code validation.
         """
