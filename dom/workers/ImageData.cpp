@@ -40,8 +40,8 @@ public:
   Create(JSContext* aCx, uint32_t aWidth, uint32_t aHeight, JSObject *aData)
   {
     MOZ_ASSERT(aData);
-    MOZ_ASSERT(JS_IsTypedArrayObject(aData, aCx));
-    MOZ_ASSERT(JS_IsUint8ClampedArray(aData, aCx));
+    MOZ_ASSERT(JS_IsTypedArrayObject(aData));
+    MOZ_ASSERT(JS_IsUint8ClampedArray(aData));
 
     JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
     if (!obj) {

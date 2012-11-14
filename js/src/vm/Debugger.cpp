@@ -1819,9 +1819,11 @@ Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
     }
 
     /* If we have a cross-compartment wrapper, dereference as far as is secure. */
-    obj = UnwrapObjectChecked(cx, obj);
-    if (!obj)
+    obj = UnwrapObjectChecked(obj);
+    if (!obj) {
+        JS_ReportError(cx, "Permission denied to access object");
         return NULL;
+    }
 
     /* If that produced an outer window, innerize it. */
     obj = GetInnerObject(cx, obj);
@@ -4465,18 +4467,8 @@ static JSBool
 DebuggerObject_unwrap(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "unwrap", args, dbg, referent);
-    JSObject *unwrapped = UnwrapOneChecked(cx, referent);
+    JSObject *unwrapped = UnwrapOneChecked(referent);
     if (!unwrapped) {
-        // If we were terminated, then pass that along.
-        if (!cx->isExceptionPending())
-            return false;
-
-        // If the unwrap operation threw an exception, assume it's a
-        // security exception, and return null. It seems like the wrappers
-        // in use in Firefox just call JS_ReportError, so we have no way to
-        // distinguish genuine should-not-unwrap errors from other kinds of
-        // errors.
-        cx->clearPendingException();
         vp->setNull();
         return true;
     }

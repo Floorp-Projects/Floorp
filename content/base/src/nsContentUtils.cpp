@@ -6187,8 +6187,8 @@ nsContentUtils::CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
   }
 
   if (dataLen > 0) {
-    NS_ASSERTION(JS_IsArrayBufferObject(*aResult, aCx), "What happened?");
-    memcpy(JS_GetArrayBufferData(*aResult, aCx), aData.BeginReading(), dataLen);
+    NS_ASSERTION(JS_IsArrayBufferObject(*aResult), "What happened?");
+    memcpy(JS_GetArrayBufferData(*aResult), aData.BeginReading(), dataLen);
   }
 
   return NS_OK;

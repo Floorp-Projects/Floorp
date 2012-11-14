@@ -309,7 +309,7 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
   }
   else if (mDataFormat == FILE_AS_ARRAYBUFFER) {
     uint32_t bytesRead = 0;
-    aInputStream->Read((char*)JS_GetArrayBufferData(mResultArrayBuffer, NULL) + aOffset,
+    aInputStream->Read((char*)JS_GetArrayBufferData(mResultArrayBuffer) + aOffset,
                        aCount, &bytesRead);
     NS_ASSERTION(bytesRead == aCount, "failed to read data");
   }
