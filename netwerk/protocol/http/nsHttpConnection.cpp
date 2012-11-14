@@ -40,6 +40,7 @@ using namespace mozilla::net;
 
 nsHttpConnection::nsHttpConnection()
     : mTransaction(nullptr)
+    , mCallbacksLock("nsHttpConnection::mCallbacksLock")
     , mIdleTimeout(0)
     , mConsiderReusedAfterInterval(0)
     , mConsiderReusedAfterEpoch(0)
@@ -327,12 +328,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint8_t caps, int32_t pri)
     nsCOMPtr<nsIEventTarget>        callbackTarget;
     trans->GetSecurityCallbacks(getter_AddRefs(callbacks),
                                 getter_AddRefs(callbackTarget));
-    if (callbacks != mCallbacks) {
-        mCallbacks.swap(callbacks);
-        if (callbacks)
-            NS_ProxyRelease(mCallbackTarget, callbacks);
-        mCallbackTarget = callbackTarget;
-    }
+    SetSecurityCallbacks(callbacks, callbackTarget);
 
     SetupNPN(caps); // only for spdy
 
@@ -1041,6 +1037,22 @@ nsHttpConnection::GetSecurityInfo(nsISupports **secinfo)
     }
 }
 
+void
+nsHttpConnection::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                       nsIEventTarget* aCallbackTarget)
+{
+    nsCOMPtr<nsIInterfaceRequestor> callbacks = aCallbacks;
+
+    MutexAutoLock lock(mCallbacksLock);
+    if (aCallbacks == mCallbacks)
+        return;
+
+    mCallbacks.swap(callbacks);
+    if (callbacks)
+        NS_ProxyRelease(mCallbackTarget, callbacks);
+    mCallbackTarget = aCallbackTarget;
+}
+
 nsresult
 nsHttpConnection::PushBack(const char *data, uint32_t length)
 {
@@ -1154,10 +1166,13 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         mTransaction = nullptr;
     }
 
-    if (mCallbacks) {
-        nsIInterfaceRequestor *cbs = nullptr;
-        mCallbacks.swap(cbs);
-        NS_ProxyRelease(mCallbackTarget, cbs);
+    {
+        MutexAutoLock lock(mCallbacksLock);
+        if (mCallbacks) {
+            nsIInterfaceRequestor *cbs = nullptr;
+            mCallbacks.swap(cbs);
+            NS_ProxyRelease(mCallbackTarget, cbs);
+        }
     }
 
     if (NS_FAILED(reason))
@@ -1586,8 +1601,12 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
 
     NS_ASSERTION(PR_GetCurrentThread() != gSocketThread, "wrong thread");
 
-    if (mCallbacks)
-        return mCallbacks->GetInterface(iid, result);
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    {
+        MutexAutoLock lock(mCallbacksLock);
+        callbacks = mCallbacks;
+    }
+    if (callbacks)
+        return callbacks->GetInterface(iid, result);
     return NS_ERROR_NO_INTERFACE;
 }
-

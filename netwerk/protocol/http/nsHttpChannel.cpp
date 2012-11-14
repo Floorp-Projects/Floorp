@@ -5925,4 +5925,40 @@ nsHttpChannel::AsyncOnExamineCachedResponse()
 
 }
 
+void
+nsHttpChannel::UpdateAggregateCallbacks()
+{
+    if (!mTransaction) {
+        return;
+    }
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
+                                           getter_AddRefs(callbacks));
+    mTransaction->SetSecurityCallbacks(callbacks, NS_GetCurrentThread());
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread.");
+
+    nsresult rv = HttpBaseChannel::SetLoadGroup(aLoadGroup);
+    if (NS_SUCCEEDED(rv)) {
+        UpdateAggregateCallbacks();
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread.");
+
+    nsresult rv = HttpBaseChannel::SetNotificationCallbacks(aCallbacks);
+    if (NS_SUCCEEDED(rv)) {
+        UpdateAggregateCallbacks();
+    }
+    return rv;
+}
+
 } } // namespace mozilla::net
