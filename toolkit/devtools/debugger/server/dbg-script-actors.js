@@ -57,6 +57,7 @@ ThreadActor.prototype = {
     if (!this._threadLifetimePool) {
       this._threadLifetimePool = new ActorPool(this.conn);
       this.conn.addActorPool(this._threadLifetimePool);
+      this._threadLifetimePool.objectActors = new WeakMap();
     }
     return this._threadLifetimePool;
   },
@@ -909,6 +910,8 @@ ThreadActor.prototype = {
 
     if (aPool.objectActors.has(aValue)) {
       return aPool.objectActors.get(aValue).grip();
+    } else if (this.threadLifetimePool.objectActors.has(aValue)) {
+      return this.threadLifetimePool.objectActors.get(aValue).grip();
     }
 
     let actor = new ObjectActor(aValue, this);
@@ -938,14 +941,37 @@ ThreadActor.prototype = {
    *        The object actor.
    */
   threadObjectGrip: function TA_threadObjectGrip(aActor) {
-    if (!this.threadLifetimePool.objectActors) {
-      this.threadLifetimePool.objectActors = new WeakMap();
-    }
     // We want to reuse the existing actor ID, so we just remove it from the
     // current pool's weak map and then let pool.addActor do the rest.
     aActor.registeredPool.objectActors.delete(aActor.obj);
     this.threadLifetimePool.addActor(aActor);
     this.threadLifetimePool.objectActors.set(aActor.obj, aActor);
+  },
+
+  /**
+   * Handle a protocol request to promote multiple pause-lifetime grips to
+   * thread-lifetime grips.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
+  onThreadGrips: function OA_onThreadGrips(aRequest) {
+    if (this.state != "paused") {
+      return { error: "wrongState" };
+    }
+
+    if (!aRequest.actors) {
+      return { error: "missingParameter",
+               message: "no actors were specified" };
+    }
+
+    for (let actorID of aRequest.actors) {
+      let actor = this._pausePool.get(actorID);
+      if (actor) {
+        this.threadObjectGrip(actor);
+      }
+    }
+    return {};
   },
 
   /**
@@ -1165,7 +1191,8 @@ ThreadActor.prototype.requestTypes = {
   "interrupt": ThreadActor.prototype.onInterrupt,
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
-  "scripts": ThreadActor.prototype.onScripts
+  "scripts": ThreadActor.prototype.onScripts,
+  "threadGrips": ThreadActor.prototype.onThreadGrips
 };
 
 
