@@ -16,14 +16,14 @@ LIBRARY_NAME = gkconraw_s
 LIBXUL_LIBRARY = 1
 
 EXPORTS += \
-  nsRawDecoder.h \
-  nsRawReader.h \
-  nsRawStructs.h \
+  RawDecoder.h \
+  RawReader.h \
+  RawStructs.h \
   $(NULL)
 
 CPPSRCS += \
-  nsRawDecoder.cpp \
-  nsRawReader.cpp \
+  RawDecoder.cpp \
+  RawReader.cpp \
   $(NULL)
 
 FORCE_STATIC_LIB = 1

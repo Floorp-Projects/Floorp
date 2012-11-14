@@ -35,7 +35,7 @@
 #include "mozilla/Preferences.h"
 
 #if defined(MOZ_SYDNEYAUDIO)
-#include "nsAudioStream.h"
+#include "AudioStream.h"
 #endif
 #include "nsIMemoryReporter.h"
 #include "nsIMemoryInfoDumper.h"

@@ -8,7 +8,7 @@
 
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"
-#include "nsBuiltinDecoder.h"
+#include "MediaDecoder.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
@@ -47,7 +47,7 @@ static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
 
 namespace mozilla {
 
-ChannelMediaResource::ChannelMediaResource(nsBuiltinDecoder* aDecoder,
+ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI)
   : MediaResource(aDecoder, aChannel, aURI),
     mOffset(0), mSuspendCount(0),
@@ -519,7 +519,7 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
 
 /* |OpenByteRange|
  * For terminated byte range requests, use this function.
- * Callback is |nsBuiltinDecoder|::|NotifyByteRangeDownloaded|().
+ * Callback is |MediaDecoder|::|NotifyByteRangeDownloaded|().
  * See |CacheClientSeek| also.
  */
 
@@ -684,7 +684,7 @@ bool ChannelMediaResource::CanClone()
   return mCacheStream.IsAvailableForSharing();
 }
 
-MediaResource* ChannelMediaResource::CloneData(nsBuiltinDecoder* aDecoder)
+MediaResource* ChannelMediaResource::CloneData(MediaDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
@@ -932,14 +932,14 @@ ChannelMediaResource::CacheClientNotifyDataReceived()
 
 class DataEnded : public nsRunnable {
 public:
-  DataEnded(nsBuiltinDecoder* aDecoder, nsresult aStatus) :
+  DataEnded(MediaDecoder* aDecoder, nsresult aStatus) :
     mDecoder(aDecoder), mStatus(aStatus) {}
   NS_IMETHOD Run() {
     mDecoder->NotifyDownloadEnded(mStatus);
     return NS_OK;
   }
 private:
-  nsRefPtr<nsBuiltinDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
   nsresult                 mStatus;
 };
 
@@ -1094,7 +1094,7 @@ ChannelMediaResource::IsSuspended()
 }
 
 void
-ChannelMediaResource::SetReadMode(nsMediaCacheStream::ReadMode aMode)
+ChannelMediaResource::SetReadMode(MediaCacheStream::ReadMode aMode)
 {
   mCacheStream.SetReadMode(aMode);
 }
@@ -1156,7 +1156,7 @@ ChannelMediaResource::PossiblyResume()
 class FileMediaResource : public MediaResource
 {
 public:
-  FileMediaResource(nsBuiltinDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  FileMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     MediaResource(aDecoder, aChannel, aURI),
     mSize(-1),
     mLock("FileMediaResource.mLock"),
@@ -1174,13 +1174,13 @@ public:
   virtual void     Resume() {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   virtual bool     CanClone();
-  virtual MediaResource* CloneData(nsBuiltinDecoder* aDecoder);
+  virtual MediaResource* CloneData(MediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
 
   // These methods are called off the main thread.
 
   // Other thread
-  virtual void     SetReadMode(nsMediaCacheStream::ReadMode aMode) {}
+  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) {}
   virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) {}
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset);
@@ -1268,7 +1268,7 @@ private:
 class LoadedEvent : public nsRunnable
 {
 public:
-  LoadedEvent(nsBuiltinDecoder* aDecoder) :
+  LoadedEvent(MediaDecoder* aDecoder) :
     mDecoder(aDecoder)
   {
     MOZ_COUNT_CTOR(LoadedEvent);
@@ -1284,7 +1284,7 @@ public:
   }
 
 private:
-  nsRefPtr<nsBuiltinDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
 };
 
 void FileMediaResource::EnsureSizeInitialized()
@@ -1404,7 +1404,7 @@ bool FileMediaResource::CanClone()
   return true;
 }
 
-MediaResource* FileMediaResource::CloneData(nsBuiltinDecoder* aDecoder)
+MediaResource* FileMediaResource::CloneData(MediaDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -1495,7 +1495,7 @@ int64_t FileMediaResource::Tell()
 }
 
 MediaResource*
-MediaResource::Create(nsBuiltinDecoder* aDecoder, nsIChannel* aChannel)
+MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "MediaResource::Open called on non-main thread");
