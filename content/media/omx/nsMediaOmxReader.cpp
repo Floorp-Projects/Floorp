@@ -123,7 +123,7 @@ bool nsMediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   uint32_t parsed = 0, decoded = 0;
-  nsMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  nsBuiltinDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
   // Throw away the currently buffered frame if we are seeking.
   if (mLastVideoFrame && mVideoSeekTimeUs != -1) {

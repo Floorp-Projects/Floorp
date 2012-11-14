@@ -13,7 +13,7 @@ nsMediaOmxDecoder::nsMediaOmxDecoder() :
 {
 }
 
-nsMediaDecoder* nsMediaOmxDecoder::Clone()
+nsBuiltinDecoder* nsMediaOmxDecoder::Clone()
 {
   return new nsMediaOmxDecoder();
 }

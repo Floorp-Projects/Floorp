@@ -11,8 +11,7 @@
 #include <gst/video/video.h>
 #include "nsBuiltinDecoderReader.h"
 
-
-class nsMediaDecoder;
+class nsBuiltinDecoder;
 class nsTimeRanges;
 
 class nsGStreamerReader : public nsBuiltinDecoderReader

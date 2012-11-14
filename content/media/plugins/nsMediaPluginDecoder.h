@@ -20,7 +20,7 @@ public:
     return NS_OK;
   }
 
-  virtual nsMediaDecoder* Clone() { return new nsMediaPluginDecoder(mType); }
+  virtual nsBuiltinDecoder* Clone() { return new nsMediaPluginDecoder(mType); }
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
 

@@ -30,6 +30,7 @@
 #include "nsEventDispatcher.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsMediaError.h"
+#include "nsBuiltinDecoder.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

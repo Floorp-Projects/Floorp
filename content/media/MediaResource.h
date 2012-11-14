@@ -26,7 +26,7 @@ static const int64_t SEEK_VS_READ_THRESHOLD = 32*1024;
 
 static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
-class nsMediaDecoder;
+class nsBuiltinDecoder;
 
 namespace mozilla {
 
@@ -177,7 +177,7 @@ public:
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
-  virtual MediaResource* CloneData(nsMediaDecoder* aDecoder) = 0;
+  virtual MediaResource* CloneData(nsBuiltinDecoder* aDecoder) = 0;
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -260,7 +260,7 @@ public:
   // Returns true if this stream is suspended by the cache because the
   // cache is full. If true then the decoder should try to start consuming
   // data, otherwise we may not be able to make progress.
-  // nsMediaDecoder::NotifySuspendedStatusChanged is called when this
+  // nsBuiltinDecoder::NotifySuspendedStatusChanged is called when this
   // changes.
   // For resources using the media cache, this returns true only when all
   // streams for the same resource are all suspended.
@@ -282,7 +282,7 @@ public:
    * Create a resource, reading data from the channel. Call on main thread only.
    * The caller must follow up by calling resource->Open().
    */
-  static MediaResource* Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel);
+  static MediaResource* Create(nsBuiltinDecoder* aDecoder, nsIChannel* aChannel);
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -309,7 +309,7 @@ public:
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) = 0;
 
 protected:
-  MediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  MediaResource(nsBuiltinDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
     mChannel(aChannel),
     mURI(aURI),
@@ -326,7 +326,7 @@ protected:
   // This is not an nsCOMPointer to prevent a circular reference
   // between the decoder to the media stream object. The stream never
   // outlives the lifetime of the decoder.
-  nsMediaDecoder* mDecoder;
+  nsBuiltinDecoder* mDecoder;
 
   // Channel used to download the media data. Must be accessed
   // from the main thread only.
@@ -352,7 +352,7 @@ protected:
 class ChannelMediaResource : public MediaResource
 {
 public:
-  ChannelMediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
+  ChannelMediaResource(nsBuiltinDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
   ~ChannelMediaResource();
 
   // These are called on the main thread by nsMediaCache. These must
@@ -392,7 +392,7 @@ public:
   // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual bool     CanClone();
-  virtual MediaResource* CloneData(nsMediaDecoder* aDecoder);
+  virtual MediaResource* CloneData(nsBuiltinDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
   virtual void     EnsureCacheUpToDate();
 

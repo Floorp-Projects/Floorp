@@ -160,7 +160,7 @@ class ReentrantMonitorAutoEnter;
  * 
  * nsMediaCache has a single internal monitor for all synchronization.
  * This is treated as the lowest level monitor in the media code. So,
- * we must not acquire any nsMediaDecoder locks or MediaResource locks
+ * we must not acquire any nsBuiltinDecoder locks or MediaResource locks
  * while holding the nsMediaCache lock. But it's OK to hold those locks
  * and then get the nsMediaCache lock.
  * 

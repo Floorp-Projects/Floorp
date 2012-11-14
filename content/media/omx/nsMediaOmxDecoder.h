@@ -15,7 +15,7 @@ public:
   nsMediaOmxDecoder();
   ~nsMediaOmxDecoder();
 
-  virtual nsMediaDecoder* Clone();
+  virtual nsBuiltinDecoder* Clone();
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
 

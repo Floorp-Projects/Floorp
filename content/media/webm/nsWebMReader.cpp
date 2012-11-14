@@ -603,7 +603,7 @@ bool nsWebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   uint32_t parsed = 0, decoded = 0;
-  nsMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  nsBuiltinDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
   nsAutoRef<NesteggPacketHolder> holder(NextPacket(VIDEO));
   if (!holder) {

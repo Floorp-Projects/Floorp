@@ -20,6 +20,8 @@
 #include "MediaResource.h"
 #include "nsDASHRepDecoder.h"
 
+using mozilla::ReentrantMonitor;
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(msg, ...) PR_LOG(gBuiltinDecoderLog, PR_LOG_DEBUG, \
@@ -71,7 +73,7 @@ nsDASHRepDecoder::SetReader(nsWebMReader* aReader)
 nsresult
 nsDASHRepDecoder::Load(MediaResource* aResource,
                        nsIStreamListener** aListener,
-                       nsMediaDecoder* aCloneDonor)
+                       nsBuiltinDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ENSURE_TRUE(mMPDRepresentation, NS_ERROR_NOT_INITIALIZED);
