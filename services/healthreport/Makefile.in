@@ -10,6 +10,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 modules := \
+  healthreporter.jsm \
   policy.jsm \
   $(NULL)
 
@@ -25,5 +26,12 @@ INSTALL_TARGETS += MODULES
 
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
 TESTING_JS_MODULE_DIR := services/healthreport
+
+EXTRA_COMPONENTS := \
+  HealthReportComponents.manifest \
+  HealthReportService.js \
+  $(NULL)
+
+PREF_JS_EXPORTS := healthreport-prefs.js
 
 include $(topsrcdir)/config/rules.mk
