@@ -808,6 +808,21 @@ ThreadClient.prototype = {
   },
 
   /**
+   * Promote multiple pause-lifetime object actors to thread-lifetime ones.
+   *
+   * @param array aActors
+   *        An array with actor IDs to promote.
+   */
+  threadGrips: function TC_threadGrips(aActors, aOnResponse) {
+    let packet = {
+      to: this._actor,
+      type: "threadGrips",
+      actors: aActors
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
    * Request the loaded scripts for the current thread.
    *
    * @param aOnResponse integer
