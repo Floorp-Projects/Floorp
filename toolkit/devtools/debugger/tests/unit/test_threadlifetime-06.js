@@ -2,7 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check that thread-lifetime grips last past a resume.
+ * Check that promoting multiple pause-lifetime actors to thread-lifetime actors
+ * works as expected.
  */
 
 var gDebuggee;
@@ -26,18 +27,29 @@ function run_test()
 function test_thread_lifetime()
 {
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    let pauseGrip = aPacket.frame.arguments[0];
+    let actors = [];
+    let last;
+    for (let aGrip of aPacket.frame.arguments) {
+      actors.push(aGrip.actor);
+      last = aGrip.actor;
+    }
 
-    // Create a thread-lifetime actor for this object.
-    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(aResponse) {
+    // Create thread-lifetime actors for these objects.
+    gThreadClient.threadGrips(actors, function(aResponse) {
       // Successful promotion won't return an error.
       do_check_eq(aResponse.error, undefined);
+
       gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-        // Verify that the promoted actor is returned again.
-        do_check_eq(pauseGrip.actor, aPacket.frame.arguments[0].actor);
-        // Now that we've resumed, release the thread-lifetime grip.
-        gClient.release(pauseGrip.actor, function(aResponse) {
-          gClient.request({ to: pauseGrip.actor, type: "bogusRequest" }, function(aResponse) {
+        // Verify that the promoted actors are returned again.
+        actors.forEach(function(actor, i) {
+          do_check_eq(actor, aPacket.frame.arguments[i].actor);
+        });
+        // Now that we've resumed, release the thread-lifetime grips.
+        gThreadClient.releaseMany(actors, function(aResponse) {
+          // Successful release won't return an error.
+          do_check_eq(aResponse.error, undefined);
+
+          gClient.request({ to: last, type: "bogusRequest" }, function(aResponse) {
             do_check_eq(aResponse.error, "noSuchActor");
             gThreadClient.resume(function(aResponse) {
               finishClient(gClient);
@@ -50,11 +62,11 @@ function test_thread_lifetime()
   });
 
   gDebuggee.eval("(" + function() {
-    function stopMe(arg1) {
+    function stopMe(arg1, arg2, arg3) {
       debugger;
       debugger;
     };
-    stopMe({obj: true});
+    stopMe({obj: 1}, {obj: 2}, {obj: 3});
     ")"
   } + ")()");
 }
