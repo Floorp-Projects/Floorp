@@ -2619,30 +2619,36 @@ void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
   NS_ERROR("nsDisplayWrapList should have been flattened away for painting");
 }
 
-bool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
-                                              LayerManager* aManager,
-                                              const ContainerParameters& aParameters,
-                                              const nsDisplayList& aList,
-                                              nsIFrame* aActiveScrolledRoot) {
+LayerState
+nsDisplayWrapList::RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
+                                                 LayerManager* aManager,
+                                                 const ContainerParameters& aParameters,
+                                                 const nsDisplayList& aList,
+                                                 nsIFrame* aActiveScrolledRoot) {
+  LayerState result = LAYER_INACTIVE;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
     nsIFrame* f = i->GetUnderlyingFrame();
     if (f) {
       nsIFrame* activeScrolledRoot =
         nsLayoutUtils::GetActiveScrolledRootFor(f, nullptr);
-      if (activeScrolledRoot != aActiveScrolledRoot)
-        return false;
+      if (activeScrolledRoot != aActiveScrolledRoot && result == LAYER_INACTIVE)
+        result = LAYER_ACTIVE;
     }
 
     LayerState state = i->GetLayerState(aBuilder, aManager, aParameters);
-    if (state == LAYER_ACTIVE || state == LAYER_ACTIVE_FORCE)
-      return false;
+    if ((state == LAYER_ACTIVE || state == LAYER_ACTIVE_FORCE) && (state > result))
+      result = state;
     if (state == LAYER_NONE) {
       nsDisplayList* list = i->GetSameCoordinateSystemChildren();
-      if (list && !ChildrenCanBeInactive(aBuilder, aManager, aParameters, *list, aActiveScrolledRoot))
-        return false;
+      if (list) {
+        LayerState childState = RequiredLayerStateForChildren(aBuilder, aManager, aParameters, *list, aActiveScrolledRoot);
+        if (childState > result) {
+          result = childState;
+        }
+      }
     }
   }
-  return true;
+  return result;
 }
 
 nsRect nsDisplayWrapList::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
@@ -2792,8 +2798,7 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
   }
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nullptr);
-  return !ChildrenCanBeInactive(aBuilder, aManager, aParameters, mList, activeScrolledRoot)
-      ? LAYER_ACTIVE : LAYER_INACTIVE;
+  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, activeScrolledRoot);
 }
 
 bool
@@ -3938,12 +3943,16 @@ nsDisplayItem::LayerState
 nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager,
                                   const ContainerParameters& aParameters) {
+  // If the transform is 3d, or the layer takes part in preserve-3d sorting
+  // then we *always* want this to be an active layer.
+  if (!GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel()).Is2D() || 
+      mFrame->Preserves3D()) {
+    return LAYER_ACTIVE_FORCE;
+  }
   // Here we check if the *post-transform* bounds of this item are big enough
   // to justify an active layer.
   if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer) &&
       !IsItemTooSmallForActiveLayer(this))
-    return LAYER_ACTIVE;
-  if (!GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel()).Is2D() || mFrame->Preserves3D())
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {
     if (nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(),
@@ -3953,12 +3962,11 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   }
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nullptr);
-  return !mStoredList.ChildrenCanBeInactive(aBuilder,
-                                            aManager,
-                                            aParameters,
-                                            *mStoredList.GetChildren(),
-                                            activeScrolledRoot)
-      ? LAYER_ACTIVE : LAYER_INACTIVE;
+  return mStoredList.RequiredLayerStateForChildren(aBuilder,
+                                                   aManager,
+                                                   aParameters,
+                                                   *mStoredList.GetChildren(),
+                                                   activeScrolledRoot);
 }
 
 bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,

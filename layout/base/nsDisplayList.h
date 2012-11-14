@@ -2129,11 +2129,11 @@ public:
    * ThebesLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
    * and they all have the given aActiveScrolledRoot.
    */
-  static bool ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
-                                    LayerManager* aManager,
-                                    const ContainerParameters& aParameters,
-                                    const nsDisplayList& aList,
-                                    nsIFrame* aActiveScrolledRoot);
+  static LayerState RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
+                                                  LayerManager* aManager,
+                                                  const ContainerParameters& aParameters,
+                                                  const nsDisplayList& aList,
+                                                  nsIFrame* aActiveScrolledRoot);
 
 protected:
   nsDisplayWrapList() {}
