@@ -33,7 +33,7 @@ def abstractmethod(method):
 
 class DeviceManager:
 
-    logcatNeedsRoot = True
+    _logcatNeedsRoot = True
 
     @abstractmethod
     def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
@@ -362,13 +362,15 @@ class DeviceManager:
 
         return 0
 
-    def getIP(self, conn_type='eth0'):
+    def getIP(self, interfaces=['eth0', 'wlan0']):
         """
         Gets the IP of the device, or None if no connection exists.
         """
-        match = re.match(r"%s: ip (\S+)" % conn_type, self.shellCheckOutput(['ifconfig', conn_type]))
-        if match:
-            return match.group(1)
+        for interface in interfaces:
+            match = re.match(r"%s: ip (\S+)" % interface,
+                             self.shellCheckOutput(['ifconfig', interface]))
+            if match:
+                return match.group(1)
 
     @abstractmethod
     def unpackFile(self, file_path, dest_dir=None):
@@ -489,7 +491,7 @@ class DeviceManager:
         #TODO: spawn this off in a separate thread/process so we can collect all the logcat information
 
         # Right now this is just clearing the logcat so we can only see what happens after this call.
-        self.shellCheckOutput(['/system/bin/logcat', '-c'], root=self.logcatNeedsRoot)
+        self.shellCheckOutput(['/system/bin/logcat', '-c'], root=self._logcatNeedsRoot)
 
     def getLogcat(self, filterSpecs=["dalvikvm:S", "ConnectivityService:S",
                                       "WifiMonitor:S", "WifiStateTracker:S",
@@ -501,7 +503,7 @@ class DeviceManager:
         """
         cmdline = ["/system/bin/logcat", "-v", format, "-d"] + filterSpecs
         lines = self.shellCheckOutput(cmdline,
-                                      root=self.logcatNeedsRoot).split('\r')
+                                      root=self._logcatNeedsRoot).split('\r')
 
         for regex in filterOutRegexps:
             lines = [line for line in lines if not re.search(regex, line)]
