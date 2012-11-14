@@ -5,6 +5,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
+  "DataSubmissionRequest", // For test use only.
   "HealthReportPolicy",
 ];
 
@@ -242,7 +243,7 @@ Object.freeze(DataSubmissionRequest.prototype);
  *        events.
  */
 this.HealthReportPolicy = function HealthReportPolicy(prefs, listener) {
-  this._log = Log4Moz.repository.getLogger("HealthReport.Policy");
+  this._log = Log4Moz.repository.getLogger("Services.HealthReport.Policy");
   this._log.level = Log4Moz.Level["Debug"];
 
   for (let handler of this.REQUIRED_LISTENERS) {
@@ -644,7 +645,7 @@ HealthReportPolicy.prototype = {
     // We want delete deletion to occur as soon as possible. Move up any
     // pending scheduled data submission and try to trigger.
     this.nextDataSubmissionDate = this.now();
-    this.checkStateAndTrigger();
+    return this.checkStateAndTrigger();
   },
 
   /**
@@ -739,8 +740,7 @@ HealthReportPolicy.prototype = {
         return;
       }
 
-      this._dispatchSubmissionRequest("onRequestRemoteDelete", true);
-      return;
+      return this._dispatchSubmissionRequest("onRequestRemoteDelete", true);
     }
 
     if (!this.dataUploadEnabled) {
@@ -768,7 +768,7 @@ HealthReportPolicy.prototype = {
       return;
     }
 
-    this._dispatchSubmissionRequest("onRequestDataUpload", false);
+    return this._dispatchSubmissionRequest("onRequestDataUpload", false);
   },
 
   /**
@@ -885,7 +885,7 @@ HealthReportPolicy.prototype = {
       this._handleSubmissionFailure();
     }.bind(this);
 
-    deferred.promise.then(onSuccess, onError);
+    let chained = deferred.promise.then(onSuccess, onError);
 
     this._log.info("Requesting data submission. Will expire at " +
                    requestExpiresDate);
@@ -898,6 +898,8 @@ HealthReportPolicy.prototype = {
       this._handleSubmissionFailure();
       return;
     }
+
+    return chained;
   },
 
   _handleSubmissionResult: function _handleSubmissionResult(request) {
