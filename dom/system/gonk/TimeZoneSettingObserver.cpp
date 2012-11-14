@@ -53,10 +53,8 @@ public:
 
   NS_IMETHOD Handle(const nsAString &aName, const JS::Value &aResult) {
 
-    JSContext *cx = nsContentUtils::GetSafeJSContext();
+    JSContext *cx = nsContentUtils::GetCurrentJSContext();
     NS_ENSURE_TRUE(cx, NS_OK);
-    JSAutoRequest ar(cx);
-    JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(aResult));
 
     // If we don't have time.timezone value in the settings, we need
     // to initialize the settings based on the current system timezone
@@ -83,6 +81,8 @@ public:
 
     // Set the system timezone based on the current settings.
     if (aResult.isString()) {
+      JSAutoRequest ar(cx);
+      JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(aResult));
       return TimeZoneSettingObserver::SetTimeZone(aResult, cx);
     }
 
