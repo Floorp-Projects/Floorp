@@ -36,7 +36,7 @@ function run_test() {
     serv = new TestServer();
     URI = ios.newURI("http://localhost:4444/just/a/test", null, null);
     ios.QueryInterface(Components.interfaces.nsISpeculativeConnect)
-        .speculativeConnect(URI, null, null);
+        .speculativeConnect(URI, null);
     do_test_pending();
 }
 

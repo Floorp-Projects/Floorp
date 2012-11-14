@@ -537,7 +537,7 @@ nsHttpChannel::SpeculativeConnect()
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
     mConnectionInfo->SetPrivate(mPrivateBrowsing);
     gHttpHandler->SpeculativeConnect(mConnectionInfo,
-                                     callbacks, NS_GetCurrentThread());
+                                     callbacks);
 }
 
 void
@@ -5933,8 +5933,9 @@ nsHttpChannel::UpdateAggregateCallbacks()
     }
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
+                                           NS_GetCurrentThread(),
                                            getter_AddRefs(callbacks));
-    mTransaction->SetSecurityCallbacks(callbacks, NS_GetCurrentThread());
+    mTransaction->SetSecurityCallbacks(callbacks);
 }
 
 NS_IMETHODIMP

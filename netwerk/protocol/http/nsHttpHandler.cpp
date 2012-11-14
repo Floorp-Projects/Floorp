@@ -1613,8 +1613,7 @@ nsHttpHandler::Observe(nsISupports *subject,
 
 NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
-                                  nsIInterfaceRequestor *aCallbacks,
-                                  nsIEventTarget *aTarget)
+                                  nsIInterfaceRequestor *aCallbacks)
 {
     nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
     bool isStsHost = false;
@@ -1665,7 +1664,7 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     nsHttpConnectionInfo *ci =
         new nsHttpConnectionInfo(host, port, nullptr, usingSSL);
 
-    return SpeculativeConnect(ci, aCallbacks, aTarget);
+    return SpeculativeConnect(ci, aCallbacks);
 }
 
 //-----------------------------------------------------------------------------
