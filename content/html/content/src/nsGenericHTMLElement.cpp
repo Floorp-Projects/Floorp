@@ -1855,7 +1855,12 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValue* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML) &&
+    uint32_t eventType = EventNameType_HTML;
+    if (mNodeInfo->Equals(nsGkAtoms::body) ||
+        mNodeInfo->Equals(nsGkAtoms::frameset)) {
+      eventType |= EventNameType_HTMLBodyOrFramesetOnly;
+    }
+    if (nsContentUtils::IsEventAttributeName(aName, eventType) &&
         aValue) {
       NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
         "Expected string value for script body");
