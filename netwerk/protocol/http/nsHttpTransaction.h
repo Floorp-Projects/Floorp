@@ -86,8 +86,7 @@ public:
 
     nsIEventTarget        *ConsumerTarget() { return mConsumerTarget; }
 
-    void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks,
-                              nsIEventTarget* aCallbackTarget);
+    void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks);
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.

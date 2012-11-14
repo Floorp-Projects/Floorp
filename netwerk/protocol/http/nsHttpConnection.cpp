@@ -78,12 +78,6 @@ nsHttpConnection::~nsHttpConnection()
 {
     LOG(("Destroying nsHttpConnection @%x\n", this));
 
-    if (mCallbacks) {
-        nsIInterfaceRequestor *cbs = nullptr;
-        mCallbacks.swap(cbs);
-        NS_ProxyRelease(mCallbackTarget, cbs);
-    }
-
     // release our reference to the handler
     nsHttpHandler *handler = gHttpHandler;
     NS_RELEASE(handler);
@@ -113,7 +107,6 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
                        nsIAsyncInputStream *instream,
                        nsIAsyncOutputStream *outstream,
                        nsIInterfaceRequestor *callbacks,
-                       nsIEventTarget *callbackTarget,
                        PRIntervalTime rtt)
 {
     NS_ABORT_IF_FALSE(transport && instream && outstream,
@@ -140,7 +133,6 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCallbacks = callbacks;
-    mCallbackTarget = callbackTarget;
     rv = mSocketTransport->SetSecurityCallbacks(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -325,10 +317,8 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint8_t caps, int32_t pri)
 
     // Update security callbacks
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    nsCOMPtr<nsIEventTarget>        callbackTarget;
-    trans->GetSecurityCallbacks(getter_AddRefs(callbacks),
-                                getter_AddRefs(callbackTarget));
-    SetSecurityCallbacks(callbacks, callbackTarget);
+    trans->GetSecurityCallbacks(getter_AddRefs(callbacks));
+    SetSecurityCallbacks(callbacks);
 
     SetupNPN(caps); // only for spdy
 
@@ -1038,19 +1028,10 @@ nsHttpConnection::GetSecurityInfo(nsISupports **secinfo)
 }
 
 void
-nsHttpConnection::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks,
-                                       nsIEventTarget* aCallbackTarget)
+nsHttpConnection::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
-    nsCOMPtr<nsIInterfaceRequestor> callbacks = aCallbacks;
-
     MutexAutoLock lock(mCallbacksLock);
-    if (aCallbacks == mCallbacks)
-        return;
-
-    mCallbacks.swap(callbacks);
-    if (callbacks)
-        NS_ProxyRelease(mCallbackTarget, callbacks);
-    mCallbackTarget = aCallbackTarget;
+    mCallbacks = aCallbacks;
 }
 
 nsresult
@@ -1168,11 +1149,7 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 
     {
         MutexAutoLock lock(mCallbacksLock);
-        if (mCallbacks) {
-            nsIInterfaceRequestor *cbs = nullptr;
-            mCallbacks.swap(cbs);
-            NS_ProxyRelease(mCallbackTarget, cbs);
-        }
+        mCallbacks = nullptr;
     }
 
     if (NS_FAILED(reason))
