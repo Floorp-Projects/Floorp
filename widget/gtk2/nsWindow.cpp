@@ -5641,7 +5641,7 @@ drag_motion_event_cb(GtkWidget *aWidget,
 
     return nsDragService::GetInstance()->
         ScheduleMotionEvent(innerMostWindow, aDragContext,
-                            nsIntPoint(aX, aY), aTime);
+                            nsIntPoint(retx, rety), aTime);
 }
 
 static void
@@ -5711,7 +5711,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
 
     return nsDragService::GetInstance()->
         ScheduleDropEvent(innerMostWindow, aDragContext,
-                          nsIntPoint(aX, aY), aTime);
+                          nsIntPoint(retx, rety), aTime);
 }
 
 static void
