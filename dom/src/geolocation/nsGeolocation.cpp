@@ -89,7 +89,7 @@ public:
     MOZ_COUNT_DTOR(GeolocationSettingsCallback);
   }
 
-  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult)
+  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult, JSContext* aCx)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -103,7 +103,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(const nsAString& aName)
+  NS_IMETHOD HandleError(const nsAString& aName, JSContext* aCx)
   {
     NS_WARNING("Unable to get value for '" GEO_SETINGS_ENABLED "'");
 
