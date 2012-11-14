@@ -28,7 +28,6 @@
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsContentUtils.h"
 
 #ifdef AGPS_TYPE_INVALID
 #define AGPS_HAVE_DUAL_APN
@@ -660,13 +659,10 @@ GonkGPSGeolocationProvider::ReceiveDataCallList(nsIRILDataCallInfo** aDataCalls,
 
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Handle(const nsAString& aName,
-                                   const JS::Value& aResult)
+                                   const JS::Value& aResult,
+                                   JSContext* cx)
 {
   if (aName.EqualsLiteral("ril.supl.apn")) {
-    JSContext *cx = nsContentUtils::GetSafeJSContext();
-    NS_ENSURE_TRUE(cx, NS_OK);
-    JSAutoRequest ar(cx);
-    JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(aResult));
     // When we get the APN, we attempt to call data_call_open of AGPS.
     if (aResult.isString()) {
       nsDependentJSString apn;
@@ -680,7 +676,8 @@ GonkGPSGeolocationProvider::Handle(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-GonkGPSGeolocationProvider::HandleError(const nsAString& aErrorMessage)
+GonkGPSGeolocationProvider::HandleError(const nsAString& aErrorMessage,
+                                        JSContext* cx)
 {
   return NS_OK;
 }
