@@ -191,6 +191,7 @@ destroying the nsBuiltinDecoder object.
 #include "MediaResource.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "MediaStreamGraph.h"
+#include "MediaDecoderOwner.h"
 
 namespace mozilla {
 namespace layers {
@@ -198,7 +199,6 @@ class Image;
 } //namespace
 class nsMediaByteRange;
 class VideoFrameContainer;
-class MediaDecoderOwner;
 } //namespace
 
 class nsAudioStream;
@@ -223,8 +223,6 @@ static inline bool IsCurrentThread(nsIThread* aThread) {
   return NS_GetCurrentThread() == aThread;
 }
 
-typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
-
 class nsBuiltinDecoder : public nsIObserver
 {
 public:
@@ -240,6 +238,8 @@ public:
   typedef mozilla::TimeDuration TimeDuration;
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::layers::Image Image;
+  typedef mozilla::MetadataTags MetadataTags;
+  typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
 
   class DecodedStreamMainThreadListener;
 
@@ -691,17 +691,6 @@ public:
 
   // Notifies the element that decoding has failed.
   virtual void DecodeError();
-
-  // The status of the next frame which might be available from the decoder
-  enum NextFrameStatus {
-    // The next frame of audio/video is available
-    NEXT_FRAME_AVAILABLE,
-    // The next frame of audio/video is unavailable because the decoder
-    // is paused while it buffers up data
-    NEXT_FRAME_UNAVAILABLE_BUFFERING,
-    // The next frame of audio/video is unavailable for some other reasons
-    NEXT_FRAME_UNAVAILABLE
-  };
 
 #ifdef MOZ_RAW
   static bool IsRawEnabled();

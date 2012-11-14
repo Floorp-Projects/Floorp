@@ -49,6 +49,8 @@ public:
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::MediaStream MediaStream;
   typedef mozilla::MediaResource MediaResource;
+  typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
+  typedef mozilla::MetadataTags MetadataTags;
 
 #ifdef MOZ_DASH
   friend class nsDASHDecoder;
@@ -191,11 +193,7 @@ public:
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
   virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
-  ImageContainer* GetImageContainer()
-  {
-    VideoFrameContainer* container = GetVideoFrameContainer();
-    return container ? container->GetImageContainer() : nullptr;
-  }
+  ImageContainer* GetImageContainer();
 
   // Called by the video frame to get the print surface, if this is
   // a static document and we're not actually playing video
@@ -217,7 +215,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(nsBuiltinDecoder::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
 
   // Use this method to change the mReadyState member, so required
   // events can be fired.

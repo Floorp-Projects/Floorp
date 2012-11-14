@@ -364,6 +364,7 @@ public:
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::MediaByteRange MediaByteRange;
   typedef mozilla::AudioDataValue AudioDataValue;
+  typedef mozilla::MetadataTags MetadataTags;
 
   nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder);
   virtual ~nsBuiltinDecoderReader();
