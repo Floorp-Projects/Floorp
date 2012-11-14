@@ -402,9 +402,6 @@ private:
     RemoveStatesSilently(aStates);
     NotifyStateChange(aStates);
   }
-
-  nsEventStates mState;
-
 public:
   virtual void UpdateEditableState(bool aNotify);
 
@@ -1081,6 +1078,9 @@ private:
   nsRect GetClientAreaRect();
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr);
+
+  // Data members
+  nsEventStates mState;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
