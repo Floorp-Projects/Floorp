@@ -323,9 +323,9 @@ TabParent::DeallocPDocumentRenderer(PDocumentRendererParent* actor)
 }
 
 PContentPermissionRequestParent*
-TabParent::AllocPContentPermissionRequest(const nsCString& type, const IPC::Principal& principal)
+TabParent::AllocPContentPermissionRequest(const nsCString& type, const nsCString& access, const IPC::Principal& principal)
 {
-  return new ContentPermissionRequestParent(type, mFrameElement, principal);
+  return new ContentPermissionRequestParent(type, access, mFrameElement, principal);
 }
 
 bool
