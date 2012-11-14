@@ -9,7 +9,7 @@
 #include "nsTimeRanges.h"
 #include "nsThreadUtils.h"
 
-using mozilla::ReentrantMonitorAutoEnter;
+namespace mozilla {
 
 static const double NS_PER_S = 1e9;
 
@@ -265,3 +265,6 @@ void nsWebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLengt
     }
   }
 }
+
+} // namespace mozilla
+

@@ -20,7 +20,7 @@
 #include "MediaResource.h"
 #include "nsDASHRepDecoder.h"
 
-using mozilla::ReentrantMonitor;
+namespace mozilla {
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
@@ -381,3 +381,5 @@ nsDASHRepDecoder::ReleaseStateMachine()
 
   nsBuiltinDecoder::ReleaseStateMachine();
 }
+
+} // namespace mozilla

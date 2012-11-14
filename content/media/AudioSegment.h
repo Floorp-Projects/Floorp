@@ -11,9 +11,9 @@
 #include "AudioSampleFormat.h"
 #include "SharedBuffer.h"
 
-class nsAudioStream;
-
 namespace mozilla {
+
+class nsAudioStream;
 
 struct AudioChunk {
   typedef mozilla::AudioSampleFormat SampleFormat;

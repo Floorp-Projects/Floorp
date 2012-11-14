@@ -22,6 +22,8 @@
 #include "vorbis/codec.h"
 #endif
 
+namespace mozilla {
+
 class nsWebMBufferedState;
 
 // Holds a nestegg_packet, and its file offset. This is needed so we
@@ -98,8 +100,6 @@ class PacketQueue : private nsDeque {
 class nsWebMReader : public nsBuiltinDecoderReader
 {
 public:
-  typedef mozilla::MediaByteRange MediaByteRange;
-
   nsWebMReader(nsBuiltinDecoder* aDecoder);
   ~nsWebMReader();
 
@@ -236,5 +236,7 @@ private:
   // Byte ranges for clusters; set internally, derived from cues.
   nsTArray<MediaByteRange> mClusterByteRanges;
 };
+
+} // namespace mozilla
 
 #endif

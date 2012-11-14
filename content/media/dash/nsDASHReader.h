@@ -18,11 +18,11 @@
 
 #include "nsBuiltinDecoderReader.h"
 
+namespace mozilla {
+
 class nsDASHReader : public nsBuiltinDecoderReader
 {
 public:
-  typedef mozilla::MediaResource MediaResource;
-
   nsDASHReader(nsBuiltinDecoder* aDecoder) :
     nsBuiltinDecoderReader(aDecoder),
     mReadMetadataMonitor("media.dashreader.readmetadata"),
@@ -310,5 +310,6 @@ private:
   MonitoredSubReaderList mVideoReaders;
 };
 
+} // namespace mozilla
 
 #endif

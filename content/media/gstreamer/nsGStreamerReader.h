@@ -11,8 +11,11 @@
 #include <gst/video/video.h>
 #include "nsBuiltinDecoderReader.h"
 
-class nsBuiltinDecoder;
 class nsTimeRanges;
+
+namespace mozilla {
+
+class nsBuiltinDecoder;
 
 class nsGStreamerReader : public nsBuiltinDecoderReader
 {
@@ -133,5 +136,7 @@ private:
   int fpsNum;
   int fpsDen;
 };
+
+} // namespace mozilla
 
 #endif

@@ -10,6 +10,8 @@
 #include "MediaResource.h"
 #include "MPAPI.h"
 
+namespace mozilla {
+
 class nsMediaPluginReader;
 
 class nsMediaPluginHost {
@@ -28,5 +30,7 @@ public:
 };
 
 nsMediaPluginHost *GetMediaPluginHost();
+
+} // namespace mozilla
 
 #endif

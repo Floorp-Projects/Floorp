@@ -14,7 +14,7 @@
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h" // DebugOnly
 
-using namespace mozilla;
+namespace mozilla {
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
@@ -1529,3 +1529,7 @@ bool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
   }
   return false;
 }
+
+
+} // namespace mozilla
+

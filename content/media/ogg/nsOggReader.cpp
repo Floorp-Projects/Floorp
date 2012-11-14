@@ -19,7 +19,7 @@ extern "C" {
 #include "mozilla/TimeStamp.h"
 #include "VorbisUtils.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 // On B2G estimate the buffered ranges rather than calculating them explicitly.
 // This prevents us doing I/O on the main thread, which is prohibited in B2G.
@@ -1728,3 +1728,6 @@ bool nsOggReader::IsKnownStream(uint32_t aSerial)
 
   return false;
 }
+
+} // namespace mozilla
+

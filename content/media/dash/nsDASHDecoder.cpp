@@ -128,7 +128,7 @@
 #include "nsDASHRepDecoder.h"
 #include "nsDASHDecoder.h"
 
-using mozilla::ReentrantMonitorAutoEnter;
+namespace mozilla {
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
@@ -730,3 +730,6 @@ nsDASHDecoder::DecodeError()
     }
   }
 }
+
+} // namespace mozilla
+

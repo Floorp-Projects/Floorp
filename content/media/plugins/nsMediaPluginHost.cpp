@@ -18,7 +18,13 @@
 #include "MPAPI.h"
 
 using namespace MPAPI;
-using namespace mozilla;
+
+Decoder::Decoder() :
+  mResource(NULL), mPrivate(NULL)
+{
+}
+
+namespace mozilla {
 
 static MediaResource *GetResource(Decoder *aDecoder)
 {
@@ -148,11 +154,6 @@ bool nsMediaPluginHost::FindDecoder(const nsACString& aMimeType, const char* con
   return false;
 }
 
-Decoder::Decoder() :
-  mResource(NULL), mPrivate(NULL)
-{
-}
-
 MPAPI::Decoder *nsMediaPluginHost::CreateDecoder(MediaResource *aResource, const nsACString& aMimeType)
 {
   const char *chars;
@@ -201,4 +202,4 @@ void nsMediaPluginHost::Shutdown()
   }
 }
 
-
+} // namespace mozilla

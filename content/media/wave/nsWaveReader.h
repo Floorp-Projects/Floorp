@@ -8,8 +8,11 @@
 
 #include "nsBuiltinDecoderReader.h"
 
-class nsBuiltinDecoder;
 class nsTimeRanges;
+
+namespace mozilla {
+
+class nsBuiltinDecoder;
 
 class nsWaveReader : public nsBuiltinDecoderReader
 {
@@ -95,5 +98,7 @@ private:
   // bytes.
   int64_t mWavePCMOffset;
 };
+
+} // namespace mozilla
 
 #endif

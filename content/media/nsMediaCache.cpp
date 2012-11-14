@@ -20,7 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "nsAnonymousTemporaryFile.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaCacheLog;
@@ -2279,3 +2279,6 @@ nsresult nsMediaCacheStream::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
   }
   return NS_OK;
 }
+
+} // namespace mozilla
+
