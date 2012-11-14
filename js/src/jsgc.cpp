@@ -4010,6 +4010,10 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
         if (rt->gcIsFull)
             SweepScriptFilenames(rt);
 
+        /* Clear out any small pools that we're hanging on to. */
+        if (JSC::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
+            execAlloc->purge();
+
         /*
          * This removes compartments from rt->compartment, so we do it last to make
          * sure we don't miss sweeping any compartments.
