@@ -27,7 +27,6 @@ function test_thread_lifetime()
 {
   // Get three thread-lifetime grips.
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    aPacket.frame.arguments[0];
     let grips = [];
 
     let handler = function(aResponse) {
