@@ -73,8 +73,11 @@ BluetoothRilListener::StartListening()
   }
 
   nsresult rv = ril->RegisterTelephonyCallback(mRILTelephonyCallback);
+  NS_ENSURE_SUCCESS(rv, false);
+  rv = ril->RegisterTelephonyMsg();
+  NS_ENSURE_SUCCESS(rv, false);
 
-  return NS_FAILED(rv) ? false : true;
+  return true;
 }
 
 bool
