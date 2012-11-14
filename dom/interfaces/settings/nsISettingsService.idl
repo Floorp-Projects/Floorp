@@ -4,12 +4,10 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(83d67430-8516-11e1-b0c4-0800200c9a66)]
+[scriptable, uuid(aad47850-2e87-11e2-81c1-0800200c9a66)]
 interface nsISettingsServiceCallback : nsISupports
 {
-  [implicit_jscontext]
   void handle(in DOMString aName, in jsval aResult);
-  [implicit_jscontext]
   void handleError(in DOMString aErrorMessage);
 };
 

@@ -195,7 +195,7 @@ class BluetoothService::StartupTask : public nsISettingsServiceCallback
 public:
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult, JSContext* aCx)
+  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -213,7 +213,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(const nsAString& aName, JSContext* aCx)
+  NS_IMETHOD HandleError(const nsAString& aName)
   {
     NS_WARNING("Unable to get value for '" BLUETOOTH_ENABLED_SETTING "'");
     return NS_OK;
