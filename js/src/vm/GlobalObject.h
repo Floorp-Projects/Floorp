@@ -392,8 +392,13 @@ class GlobalObject : public JSObject
         RootedId id(cx, NameToId(name));
         if (HasDataProperty(cx, holder, id, value.address()))
             return true;
-        Rooted<PropertyName*> rootedName(cx, name);
-        return cx->runtime->cloneSelfHostedValue(cx, rootedName, holder, value);
+        bool ok = cx->runtime->cloneSelfHostedValueById(cx, id, holder, value);
+        if (!ok)
+            return false;
+
+        ok = JS_DefinePropertyById(cx, holder, id, value, NULL, NULL, 0);
+        JS_ASSERT(ok);
+        return true;
     }
 
     inline RegExpStatics *getRegExpStatics() const;
