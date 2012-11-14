@@ -365,7 +365,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
 
 PR_IMPLEMENT(PRInt32) PR_GetSysfdTableMax(void)
 {
-#if defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP) && !defined(QNX)
+#if defined(XP_UNIX) && !defined(AIX) && !defined(QNX)
     struct rlimit rlim;
 
     if ( getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
@@ -374,7 +374,7 @@ PR_IMPLEMENT(PRInt32) PR_GetSysfdTableMax(void)
     }
 
     return rlim.rlim_max;
-#elif defined(AIX) || defined(NEXTSTEP) || defined(QNX)
+#elif defined(AIX) || defined(QNX)
     return sysconf(_SC_OPEN_MAX);
 #elif defined(WIN32)
     /*
@@ -398,7 +398,7 @@ PR_IMPLEMENT(PRInt32) PR_GetSysfdTableMax(void)
 
 PR_IMPLEMENT(PRInt32) PR_SetSysfdTableSize(int table_size)
 {
-#if defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP) && !defined(QNX)
+#if defined(XP_UNIX) && !defined(AIX) && !defined(QNX)
     struct rlimit rlim;
     PRInt32 tableMax = PR_GetSysfdTableMax();
 
@@ -433,7 +433,7 @@ PR_IMPLEMENT(PRInt32) PR_SetSysfdTableSize(int table_size)
         return -1;
     } 
     return tableMax;
-#elif defined(AIX) || defined(NEXTSTEP) || defined(QNX) \
+#elif defined(AIX) || defined(QNX) \
         || defined(WIN32) || defined(WIN16) || defined(XP_BEOS)
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return -1;

@@ -15,13 +15,6 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-# Disable optimization of the nspr on SunOS4.1.3
-ifeq ($(OS_ARCH),SunOS)
-ifeq ($(OS_RELEASE),4.1.3_U1)
-OPTIMIZER =
-endif
-endif
-
 CSRCS = \
 	ptio.c \
 	ptsynch.c \

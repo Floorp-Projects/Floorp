@@ -22,8 +22,7 @@
 #endif
 
 /* To get FIONREAD */
-#if defined(NCR) || defined(UNIXWARE) || defined(NEC) || defined(SNI) \
-        || defined(SONY)
+#if defined(UNIXWARE)
 #include <sys/filio.h>
 #endif
 
@@ -39,10 +38,10 @@
     || (defined(__GLIBC__) && __GLIBC__ >= 2)
 #define _PRSockLen_t socklen_t
 #elif defined(IRIX) || defined(HPUX) || defined(OSF1) || defined(SOLARIS) \
-    || defined(AIX4_1) || defined(LINUX) || defined(SONY) \
-    || defined(BSDI) || defined(SCO) || defined(NEC) || defined(SNI) \
-    || defined(SUNOS4) || defined(NCR) || defined(DARWIN) \
-    || defined(NEXTSTEP) || defined(QNX)
+    || defined(AIX4_1) || defined(LINUX) \
+    || defined(BSDI) || defined(SCO) \
+    || defined(DARWIN) \
+    || defined(QNX)
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \
     || defined(NETBSD) || defined(OPENBSD) || defined(UNIXWARE) \
@@ -768,7 +767,7 @@ PRInt32 _MD_recv(PRFileDesc *fd, void *buf, PRInt32 amount,
  * from socketpairs.  As long as we don't use flags on socketpairs, this
  * is a decent fix. - mikep
  */
-#if defined(UNIXWARE) || defined(SOLARIS) || defined(NCR)
+#if defined(UNIXWARE) || defined(SOLARIS)
     while ((rv = read(osfd,buf,amount)) == -1) {
 #else
     while ((rv = recv(osfd,buf,amount,flags)) == -1) {
@@ -2177,11 +2176,7 @@ void _MD_MakeNonblock(PRFileDesc *fd)
      * otherwise connect() still blocks and can be interrupted by SIGALRM.
      */
 
-#ifdef SUNOS4
-    fcntl(osfd, F_SETFL, flags | FNDELAY);
-#else
     fcntl(osfd, F_SETFL, flags | O_NONBLOCK);
-#endif
     }
 
 PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
@@ -3322,7 +3317,7 @@ int _MD_unix_get_nonblocking_connect_error(int osfd)
     } else {
         return ECONNREFUSED;
     }	
-#elif defined(NCR) || defined(UNIXWARE) || defined(SNI) || defined(NEC)
+#elif defined(UNIXWARE)
     /*
      * getsockopt() fails with EPIPE, so use getmsg() instead.
      */
