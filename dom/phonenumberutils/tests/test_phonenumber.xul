@@ -20,7 +20,7 @@
 
 "use strict";
 
-Components.utils.import("resource:///modules/PhoneNumber.jsm");
+Components.utils.import("resource://gre/modules/PhoneNumber.jsm");
 
 function CantParse(dial, currentRegion) {
   var result = PhoneNumber.Parse(dial, currentRegion);
