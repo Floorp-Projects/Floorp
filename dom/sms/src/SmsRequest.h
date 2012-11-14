@@ -17,24 +17,33 @@ namespace mozilla {
 namespace dom {
 namespace sms {
 
+class SmsRequestChild;
 class SmsRequestParent;
 class MessageReply;
+class ThreadListItem;
 
 // We need this forwarder to avoid a QI to nsIClassInfo.
 // See: https://bugzilla.mozilla.org/show_bug.cgi?id=775997#c51 
 class SmsRequestForwarder : public nsISmsRequest
 {
-  NS_FORWARD_NSISMSREQUEST(mRealRequest->)
+  friend class SmsRequestChild;
 
+public:
   NS_DECL_ISUPPORTS
+  NS_FORWARD_NSISMSREQUEST(mRealRequest->)
 
   SmsRequestForwarder(nsISmsRequest* aRealRequest) {
     mRealRequest = aRealRequest;
   }
+
+private:
   virtual
   ~SmsRequestForwarder() {}
 
-private:
+  nsISmsRequest* GetRealRequest() {
+    return mRealRequest;
+  }
+
   nsCOMPtr<nsISmsRequest> mRealRequest;
 };
 
@@ -65,6 +74,9 @@ public:
   void SetActorDied() {
     mParentAlive = false;
   }
+
+  void
+  NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems);
 
 private:
   SmsRequest() MOZ_DELETE;
@@ -99,6 +111,11 @@ private:
    * Set the object in a success state with the result being a SmsCursor.
    */
   void SetSuccess(nsIDOMMozSmsCursor* aCursor);
+
+  /**
+   * Set the object in a success state with the result being the given jsval.
+   */
+  void SetSuccess(const jsval& aVal);
 
   /**
    * Set the object in an error state with the error type being aError.
