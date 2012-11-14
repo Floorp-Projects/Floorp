@@ -32,12 +32,11 @@ typedef uint16_t nsMediaReadyState;
 
 namespace mozilla {
 class MediaResource;
-}
 class nsBuiltinDecoder;
-
 #ifdef MOZ_DASH
 class nsDASHDecoder;
 #endif
+}
 
 class nsHTMLMediaElement : public nsGenericHTMLElement,
                            public nsIObserver,
@@ -51,6 +50,8 @@ public:
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
   typedef mozilla::MetadataTags MetadataTags;
+  typedef mozilla::nsAudioStream nsAudioStream;
+  typedef mozilla::nsBuiltinDecoder nsBuiltinDecoder;
 
 #ifdef MOZ_DASH
   friend class nsDASHDecoder;
@@ -125,7 +126,7 @@ public:
   virtual void MetadataLoaded(uint32_t aChannels,
                               uint32_t aRate,
                               bool aHasAudio,
-                              const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
+                              const mozilla::MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
@@ -745,7 +746,7 @@ protected:
   static PLDHashOperator BuildObjectFromTags(nsCStringHashKey::KeyType aKey,
                                              nsCString aValue,
                                              void* aUserArg);
-  nsAutoPtr<const MetadataTags> mTags;
+  nsAutoPtr<const mozilla::MetadataTags> mTags;
 
   // URI of the resource we're attempting to load. This stores the value we
   // return in the currentSrc attribute. Use GetCurrentSrc() to access the
@@ -753,7 +754,7 @@ protected:
   // This is always the original URL we're trying to load --- before
   // redirects etc.
   nsCOMPtr<nsIURI> mLoadingSrc;
-  
+
   // Stores the current preload action for this element. Initially set to
   // PRELOAD_UNDEFINED, its value is changed by calling
   // UpdatePreloadAction().

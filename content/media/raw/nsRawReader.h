@@ -9,6 +9,8 @@
 #include "nsBuiltinDecoderReader.h"
 #include "nsRawStructs.h"
 
+namespace mozilla {
+
 class nsRawReader : public nsBuiltinDecoderReader
 {
 public:
@@ -51,5 +53,7 @@ private:
   uint32_t mFrameSize;
   nsIntRect mPicture;
 };
+
+} // namespace mozilla
 
 #endif

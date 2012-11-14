@@ -12,6 +12,8 @@
 #include "nsAutoPtr.h"
 #include "AudioSampleFormat.h"
 
+namespace mozilla {
+
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels}
@@ -104,5 +106,7 @@ protected:
   int mRate;
   int mChannels;
 };
+
+} // namespace mozilla
 
 #endif

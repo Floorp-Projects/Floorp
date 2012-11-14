@@ -9,11 +9,15 @@
 
 #include "nsBuiltinDecoder.h"
 
+namespace mozilla {
+
 class nsGStreamerDecoder : public nsBuiltinDecoder
 {
 public:
   virtual nsBuiltinDecoder* Clone() { return new nsGStreamerDecoder(); }
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
+
+} // namespace mozilla
 
 #endif

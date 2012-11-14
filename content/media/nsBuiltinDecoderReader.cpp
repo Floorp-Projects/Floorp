@@ -14,9 +14,10 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/StandardInteger.h"
 
-using namespace mozilla;
-using mozilla::layers::ImageContainer;
-using mozilla::layers::PlanarYCbCrImage;
+namespace mozilla {
+
+using layers::ImageContainer;
+using layers::PlanarYCbCrImage;
 
 // Verify these values are sane. Once we've checked the frame sizes, we then
 // can do less integer overflow checking.
@@ -533,4 +534,5 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
   return NS_OK;
 }
 
+} // namespace mozilla
 

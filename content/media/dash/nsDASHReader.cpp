@@ -17,6 +17,8 @@
 #include "nsBuiltinDecoder.h"
 #include "nsDASHReader.h"
 
+namespace mozilla {
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(msg, ...) PR_LOG(gBuiltinDecoderLog, PR_LOG_DEBUG, \
@@ -323,3 +325,6 @@ nsDASHReader::IsSeekableInBufferedRanges()
           !((mVideoReader && !mVideoReader->IsSeekableInBufferedRanges()) ||
             (mAudioReader && !mAudioReader->IsSeekableInBufferedRanges()));
 }
+
+} // namespace mozilla
+

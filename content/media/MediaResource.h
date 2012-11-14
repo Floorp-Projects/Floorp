@@ -26,9 +26,9 @@ static const int64_t SEEK_VS_READ_THRESHOLD = 32*1024;
 
 static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
-class nsBuiltinDecoder;
-
 namespace mozilla {
+
+class nsBuiltinDecoder;
 
 /**
  * This class is useful for estimating rates of data passing through
@@ -526,6 +526,6 @@ protected:
   int64_t mSeekOffset;
 };
 
-}
+} // namespace mozilla
 
 #endif

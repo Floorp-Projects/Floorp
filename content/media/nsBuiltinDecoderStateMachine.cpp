@@ -21,8 +21,9 @@
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 
-using namespace mozilla;
-using namespace mozilla::layers;
+namespace mozilla {
+
+using namespace layers;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
@@ -2591,7 +2592,7 @@ nsresult nsBuiltinDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
     mTimer->SetTarget(GetStateMachineThread());
   }
 
-  res = mTimer->InitWithFuncCallback(::TimeoutExpired,
+  res = mTimer->InitWithFuncCallback(mozilla::TimeoutExpired,
                                      this,
                                      ms,
                                      nsITimer::TYPE_ONE_SHOT);
@@ -2602,7 +2603,7 @@ bool nsBuiltinDecoderStateMachine::OnStateMachineThread() const
 {
     return IsCurrentThread(GetStateMachineThread());
 }
- 
+
 nsIThread* nsBuiltinDecoderStateMachine::GetStateMachineThread()
 {
   return StateMachineTracker::Instance().GetGlobalStateMachineThread();
@@ -2619,4 +2620,6 @@ bool nsBuiltinDecoderStateMachine::IsShutdown()
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   return GetState() == DECODER_STATE_SHUTDOWN;
 }
+
+} // namespace mozilla
 

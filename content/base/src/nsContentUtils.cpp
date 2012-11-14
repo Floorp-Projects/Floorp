@@ -6658,7 +6658,7 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
-  if (nsBuiltinDecoder::IsMediaPluginsEnabled() &&
+  if (mozilla::nsBuiltinDecoder::IsMediaPluginsEnabled() &&
       nsHTMLMediaElement::IsMediaPluginsType(nsDependentCString(aType))) {
     docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
     if (docFactory && aLoaderType) {

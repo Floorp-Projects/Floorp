@@ -13,8 +13,9 @@
 #include "nsTimeRanges.h"
 #include "mozilla/Preferences.h"
 
-using namespace mozilla;
-using namespace mozilla::layers;
+namespace mozilla {
+
+using namespace layers;
 
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
@@ -835,3 +836,6 @@ void nsGStreamerReader::Eos(GstAppSink *aSink)
     mon.NotifyAll();
   }
 }
+
+} // namespace mozilla
+

@@ -22,15 +22,14 @@
 #include "nsBuiltinDecoder.h"
 #include "nsDASHReader.h"
 
-class nsDASHRepDecoder;
-
 namespace mozilla {
 namespace net {
 class IMPDManager;
 class nsDASHMPDParser;
 class Representation;
 }// net
-}// mozilla
+
+class nsDASHRepDecoder;
 
 class nsDASHDecoder : public nsBuiltinDecoder
 {
@@ -152,5 +151,7 @@ private:
   // Array of pointers for the |Representation|s in the video |AdaptationSet|.
   nsTArray<nsRefPtr<nsDASHRepDecoder> > mVideoRepDecoders;
 };
+
+} // namespace mozilla
 
 #endif

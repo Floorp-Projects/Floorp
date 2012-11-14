@@ -45,7 +45,7 @@ PRLogModuleInfo* gMediaResourceLog;
 static const uint32_t HTTP_OK_CODE = 200;
 static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
 
-using namespace mozilla;
+namespace mozilla {
 
 ChannelMediaResource::ChannelMediaResource(nsBuiltinDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI)
@@ -1570,3 +1570,6 @@ void MediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddRequest() failed!");
   }
 }
+
+} // namespace mozilla
+

@@ -17,8 +17,18 @@
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
 
-using namespace mozilla;
-using namespace mozilla::layers;
+using mozilla::NesteggPacketHolder;
+
+template <>
+class nsAutoRefTraits<NesteggPacketHolder> : public nsPointerRefTraits<NesteggPacketHolder>
+{
+public:
+  static void Release(NesteggPacketHolder* aHolder) { delete aHolder; }
+};
+
+namespace mozilla {
+
+using namespace layers;
 
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
@@ -43,13 +53,6 @@ static const double NS_PER_S = 1e9;
 // current time, decode ahead from the current frame rather than performing
 // a full seek.
 static const int SEEK_DECODE_MARGIN = 250000;
-
-template <>
-class nsAutoRefTraits<NesteggPacketHolder> : public nsPointerRefTraits<NesteggPacketHolder>
-{
-public:
-  static void Release(NesteggPacketHolder* aHolder) { delete aHolder; }
-};
 
 // Functions for reading and seeking using MediaResource required for
 // nestegg_io. The 'user data' passed to these functions is the
@@ -840,3 +843,7 @@ nsWebMReader::GetIndexByteRanges(nsTArray<MediaByteRange>& aByteRanges)
 
   return NS_OK;
 }
+
+} // namespace mozilla
+
+

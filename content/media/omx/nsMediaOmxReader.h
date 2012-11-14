@@ -14,6 +14,8 @@
 
 #include "MPAPI.h"
 
+namespace mozilla {
+
 class nsMediaOmxReader : public nsBuiltinDecoderReader
 {
   nsCString mType;
@@ -55,5 +57,7 @@ public:
   }
 
 };
+
+} // namespace mozilla
 
 #endif

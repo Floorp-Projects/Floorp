@@ -16,6 +16,8 @@
 #include "MediaResource.h"
 #include "nsHTMLMediaElement.h"
 
+namespace mozilla {
+
 class nsBuiltinDecoder;
 
 // Stores info relevant to presenting media frames.
@@ -25,7 +27,7 @@ public:
     : mAudioRate(44100),
       mAudioChannels(2),
       mDisplay(0,0),
-      mStereoMode(mozilla::STEREO_MODE_MONO),
+      mStereoMode(STEREO_MODE_MONO),
       mHasAudio(false),
       mHasVideo(false)
   {}
@@ -49,7 +51,7 @@ public:
   nsIntSize mDisplay;
 
   // Indicates the frame layout for single track stereo videos.
-  mozilla::StereoMode mStereoMode;
+  StereoMode mStereoMode;
 
   // True if we have an active audio bitstream.
   bool mHasAudio;
@@ -61,8 +63,6 @@ public:
 // Holds chunk a decoded audio frames.
 class AudioData {
 public:
-  typedef mozilla::SharedBuffer SharedBuffer;
-  typedef mozilla::AudioDataValue AudioDataValue;
 
   AudioData(int64_t aOffset,
             int64_t aTime,
@@ -105,17 +105,15 @@ public:
   nsAutoArrayPtr<AudioDataValue> mAudioData;
 };
 
-namespace mozilla {
 namespace layers {
 class GraphicBufferLocked;
-}
 }
 
 // Holds a decoded video frame, in YCbCr format. These are queued in the reader.
 class VideoData {
 public:
-  typedef mozilla::layers::ImageContainer ImageContainer;
-  typedef mozilla::layers::Image Image;
+  typedef layers::ImageContainer ImageContainer;
+  typedef layers::Image Image;
 
   // YCbCr data obtained from decoding the video. The index's are:
   //   0 = Y
@@ -155,7 +153,7 @@ public:
                            int64_t aOffset,
                            int64_t aTime,
                            int64_t aEndTime,
-                           mozilla::layers::GraphicBufferLocked *aBuffer,
+                           layers::GraphicBufferLocked *aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
                            nsIntRect aPicture);
@@ -224,8 +222,6 @@ class MediaQueueDeallocator : public nsDequeFunctor {
 
 template <class T> class MediaQueue : private nsDeque {
  public:
-   typedef mozilla::ReentrantMonitorAutoEnter ReentrantMonitorAutoEnter;
-   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
    MediaQueue()
      : nsDeque(new MediaQueueDeallocator<T>()),
@@ -359,13 +355,6 @@ private:
 // this class can only be accessed on the decode thread.
 class nsBuiltinDecoderReader : public nsRunnable {
 public:
-  typedef mozilla::ReentrantMonitor ReentrantMonitor;
-  typedef mozilla::ReentrantMonitorAutoEnter ReentrantMonitorAutoEnter;
-  typedef mozilla::VideoFrameContainer VideoFrameContainer;
-  typedef mozilla::MediaByteRange MediaByteRange;
-  typedef mozilla::AudioDataValue AudioDataValue;
-  typedef mozilla::MetadataTags MetadataTags;
-
   nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder);
   virtual ~nsBuiltinDecoderReader();
 
@@ -502,5 +491,7 @@ protected:
   // Stores presentation info required for playback.
   nsVideoInfo mInfo;
 };
+
+} // namespace mozilla
 
 #endif

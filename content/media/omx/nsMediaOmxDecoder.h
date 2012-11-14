@@ -9,6 +9,8 @@
 #include "base/basictypes.h"
 #include "nsBuiltinDecoder.h"
 
+namespace mozilla {
+
 class nsMediaOmxDecoder : public nsBuiltinDecoder
 {
 public:
@@ -18,5 +20,7 @@ public:
   virtual nsBuiltinDecoder* Clone();
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
+
+} // namespace mozilla
 
 #endif

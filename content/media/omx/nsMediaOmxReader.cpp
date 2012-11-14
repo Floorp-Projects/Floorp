@@ -14,7 +14,8 @@
 #include "nsMediaOmxDecoder.h"
 
 using namespace android;
-using namespace mozilla;
+
+namespace mozilla {
 
 nsMediaOmxReader::nsMediaOmxReader(nsBuiltinDecoder *aDecoder) :
   nsBuiltinDecoderReader(aDecoder),
@@ -361,3 +362,6 @@ nsresult nsMediaOmxReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTi
   }
   return NS_OK;
 }
+
+} // namespace mozilla
+

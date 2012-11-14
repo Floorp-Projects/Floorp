@@ -29,9 +29,17 @@ extern "C" {
 #if defined(MOZ_CUBEB)
 #include "nsAutoRef.h"
 #include "cubeb/cubeb.h"
+
+template <>
+class nsAutoRefTraits<cubeb_stream> : public nsPointerRefTraits<cubeb_stream>
+{
+public:
+  static void Release(cubeb_stream* aStream) { cubeb_stream_destroy(aStream); }
+};
+
 #endif
 
-using namespace mozilla;
+namespace mozilla {
 
 #if defined(XP_MACOSX)
 #define SA_PER_STREAM_VOLUME 1
@@ -730,13 +738,6 @@ nsRemotedAudioStream::IsPaused()
 #endif
 
 #if defined(MOZ_CUBEB)
-template <>
-class nsAutoRefTraits<cubeb_stream> : public nsPointerRefTraits<cubeb_stream>
-{
-public:
-  static void Release(cubeb_stream* aStream) { cubeb_stream_destroy(aStream); }
-};
-
 class nsCircularByteBuffer
 {
 public:
@@ -1198,3 +1199,4 @@ nsBufferedAudioStream::StateCallback(cubeb_state aState)
 }
 #endif
 
+} // namespace mozilla

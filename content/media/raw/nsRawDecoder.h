@@ -7,6 +7,8 @@
 
 #include "nsBuiltinDecoder.h"
 
+namespace mozilla {
+
 class nsRawDecoder : public nsBuiltinDecoder
 {
 public:
@@ -18,5 +20,7 @@ public:
   }
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
+
+} // namespace mozilla
 
 #endif

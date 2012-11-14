@@ -19,6 +19,7 @@
  * WAVE_FORMAT_EXTENSIBLE chunk format.
 **/
 
+namespace mozilla {
 
 class nsWaveDecoder : public nsBuiltinDecoder
 {
@@ -31,5 +32,7 @@ public:
   }
   virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
+
+} // namespace mozilla
 
 #endif
