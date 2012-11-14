@@ -151,9 +151,11 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         if (cursor != null)
             cursor.close();
 
-        mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
-        mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
-        mHandler = null;
+        if (mHandler != null) {
+            mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
+            mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
+            mHandler = null;
+        }
     }
 
     public void filter(String searchTerm) {
