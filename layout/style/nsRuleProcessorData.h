@@ -224,17 +224,27 @@ struct NS_STACK_CLASS TreeMatchContext {
   }
 };
 
-// The implementation of the constructor and destructor are currently in
-// nsCSSRuleProcessor.cpp.
-
-struct NS_STACK_CLASS RuleProcessorData  {
+struct NS_STACK_CLASS RuleProcessorData {
   RuleProcessorData(nsPresContext* aPresContext,
-                    mozilla::dom::Element* aElement, 
-                    nsRuleWalker* aRuleWalker,
-                    TreeMatchContext& aTreeMatchContext)
-    : mPresContext(aPresContext)
+                    nsRuleWalker* aRuleWalker)
+    : mPresContext(aPresContext),
+      mRuleWalker(aRuleWalker)
+  {
+    NS_PRECONDITION(mPresContext, "Must have prescontext");
+  }
+
+  nsPresContext* const mPresContext;
+  nsRuleWalker* const mRuleWalker; // Used to add rules to our results.
+};
+
+struct NS_STACK_CLASS ElementDependentRuleProcessorData :
+                          public RuleProcessorData {
+  ElementDependentRuleProcessorData(nsPresContext* aPresContext,
+                                    mozilla::dom::Element* aElement,
+                                    nsRuleWalker* aRuleWalker,
+                                    TreeMatchContext& aTreeMatchContext)
+    : RuleProcessorData(aPresContext, aRuleWalker)
     , mElement(aElement)
-    , mRuleWalker(aRuleWalker)
     , mTreeMatchContext(aTreeMatchContext)
   {
     NS_ASSERTION(aElement, "null element leaked into SelectorMatches");
@@ -243,80 +253,75 @@ struct NS_STACK_CLASS RuleProcessorData  {
                     "Should be styling if and only if we have a rule walker");
   }
   
-  nsPresContext* const mPresContext;
   mozilla::dom::Element* const mElement; // weak ref, must not be null
-  nsRuleWalker* const mRuleWalker; // Used to add rules to our results.
   TreeMatchContext& mTreeMatchContext;
 };
 
-struct NS_STACK_CLASS ElementRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS ElementRuleProcessorData :
+                          public ElementDependentRuleProcessorData {
   ElementRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aElement, 
                            nsRuleWalker* aRuleWalker,
                            TreeMatchContext& aTreeMatchContext)
-  : RuleProcessorData(aPresContext, aElement, aRuleWalker, aTreeMatchContext)
+    : ElementDependentRuleProcessorData(aPresContext, aElement, aRuleWalker,
+                                        aTreeMatchContext)
   {
-    NS_PRECONDITION(aPresContext, "null pointer");
-    NS_PRECONDITION(aRuleWalker, "null pointer");
     NS_PRECONDITION(aTreeMatchContext.mForStyling, "Styling here!");
+    NS_PRECONDITION(aRuleWalker, "Must have rule walker");
   }
 };
 
-struct NS_STACK_CLASS PseudoElementRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS PseudoElementRuleProcessorData :
+                          public ElementDependentRuleProcessorData {
   PseudoElementRuleProcessorData(nsPresContext* aPresContext,
                                  mozilla::dom::Element* aParentElement,
                                  nsRuleWalker* aRuleWalker,
                                  nsCSSPseudoElements::Type aPseudoType,
                                  TreeMatchContext& aTreeMatchContext)
-    : RuleProcessorData(aPresContext, aParentElement, aRuleWalker,
-                        aTreeMatchContext),
+    : ElementDependentRuleProcessorData(aPresContext, aParentElement, aRuleWalker,
+                                        aTreeMatchContext),
       mPseudoType(aPseudoType)
   {
-    NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(aPseudoType <
                       nsCSSPseudoElements::ePseudo_PseudoElementCount,
-                    "null pointer");
-    NS_PRECONDITION(aRuleWalker, "null pointer");
+                    "invalid aPseudoType value");
     NS_PRECONDITION(aTreeMatchContext.mForStyling, "Styling here!");
+    NS_PRECONDITION(aRuleWalker, "Must have rule walker");
   }
 
   nsCSSPseudoElements::Type mPseudoType;
 };
 
-struct NS_STACK_CLASS AnonBoxRuleProcessorData {
+struct NS_STACK_CLASS AnonBoxRuleProcessorData : public RuleProcessorData {
   AnonBoxRuleProcessorData(nsPresContext* aPresContext,
                            nsIAtom* aPseudoTag,
                            nsRuleWalker* aRuleWalker)
-    : mPresContext(aPresContext),
-      mPseudoTag(aPseudoTag),
-      mRuleWalker(aRuleWalker)
+    : RuleProcessorData(aPresContext, aRuleWalker),
+      mPseudoTag(aPseudoTag)
   {
-    NS_PRECONDITION(mPresContext, "Must have prescontext");
     NS_PRECONDITION(aPseudoTag, "Must have pseudo tag");
     NS_PRECONDITION(aRuleWalker, "Must have rule walker");
   }
 
-  nsPresContext* mPresContext;
   nsIAtom* mPseudoTag;
-  nsRuleWalker* mRuleWalker;
 };
 
 #ifdef MOZ_XUL
-struct NS_STACK_CLASS XULTreeRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS XULTreeRuleProcessorData :
+                          public ElementDependentRuleProcessorData {
   XULTreeRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aParentElement,
                            nsRuleWalker* aRuleWalker,
                            nsIAtom* aPseudoTag,
                            nsICSSPseudoComparator* aComparator,
                            TreeMatchContext& aTreeMatchContext)
-    : RuleProcessorData(aPresContext, aParentElement, aRuleWalker,
-                        aTreeMatchContext),
+    : ElementDependentRuleProcessorData(aPresContext, aParentElement,
+                                        aRuleWalker, aTreeMatchContext),
       mPseudoTag(aPseudoTag),
       mComparator(aComparator)
   {
-    NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(aPseudoTag, "null pointer");
-    NS_PRECONDITION(aRuleWalker, "null pointer");
+    NS_PRECONDITION(aRuleWalker, "Must have rule walker");
     NS_PRECONDITION(aComparator, "must have a comparator");
     NS_PRECONDITION(aTreeMatchContext.mForStyling, "Styling here!");
   }
@@ -326,34 +331,36 @@ struct NS_STACK_CLASS XULTreeRuleProcessorData : public RuleProcessorData {
 };
 #endif
 
-struct NS_STACK_CLASS StateRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS StateRuleProcessorData :
+                          public ElementDependentRuleProcessorData {
   StateRuleProcessorData(nsPresContext* aPresContext,
                          mozilla::dom::Element* aElement,
                          nsEventStates aStateMask,
                          TreeMatchContext& aTreeMatchContext)
-    : RuleProcessorData(aPresContext, aElement, nullptr, aTreeMatchContext),
+    : ElementDependentRuleProcessorData(aPresContext, aElement, nullptr,
+                                        aTreeMatchContext),
       mStateMask(aStateMask)
   {
-    NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(!aTreeMatchContext.mForStyling, "Not styling here!");
   }
   const nsEventStates mStateMask; // |HasStateDependentStyle| for which state(s)?
                                   //  Constants defined in nsEventStates.h .
 };
 
-struct NS_STACK_CLASS AttributeRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS AttributeRuleProcessorData :
+                          public ElementDependentRuleProcessorData {
   AttributeRuleProcessorData(nsPresContext* aPresContext,
                              mozilla::dom::Element* aElement,
                              nsIAtom* aAttribute,
                              int32_t aModType,
                              bool aAttrHasChanged,
                              TreeMatchContext& aTreeMatchContext)
-    : RuleProcessorData(aPresContext, aElement, nullptr, aTreeMatchContext),
+    : ElementDependentRuleProcessorData(aPresContext, aElement, nullptr,
+                                        aTreeMatchContext),
       mAttribute(aAttribute),
       mModType(aModType),
       mAttrHasChanged(aAttrHasChanged)
   {
-    NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(!aTreeMatchContext.mForStyling, "Not styling here!");
   }
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?

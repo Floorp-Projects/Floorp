@@ -631,7 +631,7 @@ nsTransitionManager::GetElementTransitions(dom::Element *aElement,
  */
 
 void
-nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
+nsTransitionManager::WalkTransitionRule(ElementDependentRuleProcessorData* aData,
                                         nsCSSPseudoElements::Type aPseudoType)
 {
   ElementTransitions *et =

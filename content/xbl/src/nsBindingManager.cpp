@@ -1256,7 +1256,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
 
 nsresult
 nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
-                            RuleProcessorData* aData,
+                            ElementDependentRuleProcessorData* aData,
                             bool* aCutOffInheritance)
 {
   *aCutOffInheritance = false;
@@ -1321,7 +1321,7 @@ EnumRuleProcessors(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
 
 struct WalkAllRulesData {
   nsIStyleRuleProcessor::EnumFunc mFunc;
-  RuleProcessorData* mData;
+  ElementDependentRuleProcessorData* mData;
 };
 
 static PLDHashOperator
@@ -1338,7 +1338,7 @@ EnumWalkAllRules(nsPtrHashKey<nsIStyleRuleProcessor> *aKey, void* aClosure)
 
 void
 nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
-                               RuleProcessorData* aData)
+                               ElementDependentRuleProcessorData* aData)
 {
   if (!mBindingTable.IsInitialized())
     return;
