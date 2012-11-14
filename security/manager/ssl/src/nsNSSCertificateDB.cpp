@@ -9,6 +9,7 @@
 
 #include "nsNSSComponent.h"
 #include "nsNSSCertificateDB.h"
+#include "mozilla/Base64.h"
 #include "nsCOMPtr.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
@@ -1614,6 +1615,16 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
 
 
   return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateDB::AddCert(const nsACString & aCertDER, const char *aTrust,
+                            const char *aName)
+{
+  nsCString base64;
+  nsresult rv = Base64Encode(aCertDER, base64);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AddCertFromBase64(base64.get(), aTrust, aName);
 }
 
 NS_IMETHODIMP 
