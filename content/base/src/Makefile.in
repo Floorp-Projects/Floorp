@@ -87,10 +87,10 @@ CPPSRCS		= \
 		nsDocumentEncoder.cpp \
 		DocumentFragment.cpp \
 		nsFrameLoader.cpp \
+		Element.cpp \
 		nsFormData.cpp \
 		nsGenConImageContent.cpp \
 		nsGenericDOMDataNode.cpp \
-		nsGenericElement.cpp \
 		nsGkAtoms.cpp \
 		nsHTMLContentSerializer.cpp \
 		nsImageLoadingContent.cpp \
