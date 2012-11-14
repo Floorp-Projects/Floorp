@@ -68,6 +68,7 @@ EXPORTS		= \
 		nsWeakPtr.h \
 		nsInterfaceRequestorAgg.h \
 		nsGZFileWriter.h \
+		NSPRFormatTime.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla
