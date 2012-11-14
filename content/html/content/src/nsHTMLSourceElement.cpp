@@ -14,6 +14,8 @@
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
 
+using namespace mozilla::dom;
+
 class nsHTMLSourceElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLSourceElement
 {
@@ -67,8 +69,8 @@ nsHTMLSourceElement::~nsHTMLSourceElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSourceElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLSourceElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLSourceElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSourceElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLSourceElement, nsHTMLSourceElement)

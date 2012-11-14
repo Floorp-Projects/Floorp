@@ -5,8 +5,10 @@
 
 #include "nsHTMLUnknownElement.h"
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLUnknownElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLUnknownElement, nsGenericElement)
+using namespace mozilla::dom;
+
+NS_IMPL_ADDREF_INHERITED(nsHTMLUnknownElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLUnknownElement, Element)
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 

@@ -101,7 +101,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(Element* aDest);
 
   void StartObjectLoad() { StartObjectLoad(true); }
 
@@ -178,8 +178,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLObjectElement,
   nsObjectLoadingContent::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, Element)
 
 DOMCI_NODE_DATA(HTMLObjectElement, nsHTMLObjectElement)
 
@@ -538,7 +538,7 @@ nsHTMLObjectElement::DestroyContent()
 }
 
 nsresult
-nsHTMLObjectElement::CopyInnerTo(nsGenericElement* aDest)
+nsHTMLObjectElement::CopyInnerTo(Element* aDest)
 {
   nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);

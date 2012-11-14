@@ -28,6 +28,7 @@
 #include "mozilla/dom/HTMLCollectionBinding.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /* ------------------------------ TableRowsCollection -------------------------------- */
 /**
@@ -44,7 +45,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsGenericElement* GetElementAt(uint32_t aIndex);
+  virtual Element* GetElementAt(uint32_t aIndex);
   virtual nsINode* GetParentObject()
   {
     return mParent;
@@ -197,7 +198,7 @@ TableRowsCollection::GetLength(uint32_t* aLength)
 // Returns the item at index aIndex if available. If null is returned,
 // then aCount will be set to the number of rows in this row collection.
 // Otherwise, the value of aCount is undefined.
-static nsGenericElement*
+static Element*
 GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
                          uint32_t aIndex, uint32_t* aCount)
 {
@@ -214,12 +215,12 @@ GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
   return nullptr;
 }
 
-nsGenericElement*
+Element*
 TableRowsCollection::GetElementAt(uint32_t aIndex)
 {
   DO_FOR_EACH_ROWGROUP(
     uint32_t count;
-    nsGenericElement* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
+    Element* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
     if (node) {
       return node; 
     }
@@ -356,8 +357,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTableElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRows)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLTableElement, nsHTMLTableElement)

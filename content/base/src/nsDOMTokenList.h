@@ -30,6 +30,7 @@ class nsIAtom;
 class nsDOMTokenList : public nsIDOMDOMTokenList,
                        public nsWrapperCache
 {
+protected:
   typedef mozilla::dom::Element Element;
 
 public:

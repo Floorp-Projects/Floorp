@@ -96,8 +96,8 @@ nsHTMLAreaElement::~nsHTMLAreaElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLAreaElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLAreaElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLAreaElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLAreaElement, Element)
 
 DOMCI_NODE_DATA(HTMLAreaElement, nsHTMLAreaElement)
 

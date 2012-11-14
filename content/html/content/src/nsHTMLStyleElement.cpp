@@ -119,8 +119,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLStyleElement,
   tmp->nsStyleLinkElement::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLStyleElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLStyleElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLStyleElement, nsHTMLStyleElement)

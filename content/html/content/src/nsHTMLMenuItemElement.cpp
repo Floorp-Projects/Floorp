@@ -168,8 +168,8 @@ nsHTMLMenuItemElement::~nsHTMLMenuItemElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLMenuItemElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLMenuItemElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLMenuItemElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLMenuItemElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLMenuItemElement, nsHTMLMenuItemElement)

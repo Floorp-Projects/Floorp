@@ -151,8 +151,8 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 
 // nsISupports
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLButtonElement, nsHTMLButtonElement)

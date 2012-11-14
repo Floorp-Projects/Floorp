@@ -79,7 +79,7 @@ public:
   virtual nsEventStates IntrinsicState() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   void MaybeLoadImage();
   virtual nsXPCClassInfo* GetClassInfo();

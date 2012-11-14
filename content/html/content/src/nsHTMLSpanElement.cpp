@@ -10,6 +10,8 @@
 #include "nsIAtom.h"
 #include "nsRuleData.h"
 
+using namespace mozilla::dom;
+
 class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement
 {
@@ -50,8 +52,8 @@ nsHTMLSpanElement::~nsHTMLSpanElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLSpanElement, nsHTMLSpanElement)

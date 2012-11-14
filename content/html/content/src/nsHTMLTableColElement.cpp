@@ -15,6 +15,7 @@
 #include "nsRuleData.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // use the same protection as ancient code did 
 // http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46
@@ -70,8 +71,8 @@ nsHTMLTableColElement::~nsHTMLTableColElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableColElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableColElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLTableColElement, nsHTMLTableColElement)

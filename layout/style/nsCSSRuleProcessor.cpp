@@ -56,7 +56,6 @@
 #include "nsNetCID.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
-#include "nsGenericElement.h"
 #include "nsNthIndexCache.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -2003,8 +2002,7 @@ static bool SelectorMatches(Element* aElement,
           if (!aElement->IsHTML(nsGkAtoms::table)) {
             return false;
           }
-          nsGenericElement *ge = static_cast<nsGenericElement*>(aElement);
-          const nsAttrValue *val = ge->GetParsedAttr(nsGkAtoms::border);
+          const nsAttrValue *val = aElement->GetParsedAttr(nsGkAtoms::border);
           if (!val ||
               (val->Type() == nsAttrValue::eInteger &&
                val->GetIntegerValue() == 0)) {

@@ -1056,7 +1056,7 @@ nsresult nsHTMLMediaElement::LoadResource()
   nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
                                           mLoadingSrc,
                                           NodePrincipal(),
-                                          static_cast<nsGenericElement*>(this),
+                                          static_cast<Element*>(this),
                                           EmptyCString(), // mime type
                                           nullptr, // extra
                                           &shouldLoad,
@@ -3569,7 +3569,7 @@ already_AddRefed<nsILoadGroup> nsHTMLMediaElement::GetDocumentLoadGroup()
 }
 
 nsresult
-nsHTMLMediaElement::CopyInnerTo(nsGenericElement* aDest)
+nsHTMLMediaElement::CopyInnerTo(Element* aDest)
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);

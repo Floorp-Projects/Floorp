@@ -13,6 +13,7 @@
 #include "nsEventDispatcher.h"
 #include "nsContentList.h"
 
+using namespace mozilla::dom;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
 
@@ -50,8 +51,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFieldSetElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mElements, nsIDOMNodeList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, Element)
 
 DOMCI_NODE_DATA(HTMLFieldSetElement, nsHTMLFieldSetElement)
 

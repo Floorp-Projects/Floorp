@@ -19,21 +19,14 @@ class nsScriptErrorEvent;
 class nsIScriptGlobalObject;
 struct JSObject; // until we finally remove GetGlobalJSObject...
 
+// XXXbz can we just remove all this script type id stuff?
 // Some helpers for working with integer "script type IDs", and specifically
 // for working with arrays of such objects. For example, it is common for
 // implementations supporting multiple script languages to keep each
 // language's nsIScriptContext in an array indexed by the language ID.
 
-// Implementation note: We always ignore nsIProgrammingLanguage::UNKNOWN and
-// nsIProgrammingLanguage::CPLUSPLUS - this gives javascript slot 0.  An
-// attempted micro-optimization tried to avoid us going all the way to 
-// nsIProgrammingLanguage::MAX; however:
-// * Someone is reportedly working on a PHP impl - that has value 9
-// * nsGenericElement therefore allows 4 bits for the value.
-// So there is no good reason for us to be more restrictive again...
-
 #define NS_STID_FIRST nsIProgrammingLanguage::JAVASCRIPT
-// like nsGenericElement, only 4 bits worth is valid...
+// only 4 bits worth is valid...
 #define NS_STID_LAST (nsIProgrammingLanguage::MAX > 0x000FU ? \
                       0x000FU : nsIProgrammingLanguage::MAX)
 
