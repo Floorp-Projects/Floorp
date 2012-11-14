@@ -25,14 +25,6 @@ GetHighResClock(void *buf, size_t maxbytes)
     return 0;
 }
 
-#elif defined(SUNOS4)
-
-static size_t
-GetHighResClock(void *buf, size_t maxbytes)
-{
-    return 0;
-}
-
 #elif defined(HPUX)
 
 #ifdef __ia64
@@ -134,14 +126,6 @@ GetHighResClock(void *buf, size_t maxbytes)
     return(GetDevURandom( buf, maxbytes ));
 }
 
-#elif defined(NCR)
-
-static size_t
-GetHighResClock(void *buf, size_t maxbytes)
-{
-    return 0;
-}
-
 #elif defined(IRIX)
 #include <fcntl.h>
 #undef PRIVATE
@@ -225,34 +209,6 @@ static size_t GetHighResClock(void *buf, size_t maxbuf)
     return _pr_CopyLowBits(buf, maxbuf, &s0, cntr_size);
 }
 
-#elif defined(SONY)
-
-static size_t
-GetHighResClock(void *buf, size_t maxbytes)
-{
-    return 0;
-}
-
-#elif defined(SNI)
-#include <sys/times.h>
-
-static size_t
-GetHighResClock(void *buf, size_t maxbytes)
-{
-    int ticks;
-    struct tms buffer;
-
-    ticks=times(&buffer);
-    return _pr_CopyLowBits(buf, maxbytes, &ticks, sizeof(ticks));
-}
-
-#elif defined(NEC)
-
-static size_t
-GetHighResClock(void *buf, size_t maxbytes)
-{
-    return 0;
-}
 #elif defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(NTO) \
     || defined(QNX) || defined(DARWIN) || defined(RISCOS)
 #include <sys/times.h>

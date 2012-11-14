@@ -44,7 +44,7 @@ endif
 # Temporary workaround to disable the generation of
 # library build time because now.c uses the 'long long'
 # data type that's not available on some platforms.
-ifeq (,$(filter-out NEC NEXTSTEP QNX SCOOS UNIXWARE,$(OS_ARCH)))
+ifeq (,$(filter-out QNX SCOOS UNIXWARE,$(OS_ARCH)))
 DEFINES += -DOMIT_LIB_BUILD_TIME
 endif
 

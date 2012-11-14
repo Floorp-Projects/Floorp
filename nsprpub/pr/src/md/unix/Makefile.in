@@ -36,8 +36,7 @@ ASFILES += $(PR_MD_ASFILES)
 TARGETS = $(OBJS)
 
 ifeq ($(OS_ARCH),SunOS)
-	ifneq ($(OS_RELEASE),4.1.3_U1)
-		ifeq ($(CPU_ARCH),sparc)
+	ifeq ($(CPU_ARCH),sparc)
 		ifdef USE_64
 			ULTRASPARC_ASFILES = os_SunOS_sparcv9.s
 			ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
@@ -51,7 +50,6 @@ ifeq ($(OS_ARCH),SunOS)
 			RELEASE_LIBS_DEST = $(RELEASE_LIB_DIR)/cpu/sparcv8plus
 			lib_subdir = cpu/sparcv8plus
 		endif
-		endif
 	endif
 endif
 
@@ -64,7 +62,6 @@ include $(topsrcdir)/config/rules.mk
 export:: $(TARGETS)
 
 ifeq ($(OS_ARCH),SunOS)
-ifneq ($(OS_RELEASE),4.1.3_U1)
 ifeq ($(CPU_ARCH),sparc)
 
 ifdef USE_64
@@ -98,6 +95,5 @@ clean::
 	rm -rf $(ULTRASPARC_ASOBJS)
 endif
 
-endif
 endif
 endif

@@ -531,7 +531,7 @@ void _MD_unix_map_connect_error(int err)
         case EACCES:
             prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
             break;
-#if defined(UNIXWARE) || defined(SNI) || defined(NEC)
+#if defined(UNIXWARE)
         /*
          * On some platforms, if we connect to a port on the local host 
          * (the loopback address) that no process is listening on, we get 
