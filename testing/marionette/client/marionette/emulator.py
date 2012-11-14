@@ -19,6 +19,7 @@ import time
 
 from emulator_battery import EmulatorBattery
 from emulator_geo import EmulatorGeo
+from emulator_screen import EmulatorScreen
 
 
 class LogcatProc(ProcessHandlerMixin):
@@ -59,6 +60,7 @@ class Emulator(object):
         self.res = res
         self.battery = EmulatorBattery(self)
         self.geo = EmulatorGeo(self)
+        self.screen = EmulatorScreen(self)
         self.homedir = homedir
         self.sdcard = sdcard
         self.noWindow = noWindow
@@ -359,6 +361,7 @@ waitFor(
         # bug 802877
         time.sleep(10)
         self.geo.set_default_location()
+        self.screen.initialize()
 
         if self.logcat_dir:
             self.save_logcat()
