@@ -453,6 +453,25 @@ MarkActualArguments(JSTracer *trc, const IonFrameIterator &frame)
         gc::MarkValueRoot(trc, &argv[i], "ion-argv");
 }
 
+size_t
+IonFrameIterator::numBaselineStackValues() const
+{
+    // Compute the start of the BaselineFrame.
+    uint8_t *base = fp() - BaselineFrame::FramePointerOffset;
+
+    // Read the frame size in bytes. Note that we can't use frameSize() here
+    // because it includes the VMFunction arguments.
+    size_t size = *reinterpret_cast<size_t *>(base + BaselineFrame::reverseOffsetOfFrameSize());
+    JS_ASSERT(size >= BaselineFrame::FramePointerOffset + BaselineFrame::Size());
+    JS_ASSERT(size <= frameSize());
+
+    // Subtract BaselineFrame size to get size of locals and stack values.
+    size -= BaselineFrame::FramePointerOffset + BaselineFrame::Size();
+    JS_ASSERT((size % sizeof(Value)) == 0);
+
+    return size / sizeof(Value);
+}
+
 static void
 MarkBaselineJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
@@ -462,22 +481,10 @@ MarkBaselineJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     if (CalleeTokenIsFunction(layout->calleeToken()))
         MarkActualArguments(trc, frame);
 
-    // Compute the start of the BaselineFrame.
-    uint8_t *base = frame.fp() - BaselineFrame::FramePointerOffset;
-
-    // Read the frame size in bytes. Note that we can't use frame.frameSize()
-    // here because it includes the VMFunction arguments.
-    size_t size = *reinterpret_cast<size_t *>(base + BaselineFrame::reverseOffsetOfFrameSize());
-    JS_ASSERT(size >= BaselineFrame::FramePointerOffset + BaselineFrame::Size());
-    JS_ASSERT(size <= frame.frameSize());
-
-    // Subtract BaselineFrame size to get size of locals and stack values.
-    size -= BaselineFrame::FramePointerOffset + BaselineFrame::Size();
-    JS_ASSERT((size % sizeof(Value)) == 0);
-
-    size_t nvalues = size / sizeof(Value);
+    size_t nvalues = frame.numBaselineStackValues();
     if (nvalues > 0) {
         // The stack grows down, so start at the last Value.
+        uint8_t *base = frame.fp() - BaselineFrame::FramePointerOffset;
         Value *last = reinterpret_cast<Value *>(base + BaselineFrame::reverseOffsetOfLocal(nvalues - 1));
         gc::MarkValueRootRange(trc, nvalues, last, "baseline-stack");
     }
@@ -1147,6 +1154,9 @@ IonFrameIterator::dump() const
         fprintf(stderr, " Entry frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
+      case IonFrame_BaselineJS:
+        dumpBaseline();
+        break;
       case IonFrame_OptimizedJS:
       {
         InlineFrameIterator frames(this);
@@ -1189,6 +1199,52 @@ struct DumpOp {
         i_++;
     }
 };
+
+void
+IonFrameIterator::dumpBaseline() const
+{
+    AutoAssertNoGC nogc;
+    JS_ASSERT(isBaselineJS());
+
+    fprintf(stderr, " JS Baseline frame\n");
+    if (isFunctionFrame()) {
+        fprintf(stderr, "  callee fun: ");
+#ifdef DEBUG
+        js_DumpObject(callee());
+#else
+        fprintf(stderr, "?\n");
+#endif
+    } else {
+        fprintf(stderr, "  global frame, no callee\n");
+    }
+
+    fprintf(stderr, "  file %s line %u\n",
+            script()->filename, (unsigned) script()->lineno);
+
+    JSContext *cx = GetIonContext()->cx;
+    RootedScript script(cx);
+    jsbytecode *pc;
+    baselineScriptAndPc(&script, &pc);
+
+    fprintf(stderr, "  script = %p, pc = %p (offset %d)\n", (void *)script, pc, pc - script->code);
+    fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
+
+    fprintf(stderr, "  actual args: %d\n", numActualArgs());
+
+    uint8_t *base = fp() - BaselineFrame::FramePointerOffset;
+    Value *v = reinterpret_cast<Value *>(base + BaselineFrame::reverseOffsetOfLocal(0));
+    size_t nvalues = numBaselineStackValues();
+
+    for (unsigned i = 0; i < nvalues; i++) {
+        fprintf(stderr, "  slot %u: ", i);
+#ifdef DEBUG
+        js_DumpValue(*v);
+#else
+        fprintf(stderr, "?\n");
+#endif
+        v--;
+    }
+}
 
 void
 InlineFrameIterator::dump() const
