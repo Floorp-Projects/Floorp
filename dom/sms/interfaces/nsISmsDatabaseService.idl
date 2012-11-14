@@ -14,7 +14,7 @@
 interface nsIDOMMozSmsFilter;
 interface nsISmsRequest;
 
-[scriptable, uuid(6ad55465-6937-4491-93ca-29dad9775d46)]
+[scriptable, uuid(c2cb2af7-6b96-4915-bcc8-54ad705d6110)]
 interface nsISmsDatabaseService : nsISupports
 {
   // Takes some information required to save the message and returns its id.
@@ -30,4 +30,6 @@ interface nsISmsDatabaseService : nsISupports
   void getNextMessageInList(in long listId, in nsISmsRequest request);
   void clearMessageList(in long listId);
   void markMessageRead(in long messageId, in boolean value, in nsISmsRequest request);
+
+  void getThreadList(in nsISmsRequest request);
 };
