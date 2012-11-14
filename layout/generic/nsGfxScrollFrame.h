@@ -334,6 +334,9 @@ public:
   // Used for asynchronous scrolling.
   bool mShouldBuildLayer:1;
 
+  // True if this frame has been scrolled at least once
+  bool mHasBeenScrolled:1;
+
 protected:
   void ScrollToWithOrigin(nsPoint aScrollPosition,
                           nsIScrollableFrame::ScrollMode aMode,
