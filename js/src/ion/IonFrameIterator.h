@@ -72,6 +72,8 @@ class IonFrameIterator
     mutable const SafepointIndex *cachedSafepointIndex_;
     const IonActivation *activation_;
 
+    void dumpBaseline() const;
+
   public:
     IonFrameIterator(uint8 *top)
       : current_(top),
@@ -170,6 +172,9 @@ class IonFrameIterator
     // Returns the Safepoint associated with this JS frame. Incurs a lookup
     // overhead.
     const SafepointIndex *safepoint() const;
+
+    // Computes the number of values on the baseline stack.
+    size_t numBaselineStackValues() const;
 
     // Returns the OSI index associated with this JS frame. Incurs a lookup
     // overhead.
