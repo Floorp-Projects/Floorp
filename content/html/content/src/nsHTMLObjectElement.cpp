@@ -49,8 +49,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLObjectElement
@@ -309,9 +308,8 @@ nsHTMLObjectElement::IsFocusableForTabIndex()
     return false;
   }
 
-  return IsEditableRoot() ||
-         (Type() == eType_Document &&
-          nsContentUtils::IsSubDocumentTabbable(this));
+  return IsEditableRoot() || (Type() == eType_Document &&
+                              nsContentUtils::IsSubDocumentTabbable(this));
 }
 
 bool

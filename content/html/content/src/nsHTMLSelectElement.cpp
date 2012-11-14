@@ -597,29 +597,40 @@ nsHTMLSelectElement::GetSelectFrame()
   return select_frame;
 }
 
-void
-nsHTMLSelectElement::Add(nsGenericHTMLElement& aElement,
-                         nsGenericHTMLElement* aBefore,
-                         ErrorResult& aError)
+nsresult
+nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
+                         nsIDOMHTMLElement* aBefore)
 {
+  nsCOMPtr<nsIDOMNode> added;
   if (!aBefore) {
-    nsGenericHTMLElement::AppendChild(aElement, aError);
-    return;
+    return AppendChild(aElement, getter_AddRefs(added));
   }
 
   // Just in case we're not the parent, get the parent of the reference
   // element
-  nsINode* parent = aBefore->GetParentNode();
-  if (!nsContentUtils::ContentIsDescendantOf(parent, this)) {
+  nsCOMPtr<nsIDOMNode> parent;
+  aBefore->GetParentNode(getter_AddRefs(parent));
+  if (!parent) {
     // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
     // element.
-    aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-    return;
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  nsCOMPtr<nsIDOMNode> ancestor(parent);
+  nsCOMPtr<nsIDOMNode> temp;
+  while (ancestor != static_cast<nsIDOMNode*>(this)) {
+    ancestor->GetParentNode(getter_AddRefs(temp));
+    if (!temp) {
+      // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
+      // element.
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
+    temp.swap(ancestor);
   }
 
   // If the before parameter is not null, we are equivalent to the
   // insertBefore method on the parent of before.
-  parent->InsertBefore(aElement, aBefore, aError);
+  return parent->InsertBefore(aElement, aBefore, getter_AddRefs(added));
 }
 
 NS_IMETHODIMP
@@ -630,19 +641,10 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
   nsresult rv = aBefore->GetDataType(&dataType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> element = do_QueryInterface(aElement);
-  nsGenericHTMLElement* htmlElement =
-    nsGenericHTMLElement::FromContentOrNull(element);
-  if (!htmlElement) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
   // aBefore is omitted, undefined or null
   if (dataType == nsIDataType::VTYPE_EMPTY ||
       dataType == nsIDataType::VTYPE_VOID) {
-    ErrorResult error;
-    Add(*htmlElement, (nsGenericHTMLElement*)nullptr, error);
-    return error.ErrorCode();
+    return Add(aElement);
   }
 
   nsCOMPtr<nsISupports> supports;
@@ -650,24 +652,17 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
 
   // whether aBefore is nsIDOMHTMLElement...
   if (NS_SUCCEEDED(aBefore->GetAsISupports(getter_AddRefs(supports)))) {
-    nsCOMPtr<nsIContent> beforeElement = do_QueryInterface(supports);
-    nsGenericHTMLElement* beforeHTMLElement =
-      nsGenericHTMLElement::FromContentOrNull(beforeElement);
+    beforeElement = do_QueryInterface(supports);
 
-    NS_ENSURE_TRUE(beforeHTMLElement, NS_ERROR_DOM_SYNTAX_ERR);
-
-    ErrorResult error;
-    Add(*htmlElement, beforeHTMLElement, error);
-    return error.ErrorCode();
+    NS_ENSURE_TRUE(beforeElement, NS_ERROR_DOM_SYNTAX_ERR);
+    return Add(aElement, beforeElement);
   }
 
   // otherwise, whether aBefore is long
   int32_t index;
   NS_ENSURE_SUCCESS(aBefore->GetAsInt32(&index), NS_ERROR_DOM_SYNTAX_ERR);
 
-  ErrorResult error;
-  Add(*htmlElement, index, error);
-  return error.ErrorCode();
+  return Add(aElement, index);
 }
 
 NS_IMETHODIMP
