@@ -502,12 +502,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(CanvasRenderingContext2D)
  if (nsCCUncollectableMarker::sGeneration && tmp->IsBlack()) {
-    nsGenericElement* canvasElement = tmp->mCanvasElement;
+   dom::Element* canvasElement = tmp->mCanvasElement;
     if (canvasElement) {
       if (canvasElement->IsPurple()) {
         canvasElement->RemovePurple();
       }
-      nsGenericElement::MarkNodeChildren(canvasElement);
+      dom::Element::MarkNodeChildren(canvasElement);
     }
     return true;
   }
@@ -591,17 +591,23 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     return false;
   }
 
-  nsIPresShell* presShell = GetPresShell();
-  nsRefPtr<nsStyleContext> parentContext;
-  if (mCanvasElement && mCanvasElement->IsInDoc()) {
-    // Inherit from the canvas element.
-    parentContext = nsComputedDOMStyle::GetStyleContextForElement(
-      mCanvasElement, nullptr, presShell);
-  }
+  if (value.GetUnit() == nsCSSUnit::eCSSUnit_Color) {
+    // if we already have a color we can just use it directly
+    *aColor = value.GetColorValue();
+  } else {
+    // otherwise resolve it
+    nsIPresShell* presShell = GetPresShell();
+    nsRefPtr<nsStyleContext> parentContext;
+    if (mCanvasElement && mCanvasElement->IsInDoc()) {
+      // Inherit from the canvas element.
+      parentContext = nsComputedDOMStyle::GetStyleContextForElement(
+        mCanvasElement, nullptr, presShell);
+    }
 
-  unused << nsRuleNode::ComputeColor(
-    value, presShell ? presShell->GetPresContext() : nullptr, parentContext,
-    *aColor);
+    unused << nsRuleNode::ComputeColor(
+      value, presShell ? presShell->GetPresContext() : nullptr, parentContext,
+      *aColor);
+  }
   return true;
 }
 
@@ -3493,7 +3499,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     return NS_OK;
   }
 
-  uint8_t* data = JS_GetUint8ClampedArrayData(darray, aCx);
+  uint8_t* data = JS_GetUint8ClampedArrayData(darray);
 
   IntRect srcRect(0, 0, mWidth, mHeight);
   IntRect destRect(aX, aY, aWidth, aHeight);
@@ -3605,7 +3611,7 @@ CanvasRenderingContext2D::PutImageData(JSContext* cx,
     return;
   }
 
-  dom::Uint8ClampedArray arr(cx, imageData.GetDataObject());
+  dom::Uint8ClampedArray arr(imageData.GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData.Width(), imageData.Height(),
@@ -3625,7 +3631,7 @@ CanvasRenderingContext2D::PutImageData(JSContext* cx,
     return;
   }
 
-  dom::Uint8ClampedArray arr(cx, imageData.GetDataObject());
+  dom::Uint8ClampedArray arr(imageData.GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData.Width(), imageData.Height(),

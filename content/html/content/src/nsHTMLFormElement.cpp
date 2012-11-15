@@ -92,7 +92,7 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsGenericElement* GetElementAt(uint32_t index);
+  virtual Element* GetElementAt(uint32_t index);
   virtual nsINode* GetParentObject()
   {
     return mForm;
@@ -291,8 +291,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFormElement,
   tmp->mSelectedRadioButtons.EnumerateRead(ElementTraverser, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLFormElement, nsHTMLFormElement)
@@ -2516,7 +2516,7 @@ nsFormControlList::GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aContr
   return NS_OK;
 }
 
-nsGenericElement*
+Element*
 nsFormControlList::GetElementAt(uint32_t aIndex)
 {
   FlushPendingNotifications();

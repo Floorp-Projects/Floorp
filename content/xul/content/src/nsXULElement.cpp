@@ -685,7 +685,7 @@ nsXULElement::MaybeAddPopupListener(nsIAtom* aLocalName)
 void
 nsXULElement::UpdateEditableState(bool aNotify)
 {
-    // Don't call through to nsGenericElement here because the things
+    // Don't call through to Element here because the things
     // it does don't work for cases when we're an editable control.
     nsIContent *parent = GetParent();
 

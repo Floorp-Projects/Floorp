@@ -6,9 +6,13 @@
 #ifndef MediaDecoderOwner_h_
 #define MediaDecoderOwner_h_
 
-#include "nsMediaDecoder.h"
+class nsHTMLMediaElement;
 
 namespace mozilla {
+
+class VideoFrameContainer;
+
+typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
 class MediaDecoderOwner
 {
@@ -115,16 +119,27 @@ public:
   // called to notify that the principal of the decoder's media resource has changed.
   virtual void NotifyDecoderPrincipalChanged() = 0;
 
+  // The status of the next frame which might be available from the decoder
+  enum NextFrameStatus {
+    // The next frame of audio/video is available
+    NEXT_FRAME_AVAILABLE,
+    // The next frame of audio/video is unavailable because the decoder
+    // is paused while it buffers up data
+    NEXT_FRAME_UNAVAILABLE_BUFFERING,
+    // The next frame of audio/video is unavailable for some other reasons
+    NEXT_FRAME_UNAVAILABLE
+  };
+
   // Called by the decoder when some data has been downloaded or
   // buffering/seeking has ended. aNextFrameAvailable is true when
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame) = 0;
+  virtual void UpdateReadyStateForData(NextFrameStatus aNextFrame) = 0;
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
-  virtual mozilla::VideoFrameContainer* GetVideoFrameContainer() = 0;
+  virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
 };
 
 }

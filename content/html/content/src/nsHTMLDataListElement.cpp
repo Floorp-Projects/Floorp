@@ -10,6 +10,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsContentList.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLDataListElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLDataListElement
@@ -28,7 +29,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLDataListElement
   NS_DECL_NSIDOMHTMLDATALISTELEMENT
@@ -75,8 +76,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDataListElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mOptions, nsIDOMNodeList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLDataListElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLDataListElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLDataListElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLDataListElement, Element)
 
 DOMCI_NODE_DATA(HTMLDataListElement, nsHTMLDataListElement)
 

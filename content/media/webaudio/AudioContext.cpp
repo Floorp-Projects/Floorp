@@ -106,7 +106,7 @@ AudioContext::CreateGain()
 already_AddRefed<DelayNode>
 AudioContext::CreateDelay(float aMaxDelayTime, ErrorResult& aRv)
 {
-  if (aMaxDelayTime <= 0.f) {
+  if (aMaxDelayTime <= 0.f || aMaxDelayTime >= 3.f) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }

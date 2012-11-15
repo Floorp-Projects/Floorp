@@ -348,7 +348,7 @@ public:
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXULElement,
-                                                       nsGenericElement)
+                                                       mozilla::dom::Element)
 
     // nsINode
     virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -410,7 +410,7 @@ public:
 
     // This function should ONLY be used by BindToTree implementations.
     // The function exists solely because XUL elements store the binding
-    // parent as a member instead of in the slots, as nsGenericElement does.
+    // parent as a member instead of in the slots, as Element does.
     void SetXULBindingParent(nsIContent* aBindingParent)
     {
       mBindingParent = aBindingParent;
@@ -437,7 +437,7 @@ protected:
 
     nsresult AddPopupListener(nsIAtom* aName);
 
-    class nsXULSlots : public nsGenericElement::nsDOMSlots
+    class nsXULSlots : public mozilla::dom::Element::nsDOMSlots
     {
     public:
         nsXULSlots();

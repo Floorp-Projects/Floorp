@@ -3486,7 +3486,8 @@ function FillHistoryMenu(aParent) {
 }
 
 function addToUrlbarHistory(aUrlToAdd) {
-  if (aUrlToAdd &&
+  if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
+      aUrlToAdd &&
       !aUrlToAdd.contains(" ") &&
       !/[\x00-\x1F]/.test(aUrlToAdd))
     PlacesUIUtils.markPageAsTyped(aUrlToAdd);
@@ -5359,7 +5360,8 @@ function contentAreaClick(event, isPanelClick)
   // pages loaded in frames are embed visits and lost with the session, while
   // visits across frames should be preserved.
   try {
-    PlacesUIUtils.markPageAsFollowedLink(href);
+    if (!PrivateBrowsingUtils.isWindowPrivate(window))
+      PlacesUIUtils.markPageAsFollowedLink(href);
   } catch (ex) { /* Skip invalid URIs. */ }
 }
 
@@ -5483,7 +5485,8 @@ function BrowserSetForcedCharacterSet(aCharset)
 {
   gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
-  PlacesUtils.history.setCharsetForURI(gBrowser.currentURI, aCharset);
+  if (!PrivateBrowsingUtils.isWindowPrivate(window))
+    PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
   BrowserCharsetReload();
 }
 

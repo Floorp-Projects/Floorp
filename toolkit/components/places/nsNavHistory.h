@@ -11,7 +11,6 @@
 #include "nsPIPlacesHistoryListenersNotifier.h"
 #include "nsIBrowserHistory.h"
 #include "nsINavBookmarksService.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsIFaviconService.h"
 
 #include "nsIObserverService.h"
@@ -36,10 +35,6 @@
 #define QUERYUPDATE_COMPLEX 2
 #define QUERYUPDATE_COMPLEX_WITH_BOOKMARKS 3
 #define QUERYUPDATE_HOST 4
-
-// This magic number specified an uninitialized value for the
-// mInPrivateBrowsing member
-#define PRIVATEBROWSING_NOTINITED (bool(0xffffffff))
 
 // Clamp title and URL to generously large, but not too large, length.
 // See bug 319004 for details.
@@ -204,7 +199,7 @@ public:
 
   // Returns whether history is enabled or not.
   bool IsHistoryDisabled() {
-    return !mHistoryEnabled || InPrivateBrowsingMode();
+    return !mHistoryEnabled;
   }
 
   // Constants for the columns returned by the above statement.
@@ -293,21 +288,6 @@ public:
   nsresult QueryStringToQueryArray(const nsACString& aQueryString,
                                    nsCOMArray<nsNavHistoryQuery>* aQueries,
                                    nsNavHistoryQueryOptions** aOptions);
-
-  // Returns true if we are currently in private browsing mode
-  bool InPrivateBrowsingMode()
-  {
-    if (mInPrivateBrowsing == PRIVATEBROWSING_NOTINITED) {
-      mInPrivateBrowsing = false;
-      nsCOMPtr<nsIPrivateBrowsingService> pbs =
-        do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-      if (pbs) {
-        pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
-      }
-    }
-
-    return mInPrivateBrowsing;
-  }
 
   typedef nsDataHashtable<nsCStringHashKey, nsCString> StringHash;
 
@@ -617,8 +597,6 @@ protected:
                            nsNavHistoryQueryOptions* aOptions);
 
   int64_t mTagsFolder;
-
-  bool mInPrivateBrowsing;
 
   int8_t mHasHistoryEntries;
 

@@ -81,6 +81,13 @@ class TransportTestPeer : public sigslot::has_slots<> {
     int r = usrsctp_set_non_blocking(sctp_, 1);
     EXPECT_GE(r, 0);
 
+    struct linger l;
+    l.l_onoff = 1;
+    l.l_linger = 0;
+    r = usrsctp_setsockopt(sctp_, SOL_SOCKET, SO_LINGER, &l,
+                       (socklen_t)sizeof(l));
+    EXPECT_GE(r, 0);
+
     struct sctp_event subscription;
     memset(&subscription, 0, sizeof(subscription));
     subscription.se_assoc_id = SCTP_ALL_ASSOC;

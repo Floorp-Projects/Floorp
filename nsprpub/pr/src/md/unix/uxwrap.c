@@ -70,9 +70,6 @@ void PR_SetXtHackOkayToReleaseXLockFn(int (*fn)(void))
 
 #if defined(HPUX9)
 int select(size_t width, int *rl, int *wl, int *el, const struct timeval *tv)
-#elif defined(NEXTSTEP)
-int wrap_select(int width, fd_set *rd, fd_set *wr, fd_set *ex,
-        const struct timeval *tv)
 #elif defined(AIX_RENAME_SELECT)
 int wrap_select(unsigned long width, void *rl, void *wl, void *el,
         struct timeval *tv)
@@ -258,7 +255,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
                     nbits++;
                 }
                 PR_ASSERT(nbits > 0);
-#if defined(HPUX) || defined(SOLARIS) || defined(SUNOS4) || defined(OSF1) || defined(AIX)
+#if defined(HPUX) || defined(SOLARIS) || defined(OSF1) || defined(AIX)
                 retVal += nbits;
 #else /* IRIX */
                 retVal += 1;

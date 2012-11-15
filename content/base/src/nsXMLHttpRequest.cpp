@@ -2669,8 +2669,8 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult, uint64_t* aContentLe
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal)) {
       JSObject *obj = JSVAL_TO_OBJECT(realVal);
       ac.construct(cx, obj);
-      if (JS_IsArrayBufferObject(obj, cx)) {
-          ArrayBuffer buf(cx, obj);
+      if (JS_IsArrayBufferObject(obj)) {
+          ArrayBuffer buf(obj);
           return GetRequestBody(&buf, aResult, aContentLength, aContentType, aCharset);
       }
     }

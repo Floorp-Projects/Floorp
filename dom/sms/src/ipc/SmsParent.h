@@ -103,6 +103,9 @@ protected:
 
   bool
   DoRequest(const MarkMessageReadRequest& aRequest);
+
+  bool
+  DoRequest(const GetThreadListRequest& aRequest);
 };
 
 } // namespace sms

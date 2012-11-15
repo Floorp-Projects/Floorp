@@ -49,7 +49,8 @@ enum nsDOMClassInfoID {
 #undef DOMCI_CASTABLE_INTERFACE
 #define DOMCI_CASTABLE_INTERFACES(_extra)                                     \
 DOMCI_CASTABLE_INTERFACE(nsINode, nsINode, 0, _extra)                         \
-DOMCI_CASTABLE_INTERFACE(nsGenericElement, nsGenericElement, 1, _extra)       \
+DOMCI_CASTABLE_NODECL_INTERFACE(mozilla::dom::Element,  mozilla::dom::Element,\
+                                1, _extra)                                    \
 DOMCI_CASTABLE_INTERFACE(nsDocument, nsIDocument, 5, _extra)                  \
 DOMCI_CASTABLE_INTERFACE(nsGenericHTMLElement, nsGenericHTMLElement, 6,       \
                          _extra)                                              \
@@ -59,9 +60,18 @@ DOMCI_CASTABLE_INTERFACE(nsSVGStylableElement, nsIContent, 9, _extra)
  
 // Make sure all classes mentioned in DOMCI_CASTABLE_INTERFACES
 // have been declared.
+#define DOMCI_CASTABLE_NODECL_INTERFACE(_interface, _u1, _u2, _u3) /* Nothing */
 #define DOMCI_CASTABLE_INTERFACE(_interface, _u1, _u2, _u3) class _interface;
 DOMCI_CASTABLE_INTERFACES(unused)
 #undef DOMCI_CASTABLE_INTERFACE
+#undef DOMCI_CASTABLE_NODECL_INTERFACE
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
+#define DOMCI_CASTABLE_NODECL_INTERFACE DOMCI_CASTABLE_INTERFACE
 
 #ifdef _IMPL_NS_LAYOUT
 

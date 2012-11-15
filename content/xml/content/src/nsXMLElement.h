@@ -7,14 +7,14 @@
 #define nsXMLElement_h___
 
 #include "nsIDOMElement.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 
-class nsXMLElement : public nsGenericElement,
+class nsXMLElement : public mozilla::dom::Element,
                      public nsIDOMElement
 {
 public:
   nsXMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsGenericElement(aNodeInfo)
+    : mozilla::dom::Element(aNodeInfo)
   {
   }
 
@@ -48,7 +48,7 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 
-  // nsGenericElement overrides
+  // Element overrides
   virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo);
 
 

@@ -20,8 +20,7 @@ using mozilla::DebugOnly;
 bool
 js::OffThreadCompilationAvailable(JSContext *cx)
 {
-    WorkerThreadState &state = *cx->runtime->workerThreadState;
-    return state.numThreads > 0;
+    return cx->runtime->useHelperThreads();
 }
 
 bool
@@ -77,6 +76,8 @@ CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *ta
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
+    AutoAssertNoGC nogc;
+
     if (!compartment->rt->workerThreadState)
         return;
 
