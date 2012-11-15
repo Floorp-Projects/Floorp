@@ -1712,14 +1712,13 @@ nsComboboxControlFrame::OnContentReset()
 // nsIStatefulFrame
 //--------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::SaveState(SpecialStateID aStateID,
-                                  nsPresState** aState)
+nsComboboxControlFrame::SaveState(nsPresState** aState)
 {
   if (!mListControlFrame)
     return NS_ERROR_FAILURE;
 
   nsIStatefulFrame* stateful = do_QueryFrame(mListControlFrame);
-  return stateful->SaveState(aStateID, aState);
+  return stateful->SaveState(aState);
 }
 
 NS_IMETHODIMP
