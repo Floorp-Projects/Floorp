@@ -182,6 +182,13 @@ static bool lastRunCrashID_checked = false;
 // The minidump ID contained in the marker file.
 static nsString* lastRunCrashID = nullptr;
 
+#if defined(MOZ_WIDGET_ANDROID)
+// on Android 4.2 and above there is a user serial number associated
+// with the current process that gets lost when we fork so we need to
+// explicitly pass it to am
+static char* androidUserSerial = nullptr;
+#endif
+
 // these are just here for readability
 static const char kCrashTimeParameter[] = "CrashTime=";
 static const int kCrashTimeParameterLen = sizeof(kCrashTimeParameter)-1;
@@ -695,20 +702,31 @@ bool MinidumpCallback(
                  crashReporterPath, minidumpPath, (char*)0);
 #else
     // Invoke the reportCrash activity using am
-    (void) execlp("/system/bin/am",
-                 "/system/bin/am",
-                 "start",
-                 "-a", "org.mozilla.gecko.reportCrash",
-                 "-n", crashReporterPath,
-                 "--es", "minidumpPath", minidumpPath,
-                 (char*)0);
+    if (androidUserSerial) {
+      (void) execlp("/system/bin/am",
+                    "/system/bin/am",
+                    "start",
+                    "--user", androidUserSerial,
+                    "-a", "org.mozilla.gecko.reportCrash",
+                    "-n", crashReporterPath,
+                    "--es", "minidumpPath", minidumpPath,
+                    (char*)0);
+    } else {
+      (void) execlp("/system/bin/am",
+                    "/system/bin/am",
+                    "start",
+                    "-a", "org.mozilla.gecko.reportCrash",
+                    "-n", crashReporterPath,
+                    "--es", "minidumpPath", minidumpPath,
+                    (char*)0);
+    }
 #endif
     _exit(1);
   }
 #endif // XP_MACOSX
 #endif // XP_UNIX
 
- return returnValue;
+  return returnValue;
 }
 
 #ifdef XP_WIN
@@ -915,6 +933,10 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     }
   }
 #endif // XP_WIN32
+
+#ifdef MOZ_WIDGET_ANDROID
+  androidUserSerial = getenv("MOZ_ANDROID_USER_SERIAL_NUMBER");
+#endif
 
   // now set the exception handler
 #ifdef XP_LINUX
