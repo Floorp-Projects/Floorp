@@ -2147,20 +2147,11 @@ static inline bool IsAutocompleteOff(const nsIContent* aElement)
 /*static*/ nsresult
 nsContentUtils::GenerateStateKey(nsIContent* aContent,
                                  const nsIDocument* aDocument,
-                                 nsIStatefulFrame::SpecialStateID aID,
                                  nsACString& aKey)
 {
   aKey.Truncate();
 
   uint32_t partID = aDocument ? aDocument->GetPartID() : 0;
-
-  // SpecialStateID case - e.g. scrollbars around the content window
-  // The key in this case is a special state id
-  if (nsIStatefulFrame::eNoID != aID) {
-    KeyAppendInt(partID, aKey);  // first append a partID
-    KeyAppendInt(aID, aKey);
-    return NS_OK;
-  }
 
   // We must have content if we're not using a special state id
   NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
@@ -2177,9 +2168,6 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(aContent->GetCurrentDoc()));
 
   KeyAppendInt(partID, aKey);  // first append a partID
-  // Make sure we can't possibly collide with an nsIStatefulFrame
-  // special id of some sort
-  KeyAppendInt(nsIStatefulFrame::eNoID, aKey);
   bool generatedUniqueKey = false;
 
   if (htmlDocument) {
@@ -3934,9 +3922,8 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
                (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_LOOKUP));
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry->mListenerManager,
-                                                 nsEventListenerManager,
-                                  "[via hash] mListenerManager")
+    CycleCollectionNoteChild(cb, entry->mListenerManager.get(),
+                             "[via hash] mListenerManager");
   }
 }
 

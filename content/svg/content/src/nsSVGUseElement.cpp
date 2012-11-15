@@ -43,14 +43,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGUseElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSVGUseElement,
                                                 nsSVGUseElementBase)
   nsAutoScriptBlocker scriptBlocker;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginal)
   tmp->DestroyAnonymousContent();
   tmp->UnlinkSource();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsSVGUseElement,
                                                   nsSVGUseElementBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOriginal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mClone)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOriginal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mClone)
   tmp->mSource.Traverse(&cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

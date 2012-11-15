@@ -2069,9 +2069,7 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
   //
   // Get the state key
   //
-  nsresult rv = nsContentUtils::GenerateStateKey(aContent, doc,
-                                                 nsIStatefulFrame::eNoID,
-                                                 aKey);
+  nsresult rv = nsContentUtils::GenerateStateKey(aContent, doc, aKey);
   if (NS_FAILED(rv)) {
     return nullptr;
   }

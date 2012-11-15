@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsCycleCollectionNoteChild.h"
 
 #include "nsIDocShell.h"
 
@@ -1525,11 +1526,6 @@ struct WebGLVertexAttribData {
     GLuint actualStride() const {
         if (stride) return stride;
         return size * componentSize();
-    }
-
-    // for cycle collection
-    WebGLBuffer* get() {
-        return buf.get();
     }
 };
 
@@ -3452,6 +3448,39 @@ private:
   WebGLContext *mContext;
 };
 
+} // namespace mozilla
+
+inline void ImplCycleCollectionUnlink(mozilla::WebGLVertexAttribData& aField)
+{
+  aField.buf = nullptr;
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            mozilla::WebGLVertexAttribData& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
+  aCallback.NoteXPCOMChild(aField.buf);
+}
+
+template <typename T>
+inline void
+ImplCycleCollectionUnlink(mozilla::WebGLRefPtr<T>& aField)
+{
+  aField = nullptr;
+}
+
+template <typename T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            mozilla::WebGLRefPtr<T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
+  aCallback.NoteXPCOMChild(aField);
 }
 
 #endif

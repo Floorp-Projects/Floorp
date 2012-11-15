@@ -1723,8 +1723,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
 // Accept a content id here, in some cases we may not have content (scroll position)
 void
 nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
-                                     nsILayoutHistoryState* aState,
-                                     nsIStatefulFrame::SpecialStateID aID)
+                                     nsILayoutHistoryState* aState)
 {
   if (!aFrame || !aState) {
     NS_WARNING("null frame, or state");
@@ -1739,7 +1738,7 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
 
   // Capture the state, exit early if we get null (nothing to save)
   nsAutoPtr<nsPresState> frameState;
-  nsresult rv = statefulFrame->SaveState(aID, getter_Transfers(frameState));
+  nsresult rv = statefulFrame->SaveState(getter_Transfers(frameState));
   if (!frameState) {
     return;
   }
@@ -1749,7 +1748,7 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   nsAutoCString stateKey;
   nsIContent* content = aFrame->GetContent();
   nsIDocument* doc = content ? content->GetCurrentDoc() : nullptr;
-  rv = nsContentUtils::GenerateStateKey(content, doc, aID, stateKey);
+  rv = nsContentUtils::GenerateStateKey(content, doc, stateKey);
   if(NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;
   }
@@ -1792,8 +1791,7 @@ nsFrameManager::CaptureFrameState(nsIFrame* aFrame,
 // Accept a content id here, in some cases we may not have content (scroll position)
 void
 nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
-                                     nsILayoutHistoryState* aState,
-                                     nsIStatefulFrame::SpecialStateID aID)
+                                     nsILayoutHistoryState* aState)
 {
   if (!aFrame || !aState) {
     NS_WARNING("null frame or state");
@@ -1817,7 +1815,7 @@ nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
 
   nsAutoCString stateKey;
   nsIDocument* doc = content->GetCurrentDoc();
-  nsresult rv = nsContentUtils::GenerateStateKey(content, doc, aID, stateKey);
+  nsresult rv = nsContentUtils::GenerateStateKey(content, doc, stateKey);
   if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;
   }

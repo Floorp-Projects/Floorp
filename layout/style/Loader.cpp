@@ -66,6 +66,8 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsCycleCollectionParticipant.h"
 
+#include "mozilla/dom/EncodingUtils.h"
+using mozilla::dom::EncodingUtils;
 
 /**
  * OVERALL ARCHITECTURE
@@ -610,89 +612,36 @@ Loader::SetPreferredSheet(const nsAString& aTitle)
 
 static const char kCharsetSym[] = "@charset \"";
 
-static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
-                                   uint32_t aDataLength,
-                                   nsACString& aCharset)
+static bool GetCharsetFromData(const char* aStyleSheetData,
+                               uint32_t aDataLength,
+                               nsACString& aCharset)
 {
   aCharset.Truncate();
   if (aDataLength <= sizeof(kCharsetSym) - 1)
-    return NS_ERROR_NOT_AVAILABLE;
-  uint32_t step = 1;
-  uint32_t pos = 0;
-  bool bigEndian = false;
-  // Determine the encoding type.  If we have a BOM, set aCharset to the
-  // charset listed for that BOM in http://www.w3.org/TR/REC-xml#sec-guessing;
-  // that way even if we don't have a valid @charset rule we can use the BOM to
-  // get a reasonable charset.  If we do have an @charset rule, the string from
-  // that will override this fallback setting of aCharset.
-  if (*aStyleSheetData == 0x40 && *(aStyleSheetData+1) == 0x63 /* '@c' */ ) {
-    // 1-byte ASCII-based encoding (ISO-8859-*, UTF-8, etc), no BOM
-    step = 1;
-    pos = 0;
-  }
-  else if (nsContentUtils::CheckForBOM(aStyleSheetData,
-                                       aDataLength, aCharset, &bigEndian)) {
-    if (aCharset.Equals("UTF-8")) {
-      step = 1;
-      pos = 3;
-    }
-    else if (aCharset.Equals("UTF-16")) {
-      step = 2;
-      pos = bigEndian ? 3 : 2;
-    }
-  }
-  else if (aStyleSheetData[0] == 0x00 &&
-           aStyleSheetData[1] == 0x40 &&
-           aStyleSheetData[2] == 0x00 &&
-           aStyleSheetData[3] == 0x63) {
-    // 2-byte big-endian encoding, no BOM
-    step = 2;
-    pos = 1;
-  }
-  else if (aStyleSheetData[0] == 0x40 &&
-           aStyleSheetData[1] == 0x00 &&
-           aStyleSheetData[2] == 0x63 &&
-           aStyleSheetData[3] == 0x00) {
-    // 2-byte little-endian encoding, no BOM
-    step = 2;
-    pos = 0;
-  }
-  else {
-    // no clue what this is
-    return NS_ERROR_UNEXPECTED;
+    return false;
+
+  if (strncmp(aStyleSheetData,
+              kCharsetSym,
+              sizeof(kCharsetSym) - 1)) {
+    return false;
   }
 
-  uint32_t index = 0;
-  while (pos < aDataLength && index < sizeof(kCharsetSym) - 1) {
-    if (aStyleSheetData[pos] != kCharsetSym[index]) {
-      // If we have a guess as to the charset based on the BOM, then
-      // we can just return NS_OK even if there is no valid @charset
-      // rule.
-      return aCharset.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
-    }
-    ++index;
-    pos += step;
-  }
-
-  nsAutoCString charset;
-  while (pos < aDataLength) {
-    if (aStyleSheetData[pos] == '"') {
+  for (uint32_t i = sizeof(kCharsetSym) - 1; i < aDataLength; ++i) {
+    char c = aStyleSheetData[i];
+    if (c == '"') {
+      ++i;
+      if (i < aDataLength && aStyleSheetData[i] == ';') {
+        return true;
+      }
+      // fail
       break;
     }
-
-    // casting to avoid ambiguities
-    charset.Append(char(aStyleSheetData[pos]));
-    pos += step;
+    aCharset.Append(c);
   }
 
-  // Check for the ending ';'
-  pos += step;
-  if (pos >= aDataLength || aStyleSheetData[pos] != ';') {
-    return aCharset.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
-  }
-
-  aCharset = charset;
-  return NS_OK;
+  // Did not see end quote or semicolon
+  aCharset.Truncate();
+  return false;
 }
 
 NS_IMETHODIMP
@@ -705,93 +654,123 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
                   "Can't have element _and_ charset hint");
 
   LOG_URI("SheetLoadData::OnDetermineCharset for '%s'", mURI);
-  nsCOMPtr<nsIChannel> channel;
-  nsresult result = aLoader->GetChannel(getter_AddRefs(channel));
-  if (NS_FAILED(result))
-    channel = nullptr;
+
+  // The precedence is (per CSS3 Syntax 2012-11-08 ED):
+  // BOM
+  // Channel
+  // @charset rule
+  // charset attribute on the referrer
+  // encoding of the referrer
+  // UTF-8
 
   aCharset.Truncate();
 
-  /*
-   * First determine the charset (if one is indicated)
-   * 1)  Check nsIChannel::contentCharset
-   * 2)  Check @charset rules in the data
-   * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
-   *
-   * If all these fail to give us a charset, fall back on our default
-   * (parent sheet charset, document charset or ISO-8859-1 in that order)
-   */
+  if (nsContentUtils::CheckForBOM((const unsigned char*)aSegment.BeginReading(),
+                                  aSegment.Length(),
+                                  aCharset)) {
+    // aCharset is now either "UTF-16" or "UTF-8".
+    // The UTF-16 decoder will re-sniff and swallow the BOM.
+    // The UTF-8 decoder will swallow the BOM.
+    mCharset.Assign(aCharset);
+#ifdef PR_LOGGING
+    LOG(("  Setting from BOM to: %s", PromiseFlatCString(aCharset).get()));
+#endif
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  nsAutoCString specified;
+  aLoader->GetChannel(getter_AddRefs(channel));
   if (channel) {
-    channel->GetContentCharset(aCharset);
-  }
-
-  result = NS_ERROR_NOT_AVAILABLE;
-
+    channel->GetContentCharset(specified);
+    if (EncodingUtils::FindEncodingForLabel(specified, aCharset)) {
+      mCharset.Assign(aCharset);
 #ifdef PR_LOGGING
-  if (! aCharset.IsEmpty()) {
-    LOG(("  Setting from HTTP to: %s", PromiseFlatCString(aCharset).get()));
-  }
+      LOG(("  Setting from HTTP to: %s", PromiseFlatCString(aCharset).get()));
 #endif
-
-  if (aCharset.IsEmpty()) {
-    //  We have no charset
-    //  Try @charset rule and BOM
-    result = GetCharsetFromData((const unsigned char*)aSegment.BeginReading(),
-                                aSegment.Length(), aCharset);
-#ifdef PR_LOGGING
-    if (NS_SUCCEEDED(result)) {
-      LOG(("  Setting from @charset rule or BOM: %s",
-           PromiseFlatCString(aCharset).get()));
+      return NS_OK;
     }
-#endif
   }
 
-  if (aCharset.IsEmpty()) {
-    // Now try the charset on the <link> or processing instruction
-    // that loaded us
-    if (mOwningElement) {
-      nsAutoString elementCharset;
-      mOwningElement->GetCharset(elementCharset);
-      LossyCopyUTF16toASCII(elementCharset, aCharset);
-#ifdef PR_LOGGING
-      if (! aCharset.IsEmpty()) {
-        LOG(("  Setting from property on element: %s",
-             PromiseFlatCString(aCharset).get()));
+  if (GetCharsetFromData(aSegment.BeginReading(),
+                         aSegment.Length(),
+                         specified)) {
+    if (EncodingUtils::FindEncodingForLabel(specified, aCharset)) {
+      // FindEncodingForLabel currently never returns UTF-16LE but will
+      // probably change to never return UTF-16 instead, so check both here
+      // to avoid relying on the exact behavior.
+      if (aCharset.EqualsLiteral("UTF-16") ||
+          aCharset.EqualsLiteral("UTF-16BE") ||
+          aCharset.EqualsLiteral("UTF-16LE")) {
+        // Be consistent with HTML <meta> handling in face of impossibility.
+        // When the @charset rule itself evidently was not UTF-16-encoded,
+        // it saying UTF-16 has to be a lie.
+        aCharset.AssignLiteral("UTF-8");
       }
-#endif
-    } else {
-      // If mCharsetHint is empty, that's ok; aCharset is known empty here
-      aCharset = mCharsetHint;
-    }
-  }
-
-  if (aCharset.IsEmpty() && mParentData) {
-    aCharset = mParentData->mCharset;
+      mCharset.Assign(aCharset);
 #ifdef PR_LOGGING
-    if (! aCharset.IsEmpty()) {
-      LOG(("  Setting from parent sheet: %s",
-           PromiseFlatCString(aCharset).get()));
-    }
+      LOG(("  Setting from @charset rule to: %s",
+          PromiseFlatCString(aCharset).get()));
 #endif
+      return NS_OK;
+    }
   }
 
-  if (aCharset.IsEmpty() && mLoader->mDocument) {
+  // Now try the charset on the <link> or processing instruction
+  // that loaded us
+  if (mOwningElement) {
+    nsAutoString specified16;
+    mOwningElement->GetCharset(specified16);
+    if (EncodingUtils::FindEncodingForLabel(specified16, aCharset)) {
+      mCharset.Assign(aCharset);
+#ifdef PR_LOGGING
+      LOG(("  Setting from charset attribute to: %s",
+          PromiseFlatCString(aCharset).get()));
+#endif
+      return NS_OK;
+    }
+  }
+
+  // In the preload case, the value of the charset attribute on <link> comes
+  // in via mCharsetHint instead.
+  if (EncodingUtils::FindEncodingForLabel(mCharsetHint, aCharset)) {
+    mCharset.Assign(aCharset);
+#ifdef PR_LOGGING
+      LOG(("  Setting from charset attribute (preload case) to: %s",
+          PromiseFlatCString(aCharset).get()));
+#endif
+    return NS_OK;
+  }
+
+  // Try charset from the parent stylesheet.
+  if (mParentData) {
+    aCharset = mParentData->mCharset;
+    if (!aCharset.IsEmpty()) {
+      mCharset.Assign(aCharset);
+#ifdef PR_LOGGING
+      LOG(("  Setting from parent sheet to: %s",
+          PromiseFlatCString(aCharset).get()));
+#endif
+      return NS_OK;
+    }
+  }
+
+  if (mLoader->mDocument) {
     // no useful data on charset.  Try the document charset.
     aCharset = mLoader->mDocument->GetDocumentCharacterSet();
+    MOZ_ASSERT(!aCharset.IsEmpty());
+    mCharset.Assign(aCharset);
 #ifdef PR_LOGGING
-    LOG(("  Set from document: %s", PromiseFlatCString(aCharset).get()));
+    LOG(("  Setting from document to: %s", PromiseFlatCString(aCharset).get()));
 #endif
+    return NS_OK;
   }
 
-  if (aCharset.IsEmpty()) {
-    NS_WARNING("Unable to determine charset for sheet, using ISO-8859-1!");
-#ifdef PR_LOGGING
-    LOG_WARN(("  Falling back to ISO-8859-1"));
-#endif
-    aCharset.AssignLiteral("ISO-8859-1");
-  }
-
+  aCharset.AssignLiteral("UTF-8");
   mCharset = aCharset;
+#ifdef PR_LOGGING
+  LOG(("  Setting from default to: %s", PromiseFlatCString(aCharset).get()));
+#endif
   return NS_OK;
 }
 
