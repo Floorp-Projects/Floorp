@@ -1,0 +1,97 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.content.ContentResolver;
+
+/* This test will test if doorhangers are displayed and dismissed
+   The test will test:
+   * geolocation doorhangers - sharing and not sharing the location dismisses the doorhanger
+   * opening a new tab hides the doorhanger
+   * offline storage permission doorhangers - allowing and not allowing offline storage dismisses the doorhanger
+   * Password Manager doorhangers - Remember and Not Now options dismiss the doorhanger
+*/
+public class testDoorHanger extends BaseTest {
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testDoorHanger() {
+        String GEO_URL = getAbsoluteUrl("/robocop/robocop_geolocation.html");
+        String BLANK_URL = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String OFFLINE_STORAGE_URL = getAbsoluteUrl("/robocop/robocop_offline_storage.html");
+        String LOGIN_URL = getAbsoluteUrl("/robocop/robocop_login.html");
+
+        blockForGeckoReady();
+
+        // Test geolocation notification
+        loadUrl(GEO_URL);
+        mSolo.waitForText("wants your location");
+        mAsserter.is(mSolo.searchText("wants your location"), true, "Geolocation doorhanger has been displayed");
+
+        // Test "Share" button hides the notification
+        mSolo.clickOnCheckBox(0);
+        mSolo.clickOnText("Share");
+        mAsserter.is(mSolo.searchText("wants your location"), false, "Geolocation doorhanger has been hidden");
+
+        // Re-trigger geolocation notification
+        loadUrl(GEO_URL);
+        mSolo.waitForText("wants your location");
+
+        // Test "Don't share" button hides the notification
+        mSolo.clickOnCheckBox(0);
+        mSolo.clickOnText("Don't share");
+        mAsserter.is(mSolo.searchText("wants your location"), false, "Geolocation doorhanger has been hidden");
+
+        // Re-trigger geolocation notification
+        loadUrl(GEO_URL);
+        mSolo.waitForText("wants your location");
+
+        // Add a new tab
+        addTab(BLANK_URL);
+
+        // Make sure doorhanger is hidden
+        mAsserter.is(mSolo.searchText("wants your location"), false, "Doorhanger notification is hidden");
+
+        // Load offline storage page
+        loadUrl(OFFLINE_STORAGE_URL);
+        mSolo.waitForText("wants to store data on your device for offline use");
+
+        // Test doorhanger dismissed when tapping "Not Now"
+        mSolo.clickOnText("Not Now");
+        mAsserter.is(mSolo.searchText("wants to store data on your device for offline use"), false, "Doorhanger notification is hidden");
+
+        // Load offline storage page
+        loadUrl(OFFLINE_STORAGE_URL);
+        mSolo.waitForText("wants to store data on your device for offline use");
+
+        // Test doorhanger dismissed when tapping "Allow" and is not displayed again
+        mSolo.clickOnText("Allow");
+        mAsserter.is(mSolo.searchText("wants to store data on your device for offline use"), false, "Doorhanger notification is hidden");
+        loadUrl(OFFLINE_STORAGE_URL);
+        mAsserter.is(mSolo.searchText("wants to store data on your device for offline use"), false, "Doorhanger is no longer triggered");
+
+        // Load login page
+        loadUrl(LOGIN_URL);
+        mSolo.waitForText("to remeber password for");
+
+        // Test doorhanger is dismissed when tapping "Not Now"
+        mSolo.clickOnText("Not Now");
+        mAsserter.is(mSolo.searchText("to remeber password for"), false, "Doorhanger notification is hidden");
+
+        // Load login page
+        loadUrl(LOGIN_URL);
+        mSolo.waitForText("prevented this site from opening");
+
+        // Test doorhanger is dismissed when tapping "Never show" and is no longer triggered
+        mSolo.clickOnText("Remember");
+        mAsserter.is(mSolo.searchText("to remeber password for"), false, "Doorhanger notification is hidden");
+
+        // Reload the page and check that there is no doorhanger displayed
+        loadUrl(LOGIN_URL);
+        mAsserter.is(mSolo.searchText("to remeber password for"), false, "Doorhanger notification is hidden");
+    }
+}
