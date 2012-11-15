@@ -364,10 +364,52 @@ var tests = {
       todo(!chatbar.nub.hasAttribute("activity"), "Bug 806266 - nub should no longer have activity");
       // TODO: tests for bug 806266 should arrange to have 2 chats collapsed
       // then open them checking the nub is updated correctly.
-      closeAllChats();
-      port.close();
-      next();
+      // Now we will go and change the embedded iframe in the second chat and
+      // ensure the activity magic still works (ie, check that the unload for
+      // the iframe didn't cause our event handlers to be removed.)
+      ok(!second.hasAttribute("activity"), "second chat should have no activity");
+      let subiframe = iframe2.contentDocument.getElementById("iframe");
+      subiframe.contentWindow.addEventListener("unload", function subunload() {
+        subiframe.contentWindow.removeEventListener("unload", subunload);
+        // ensure all other unload listeners have fired.
+        executeSoon(function() {
+          let evt = iframe2.contentDocument.createEvent("CustomEvent");
+          evt.initCustomEvent("socialChatActivity", true, true, {});
+          iframe2.contentDocument.documentElement.dispatchEvent(evt);
+          ok(second.hasAttribute("activity"), "second chat still has activity after unloading sub-iframe");
+          closeAllChats();
+          port.close();
+          next();
+        })
+      })
+      subiframe.setAttribute("src", "data:text/plain:new location for iframe");
     });
+  },
+
+  testOnlyOneCallback: function(next) {
+    let chats = document.getElementById("pinnedchats");
+    let port = Social.provider.getWorkerPort();
+    let numOpened = 0;
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "test-init-done":
+          port.postMessage({topic: "test-chatbox-open"});
+          break;
+        case "chatbox-opened":
+          numOpened += 1;
+          port.postMessage({topic: "ping"});
+          break;
+        case "pong":
+          executeSoon(function() {
+            is(numOpened, 1, "only got one open message");
+            chats.removeAll();
+            port.close();
+            next();
+          });
+      }
+    }
+    port.postMessage({topic: "test-init", data: { id: 1 }});
   },
 
   // XXX - note this must be the last test until we restore the login state
