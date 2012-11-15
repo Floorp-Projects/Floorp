@@ -2681,7 +2681,7 @@ html|*#gcli-output-frame {
   margin-right: -12px;
 }
 
-#social-statusarea-user-portrait {
+.social-statusarea-user-portrait {
   width: 32px;
   height: 32px;
   border-radius: 2px;
