@@ -116,20 +116,40 @@ protected:
   bool                      mAddedScrollPositionListener;
 };
 
+class nsDisplayCanvasBackgroundGeometry : public nsDisplayItemGeometry
+{
+public:
+  nsDisplayCanvasBackgroundGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder, const nsRect& aChildBorder)
+    : nsDisplayItemGeometry(aItem, aBuilder)
+    , mChildBorder(aChildBorder)
+    , mPaddingRect(aItem->GetPaddingRect())
+    , mContentRect(aItem->GetContentRect())
+  {}
+
+  virtual void MoveBy(const nsPoint& aOffset)
+  {
+    mBounds.MoveBy(aOffset);
+    mPaddingRect.MoveBy(aOffset);
+    mContentRect.MoveBy(aOffset);
+  }
+
+  nsRect mChildBorder;
+  nsRect mPaddingRect;
+  nsRect mContentRect;
+};
+
 /**
  * Override nsDisplayBackground methods so that we pass aBGClipRect to
  * PaintBackground, covering the whole overflow area.
  * We can also paint an "extra background color" behind the normal
  * background.
  */
-class nsDisplayCanvasBackground : public nsDisplayBackgroundImage {
+class nsDisplayCanvasBackground : public nsDisplayBackground {
 public:
-  nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                            uint32_t aLayer, bool aIsThemed,
-                            const nsStyleBackground* aBackgroundStyle)
-    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aIsThemed, aBackgroundStyle),
-      mExtraBackgroundColor(NS_RGBA(0,0,0,0))
+  nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame, uint32_t aLayer)
+    : nsDisplayBackground(aBuilder, aFrame, aLayer, true)
   {
+    mExtraBackgroundColor = NS_RGBA(0,0,0,0);
   }
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -137,7 +157,7 @@ public:
                                  const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE
   {
     return NS_GET_A(mExtraBackgroundColor) > 0 ||
-      nsDisplayBackgroundImage::ComputeVisibility(aBuilder, aVisibleRegion,
+      nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
                                              aAllowVisibleRegionExpansion);
   }
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -146,12 +166,12 @@ public:
     if (NS_GET_A(mExtraBackgroundColor) == 255) {
       return nsRegion(GetBounds(aBuilder, aSnap));
     }
-    return nsDisplayBackgroundImage::GetOpaqueRegion(aBuilder, aSnap);
+    return nsDisplayBackground::GetOpaqueRegion(aBuilder, aSnap);
   }
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE
   {
     nscolor background;
-    if (!nsDisplayBackgroundImage::IsUniform(aBuilder, &background))
+    if (!nsDisplayBackground::IsUniform(aBuilder, &background))
       return false;
     NS_ASSERTION(background == NS_RGBA(0,0,0,0),
                  "The nsDisplayBackground for a canvas frame doesn't paint "
@@ -171,17 +191,39 @@ public:
     // We need to override so we don't consider border-radius.
     aOutFrames->AppendElement(mFrame);
   }
-  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
+  
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
   {
-    // Put background-attachment:fixed canvas background images in their own
-    // compositing layer. Since we know their background painting area can't
-    // change (unless the viewport size itself changes), async scrolling
-    // will work well.
-    return mBackgroundStyle &&
-      mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-      !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
+    nsIFrame *child = mFrame->GetFirstPrincipalChild();
+    return new nsDisplayCanvasBackgroundGeometry(this, aBuilder, 
+                                                 child ? child->GetRect() : nsRect());;
   }
 
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion)
+  {
+    const nsDisplayCanvasBackgroundGeometry* geometry = static_cast<const nsDisplayCanvasBackgroundGeometry*>(aGeometry);
+    if (ShouldFixToViewport(aBuilder)) {
+      // This is incorrect, We definitely need to check more things here. 
+      return;
+    }
+
+    nsIFrame *child = mFrame->GetFirstPrincipalChild();
+
+    bool snap;
+    if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
+        (child && !geometry->mChildBorder.IsEqualInterior(child->GetRect())) ||
+        !geometry->mPaddingRect.IsEqualInterior(GetPaddingRect()) ||
+        !geometry->mContentRect.IsEqualInterior(GetContentRect())) {
+      if (!RenderingMightDependOnFrameSize() && geometry->mBounds.TopLeft() == GetBounds(aBuilder, &snap).TopLeft()) {
+        aInvalidRegion->Xor(GetBounds(aBuilder, &snap), geometry->mBounds);
+      } else {
+        aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
+      }
+    }
+  }
+  
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
 
@@ -195,5 +237,6 @@ public:
 private:
   nscolor mExtraBackgroundColor;
 };
+
 
 #endif /* nsCanvasFrame_h___ */
