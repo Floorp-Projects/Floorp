@@ -31,6 +31,10 @@ my $global_debug_dir = '/usr/lib/debug';
 # - {pipe_read}, {pipe_write}: these constitute a bidirectional pipe to an
 #   addr2line process that gives symbol information for a file.
 #
+# - {cache}: this table holds the results of lookups that we've done
+#   previously for (pre-adjustment) addresses, which lets us avoid redundant
+#   calls to addr2line.
+#
 # - {address_adjustment}: addr2line wants offsets relative to the base address
 #   for shared libraries, but it wants addresses including the base address
 #   offset for executables.  This holds the appropriate address adjustment to
@@ -228,18 +232,22 @@ while (<>) {
 
         if (-f $file) {
             my $file_info = get_file_info($file);
-            $address += $file_info->{address_adjustment};
-
-            my $out = $file_info->{pipe_write};
-            my $in = $file_info->{pipe_read};
-            printf {$out} "0x%X\n", $address;
-            chomp(my $symbol = <$in>);
-            chomp(my $fileandline = <$in>);
-            if (!$symbol || $symbol eq '??') { $symbol = $badsymbol; }
-            if (!$fileandline || $fileandline eq '??:0') {
-                $fileandline = $file;
+            my $result = $file_info->{cache}->{$address};
+            if (not defined $result) {
+                my $address2 = $address + $file_info->{address_adjustment};
+                my $out = $file_info->{pipe_write};
+                my $in = $file_info->{pipe_read};
+                printf {$out} "0x%X\n", $address2;
+                chomp(my $symbol = <$in>);
+                chomp(my $fileandline = <$in>);
+                if (!$symbol || $symbol eq '??') { $symbol = $badsymbol; }
+                if (!$fileandline || $fileandline eq '??:0') {
+                    $fileandline = $file;
+                }
+                $result = "$symbol ($fileandline)";
+                $file_info->{cache}->{$address} = $result;
             }
-            print "$before$symbol ($fileandline)$after\n";
+            print "$before$result$after\n";
         } else {
             print STDERR "Warning: File \"$file\" does not exist.\n";
             print $line;
