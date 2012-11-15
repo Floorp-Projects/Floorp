@@ -580,7 +580,7 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     return false;
   }
 
-  if (value.GetUnit() == nsCSSUnit::eCSSUnit_Color) {
+  if (value.GetUnit() == eCSSUnit_Color) {
     // if we already have a color we can just use it directly
     *aColor = value.GetColorValue();
   } else {
