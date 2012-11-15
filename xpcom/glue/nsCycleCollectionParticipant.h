@@ -400,15 +400,6 @@ T* DowncastCCParticipant(void *p)
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                                \
     ImplCycleCollectionUnlink(tmp->_field);
 
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                       \
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
-
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                     \
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
-
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                       \
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
-
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                    \
     (void)tmp;                                                                 \
     return NS_OK;                                                              \
@@ -470,30 +461,6 @@ T* DowncastCCParticipant(void *p)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
   CycleCollectionNoteChild(cb, tmp->_field, #_field);
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)                     \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)    \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)                   \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_ptr)  \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_ptr)
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)  \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_array)                      \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_array)
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)         \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)      \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS                       \
     that->Trace(p, &nsScriptObjectTracer::NoteJSChild, &cb);
