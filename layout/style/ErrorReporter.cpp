@@ -221,7 +221,7 @@ ErrorReporter::ClearError()
 }
 
 void
-ErrorReporter::AddToError(const nsAString &aErrorText)
+ErrorReporter::AddToError(const nsString &aErrorText)
 {
   if (!ShouldReportErrors()) return;
 
@@ -230,7 +230,8 @@ ErrorReporter::AddToError(const nsAString &aErrorText)
     mErrorColNumber = mScanner->GetColumnNumber();
     mError = aErrorText;
   } else {
-    mError.Append(NS_LITERAL_STRING("  ") + aErrorText);
+    mError.AppendLiteral("  ");
+    mError.Append(aErrorText);
   }
 }
 
@@ -246,15 +247,51 @@ ErrorReporter::ReportUnexpected(const char *aMessage)
 }
 
 void
-ErrorReporter::ReportUnexpectedParams(const char *aMessage,
-                                      const PRUnichar **aParams,
-                                      uint32_t aParamsLength)
+ErrorReporter::ReportUnexpected(const char *aMessage,
+                                const nsString &aParam)
 {
   if (!ShouldReportErrors()) return;
 
+  const PRUnichar *params[1] = { aParam.get() };
   nsAutoString str;
   sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
-                                      aParams, aParamsLength,
+                                      params, ArrayLength(params),
+                                      getter_Copies(str));
+  AddToError(str);
+}
+
+void
+ErrorReporter::ReportUnexpected(const char *aMessage,
+                                const nsCSSToken &aToken)
+{
+  if (!ShouldReportErrors()) return;
+
+  nsAutoString tokenString;
+  aToken.AppendToString(tokenString);
+  const PRUnichar *params[1] = { tokenString.get() };
+
+  nsAutoString str;
+  sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
+                                      params, ArrayLength(params),
+                                      getter_Copies(str));
+  AddToError(str);
+}
+
+void
+ErrorReporter::ReportUnexpected(const char *aMessage,
+                                const nsCSSToken &aToken,
+                                PRUnichar aChar)
+{
+  if (!ShouldReportErrors()) return;
+
+  nsAutoString tokenString;
+  aToken.AppendToString(tokenString);
+  const PRUnichar charStr[2] = { aChar, 0 };
+  const PRUnichar *params[2] = { tokenString.get(), charStr };
+
+  nsAutoString str;
+  sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
+                                      params, ArrayLength(params),
                                       getter_Copies(str));
   AddToError(str);
 }
@@ -267,13 +304,11 @@ ErrorReporter::ReportUnexpectedEOF(const char *aMessage)
   nsAutoString innerStr;
   sStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
                                    getter_Copies(innerStr));
-  const PRUnichar *params[] = {
-    innerStr.get()
-  };
+  const PRUnichar *params[1] = { innerStr.get() };
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
-                                      params, NS_ARRAY_LENGTH(params),
+                                      params, ArrayLength(params),
                                       getter_Copies(str));
   AddToError(str);
 }
@@ -286,54 +321,13 @@ ErrorReporter::ReportUnexpectedEOF(PRUnichar aExpected)
   const PRUnichar expectedStr[] = {
     PRUnichar('\''), aExpected, PRUnichar('\''), PRUnichar(0)
   };
-  const PRUnichar *params[] = { expectedStr };
+  const PRUnichar *params[1] = { expectedStr };
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
-                                      params, NS_ARRAY_LENGTH(params),
+                                      params, ArrayLength(params),
                                       getter_Copies(str));
   AddToError(str);
-}
-
-void
-ErrorReporter::ReportUnexpectedToken(const char *aMessage,
-                                     const nsCSSToken &aToken)
-{
-  if (!ShouldReportErrors()) return;
-
-  nsAutoString tokenString;
-  aToken.AppendToString(tokenString);
-  const PRUnichar *params[] = {
-    tokenString.get()
-  };
-
-  nsAutoString str;
-  sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
-                                      params, NS_ARRAY_LENGTH(params),
-                                      getter_Copies(str));
-  AddToError(str);
-}
-
-void
-ErrorReporter::ReportUnexpectedTokenParams(const char *aMessage,
-                                           const nsCSSToken &aToken,
-                                           const PRUnichar **aParams,
-                                           uint32_t aParamsLength)
-{
-  NS_ABORT_IF_FALSE(aParams[0] == nullptr, "first param should be empty");
-
-  if (!ShouldReportErrors()) return;
-
-  nsAutoString tokenString;
-  aToken.AppendToString(tokenString);
-  aParams[0] = tokenString.get();
-
-  nsAutoString str;
-  sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
-                                      aParams, aParamsLength,
-                                      getter_Copies(str));
-  AddToError(str);
-
 }
 
 } // namespace css
