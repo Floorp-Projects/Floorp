@@ -3591,8 +3591,7 @@ CanvasRenderingContext2D::FillRuleChanged()
 }
 
 void
-CanvasRenderingContext2D::PutImageData(JSContext* cx,
-                                       ImageData& imageData, double dx,
+CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
                                        double dy, ErrorResult& error)
 {
   if (!FloatValidate(dx, dy)) {
@@ -3608,8 +3607,7 @@ CanvasRenderingContext2D::PutImageData(JSContext* cx,
 }
 
 void
-CanvasRenderingContext2D::PutImageData(JSContext* cx,
-                                       ImageData& imageData, double dx,
+CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
                                        double dy, double dirtyX,
                                        double dirtyY, double dirtyWidth,
                                        double dirtyHeight,

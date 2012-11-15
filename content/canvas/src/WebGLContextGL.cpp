@@ -4862,7 +4862,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
 }
 
 void
-WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+WebGLContext::TexImage2D(WebGLenum target, WebGLint level,
                          WebGLenum internalformat, WebGLsizei width,
                          WebGLsizei height, WebGLint border, WebGLenum format,
                          WebGLenum type, ArrayBufferView *pixels, ErrorResult& rv)
@@ -4878,7 +4878,7 @@ WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
 }
 
 void
-WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+WebGLContext::TexImage2D(WebGLenum target, WebGLint level,
                          WebGLenum internalformat, WebGLenum format,
                          WebGLenum type, ImageData* pixels, ErrorResult& rv)
 {
@@ -5011,7 +5011,7 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
 }
 
 void
-WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+WebGLContext::TexSubImage2D(WebGLenum target, WebGLint level,
                             WebGLint xoffset, WebGLint yoffset,
                             WebGLsizei width, WebGLsizei height,
                             WebGLenum format, WebGLenum type,
@@ -5032,7 +5032,7 @@ WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
 }
 
 void
-WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+WebGLContext::TexSubImage2D(WebGLenum target, WebGLint level,
                             WebGLint xoffset, WebGLint yoffset,
                             WebGLenum format, WebGLenum type, ImageData* pixels,
                             ErrorResult& rv)
