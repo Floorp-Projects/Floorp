@@ -8,7 +8,9 @@
 
 #include "mozilla/Likely.h"
 #include "mozilla/TypeTraits.h"
-#include "nsISupports.h"
+
+#include "nsCycleCollectionNoteChild.h"
+#include "nsCycleCollectionTraversalCallback.h"
 
 #define NS_CYCLECOLLECTIONPARTICIPANT_IID                                      \
 {                                                                              \
@@ -52,60 +54,8 @@ class nsCycleCollectionParticipant;
 class nsScriptObjectTracer;
 class nsXPCOMCycleCollectionParticipant;
 
-/**
- * Callback definitions
- */
 typedef void
-(* TraceCallback)(void *p, const char *name, void *closure);
-
-class NS_NO_VTABLE nsCycleCollectionTraversalCallback
-{
-public:
-    // You must call DescribeRefCountedNode() with an accurate
-    // refcount, otherwise cycle collection will fail, and probably crash.
-    // If the callback cares about objname, it should put
-    // WANT_DEBUG_INFO in mFlags.
-    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
-                                             const char *objname) = 0;
-    NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                       const char *objname) = 0;
-
-    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) = 0;
-    NS_IMETHOD_(void) NoteJSRoot(void *root) = 0;
-    NS_IMETHOD_(void) NoteNativeRoot(void *root, nsCycleCollectionParticipant *participant) = 0;
-
-    NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) = 0;
-    NS_IMETHOD_(void) NoteJSChild(void *child) = 0;
-    NS_IMETHOD_(void) NoteNativeChild(void *child,
-                                      nsCycleCollectionParticipant *helper) = 0;
-
-    // Give a name to the edge associated with the next call to
-    // NoteXPCOMChild, NoteJSChild, or NoteNativeChild.
-    // Callbacks who care about this should set WANT_DEBUG_INFO in the
-    // flags.
-    NS_IMETHOD_(void) NoteNextEdgeName(const char* name) = 0;
-
-    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *kdelegate, void *val) = 0;
-
-    enum {
-        // Values for flags:
-
-        // Caller should call NoteNextEdgeName and pass useful objName
-        // to DescribeRefCountedNode and DescribeGCedNode.
-        WANT_DEBUG_INFO = (1<<0),
-
-        // Caller should not skip objects that we know will be
-        // uncollectable.
-        WANT_ALL_TRACES = (1<<1)
-    };
-    uint32_t Flags() const { return mFlags; }
-    bool WantDebugInfo() const { return (mFlags & WANT_DEBUG_INFO) != 0; }
-    bool WantAllTraces() const { return (mFlags & WANT_ALL_TRACES) != 0; }
-protected:
-    nsCycleCollectionTraversalCallback() : mFlags(0) {}
-
-    uint32_t mFlags;
-};
+(* TraceCallback)(void *p, const char* name, void *closure);
 
 /**
  * VTables
@@ -443,14 +393,17 @@ public:
   {                                                                            \
     _class *tmp = static_cast<_class*>(p);
 
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                                \
+    ImplCycleCollectionUnlink(tmp->_field);
+
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(_field)                       \
-    tmp->_field = NULL;    
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(_field)                     \
-    tmp->_field.Clear();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(_field)                       \
-    tmp->_field.Clear();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                    \
     (void)tmp;                                                                 \
@@ -516,12 +469,8 @@ public:
     _class *tmp = static_cast<_class*>(p);                                     \
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
 
-#define NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(_cb, _name)                         \
-  PR_BEGIN_MACRO                                                               \
-    if (MOZ_UNLIKELY((_cb).WantDebugInfo())) {                                 \
-      (_cb).NoteNextEdgeName(_name);                                           \
-    }                                                                          \
-  PR_END_MACRO
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)                              \
+  ImplCycleCollectionTraverse(cb, tmp->_field, #_field, 0);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
   PR_BEGIN_MACRO                                                               \
@@ -530,10 +479,7 @@ public:
   PR_END_MACRO;
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field)                     \
-  PR_BEGIN_MACRO                                                               \
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, #_field);                           \
-    cb.NoteXPCOMChild(tmp->_field.get());                                      \
-  PR_END_MACRO;
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(_field, _base)    \
   PR_BEGIN_MACRO                                                               \
@@ -542,13 +488,7 @@ public:
   PR_END_MACRO;
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(_field)                   \
-    {                                                                          \
-      int32_t i;                                                               \
-      for (i = 0; i < tmp->_field.Count(); ++i) {                              \
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, #_field "[i]");                 \
-        cb.NoteXPCOMChild(tmp->_field[i]);                                     \
-      }                                                                        \
-    }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(_ptr, _ptr_class, _name)  \
   PR_BEGIN_MACRO                                                               \
@@ -571,13 +511,7 @@ public:
     }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_OF_NSCOMPTR(_field)         \
-    {                                                                          \
-      uint32_t i, length = tmp->_field.Length();                               \
-      for (i = 0; i < length; ++i) {                                           \
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, #_field "[i]");                 \
-        cb.NoteXPCOMChild(tmp->_field[i].get());                               \
-      }                                                                        \
-    }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(_field,              \
                                                           _element_class)      \
@@ -1211,5 +1145,7 @@ struct Skippable
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_f7)                               \
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_f8)                               \
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+#define NS_CYCLE_COLLECTION_NOTE_EDGE_NAME CycleCollectionNoteEdgeName
 
 #endif // nsCycleCollectionParticipant_h__
