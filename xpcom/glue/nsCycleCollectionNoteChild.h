@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,6 +11,7 @@
 
 #include "nsCycleCollectionTraversalCallback.h"
 #include "mozilla/Likely.h"
+#include "mozilla/TypeTraits.h"
 
 enum {
   CycleCollectionEdgeNameArrayFlag = 1
@@ -31,6 +32,57 @@ CycleCollectionNoteEdgeName(nsCycleCollectionTraversalCallback& aCallback,
   if (MOZ_UNLIKELY(aCallback.WantDebugInfo())) {
     CycleCollectionNoteEdgeNameImpl(aCallback, aName, aFlags);
   }
+}
+
+#define NS_CYCLE_COLLECTION_INNERCLASS                                         \
+        cycleCollection
+
+#define NS_CYCLE_COLLECTION_INNERNAME                                          \
+        _cycleCollectorGlobal
+
+#define NS_CYCLE_COLLECTION_PARTICIPANT(_class)                                \
+        _class::NS_CYCLE_COLLECTION_INNERNAME.GetParticipant()
+
+template <typename T>
+nsISupports* ToSupports(T* p, typename T::NS_CYCLE_COLLECTION_INNERCLASS* dummy = 0)
+{
+  return T::NS_CYCLE_COLLECTION_INNERCLASS::Upcast(p);
+}
+
+// The default implementation of this class template is empty, because it
+// should never be used: see the partial specializations below.
+template <typename T,
+          bool IsXPCOM = mozilla::IsBaseOf<nsISupports, T>::value>
+struct CycleCollectionNoteChildImpl
+{
+};
+
+template <typename T>
+struct CycleCollectionNoteChildImpl<T, true>
+{
+  static void Run(nsCycleCollectionTraversalCallback& aCallback, T* aChild)
+  {
+    aCallback.NoteXPCOMChild(ToSupports(aChild));
+  }
+};
+
+template <typename T>
+struct CycleCollectionNoteChildImpl<T, false>
+{
+  static void Run(nsCycleCollectionTraversalCallback& aCallback, T* aChild)
+  {
+    aCallback.NoteNativeChild(aChild, NS_CYCLE_COLLECTION_PARTICIPANT(T));
+  }
+};
+
+template <typename T>
+inline void CycleCollectionNoteChild(nsCycleCollectionTraversalCallback& aCallback,
+                                     T* aChild,
+                                     const char* aName,
+                                     uint32_t aFlags = 0)
+{
+  CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
+  CycleCollectionNoteChildImpl<T>::Run(aCallback, aChild);
 }
 
 #endif // nsCycleCollectionNoteChild_h__

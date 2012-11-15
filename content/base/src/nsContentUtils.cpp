@@ -3947,9 +3947,8 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
                (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_LOOKUP));
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry->mListenerManager,
-                                                 nsEventListenerManager,
-                                  "[via hash] mListenerManager")
+    CycleCollectionNoteChild(cb, entry->mListenerManager.get(),
+                             "[via hash] mListenerManager");
   }
 }
 
