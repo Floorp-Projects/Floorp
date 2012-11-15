@@ -53,6 +53,14 @@ MediaEngineWebRTCAudioSource::Allocate()
     return NS_ERROR_FAILURE;
   }
 
+  webrtc::VoEHardware* ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
+  int res = ptrVoEHw->SetRecordingDevice(mCapIndex);
+  ptrVoEHw->Release();
+  if (res) {
+    return NS_ERROR_FAILURE;
+  }
+
+  LOG(("Audio device %d allocated", mCapIndex));
   mState = kAllocated;
   return NS_OK;
 }
@@ -177,11 +185,13 @@ MediaEngineWebRTCAudioSource::Init()
   // Check for availability.
   webrtc::VoEHardware* ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
   if (ptrVoEHw->SetRecordingDevice(mCapIndex)) {
+    ptrVoEHw->Release();
     return;
   }
 
   bool avail = false;
   ptrVoEHw->GetRecordingDeviceStatus(avail);
+  ptrVoEHw->Release();
   if (!avail) {
     return;
   }
