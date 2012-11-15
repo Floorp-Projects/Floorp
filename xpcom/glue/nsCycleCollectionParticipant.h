@@ -400,13 +400,13 @@ T* DowncastCCParticipant(void *p)
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                                \
     ImplCycleCollectionUnlink(tmp->_field);
 
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(_field)                       \
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                       \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
 
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(_field)                     \
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                     \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
 
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(_field)                       \
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                       \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                    \
@@ -471,30 +471,28 @@ T* DowncastCCParticipant(void *p)
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
   CycleCollectionNoteChild(cb, tmp->_field, #_field);
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field)                     \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)                     \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(_field, _base)    \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)    \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(_field)                   \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)                   \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(_ptr, _ptr_class, _name)  \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_ptr)  \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_ptr)
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(_field, _field_class)  \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)  \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(_array, _element_class,     \
-                                                   _name)                      \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_array)                      \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_array)
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_OF_NSCOMPTR(_field)         \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)         \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(_field,              \
-                                                          _element_class)      \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)      \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS                       \
