@@ -413,7 +413,7 @@ public:
                           { return aStatus == nsEventStatus_eConsumeNoDefault; }
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
-  virtual bool            GetShouldAccelerate();
+  virtual bool            ComputeShouldAccelerate(bool aDefault);
   virtual bool            UseOffMainThreadCompositing();
 
   NS_IMETHOD        SetCursor(nsCursor aCursor);

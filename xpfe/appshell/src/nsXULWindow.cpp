@@ -1395,7 +1395,7 @@ void nsXULWindow::SyncAttributesToWidget()
   bool isAccelerated;
   rv = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"), &isAccelerated);
   if (NS_SUCCEEDED(rv)) {
-    mWindow->SetAcceleratedRendering(isAccelerated);
+    mWindow->SetLayersAcceleration(isAccelerated);
   }
 
   // "windowtype" attribute

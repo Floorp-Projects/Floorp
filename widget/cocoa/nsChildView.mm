@@ -1312,14 +1312,14 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
 }
 
 bool
-nsChildView::GetShouldAccelerate()
+nsChildView::ComputeShouldAccelerate(bool aDefault)
 {
   // Don't use OpenGL for transparent windows or for popup windows.
   if (!mView || ![[mView window] isOpaque] ||
       [[mView window] isKindOfClass:[PopupWindow class]])
     return false;
 
-  return nsBaseWidget::GetShouldAccelerate();
+  return nsBaseWidget::ComputeShouldAccelerate(aDefault);
 }
 
 bool
@@ -1327,7 +1327,8 @@ nsChildView::UseOffMainThreadCompositing()
 {
   // OMTC doesn't work with Basic Layers on OS X right now. Once it works, we'll
   // still want to disable it for certain kinds of windows (e.g. popups).
-  return nsBaseWidget::UseOffMainThreadCompositing() && GetShouldAccelerate();
+  return nsBaseWidget::UseOffMainThreadCompositing() &&
+         ComputeShouldAccelerate(mUseLayersAcceleration);
 }
 
 inline uint16_t COLOR8TOCOLOR16(uint8_t color8)
