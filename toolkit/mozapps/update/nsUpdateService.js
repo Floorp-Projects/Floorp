@@ -2861,6 +2861,8 @@ Checker.prototype = {
     if (!listener)
       throw Cr.NS_ERROR_NULL_POINTER;
 
+    Services.obs.notifyObservers(null, "update-check-start", null);
+
     var url = this.getUpdateURL(force);
     if (!url || (!this.enabled && !force))
       return;
