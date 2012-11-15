@@ -721,20 +721,20 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
 #define REPORT_UNEXPECTED(msg_) \
   mReporter->ReportUnexpected(#msg_)
 
-#define REPORT_UNEXPECTED_P(msg_, params_) \
-  mReporter->ReportUnexpectedParams(#msg_, params_)
+#define REPORT_UNEXPECTED_P(msg_, param_) \
+  mReporter->ReportUnexpected(#msg_, param_)
+
+#define REPORT_UNEXPECTED_TOKEN(msg_) \
+  mReporter->ReportUnexpected(#msg_, mToken)
+
+#define REPORT_UNEXPECTED_TOKEN_CHAR(msg_, ch_) \
+  mReporter->ReportUnexpected(#msg_, mToken, ch_)
 
 #define REPORT_UNEXPECTED_EOF(lf_) \
   mReporter->ReportUnexpectedEOF(#lf_)
 
 #define REPORT_UNEXPECTED_EOF_CHAR(ch_) \
   mReporter->ReportUnexpectedEOF(ch_)
-
-#define REPORT_UNEXPECTED_TOKEN(msg_) \
-  mReporter->ReportUnexpectedToken(#msg_, mToken)
-
-#define REPORT_UNEXPECTED_TOKEN_P(msg_, params_) \
-  mReporter->ReportUnexpectedTokenParams(#msg_, mToken, params_)
 
 #define OUTPUT_ERROR() \
   mReporter->OutputError()
@@ -1088,10 +1088,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   // Check for unknown or preffed off properties
   if (eCSSProperty_UNKNOWN == aPropID || !nsCSSProps::IsEnabled(aPropID)) {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
-    const PRUnichar *params[] = {
-      propName.get()
-    };
-    REPORT_UNEXPECTED_P(PEUnknownProperty, params);
+    REPORT_UNEXPECTED_P(PEUnknownProperty, propName);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     ReleaseScanner();
@@ -1107,10 +1104,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
 
   if (!parsedOK) {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
-    const PRUnichar *params[] = {
-      propName.get()
-    };
-    REPORT_UNEXPECTED_P(PEValueParsingError, params);
+    REPORT_UNEXPECTED_P(PEValueParsingError, propName);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     mTempData.ClearProperty(aPropID);
@@ -1929,10 +1923,7 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_MALFORMED_URI) {
       // import url is bad
-      const PRUnichar *params[] = {
-        aURLSpec.get()
-      };
-      REPORT_UNEXPECTED_P(PEImportBadURI, params);
+      REPORT_UNEXPECTED_P(PEImportBadURI, aURLSpec);
       OUTPUT_ERROR();
     }
     return;
@@ -2213,19 +2204,13 @@ CSSParserImpl::ParseFontDescriptor(nsCSSFontFaceRule* aRule)
       SkipDeclaration(true);
       return true;
     } else {
-      const PRUnichar *params[] = {
-        descName.get()
-      };
-      REPORT_UNEXPECTED_P(PEUnknownFontDesc, params);
+      REPORT_UNEXPECTED_P(PEUnknownFontDesc, descName);
       return false;
     }
   }
 
   if (!ParseFontDescriptorValue(descID, value)) {
-    const PRUnichar *params[] = {
-      descName.get()
-    };
-    REPORT_UNEXPECTED_P(PEValueParsingError, params);
+    REPORT_UNEXPECTED_P(PEValueParsingError, descName);
     return false;
   }
 
@@ -2491,10 +2476,7 @@ CSSParserImpl::ParseSupportsConditionInParensInsideParens(bool& aConditionMet)
       }
 
       if (ExpectSymbol(')', true)) {
-        const PRUnichar *params[] = {
-          propertyName.get()
-        };
-        REPORT_UNEXPECTED_P(PEValueParsingError, params);
+        REPORT_UNEXPECTED_P(PEValueParsingError, propertyName);
         UngetToken();
         return false;
       }
@@ -4134,12 +4116,7 @@ CSSParserImpl::ParseColorComponent(uint8_t& aComponent,
     aComponent = NSToIntRound(value);
     return true;
   }
-  const PRUnichar stopString[] = { PRUnichar(aStop), PRUnichar(0) };
-  const PRUnichar *params[] = {
-    nullptr,
-    stopString
-  };
-  REPORT_UNEXPECTED_TOKEN_P(PEColorComponentBadTerm, params);
+  REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aStop);
   return false;
 }
 
@@ -4208,12 +4185,7 @@ CSSParserImpl::ParseHSLColor(nscolor& aColor,
     return true;
   }
 
-  const PRUnichar stopString[] = { PRUnichar(aStop), PRUnichar(0) };
-  const PRUnichar *params[] = {
-    nullptr,
-    stopString
-  };
-  REPORT_UNEXPECTED_TOKEN_P(PEColorComponentBadTerm, params);
+  REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aStop);
   return false;
 }
 
@@ -4341,10 +4313,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
      (aContext == nsCSSContextType::eCSSContext_Page &&
       !nsCSSProps::PropHasFlags(propID, CSS_PROPERTY_APPLIES_TO_PAGE_RULE))) { // unknown property
     if (!NonMozillaVendorIdentifier(propertyName)) {
-      const PRUnichar *params[] = {
-        propertyName.get()
-      };
-      REPORT_UNEXPECTED_P(PEUnknownProperty, params);
+      REPORT_UNEXPECTED_P(PEUnknownProperty, propertyName);
       REPORT_UNEXPECTED(PEDeclDropped);
       OUTPUT_ERROR();
     }
@@ -4353,10 +4322,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   }
   if (! ParseProperty(propID)) {
     // XXX Much better to put stuff in the value parsers instead...
-    const PRUnichar *params[] = {
-      propertyName.get()
-    };
-    REPORT_UNEXPECTED_P(PEValueParsingError, params);
+    REPORT_UNEXPECTED_P(PEValueParsingError, propertyName);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     mTempData.ClearProperty(propID);
@@ -9861,10 +9827,7 @@ CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix)
   // else no declared namespaces
 
   if (nameSpaceID == kNameSpaceID_Unknown) {   // unknown prefix, dump it
-    const PRUnichar *params[] = {
-      aPrefix.get()
-    };
-    REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+    REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, aPrefix);
   }
 
   return nameSpaceID;
