@@ -4108,7 +4108,7 @@ html|*#gcli-output-frame {
 
 /* === social toolbar provider menu  === */
 
-#social-statusarea-user-portrait {
+.social-statusarea-user-portrait {
   width: 32px;
   height: 32px;
   margin: 4px;
