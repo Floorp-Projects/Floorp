@@ -35,14 +35,14 @@ nsTransactionManager::~nsTransactionManager()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsTransactionManager)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsTransactionManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mListeners)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mListeners)
   tmp->mDoStack.DoUnlink();
   tmp->mUndoStack.DoUnlink();
   tmp->mRedoStack.DoUnlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTransactionManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mListeners)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListeners)
   tmp->mDoStack.DoTraverse(cb);
   tmp->mUndoStack.DoTraverse(cb);
   tmp->mRedoStack.DoTraverse(cb);

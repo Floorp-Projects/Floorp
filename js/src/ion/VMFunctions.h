@@ -461,6 +461,8 @@ bool SPSExit(JSContext *cx, HandleScript script);
 
 bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out);
 
+bool GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval);
+
 } // namespace ion
 } // namespace js
 
