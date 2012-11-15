@@ -30,8 +30,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(CallEvent)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CallEvent,
                                                   nsDOMEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(tmp->mCall->ToISupports(),
-                                               TelephonyCall, "mCall")
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(tmp->mCall->ToISupports(),
+  //                                              TelephonyCall, "mCall")
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCall");
+  cb.NoteNativeChild(tmp->mCall->ToISupports(), NS_CYCLE_COLLECTION_PARTICIPANT(TelephonyCall));
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CallEvent,
