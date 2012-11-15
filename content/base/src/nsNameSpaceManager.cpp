@@ -31,7 +31,6 @@ using namespace mozilla::dom;
 #define kRDFNameSpaceURI "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define kXULNameSpaceURI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
-#define kXMLEventsNameSpaceURI "http://www.w3.org/2001/xml-events"
 
 class nsNameSpaceKey : public PLDHashEntryHdr
 {
@@ -119,7 +118,6 @@ nsresult NameSpaceManagerImpl::Init()
   REGISTER_NAMESPACE(kRDFNameSpaceURI, kNameSpaceID_RDF);
   REGISTER_NAMESPACE(kXULNameSpaceURI, kNameSpaceID_XUL);
   REGISTER_NAMESPACE(kSVGNameSpaceURI, kNameSpaceID_SVG);
-  REGISTER_NAMESPACE(kXMLEventsNameSpaceURI, kNameSpaceID_XMLEvents);
 
 #undef REGISTER_NAMESPACE
 
@@ -204,9 +202,6 @@ NS_NewElement(nsIContent** aResult,
   if (ns == kNameSpaceID_SVG) {
     return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
   }
-  if (ns == kNameSpaceID_XMLEvents) {
-    return NS_NewXMLEventsElement(aResult, aNodeInfo);
-  }
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
@@ -219,7 +214,6 @@ NameSpaceManagerImpl::HasElementCreator(int32_t aNameSpaceID)
 #endif
          aNameSpaceID == kNameSpaceID_MathML ||
          aNameSpaceID == kNameSpaceID_SVG ||
-         aNameSpaceID == kNameSpaceID_XMLEvents ||
          false;
 }
 
