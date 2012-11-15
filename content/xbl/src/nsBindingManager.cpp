@@ -138,8 +138,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnonymousContentList)
   {
     int32_t i, count = tmp->mElements->Length();
     for (i = 0; i < count; ++i) {
-      NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElements->ElementAt(i),
-                                                      nsXBLInsertionPoint);
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElements->ElementAt(i));
     }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
