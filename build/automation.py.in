@@ -455,9 +455,6 @@ user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_com
 
 // Get network events.
 user_pref("network.activity.blipIntervalMilliseconds", 250);
-
-// Shut up the media volume level.
-user_pref("media.volume_scale", "0.05");
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
