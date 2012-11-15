@@ -1182,7 +1182,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMCSSStyleRule)
   // Unlink the wrapper for our declaraton.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
-  nsContentUtils::ReleaseWrapper(s, tmp->DOMDeclaration());
+  nsContentUtils::ReleaseWrapper(static_cast<nsISupports*>(p), tmp->DOMDeclaration());
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMCSSStyleRule)
