@@ -324,7 +324,6 @@ class IonBuilder : public MIRGenerator
     bool jsop_getgname(HandlePropertyName name);
     bool jsop_setgname(HandlePropertyName name);
     bool jsop_getname(HandlePropertyName name);
-    bool jsop_intrinsicname(HandlePropertyName name);
     bool jsop_bindname(PropertyName *name);
     bool jsop_getelem();
     bool jsop_getelem_dense();
