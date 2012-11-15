@@ -11,8 +11,8 @@
   { 0xa589d96f, 0x7e09, 0x4edf, { 0xa0, 0x1a, 0xeb, 0x49, 0x51, 0xf4, 0x2f, 0x37 } }
 
 class nsITCPSocketInternal;
-class JSContext;
-class JSObject;
+struct JSContext;
+struct JSObject;
 
 namespace mozilla {
 namespace dom {
