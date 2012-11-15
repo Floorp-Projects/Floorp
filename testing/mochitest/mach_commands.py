@@ -82,7 +82,8 @@ class MochitestRunner(MozbuildObject):
         else:
             env = {}
 
-        self._run_make(directory='.', target=target, append_env=env)
+        return self._run_make(directory='.', target=target, append_env=env,
+            ensure_exit_code=False)
 
 
 @CommandProvider
@@ -91,28 +92,28 @@ class MachCommands(MachCommandBase):
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
     def run_mochitest_plain(self, test_file):
-        self.run_mochitest(test_file, 'plain')
+        return self.run_mochitest(test_file, 'plain')
 
     @Command('mochitest-chrome', help='Run a chrome mochitest.')
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
     def run_mochitest_chrome(self, test_file):
-        self.run_mochitest(test_file, 'chrome')
+        return self.run_mochitest(test_file, 'chrome')
 
     @Command('mochitest-browser', help='Run a mochitest with browser chrome.')
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
     def run_mochitest_browser(self, test_file):
-        self.run_mochitest(test_file, 'browser')
+        return self.run_mochitest(test_file, 'browser')
 
     @Command('mochitest-a11y', help='Run an a11y mochitest.')
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
     def run_mochitest_a11y(self, test_file):
-        self.run_mochitest(test_file, 'a11y')
+        return self.run_mochitest(test_file, 'a11y')
 
     def run_mochitest(self, test_file, flavor):
         self._ensure_state_subdir_exists('.')
 
         mochitest = self._spawn(MochitestRunner)
-        mochitest.run_mochitest_test(test_file, flavor)
+        return mochitest.run_mochitest_test(test_file, flavor)
