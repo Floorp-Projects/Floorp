@@ -91,6 +91,7 @@ UpdateCheckListener.prototype = {
 function UpdatePrompt() {
   this.wrappedJSObject = this;
   this._updateCheckListener = new UpdateCheckListener(this);
+  Services.obs.addObserver(this, "update-check-start", false);
 }
 
 UpdatePrompt.prototype = {
@@ -357,6 +358,57 @@ UpdatePrompt.prototype = {
     }
   },
 
+  appsUpdated: function UP_appsUpdated(aApps) {
+    log("appsUpdated: " + aApps.length + " apps to update");
+    let lock = Services.settings.createLock();
+    lock.set("apps.updateStatus", "check-complete", null);
+    this.sendChromeEvent("apps-update-check", { apps: aApps });
+    this._checkingApps = false;
+  },
+
+  // Trigger apps update check and wait for all to be done before
+  // notifying gaia.
+  onUpdateCheckStart: function UP_onUpdateCheckStart() {
+    // Don't start twice.
+    if (this._checkingApps) {
+      return;
+    }
+
+    this._checkingApps = true;
+
+    let self = this;
+
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    let all = window.navigator.mozApps.mgmt.getAll();
+
+    all.onsuccess = function() {
+      let appsCount = this.result.length;
+      let appsChecked = 0;
+      let appsToUpdate = [];
+      this.result.forEach(function updateApp(aApp) {
+        let update = aApp.checkForUpdate();
+        update.onsuccess = function() {
+          appsChecked += 1;
+          appsToUpdate.push(aApp.manifestURL);
+          if (appsChecked == appsCount) {
+            self.appsUpdated(appsToUpdate);
+          }
+        }
+        update.onerror = function() {
+          appsChecked += 1;
+          if (appsChecked == appsCount) {
+            self.appsUpdated(appsToUpdate);
+          }
+        }
+      });
+    }
+
+    all.onerror = function() {
+      // Could not get the app list, just notify to update nothing.
+      self.appsUpdated([]);
+    }
+  },
+
   // nsIObserver
 
   observe: function UP_observe(aSubject, aTopic, aData) {
@@ -368,6 +420,9 @@ UpdatePrompt.prototype = {
       case "quit-application":
         Services.idle.removeIdleObserver(this, APPLY_IDLE_TIMEOUT_SECONDS);
         Services.obs.removeObserver(this, "quit-application");
+        break;
+      case "update-check-start":
+        this.onUpdateCheckStart();
         break;
     }
   },
