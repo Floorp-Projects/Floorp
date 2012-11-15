@@ -319,8 +319,8 @@ struct DowncastCCParticipantImpl<T, true>
   static T* Run(void *p)
   {
     nsISupports *s = static_cast<nsISupports*>(p);
-    NS_ASSERTION(NS_CYCLE_COLLECTION_CLASSNAME(T)::CheckForRightISupports(s),
-                 "not the nsISupports pointer we expect");
+    MOZ_ASSERT(NS_CYCLE_COLLECTION_CLASSNAME(T)::CheckForRightISupports(s),
+               "not the nsISupports pointer we expect");
     return NS_CYCLE_COLLECTION_CLASSNAME(T)::Downcast(s);
   }
 };
@@ -418,8 +418,8 @@ T* DowncastCCParticipant(void *p)
   NS_METHOD                                                                    \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::UnlinkImpl(void *p)                   \
   {                                                                            \
-    NS_ASSERTION(CheckForRightISupports(static_cast<nsISupports*>(p)),         \
-                 "not the nsISupports pointer we expect");                     \
+    MOZ_ASSERT(CheckForRightISupports(static_cast<nsISupports*>(p)),           \
+               "not the nsISupports pointer we expect");                       \
     return NS_OK;                                                              \
   }
 
