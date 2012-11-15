@@ -18,13 +18,6 @@
 #include "nsDataHashtable.h"
 #include "nsString.h"
 
-#ifdef MOZ_XTF
-#include "nsIServiceManager.h"
-#include "nsIXTFService.h"
-#include "nsContentUtils.h"
-static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -214,15 +207,6 @@ NS_NewElement(nsIContent** aResult,
   if (ns == kNameSpaceID_XMLEvents) {
     return NS_NewXMLEventsElement(aResult, aNodeInfo);
   }
-#ifdef MOZ_XTF
-  if (ns > kNameSpaceID_LastBuiltin) {
-    nsIXTFService* xtfService = nsContentUtils::GetXTFService();
-    NS_ASSERTION(xtfService, "could not get xtf service");
-    if (xtfService &&
-        NS_SUCCEEDED(xtfService->CreateElement(aResult, aNodeInfo)))
-      return NS_OK;
-  }
-#endif
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
