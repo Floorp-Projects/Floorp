@@ -325,13 +325,13 @@ function getJSON(element) {
     }
   }
 
-  // Gecko supports the inputmode attribute on text fields (but not textareas).
-  // But it doesn't recognize "verbatim" and other modes that we're interested
-  // in in Gaia, and the inputmode property returns "auto" for any value
-  // that gecko does not support. So we must query the inputmode attribute
-  // with getAttribute() rather than just using the inputmode property here.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=746142
-  let inputmode = element.getAttribute('inputmode');
+  // Gecko has some support for @inputmode but behind a preference and
+  // it is disabled by default.
+  // Gaia is then using @x-inputmode has its proprietary way to set
+  // inputmode for fields. This shouldn't be used outside of pre-installed
+  // apps because the attribute is going to disappear as soon as a definitive
+  // solution will be find.
+  let inputmode = element.getAttribute('x-inputmode');
   if (inputmode) {
     inputmode = inputmode.toLowerCase();
   } else {
