@@ -14,13 +14,13 @@
 #include "nsContentDLF.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
+#include "mozilla/css/ErrorReporter.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
-#include "nsCSSScanner.h"
 #include "nsDOMAttribute.h"
 #include "nsDOMClassInfo.h"
 #include "nsEventListenerManager.h"
@@ -312,7 +312,7 @@ nsLayoutStatics::Shutdown()
   nsFloatManager::Shutdown();
   nsImageFrame::ReleaseGlobals();
 
-  nsCSSScanner::ReleaseGlobals();
+  mozilla::css::ErrorReporter::ReleaseGlobals();
 
   nsTextFragment::Shutdown();
 
