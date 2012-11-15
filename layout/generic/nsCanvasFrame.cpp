@@ -206,18 +206,25 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
   nsRefPtr<gfxASurface> surf;
   nsRefPtr<gfxContext> ctx;
+  gfxRect destRect;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
-  if (IsSingleFixedPositionImage(aBuilder, bgClipRect) && aBuilder->IsPaintingToWindow() && !aBuilder->IsCompositingCheap()) {
+  if (IsSingleFixedPositionImage(aBuilder, bgClipRect, &destRect) &&
+      aBuilder->IsPaintingToWindow() && !aBuilder->IsCompositingCheap() &&
+      !dest->CurrentMatrix().HasNonIntegerTranslation()) {
+    // Snap image rectangle to nearest pixel boundaries. This is the right way
+    // to snap for this context, because we checked HasNonIntegerTranslation above.
+    destRect.Round();
     surf = static_cast<gfxASurface*>(GetUnderlyingFrame()->Properties().Get(nsIFrame::CachedBackgroundImage()));
     nsRefPtr<gfxASurface> destSurf = dest->CurrentSurface();
     if (surf && surf->GetType() == destSurf->GetType()) {
-      BlitSurface(dest, mDestRect, surf);
+      BlitSurface(dest, destRect, surf);
       return;
     }
-    surf = destSurf->CreateSimilarSurface(gfxASurface::CONTENT_COLOR_ALPHA, gfxIntSize(ceil(mDestRect.width), ceil(mDestRect.height)));
+    surf = destSurf->CreateSimilarSurface(gfxASurface::CONTENT_COLOR_ALPHA,
+        gfxIntSize(destRect.width, destRect.height));
     if (surf) {
       ctx = new gfxContext(surf);
-      ctx->Translate(-gfxPoint(mDestRect.x, mDestRect.y));
+      ctx->Translate(-gfxPoint(destRect.x, destRect.y));
       context.Init(aCtx->DeviceContext(), ctx);
     }
   }
@@ -229,7 +236,7 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
                                   aBuilder->GetBackgroundPaintFlags(),
                                   &bgClipRect, mLayer);
   if (surf) {
-    BlitSurface(dest, mDestRect, surf);
+    BlitSurface(dest, destRect, surf);
 
     GetUnderlyingFrame()->Properties().Set(nsIFrame::CachedBackgroundImage(), surf.forget().get());
     GetUnderlyingFrame()->AddStateBits(NS_FRAME_HAS_CACHED_BACKGROUND);
