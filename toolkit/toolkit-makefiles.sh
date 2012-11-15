@@ -1159,11 +1159,6 @@ if [ "$ACCESSIBILITY" ]; then
     accessible/src/jsat/Makefile
     accessible/src/xpcom/Makefile
   "
-  if [ ! "$DISABLE_XFORMS_HOOKS" ]; then
-    add_makefiles "
-      accessible/src/xforms/Makefile
-    "
-  fi
   if [ "$MOZ_XUL" ]; then
     add_makefiles "
       accessible/src/xul/Makefile

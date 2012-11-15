@@ -31,12 +31,6 @@ namespace statistics {
   inline void IAccessibleTableUsed()
     { Telemetry::Accumulate(Telemetry::A11Y_IATABLE_USAGE_FLAG, true); }
 
-  /**
-   * Report that XForms accessibility has been instantiated.
-   */
-  inline void XFormsAccessibleUsed()
-    { Telemetry::Accumulate(Telemetry::A11Y_XFORMS_USAGE_FLAG, true); }
-
 } // namespace statistics
 } // namespace a11y
 } // namespace mozilla
