@@ -12,6 +12,7 @@ let SocialUI = {
     Services.obs.addObserver(this, "social:pref-changed", false);
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
     Services.obs.addObserver(this, "social:profile-changed", false);
+    Services.obs.addObserver(this, "social:recommend-info-changed", false);
     Services.obs.addObserver(this, "social:frameworker-error", false);
 
     Services.prefs.addObserver("social.sidebar.open", this, false);
@@ -33,6 +34,7 @@ let SocialUI = {
     Services.obs.removeObserver(this, "social:pref-changed");
     Services.obs.removeObserver(this, "social:ambient-notification-changed");
     Services.obs.removeObserver(this, "social:profile-changed");
+    Services.obs.removeObserver(this, "social:recommend-info-changed");
     Services.obs.removeObserver(this, "social:frameworker-error");
 
     Services.prefs.removeObserver("social.sidebar.open", this);
@@ -73,6 +75,9 @@ let SocialUI = {
         SocialToolbar.updateProfile();
         SocialShareButton.updateProfileInfo();
         SocialChatBar.update();
+        break;
+      case "social:recommend-info-changed":
+        SocialShareButton.updateShareState();
         break;
       case "social:frameworker-error":
         if (Social.provider) {
@@ -254,8 +259,10 @@ let SocialChatBar = {
     }
   },
   focus: function SocialChatBar_focus() {
+    if (!this.chatbar.selectedChat)
+      return;
     let commandDispatcher = gBrowser.ownerDocument.commandDispatcher;
-    commandDispatcher.advanceFocusIntoSubtree(this.chatbar);
+    commandDispatcher.advanceFocusIntoSubtree(this.chatbar.selectedChat);
   }
 }
 
@@ -453,12 +460,6 @@ let SocialFlyout = {
 }
 
 let SocialShareButton = {
-  // promptImages and promptMessages being null means we are yet to get the
-  // message back from the provider with the images and icons (or that we got
-  // the response but determined it was invalid.)
-  promptImages: null,
-  promptMessages: null,
-
   // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
     this.updateButtonHiddenState();
@@ -468,8 +469,6 @@ let SocialShareButton = {
   updateProfileInfo: function SSB_updateProfileInfo() {
     let profileRow = document.getElementById("unsharePopupHeader");
     let profile = Social.provider.profile;
-    this.promptImages = null;
-    this.promptMessages = null;
     if (profile && profile.displayName) {
       profileRow.hidden = false;
       let portrait = document.getElementById("socialUserPortrait");
@@ -481,63 +480,7 @@ let SocialShareButton = {
       this.updateButtonHiddenState();
       return;
     }
-    // XXX - this shouldn't be done as part of updateProfileInfo, but instead
-    // whenever we notice the provider has changed - but the concept of
-    // "provider changed" will only exist once bug 774520 lands. 
-    // get the recommend-prompt info.
-    let port = Social.provider.getWorkerPort();
-    if (port) {
-      port.onmessage = function(evt) {
-        if (evt.data.topic == "social.user-recommend-prompt-response") {
-          port.close();
-          this.acceptRecommendInfo(evt.data.data);
-          this.updateButtonHiddenState();
-          this.updateShareState();
-        }
-      }.bind(this);
-      port.postMessage({topic: "social.user-recommend-prompt"});
-    }
-  },
-
-  acceptRecommendInfo: function SSB_acceptRecommendInfo(data) {
-    // Accept *and validate* the user-recommend-prompt-response message.
-    let promptImages = {};
-    let promptMessages = {};
-    function reportError(reason) {
-      Cu.reportError("Invalid recommend data from provider: " + reason + ": sharing is disabled for this provider");
-      return false;
-    }
-    if (!data ||
-        !data.images || typeof data.images != "object" ||
-        !data.messages || typeof data.messages != "object") {
-      return reportError("data is missing valid 'images' or 'messages' elements");
-    }
-    for (let sub of ["share", "unshare"]) {
-      let url = data.images[sub];
-      if (!url || typeof url != "string" || url.length == 0) {
-        return reportError('images["' + sub + '"] is missing or not a non-empty string');
-      }
-      // resolve potentially relative URLs then check the scheme is acceptable.
-      url = Services.io.newURI(Social.provider.origin, null, null).resolve(url);
-      let uri = Services.io.newURI(url, null, null);
-      if (!uri.schemeIs("http") && !uri.schemeIs("https") && !uri.schemeIs("data")) {
-        return reportError('images["' + sub + '"] does not have a valid scheme');
-      }
-      promptImages[sub] = url;
-    }
-    for (let sub of ["shareTooltip", "unshareTooltip",
-                     "sharedLabel", "unsharedLabel", "unshareLabel",
-                     "portraitLabel", 
-                     "unshareConfirmLabel", "unshareConfirmAccessKey",
-                     "unshareCancelLabel", "unshareCancelAccessKey"]) {
-      if (typeof data.messages[sub] != "string" || data.messages[sub].length == 0) {
-        return reportError('messages["' + sub + '"] is not a valid string');
-      }
-      promptMessages[sub] = data.messages[sub];
-    }
-    this.promptImages = promptImages;
-    this.promptMessages = promptMessages;
-    return true;
+    this.updateShareState();
   },
 
   get shareButton() {
@@ -559,7 +502,7 @@ let SocialShareButton = {
   updateButtonHiddenState: function SSB_updateButtonHiddenState() {
     let shareButton = this.shareButton;
     if (shareButton)
-      shareButton.hidden = !Social.uiVisible || this.promptImages == null ||
+      shareButton.hidden = !Social.uiVisible || Social.provider.recommendInfo == null ||
                            !SocialUI.haveLoggedInUser() ||
                            !this.canSharePage(gBrowser.currentURI);
   },
@@ -583,16 +526,17 @@ let SocialShareButton = {
     }
     let continueSharingButton = document.getElementById("unsharePopupContinueSharingButton");
     continueSharingButton.focus();
+    let recommendInfo = Social.provider.recommendInfo;
     updateElement("unsharePopupContinueSharingButton",
-                  {label: this.promptMessages.unshareCancelLabel,
-                   accesskey: this.promptMessages.unshareCancelAccessKey});
+                  {label: recommendInfo.messages.unshareCancelLabel,
+                   accesskey: recommendInfo.messages.unshareCancelAccessKey});
     updateElement("unsharePopupStopSharingButton",
-                  {label: this.promptMessages.unshareConfirmLabel,
-                  accesskey: this.promptMessages.unshareConfirmAccessKey});
+                  {label: recommendInfo.messages.unshareConfirmLabel,
+                  accesskey: recommendInfo.messages.unshareConfirmAccessKey});
     updateElement("socialUserPortrait",
-                  {"aria-label": this.promptMessages.portraitLabel});
+                  {"aria-label": recommendInfo.messages.portraitLabel});
     updateElement("socialUserRecommendedText",
-                  {value: this.promptMessages.unshareLabel});
+                  {value: recommendInfo.messages.unshareLabel});
   },
 
   sharePage: function SSB_sharePage() {
@@ -621,6 +565,7 @@ let SocialShareButton = {
     let shareButton = this.shareButton;
     let currentPageShared = shareButton && !shareButton.hidden && Social.isPageShared(gBrowser.currentURI);
 
+    let recommendInfo = Social.provider ? Social.provider.recommendInfo : null;
     // Provide a11y-friendly notification of share.
     let status = document.getElementById("share-button-status");
     if (status) {
@@ -628,10 +573,10 @@ let SocialShareButton = {
       // unshared (ie, it needs to manage three-states: (1) nothing done, (2)
       // shared, (3) shared then unshared)
       // Note that we *do* have an appropriate string from the provider for
-      // this (promptMessages['unsharedLabel'] but currently lack a way of
+      // this (recommendInfo.messages.unsharedLabel) but currently lack a way of
       // tracking this state)
-      let statusString = currentPageShared ?
-                           this.promptMessages['sharedLabel'] : "";
+      let statusString = currentPageShared && recommendInfo ?
+                           recommendInfo.messages.sharedLabel : "";
       status.setAttribute("value", statusString);
     }
 
@@ -642,12 +587,12 @@ let SocialShareButton = {
     let imageURL;
     if (currentPageShared) {
       shareButton.setAttribute("shared", "true");
-      shareButton.setAttribute("tooltiptext", this.promptMessages['unshareTooltip']);
-      imageURL = this.promptImages["unshare"]
+      shareButton.setAttribute("tooltiptext", recommendInfo.messages.unshareTooltip);
+      imageURL = recommendInfo.images.unshare;
     } else {
       shareButton.removeAttribute("shared");
-      shareButton.setAttribute("tooltiptext", this.promptMessages['shareTooltip']);
-      imageURL = this.promptImages["share"]
+      shareButton.setAttribute("tooltiptext", recommendInfo.messages.shareTooltip);
+      imageURL = recommendInfo.images.share;
     }
     shareButton.src = imageURL;
   }

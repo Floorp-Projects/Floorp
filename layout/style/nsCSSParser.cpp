@@ -400,12 +400,18 @@ protected:
     eParseDeclaration_InBraces       = 1 << 0,
     eParseDeclaration_AllowImportant = 1 << 1
   };
+  enum nsCSSContextType {
+    eCSSContext_General,
+    eCSSContext_Page
+  };
 
-  css::Declaration* ParseDeclarationBlock(uint32_t aFlags);
+  css::Declaration* ParseDeclarationBlock(uint32_t aFlags,
+                                          nsCSSContextType aContext = eCSSContext_General);
   bool ParseDeclaration(css::Declaration* aDeclaration,
                         uint32_t aFlags,
                         bool aMustCallValueAppended,
-                        bool* aChanged);
+                        bool* aChanged,
+                        nsCSSContextType aContext = eCSSContext_General);
 
   bool ParseProperty(nsCSSProperty aPropID);
   bool ParsePropertyByFunction(nsCSSProperty aPropID);
@@ -2261,13 +2267,6 @@ CSSParserImpl::ParseFontDescriptor(nsCSSFontFaceRule* aRule)
 
 
 bool
-CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
-{
-  // XXX not yet implemented
-  return false;
-}
-
-bool
 CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
 {
   if (!GetToken(true)) {
@@ -2303,6 +2302,26 @@ CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
   return true;
 }
 
+bool
+CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
+{
+  // TODO: There can be page selectors after @page such as ":first", ":left".
+  uint32_t parseFlags = eParseDeclaration_InBraces |
+                        eParseDeclaration_AllowImportant;
+  nsAutoPtr<css::Declaration> declaration(
+                                ParseDeclarationBlock(parseFlags,
+                                                      eCSSContext_Page));
+  if (!declaration) {
+    return false;
+  }
+
+  // Takes ownership of declaration.
+  nsRefPtr<nsCSSPageRule> rule = new nsCSSPageRule(declaration);
+
+  (*aAppendFunc)(rule, aData);
+  return true;
+}
+
 already_AddRefed<nsCSSKeyframeRule>
 CSSParserImpl::ParseKeyframeRule()
 {
@@ -2316,7 +2335,6 @@ CSSParserImpl::ParseKeyframeRule()
   uint32_t parseFlags = eParseDeclaration_InBraces;
   nsAutoPtr<css::Declaration> declaration(ParseDeclarationBlock(parseFlags));
   if (!declaration) {
-    REPORT_UNEXPECTED(PEBadSelectorKeyframeRuleIgnored);
     return nullptr;
   }
 
@@ -3892,7 +3910,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
 }
 
 css::Declaration*
-CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags)
+CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
 {
   bool checkForBraces = (aFlags & eParseDeclaration_InBraces) != 0;
 
@@ -3908,7 +3926,7 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags)
   if (declaration) {
     for (;;) {
       bool changed;
-      if (!ParseDeclaration(declaration, aFlags, true, &changed)) {
+      if (!ParseDeclaration(declaration, aFlags, true, &changed, aContext)) {
         if (!SkipDeclaration(checkForBraces)) {
           break;
         }
@@ -4299,8 +4317,12 @@ bool
 CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
                                 uint32_t aFlags,
                                 bool aMustCallValueAppended,
-                                bool* aChanged)
+                                bool* aChanged,
+                                nsCSSContextType aContext)
 {
+  NS_PRECONDITION(aContext == eCSSContext_General ||
+                  aContext == eCSSContext_Page,
+                  "Must be page or general context");
   bool checkForBraces = (aFlags & eParseDeclaration_InBraces) != 0;
 
   mTempData.AssertInitialState();
@@ -4344,7 +4366,9 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   // Map property name to its ID and then parse the property
   nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName,
                                                     nsCSSProps::eEnabled);
-  if (eCSSProperty_UNKNOWN == propID) { // unknown property
+  if (eCSSProperty_UNKNOWN == propID ||
+     (aContext == nsCSSContextType::eCSSContext_Page &&
+      !nsCSSProps::PropHasFlags(propID, CSS_PROPERTY_APPLIES_TO_PAGE_RULE))) { // unknown property
     if (!NonMozillaVendorIdentifier(propertyName)) {
       const PRUnichar *params[] = {
         propertyName.get()

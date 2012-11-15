@@ -10615,8 +10615,7 @@ NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
         rv = GetPresShell(getter_AddRefs(shell));
         if (NS_SUCCEEDED(rv) && shell) {
             nsCOMPtr<nsILayoutHistoryState> layoutState;
-            rv = shell->CaptureHistoryState(getter_AddRefs(layoutState),
-                                            true);
+            rv = shell->CaptureHistoryState(getter_AddRefs(layoutState));
         }
     }
 

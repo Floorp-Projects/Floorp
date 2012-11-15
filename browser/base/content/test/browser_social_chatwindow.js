@@ -60,6 +60,85 @@ var tests = {
     }
     port.postMessage({topic: "test-init", data: { id: 1 }});
   },
+  testOpenMinimized: function(next) {
+    // In this case the sidebar opens a chat (without specifying minimized).
+    // We then minimize it and have the sidebar reopen the chat (again without
+    // minimized).  On that second call the chat should open and no longer
+    // be minimized.
+    let chats = document.getElementById("pinnedchats");
+    let port = Social.provider.getWorkerPort();
+    let seen_opened = false;
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "test-init-done":
+          port.postMessage({topic: "test-chatbox-open"});
+          break;
+        case "chatbox-opened":
+          is(e.data.result, "ok", "the sidebar says it got a chatbox");
+          if (!seen_opened) {
+            // first time we got the opened message, so minimize the chat then
+            // re-request the same chat to be opened - we should get the
+            // message again and the chat should be restored.
+            ok(!chats.selectedChat.minimized, "chat not initially minimized")
+            chats.selectedChat.minimized = true
+            seen_opened = true;
+            port.postMessage({topic: "test-chatbox-open"});
+          } else {
+            // This is the second time we've seen this message - there should
+            // be exactly 1 chat open and it should no longer be minimized.
+            let chats = document.getElementById("pinnedchats");
+            ok(!chats.selectedChat.minimized, "chat no longer minimized")
+            chats.selectedChat.close();
+            is(chats.selectedChat, null, "should only have been one chat open");
+            port.close();
+            next();
+          }
+      }
+    }
+    port.postMessage({topic: "test-init", data: { id: 1 }});
+  },
+  // In this case the *worker* opens a chat (so minimized is specified).
+  // The worker then makes the same call again - as that second call also
+  // specifies "minimized" the chat should *not* be restored.
+  testWorkerChatWindowMinimized: function(next) {
+    const chatUrl = "https://example.com/browser/browser/base/content/test/social_chat.html";
+    let port = Social.provider.getWorkerPort();
+    let seen_opened = false;
+    ok(port, "provider has a port");
+    port.postMessage({topic: "test-init"});
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "got-chatbox-message":
+          ok(true, "got a chat window opened");
+          let chats = document.getElementById("pinnedchats");
+          if (!seen_opened) {
+            // first time we got the opened message, so minimize the chat then
+            // re-request the same chat to be opened - we should get the
+            // message again and the chat should be restored.
+            ok(chats.selectedChat.minimized, "chatbox from worker opened as minimized");
+            seen_opened = true;
+            port.postMessage({topic: "test-worker-chat", data: chatUrl});
+            // Sadly there is no notification we can use to know the chat was
+            // re-opened :(  So we ask the chat window to "ping" us - by then
+            // the second request should have made it.
+            chats.selectedChat.iframe.contentWindow.wrappedJSObject.pingWorker();
+          } else {
+            // This is the second time we've seen this message - there should
+            // be exactly 1 chat open and it should still be minimized.
+            let chats = document.getElementById("pinnedchats");
+            ok(chats.selectedChat.minimized, "chat still minimized")
+            chats.selectedChat.close();
+            is(chats.selectedChat, null, "should only have been one chat open");
+            port.close();
+            next();
+          }
+          break;
+      }
+    }
+    port.postMessage({topic: "test-worker-chat", data: chatUrl});
+  },
   testManyChats: function(next) {
     // open enough chats to overflow the window, then check
     // if the menupopup is visible
@@ -285,10 +364,52 @@ var tests = {
       todo(!chatbar.nub.hasAttribute("activity"), "Bug 806266 - nub should no longer have activity");
       // TODO: tests for bug 806266 should arrange to have 2 chats collapsed
       // then open them checking the nub is updated correctly.
-      closeAllChats();
-      port.close();
-      next();
+      // Now we will go and change the embedded iframe in the second chat and
+      // ensure the activity magic still works (ie, check that the unload for
+      // the iframe didn't cause our event handlers to be removed.)
+      ok(!second.hasAttribute("activity"), "second chat should have no activity");
+      let subiframe = iframe2.contentDocument.getElementById("iframe");
+      subiframe.contentWindow.addEventListener("unload", function subunload() {
+        subiframe.contentWindow.removeEventListener("unload", subunload);
+        // ensure all other unload listeners have fired.
+        executeSoon(function() {
+          let evt = iframe2.contentDocument.createEvent("CustomEvent");
+          evt.initCustomEvent("socialChatActivity", true, true, {});
+          iframe2.contentDocument.documentElement.dispatchEvent(evt);
+          ok(second.hasAttribute("activity"), "second chat still has activity after unloading sub-iframe");
+          closeAllChats();
+          port.close();
+          next();
+        })
+      })
+      subiframe.setAttribute("src", "data:text/plain:new location for iframe");
     });
+  },
+
+  testOnlyOneCallback: function(next) {
+    let chats = document.getElementById("pinnedchats");
+    let port = Social.provider.getWorkerPort();
+    let numOpened = 0;
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "test-init-done":
+          port.postMessage({topic: "test-chatbox-open"});
+          break;
+        case "chatbox-opened":
+          numOpened += 1;
+          port.postMessage({topic: "ping"});
+          break;
+        case "pong":
+          executeSoon(function() {
+            is(numOpened, 1, "only got one open message");
+            chats.removeAll();
+            port.close();
+            next();
+          });
+      }
+    }
+    port.postMessage({topic: "test-init", data: { id: 1 }});
   },
 
   // XXX - note this must be the last test until we restore the login state

@@ -478,6 +478,8 @@ DOMCI_CLASS(TouchEvent)
 DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
 
+DOMCI_CLASS(CSSPageRule)
+
 DOMCI_CLASS(MediaQueryList)
 
 DOMCI_CLASS(MutationObserver)

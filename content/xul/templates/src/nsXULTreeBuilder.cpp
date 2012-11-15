@@ -276,10 +276,10 @@ NS_IMPL_ADDREF_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 NS_IMPL_RELEASE_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mBoxObject)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSelection)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPersistStateStore)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mObservers)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mBoxObject)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mPersistStateStore)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservers)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 static bool TraverseObservers(nsISupports* aElement, void *aData)
@@ -292,9 +292,9 @@ static bool TraverseObservers(nsISupports* aElement, void *aData)
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBoxObject)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSelection)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPersistStateStore)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBoxObject)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelection)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPersistStateStore)
     if (tmp->mObservers) {
         tmp->mObservers->EnumerateForwards(TraverseObservers, &cb);
     }

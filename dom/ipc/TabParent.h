@@ -296,6 +296,9 @@ private:
     // dispatch to content.
     void MaybeForwardEventToRenderFrame(const nsInputEvent& aEvent,
                                         nsInputEvent* aOutEvent);
+    // When true, the TabParent is invalid and we should not send IPC messages
+    // anymore.
+    bool mIsDestroyed;
 };
 
 } // namespace dom

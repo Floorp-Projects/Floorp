@@ -3862,14 +3862,8 @@ nsGfxScrollFrameInner::GetCoordAttribute(nsIFrame* aBox, nsIAtom* aAtom,
 }
 
 nsPresState*
-nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
+nsGfxScrollFrameInner::SaveState()
 {
-  // Don't save "normal" state for the root scrollframe; that's
-  // handled via the eDocumentScrollState state id
-  if (mIsRoot && aStateID == nsIStatefulFrame::eNoID) {
-    return nullptr;
-  }
-
   nsIScrollbarMediator* mediator = do_QueryFrame(GetScrolledFrame());
   if (mediator) {
     // child handles its own scroll state, so don't bother saving state here

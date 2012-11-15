@@ -31,9 +31,6 @@ public:
 
   nsSize      mReflowSize;
   nsMargin    mReflowMargin;
-  // Extra Margin between the device area and the edge of the page;
-  // approximates unprintable area
-  nsMargin    mExtraMargin;
   // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX 
   // and 0 elsewhere; I think it has to do with some inconsistency in page size
   // computations

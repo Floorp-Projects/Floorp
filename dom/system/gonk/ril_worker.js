@@ -4145,6 +4145,10 @@ let RIL = {
       if (DEBUG) debug("Handling parcel as " + method.name);
       method.call(this, length, options);
     }
+  },
+
+  setDebugEnabled: function setDebugEnabled(options) {
+    DEBUG = DEBUG_WORKER || options.enabled;
   }
 };
 

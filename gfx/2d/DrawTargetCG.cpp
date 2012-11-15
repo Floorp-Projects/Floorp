@@ -409,7 +409,11 @@ CreateCGPattern(const Pattern &aPattern, CGAffineTransform aUserSpace)
     {0, 0,},
     {static_cast<CGFloat>(CGImageGetWidth(image)), static_cast<CGFloat>(CGImageGetHeight(image))}
   };
-  CGAffineTransform transform = CGAffineTransformConcat(CGAffineTransformMakeScale(1, -1), aUserSpace);
+  CGAffineTransform transform =
+      CGAffineTransformConcat(CGAffineTransformConcat(CGAffineTransformMakeScale(1,
+                                                                                 -1),
+                                                      GfxMatrixToCGAffineTransform(pat.mMatrix)),
+                              aUserSpace);
   transform = CGAffineTransformTranslate(transform, 0, -static_cast<float>(CGImageGetHeight(image)));
   return CGPatternCreate(CGImageRetain(image), bounds, transform, xStep, yStep, kCGPatternTilingConstantSpacing,
                          true, &patternCallbacks);
