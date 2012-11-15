@@ -269,7 +269,7 @@ browser.jar:
         skin/classic/aero/browser/webRTC-shareDevice-16.png
         skin/classic/aero/browser/webRTC-shareDevice-64.png
         skin/classic/aero/browser/downloads/buttons.png              (downloads/buttons-aero.png)
-        skin/classic/aero/browser/downloads/download-glow.png        (downloads/download-glow-aero.png)
+        skin/classic/aero/browser/downloads/download-glow.png        (downloads/download-glow.png)
         skin/classic/aero/browser/downloads/download-notification.png (downloads/download-notification.png)
 *       skin/classic/aero/browser/downloads/downloads.css            (downloads/downloads-aero.css)
         skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
