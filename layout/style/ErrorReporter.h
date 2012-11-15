@@ -38,47 +38,28 @@ public:
   void OutputError();
   void ClearError();
 
-  // aMessage must take no parameters
+  // In all overloads of ReportUnexpected, aMessage is a stringbundle
+  // name, which will be processed as a format string with the
+  // indicated number of parameters.
+
+  // no parameters
   void ReportUnexpected(const char *aMessage);
-  // aLookingFor is a plain string, not a format string
-  void ReportUnexpectedEOF(const char *aLookingFor);
-  // aLookingFor is a single character
-  void ReportUnexpectedEOF(PRUnichar aLookingFor);
+  // one parameter, a string
+  void ReportUnexpected(const char *aMessage, const nsString& aParam);
+  // one parameter, a token
+  void ReportUnexpected(const char *aMessage, const nsCSSToken& aToken);
+  // two parameters, a token and a character, in that order
+  void ReportUnexpected(const char *aMessage, const nsCSSToken& aToken,
+                        PRUnichar aChar);
 
-  // aMessage is a format string with 1 parameter (for the string
-  // representation of the unexpected token)
-  void ReportUnexpectedToken(const char *aMessage, const nsCSSToken &aToken);
-
-  // aMessage is a format string
-  template<uint32_t N>
-  void ReportUnexpectedParams(const char* aMessage,
-                              const PRUnichar* (&aParams)[N])
-  {
-    MOZ_STATIC_ASSERT(N > 0, "use ReportUnexpected instead");
-    ReportUnexpectedParams(aMessage, aParams, N);
-  }
-
-  // aMessage is a format string
-  // aParams's first entry must be null, and we'll fill in the token
-  template<uint32_t N>
-  void ReportUnexpectedTokenParams(const char* aMessage,
-                                   const nsCSSToken &aToken,
-                                   const PRUnichar* (&aParams)[N])
-  {
-    MOZ_STATIC_ASSERT(N > 1, "use ReportUnexpectedToken instead");
-    ReportUnexpectedTokenParams(aMessage, aToken, aParams, N);
-  }
+  // for ReportUnexpectedEOF, aExpected can be either a stringbundle
+  // name or a single character.  In the former case there may not be
+  // any format parameters.
+  void ReportUnexpectedEOF(const char *aExpected);
+  void ReportUnexpectedEOF(PRUnichar aExpected);
 
 private:
-  void ReportUnexpectedParams(const char *aMessage,
-                              const PRUnichar **aParams,
-                              uint32_t aParamsLength);
-  void ReportUnexpectedTokenParams(const char *aMessage,
-                                   const nsCSSToken &aToken,
-                                   const PRUnichar **aParams,
-                                   uint32_t aParamsLength);
-
-  void AddToError(const nsAString &aErrorText);
+  void AddToError(const nsString &aErrorText);
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsAutoString mError;
@@ -106,19 +87,15 @@ inline void ErrorReporter::OutputError() {}
 inline void ErrorReporter::ClearError() {}
 
 inline void ErrorReporter::ReportUnexpected(const char *) {}
-inline void ErrorReporter::ReportUnexpectedParams(const char *,
-                                                  const PRUnichar **,
-                                                  uint32_t) {}
+inline void ErrorReporter::ReportUnexpected(const char *, const nsString &) {}
+inline void ErrorReporter::ReportUnexpected(const char *, const nsCSSToken &) {}
+inline void ErrorReporter::ReportUnexpected(const char *, const nsCSSToken &,
+                                            PRUnichar) {}
+
 inline void ErrorReporter::ReportUnexpectedEOF(const char *) {}
 inline void ErrorReporter::ReportUnexpectedEOF(PRUnichar) {}
-inline void ErrorReporter::ReportUnexpectedToken(const char *,
-                                                 const nsCSSToken &) {}
-inline void ErrorReporter::ReportUnexpectedTokenParams(const char *,
-                                                       const nsCSSToken &,
-                                                       const PRUnichar **,
-                                                       uint32_t) {}
 
-inline void ErrorReporter::AddToError(const nsAString &) {}
+inline void ErrorReporter::AddToError(const nsString &) {}
 #endif
 
 } // namespace css
