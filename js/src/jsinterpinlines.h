@@ -405,8 +405,9 @@ inline bool
 IntrinsicNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHandleValue vp)
 {
     JSOp op = JSOp(*pc);
-    RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, op));
-    return cx->global()->getIntrinsicValue(cx, name, vp);
+    RootedPropertyName name(cx,  GetNameFromBytecode(cx, script, pc, op));
+    cx->global()->getIntrinsicValue(cx, name, vp);
+    return true;
 }
 
 inline bool
