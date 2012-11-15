@@ -23,6 +23,7 @@ mozilla_StartupTimeline_Event(FIRST_LOAD_URI, "firstLoadURI")
 
 #include "prtime.h"
 #include "nscore.h"
+#include "sampler.h"
 
 #ifdef MOZ_LINKER
 extern "C" {
@@ -57,7 +58,12 @@ public:
     return sStartupTimelineDesc[ev];
   }
 
-  static void Record(Event ev, PRTime when = PR_Now()) {
+  static void Record(Event ev) {
+    SAMPLE_MARKER(Describe(ev));
+    Record(ev, PR_Now());
+  }
+
+  static void Record(Event ev, PRTime when) {
     sStartupTimeline[ev] = when;
 #ifdef MOZ_LINKER
     if (__moz_linker_stats)
