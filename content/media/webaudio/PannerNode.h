@@ -156,16 +156,6 @@ public:
     mConeOuterGain = aConeOuterGain;
   }
 
-  AudioParam* ConeGain() const
-  {
-    return mConeGain;
-  }
-
-  AudioParam* DistanceGain() const
-  {
-    return mDistanceGain;
-  }
-
 private:
   PanningModelEnum mPanningModel;
   DistanceModelEnum mDistanceModel;
@@ -178,8 +168,6 @@ private:
   float mConeInnerAngle;
   float mConeOuterAngle;
   float mConeOuterGain;
-  nsRefPtr<AudioParam> mConeGain;
-  nsRefPtr<AudioParam> mDistanceGain;
 };
 
 }

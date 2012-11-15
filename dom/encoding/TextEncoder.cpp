@@ -101,16 +101,6 @@ TextEncoder::Encode(JSContext* aCx,
 void
 TextEncoder::GetEncoding(nsAString& aEncoding)
 {
-  // Our utf-16 converter does not comply with the Encoding Standard.
-  // As a result the utf-16le converter is used for the encoding label
-  // "utf-16".
-  // This workaround should not be exposed to the public API and so "utf-16"
-  // is returned by GetEncoding() if the internal encoding name is "utf-16le".
-  if (mEncoding.EqualsLiteral("UTF-16LE")) {
-    aEncoding.AssignLiteral("utf-16");
-    return;
-  }
-
   CopyASCIItoUTF16(mEncoding, aEncoding);
   nsContentUtils::ASCIIToLower(aEncoding);
 }

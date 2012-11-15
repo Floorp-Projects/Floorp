@@ -88,6 +88,8 @@ EXPORTS = \
 		nsProxyRelease.h \
 		nsXPTCUtils.h \
 		nsCycleCollectorUtils.h \
+		nsCycleCollectionNoteChild.h \
+		nsCycleCollectionTraversalCallback.h \
 		$(NULL)
 
 EXPORTS_mozilla = \

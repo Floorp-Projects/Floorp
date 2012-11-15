@@ -14,18 +14,6 @@
 #include "nsWrapperCache.h"
 #include "mozilla/TypeTraits.h"
 
-inline nsISupports*
-ToSupports(nsISupports *p)
-{
-    return p;
-}
-
-inline nsISupports*
-ToCanonicalSupports(nsISupports *p)
-{
-    return NULL;
-}
-
 template <typename T>
 struct qsIsNode
 {

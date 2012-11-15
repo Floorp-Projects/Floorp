@@ -8,8 +8,8 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMTCPSocket.h"
 
-class JSContext;
-class JSObject;
+struct JSContext;
+struct JSObject;
 
 namespace mozilla {
 namespace dom {
