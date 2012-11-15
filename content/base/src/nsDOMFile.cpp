@@ -688,7 +688,7 @@ nsDOMMemoryFile::DataOwner::sMemoryReporterRegistered;
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerSizeOf,
                                      "memory-file-data");
 
-class nsDOMMemoryFileDataOwnerMemoryReporter
+class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
   : public nsIMemoryMultiReporter
 {
   NS_DECL_ISUPPORTS
