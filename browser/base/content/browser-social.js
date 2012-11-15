@@ -254,8 +254,10 @@ let SocialChatBar = {
     }
   },
   focus: function SocialChatBar_focus() {
+    if (!this.chatbar.selectedChat)
+      return;
     let commandDispatcher = gBrowser.ownerDocument.commandDispatcher;
-    commandDispatcher.advanceFocusIntoSubtree(this.chatbar);
+    commandDispatcher.advanceFocusIntoSubtree(this.chatbar.selectedChat);
   }
 }
 
