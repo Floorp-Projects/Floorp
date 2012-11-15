@@ -1382,33 +1382,49 @@ public class BrowserProvider extends ContentProvider {
                     + " ADD COLUMN " + Bookmarks.FAVICON_ID + " INTEGER");
 
             try {
-                c = db.rawQuery("SELECT " + Obsolete.Images.URL + ", "
-                        + Obsolete.Images.FAVICON_URL + ", "
-                        + Obsolete.Images.FAVICON + ", "
-                        + Obsolete.Images.DATE_CREATED + ", "
-                        + Obsolete.Images.DATE_MODIFIED
-                        + " FROM " + Obsolete.TABLE_IMAGES
-                        + " WHERE " + Obsolete.Images.FAVICON_URL + " IS NOT NULL"
-                        + " GROUP BY " + Obsolete.Images.FAVICON_URL
-                        + " UNION ALL SELECT " + Obsolete.Images.URL + ", "
-                        + Obsolete.Images.FAVICON_URL + ", "
-                        + Obsolete.Images.FAVICON + ", "
-                        + Obsolete.Images.DATE_CREATED + ", "
-                        + Obsolete.Images.DATE_MODIFIED
-                        + " FROM " + Obsolete.TABLE_IMAGES
-                        + " WHERE " + Obsolete.Images.FAVICON_URL + " IS NULL",
-                        null);
+                c = db.query(Obsolete.TABLE_IMAGES,
+                        new String[] {
+                            Obsolete.Images.URL,
+                            Obsolete.Images.FAVICON_URL,
+                            Obsolete.Images.FAVICON,
+                            Obsolete.Images.DATE_MODIFIED,
+                            Obsolete.Images.DATE_CREATED
+                        },
+                        Obsolete.Images.FAVICON + " IS NOT NULL",
+                        null, null, null, null);
 
                 while (c.moveToNext()) {
-                    ContentValues values = new ContentValues(4);
-                    values.put(Favicons.URL, c.getString(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL)));
-                    values.put(Favicons.DATA, c.getBlob(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON)));
-                    values.put(Favicons.DATE_MODIFIED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_MODIFIED)));
-                    values.put(Favicons.DATE_CREATED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_CREATED)));
-                    long favicon_id = db.insert(TABLE_FAVICONS, null, values);
+                    String faviconUrl = c.getString(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL));
+                    long faviconId = -1;
 
-                    values = new ContentValues(1);
-                    values.put(FaviconColumns.FAVICON_ID, favicon_id);
+                    if (faviconUrl != null) {
+                        Cursor c2 = null;
+                        try {
+                            c2 = db.query(TABLE_FAVICONS,
+                                    new String[] { Favicons._ID },
+                                    Favicons.URL + " = ?",
+                                    new String[] { faviconUrl },
+                                    null, null, null);
+                            if (c2.moveToFirst()) {
+                                faviconId = c2.getLong(c2.getColumnIndexOrThrow(Favicons._ID));
+                            }
+                        } finally {
+                            if (c2 != null)
+                                c2.close();
+                        }
+                    }
+
+                    if (faviconId == -1) {
+                        ContentValues values = new ContentValues(4);
+                        values.put(Favicons.URL, faviconUrl);
+                        values.put(Favicons.DATA, c.getBlob(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON)));
+                        values.put(Favicons.DATE_MODIFIED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_MODIFIED)));
+                        values.put(Favicons.DATE_CREATED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_CREATED)));
+                        faviconId = db.insert(TABLE_FAVICONS, null, values);
+                    }
+
+                    ContentValues values = new ContentValues(1);
+                    values.put(FaviconColumns.FAVICON_ID, faviconId);
                     db.update(TABLE_HISTORY, values, History.URL + " = ?",
                             new String[] { c.getString(c.getColumnIndexOrThrow(Obsolete.Images.URL)) });
                     db.update(TABLE_BOOKMARKS, values, Bookmarks.URL + " = ?",
