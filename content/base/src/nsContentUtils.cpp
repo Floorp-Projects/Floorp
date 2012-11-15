@@ -68,10 +68,6 @@
 #include "nsCRT.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#ifdef MOZ_XTF
-#include "nsIXTFService.h"
-static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
-#endif
 #include "nsIMIMEService.h"
 #include "nsLWBrkCIID.h"
 #include "nsILineBreaker.h"
@@ -195,9 +191,6 @@ nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack;
 nsIParserService *nsContentUtils::sParserService = nullptr;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
-#ifdef MOZ_XTF
-nsIXTFService *nsContentUtils::sXTFService = nullptr;
-#endif
 imgILoader *nsContentUtils::sImgLoader;
 imgILoader *nsContentUtils::sPrivateImgLoader;
 imgICache *nsContentUtils::sImgCache;
@@ -955,21 +948,6 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAString& aSandboxAttrValue)
   return out;
 }
 
-#ifdef MOZ_XTF
-nsIXTFService*
-nsContentUtils::GetXTFService()
-{
-  if (!sXTFService) {
-    nsresult rv = CallGetService(kXTFServiceCID, &sXTFService);
-    if (NS_FAILED(rv)) {
-      sXTFService = nullptr;
-    }
-  }
-
-  return sXTFService;
-}
-#endif
-
 #ifdef IBMBIDI
 nsIBidiKeyboard*
 nsContentUtils::GetBidiKeyboard()
@@ -1473,9 +1451,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-#ifdef MOZ_XTF
-  NS_IF_RELEASE(sXTFService);
-#endif
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sPrivateImgLoader);
   NS_IF_RELEASE(sImgCache);

@@ -1078,11 +1078,6 @@ if [ "$ENABLE_TESTS" ]; then
       toolkit/components/url-classifier/tests/mochitest/Makefile
     "
   fi
-  if [ "$MOZ_XTF" ]; then
-    add_makefiles "
-      content/xtf/test/Makefile
-    "
-  fi
   if [ "$MOZ_XUL" ]; then
     add_makefiles "
       content/xul/templates/tests/chrome/Makefile
