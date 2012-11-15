@@ -1165,6 +1165,24 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   FileRules(EnumRulesMatching<AnonBoxRuleProcessorData>, &data, nullptr,
             &ruleWalker);
 
+  if (aPseudoTag == nsCSSAnonBoxes::pageContent) {
+    // Add any @page rules that are specified.
+    nsTArray<nsCSSPageRule*> rules;
+    nsTArray<css::ImportantRule*> importantRules;
+    nsPresContext* presContext = PresContext();
+    presContext->StyleSet()->AppendPageRules(presContext, rules);
+    for (uint32_t i = 0, i_end = rules.Length(); i != i_end; ++i) {
+      ruleWalker.Forward(rules[i]);
+      css::ImportantRule* importantRule = rules[i]->GetImportantRule();
+      if (importantRule) {
+        importantRules.AppendElement(importantRule);
+      }
+    }
+    for (uint32_t i = 0, i_end = importantRules.Length(); i != i_end; ++i) {
+      ruleWalker.Forward(importantRules[i]);
+    }
+  }
+
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,
                     false, false,
                     aPseudoTag, nsCSSPseudoElements::ePseudo_AnonBox,
@@ -1237,6 +1255,21 @@ nsStyleSet::AppendKeyframesRules(nsPresContext* aPresContext,
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc && !ruleProc->AppendKeyframesRules(aPresContext, aArray))
+      return false;
+  }
+  return true;
+}
+
+bool
+nsStyleSet::AppendPageRules(nsPresContext* aPresContext,
+                            nsTArray<nsCSSPageRule*>& aArray)
+{
+  NS_ENSURE_FALSE(mInShutdown, false);
+
+  for (uint32_t i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+    nsCSSRuleProcessor* ruleProc = static_cast<nsCSSRuleProcessor*>
+                                    (mRuleProcessors[gCSSSheetTypes[i]].get());
+    if (ruleProc && !ruleProc->AppendPageRules(aPresContext, aArray))
       return false;
   }
   return true;

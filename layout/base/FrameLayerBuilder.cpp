@@ -3022,8 +3022,10 @@ PredictScaleForContent(nsIFrame* aFrame, nsIFrame* aAncestorWithScale,
 {
   gfx3DMatrix transform =
     gfx3DMatrix::ScalingMatrix(aScale.width, aScale.height, 1.0);
-  // aTransform is applied first, then the scale is applied to the result
-  transform = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestorWithScale)*transform;
+  if (aFrame != aAncestorWithScale) {
+    // aTransform is applied first, then the scale is applied to the result
+    transform = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestorWithScale)*transform;
+  }
   gfxMatrix transform2d;
   if (transform.CanDraw2D(&transform2d)) {
      return transform2d.ScaleFactors(true);
@@ -3037,6 +3039,13 @@ FrameLayerBuilder::GetThebesLayerScaleForFrame(nsIFrame* aFrame)
   nsIFrame* last;
   for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     last = f;
+
+    if (nsLayoutUtils::IsPopup(f)) {
+      // Don't examine ancestors of a popup. It won't make sense to check
+      // the transform from some content inside the popup to some content
+      // which is an ancestor of the popup.
+      break;
+    }
   
     nsTArray<DisplayItemData*> *array = 
       reinterpret_cast<nsTArray<DisplayItemData*>*>(aFrame->Properties().Get(LayerManagerDataProperty()));

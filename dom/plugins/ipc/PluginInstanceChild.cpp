@@ -43,6 +43,7 @@ using mozilla::gfx::SharedDIBSurface;
 using namespace mozilla;
 using mozilla::ipc::ProcessChild;
 using namespace mozilla::plugins;
+using namespace mozilla::layers;
 using namespace std;
 
 #ifdef MOZ_WIDGET_GTK

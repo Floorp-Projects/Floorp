@@ -19,7 +19,6 @@
 #endif
 
 #include "nsAString.h"
-#include "nsIStatefulFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXPCScriptable.h"
 #include "nsDataHashtable.h"
@@ -475,7 +474,6 @@ public:
 
   static nsresult GenerateStateKey(nsIContent* aContent,
                                    const nsIDocument* aDocument,
-                                   nsIStatefulFrame::SpecialStateID aID,
                                    nsACString& aKey);
 
   /**
