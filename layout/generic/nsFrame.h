@@ -99,7 +99,7 @@
 //----------------------------------------------------------------------
 
 struct nsBoxLayoutMetrics;
-class nsDisplayBackgroundImage;
+class nsDisplayBackground;
 
 /**
  * Implementation of a simple frame that's not splittable and has no
@@ -510,7 +510,7 @@ public:
   nsresult DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                           const nsDisplayListSet& aLists,
                                           bool aForceBackground,
-                                          nsDisplayBackgroundImage** aBackground);
+                                          nsDisplayBackground** aBackground);
   /**
    * Adds display items for standard CSS borders, background and outline for
    * for this frame, as necessary. Checks IsVisibleForPainting and won't
