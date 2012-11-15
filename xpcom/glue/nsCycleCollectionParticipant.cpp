@@ -6,6 +6,12 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
+#ifdef MOZILLA_INTERNAL_API
+#include "nsString.h"
+#else
+#include "nsStringAPI.h"
+#endif
+
 void
 nsScriptObjectTracer::NoteJSChild(void *aScriptThing, const char *name,
                                   void *aClosure)
@@ -47,4 +53,16 @@ nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
     s->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
                       reinterpret_cast<void**>(&foo));
     return s == foo;
+}
+
+void
+CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
+                                const char* aName,
+                                uint32_t aFlags)
+{
+  nsAutoCString arrayEdgeName(aName);
+  if (aFlags & CycleCollectionEdgeNameArrayFlag) {
+    arrayEdgeName.AppendLiteral("[i]");
+  }
+  aCallback.NoteNextEdgeName(arrayEdgeName.get());
 }

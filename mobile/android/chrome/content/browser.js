@@ -6502,7 +6502,8 @@ var SearchEngines = {
     let method = form.method.toUpperCase();
     let formData = [];
 
-    for each (let el in form.elements) {
+    for (let i = 0; i < form.elements.length; ++i) {
+      let el = form.elements[i];
       if (!el.type)
         continue;
 
@@ -6569,7 +6570,8 @@ var SearchEngines = {
           Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
           let engine = Services.search.getEngineByName(name);
           engine.wrappedJSObject._queryCharset = charset;
-          for each (let param in formData) {
+          for (let i = 0; i < formData.length; ++i) {
+            let param = formData[i];
             if (param.name && param.value)
               engine.addParam(param.name, param.value, null);
           }

@@ -44,9 +44,5 @@ interface PannerNode : AudioNode {
     attribute float coneOuterAngle;
     attribute float coneOuterGain;
 
-    // Dynamically calculated gain values 
-    readonly attribute AudioParam coneGain;
-    readonly attribute AudioParam distanceGain;
-
 };
 

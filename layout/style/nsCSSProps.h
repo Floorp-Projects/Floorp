@@ -104,6 +104,9 @@ MOZ_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // Does the property apply to ::-moz-placeholder?
 #define CSS_PROPERTY_APPLIES_TO_PLACEHOLDER       (1<<18)
 
+// This property is allowed in an @page rule.
+#define CSS_PROPERTY_APPLIES_TO_PAGE_RULE         (1<<19)
+
 /**
  * Types of animatable values.
  */

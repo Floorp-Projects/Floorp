@@ -151,13 +151,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsInProcessTabChildGlobal)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsInProcessTabChildGlobal,
                                                 nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsInProcessTabChildGlobal,
                                                   nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMessageManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
   nsFrameScriptExecutor::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
