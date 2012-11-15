@@ -114,7 +114,7 @@ private:
 inline void
 ImplCycleCollectionUnlink(nsCOMArray_base& aField)
 {
-  aField.Clear();
+    aField.Clear();
 }
 
 inline void
@@ -123,12 +123,11 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  aFlags |= CycleCollectionEdgeNameArrayFlag;
-  size_t length = aField.Count();
-  for (size_t i = 0; i < length; ++i) {
-    CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
-    aCallback.NoteXPCOMChild(aField[i]);
-  }
+    aFlags |= CycleCollectionEdgeNameArrayFlag;
+    size_t length = aField.Count();
+    for (size_t i = 0; i < length; ++i) {
+        CycleCollectionNoteChild(aCallback, aField[i], aName, aFlags);
+    }
 }
 
 
@@ -302,7 +301,7 @@ template <typename T>
 inline void
 ImplCycleCollectionUnlink(nsCOMArray<T>& aField)
 {
-  aField.Clear();
+    aField.Clear();
 }
 
 template <typename E>
@@ -312,12 +311,11 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  aFlags |= CycleCollectionEdgeNameArrayFlag;
-  size_t length = aField.Count();
-  for (size_t i = 0; i < length; ++i) {
-    CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
-    aCallback.NoteXPCOMChild(aField[i]);
-  }
+    aFlags |= CycleCollectionEdgeNameArrayFlag;
+    size_t length = aField.Count();
+    for (size_t i = 0; i < length; ++i) {
+        CycleCollectionNoteChild(aCallback, aField[i], aName, aFlags);
+    }
 }
 
 #endif

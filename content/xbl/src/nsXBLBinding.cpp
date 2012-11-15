@@ -427,8 +427,7 @@ TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mInsertionPointTable key");
   cb.NoteXPCOMChild(aKey);
   if (aData) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint,
-                                               "mInsertionPointTable value")
+    ImplCycleCollectionTraverse(cb, *aData, "mInsertionPointTable value");
   }
   return PL_DHASH_NEXT;
 }

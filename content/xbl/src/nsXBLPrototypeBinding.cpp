@@ -341,9 +341,7 @@ TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
     *static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
   nsXBLInsertionPointEntry* entry =
     static_cast<nsXBLInsertionPointEntry*>(aData);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry,
-                                               nsXBLInsertionPointEntry,
-                                               "[insertion point table] value")
+  CycleCollectionNoteChild(cb, entry, "[insertion point table] value");
   return kHashEnumerateNext;
 }
 
