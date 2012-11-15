@@ -842,18 +842,18 @@ public:
     void StencilOp(WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass);
     void StencilOpSeparate(WebGLenum face, WebGLenum sfail, WebGLenum dpfail,
                            WebGLenum dppass);
-    void TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLsizei width,
                     WebGLsizei height, WebGLint border, WebGLenum format,
                     WebGLenum type, dom::ArrayBufferView *pixels,
                     ErrorResult& rv);
-    void TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
                     dom::ImageData* pixels, ErrorResult& rv);
     // Allow whatever element types the bindings are willing to pass
     // us in TexImage2D
     template<class ElementType>
-    void TexImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
+    void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
                     ElementType* elt, ErrorResult& rv) {
         if (!IsContextStable())
@@ -879,18 +879,18 @@ public:
         TexParameter_base(target, pname, &param, nullptr);
     }
     
-    void TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset,
                        WebGLsizei width, WebGLsizei height, WebGLenum format,
                        WebGLenum type, dom::ArrayBufferView* pixels,
                        ErrorResult& rv);
-    void TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
                        WebGLenum type, dom::ImageData* pixels, ErrorResult& rv);
     // Allow whatever element types the bindings are willing to pass
     // us in TexSubImage2D
     template<class ElementType>
-    void TexSubImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
+    void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
                        WebGLenum type, ElementType* elt, ErrorResult& rv) {
         if (!IsContextStable())

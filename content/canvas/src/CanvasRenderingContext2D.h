@@ -295,9 +295,9 @@ public:
   already_AddRefed<mozilla::dom::ImageData>
     GetImageData(JSContext* cx, double sx, double sy, double sw, double sh,
                  mozilla::ErrorResult& error);
-  void PutImageData(JSContext* cx, mozilla::dom::ImageData& imageData,
+  void PutImageData(mozilla::dom::ImageData& imageData,
                     double dx, double dy, mozilla::ErrorResult& error);
-  void PutImageData(JSContext* cx, mozilla::dom::ImageData& imageData,
+  void PutImageData(mozilla::dom::ImageData& imageData,
                     double dx, double dy, double dirtyX, double dirtyY,
                     double dirtyWidth, double dirtyHeight,
                     mozilla::ErrorResult& error);
