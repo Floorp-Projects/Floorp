@@ -1149,7 +1149,7 @@ FTP_STATE
 nsFtpState::R_list() {
     if (mResponseCode/100 == 1) {
         // OK, time to start reading from the data connection.
-        if (HasPendingCallback())
+        if (mDataStream && HasPendingCallback())
             mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
         return FTP_READ_BUF;
     }
@@ -1191,7 +1191,7 @@ nsFtpState::R_retr() {
             (void)mCacheEntry->AsyncDoom(nullptr);
             mCacheEntry = nullptr;
         }
-        if (HasPendingCallback())
+        if (mDataStream && HasPendingCallback())
             mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
         return FTP_READ_BUF;
     }
@@ -2286,7 +2286,7 @@ nsFtpState::ReadCacheEntry()
     if (NS_FAILED(OpenCacheDataStream()))
         return false;
 
-    if (HasPendingCallback())
+    if (mDataStream && HasPendingCallback())
         mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
 
     mDoomCache = false;
