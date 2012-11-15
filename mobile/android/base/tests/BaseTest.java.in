@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import android.view.View;
 
 /**
  *  A convenient base class suitable for most Robocop tests.
@@ -28,6 +29,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
+    private static final int MAX_WAIT_MS = 3000;
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -357,5 +359,37 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         String tabCountText = tabCount.getText();
         int tabCountInt = Integer.parseInt(tabCountText);
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
+    }
+
+    public void addTab(String url) {
+        Element tabs = null;
+        Element addTab = null;
+
+        Activity activity = getActivity();
+        tabs = mDriver.findElement(activity, "tabs");
+        addTab = mDriver.findElement(activity, "add_tab");
+        final int addTabId = addTab.getId();
+        mAsserter.ok(tabs.click(), "checking that tabs clicked", "tabs element clicked");
+
+        // wait for addTab to appear (this is usually immediate)
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+                View addTabView = getActivity().findViewById(addTabId);
+                if (addTabView == null) {
+                    return false;
+                }
+                return true;
+            }
+        }, MAX_WAIT_MS);
+        mAsserter.ok(success, "waiting for add tab view", "add tab view available");
+
+        mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
+
+        // must pause before sending keys, until awesome bar is displayed; waiting for known text is simple
+        mSolo.waitForText("History");
+
+        // cannot use loadUrl(): getText fails because we are using a different urlbar
+        mActions.sendKeys(url);
+        hitEnterAndWait();
     }
 }
