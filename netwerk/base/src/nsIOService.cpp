@@ -1178,16 +1178,13 @@ public:
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
 
     IOServiceProxyCallback(nsIInterfaceRequestor *aCallbacks,
-                           nsIEventTarget *aTarget,
                            nsIOService *aIOService)
         : mCallbacks(aCallbacks)
-        , mTarget(aTarget)
         , mIOService(aIOService)
     { }
 
 private:
     nsRefPtr<nsIInterfaceRequestor> mCallbacks;
-    nsRefPtr<nsIEventTarget>        mTarget;
     nsRefPtr<nsIOService>           mIOService;
 };
 
@@ -1223,15 +1220,13 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request, nsIURI *aURI,
         return NS_OK;
 
     speculativeHandler->SpeculativeConnect(aURI,
-                                           mCallbacks,
-                                           mTarget);
+                                           mCallbacks);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIOService::SpeculativeConnect(nsIURI *aURI,
-                                nsIInterfaceRequestor *aCallbacks,
-                                nsIEventTarget *aTarget)
+                                nsIInterfaceRequestor *aCallbacks)
 {
     // Check for proxy information. If there is a proxy configured then a
     // speculative connect should not be performed because the potential
@@ -1244,6 +1239,6 @@ nsIOService::SpeculativeConnect(nsIURI *aURI,
 
     nsCOMPtr<nsICancelable> cancelable;
     nsRefPtr<IOServiceProxyCallback> callback =
-        new IOServiceProxyCallback(aCallbacks, aTarget, this);
+        new IOServiceProxyCallback(aCallbacks, this);
     return pps->AsyncResolve(aURI, 0, callback, getter_AddRefs(cancelable));
 }

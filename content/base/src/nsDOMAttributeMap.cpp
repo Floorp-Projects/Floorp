@@ -10,7 +10,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsDOMAttribute.h"
 #include "nsIDOMDocument.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsError.h"

@@ -31,7 +31,7 @@ However not all elements will have enough children to get cached. And any
 allocator that doesn't return addresses aligned to 64 bytes will ensure that
 any index will get used.
 
-[*] sizeof(nsGenericElement) + 4 bytes for nsIDOMElement vtable pointer.
+[*] sizeof(Element) + 4 bytes for nsIDOMElement vtable pointer.
 */
 
 #define CACHE_POINTER_SHIFT 5

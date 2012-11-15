@@ -16,7 +16,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
-#include "nsAudioStream.h"
+#include "AudioStream.h"
 #include "VideoFrameContainer.h"
 #include "mozilla/CORSMode.h"
 #include "nsDOMMediaStream.h"
@@ -32,10 +32,11 @@ typedef uint16_t nsMediaReadyState;
 
 namespace mozilla {
 class MediaResource;
-}
+class MediaDecoder;
 #ifdef MOZ_DASH
-class nsDASHDecoder;
+class DASHDecoder;
 #endif
+}
 
 class nsHTMLMediaElement : public nsGenericHTMLElement,
                            public nsIObserver,
@@ -47,9 +48,13 @@ public:
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::MediaStream MediaStream;
   typedef mozilla::MediaResource MediaResource;
+  typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
+  typedef mozilla::MetadataTags MetadataTags;
+  typedef mozilla::AudioStream AudioStream;
+  typedef mozilla::MediaDecoder MediaDecoder;
 
 #ifdef MOZ_DASH
-  friend class nsDASHDecoder;
+  friend class DASHDecoder;
 #endif
 
   enum CanPlayStatus {
@@ -121,7 +126,7 @@ public:
   virtual void MetadataLoaded(uint32_t aChannels,
                               uint32_t aRate,
                               bool aHasAudio,
-                              const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
+                              const mozilla::MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
@@ -189,11 +194,7 @@ public:
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
   virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
-  ImageContainer* GetImageContainer()
-  {
-    VideoFrameContainer* container = GetVideoFrameContainer();
-    return container ? container->GetImageContainer() : nullptr;
-  }
+  ImageContainer* GetImageContainer();
 
   // Called by the video frame to get the print surface, if this is
   // a static document and we're not actually playing video
@@ -215,7 +216,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
 
   // Use this method to change the mReadyState member, so required
   // events can be fired.
@@ -357,7 +358,7 @@ public:
    */
   bool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   /**
    * Sets the Accept header on the HTTP channel to the required
@@ -388,6 +389,9 @@ public:
 protected:
   class MediaLoadListener;
   class StreamListener;
+
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
 
   class WakeLockBoolWrapper {
   public:
@@ -441,14 +445,14 @@ protected:
    * Create a decoder for the given aMIMEType. Returns null if we
    * were unable to create the decoder.
    */
-  already_AddRefed<nsMediaDecoder> CreateDecoder(const nsACString& aMIMEType);
+  already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aMIMEType);
 
   /**
    * Initialize a decoder as a clone of an existing decoder in another
    * element.
    * mLoadingSrc must already be set.
    */
-  nsresult InitializeDecoderAsClone(nsMediaDecoder* aOriginal);
+  nsresult InitializeDecoderAsClone(MediaDecoder* aOriginal);
 
   /**
    * Initialize a decoder to load the given channel. The decoder's stream
@@ -462,10 +466,10 @@ protected:
    * Finish setting up the decoder after Load() has been called on it.
    * Called by InitializeDecoderForChannel/InitializeDecoderAsClone.
    */
-  nsresult FinishDecoderSetup(nsMediaDecoder* aDecoder,
+  nsresult FinishDecoderSetup(MediaDecoder* aDecoder,
                               MediaResource* aStream,
                               nsIStreamListener **aListener,
-                              nsMediaDecoder* aCloneDonor);
+                              MediaDecoder* aCloneDonor);
 
   /**
    * Call this after setting up mLoadingSrc and mDecoder.
@@ -658,7 +662,7 @@ protected:
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
-  nsRefPtr<nsMediaDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
 
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
@@ -745,7 +749,7 @@ protected:
   static PLDHashOperator BuildObjectFromTags(nsCStringHashKey::KeyType aKey,
                                              nsCString aValue,
                                              void* aUserArg);
-  nsAutoPtr<const MetadataTags> mTags;
+  nsAutoPtr<const mozilla::MetadataTags> mTags;
 
   // URI of the resource we're attempting to load. This stores the value we
   // return in the currentSrc attribute. Use GetCurrentSrc() to access the
@@ -753,7 +757,7 @@ protected:
   // This is always the original URL we're trying to load --- before
   // redirects etc.
   nsCOMPtr<nsIURI> mLoadingSrc;
-  
+
   // Stores the current preload action for this element. Initially set to
   // PRELOAD_UNDEFINED, its value is changed by calling
   // UpdatePreloadAction().
@@ -791,7 +795,7 @@ protected:
   nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
-  nsRefPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<AudioStream> mAudioStream;
 
   // Range of time played.
   nsTimeRanges mPlayed;

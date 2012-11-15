@@ -29,19 +29,28 @@ class DummyFrameGuard;
 class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 {
     unsigned mFlags;
+    bool mSafeToUnwrap;
 
   public:
     enum Action {
         GET,
         SET,
-        CALL,
-        PUNCTURE
+        CALL
     };
 
     enum Flags {
         CROSS_COMPARTMENT = 1 << 0,
         LAST_USED_FLAG = CROSS_COMPARTMENT
     };
+
+    /*
+     * Wrappers can explicitly specify that they are unsafe to unwrap from a
+     * security perspective (as is the case for SecurityWrappers). If a wrapper
+     * is not safe to unwrap, operations requiring full access to the underlying
+     * object (via UnwrapObjectChecked) will throw. Otherwise, they will succeed.
+     */
+    void setSafeToUnwrap(bool safe) { mSafeToUnwrap = safe; };
+    bool isSafeToUnwrap() { return mSafeToUnwrap; };
 
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto,
                          JSObject *parent, Wrapper *handler);
@@ -62,24 +71,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
      * on the underlying object's |id| property. In the case when |act| is CALL,
      * |id| is generally JSID_VOID.
      *
-     * The |act| parameter to enter() specifies the action being performed. GET,
-     * SET, and CALL are self-explanatory, but PUNCTURE requires more
-     * explanation:
-     *
-     * GET and SET allow for a very fine-grained security membrane, through
-     * which access can be granted or denied on a per-property, per-object, and
-     * per-action basis. Sometimes though, we just want to asks if we can access
-     * _everything_ behind the wrapper barrier. For example, when the structured
-     * clone algorithm runs up against a cross-compartment wrapper, it needs to
-     * know whether it can enter the compartment and keep cloning, or whether it
-     * should throw. This is the role of PUNCTURE.
-     *
-     * PUNCTURE allows the policy to specify whether the wrapper barrier may
-     * be lifted - that is to say, whether the caller is allowed to access
-     * anything that the wrapped object could access. This is a very powerful
-     * permission, and thus should generally be denied for security wrappers
-     * except under very special circumstances. When |act| is PUNCTURE, |id|
-     * should be JSID_VOID.
+     * The |act| parameter to enter() specifies the action being performed.
      */
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
                        bool *bp);
@@ -263,12 +255,12 @@ UnwrapObject(JSObject *obj, bool stopAtOuter = true, unsigned *flagsp = NULL);
 // code should never be unwrapping outer window wrappers, we always stop at
 // outer windows.
 JS_FRIEND_API(JSObject *)
-UnwrapObjectChecked(JSContext *cx, RawObject obj);
+UnwrapObjectChecked(RawObject obj);
 
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.
 JS_FRIEND_API(JSObject *)
-UnwrapOneChecked(JSContext *cx, HandleObject obj);
+UnwrapOneChecked(RawObject obj);
 
 JS_FRIEND_API(bool)
 IsCrossCompartmentWrapper(RawObject obj);

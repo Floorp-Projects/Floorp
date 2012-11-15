@@ -74,11 +74,11 @@
 #include "nsTextServicesDocument.h"
 
 #ifdef MOZ_MEDIA_PLUGINS
-#include "nsMediaPluginHost.h"
+#include "MediaPluginHost.h"
 #endif
 
 #ifdef MOZ_SYDNEYAUDIO
-#include "nsAudioStream.h"
+#include "AudioStream.h"
 #endif
 
 #include "nsError.h"
@@ -233,7 +233,7 @@ nsLayoutStatics::Initialize()
   }
 
 #ifdef MOZ_SYDNEYAUDIO
-  nsAudioStream::InitLibrary();
+  AudioStream::InitLibrary();
 #endif
 
   nsContentSink::InitializeStatics();
@@ -332,11 +332,11 @@ nsLayoutStatics::Shutdown()
   FrameLayerBuilder::Shutdown();
 
 #ifdef MOZ_MEDIA_PLUGINS
-  nsMediaPluginHost::Shutdown();  
+  MediaPluginHost::Shutdown();  
 #endif
 
 #ifdef MOZ_SYDNEYAUDIO
-  nsAudioStream::ShutdownLibrary();
+  AudioStream::ShutdownLibrary();
 #endif
 
   nsCORSListenerProxy::Shutdown();

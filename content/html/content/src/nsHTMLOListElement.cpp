@@ -17,6 +17,7 @@
 #include "nsRuleData.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 class nsHTMLSharedListElement : public nsGenericHTMLElement,
                                 public nsIDOMHTMLOListElement,
@@ -37,7 +38,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLOListElement
   NS_DECL_NSIDOMHTMLOLISTELEMENT
@@ -81,8 +82,8 @@ nsHTMLSharedListElement::~nsHTMLSharedListElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSharedListElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLSharedListElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLSharedListElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSharedListElement, Element)
 
 
 DOMCI_DATA(HTMLOListElement, nsHTMLSharedListElement)

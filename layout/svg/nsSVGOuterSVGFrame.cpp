@@ -859,8 +859,7 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
         // Our document is inside an HTML 'object', 'embed' or 'applet' element
         if (aEmbeddingFrame) {
           nsCOMPtr<nsIContent> element = do_QueryInterface(frameElement);
-          *aEmbeddingFrame =
-            static_cast<nsGenericElement*>(element.get())->GetPrimaryFrame();
+          *aEmbeddingFrame = element->GetPrimaryFrame();
           NS_ASSERTION(*aEmbeddingFrame, "Yikes, no embedding frame!");
         }
         return true;

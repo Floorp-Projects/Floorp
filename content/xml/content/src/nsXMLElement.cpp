@@ -6,6 +6,8 @@
 #include "nsXMLElement.h"
 #include "nsContentUtils.h" // nsAutoScriptBlocker
 
+using namespace mozilla::dom;
+
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
@@ -26,8 +28,8 @@ NS_INTERFACE_TABLE_HEAD(nsXMLElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Element)
 NS_ELEMENT_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsXMLElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsXMLElement, Element)
 
 NS_IMPL_ELEMENT_CLONE(nsXMLElement)
 
@@ -46,7 +48,7 @@ nsXMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 
   nsMutationGuard guard;
 
-  nsresult rv = nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  nsresult rv = Element::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 
   if (isId &&
       (!guard.Mutated(0) ||
@@ -140,9 +142,9 @@ nsXMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                          nsIContent* aBindingParent,
                          bool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericElement::BindToTree(aDocument, aParent,
-                                             aBindingParent,
-                                             aCompileEventHandlers);
+  nsresult rv = Element::BindToTree(aDocument, aParent,
+                                    aBindingParent,
+                                    aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument && HasID() && !GetBindingParent()) {
@@ -157,5 +159,5 @@ nsXMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   RemoveFromIdTable();
 
-  return nsGenericElement::UnbindFromTree(aDeep, aNullParent);
+  return Element::UnbindFromTree(aDeep, aNullParent);
 }

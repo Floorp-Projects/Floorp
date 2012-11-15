@@ -1150,7 +1150,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
           continue;
         }
 
-        // XXX allocating a nsAudioStream could be slow so we're going to have to do
+        // XXX allocating a AudioStream could be slow so we're going to have to do
         // something here ... preallocation, async allocation, multiplexing onto a single
         // stream ...
         AudioSegment* audio = tracks->Get<AudioSegment>();
@@ -1158,7 +1158,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
           aStream->mAudioOutputStreams.AppendElement();
         audioOutputStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
         audioOutputStream->mBlockedAudioTime = 0;
-        audioOutputStream->mStream = nsAudioStream::AllocateStream();
+        audioOutputStream->mStream = AudioStream::AllocateStream();
         audioOutputStream->mStream->Init(audio->GetChannels(),
                                          tracks->GetRate());
         audioOutputStream->mTrackID = tracks->GetID();

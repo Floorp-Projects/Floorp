@@ -460,20 +460,12 @@ JSValToNPVariant(NPP npp, JSContext *cx, jsval val, NPVariant *variant)
   // element has since been adopted into a new document. We don't bother
   // transplanting the plugin objects, and just do a unwrap with security
   // checks if we encounter one of them as an argument. If the unwrap fails,
-  // we clear the pending exception and just run with the original wrapped object,
-  // since sometimes there are legitimate cases where a security wrapper ends
-  // up here (for example, Location objects, which are _always_ behind security
-  // wrappers).
-  //
-  // NB: In addition to clearing the pending exception, we also have to temporarily
-  // disable the error reporter, because SpiderMonkey calls it directly if there's
-  // no JS code on the stack, which might be the case here.
+  // we run with the original wrapped object, since sometimes there are
+  // legitimate cases where a security wrapper ends up here (for example,
+  // Location objects, which are _always_ behind security wrappers).
   JSObject *obj = JSVAL_TO_OBJECT(val);
-  JSErrorReporter reporter = JS_SetErrorReporter(cx, NULL);
-  obj = js::UnwrapObjectChecked(cx, obj);
-  JS_SetErrorReporter(cx, reporter);
+  obj = js::UnwrapObjectChecked(obj);
   if (!obj) {
-    JS_ClearPendingException(cx);
     obj = JSVAL_TO_OBJECT(val);
   }
 
@@ -1134,7 +1126,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 static JSObject *
 GetNPObjectWrapper(JSContext *cx, JSObject *obj, bool wrapResult = true)
 {
-  while (obj && (obj = js::UnwrapObjectChecked(cx, obj))) {
+  while (obj && (obj = js::UnwrapObjectChecked(obj))) {
     if (JS_GetClass(obj) == &sNPObjectJSWrapperClass) {
       if (wrapResult && !JS_WrapObject(cx, &obj)) {
         return NULL;
