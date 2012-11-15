@@ -30,7 +30,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
                        TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32 loopDepth)
   : MIRGenerator(cx->compartment, temp, graph, info),
     recompileInfo(cx->compartment->types.compiledInfo),
-    backgroundCompiledLir(NULL),
+    backgroundCodegen_(NULL),
     cx(cx),
     loopDepth_(loopDepth),
     callerResumePoint_(NULL),

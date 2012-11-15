@@ -36,10 +36,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool generateBody();
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
+    CodeGenerator(MIRGenerator *gen, LIRGraph *graph);
 
   public:
     bool generate();
+    bool link();
 
     bool visitLabel(LLabel *lir);
     bool visitNop(LNop *lir);

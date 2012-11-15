@@ -52,7 +52,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void linkAbsoluteLabels();
 
   public:
-    CodeGeneratorX86(MIRGenerator *gen, LIRGraph &graph);
+    CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph);
 
   public:
     bool visitBox(LBox *box);
