@@ -3572,7 +3572,8 @@ nsWindow::Create(nsIWidget        *aParent,
         gtk_widget_realize(container);
 
         // make sure this is the focus widget in the container
-        gtk_window_set_focus(GTK_WINDOW(mShell), container);
+        gtk_widget_show(container);
+        gtk_widget_grab_focus(container);
 
         // the drawing window
         mGdkWindow = gtk_widget_get_window(mShell);
@@ -3906,7 +3907,6 @@ nsWindow::NativeShow(bool aAction)
                 SetUserTimeAndStartupIDForActivatedWindow(mShell);
             }
 
-            gtk_widget_show(GTK_WIDGET(mContainer));
             gtk_widget_show(mShell);
         }
         else if (mContainer) {
@@ -3919,7 +3919,6 @@ nsWindow::NativeShow(bool aAction)
     else {
         if (mIsTopLevel) {
             gtk_widget_hide(GTK_WIDGET(mShell));
-            gtk_widget_hide(GTK_WIDGET(mContainer));
 
             ClearTransparencyBitmap(); // Release some resources
         }
