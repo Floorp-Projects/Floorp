@@ -114,10 +114,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// 307910dd-7355-4535-84e7-6b95a4edffbe
+// 0d3bfc0e-661c-4e70-933e-98efc912a75b
 #define NS_IPRESSHELL_IID \
-{ 0x307910dd, 0x7355, 0x4535, \
-  { 0x84, 0xe7, 0x6b, 0x95, 0xa4, 0xed, 0xff, 0xbe } }
+{ 0x0d3bfc0e, 0x661c, 0x4e70, \
+  { 0x93, 0x3e, 0x98, 0xef, 0xc9, 0x12, 0xa7, 0x5b } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -785,7 +785,7 @@ public:
    * Get and set the history state for the current document 
    */
 
-  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, bool aLeavingPage = false) = 0;
+  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
 
   /**
    * Determine if reflow is currently locked
