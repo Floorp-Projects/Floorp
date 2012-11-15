@@ -6,16 +6,16 @@
 class MarionetteException(Exception):
 
     def __init__(self, message=None, status=500, stacktrace=None):
-        self.message = message
+        self.msg = message
         self.status = status
         self.stacktrace = stacktrace
 
     def __str__(self):
         if self.stacktrace:
-            return '%s\nstacktrace:\n%s' % (str(self.message),
+            return '%s\nstacktrace:\n%s' % (str(self.msg),
                 ''.join(['\t%s\n' % x for x in self.stacktrace.split('\n')]))
         else:
-            return str(self.message)
+            return str(self.msg)
 
 class TimeoutException(MarionetteException):
     pass
