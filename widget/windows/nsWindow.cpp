@@ -3259,11 +3259,11 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
         prefs.mDisableAcceleration ||
         windowRect.right - windowRect.left > MAX_ACCELERATED_DIMENSION ||
         windowRect.bottom - windowRect.top > MAX_ACCELERATED_DIMENSION)
-      mUseAcceleratedRendering = false;
+      mUseLayersAcceleration = false;
     else if (prefs.mAccelerateByDefault)
-      mUseAcceleratedRendering = true;
+      mUseLayersAcceleration = true;
 
-    if (mUseAcceleratedRendering) {
+    if (mUseLayersAcceleration) {
       if (aPersistence == LAYER_MANAGER_PERSISTENT && !sAllowD3D9) {
         MOZ_ASSERT(!mLayerManager || !mLayerManager->IsInTransaction());
 
