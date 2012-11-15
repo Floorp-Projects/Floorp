@@ -311,7 +311,7 @@ struct JSObject : public js::ObjectImpl
      * Update the slot span directly for a dictionary object, and allocate
      * slots to cover the new span if necessary.
      */
-    bool setSlotSpan(JSContext *cx, uint32_t span);
+    static bool setSlotSpan(JSContext *cx, JS::HandleObject obj, uint32_t span);
 
     /* Upper bound on the number of elements in an object. */
     static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);

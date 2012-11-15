@@ -130,6 +130,8 @@ Shape::removeChild(Shape *child)
 Shape *
 PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const StackShape &child)
 {
+    AssertCanGC();
+
     Shape *shape = NULL;
 
     JS_ASSERT(parent_);

@@ -152,7 +152,7 @@ StackBaseShape::updateGetterSetter(uint8_t attrs,
 }
 
 inline void
-BaseShape::adoptUnowned(UnownedBaseShape *other)
+BaseShape::adoptUnowned(UnrootedUnownedBaseShape other)
 {
     /*
      * This is a base shape owned by a dictionary object, update it to reflect the
@@ -174,7 +174,7 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
 }
 
 inline void
-BaseShape::setOwned(UnownedBaseShape *unowned)
+BaseShape::setOwned(UnrootedUnownedBaseShape unowned)
 {
     flags |= OWNED_SHAPE;
     this->unowned_ = unowned;
@@ -185,7 +185,7 @@ BaseShape::assertConsistency()
 {
 #ifdef DEBUG
     if (isOwned()) {
-        UnownedBaseShape *unowned = baseUnowned();
+        UnrootedUnownedBaseShape unowned = baseUnowned();
         JS_ASSERT(hasGetterObject() == unowned->hasGetterObject());
         JS_ASSERT(hasSetterObject() == unowned->hasSetterObject());
         JS_ASSERT_IF(hasGetterObject(), getterObject() == unowned->getterObject());
@@ -210,7 +210,7 @@ Shape::Shape(const StackShape &other, uint32_t nfixed)
 }
 
 inline
-Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
+Shape::Shape(UnrootedUnownedBaseShape base, uint32_t nfixed)
   : base_(base),
     propid_(JSID_EMPTY),
     slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
@@ -253,7 +253,7 @@ Shape::matches(const StackShape &other) const
 }
 
 inline bool
-Shape::matchesParamsAfterId(BaseShape *base, uint32_t aslot,
+Shape::matchesParamsAfterId(UnrootedBaseShape base, uint32_t aslot,
                             unsigned aattrs, unsigned aflags, int ashortid) const
 {
     return base->unowned() == this->base()->unowned() &&
@@ -391,7 +391,7 @@ Shape::initDictionaryShape(const StackShape &child, uint32_t nfixed, HeapPtrShap
 }
 
 inline
-EmptyShape::EmptyShape(UnownedBaseShape *base, uint32_t nfixed)
+EmptyShape::EmptyShape(UnrootedUnownedBaseShape base, uint32_t nfixed)
   : js::Shape(base, nfixed)
 {
     /* Only empty shapes can be NON_NATIVE. */
@@ -443,7 +443,7 @@ Shape::markChildren(JSTracer *trc)
 }
 
 inline void
-BaseShape::writeBarrierPre(BaseShape *base)
+BaseShape::writeBarrierPre(RawBaseShape base)
 {
 #ifdef JSGC_INCREMENTAL
     if (!base)
@@ -451,7 +451,7 @@ BaseShape::writeBarrierPre(BaseShape *base)
 
     JSCompartment *comp = base->compartment();
     if (comp->needsBarrier()) {
-        BaseShape *tmp = base;
+        RawBaseShape tmp = base;
         MarkBaseShapeUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == base);
     }
@@ -459,17 +459,17 @@ BaseShape::writeBarrierPre(BaseShape *base)
 }
 
 inline void
-BaseShape::writeBarrierPost(BaseShape *shape, void *addr)
+BaseShape::writeBarrierPost(RawBaseShape shape, void *addr)
 {
 }
 
 inline void
-BaseShape::readBarrier(BaseShape *base)
+BaseShape::readBarrier(RawBaseShape base)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = base->compartment();
     if (comp->needsBarrier()) {
-        BaseShape *tmp = base;
+        RawBaseShape tmp = base;
         MarkBaseShapeUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
         JS_ASSERT(tmp == base);
     }
