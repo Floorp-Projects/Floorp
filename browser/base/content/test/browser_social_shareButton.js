@@ -54,7 +54,7 @@ function testInitial(finishcb) {
 
   // ensure the worker initialization and handshakes are all done and we
   // have a profile and the worker has responsed to the recommend-prompt msg.
-  waitForCondition(function() Social.provider.profile && SocialShareButton.promptImages != null, function() {
+  waitForCondition(function() Social.provider.profile && Social.provider.recommendInfo != null, function() {
     is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' attribute before share button is clicked");
     // check dom values
     let profile = Social.provider.profile;
