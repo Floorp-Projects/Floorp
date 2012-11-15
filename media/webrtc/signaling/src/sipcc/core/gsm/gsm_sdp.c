@@ -1218,7 +1218,7 @@ gsmsdp_set_media_attributes (uint32_t media_type, void *sdp_p, uint16_t level,
 
             (void) sdp_attr_set_rtpmap_clockrate(sdp_p, level, 0, a_inst,
             		RTPMAP_OPUS_CLOCKRATE);
-
+            (void) sdp_attr_set_rtpmap_num_chan (sdp_p, level, 0, a_inst, 2);
 
             /* a=fmtp options */
             if (maxavbitrate || maxcodedaudiobw || usedtx || stereo || useinbandfec || cbr) {
