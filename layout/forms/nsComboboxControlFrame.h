@@ -191,7 +191,7 @@ public:
   virtual nsIWidget* GetRollupWidget();
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) MOZ_OVERRIDE;
+  NS_IMETHOD SaveState(nsPresState** aState) MOZ_OVERRIDE;
   NS_IMETHOD RestoreState(nsPresState* aState) MOZ_OVERRIDE;
 
   static bool ToolkitHasNativePopup();
