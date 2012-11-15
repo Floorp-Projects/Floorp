@@ -13,6 +13,9 @@ onconnect = function(e) {
         testPort = port;
         port.postMessage({topic: "test-init-done"});
         break;
+      case "ping":
+        port.postMessage({topic: "pong"});
+        break;
       case "test-logout":
         apiPort.postMessage({topic: "social.user-profile", data: {}});
         break;
