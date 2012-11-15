@@ -9,7 +9,7 @@ const Telemetry = Cc["@mozilla.org/base/telemetry;1"]
                   .getService(Ci.nsITelemetry);
 
 let tmpScope = {};
-Cu.import("resource:///modules/TelemetryStopwatch.jsm", tmpScope);
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", tmpScope);
 let TelemetryStopwatch = tmpScope.TelemetryStopwatch;
 
 // We can't create a histogram here since the ones created with

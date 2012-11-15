@@ -188,7 +188,7 @@ pref("media.webaudio.enabled", false);
 pref("media.autoplay.enabled", true);
 
 // The default number of decoded video frames that are enqueued in
-// nsBuiltinDecoderReader's mVideoQueue.
+// MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 10);
 
 #ifdef XP_MACOSX

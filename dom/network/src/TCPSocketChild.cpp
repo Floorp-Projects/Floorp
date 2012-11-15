@@ -28,7 +28,7 @@ DeserializeUint8Array(JSRawObject aObj,
   JSObject* obj = JS_NewArrayBuffer(cx, aBuffer.Length());
   if (!obj)
     return false;
-  uint8_t* data = JS_GetArrayBufferData(obj, cx);
+  uint8_t* data = JS_GetArrayBufferData(obj);
   if (!data)
     return false;
   memcpy(data, aBuffer.Elements(), aBuffer.Length());
@@ -187,10 +187,10 @@ TCPSocketChild::Send(const JS::Value& aData, JSContext* aCx)
   } else {
     NS_ENSURE_TRUE(aData.isObject(), NS_ERROR_FAILURE);
     JSObject* obj = &aData.toObject();
-    NS_ENSURE_TRUE(JS_IsTypedArrayObject(obj, aCx), NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(JS_IsUint8Array(obj, aCx), NS_ERROR_FAILURE);
-    uint32_t nbytes = JS_GetTypedArrayByteLength(obj, aCx);
-    uint8_t* data = JS_GetUint8ArrayData(obj, aCx);
+    NS_ENSURE_TRUE(JS_IsTypedArrayObject(obj), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(JS_IsUint8Array(obj), NS_ERROR_FAILURE);
+    uint32_t nbytes = JS_GetTypedArrayByteLength(obj);
+    uint8_t* data = JS_GetUint8ArrayData(obj);
     if (!data) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

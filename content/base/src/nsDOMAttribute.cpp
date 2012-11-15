@@ -8,7 +8,6 @@
  */
 
 #include "nsDOMAttribute.h"
-#include "nsGenericElement.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsINameSpaceManager.h"

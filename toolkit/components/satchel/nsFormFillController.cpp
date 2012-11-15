@@ -571,6 +571,24 @@ nsFormFillController::GetConsumeRollupEvent(bool *aConsumeRollupEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFormFillController::GetInPrivateContext(bool *aInPrivateContext)
+{
+  if (!mFocusedInput) {
+    *aInPrivateContext = false;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMDocument> inputDoc;
+  mFocusedInput->GetOwnerDocument(getter_AddRefs(inputDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(inputDoc);
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+  *aInPrivateContext = loadContext && loadContext->UsePrivateBrowsing();
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteSearch

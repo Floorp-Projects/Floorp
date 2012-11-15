@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsHTMLMediaElement.h"
 #include "mozilla/Util.h"
 
 #include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLSourceElement.h"
-#include "nsHTMLMediaElement.h"
 #include "nsTimeRanges.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -39,6 +39,7 @@
 
 #include "nsEventDispatcher.h"
 #include "nsMediaError.h"
+#include "MediaDecoder.h"
 #include "nsICategoryManager.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "MediaResource.h"
@@ -73,29 +74,29 @@
 #include "nsIPowerManagerService.h"
 
 #ifdef MOZ_OGG
-#include "nsOggDecoder.h"
+#include "OggDecoder.h"
 #endif
 #ifdef MOZ_WAVE
-#include "nsWaveDecoder.h"
+#include "WaveDecoder.h"
 #endif
 #ifdef MOZ_WEBM
-#include "nsWebMDecoder.h"
+#include "WebMDecoder.h"
 #endif
 #ifdef MOZ_RAW
-#include "nsRawDecoder.h"
+#include "RawDecoder.h"
 #endif
 #ifdef MOZ_GSTREAMER
-#include "nsGStreamerDecoder.h"
+#include "GStreamerDecoder.h"
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-#include "nsMediaPluginHost.h"
-#include "nsMediaPluginDecoder.h"
+#include "MediaPluginHost.h"
+#include "MediaPluginDecoder.h"
 #endif
 #ifdef MOZ_WIDGET_GONK
-#include "nsMediaOmxDecoder.h"
+#include "MediaOmxDecoder.h"
 #endif
 #ifdef MOZ_DASH
-#include "nsDASHDecoder.h"
+#include "DASHDecoder.h"
 #endif
 
 #ifdef PR_LOGGING
@@ -117,6 +118,7 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+
 
 // Number of milliseconds between timeupdate events as defined by spec
 #define TIMEUPDATE_MS 250
@@ -1054,7 +1056,7 @@ nsresult nsHTMLMediaElement::LoadResource()
   nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
                                           mLoadingSrc,
                                           NodePrincipal(),
-                                          static_cast<nsGenericElement*>(this),
+                                          static_cast<Element*>(this),
                                           EmptyCString(), // mime type
                                           nullptr, // extra
                                           &shouldLoad,
@@ -1781,6 +1783,20 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
   }
 }
 
+void
+nsHTMLMediaElement::GetItemValueText(nsAString& aValue)
+{
+  // Can't call GetSrc because we don't have a JSContext
+  GetURIAttr(nsGkAtoms::src, nullptr, aValue);
+}
+
+void
+nsHTMLMediaElement::SetItemValueText(const nsAString& aValue)
+{
+  // Can't call SetSrc because we don't have a JSContext
+  SetAttr(kNameSpaceID_None, nsGkAtoms::src, aValue, true);
+}
+
 void nsHTMLMediaElement::StopSuspendingAfterFirstFrame()
 {
   mAllowSuspendAfterFirstFrame = false;
@@ -2021,7 +2037,7 @@ static const char* gRawCodecs[1] = {
 
 static bool IsRawType(const nsACString& aType)
 {
-  if (!nsMediaDecoder::IsRawEnabled()) {
+  if (!MediaDecoder::IsRawEnabled()) {
     return false;
   }
 
@@ -2059,7 +2075,7 @@ char const *const nsHTMLMediaElement::gOggCodecsWithOpus[4] = {
 bool
 nsHTMLMediaElement::IsOggType(const nsACString& aType)
 {
-  if (!nsMediaDecoder::IsOggEnabled()) {
+  if (!MediaDecoder::IsOggEnabled()) {
     return false;
   }
 
@@ -2092,7 +2108,7 @@ char const *const nsHTMLMediaElement::gWaveCodecs[2] = {
 bool
 nsHTMLMediaElement::IsWaveType(const nsACString& aType)
 {
-  if (!nsMediaDecoder::IsWaveEnabled()) {
+  if (!MediaDecoder::IsWaveEnabled()) {
     return false;
   }
 
@@ -2122,7 +2138,7 @@ char const *const nsHTMLMediaElement::gWebMCodecs[4] = {
 bool
 nsHTMLMediaElement::IsWebMType(const nsACString& aType)
 {
-  if (!nsMediaDecoder::IsWebMEnabled()) {
+  if (!MediaDecoder::IsWebMEnabled()) {
     return false;
   }
 
@@ -2181,7 +2197,7 @@ const char nsHTMLMediaElement::gOmxTypes[5][16] = {
 bool
 nsHTMLMediaElement::IsOmxSupportedType(const nsACString& aType)
 {
-  if (!nsMediaDecoder::IsOmxEnabled()) {
+  if (!MediaDecoder::IsOmxEnabled()) {
     return false;
   }
 
@@ -2199,7 +2215,7 @@ nsHTMLMediaElement::IsOmxSupportedType(const nsACString& aType)
 bool
 nsHTMLMediaElement::IsMediaPluginsType(const nsACString& aType)
 {
-  if (!nsMediaDecoder::IsMediaPluginsEnabled()) {
+  if (!MediaDecoder::IsMediaPluginsEnabled()) {
     return false;
   }
 
@@ -2225,7 +2241,7 @@ const char nsHTMLMediaElement::gDASHMPDTypes[1][21] = {
 bool
 nsHTMLMediaElement::IsDASHMPDType(const nsACString& aType)
 {
-  if (!nsMediaDecoder::IsDASHEnabled()) {
+  if (!MediaDecoder::IsDASHEnabled()) {
     return false;
   }
 
@@ -2252,7 +2268,7 @@ nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
 #endif
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType))) {
-    *aCodecList = nsMediaDecoder::IsOpusEnabled() ? gOggCodecsWithOpus : gOggCodecs;
+    *aCodecList = MediaDecoder::IsOpusEnabled() ? gOggCodecsWithOpus : gOggCodecs;
     return CANPLAY_MAYBE;
   }
 #endif
@@ -2289,7 +2305,7 @@ nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-  if (nsMediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), aCodecList))
+  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), aCodecList))
     return CANPLAY_MAYBE;
 #endif
   return CANPLAY_NO;
@@ -2320,7 +2336,7 @@ bool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
   }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-  if (nsMediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), NULL))
+  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), NULL))
     return true;
 #endif
   // We should not return true for Wave types, since there are some
@@ -2408,7 +2424,7 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
 bool
 nsHTMLMediaElement::IsGStreamerSupportedType(const nsACString& aMimeType)
 {
-  if (!nsMediaDecoder::IsGStreamerEnabled())
+  if (!MediaDecoder::IsGStreamerEnabled())
     return false;
   if (IsH264Type(aMimeType))
     return true;
@@ -2426,7 +2442,7 @@ nsHTMLMediaElement::IsGStreamerSupportedType(const nsACString& aMimeType)
 }
 #endif
 
-already_AddRefed<nsMediaDecoder>
+already_AddRefed<MediaDecoder>
 nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 {
 
@@ -2434,7 +2450,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   // When enabled, use GStreamer for H.264, but not for codecs handled by our
   // bundled decoders, unless the "media.prefer-gstreamer" pref is set.
   if (IsGStreamerSupportedType(aType)) {
-    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
+    nsRefPtr<GStreamerDecoder> decoder = new GStreamerDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2443,7 +2459,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 
 #ifdef MOZ_RAW
   if (IsRawType(aType)) {
-    nsRefPtr<nsRawDecoder> decoder = new nsRawDecoder();
+    nsRefPtr<RawDecoder> decoder = new RawDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2451,7 +2467,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_OGG
   if (IsOggType(aType)) {
-    nsRefPtr<nsOggDecoder> decoder = new nsOggDecoder();
+    nsRefPtr<OggDecoder> decoder = new OggDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2459,7 +2475,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_WAVE
   if (IsWaveType(aType)) {
-    nsRefPtr<nsWaveDecoder> decoder = new nsWaveDecoder();
+    nsRefPtr<WaveDecoder> decoder = new WaveDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2467,15 +2483,15 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_WIDGET_GONK
   if (IsOmxSupportedType(aType)) {
-    nsRefPtr<nsMediaOmxDecoder> decoder = new nsMediaOmxDecoder();
+    nsRefPtr<MediaOmxDecoder> decoder = new MediaOmxDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }
   }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-  if (nsMediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(aType, NULL)) {
-    nsRefPtr<nsMediaPluginDecoder> decoder = new nsMediaPluginDecoder(aType);
+  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(aType, NULL)) {
+    nsRefPtr<MediaPluginDecoder> decoder = new MediaPluginDecoder(aType);
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2483,7 +2499,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_WEBM
   if (IsWebMType(aType)) {
-    nsRefPtr<nsWebMDecoder> decoder = new nsWebMDecoder();
+    nsRefPtr<WebMDecoder> decoder = new WebMDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2492,7 +2508,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 
 #ifdef MOZ_DASH
   if (IsDASHMPDType(aType)) {
-    nsRefPtr<nsDASHDecoder> decoder = new nsDASHDecoder();
+    nsRefPtr<DASHDecoder> decoder = new DASHDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2502,7 +2518,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   return nullptr;
 }
 
-nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
+nsresult nsHTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
@@ -2510,7 +2526,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
   MediaResource* originalResource = aOriginal->GetResource();
   if (!originalResource)
     return NS_ERROR_FAILURE;
-  nsRefPtr<nsMediaDecoder> decoder = aOriginal->Clone();
+  nsRefPtr<MediaDecoder> decoder = aOriginal->Clone();
   if (!decoder)
     return NS_ERROR_FAILURE;
 
@@ -2547,7 +2563,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   aChannel->GetContentType(mMimeType);
   NS_ASSERTION(!mMimeType.IsEmpty(), "We should have the Content-Type.");
 
-  nsRefPtr<nsMediaDecoder> decoder = CreateDecoder(mMimeType);
+  nsRefPtr<MediaDecoder> decoder = CreateDecoder(mMimeType);
   if (!decoder) {
     nsAutoString src;
     GetCurrentSrc(src);
@@ -2569,10 +2585,10 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   return FinishDecoderSetup(decoder, resource, aListener, nullptr);
 }
 
-nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder,
+nsresult nsHTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
                                                 MediaResource* aStream,
                                                 nsIStreamListener **aListener,
-                                                nsMediaDecoder* aCloneDonor)
+                                                MediaDecoder* aCloneDonor)
 {
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
 
@@ -2653,8 +2669,8 @@ public:
   {
     if (mElement && mHaveCurrentData) {
       mElement->UpdateReadyStateForData(
-        mBlocked ? nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING :
-                   nsMediaDecoder::NEXT_FRAME_AVAILABLE);
+        mBlocked ? MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING :
+                   MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
     }
   }
   void DoNotifyBlocked()
@@ -3057,7 +3073,7 @@ bool nsHTMLMediaElement::ShouldCheckAllowOrigin()
   return mCORSMode != CORS_NONE;
 }
 
-void nsHTMLMediaElement::UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame)
+void nsHTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame)
 {
   if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
     // aNextFrame might have a next frame because the decoder can advance
@@ -3082,9 +3098,9 @@ void nsHTMLMediaElement::UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus
     return;
   }
 
-  if (aNextFrame != nsMediaDecoder::NEXT_FRAME_AVAILABLE) {
+  if (aNextFrame != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
-    if (!mWaitingFired && aNextFrame == nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING) {
+    if (!mWaitingFired && aNextFrame == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       FireTimeUpdate(false);
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
       mWaitingFired = true;
@@ -3105,7 +3121,7 @@ void nsHTMLMediaElement::UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus
   // autoplay elements for live streams will never play. Otherwise we
   // move to HAVE_ENOUGH_DATA if we can play through the entire media
   // without stopping to buffer.
-  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+  MediaDecoder::Statistics stats = mDecoder->GetStatistics();
   if (stats.mTotalBytes < 0 ? stats.mDownloadRateReliable :
                               stats.mTotalBytes == stats.mDownloadPosition ||
       mDecoder->CanPlayThrough())
@@ -3553,7 +3569,7 @@ already_AddRefed<nsILoadGroup> nsHTMLMediaElement::GetDocumentLoadGroup()
 }
 
 nsresult
-nsHTMLMediaElement::CopyInnerTo(nsGenericElement* aDest)
+nsHTMLMediaElement::CopyInnerTo(Element* aDest)
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3696,3 +3712,10 @@ void nsHTMLMediaElement::NotifyAudioAvailableListener()
     mDecoder->NotifyAudioAvailableListener();
   }
 }
+
+ImageContainer* nsHTMLMediaElement::GetImageContainer()
+{
+  VideoFrameContainer* container = GetVideoFrameContainer();
+  return container ? container->GetImageContainer() : nullptr;
+}
+

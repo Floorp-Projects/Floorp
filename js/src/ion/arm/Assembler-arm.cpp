@@ -2442,7 +2442,6 @@ AutoFlushCache::update(uintptr_t newStart, size_t len)
 {
     uintptr_t newStop = newStart + len;
     used_ = true;
-    static int count = 0;
     if (start_ == NULL) {
         IonSpewCont(IonSpew_CacheFlush,  ".");
         start_ = newStart;

@@ -10,6 +10,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsContentUtils.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLMetaElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLMetaElement
@@ -28,7 +29,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLMetaElement
   NS_DECL_NSIDOMHTMLMETAELEMENT
@@ -65,8 +66,8 @@ nsHTMLMetaElement::~nsHTMLMetaElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLMetaElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLMetaElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLMetaElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLMetaElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLMetaElement, nsHTMLMetaElement)

@@ -181,7 +181,15 @@ RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource
 void
 RecordedEvent::RecordStrokeOptions(std::ostream &aStream, const StrokeOptions &aStrokeOptions) const
 {
-  WriteElement(aStream, aStrokeOptions);
+  JoinStyle joinStyle = aStrokeOptions.mLineJoin;
+  CapStyle capStyle = aStrokeOptions.mLineCap;
+
+  WriteElement(aStream, uint64_t(aStrokeOptions.mDashLength));
+  WriteElement(aStream, aStrokeOptions.mDashOffset);
+  WriteElement(aStream, aStrokeOptions.mLineWidth);
+  WriteElement(aStream, aStrokeOptions.mMiterLimit);
+  WriteElement(aStream, joinStyle);
+  WriteElement(aStream, capStyle);
 
   if (!aStrokeOptions.mDashPattern) {
     return;
@@ -193,7 +201,19 @@ RecordedEvent::RecordStrokeOptions(std::ostream &aStream, const StrokeOptions &a
 void
 RecordedEvent::ReadStrokeOptions(std::istream &aStream, StrokeOptions &aStrokeOptions)
 {
-  ReadElement(aStream, aStrokeOptions);
+  uint64_t dashLength;
+  JoinStyle joinStyle;
+  CapStyle capStyle;
+
+  ReadElement(aStream, dashLength);
+  ReadElement(aStream, aStrokeOptions.mDashOffset);
+  ReadElement(aStream, aStrokeOptions.mLineWidth);
+  ReadElement(aStream, aStrokeOptions.mMiterLimit);
+  ReadElement(aStream, joinStyle);
+  ReadElement(aStream, capStyle);
+  aStrokeOptions.mDashLength = dashLength;
+  aStrokeOptions.mLineJoin = joinStyle;
+  aStrokeOptions.mLineCap = capStyle;
 
   if (!aStrokeOptions.mDashLength) {
     return;
@@ -887,7 +907,7 @@ void
 RecordedPathCreation::RecordToStream(ostream &aStream) const
 {
   WriteElement(aStream, mRefPtr);
-  WriteElement(aStream, mPathOps.size());
+  WriteElement(aStream, uint64_t(mPathOps.size()));
   WriteElement(aStream, mFillRule);
   typedef std::vector<PathOp> pathOpVec;
   for (pathOpVec::const_iterator iter = mPathOps.begin(); iter != mPathOps.end(); iter++) {
@@ -908,13 +928,13 @@ RecordedPathCreation::RecordToStream(ostream &aStream) const
 RecordedPathCreation::RecordedPathCreation(istream &aStream)
   : RecordedEvent(PATHCREATION)
 {
-  size_t size;
+  uint64_t size;
 
   ReadElement(aStream, mRefPtr);
   ReadElement(aStream, size);
   ReadElement(aStream, mFillRule);
 
-  for (size_t i = 0; i < size; i++) {
+  for (uint64_t i = 0; i < size; i++) {
     PathOp newPathOp;
     ReadElement(aStream, newPathOp.mType);
     if (sPointCount[newPathOp.mType] >= 1) {

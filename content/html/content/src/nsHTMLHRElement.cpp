@@ -18,6 +18,7 @@
 #include "nsCSSProps.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 class nsHTMLHRElement : public nsGenericHTMLElement,
                         public nsIDOMHTMLHRElement
@@ -36,7 +37,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLHRElement
   NS_DECL_NSIDOMHTMLHRELEMENT
@@ -66,8 +67,8 @@ nsHTMLHRElement::~nsHTMLHRElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLHRElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLHRElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLHRElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLHRElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLHRElement, nsHTMLHRElement)

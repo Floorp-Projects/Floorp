@@ -21,6 +21,7 @@
 #include "celldata.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 class nsHTMLTableCellElement : public nsGenericHTMLElement,
                                public nsIDOMHTMLTableCellElement
@@ -39,7 +40,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLTableCellElement
   NS_DECL_NSIDOMHTMLTABLECELLELEMENT
@@ -77,8 +78,8 @@ nsHTMLTableCellElement::~nsHTMLTableCellElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableCellElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLTableCellElement, nsHTMLTableCellElement)

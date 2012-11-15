@@ -156,10 +156,10 @@ TCPSocketParent::SendCallback(const nsAString& aType, const JS::Value& aDataVal,
 
   } else if (aDataVal.isObject()) {
     JSObject* obj = &aDataVal.toObject();
-    if (JS_IsTypedArrayObject(obj, aCx)) {
-      NS_ENSURE_TRUE(JS_IsUint8Array(obj, aCx), NS_ERROR_FAILURE);
-      uint32_t nbytes = JS_GetTypedArrayByteLength(obj, aCx);
-      uint8_t* buffer = JS_GetUint8ArrayData(obj, aCx);
+    if (JS_IsTypedArrayObject(obj)) {
+      NS_ENSURE_TRUE(JS_IsUint8Array(obj), NS_ERROR_FAILURE);
+      uint32_t nbytes = JS_GetTypedArrayByteLength(obj);
+      uint8_t* buffer = JS_GetUint8ArrayData(obj);
       if (!buffer) {
         FireInteralError(this, __LINE__);
         return NS_ERROR_OUT_OF_MEMORY;

@@ -474,10 +474,7 @@ GetApplicationCache(nsIRequest* aRequest)
 bool
 imgRequest::CacheChanged(nsIRequest* aNewRequest)
 {
-  nsresult rv;
-
   nsCOMPtr<nsIApplicationCache> newAppCache = GetApplicationCache(aNewRequest);
-  NS_ENSURE_SUCCESS(rv, true); // cannot determine, play safely
 
   // Application cache not involved at all or the same app cache involved
   // in both of the loads (original and new).
@@ -487,6 +484,8 @@ imgRequest::CacheChanged(nsIRequest* aNewRequest)
   // In a rare case it may happen that two objects still refer
   // the same application cache version.
   if (newAppCache && mApplicationCache) {
+    nsresult rv;
+
     nsAutoCString oldAppCacheClientId, newAppCacheClientId;
     rv = mApplicationCache->GetClientID(oldAppCacheClientId);
     NS_ENSURE_SUCCESS(rv, true);

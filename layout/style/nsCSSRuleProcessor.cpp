@@ -56,7 +56,6 @@
 #include "nsNetCID.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
-#include "nsGenericElement.h"
 #include "nsNthIndexCache.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -454,7 +453,7 @@ public:
   RuleHash(bool aQuirksMode);
   ~RuleHash();
   void AppendRule(const RuleSelectorPair &aRuleInfo);
-  void EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
+  void EnumerateAllRules(Element* aElement, ElementDependentRuleProcessorData* aData,
                          NodeMatchContext& aNodeMatchContext);
 
   size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -684,10 +683,10 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 
 static inline
 void ContentEnumFunc(const RuleValue &value, nsCSSSelector* selector,
-                     RuleProcessorData* data, NodeMatchContext& nodeContext,
+                     ElementDependentRuleProcessorData* data, NodeMatchContext& nodeContext,
                      AncestorFilter *ancestorFilter);
 
-void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
+void RuleHash::EnumerateAllRules(Element* aElement, ElementDependentRuleProcessorData* aData,
                                  NodeMatchContext& aNodeContext)
 {
   int32_t nameSpace = aElement->GetNameSpaceID();
@@ -2003,8 +2002,7 @@ static bool SelectorMatches(Element* aElement,
           if (!aElement->IsHTML(nsGkAtoms::table)) {
             return false;
           }
-          nsGenericElement *ge = static_cast<nsGenericElement*>(aElement);
-          const nsAttrValue *val = ge->GetParsedAttr(nsGkAtoms::border);
+          const nsAttrValue *val = aElement->GetParsedAttr(nsGkAtoms::border);
           if (!val ||
               (val->Type() == nsAttrValue::eInteger &&
                val->GetIntegerValue() == 0)) {
@@ -2296,7 +2294,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
 
 static inline
 void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,
-                     RuleProcessorData* data, NodeMatchContext& nodeContext,
+                     ElementDependentRuleProcessorData* data, NodeMatchContext& nodeContext,
                      AncestorFilter *ancestorFilter)
 {
   if (nodeContext.mIsRelevantLink) {

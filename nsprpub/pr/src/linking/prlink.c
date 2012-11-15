@@ -54,8 +54,8 @@
 /*
  * On these platforms, symbols have a leading '_'.
  */
-#if defined(SUNOS4) || (defined(DARWIN) && defined(USE_MACH_DYLD)) \
-    || defined(NEXTSTEP) || defined(XP_OS2) \
+#if (defined(DARWIN) && defined(USE_MACH_DYLD)) \
+    || defined(XP_OS2) \
     || ((defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__))
 #define NEED_LEADING_UNDERSCORE
 #endif
