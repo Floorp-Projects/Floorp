@@ -2443,8 +2443,6 @@ PresShell::RestoreRootScrollPosition()
     if (scrollFrame) {
       nsIScrollableFrame* scrollableFrame = do_QueryFrame(scrollFrame);
       if (scrollableFrame) {
-        mFrameConstructor->RestoreFrameStateFor(scrollFrame, historyState,
-                                                nsIStatefulFrame::eDocumentScrollState);
         scrollableFrame->ScrollToRestoredPosition();
       }
     }
@@ -3587,8 +3585,6 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, bool aLeavingPage
   if (aLeavingPage) {
     nsIFrame* scrollFrame = GetRootScrollFrame();
     if (scrollFrame) {
-      mFrameConstructor->CaptureFrameStateFor(scrollFrame, historyState,
-                                              nsIStatefulFrame::eDocumentScrollState);
     }
   }
 
