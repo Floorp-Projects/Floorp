@@ -33,8 +33,6 @@ function setDefaultPrefs() {
     branch.setIntPref("urlclassifier.updateinterval", 172800);
     // Disable high-quality downscaling, since it makes reftests more difficult.
     branch.setBoolPref("image.high_quality_downscaling.enabled", false);
-    // Shut up the media prefs when running tests.
-    branch.setIntPref("media.volume_scale", "0.05");
 }
 
 var windowListener = {
