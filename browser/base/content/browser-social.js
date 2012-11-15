@@ -105,22 +105,9 @@ let SocialUI = {
 
     this.updateToggleCommand();
 
-    let toggleCommand = this.toggleCommand;
-    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
-    let label = gNavigatorBundle.getFormattedString("social.toggle.label",
-                                                    [Social.provider.name,
-                                                     brandShortName]);
-    let accesskey = gNavigatorBundle.getString("social.toggle.accesskey");
-    toggleCommand.setAttribute("label", label);
-    toggleCommand.setAttribute("accesskey", accesskey);
-
-    let kbMenuitem = document.getElementById("menu_socialAmbientMenu");
-    kbMenuitem.hidden = !Social.enabled;
-    kbMenuitem.setAttribute("label", label);
-    kbMenuitem.setAttribute("accesskey", accesskey);
-
-    // The View->Sidebar menu.
-    document.getElementById("menu_socialSidebar").setAttribute("label", Social.provider.name);
+    // The View->Sidebar and Menubar->Tools menu.
+    for (let id of ["menu_socialSidebar", "menu_socialAmbientMenu"])
+      document.getElementById(id).setAttribute("label", Social.provider.name);
 
     SocialToolbar.init();
     SocialShareButton.init();
@@ -129,9 +116,17 @@ let SocialUI = {
   },
 
   updateToggleCommand: function SocialUI_updateToggleCommand() {
+    if (!Social.provider)
+      return;
+
     let toggleCommand = this.toggleCommand;
     // We only need to update the command itself - all our menu items use it.
-    toggleCommand.setAttribute("checked", Services.prefs.getBoolPref("social.enabled"));
+    let enabled = Services.prefs.getBoolPref("social.enabled");
+    let label = gNavigatorBundle.getFormattedString(enabled ? "social.turnOff.label" : "social.turnOn.label",
+                                                    [Social.provider.name]);
+    let accesskey = gNavigatorBundle.getString(enabled ? "social.turnOff.accesskey" : "social.turnOn.accesskey");
+    toggleCommand.setAttribute("label", label);
+    toggleCommand.setAttribute("accesskey", accesskey);
     toggleCommand.setAttribute("hidden", Social.active ? "false" : "true");
   },
 
@@ -601,7 +596,7 @@ let SocialShareButton = {
 var SocialMenu = {
   populate: function SocialMenu_populate() {
     // This menu is only accessible through keyboard navigation.
-    let submenu = document.getElementById("menu_socialAmbientMenuPopup");
+    let submenu = document.getElementById("menu_social-statusarea-popup");
     let ambientMenuItems = submenu.getElementsByClassName("ambient-menuitem");
     while (ambientMenuItems.length)
       submenu.removeChild(ambientMenuItems.item(0));
@@ -633,13 +628,14 @@ var SocialToolbar = {
   init: function SocialToolbar_init() {
     this.button.setAttribute("image", Social.provider.iconURL);
 
-    let removeItem = document.getElementById("social-remove-menuitem");
     let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
     let label = gNavigatorBundle.getFormattedString("social.remove.label",
                                                     [brandShortName]);
     let accesskey = gNavigatorBundle.getString("social.remove.accesskey");
-    removeItem.setAttribute("label", label);
-    removeItem.setAttribute("accesskey", accesskey);
+
+    let removeCommand = document.getElementById("Social:Remove");
+    removeCommand.setAttribute("label", label);
+    removeCommand.setAttribute("accesskey", accesskey);
 
     this.updateButton();
     this.updateProfile();
@@ -652,8 +648,16 @@ var SocialToolbar = {
 
   updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
     let tbi = document.getElementById("social-toolbar-item");
-    tbi.hidden = !Social.uiVisible;
-    if (!SocialUI.haveLoggedInUser()) {
+    tbi.hidden = !Social.active;
+    let socialEnabled = Social.enabled;
+    for (let className of ["social-statusarea-separator", "social-statusarea-user"]) {
+      for (let element of document.getElementsByClassName(className))
+        element.hidden = !socialEnabled;
+    }
+    let toggleNotificationsCommand = document.getElementById("Social:ToggleNotifications");
+    toggleNotificationsCommand.setAttribute("hidden", !socialEnabled);
+
+    if (!SocialUI.haveLoggedInUser() || !socialEnabled) {
       let parent = document.getElementById("social-notification-panel");
       while (parent.hasChildNodes())
         parent.removeChild(parent.firstChild);
@@ -669,18 +673,12 @@ var SocialToolbar = {
     // social:profile-changed
     let profile = Social.provider.profile || {};
     let userPortrait = profile.portrait || "chrome://global/skin/icons/information-32.png";
-    document.getElementById("social-statusarea-user-portrait").setAttribute("src", userPortrait);
+    document.getElementById("socialBroadcaster_userPortrait").setAttribute("src", userPortrait);
 
-    let notLoggedInLabel = document.getElementById("social-statusarea-notloggedin");
-    let userNameBtn = document.getElementById("social-statusarea-username");
-    if (profile.userName) {
-      notLoggedInLabel.hidden = true;
-      userNameBtn.hidden = false;
-      userNameBtn.value = profile.userName;
-    } else {
-      notLoggedInLabel.hidden = false;
-      userNameBtn.hidden = true;
-    }
+    let loggedInStatusBroadcaster = document.getElementById("socialBroadcaster_loggedInStatus");
+    let notLoggedInString = loggedInStatusBroadcaster.getAttribute("notLoggedInLabel");
+    let loggedInStatusValue = profile.userName ? profile.userName : notLoggedInString;
+    loggedInStatusBroadcaster.setAttribute("value", loggedInStatusValue);
   },
 
   updateButton: function SocialToolbar_updateButton() {

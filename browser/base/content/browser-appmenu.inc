@@ -351,10 +351,6 @@
 #endif
                       oncommand="openPreferences();"/>
             <menuseparator/>
-            <menuitem id="appmenu_socialToggle"
-                      type="checkbox"
-                      autocheck="false"
-                      command="Social:Toggle"/>
             <menuseparator id="appmenu_toggleToolbarsSeparator"/>
             <menuitem id="appmenu_toggleTabsOnTop"
                       label="&viewTabsOnTop.label;"
