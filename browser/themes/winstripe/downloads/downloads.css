@@ -181,8 +181,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 }
 
 #downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
-                              15, 33, 33, 15) center no-repeat;
+  background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
 #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
@@ -192,8 +191,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 }
 
 #downloads-indicator:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
-                                    16, 32, 32, 16);
+  background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
 /*** Event notification ***/
