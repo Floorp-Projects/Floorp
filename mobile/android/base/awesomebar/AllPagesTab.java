@@ -95,6 +95,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         registerEventListener("SearchEngines:Data");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
+
+        mHandler = new AllPagesHandler();
     }
 
     public boolean onBackPressed() {
@@ -133,8 +135,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
             list.setAdapter(adapter);
             list.setOnTouchListener(mListListener);
-
-            mHandler = new AllPagesHandler();
         }
 
         return mView;
@@ -151,11 +151,9 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         if (cursor != null)
             cursor.close();
 
-        if (mHandler != null) {
-            mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
-            mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
-            mHandler = null;
-        }
+        mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
+        mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
+        mHandler = null;
     }
 
     public void filter(String searchTerm) {
