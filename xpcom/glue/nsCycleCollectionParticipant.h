@@ -317,6 +317,43 @@ public:
 #define NS_CYCLE_COLLECTION_UPCAST(obj, clazz)                                 \
   NS_CYCLE_COLLECTION_CLASSNAME(clazz)::Upcast(obj)
 
+// The default implementation of this class template is empty, because it
+// should never be used: see the partial specializations below.
+template <typename T,
+          bool IsXPCOM = mozilla::IsBaseOf<nsISupports, T>::value>
+struct DowncastCCParticipantImpl
+{
+};
+
+// Specialization for XPCOM CC participants
+template <typename T>
+struct DowncastCCParticipantImpl<T, true>
+{
+  static T* Run(void *p)
+  {
+    nsISupports *s = static_cast<nsISupports*>(p);
+    NS_ASSERTION(NS_CYCLE_COLLECTION_CLASSNAME(T)::CheckForRightISupports(s),
+                 "not the nsISupports pointer we expect");
+    return NS_CYCLE_COLLECTION_CLASSNAME(T)::Downcast(s);
+  }
+};
+
+// Specialization for native CC participants
+template <typename T>
+struct DowncastCCParticipantImpl<T, false>
+{
+  static T* Run(void *p)
+  {
+    return static_cast<T*>(p);
+  }
+};
+
+template <typename T>
+T* DowncastCCParticipant(void *p)
+{
+  return DowncastCCParticipantImpl<T>::Run(p);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers for implementing CanSkip methods
 ///////////////////////////////////////////////////////////////////////////////
@@ -326,10 +363,7 @@ public:
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::CanSkipImpl(void *p,                  \
                                                      bool aRemovingAllowed)    \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = Downcast(s);
+    _class *tmp = DowncastCCParticipant<_class >(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END                                  \
     (void)tmp;                                                                 \
@@ -340,10 +374,7 @@ public:
   NS_METHOD_(bool)                                                             \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::CanSkipInCCImpl(void *p)              \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = Downcast(s);
+    _class *tmp = DowncastCCParticipant<_class >(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END                            \
     (void)tmp;                                                                 \
@@ -354,10 +385,7 @@ public:
   NS_METHOD_(bool)                                                             \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::CanSkipThisImpl(void *p)              \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = Downcast(s);
+    _class *tmp = DowncastCCParticipant<_class >(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END                             \
     (void)tmp;                                                                 \
@@ -372,26 +400,15 @@ public:
   NS_METHOD                                                                    \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::UnlinkImpl(void *p)                   \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = Downcast(s);
+    _class *tmp = DowncastCCParticipant<_class >(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base_class)   \
-  NS_METHOD                                                                    \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::UnlinkImpl(void *p)                   \
-  {                                                                            \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                                \
     nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = static_cast<_class*>(Downcast(s));                           \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::UnlinkImpl(s);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(_class)                   \
-  NS_METHOD                                                                    \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::UnlinkImpl(void *p)                   \
-  {                                                                            \
-    _class *tmp = static_cast<_class*>(p);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                                \
     ImplCycleCollectionUnlink(tmp->_field);
@@ -440,10 +457,7 @@ public:
                          (NS_CYCLE_COLLECTION_CLASSNAME(_class) *that, void *p,\
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = static_cast<_class*>(Downcast(s));
+    _class *tmp = DowncastCCParticipant<_class >(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                        \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)                     \
@@ -455,19 +469,14 @@ public:
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base_class) \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)                     \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
     if (NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::TraverseImpl(that, s, cb)  \
         == NS_SUCCESS_INTERRUPTED_TRAVERSE) {                                  \
       return NS_SUCCESS_INTERRUPTED_TRAVERSE;                                  \
     }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(_class)                 \
-  NS_METHOD                                                                    \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraverseImpl                          \
-                         (NS_CYCLE_COLLECTION_CLASSNAME(_class) *that, void *p,\
-                          nsCycleCollectionTraversalCallback &cb)              \
-  {                                                                            \
-    _class *tmp = static_cast<_class*>(p);                                     \
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)                              \
   ImplCycleCollectionTraverse(cb, tmp->_field, #_field, 0);
@@ -536,32 +545,17 @@ public:
                                                    TraceCallback aCallback,    \
                                                    void *aClosure)             \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = Downcast(s);
+    _class *tmp = DowncastCCParticipant<_class >(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(_class, _base_class)    \
-  void                                                                         \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraceImpl(void *p,                    \
-                                                   TraceCallback aCallback,    \
-                                                   void *aClosure)             \
-  {                                                                            \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)                                 \
     nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = static_cast<_class*>(Downcast(s));                           \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::TraceImpl(s,                   \
                                                           aCallback,           \
                                                           aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(_class)                    \
-  void                                                                         \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraceImpl(void *p,                    \
-                                                   TraceCallback aCallback,    \
-                                                   void *aClosure)             \
-  {                                                                            \
-    _class *tmp = static_cast<_class*>(p);
+  NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(_object, _name)             \
   if (_object)                                                                 \
