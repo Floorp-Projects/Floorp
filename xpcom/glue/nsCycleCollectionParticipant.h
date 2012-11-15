@@ -6,11 +6,7 @@
 #ifndef nsCycleCollectionParticipant_h__
 #define nsCycleCollectionParticipant_h__
 
-#include "mozilla/Likely.h"
-#include "mozilla/TypeTraits.h"
-
 #include "nsCycleCollectionNoteChild.h"
-#include "nsCycleCollectionTraversalCallback.h"
 
 #define NS_CYCLECOLLECTIONPARTICIPANT_IID                                      \
 {                                                                              \
@@ -256,17 +252,8 @@ public:
 // Helpers for implementing a QI to nsXPCOMCycleCollectionParticipant
 ///////////////////////////////////////////////////////////////////////////////
 
-#define NS_CYCLE_COLLECTION_INNERCLASS                                         \
-        cycleCollection
-
 #define NS_CYCLE_COLLECTION_CLASSNAME(_class)                                  \
         _class::NS_CYCLE_COLLECTION_INNERCLASS
-
-#define NS_CYCLE_COLLECTION_INNERNAME                                          \
-        _cycleCollectorGlobal
-
-#define NS_CYCLE_COLLECTION_PARTICIPANT(_class)                                \
-        _class::NS_CYCLE_COLLECTION_INNERNAME.GetParticipant()
 
 #define NS_IMPL_QUERY_CYCLE_COLLECTION(_class)                                 \
   if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {          \
@@ -482,50 +469,33 @@ T* DowncastCCParticipant(void *p)
   ImplCycleCollectionTraverse(cb, tmp->_field, #_field, 0);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
-  PR_BEGIN_MACRO                                                               \
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, #_field);                           \
-    cb.NoteXPCOMChild(tmp->_field);                                            \
-  PR_END_MACRO;
+  CycleCollectionNoteChild(cb, tmp->_field, #_field);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field)                     \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(_field, _base)    \
-  PR_BEGIN_MACRO                                                               \
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, #_field);                           \
-    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(_base*, tmp->_field));                 \
-  PR_END_MACRO;
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(_field)                   \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(_ptr, _ptr_class, _name)  \
-  PR_BEGIN_MACRO                                                               \
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, _name);                             \
-    cb.NoteNativeChild(_ptr, NS_CYCLE_COLLECTION_PARTICIPANT(_ptr_class));     \
-  PR_END_MACRO;
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_ptr)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(_field, _field_class)  \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(tmp->_field, _field_class,      \
-                                               #_field)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(_array, _element_class,     \
                                                    _name)                      \
-    {                                                                          \
-      uint32_t i, length = (_array).Length();                                  \
-      for (i = 0; i < length; ++i)                                             \
-        NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR((_array)[i],              \
-                                                     _element_class,           \
-                                                     _name "[i]");             \
-    }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_array)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_OF_NSCOMPTR(_field)         \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(_field,              \
                                                           _element_class)      \
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(tmp->_field, _element_class,    \
-                                               #_field)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS                       \
     that->Trace(p, &nsScriptObjectTracer::NoteJSChild, &cb);
@@ -600,7 +570,10 @@ public:                                                                        \
   static nsISupports* Upcast(_class *p)                                        \
   {                                                                            \
     return NS_ISUPPORTS_CAST(_base*, p);                                       \
-  }
+  }                                                                            \
+  template <typename T>                                                        \
+  friend nsISupports*                                                          \
+  ToSupports(T* p, NS_CYCLE_COLLECTION_INNERCLASS* dummy);
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                     \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)                 \

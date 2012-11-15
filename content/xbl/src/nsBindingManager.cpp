@@ -1718,8 +1718,7 @@ nsBindingManager::Traverse(nsIContent *aContent,
   if (binding) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mBindingTable key");
     cb.NoteXPCOMChild(aContent);
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(binding, nsXBLBinding,
-                                  "[via binding manager] mBindingTable value")
+    CycleCollectionNoteChild(cb, binding, "[via binding manager] mBindingTable value");
   }
   if (mContentListTable.ops &&
       (value = LookupObject(mContentListTable, aContent))) {

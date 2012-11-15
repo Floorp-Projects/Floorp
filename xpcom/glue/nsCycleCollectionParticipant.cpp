@@ -58,7 +58,7 @@ nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
 void
 CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
                                 const char* aName,
-                                uint32_t aFlags = 0)
+                                uint32_t aFlags)
 {
   nsAutoCString arrayEdgeName(aName);
   if (aFlags & CycleCollectionEdgeNameArrayFlag) {
