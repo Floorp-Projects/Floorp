@@ -343,23 +343,8 @@ class ICStubCompiler
         return static_cast<int32_t>(kind);
     }
 
-    virtual IonCode *generateStubCode() = 0;
-    IonCode *getStubCode() {
-        IonCompartment *ion = cx->compartment->ionCompartment();
-        uint32_t stubKey = getKey();
-        IonCode *stubCode = ion->getStubCode(stubKey);
-        if (stubCode)
-            return stubCode;
-
-        Rooted<IonCode *> newStubCode(cx, generateStubCode());
-        if (!newStubCode)
-            return NULL;
-
-        if (!ion->putStubCode(stubKey, newStubCode))
-            return NULL;
-
-        return newStubCode;
-    }
+    virtual bool generateStubCode(MacroAssembler &masm) = 0;
+    IonCode *getStubCode();
 
     ICStubCompiler(JSContext *cx, ICStub::Kind kind)
       : cx(cx), kind(kind) {}
@@ -415,7 +400,7 @@ class ICCompare_Fallback : public ICFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx)
@@ -440,7 +425,7 @@ class ICCompare_Int32 : public ICFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICMultiStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx, JSOp op)
@@ -470,7 +455,7 @@ class ICToBool_Fallback : public ICFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx)
@@ -495,7 +480,7 @@ class ICToBool_Bool : public ICStub
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx)
@@ -523,7 +508,7 @@ class ICToNumber_Fallback : public ICFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx)
@@ -553,7 +538,7 @@ class ICBinaryArith_Fallback : public ICFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx)
@@ -578,7 +563,7 @@ class ICBinaryArith_Int32 : public ICStub
     // Compiler for this stub kind.
     class Compiler : public ICMultiStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx, JSOp op)
@@ -614,7 +599,7 @@ class ICCall_Fallback : public ICFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICCallStubCompiler {
       protected:
-        IonCode *generateStubCode();
+        bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx)

@@ -83,6 +83,9 @@ class IonJSFrameLayout : public IonEntryFrameLayout
         // +1 to skip |this|.
         return reinterpret_cast<size_t>(&base->argv()[1]);
     }
+    static size_t offsetOfActualArg(size_t arg) {
+        return offsetOfActualArgs() + arg * sizeof(Value);
+    }
 
     Value *argv() {
         return (Value *)(this + 1);
@@ -432,5 +435,40 @@ class InvalidationBailoutStack
 
 } // namespace ion
 } // namespace js
+
+// The stack looks like this, fp is the frame pointer:
+//
+// fp+y   arguments
+// fp+x   IonJSFrameLayout (frame header)
+// fp  => saved frame pointer
+// fp-x   BaselineFrame
+//        locals
+//        stack values
+class BaselineFrame
+{
+    size_t frameSize;
+
+  public:
+    // Distance between the frame pointer and the frame header (return address).
+    // This is the old frame pointer saved in the prologue.
+    static const uint32_t FramePointerOffset = sizeof(void *);
+
+    static inline size_t offsetOfArg(size_t index) {
+        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfActualArg(index);
+    }
+    static size_t Size() {
+        return sizeof(BaselineFrame);
+    }
+
+    // The reverseOffsetOf methods below compute the offset relative to the
+    // frame's base pointer. Since the stack grows down, these offsets are
+    // negative.
+    static inline size_t reverseOffsetOfFrameSize() {
+        return -(sizeof(BaselineFrame) - offsetof(BaselineFrame, frameSize));
+    }
+    static inline size_t reverseOffsetOfLocal(size_t index) {
+        return -(sizeof(BaselineFrame) + index * sizeof(js::Value)) - sizeof(js::Value);
+    }
+};
 
 #endif // jsion_ionframes_arm_h

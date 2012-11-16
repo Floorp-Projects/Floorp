@@ -16,6 +16,12 @@ namespace js {
 namespace ion {
 
 inline void
+EmitRestoreTailCallReg(MacroAssembler &masm)
+{
+    masm.pop(BaselineTailCallReg);
+}
+
+inline void
 EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 {
     // Move ICEntry offset into BaselineStubReg
@@ -33,6 +39,12 @@ EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 
     // Call the stubcode.
     masm.call(BaselineTailCallReg);
+}
+
+inline void
+EmitReturnFromIC(MacroAssembler &masm)
+{
+    masm.ret();
 }
 
 inline void

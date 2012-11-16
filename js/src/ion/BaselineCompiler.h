@@ -23,7 +23,7 @@
 #elif defined(JS_CPU_X64)
 # include "x64/BaselineCompiler-x64.h"
 #else
-#error "CPU Not Supported"
+# include "arm/BaselineCompiler-arm.h"
 #endif
 
 namespace js {
