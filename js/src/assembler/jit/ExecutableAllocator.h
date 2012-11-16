@@ -212,6 +212,13 @@ public:
         //JS_ASSERT(m_pools.empty());     // if this asserts we have a pool leak
     }
 
+    void purge() {
+        for (size_t i = 0; i < m_smallPools.length(); i++)
+            m_smallPools[i]->release();
+
+	m_smallPools.clear();
+    }
+
     // alloc() returns a pointer to some memory, and also (by reference) a
     // pointer to reference-counted pool. The caller owns a reference to the
     // pool; i.e. alloc() increments the count before returning the object.

@@ -135,7 +135,6 @@ abstract public class GeckoApp
     public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR   = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
     public static final String ACTION_ALERT_CALLBACK = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
-    public static final String ACTION_ANNOUNCEMENTS_PREF = "org.mozilla.gecko.ANNOUNCEMENTS_PREF";
     public static final String ACTION_WEBAPP_PREFIX = "org.mozilla.gecko.WEBAPP";
     public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
@@ -730,6 +729,7 @@ abstract public class GeckoApp
     void handleThumbnailData(Tab tab, ByteBuffer data) {
         if (shouldUpdateThumbnail(tab)) {
             Bitmap b = tab.getThumbnailBitmap();
+            data.position(0);
             b.copyPixelsFromBuffer(data);
             processThumbnail(tab, b, null);
         }
@@ -813,7 +813,6 @@ abstract public class GeckoApp
 
     void handleClearHistory() {
         BrowserDB.clearHistory(getContentResolver());
-        getFavicons().clearFavicons();
     }
 
     /**

@@ -50,17 +50,6 @@
         </setter>
       </property>
 
-      <method name="init">
-        <parameter name="aProvider"/>
-        <parameter name="aURL"/>
-        <parameter name="aCallback"/>
-        <body><![CDATA[
-          this._callback = aCallback;
-          this.setAttribute("origin", aProvider.origin);
-          this.setAttribute("src", aURL);
-        ]]></body>
-      </method>
-
       <method name="close">
         <body><![CDATA[
           this.parentNode.remove(this);
@@ -78,21 +67,6 @@
       <handler event="focus" phase="capturing">
         this.parentNode.selectedChat = this;
       </handler>
-      <handler event="DOMContentLoaded"><![CDATA[
-        this.isActive = !this.minimized;
-        if (this._callback) this._callback(this.iframe.contentWindow);
-        let chatbox = this;
-        function chatActivity() {
-          chatbox.setAttribute("activity", true);
-          chatbox.parentNode.updateTitlebar(chatbox);
-        };
-        let iframeWindow = this.iframe.contentWindow;
-        iframeWindow.addEventListener("socialChatActivity", chatActivity);
-        iframeWindow.addEventListener("unload", function unload() {
-          iframeWindow.removeEventListener("unload", unload);
-          iframeWindow.removeEventListener("socialChatActivity", chatActivity);
-        });
-      ]]></handler>
       <handler event="DOMTitleChanged"><![CDATA[
         this.setAttribute('label', this.iframe.contentDocument.title);
         this.parentNode.updateTitlebar(this);
@@ -290,8 +264,9 @@
 
       <method name="showChat">
         <parameter name="aChatbox"/>
+        <parameter name="aMode"/>
         <body><![CDATA[
-          if (aChatbox.minimized)
+          if ((aMode != "minimized") && aChatbox.minimized)
             aChatbox.minimized = false;
           if (this.selectedChat != aChatbox)
             this.selectedChat = aChatbox;
@@ -354,6 +329,46 @@
         ]]></body>
       </method>
 
+      <method name="initChatBox">
+        <!-- ideally this would be a method on the chatbox itself, but the
+             vagaries of XBL bindings means that in some edge cases the
+             chatbox methods don't exist yet when we need them to...
+        -->
+        <parameter name="aChatBox"/>
+        <parameter name="aProvider"/>
+        <parameter name="aURL"/>
+        <parameter name="aCallback"/>
+        <body><![CDATA[
+          // callbacks to be called when onload fires - more might be added
+          // if the same chat is requested before onload has fired.  Set back
+          // to null in DOMContentLoaded, so null means DOMContentLoaded has
+          // already fired and new callbacks can be made immediately.
+          aChatBox._callbacks = [aCallback];
+          let iframeWindow = aChatBox.iframe.contentWindow;
+          aChatBox.addEventListener("DOMContentLoaded", function DOMContentLoaded() {
+            aChatBox.removeEventListener("DOMContentLoaded", DOMContentLoaded);
+            aChatBox.isActive = !aChatBox.minimized;
+            for (let callback of aChatBox._callbacks) {
+              if (callback)
+                callback(iframeWindow);
+            }
+            aChatBox._callbacks = null;
+            function chatActivity() {
+              aChatBox.setAttribute("activity", true);
+              aChatBox.parentNode.updateTitlebar(aChatBox);
+            };
+
+            iframeWindow.addEventListener("socialChatActivity", chatActivity);
+            iframeWindow.addEventListener("unload", function unload() {
+              iframeWindow.removeEventListener("unload", unload);
+              iframeWindow.removeEventListener("socialChatActivity", chatActivity);
+            });
+          });
+
+          aChatBox.setAttribute("origin", aProvider.origin);
+          aChatBox.setAttribute("src", aURL);
+        ]]></body>
+      </method>
       <method name="openChat">
         <parameter name="aProvider"/>
         <parameter name="aURL"/>
@@ -364,9 +379,16 @@
           if (cb) {
             cb = cb.get();
             if (cb.parentNode) {
-              this.showChat(cb);
-              if (aCallback)
-                aCallback(cb.iframe.contentWindow);
+              this.showChat(cb, aMode);
+              if (aCallback) {
+                if (cb._callbacks == null) {
+                  // DOMContentLoaded has already fired, so callback now.
+                  aCallback(cb.iframe.contentWindow);
+                } else {
+                  // DOMContentLoaded for this chat is yet to fire...
+                  cb._callbacks.push(aCallback);
+                }
+              }
               return;
             }
             this.chatboxForURL.delete(aURL);
@@ -376,7 +398,7 @@
             cb.setAttribute("minimized", "true");
           this.selectedChat = cb;
           this.insertBefore(cb, this.firstChild);
-          cb.init(aProvider, aURL, aCallback);
+          this.initChatBox(cb, aProvider, aURL, aCallback);
           this.chatboxForURL.set(aURL, Cu.getWeakReference(cb));
           this.resize();
         ]]></body>

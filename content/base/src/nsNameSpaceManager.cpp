@@ -18,13 +18,6 @@
 #include "nsDataHashtable.h"
 #include "nsString.h"
 
-#ifdef MOZ_XTF
-#include "nsIServiceManager.h"
-#include "nsIXTFService.h"
-#include "nsContentUtils.h"
-static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -38,7 +31,6 @@ using namespace mozilla::dom;
 #define kRDFNameSpaceURI "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define kXULNameSpaceURI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
-#define kXMLEventsNameSpaceURI "http://www.w3.org/2001/xml-events"
 
 class nsNameSpaceKey : public PLDHashEntryHdr
 {
@@ -126,7 +118,6 @@ nsresult NameSpaceManagerImpl::Init()
   REGISTER_NAMESPACE(kRDFNameSpaceURI, kNameSpaceID_RDF);
   REGISTER_NAMESPACE(kXULNameSpaceURI, kNameSpaceID_XUL);
   REGISTER_NAMESPACE(kSVGNameSpaceURI, kNameSpaceID_SVG);
-  REGISTER_NAMESPACE(kXMLEventsNameSpaceURI, kNameSpaceID_XMLEvents);
 
 #undef REGISTER_NAMESPACE
 
@@ -211,18 +202,6 @@ NS_NewElement(nsIContent** aResult,
   if (ns == kNameSpaceID_SVG) {
     return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
   }
-  if (ns == kNameSpaceID_XMLEvents) {
-    return NS_NewXMLEventsElement(aResult, aNodeInfo);
-  }
-#ifdef MOZ_XTF
-  if (ns > kNameSpaceID_LastBuiltin) {
-    nsIXTFService* xtfService = nsContentUtils::GetXTFService();
-    NS_ASSERTION(xtfService, "could not get xtf service");
-    if (xtfService &&
-        NS_SUCCEEDED(xtfService->CreateElement(aResult, aNodeInfo)))
-      return NS_OK;
-  }
-#endif
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
@@ -235,7 +214,6 @@ NameSpaceManagerImpl::HasElementCreator(int32_t aNameSpaceID)
 #endif
          aNameSpaceID == kNameSpaceID_MathML ||
          aNameSpaceID == kNameSpaceID_SVG ||
-         aNameSpaceID == kNameSpaceID_XMLEvents ||
          false;
 }
 

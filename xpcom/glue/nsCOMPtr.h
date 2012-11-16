@@ -37,6 +37,8 @@
   // for |NS_COM_GLUE|
 #endif
 
+#include "nsCycleCollectionNoteChild.h"
+
 
 /*
   WARNING:
@@ -1125,6 +1127,23 @@ class nsCOMPtr<nsISupports>
 #endif
         }
   };
+
+template <typename T>
+inline void
+ImplCycleCollectionUnlink(nsCOMPtr<T>& aField)
+{
+  aField = nullptr;
+}
+
+template <typename T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsCOMPtr<T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  CycleCollectionNoteChild(aCallback, aField.get(), aName, aFlags);
+}
 
 #ifndef NSCAP_FEATURE_USE_BASE
 template <class T>

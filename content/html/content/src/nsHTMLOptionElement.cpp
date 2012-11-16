@@ -74,8 +74,8 @@ nsHTMLOptionElement::~nsHTMLOptionElement()
 // ISupports
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOptionElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLOptionElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLOptionElement, nsHTMLOptionElement)
@@ -446,7 +446,7 @@ nsHTMLOptionElement::Initialize(nsISupports* aOwner,
 }
 
 nsresult
-nsHTMLOptionElement::CopyInnerTo(nsGenericElement* aDest)
+nsHTMLOptionElement::CopyInnerTo(Element* aDest)
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -992,8 +992,11 @@ TelemetryPing.prototype = {
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       break;
     case "get-payload":
+      // This handler returns the current Telemetry payload to the caller.
+      // We only gather startup info once.
+      if (Object.keys(this._slowSQLStartup).length == 0)
+        this.gatherStartupInformation();
       this.gatherMemory();
-      this.gatherStartupInformation();
       let data = this.getCurrentSessionPayloadAndSlug("gather-payload");
 
       aSubject.QueryInterface(Ci.nsISupportsString).data = data.payload;

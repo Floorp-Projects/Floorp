@@ -1,0 +1,71 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import com.jayway.android.robotium.solo.Solo;
+
+import android.app.Activity;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.TabWidget;
+import android.support.v4.view.ViewPager;
+
+import java.util.ArrayList;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+/* Tests opening the all pages tab, that items look correct, clicking on an item
+   and long tapping on an item
+*/
+
+public class testAwesomebarSwipes extends BaseTest {
+    private static final String ABOUT_HOME_URL = "about:home";
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testAwesomebarSwipes() {
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        ListView list = getAllPagesList("about:firefox");
+
+        // Test normal sliding of the list left and right
+        ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+        mAsserter.is(pager.getCurrentItem(), 0, "All pages is selected");
+
+        mSolo.scrollToSide(Solo.RIGHT);
+        mAsserter.is(pager.getCurrentItem(), 1, "Bookmarks page is selected");
+
+        mSolo.scrollToSide(Solo.LEFT);
+        mAsserter.is(pager.getCurrentItem(), 0, "All pages is selected");
+
+        // Test tapping on the tab strip changes tabs
+        TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
+        mSolo.clickOnView(tabwidget.getChildAt(1));
+        mAsserter.is(pager.getCurrentItem(), 1, "Clicking on tab selected bookmarks page");
+
+        // Test typing in the awesomebar changes tabs and prevents panning
+        mSolo.typeText(0, "woot");
+        mAsserter.is(pager.getCurrentItem(), 0, "Searching switched to all pages tab");
+        mSolo.scrollToSide(Solo.LEFT);
+        mAsserter.is(pager.getCurrentItem(), 0, "Dragging left is not allowed when searching");
+
+        mSolo.scrollToSide(Solo.RIGHT);
+        mAsserter.is(pager.getCurrentItem(), 0, "Dragging right is not allowed when searching");
+
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+    }
+
+    private ListView getAllPagesList(String url) {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.waitForText(url);
+
+        ArrayList<ListView> views = mSolo.getCurrentListViews();
+        for (ListView view : views) {
+            if (view.getTag() == "allPages")
+                return view;
+        }
+        return null;
+    }
+}

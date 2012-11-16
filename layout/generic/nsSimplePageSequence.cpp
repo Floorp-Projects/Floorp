@@ -65,7 +65,6 @@ nsSharedPageData::nsSharedPageData() :
   mDocURL(nullptr),
   mReflowSize(0,0),
   mReflowMargin(0,0,0,0),
-  mExtraMargin(0,0,0,0),
   mEdgePaperMargin(0,0,0,0),
   mPageContentXMost(0),
   mPageContentSize(0)
@@ -220,30 +219,11 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   }
   mPageData->mReflowMargin = mMargin;
 
-  // Compute the size of each page and the x coordinate that each page will
-  // be placed at
-  nscoord extraThreshold = NS_MAX(pageSize.width, pageSize.height)/10;
-  int32_t gapInTwips = Preferences::GetInt("print.print_extra_margin");
-  gapInTwips = NS_MAX(0, gapInTwips);
-
-  nscoord extraGap = aPresContext->CSSTwipsToAppUnits(gapInTwips);
-  extraGap = NS_MIN(extraGap, extraThreshold); // clamp to 1/10 of the largest dim of the page
-
-  nsMargin extraMargin(0,0,0,0);
-  if (aPresContext->IsScreen()) {
-    extraMargin.SizeTo(extraGap, extraGap, extraGap, extraGap);
-  }
-
-  mPageData->mExtraMargin = extraMargin;
-
   // We use the CSS "margin" property on the -moz-page pseudoelement
   // to determine the space between each page in print preview.
   // Keep a running y-offset for each page.
   nscoord y = 0;
   nscoord maxXMost = 0;
-
-  nsSize availSize(pageSize.width + extraMargin.LeftRight(),
-                   pageSize.height + extraMargin.TopBottom());
 
   // Tile the pages vertically
   nsHTMLReflowMetrics kidSize;
@@ -254,7 +234,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
     // Reflow the page
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
-                                     availSize);
+                                     pageSize);
     nsReflowStatus  status;
 
     kidReflowState.SetComputedWidth(kidReflowState.availableWidth);
@@ -520,7 +500,7 @@ GetPrintCanvasElementsInFrame(nsIFrame* aFrame, nsTArray<nsRefPtr<nsHTMLCanvasEl
       // If there is a canvasFrame, try to get actual canvas element.
       if (canvasFrame) {
         nsHTMLCanvasElement* canvas =
-          nsHTMLCanvasElement::FromContent(canvasFrame->GetContent());
+          nsHTMLCanvasElement::FromContentOrNull(canvasFrame->GetContent());
         nsCOMPtr<nsIPrintCallback> printCallback;
         if (canvas &&
             NS_SUCCEEDED(canvas->GetMozPrintCallback(getter_AddRefs(printCallback))) &&

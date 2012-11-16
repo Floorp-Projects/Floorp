@@ -461,10 +461,9 @@ unchanged:
      /// 'sequenceMS' = one processing sequence length in milliseconds
      /// 'seekwindowMS' = seeking window length for scanning the best overlapping 
      ///      position
-only in patch2:
---- /src/cpu_detect_x86.cpp	2012-04-12 19:52:12.743376976 -0700
-+++ /src/cpu_detect_x86.cpp	2012-08-02 09:54:24.561712171 -0700
-@@ -38,30 +38,35 @@
+--- /src/cpu_detect_x86.cpp
++++ /src/cpu_detect_x86.cpp
+@@ -38,28 +38,33 @@
  //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  //
  ////////////////////////////////////////////////////////////////////////////////
@@ -479,14 +478,12 @@ only in patch2:
 +    #if defined(__GNUC__)
 +        // gcc and clang
          #include "cpuid.h"
-     #endif
- 
-     #if defined(_M_IX86)
-         // windows
+     #elif defined(_M_IX86)
+         // windows non-gcc
          #include <intrin.h>
--        #define bit_MMX		(1 << 23)
--        #define bit_SSE		(1 << 25)
--        #define bit_SSE2	(1 << 26)
+-        #define bit_MMX     (1 << 23)
+-        #define bit_SSE     (1 << 25)
+-        #define bit_SSE2    (1 << 26)
      #endif
 -
 +    // If we still don't have the macros, define them (Windows, MacOS)

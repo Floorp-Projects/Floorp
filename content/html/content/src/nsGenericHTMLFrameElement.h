@@ -53,7 +53,7 @@ public:
                            bool aNotify);
   virtual void DestroyContent();
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 

@@ -2564,6 +2564,19 @@ nsTextStore::OnFocusChange(bool aFocus,
   return NS_OK;
 }
 
+// static
+nsIMEUpdatePreference
+nsTextStore::GetIMEUpdatePreference()
+{
+  bool hasFocus = false;
+  if (sTsfThreadMgr && sTsfTextStore && sTsfTextStore->mDocumentMgr) {
+    nsRefPtr<ITfDocumentMgr> docMgr;
+    sTsfThreadMgr->GetFocus(getter_AddRefs(docMgr));
+    hasFocus = (docMgr == sTsfTextStore->mDocumentMgr);
+  }
+  return nsIMEUpdatePreference(hasFocus, false);
+}
+
 nsresult
 nsTextStore::OnTextChangeInternal(uint32_t aStart,
                                   uint32_t aOldEnd,

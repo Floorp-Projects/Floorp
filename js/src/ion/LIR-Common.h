@@ -2519,6 +2519,17 @@ class LGetNameCache : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
+class LCallGetIntrinsicValue : public LCallInstructionHelper<BOX_PIECES, 0, 0>
+{
+  public:
+    LIR_HEADER(CallGetIntrinsicValue);
+    BOX_OUTPUT_ACCESSORS();
+
+    const MCallGetIntrinsicValue *mir() const {
+        return mir_->toCallGetIntrinsicValue();
+    }
+};
+
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
 class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1, 0>

@@ -27,5 +27,22 @@ TestInterfaceB.prototype = {
   name: "TestInterfaceADefaultName"
 };
 
+function TestInterfaceAll() {}
+TestInterfaceAll.prototype = {
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceA, TestInterfaceB]);
+  /* Boilerplate */
+  QueryInterface: XPCOMUtils.generateQI([Components.interfaces["nsIXPCTestInterfaceA"],
+                                         Components.interfaces["nsIXPCTestInterfaceB"],
+                                         Components.interfaces["nsIXPCTestInterfaceC"]]),
+  contractID: "@mozilla.org/js/xpc/test/js/TestInterfaceAll;1",
+  classID: Components.ID("{90ec5c9e-f6da-406b-9a38-14d00f59db76}"),
+
+  /* nsIXPCTestInterfaceA / nsIXPCTestInterfaceB */
+  name: "TestInterfaceAllDefaultName",
+
+  /* nsIXPCTestInterfaceC */
+  someInteger: 42
+};
+
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceA, TestInterfaceB, TestInterfaceAll]);
+

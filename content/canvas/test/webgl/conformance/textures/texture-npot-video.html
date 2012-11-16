@@ -139,6 +139,7 @@ function runTest(videoElement)
     runOneIteration(videoElement, true, false, red, green, false, false, false);
 
     glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
+    videoElement.removeEventListener("playing", runTest);
     finishTest();
 }
 </script>

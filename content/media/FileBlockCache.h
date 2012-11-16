@@ -10,7 +10,7 @@
 #include "mozilla/Monitor.h"
 #include "prio.h"
 #include "nsTArray.h"
-#include "nsMediaCache.h"
+#include "MediaCache.h"
 #include "nsDeque.h"
 
 namespace mozilla {
@@ -48,7 +48,7 @@ namespace mozilla {
 class FileBlockCache : public nsRunnable {
 public:
   enum {
-    BLOCK_SIZE = nsMediaCacheStream::BLOCK_SIZE
+    BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE
   };
 
   FileBlockCache();
@@ -150,7 +150,7 @@ private:
   // Monitor which controls access to mFD and mFDCurrentPos. Don't hold
   // mDataMonitor while holding mFileMonitor! mFileMonitor must be owned
   // while accessing any of the following data fields or methods.
-  mozilla::Monitor mFileMonitor;
+  Monitor mFileMonitor;
   // Moves a block already committed to file.
   nsresult MoveBlockInFile(int32_t aSourceBlockIndex,
                            int32_t aDestBlockIndex);
@@ -172,7 +172,7 @@ private:
   // and mFDCurrentPos. Don't hold mDataMonitor while holding mFileMonitor!
   // mDataMonitor must be owned while accessing any of the following data
   // fields or methods.
-  mozilla::Monitor mDataMonitor;
+  Monitor mDataMonitor;
   // Ensures we either are running the event to preform IO, or an event
   // has been dispatched to preform the IO.
   // mDataMonitor must be owned while calling this.

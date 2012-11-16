@@ -63,7 +63,7 @@ class MtransportTestUtils {
         nsCOMPtr<nsIProperties> dirsvc =
             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
         nsCOMPtr<nsIFile> cwd;
-        rv = dirsvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+        rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR,
                          NS_GET_IID(nsIFile),
                          getter_AddRefs(cwd));
         MOZ_ASSERT(NS_SUCCEEDED(rv));

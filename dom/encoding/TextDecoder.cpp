@@ -196,23 +196,6 @@ TextDecoder::FeedBytes(const char* aBytes, nsAString* aOutString)
 void
 TextDecoder::GetEncoding(nsAString& aEncoding)
 {
-  // Our utf-16 converter does not comply with the Encoding Standard.
-  // As a result the utf-16le converter is used for the encoding label
-  // "utf-16".
-  // This workaround should not be exposed to the public API and so "utf-16"
-  // is returned by GetEncoding() if the internal encoding name is "utf-16le".
-  if (mEncoding.EqualsLiteral("UTF-16LE")) {
-    aEncoding.AssignLiteral("utf-16");
-    return;
-  }
-
-  // Similarly, "x-windows-949" is used for the "euc-kr" family. Therefore, if
-  // the internal encoding name is "x-windows-949", "euc-kr" is returned.
-  if (mEncoding.EqualsLiteral("x-windows-949")) {
-    aEncoding.AssignLiteral("euc-kr");
-    return;
-  }
-
   CopyASCIItoUTF16(mEncoding, aEncoding);
   nsContentUtils::ASCIIToLower(aEncoding);
 }

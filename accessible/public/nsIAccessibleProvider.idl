@@ -11,7 +11,7 @@
    object. For that XBL binding of element should implement the interface.
  */
 
-[scriptable, uuid(ac0639d5-f95b-4e2b-970c-9eab281fb6a5)]
+[scriptable, uuid(f7e531b6-bc29-4d3d-8c91-60fc2b71eb40)]
 interface nsIAccessibleProvider : nsISupports
 {
   /**
@@ -75,61 +75,6 @@ interface nsIAccessibleProvider : nsISupports
   const long XULToolbarSeparator = 0x00001021;
   const long XULTooltip          = 0x00001022;
   const long XULToolbarButton    = 0x00001023;
-
-
-  /**
-   * Constants set is used by XForms elements.
-   */
-
-  /** Used for xforms elements that provide accessible object for itself as
-   * well for anonymous content. This property are used for upload,
-   * input[type="xsd:gDay"] and input[type="xsd:gMonth"] */
-  const long XFormsContainer = 0x00002000;
-
-  /** Used for label element */
-  const long XFormsLabel = 0x00002001;
-  /** Used for output element */
-  const long XFormsOutput = 0x00002002;
-  /** Used for trigger and submit elements */
-  const long XFormsTrigger = 0x00002003;
-  /** Used for input and textarea elements */
-  const long XFormsInput = 0x00002004;
-  /** Used for input[xsd:boolean] element */
-  const long XFormsInputBoolean = 0x00002005;
-  /** Used for input[xsd:date] element */
-  const long XFormsInputDate = 0x00002006;
-  /** Used for secret element */
-  const long XFormsSecret = 0x00002007;
-  /** Used for range element represented by slider */
-  const long XFormsSliderRange = 0x00002008;
-
-  /** Used for select and select1 that are implemented using host document's
-   * native widget. For example, a select1 in a xhtml document may be
-   * represented by the native html control html:select */
-  const long XFormsSelect = 0x00002009;
-  /** Used for xforms choices element */
-  const long XFormsChoices = 0x00002010;
-  /** Used for xforms full select/select1 elements that may be represented by
-   * group of checkboxes and radiogroup */
-  const long XFormsSelectFull = 0x00002011;
-  /** Used for xforms item element that is used inside xforms select elements
-   * represented by group of checkboxes */
-  const long XFormsItemCheckgroup = 0x00002012;
-  /** Used for xforms item element that is used inside xforms select1 elements
-   * represented by radio group */
-  const long XFormsItemRadiogroup = 0x00002013;
-  /** Used for xforms select1 element that is represented by combobox */
-  const long XFormsSelectCombobox = 0x00002014;
-  /** Used for xforms item element that is used inside xforms select1
-   * elements represented by combobox */
-  const long XFormsItemCombobox = 0x00002015;
-
-  /** Used for dropmarker widget that is used by xforms elements */
-  const long XFormsDropmarkerWidget = 0x00002101;
-  /** Used for calendar widget that is used by xforms elements */
-  const long XFormsCalendarWidget = 0x00002102;
-  /** Used for popup widget that is used by xforms minimal select1 elements */
-  const long XFormsComboboxPopupWidget = 0x00002103;
 
   /**
    * Return one of constants declared above.

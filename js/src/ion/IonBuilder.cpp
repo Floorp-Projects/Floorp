@@ -15,6 +15,7 @@
 
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
+#include "ExecutionModeInlines.h"
 
 #ifdef JS_THREADSAFE
 # include "prthread.h"
@@ -29,7 +30,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
                        TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32 loopDepth)
   : MIRGenerator(cx->compartment, temp, graph, info),
     recompileInfo(cx->compartment->types.compiledInfo),
-    backgroundCompiledLir(NULL),
+    backgroundCodegen_(NULL),
     cx(cx),
     loopDepth_(loopDepth),
     callerResumePoint_(NULL),
@@ -204,8 +205,8 @@ IonBuilder::canInlineTarget(JSFunction *target)
     }
 
     RootedScript inlineScript(cx, target->script());
-
-    if (!inlineScript->canIonCompile()) {
+    ExecutionMode executionMode = info().executionMode();
+    if (!CanIonCompile(inlineScript, executionMode)) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to disable Ion compilation");
         return false;
     }
@@ -960,6 +961,13 @@ IonBuilder::inspectOpcode(JSOp op)
       {
         RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_getname(name);
+      }
+
+      case JSOP_INTRINSICNAME:
+      case JSOP_CALLINTRINSIC:
+      {
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_intrinsicname(name);
       }
 
       case JSOP_BINDNAME:
@@ -2829,7 +2837,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     // lifetime.
     RootedScript calleeScript(cx, callee->script());
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(calleeScript.get(), callee,
-                                                              (jsbytecode *)NULL, constructing);
+                                                              (jsbytecode *)NULL, constructing,
+                                                              SequentialExecution);
     if (!info)
         return false;
 
@@ -4740,6 +4749,42 @@ IonBuilder::jsop_getname(HandlePropertyName name)
 
     monitorResult(ins, barrier, types);
     return pushTypeBarrier(ins, types, barrier);
+}
+
+bool
+IonBuilder::jsop_intrinsicname(HandlePropertyName name)
+{
+    types::StackTypeSet *types = oracle->propertyRead(script_, pc);
+    JSValueType type = types->getKnownTypeTag();
+
+    // If we haven't executed this opcode yet, we need to get the intrinsic
+    // value and monitor the result.
+    if (type == JSVAL_TYPE_UNKNOWN) {
+        MCallGetIntrinsicValue *ins = MCallGetIntrinsicValue::New(name);
+
+        current->add(ins);
+        current->push(ins);
+
+        if (!resumeAfter(ins))
+            return false;
+
+        types::StackTypeSet *barrier = oracle->propertyReadBarrier(script_, pc);
+        monitorResult(ins, barrier, types);
+        return pushTypeBarrier(ins, types, barrier);
+    }
+
+    // Bake in the intrinsic. Make sure that TI agrees with us on the type.
+    RootedValue vp(cx, UndefinedValue());
+    if (!cx->global()->getIntrinsicValue(cx, name, &vp))
+        return false;
+
+    JS_ASSERT(types->hasType(types::GetValueType(cx, vp)));
+
+    MConstant *ins = MConstant::New(vp);
+    current->add(ins);
+    current->push(ins);
+
+    return true;
 }
 
 bool

@@ -81,8 +81,8 @@ nsHTMLImageElement::~nsHTMLImageElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLImageElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLImageElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLImageElement, nsHTMLImageElement)
@@ -372,7 +372,7 @@ nsHTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
     // Force image loading here, so that we'll try to load the image from
     // network if it's set to be not cacheable...  If we change things so that
-    // the state gets in nsGenericElement's attr-setting happen around this
+    // the state gets in Element's attr-setting happen around this
     // LoadImage call, we could start passing false instead of aNotify
     // here.
     LoadImage(aValue, true, aNotify);
@@ -531,7 +531,7 @@ nsHTMLImageElement::GetNaturalWidth(uint32_t* aNaturalWidth)
 }
 
 nsresult
-nsHTMLImageElement::CopyInnerTo(nsGenericElement* aDest)
+nsHTMLImageElement::CopyInnerTo(Element* aDest)
 {
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsHTMLImageElement*>(aDest));

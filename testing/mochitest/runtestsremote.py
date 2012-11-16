@@ -12,7 +12,7 @@ import traceback
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
 
 from automation import Automation
-from remoteautomation import RemoteAutomation
+from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import Mochitest
 from runtests import MochitestOptions
 from runtests import MochitestServer
@@ -535,8 +535,8 @@ def main():
             retVal = 1
 
     try:
-        logcat = dm.getLogcat()
-        print ''.join(logcat[-500:-1])
+        logcat = dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
+        print ''.join(logcat)
         print dm.getInfo()
     except devicemanager.DMError:
         print "WARNING: Error getting device information at end of test"

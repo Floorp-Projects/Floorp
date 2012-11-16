@@ -95,7 +95,9 @@ function log(aMsg) {
 }
 
 function getDOMWindow(aChannel) {
-  var requestor = aChannel.notificationCallbacks;
+  var requestor = aChannel.notificationCallbacks ?
+                  aChannel.notificationCallbacks :
+                  aChannel.loadGroup.notificationCallbacks;
   var win = requestor.getInterface(Components.interfaces.nsIDOMWindow);
   return win;
 }
@@ -542,21 +544,6 @@ PdfStreamConverter.prototype = {
     if (!isEnabled())
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
 
-    var useFetchByChrome = getBoolPref(PREF_PREFIX + '.fetchByChrome', true);
-    if (!useFetchByChrome) {
-      // Ignoring HTTP POST requests -- pdf.js has to repeat the request.
-      var skipConversion = false;
-      try {
-        var request = aCtxt;
-        request.QueryInterface(Ci.nsIHttpChannel);
-        skipConversion = (request.requestMethod !== 'GET');
-      } catch (e) {
-        // Non-HTTP request... continue normally.
-      }
-      if (skipConversion)
-        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    }
-
     // Store the listener passed to us
     this.listener = aListener;
   },
@@ -575,22 +562,17 @@ PdfStreamConverter.prototype = {
 
   // nsIRequestObserver::onStartRequest
   onStartRequest: function(aRequest, aContext) {
-
     // Setup the request so we can use it below.
     aRequest.QueryInterface(Ci.nsIChannel);
-    var useFetchByChrome = getBoolPref(PREF_PREFIX + '.fetchByChrome', true);
-    var dataListener;
-    if (useFetchByChrome) {
-      // Creating storage for PDF data
-      var contentLength = aRequest.contentLength;
-      dataListener = new PdfDataListener(contentLength);
-      this.dataListener = dataListener;
-      this.binaryStream = Cc['@mozilla.org/binaryinputstream;1']
-                          .createInstance(Ci.nsIBinaryInputStream);
-    } else {
-      // Cancel the request so the viewer can handle it.
-      aRequest.cancel(Cr.NS_BINDING_ABORTED);
-    }
+    // Creating storage for PDF data
+    var contentLength = aRequest.contentLength;
+    var dataListener = new PdfDataListener(contentLength);
+    this.dataListener = dataListener;
+    this.binaryStream = Cc['@mozilla.org/binaryinputstream;1']
+                        .createInstance(Ci.nsIBinaryInputStream);
+
+    // Change the content type so we don't get stuck in a loop.
+    aRequest.contentType = 'text/html';
 
     // Create a new channel that is viewer loaded as a resource.
     var ioService = Services.io;
@@ -598,17 +580,20 @@ PdfStreamConverter.prototype = {
                     PDF_VIEWER_WEB_PAGE, null, null);
 
     var listener = this.listener;
-    var self = this;
     // Proxy all the request observer calls, when it gets to onStopRequest
-    // we can get the dom window.
+    // we can get the dom window.  We also intentionally pass on the original
+    // request(aRequest) below so we don't overwrite the original channel and
+    // trigger an assertion.
     var proxy = {
-      onStartRequest: function() {
-        listener.onStartRequest.apply(listener, arguments);
+      onStartRequest: function(request, context) {
+        listener.onStartRequest(aRequest, context);
       },
-      onDataAvailable: function() {
-        listener.onDataAvailable.apply(listener, arguments);
+      onDataAvailable: function(request, context, inputStream, offset, count) {
+        listener.onDataAvailable(aRequest, context, inputStream, offset, count);
       },
-      onStopRequest: function() {
+      onStopRequest: function(request, context, statusCode) {
+        // We get the DOM window here instead of before the request since it
+        // may have changed during a redirect.
         var domWindow = getDOMWindow(channel);
         // Double check the url is still the correct one.
         if (domWindow.document.documentURIObject.equals(aRequest.URI)) {
@@ -624,27 +609,29 @@ PdfStreamConverter.prototype = {
                                                         chromeWindow);
             findEventManager.bind();
           }
+        } else {
+          log('Dom window url did not match request url.');
         }
-        listener.onStopRequest.apply(listener, arguments);
+        listener.onStopRequest(aRequest, context, statusCode);
       }
     };
 
     // Keep the URL the same so the browser sees it as the same.
     channel.originalURI = aRequest.URI;
+    channel.loadGroup = aRequest.loadGroup;
+
+    // We can use resource principal when data is fetched by the chrome
+    // e.g. useful for NoScript
+    var securityManager = Cc['@mozilla.org/scriptsecuritymanager;1']
+                          .getService(Ci.nsIScriptSecurityManager);
+    var uri = ioService.newURI(PDF_VIEWER_WEB_PAGE, null, null);
+    // FF16 and below had getCodebasePrincipal, it was replaced by
+    // getNoAppCodebasePrincipal (bug 758258).
+    var resourcePrincipal = 'getNoAppCodebasePrincipal' in securityManager ?
+                            securityManager.getNoAppCodebasePrincipal(uri) :
+                            securityManager.getCodebasePrincipal(uri);
+    aRequest.owner = resourcePrincipal;
     channel.asyncOpen(proxy, aContext);
-    if (useFetchByChrome) {
-      // We can use resource principal when data is fetched by the chrome
-      // e.g. useful for NoScript
-      var securityManager = Cc['@mozilla.org/scriptsecuritymanager;1']
-                            .getService(Ci.nsIScriptSecurityManager);
-      var uri = ioService.newURI(PDF_VIEWER_WEB_PAGE, null, null);
-      // FF16 and below had getCodebasePrincipal, it was replaced by
-      // getNoAppCodebasePrincipal (bug 758258).
-      var resourcePrincipal = 'getNoAppCodebasePrincipal' in securityManager ?
-                              securityManager.getNoAppCodebasePrincipal(uri) :
-                              securityManager.getCodebasePrincipal(uri);
-      channel.owner = resourcePrincipal;
-    }
   },
 
   // nsIRequestObserver::onStopRequest

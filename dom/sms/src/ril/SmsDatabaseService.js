@@ -14,8 +14,9 @@ const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_NAME = "sms";
+const MOST_RECENT_STORE_NAME = "most-recent";
 
 const DELIVERY_SENT = "sent";
 const DELIVERY_RECEIVED = "received";
@@ -51,6 +52,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
                                    "nsIIndexedDatabaseManager");
 
 const GLOBAL_SCOPE = this;
+
+function numberFromMessage(message) {
+  return message.delivery == DELIVERY_SENT ? message.receiver : message.sender;
+}
 
 /**
  * SmsDatabaseService
@@ -176,6 +181,10 @@ SmsDatabaseService.prototype = {
             objectStore = event.target.transaction.objectStore(STORE_NAME);
             self.upgradeSchema2(objectStore);
             break;
+          case 3:
+            if (DEBUG) debug("Upgrade to version 4. Add quick threads view.")
+            self.upgradeSchema3(db, event.target.transaction);
+            break;
           default:
             event.target.transaction.abort();
             callback("Old database version: " + event.oldVersion, null);
@@ -183,7 +192,7 @@ SmsDatabaseService.prototype = {
         }
         currentVersion++;
       }
-    };
+    }
     request.onerror = function (event) {
       //TODO look at event.target.Code and change error constant accordingly
       callback("Error opening database!", null);
@@ -201,15 +210,22 @@ SmsDatabaseService.prototype = {
    * @param callback
    *        Function to call when the transaction is available. It will
    *        be invoked with the transaction and the 'sms' object store.
+   * @param objectStores
+   *        Function to call when the transaction is available. It will
+   *        be invoked with the transaction and the 'sms' object store.
    */
-  newTxn: function newTxn(txn_type, callback) {
+  newTxn: function newTxn(txn_type, callback, objectStores) {
+    if (!objectStores) {
+      objectStores = [STORE_NAME];
+    }
+    if (DEBUG) debug("Opening transaction for objectStores: " + objectStores);
     this.ensureDB(function (error, db) {
       if (error) {
         if (DEBUG) debug("Could not open database: " + error);
         callback(error);
         return;
       }
-      let txn = db.transaction([STORE_NAME], txn_type);
+      let txn = db.transaction(objectStores, txn_type);
       if (DEBUG) debug("Started transaction " + txn + " of type " + txn_type);
       if (DEBUG) {
         txn.oncomplete = function oncomplete(event) {
@@ -221,9 +237,18 @@ SmsDatabaseService.prototype = {
           debug("Error occurred during transaction: " + event.target.errorCode);
         };
       }
-      if (DEBUG) debug("Retrieving object store", STORE_NAME);
-      let store = txn.objectStore(STORE_NAME);
-      callback(null, txn, store);
+      let stores;
+      if (objectStores.length == 1) {
+        if (DEBUG) debug("Retrieving object store " + objectStores[0]);
+        stores = txn.objectStore(objectStores[0]);
+      } else {
+        stores = [];
+        for each (let storeName in objectStores) {
+          if (DEBUG) debug("Retrieving object store " + storeName);
+          stores.push(txn.objectStore(storeName));
+        }
+      }
+      callback(null, txn, stores);
     });
   },
 
@@ -234,8 +259,8 @@ SmsDatabaseService.prototype = {
    * TODO full text search on body???
    */
   createSchema: function createSchema(db) {
+    // This objectStore holds the main SMS data.
     let objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-    objectStore.createIndex("id", "id", { unique: true });
     objectStore.createIndex("delivery", "delivery", { unique: false });
     objectStore.createIndex("sender", "sender", { unique: false });
     objectStore.createIndex("receiver", "receiver", { unique: false });
@@ -247,7 +272,6 @@ SmsDatabaseService.prototype = {
    * Upgrade to the corresponding database schema version.
    */
   upgradeSchema: function upgradeSchema(objectStore) {
-    // For now, the only possible upgrade is to version 2.
     objectStore.createIndex("read", "read", { unique: false });  
   },
 
@@ -264,6 +288,29 @@ SmsDatabaseService.prototype = {
       cursor.update(message);
       cursor.continue();
     }
+  },
+
+  upgradeSchema3: function upgradeSchema3(db, transaction) {
+    // Delete redundant "id" index.
+    let objectStore = transaction.objectStore(STORE_NAME);
+    if (objectStore.indexNames.contains("id")) {
+      objectStore.deleteIndex("id");
+    }
+
+    /**
+     * This objectStore can be used to quickly construct a thread view of the
+     * SMS database. Each entry looks like this:
+     *
+     * { senderOrReceiver: <String> (primary key),
+     *   id: <Number>,
+     *   timestamp: <Date>,
+     *   body: <String>,
+     *   unreadCount: <Number> }
+     *
+     */
+    objectStore = db.createObjectStore(MOST_RECENT_STORE_NAME,
+                                       { keyPath: "senderOrReceiver" });
+    objectStore.createIndex("timestamp", "timestamp");
   },
 
   /**
@@ -355,12 +402,43 @@ SmsDatabaseService.prototype = {
     this.lastKey += 1;
     message.id = this.lastKey;
     if (DEBUG) debug("Going to store " + JSON.stringify(message));
-    this.newTxn(READ_WRITE, function(error, txn, store) {
+    this.newTxn(READ_WRITE, function(error, txn, stores) {
       if (error) {
         return;
       }
-      let request = store.put(message);
-    });
+      // First add to main objectStore.
+      stores[0].put(message);
+
+      let number = numberFromMessage(message);
+
+      // Next update the other objectStore.
+      stores[1].get(number).onsuccess = function(event) {
+        let mostRecentEntry = event.target.result;
+        if (mostRecentEntry) {
+          let needsUpdate = false;
+
+          if (mostRecentEntry.timestamp <= message.timestamp) {
+            mostRecentEntry.timestamp = message.timestamp;
+            mostRecentEntry.body = message.body;
+            needsUpdate = true;
+          }
+
+          if (!message.read) {
+            mostRecentEntry.unreadCount++;
+            needsUpdate = true;
+          }
+
+          if (needsUpdate) {
+            event.target.source.put(mostRecentEntry);
+          }
+        } else {
+          event.target.source.add({ senderOrReceiver: number,
+                                    timestamp: message.timestamp,
+                                    body: message.body,
+                                    unreadCount: message.read ? 0 : 1 });
+        }
+      }
+    }, [STORE_NAME, MOST_RECENT_STORE_NAME]);
     // We return the key that we expect to store in the db
     return message.id;
   },
@@ -500,33 +578,103 @@ SmsDatabaseService.prototype = {
   deleteMessage: function deleteMessage(messageId, aRequest) {
     let deleted = false;
     let self = this;
-    this.newTxn(READ_WRITE, function (error, txn, store) {
+    this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
         aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
-      let request = store.count(messageId);
-
-      request.onsuccess = function onsuccess(event) {        
-        let count = event.target.result;
-        if (DEBUG) debug("Count for messageId " + messageId + ": " + count);
-        deleted = (count == 1);
-        if (deleted) {
-          store.delete(messageId);
-        }
+      txn.onerror = function onerror(event) {
+        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
+        //TODO look at event.target.errorCode, pick appropriate error constant
+        aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
+
+      const smsStore = stores[0];
+      const mruStore = stores[1];
+
+      let deleted = false;
 
       txn.oncomplete = function oncomplete(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         aRequest.notifyMessageDeleted(deleted);
       };
 
-      txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
-        //TODO look at event.target.errorCode, pick appropriate error constant
-        aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+      smsStore.get(messageId).onsuccess = function(event) {
+        let message = event.target.result;
+        if (message) {
+          if (DEBUG) debug("Deleting message id " + messageId);
+
+          // First actually delete the message.
+          event.target.source.delete(messageId).onsuccess = function(event) {
+            deleted = true;
+
+            // Then update unread count and most recent message.
+            let number = numberFromMessage(message);
+
+            mruStore.get(number).onsuccess = function(event) {
+              // This must exist.
+              let mostRecentEntry = event.target.result;
+
+              if (!message.read) {
+                mostRecentEntry.unreadCount--;
+              }
+
+              if (mostRecentEntry.id == messageId) {
+                // This sucks, we have to find a new most-recent message.
+                message = null;
+
+                // Check most recent sender.
+                smsStore.index("sender").openCursor(number, "prev").onsuccess = function(event) {
+                  let cursor = event.target.result;
+                  if (cursor) {
+                    message = cursor.value;
+                  }
+                };
+
+                // Check most recent receiver.
+                smsStore.index("receiver").openCursor(number, "prev").onsuccess = function(event) {
+                  let cursor = event.target.result;
+                  if (cursor) {
+                    if (!message || cursor.value.timeStamp > message.timestamp) {
+                      message = cursor.value;
+                    }
+                  }
+
+                  // If we found a new message then we need to update the data
+                  // in the most-recent store. Otherwise we can delete it.
+                  if (message) {
+                    mostRecentEntry.id = message.id;
+                    mostRecentEntry.timestamp = message.timestamp;
+                    mostRecentEntry.body = message.body;
+                    if (DEBUG) {
+                      debug("Updating mru entry: " +
+                            JSON.stringify(mostRecentEntry));
+                    }
+                    mruStore.put(mostRecentEntry);
+                  }
+                  else {
+                    if (DEBUG) {
+                      debug("Deleting mru entry for number '" + number + "'");
+                    }
+                    mruStore.delete(number);
+                  }
+                };
+              } else if (!message.read) {
+                // Shortcut, just update the unread count.
+                if (DEBUG) {
+                  debug("Updating unread count for number '" + number + "': " +
+                        (mostRecentEntry.unreadCount + 1) + " -> " +
+                        mostRecentEntry.unreadCount);
+                }
+                mruStore.put(mostRecentEntry);
+              }
+            };
+          };
+        } else if (DEBUG) {
+          debug("Message id " + messageId + " does not exist");
+        }
       };
-    });
+    }, [STORE_NAME, MOST_RECENT_STORE_NAME]);
   },
 
   createMessageList: function createMessageList(filter, reverse, aRequest) {
@@ -557,7 +705,7 @@ SmsDatabaseService.prototype = {
         if (DEBUG) {
           debug("These messages match the " + filter + " filter: " +
                 filteredKeys[filter]);
-      }
+        }
         return;
       }
       // The cursor primaryKey is stored in its corresponding partial array
@@ -727,18 +875,20 @@ SmsDatabaseService.prototype = {
 
   markMessageRead: function markMessageRead(messageId, value, aRequest) {
     if (DEBUG) debug("Setting message " + messageId + " read to " + value);
-    this.newTxn(READ_WRITE, function (error, txn, store) {
+    this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
         if (DEBUG) debug(error);
         aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
-      let getRequest = store.get(messageId);
-
-      getRequest.onsuccess = function onsuccess(event) {
+      txn.onerror = function onerror(event) {
+        if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
+        aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+      };
+      stores[0].get(messageId).onsuccess = function onsuccess(event) {
         let message = event.target.result;
-        if (DEBUG) debug("Message ID " + messageId + " not found");
         if (!message) {
+          if (DEBUG) debug("Message ID " + messageId + " not found");
           aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
           return;
         }
@@ -759,26 +909,50 @@ SmsDatabaseService.prototype = {
         }
         message.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
         if (DEBUG) debug("Message.read set to: " + value);
-        let putRequest = store.put(message);
-        putRequest.onsuccess = function onsuccess(event) {
+        event.target.source.put(message).onsuccess = function onsuccess(event) {
           if (DEBUG) {
             debug("Update successfully completed. Message: " +
                   JSON.stringify(event.target.result));
           }
-          let checkRequest = store.get(message.id);
-          checkRequest.onsuccess = function onsuccess(event) {
-            aRequest.notifyMessageMarkedRead(event.target.result.read);
-          };
-        }
-      };
 
+          // Now update the unread count.
+          let number = numberFromMessage(message);
+
+          stores[1].get(number).onsuccess = function(event) {
+            let mostRecentEntry = event.target.result;
+            mostRecentEntry.unreadCount += value ? -1 : 1;
+            if (DEBUG) {
+              debug("Updating unreadCount for '" + number + "': " +
+                    (value ?
+                     mostRecentEntry.unreadCount + 1 :
+                     mostRecentEntry.unreadCount - 1) +
+                    " -> " + mostRecentEntry.unreadCount);
+            }
+            event.target.source.put(mostRecentEntry).onsuccess = function(event) {
+              aRequest.notifyMessageMarkedRead(message.read);
+            };
+          };
+        };
+      };
+    }, [STORE_NAME, MOST_RECENT_STORE_NAME]);
+  },
+  getThreadList: function getThreadList(aRequest) {
+    if (DEBUG) debug("Getting thread list");
+    this.newTxn(READ_ONLY, function (error, txn, store) {
+      if (error) {
+        if (DEBUG) debug(error);
+        aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        return;
+      }
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
-        aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
-    });
+      store.index("timestamp").mozGetAll().onsuccess = function(event) {
+        aRequest.notifyThreadList(event.target.result);
+      };
+    }, [MOST_RECENT_STORE_NAME]);
   }
-
 };
 
 XPCOMUtils.defineLazyGetter(SmsDatabaseService.prototype, "mRIL", function () {

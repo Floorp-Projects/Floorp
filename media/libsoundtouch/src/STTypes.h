@@ -8,10 +8,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date: 2012-04-01 10:01:42 -0700 (Sun, 01 Apr 2012) $
+// Last changed  : $Date$
 // File revision : $Revision: 3 $
 //
-// $Id: STTypes.h 136 2012-04-01 17:01:42Z oparviai $
+// $Id$
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -41,6 +41,18 @@
 
 typedef unsigned int    uint;
 typedef unsigned long   ulong;
+
+// Patch for MinGW: on Win64 long is 32-bit
+#ifdef _WIN64
+    typedef unsigned long long ulongptr;
+#else
+    typedef ulong ulongptr;
+#endif
+
+
+// Helper macro for aligning pointer up to next 16-byte boundary
+#define SOUNDTOUCH_ALIGN_POINTER_16(x)      ( ( (ulongptr)(x) + 15 ) & ~(ulongptr)15 )
+
 
 #include "soundtouch_config.h"
 

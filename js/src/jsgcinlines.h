@@ -26,8 +26,8 @@ struct Shape;
 
 /*
  * This auto class should be used around any code that might cause a mark bit to
- * be set on an object in a dead compartment. See AutoTransplantGC for more
- * details.
+ * be set on an object in a dead compartment. See AutoMaybeTouchDeadCompartments
+ * for more details.
  */
 struct AutoMarkInDeadCompartment
 {
@@ -35,7 +35,7 @@ struct AutoMarkInDeadCompartment
       : compartment(comp),
         scheduled(comp->scheduledForDestruction)
     {
-        if (comp->rt->gcInTransplant && comp->scheduledForDestruction) {
+        if (comp->rt->gcManipulatingDeadCompartments && comp->scheduledForDestruction) {
             comp->rt->gcObjectsMarkedInDeadCompartments++;
             comp->scheduledForDestruction = false;
         }
@@ -465,7 +465,9 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
     AssertCanGC();
     JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
     JS_ASSERT_IF(cx->compartment == cx->runtime->atomsCompartment,
-                 kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
+                 kind == FINALIZE_STRING ||
+                 kind == FINALIZE_SHORT_STRING ||
+                 kind == FINALIZE_IONCODE);
     JS_ASSERT(!cx->runtime->isHeapBusy());
     JS_ASSERT(!cx->runtime->noGCOrAllocationCheck);
 

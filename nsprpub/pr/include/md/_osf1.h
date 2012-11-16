@@ -186,8 +186,7 @@ struct _MDCPU {
  * some of them should probably be moved into _unixos.h.  But
  * _irix.h seems to be quite different in regard to these macros.
  */
-#define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
+#define _MD_INTERVAL_USE_GTOD
 
 #define _MD_EARLY_INIT		_MD_EarlyInit
 #define _MD_FINAL_INIT		_PR_UnixInit

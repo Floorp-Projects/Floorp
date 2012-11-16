@@ -218,9 +218,9 @@ GetInputStreamForJSVal(const jsval& aValue, JSContext* aCx,
 
   if (!JSVAL_IS_PRIMITIVE(aValue)) {
     JSObject* obj = JSVAL_TO_OBJECT(aValue);
-    if (JS_IsArrayBufferObject(obj, aCx)) {
-      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj, aCx));
-      uint32_t length = JS_GetArrayBufferByteLength(obj, aCx);
+    if (JS_IsArrayBufferObject(obj)) {
+      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj));
+      uint32_t length = JS_GetArrayBufferByteLength(obj);
 
       rv = NS_NewByteInputStream(aInputStream, data, length,
                                  NS_ASSIGNMENT_COPY);
@@ -327,13 +327,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(LockedFile)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(LockedFile,
                                                   nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mFileHandle,
-                                                       nsIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileHandle)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(LockedFile,
                                                 nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFileHandle)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFileHandle)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(LockedFile)

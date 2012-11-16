@@ -118,6 +118,8 @@ private:
   nsCOMPtr<nsIThread> mReadFileThread;
   nsCOMPtr<nsIOutputStream> mOutputStream;
   nsCOMPtr<nsIInputStream> mInputStream;
+
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
 END_BLUETOOTH_NAMESPACE

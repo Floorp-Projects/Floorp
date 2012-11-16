@@ -12,14 +12,8 @@
 #endif
 
 #if defined(__sun)
-#if defined(__svr4) || defined(__svr4__) || defined(__SVR4)
 #ifndef SOLARIS
 	error - SOLARIS is not defined
-#endif
-#else
-#ifndef SUNOS4
-	error - SUNOS4 is not defined
-#endif
 #endif
 #endif
 
@@ -70,12 +64,6 @@
 #endif
 #endif
 
-#if defined(__NeXT__)
-#ifndef NEXTSTEP
-      error - NEXTSTEP is not defined
-#endif
-#endif
-
 /************************************************************************/
 
 /* Generate cpucfg.h */
@@ -87,7 +75,7 @@
 #define INT64	long
 #endif
 #else
-#if defined(HPUX) || defined(NECSVR4) || defined(SCO) || defined(UNIXWARE) || defined (NCR)
+#if defined(HPUX) || defined(SCO) || defined(UNIXWARE)
 #define INT64	long
 #else
 #define INT64	long long

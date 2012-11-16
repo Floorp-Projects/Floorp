@@ -33,11 +33,6 @@
 
 #include "primpl.h"
 
-#if defined(NEXTSTEP)
-/* NEXTSTEP is special: this must come before netinet/tcp.h. */
-#include <netinet/in_systm.h>  /* n_short, n_long, n_time */
-#endif
-
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>  /* TCP_NODELAY, TCP_MAXSEG */
 #endif
@@ -359,14 +354,8 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
 #error "SO_LINGER is not defined"
 #endif
 
-/*
- * Some platforms, such as NCR 2.03, don't have TCP_NODELAY defined
- * in <netinet/tcp.h>
- */
-#if !defined(NCR)
 #if !defined(TCP_NODELAY)
 #error "TCP_NODELAY is not defined"
-#endif
 #endif
 
 /*

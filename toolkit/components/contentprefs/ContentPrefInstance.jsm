@@ -7,17 +7,17 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-var EXPORTED_SYMBOLS = ['ContentPrefInstance'];
+this.EXPORTED_SYMBOLS = ['ContentPrefInstance'];
 
 // This is a wrapper for nsIContentPrefService that alleviates the need to pass
 // an nsILoadContext argument to every method. Pass the context to the constructor
 // instead and continue on your way in blissful ignorance.
 
-function ContentPrefInstance(aContext) {
+this.ContentPrefInstance = function ContentPrefInstance(aContext) {
   this._contentPrefSvc = Cc["@mozilla.org/content-pref/service;1"].
                            getService(Ci.nsIContentPrefService);
   this._context = aContext;
-}
+};
 
 ContentPrefInstance.prototype = {
   getPref: function ContentPrefInstance_init(aName, aGroup, aCallback) {

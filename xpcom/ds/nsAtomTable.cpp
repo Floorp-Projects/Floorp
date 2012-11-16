@@ -473,7 +473,7 @@ NS_SizeOfAtomTablesIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
     n += gStaticAtomTable->SizeOfIncludingThis(SizeOfStaticAtomTableEntryExcludingThis,
                                                aMallocSizeOf);
   }
-  return 0;
+  return n;
 }
 
 #define ATOM_HASHTABLE_INITIAL_SIZE  4096

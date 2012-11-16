@@ -258,7 +258,7 @@ pref("media.preload.auto", 2);    // preload metadata if preload=auto
 pref("media.cache_size", 4096);    // 4MB media cache
 
 // The default number of decoded video frames that are enqueued in
-// nsBuiltinDecoderReader's mVideoQueue.
+// MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 3);
 
 //  0: don't show fullscreen keyboard
@@ -269,7 +269,7 @@ pref("widget.ime.android.fullscreen_threshold", 250); // in hundreths of inches
 
 // optimize images' memory usage
 pref("image.mem.decodeondraw", true);
-pref("content.image.allow_locking", false);
+pref("content.image.allow_locking", true);
 pref("image.mem.min_discard_timeout_ms", 10000);
 pref("image.mem.max_decoded_image_kb", 5120); /* 5MB */
 
@@ -587,3 +587,7 @@ pref("general.useragent.override.facebook.com", "\(Mobile#(Android; Mobile");
 pref("general.useragent.override.youtube.com", "\(Mobile#(Android; Mobile");
 
 pref("jsloader.reuseGlobal", true);
+
+// Enable freeing dirty pages when minimizing memory; this reduces memory
+// consumption when applications are sent to the background.
+pref("memory.free_dirty_pages", true);

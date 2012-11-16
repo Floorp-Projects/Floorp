@@ -888,8 +888,11 @@ abstract public class BrowserApp extends GeckoApp
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
 
         String url = tab.getURL();
-        if (ReaderModeUtils.isAboutReader(url))
-            url = ReaderModeUtils.getUrlFromAboutReader(url);
+        if (ReaderModeUtils.isAboutReader(url)) {
+            String urlFromReader = ReaderModeUtils.getUrlFromAboutReader(url);
+            if (urlFromReader != null)
+                url = urlFromReader;
+        }
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
         String scheme = Uri.parse(url).getScheme();

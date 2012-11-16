@@ -1134,25 +1134,31 @@ MacroAssemblerARM::ma_vdiv(FloatRegister src1, FloatRegister src2, FloatRegister
 }
 
 void
-MacroAssemblerARM::ma_vmov(FloatRegister src, FloatRegister dest)
+MacroAssemblerARM::ma_vmov(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vmov(dest, src);
+    as_vmov(dest, src, cc);
 }
 
 void
-MacroAssemblerARM::ma_vneg(FloatRegister src, FloatRegister dest)
+MacroAssemblerARM::ma_vneg(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vneg(dest, src);
+    as_vneg(dest, src, cc);
 }
 
 void
-MacroAssemblerARM::ma_vabs(FloatRegister src, FloatRegister dest)
+MacroAssemblerARM::ma_vabs(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vabs(dest, src);
+    as_vabs(dest, src, cc);
 }
 
 void
-MacroAssemblerARM::ma_vimm(double value, FloatRegister dest)
+MacroAssemblerARM::ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vsqrt(dest, src, cc);
+}
+
+void
+MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
 {
     union DoublePun {
         struct {
@@ -1170,76 +1176,76 @@ MacroAssemblerARM::ma_vimm(double value, FloatRegister dest)
         if (dpun.s.hi == 0) {
             // To zero a register, load 1.0, then execute dN <- dN - dN
             VFPImm dblEnc(0x3FF00000);
-            as_vimm(dest, dblEnc);
-            as_vsub(dest, dest, dest);
+            as_vimm(dest, dblEnc, cc);
+            as_vsub(dest, dest, dest, cc);
             return;
         }
 
         VFPImm dblEnc(dpun.s.hi);
         if (dblEnc.isValid()) {
-            as_vimm(dest, dblEnc);
+            as_vimm(dest, dblEnc, cc);
             return;
         }
 
     }
     // Fall back to putting the value in a pool.
-    as_FImm64Pool(dest, value);
+    as_FImm64Pool(dest, value, NULL, cc);
 }
 
 void
-MacroAssemblerARM::ma_vcmp(FloatRegister src1, FloatRegister src2)
+MacroAssemblerARM::ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc)
 {
-    as_vcmp(VFPRegister(src1), VFPRegister(src2));
+    as_vcmp(VFPRegister(src1), VFPRegister(src2), cc);
 }
 void
-MacroAssemblerARM::ma_vcmpz(FloatRegister src1)
+MacroAssemblerARM::ma_vcmpz(FloatRegister src1, Condition cc)
 {
-    as_vcmpz(VFPRegister(src1));
-}
-
-void
-MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest)
-{
-    as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src));
-}
-void
-MacroAssemblerARM::ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest)
-{
-    as_vcvt(VFPRegister(dest).uintOverlay(), VFPRegister(src));
-}
-void
-MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister dest, FloatRegister src)
-{
-    as_vcvt(VFPRegister(dest), VFPRegister(src).sintOverlay());
-}
-void
-MacroAssemblerARM::ma_vcvt_U32_F64(FloatRegister dest, FloatRegister src)
-{
-    as_vcvt(VFPRegister(dest), VFPRegister(src).uintOverlay());
+    as_vcmpz(VFPRegister(src1), cc);
 }
 
 void
-MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest)
+MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore);
+    as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src), false, cc);
+}
+void
+MacroAssemblerARM::ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vcvt(VFPRegister(dest).uintOverlay(), VFPRegister(src), false, cc);
+}
+void
+MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister dest, FloatRegister src, Condition cc)
+{
+    as_vcvt(VFPRegister(dest), VFPRegister(src).sintOverlay(), false, cc);
+}
+void
+MacroAssemblerARM::ma_vcvt_U32_F64(FloatRegister dest, FloatRegister src, Condition cc)
+{
+    as_vcvt(VFPRegister(dest), VFPRegister(src).uintOverlay(), false, cc);
 }
 
 void
-MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest1, Register dest2)
+MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest, Condition cc)
 {
-    as_vxfer(dest1, dest2, VFPRegister(src), FloatToCore);
+    as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore, cc);
 }
 
 void
-MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest)
+MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest1, Register dest2, Condition cc)
 {
-    as_vxfer(dest, InvalidReg, src, FloatToCore);
+    as_vxfer(dest1, dest2, VFPRegister(src), FloatToCore, cc);
 }
 
 void
-MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest1, Register dest2)
+MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest, Condition cc)
 {
-    as_vxfer(dest1, dest2, src, FloatToCore);
+    as_vxfer(dest, InvalidReg, src, FloatToCore, cc);
+}
+
+void
+MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest1, Register dest2, Condition cc)
+{
+    as_vxfer(dest1, dest2, src, FloatToCore, cc);
 }
 
 void
@@ -1291,32 +1297,32 @@ MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Co
 }
 
 void
-MacroAssemblerARM::ma_vldr(VFPAddr addr, VFPRegister dest)
+MacroAssemblerARM::ma_vldr(VFPAddr addr, VFPRegister dest, Condition cc)
 {
-    as_vdtr(IsLoad, dest, addr);
+    as_vdtr(IsLoad, dest, addr, cc);
 }
 void
-MacroAssemblerARM::ma_vldr(const Operand &addr, VFPRegister dest)
+MacroAssemblerARM::ma_vldr(const Operand &addr, VFPRegister dest, Condition cc)
 {
-    ma_vdtr(IsLoad, addr, dest);
-}
-
-void
-MacroAssemblerARM::ma_vstr(VFPRegister src, VFPAddr addr)
-{
-    as_vdtr(IsStore, src, addr);
+    ma_vdtr(IsLoad, addr, dest, cc);
 }
 
 void
-MacroAssemblerARM::ma_vstr(VFPRegister src, const Operand &addr)
+MacroAssemblerARM::ma_vstr(VFPRegister src, VFPAddr addr, Condition cc)
 {
-    ma_vdtr(IsStore, addr, src);
+    as_vdtr(IsStore, src, addr, cc);
+}
+
+void
+MacroAssemblerARM::ma_vstr(VFPRegister src, const Operand &addr, Condition cc)
+{
+    ma_vdtr(IsStore, addr, src, cc);
 }
 void
-MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32 shift)
+MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32 shift, Condition cc)
 {
-    as_add(ScratchRegister, base, lsl(index, shift));
-    ma_vstr(src, Operand(ScratchRegister, 0));
+    as_add(ScratchRegister, base, lsl(index, shift), NoSetCond, cc);
+    ma_vstr(src, Operand(ScratchRegister, 0), cc);
 }
 
 bool
@@ -2228,6 +2234,12 @@ MacroAssemblerARMCompat::boxDouble(const FloatRegister &src, const ValueOperand 
     as_vxfer(dest.payloadReg(), dest.typeReg(), VFPRegister(src), FloatToCore);
 }
 
+void
+MacroAssemblerARMCompat::boxNonDouble(JSValueType type, const Register &src, const ValueOperand &dest) {
+    if (src != dest.payloadReg())
+        ma_mov(src, dest.payloadReg());
+    ma_mov(ImmType(type), dest.typeReg());
+}
 
 void
 MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest)

@@ -3393,8 +3393,8 @@ RasterImage::DecodeWorker::Run()
     EnsurePendingInEventLoop();
   }
 
-  Telemetry::Accumulate(Telemetry::IMAGE_DECODE_LATENCY,
-                        uint32_t((TimeStamp::Now() - eventStart).ToMilliseconds()));
+  Telemetry::Accumulate(Telemetry::IMAGE_DECODE_LATENCY_US,
+                        uint32_t((TimeStamp::Now() - eventStart).ToMicroseconds()));
 
   return NS_OK;
 }

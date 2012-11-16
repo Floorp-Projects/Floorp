@@ -132,7 +132,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         // fully recovered, so we try to mitigate observing this behavior by
         // detecting its use early.
         RawScript script = iter.script().get(nogc);
-        if (!script->hasIonScript())
+        if (!script->hasAnyIonScript())
             ion::ForbidCompilation(cx, script);
 #endif
 
@@ -174,16 +174,10 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
             return false;
 
         /*
-         * Censor the caller if we can't PUNCTURE it.
-         *
-         * NB - This will get much much nicer with bug 800915
+         * Censor the caller if we don't have full access to it.
          */
         JSObject &caller = vp.toObject();
-        JSErrorReporter reporter = JS_SetErrorReporter(cx, NULL);
-        bool punctureThrew = !UnwrapObjectChecked(cx, &caller);
-        JS_SetErrorReporter(cx, reporter);
-        if (punctureThrew) {
-            JS_ClearPendingException(cx);
+        if (caller.isWrapper() && !Wrapper::wrapperHandler(&caller)->isSafeToUnwrap()) {
             vp.setNull();
         } else if (caller.isFunction()) {
             JSFunction *callerFun = caller.toFunction();

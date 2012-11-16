@@ -68,3 +68,9 @@ class TestVisibility(MarionetteTestCase):
 
         zero_tranform = self.marionette.find_element("id", 'zero-tranform')
         self.assertTrue(zero_tranform.is_displayed())
+
+    def testShouldSayElementIsVisibleWhenItHasNegativeTransformButElementisntInANegativeSpace(self):
+        test_html = self.marionette.absolute_url("cssTransform2.html")
+        self.marionette.navigate(test_html)
+        negative_percent__tranform = self.marionette.find_element("id", 'negative-percentage-transformY')
+        self.assertTrue(negative_percent__tranform.is_displayed())

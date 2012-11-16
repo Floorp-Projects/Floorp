@@ -4,7 +4,7 @@
 
 interface nsIVariant;
 
-[scriptable, builtinclass, uuid(fb7a8ec4-c1eb-4d9f-b927-fbb8b4493e6d)]
+[scriptable, builtinclass, uuid(7363aa5c-f4b2-4b86-8d15-e0f714c9216b)]
 interface nsIDOMDataChannel : nsIDOMEventTarget
 {
   readonly attribute DOMString label;
@@ -31,5 +31,5 @@ interface nsIDOMDataChannel : nsIDOMEventTarget
    * @return if the connection is still established and the data was queued or
    *         sent successfully.
    */
-  [implicit_jscontext] void send(in nsIVariant data);
+  void send(in nsIVariant data);
 };

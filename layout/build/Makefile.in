@@ -237,12 +237,6 @@ LOCAL_INCLUDES  += \
       $(NULL)
 SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
 
-ifdef MOZ_XTF
-SHARED_LIBRARY_LIBS += \
-		$(DEPTH)/content/xtf/src/$(LIB_PREFIX)gkcontentxtf_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
 SHARED_LIBRARY_LIBS += \
 		../svg/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \

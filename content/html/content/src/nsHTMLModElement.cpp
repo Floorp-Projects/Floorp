@@ -9,6 +9,8 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 
+using namespace mozilla::dom;
+
 class nsHTMLModElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLModElement
 {
@@ -26,7 +28,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLModElement
   NS_DECL_NSIDOMHTMLMODELEMENT
@@ -51,8 +53,8 @@ nsHTMLModElement::~nsHTMLModElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLModElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLModElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLModElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLModElement, Element)
 
 DOMCI_NODE_DATA(HTMLModElement, nsHTMLModElement)
 

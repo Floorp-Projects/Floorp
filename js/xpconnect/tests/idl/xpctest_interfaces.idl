@@ -20,3 +20,8 @@ interface nsIXPCTestInterfaceA : nsISupports {
 interface nsIXPCTestInterfaceB : nsISupports {
   attribute string name;
 };
+
+[scriptable, uuid(401cf1b4-355b-4cee-b7b3-c7973aee49bd)]
+interface nsIXPCTestInterfaceC : nsISupports {
+  attribute long someInteger;
+};

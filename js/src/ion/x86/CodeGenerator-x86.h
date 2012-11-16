@@ -43,6 +43,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
     ValueOperand ToOutValue(LInstruction *ins);
+    ValueOperand ToTempValue(LInstruction *ins, size_t pos);
 
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                            const Register &elements, const LAllocation *index);
@@ -51,7 +52,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void linkAbsoluteLabels();
 
   public:
-    CodeGeneratorX86(MIRGenerator *gen, LIRGraph &graph);
+    CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph);
 
   public:
     bool visitBox(LBox *box);
