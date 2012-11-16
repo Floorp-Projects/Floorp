@@ -5,12 +5,15 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.ScreenshotHandler;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
+import org.mozilla.gecko.ui.Axis;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
@@ -679,6 +682,23 @@ public class GeckoLayerClient
         if (notifyGecko && mGeckoIsReady) {
             geometryChanged();
         }
+        setShadowVisibility();
+    }
+
+    private void setShadowVisibility() {
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            public void run() {
+                if (BrowserApp.mBrowserToolbar == null) {
+                    return;
+                }
+                Axis.Overscroll overscroll = mPanZoomController.getOverscrollY();
+                if (overscroll == Axis.Overscroll.PLUS || overscroll == Axis.Overscroll.NONE) {
+                    BrowserApp.mBrowserToolbar.setShadowVisibility(true);
+                } else {
+                    BrowserApp.mBrowserToolbar.setShadowVisibility(false);
+                }
+            }
+        });
     }
 
     /** Implementation of PanZoomTarget */
