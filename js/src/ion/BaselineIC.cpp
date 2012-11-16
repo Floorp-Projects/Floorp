@@ -307,8 +307,24 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
 
     Value *args = vp + 2;
 
-    // Run the function in the interpreter.
-    bool ok = Invoke(cx, thisv, callee, argc, args, res.address());
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    bool ok = false;
+
+    JSOp op = JSOp(*stub->icEntry()->pc(script));
+    switch (op) {
+      case JSOP_CALL:
+      case JSOP_FUNCALL:
+      case JSOP_FUNAPPLY:
+        // Run the function in the interpreter.
+        ok = Invoke(cx, thisv, callee, argc, args, res.address());
+        break;
+      case JSOP_NEW:
+        ok = InvokeConstructor(cx, callee, argc, args, res.address());
+        break;
+      default:
+        JS_NOT_REACHED("Invalid call op");
+    }
+
     if (ok)
         types::TypeScript::Monitor(cx, res);
 

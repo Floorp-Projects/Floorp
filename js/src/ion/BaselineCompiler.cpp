@@ -568,7 +568,7 @@ BaselineCompiler::emitCall()
     masm.mov(Imm32(argc), R0.scratchReg());
 
     // Allocate IC entry and stub.
-    ICCall_Fallback::Compiler stubCompiler(cx, JSOp(*pc));
+    ICCall_Fallback::Compiler stubCompiler(cx);
     ICEntry *entry = allocateICEntry(stubCompiler.getStub());
     if (!entry)
         return false;
@@ -592,6 +592,12 @@ BaselineCompiler::emitCall()
 
 bool
 BaselineCompiler::emit_JSOP_CALL()
+{
+    return emitCall();
+}
+
+bool
+BaselineCompiler::emit_JSOP_NEW()
 {
     return emitCall();
 }
