@@ -339,9 +339,6 @@ PrivateBrowsingService.prototype = {
                       createInstance(Ci.nsISupportsPRBool);
     cancelLeave.data = false;
     this._obs.notifyObservers(cancelLeave, "private-browsing-cancel-vote", "exit");
-    if (!cancelLeave.data) {
-      this._obs.notifyObservers(cancelLeave, "last-pb-context-exiting", null);
-    }
     return !cancelLeave.data;
   },
 

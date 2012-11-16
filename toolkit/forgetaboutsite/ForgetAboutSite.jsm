@@ -101,41 +101,36 @@ this.ForgetAboutSite = {
     let (dm = Cc["@mozilla.org/download-manager;1"].
               getService(Ci.nsIDownloadManager)) {
       // Active downloads
-      for (let enumerator of [dm.activeDownloads, dm.activePrivateDownloads]) {
-        while (enumerator.hasMoreElements()) {
-          let dl = enumerator.getNext().QueryInterface(Ci.nsIDownload);
-          if (hasRootDomain(dl.source.host, aDomain)) {
-            dl.cancel();
-            dl.remove();
-          }
-        }
-      }
-
-      function deleteAllLike(db) {
-        // NOTE: This is lossy, but we feel that it is OK to be lossy here and not
-        //       invoke the cost of creating a URI for each download entry and
-        //       ensure that the hostname matches.
-        let stmt = db.createStatement(
-          "DELETE FROM moz_downloads " +
-          "WHERE source LIKE ?1 ESCAPE '/' " +
-          "AND state NOT IN (?2, ?3, ?4)"
-        );
-        let pattern = stmt.escapeStringForLIKE(aDomain, "/");
-        stmt.bindByIndex(0, "%" + pattern + "%");
-        stmt.bindByIndex(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-        stmt.bindByIndex(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-        stmt.bindByIndex(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
-        try {
-          stmt.execute();
-        }
-        finally {
-          stmt.finalize();
+      let enumerator = dm.activeDownloads;
+      while (enumerator.hasMoreElements()) {
+        let dl = enumerator.getNext().QueryInterface(Ci.nsIDownload);
+        if (hasRootDomain(dl.source.host, aDomain)) {
+          dm.cancelDownload(dl.id);
+          dm.removeDownload(dl.id);
         }
       }
 
       // Completed downloads
-      deleteAllLike(dm.DBConnection);
-      deleteAllLike(dm.privateDBConnection);
+      let db = dm.DBConnection;
+      // NOTE: This is lossy, but we feel that it is OK to be lossy here and not
+      //       invoke the cost of creating a URI for each download entry and
+      //       ensure that the hostname matches.
+      let stmt = db.createStatement(
+        "DELETE FROM moz_downloads " +
+        "WHERE source LIKE ?1 ESCAPE '/' " +
+        "AND state NOT IN (?2, ?3, ?4)"
+      );
+      let pattern = stmt.escapeStringForLIKE(aDomain, "/");
+      stmt.bindByIndex(0, "%" + pattern + "%");
+      stmt.bindByIndex(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+      stmt.bindByIndex(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+      stmt.bindByIndex(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
+      try {
+        stmt.execute();
+      }
+      finally {
+        stmt.finalize();
+      }
 
       // We want to rebuild the list if the UI is showing, so dispatch the
       // observer topic
