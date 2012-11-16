@@ -42,6 +42,7 @@ class MacroAssemblerARM : public Assembler
   private:
     bool alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
                  SetCond_ sc, Condition c);
+
   public:
     void ma_alu(Register src1, Operand2 op2, Register dest, ALUOp op,
                 SetCond_ sc = NoSetCond, Condition c = Always);
@@ -258,6 +259,8 @@ class MacroAssemblerARM : public Assembler
     // except, possibly in the crazy bailout-table case.
     void ma_bl(Label *dest, Condition c = Always);
 
+    void ma_blx(Register dest, Condition c = Always);
+
     //VFP/ALU
     void ma_vadd(FloatRegister src1, FloatRegister src2, FloatRegister dst);
     void ma_vsub(FloatRegister src1, FloatRegister src2, FloatRegister dst);
@@ -424,6 +427,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(Imm32((uint32)c->raw()), ScratchRegister);
         ma_bx(ScratchRegister);
     }
+    void branch(const Register reg) {
+        ma_bx(reg);
+    }
     void nop() {
         ma_nop();
     }
@@ -479,6 +485,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return label;
     }
 
+    CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
+        CodeOffsetLabel label = currentOffset();
+        ma_movPatchable(Imm32(imm.value), dest, Always, L_MOVWT);
+        return label;
+    }
+
     void jump(Label *label) {
         as_b(label);
     }
@@ -506,6 +518,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testUndefined(Condition cond, const ValueOperand &value);
     Condition testString(Condition cond, const ValueOperand &value);
     Condition testObject(Condition cond, const ValueOperand &value);
+    Condition testNumber(Condition cond, const ValueOperand &value);
     Condition testMagic(Condition cond, const ValueOperand &value);
 
     Condition testPrimitive(Condition cond, const ValueOperand &value);
@@ -748,6 +761,15 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void moveValue(const Value &val, const ValueOperand &dest);
 
+    void moveValue(const ValueOperand &src, const ValueOperand &dest) {
+        JS_ASSERT(src.typeReg() != dest.payloadReg());
+        JS_ASSERT(src.payloadReg() != dest.typeReg());
+        if (src.typeReg() != dest.typeReg())
+            ma_mov(src.typeReg(), dest.typeReg());
+        if (src.payloadReg() != dest.payloadReg())
+            ma_mov(src.payloadReg(), dest.payloadReg());
+    }
+
     void storeValue(ValueOperand val, Operand dst);
     void storeValue(ValueOperand val, Register base, Register index, int32 shift = defaultShift);
     void storeValue(ValueOperand val, const Address &dest) {
@@ -810,6 +832,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
         ma_push(reg);
     }
+    void pushValue(const Address &addr);
     void storePayload(const Value &val, Operand dest);
     void storePayload(Register src, Operand dest);
     void storePayload(const Value &val, Register base, Register index, int32 shift = defaultShift);

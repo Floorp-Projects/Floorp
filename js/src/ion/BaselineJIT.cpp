@@ -177,6 +177,7 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
     if (!compiler.init())
         return Method_Error;
 
+    AutoFlushCache afc("BaselineJIT", cx->compartment->ionCompartment());
     return compiler.compile();
 }
 

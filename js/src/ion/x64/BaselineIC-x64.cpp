@@ -19,8 +19,8 @@ namespace ion {
 
 // ICCompare_Int32
 
-IonCode *
-ICCompare_Int32::Compiler::generateStubCode()
+bool
+ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 {
     // The condition to test on depends on the opcode
     Assembler::Condition cond;
@@ -29,10 +29,8 @@ ICCompare_Int32::Compiler::generateStubCode()
       case JSOP_GT: cond = Assembler::GreaterThan; break;
       default:
         JS_ASSERT(!"Unhandled op for ICCompare_Int32!");
-        return NULL;
+        return false;
     }
-
-    MacroAssembler masm;
 
     // Guard that R0 is an integer and R1 is an integer.
     Label failure;
@@ -48,23 +46,20 @@ ICCompare_Int32::Compiler::generateStubCode()
 
     // Box the result and return
     masm.boxValue(JSVAL_TYPE_BOOLEAN, ScratchReg, R0.valueReg());
-    masm.ret();
+    EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
 
 // ICBinaryArith_Int32
 
-IonCode *
-ICBinaryArith_Int32::Compiler::generateStubCode()
+bool
+ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    MacroAssembler masm;
-
     // Guard that R0 is an integer and R1 is an integer.
     Label failure;
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
@@ -81,7 +76,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode()
         break;
       default:
         JS_ASSERT(!"Unhandled op for BinaryArith_Int32!");
-        return NULL;
+        return false;
     }
 
     // Just jump to failure on overflow.  R0 and R1 are preserved, so we can just jump to
@@ -90,14 +85,13 @@ ICBinaryArith_Int32::Compiler::generateStubCode()
 
     // Box the result and return
     masm.boxValue(JSVAL_TYPE_INT32, ScratchReg, R0.valueReg());
-    masm.ret();
+    EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
 
 
