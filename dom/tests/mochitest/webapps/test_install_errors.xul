@@ -16,7 +16,7 @@
      target="_blank">Mozilla Bug 741549</a>
   </body>
 
-<script> 
+<script>
 
 var steps = [
   noArgs,
@@ -26,6 +26,7 @@ var steps = [
   invalidContent,
   installPackageNotImplemented,
   invalidLaunchPath,
+  invalidLaunchPath2,
   invalidEntryPoint,
   invalidLocaleEntryPoint,
   fileURL,
@@ -34,7 +35,7 @@ var steps = [
 runAll(steps);
 
 function noArgs(next) {
-  try { 
+  try {
     navigator.mozApps.install();
   } catch (e) {
     is(e.message, "Not enough arguments \[mozIDOMApplicationRegistry.install\]",
@@ -106,7 +107,17 @@ function invalidLaunchPath(next) {
 
   confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
-    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
+    next();
+  };
+}
+
+function invalidLaunchPath2(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_launch_path2.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
     next();
   };
 }
