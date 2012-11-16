@@ -277,7 +277,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-color: rgb(90, 185, 255);
+  background-color: rgb(90, 201, 66);
   background-image: linear-gradient(transparent 1px, rgba(255, 255, 255, 0.4) 1px, rgba(255, 255, 255, 0.4) 2px, transparent 2px);
   border: 1px solid;
   border-color: rgba(0,43,86,.6) rgba(0,43,86,.4) rgba(0,43,86,.4);
