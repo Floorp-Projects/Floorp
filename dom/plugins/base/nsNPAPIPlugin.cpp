@@ -669,6 +669,23 @@ GetPrivacyFromNPP(NPP npp, bool* aPrivate)
   return NS_OK;
 }
 
+static already_AddRefed<nsIChannel>
+GetChannelFromNPP(NPP npp)
+{
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromNPP(npp);
+  if (!doc)
+    return nullptr;
+  nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
+  nsCOMPtr<nsIChannel> channel;
+  if (domwindow) {
+    nsCOMPtr<nsIDocShell> docShell = domwindow->GetDocShell();
+    if (docShell) {
+      docShell->GetCurrentDocumentChannel(getter_AddRefs(channel));
+    }
+  }
+  return channel.forget();
+}
+
 static NPIdentifier
 doGetIdentifier(JSContext *cx, const NPUTF8* name)
 {
@@ -2640,7 +2657,9 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
         return NPERR_GENERIC_ERROR;
       }
 
-      if (NS_FAILED(cookieService->GetCookieString(uri, nullptr, value)) ||
+      nsCOMPtr<nsIChannel> channel = GetChannelFromNPP(instance);
+
+      if (NS_FAILED(cookieService->GetCookieString(uri, channel, value)) ||
           !*value) {
         return NPERR_GENERIC_ERROR;
       }
@@ -2693,10 +2712,12 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
       nsCOMPtr<nsIPrompt> prompt;
       nsPluginHost::GetPrompt(nullptr, getter_AddRefs(prompt));
 
+      nsCOMPtr<nsIChannel> channel = GetChannelFromNPP(instance);
+
       char *cookie = (char*)value;
       char c = cookie[len];
       cookie[len] = '\0';
-      rv = cookieService->SetCookieString(uriIn, prompt, cookie, nullptr);
+      rv = cookieService->SetCookieString(uriIn, prompt, cookie, channel);
       cookie[len] = c;
       if (NS_SUCCEEDED(rv))
         return NPERR_NO_ERROR;
