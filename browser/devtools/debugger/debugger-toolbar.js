@@ -884,6 +884,7 @@ FilterView.prototype = {
 
     // Perform a variable search based on the specified operator.
     if (isVariable) {
+      DebuggerView.Variables.performSearch(token);
       DebuggerView.Variables.expandFirstSearchResults();
       return;
     }
@@ -913,7 +914,6 @@ FilterView.prototype = {
   _doSearch: function DVF__doSearch(aOperator = "") {
     this._searchbox.focus();
     this._searchbox.value = aOperator;
-    DebuggerView.GlobalSearch.clearView();
   },
 
   /**
@@ -952,6 +952,7 @@ FilterView.prototype = {
    * Called when the variable search filter key sequence was pressed.
    */
   _doVariableSearch: function DVF__doVariableSearch() {
+    DebuggerView.Variables.performSearch("");
     this._doSearch(SEARCH_VARIABLE_FLAG);
     this._searchboxPanel.hidePopup();
   },

@@ -52,6 +52,7 @@ let DebuggerController = {
 
     DebuggerView.initialize(function() {
       DebuggerView._isInitialized = true;
+
       window.dispatchEvent("Debugger:Loaded");
       this._connect();
     }.bind(this));
@@ -371,6 +372,7 @@ function StackFrames() {
 
 StackFrames.prototype = {
   get activeThread() DebuggerController.activeThread,
+  autoScopeExpand: false,
   currentFrame: null,
   currentException: null,
 
@@ -493,11 +495,11 @@ StackFrames.prototype = {
     if (!frame) {
       return;
     }
-    let env = frame.environment;
+    let environment = frame.environment;
     let { url, line } = frame.where;
 
     // Check if the frame does not represent the evaluation of debuggee code.
-    if (!env) {
+    if (!environment) {
       return;
     }
 
@@ -512,78 +514,24 @@ StackFrames.prototype = {
     // Clear existing scopes and create each one dynamically.
     DebuggerView.Variables.empty();
 
-    let self = this;
-    let name = "";
-
     do {
-      // Name the outermost scope Global.
-      if (!env.parent) {
-        name = L10N.getStr("globalScopeLabel");
-      }
-      // Otherwise construct the scope name.
-      else {
-        name = env.type.charAt(0).toUpperCase() + env.type.slice(1);
-      }
-
-      let label = L10N.getFormatStr("scopeLabel", [name]);
-      switch (env.type) {
-        case "with":
-        case "object":
-          label += " [" + env.object.class + "]";
-          break;
-        case "function":
-          label += " [" + env.functionName + "]";
-          break;
-      }
-
       // Create a scope to contain all the inspected variables.
+      let label = this._getScopeLabel(environment);
       let scope = DebuggerView.Variables.addScope(label);
 
       // Special additions to the innermost scope.
-      if (env == frame.environment) {
-        // Add any thrown exception.
-        if (aDepth == 0 && this.currentException) {
-          let excVar = scope.addVar("<exception>", { value: this.currentException });
-          this._addExpander(excVar, this.currentException);
-        }
-        // Add "this".
-        if (frame.this) {
-          let thisVar = scope.addVar("this", { value: frame.this });
-          this._addExpander(thisVar, frame.this);
-        }
-        // Expand the innermost scope by default.
-        scope.expand(true);
+      if (environment == frame.environment) {
+        this._insertScopeFrameReferences(scope, frame);
+        this._fetchScopeVariables(scope, environment);
+        // Always expand the innermost scope by default.
+        scope.expand();
       }
-
-      switch (env.type) {
-        case "with":
-        case "object":
-          // Add nodes for all variables in the environment object scope.
-          this.activeThread.pauseGrip(env.object).getPrototypeAndProperties(function(aResponse) {
-            self._addScopeVariables(aResponse.ownProperties, scope);
-
-            // Signal that variables have been fetched.
-            window.dispatchEvent("Debugger:FetchedVariables");
-            DebuggerView.Variables.commitHierarchy();
-          });
-          break;
-        case "block":
-        case "function":
-          // Add nodes for every argument.
-          for (let variable of env.bindings.arguments) {
-            let name = Object.getOwnPropertyNames(variable)[0];
-            let paramVar = scope.addVar(name, variable[name]);
-            let paramVal = variable[name].value;
-            this._addExpander(paramVar, paramVal);
-          }
-          // Add nodes for every other variable in scope.
-          this._addScopeVariables(env.bindings.variables, scope);
-          break;
-        default:
-          Cu.reportError("Unknown Debugger.Environment type: " + env.type);
-          break;
+      // Lazily add nodes for every other environment scope.
+      else {
+        this._addScopeExpander(scope, environment);
+        this.autoScopeExpand && scope.expand();
       }
-    } while (env = env.parent);
+    } while (environment = environment.parent);
 
     // Signal that variables have been fetched.
     window.dispatchEvent("Debugger:FetchedVariables");
@@ -591,30 +539,21 @@ StackFrames.prototype = {
   },
 
   /**
-   * Add nodes for every variable in scope.
+   * Adds an 'onexpand' callback for a scope, lazily handling
+   * the addition of new variables.
    *
-   * @param object aVariables
-   *        The map of names to variables, as specified in the Remote
-   *        Debugging Protocol.
    * @param Scope aScope
-   *        The scope where the nodes will be placed into.
+   *        The scope where the variables will be placed into.
+   * @param object aEnv
+   *        The scope's environment.
    */
-  _addScopeVariables: function SF_addScopeVariables(aVariables, aScope) {
-    if (!aVariables) {
-      return;
-    }
-    let variableNames = Object.keys(aVariables);
+  _addScopeExpander: function SF__addScopeExpander(aScope, aEnv) {
+    let callback = this._fetchScopeVariables.bind(this, aScope, aEnv);
 
-    // Sort all of the variables before adding them if preferred.
-    if (Prefs.variablesSortingEnabled) {
-      variableNames.sort();
-    }
-    // Add the sorted variables to the specified scope.
-    for (let name of variableNames) {
-      let paramVar = aScope.addVar(name, aVariables[name]);
-      let paramVal = aVariables[name].value;
-      this._addExpander(paramVar, paramVal);
-    }
+    // It's a good idea to be prepared in case of an expansion.
+    aScope.onmouseover = callback;
+    // Make sure that variables are always available on expansion.
+    aScope.onexpand = callback;
   },
 
   /**
@@ -626,28 +565,146 @@ StackFrames.prototype = {
    * @param any aGrip
    *        The grip of the variable.
    */
-  _addExpander: function SF__addExpander(aVar, aGrip) {
+  _addVarExpander: function SF__addVarExpander(aVar, aGrip) {
     // No need for expansion for primitive values.
     if (VariablesView.isPrimitive({ value: aGrip })) {
       return;
     }
-    aVar.onexpand = this._addVarProperties.bind(this, aVar, aGrip);
+    let callback = this._fetchVarProperties.bind(this, aVar, aGrip);
+
+    // Some variables are likely to contain a very large number of properties.
+    // It's a good idea to be prepared in case of an expansion.
+    if (aVar.name == "window" || aVar.name == "this") {
+      aVar.onmouseover = callback;
+    }
+    // Make sure that properties are always available on expansion.
+    aVar.onexpand = callback;
+  },
+
+  /**
+   * Adds variables to a scope in the view. Triggered when a scope is
+   * expanded or is hovered. It does not expand the scope.
+   *
+   * @param Scope aScope
+   *        The scope where the variables will be placed into.
+   * @param object aEnv
+   *        The scope's environment.
+   */
+  _fetchScopeVariables: function SF__fetchScopeVariables(aScope, aEnv) {
+    // Retrieve the variables only once.
+    if (aScope.fetched) {
+      return;
+    }
+    aScope.fetched = true;
+
+    switch (aEnv.type) {
+      case "with":
+      case "object":
+        // Add nodes for every variable in scope.
+        this.activeThread.pauseGrip(aEnv.object).getPrototypeAndProperties(function(aResponse) {
+          this._insertScopeVariables(aResponse.ownProperties, aScope);
+
+          // Signal that variables have been fetched.
+          window.dispatchEvent("Debugger:FetchedVariables");
+          DebuggerView.Variables.commitHierarchy();
+        }.bind(this));
+        break;
+      case "block":
+      case "function":
+        // Add nodes for every argument and every other variable in scope.
+        this._insertScopeArguments(aEnv.bindings.arguments, aScope);
+        this._insertScopeVariables(aEnv.bindings.variables, aScope);
+        break;
+      default:
+        Cu.reportError("Unknown Debugger.Environment type: " + aEnv.type);
+        break;
+    }
+  },
+
+  /**
+   * Add nodes for special frame references in the innermost scope.
+   *
+   * @param Scope aScope
+   *        The scope where the references will be placed into.
+   * @param object aFrame
+   *        The frame to get some references from.
+   */
+  _insertScopeFrameReferences: function SF__insertScopeFrameReferences(aScope, aFrame) {
+    // Add any thrown exception.
+    if (this.currentException) {
+      let excRef = aScope.addVar("<exception>", { value: this.currentException });
+      this._addVarExpander(excRef, this.currentException);
+    }
+    // Add "this".
+    if (aFrame.this) {
+      let thisRef = aScope.addVar("this", { value: aFrame.this });
+      this._addVarExpander(thisRef, aFrame.this);
+    }
+  },
+
+  /**
+   * Add nodes for every argument in scope.
+   *
+   * @param object aArguments
+   *        The map of names to arguments, as specified in the protocol.
+   * @param Scope aScope
+   *        The scope where the nodes will be placed into.
+   */
+  _insertScopeArguments: function SF__insertScopeArguments(aArguments, aScope) {
+    if (!aArguments) {
+      return;
+    }
+
+    for (let argument of aArguments) {
+      let name = Object.getOwnPropertyNames(argument)[0];
+      let argRef = aScope.addVar(name, argument[name]);
+      let argVal = argument[name].value;
+      this._addVarExpander(argRef, argVal);
+    }
+  },
+
+  /**
+   * Add nodes for every variable in scope.
+   *
+   * @param object aVariables
+   *        The map of names to variables, as specified in the protocol.
+   * @param Scope aScope
+   *        The scope where the nodes will be placed into.
+   */
+  _insertScopeVariables: function SF__insertScopeVariables(aVariables, aScope) {
+    if (!aVariables) {
+      return;
+    }
+
+    let variableNames = Object.keys(aVariables);
+
+    // Sort all of the variables before adding them if preferred.
+    if (Prefs.variablesSortingEnabled) {
+      variableNames.sort();
+    }
+    // Add the sorted variables to the specified scope.
+    for (let name of variableNames) {
+      let varRef = aScope.addVar(name, aVariables[name]);
+      let varVal = aVariables[name].value;
+      this._addVarExpander(varRef, varVal);
+    }
   },
 
   /**
    * Adds properties to a variable in the view. Triggered when a variable is
-   * expanded.
+   * expanded or certain variables are hovered. It does not expand the variable.
    *
    * @param Variable aVar
    *        The variable where the properties will be placed into.
    * @param any aGrip
    *        The grip of the variable.
    */
-  _addVarProperties: function SF__addVarProperties(aVar, aGrip) {
+  _fetchVarProperties: function SF__fetchVarProperties(aVar, aGrip) {
     // Retrieve the properties only once.
     if (aVar.fetched) {
       return;
     }
+    aVar.fetched = true;
 
     this.activeThread.pauseGrip(aGrip).getPrototypeAndProperties(function(aResponse) {
       let { ownProperties, prototype } = aResponse;
@@ -657,7 +714,7 @@ StackFrames.prototype = {
         aVar.addProperties(ownProperties);
         // Expansion handlers must be set after the properties are added.
         for (let name in ownProperties) {
-          this._addExpander(aVar.get(name), ownProperties[name].value);
+          this._addVarExpander(aVar.get(name), ownProperties[name].value);
         }
       }
 
@@ -665,15 +722,48 @@ StackFrames.prototype = {
       if (prototype.type != "null") {
         aVar.addProperty("__proto__", { value: prototype });
         // Expansion handlers must be set after the properties are added.
-        this._addExpander(aVar.get("__proto__"), prototype);
+        this._addVarExpander(aVar.get("__proto__"), prototype);
       }
 
-      aVar.fetched = true;
+      aVar._retrieved = true;
 
       // Signal that properties have been fetched.
       window.dispatchEvent("Debugger:FetchedProperties");
       DebuggerView.Variables.commitHierarchy();
     }.bind(this));
+  },
+
+  /**
+   * Constructs a scope label based on its environment.
+   *
+   * @param object aEnv
+   *        The scope's environment.
+   * @return string
+   *         The scope's label.
+   */
+  _getScopeLabel: function SV__getScopeLabel(aEnv) {
+    let name = "";
+
+    // Name the outermost scope Global.
+    if (!aEnv.parent) {
+      name = L10N.getStr("globalScopeLabel");
+    }
+    // Otherwise construct the scope name.
+    else {
+      name = aEnv.type.charAt(0).toUpperCase() + aEnv.type.slice(1);
+    }
+
+    let label = L10N.getFormatStr("scopeLabel", [name]);
+    switch (aEnv.type) {
+      case "with":
+      case "object":
+        label += " [" + aEnv.object.class + "]";
+        break;
+      case "function":
+        label += " [" + aEnv.functionName + "]";
+        break;
+    }
+    return label;
   },
 
   /**
@@ -1041,8 +1131,8 @@ Breakpoints.prototype = {
    * @param object aLocation
    *        The location where you want the breakpoint. This object must have
    *        two properties:
-   *          - url - the url of the source.
-   *          - line - the line number (starting from 1).
+   *          - url: the url of the source.
+   *          - line: the line number (starting from 1).
    * @param function aCallback [optional]
    *        Optional function to invoke once the breakpoint is added. The
    *        callback is invoked with two arguments:

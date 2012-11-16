@@ -13,12 +13,8 @@
   overflow-y: auto;
 }
 
-.dbg-results-container {
+.dbg-results-container:not([open]) {
   display: none;
-}
-
-.dbg-results-container[open] {
-  display: -moz-box;
 }
 
 /**
@@ -48,19 +44,16 @@
  */
 
 #variables {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /**
  * Scope, variable and property elements
  */
 
-#variables .details {
+#variables .details:not([open]) {
   display: none;
-}
-
-#variables .details[open] {
-  display: -moz-box;
 }
 
 .scope[non-header] > .title,
