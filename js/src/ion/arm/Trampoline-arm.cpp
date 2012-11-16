@@ -618,7 +618,7 @@ IonRuntime::generatePreBarrier(JSContext *cx)
     masm.PushRegsInMask(save);
 
     JS_ASSERT(PreBarrierReg == r1);
-    masm.movePtr(ImmWord(cx->compartment), r0);
+    masm.movePtr(ImmWord(cx->runtime), r0);
 
     masm.setupUnalignedABICall(2, r2);
     masm.passABIArg(r0);
