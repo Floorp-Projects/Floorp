@@ -89,15 +89,15 @@ function run_test()
   // Look for the removed download notification
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
-  const kRemoveTopic = "download-manager-remove-download-guid";
+  const kRemoveTopic = "download-manager-remove-download";
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
       if (aTopic != kRemoveTopic)
         return;
 
       // Make sure the removed/expired download was the one we added
-      let id = aSubject.QueryInterface(Ci.nsISupportsCString);
-      do_check_eq(id.data, theGUID);
+      let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
+      do_check_eq(id.data, theId);
 
       // We're done!
       histobs.onEndUpdateBatch();

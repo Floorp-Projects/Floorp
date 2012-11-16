@@ -269,36 +269,33 @@ Sanitizer.prototype = {
         var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
                               .getService(Components.interfaces.nsIDownloadManager);
 
-        var dlsToRemove = [];
+        var dlIDsToRemove = [];
         if (this.range) {
           // First, remove the completed/cancelled downloads
           dlMgr.removeDownloadsByTimeframe(this.range[0], this.range[1]);
-
+          
           // Queue up any active downloads that started in the time span as well
-          for (let dlsEnum of [dlMgr.activeDownloads, dlMgr.activePrivateDownloads]) {
-            while (dlsEnum.hasMoreElements()) {
-              var dl = dlsEnum.next();
-              if (dl.startTime >= this.range[0])
-                dlsToRemove.push(dl);
-            }
+          var dlsEnum = dlMgr.activeDownloads;
+          while(dlsEnum.hasMoreElements()) {
+            var dl = dlsEnum.next();
+            if(dl.startTime >= this.range[0])
+              dlIDsToRemove.push(dl.id);
           }
         }
         else {
           // Clear all completed/cancelled downloads
           dlMgr.cleanUp();
-          dlMgr.cleanUpPrivate();
           
           // Queue up all active ones as well
-          for (let dlsEnum of [dlMgr.activeDownloads, dlMgr.activePrivateDownloads]) {
-            while (dlsEnum.hasMoreElements()) {
-              dlsToRemove.push(dlsEnum.next());
-            }
+          var dlsEnum = dlMgr.activeDownloads;
+          while(dlsEnum.hasMoreElements()) {
+            dlIDsToRemove.push(dlsEnum.next().id);
           }
         }
-
+        
         // Remove any queued up active downloads
-        dlsToRemove.forEach(function (dl) {
-          dl.remove();
+        dlIDsToRemove.forEach(function(id) {
+          dlMgr.removeDownload(id);
         });
       },
 
@@ -306,7 +303,7 @@ Sanitizer.prototype = {
       {
         var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
                               .getService(Components.interfaces.nsIDownloadManager);
-        return dlMgr.canCleanUp || dlMgr.canCleanUpPrivate;
+        return dlMgr.canCleanUp;
       }
     },
     
