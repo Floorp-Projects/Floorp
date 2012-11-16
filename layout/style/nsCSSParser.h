@@ -57,9 +57,6 @@ public:
   // Set whether or not to emulate Nav quirks
   nsresult SetQuirkMode(bool aQuirkMode);
 
-  // Set whether or not we are in an SVG element
-  nsresult SetSVGMode(bool aSVGMode);
-
   // Set loader to use for child sheets
   nsresult SetChildLoader(mozilla::css::Loader* aChildLoader);
 
@@ -113,14 +110,23 @@ public:
                      nsIPrincipal*           aSheetPrincipal,
                      nsCOMArray<mozilla::css::Rule>& aResult);
 
+  // Parse the value of a single CSS property, and add or replace that
+  // property in aDeclaration.
+  //
+  // SVG "mapped attributes" (which correspond directly to CSS
+  // properties) are parsed slightly differently from regular CSS; in
+  // particular, units may be omitted from <length>.  The 'aIsSVGMode'
+  // argument controls this quirk.  Note that this *only* applies to
+  // mapped attributes, not inline styles or full style sheets in SVG.
   nsresult ParseProperty(const nsCSSProperty aPropID,
                          const nsAString&    aPropValue,
                          nsIURI*             aSheetURL,
                          nsIURI*             aBaseURL,
                          nsIPrincipal*       aSheetPrincipal,
                          mozilla::css::Declaration* aDeclaration,
-                         bool*             aChanged,
-                         bool                aIsImportant);
+                         bool*               aChanged,
+                         bool                aIsImportant,
+                         bool                aIsSVGMode = false);
 
   /**
    * Parse aBuffer into a media list |aMediaList|, which must be

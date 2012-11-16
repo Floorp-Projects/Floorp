@@ -191,6 +191,8 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
 
+  ENSURE_NOT_PRIVATE_BROWSING;
+
   // If we are about to expire all favicons, don't bother setting a new one.
   if (mFaviconsExpirationRunning) {
     return NS_OK;
@@ -198,10 +200,6 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-  if (history->InPrivateBrowsingMode()) {
-    return NS_OK;
-  }
 
   nsresult rv;
   int64_t iconId = -1;

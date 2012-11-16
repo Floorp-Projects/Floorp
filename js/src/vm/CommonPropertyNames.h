@@ -44,10 +44,12 @@
     macro(caller, caller, "caller") \
     macro(_CallFunction, _CallFunction, "_CallFunction") \
     macro(classPrototype, classPrototype, "prototype") \
+    macro(Collator, Collator, "Collator") \
     macro(columnNumber, columnNumber, "columnNumber") \
     macro(configurable, configurable, "configurable") \
     macro(construct, construct, "construct") \
     macro(constructor, constructor, "constructor") \
+    macro(DateTimeFormat, DateTimeFormat, "DateTimeFormat") \
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
     macro(defineProperty, defineProperty, "defineProperty") \
@@ -76,6 +78,9 @@
     macro(hasOwnProperty, hasOwnProperty, "hasOwnProperty") \
     macro(ignoreCase, ignoreCase, "ignoreCase") \
     macro(index, index, "index") \
+    macro(InitializeCollator, InitializeCollator, "intl_InitializeCollator") \
+    macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "intl_InitializeDateTimeFormat") \
+    macro(InitializeNumberFormat, InitializeNumberFormat, "intl_InitializeNumberFormat") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
     macro(isFinite, isFinite, "isFinite") \
@@ -101,6 +106,7 @@
     macro(NaN, NaN, "NaN") \
     macro(next, next, "next") \
     macro(noSuchMethod, noSuchMethod, "__noSuchMethod__") \
+    macro(NumberFormat, NumberFormat, "NumberFormat") \
     macro(objectNull, objectNull, "[object Null]") \
     macro(objectUndefined, objectUndefined, "[object Undefined]") \
     macro(of, of, "of") \

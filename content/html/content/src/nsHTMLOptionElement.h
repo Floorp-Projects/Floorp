@@ -33,11 +33,11 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLOptionElement
-  using nsGenericElement::SetText;
-  using nsGenericElement::GetText;
+  using mozilla::dom::Element::SetText;
+  using mozilla::dom::Element::GetText;
   NS_DECL_NSIDOMHTMLOPTIONELEMENT
 
   bool Selected() const;
@@ -67,7 +67,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   virtual nsXPCClassInfo* GetClassInfo();
 

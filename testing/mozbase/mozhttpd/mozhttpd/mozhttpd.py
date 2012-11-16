@@ -68,6 +68,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     log_requests = False
     request = None
 
+    def __init__(self, *args, **kwargs):
+        SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, *args, **kwargs)
+        self.extensions_map['.svg'] = 'image/svg+xml'
+
     def _try_handler(self, method):
         if self.log_requests:
             self.request_log.append({ 'method': method,

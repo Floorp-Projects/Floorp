@@ -47,8 +47,8 @@ clobber-zip:
 	  $(STAGEDIST)/chrome/$(AB_CD)
 
 libs-%:
-	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$* BOTH_MANIFESTS=1
-	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences BOTH_MANIFESTS=1
+	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
+	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences
 
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:

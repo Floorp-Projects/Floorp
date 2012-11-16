@@ -86,6 +86,7 @@ public class GeckoEvent {
     public static final int IME_ADD_COMPOSITION_RANGE = 3;
     public static final int IME_UPDATE_COMPOSITION = 4;
     public static final int IME_REMOVE_COMPOSITION = 5;
+    public static final int IME_ACKNOWLEDGE_FOCUS = 6;
 
     public static final int IME_RANGE_CARETPOSITION = 1;
     public static final int IME_RANGE_RAWINPUT = 2;
@@ -265,24 +266,29 @@ public class GeckoEvent {
     }
 
     public static GeckoEvent createNativeGestureEvent(int action, PointF pt, double size) {
-        GeckoEvent event = new GeckoEvent(NATIVE_GESTURE_EVENT);
-        event.mAction = action;
-        event.mCount = 1;
-        event.mPoints = new Point[1];
+        try {
+            GeckoEvent event = new GeckoEvent(NATIVE_GESTURE_EVENT);
+            event.mAction = action;
+            event.mCount = 1;
+            event.mPoints = new Point[1];
 
-        PointF geckoPoint = new PointF(pt.x, pt.y);
-        geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);
+            PointF geckoPoint = new PointF(pt.x, pt.y);
+            geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);
 
-        if (geckoPoint == null) {
-            // This could happen if Gecko isn't ready yet.
+            if (geckoPoint == null) {
+                // This could happen if Gecko isn't ready yet.
+                return null;
+            }
+
+            event.mPoints[0] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
+
+            event.mX = size;
+            event.mTime = System.currentTimeMillis();
+            return event;
+        } catch (Exception e) {
+            // This can happen if Gecko isn't ready yet
             return null;
         }
-
-        event.mPoints[0] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
-
-        event.mX = size;
-        event.mTime = System.currentTimeMillis();
-        return event;
     }
 
     public static GeckoEvent createMotionEvent(MotionEvent m) {
@@ -370,7 +376,7 @@ public class GeckoEvent {
                 mOrientations[index] = 0;
             }
             mPressures[index] = event.getPressure(eventIndex);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             Log.e(LOGTAG, "Error creating motion point " + index, ex);
             mPointRadii[index] = new Point(0, 0);
             mPoints[index] = new Point(0, 0);

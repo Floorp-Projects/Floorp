@@ -1262,7 +1262,7 @@ public:
     const nsString& GetName() const { return mFontEntry->Name(); }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
-    cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
+    virtual cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
 
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption) {
         // platforms where this actually matters should override

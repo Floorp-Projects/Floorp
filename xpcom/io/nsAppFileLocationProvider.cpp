@@ -209,6 +209,8 @@ nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile *
         static const char *const sysLPlgDir =
 #if defined(HAVE_USR_LIB64_DIR) && defined(__LP64__)
           "/usr/lib64/mozilla/plugins";
+#elif defined(__OpenBSD__) || defined (__FreeBSD__)
+          "/usr/local/lib/mozilla/plugins";
 #else
           "/usr/lib/mozilla/plugins";
 #endif

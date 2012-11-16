@@ -91,6 +91,7 @@ class JaegerRuntime;
 class MathCache;
 
 namespace ion {
+class IonRuntime;
 class IonActivation;
 }
 
@@ -499,12 +500,14 @@ struct JSRuntime : js::RuntimeFriendFields
 #ifdef JS_METHODJIT
     js::mjit::JaegerRuntime *jaegerRuntime_;
 #endif
+    js::ion::IonRuntime *ionRuntime_;
 
     JSObject *selfHostedGlobal_;
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
     js::mjit::JaegerRuntime *createJaegerRuntime(JSContext *cx);
+    js::ion::IonRuntime *createIonRuntime(JSContext *cx);
 
   public:
     JSC::ExecutableAllocator *getExecAlloc(JSContext *cx) {
@@ -513,6 +516,9 @@ struct JSRuntime : js::RuntimeFriendFields
     JSC::ExecutableAllocator &execAlloc() {
         JS_ASSERT(execAlloc_);
         return *execAlloc_;
+    }
+    JSC::ExecutableAllocator *maybeExecAlloc() {
+        return execAlloc_;
     }
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
@@ -529,6 +535,9 @@ struct JSRuntime : js::RuntimeFriendFields
         return *jaegerRuntime_;
     }
 #endif
+    js::ion::IonRuntime *getIonRuntime(JSContext *cx) {
+        return ionRuntime_ ? ionRuntime_ : createIonRuntime(cx);
+    }
 
     bool initSelfHosting(JSContext *cx);
     void markSelfHostedGlobal(JSTracer *trc);
@@ -719,9 +728,10 @@ struct JSRuntime : js::RuntimeFriendFields
 
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,
-     * JS_TransplantObject).
+     * JS_TransplantObject) or some other operation that can manipulate
+     * dead compartments.
      */
-    bool                gcInTransplant;
+    bool                gcManipulatingDeadCompartments;
 
     /*
      * This field is incremented each time we mark an object inside a
@@ -2193,6 +2203,7 @@ class RuntimeAllocPolicy
     RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
     RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
     void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
+    void *calloc_(size_t bytes) { return runtime->calloc_(bytes); }
     void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}
@@ -2209,6 +2220,7 @@ class ContextAllocPolicy
     ContextAllocPolicy(JSContext *cx) : cx(cx) {}
     JSContext *context() const { return cx; }
     void *malloc_(size_t bytes) { return cx->malloc_(bytes); }
+    void *calloc_(size_t bytes) { return cx->calloc_(bytes); }
     void *realloc_(void *p, size_t oldBytes, size_t bytes) { return cx->realloc_(p, oldBytes, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const { js_ReportAllocationOverflow(cx); }

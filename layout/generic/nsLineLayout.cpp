@@ -961,7 +961,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Tell the frame that we're done reflowing it
   aFrame->DidReflow(mPresContext,
                     isText ? nullptr : reflowStateHolder.addr(),
-                    NS_FRAME_REFLOW_FINISHED);
+                    nsDidReflowStatus::FINISHED);
 
   if (aMetrics) {
     *aMetrics = metrics;

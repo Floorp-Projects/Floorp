@@ -14,6 +14,7 @@
 #include "gfxContext.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsSVGElement::LengthInfo nsSVGImageElement::sLengthInfo[4] =
 {
@@ -274,7 +275,7 @@ nsSVGImageElement::GetStringInfo()
 }
 
 nsresult
-nsSVGImageElement::CopyInnerTo(nsGenericElement* aDest)
+nsSVGImageElement::CopyInnerTo(Element* aDest)
 {
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsSVGImageElement*>(aDest));

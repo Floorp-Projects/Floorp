@@ -8,7 +8,7 @@
 #define mozilla_dom_AudioParent_h
 
 #include "mozilla/dom/PAudioParent.h"
-#include "nsAudioStream.h"
+#include "AudioStream.h"
 #include "nsITimer.h"
 
 namespace mozilla {
@@ -54,7 +54,7 @@ class AudioParent : public PAudioParent, public nsITimerCallback
     virtual ~AudioParent();
     virtual void ActorDestroy(ActorDestroyReason);
 
-    nsRefPtr<nsAudioStream> mStream;
+    nsRefPtr<AudioStream> mStream;
     nsCOMPtr<nsITimer> mTimer;
 
 private:

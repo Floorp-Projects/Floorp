@@ -7404,7 +7404,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
   nsresult rv = nsTextStore::OnFocusChange(aFocus, this,
                                            mInputContext.mIMEState.mEnabled);
   if (rv == NS_ERROR_NOT_AVAILABLE)
-    rv = NS_ERROR_NOT_IMPLEMENTED; // TSF is not enabled, maybe.
+    rv = NS_OK; // TSF is not enabled, maybe.
   return rv;
 }
 
@@ -7421,6 +7421,13 @@ nsWindow::OnIMESelectionChange(void)
 {
   return nsTextStore::OnSelectionChange();
 }
+
+nsIMEUpdatePreference
+nsWindow::GetIMEUpdatePreference()
+{
+  return nsTextStore::GetIMEUpdatePreference();
+}
+
 #endif //NS_ENABLE_TSF
 
 bool nsWindow::AssociateDefaultIMC(bool aAssociate)

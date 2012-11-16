@@ -512,6 +512,9 @@ template <class T, size_t N, class AllocPolicy>
 JS_ALWAYS_INLINE
 Vector<T, N, AllocPolicy>::Vector(MoveRef<Vector> rhs)
     : AllocPolicy(rhs)
+#ifdef DEBUG
+    , entered(false)
+#endif
 {
     mLength = rhs->mLength;
     mCapacity = rhs->mCapacity;

@@ -2711,7 +2711,7 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
     // we don't have full access to the other compartment, in which case we throw.
     // Otherwise, enter the compartment.
     if (js::IsCrossCompartmentWrapper(obj)) {
-        obj = js::UnwrapOneChecked(cx, obj);
+        obj = js::UnwrapOneChecked(obj);
         if (!obj)
             return NS_ERROR_XPC_BAD_CONVERT_JS;
     }
@@ -3863,7 +3863,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 {
     JS_AbortIfWrongThread(JS_GetRuntime(cx));
 
-    sandbox = js::UnwrapObjectChecked(cx, sandbox);
+    sandbox = js::UnwrapObjectChecked(sandbox);
     if (!sandbox || js::GetObjectJSClass(sandbox) != &SandboxClass) {
         return NS_ERROR_INVALID_ARG;
     }

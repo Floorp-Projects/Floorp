@@ -318,15 +318,6 @@ textarea:active {
   background-color: @color_background_highlight_overlay@ !important;
 }
 
-/* 
- * Generate an additional space after the anonymous div to make it easier to
- * to position the caret at the end of the text
- */
-input > .anonymous-div:after {
-  content: "";
-  margin: 16px;
-}
-
 xul|menulist {
   -moz-binding: url("chrome://browser/content/bindings/menulist.xml#menulist");
 }

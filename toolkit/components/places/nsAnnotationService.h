@@ -135,8 +135,6 @@ protected:
                                     int64_t aItemId,
                                     const nsACString& aName);
 
-  bool InPrivateBrowsingMode() const;
-
 public:
   nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,
                                           nsCOMArray<nsIURI>* _results);

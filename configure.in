@@ -1935,7 +1935,7 @@ case "$target" in
     fi
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
-    STRIP="$STRIP -x -S"
+    STRIP_FLAGS="$STRIP_FLAGS -x -S"
     # Check whether we're targeting OS X or iOS
     AC_CACHE_CHECK(for iOS target,
                    ac_cv_ios_target,
@@ -3873,7 +3873,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.9.3, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.9.4, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4244,7 +4244,6 @@ MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
-MOZ_XTF=1
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
@@ -5706,17 +5705,6 @@ MOZ_ARG_DISABLE_BOOL(negotiateauth,
     MOZ_AUTH_EXTENSION=1 )
 
 dnl ========================================================
-dnl XTF
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(xtf,
-[  --disable-xtf           Disable XTF (pluggable xml tags) support],
-    MOZ_XTF=,
-    MOZ_XTF=1 )
-if test "$MOZ_XTF"; then
-  AC_DEFINE(MOZ_XTF)
-fi
-
-dnl ========================================================
 dnl Pref extensions (autoconfig)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(pref-extensions,
@@ -6072,12 +6060,6 @@ AC_SUBST(MOZ_GIO_COMPONENT)
 if test -z "$MOZ_JSDEBUGGER" -a `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
     AC_MSG_WARN([Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
-fi
-
-dnl xforms requires xtf
-if test -z "$MOZ_XTF" -a `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
-    AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 
 dnl Remove dupes
@@ -8313,7 +8295,6 @@ AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_PLATFORM_MAEMO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PERMISSIONS)
-AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)

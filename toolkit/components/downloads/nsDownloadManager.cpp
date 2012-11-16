@@ -2460,7 +2460,7 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
 
     // If we have a MIME info, we know that exthandler has already added this to
     // the history, but if we do not, we'll have to add it ourselves.
-    if (!mMIMEInfo) {
+    if (!mMIMEInfo && !mPrivate) {
       nsCOMPtr<nsIDownloadHistory> dh =
         do_GetService(NS_DOWNLOADHISTORY_CONTRACTID);
       if (dh)

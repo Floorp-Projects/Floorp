@@ -909,6 +909,12 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         mPresContext->SetPageScale(1.0f);
       }
 #endif
+    } else {
+      // Avoid leaking the old viewer.
+      if (mPreviousViewer) {
+        mPreviousViewer->Destroy();
+        mPreviousViewer = nullptr;
+      }
     }
   }
 
@@ -2061,7 +2067,7 @@ DocumentViewerImpl::Hide(void)
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     nsCOMPtr<nsILayoutHistoryState> layoutState;
-    mPresShell->CaptureHistoryState(getter_AddRefs(layoutState), true);
+    mPresShell->CaptureHistoryState(getter_AddRefs(layoutState));
   }
 
   DestroyPresShell();

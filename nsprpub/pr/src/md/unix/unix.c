@@ -22,8 +22,7 @@
 #endif
 
 /* To get FIONREAD */
-#if defined(NCR) || defined(UNIXWARE) || defined(NEC) || defined(SNI) \
-        || defined(SONY)
+#if defined(UNIXWARE)
 #include <sys/filio.h>
 #endif
 
@@ -39,10 +38,10 @@
     || (defined(__GLIBC__) && __GLIBC__ >= 2)
 #define _PRSockLen_t socklen_t
 #elif defined(IRIX) || defined(HPUX) || defined(OSF1) || defined(SOLARIS) \
-    || defined(AIX4_1) || defined(LINUX) || defined(SONY) \
-    || defined(BSDI) || defined(SCO) || defined(NEC) || defined(SNI) \
-    || defined(SUNOS4) || defined(NCR) || defined(DARWIN) \
-    || defined(NEXTSTEP) || defined(QNX)
+    || defined(AIX4_1) || defined(LINUX) \
+    || defined(BSDI) || defined(SCO) \
+    || defined(DARWIN) \
+    || defined(QNX)
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \
     || defined(NETBSD) || defined(OPENBSD) || defined(UNIXWARE) \
@@ -768,7 +767,7 @@ PRInt32 _MD_recv(PRFileDesc *fd, void *buf, PRInt32 amount,
  * from socketpairs.  As long as we don't use flags on socketpairs, this
  * is a decent fix. - mikep
  */
-#if defined(UNIXWARE) || defined(SOLARIS) || defined(NCR)
+#if defined(UNIXWARE) || defined(SOLARIS)
     while ((rv = read(osfd,buf,amount)) == -1) {
 #else
     while ((rv = recv(osfd,buf,amount,flags)) == -1) {
@@ -2177,11 +2176,7 @@ void _MD_MakeNonblock(PRFileDesc *fd)
      * otherwise connect() still blocks and can be interrupted by SIGALRM.
      */
 
-#ifdef SUNOS4
-    fcntl(osfd, F_SETFL, flags | FNDELAY);
-#else
     fcntl(osfd, F_SETFL, flags | O_NONBLOCK);
-#endif
     }
 
 PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
@@ -3017,6 +3012,13 @@ PR_Now(void)
     return s;
 }
 
+#if defined(_MD_INTERVAL_USE_GTOD)
+/*
+ * This version of interval times is based on the time of day
+ * capability offered by the system. This isn't valid for two reasons:
+ * 1) The time of day is neither linear nor montonically increasing
+ * 2) The units here are milliseconds. That's not appropriate for our use.
+ */
 PRIntervalTime _PR_UNIX_GetInterval()
 {
     struct timeval time;
@@ -3026,12 +3028,35 @@ PRIntervalTime _PR_UNIX_GetInterval()
     ticks = (PRUint32)time.tv_sec * PR_MSEC_PER_SEC;  /* that's in milliseconds */
     ticks += (PRUint32)time.tv_usec / PR_USEC_PER_MSEC;  /* so's that */
     return ticks;
-}  /* _PR_SUNOS_GetInterval */
+}  /* _PR_UNIX_GetInterval */
 
 PRIntervalTime _PR_UNIX_TicksPerSecond()
 {
     return 1000;  /* this needs some work :) */
 }
+#endif
+
+#if defined(HAVE_CLOCK_MONOTONIC)
+PRIntervalTime _PR_UNIX_GetInterval2()
+{
+    struct timespec time;
+    PRIntervalTime ticks;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &time) != 0) {
+        fprintf(stderr, "clock_gettime failed: %d\n", errno);
+        abort();
+    }
+
+    ticks = (PRUint32)time.tv_sec * PR_MSEC_PER_SEC;
+    ticks += (PRUint32)time.tv_nsec / PR_NSEC_PER_MSEC;
+    return ticks;
+}
+
+PRIntervalTime _PR_UNIX_TicksPerSecond2()
+{
+    return 1000;
+}
+#endif
 
 #if !defined(_PR_PTHREADS)
 /*
@@ -3292,7 +3317,7 @@ int _MD_unix_get_nonblocking_connect_error(int osfd)
     } else {
         return ECONNREFUSED;
     }	
-#elif defined(NCR) || defined(UNIXWARE) || defined(SNI) || defined(NEC)
+#elif defined(UNIXWARE)
     /*
      * getsockopt() fails with EPIPE, so use getmsg() instead.
      */

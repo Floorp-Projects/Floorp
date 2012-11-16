@@ -366,7 +366,11 @@ public:
     void UnregisterSurfaceTextureFrameListener(jobject surfaceTexture);
 
     void GetGfxInfoData(nsACString& aRet);
-
+    nsresult GetProxyForURI(const nsACString & aSpec,
+                            const nsACString & aScheme,
+                            const nsACString & aHost,
+                            const int32_t      aPort,
+                            nsACString & aResult);
 protected:
     static AndroidBridge *sBridge;
     static StaticAutoPtr<nsTArray<nsCOMPtr<nsISmsRequest> > > sSmsRequests;
@@ -466,6 +470,7 @@ protected:
     jmethodID jShowSurface;
     jmethodID jHideSurface;
     jmethodID jDestroySurface;
+    jmethodID jGetProxyForURI;
 
     jmethodID jNumberOfMessages;
     jmethodID jSendMessage;

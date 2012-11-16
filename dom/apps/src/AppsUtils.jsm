@@ -245,7 +245,7 @@ this.ManifestHelper = function(aManifest, aOrigin) {
   this._manifest = aManifest;
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry)
                                                           .QueryInterface(Ci.nsIToolkitChromeRegistry);
-  let locale = chrome.getSelectedLocale("browser").toLowerCase();
+  let locale = chrome.getSelectedLocale("global").toLowerCase();
   this._localeRoot = this._manifest;
 
   if (this._manifest.locales && this._manifest.locales[locale]) {

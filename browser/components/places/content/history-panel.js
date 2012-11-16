@@ -77,6 +77,7 @@ function searchHistory(aInput)
 
   options.sortingMode = sortingMode;
   options.resultType = resultType;
+  options.includeHidden = !!aInput;
 
   // call load() on the tree manually
   // instead of setting the place attribute in history-panel.xul

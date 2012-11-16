@@ -29,7 +29,7 @@
 #include "mozilla/dom/EncodingUtils.h"
 
 USING_WORKERS_NAMESPACE
-using mozilla::ErrorResult;
+using namespace mozilla;
 using mozilla::dom::Optional;
 
 NS_IMPL_ADDREF_INHERITED(FileReaderSync, DOMBindingBase)
@@ -95,8 +95,8 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx, JSObject* aBlob,
     return nullptr;
   }
 
-  uint32_t bufferLength = JS_GetArrayBufferByteLength(jsArrayBuffer, aCx);
-  uint8_t* arrayBuffer = JS_GetArrayBufferData(jsArrayBuffer, aCx);
+  uint32_t bufferLength = JS_GetArrayBufferByteLength(jsArrayBuffer);
+  uint8_t* arrayBuffer = JS_GetArrayBufferData(jsArrayBuffer);
 
   nsCOMPtr<nsIInputStream> stream;
   rv = blob->GetInternalStream(getter_AddRefs(stream));

@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-llvm_revision = "166095"
+llvm_revision = "167750"
 moz_version = "moz0"
 
 ##############################################
@@ -118,17 +118,17 @@ if isDarwin:
 
 if not os.path.exists(source_dir):
     os.makedirs(source_dir)
-    svn_co("http://llvm.org/svn/llvm-project/llvm/trunk",
+    svn_co("http://llvm.org/svn/llvm-project/llvm/branches/release_32",
            llvm_source_dir, llvm_revision)
-    svn_co("http://llvm.org/svn/llvm-project/cfe/trunk",
+    svn_co("http://llvm.org/svn/llvm-project/cfe/branches/release_32",
            clang_source_dir, llvm_revision)
-    svn_co("http://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    svn_co("http://llvm.org/svn/llvm-project/compiler-rt/branches/release_32",
            compiler_rt_source_dir, llvm_revision)
     os.symlink("../../clang", llvm_source_dir + "/tools/clang")
     os.symlink("../../compiler-rt", llvm_source_dir + "/projects/compiler-rt")
     patch("llvm-debug-frame.patch", 1, llvm_source_dir)
     if not isDarwin:
-        patch("no-sse-on-linux.patch", 1, clang_source_dir)
+        patch("no-sse-on-linux.patch", 0, clang_source_dir)
 
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)

@@ -48,7 +48,7 @@ void
 nsStyleLinkElement::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
   nsStyleLinkElement* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStyleSheet);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheet);
 }
 
 NS_IMETHODIMP 

@@ -456,17 +456,19 @@ PrivateBrowsingService.prototype = {
       case "command-line-startup":
         this._obs.removeObserver(this, "command-line-startup");
         aSubject.QueryInterface(Ci.nsICommandLine);
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
         if (aSubject.findFlag("private", false) >= 0) {
           // Don't need to go into PB mode if it's already set to autostart
           if (this._autoStarted)
             aSubject.handleFlag("private", false);
 
-          Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
           this.privateBrowsingEnabled = true;
           this._autoStarted = true;
           this._lastChangedByCommandLine = true;
         }
-        else if (aSubject.findFlag("private-toggle", false) >= 0) {
+        else
+#endif
+        if (aSubject.findFlag("private-toggle", false) >= 0) {
           this._lastChangedByCommandLine = true;
         }
         break;
@@ -482,9 +484,12 @@ PrivateBrowsingService.prototype = {
   // nsICommandLineHandler
 
   handle: function PBS_handle(aCmdLine) {
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     if (aCmdLine.handleFlag("private", false))
       aCmdLine.preventDefault = true; // It has already been handled
-    else if (aCmdLine.handleFlag("private-toggle", false)) {
+    else
+#endif
+    if (aCmdLine.handleFlag("private-toggle", false)) {
       if (this._autoStarted) {
         throw Cr.NS_ERROR_ABORT;
       }

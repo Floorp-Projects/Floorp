@@ -16,6 +16,7 @@
 #include "jsweakmap.h"
 
 #include "builtin/Eval.h"
+#include "builtin/Intl.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeEmitter.h"
@@ -470,7 +471,11 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            js_InitMapClass(cx, global) &&
            GlobalObject::initMapIteratorProto(cx, global) &&
            js_InitSetClass(cx, global) &&
-           GlobalObject::initSetIteratorProto(cx, global);
+           GlobalObject::initSetIteratorProto(cx, global) &&
+#if ENABLE_INTL_API
+           js_InitIntlClass(cx, global) &&
+#endif
+           true;
 }
 
 bool

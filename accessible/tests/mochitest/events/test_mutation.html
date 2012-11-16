@@ -242,8 +242,8 @@
     }
 
     /**
-     * Trigger content insertion, removal and insertion of the same element
-     * for the same parent.
+     * Trigger content insertion (flush layout), removal and insertion of
+     * the same element for the same parent.
      */
     function test1(aContainerID)
     {
@@ -266,13 +266,14 @@
 
       this.getID = function test1_getID()
       {
-        return "test1";
+        return "fuzzy test #1: content insertion (flush layout), removal and" +
+          "reinsertion";
       }
     }
 
     /**
-     * Trigger content insertion, removal and insertion of the same element
-     * for the different parents.
+     * Trigger content insertion (flush layout), removal and insertion of
+     * the same element for the different parents.
      */
     function test2(aContainerID, aTmpContainerID)
     {
@@ -302,7 +303,36 @@
 
       this.getID = function test2_getID()
       {
-        return "test2";
+        return "fuzzy test #2: content insertion (flush layout), removal and" +
+          "reinsertion under another container";
+      }
+    }
+
+    /**
+     * Content insertion (flush layout) and then removal (nothing was changed).
+     */
+    function test3(aContainerID)
+    {
+      this.divNode = document.createElement("div");
+      this.divNode.setAttribute("id", "div-test3");
+      this.containerNode = getNode(aContainerID);
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_SHOW, this.divNode),
+        new invokerChecker(EVENT_HIDE, this.divNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.invoke = function test3_invoke()
+      {
+        this.containerNode.appendChild(this.divNode);
+        getComputedStyle(this.divNode, "").color;
+        this.containerNode.removeChild(this.divNode);
+      }
+
+      this.getID = function test3_getID()
+      {
+        return "fuzzy test #3: content insertion (flush layout) and removal";
       }
     }
 
@@ -343,8 +373,7 @@
      * Do tests.
      */
     var gQueue = null;
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    //gA11yEventDumpToConsole = true; // debug stuff
 
     function doTests()
     {
@@ -427,6 +456,7 @@
       gQueue.push(new test1("testContainer"));
       gQueue.push(new test2("testContainer", "testContainer2"));
       gQueue.push(new test2("testContainer", "testNestedContainer"));
+      gQueue.push(new test3("testContainer"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

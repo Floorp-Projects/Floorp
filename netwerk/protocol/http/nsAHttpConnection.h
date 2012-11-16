@@ -124,6 +124,10 @@ public:
     // The number of transaction bytes written out on this HTTP Connection, does
     // not count CONNECT tunnel setup
     virtual int64_t BytesWritten() = 0;
+
+    // Update the callbacks used to provide security info. May be called on
+    // any thread.
+    virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) = 0;
 };
 
 #define NS_DECL_NSAHTTPCONNECTION(fwdObject)                    \
@@ -195,6 +199,10 @@ public:
         return (fwdObject)->Classify(newclass);             \
     }                                                       \
     int64_t BytesWritten()                                  \
-    {     return fwdObject ? (fwdObject)->BytesWritten() : 0; }
+    {     return fwdObject ? (fwdObject)->BytesWritten() : 0; } \
+    void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) \
+    {                                                       \
+        (fwdObject)->SetSecurityCallbacks(aCallbacks); \
+    }
 
 #endif // nsAHttpConnection_h__

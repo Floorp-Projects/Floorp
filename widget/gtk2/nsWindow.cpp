@@ -3466,18 +3466,13 @@ nsWindow::Create(nsIWidget        *aParent,
             mShell = gtk_window_new(type);
             gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup",
                                    gdk_get_program_class());
-            
-            if (!aInitData->mNoAutoHide) {
-                GdkScreen *screen = gtk_widget_get_screen(mShell);
-                // Use an RGBA visual for all short-lived popup windows if
-                // we are on a compositing window manager. We don't do this in
+
+            if (aInitData->mSupportTranslucency) {
+                // We need to select an ARGB visual here instead of in
                 // SetTransparencyMode() because it has to be done before the
-                // widget is realized.
-                // Normally we would need to hook up to the screen's
-                // "composited-changed" signal, but we don't do that because
-                // we are only changing the visual on short-lived windows,
-                // so it doesn't matter too much if the screens compositor
-                // goes away
+                // widget is realized.  An ARGB visual is only useful if we
+                // are on a compositing window manager.
+                GdkScreen *screen = gtk_widget_get_screen(mShell);
                 if (gdk_screen_is_composited(screen)) {
 #if defined(MOZ_WIDGET_GTK2)
                     GdkColormap *colormap =
@@ -3488,7 +3483,8 @@ nsWindow::Create(nsIWidget        *aParent,
                     gtk_widget_set_visual(mShell, visual);
 #endif
                 }
-            } else {
+            }
+            if (aInitData->mNoAutoHide) {
                 // ... but the window manager does not decorate this window,
                 // nor provide a separate taskbar icon.
                 if (mBorderStyle == eBorderStyle_default) {
@@ -3576,7 +3572,8 @@ nsWindow::Create(nsIWidget        *aParent,
         gtk_widget_realize(container);
 
         // make sure this is the focus widget in the container
-        gtk_window_set_focus(GTK_WINDOW(mShell), container);
+        gtk_widget_show(container);
+        gtk_widget_grab_focus(container);
 
         // the drawing window
         mGdkWindow = gtk_widget_get_window(mShell);
@@ -3910,7 +3907,6 @@ nsWindow::NativeShow(bool aAction)
                 SetUserTimeAndStartupIDForActivatedWindow(mShell);
             }
 
-            gtk_widget_show(GTK_WIDGET(mContainer));
             gtk_widget_show(mShell);
         }
         else if (mContainer) {
@@ -3923,7 +3919,6 @@ nsWindow::NativeShow(bool aAction)
     else {
         if (mIsTopLevel) {
             gtk_widget_hide(GTK_WIDGET(mShell));
-            gtk_widget_hide(GTK_WIDGET(mContainer));
 
             ClearTransparencyBitmap(); // Release some resources
         }
@@ -5641,7 +5636,7 @@ drag_motion_event_cb(GtkWidget *aWidget,
 
     return nsDragService::GetInstance()->
         ScheduleMotionEvent(innerMostWindow, aDragContext,
-                            nsIntPoint(aX, aY), aTime);
+                            nsIntPoint(retx, rety), aTime);
 }
 
 static void
@@ -5711,7 +5706,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
 
     return nsDragService::GetInstance()->
         ScheduleDropEvent(innerMostWindow, aDragContext,
-                          nsIntPoint(aX, aY), aTime);
+                          nsIntPoint(retx, rety), aTime);
 }
 
 static void
@@ -5921,8 +5916,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
     if (mIMModule) {
       mIMModule->OnFocusChangeInGecko(aFocus);
     }
-    // XXX Return NS_ERROR_NOT_IMPLEMENTED, see bug 496360.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

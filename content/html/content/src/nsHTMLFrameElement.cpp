@@ -33,7 +33,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFrameElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLFrameElement
   NS_DECL_NSIDOMHTMLFRAMEELEMENT
@@ -65,8 +65,8 @@ nsHTMLFrameElement::~nsHTMLFrameElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFrameElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLFrameElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLFrameElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLFrameElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLFrameElement, nsHTMLFrameElement)

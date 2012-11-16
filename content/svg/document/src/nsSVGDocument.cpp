@@ -8,7 +8,6 @@
 #include "nsLiteralString.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "mozilla/dom/Element.h"
-#include "nsGenericElement.h"
 
 using namespace mozilla::dom;
 

@@ -58,7 +58,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLCanvasElement
   NS_DECL_NSIDOMHTMLCANVASELEMENT
@@ -131,7 +131,7 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   /*
    * Helpers called by various users of Canvas
@@ -199,7 +199,7 @@ public:
 inline nsISupports*
 GetISupports(nsHTMLCanvasElement* p)
 {
-  return static_cast<nsGenericElement*>(p);
+  return static_cast<mozilla::dom::Element*>(p);
 }
 
 #endif /* nsHTMLCanvasElement_h__ */

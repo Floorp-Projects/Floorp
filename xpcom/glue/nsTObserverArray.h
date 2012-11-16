@@ -7,6 +7,7 @@
 #define nsTObserverArray_h___
 
 #include "nsTArray.h"
+#include "nsCycleCollectionNoteChild.h"
 
 /**
  * An array of observers. Like a normal array, but supports iterators that are
@@ -373,6 +374,27 @@ class nsTObserverArray : public nsAutoTObserverArray<T, 0> {
       base_type::mArray.SetCapacity(capacity);
     }
 };
+
+template <typename T>
+inline void
+ImplCycleCollectionUnlink(nsTObserverArray<T>& aField)
+{
+  aField.Clear();
+}
+
+template <typename T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsTObserverArray<T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aFlags |= CycleCollectionEdgeNameArrayFlag;
+  size_t length = aField.Length();
+  for (size_t i = 0; i < length; ++i) {
+    ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
+  }
+}
 
 // XXXbz I wish I didn't have to pass in the observer type, but I
 // don't see a way to get it out of array_.

@@ -184,7 +184,7 @@ public:
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 
     virtual PContentPermissionRequestParent*
-    AllocPContentPermissionRequest(const nsCString& aType, const IPC::Principal& aPrincipal);
+    AllocPContentPermissionRequest(const nsCString& aType, const nsCString& aAccess, const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestParent* actor);
 
     virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdate(
@@ -296,6 +296,9 @@ private:
     // dispatch to content.
     void MaybeForwardEventToRenderFrame(const nsInputEvent& aEvent,
                                         nsInputEvent* aOutEvent);
+    // When true, the TabParent is invalid and we should not send IPC messages
+    // anymore.
+    bool mIsDestroyed;
 };
 
 } // namespace dom

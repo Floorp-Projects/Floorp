@@ -89,7 +89,7 @@ public:
     MOZ_COUNT_DTOR(GeolocationSettingsCallback);
   }
 
-  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult, JSContext* aCx)
+  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -103,7 +103,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(const nsAString& aName, JSContext* aCx)
+  NS_IMETHOD HandleError(const nsAString& aName)
   {
     NS_WARNING("Unable to get value for '" GEO_SETINGS_ENABLED "'");
 
@@ -350,6 +350,13 @@ NS_IMETHODIMP
 nsGeolocationRequest::GetType(nsACString & aType)
 {
   aType = "geolocation";
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationRequest::GetAccess(nsACString & aAccess)
+{
+  aAccess = "unused";
   return NS_OK;
 }
 
@@ -746,11 +753,10 @@ nsGeolocationService::HandleMozsettingValue(const bool aValue)
     }
 
     if (sGeoInitPending) {
+      sGeoInitPending = false;
       for (uint32_t i = 0, length = mGeolocators.Length(); i < length; ++i) {
         mGeolocators[i]->ServiceReady();
       }
-
-      sGeoInitPending = false;
     }
 }
 
@@ -1063,13 +1069,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGeolocation)
   uint32_t i;
   for (i = 0; i < tmp->mPendingRequests.Length(); ++i)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mPendingRequests[i].request, nsIContentPermissionRequest)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingRequests[i].request)
 
   for (i = 0; i < tmp->mPendingCallbacks.Length(); ++i)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mPendingCallbacks[i], nsIContentPermissionRequest)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingCallbacks[i])
 
   for (i = 0; i < tmp->mWatchingCallbacks.Length(); ++i)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mWatchingCallbacks[i], nsIContentPermissionRequest)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWatchingCallbacks[i])
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 nsGeolocation::nsGeolocation()
@@ -1412,9 +1418,10 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     request->AddRef();
-
-    nsCString type = NS_LITERAL_CSTRING("geolocation");
-    child->SendPContentPermissionRequestConstructor(request, type, IPC::Principal(mPrincipal));
+    child->SendPContentPermissionRequestConstructor(request,
+                                                    NS_LITERAL_CSTRING("geolocation"),
+                                                    NS_LITERAL_CSTRING("unused"),
+                                                    IPC::Principal(mPrincipal));
 
     request->Sendprompt();
     return true;

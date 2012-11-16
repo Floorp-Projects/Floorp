@@ -36,6 +36,14 @@ public class PaintedSurface {
         }
     }
 
+    public final int getWidth() {
+        return mWidth;
+    }
+
+    public final int getHeight() {
+        return mHeight;
+    }
+
     public final int getPixelAt(int x, int y) {
         if (mPixelBuffer == null) {
             throw new RoboCopException("Trying to access PaintedSurface with no active PixelBuffer");

@@ -215,6 +215,12 @@ COMPONENT_LIBS += \
   $(NULL)
 endif
 
+ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += \
+  androidproxy \
+  $(NULL)
+endif
+
 ifdef MOZ_JSDEBUGGER
 DEFINES += -DMOZ_JSDEBUGGER
 COMPONENT_LIBS += \

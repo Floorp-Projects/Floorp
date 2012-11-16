@@ -34,7 +34,8 @@ public:
   NS_DECL_NSIDOMHTMLLABELELEMENT
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
   virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIFormControl
