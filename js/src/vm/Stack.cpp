@@ -1784,7 +1784,9 @@ StackIter::numFrameSlots() const
         break;
       case ION:
 #ifdef JS_ION
-        return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed;
+        if (ionFrames_.isOptimizedJS())
+            return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed;
+        return ionFrames_.numBaselineStackValues() - ionFrames_.script()->nfixed;
 #else
         break;
 #endif
@@ -1807,11 +1809,14 @@ StackIter::frameSlotValue(size_t index) const
         break;
       case ION:
 #ifdef JS_ION
-      {
-        ion::SnapshotIterator si(ionInlineFrames_.snapshotIterator());
-        index += ionInlineFrames_.script()->nfixed;
-        return si.maybeReadSlotByIndex(index);
-      }
+        if (ionFrames_.isOptimizedJS()) {
+            ion::SnapshotIterator si(ionInlineFrames_.snapshotIterator());
+            index += ionInlineFrames_.script()->nfixed;
+            return si.maybeReadSlotByIndex(index);
+        }
+
+        index += ionFrames_.script()->nfixed;
+        return ionFrames_.baselineStackValue(index);
 #else
         break;
 #endif
