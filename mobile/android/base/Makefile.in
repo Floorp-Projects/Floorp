@@ -193,6 +193,7 @@ FENNEC_PP_JAVA_VIEW_FILES = \
   GeckoButton.java \
   GeckoImageButton.java \
   GeckoImageView.java \
+  GeckoEditText.java \
   GeckoFrameLayout.java \
   GeckoLinearLayout.java \
   GeckoRelativeLayout.java \
