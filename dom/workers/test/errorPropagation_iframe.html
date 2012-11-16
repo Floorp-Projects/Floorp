@@ -18,8 +18,8 @@
               type: "window",
               data: { message: message, filename: filename, lineno: lineno }
             });
-            return true;
           }
+          return false;
         };
 
         worker = new Worker("errorPropagation_worker.js");
