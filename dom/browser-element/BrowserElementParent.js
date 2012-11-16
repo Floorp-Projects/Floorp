@@ -365,7 +365,7 @@ BrowserElementParent.prototype = {
     // that we must do so here, rather than in the BrowserElementParent
     // constructor, because the BrowserElementChild may not be initialized when
     // we run our constructor.
-    if (this._window.document.mozHidden) {
+    if (this._window.document.hidden) {
       this._ownerVisibilityChange();
     }
   },
@@ -609,7 +609,7 @@ BrowserElementParent.prototype = {
    */
   _ownerVisibilityChange: function() {
     this._sendAsyncMsg('owner-visibility-change',
-                       {visible: !this._window.document.mozHidden});
+                       {visible: !this._window.document.hidden});
   },
 
   _exitFullscreen: function() {

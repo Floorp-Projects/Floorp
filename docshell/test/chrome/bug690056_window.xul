@@ -97,9 +97,9 @@
 
       function generateDetector(state, hidden, title, name) {
         var detector = function (event) {
-          is(event.target.mozHidden, hidden,
+          is(event.target.hidden, hidden,
              name + " hidden value does not match");
-          is(event.target.mozVisibilityState, state,
+          is(event.target.visibilityState, state,
              name + " state value does not match");
           is(event.target.title, title,
              name + " title value does not match");
