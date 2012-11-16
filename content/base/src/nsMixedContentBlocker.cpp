@@ -12,6 +12,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
+#include "nsNetUtil.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -53,7 +54,7 @@ private:
   // the document that caused the load.
   nsCOMPtr<nsISupports> mContext;
 
-  // The type of mixed content that was blocked, i.e. active or display
+  // The type of mixed content that was blocked, e.g. active or display
   unsigned short mType;
 };
 */
@@ -94,8 +95,9 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     return NS_OK;
   }
 
-  // Top-level load cannot be mixed content so allow it
-  if (aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
+  // Top-level load cannot be mixed content so allow it.
+  // Creating insecure websocket connections in a secure page is blocked already in websocket constructor.
+  if (aContentType == nsIContentPolicy::TYPE_DOCUMENT || aContentType == nsIContentPolicy::TYPE_WEBSOCKET) {
     return NS_OK;
   }
 
@@ -124,11 +126,36 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     return NS_OK;
   }
 
-  // Get the scheme of the sub-document resource to be requested. If it is
-  // an HTTPS load then mixed content doesn't apply.
-  bool isHttps;
-  if (NS_FAILED(aContentLocation->SchemeIs("https", &isHttps)) || isHttps) {
-    return NS_OK;
+ /* Get the scheme of the sub-document resource to be requested. If it is
+  * a safe to load in an https context then mixed content doesn't apply.
+  *
+  * Check Protocol Flags to determine if scheme is safe to load:
+  * URI_DOES_NOT_RETURN_DATA - e.g.
+  *   "mailto"
+  * URI_IS_LOCAL_RESOURCE - e.g.
+  *   "data",
+  *   "resource",
+  *   "moz-icon"
+  * URI_INHERITS_SECURITY_CONTEXT - e.g.
+  *   "javascript"
+  * URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT - e.g.
+  *   "https",
+  *   "moz-safe-about"
+  *
+  */
+  bool schemeLocal = false;
+  bool schemeNoReturnData = false;
+  bool schemeInherits = false;
+  bool schemeSecure = false;
+  if (NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
+      NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA, &schemeNoReturnData)) ||
+      NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT, &schemeInherits)) ||
+      NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT, &schemeSecure))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (schemeLocal || schemeNoReturnData || schemeInherits || schemeSecure) {
+     return NS_OK;
   }
 
   // If we are here we have mixed content.
@@ -195,9 +222,9 @@ nsMixedContentBlocker::ShouldProcess(uint32_t aContentType,
                                      nsIPrincipal* aRequestPrincipal,
                                      int16_t* aDecision)
 {
-  if(!aContentLocation) {
+  if (!aContentLocation) {
     // aContentLocation may be null when a plugin is loading without an associated URI resource
-    if(aContentType == TYPE_OBJECT) {
+    if (aContentType == TYPE_OBJECT) {
        return NS_OK;
     } else {
        return NS_ERROR_FAILURE;
