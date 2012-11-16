@@ -64,21 +64,21 @@
                         android:layout_alignParentBottom="true"
                         android:layout_centerVertical="true">
 
-            <RelativeLayout android:id="@+id/awesome_bar"
-                            style="@style/AddressBar.Button"
-                            android:layout_centerVertical="true"
-                            android:clickable="true"
-                            android:focusable="true">
+            <Gecko.RelativeLayout android:id="@+id/awesome_bar"
+                                  style="@style/AddressBar.Button"
+                                  android:layout_centerVertical="true"
+                                  android:clickable="true"
+                                  android:focusable="true">
 
-                <ImageView style="@style/AddressBar.Button"
-                           android:layout_marginLeft="20dp"
-                           android:layout_marginRight="0dp"
-                           android:layout_marginTop="6dp"
-                           android:layout_marginBottom="6dp"
-                           android:duplicateParentState="true"
-                           android:clickable="false"
-                           android:focusable="false"
-                           android:background="@drawable/address_bar_url"/>
+                <Gecko.ImageView style="@style/AddressBar.Button"
+                                 android:layout_marginLeft="20dp"
+                                 android:layout_marginRight="0dp"
+                                 android:layout_marginTop="6dp"
+                                 android:layout_marginBottom="6dp"
+                                 android:duplicateParentState="true"
+                                 android:clickable="false"
+                                 android:focusable="false"
+                                 android:background="@drawable/address_bar_url"/>
 
                 <view class="org.mozilla.gecko.BrowserToolbar$RightEdge"
                       android:id="@+id/awesome_bar_right_edge"
@@ -91,18 +91,18 @@
                       android:layout_alignParentRight="true"
                       android:duplicateParentState="true">
 
-                    <ImageView android:layout_width="50dp"
-                               android:layout_height="fill_parent"
-                               android:scaleType="fitXY"
-                               android:layout_marginLeft="-26dp"
-                               android:duplicateParentState="true"
-                               android:clickable="false"
-                               android:focusable="false"
-                               android:src="@drawable/address_bar_url"/>
+                    <Gecko.ImageView android:layout_width="50dp"
+                                     android:layout_height="fill_parent"
+                                     android:scaleType="fitXY"
+                                     android:layout_marginLeft="-26dp"
+                                     android:duplicateParentState="true"
+                                     android:clickable="false"
+                                     android:focusable="false"
+                                     android:src="@drawable/address_bar_url"/>
 
                 </view>
 
-            </RelativeLayout>
+            </Gecko.RelativeLayout>
 
             <ImageButton android:id="@+id/forward"
                          style="@style/AddressBar.ImageButton"
@@ -150,17 +150,18 @@
                              android:contentDescription="@string/site_security"
                              android:visibility="gone"/>
 
-                <TextView android:id="@+id/awesome_bar_title"
-                          style="@style/AddressBar.Button"
-                          android:layout_width="fill_parent"
-                          android:layout_height="fill_parent"
-                          android:layout_weight="1.0"
-                          android:singleLine="true"
-                          android:paddingRight="8dp"
-                          android:textColor="#222222"
-                          android:gravity="center_vertical|left"
-                          android:hint="@string/awesomebar_default_text"
-                          android:layout_gravity="center_vertical"/>
+                <Gecko.TextView android:id="@+id/awesome_bar_title"
+                                style="@style/AddressBar.Button"
+                                android:layout_width="fill_parent"
+                                android:layout_height="fill_parent"
+                                android:layout_weight="1.0"
+                                android:singleLine="true"
+                                android:paddingRight="8dp"
+                                android:textColor="@color/awesome_bar_title"
+                                android:textColorHint="@color/awesome_bar_title_hint"
+                                android:gravity="center_vertical|left"
+                                android:hint="@string/awesomebar_default_text"
+                                android:layout_gravity="center_vertical"/>
 
                 <ImageButton android:id="@+id/reader"
                              style="@style/AddressBar.ImageButton.Icon"
