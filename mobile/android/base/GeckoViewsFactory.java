@@ -86,6 +86,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new LayerView(context, attrs);
             else if (TextUtils.equals(viewName, "Button"))
                 return new GeckoButton(context, attrs);
+            else if (TextUtils.equals(viewName, "EditText"))
+                return new GeckoEditText(context, attrs);
             else if (TextUtils.equals(viewName, "FrameLayout"))
                 return new GeckoFrameLayout(context, attrs);
             else if (TextUtils.equals(viewName, "ImageButton"))
