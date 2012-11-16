@@ -8,7 +8,8 @@
                 xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@"
                 style="@style/AwesomeBar">
 
-    <org.mozilla.gecko.BrowserToolbarBackground android:layout_width="fill_parent"
+    <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
+                                                android:layout_width="fill_parent"
                                                 android:layout_height="fill_parent"
                                                 android:layout_alignParentTop="true"
                                                 android:layout_alignParentRight="true"
@@ -38,6 +39,8 @@
           android:paddingLeft="15dip"
           android:paddingRight="40dip"
           android:hint="@string/awesomebar_default_text"
+          android:textColor="@color/awesome_bar_title"
+          android:textColorHint="@color/awesome_bar_title_hint"
           android:textColorHighlight="@color/url_bar_text_highlight"
           android:inputType="textUri|textNoSuggestions"
           android:imeOptions="actionSearch|flagNoExtractUi|flagNoFullscreen"
