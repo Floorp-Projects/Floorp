@@ -33,7 +33,8 @@ private:
     nsresult ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_obj,
                         const nsAString& charset, const char *uriStr,
                         nsIIOService *serv, nsIPrincipal *principal,
-                        JSScript **scriptp);
+                        JSScript **scriptp, JSFunction **functionp);
 
+    bool mReuseLoaderGlobal;
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 };
