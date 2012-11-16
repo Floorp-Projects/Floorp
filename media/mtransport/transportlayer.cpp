@@ -14,7 +14,7 @@
 // Logging context
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport");
+MOZ_MTLOG_MODULE("mtransport")
 
 nsresult TransportLayer::Init() {
   if (state_ != TS_NONE)
