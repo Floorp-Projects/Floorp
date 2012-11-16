@@ -247,12 +247,12 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 /*** Progress bar and text ***/
 
 #downloads-indicator-counter {
-  height: 10px;
-  margin: 0;
+  height: 9px;
+  margin: -3px 0px 0px 0px;
   color: hsl(0,0%,30%);
   text-shadow: hsla(0,0%,100%,.5) 0 1px;
-  font-size: 10px;
-  line-height: 10px;
+  font-size: 9px;
+  line-height: 9px;
   text-align: center;
 }
 
@@ -264,7 +264,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 
 #downloads-indicator-progress {
   width: 16px;
-  height: 6px;
+  height: 5px;
   min-width: 0;
   min-height: 0;
   margin-top: 1px;
