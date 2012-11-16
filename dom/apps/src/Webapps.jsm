@@ -1430,9 +1430,8 @@ this.DOMApplicationRegistry = {
       });
     };
 
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    let deviceStorage = browser.getContentWindow().navigator
-                               .getDeviceStorage("apps");
+    let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
+                                .navigator.getDeviceStorage("apps");
     let req = deviceStorage.stat();
     req.onsuccess = req.onerror = function statResult(e) {
       // Even if we could not retrieve the device storage free space, we try
