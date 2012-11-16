@@ -1486,7 +1486,34 @@ VariablesView.isPrimitive = function VV_isPrimitive(aDescriptor) {
 
   // For convenience, undefined and null are both considered types.
   let type = grip.type;
-  if (["undefined", "null"].indexOf(type + "") != -1) {
+  if (type == "undefined" || type == "null") {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Returns true if the descriptor represents a falsy value.
+ *
+ * @param object aDescriptor
+ *        The variable's descriptor.
+ */
+VariablesView.isFalsy = function VV_isFalsy(aDescriptor) {
+  if (!aDescriptor || typeof aDescriptor != "object") {
+    return true;
+  }
+
+  // As described in the remote debugger protocol, the value grip
+  // must be contained in a 'value' property.
+  let grip = aDescriptor.value;
+  if (typeof grip != "object") {
+    return !grip;
+  }
+
+  // For convenience, undefined and null are both considered types.
+  let type = grip.type;
+  if (type == "undefined" || type == "null") {
     return true;
   }
 

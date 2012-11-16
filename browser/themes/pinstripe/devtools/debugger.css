@@ -138,7 +138,7 @@
 
 #stackframes {
   background-color: white;
-  min-height: 30px;
+  min-height: 10px;
 }
 
 .dbg-stackframe {
@@ -156,12 +156,16 @@
 
 #breakpoints {
   background-color: white;
-  min-height: 30px;
+  min-height: 10px;
 }
 
 #breakpoints > vbox:not(:empty) {
-  min-height: 30px;
+  min-height: 10px;
   max-height: 200px;
+}
+
+.dbg-breakpoint:not(:last-child) {
+  border-bottom: 1px solid #eee;
 }
 
 .dbg-breakpoint-info {
@@ -170,6 +174,14 @@
 
 .dbg-breakpoint-text {
   font: 8pt monospace;
+}
+
+#conditional-breakpoint-panel .description {
+  margin: -6px 0 8px 0;
+}
+
+#conditional-breakpoint-panel textbox {
+  margin: 0 0 -2px 0;
 }
 
 /**
