@@ -31,7 +31,6 @@
 
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
-#include "mozilla/Preferences.h"
 
 using namespace mozilla::scache;
 
@@ -58,7 +57,6 @@ mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nullptr)
     // Force construction of the JS component loader.  We may need it later.
     nsCOMPtr<xpcIJSModuleLoader> componentLoader =
         do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
-    mReuseLoaderGlobal = mozilla::Preferences::GetBool("jsloader.reuseGlobal");
 }
 
 mozJSSubScriptLoader::~mozJSSubScriptLoader()
@@ -79,14 +77,11 @@ nsresult
 mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_obj,
                                  const nsAString& charset, const char *uriStr,
                                  nsIIOService *serv, nsIPrincipal *principal,
-                                 JSScript **scriptp, JSFunction **functionp)
+                                 JSScript **scriptp)
 {
     nsCOMPtr<nsIChannel>     chan;
     nsCOMPtr<nsIInputStream> instream;
     JSErrorReporter  er;
-
-    *scriptp = nullptr;
-    *functionp = nullptr;
 
     nsresult rv;
     // Instead of calling NS_OpenURI, we create the channel ourselves and call
@@ -125,9 +120,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
     JS::CompileOptions options(cx);
     options.setPrincipals(nsJSPrincipals::get(principal))
            .setFileAndLine(uriStr, 1)
-           .setSourcePolicy(mReuseLoaderGlobal ?
-                            JS::CompileOptions::NO_SOURCE :
-                            JS::CompileOptions::LAZY_SOURCE);
+           .setSourcePolicy(JS::CompileOptions::LAZY_SOURCE);
     js::RootedObject target_obj_root(cx, target_obj);
     if (!charset.IsVoid()) {
         nsString script;
@@ -138,24 +131,10 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
             return ReportError(cx, LOAD_ERROR_BADCHARSET);
         }
 
-        if (!mReuseLoaderGlobal) {
-            *scriptp = JS::Compile(cx, target_obj_root, options,
-                                   reinterpret_cast<const jschar*>(script.get()),
-                                   script.Length());
-        } else {
-            *functionp = JS::CompileFunction(cx, target_obj_root, options,
-                                             nullptr, 0, nullptr,
-                                             reinterpret_cast<const jschar*>(script.get()),
-                                             script.Length());
-        }
+        *scriptp = JS::Compile(cx, target_obj_root, options,
+                               reinterpret_cast<const jschar*>(script.get()), script.Length());
     } else {
-        if (!mReuseLoaderGlobal) {
-            *scriptp = JS::Compile(cx, target_obj_root, options, buf.get(), len);
-        } else {
-            *functionp = JS::CompileFunction(cx, target_obj_root, options,
-                                             nullptr, 0, nullptr, buf.get(),
-                                             len);
-        }
+        *scriptp = JS::Compile(cx, target_obj_root, options, buf.get(), len);
     }
 
     /* repent for our evil deeds */
@@ -202,9 +181,10 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     if (!JS_ValueToObject(cx, target, &targetObj))
         return NS_ERROR_ILLEGAL_VALUE;
 
-    mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+
     if (!targetObj) {
         // If the user didn't provide an object to eval onto, find one.
+        mozJSComponentLoader* loader = mozJSComponentLoader::Get();
         rv = loader->FindTargetObject(cx, &targetObj);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -292,32 +272,20 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     cachePath.AppendPrintf("jssubloader/%d", version);
     PathifyURI(uri, cachePath);
 
-    JSFunction* function = nullptr;
     script = nullptr;
     if (cache)
         rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
     if (!script) {
         rv = ReadScript(uri, cx, targetObj, charset,
                         static_cast<const char*>(uriStr.get()), serv,
-                        principal, &script, &function);
-        writeScript = !!script;
+                        principal, &script);
+        writeScript = true;
     }
 
-    if (NS_FAILED(rv) || (!script && !function))
+    if (NS_FAILED(rv) || !script)
         return rv;
 
-    if (function) {
-        script = JS_GetFunctionScript(cx, function);
-    }
-
-    loader->NoteSubScript(script, targetObj);
-
-    bool ok = false;
-    if (function) {
-        ok = JS_CallFunction(cx, targetObj, function, 0, nullptr, retval);
-    } else {
-        ok = JS_ExecuteScriptVersion(cx, targetObj, script, retval, version);
-    }
+    bool ok = JS_ExecuteScriptVersion(cx, targetObj, script, retval, version);
 
     if (ok) {
         JSAutoCompartment rac(cx, result_obj);
