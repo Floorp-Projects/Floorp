@@ -119,10 +119,23 @@ public class AwesomeBar extends GeckoActivity {
 
         Intent intent = getIntent();
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
-        mTarget = intent.getStringExtra(TARGET_KEY);
         if (currentUrl != null) {
             mText.setText(currentUrl);
             mText.selectAll();
+        }
+
+        mTarget = intent.getStringExtra(TARGET_KEY);
+        if (mTarget.equals(Target.CURRENT_TAB.name())) {
+            if (Tabs.getInstance().getSelectedTab().isPrivate()) {
+                BrowserToolbarBackground mAddressBarBg = (BrowserToolbarBackground) findViewById(R.id.address_bar_bg);
+                mAddressBarBg.setPrivateMode(true);
+
+                TabsButton mTabs = (TabsButton) findViewById(R.id.dummy_tab);
+                if (mTabs != null)
+                    mTabs.setPrivateMode(true);
+
+                mText.setPrivateMode(true);
+            }
         }
 
         mText.setOnKeyPreImeListener(new CustomEditText.OnKeyPreImeListener() {
