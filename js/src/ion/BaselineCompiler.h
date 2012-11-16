@@ -66,6 +66,7 @@ namespace ion {
     _(JSOP_CALL)               \
     _(JSOP_FUNCALL)            \
     _(JSOP_FUNAPPLY)           \
+    _(JSOP_NEW)                \
     _(JSOP_RETURN)             \
     _(JSOP_STOP)
 
