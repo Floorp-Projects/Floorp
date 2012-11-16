@@ -127,7 +127,7 @@ public class AwesomeBarTabs extends TabHost {
 
         mListTouchListener = new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
-                if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN)
+                if (event.getAction() == MotionEvent.ACTION_DOWN)
                     hideSoftInput(view);
                 return false;
             }
@@ -153,12 +153,10 @@ public class AwesomeBarTabs extends TabHost {
             public void onPageSelected(int position) {
                 tabWidget.setCurrentTab(position);
                 styleSelectedTab();
-                hideSoftInput(mViewPager);
              }
          });
 
         for (int i = 0; i < mTabs.length; i++) {
-            mTabs[i].setListTouchListener(mListTouchListener);
             addAwesomeTab(mTabs[i].getTag(),
                           mTabs[i].getTitleStringId(),
                           i);
