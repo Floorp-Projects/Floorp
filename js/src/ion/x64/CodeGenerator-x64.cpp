@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::ion;
 
-CodeGeneratorX64::CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph)
+CodeGeneratorX64::CodeGeneratorX64(MIRGenerator *gen, LIRGraph *graph)
   : CodeGeneratorX86Shared(gen, graph)
 {
 }

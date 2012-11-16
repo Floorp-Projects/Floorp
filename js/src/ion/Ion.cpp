@@ -207,11 +207,18 @@ IonCompartment::IonCompartment(IonRuntime *rt)
 void
 ion::FinishOffThreadBuilder(IonBuilder *builder)
 {
+    // Clean up if compilation did not succeed.
     if (builder->script()->isIonCompilingOffThread()) {
         types::TypeCompartment &types = builder->script()->compartment()->types;
         builder->recompileInfo.compilerOutput(types)->invalidate();
         builder->script()->ion = NULL;
     }
+
+    // The builder is allocated into its LifoAlloc, so destroying that will
+    // destroy the builder and all other data accumulated during compilation,
+    // except any final codegen (which includes an assembler and needs to be
+    // explicitly destroyed).
+    js_delete(builder->backgroundCodegen());
     js_delete(builder->temp().lifoAlloc());
 }
 
@@ -760,7 +767,7 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
 namespace js {
 namespace ion {
 
-LIRGraph *
+CodeGenerator *
 CompileBackEnd(MIRGenerator *mir)
 {
     IonSpewPass("BuildSSA");
@@ -946,7 +953,13 @@ CompileBackEnd(MIRGenerator *mir)
             return NULL;
     }
 
-    return lir;
+    CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir);
+    if (!codegen || !codegen->generate()) {
+        js_delete(codegen);
+        return NULL;
+    }
+
+    return codegen;
 }
 
 class AutoDestroyAllocator
@@ -997,11 +1010,14 @@ AttachFinishedCompilations(JSContext *cx)
     while (!compilations.empty()) {
         IonBuilder *builder = compilations.popCopy();
 
-        if (builder->backgroundCompiledLir) {
+        if (CodeGenerator *codegen = builder->backgroundCodegen()) {
             RootedScript script(cx, builder->script());
             IonContext ictx(cx, cx->compartment, &builder->temp());
 
-            CodeGenerator codegen(builder, *builder->backgroundCompiledLir);
+            // Root the assembler until the builder is finished below. As it
+            // was constructed off thread, the assembler has not been rooted
+            // previously, though any GC activity would discard the builder.
+            codegen->masm.constructRoot(cx);
 
             types::AutoEnterTypeInference enterTypes(cx);
 
@@ -1014,7 +1030,7 @@ AttachFinishedCompilations(JSContext *cx)
                 // Release the worker thread lock and root the compiler for GC.
                 AutoTempAllocatorRooter root(cx, &builder->temp());
                 AutoUnlockWorkerThreadState unlock(cx->runtime);
-                success = codegen.generate();
+                success = codegen->link();
             }
 
             if (success) {
@@ -1123,21 +1139,18 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
         return true;
     }
 
-    LIRGraph *lir = CompileBackEnd(builder);
-    if (!lir) {
+    CodeGenerator *codegen = CompileBackEnd(builder);
+    if (!codegen) {
         IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
         return false;
     }
 
-    CodeGenerator codegen(builder, *lir);
-    if (!codegen.generate()) {
-        IonSpew(IonSpew_Abort, "Failed during code generation.");
-        return false;
-    }
+    bool success = codegen->link();
+    js_delete(codegen);
 
     IonSpewEndFunction();
 
-    return true;
+    return success;
 }
 
 bool

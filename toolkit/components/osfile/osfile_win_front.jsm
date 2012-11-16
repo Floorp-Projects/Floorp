@@ -749,15 +749,19 @@
          let value = ctypes.UInt64.join(this._nFileSizeHigh, this._nFileSizeLow);
          return exports.OS.Shared.Type.uint64_t.importFromC(value);
        },
+       // Deprecated
+       get creationDate() {
+         return this.winBirthDate;
+       },
        /**
-        * The date of creation of this file
+        * The date of creation of this file.
         *
         * @type {Date}
         */
-       get creationDate() {
-         delete this.creationDate;
+       get winBirthDate() {
+         delete this.winBirthDate;
          let date = FILETIME_to_Date(this._ftCreationTime);
-         Object.defineProperty(this, "creationDate", { value: date });
+         Object.defineProperty(this, "winBirthDate", { value: date });
          return date;
        },
        /**

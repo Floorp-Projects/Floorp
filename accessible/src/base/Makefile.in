@@ -79,7 +79,6 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xpcom \
   -I$(srcdir)/../xul \
-  -I$(srcdir)/../xforms \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/style \
   -I$(srcdir)/../../../layout/xul/base/src \
