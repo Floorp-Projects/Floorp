@@ -299,5 +299,81 @@ ICBinaryArith_Fallback::Compiler::generateStubCode()
     return linker.newCode(cx);
 }
 
+static bool
+DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, MutableHandleValue res)
+{
+    RootedValue callee(cx, vp[0]);
+    RootedValue thisv(cx, vp[1]);
+
+    Value *args = vp + 2;
+
+    // Run the function in the interpreter.
+    bool ok = Invoke(cx, thisv, callee, argc, args, res.address());
+    if (ok)
+        types::TypeScript::Monitor(cx, res);
+
+    return ok;
+}
+
+void
+ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, Register argcReg)
+{
+    GeneralRegisterSet regs(availableGeneralRegs());
+    regs.take(argcReg);
+
+    // Push the callee and |this| too.
+    Register count = regs.takeAny();
+    masm.mov(argcReg, count);
+    masm.add32(Imm32(2), count);
+
+    // argPtr initially points to the last argument.
+    Register argPtr = regs.takeAny();
+    masm.mov(BaselineStackReg, argPtr);
+
+    // Push all values, starting at the last one.
+    Label loop, done;
+    masm.bind(&loop);
+    masm.branchTest32(Assembler::Zero, count, count, &done);
+    {
+        masm.pushValue(Address(argPtr, 0));
+        masm.addPtr(Imm32(sizeof(Value)), argPtr);
+
+        masm.sub32(Imm32(1), count);
+        masm.jmp(&loop);
+    }
+    masm.bind(&done);
+}
+
+IonCode *
+ICCall_Fallback::Compiler::generateStubCode()
+{
+    MacroAssembler masm;
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Pop return address.
+    masm.pop(BaselineTailCallReg);
+
+    typedef bool (*pf)(JSContext *, ICCall_Fallback *, uint32_t, Value *, MutableHandleValue);
+    static const VMFunction fun = FunctionInfo<pf>(DoCallFallback);
+
+    // Values are on the stack left-to-right. Calling convention wants them
+    // right-to-left so duplicate them on the stack in reverse order.
+    // |this| and callee are pushed last.
+
+    // R0.scratchReg() holds argc.
+    pushCallArguments(masm, R0.scratchReg());
+
+    masm.push(BaselineStackReg);
+    masm.push(R0.scratchReg());
+    masm.push(BaselineStubReg);
+
+    // Call.
+    if (!callVM(fun, masm))
+        return NULL;
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
 } // namespace ion
 } // namespace js

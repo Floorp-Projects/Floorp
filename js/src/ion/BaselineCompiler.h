@@ -32,6 +32,7 @@ namespace ion {
 #define OPCODE_LIST(_)         \
     _(JSOP_NOP)                \
     _(JSOP_LABEL)              \
+    _(JSOP_NOTEARG)            \
     _(JSOP_POP)                \
     _(JSOP_DUP)                \
     _(JSOP_GOTO)               \
@@ -57,9 +58,14 @@ namespace ion {
     _(JSOP_LT)                 \
     _(JSOP_GT)                 \
     _(JSOP_GETLOCAL)           \
+    _(JSOP_CALLLOCAL)          \
     _(JSOP_SETLOCAL)           \
     _(JSOP_GETARG)             \
+    _(JSOP_CALLARG)            \
     _(JSOP_SETARG)             \
+    _(JSOP_CALL)               \
+    _(JSOP_FUNCALL)            \
+    _(JSOP_FUNAPPLY)           \
     _(JSOP_RETURN)             \
     _(JSOP_STOP)
 
@@ -93,6 +99,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     // Handles JSOP_LT, JSOP_GT, and friends
     bool emitCompare();
+    bool emitCall();
 };
 
 } // namespace ion
