@@ -57,8 +57,6 @@ ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
-namespace js {
-
 static bool
 TestProtoGetterThis(const Value &v)
 {
@@ -92,7 +90,9 @@ ProtoGetter(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod(cx, TestProtoGetterThis, ProtoGetterImpl, args);
 }
 
+namespace js {
 size_t sSetProtoCalled = 0;
+} // namespace js
 
 static bool
 TestProtoSetterThis(const Value &v)
@@ -533,7 +533,7 @@ GlobalObject::createBlankPrototypeInheriting(JSContext *cx, Class *clasp, JSObje
 }
 
 bool
-LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_)
+js::LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_)
 {
     RootedObject ctor(cx, ctor_), proto(cx, proto_);
 
@@ -548,8 +548,8 @@ LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_)
 }
 
 bool
-DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_,
-                         const JSPropertySpec *ps, const JSFunctionSpec *fs)
+js::DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_,
+                             const JSPropertySpec *ps, const JSFunctionSpec *fs)
 {
     RootedObject obj(cx, obj_);
 
@@ -560,7 +560,7 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_,
     return true;
 }
 
-void
+static void
 GlobalDebuggees_finalize(FreeOp *fop, RawObject obj)
 {
     fop->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
@@ -620,5 +620,3 @@ GlobalObject::addDebugger(JSContext *cx, Handle<GlobalObject*> global, Debugger 
     }
     return true;
 }
-
-} // namespace js

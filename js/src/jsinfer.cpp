@@ -5133,11 +5133,8 @@ ScriptAnalysis::printTypes(JSContext *cx)
 // Interface functions
 /////////////////////////////////////////////////////////////////////
 
-namespace js {
-namespace types {
-
 void
-MarkIteratorUnknownSlow(JSContext *cx)
+types::MarkIteratorUnknownSlow(JSContext *cx)
 {
     /* Check whether we are actually at an ITER opcode. */
 
@@ -5197,7 +5194,8 @@ MarkIteratorUnknownSlow(JSContext *cx)
 }
 
 void
-TypeMonitorCallSlow(JSContext *cx, HandleObject callee, const CallArgs &args, bool constructing)
+types::TypeMonitorCallSlow(JSContext *cx, HandleObject callee, const CallArgs &args,
+                           bool constructing)
 {
     unsigned nargs = callee->toFunction()->nargs;
     RootedScript script(cx, callee->toFunction()->script());
@@ -5230,7 +5228,7 @@ IsAboutToBeFinalized(TypeObjectKey *key)
 }
 
 void
-TypeDynamicResult(JSContext *cx, HandleScript script, jsbytecode *pc, Type type)
+types::TypeDynamicResult(JSContext *cx, HandleScript script, jsbytecode *pc, Type type)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
     AutoEnterTypeInference enter(cx);
@@ -5332,7 +5330,7 @@ TypeDynamicResult(JSContext *cx, HandleScript script, jsbytecode *pc, Type type)
 }
 
 void
-TypeMonitorResult(JSContext *cx, HandleScript script, jsbytecode *pc, const js::Value &rval)
+types::TypeMonitorResult(JSContext *cx, HandleScript script, jsbytecode *pc, const js::Value &rval)
 {
     /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
     if (!(js_CodeSpec[*pc].format & JOF_TYPESET))
@@ -5354,8 +5352,6 @@ TypeMonitorResult(JSContext *cx, HandleScript script, jsbytecode *pc, const js::
               script->id(), pc - script->code, TypeString(type));
     types->addType(cx, type);
 }
-
-} } /* namespace js::types */
 
 /////////////////////////////////////////////////////////////////////
 // TypeScript
