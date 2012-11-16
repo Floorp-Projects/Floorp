@@ -275,22 +275,43 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
 
   MarkChanged();
 
+  IntRect sourceIntRect;
+  bool integerAligned = aSource.ToIntRect(&sourceIntRect);
+
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
 
-  SkMatrix matrix;
-  matrix.setRectToRect(sourceRect, destRect, SkMatrix::kFill_ScaleToFit);
-  
+  Rect boundingSource = aSource;
+  boundingSource.RoundOut();
+
+  SkRect sourceBoundingRect = RectToSkRect(boundingSource);
+  SkIRect sourceBoundingIRect = RectToSkIRect(boundingSource);
+
   const SkBitmap& bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
  
   AutoPaintSetup paint(mCanvas.get(), aOptions);
-  SkShader *shader = SkShader::CreateBitmapShader(bitmap, SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
-  shader->setLocalMatrix(matrix);
-  SkSafeUnref(paint.mPaint.setShader(shader));
   if (aSurfOptions.mFilter != FILTER_LINEAR) {
     paint.mPaint.setFilterBitmap(false);
   }
-  mCanvas->drawRect(destRect, paint.mPaint);
+
+  if (!integerAligned) {
+    // We need to inflate our destRect by the same amount we inflated sourceRect
+    // by when we rounded up to the nearest integer size to ensure we interpolate
+    // the edge pixels properly, but clip to the true destination rect first so
+    // we don't draw outside our designated area.
+    mCanvas->save();
+    mCanvas->clipRect(destRect);
+
+    SkMatrix rectTransform;
+    rectTransform.setRectToRect(sourceRect, sourceBoundingRect, SkMatrix::kFill_ScaleToFit);
+    rectTransform.mapRect(&destRect);
+  }
+
+  mCanvas->drawBitmapRect(bitmap, &sourceBoundingIRect, destRect, &paint.mPaint);
+
+  if (!integerAligned) {
+    mCanvas->restore();
+  }
 }
 
 void
