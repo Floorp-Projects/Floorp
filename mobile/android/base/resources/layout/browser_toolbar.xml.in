@@ -48,13 +48,13 @@
                                       android:paddingLeft="38dip"
                                       android:paddingRight="10dip"/>
 
-        <TextSwitcher android:id="@+id/tabs_count"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="44.5dip"
-                     android:layout_height="wrap_content"
-                     android:layout_marginTop="5dp"
-                     android:layout_alignRight="@id/tabs"
-                     android:gravity="center_horizontal"/>
+        <Gecko.TextSwitcher android:id="@+id/tabs_count"
+                            style="@style/AddressBar.ImageButton"
+                            android:layout_width="44.5dip"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:layout_alignRight="@id/tabs"
+                            android:gravity="center_horizontal"/>
 
         <FrameLayout style="@style/AddressBar.Button"
                      android:layout_marginTop="4dp"
