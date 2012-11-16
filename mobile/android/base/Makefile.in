@@ -226,6 +226,7 @@ FENNEC_PP_XML_FILES = \
   res/color/tabs_counter_color.xml \
   res/drawable/address_bar_bg.xml \
   res/drawable/address_bar_url.xml \
+  res/drawable/menu_level.xml \
   res/drawable/tabs_button.xml \
   res/drawable/tabs_level.xml \
   res/drawable-xlarge-mdpi-v11/tabs_button.xml \
@@ -735,6 +736,7 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_quit.png \
   res/drawable-mdpi-v11/ic_status_logo.png \
   res/drawable-mdpi-v11/menu.png \
+  res/drawable-mdpi-v11/menu_pb.png \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_arrow.png \
@@ -769,6 +771,7 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_quit.png \
   res/drawable-hdpi-v11/ic_status_logo.png \
   res/drawable-hdpi-v11/menu.png \
+  res/drawable-hdpi-v11/menu_pb.png \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_arrow.png \
@@ -803,6 +806,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_quit.png \
   res/drawable-xhdpi-v11/ic_status_logo.png \
   res/drawable-xhdpi-v11/menu.png \
+  res/drawable-xhdpi-v11/menu_pb.png \
   res/drawable-xhdpi-v11/menu_panel_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_arrow.png \
@@ -832,6 +836,7 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/tabs_carat_pb.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
   res/drawable-land-mdpi-v14/menu.png \
+  res/drawable-land-mdpi-v14/menu_pb.png \
   res/drawable-land-mdpi-v14/reader.png \
   res/drawable-land-mdpi-v14/site_security_identified.png \
   res/drawable-land-mdpi-v14/site_security_verified.png \
@@ -853,6 +858,7 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/tabs_carat_pb.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
   res/drawable-land-hdpi-v14/menu.png \
+  res/drawable-land-hdpi-v14/menu_pb.png \
   res/drawable-land-hdpi-v14/reader.png \
   res/drawable-land-hdpi-v14/site_security_identified.png \
   res/drawable-land-hdpi-v14/site_security_verified.png \
@@ -874,6 +880,7 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/tabs_carat_pb.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/menu.png \
+  res/drawable-land-xhdpi-v14/menu_pb.png \
   res/drawable-land-xhdpi-v14/reader.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
@@ -904,6 +911,7 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/site_security_identified.png \
   res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/menu.png \
+  res/drawable-large-mdpi-v11/menu_pb.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
   res/drawable-large-mdpi-v11/tabs_carat_pb.png \
   $(NULL)
@@ -931,6 +939,7 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/site_security_identified.png \
   res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/menu.png \
+  res/drawable-large-hdpi-v11/menu_pb.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
   res/drawable-large-hdpi-v11/tabs_carat_pb.png \
   $(NULL)
@@ -958,6 +967,7 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
   res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/menu.png \
+  res/drawable-large-xhdpi-v11/menu_pb.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
   res/drawable-large-xhdpi-v11/tabs_carat_pb.png \
   $(NULL)
@@ -967,6 +977,7 @@ RES_DRAWABLE_XLARGE_MDPI_V11 = \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-mdpi-v11/menu.png \
+  res/drawable-xlarge-mdpi-v11/menu_pb.png \
   res/drawable-xlarge-mdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-mdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-mdpi-v11/tabs_carat_expanded.png \
@@ -978,6 +989,7 @@ RES_DRAWABLE_XLARGE_HDPI_V11 = \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-hdpi-v11/menu.png \
+  res/drawable-xlarge-hdpi-v11/menu_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_expanded.png \
@@ -989,6 +1001,7 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-xhdpi-v11/menu.png \
+  res/drawable-xlarge-xhdpi-v11/menu_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded.png \
@@ -1033,7 +1046,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/handle_start_level.xml                 \
   mobile/android/base/resources/drawable/menu_button.xml                        \
   mobile/android/base/resources/drawable/menu_item_checkmark.xml                \
-  mobile/android/base/resources/drawable/menu_level.xml                         \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/progress_spinner_1.png                 \
   mobile/android/base/resources/drawable/progress_spinner_2.png                 \
