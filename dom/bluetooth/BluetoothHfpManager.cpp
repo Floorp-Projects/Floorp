@@ -580,8 +580,9 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
     return false;
   }
 
-  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
-    NS_WARNING("BluetoothHfpManager has connected to a headset/handsfree!");
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED ||
+      GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTING) {
+    NS_WARNING("BluetoothHfpManager has connected/is connecting to a headset!");
     return false;
   }
 

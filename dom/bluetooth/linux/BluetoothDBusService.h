@@ -133,7 +133,7 @@ public:
   virtual nsresult
   PrepareAdapterInternal(const nsAString& aPath);
 
-  virtual bool
+  virtual void
   Connect(const nsAString& aDeviceAddress,
           const nsAString& aAdapterPath,
           const uint16_t aProfileId,
