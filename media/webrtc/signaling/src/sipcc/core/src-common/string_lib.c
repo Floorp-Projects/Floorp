@@ -379,3 +379,8 @@ strlib_empty (void)
     return (empty_str);
 }
 
+void
+strlib_init (void)
+{
+  (void) strlib_empty(); // force it to allocate the empty string buffer
+}
