@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for CSS parser diagnostics escaping unprintable
+         characters correctly</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=229827"
+>Mozilla Bug 229827</a>
+<style id="testbench"></style>
+<script type="application/javascript;version=1.8">
+// This test has intimate knowledge of how to get the CSS parser to
+// emit diagnostics that contain text under control of the user.
+// That's not the point of the test, though; the point is only that
+// *that text* is properly escaped.
+
+// There is one "pattern" for each code path through the error reporter
+// that might need to escape some kind of user-supplied text.
+// Each "pattern" is tested once with each of the "substitution"s below:
+// <t>, <i>, and <s> are replaced by the t:, i:, and s: fields of
+// each substitution object in turn.
+const patterns = [
+  // REPORT_UNEXPECTED_P (only ever used in contexts where identifier-like
+  // escaping is appropriate)
+  { i: "<t>|x{}",                 o: "prefix '<i>'" },
+  // REPORT_UNEXPECTED_TOKEN with:
+  // _Ident
+  { i: "@namespace fnord <t>;",    o: "within @namespace: '<i>'" },
+  // _Ref
+  { i: "@namespace fnord #<t>;",   o: "within @namespace: '#<i>'" },
+  // _Function
+  { i: "@namespace fnord <t>();",  o: "within @namespace: '<i>('" },
+  // _Dimension
+  { i: "@namespace fnord 14<t>;",  o: "within @namespace: '14<i>'" },
+  // _AtKeyword
+  { i: "x{@<t>: }",        o: "declaration but found '@<i>'." },
+  // _String
+  { i: "x{ '<t>'}" ,       o: "declaration but found ''<s>''." },
+  // _Bad_String
+  { i: "x{ '<t>\n}",      o: "declaration but found ''<s>'." },
+  // _URL
+  { i: "x{ url('<t>')}",   o: "declaration but found 'url('<s>')'." },
+  // _Bad_URL
+  { i: "x{ url('<t>'.)}" , o: "declaration but found 'url('<s>''." }
+];
+
+// Blocks of characters to test, and how they should be escaped when
+// they appear in identifiers and string constants.
+const substitutions = [
+  // ASCII printables that _can_ normally appear in identifiers,
+  // so should of course _not_ be escaped.
+  { t: "-_0123456789",               i: "-_0123456789",
+                                     s: "-_0123456789" },
+  { t: "abcdefghijklmnopqrstuvwxyz", i: "abcdefghijklmnopqrstuvwxyz",
+                                     s: "abcdefghijklmnopqrstuvwxyz" },
+  { t: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", i: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                                     s: "ABCDEFGHIJKLMNOPQRSTUVWXYZ" },
+
+  // ASCII printables that are not normally valid as the first character
+  // of an identifier, or the character immediately after a leading dash,
+  // but can be forced into that position with escapes.
+  { t: "\\-",    i: "\\-",    s: "-"  },
+  { t: "\\30 ",  i: "\\30 ",  s: "0"  },
+  { t: "\\31 ",  i: "\\31 ",  s: "1"  },
+  { t: "\\32 ",  i: "\\32 ",  s: "2"  },
+  { t: "\\33 ",  i: "\\33 ",  s: "3"  },
+  { t: "\\34 ",  i: "\\34 ",  s: "4"  },
+  { t: "\\35 ",  i: "\\35 ",  s: "5"  },
+  { t: "\\36 ",  i: "\\36 ",  s: "6"  },
+  { t: "\\37 ",  i: "\\37 ",  s: "7"  },
+  { t: "\\38 ",  i: "\\38 ",  s: "8"  },
+  { t: "\\39 ",  i: "\\39 ",  s: "9"  },
+  { t: "-\\-",   i: "-\\-",   s: "--" },
+  { t: "-\\30 ", i: "-\\30 ", s: "-0" },
+  { t: "-\\31 ", i: "-\\31 ", s: "-1" },
+  { t: "-\\32 ", i: "-\\32 ", s: "-2" },
+  { t: "-\\33 ", i: "-\\33 ", s: "-3" },
+  { t: "-\\34 ", i: "-\\34 ", s: "-4" },
+  { t: "-\\35 ", i: "-\\35 ", s: "-5" },
+  { t: "-\\36 ", i: "-\\36 ", s: "-6" },
+  { t: "-\\37 ", i: "-\\37 ", s: "-7" },
+  { t: "-\\38 ", i: "-\\38 ", s: "-8" },
+  { t: "-\\39 ", i: "-\\39 ", s: "-9" },
+
+  // ASCII printables that must be escaped in identifiers.
+  // Most of these should not be escaped in strings.
+  { t: "\\!\\\"\\#\\$",   i: "\\!\\\"\\#\\$",   s: "!\\\"#$" },
+  { t: "\\%\\&\\'\\(",    i: "\\%\\&\\'\\(",    s: "%&\\'(" },
+  { t: "\\)\\*\\+\\,",    i: "\\)\\*\\+\\,",    s: ")*+," },
+  { t: "\\.\\/\\:\\;",    i: "\\.\\/\\:\\;",    s: "./:;" },
+  { t: "\\<\\=\\>\\?",    i: "\\<\\=\\>\\?",    s: "<=>?", },
+  { t: "\\@\\[\\\\\\]",   i: "\\@\\[\\\\\\]",   s: "@[\\\\]" },
+  { t: "\\^\\`\\{\\}\\~", i: "\\^\\`\\{\\}\\~", s: "^`{}~" },
+
+  // U+0000 - U+0020 (C0 controls, space)
+  // U+000A LINE FEED, U+000C FORM FEED, and U+000D CARRIAGE RETURN
+  // cannot be put into a CSS token as escaped literal characters, so
+  // we do them with hex escapes instead.
+  { t: "\\\x00\\\x01\\\x02\\\x03",       i: "\\0 \\1 \\2 \\3 ",
+                                         s: "\\0 \\1 \\2 \\3 " },
+  { t: "\\\x04\\\x05\\\x06\\\x07",       i: "\\4 \\5 \\6 \\7 ",
+                                         s: "\\4 \\5 \\6 \\7 " },
+  { t: "\\\x08\\\x09\\000A\\\x0B",       i: "\\8 \\9 \\A \\B ",
+                                         s: "\\8 \\9 \\A \\B " },
+  { t: "\\000C\\000D\\\x0E\\\x0F",       i: "\\C \\D \\E \\F ",
+                                         s: "\\C \\D \\E \\F " },
+  { t: "\\\x10\\\x11\\\x12\\\x13",       i: "\\10 \\11 \\12 \\13 ",
+                                         s: "\\10 \\11 \\12 \\13 " },
+  { t: "\\\x14\\\x15\\\x16\\\x17",       i: "\\14 \\15 \\16 \\17 ",
+                                         s: "\\14 \\15 \\16 \\17 " },
+  { t: "\\\x18\\\x19\\\x1A\\\x1B",       i: "\\18 \\19 \\1A \\1B ",
+                                         s: "\\18 \\19 \\1A \\1B " },
+  { t: "\\\x1C\\\x1D\\\x1E\\\x1F\\ ",    i: "\\1C \\1D \\1E \\1F \\ ",
+                                         s: "\\1C \\1D \\1E \\1F  " },
+
+  // U+007F (DELETE) and U+0080 - U+009F (C1 controls)
+  { t: "\\\x7f\\\x80\\\x81\\\x82",       i: "\\7F \\80 \\81 \\82 ",
+                                         s: "\\7F \\80 \\81 \\82 " },
+  { t: "\\\x83\\\x84\\\x85\\\x86",       i: "\\83 \\84 \\85 \\86 ",
+                                         s: "\\83 \\84 \\85 \\86 " },
+  { t: "\\\x87\\\x88\\\x89\\\x8A",       i: "\\87 \\88 \\89 \\8A ",
+                                         s: "\\87 \\88 \\89 \\8A " },
+  { t: "\\\x8B\\\x8C\\\x8D\\\x8E",       i: "\\8B \\8C \\8D \\8E ",
+                                         s: "\\8B \\8C \\8D \\8E " },
+  { t: "\\\x8F\\\x90\\\x91\\\x92",       i: "\\8F \\90 \\91 \\92 ",
+                                         s: "\\8F \\90 \\91 \\92 " },
+  { t: "\\\x93\\\x94\\\x95\\\x96",       i: "\\93 \\94 \\95 \\96 ",
+                                         s: "\\93 \\94 \\95 \\96 " },
+  { t: "\\\x97\\\x98\\\x99\\\x9A",       i: "\\97 \\98 \\99 \\9A ",
+                                         s: "\\97 \\98 \\99 \\9A " },
+  { t: "\\\x9B\\\x9C\\\x9D\\\x9E\\\x9F", i: "\\9B \\9C \\9D \\9E \\9F ",
+                                         s: "\\9B \\9C \\9D \\9E \\9F " },
+
+  // CSS doesn't bother with the full Unicode rules for identifiers,
+  // instead declaring that any code point greater than or equal to
+  // U+00A0 is a valid identifier character.  Test a small handful
+  // of both basic and astral plane characters.
+
+  // Arabic (caution to editors: there is a possibly-invisible U+200E
+  // LEFT-TO-RIGHT MARK in each string, just before the close quote)
+  { t: "أبجدهوزحطيكلمنسعفصقرشتثخذضظغ‎",
+    i: "أبجدهوزحطيكلمنسعفصقرشتثخذضظغ‎",
+    s: "أبجدهوزحطيكلمنسعفصقرشتثخذضظغ‎" },
+
+  // Box drawing
+  { t: "─│┌┐└┘├┤┬┴┼╭╮╯╰╴╵╶╷",
+    i: "─│┌┐└┘├┤┬┴┼╭╮╯╰╴╵╶╷",
+    s: "─│┌┐└┘├┤┬┴┼╭╮╯╰╴╵╶╷" },
+
+  // CJK Unified Ideographs
+  { t: "一丁丂七丄丅丆万丈三上下丌不与丏",
+    i: "一丁丂七丄丅丆万丈三上下丌不与丏",
+    s: "一丁丂七丄丅丆万丈三上下丌不与丏" },
+
+  // CJK Unified Ideographs Extension B (astral)
+  { t: "𠀀𠀁𠀂𠀃𠀄𠀅𠀆𠀇𠀈𠀉𠀊𠀋𠀌𠀍𠀎𠀏",
+    i: "𠀀𠀁𠀂𠀃𠀄𠀅𠀆𠀇𠀈𠀉𠀊𠀋𠀌𠀍𠀎𠀏",
+    s: "𠀀𠀁𠀂𠀃𠀄𠀅𠀆𠀇𠀈𠀉𠀊𠀋𠀌𠀍𠀎𠀏" },
+
+  // Devanagari
+  { t: "कखगघङचछजझञटठडढणतथदधनपफबभमयरलळवशषसह",
+    i: "कखगघङचछजझञटठडढणतथदधनपफबभमयरलळवशषसह",
+    s: "कखगघङचछजझञटठडढणतथदधनपफबभमयरलळवशषसह" },
+
+  // Emoticons (astral)
+  { t: "😁😂😃😄😅😆😇😈😉😊😋😌😍😎😏😐",
+    i: "😁😂😃😄😅😆😇😈😉😊😋😌😍😎😏😐",
+    s: "😁😂😃😄😅😆😇😈😉😊😋😌😍😎😏😐" },
+
+  // Greek
+  { t: "αβγδεζηθικλμνξοπρςστυφχψω",
+    i: "αβγδεζηθικλμνξοπρςστυφχψω",
+    s: "αβγδεζηθικλμνξοπρςστυφχψω" }
+];
+
+const npatterns = patterns.length;
+const nsubstitutions = substitutions.length;
+
+function quotemeta(str) {
+  return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+function subst(str, sub) {
+  return str.replace("<t>", sub.t)
+    .replace("<i>", sub.i)
+    .replace("<s>", sub.s);
+}
+
+var curpat = 0;
+var cursubst = -1;
+var testbench = document.getElementById("testbench");
+
+function nextTest() {
+  cursubst++;
+  if (cursubst == nsubstitutions) {
+    curpat++;
+    cursubst = 0;
+  }
+  if (curpat == npatterns) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let css = subst(patterns[curpat].i, substitutions[cursubst]);
+  let msg = quotemeta(subst(patterns[curpat].o, substitutions[cursubst]));
+
+  SimpleTest.expectConsoleMessages(function () { testbench.innerHTML = css },
+                                   [{ errorMessage: new RegExp(msg) }],
+                                   nextTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+nextTest();
+</script>
+</body>
+</html>

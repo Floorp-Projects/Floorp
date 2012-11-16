@@ -118,6 +118,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_parse_ident.html \
 		test_parse_rule.html \
 		test_parse_url.html \
+		test_parser_diagnostics_unprintables.html \
 		test_pixel_lengths.html \
 		test_pointer-events.html \
 		test_property_database.html \

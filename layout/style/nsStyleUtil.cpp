@@ -55,45 +55,37 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
   return result;
 }
 
-void nsStyleUtil::AppendEscapedCSSString(const nsString& aString,
-                                         nsAString& aReturn)
+void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
+                                         nsAString& aReturn,
+                                         PRUnichar quoteChar)
 {
-  aReturn.Append(PRUnichar('"'));
+  NS_PRECONDITION(quoteChar == '\'' || quoteChar == '"',
+                  "CSS strings must be quoted with ' or \"");
+  aReturn.Append(quoteChar);
 
-  const nsString::char_type* in = aString.get();
-  const nsString::char_type* const end = in + aString.Length();
-  for (; in != end; in++)
-  {
-    if (*in < 0x20)
-    {
-     // Escape all characters below 0x20 numerically.
-   
-     /*
-      This is the buffer into which snprintf should write. As the hex. value is,
-      for numbers below 0x20, max. 2 characters long, we don't need more than 5
-      characters ("\XX "+NUL).
-     */
-     PRUnichar buf[5];
-     nsTextFormatter::snprintf(buf, ArrayLength(buf), NS_LITERAL_STRING("\\%hX ").get(), *in);
-     aReturn.Append(buf);
-   
-    } else switch (*in) {
-      // Special characters which should be escaped: Quotes and backslash
-      case '\\':
-      case '\"':
-      case '\'':
-       aReturn.Append(PRUnichar('\\'));
-      // And now, after the eventual escaping character, the actual one.
-      default:
-       aReturn.Append(PRUnichar(*in));
+  const PRUnichar* in = aString.BeginReading();
+  const PRUnichar* const end = aString.EndReading();
+  for (; in != end; in++) {
+    if (*in < 0x20 || (*in >= 0x7F && *in < 0xA0)) {
+      // Escape U+0000 through U+001F and U+007F through U+009F numerically.
+      aReturn.AppendPrintf("\\%hX ", *in);
+    } else {
+      if (*in == '"' || *in == '\'' || *in == '\\') {
+        // Escape backslash and quote characters symbolically.
+        // It's not technically necessary to escape the quote
+        // character that isn't being used to delimit the string,
+        // but we do it anyway because that makes testing simpler.
+        aReturn.Append(PRUnichar('\\'));
+      }
+      aReturn.Append(*in);
     }
   }
 
-  aReturn.Append(PRUnichar('"'));
+  aReturn.Append(quoteChar);
 }
 
 /* static */ void
-nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
+nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
 {
   // The relevant parts of the CSS grammar are:
   //   ident    [-]?{nmstart}{nmchar}*
@@ -104,44 +96,48 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
   //   unicode  \\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
   // from http://www.w3.org/TR/CSS21/syndata.html#tokenization
 
-  const nsString::char_type* in = aIdent.get();
-  const nsString::char_type* const end = in + aIdent.Length();
+  const PRUnichar* in = aIdent.BeginReading();
+  const PRUnichar* const end = aIdent.EndReading();
 
-  // Deal with the leading dash separately so we don't need to
-  // unnecessarily escape digits.
-  if (in != end && *in == '-') {
+  if (in == end)
+    return;
+
+  // A leading dash does not need to be escaped as long as it is not the
+  // *only* character in the identifier.
+  if (in + 1 != end && *in == '-') {
     aReturn.Append(PRUnichar('-'));
     ++in;
   }
 
-  bool first = true;
-  for (; in != end; ++in, first = false)
-  {
-    if (*in < 0x20 || (first && '0' <= *in && *in <= '9'))
-    {
-      // Escape all characters below 0x20, and digits at the start
-      // (including after a dash), numerically.  If we didn't escape
-      // digits numerically, they'd get interpreted as a numeric escape
-      // for the wrong character.
-
-      /*
-       This is the buffer into which snprintf should write. As the hex.
-       value is, for numbers below 0x7F, max. 2 characters long, we
-       don't need more than 5 characters ("\XX "+NUL).
-      */
-      PRUnichar buf[5];
-      nsTextFormatter::snprintf(buf, ArrayLength(buf),
-                                NS_LITERAL_STRING("\\%hX ").get(), *in);
-      aReturn.Append(buf);
+  // Escape a digit at the start (including after a dash),
+  // numerically.  If we didn't escape it numerically, it would get
+  // interpreted as a numeric escape for the wrong character.
+  // A second dash immediately after a leading dash must also be
+  // escaped, but this may be done symbolically.
+  if (in != end && (*in == '-' ||
+                    ('0' <= *in && *in <= '9'))) {
+    if (*in == '-') {
+      aReturn.Append(PRUnichar('\\'));
+      aReturn.Append(PRUnichar('-'));
     } else {
-      PRUnichar ch = *in;
-      if (!((ch == PRUnichar('_')) ||
-            (PRUnichar('A') <= ch && ch <= PRUnichar('Z')) ||
-            (PRUnichar('a') <= ch && ch <= PRUnichar('z')) ||
-            PRUnichar(0x80) <= ch ||
-            (!first && ch == PRUnichar('-')) ||
-            (PRUnichar('0') <= ch && ch <= PRUnichar('9')))) {
-        // Character needs to be escaped
+      aReturn.AppendPrintf("\\%hX ", *in);
+    }
+    ++in;
+  }
+
+  for (; in != end; ++in) {
+    PRUnichar ch = *in;
+    if (ch < 0x20 || (0x7F <= ch && ch < 0xA0)) {
+      // Escape U+0000 through U+001F and U+007F through U+009F numerically.
+      aReturn.AppendPrintf("\\%hX ", *in);
+    } else {
+      // Escape ASCII non-identifier printables as a backslash plus
+      // the character.
+      if (ch < 0x7F &&
+          ch != '_' && ch != '-' &&
+          (ch < '0' || '9' < ch) &&
+          (ch < 'A' || 'Z' < ch) &&
+          (ch < 'a' || 'z' < ch)) {
         aReturn.Append(PRUnichar('\\'));
       }
       aReturn.Append(ch);
