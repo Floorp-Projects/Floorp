@@ -134,13 +134,13 @@ function test()
 
   function test10(callback)
   {
-    resume(null, function() {
+    gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
+      gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
+
       is(gBreakpointsPane.selectedItem, null,
         "There should be no selected breakpoint in the breakpoints pane.")
       is(gBreakpointsPane._popupShown, false,
         "The breakpoint conditional expression popup should not be shown.");
-      is(gDebugger.DebuggerController.activeThread.state, "attached",
-        "Should have finished going through all the breakpoints.");
 
       is(gDebugger.DebuggerView.StackFrames.visibleItems, 0,
         "There should be no visible stackframes.");
@@ -148,7 +148,9 @@ function test()
         "There should be thirteen visible breakpoints.");
 
       testReload();
-    });
+    }, true);
+
+    gDebugger.DebuggerController.activeThread.resume();
   }
 
   function resumeAndTestBreakpoint(url, line, callback)
