@@ -3178,12 +3178,9 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject proto(cx);
     if (!JSObject::getProto(cx, target, &proto))
         return false;
-    JSObject *parent = NULL;
-    if (proto)
-        parent = proto->getParent();
     RootedObject fun(cx, target->isCallable() ? target : (JSObject *) NULL);
     JSObject *proxy = NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
-                                     ObjectValue(*target), proto, parent,
+                                     ObjectValue(*target), proto, cx->global(),
                                      fun, fun);
     if (!proxy)
         return false;
