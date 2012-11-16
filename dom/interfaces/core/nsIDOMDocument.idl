@@ -27,7 +27,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(22af46a3-64ac-430a-bcc7-d0a9aefe474f)]
+[scriptable, uuid(31ce7ae7-15d5-4fc8-912b-ae0e23e93146)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -385,7 +385,9 @@ interface nsIDOMDocument : nsIDOMNode
   /**
    * Visibility API implementation.
    */
+  readonly attribute boolean hidden;
   readonly attribute boolean mozHidden;
+  readonly attribute DOMString visibilityState;
   readonly attribute DOMString mozVisibilityState;
 
   /**
