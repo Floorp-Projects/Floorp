@@ -4,3 +4,7 @@ jssubloader/
 #ifdef XP_MACOSX
 run-mozilla.sh
 #endif
+#ifdef XP_WIN
+  mozcrt19.dll
+  mozcpp19.dll
+#endif

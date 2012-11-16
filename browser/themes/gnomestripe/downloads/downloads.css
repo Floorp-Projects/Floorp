@@ -189,9 +189,12 @@ toolbar[iconsize="large"] #downloads-indicator-icon {
                               0, 24, 24, 0) center no-repeat;
 }
 
-#downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
-                              16, 32, 32, 16) center no-repeat;
+toolbar[iconsize="small"] #downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  background-image: url("chrome://browser/skin/downloads/download-glow-small.png");
+}
+
+toolbar[iconsize="large"] #downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
 #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
@@ -201,8 +204,7 @@ toolbar[iconsize="large"] #downloads-indicator-icon {
 }
 
 #downloads-indicator:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
-                                    16, 32, 32, 16);
+  background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
 /*** Event notification ***/

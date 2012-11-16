@@ -122,7 +122,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void linkAbsoluteLabels();
 
   public:
-    CodeGeneratorARM(MIRGenerator *gen, LIRGraph &graph);
+    CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph);
 
   public:
     bool visitBox(LBox *box);

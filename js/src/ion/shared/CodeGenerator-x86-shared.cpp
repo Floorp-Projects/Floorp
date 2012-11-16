@@ -44,7 +44,7 @@ class DeferredJumpTable : public DeferredData
     }
 };
 
-CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph)
+CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *graph)
   : CodeGeneratorShared(gen, graph),
     deoptLabel_(NULL)
 {

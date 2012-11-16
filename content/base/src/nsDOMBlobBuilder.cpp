@@ -240,7 +240,7 @@ nsDOMMultipartFile::InitInternal(JSContext* aCx,
           continue;
         }
         if (JS_IsArrayBufferObject(&obj)) {
-          blobSet.AppendArrayBuffer(&obj, aCx);
+          blobSet.AppendArrayBuffer(&obj);
           continue;
         }
         // neither Blob nor ArrayBuffer(View)
@@ -319,7 +319,7 @@ BlobSet::AppendBlobs(const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlob)
 }
 
 nsresult
-BlobSet::AppendArrayBuffer(JSObject* aBuffer, JSContext *aCx)
+BlobSet::AppendArrayBuffer(JSObject* aBuffer)
 {
   return AppendVoidPtr(JS_GetArrayBufferData(aBuffer),
                        JS_GetArrayBufferByteLength(aBuffer));
