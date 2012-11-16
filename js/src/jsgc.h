@@ -544,8 +544,19 @@ GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
 extern void
 PrepareForDebugGC(JSRuntime *rt);
 
+/* Functions for managing cross compartment gray pointers. */
+
 extern void
-DelayCrossCompartmentGrayMarking(RawObject src, gc::Cell *cell);
+DelayCrossCompartmentGrayMarking(RawObject src);
+
+extern void
+NotifyGCNukeWrapper(RawObject o);
+
+extern unsigned
+NotifyGCPreSwap(RawObject a, RawObject b);
+
+extern void
+NotifyGCPostSwap(RawObject a, RawObject b, unsigned preResult);
 
 void
 InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);

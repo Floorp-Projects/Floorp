@@ -2935,7 +2935,9 @@ JSObject::swap(JSContext *cx, JSObject *other_)
     TradeGutsReserved reserved(cx);
     if (!ReserveForTradeGuts(cx, this, other, reserved))
         return false;
+    unsigned r = NotifyGCPreSwap(this, other);
     TradeGuts(cx, this, other, reserved);
+    NotifyGCPostSwap(this, other, r);
     return true;
 }
 

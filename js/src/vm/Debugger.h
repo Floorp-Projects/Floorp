@@ -376,6 +376,7 @@ class Debugger {
     static void detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
     static unsigned gcGrayLinkSlot();
+    static bool isDebugWrapper(RawObject o);
     static void findCompartmentEdges(JSCompartment *v, js::gc::ComponentFinder &finder);
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);

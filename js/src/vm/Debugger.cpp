@@ -1341,10 +1341,19 @@ JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
 JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
                  unsigned(JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK));
 
-unsigned
+/* static */ unsigned
 Debugger::gcGrayLinkSlot()
 {
     return JSSLOT_DEBUGOBJECT_GC_GRAY_LINK;
+}
+
+/* static */ bool
+Debugger::isDebugWrapper(RawObject o)
+{
+    Class *c = o->getClass();
+    return c == &DebuggerObject_class ||
+           c == &DebuggerEnv_class ||
+           c == &DebuggerScript_class;
 }
 
 void

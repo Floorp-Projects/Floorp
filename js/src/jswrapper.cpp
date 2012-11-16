@@ -996,6 +996,8 @@ js::NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper)
 {
     JS_ASSERT(IsCrossCompartmentWrapper(wrapper));
 
+    NotifyGCNukeWrapper(wrapper);
+
     NukeSlot(wrapper, JSSLOT_PROXY_PRIVATE, NullValue());
     SetProxyHandler(wrapper, &DeadObjectProxy::singleton);
 
@@ -1006,6 +1008,8 @@ js::NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper)
 
     NukeSlot(wrapper, JSSLOT_PROXY_EXTRA + 0, NullValue());
     NukeSlot(wrapper, JSSLOT_PROXY_EXTRA + 1, NullValue());
+
+    JS_ASSERT(IsDeadProxyObject(wrapper));
 }
 
 /*

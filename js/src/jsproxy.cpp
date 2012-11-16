@@ -3153,6 +3153,7 @@ JSObject *
 js::RenewProxyObject(JSContext *cx, JSObject *obj,
                      BaseProxyHandler *handler, Value priv)
 {
+    JS_ASSERT_IF(IsCrossCompartmentWrapper(obj), IsDeadProxyObject(obj));
     JS_ASSERT(obj->getParent() == cx->global());
     JS_ASSERT(obj->getClass() == &ObjectProxyClass);
     JS_ASSERT(obj->getTaggedProto().isLazy());
@@ -3161,13 +3162,7 @@ js::RenewProxyObject(JSContext *cx, JSObject *obj,
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
     obj->setCrossCompartmentSlot(JSSLOT_PROXY_PRIVATE, priv);
     obj->setSlot(JSSLOT_PROXY_EXTRA + 0, UndefinedValue());
-
-    /*
-     * The GC can use the second reserved slot to link the cross compartment
-     * wrappers into a linked list, in which case we don't want to reset it.
-     */
-    if (!IsCrossCompartmentWrapper(obj))
-        obj->setSlot(JSSLOT_PROXY_EXTRA + 1, UndefinedValue());
+    obj->setSlot(JSSLOT_PROXY_EXTRA + 1, UndefinedValue());
 
     return obj;
 }
