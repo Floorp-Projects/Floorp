@@ -6547,7 +6547,7 @@ var SearchEngines = {
     let dbFile = FileUtils.getFile("ProfD", ["browser.db"]);
     let mDBConn = Services.storage.openDatabase(dbFile);
     let stmts = [];
-    stmts[0] = mDBConn.createStatement("SELECT favicon FROM images WHERE url_key = ?");
+    stmts[0] = mDBConn.createStatement("SELECT favicon FROM history_with_favicons WHERE url = ?");
     stmts[0].bindStringParameter(0, docURI.spec);
     let favicon = null;
     Services.search.init(function addEngine_cb(rv) {
