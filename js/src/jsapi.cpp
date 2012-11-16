@@ -680,49 +680,43 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 /*
  * Thread Local Storage slot for storing the runtime for a thread.
  */
-namespace js {
-mozilla::ThreadLocal<PerThreadData *> TlsPerThreadData;
-}
-
-namespace JS {
+mozilla::ThreadLocal<PerThreadData *> js::TlsPerThreadData;
 
 #ifdef DEBUG
 JS_FRIEND_API(void)
-EnterAssertNoGCScope()
+JS::EnterAssertNoGCScope()
 {
     ++TlsPerThreadData.get()->gcAssertNoGCDepth;
 }
 
 JS_FRIEND_API(void)
-LeaveAssertNoGCScope()
+JS::LeaveAssertNoGCScope()
 {
     --TlsPerThreadData.get()->gcAssertNoGCDepth;
     JS_ASSERT(TlsPerThreadData.get()->gcAssertNoGCDepth >= 0);
 }
 
 JS_FRIEND_API(bool)
-InNoGCScope()
+JS::InNoGCScope()
 {
     return TlsPerThreadData.get()->gcAssertNoGCDepth > 0;
 }
 
 JS_FRIEND_API(bool)
-NeedRelaxedRootChecks()
+JS::NeedRelaxedRootChecks()
 {
     return TlsPerThreadData.get()->gcRelaxRootChecks;
 }
 #else
-JS_FRIEND_API(void) EnterAssertNoGCScope() {}
-JS_FRIEND_API(void) LeaveAssertNoGCScope() {}
-JS_FRIEND_API(bool) InNoGCScope() { return false; }
-JS_FRIEND_API(bool) NeedRelaxedRootChecks() { return false; }
+JS_FRIEND_API(void) JS::EnterAssertNoGCScope() {}
+JS_FRIEND_API(void) JS::LeaveAssertNoGCScope() {}
+JS_FRIEND_API(bool) JS::InNoGCScope() { return false; }
+JS_FRIEND_API(bool) JS::NeedRelaxedRootChecks() { return false; }
 #endif
-
-} /* namespace JS */
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
-js::PerThreadData::PerThreadData(JSRuntime *runtime)
+PerThreadData::PerThreadData(JSRuntime *runtime)
   : runtime_(runtime)
 #ifdef DEBUG
   , gcRelaxRootChecks(false)
@@ -5770,10 +5764,8 @@ JS_CallFunctionValue(JSContext *cx, JSObject *objArg, jsval fval, unsigned argc,
     return Invoke(cx, ObjectOrNullValue(obj), fval, argc, argv, rval);
 }
 
-namespace JS {
-
 JS_PUBLIC_API(bool)
-Call(JSContext *cx, jsval thisv, jsval fval, unsigned argc, jsval *argv, jsval *rval)
+JS::Call(JSContext *cx, jsval thisv, jsval fval, unsigned argc, jsval *argv, jsval *rval)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5782,8 +5774,6 @@ Call(JSContext *cx, jsval thisv, jsval fval, unsigned argc, jsval *argv, jsval *
 
     return Invoke(cx, thisv, fval, argc, argv, rval);
 }
-
-} // namespace JS
 
 JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctorArg, unsigned argc, jsval *argv)
@@ -7106,8 +7096,6 @@ JS_CallOnce(JSCallOnceType *once, JSInitCallback func)
 #endif
 }
 
-namespace JS {
-
 AutoGCRooter::AutoGCRooter(JSContext *cx, ptrdiff_t tag)
   : down(cx->runtime->autoGCRooters), tag(tag), stackTop(&cx->runtime->autoGCRooters)
 {
@@ -7117,15 +7105,13 @@ AutoGCRooter::AutoGCRooter(JSContext *cx, ptrdiff_t tag)
 
 #ifdef DEBUG
 JS_PUBLIC_API(void)
-AssertArgumentsAreSane(JSContext *cx, const JS::Value &value)
+JS::AssertArgumentsAreSane(JSContext *cx, const JS::Value &value)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
 }
 #endif /* DEBUG */
-
-} // namespace JS
 
 JS_PUBLIC_API(void *)
 JS_EncodeScript(JSContext *cx, JSRawScript scriptArg, uint32_t *lengthp)

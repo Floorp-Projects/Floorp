@@ -1938,8 +1938,6 @@ JSScript::finalize(FreeOp *fop)
     }
 }
 
-namespace js {
-
 static const uint32_t GSN_CACHE_THRESHOLD = 100;
 static const uint32_t GSN_CACHE_MAP_INIT_SIZE = 20;
 
@@ -1950,8 +1948,6 @@ GSNCache::purge()
     if (map.initialized())
         map.finish();
 }
-
-} /* namespace js */
 
 jssrcnote *
 js_GetSrcNote(JSContext *cx, RawScript script, jsbytecode *pc)
@@ -2133,18 +2129,16 @@ js_GetScriptLineExtent(RawScript script)
     return 1 + lineno - script->lineno;
 }
 
-namespace js {
-
 unsigned
-CurrentLine(JSContext *cx)
+js::CurrentLine(JSContext *cx)
 {
     AutoAssertNoGC nogc;
     return PCToLineNumber(cx->fp()->script().get(nogc), cx->regs().pc);
 }
 
 void
-CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
-                                JSPrincipals **origin)
+js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
+                                    JSPrincipals **origin)
 {
     AutoAssertNoGC nogc;
     NonBuiltinScriptFrameIter iter(cx);
@@ -2161,8 +2155,6 @@ CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *line
     *linenop = PCToLineNumber(iter.script().get(nogc), iter.pc());
     *origin = script->originPrincipals;
 }
-
-}  /* namespace js */
 
 template <class T>
 static inline T *
