@@ -977,9 +977,6 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
             if (mConnectionFlags & nsISocketTransport::ANONYMOUS_CONNECT)
                 proxyFlags |= nsISocketProvider::ANONYMOUS_CONNECT;
 
-            if (mConnectionFlags & nsISocketTransport::NO_PERMANENT_STORAGE)
-                proxyFlags |= nsISocketProvider::NO_PERMANENT_STORAGE;
-
             nsCOMPtr<nsISupports> secinfo;
             if (i == 0) {
                 // if this is the first type, we'll want the 

@@ -135,8 +135,8 @@ public:
 private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
   nsresult GetPrincipalForURI(nsIURI *aURI, nsIPrincipal **aPrincipal);
-  nsresult SetStsState(nsIURI* aSourceURI, int64_t maxage, bool includeSubdomains, uint32_t flags);
-  nsresult ProcessStsHeaderMutating(nsIURI* aSourceURI, char* aHeader, uint32_t flags,
+  nsresult SetStsState(nsIURI* aSourceURI, int64_t maxage, bool includeSubdomains);
+  nsresult ProcessStsHeaderMutating(nsIURI* aSourceURI, char* aHeader,
                                     uint64_t *aMaxAge, bool *aIncludeSubdomains);
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);
 
@@ -145,16 +145,15 @@ private:
                          const char *aType,
                          uint32_t   aPermission,
                          uint32_t   aExpireType,
-                         int64_t    aExpireTime,
-                         bool       aIsPrivate);
+                         int64_t    aExpireTime);
   nsresult RemovePermission(const nsCString  &aHost,
-                            const char       *aType,
-                            bool              aIsPrivate);
+                            const char       *aType);
 
   // cached services
   nsCOMPtr<nsIPermissionManager> mPermMgr;
   nsCOMPtr<nsIObserverService> mObserverService;
 
+  bool mInPrivateMode;
   nsTHashtable<nsSTSHostEntry> mPrivateModeHostTable;
   bool mUsePreloadList;
 };

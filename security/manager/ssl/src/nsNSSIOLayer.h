@@ -13,14 +13,13 @@
 #include "nsNSSCertificate.h"
 #include "nsDataHashtable.h"
 #include "nsTHashtable.h"
-#include "nsISocketTransport.h"
 
 class nsNSSSocketInfo : public mozilla::psm::TransportSecurityInfo,
                         public nsISSLSocketControl,
                         public nsIClientAuthUserDecision
 {
 public:
-  nsNSSSocketInfo(uint32_t providerFlags);
+  nsNSSSocketInfo();
   
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISSLSOCKETCONTROL
@@ -73,7 +72,7 @@ public:
   {
     return mCertVerificationState == waiting_for_cert_verification;
   }
-
+  
   bool IsSSL3Enabled() const { return mSSL3Enabled; }
   void SetSSL3Enabled(bool enabled) { mSSL3Enabled = enabled; }
   bool IsTLSEnabled() const { return mTLSEnabled; }
@@ -101,8 +100,6 @@ private:
   bool      mHandshakeCompleted;
   bool      mJoined;
   bool      mSentClientCert;
-
-  uint32_t mProviderFlags;
 };
 
 class nsSSLIOLayerHelpers
@@ -149,7 +146,7 @@ nsresult nsSSLIOLayerNewSocket(int32_t family,
                                PRFileDesc **fd,
                                nsISupports **securityInfo,
                                bool forSTARTTLS,
-                               uint32_t flags);
+                               bool anonymousLoad);
 
 nsresult nsSSLIOLayerAddToSocket(int32_t family,
                                  const char *host,
@@ -159,7 +156,7 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family,
                                  PRFileDesc *fd,
                                  nsISupports **securityInfo,
                                  bool forSTARTTLS,
-                                 uint32_t flags);
+                                 bool anonymousLoad);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error);

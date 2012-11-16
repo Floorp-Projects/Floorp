@@ -1620,12 +1620,8 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     if (!stss)
         return NS_OK;
 
-    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(aCallbacks);
-    uint32_t flags = 0;
-    if (loadContext && loadContext->UsePrivateBrowsing())
-        flags |= nsISocketProvider::NO_PERMANENT_STORAGE;
     nsCOMPtr<nsIURI> clone;
-    if (NS_SUCCEEDED(stss->IsStsURI(aURI, flags, &isStsHost)) && isStsHost) {
+    if (NS_SUCCEEDED(stss->IsStsURI(aURI, &isStsHost)) && isStsHost) {
         if (NS_SUCCEEDED(aURI->Clone(getter_AddRefs(clone)))) {
             clone->SetScheme(NS_LITERAL_CSTRING("https"));
             aURI = clone.get();

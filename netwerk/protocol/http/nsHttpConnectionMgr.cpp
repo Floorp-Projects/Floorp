@@ -2457,9 +2457,6 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     if (mCaps & NS_HTTP_LOAD_ANONYMOUS)
         tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
 
-    if (mEnt->mConnInfo->GetPrivate())
-        tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
-
     // For backup connections, we disable IPv6. That's because some users have
     // broken IPv6 connectivity (leading to very long timeouts), and disabling
     // IPv6 on the backup connection gives them a much better user experience
