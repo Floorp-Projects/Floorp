@@ -85,6 +85,10 @@ LIBS      = $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS) $(MOZ_ZLI
 
 LOCAL_INCLUDES += -I$(topsrcdir) -I..
 
+ifdef QEMU_EXE
+MOZ_POST_PROGRAM_COMMAND = $(topsrcdir)/build/qemu-wrap --qemu $(QEMU_EXE) --libdir $(CROSS_LIB)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 check::

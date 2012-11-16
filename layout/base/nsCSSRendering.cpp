@@ -1810,26 +1810,26 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
     aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
+  const nsStyleBackground *bg = aStyleContext->GetStyleBackground();
   nscolor bgColor;
   if (aDrawBackgroundColor) {
     bgColor =
       aStyleContext->GetVisitedDependentColor(eCSSProperty_background_color);
-    if (NS_GET_A(bgColor) == 0)
+    if (NS_GET_A(bgColor) == 0) {
       aDrawBackgroundColor = false;
+    }
   } else {
     // If GetBackgroundColorDraw() is false, we are still expected to
     // draw color in the background of any frame that's not completely
     // transparent, but we are expected to use white instead of whatever
     // color was specified.
     bgColor = NS_RGB(255, 255, 255);
-    if (aDrawBackgroundImage ||
-        !aStyleContext->GetStyleBackground()->IsTransparent())
+    if (aDrawBackgroundImage || !bg->IsTransparent()) {
       aDrawBackgroundColor = true;
-    else
+    } else {
       bgColor = NS_RGBA(0,0,0,0);
+    }
   }
-
-  const nsStyleBackground *bg = aStyleContext->GetStyleBackground();
 
   // We can skip painting the background color if a background image is opaque.
   if (aDrawBackgroundColor &&
@@ -2736,6 +2736,103 @@ IsTransformed(nsIFrame* aForFrame, nsIFrame* aTopFrame)
   return false;
 }
 
+nsRect
+nsCSSRendering::ComputeBackgroundPositioningArea(nsPresContext* aPresContext,
+                                                 nsIFrame* aForFrame,
+                                                 const nsRect& aBorderArea,
+                                                 const nsStyleBackground& aBackground,
+                                                 const nsStyleBackground::Layer& aLayer,
+                                                 nsIFrame** aAttachedToFrame)
+{
+  // Compute background origin area relative to aBorderArea now as we may need
+  // it to compute the effective image size for a CSS gradient.
+  nsRect bgPositioningArea(0, 0, 0, 0);
+
+  nsIAtom* frameType = aForFrame->GetType();
+  nsIFrame* geometryFrame = aForFrame;
+  if (frameType == nsGkAtoms::inlineFrame) {
+    // XXXjwalden Strictly speaking this is not quite faithful to how
+    // background-break is supposed to interact with background-origin values,
+    // but it's a non-trivial amount of work to make it fully conformant, and
+    // until the specification is more finalized (and assuming background-break
+    // even makes the cut) it doesn't make sense to hammer out exact behavior.
+    switch (aBackground.mBackgroundInlinePolicy) {
+    case NS_STYLE_BG_INLINE_POLICY_EACH_BOX:
+      bgPositioningArea = nsRect(nsPoint(0,0), aBorderArea.Size());
+      break;
+    case NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX:
+      bgPositioningArea = gInlineBGData->GetBoundingRect(aForFrame);
+      break;
+    default:
+      NS_ERROR("Unknown background-inline-policy value!  "
+               "Please, teach me what to do.");
+    case NS_STYLE_BG_INLINE_POLICY_CONTINUOUS:
+      bgPositioningArea = gInlineBGData->GetContinuousRect(aForFrame);
+      break;
+    }
+  } else if (frameType == nsGkAtoms::canvasFrame) {
+    geometryFrame = aForFrame->GetFirstPrincipalChild();
+    // geometryFrame might be null if this canvas is a page created
+    // as an overflow container (e.g. the in-flow content has already
+    // finished and this page only displays the continuations of
+    // absolutely positioned content).
+    if (geometryFrame) {
+      bgPositioningArea = geometryFrame->GetRect();
+    }
+  } else {
+    bgPositioningArea = nsRect(nsPoint(0,0), aBorderArea.Size());
+  }
+
+  // Background images are tiled over the 'background-clip' area
+  // but the origin of the tiling is based on the 'background-origin' area
+  if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_BORDER && geometryFrame) {
+    nsMargin border = geometryFrame->GetUsedBorder();
+    if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
+      border += geometryFrame->GetUsedPadding();
+      NS_ASSERTION(aLayer.mOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
+                   "unknown background-origin value");
+    }
+    geometryFrame->ApplySkipSides(border);
+    bgPositioningArea.Deflate(border);
+  }
+
+  nsIFrame* attachedToFrame = aForFrame;
+  if (NS_STYLE_BG_ATTACHMENT_FIXED == aLayer.mAttachment) {
+    // If it's a fixed background attachment, then the image is placed
+    // relative to the viewport, which is the area of the root frame
+    // in a screen context or the page content frame in a print context.
+    attachedToFrame = aPresContext->PresShell()->FrameManager()->GetRootFrame();
+    NS_ASSERTION(attachedToFrame, "no root frame");
+    nsIFrame* pageContentFrame = nullptr;
+    if (aPresContext->IsPaginated()) {
+      pageContentFrame =
+        nsLayoutUtils::GetClosestFrameOfType(aForFrame, nsGkAtoms::pageContentFrame);
+      if (pageContentFrame) {
+        attachedToFrame = pageContentFrame;
+      }
+      // else this is an embedded shell and its root frame is what we want
+    }
+
+    // Set the background positioning area to the viewport's area
+    // (relative to aForFrame)
+    bgPositioningArea =
+      nsRect(-aForFrame->GetOffsetTo(attachedToFrame), attachedToFrame->GetSize());
+
+    if (!pageContentFrame) {
+      // Subtract the size of scrollbars.
+      nsIScrollableFrame* scrollableFrame =
+        aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
+      if (scrollableFrame) {
+        nsMargin scrollbars = scrollableFrame->GetActualScrollbarSizes();
+        bgPositioningArea.Deflate(scrollbars);
+      }
+    }
+  }
+  *aAttachedToFrame = attachedToFrame;
+
+  return bgPositioningArea;
+}
+
 nsBackgroundLayerState
 nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
                                        nsIFrame* aForFrame,
@@ -2811,57 +2908,13 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
     return state;
   }
 
+  // The frame to which the background is attached
+  nsIFrame* attachedToFrame = aForFrame;
   // Compute background origin area relative to aBorderArea now as we may need
   // it to compute the effective image size for a CSS gradient.
-  nsRect bgPositioningArea(0, 0, 0, 0);
-
-  nsIAtom* frameType = aForFrame->GetType();
-  nsIFrame* geometryFrame = aForFrame;
-  if (frameType == nsGkAtoms::inlineFrame) {
-    // XXXjwalden Strictly speaking this is not quite faithful to how
-    // background-break is supposed to interact with background-origin values,
-    // but it's a non-trivial amount of work to make it fully conformant, and
-    // until the specification is more finalized (and assuming background-break
-    // even makes the cut) it doesn't make sense to hammer out exact behavior.
-    switch (aBackground.mBackgroundInlinePolicy) {
-    case NS_STYLE_BG_INLINE_POLICY_EACH_BOX:
-      bgPositioningArea = nsRect(nsPoint(0,0), aBorderArea.Size());
-      break;
-    case NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX:
-      bgPositioningArea = gInlineBGData->GetBoundingRect(aForFrame);
-      break;
-    default:
-      NS_ERROR("Unknown background-inline-policy value!  "
-               "Please, teach me what to do.");
-    case NS_STYLE_BG_INLINE_POLICY_CONTINUOUS:
-      bgPositioningArea = gInlineBGData->GetContinuousRect(aForFrame);
-      break;
-    }
-  } else if (frameType == nsGkAtoms::canvasFrame) {
-    geometryFrame = aForFrame->GetFirstPrincipalChild();
-    // geometryFrame might be null if this canvas is a page created
-    // as an overflow container (e.g. the in-flow content has already
-    // finished and this page only displays the continuations of
-    // absolutely positioned content).
-    if (geometryFrame) {
-      bgPositioningArea = geometryFrame->GetRect();
-    }
-  } else {
-    bgPositioningArea = nsRect(nsPoint(0,0), aBorderArea.Size());
-  }
-
-  // Background images are tiled over the 'background-clip' area
-  // but the origin of the tiling is based on the 'background-origin' area
-  if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_BORDER && geometryFrame) {
-    nsMargin border = geometryFrame->GetUsedBorder();
-    if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
-      border += geometryFrame->GetUsedPadding();
-      NS_ASSERTION(aLayer.mOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
-                   "unknown background-origin value");
-    }
-    geometryFrame->ApplySkipSides(border);
-    bgPositioningArea.Deflate(border);
-  }
+  nsRect bgPositioningArea =
+    ComputeBackgroundPositioningArea(aPresContext, aForFrame, aBorderArea,
+                                     aBackground, aLayer, &attachedToFrame);
 
   // For background-attachment:fixed backgrounds, we'll limit the area
   // where the background can be drawn to the viewport.
@@ -2873,40 +2926,8 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
   // of aForFrame's border-box will be rendered)
   nsPoint imageTopLeft;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aLayer.mAttachment) {
-    aPresContext->SetHasFixedBackgroundFrame();
-
-    // If it's a fixed background attachment, then the image is placed
-    // relative to the viewport, which is the area of the root frame
-    // in a screen context or the page content frame in a print context.
-    nsIFrame* topFrame =
-      aPresContext->PresShell()->FrameManager()->GetRootFrame();
-    NS_ASSERTION(topFrame, "no root frame");
-    nsIFrame* pageContentFrame = nullptr;
-    if (aPresContext->IsPaginated()) {
-      pageContentFrame =
-        nsLayoutUtils::GetClosestFrameOfType(aForFrame, nsGkAtoms::pageContentFrame);
-      if (pageContentFrame) {
-        topFrame = pageContentFrame;
-      }
-      // else this is an embedded shell and its root frame is what we want
-    }
-
-    // Set the background positioning area to the viewport's area
-    // (relative to aForFrame)
-    bgPositioningArea = nsRect(-aForFrame->GetOffsetTo(topFrame), topFrame->GetSize());
-
-    if (!pageContentFrame) {
-      // Subtract the size of scrollbars.
-      nsIScrollableFrame* scrollableFrame =
-        aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
-      if (scrollableFrame) {
-        nsMargin scrollbars = scrollableFrame->GetActualScrollbarSizes();
-        bgPositioningArea.Deflate(scrollbars);
-      }
-    }
-
-    if (aFlags & nsCSSRendering::PAINTBG_TO_WINDOW &&
-        !IsTransformed(aForFrame, topFrame)) {
+    if ((aFlags & nsCSSRendering::PAINTBG_TO_WINDOW) &&
+        !IsTransformed(aForFrame, attachedToFrame)) {
       // Clip background-attachment:fixed backgrounds to the viewport, if we're
       // painting to the screen and not transformed. This avoids triggering
       // tiling in common cases, without affecting output since drawing is

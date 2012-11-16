@@ -117,6 +117,7 @@
     <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
     <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
+    <command id="Social:Remove" oncommand="SocialUI.disableWithConfirmation();"/>
   </commandset>
 
   <commandset id="placesCommands">
@@ -249,6 +250,11 @@
     <broadcaster id="devtoolsMenuBroadcaster_GetMoreTools"
                  label="&getMoreDevtoolsCmd.label;"
                  oncommand="openUILinkIn('https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/', 'tab');"/>
+
+    <!-- SocialAPI broadcasters -->
+    <broadcaster id="socialBroadcaster_userPortrait"/>
+    <broadcaster id="socialBroadcaster_loggedInStatus"
+                 notLoggedInLabel="&social.notLoggedIn.label;"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">

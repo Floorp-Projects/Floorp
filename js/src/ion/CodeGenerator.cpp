@@ -850,9 +850,9 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.branchIfFunctionIsNative(calleereg, &invoke);
 
     // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
+    masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
     ExecutionMode executionMode = gen->info().executionMode();
-    masm.movePtr(Address(objreg, ionOffset(executionMode)), objreg);
+    masm.loadPtr(Address(objreg, ionOffset(executionMode)), objreg);
 
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
@@ -872,8 +872,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.j(Assembler::Above, &thunk);
 
     // No argument fixup needed. Load the start of the target IonCode.
-    masm.movePtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
-    masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
+    masm.loadPtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
+    masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
     masm.jump(&makeCall);
 
     // Argument fixed needed. Load the ArgumentsRectifier.
@@ -881,7 +881,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     {
         JS_ASSERT(ArgumentsRectifierReg != objreg);
         masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
-        masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
+        masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
         masm.move32(Imm32(call->numStackArgs()), ArgumentsRectifierReg);
     }
 
@@ -943,15 +943,15 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     }
 
     // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.movePtr(Address(objreg, ionOffset(executionMode)), objreg);
+    masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
+    masm.loadPtr(Address(objreg, ionOffset(executionMode)), objreg);
 
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
 
     // Load the start of the target IonCode.
-    masm.movePtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
-    masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
+    masm.loadPtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
+    masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -1158,8 +1158,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     }
 
     // Knowing that calleereg is a non-native function, load the JSScript.
-    masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.movePtr(Address(objreg, ionOffset(executionMode)), objreg);
+    masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
+    masm.loadPtr(Address(objreg, ionOffset(executionMode)), objreg);
 
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
@@ -1189,8 +1189,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
         // No argument fixup needed. Load the start of the target IonCode.
         {
-            masm.movePtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
-            masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
+            masm.loadPtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
+            masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
 
             // Skip the construction of the rectifier frame because we have no
             // underflow.
@@ -1207,7 +1207,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
             JS_ASSERT(ArgumentsRectifierReg != objreg);
             masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
-            masm.movePtr(Address(objreg, IonCode::offsetOfCode()), objreg);
+            masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
             masm.movePtr(argcreg, ArgumentsRectifierReg);
         }
 
@@ -1219,7 +1219,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
             return false;
 
         // Recover the number of arguments from the frame descriptor.
-        masm.movePtr(Address(StackPointer, 0), copyreg);
+        masm.loadPtr(Address(StackPointer, 0), copyreg);
         masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), copyreg);
         masm.subPtr(Imm32(pushed), copyreg);
 
@@ -2957,7 +2957,7 @@ CodeGenerator::visitArgumentsLength(LArgumentsLength *lir)
     Register argc = ToRegister(lir->output());
     Address ptr(StackPointer, frameSize() + IonJSFrameLayout::offsetOfNumActualArgs());
 
-    masm.movePtr(ptr, argc);
+    masm.loadPtr(ptr, argc);
     return true;
 }
 

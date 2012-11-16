@@ -247,7 +247,11 @@ ifeq ($(MOZ_PKG_FORMAT),APK)
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 include $(MOZILLA_DIR)/config/android-common.mk
 
+ifdef MOZ_SIGN_CMD
+JARSIGNER := $(MOZ_SIGN_CMD) -f jar
+else
 JARSIGNER ?= echo
+endif
 
 DIST_FILES =
 

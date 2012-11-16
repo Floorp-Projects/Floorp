@@ -667,33 +667,33 @@
                        class="toolbarbutton-1"
                        type="menu">
           <menupopup id="social-statusarea-popup">
-            <menuitem id="social-statusarea-user" pack="start" align="center" class="menuitem-iconic"
-                  onclick="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
-              <image id="social-statusarea-user-portrait"/>
+            <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
+                      oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
+              <image class="social-statusarea-user-portrait"
+                     observes="socialBroadcaster_userPortrait"/>
               <vbox>
-                <label id="social-statusarea-notloggedin"
-                       value="&social.notLoggedIn.label;"/>
-                <label id="social-statusarea-username"/>
+                <label class="social-statusarea-loggedInStatus"
+                       observes="socialBroadcaster_loggedInStatus"/>
               </vbox>
             </menuitem>
 #ifndef XP_WIN
-            <menuseparator/>
+            <menuseparator class="social-statusarea-separator"/>
 #endif
-            <menuitem id="social-toggle-sidebar-menuitem"
+            <menuitem class="social-toggle-sidebar-menuitem"
                       type="checkbox"
                       autocheck="false"
                       command="Social:ToggleSidebar"
                       label="&social.toggleSidebar.label;"
                       accesskey="&social.toggleSidebar.accesskey;"/>
-            <menuitem id="social-toggle-notifications-menuitem"
+            <menuitem class="social-toggle-notifications-menuitem"
                       type="checkbox"
                       autocheck="false"
                       command="Social:ToggleNotifications"
                       label="&social.toggleNotifications.label;"
                       accesskey="&social.toggleNotifications.accesskey;"/>
-            <menuseparator/>
-            <menuitem id="social-remove-menuitem"
-                      oncommand="SocialUI.disableWithConfirmation();"/>
+            <menuseparator class="social-statusarea-separator"/>
+            <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
+            <menuitem class="social-remove-menuitem" command="Social:Remove"/>
           </menupopup>
         </toolbarbutton>
       </toolbaritem>

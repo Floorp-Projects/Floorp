@@ -1482,11 +1482,6 @@ MacroAssemblerARMCompat::move32(const Imm32 &imm, const Register &dest)
     ma_mov(imm, dest);
 }
 void
-MacroAssemblerARMCompat::move32(const Address &src, const Register &dest)
-{
-    movePtr(src, dest);
-}
-void
 MacroAssemblerARMCompat::movePtr(const Register &src, const Register &dest)
 {
     ma_mov(src, dest);
@@ -1500,11 +1495,6 @@ void
 MacroAssemblerARMCompat::movePtr(const ImmGCPtr &imm, const Register &dest)
 {
     ma_mov(imm, dest);
-}
-void
-MacroAssemblerARMCompat::movePtr(const Address &src, const Register &dest)
-{
-    loadPtr(src, dest);
 }
 void
 MacroAssemblerARMCompat::load8ZeroExtend(const Address &address, const Register &dest)
