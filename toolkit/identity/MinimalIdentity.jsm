@@ -25,6 +25,7 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/identity/LogUtils.jsm");
+Cu.import("resource://gre/modules/identity/IdentityUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
                                   "jwcrypto",
@@ -35,6 +36,35 @@ function log(...aMessageArgs) {
 }
 function reportError(...aMessageArgs) {
   Logger.reportError.apply(Logger, ["core"].concat(aMessageArgs));
+}
+
+function makeMessageObject(aRpCaller) {
+  let options = {};
+
+  options.id = aRpCaller.id;
+  options.origin = aRpCaller.origin;
+
+  // loggedInUser can be undefined, null, or a string
+  options.loggedInUser = aRpCaller.loggedInUser;
+
+  Object.keys(aRpCaller).forEach(function(option) {
+    // Duplicate the callerobject, scrubbing out functions and other
+    // internal variables (like _mm, the message manager object)
+    if (!Object.hasOwnProperty(this, option)
+        && option[0] !== '_'
+        && typeof aRpCaller[option] !== 'function') {
+      options[option] = aRpCaller[option];
+    }
+  });
+
+  if (! (options.id && options.origin)) {
+    let err = "id and origin required in relying-party message";
+    reportError(err);
+    throw new Error(err);
+  }
+
+  dump("message object is: " + JSON.stringify(options) + "\n");
+  return options;
 }
 
 function IDService() {
@@ -97,15 +127,11 @@ IDService.prototype = {
    *
    */
   watch: function watch(aRpCaller) {
-    log("watch: caller keys:", Object.keys(aRpCaller));
-    log("watch: rpcaller:", aRpCaller);
     // store the caller structure and notify the UI observers
-
+    dump("RP - watch: " + JSON.stringify(aRpCaller) + "\n");
     this._rpFlows[aRpCaller.id] = aRpCaller;
 
-    let options = {rpId: aRpCaller.id,
-                   origin: aRpCaller.origin,
-                   loggedInUser: aRpCaller.loggedInUser};
+    let options = makeMessageObject(aRpCaller);
     log("sending identity-controller-watch:", options);
     Services.obs.notifyObservers({wrappedJSObject: options},"identity-controller-watch", null);
   },
@@ -121,12 +147,12 @@ IDService.prototype = {
    *        (Object)  options including privacyPolicy, termsOfService
    */
   request: function request(aRPId, aOptions) {
-    log("request: rpId:", aRPId);
     let rp = this._rpFlows[aRPId];
 
     // Notify UX to display identity picker.
     // Pass the doc id to UX so it can pass it back to us later.
-    let options = {rpId: aRPId, origin: rp.origin};
+    let options = makeMessageObject(rp);
+    objectCopy(aOptions, options);
     Services.obs.notifyObservers({wrappedJSObject: options}, "identity-controller-request", null);
   },
 
@@ -139,10 +165,9 @@ IDService.prototype = {
    *
    */
   logout: function logout(aRpCallerId) {
-    log("logout: RP caller id:", aRpCallerId);
     let rp = this._rpFlows[aRpCallerId];
 
-    let options = {rpId: aRpCallerId, origin: rp.origin};
+    let options = makeMessageObject(rp);
     Services.obs.notifyObservers({wrappedJSObject: options}, "identity-controller-logout", null);
   },
 
@@ -154,24 +179,30 @@ IDService.prototype = {
 
   doLogin: function doLogin(aRpCallerId, aAssertion) {
     let rp = this._rpFlows[aRpCallerId];
-    if (!rp)
+    if (!rp) {
+      dump("WARNING: doLogin found no rp to go with callerId " + aRpCallerId + "\n");
       return;
+    }
 
     rp.doLogin(aAssertion);
   },
 
   doLogout: function doLogout(aRpCallerId) {
     let rp = this._rpFlows[aRpCallerId];
-    if (!rp)
+    if (!rp) {
+      dump("WARNING: doLogout found no rp to go with callerId " + aRpCallerId + "\n");
       return;
+    }
 
     rp.doLogout();
   },
 
   doReady: function doReady(aRpCallerId) {
     let rp = this._rpFlows[aRpCallerId];
-    if (!rp)
+    if (!rp) {
+      dump("WARNING: doReady found no rp to go with callerId " + aRpCallerId + "\n");
       return;
+    }
 
     rp.doReady();
   },
