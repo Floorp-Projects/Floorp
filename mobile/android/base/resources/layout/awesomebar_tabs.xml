@@ -36,7 +36,6 @@
 
         <android.support.v4.view.ViewPager
                         android:id="@+id/tabviewpager"
-                        style="@style/AwesomeBarList"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"/>
 
