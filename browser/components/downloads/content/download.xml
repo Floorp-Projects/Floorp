@@ -24,8 +24,16 @@
       <xul:image class="downloadTypeIcon blockedIcon"/>
       <xul:vbox pack="center"
                 flex="1">
+        <!-- We're letting localizers put a min-width in here primarily
+             because of the downloads summary at the bottom of the list of
+             download items. An element in the summary has the same min-width
+             on a description, and we don't want the panel to change size if the
+             summary isn't being displayed, so we ensure that items share the
+             same minimum width.
+             -->
         <xul:description class="downloadTarget"
                          crop="center"
+                         style="min-width: &downloadsSummary.minWidth;"
                          xbl:inherits="value=target,tooltiptext=target"/>
         <xul:progressmeter anonid="progressmeter"
                            class="downloadProgress"
