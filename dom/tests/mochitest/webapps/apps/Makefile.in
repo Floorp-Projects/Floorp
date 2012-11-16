@@ -24,6 +24,8 @@ MOCHITEST_CHROME_FILES	= \
     utf8.webapp^headers^ \
     invalid_launch_path.webapp \
     invalid_launch_path.webapp^headers^ \
+    invalid_launch_path2.webapp \
+    invalid_launch_path2.webapp^headers^ \
     invalid_entry_point.webapp \
     invalid_entry_point.webapp^headers^ \
     invalid_locale_entry_point.webapp \

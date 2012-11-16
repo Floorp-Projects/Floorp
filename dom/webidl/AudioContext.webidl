@@ -28,6 +28,8 @@ interface mozAudioContext {
 
     [Creator]
     GainNode createGain();
+    // maxDelayTime should ideally be a restricted float to protect against
+    // things such as NaNs.
     [Creator, Throws]
     DelayNode createDelay(optional float maxDelayTime = 1);
     [Creator]

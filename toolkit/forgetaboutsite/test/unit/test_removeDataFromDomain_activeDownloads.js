@@ -73,6 +73,13 @@ let data = [
   },
 ];
 
+function makeGUID() {
+  let guid = "";
+  for (var i = 0; i < 12; i++)
+    guid += Math.floor(Math.random() * 10);
+  return guid;
+}
+
 function run_test()
 {
   // We add this data to the database first, but we cannot instantiate the
@@ -92,8 +99,8 @@ function run_test()
 
   // Insert the data
   let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (source, target, state, autoResume, entityID) " +
-    "VALUES (:source, :target, :state, :autoResume, :entityID)"
+    "INSERT INTO moz_downloads (source, target, state, autoResume, entityID, guid) " +
+    "VALUES (:source, :target, :state, :autoResume, :entityID, :guid)"
   );
   for (let i = 0; i < data.length; i++) {
     stmt.params.source = data[i].source;
@@ -101,6 +108,7 @@ function run_test()
     stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_PAUSED;
     stmt.params.autoResume = 0; // DONT_RESUME is 0
     stmt.params.entityID = "foo" // just has to be non-null for our test
+    stmt.params.guid = makeGUID();
     stmt.execute();
     stmt.reset();
   }

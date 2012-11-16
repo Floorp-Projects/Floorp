@@ -621,11 +621,17 @@ Accessible::VisibilityState()
     if (view && view->GetVisibility() == nsViewVisibility_kHide)
       return states::INVISIBLE;
 
-    // Offscreen state for background tab content.
+    // Offscreen state for background tab content and invisible for not selected
+    // deck panel.
     nsIFrame* parentFrame = curFrame->GetParent();
     nsDeckFrame* deckFrame = do_QueryFrame(parentFrame);
-    if (deckFrame && deckFrame->GetSelectedBox() != curFrame)
-      return states::OFFSCREEN;
+    if (deckFrame && deckFrame->GetSelectedBox() != curFrame) {
+      if (deckFrame->GetContent()->IsXUL() &&
+          deckFrame->GetContent()->Tag() == nsGkAtoms::tabpanels)
+        return states::OFFSCREEN;
+
+      return states::INVISIBLE;
+    }
 
     // If contained by scrollable frame then check that at least 12 pixels
     // around the object is visible, otherwise the object is offscreen.
