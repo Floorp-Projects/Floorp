@@ -311,6 +311,14 @@ public:
   // SCALE_INVALID otherwise.
   void ScalingDone(ScaleRequest* request, ScaleStatus status);
 
+  // Decoder shutdown
+  enum eShutdownIntent {
+    eShutdownIntent_Done        = 0,
+    eShutdownIntent_Interrupted = 1,
+    eShutdownIntent_Error       = 2,
+    eShutdownIntent_AllCount    = 3
+  };
+
 private:
   struct Anim
   {
@@ -710,13 +718,6 @@ private: // data
   // will inform us when to let go of this pointer.
   ScaleRequest* mScaleRequest;
 
-  // Decoder shutdown
-  enum eShutdownIntent {
-    eShutdownIntent_Done        = 0,
-    eShutdownIntent_Interrupted = 1,
-    eShutdownIntent_Error       = 2,
-    eShutdownIntent_AllCount    = 3
-  };
   nsresult ShutdownDecoder(eShutdownIntent aIntent);
 
   // Helpers

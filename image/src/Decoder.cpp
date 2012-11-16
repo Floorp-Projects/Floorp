@@ -80,7 +80,7 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
 }
 
 void
-Decoder::Finish()
+Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
 {
   // Implementation-specific finalization
   if (!HasError())
@@ -114,16 +114,22 @@ Decoder::Finish()
       }
     }
 
-    // If we only have a data error, see if things are worth salvaging
-    bool salvage = !HasDecoderError() && mImage.GetNumFrames();
+    bool usable = true;
+    if (aShutdownIntent != RasterImage::eShutdownIntent_Interrupted && !HasDecoderError()) {
+      // If we only have a data error, we're usable if we have at least one frame.
+      if (mImage.GetNumFrames() == 0) {
+        usable = false;
+      }
+    }
 
-    // If we're salvaging, say we finished decoding
-    if (salvage)
-      mImage.DecodingComplete();
-
-    // Fire teardown notifications
-    if (mObserver) {
-      mObserver->OnStopDecode(salvage ? NS_OK : NS_ERROR_FAILURE);
+    // If we're usable, do exactly what we should have when the decoder
+    // completed.
+    if (usable) {
+      PostDecodeDone();
+    } else {
+      if (mObserver) {
+        mObserver->OnStopDecode(NS_ERROR_FAILURE);
+      }
     }
   }
 }
