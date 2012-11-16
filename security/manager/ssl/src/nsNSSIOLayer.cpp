@@ -61,7 +61,7 @@ typedef enum {ASK, AUTO} SSM_UserCertChoice;
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-nsNSSSocketInfo::nsNSSSocketInfo(uint32_t providerFlags)
+nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nullptr),
     mCertVerificationState(before_cert_verification),
     mForSTARTTLS(false),
@@ -77,21 +77,13 @@ nsNSSSocketInfo::nsNSSSocketInfo(uint32_t providerFlags)
     mNPNCompleted(false),
     mHandshakeCompleted(false),
     mJoined(false),
-    mSentClientCert(false),
-    mProviderFlags(providerFlags)
+    mSentClientCert(false)
 {
 }
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNSSSocketInfo, TransportSecurityInfo,
                              nsISSLSocketControl,
                              nsIClientAuthUserDecision)
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetProviderFlags(uint32_t* aProviderFlags)
-{
-  *aProviderFlags = mProviderFlags;
-  return NS_OK;
-}
 
 nsresult
 nsNSSSocketInfo::GetHandshakePending(bool *aHandshakePending)
@@ -1320,14 +1312,14 @@ nsSSLIOLayerNewSocket(int32_t family,
                       PRFileDesc **fd,
                       nsISupports** info,
                       bool forSTARTTLS,
-                      uint32_t flags)
+                      bool anonymousLoad)
 {
 
   PRFileDesc* sock = PR_OpenTCPSocket(family);
   if (!sock) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = nsSSLIOLayerAddToSocket(family, host, port, proxyHost, proxyPort,
-                                        sock, info, forSTARTTLS, flags);
+                                        sock, info, forSTARTTLS, anonymousLoad);
   if (NS_FAILED(rv)) {
     PR_Close(sock);
     return rv;
@@ -2317,7 +2309,8 @@ done:
 static PRFileDesc*
 nsSSLIOLayerImportFD(PRFileDesc *fd,
                      nsNSSSocketInfo *infoObject,
-                     const char *host)
+                     const char *host,
+                     bool anonymousLoad)
 {
   nsNSSShutDownPreventionLock locker;
   PRFileDesc* sslSock = SSL_ImportFD(nullptr, fd);
@@ -2329,9 +2322,7 @@ nsSSLIOLayerImportFD(PRFileDesc *fd,
   SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
 
   // Disable this hook if we connect anonymously. See bug 466080.
-  uint32_t flags = 0;
-  infoObject->GetProviderFlags(&flags);
-  if (flags & nsISocketTransport::ANONYMOUS_CONNECT) {
+  if (anonymousLoad) {
       SSL_GetClientAuthDataHook(sslSock, nullptr, infoObject);
   } else {
       SSL_GetClientAuthDataHook(sslSock, 
@@ -2437,14 +2428,14 @@ nsSSLIOLayerAddToSocket(int32_t family,
                         PRFileDesc* fd,
                         nsISupports** info,
                         bool forSTARTTLS,
-                        uint32_t providerFlags)
+                        bool anonymousLoad)
 {
   nsNSSShutDownPreventionLock locker;
   PRFileDesc* layer = nullptr;
   nsresult rv;
   PRStatus stat;
 
-  nsNSSSocketInfo* infoObject = new nsNSSSocketInfo(providerFlags);
+  nsNSSSocketInfo* infoObject = new nsNSSSocketInfo();
   if (!infoObject) return NS_ERROR_FAILURE;
   
   NS_ADDREF(infoObject);
@@ -2452,8 +2443,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
   infoObject->SetHostName(host);
   infoObject->SetPort(port);
 
-  bool anonymousLoad = providerFlags & nsISocketProvider::ANONYMOUS_CONNECT;
-  PRFileDesc *sslSock = nsSSLIOLayerImportFD(fd, infoObject, host);
+  PRFileDesc *sslSock = nsSSLIOLayerImportFD(fd, infoObject, host, anonymousLoad);
   if (!sslSock) {
     NS_ASSERTION(false, "NSS: Error importing socket");
     goto loser;
