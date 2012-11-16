@@ -65,6 +65,12 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register
     ma_b(fail, Assembler::Equal);
 }
 
+void
+MacroAssemblerARM::inc64(AbsoluteAddress dest)
+{
+    JS_NOT_REACHED("NYI");
+}
+
 bool
 MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
                            SetCond_ sc, Condition c)
