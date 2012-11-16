@@ -243,7 +243,7 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  NS_ASSERTION(content, "elements must implement nsIContent");
+  NS_ENSURE_ARG_POINTER(content);
 
   nsIDocument *ownerDoc = content->OwnerDoc();
   nsXBLBinding *binding = ownerDoc->BindingManager()->GetBinding(content);
