@@ -456,6 +456,8 @@ MarkActualArguments(JSTracer *trc, const IonFrameIterator &frame)
 size_t
 IonFrameIterator::numBaselineStackValues() const
 {
+    JS_ASSERT(isBaselineJS());
+
     // Compute the start of the BaselineFrame.
     uint8_t *base = fp() - BaselineFrame::FramePointerOffset;
 
@@ -470,6 +472,18 @@ IonFrameIterator::numBaselineStackValues() const
     JS_ASSERT((size % sizeof(Value)) == 0);
 
     return size / sizeof(Value);
+}
+
+Value
+IonFrameIterator::baselineStackValue(size_t index) const
+{
+    JS_ASSERT(isBaselineJS());
+    JS_ASSERT(index < numBaselineStackValues());
+
+    // Compute the start of the BaselineFrame.
+    uint8_t *base = fp() - BaselineFrame::FramePointerOffset;
+
+    return *reinterpret_cast<Value *>(base + BaselineFrame::reverseOffsetOfLocal(index));
 }
 
 static void
