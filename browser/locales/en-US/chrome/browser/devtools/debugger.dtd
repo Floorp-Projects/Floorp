@@ -63,3 +63,16 @@
 <!-- LOCALIZATION NOTE (debuggerUI.searchPanelTitle): This is the text that
   -  appears in the filter panel popup as a description. -->
 <!ENTITY debuggerUI.searchPanelTitle    "Operators">
+
+<!-- LOCALIZATION NOTE (debuggerUI.condBreakPanelTitle): This is the text that
+  -  appears in the conditional breakpoint panel popup as a description. -->
+<!ENTITY debuggerUI.condBreakPanelTitle "This breakpoint will stop execution only if the following expression is true">
+
+<!-- LOCALIZATION NOTE (debuggerUI.seMenuBreak): This is the text that
+  -  appears in the source editor context menu for adding a breakpoint. -->
+<!ENTITY debuggerUI.seMenuBreak         "Add breakpoint">
+
+<!-- LOCALIZATION NOTE (debuggerUI.seMenuCondBreak): This is the text that
+  -  appears in the source editor context menu for adding a conditional
+  -  breakpoint. -->
+<!ENTITY debuggerUI.seMenuCondBreak     "Add conditional breakpoint">
