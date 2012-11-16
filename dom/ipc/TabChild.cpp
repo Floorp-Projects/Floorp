@@ -422,11 +422,20 @@ TabChild::HandlePossibleViewportChange()
     bodyDOMElement->GetScrollHeight(&bodyHeight);
   }
 
-  float pageWidth = NS_MAX(htmlWidth, bodyWidth);
-  float pageHeight = NS_MAX(htmlHeight, bodyHeight);
+  float pageWidth, pageHeight;
+  if (htmlDOMElement || bodyDOMElement) {
+    pageWidth = NS_MAX(htmlWidth, bodyWidth);
+    pageHeight = NS_MAX(htmlHeight, bodyHeight);
+  } else {
+    // For non-HTML content (e.g. SVG), just assume page size == viewport size.
+    pageWidth = viewportW;
+    pageHeight = viewportH;
+  }
+  NS_ENSURE_TRUE_VOID(pageWidth); // (return early rather than divide by 0)
 
   minScale = mInnerSize.width / pageWidth;
   minScale = clamped((double)minScale, viewportInfo.minZoom, viewportInfo.maxZoom);
+  NS_ENSURE_TRUE_VOID(minScale); // (return early rather than divide by 0)
 
   viewportH = NS_MAX(viewportH, screenH / minScale);
   SetCSSViewport(viewportW, viewportH);
