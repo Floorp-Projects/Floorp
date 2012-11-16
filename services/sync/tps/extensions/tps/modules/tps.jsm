@@ -25,6 +25,7 @@ CU.import("resource://tps/history.jsm");
 CU.import("resource://tps/forms.jsm");
 CU.import("resource://tps/prefs.jsm");
 CU.import("resource://tps/tabs.jsm");
+CU.import("resource://tps/windows.jsm");
 
 var hh = CC["@mozilla.org/network/protocol;1?name=http"]
          .getService(CI.nsIHttpProtocolHandler);
@@ -161,6 +162,20 @@ let TPS = {
     }, this);
     Logger.close();
     this.goQuitApplication();
+  },
+
+  HandleWindows: function (aWindow, action) {
+    Logger.logInfo("executing action " + action.toUpperCase() +
+                   " on window " + JSON.stringify(aWindow));
+    switch(action) {
+      case ACTION_ADD:
+        BrowserWindows.Add(aWindow.private, function(win) {
+          Logger.logInfo("window finished loading");
+          this.FinishAsyncOperation();
+        }.bind(this));
+        break;
+    }
+    Logger.logPass("executing action " + action.toUpperCase() + " on windows");
   },
 
   HandleTabs: function (tabs, action) {
@@ -927,3 +942,9 @@ var Tabs = {
   }
 };
 
+var Windows = {
+  add: function Window__add(aWindow) {
+    TPS.StartAsyncOperation();
+    TPS.HandleWindows(aWindow, ACTION_ADD);
+  },
+};
