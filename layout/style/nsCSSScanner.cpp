@@ -9,6 +9,7 @@
 #include <math.h> // must be first due to symbol conflicts
 
 #include "nsCSSScanner.h"
+#include "nsStyleUtil.h"
 #include "mozilla/css/ErrorReporter.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Util.h"
@@ -144,64 +145,85 @@ void
 nsCSSToken::AppendToString(nsString& aBuffer) const
 {
   switch (mType) {
-    case eCSSToken_AtKeyword:
-      aBuffer.Append(PRUnichar('@')); // fall through intentional
     case eCSSToken_Ident:
-    case eCSSToken_WhiteSpace:
-    case eCSSToken_Function:
-    case eCSSToken_HTMLComment:
-    case eCSSToken_URange:
-      aBuffer.Append(mIdent);
-      if (mType == eCSSToken_Function)
-        aBuffer.Append(PRUnichar('('));
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
       break;
+
+    case eCSSToken_AtKeyword:
+      aBuffer.Append('@');
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
+      break;
+
+    case eCSSToken_ID:
+    case eCSSToken_Ref:
+      aBuffer.Append('#');
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
+      break;
+
+    case eCSSToken_Function:
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
+      aBuffer.Append('(');
+      break;
+
     case eCSSToken_URL:
     case eCSSToken_Bad_URL:
       aBuffer.AppendLiteral("url(");
       if (mSymbol != PRUnichar(0)) {
-        aBuffer.Append(mSymbol);
-      }
-      aBuffer.Append(mIdent);
-      if (mSymbol != PRUnichar(0)) {
-        aBuffer.Append(mSymbol);
+        nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
+      } else {
+        aBuffer.Append(mIdent);
       }
       if (mType == eCSSToken_URL) {
         aBuffer.Append(PRUnichar(')'));
       }
       break;
+
     case eCSSToken_Number:
       if (mIntegerValid) {
         aBuffer.AppendInt(mInteger, 10);
-      }
-      else {
+      } else {
         aBuffer.AppendFloat(mNumber);
       }
       break;
+
     case eCSSToken_Percentage:
       NS_ASSERTION(!mIntegerValid, "How did a percentage token get this set?");
       aBuffer.AppendFloat(mNumber * 100.0f);
       aBuffer.Append(PRUnichar('%'));
       break;
+
     case eCSSToken_Dimension:
       if (mIntegerValid) {
         aBuffer.AppendInt(mInteger, 10);
-      }
-      else {
+      } else {
         aBuffer.AppendFloat(mNumber);
       }
-      aBuffer.Append(mIdent);
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
       break;
+
+    case eCSSToken_Bad_String:
+      nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
+      // remove the trailing quote character
+      aBuffer.Truncate(aBuffer.Length() - 1);
+      break;
+
     case eCSSToken_String:
-      aBuffer.Append(mSymbol);
-      aBuffer.Append(mIdent); // fall through intentional
+      nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
+      break;
+
     case eCSSToken_Symbol:
       aBuffer.Append(mSymbol);
       break;
-    case eCSSToken_ID:
-    case eCSSToken_Ref:
-      aBuffer.Append(PRUnichar('#'));
+
+    case eCSSToken_WhiteSpace:
+      aBuffer.Append(' ');
+      break;
+
+    case eCSSToken_HTMLComment:
+    case eCSSToken_URange:
       aBuffer.Append(mIdent);
       break;
+
     case eCSSToken_Includes:
       aBuffer.AppendLiteral("~=");
       break;
@@ -217,10 +239,7 @@ nsCSSToken::AppendToString(nsString& aBuffer) const
     case eCSSToken_Containsmatch:
       aBuffer.AppendLiteral("*=");
       break;
-    case eCSSToken_Bad_String:
-      aBuffer.Append(mSymbol);
-      aBuffer.Append(mIdent);
-      break;
+
     default:
       NS_ERROR("invalid token type");
       break;

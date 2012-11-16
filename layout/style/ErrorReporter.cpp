@@ -17,6 +17,7 @@
 #include "nsIScriptError.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
+#include "nsStyleUtil.h"
 #include "nsThreadUtils.h"
 
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -252,7 +253,10 @@ ErrorReporter::ReportUnexpected(const char *aMessage,
 {
   if (!ShouldReportErrors()) return;
 
-  const PRUnichar *params[1] = { aParam.get() };
+  nsAutoString qparam;
+  nsStyleUtil::AppendEscapedCSSIdent(aParam, qparam);
+  const PRUnichar *params[1] = { qparam.get() };
+
   nsAutoString str;
   sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
                                       params, ArrayLength(params),

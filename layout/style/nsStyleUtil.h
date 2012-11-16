@@ -25,14 +25,17 @@ public:
  static bool DashMatchCompare(const nsAString& aAttributeValue,
                                 const nsAString& aSelectorValue,
                                 const nsStringComparator& aComparator);
-                                
-  // Append a quoted (with "") and escaped version of aString to aResult.
-  static void AppendEscapedCSSString(const nsString& aString,
-                                     nsAString& aResult);
+
+  // Append a quoted (with 'quoteChar') and escaped version of aString
+  // to aResult.  'quoteChar' must be ' or ".
+  static void AppendEscapedCSSString(const nsAString& aString,
+                                     nsAString& aResult,
+                                     PRUnichar quoteChar = '"');
+
   // Append the identifier given by |aIdent| to |aResult|, with
   // appropriate escaping so that it can be reparsed to the same
   // identifier.
-  static void AppendEscapedCSSIdent(const nsString& aIdent,
+  static void AppendEscapedCSSIdent(const nsAString& aIdent,
                                     nsAString& aResult);
 
   // Append a bitmask-valued property's value(s) (space-separated) to aResult.
