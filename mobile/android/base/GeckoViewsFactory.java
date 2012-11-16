@@ -96,6 +96,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new GeckoLinearLayout(context, attrs);
             else if (TextUtils.equals(viewName, "RelativeLayout"))
                 return new GeckoRelativeLayout(context, attrs);
+            else if (TextUtils.equals(viewName, "TextSwitcher"))
+                return new GeckoTextSwitcher(context, attrs);
             else if (TextUtils.equals(viewName, "TextView"))
                 return new GeckoTextView(context, attrs);
             else
