@@ -70,7 +70,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private AnimationDrawable mProgressSpinner;
     private GeckoTextSwitcher mTabsCount;
     private ImageView mShadow;
-    private ImageButton mMenu;
+    private GeckoImageButton mMenu;
     private LinearLayout mActionItemBar;
     private MenuPopup mMenuPopup;
     private List<View> mFocusOrder;
@@ -291,7 +291,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mTitleSlideLeft.setDuration(lockAnimDuration);
         mTitleSlideRight.setDuration(lockAnimDuration);
 
-        mMenu = (ImageButton) mLayout.findViewById(R.id.menu);
+        mMenu = (GeckoImageButton) mLayout.findViewById(R.id.menu);
         mActionItemBar = (LinearLayout) mLayout.findViewById(R.id.menu_items);
         mHasSoftMenuButton = !mActivity.hasPermanentMenuKey();
 
@@ -799,6 +799,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             mTabsCount.setPrivateMode(tab.isPrivate());
             ((GeckoTextView) mTabsCount.getCurrentView()).setPrivateMode(tab.isPrivate());
             mTitle.setPrivateMode(tab.isPrivate());
+            mMenu.setPrivateMode(tab.isPrivate());
         }
     }
 
