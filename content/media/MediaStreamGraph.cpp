@@ -20,8 +20,10 @@
 #include "mozilla/Attributes.h"
 #include "TrackUnionStream.h"
 #include "ImageContainer.h"
+#include "AudioChannelCommon.h"
 
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 
 namespace mozilla {
 
@@ -1160,7 +1162,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         audioOutputStream->mBlockedAudioTime = 0;
         audioOutputStream->mStream = AudioStream::AllocateStream();
         audioOutputStream->mStream->Init(audio->GetChannels(),
-                                         tracks->GetRate());
+                                         tracks->GetRate(), AUDIO_CHANNEL_NORMAL);
         audioOutputStream->mTrackID = tracks->GetID();
       }
     }
