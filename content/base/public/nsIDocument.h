@@ -79,8 +79,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x20d19edb, 0xa74c, 0x4ce4, \
-  { 0xb2, 0x7c, 0x5b, 0xdd, 0x6f, 0xbd, 0x2b, 0x66 } }
+{ 0xd69b94c2, 0x92ed, 0x4baa, \
+  { 0x82, 0x08, 0x56, 0xe4, 0xc4, 0xb3, 0xf3, 0xc8 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -958,8 +958,6 @@ public:
   }
 
   virtual bool IsScriptEnabled() = 0;
-
-  virtual void AddXMLEventsContent(nsIContent * aXMLEventsElement) = 0;
 
   /**
    * Create an element with the specified name, prefix and namespace ID.

@@ -28,8 +28,7 @@ static const int32_t kNameSpaceID_None = 0;
 #define kNameSpaceID_RDF      8
 #define kNameSpaceID_XUL      9
 #define kNameSpaceID_SVG      10
-#define kNameSpaceID_XMLEvents 11
-#define kNameSpaceID_LastBuiltin          11 // last 'built-in' namespace
+#define kNameSpaceID_LastBuiltin          10 // last 'built-in' namespace
  
 #define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 
