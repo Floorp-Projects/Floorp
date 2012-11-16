@@ -207,9 +207,6 @@ function run_test() {
             do_check_true(promptService.wasCalled());
             do_check_false(pb.privateBrowsingEnabled);
 
-            // Simulate leaving PB mode
-            Services.obs.notifyObservers(null, "last-pb-context-exited", null);
-
             // Check that Download-F is canceled and not accessible
             do_check_eq(dlF.state, dm.DOWNLOAD_PAUSED);
 
