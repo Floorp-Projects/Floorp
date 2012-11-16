@@ -96,6 +96,14 @@ add_test(function test_register_providers_from_category_manager() {
   run_next_test();
 });
 
+add_test(function test_start() {
+  let reporter = getReporter("start");
+  reporter.start().then(function onStarted() {
+    reporter.stop();
+    run_next_test();
+  });
+});
+
 add_test(function test_json_payload_simple() {
   let reporter = getReporter("json_payload_simple");
 
@@ -258,5 +266,20 @@ add_test(function test_policy_accept_reject() {
   do_check_false(reporter.willUploadData);
 
   server.stop(run_next_test);
+});
+
+
+add_test(function test_upload_save_payload() {
+  let [reporter, server] = getReporterAndServer("upload_save_payload");
+
+  let deferred = Promise.defer();
+  let request = new DataSubmissionRequest(deferred, new Date(), false);
+
+  reporter._uploadData(request).then(function onUpload() {
+    reporter.getLastPayload().then(function onJSON(json) {
+      do_check_true("thisPingDate" in json);
+      server.stop(run_next_test);
+    });
+  });
 });
 
