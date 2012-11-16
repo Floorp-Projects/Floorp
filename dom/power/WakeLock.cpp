@@ -58,7 +58,7 @@ WakeLock::Init(const nsAString &aTopic, nsIDOMWindow *aWindow)
   if (window) {
     nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
     NS_ENSURE_STATE(domDoc);
-    domDoc->GetMozHidden(&mHidden);
+    domDoc->GetHidden(&mHidden);
   }
 
   AttachEventListener();
@@ -176,7 +176,7 @@ WakeLock::HandleEvent(nsIDOMEvent *aEvent)
     nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
     NS_ENSURE_STATE(domDoc);
     bool oldHidden = mHidden;
-    domDoc->GetMozHidden(&mHidden);
+    domDoc->GetHidden(&mHidden);
 
     if (mLocked && oldHidden != mHidden) {
       hal::ModifyWakeLock(mTopic,
