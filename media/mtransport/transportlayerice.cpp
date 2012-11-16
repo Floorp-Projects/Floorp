@@ -82,7 +82,7 @@ namespace mozilla {
 #undef ERROR
 #endif
 
-MOZ_MTLOG_MODULE("mtransport");
+MOZ_MTLOG_MODULE("mtransport")
 
 TransportLayerIce::TransportLayerIce(const std::string& name,
     RefPtr<NrIceCtx> ctx, RefPtr<NrIceMediaStream> stream,

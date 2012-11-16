@@ -79,6 +79,7 @@
         './src/common/csf_common.h',
         './src/common/NullDeleter.h',
         './src/common/Wrapper.h',
+        './src/common/NullTransport.h',
         # Browser Logging
         './src/common/browser_logging/CSFLog.cpp',
         './src/common/browser_logging/CSFLog.h',

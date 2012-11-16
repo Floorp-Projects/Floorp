@@ -15,7 +15,10 @@
     <dimen name="autocomplete_row_height">32dp</dimen>
     <dimen name="awesomebar_header_row_height">20dp</dimen>
     <dimen name="awesomebar_row_height">48dp</dimen>
-    <dimen name="awesomebar_row_favicon_size">32dp</dimen>
+    <dimen name="awesomebar_row_favicon_size_small">16dp</dimen>
+    <dimen name="awesomebar_row_favicon_size_large">32dp</dimen>
+    <dimen name="awesomebar_row_favicon_bg">32dp</dimen>
+    <dimen name="awesomebar_row_favicon_bg_radius">1dp</dimen>
     <dimen name="awesomebar_tab_transparency_height">38dp</dimen>
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_icon_width">36dp</dimen>

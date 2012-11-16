@@ -1218,7 +1218,7 @@ gsmsdp_set_media_attributes (uint32_t media_type, void *sdp_p, uint16_t level,
 
             (void) sdp_attr_set_rtpmap_clockrate(sdp_p, level, 0, a_inst,
             		RTPMAP_OPUS_CLOCKRATE);
-
+            (void) sdp_attr_set_rtpmap_num_chan (sdp_p, level, 0, a_inst, 2);
 
             /* a=fmtp options */
             if (maxavbitrate || maxcodedaudiobw || usedtx || stereo || useinbandfec || cbr) {
@@ -2855,17 +2855,24 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                 }
 
                 if (media->type == SDP_MEDIA_AUDIO) {
-                    ptime = sdp_attr_get_simple_u32(sdp_p->dest_sdp,
-                                                SDP_ATTR_PTIME, level, 0, 1);
-                    if (ptime != 0) {
-                        media->packetization_period = (uint16_t) ptime;
-                    }
+
                     if (media->payload == RTP_ILBC) {
                         media->mode = (uint16_t)sdp_attr_get_fmtp_mode_for_payload_type
                                                        (sdp_p->dest_sdp, level, 0,
                                                         media->remote_dynamic_payload_type_value);
                     }
                     if (media->payload == RTP_OPUS) {
+                        u16 a_inst;
+                        if (!sdp_attr_rtpmap_payload_valid(sdp_p->dest_sdp, level, 0, &a_inst,
+                                                               remote_dynamic_payload_type_value) ||
+                            sdp_attr_get_rtpmap_clockrate(sdp_p->dest_sdp, level, 0, a_inst) != RTPMAP_OPUS_CLOCKRATE ||
+                            sdp_attr_get_rtpmap_num_chan(sdp_p->dest_sdp, level, 0, a_inst) != 2) {
+                            /* Be conservative in what we accept: any
+                               implementation that does not use a 48 kHz
+                               clockrate or 2 channels is broken. */
+                            explicit_reject = TRUE;
+                            continue; // keep looking
+                        }
 
                         maxptime = sdp_attr_get_simple_u32(sdp_p->dest_sdp,
                         		                          SDP_ATTR_MAXPTIME, level, 0, 1);
@@ -2886,6 +2893,11 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                         sdp_attr_get_fmtp_useinbandfec (sdp_p->dest_sdp, level, 0, 1, &useinbandfec);
 
                         sdp_attr_get_fmtp_cbr (sdp_p->dest_sdp, level, 0, 1, &cbr);
+                    }
+                    ptime = sdp_attr_get_simple_u32(sdp_p->dest_sdp,
+                                                SDP_ATTR_PTIME, level, 0, 1);
+                    if (ptime != 0) {
+                        media->packetization_period = (uint16_t) ptime;
                     }
 
                     GSM_DEBUG(DEB_L_C_F_PREFIX"codec= %d\n",
