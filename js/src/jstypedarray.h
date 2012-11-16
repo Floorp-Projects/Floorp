@@ -132,6 +132,8 @@ class ArrayBufferObject : public JSObject
 
     static void sweepAll(JSRuntime *rt);
 
+    static void resetArrayBufferList(JSRuntime *rt);
+
     static bool stealContents(JSContext *cx, JSObject *obj, void **contents,
                               uint8_t **data);
 

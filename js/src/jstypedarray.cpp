@@ -549,17 +549,24 @@ void
 ArrayBufferObject::sweepAll(JSRuntime *rt)
 {
     JSObject *buffer = rt->liveArrayBuffers;
+    JS_ASSERT(buffer != UNSET_BUFFER_LINK);
+
+    JSObject *lastBufferViews = NULL;
+
     while (buffer) {
         JSObject **views = GetViewList(&buffer->asArrayBuffer());
         JS_ASSERT(*views);
-        JSObject *nextBuffer = BufferLink(*views);
 
-        // Rebuild the list of views of the ArrayBuffer, discarding dead views
+        JSObject *nextBuffer = BufferLink(*views);
+        JS_ASSERT(nextBuffer != UNSET_BUFFER_LINK);
+
+        // Rebuild the list of views of the ArrayBuffer, discarding dead views.
+        // If there is only one view, it will have already been marked.
         JSObject *prevLiveView = NULL;
         JSObject *view = *views;
         while (view) {
-            JSObject *nextView =
-                static_cast<JSObject*>(view->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toPrivate());
+            JS_ASSERT(buffer->compartment() == view->compartment());
+            JSObject *nextView = NextView(view);
             if (!JS_IsAboutToBeFinalized(view)) {
                 view->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(prevLiveView));
                 prevLiveView = view;
@@ -567,12 +574,43 @@ ArrayBufferObject::sweepAll(JSRuntime *rt)
             view = nextView;
         }
         *views = prevLiveView;
-        if (*views)
-            SetBufferLink(*views, UNSET_BUFFER_LINK);
+
+        // Add the buffer to the end of the list if it has any views left.
+        // Buffers without views are dropped from the list.
+        if (*views) {
+            if (lastBufferViews)
+                SetBufferLink(lastBufferViews, buffer);
+            else
+                rt->liveArrayBuffers = buffer;
+            lastBufferViews = *views;
+        }
 
         buffer = nextBuffer;
     }
 
+    // Terminate the buffer list.
+    if (lastBufferViews)
+        SetBufferLink(lastBufferViews, NULL);
+    else
+        rt->liveArrayBuffers = NULL;
+}
+
+void
+ArrayBufferObject::resetArrayBufferList(JSRuntime *rt)
+{
+    JSObject *buffer = rt->liveArrayBuffers;
+    JS_ASSERT(buffer != UNSET_BUFFER_LINK);
+
+    while (buffer) {
+        JSObject *view = *GetViewList(&buffer->asArrayBuffer());
+        JS_ASSERT(view);
+
+        JSObject *nextBuffer = BufferLink(view);
+        JS_ASSERT(nextBuffer != UNSET_BUFFER_LINK);
+
+        SetBufferLink(view, UNSET_BUFFER_LINK);
+        buffer = nextBuffer;
+    }
     rt->liveArrayBuffers = NULL;
 }
 

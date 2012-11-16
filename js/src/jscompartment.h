@@ -18,6 +18,7 @@
 #include "jsscope.h"
 
 #include "gc/StoreBuffer.h"
+#include "gc/FindSCCs.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 
@@ -116,7 +117,7 @@ namespace js {
 class AutoDebugModeGC;
 }
 
-struct JSCompartment
+struct JSCompartment : public js::gc::GraphNodeBase
 {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
@@ -192,7 +193,8 @@ struct JSCompartment
     enum CompartmentGCState {
         NoGC,
         Mark,
-        Sweep
+        Sweep,
+        Finished
     };
 
   private:
@@ -202,11 +204,10 @@ struct JSCompartment
 
   public:
     bool isCollecting() const {
-        if (rt->isHeapCollecting()) {
+        if (rt->isHeapCollecting())
             return gcState != NoGC;
-        } else {
+        else
             return needsBarrier();
-        }
     }
 
     bool isPreservingCode() const {
@@ -248,7 +249,10 @@ struct JSCompartment
     }
 
     bool isGCMarking() {
-        return gcState == Mark;
+        if (rt->isHeapCollecting())
+            return gcState == Mark;
+        else
+            return needsBarrier();
     }
 
     bool isGCSweeping() {
@@ -259,7 +263,6 @@ struct JSCompartment
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
     double                       gcHeapGrowthFactor;
-    JSCompartment                *gcNextCompartment;
 
     bool                         hold;
     bool                         isSystemCompartment;
@@ -335,7 +338,7 @@ struct JSCompartment
     size_t                       gcTriggerMallocAndFreeBytes;
 
     /* During GC, stores the index of this compartment in rt->compartments. */
-    unsigned                     index;
+    unsigned                     gcIndex;
 
   private:
     /*
@@ -375,6 +378,8 @@ struct JSCompartment
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();
     void purge();
+
+    virtual void findOutgoingEdges(js::gc::ComponentFinder& finder);
 
     void setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
