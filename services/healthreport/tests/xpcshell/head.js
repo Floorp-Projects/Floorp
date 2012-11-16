@@ -3,6 +3,9 @@
 
 "use strict";
 
+// We need to initialize the profile or OS.File may not work. See bug 810543.
+do_get_profile();
+
 (function initMetricsTestingInfrastructure() {
   let ns = {};
   Components.utils.import("resource://testing-common/services-common/logging.js",
