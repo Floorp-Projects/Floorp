@@ -31,7 +31,6 @@
   border-top-right-radius: 6px;
 }
 
-#downloadsSummary,
 #downloadsPanel[hasdownloads] > #downloadsHistory {
   background: #e5e5e5;
   border-top: 1px solid hsla(0,0%,0%,.1);
@@ -54,34 +53,17 @@
   border-bottom-right-radius: 6px;
 }
 
-/*** Downloads Summary and List items ***/
+/*** List items ***/
 
-#downloadsSummary,
 richlistitem[type="download"] {
   height: 7em;
-  -moz-padding-end: 0;
-  color: inherit;
-}
-
-#downloadsSummary {
-  padding: 8px 38px 8px 12px;
-  cursor: pointer;
-}
-
-#downloadsSummary > .downloadTypeIcon {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
-}
-
-#downloadsSummaryDescription {
-  color: -moz-nativehyperlinktext;
-}
-
-richlistitem[type="download"] {
   margin: 0;
   border-top: 1px solid hsla(0,0%,100%,.07);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
   background: transparent;
   padding: 8px;
+  -moz-padding-end: 0;
+  color: inherit;
 }
 
 richlistitem[type="download"]:first-child {
