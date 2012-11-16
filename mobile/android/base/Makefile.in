@@ -219,6 +219,7 @@ FENNEC_PP_JAVA_FILES = \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
+  res/drawable/address_bar_bg.xml \
   res/layout/abouthome_content.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_suggestion_row.xml \
@@ -524,6 +525,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/address_bar_back_button_pressed_bg.xml \
   res/drawable/address_bar_forward_button.xml \
   res/drawable/address_bar_texture_port.png \
+  res/drawable/address_bar_texture_port_pb.png \
   res/drawable/address_bar_url.xml \
   res/drawable/address_bar_url_default.9.png \
   res/drawable/address_bar_url_pressed.9.png \
@@ -598,6 +600,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_carat.png \
   res/drawable-hdpi/address_bar_texture_port.png \
+  res/drawable-hdpi/address_bar_texture_port_pb.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
   res/drawable-hdpi/doorhanger_arrow.png \
@@ -636,6 +639,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_thumbnail_bg.png \
   res/drawable-xhdpi/address_bar_bg_shadow.png \
   res/drawable-xhdpi/address_bar_texture_port.png \
+  res/drawable-xhdpi/address_bar_texture_port_pb.png \
   res/drawable-xhdpi/address_bar_url_default.9.png \
   res/drawable-xhdpi/address_bar_url_pressed.9.png \
   res/drawable-xhdpi/alert_addon.png \
@@ -789,13 +793,15 @@ RES_DRAWABLE_XHDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \
-  res/drawable-land-v14/address_bar_bg.xml \
+  res/drawable-land-v14/address_bar_bg_normal.xml \
+  res/drawable-land-v14/address_bar_bg_private.xml \
   $(NULL)
 
 RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-mdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-mdpi-v14/address_bar_texture_land.png \
+  res/drawable-land-mdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-mdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-mdpi-v14/address_bar_url_pressed.9.png \
   res/drawable-land-mdpi-v14/remote_tabs_off.png \
@@ -813,6 +819,7 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-hdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-hdpi-v14/address_bar_texture_land.png \
+  res/drawable-land-hdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-hdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-hdpi-v14/address_bar_url_pressed.9.png \
   res/drawable-land-hdpi-v14/remote_tabs_off.png \
@@ -830,6 +837,7 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-xhdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-xhdpi-v14/address_bar_texture_land.png \
+  res/drawable-land-xhdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-xhdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-xhdpi-v14/address_bar_url_pressed.9.png \
   res/drawable-land-xhdpi-v14/remote_tabs_off.png \
@@ -844,8 +852,10 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
-  res/drawable-large-mdpi-v11/address_bar_bg.xml \
+  res/drawable-large-mdpi-v11/address_bar_bg_normal.xml \
+  res/drawable-large-mdpi-v11/address_bar_bg_private.xml \
   res/drawable-large-mdpi-v11/address_bar_texture_tablet.png \
+  res/drawable-large-mdpi-v11/address_bar_texture_tablet_pb.png \
   res/drawable-large-mdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-mdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-mdpi-v11/address_bar_url_default.9.png \
@@ -869,6 +879,7 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/address_bar_texture_tablet.png \
+  res/drawable-large-hdpi-v11/address_bar_texture_tablet_pb.png \
   res/drawable-large-hdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-hdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-hdpi-v11/address_bar_url_default.9.png \
@@ -892,6 +903,7 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/address_bar_texture_tablet.png \
+  res/drawable-large-xhdpi-v11/address_bar_texture_tablet_pb.png \
   res/drawable-large-xhdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_url_default.9.png \
@@ -967,7 +979,8 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/abouthome_divider.xml                  \
   mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
-  mobile/android/base/resources/drawable/address_bar_bg.xml                     \
+  mobile/android/base/resources/drawable/address_bar_bg_normal.xml              \
+  mobile/android/base/resources/drawable/address_bar_bg_private.xml             \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_url_level.xml              \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
@@ -1107,7 +1120,7 @@ PP_RES_XML= \
 # This is kinda awful; if any of the source files change, we remake them all.
 $(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res,$(srcdir)/resources,$@).in > $@
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res/,$(srcdir)/resources/,$@).in > $@
 
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
 SERVICES_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/services/manifests/*.in)
