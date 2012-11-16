@@ -59,9 +59,9 @@ this.EXPORTED_SYMBOLS = ["CssRuleView",
 /**
  * ElementStyle maintains a list of Rule objects for a given element.
  *
- * @param Element aElement
+ * @param {Element} aElement
  *        The element whose style we are viewing.
- * @param object aStore
+ * @param {object} aStore
  *        The ElementStyle can use this object to store metadata
  *        that might outlast the rule view, particularly the current
  *        set of disabled properties.
@@ -189,7 +189,7 @@ ElementStyle.prototype = {
    * @param {object} aOptions
    *        Options for creating the Rule, see the Rule constructor.
    *
-   * @return true if we added the rule.
+   * @return {bool} true if we added the rule.
    */
   _maybeAddRule: function ElementStyle_maybeAddRule(aOptions)
   {
@@ -305,7 +305,7 @@ ElementStyle.prototype = {
    * @param {TextProperty} aProp
    *        The text property to update.
    *
-   * @return True if the TextProperty's overridden state (or any of its
+   * @return {bool} true if the TextProperty's overridden state (or any of its
    *         computed properties overridden state) changed.
    */
   _updatePropertyOverridden: function ElementStyle_updatePropertyOverridden(aProp)
@@ -420,9 +420,8 @@ Rule.prototype = {
    * Returns true if the rule matches the creation options
    * specified.
    *
-   * @param object aOptions
-   *        Creation options.  See the Rule constructor for
-   *        documentation.
+   * @param {object} aOptions
+   *        Creation options.  See the Rule constructor for documentation.
    */
   matches: function Rule_matches(aOptions)
   {
@@ -673,12 +672,12 @@ Rule.prototype = {
    *
    * If no existing properties match the property, nothing happens.
    *
-   * @param TextProperty aNewProp
+   * @param {TextProperty} aNewProp
    *        The current version of the property, as parsed from the
    *        cssText in Rule._getTextProperties().
    *
-   * @returns true if a property was updated, false if no properties
-   *          were updated.
+   * @return {bool} true if a property was updated, false if no properties
+   *         were updated.
    */
   _updateTextProperty: function Rule__updateTextProperty(aNewProp) {
     let match = { rank: 0, prop: null };
@@ -801,7 +800,7 @@ TextProperty.prototype = {
    * Set all the values from another TextProperty instance into
    * this TextProperty instance.
    *
-   * @param TextProperty aOther
+   * @param {TextProperty} aOther
    *        The other TextProperty instance.
    */
   set: function TextProperty_set(aOther)
@@ -866,9 +865,9 @@ TextProperty.prototype = {
  * apply to a given element.  After construction, the 'element'
  * property will be available with the user interface.
  *
- * @param Document aDoc
+ * @param {Document} aDoc
  *        The document that will contain the rule view.
- * @param object aStore
+ * @param {object} aStore
  *        The CSS rule view can use this object to store metadata
  *        that might outlast the rule view, particularly the current
  *        set of disabled properties.
@@ -895,7 +894,7 @@ CssRuleView.prototype = {
   _viewedElement: null,
 
   /**
-   * Returns true if the rule view currently has an input editor visible.
+   * Return {bool} true if the rule view currently has an input editor visible.
    */
   get isEditing() {
     return this.element.querySelectorAll(".styleinspector-propertyeditor").length > 0;
@@ -1120,7 +1119,8 @@ CssRuleView.prototype = {
    * Update the rule view's context menu by disabling irrelevant menuitems and
    * enabling relevant ones.
    *
-   * @param aEvent The event object
+   * @param {Event} aEvent
+   *        The event object.
    */
   _onMenuUpdate: function CssRuleView_onMenuUpdate(aEvent)
   {
@@ -1159,7 +1159,8 @@ CssRuleView.prototype = {
   /**
    * Copy selected text from the rule view.
    *
-   * @param aEvent The event object
+   * @param {Event} aEvent
+   *        The event object.
    */
   _onCopy: function CssRuleView_onCopy(aEvent)
   {
@@ -1194,7 +1195,8 @@ CssRuleView.prototype = {
   /**
    * Copy a rule from the rule view.
    *
-   * @param aEvent The event object
+   * @param {Event} aEvent
+   *        The event object.
    */
   _onCopyRule: function CssRuleView_onCopyRule(aEvent)
   {
@@ -1247,7 +1249,8 @@ CssRuleView.prototype = {
   /**
    * Copy a declaration from the rule view.
    *
-   * @param aEvent The event object
+   * @param {Event} aEvent
+   *        The event object.
    */
   _onCopyDeclaration: function CssRuleView_onCopyDeclaration(aEvent)
   {
@@ -1286,7 +1289,8 @@ CssRuleView.prototype = {
   /**
    * Copy a property name from the rule view.
    *
-   * @param aEvent The event object
+   * @param {Event} aEvent
+   *        The event object.
    */
   _onCopyProperty: function CssRuleView_onCopyProperty(aEvent)
   {
@@ -1308,7 +1312,8 @@ CssRuleView.prototype = {
  /**
    * Copy a property value from the rule view.
    *
-   * @param aEvent The event object
+   * @param {Event} aEvent
+   *        The event object.
    */
   _onCopyPropertyValue: function CssRuleView_onCopyPropertyValue(aEvent)
   {
@@ -1330,9 +1335,9 @@ CssRuleView.prototype = {
 /**
  * Create a RuleEditor.
  *
- * @param CssRuleView aRuleView
+ * @param {CssRuleView} aRuleView
  *        The CssRuleView containg the document holding this rule editor.
- * @param Rule aRule
+ * @param {Rule} aRule
  *        The Rule object we're editing.
  * @constructor
  */
@@ -1451,7 +1456,8 @@ RuleEditor.prototype = {
             textContent: ", "
           });
         }
-        let cls = element.mozMatchesSelector(selector) ? "ruleview-selector-matched" : "ruleview-selector-unmatched";
+        let cls = element.mozMatchesSelector(selector) ? "ruleview-selector-matched" :
+                                                         "ruleview-selector-unmatched";
         createChild(this.selectorText, "span", {
           class: cls,
           textContent: selector
@@ -1472,11 +1478,11 @@ RuleEditor.prototype = {
   /**
    * Programatically add a new property to the rule.
    *
-   * @param string aName
+   * @param {string} aName
    *        Property name.
-   * @param string aValue
+   * @param {string} aValue
    *        Property value.
-   * @param string aPriority
+   * @param {string} aPriority
    *        Property priority.
    */
   addProperty: function RuleEditor_addProperty(aName, aValue, aPriority)
@@ -1524,9 +1530,9 @@ RuleEditor.prototype = {
    * Called when the new property input has been dismissed.
    * Will create a new TextProperty if necessary.
    *
-   * @param string aValue
+   * @param {string} aValue
    *        The value in the editor.
-   * @param bool aCommit
+   * @param {bool} aCommit
    *        True if the value should be committed.
    */
   _onNewProperty: function RuleEditor__onNewProperty(aValue, aCommit)
@@ -1836,7 +1842,7 @@ TextPropertyEditor.prototype = {
    *
    * @param {string} aValue
    *        The value from the text editor.
-   * @return an object with 'value' and 'priority' properties.
+   * @return {object} an object with 'value' and 'priority' properties.
    */
   _parseValue: function TextPropertyEditor_parseValue(aValue)
   {
@@ -1853,7 +1859,7 @@ TextPropertyEditor.prototype = {
    *
    * @param {string} aValue
    *        The value contained in the editor.
-   * @param {boolean} aCommit
+   * @param {bool} aCommit
    *        True if the change should be applied.
    */
    _onValueDone: function PropertyEditor_onValueDone(aValue, aCommit)
@@ -1871,12 +1877,11 @@ TextPropertyEditor.prototype = {
   /**
    * Validate this property.
    *
-   * @param {String} [aValue]
+   * @param {string} [aValue]
    *        Override the actual property value used for validation without
    *        applying property values e.g. validate as you type.
    *
-   * @returns {Boolean}
-   *          True if the property value is valid, false otherwise.
+   * @return {bool} true if the property value is valid, false otherwise.
    */
   _validate: function TextPropertyEditor_validate(aValue)
   {
@@ -1945,12 +1950,12 @@ function editableField(aOptions)
  * clicks and sit in the editing tab order, and call
  * a callback when it is activated.
  *
- * @param object aOptions
+ * @param {object} aOptions
  *    The options for this editor, including:
  *    {Element} element: The DOM element.
  *    {string} trigger: The DOM event that should trigger editing,
  *      defaults to "click"
- * @param function aCallback
+ * @param {function} aCallback
  *        Called when the editor is activated.
  */
 this.editableItem = function editableItem(aOptions, aCallback)
@@ -2159,6 +2164,355 @@ InplaceEditor.prototype = {
     this.input.style.width = width + "px";
   },
 
+   /**
+   * Increment property values in rule view.
+   *
+   * @param {number} increment 
+   *        The amount to increase/decrease the property value.
+   * @return {bool} true if value has been incremented.
+   */
+  _incrementValue: function InplaceEditor_incrementValue(increment)
+  {
+    let value = this.input.value;
+    let selectionStart = this.input.selectionStart;
+    let selectionEnd = this.input.selectionEnd;
+
+    let newValue = this._incrementCSSValue(value, increment, selectionStart, selectionEnd);
+
+    if (!newValue) {
+      return false;
+    }
+
+    this.input.value = newValue.value;
+    this.input.setSelectionRange(newValue.start, newValue.end);
+
+    return true;
+  },
+
+  /**
+   * Increment the property value based on the property type.
+   *
+   * @param {string} value
+   *        Property value.
+   * @param {number} increment
+   *        Amount to increase/decrease the property value.
+   * @param {number} selStart
+   *        Starting index of the value.
+   * @param {number} selEnd
+   *        Ending index of the value.
+   * @return {object} object with properties 'value', 'start', and 'end'.
+   */
+  _incrementCSSValue: function InplaceEditor_incrementCSSValue(value, increment, selStart, 
+                                                               selEnd)
+  {
+    let range = this._parseCSSValue(value, selStart);
+    let type = (range && range.type) || "";
+    let rawValue = (range ? value.substring(range.start, range.end) : "");
+    let incrementedValue = null, selection;
+
+    if (type === "num") {
+      let newValue = this._incrementRawValue(rawValue, increment);
+      if (newValue !== null) {
+        incrementedValue = newValue;
+        selection = [0, incrementedValue.length];
+      }
+    } else if (type === "hex") {
+      let exprOffset = selStart - range.start;
+      let exprOffsetEnd = selEnd - range.start;
+      let newValue = this._incHexColor(rawValue, increment, exprOffset, exprOffsetEnd);
+      if (newValue) {
+        incrementedValue = newValue.value;
+        selection = newValue.selection;
+      }
+    } else {
+      let info;
+      if (type === "rgb" || type === "hsl") {
+        info = {};
+        let part = value.substring(range.start, selStart).split(",").length - 1;
+        if (part === 3) { // alpha
+          info.minValue = 0;
+          info.maxValue = 1;
+        } else if (type === "rgb") {
+          info.minValue = 0;
+          info.maxValue = 255;
+        } else if (part !== 0) { // hsl percentage
+          info.minValue = 0;
+          info.maxValue = 100;
+
+          // select the previous number if the selection is at the end of a percentage sign
+          if (value.charAt(selStart - 1) === "%") {
+            --selStart;
+          }
+        }
+      }
+      return this._incrementGenericValue(value, increment, selStart, selEnd, info);
+    }
+
+    if (incrementedValue === null) {
+      return;
+    }
+
+    let preRawValue = value.substr(0, range.start);
+    let postRawValue = value.substr(range.end);
+
+    return {
+      value: preRawValue + incrementedValue + postRawValue,
+      start: range.start + selection[0],
+      end: range.start + selection[1]
+    };
+  },
+
+  /**
+   * Parses the property value and type.
+   *
+   * @param {string} value 
+   *        Property value.
+   * @param {number} offset 
+   *        Starting index of value.
+   * @return {object} object with properties 'value', 'start', 'end', and 'type'.
+   */
+   _parseCSSValue: function InplaceEditor_parseCSSValue(value, offset)
+  {
+    const reSplitCSS = /(url\("?[^"\)]+"?\)?)|(rgba?\([^)]*\)?)|(hsla?\([^)]*\)?)|(#[\dA-Fa-f]+)|(-?\d+(\.\d+)?(%|[a-z]{1,4})?)|"([^"]*)"?|'([^']*)'?|([^,\s\/!\(\)]+)|(!(.*)?)/;
+    let start = 0;
+    let m;
+
+    // retreive values from left to right until we find the one at our offset
+    while ((m = reSplitCSS.exec(value)) &&
+          (m.index + m[0].length < offset)) {
+      value = value.substr(m.index + m[0].length);
+      start += m.index + m[0].length;
+      offset -= m.index + m[0].length;
+    }
+
+    if (!m) {
+      return;
+    }
+
+    let type;
+    if (m[1]) {
+      type = "url";
+    } else if (m[2]) {
+      type = "rgb";
+    } else if (m[3]) {
+      type = "hsl";
+    } else if (m[4]) {
+      type = "hex";
+    } else if (m[5]) {
+      type = "num";
+    }
+
+    return {
+      value: m[0],
+      start: start + m.index,
+      end: start + m.index + m[0].length,
+      type: type
+    };
+  },
+
+  /**
+   * Increment the property value for types other than
+   * number or hex, such as rgb, hsl, and file names.
+   *
+   * @param {string} value 
+   *        Property value.
+   * @param {number} increment 
+   *        Amount to increment/decrement.
+   * @param {number} offset 
+   *        Starting index of the property value.
+   * @param {number} offsetEnd 
+   *        Ending index of the property value.
+   * @param {object} info 
+   *        Object with details about the property value.
+   * @return {object} object with properties 'value', 'start', and 'end'.
+   */
+  _incrementGenericValue: function InplaceEditor_incrementGenericValue(value, increment, offset,
+                                                                       offsetEnd, info)
+  {
+    // Try to find a number around the cursor to increment.
+    let start, end;
+    // Check if we are incrementing in a non-number context (such as a URL)
+    if (/^-?[0-9.]/.test(value.substring(offset, offsetEnd)) &&
+      !(/\d/.test(value.charAt(offset - 1) + value.charAt(offsetEnd)))) {
+      // We have a number selected, possibly with a suffix, and we are not in
+      // the disallowed case of just part of a known number being selected.
+      // Use that number.
+      start = offset;
+      end = offsetEnd;
+    } else {
+      // Parse periods as belonging to the number only if we are in a known number
+      // context. (This makes incrementing the 1 in 'image1.gif' work.)
+      let pattern = "[" + (info ? "0-9." : "0-9") + "]*";
+      let before = new RegExp(pattern + "$").exec(value.substr(0, offset))[0].length;
+      let after = new RegExp("^" + pattern).exec(value.substr(offset))[0].length;
+
+      start = offset - before;
+      end = offset + after;
+
+      // Expand the number to contain an initial minus sign if it seems
+      // free-standing.
+      if (value.charAt(start - 1) === "-" &&
+         (start - 1 === 0 || /[ (:,='"]/.test(value.charAt(start - 2)))) {
+        --start;
+      }
+    }
+
+    if (start !== end)
+    {
+      // Include percentages as part of the incremented number (they are
+      // common enough).
+      if (value.charAt(end) === "%") {
+        ++end;
+      }
+
+      let first = value.substr(0, start);
+      let mid = value.substring(start, end);
+      let last = value.substr(end);
+
+      mid = this._incrementRawValue(mid, increment, info);
+
+      if (mid !== null) {
+        return {
+          value: first + mid + last,
+          start: start,
+          end: start + mid.length
+        };
+      }
+    }
+  },
+
+  /**
+   * Increment the property value for numbers.
+   *
+   * @param {string} rawValue 
+   *        Raw value to increment.
+   * @param {number} increment 
+   *        Amount to increase/decrease the raw value.
+   * @param {object} info 
+   *        Object with info about the property value.
+   * @return {string} the incremented value.
+   */
+  _incrementRawValue: function InplaceEditor_incrementRawValue(rawValue, increment, info)
+  {
+    let num = parseFloat(rawValue);
+
+    if (isNaN(num)) {
+      return null;
+    }
+
+    let number = /\d+(\.\d+)?/.exec(rawValue);
+    let units = rawValue.substr(number.index + number[0].length);
+
+    // avoid rounding errors
+    let newValue = Math.round((num + increment) * 1000) / 1000;
+
+    if (info && "minValue" in info) {
+      newValue = Math.max(newValue, info.minValue);
+    }
+    if (info && "maxValue" in info) {
+      newValue = Math.min(newValue, info.maxValue);
+    }
+
+    newValue = newValue.toString();
+
+    return newValue + units;
+  },
+
+  /**
+   * Increment the property value for hex.
+   *
+   * @param {string} value 
+   *        Property value.
+   * @param {number} increment 
+   *        Amount to increase/decrease the property value.
+   * @param {number} offset 
+   *        Starting index of the property value.
+   * @param {number} offsetEnd 
+   *        Ending index of the property value.
+   * @return {object} object with properties 'value' and 'selection'.
+   */
+  _incHexColor: function InplaceEditor_incHexColor(rawValue, increment, offset, offsetEnd)
+  {
+    // Return early if no part of the rawValue is selected.
+    if (offsetEnd > rawValue.length && offset >= rawValue.length) {
+      return;
+    }
+    if (offset < 1 && offsetEnd <= 1) {
+      return;
+    }
+    // Ignore the leading #.
+    rawValue = rawValue.substr(1);
+    --offset;
+    --offsetEnd;
+
+    // Clamp the selection to within the actual value.
+    offset = Math.max(offset, 0);
+    offsetEnd = Math.min(offsetEnd, rawValue.length);
+    offsetEnd = Math.max(offsetEnd, offset);
+
+    // Normalize #ABC -> #AABBCC.
+    if (rawValue.length === 3) {
+      rawValue = rawValue.charAt(0) + rawValue.charAt(0) +
+                 rawValue.charAt(1) + rawValue.charAt(1) +
+                 rawValue.charAt(2) + rawValue.charAt(2);
+      offset *= 2;
+      offsetEnd *= 2;
+    }
+
+    if (rawValue.length !== 6) {
+      return;
+    }
+
+    // If no selection, increment an adjacent color, preferably one to the left.
+    if (offset === offsetEnd) {
+      if (offset === 0) {
+        offsetEnd = 1;
+      } else {
+        offset = offsetEnd - 1;
+      }
+    }
+
+    // Make the selection cover entire parts.
+    offset -= offset % 2;
+    offsetEnd += offsetEnd % 2;
+
+    // Remap the increments from [0.1, 1, 10] to [1, 1, 16].
+    if (-1 < increment && increment < 1) {
+      increment = (increment < 0 ? -1 : 1);
+    }
+    if (Math.abs(increment) === 10) {
+      increment = (increment < 0 ? -16 : 16);
+    }
+
+    let isUpper = (rawValue.toUpperCase() === rawValue);
+
+    for (let pos = offset; pos < offsetEnd; pos += 2) {
+      // Increment the part in [pos, pos+2).
+      let mid = rawValue.substr(pos, 2);
+      let value = parseInt(mid, 16);
+
+      if (isNaN(value)) {
+        return;
+      }
+
+      mid = Math.min(Math.max(value + increment, 0), 255).toString(16);
+
+      while (mid.length < 2) {
+        mid = "0" + mid;
+      }
+      if (isUpper) {
+        mid = mid.toUpperCase();
+      }
+
+      rawValue = rawValue.substr(0, pos) + mid + rawValue.substr(pos + 2);
+    }
+
+    return {
+      value: "#" + rawValue,
+      selection: [offset + 1, offsetEnd + 1]
+    };
+  },
+
   /**
    * Call the client's done handler and clear out.
    */
@@ -2174,6 +2528,7 @@ InplaceEditor.prototype = {
       let val = this.input.value.trim();
       return this.done(this.cancelled ? this.initial : val, !this.cancelled);
     }
+
     return null;
   },
 
@@ -2188,9 +2543,43 @@ InplaceEditor.prototype = {
     }
   },
 
+  /**
+   * Handle the input field's keypress event.
+   */
   _onKeyPress: function InplaceEditor_onKeyPress(aEvent)
   {
     let prevent = false;
+
+    const largeIncrement = 100;
+    const mediumIncrement = 10;
+    const smallIncrement = 0.1;
+
+    let increment = 0;
+
+    if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_UP
+       || aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP) {
+      increment = 1;
+    } else if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_DOWN
+       || aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN) {
+      increment = -1;
+    }
+
+    if (aEvent.shiftKey && !aEvent.altKey) {
+      if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP
+           ||  aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN) {
+        increment *= largeIncrement;
+      } else {
+        increment *= mediumIncrement;
+      }
+    } else if (aEvent.altKey && !aEvent.shiftKey) {
+      increment *= smallIncrement;
+    }
+
+    if (increment && this._incrementValue(increment) ) {
+      this._updateSize();
+      prevent = true;
+    }
+
     if (this.multiline &&
         aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN &&
         aEvent.shiftKey) {
@@ -2258,7 +2647,7 @@ InplaceEditor.prototype = {
   },
 
   /**
-   * Handle changes the input text.
+   * Handle changes to the input text.
    */
   _onInput: function InplaceEditor_onInput(aEvent)
   {
@@ -2285,7 +2674,10 @@ InplaceEditor.prototype = {
  * own compartment, those expandos live on Xray wrappers that are only visible
  * within this JSM. So we provide a little workaround here.
  */
-this._getInplaceEditorForSpan = function _getInplaceEditorForSpan(aSpan) { return aSpan.inplaceEditor; };
+this._getInplaceEditorForSpan = function _getInplaceEditorForSpan(aSpan)
+{
+  return aSpan.inplaceEditor;
+};
 
 /**
  * Store of CSSStyleDeclarations mapped to properties that have been changed by
@@ -2304,13 +2696,13 @@ UserProperties.prototype = {
    *
    * @param {CSSStyleDeclaration} aStyle
    *        The CSSStyleDeclaration against which the property is mapped.
-   * @param {String} aName
+   * @param {string} aName
    *        The name of the property to get.
-   * @param {String} aComputedValue
+   * @param {string} aComputedValue
    *        The computed value of the property.  The user value will only be
    *        returned if the computed value hasn't changed since, and this will
    *        be returned as the default if no user value is available.
-   * @returns {String}
+   * @return {string}
    *          The property value if it has previously been set by the user, null
    *          otherwise.
    */
