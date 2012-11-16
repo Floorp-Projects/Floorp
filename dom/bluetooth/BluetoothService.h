@@ -264,7 +264,7 @@ public:
   virtual nsresult
   PrepareAdapterInternal(const nsAString& aPath) = 0;
 
-  virtual bool
+  virtual void
   Connect(const nsAString& aDeviceAddress,
           const nsAString& aAdapterPath,
           uint16_t aProfileId,
