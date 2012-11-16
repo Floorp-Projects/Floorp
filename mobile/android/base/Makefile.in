@@ -227,6 +227,7 @@ FENNEC_PP_XML_FILES = \
   res/color/tabs_counter_color.xml \
   res/drawable/address_bar_bg.xml \
   res/drawable/address_bar_url.xml \
+  res/drawable/awesomebar_tabs_bg.xml \
   res/drawable/menu_level.xml \
   res/drawable/tabs_button.xml \
   res/drawable/tabs_level.xml \
@@ -485,6 +486,7 @@ RES_ANIM = \
 
 RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
+  res/drawable-nodpi/abouthome_bg_pb.png \
   res/drawable-nodpi/tabs_tray_bg.png \
   res/drawable-nodpi/tabs_tray_bg_pb.png \
   res/drawable-nodpi/tabs_tray_selected_bg.png \
@@ -1031,6 +1033,7 @@ endif
 MOZ_ANDROID_DRAWABLES += \
   $(SYNC_RES_DRAWABLE)                                                          \
   mobile/android/base/resources/drawable/abouthome_bg_repeat.xml                \
+  mobile/android/base/resources/drawable/abouthome_bg_pb_repeat.xml             \
   mobile/android/base/resources/drawable/abouthome_divider.xml                  \
   mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
