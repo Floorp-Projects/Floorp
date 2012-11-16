@@ -1,4 +1,4 @@
-* This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -24,7 +24,6 @@
   cursor: pointer;
 }
 
-#downloadsSummary,
 #downloadsPanel[hasdownloads] > #downloadsHistory {
   border-top: 1px solid ThreeDShadow;
   background-image: -moz-linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
@@ -38,36 +37,17 @@
   outline: 1px -moz-dialogtext dotted;
 }
 
-/*** Downloads Summary and List items ***/
+/*** List items ***/
 
-#downloadsSummary,
 richlistitem[type="download"] {
   height: 6em;
-  -moz-padding-end: 0;
-  color: inherit;
-}
-
-#downloadsSummary {
-  padding: 8px 38px 8px 12px;
-  cursor: pointer;
-}
-
-#downloadsSummary > .downloadTypeIcon {
-  height: 32px;
-  width: 32px;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
-}
-
-#downloadsSummaryDescription {
-  color: -moz-nativehyperlinktext;
-}
-
-richlistitem[type="download"] {
   margin: 0;
   border-top: 1px solid hsla(0,0%,100%,.2);
   border-bottom: 1px solid hsla(0,0%,0%,.15);
   background: transparent;
   padding: 8px;
+  -moz-padding-end: 0;
+  color: inherit;
 }
 
 richlistitem[type="download"]:first-child {
@@ -284,7 +264,7 @@ toolbar[iconsize="large"] #downloads-indicator[attention] > #downloads-indicator
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-color: rgb(255, 135, 94);
+  background-color: rgb(90, 185, 255);
   background-image: linear-gradient(transparent 1px, rgba(255, 255, 255, 0.4) 1px, rgba(255, 255, 255, 0.4) 2px, transparent 2px);
   border: 1px solid;
   border-color: rgba(0,43,86,.6) rgba(0,43,86,.4) rgba(0,43,86,.4);

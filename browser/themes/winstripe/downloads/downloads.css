@@ -14,10 +14,6 @@
   color: inherit;
 }
 
-#downloadsPanel:not([hasdownloads]) > #downloadsListBox {
-  display: none;
-}
-
 #downloadsHistory {
   background: transparent;
   color: -moz-nativehyperlinktext;
@@ -29,43 +25,23 @@
 }
 
 @media (-moz-windows-default-theme) {
-  #downloadsSummary,
   #downloadsPanel[hasdownloads] > #downloadsHistory {
     background-color: hsla(216,45%,88%,.98);
-    box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+    box-shadow: 0px 1px 2px rgb(204,214,234) inset;  
   }
 }
 
-/*** Downloads Summary and List items ***/
+/*** List items ***/
 
-#downloadsSummary,
 richlistitem[type="download"] {
   height: 7em;
-  -moz-padding-end: 0;
-  color: inherit;
-}
-
-#downloadsSummary {
-  padding: 8px 38px 8px 12px;
-  cursor: pointer;
-}
-
-#downloadsSummary > .downloadTypeIcon {
-  height: 24px;
-  width: 24px;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
-}
-
-#downloadsSummaryDescription {
-  color: -moz-nativehyperlinktext;
-}
-
-richlistitem[type="download"] {
   margin: 0;
   border-top: 1px solid hsla(0,0%,100%,.3);
   border-bottom: 1px solid hsla(220,18%,51%,.25);
   background: transparent;
   padding: 8px;
+  -moz-padding-end: 0;
+  color: inherit;
 }
 
 richlistitem[type="download"]:first-child {
@@ -251,12 +227,12 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 /*** Progress bar and text ***/
 
 #downloads-indicator-counter {
-  height: 9px;
-  margin: -3px 0px 0px 0px;
+  height: 10px;
+  margin: 0;
   color: hsl(0,0%,30%);
   text-shadow: hsla(0,0%,100%,.5) 0 1px;
-  font-size: 9px;
-  line-height: 9px;
+  font-size: 10px;
+  line-height: 10px;
   text-align: center;
 }
 
@@ -268,7 +244,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 
 #downloads-indicator-progress {
   width: 16px;
-  height: 5px;
+  height: 6px;
   min-width: 0;
   min-height: 0;
   margin-top: 1px;
@@ -281,7 +257,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-color: rgb(90, 201, 66);
+  background-color: rgb(90, 185, 255);
   background-image: linear-gradient(transparent 1px, rgba(255, 255, 255, 0.4) 1px, rgba(255, 255, 255, 0.4) 2px, transparent 2px);
   border: 1px solid;
   border-color: rgba(0,43,86,.6) rgba(0,43,86,.4) rgba(0,43,86,.4);
