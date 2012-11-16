@@ -1079,6 +1079,8 @@ already_AddRefed<layers::Image>
 RasterImage::GetCurrentImage()
 {
   if (!mDecoded) {
+    // We can't call StartDecoding because that can synchronously notify
+    // which can cause DOM modification
     RequestDecode();
     return nullptr;
   }
