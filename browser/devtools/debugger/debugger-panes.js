@@ -1044,7 +1044,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
     let sourceResultsItem = SourceResults.getItemForElement(target);
     let lineResultsItem = LineResults.getItemForElement(target);
 
-    sourceResultsItem.instance.expand(true);
+    sourceResultsItem.instance.expand();
     this._currentlyFocusedMatch = LineResults.indexOfElement(target);
     this._scrollMatchIntoViewIfNeeded(target);
     this._bounceMatch(target);
@@ -1084,7 +1084,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
     let { clientHeight } = this._container._parent;
 
     if (top - height <= clientHeight || this._forceExpandResults) {
-      sourceResultsItem.instance.expand(true);
+      sourceResultsItem.instance.expand();
     }
   },
 
@@ -1303,7 +1303,7 @@ SourceResults.prototype = {
     aElementNode.resultsContainer = resultsContainer;
 
     if (aExpandFlag && aMatchCount < GLOBAL_SEARCH_EXPAND_MAX_RESULTS) {
-      this.expand(true);
+      this.expand();
     }
 
     let resultsBox = document.createElement("vbox");
@@ -1528,7 +1528,7 @@ LineResults.indexOfElement = function DVGS_indexOFElement(aElement) {
 SourceResults.size =
 LineResults.size = function DVGS_size() {
   let count = 0;
-  for (let [_, item] of this._itemsByElement) {
+  for (let [, item] of this._itemsByElement) {
     if (!item.nonenumerable) {
       count++;
     }

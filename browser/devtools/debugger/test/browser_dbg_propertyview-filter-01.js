@@ -24,6 +24,7 @@ function test()
     gDebugger = gPane.contentWindow;
     gDebuggee = aDebuggee;
 
+    gDebugger.DebuggerController.StackFrames.autoScopeExpand = true;
     testSearchbox();
     prepareVariables(testVariablesFiltering);
   });
@@ -121,6 +122,8 @@ function testVariablesFiltering()
       "The local scope 'this.window.document.location' should be expanded");
 
     ignoreExtraMatchedProperties();
+    locationItem.toggle();
+    locationItem.toggle();
 
     is(innerScope.querySelectorAll(".variable:not([non-match])").length, 1,
       "There should be 1 variable displayed in the inner scope");
@@ -207,6 +210,8 @@ function testVariablesFiltering()
       "The local scope 'this.window.document.location' should be expanded");
 
     ignoreExtraMatchedProperties();
+    locationItem.toggle();
+    locationItem.toggle();
 
     is(innerScope.querySelectorAll(".variable:not([non-match])").length, 1,
       "There should be 1 variable displayed in the inner scope");
@@ -316,6 +321,22 @@ function prepareVariables(aCallback)
         loadScope.querySelector(".name").getAttribute("value"));
       let globalScopeItem = gDebugger.DebuggerView.Variables._currHierarchy.get(
         globalScope.querySelector(".name").getAttribute("value"));
+
+      is(innerScopeItem.expanded, true,
+        "The innerScope expanded getter should return true");
+      is(mathScopeItem.expanded, true,
+        "The mathScope expanded getter should return true");
+      is(testScopeItem.expanded, true,
+        "The testScope expanded getter should return true");
+      is(loadScopeItem.expanded, true,
+        "The loadScope expanded getter should return true");
+      is(globalScopeItem.expanded, true,
+        "The globalScope expanded getter should return true");
+
+      mathScopeItem.collapse();
+      testScopeItem.collapse();
+      loadScopeItem.collapse();
+      globalScopeItem.collapse();
 
       is(innerScopeItem.expanded, true,
         "The innerScope expanded getter should return true");
@@ -443,7 +464,7 @@ function prepareVariables(aCallback)
 
 function ignoreExtraMatchedProperties()
 {
-  for (let [_, item] of gDebugger.DebuggerView.Variables._currHierarchy) {
+  for (let [, item] of gDebugger.DebuggerView.Variables._currHierarchy) {
     let name = item.name.toLowerCase();
     let value = item._valueString || "";
 
