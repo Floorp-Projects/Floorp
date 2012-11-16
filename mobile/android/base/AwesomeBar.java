@@ -61,7 +61,7 @@ public class AwesomeBar extends GeckoActivity {
     static final String SEARCH_KEY = "search";
     static final String USER_ENTERED_KEY = "user_entered";
     static final String READING_LIST_KEY = "reading_list";
-    static enum Target { NEW_TAB, CURRENT_TAB };
+    public static enum Target { NEW_TAB, CURRENT_TAB };
 
     private String mTarget;
     private AwesomeBarTabs mAwesomeTabs;
@@ -137,6 +137,7 @@ public class AwesomeBar extends GeckoActivity {
                 mText.setPrivateMode(true);
             }
         }
+        mAwesomeTabs.setTarget(mTarget);
 
         mText.setOnKeyPreImeListener(new CustomEditText.OnKeyPreImeListener() {
             public boolean onKeyPreIme(View v, int keyCode, KeyEvent event) {

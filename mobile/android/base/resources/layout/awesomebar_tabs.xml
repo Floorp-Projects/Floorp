@@ -9,10 +9,11 @@
                                   android:layout_height="fill_parent">
 
     <view class="org.mozilla.gecko.AwesomeBarTabs.Background"
+          android:id="@+id/awesomebar_background"
           android:orientation="vertical"
           android:layout_width="fill_parent"
           android:layout_height="fill_parent"
-          android:background="@drawable/abouthome_bg_repeat">
+          android:background="@drawable/awesomebar_tabs_bg">
 
         <LinearLayout android:id="@+id/tab_widget_container"
                       android:layout_width="fill_parent"
