@@ -16,7 +16,7 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsMediaCache.h"
+#include "MediaCache.h"
 #include "mozilla/Attributes.h"
 
 // For HTTP seeking, if number of bytes needing to be
@@ -26,9 +26,9 @@ static const int64_t SEEK_VS_READ_THRESHOLD = 32*1024;
 
 static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
-class nsMediaDecoder;
-
 namespace mozilla {
+
+class MediaDecoder;
 
 /**
  * This class is useful for estimating rates of data passing through
@@ -124,7 +124,7 @@ public:
 
 /**
  * Provides a thread-safe, seek/read interface to resources
- * loaded from a URI. Uses nsMediaCache to cache data received over
+ * loaded from a URI. Uses MediaCache to cache data received over
  * Necko's async channel API, thus resolving the mismatch between clients
  * that need efficient random access to the data and protocols that do not
  * support efficient random access, such as HTTP.
@@ -177,11 +177,11 @@ public:
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
-  virtual MediaResource* CloneData(nsMediaDecoder* aDecoder) = 0;
+  virtual MediaResource* CloneData(MediaDecoder* aDecoder) = 0;
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
-  virtual void SetReadMode(nsMediaCacheStream::ReadMode aMode) = 0;
+  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
   // This is the client's estimate of the playback rate assuming
   // the media plays continuously. The cache can't guess this itself
   // because it doesn't know when the decoder was paused, buffering, etc.
@@ -260,7 +260,7 @@ public:
   // Returns true if this stream is suspended by the cache because the
   // cache is full. If true then the decoder should try to start consuming
   // data, otherwise we may not be able to make progress.
-  // nsMediaDecoder::NotifySuspendedStatusChanged is called when this
+  // MediaDecoder::NotifySuspendedStatusChanged is called when this
   // changes.
   // For resources using the media cache, this returns true only when all
   // streams for the same resource are all suspended.
@@ -282,7 +282,7 @@ public:
    * Create a resource, reading data from the channel. Call on main thread only.
    * The caller must follow up by calling resource->Open().
    */
-  static MediaResource* Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel);
+  static MediaResource* Create(MediaDecoder* aDecoder, nsIChannel* aChannel);
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -309,7 +309,7 @@ public:
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) = 0;
 
 protected:
-  MediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  MediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
     mChannel(aChannel),
     mURI(aURI),
@@ -326,7 +326,7 @@ protected:
   // This is not an nsCOMPointer to prevent a circular reference
   // between the decoder to the media stream object. The stream never
   // outlives the lifetime of the decoder.
-  nsMediaDecoder* mDecoder;
+  MediaDecoder* mDecoder;
 
   // Channel used to download the media data. Must be accessed
   // from the main thread only.
@@ -343,19 +343,19 @@ protected:
 
 /**
  * This is the MediaResource implementation that wraps Necko channels.
- * Much of its functionality is actually delegated to nsMediaCache via
- * an underlying nsMediaCacheStream.
+ * Much of its functionality is actually delegated to MediaCache via
+ * an underlying MediaCacheStream.
  *
- * All synchronization is performed by nsMediaCacheStream; all off-main-
+ * All synchronization is performed by MediaCacheStream; all off-main-
  * thread operations are delegated directly to that object.
  */
 class ChannelMediaResource : public MediaResource
 {
 public:
-  ChannelMediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
+  ChannelMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
   ~ChannelMediaResource();
 
-  // These are called on the main thread by nsMediaCache. These must
+  // These are called on the main thread by MediaCache. These must
   // not block or grab locks, because the media cache is holding its lock.
   // Notify that data is available from the cache. This can happen even
   // if this stream didn't read any data, since another stream might have
@@ -368,12 +368,12 @@ public:
   // Notify that the principal for the cached resource changed.
   void CacheClientNotifyPrincipalChanged();
 
-  // These are called on the main thread by nsMediaCache. These shouldn't block,
+  // These are called on the main thread by MediaCache. These shouldn't block,
   // but they may grab locks --- the media cache is not holding its lock
   // when these are called.
   // Start a new load at the given aOffset. The old load is cancelled
   // and no more data from the old load will be notified via
-  // nsMediaCacheStream::NotifyDataReceived/Ended.
+  // MediaCacheStream::NotifyDataReceived/Ended.
   // This can fail.
   nsresult CacheClientSeek(int64_t aOffset, bool aResume);
   // Suspend the current load since data is currently not wanted
@@ -392,12 +392,12 @@ public:
   // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual bool     CanClone();
-  virtual MediaResource* CloneData(nsMediaDecoder* aDecoder);
+  virtual MediaResource* CloneData(MediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
   virtual void     EnsureCacheUpToDate();
 
   // Other thread
-  virtual void     SetReadMode(nsMediaCacheStream::ReadMode aMode);
+  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode);
   virtual void     SetPlaybackRate(uint32_t aBytesPerSecond);
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset);
@@ -496,7 +496,7 @@ protected:
   bool               mIgnoreClose;
 
   // Any thread access
-  nsMediaCacheStream mCacheStream;
+  MediaCacheStream mCacheStream;
 
   // This lock protects mChannelStatistics
   Mutex               mLock;
@@ -526,6 +526,6 @@ protected:
   int64_t mSeekOffset;
 };
 
-}
+} // namespace mozilla
 
 #endif

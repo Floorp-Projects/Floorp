@@ -24,7 +24,16 @@ var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 // set to true in ril_consts.js to see debug messages
-const DEBUG = RIL.DEBUG_RIL;
+var DEBUG = RIL.DEBUG_RIL;
+
+// Read debug setting from pref
+let debugPref = false;
+try {
+  debugPref = Services.prefs.getBoolPref("ril.debugging.enabled");
+} catch(e) {
+  debugPref = false;
+}
+DEBUG = RIL.DEBUG_RIL || debugPref;
 
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
@@ -281,6 +290,12 @@ function RadioInterfaceLayer() {
 
   this.portAddressedSmsApps = {};
   this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
+
+  this._targetMessageQueue = [];
+
+  // pass debug pref to ril_worker
+  this.worker.postMessage({rilMessageType: "setDebugEnabled",
+                           enabled: debugPref});
 }
 RadioInterfaceLayer.prototype = {
 
@@ -657,6 +672,12 @@ RadioInterfaceLayer.prototype = {
   },
 
   _sendTargetMessage: function _sendTargetMessage(permission, message, options) {
+
+    if (!this._sysMsgListenerReady) {
+      this._enqueueTargetMessage(permission, message, options);
+      return;
+    }
+
     let targets = this._messageManagerByPermission[permission];
     if (!targets) {
       return;
@@ -922,6 +943,36 @@ RadioInterfaceLayer.prototype = {
     //TODO Should we notify this change as a card state change?
 
     this._ensureRadioState();
+  },
+
+  _enqueueTargetMessage: function _enqueueTargetMessage(permission, message, options) {
+    let msg = { permission : permission,
+                message : message,
+                options : options };
+    // Remove previous queued message of same message type, only one message
+    // per message type is allowed in queue.
+    let messageQueue = this._targetMessageQueue;
+    for(let i = 0; i < messageQueue.length; i++) {
+      if (messageQueue[i].message === message) {
+        messageQueue.splice(i, 1);
+        break;
+      }
+    }
+
+    messageQueue.push(msg);
+  },
+
+  _resendQueuedTargetMessage: function _resendQueuedTargetMessage() {
+    // Here uses this._sendTargetMessage() to resend message, which will
+    // enqueue message if listener is not ready.
+    // So only resend after listener is ready, or it will cause infinate loop and
+    // hang the system.
+
+    // Dequeue and resend messages.
+    for each (let msg in this._targetMessageQueue) {
+      this._sendTargetMessage(msg.permission, msg.message, msg.options);
+    }
+    this._targetMessageQueue = null;
   },
 
   _ensureRadioState: function _ensureRadioState() {
@@ -1490,6 +1541,7 @@ RadioInterfaceLayer.prototype = {
       case kSysMsgListenerReadyObserverTopic:
         Services.obs.removeObserver(this, kSysMsgListenerReadyObserverTopic);
         this._sysMsgListenerReady = true;
+        this._resendQueuedTargetMessage();
         this._ensureRadioState();
         break;
       case kMozSettingsChangedObserverTopic:

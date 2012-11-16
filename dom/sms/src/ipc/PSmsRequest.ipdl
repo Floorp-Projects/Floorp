@@ -85,6 +85,24 @@ struct ReplyNoMessageInList
 {
 };
 
+struct ThreadListItem
+{
+  nsString senderOrReceiver;
+  uint64_t timestamp;
+  nsString body;
+  uint64_t unreadCount;
+};
+
+struct ReplyThreadList
+{
+  ThreadListItem[] items;
+};
+
+struct ReplyThreadListFail
+{
+  int32_t error;
+};
+
 union MessageReply
 {
   ReplyMessageSend;
@@ -99,6 +117,8 @@ union MessageReply
   ReplyGetNextMessage;
   ReplyMarkeMessageRead;
   ReplyMarkeMessageReadFail;
+  ReplyThreadList;
+  ReplyThreadListFail;
 };
 
 } // namespace sms

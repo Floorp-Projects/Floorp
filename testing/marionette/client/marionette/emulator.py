@@ -19,6 +19,7 @@ import time
 
 from emulator_battery import EmulatorBattery
 from emulator_geo import EmulatorGeo
+from emulator_screen import EmulatorScreen
 
 
 class LogcatProc(ProcessHandlerMixin):
@@ -59,6 +60,7 @@ class Emulator(object):
         self.res = res
         self.battery = EmulatorBattery(self)
         self.geo = EmulatorGeo(self)
+        self.screen = EmulatorScreen(self)
         self.homedir = homedir
         self.sdcard = sdcard
         self.noWindow = noWindow
@@ -331,8 +333,7 @@ waitFor(
 
         qemu_args = self.args[:]
         if self.copy_userdata:
-            # Make a copy of the userdata.img for this instance of the emulator
-            # to use.
+            # Make a copy of the userdata.img for this instance of the emulator to use.
             self._tmp_userdata = tempfile.mktemp(prefix='marionette')
             shutil.copyfile(self.dataImg, self._tmp_userdata)
             qemu_args[qemu_args.index('-data') + 1] = self._tmp_userdata
@@ -359,6 +360,7 @@ waitFor(
         # bug 802877
         time.sleep(10)
         self.geo.set_default_location()
+        self.screen.initialize()
 
         if self.logcat_dir:
             self.save_logcat()
@@ -401,19 +403,17 @@ waitFor(
                             raise
 
         print 'restarting B2G'
+        # see bug 809437 for the path that lead to this madness
+        time.sleep(5)
         self.dm.shellCheckOutput(['stop', 'b2g'])
-        # ensure the b2g process has fully stopped (bug 809437)
-        for i in range(0, 10):
-            time.sleep(1)
-            if self.dm.processExist('b2g') is None:
-                break
-        else:
-            raise TimeoutException("Timeout waiting for the b2g process to terminate")
+        time.sleep(10)
         self.dm.shellCheckOutput(['start', 'b2g'])
+        time.sleep(5)
 
         if not self.wait_for_port():
             raise TimeoutException("Timeout waiting for marionette on port '%s'" % self.marionette_port)
         self.wait_for_system_message(marionette)
+
 
     def rotate_log(self, srclog, index=1):
         """ Rotate a logfile, by recursively rotating logs further in the sequence,

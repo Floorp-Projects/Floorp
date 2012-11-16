@@ -466,14 +466,15 @@ let tests = {
   },
   
   testMissingWorker: function(cbnext) {
+    let worker = getFrameWorkerHandle(url, undefined, "testMissingWorker");
     Services.obs.addObserver(function handleError() {
       Services.obs.removeObserver(handleError, "social:frameworker-error");
         ok(true, "social:frameworker-error was handled");
+        worker.terminate();
         cbnext();
     }, 'social:frameworker-error', false);
     // don't ever create this file!  We want a 404.
     let url = "https://example.com/browser/toolkit/components/social/test/browser/worker_is_missing.js";
-    let worker = getFrameWorkerHandle(url, undefined, "testMissingWorker");
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
       cbnext();
@@ -481,13 +482,14 @@ let tests = {
   },
 
   testNoConnectWorker: function(cbnext) {
+    let worker = getFrameWorkerHandle(makeWorkerUrl(function () {}),
+                                      undefined, "testNoConnectWorker");
     Services.obs.addObserver(function handleError() {
       Services.obs.removeObserver(handleError, "social:frameworker-error");
         ok(true, "social:frameworker-error was handled");
+        worker.terminate();
         cbnext();
     }, 'social:frameworker-error', false);
-    let worker = getFrameWorkerHandle(makeWorkerUrl(function () {}),
-                                      undefined, "testNoConnectWorker");
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
       cbnext();
@@ -495,13 +497,14 @@ let tests = {
   },
 
   testEmptyWorker: function(cbnext) {
+    let worker = getFrameWorkerHandle("data:application/javascript;charset=utf-8,",
+                                      undefined, "testEmptyWorker");
     Services.obs.addObserver(function handleError() {
       Services.obs.removeObserver(handleError, "social:frameworker-error");
         ok(true, "social:frameworker-error was handled");
+        worker.terminate();
         cbnext();
     }, 'social:frameworker-error', false);
-    let worker = getFrameWorkerHandle("data:application/javascript;charset=utf-8,",
-                                      undefined, "testEmptyWorker");
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
       cbnext();
@@ -509,11 +512,6 @@ let tests = {
   },
 
   testWorkerConnectError: function(cbnext) {
-    Services.obs.addObserver(function handleError() {
-      Services.obs.removeObserver(handleError, "social:frameworker-error");
-        ok(true, "social:frameworker-error was handled");
-        cbnext();
-    }, 'social:frameworker-error', false);
     let run = function () {
       onconnect = function(e) {
         throw new Error("worker failure");
@@ -521,9 +519,42 @@ let tests = {
     }
     let worker = getFrameWorkerHandle(makeWorkerUrl(run),
                                       undefined, "testWorkerConnectError");
+    Services.obs.addObserver(function handleError() {
+      Services.obs.removeObserver(handleError, "social:frameworker-error");
+        ok(true, "social:frameworker-error was handled");
+        worker.terminate();
+        cbnext();
+    }, 'social:frameworker-error', false);
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
       cbnext();
+    }
+  },
+
+  testReloadAndNewPort: function(cbnext) {
+    let run = function () {
+      onconnect = function(e) {
+        e.ports[0].postMessage({topic: "ready"});
+      }
+    }
+    let doneReload = false;
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run),
+                                      undefined, "testReloadAndNewPort");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "ready" && !doneReload) {
+        // do the "reload"
+        doneReload = true;
+        worker._worker.reload();
+        let worker2 = getFrameWorkerHandle(makeWorkerUrl(run),
+                                           undefined, "testReloadAndNewPort");
+        worker2.port.onmessage = function(e) {
+          if (e.data.topic == "ready") {
+            // "worker" and "worker2" are handles to the same worker
+            worker2.terminate();
+            cbnext();
+          }
+        }
+      }
     }
   },
 }

@@ -579,7 +579,7 @@ WebappsApplication.prototype = {
               this.readyToApplyDownload = app.readyToApplyDownload;
               this.downloadSize = app.downloadSize || 0;
               this.installState = app.installState;
-              this.manifest = app.manifest;
+              this._manifest = msg.manifest;
               this._fireEvent("downloadsuccess", this._ondownloadsuccess);
               this._fireEvent("downloadapplied", this._ondownloadapplied);
               break;

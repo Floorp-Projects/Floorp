@@ -68,10 +68,6 @@
 #include "nsCRT.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#ifdef MOZ_XTF
-#include "nsIXTFService.h"
-static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
-#endif
 #include "nsIMIMEService.h"
 #include "nsLWBrkCIID.h"
 #include "nsILineBreaker.h"
@@ -172,6 +168,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsSandboxFlags.h"
 #include "nsSVGFeatures.h"
+#include "MediaDecoder.h"
 
 #include "nsWrapperCacheInlines.h"
 
@@ -194,9 +191,6 @@ nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack;
 nsIParserService *nsContentUtils::sParserService = nullptr;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
-#ifdef MOZ_XTF
-nsIXTFService *nsContentUtils::sXTFService = nullptr;
-#endif
 imgILoader *nsContentUtils::sImgLoader;
 imgILoader *nsContentUtils::sPrivateImgLoader;
 imgICache *nsContentUtils::sImgCache;
@@ -419,7 +413,7 @@ nsContentUtils::Init()
                                "dom.event.handling-user-input-time-limit",
                                1000);
 
-  nsGenericElement::InitCCCallbacks();
+  Element::InitCCCallbacks();
 
   sInitialized = true;
 
@@ -954,21 +948,6 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAString& aSandboxAttrValue)
   return out;
 }
 
-#ifdef MOZ_XTF
-nsIXTFService*
-nsContentUtils::GetXTFService()
-{
-  if (!sXTFService) {
-    nsresult rv = CallGetService(kXTFServiceCID, &sXTFService);
-    if (NS_FAILED(rv)) {
-      sXTFService = nullptr;
-    }
-  }
-
-  return sXTFService;
-}
-#endif
-
 #ifdef IBMBIDI
 nsIBidiKeyboard*
 nsContentUtils::GetBidiKeyboard()
@@ -1472,9 +1451,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-#ifdef MOZ_XTF
-  NS_IF_RELEASE(sXTFService);
-#endif
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sPrivateImgLoader);
   NS_IF_RELEASE(sImgCache);
@@ -2171,20 +2147,11 @@ static inline bool IsAutocompleteOff(const nsIContent* aElement)
 /*static*/ nsresult
 nsContentUtils::GenerateStateKey(nsIContent* aContent,
                                  const nsIDocument* aDocument,
-                                 nsIStatefulFrame::SpecialStateID aID,
                                  nsACString& aKey)
 {
   aKey.Truncate();
 
   uint32_t partID = aDocument ? aDocument->GetPartID() : 0;
-
-  // SpecialStateID case - e.g. scrollbars around the content window
-  // The key in this case is a special state id
-  if (nsIStatefulFrame::eNoID != aID) {
-    KeyAppendInt(partID, aKey);  // first append a partID
-    KeyAppendInt(aID, aKey);
-    return NS_OK;
-  }
 
   // We must have content if we're not using a special state id
   NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
@@ -2201,9 +2168,6 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(aContent->GetCurrentDoc()));
 
   KeyAppendInt(partID, aKey);  // first append a partID
-  // Make sure we can't possibly collide with an nsIStatefulFrame
-  // special id of some sort
-  KeyAppendInt(nsIStatefulFrame::eNoID, aKey);
   bool generatedUniqueKey = false;
 
   if (htmlDocument) {
@@ -3958,9 +3922,8 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
                (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_LOOKUP));
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry->mListenerManager,
-                                                 nsEventListenerManager,
-                                  "[via hash] mListenerManager")
+    CycleCollectionNoteChild(cb, entry->mListenerManager.get(),
+                             "[via hash] mListenerManager");
   }
 }
 
@@ -6187,8 +6150,8 @@ nsContentUtils::CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
   }
 
   if (dataLen > 0) {
-    NS_ASSERTION(JS_IsArrayBufferObject(*aResult, aCx), "What happened?");
-    memcpy(JS_GetArrayBufferData(*aResult, aCx), aData.BeginReading(), dataLen);
+    NS_ASSERTION(JS_IsArrayBufferObject(*aResult), "What happened?");
+    memcpy(JS_GetArrayBufferData(*aResult), aData.BeginReading(), dataLen);
   }
 
   return NS_OK;
@@ -6657,7 +6620,7 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
-  if (nsMediaDecoder::IsMediaPluginsEnabled() &&
+  if (mozilla::MediaDecoder::IsMediaPluginsEnabled() &&
       nsHTMLMediaElement::IsMediaPluginsType(nsDependentCString(aType))) {
     docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
     if (docFactory && aLoaderType) {

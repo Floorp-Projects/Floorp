@@ -16,9 +16,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef SUNOS4
-#include "md/sunos4.h"  /* for strtoul */
-#endif
 #include "prprf.h"
 #include "prdtoa.h"
 #include "prlog.h"

@@ -27,6 +27,7 @@
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
+#include "nsLayoutStatics.h"
 
 namespace mozilla {
 namespace dom {
@@ -63,6 +64,8 @@ public:
     // Set mCallable before we hold, on the off chance that a GC could somehow
     // happen in there... (which would be pretty odd, granted).
     mCallable = aCallable;
+    // Make sure we'll be able to drop as needed
+    nsLayoutStatics::AddRef();
     NS_HOLD_JS_OBJECTS(this, CallbackFunction);
     *aInited = true;
   }
@@ -90,6 +93,7 @@ protected:
     if (mCallable) {
       NS_DROP_JS_OBJECTS(this, CallbackFunction);
       mCallable = nullptr;
+      nsLayoutStatics::Release();
     }
   }
 

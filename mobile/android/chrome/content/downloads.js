@@ -80,8 +80,6 @@ var Downloads = {
       }
     };
 
-    if (!aTitle)
-      aTitle = Strings.browser.GetStringFromName("alertDownloads");
     if (!aIcon)
       aIcon = URI_GENERIC_ICON_DOWNLOAD;
 
@@ -94,7 +92,7 @@ var Downloads = {
     let download = aSubject.QueryInterface(Ci.nsIDownload);
     let msgKey = "";
     if (aTopic == "dl-start") {
-      msgKey = "alertDownloadsStart";
+      msgKey = "alertDownloadsStart2";
       if (!this._progressAlert) {
         if (!this._dlmgr)
           this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
@@ -104,11 +102,11 @@ var Downloads = {
 
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), "long");
     } else if (aTopic == "dl-done") {
-      msgKey = "alertDownloadsDone";
+      msgKey = "alertDownloadsDone2";
     }
 
     if (msgKey)
-      this.showAlert(download, Strings.browser.formatStringFromName(msgKey, [download.displayName], 1));
+      this.showAlert(download, Strings.browser.GetStringFromName(msgKey), download.displayName);
   },
 
   QueryInterface: function (aIID) {

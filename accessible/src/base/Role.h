@@ -69,7 +69,7 @@ enum Role {
    * Assistive Technologies typically respond to the role by reading the entire
    * onscreen contents of containers advertising this role. Should be used for
    * warning dialogs, etc. The role is used by xul:browsermessage,
-   * role="alert", xforms:message.
+   * role="alert".
    */
   ALERT = 8,
 
@@ -209,8 +209,7 @@ enum Role {
   /**
    * Represents a link to something else. This object might look like text or
    * a graphic, but it acts like a button. It is used for
-   * xul:label@class="text-link", html:a, html:area,
-   * xforms:trigger@appearance="minimal".
+   * xul:label@class="text-link", html:a, html:area.
    */
   LINK = 30,
 
@@ -276,8 +275,7 @@ enum Role {
   /**
    * Represents read-only text, such as labels for other controls or
    * instructions in a dialog box. Static text cannot be modified or selected.
-   * Is is used for xul:label, xul:description, html:label, role="label",
-   * or xforms:output.
+   * Is is used for xul:label, xul:description, html:label, role="label".
    */
   STATICTEXT = 41,
 
@@ -288,13 +286,13 @@ enum Role {
 
   /**
    * Represents a push button control. It is used for xul:button, html:button,
-   * role="button", xforms:trigger, xforms:submit.
+   * role="button".
    */
   PUSHBUTTON = 43,
 
   /**
    * Represents a check box control. It is used for xul:checkbox,
-   * html:input@type="checkbox", role="checkbox", boolean xforms:input.
+   * html:input@type="checkbox", role="checkbox".
    */
   CHECKBUTTON = 44,
   
@@ -315,7 +313,7 @@ enum Role {
   COMBOBOX = 46,
 
   /**
-   * Represents the calendar control. It is used for date xforms:input.
+   * Represents the calendar control.
    */
   DROPLIST = 47,
 
@@ -340,7 +338,7 @@ enum Role {
   /**
    * Represents a slider, which allows the user to adjust a setting in given
    * increments between minimum and maximum values. It is used by xul:scale,
-   * role="slider", xforms:range.
+   * role="slider".
    */
   SLIDER = 51,
 

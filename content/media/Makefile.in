@@ -22,13 +22,12 @@ EXPORTS = \
   MediaResource.h \
   MediaSegment.h \
   MediaStreamGraph.h \
-  nsAudioAvailableEventManager.h \
-  nsBuiltinDecoder.h \
-  nsBuiltinDecoderStateMachine.h \
-  nsBuiltinDecoderReader.h \
+  AudioAvailableEventManager.h \
+  MediaDecoder.h \
+  MediaDecoderStateMachine.h \
+  MediaDecoderReader.h \
   nsDOMMediaStream.h \
-  nsMediaCache.h \
-  nsMediaDecoder.h \
+  MediaCache.h \
   SharedBuffer.h \
   StreamBuffer.h \
   TimeVarying.h \
@@ -43,13 +42,12 @@ CPPSRCS = \
   FileBlockCache.cpp \
   MediaResource.cpp \
   MediaStreamGraph.cpp \
-  nsAudioAvailableEventManager.cpp \
-  nsBuiltinDecoder.cpp \
-  nsBuiltinDecoderStateMachine.cpp \
-  nsBuiltinDecoderReader.cpp \
+  AudioAvailableEventManager.cpp \
+  MediaDecoder.cpp \
+  MediaDecoderStateMachine.cpp \
+  MediaDecoderReader.cpp \
   nsDOMMediaStream.cpp \
-  nsMediaCache.cpp \
-  nsMediaDecoder.cpp \
+  MediaCache.cpp \
   StreamBuffer.cpp \
   VideoFrameContainer.cpp \
   VideoSegment.cpp \
@@ -58,10 +56,10 @@ CPPSRCS = \
 
 ifdef MOZ_SYDNEYAUDIO
 EXPORTS += \
-  nsAudioStream.h \
+  AudioStream.h \
   $(NULL)
 CPPSRCS += \
-  nsAudioStream.cpp \
+  AudioStream.cpp \
   $(NULL)
 endif
 

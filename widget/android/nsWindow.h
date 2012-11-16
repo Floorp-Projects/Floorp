@@ -184,6 +184,7 @@ protected:
 
     bool mIMEComposing;
     bool mIMEMaskSelectionUpdate, mIMEMaskTextUpdate;
+    bool mIMEMaskEvents;
     nsString mIMEComposingText;
     nsAutoTArray<nsTextRange, 4> mIMERanges;
 

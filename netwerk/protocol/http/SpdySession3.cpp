@@ -1870,7 +1870,7 @@ SpdySession3::Close(nsresult aReason)
   mStreamTransactionHash.Clear();
 
   if (NS_SUCCEEDED(aReason))
-    GenerateGoAway(goawayReason::OK);
+    GenerateGoAway(OK);
   mConnection = nullptr;
   mSegmentReader = nullptr;
   mSegmentWriter = nullptr;
@@ -2178,8 +2178,7 @@ SpdySession3::SetConnection(nsAHttpConnection *)
 }
 
 void
-SpdySession3::GetSecurityCallbacks(nsIInterfaceRequestor **,
-                                  nsIEventTarget **)
+SpdySession3::GetSecurityCallbacks(nsIInterfaceRequestor **)
 {
   // This is unexpected
   NS_ABORT_IF_FALSE(false, "SpdySession3::GetSecurityCallbacks()");

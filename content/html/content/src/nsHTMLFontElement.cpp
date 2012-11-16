@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 class nsHTMLFontElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLFontElement
@@ -37,7 +38,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLFontElement
   NS_DECL_NSIDOMHTMLFONTELEMENT
@@ -66,8 +67,8 @@ nsHTMLFontElement::~nsHTMLFontElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFontElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLFontElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLFontElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLFontElement, Element)
 
 DOMCI_NODE_DATA(HTMLFontElement, nsHTMLFontElement)
 

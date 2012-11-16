@@ -7,6 +7,7 @@
 from __future__ import unicode_literals
 
 import os
+import sys
 
 from StringIO import StringIO
 
@@ -20,6 +21,12 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+
+
+if sys.version_info[0] < 3:
+    unicode_type = unicode
+else:
+    unicode_type = str
 
 
 class XPCShellRunner(MozbuildObject):
@@ -107,8 +114,20 @@ class XPCShellRunner(MozbuildObject):
         if test_path is not None:
             args['testPath'] = test_path
 
+        # Python through 2.7.2 has issues with unicode in some of the
+        # arguments. Work around that.
+        filtered_args = {}
+        for k, v in args.items():
+            if isinstance(v, unicode_type):
+                v = v.encode('utf-8')
+
+            if isinstance(k, unicode_type):
+                k = k.encode('utf-8')
+
+            filtered_args[k] = v
+
         # TODO do something with result.
-        xpcshell.runTests(**args)
+        xpcshell.runTests(**filtered_args)
 
         self.log_manager.disable_unstructured()
 

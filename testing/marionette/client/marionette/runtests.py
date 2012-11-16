@@ -17,15 +17,8 @@ import platform
 import weakref
 import xml.dom.minidom as dom
 
-try:
-    from manifestparser import TestManifest
-    from mozhttpd import iface, MozHttpd
-except ImportError:
-    print "manifestparser or mozhttpd not found!  Please install mozbase:\n"
-    print "\tgit clone git://github.com/mozilla/mozbase.git"
-    print "\tpython setup_development.py\n"
-    import sys
-    sys.exit(1)
+from manifestparser import TestManifest
+from mozhttpd import iface, MozHttpd
 
 from marionette import Marionette
 from marionette_test import MarionetteJSTestCase, MarionetteTestCase
@@ -517,7 +510,7 @@ class MarionetteTestRunner(object):
                 msg.appendChild(doc.createTextNode(text))
 
                 r.appendChild(msg)
-                t.appendChild(f)
+                t.appendChild(r)
 
             cls = classes[cls_name]
             cls.appendChild(t)

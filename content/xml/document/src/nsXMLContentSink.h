@@ -163,7 +163,7 @@ protected:
   nsresult HandleCharacterData(const PRUnichar *aData, uint32_t aLength,
                                bool aInterruptable);
 
-  nsIContent*      mDocElement;
+  nsCOMPtr<nsIContent> mDocElement;
   nsCOMPtr<nsIContent> mCurrentHead;  // When set, we're in an XHTML <haed>
   PRUnichar*       mText;
 

@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.util.GeckoAsyncTask;
@@ -327,10 +327,15 @@ public class AboutHomeContent extends ScrollView
     }
 
     private void updateTopSitesThumbnails(Map<String, Bitmap> thumbnails) {
-        for (int i = 0; i < mTopSitesGrid.getChildCount(); i++) {
+        for (int i = 0; i < mTopSitesAdapter.getCount(); i++) {
             final View view = mTopSitesGrid.getChildAt(i);
 
-            Cursor c = (Cursor) mTopSitesGrid.getItemAtPosition(i);
+            // The grid view might get temporarily out of sync with the
+            // adapter refreshes (e.g. on device rotation)
+            if (view == null)
+                continue;
+
+            Cursor c = (Cursor) mTopSitesAdapter.getItem(i);
             final String url = c.getString(c.getColumnIndex(URLColumns.URL));
 
             displayThumbnail(view, thumbnails.get(url));
@@ -347,8 +352,8 @@ public class AboutHomeContent extends ScrollView
                 return thumbnails;
 
             do {
-                final String url = c.getString(c.getColumnIndexOrThrow(Images.URL));
-                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Images.THUMBNAIL));
+                final String url = c.getString(c.getColumnIndexOrThrow(Thumbnails.URL));
+                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Thumbnails.DATA));
                 if (b == null)
                     continue;
 

@@ -28,10 +28,12 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.Control;
+import org.mozilla.gecko.db.BrowserContract.Favicons;
+import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
-import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
+import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
@@ -69,7 +71,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 12;
+    static final int DATABASE_VERSION = 13;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -94,17 +96,18 @@ public class BrowserProvider extends ContentProvider {
 
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
-    static final String TABLE_IMAGES = "images";
+    static final String TABLE_FAVICONS = "favicons";
+    static final String TABLE_THUMBNAILS = "thumbnails";
 
     static final String TABLE_BOOKMARKS_TMP = TABLE_BOOKMARKS + "_tmp";
     static final String TABLE_HISTORY_TMP = TABLE_HISTORY + "_tmp";
-    static final String TABLE_IMAGES_TMP = TABLE_IMAGES + "_tmp";
-
-    static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
-    static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
+    static final String TABLE_IMAGES_TMP = Obsolete.TABLE_IMAGES + "_tmp";
 
     static final String VIEW_COMBINED = "combined";
-    static final String VIEW_COMBINED_WITH_IMAGES = "combined_with_images";
+
+    static final String VIEW_BOOKMARKS_WITH_FAVICONS = "bookmarks_with_favicons";
+    static final String VIEW_HISTORY_WITH_FAVICONS = "history_with_favicons";
+    static final String VIEW_COMBINED_WITH_FAVICONS = "combined_with_favicons";
 
     // Bookmark matches
     static final int BOOKMARKS = 100;
@@ -118,9 +121,9 @@ public class BrowserProvider extends ContentProvider {
     static final int HISTORY_ID = 201;
     static final int HISTORY_OLD = 202;
 
-    // Image matches
-    static final int IMAGES = 300;
-    static final int IMAGES_ID = 301;
+    // Favicon matches
+    static final int FAVICONS = 300;
+    static final int FAVICON_ID = 301;
 
     // Schema matches
     static final int SCHEMA = 400;
@@ -134,28 +137,68 @@ public class BrowserProvider extends ContentProvider {
     // Search Suggest matches
     static final int SEARCH_SUGGEST = 700;
 
+    // Thumbnail matches
+    static final int THUMBNAILS = 800;
+    static final int THUMBNAIL_ID = 801;
+
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
 
     static final String DEFAULT_HISTORY_SORT_ORDER = History.DATE_LAST_VISITED + " DESC";
 
-    static final String TABLE_BOOKMARKS_JOIN_IMAGES = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
-            TABLE_IMAGES + " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
-            qualifyColumn(TABLE_IMAGES, Images.URL);
+    static final String TABLE_BOOKMARKS_JOIN_FAVICONS = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
+            TABLE_FAVICONS + " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.FAVICON_ID) + " = " +
+            qualifyColumn(TABLE_FAVICONS, Favicons._ID);
 
-    static final String TABLE_HISTORY_JOIN_IMAGES = TABLE_HISTORY + " LEFT OUTER JOIN " +
-            TABLE_IMAGES + " ON " + qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
-            qualifyColumn(TABLE_IMAGES, Images.URL);
+    static final String TABLE_HISTORY_JOIN_FAVICONS = TABLE_HISTORY + " LEFT OUTER JOIN " +
+            TABLE_FAVICONS + " ON " + qualifyColumn(TABLE_HISTORY, History.FAVICON_ID) + " = " +
+            qualifyColumn(TABLE_FAVICONS, Favicons._ID);
 
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
     static final Map<String, String> BOOKMARKS_PROJECTION_MAP;
     static final Map<String, String> HISTORY_PROJECTION_MAP;
-    static final Map<String, String> IMAGES_PROJECTION_MAP;
     static final Map<String, String> COMBINED_PROJECTION_MAP;
     static final Map<String, String> SCHEMA_PROJECTION_MAP;
     static final Map<String, String> SEARCH_SUGGEST_PROJECTION_MAP;
+    static final Map<String, String> FAVICONS_PROJECTION_MAP;
+    static final Map<String, String> THUMBNAILS_PROJECTION_MAP;
+
+    static final class Obsolete {
+        public static final String TABLE_IMAGES = "images";
+        public static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
+        public static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
+        public static final String VIEW_COMBINED_WITH_IMAGES = "combined_with_images";
+
+        public static final class Images implements CommonColumns, SyncColumns {
+            private Images() {}
+
+            public static final String URL = "url_key";
+            public static final String FAVICON_URL = "favicon_url";
+            public static final String FAVICON = "favicon";
+            public static final String THUMBNAIL = "thumbnail";
+            public static final String _ID = "_id";
+            public static final String GUID = "guid";
+            public static final String DATE_CREATED = "created";
+            public static final String DATE_MODIFIED = "modified";
+            public static final String IS_DELETED = "deleted";
+        }
+
+        public static final class Combined {
+            private Combined() {}
+
+            public static final String THUMBNAIL = "thumbnail";
+        }
+
+        static final String TABLE_BOOKMARKS_JOIN_IMAGES = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
+                Obsolete.TABLE_IMAGES + " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+                qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL);
+
+        static final String TABLE_HISTORY_JOIN_IMAGES = TABLE_HISTORY + " LEFT OUTER JOIN " +
+                Obsolete.TABLE_IMAGES + " ON " + qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
+                qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL);
+    }
 
     static {
         // We will reuse this.
@@ -173,7 +216,8 @@ public class BrowserProvider extends ContentProvider {
         map.put(Bookmarks.TITLE, Bookmarks.TITLE);
         map.put(Bookmarks.URL, Bookmarks.URL);
         map.put(Bookmarks.FAVICON, Bookmarks.FAVICON);
-        map.put(Bookmarks.THUMBNAIL, Bookmarks.THUMBNAIL);
+        map.put(Bookmarks.FAVICON_ID, Bookmarks.FAVICON_ID);
+        map.put(Bookmarks.FAVICON_URL, Bookmarks.FAVICON_URL);
         map.put(Bookmarks.TYPE, Bookmarks.TYPE);
         map.put(Bookmarks.PARENT, Bookmarks.PARENT);
         map.put(Bookmarks.POSITION, Bookmarks.POSITION);
@@ -196,7 +240,8 @@ public class BrowserProvider extends ContentProvider {
         map.put(History.TITLE, History.TITLE);
         map.put(History.URL, History.URL);
         map.put(History.FAVICON, History.FAVICON);
-        map.put(History.THUMBNAIL, History.THUMBNAIL);
+        map.put(History.FAVICON_ID, History.FAVICON_ID);
+        map.put(History.FAVICON_URL, History.FAVICON_URL);
         map.put(History.VISITS, History.VISITS);
         map.put(History.DATE_LAST_VISITED, History.DATE_LAST_VISITED);
         map.put(History.DATE_CREATED, History.DATE_CREATED);
@@ -205,21 +250,27 @@ public class BrowserProvider extends ContentProvider {
         map.put(History.IS_DELETED, History.IS_DELETED);
         HISTORY_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
-        // Images
-        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images", IMAGES);
-        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images/#", IMAGES_ID);
+        // Favicons
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "favicons", FAVICONS);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "favicons/#", FAVICON_ID);
 
         map = new HashMap<String, String>();
-        map.put(Images._ID, Images._ID);
-        map.put(Images.URL, Images.URL);
-        map.put(Images.FAVICON, Images.FAVICON);
-        map.put(Images.FAVICON_URL, Images.FAVICON_URL);
-        map.put(Images.THUMBNAIL, Images.THUMBNAIL);
-        map.put(Images.DATE_CREATED, Images.DATE_CREATED);
-        map.put(Images.DATE_MODIFIED, Images.DATE_MODIFIED);
-        map.put(Images.GUID, Images.GUID);
-        map.put(Images.IS_DELETED, Images.IS_DELETED);
-        IMAGES_PROJECTION_MAP = Collections.unmodifiableMap(map);
+        map.put(Favicons._ID, Favicons._ID);
+        map.put(Favicons.URL, Favicons.URL);
+        map.put(Favicons.DATA, Favicons.DATA);
+        map.put(Favicons.DATE_CREATED, Favicons.DATE_CREATED);
+        map.put(Favicons.DATE_MODIFIED, Favicons.DATE_MODIFIED);
+        FAVICONS_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+        // Thumbnails
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "thumbnails", THUMBNAILS);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "thumbnails/#", THUMBNAIL_ID);
+
+        map = new HashMap<String, String>();
+        map.put(Thumbnails._ID, Thumbnails._ID);
+        map.put(Thumbnails.URL, Thumbnails.URL);
+        map.put(Thumbnails.DATA, Thumbnails.DATA);
+        THUMBNAILS_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Combined bookmarks and history
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "combined", COMBINED);
@@ -234,7 +285,8 @@ public class BrowserProvider extends ContentProvider {
         map.put(Combined.VISITS, Combined.VISITS);
         map.put(Combined.DATE_LAST_VISITED, Combined.DATE_LAST_VISITED);
         map.put(Combined.FAVICON, Combined.FAVICON);
-        map.put(Combined.THUMBNAIL, Combined.THUMBNAIL);
+        map.put(Combined.FAVICON_ID, Combined.FAVICON_ID);
+        map.put(Combined.FAVICON_URL, Combined.FAVICON_URL);
         COMBINED_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Schema
@@ -284,11 +336,11 @@ public class BrowserProvider extends ContentProvider {
         return table + "." + column;
     }
 
-    private static boolean hasImagesInProjection(String[] projection) {
+    private static boolean hasFaviconsInProjection(String[] projection) {
         if (projection == null) return true;
         for (int i = 0; i < projection.length; ++i) {
-            if (projection[i].equals(Images.FAVICON) ||
-                projection[i].equals(Images.THUMBNAIL))
+            if (projection[i].equals(FaviconColumns.FAVICON) ||
+                projection[i].equals(FaviconColumns.FAVICON_URL))
                 return true;
         }
 
@@ -337,6 +389,7 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks.KEYWORD + " TEXT," +
                     Bookmarks.DESCRIPTION + " TEXT," +
                     Bookmarks.TAGS + " TEXT," +
+                    Bookmarks.FAVICON_ID + " INTEGER," +
                     Bookmarks.DATE_CREATED + " INTEGER," +
                     Bookmarks.DATE_MODIFIED + " INTEGER," +
                     Bookmarks.GUID + " TEXT NOT NULL," +
@@ -361,6 +414,7 @@ public class BrowserProvider extends ContentProvider {
                     History.TITLE + " TEXT," +
                     History.URL + " TEXT NOT NULL," +
                     History.VISITS + " INTEGER NOT NULL DEFAULT 0," +
+                    History.FAVICON_ID + " INTEGER," +
                     History.DATE_LAST_VISITED + " INTEGER," +
                     History.DATE_CREATED + " INTEGER," +
                     History.DATE_MODIFIED + " INTEGER," +
@@ -379,49 +433,97 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void createImagesTable(SQLiteDatabase db) {
-            debug("Creating " + TABLE_IMAGES + " table");
-            db.execSQL("CREATE TABLE " + TABLE_IMAGES + " (" +
-                    Images._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    Images.URL + " TEXT UNIQUE NOT NULL," +
-                    Images.FAVICON + " BLOB," +
-                    Images.FAVICON_URL + " TEXT," +
-                    Images.THUMBNAIL + " BLOB," +
-                    Images.DATE_CREATED + " INTEGER," +
-                    Images.DATE_MODIFIED + " INTEGER," +
-                    Images.GUID + " TEXT NOT NULL," +
-                    Images.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
+            debug("Creating " + Obsolete.TABLE_IMAGES + " table");
+            db.execSQL("CREATE TABLE " + Obsolete.TABLE_IMAGES + " (" +
+                    Obsolete.Images._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    Obsolete.Images.URL + " TEXT UNIQUE NOT NULL," +
+                    Obsolete.Images.FAVICON + " BLOB," +
+                    Obsolete.Images.FAVICON_URL + " TEXT," +
+                    Obsolete.Images.THUMBNAIL + " BLOB," +
+                    Obsolete.Images.DATE_CREATED + " INTEGER," +
+                    Obsolete.Images.DATE_MODIFIED + " INTEGER," +
+                    Obsolete.Images.GUID + " TEXT NOT NULL," +
+                    Obsolete.Images.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
-            db.execSQL("CREATE INDEX images_url_index ON " + TABLE_IMAGES + "("
-                    + Images.URL + ")");
-            db.execSQL("CREATE UNIQUE INDEX images_guid_index ON " + TABLE_IMAGES + "("
-                    + Images.GUID + ")");
-            db.execSQL("CREATE INDEX images_modified_index ON " + TABLE_IMAGES + "("
-                    + Images.DATE_MODIFIED + ")");
+            db.execSQL("CREATE INDEX images_url_index ON " + Obsolete.TABLE_IMAGES + "("
+                    + Obsolete.Images.URL + ")");
+            db.execSQL("CREATE UNIQUE INDEX images_guid_index ON " + Obsolete.TABLE_IMAGES + "("
+                    + Obsolete.Images.GUID + ")");
+            db.execSQL("CREATE INDEX images_modified_index ON " + Obsolete.TABLE_IMAGES + "("
+                    + Obsolete.Images.DATE_MODIFIED + ")");
+        }
+
+        private void createFaviconsTable(SQLiteDatabase db) {
+            debug("Creating " + TABLE_FAVICONS + " table");
+            db.execSQL("CREATE TABLE " + TABLE_FAVICONS + " (" +
+                    Favicons._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    Favicons.URL + " TEXT UNIQUE," +
+                    Favicons.DATA + " BLOB," +
+                    Favicons.DATE_CREATED + " INTEGER," +
+                    Favicons.DATE_MODIFIED + " INTEGER" +
+                    ");");
+
+            db.execSQL("CREATE INDEX favicons_url_index ON " + TABLE_FAVICONS + "("
+                    + Favicons.URL + ")");
+            db.execSQL("CREATE INDEX favicons_modified_index ON " + TABLE_FAVICONS + "("
+                    + Favicons.DATE_MODIFIED + ")");
+        }
+
+        private void createThumbnailsTable(SQLiteDatabase db) {
+            debug("Creating " + TABLE_THUMBNAILS + " table");
+            db.execSQL("CREATE TABLE " + TABLE_THUMBNAILS + " (" +
+                    Thumbnails._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    Thumbnails.URL + " TEXT UNIQUE," +
+                    Thumbnails.DATA + " BLOB" +
+                    ");");
+
+            db.execSQL("CREATE INDEX thumbnails_url_index ON " + TABLE_THUMBNAILS + "("
+                    + Thumbnails.URL + ")");
         }
 
         private void createBookmarksWithImagesView(SQLiteDatabase db) {
-            debug("Creating " + VIEW_BOOKMARKS_WITH_IMAGES + " view");
+            debug("Creating " + Obsolete.VIEW_BOOKMARKS_WITH_IMAGES + " view");
 
-            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + Obsolete.VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
-                    ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
-                    TABLE_BOOKMARKS_JOIN_IMAGES);
+                    ", " + Obsolete.Images.FAVICON + ", " + Obsolete.Images.THUMBNAIL + " FROM " +
+                    Obsolete.TABLE_BOOKMARKS_JOIN_IMAGES);
+        }
+
+        private void createBookmarksWithFaviconsView(SQLiteDatabase db) {
+            debug("Creating " + VIEW_BOOKMARKS_WITH_FAVICONS + " view");
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_FAVICONS + " AS " +
+                    "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
+                    ", " + qualifyColumn(TABLE_FAVICONS, Favicons.DATA) + " AS " + Bookmarks.FAVICON +
+                    ", " + qualifyColumn(TABLE_FAVICONS, Favicons.URL) + " AS " + Bookmarks.FAVICON_URL +
+                    " FROM " + TABLE_BOOKMARKS_JOIN_FAVICONS);
         }
 
         private void createHistoryWithImagesView(SQLiteDatabase db) {
-            debug("Creating " + VIEW_HISTORY_WITH_IMAGES + " view");
+            debug("Creating " + Obsolete.VIEW_HISTORY_WITH_IMAGES + " view");
 
-            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_IMAGES + " AS " +
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + Obsolete.VIEW_HISTORY_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
-                    ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
-                    TABLE_HISTORY_JOIN_IMAGES);
+                    ", " + Obsolete.Images.FAVICON + ", " + Obsolete.Images.THUMBNAIL + " FROM " +
+                    Obsolete.TABLE_HISTORY_JOIN_IMAGES);
+        }
+
+        private void createHistoryWithFaviconsView(SQLiteDatabase db) {
+            debug("Creating " + VIEW_HISTORY_WITH_FAVICONS + " view");
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_FAVICONS + " AS " +
+                    "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
+                    ", " + qualifyColumn(TABLE_FAVICONS, Favicons.DATA) + " AS " + History.FAVICON +
+                    ", " + qualifyColumn(TABLE_FAVICONS, Favicons.URL) + " AS " + History.FAVICON_URL +
+                    " FROM " + TABLE_HISTORY_JOIN_FAVICONS);
         }
 
         private void createCombinedWithImagesView(SQLiteDatabase db) {
-            debug("Creating " + VIEW_COMBINED_WITH_IMAGES + " view");
+            debug("Creating " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " view");
 
-            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_IMAGES + " AS" +
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " AS" +
                     " SELECT " + Combined.BOOKMARK_ID + ", " +
                                  Combined.HISTORY_ID + ", " +
                                  // We need to return an _id column because CursorAdapter requires it for its
@@ -433,8 +535,8 @@ public class BrowserProvider extends ContentProvider {
                                  Combined.TITLE + ", " +
                                  Combined.VISITS + ", " +
                                  Combined.DATE_LAST_VISITED + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.THUMBNAIL) + " AS " + Combined.THUMBNAIL +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.THUMBNAIL) + " AS " + Obsolete.Combined.THUMBNAIL +
                     " FROM (" +
                         // Bookmarks without history.
                         " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
@@ -465,14 +567,14 @@ public class BrowserProvider extends ContentProvider {
                                     qualifyColumn(TABLE_HISTORY, History.IS_DELETED)  + " = 0 AND (" +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ")" +
-                    ") LEFT OUTER JOIN " + TABLE_IMAGES +
-                        " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
+                    ") LEFT OUTER JOIN " + Obsolete.TABLE_IMAGES +
+                        " ON " + Combined.URL + " = " + qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL));
         }
 
         private void createCombinedWithImagesViewOn9(SQLiteDatabase db) {
-            debug("Creating " + VIEW_COMBINED_WITH_IMAGES + " view");
+            debug("Creating " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " view");
 
-            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_IMAGES + " AS" +
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " AS" +
                     " SELECT " + Combined.BOOKMARK_ID + ", " +
                                  Combined.HISTORY_ID + ", " +
                                  // We need to return an _id column because CursorAdapter requires it for its
@@ -485,8 +587,8 @@ public class BrowserProvider extends ContentProvider {
                                  Combined.VISITS + ", " +
                                  Combined.DISPLAY + ", " +
                                  Combined.DATE_LAST_VISITED + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.THUMBNAIL) + " AS " + Combined.THUMBNAIL +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.THUMBNAIL) + " AS " + Obsolete.Combined.THUMBNAIL +
                     " FROM (" +
                         // Bookmarks without history.
                         " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
@@ -523,14 +625,14 @@ public class BrowserProvider extends ContentProvider {
                                     qualifyColumn(TABLE_HISTORY, History.IS_DELETED)  + " = 0 AND (" +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ")" +
-                    ") LEFT OUTER JOIN " + TABLE_IMAGES +
-                        " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
+                    ") LEFT OUTER JOIN " + Obsolete.TABLE_IMAGES +
+                        " ON " + Combined.URL + " = " + qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL));
         }
 
         private void createCombinedWithImagesViewOn10(SQLiteDatabase db) {
-            debug("Creating " + VIEW_COMBINED_WITH_IMAGES + " view");
+            debug("Creating " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " view");
 
-            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_IMAGES + " AS" +
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " AS" +
                     " SELECT " + Combined.BOOKMARK_ID + ", " +
                                  Combined.HISTORY_ID + ", " +
                                  // We need to return an _id column because CursorAdapter requires it for its
@@ -543,8 +645,8 @@ public class BrowserProvider extends ContentProvider {
                                  Combined.VISITS + ", " +
                                  Combined.DISPLAY + ", " +
                                  Combined.DATE_LAST_VISITED + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.THUMBNAIL) + " AS " + Combined.THUMBNAIL +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.THUMBNAIL) + " AS " + Obsolete.Combined.THUMBNAIL +
                     " FROM (" +
                         // Bookmarks without history.
                         " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
@@ -582,14 +684,14 @@ public class BrowserProvider extends ContentProvider {
                                     qualifyColumn(TABLE_HISTORY, History.IS_DELETED)  + " = 0 AND (" +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ")" +
-                    ") LEFT OUTER JOIN " + TABLE_IMAGES +
-                        " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
+                    ") LEFT OUTER JOIN " + Obsolete.TABLE_IMAGES +
+                        " ON " + Combined.URL + " = " + qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL));
         }
 
         private void createCombinedWithImagesViewOn11(SQLiteDatabase db) {
-            debug("Creating " + VIEW_COMBINED_WITH_IMAGES + " view");
+            debug("Creating " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " view");
 
-            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_IMAGES + " AS" +
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " AS" +
                     " SELECT " + Combined.BOOKMARK_ID + ", " +
                                  Combined.HISTORY_ID + ", " +
                                  // We need to return an _id column because CursorAdapter requires it for its
@@ -602,8 +704,8 @@ public class BrowserProvider extends ContentProvider {
                                  Combined.VISITS + ", " +
                                  Combined.DISPLAY + ", " +
                                  Combined.DATE_LAST_VISITED + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
-                                 qualifyColumn(TABLE_IMAGES, Images.THUMBNAIL) + " AS " + Combined.THUMBNAIL +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
+                                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.THUMBNAIL) + " AS " + Obsolete.Combined.THUMBNAIL +
                     " FROM (" +
                         // Bookmarks without history.
                         " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
@@ -644,8 +746,8 @@ public class BrowserProvider extends ContentProvider {
                                     qualifyColumn(TABLE_HISTORY, History.IS_DELETED)  + " = 0 AND (" +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ") " +
-                    ") LEFT OUTER JOIN " + TABLE_IMAGES +
-                        " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
+                    ") LEFT OUTER JOIN " + Obsolete.TABLE_IMAGES +
+                        " ON " + Combined.URL + " = " + qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL));
         }
 
         private void createCombinedViewOn12(SQLiteDatabase db) {
@@ -706,14 +808,85 @@ public class BrowserProvider extends ContentProvider {
                                         qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ") " +
                     ")");
 
-            debug("Creating " + VIEW_COMBINED_WITH_IMAGES + " view");
+            debug("Creating " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " view");
 
-            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_IMAGES + " AS" +
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES + " AS" +
                     " SELECT *, " +
-                        qualifyColumn(TABLE_IMAGES, Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
-                        qualifyColumn(TABLE_IMAGES, Images.THUMBNAIL) + " AS " + Combined.THUMBNAIL +
-                    " FROM " + VIEW_COMBINED + " LEFT OUTER JOIN " + TABLE_IMAGES +
-                        " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
+                        qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
+                        qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.THUMBNAIL) + " AS " + Obsolete.Combined.THUMBNAIL +
+                    " FROM " + VIEW_COMBINED + " LEFT OUTER JOIN " + Obsolete.TABLE_IMAGES +
+                        " ON " + Combined.URL + " = " + qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL));
+        }
+
+        private void createCombinedViewOn13(SQLiteDatabase db) {
+            debug("Creating " + VIEW_COMBINED + " view");
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED + " AS" +
+                    " SELECT " + Combined.BOOKMARK_ID + ", " +
+                                 Combined.HISTORY_ID + ", " +
+                                 // We need to return an _id column because CursorAdapter requires it for its
+                                 // default implementation for the getItemId() method. However, since
+                                 // we're not using this feature in the parts of the UI using this view,
+                                 // we can just use 0 for all rows.
+                                 "0 AS " + Combined._ID + ", " +
+                                 Combined.URL + ", " +
+                                 Combined.TITLE + ", " +
+                                 Combined.VISITS + ", " +
+                                 Combined.DISPLAY + ", " +
+                                 Combined.DATE_LAST_VISITED + ", " +
+                                 Combined.FAVICON_ID +
+                    " FROM (" +
+                        // Bookmarks without history.
+                        " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " AS " + Combined.URL + ", " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + " AS " + Combined.TITLE + ", " +
+                                     "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT) + " WHEN " +
+                                        Bookmarks.FIXED_READING_LIST_ID + " THEN " + Combined.DISPLAY_READER + " ELSE " +
+                                        Combined.DISPLAY_NORMAL + " END AS " + Combined.DISPLAY + ", " +
+                                     "-1 AS " + Combined.HISTORY_ID + ", " +
+                                     "-1 AS " + Combined.VISITS + ", " +
+                                     "-1 AS " + Combined.DATE_LAST_VISITED + ", " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.FAVICON_ID) + " AS " + Combined.FAVICON_ID +
+                        " FROM " + TABLE_BOOKMARKS +
+                        " WHERE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + " AND " +
+                                    qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED)  + " = 0 AND " +
+                                    qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) +
+                                        " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY + ")" +
+                        " UNION ALL" +
+                        // History with and without bookmark.
+                        " SELECT " + "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " WHEN 0 THEN " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) +  " ELSE NULL END AS " + Combined.BOOKMARK_ID + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
+                                     // Prioritize bookmark titles over history titles, since the user may have
+                                     // customized the title for a bookmark.
+                                     "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
+                                                   qualifyColumn(TABLE_HISTORY, History.TITLE) +")" + " AS " + Combined.TITLE + ", " +
+                                     // Only use DISPLAY_READER if the matching bookmark entry inside reading
+                                     // list folder is not marked as deleted.
+                                     "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " WHEN 0 THEN CASE " +
+                                        qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT) + " WHEN " + Bookmarks.FIXED_READING_LIST_ID +
+                                        " THEN " + Combined.DISPLAY_READER + " ELSE " + Combined.DISPLAY_NORMAL + " END ELSE " +
+                                        Combined.DISPLAY_NORMAL + " END AS " + Combined.DISPLAY + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History._ID) + " AS " + Combined.HISTORY_ID + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.VISITS) + " AS " + Combined.VISITS + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.DATE_LAST_VISITED) + " AS " + Combined.DATE_LAST_VISITED + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.FAVICON_ID) + " AS " + Combined.FAVICON_ID +
+                        " FROM " + TABLE_HISTORY + " LEFT OUTER JOIN " + TABLE_BOOKMARKS +
+                            " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " + qualifyColumn(TABLE_HISTORY, History.URL) +
+                        " WHERE " + qualifyColumn(TABLE_HISTORY, History.URL) + " IS NOT NULL AND " +
+                                    qualifyColumn(TABLE_HISTORY, History.IS_DELETED)  + " = 0 AND (" +
+                                        qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
+                                        qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ") " +
+                    ")");
+
+            debug("Creating " + VIEW_COMBINED_WITH_FAVICONS + " view");
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_FAVICONS + " AS" +
+                    " SELECT " + qualifyColumn(VIEW_COMBINED, "*") + ", " +
+                        qualifyColumn(TABLE_FAVICONS, Favicons.URL) + " AS " + Combined.FAVICON_URL + ", " +
+                        qualifyColumn(TABLE_FAVICONS, Favicons.DATA) + " AS " + Combined.FAVICON +
+                    " FROM " + VIEW_COMBINED + " LEFT OUTER JOIN " + TABLE_FAVICONS +
+                        " ON " + Combined.FAVICON_ID + " = " + qualifyColumn(TABLE_FAVICONS, Favicons._ID));
         }
 
         @Override
@@ -722,11 +895,12 @@ public class BrowserProvider extends ContentProvider {
 
             createBookmarksTable(db);
             createHistoryTable(db);
-            createImagesTable(db);
-            createCombinedViewOn12(db);
+            createFaviconsTable(db);
+            createThumbnailsTable(db);
 
-            createBookmarksWithImagesView(db);
-            createHistoryWithImagesView(db);
+            createBookmarksWithFaviconsView(db);
+            createHistoryWithFaviconsView(db);
+            createCombinedViewOn13(db);
 
             createOrUpdateSpecialFolder(db, Bookmarks.PLACES_FOLDER_GUID,
                 R.string.bookmarks_folder_places, 0);
@@ -801,11 +975,9 @@ public class BrowserProvider extends ContentProvider {
 
             if (stream != null) {
                 ContentValues values = new ContentValues();
-                values.put(Images.FAVICON, stream.toByteArray());
-                values.put(Images.URL, url);
-                values.put(Images.IS_DELETED, 0);
-                values.put(Images.GUID, Utils.generateGuid());
-                db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
+                values.put(Favicons.DATA, stream.toByteArray());
+                values.put(Favicons.PAGE_URL, url);
+                insertFavicon(db, values);
             }
         }
 
@@ -973,7 +1145,7 @@ public class BrowserProvider extends ContentProvider {
                        " RENAME TO " + TABLE_BOOKMARKS_TMP);
 
             debug("Dropping views and indexes related to " + TABLE_BOOKMARKS);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_BOOKMARKS_WITH_IMAGES);
 
             db.execSQL("DROP INDEX IF EXISTS bookmarks_url_index");
             db.execSQL("DROP INDEX IF EXISTS bookmarks_guid_index");
@@ -1002,8 +1174,8 @@ public class BrowserProvider extends ContentProvider {
                        " RENAME TO " + TABLE_HISTORY_TMP);
 
             debug("Dropping views and indexes related to " + TABLE_HISTORY);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_HISTORY_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
 
             db.execSQL("DROP INDEX IF EXISTS history_url_index");
             db.execSQL("DROP INDEX IF EXISTS history_guid_index");
@@ -1022,12 +1194,12 @@ public class BrowserProvider extends ContentProvider {
 
         private void migrateImagesTable(SQLiteDatabase db) {
             debug("Renaming images table to " + TABLE_IMAGES_TMP);
-            db.execSQL("ALTER TABLE " + TABLE_IMAGES +
+            db.execSQL("ALTER TABLE " + Obsolete.TABLE_IMAGES +
                        " RENAME TO " + TABLE_IMAGES_TMP);
 
-            debug("Dropping views and indexes related to " + TABLE_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_HISTORY_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+            debug("Dropping views and indexes related to " + Obsolete.TABLE_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
 
             db.execSQL("DROP INDEX IF EXISTS images_url_index");
             db.execSQL("DROP INDEX IF EXISTS images_guid_index");
@@ -1037,7 +1209,7 @@ public class BrowserProvider extends ContentProvider {
             createHistoryWithImagesView(db);
             createCombinedWithImagesView(db);
 
-            db.execSQL("INSERT INTO " + TABLE_IMAGES + " SELECT * FROM " + TABLE_IMAGES_TMP);
+            db.execSQL("INSERT INTO " + Obsolete.TABLE_IMAGES + " SELECT * FROM " + TABLE_IMAGES_TMP);
 
             debug("Dropping images temporary table");
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_IMAGES_TMP);
@@ -1048,13 +1220,13 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void upgradeDatabaseFrom2to3(SQLiteDatabase db) {
-            debug("Dropping view: " + VIEW_BOOKMARKS_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES);
+            debug("Dropping view: " + Obsolete.VIEW_BOOKMARKS_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_BOOKMARKS_WITH_IMAGES);
 
             createBookmarksWithImagesView(db);
 
-            debug("Dropping view: " + VIEW_HISTORY_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_HISTORY_WITH_IMAGES);
+            debug("Dropping view: " + Obsolete.VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_HISTORY_WITH_IMAGES);
 
             createHistoryWithImagesView(db);
         }
@@ -1068,8 +1240,8 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void upgradeDatabaseFrom5to6(SQLiteDatabase db) {
-            debug("Dropping view: " + VIEW_COMBINED_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+            debug("Dropping view: " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
 
             createCombinedWithImagesView(db);
         }
@@ -1079,16 +1251,16 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("DELETE FROM " + TABLE_HISTORY + " WHERE " + History.GUID + " IS NULL");
 
             debug("Update images with NULL GUIDs");
-            String[] columns = new String[] { Images._ID };
+            String[] columns = new String[] { Obsolete.Images._ID };
             Cursor cursor = null;
             try {
-              cursor = db.query(TABLE_IMAGES, columns, Images.GUID + " IS NULL", null, null ,null, null, null);
+              cursor = db.query(Obsolete.TABLE_IMAGES, columns, Obsolete.Images.GUID + " IS NULL", null, null ,null, null, null);
               ContentValues values = new ContentValues();
               if (cursor.moveToFirst()) {
                   do {
-                      values.put(Images.GUID, Utils.generateGuid());
-                      db.update(TABLE_IMAGES, values, Images._ID + " = ?", new String[] {
-                        cursor.getString(cursor.getColumnIndexOrThrow(Images._ID))
+                      values.put(Obsolete.Images.GUID, Utils.generateGuid());
+                      db.update(Obsolete.TABLE_IMAGES, values, Obsolete.Images._ID + " = ?", new String[] {
+                        cursor.getString(cursor.getColumnIndexOrThrow(Obsolete.Images._ID))
                       });
                   } while (cursor.moveToNext());
               }
@@ -1140,22 +1312,22 @@ public class BrowserProvider extends ContentProvider {
             createOrUpdateSpecialFolder(db, Bookmarks.READING_LIST_FOLDER_GUID,
                 R.string.bookmarks_folder_reading_list, 5);
 
-            debug("Dropping view: " + VIEW_COMBINED_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+            debug("Dropping view: " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
 
             createCombinedWithImagesViewOn9(db);
         }
 
         private void upgradeDatabaseFrom9to10(SQLiteDatabase db) {
-            debug("Dropping view: " + VIEW_COMBINED_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+            debug("Dropping view: " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
 
             createCombinedWithImagesViewOn10(db);
         }
 
         private void upgradeDatabaseFrom10to11(SQLiteDatabase db) {
-            debug("Dropping view: " + VIEW_COMBINED_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+            debug("Dropping view: " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
 
             db.execSQL("CREATE INDEX bookmarks_type_deleted_index ON " + TABLE_BOOKMARKS + "("
                     + Bookmarks.TYPE + ", " + Bookmarks.IS_DELETED + ")");
@@ -1164,10 +1336,110 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void upgradeDatabaseFrom11to12(SQLiteDatabase db) {
-            debug("Dropping view: " + VIEW_COMBINED_WITH_IMAGES);
-            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+            debug("Dropping view: " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
 
             createCombinedViewOn12(db);
+        }
+
+        private void upgradeDatabaseFrom12to13(SQLiteDatabase db) {
+            final String FAVICON_DB = "favicon_urls.db";
+
+            // Update images table with favicon URLs
+            SQLiteDatabase faviconsDb = null;
+            Cursor c = null;
+            try {
+                final String FAVICON_TABLE = "favicon_urls";
+                final String FAVICON_URL = "favicon_url";
+                final String FAVICON_PAGE = "page_url";
+
+                String dbPath = mContext.getDatabasePath(FAVICON_DB).getPath();
+                faviconsDb = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY);
+                String[] columns = new String[] { FAVICON_URL, FAVICON_PAGE };
+                c = faviconsDb.query(FAVICON_TABLE, columns, null, null, null, null, null, null);
+                int faviconIndex = c.getColumnIndexOrThrow(FAVICON_URL);
+                int pageIndex = c.getColumnIndexOrThrow(FAVICON_PAGE);
+                while (c.moveToNext()) {
+                    ContentValues values = new ContentValues(1);
+                    String faviconUrl = c.getString(faviconIndex);
+                    String pageUrl = c.getString(pageIndex);
+                    values.put(FAVICON_URL, faviconUrl);
+                    db.update(Obsolete.TABLE_IMAGES, values, Obsolete.Images.URL + " = ?", new String[] { pageUrl });
+                }
+            } finally {
+                if (c != null)
+                    c.close();
+                if (faviconsDb != null)
+                    faviconsDb.close();
+            }
+
+            createFaviconsTable(db);
+
+            // Import favicons into the favicons table
+            db.execSQL("ALTER TABLE " + TABLE_HISTORY
+                    + " ADD COLUMN " + History.FAVICON_ID + " INTEGER");
+            db.execSQL("ALTER TABLE " + TABLE_BOOKMARKS
+                    + " ADD COLUMN " + Bookmarks.FAVICON_ID + " INTEGER");
+
+            try {
+                c = db.rawQuery("SELECT " + Obsolete.Images.URL + ", "
+                        + Obsolete.Images.FAVICON_URL + ", "
+                        + Obsolete.Images.FAVICON + ", "
+                        + Obsolete.Images.DATE_CREATED + ", "
+                        + Obsolete.Images.DATE_MODIFIED
+                        + " FROM " + Obsolete.TABLE_IMAGES
+                        + " WHERE " + Obsolete.Images.FAVICON_URL + " IS NOT NULL"
+                        + " GROUP BY " + Obsolete.Images.FAVICON_URL
+                        + " UNION ALL SELECT " + Obsolete.Images.URL + ", "
+                        + Obsolete.Images.FAVICON_URL + ", "
+                        + Obsolete.Images.FAVICON + ", "
+                        + Obsolete.Images.DATE_CREATED + ", "
+                        + Obsolete.Images.DATE_MODIFIED
+                        + " FROM " + Obsolete.TABLE_IMAGES
+                        + " WHERE " + Obsolete.Images.FAVICON_URL + " IS NULL",
+                        null);
+
+                while (c.moveToNext()) {
+                    ContentValues values = new ContentValues(4);
+                    values.put(Favicons.URL, c.getString(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL)));
+                    values.put(Favicons.DATA, c.getBlob(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON)));
+                    values.put(Favicons.DATE_MODIFIED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_MODIFIED)));
+                    values.put(Favicons.DATE_CREATED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_CREATED)));
+                    long favicon_id = db.insert(TABLE_FAVICONS, null, values);
+
+                    values = new ContentValues(1);
+                    values.put(FaviconColumns.FAVICON_ID, favicon_id);
+                    db.update(TABLE_HISTORY, values, History.URL + " = ?",
+                            new String[] { c.getString(c.getColumnIndexOrThrow(Obsolete.Images.URL)) });
+                    db.update(TABLE_BOOKMARKS, values, Bookmarks.URL + " = ?",
+                            new String[] { c.getString(c.getColumnIndexOrThrow(Obsolete.Images.URL)) });
+                }
+            } finally {
+                if (c != null)
+                    c.close();
+            }
+
+            createThumbnailsTable(db);
+
+            // Import thumbnails into the thumbnails table
+            db.execSQL("INSERT INTO " + TABLE_THUMBNAILS + " ("
+                    + Thumbnails.URL + ", "
+                    + Thumbnails.DATA + ") "
+                    + "SELECT " + Obsolete.Images.URL + ", " + Obsolete.Images.THUMBNAIL
+                    + " FROM " + Obsolete.TABLE_IMAGES
+                    + " WHERE " + Obsolete.Images.THUMBNAIL + " IS NOT NULL");
+
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_BOOKMARKS_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
+
+            createBookmarksWithFaviconsView(db);
+            createHistoryWithFaviconsView(db);
+            createCombinedViewOn13(db);
+
+            db.execSQL("DROP TABLE IF EXISTS " + Obsolete.TABLE_IMAGES);
+            mContext.deleteDatabase(FAVICON_DB);
         }
 
         @Override
@@ -1223,6 +1495,10 @@ public class BrowserProvider extends ContentProvider {
 
                     case 12:
                         upgradeDatabaseFrom11to12(db);
+                        break;
+
+                    case 13:
+                        upgradeDatabaseFrom12to13(db);
                         break;
                  }
              }
@@ -1427,7 +1703,7 @@ public class BrowserProvider extends ContentProvider {
      *
      * Call this method within a transaction.
      */
-    public void expireHistory(final SQLiteDatabase db, final int retain, final long keepAfter) {
+    private void expireHistory(final SQLiteDatabase db, final int retain, final long keepAfter) {
         final long rows = DatabaseUtils.queryNumEntries(db, TABLE_HISTORY);
 
         if (retain >= rows) {
@@ -1462,13 +1738,12 @@ public class BrowserProvider extends ContentProvider {
      *
      * Call this method within a transaction.
      */
-    public void expireThumbnails(final SQLiteDatabase db) {
+    private void expireThumbnails(final SQLiteDatabase db) {
         final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
-        final String sql = "UPDATE " + TABLE_IMAGES +
-                           " SET " + Images.THUMBNAIL + " = NULL " +
-                           " WHERE " + Images.URL + " NOT IN ( " +
+        final String sql = "DELETE FROM " + TABLE_THUMBNAILS +
+                           " WHERE " + Thumbnails.URL + " NOT IN ( " +
                              " SELECT " + Combined.URL +
-                             " FROM " + VIEW_COMBINED_WITH_IMAGES +
+                             " FROM " + VIEW_COMBINED +
                              " ORDER BY " + sortOrder +
                              " LIMIT " + DEFAULT_EXPIRY_THUMBNAIL_COUNT +
                            ")";
@@ -1631,16 +1906,29 @@ public class BrowserProvider extends ContentProvider {
                 break;
             }
 
-            case IMAGES_ID:
-                debug("Delete on IMAGES_ID: " + uri);
+            case FAVICON_ID:
+                debug("Delete on FAVICON_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
+                selection = DBUtils.concatenateWhere(selection, TABLE_FAVICONS + "._id = ?");
                 selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
-            case IMAGES: {
-                trace("Deleting images: " + uri);
-                deleted = deleteImages(uri, selection, selectionArgs);
+            case FAVICONS: {
+                trace("Deleting favicons: " + uri);
+                deleted = deleteFavicons(uri, selection, selectionArgs);
+                break;
+            }
+
+            case THUMBNAIL_ID:
+                debug("Delete on THUMBNAIL_ID: " + uri);
+
+                selection = DBUtils.concatenateWhere(selection, TABLE_THUMBNAILS + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case THUMBNAILS: {
+                trace("Deleting thumbnails: " + uri);
+                deleted = deleteThumbnails(uri, selection, selectionArgs);
                 break;
             }
 
@@ -1704,21 +1992,15 @@ public class BrowserProvider extends ContentProvider {
                 break;
             }
 
-            case IMAGES: {
-                trace("Insert on IMAGES: " + uri);
+            case FAVICONS: {
+                trace("Insert on FAVICONS: " + uri);
+                id = insertFavicon(uri, values);
+                break;
+            }
 
-                long now = System.currentTimeMillis();
-                values.put(History.DATE_CREATED, now);
-                values.put(History.DATE_MODIFIED, now);
-
-                // Generate GUID for new history entry
-                values.put(History.GUID, Utils.generateGuid());
-
-                String url = values.getAsString(Images.URL);
-
-                debug("Inserting image in database with URL: " + url);
-                final SQLiteDatabase db = getWritableDatabase(uri);
-                id = db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
+            case THUMBNAILS: {
+                trace("Insert on THUMBNAILS: " + uri);
+                id = insertThumbnail(uri, values);
                 break;
             }
 
@@ -1824,20 +2106,40 @@ public class BrowserProvider extends ContentProvider {
                 break;
             }
 
-            case IMAGES: {
-                debug("Update on IMAGES: " + uri);
+            case FAVICONS: {
+                debug("Update on FAVICONS: " + uri);
 
-                String url = values.getAsString(Images.URL);
+                String url = values.getAsString(Favicons.URL);
+                String faviconSelection = null;
+                String[] faviconSelectionArgs = null;
+
+                if (!TextUtils.isEmpty(url)) {
+                    faviconSelection = Favicons.URL + " = ?";
+                    faviconSelectionArgs = new String[] { url };
+                }
+
+                if (shouldUpdateOrInsert(uri))
+                    updated = updateOrInsertFavicon(uri, values, faviconSelection, faviconSelectionArgs);
+                else
+                    updated = updateExistingFavicon(uri, values, faviconSelection, faviconSelectionArgs);
+
+                break;
+            }
+
+            case THUMBNAILS: {
+                debug("Update on THUMBNAILS: " + uri);
+
+                String url = values.getAsString(Thumbnails.URL);
 
                 // if no URL is provided, update all of the entries
-                if (TextUtils.isEmpty(url))
-                    updated = updateExistingImage(uri, values, null, null);
+                if (TextUtils.isEmpty(values.getAsString(Thumbnails.URL)))
+                    updated = updateExistingThumbnail(uri, values, null, null);
                 else if (shouldUpdateOrInsert(uri))
-                    updated = updateOrInsertImage(uri, values, Images.URL + " = ?",
-                                                  new String[] { url });
+                    updated = updateOrInsertThumbnail(uri, values, Thumbnails.URL + " = ?",
+                                                      new String[] { url });
                 else
-                    updated = updateExistingImage(uri, values, Images.URL + " = ?",
-                                                  new String[] { url });
+                    updated = updateExistingThumbnail(uri, values, Thumbnails.URL + " = ?",
+                                                      new String[] { url });
 
                 break;
             }
@@ -1962,8 +2264,8 @@ public class BrowserProvider extends ContentProvider {
 
                 qb.setProjectionMap(BOOKMARKS_PROJECTION_MAP);
 
-                if (hasImagesInProjection(projection))
-                    qb.setTables(VIEW_BOOKMARKS_WITH_IMAGES);
+                if (hasFaviconsInProjection(projection))
+                    qb.setTables(VIEW_BOOKMARKS_WITH_FAVICONS);
                 else
                     qb.setTables(TABLE_BOOKMARKS);
 
@@ -1971,14 +2273,12 @@ public class BrowserProvider extends ContentProvider {
             }
 
             case HISTORY_ID:
+                selection = DBUtils.concatenateWhere(selection, History._ID + " = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
             case HISTORY: {
                 debug("Query is on history: " + uri);
-
-                if (match == HISTORY_ID) {
-                    selection = DBUtils.concatenateWhere(selection, History._ID + " = ?");
-                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
-                            new String[] { Long.toString(ContentUris.parseId(uri)) });
-                }
 
                 if (!shouldShowDeleted(uri))
                     selection = DBUtils.concatenateWhere(History.IS_DELETED + " = 0", selection);
@@ -1988,29 +2288,38 @@ public class BrowserProvider extends ContentProvider {
 
                 qb.setProjectionMap(HISTORY_PROJECTION_MAP);
 
-                if (hasImagesInProjection(projection))
-                    qb.setTables(VIEW_HISTORY_WITH_IMAGES);
+                if (hasFaviconsInProjection(projection))
+                    qb.setTables(VIEW_HISTORY_WITH_FAVICONS);
                 else
                     qb.setTables(TABLE_HISTORY);
 
                 break;
             }
 
-            case IMAGES_ID:
-            case IMAGES: {
-                debug("Query is on images: " + uri);
+            case FAVICON_ID:
+                selection = DBUtils.concatenateWhere(selection, Favicons._ID + " = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case FAVICONS: {
+                debug("Query is on favicons: " + uri);
 
-                if (match == IMAGES_ID) {
-                    selection = DBUtils.concatenateWhere(selection, Images._ID + " = ?");
-                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
-                            new String[] { Long.toString(ContentUris.parseId(uri)) });
-                }
+                qb.setProjectionMap(FAVICONS_PROJECTION_MAP);
+                qb.setTables(TABLE_FAVICONS);
 
-                if (!shouldShowDeleted(uri))
-                    selection = DBUtils.concatenateWhere(Images.IS_DELETED + " = 0", selection);
+                break;
+            }
 
-                qb.setProjectionMap(IMAGES_PROJECTION_MAP);
-                qb.setTables(TABLE_IMAGES);
+            case THUMBNAIL_ID:
+                selection = DBUtils.concatenateWhere(selection, Thumbnails._ID + " = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case THUMBNAILS: {
+                debug("Query is on thumbnails: " + uri);
+
+                qb.setProjectionMap(THUMBNAILS_PROJECTION_MAP);
+                qb.setTables(TABLE_THUMBNAILS);
 
                 break;
             }
@@ -2035,8 +2344,8 @@ public class BrowserProvider extends ContentProvider {
 
                 qb.setProjectionMap(COMBINED_PROJECTION_MAP);
 
-                if (hasImagesInProjection(projection))
-                    qb.setTables(VIEW_COMBINED_WITH_IMAGES);
+                if (hasFaviconsInProjection(projection))
+                    qb.setTables(VIEW_COMBINED_WITH_FAVICONS);
                 else
                     qb.setTables(VIEW_COMBINED);
 
@@ -2069,7 +2378,7 @@ public class BrowserProvider extends ContentProvider {
                     sortOrder = DEFAULT_HISTORY_SORT_ORDER;
 
                 qb.setProjectionMap(SEARCH_SUGGEST_PROJECTION_MAP);
-                qb.setTables(VIEW_COMBINED_WITH_IMAGES);
+                qb.setTables(VIEW_COMBINED_WITH_FAVICONS);
 
                 break;
             }
@@ -2085,37 +2394,6 @@ public class BrowserProvider extends ContentProvider {
                 BrowserContract.AUTHORITY_URI);
 
         return cursor;
-    }
-
-    ContentValues extractImageValues(ContentValues values, String url) {
-        trace("Extracting image values for URI: " + url);
-
-        ContentValues imageValues = null;
-
-        if (values.containsKey(Bookmarks.FAVICON)) {
-            debug("Has favicon value on URL: " + url);
-            imageValues = new ContentValues();
-            imageValues.put(Images.FAVICON,
-                    values.getAsByteArray(Bookmarks.FAVICON));
-            values.remove(Bookmarks.FAVICON);
-        }
-
-        if (values.containsKey(Bookmarks.THUMBNAIL)) {
-            debug("Has favicon value on URL: " + url);
-            if (imageValues == null)
-                imageValues = new ContentValues();
-
-            imageValues.put(Images.THUMBNAIL,
-                    values.getAsByteArray(Bookmarks.THUMBNAIL));
-            values.remove(Bookmarks.THUMBNAIL);
-        }
-
-        if (imageValues != null && url != null) {
-            debug("Has URL value");
-            imageValues.put(Images.URL, url);
-        }
-
-        return imageValues;
     }
 
     int getUrlCount(SQLiteDatabase db, String table, String url) {
@@ -2259,15 +2537,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         String url = values.getAsString(Bookmarks.URL);
-        ContentValues imageValues = extractImageValues(values, url);
         Integer type = values.getAsInteger(Bookmarks.TYPE);
-
-        if ((type == null || type != Bookmarks.TYPE_FOLDER)
-            && imageValues != null && !TextUtils.isEmpty(url)) {
-            debug("Inserting bookmark image for URL: " + url);
-            updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
-                                new String[] { url });
-        }
 
         debug("Inserting bookmark in database with URL: " + url);
         final SQLiteDatabase db = getWritableDatabase(uri);
@@ -2314,8 +2584,6 @@ public class BrowserProvider extends ContentProvider {
             if (updatingUrl)
                 url = values.getAsString(Bookmarks.URL);
 
-            ContentValues imageValues = extractImageValues(values, url);
-
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
 
@@ -2323,20 +2591,6 @@ public class BrowserProvider extends ContentProvider {
 
                 updated += db.update(TABLE_BOOKMARKS, values, "_id = ?",
                         new String[] { Long.toString(id) });
-
-                if (imageValues == null)
-                    continue;
-
-                if (!updatingUrl) {
-                    url = cursor.getString(1);
-                    imageValues.put(Images.URL, url);
-                }
-
-                if (!TextUtils.isEmpty(url)) {
-                    trace("Updating bookmark image for URL: " + url);
-                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
-                            new String[] { url });
-                }
             }
         } finally {
             if (cursor != null)
@@ -2359,13 +2613,6 @@ public class BrowserProvider extends ContentProvider {
         }
 
         String url = values.getAsString(History.URL);
-        ContentValues imageValues = extractImageValues(values, url);
-
-        if (imageValues != null) {
-            debug("Inserting history image for URL: " + url);
-            updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
-                    new String[] { url });
-        }
 
         debug("Inserting history in database with URL: " + url);
         return db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
@@ -2416,8 +2663,6 @@ public class BrowserProvider extends ContentProvider {
             if (updatingUrl)
                 url = values.getAsString(History.URL);
 
-            ContentValues imageValues = extractImageValues(values, url);
-
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
 
@@ -2433,20 +2678,6 @@ public class BrowserProvider extends ContentProvider {
 
                 updated += db.update(TABLE_HISTORY, values, "_id = ?",
                         new String[] { Long.toString(id) });
-
-                if (imageValues == null)
-                    continue;
-
-                if (!updatingUrl) {
-                    url = cursor.getString(1);
-                    imageValues.put(Images.URL, url);
-                }
-
-                if (!TextUtils.isEmpty(url)) {
-                    trace("Updating history image for URL: " + url);
-                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
-                            new String[] { url });
-                }
             }
         } finally {
             if (cursor != null)
@@ -2456,53 +2687,153 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
-    int updateOrInsertImage(Uri uri, ContentValues values, String selection,
+    private void updateFaviconIdsForUrl(SQLiteDatabase db, String pageUrl, long faviconId) {
+        ContentValues updateValues = new ContentValues(1);
+        updateValues.put(FaviconColumns.FAVICON_ID, faviconId);
+        db.update(TABLE_HISTORY,
+                  updateValues,
+                  History.URL + " = ?",
+                  new String[] { pageUrl });
+        db.update(TABLE_BOOKMARKS,
+                  updateValues,
+                  Bookmarks.URL + " = ?",
+                  new String[] { pageUrl });
+    }
+
+    long insertFavicon(Uri uri, ContentValues values) {
+        return insertFavicon(getWritableDatabase(uri), values);
+    }
+
+    long insertFavicon(SQLiteDatabase db, ContentValues values) {
+        String faviconUrl = values.getAsString(Favicons.URL);
+        String pageUrl = null;
+        Cursor cursor = null;
+        long faviconId;
+
+        trace("Inserting favicon for URL: " + faviconUrl);
+
+        // Extract the page URL from the ContentValues
+        if (values.containsKey(Favicons.PAGE_URL)) {
+            pageUrl = values.getAsString(Favicons.PAGE_URL);
+            values.remove(Favicons.PAGE_URL);
+        }
+
+        long now = System.currentTimeMillis();
+        values.put(Favicons.DATE_CREATED, now);
+        values.put(Favicons.DATE_MODIFIED, now);
+        faviconId = db.insertOrThrow(TABLE_FAVICONS, null, values);
+
+        if (pageUrl != null) {
+            updateFaviconIdsForUrl(db, pageUrl, faviconId);
+        }
+
+        return faviconId;
+    }
+
+    int updateOrInsertFavicon(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        return updateImage(uri, values, selection, selectionArgs,
+        return updateFavicon(uri, values, selection, selectionArgs,
                 true /* insert if needed */);
     }
 
-    int updateExistingImage(Uri uri, ContentValues values, String selection,
+    int updateExistingFavicon(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        return updateImage(uri, values, selection, selectionArgs,
+        return updateFavicon(uri, values, selection, selectionArgs,
                 false /* only update, no insert */);
     }
 
-    int updateImage(Uri uri, ContentValues values, String selection,
+    int updateFavicon(Uri uri, ContentValues values, String selection,
             String[] selectionArgs, boolean insertIfNeeded) {
-        String url = values.getAsString(Images.URL);
-
-        trace("Updating image for URL: " + url);
-
+        String faviconUrl = values.getAsString(Favicons.URL);
+        String pageUrl = null;
+        int updated = 0;
         final SQLiteDatabase db = getWritableDatabase(uri);
-
+        Cursor cursor = null;
+        Long faviconId = null;
         long now = System.currentTimeMillis();
 
-        // Thumbnails update on every page load. We don't want to flood
-        // sync with meaningless last modified date. Only update modified
-        // date when favicons bits change.
-        if (values.containsKey(Images.FAVICON) || values.containsKey(Images.FAVICON_URL))
-            values.put(Images.DATE_MODIFIED, now);
+        trace("Updating favicon for URL: " + faviconUrl);
 
-        // Restore and update an existing image record marked as
-        // deleted if possible.
-        if (insertIfNeeded)
-            values.put(Images.IS_DELETED, 0);
+        // Extract the page URL from the ContentValues
+        if (values.containsKey(Favicons.PAGE_URL)) {
+            pageUrl = values.getAsString(Favicons.PAGE_URL);
+            values.remove(Favicons.PAGE_URL);
+        }
 
-        debug("Trying to update image for URL: " + url);
-        int updated = db.update(TABLE_IMAGES, values, selection, selectionArgs);
+        values.put(Favicons.DATE_MODIFIED, now);
+
+        // If there's no favicon URL given and we're inserting if needed, skip
+        // the update and only do an insert (otherwise all rows would be
+        // updated)
+        if (!(insertIfNeeded && (faviconUrl == null))) {
+            updated = db.update(TABLE_FAVICONS, values, selection, selectionArgs);
+        }
+
+        if (updated > 0) {
+            if ((faviconUrl != null) && (pageUrl != null)) {
+                try {
+                    cursor = db.query(TABLE_FAVICONS,
+                                      new String[] { Favicons._ID },
+                                      Favicons.URL + " = ?",
+                                      new String[] { faviconUrl },
+                                      null, null, null);
+                    if (cursor.moveToFirst()) {
+                        faviconId = cursor.getLong(cursor.getColumnIndexOrThrow(Favicons._ID));
+                    }
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+            }
+        } else if (insertIfNeeded) {
+            values.put(Favicons.DATE_CREATED, now);
+
+            trace("No update, inserting favicon for URL: " + faviconUrl);
+            faviconId = db.insert(TABLE_FAVICONS, null, values);
+            updated = 1;
+        }
+
+        if (pageUrl != null) {
+            updateFaviconIdsForUrl(db, pageUrl, faviconId);
+        }
+
+        return updated;
+    }
+
+    long insertThumbnail(Uri uri, ContentValues values) {
+        String url = values.getAsString(Thumbnails.URL);
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        trace("Inserting thumbnail for URL: " + url);
+
+        return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
+    }
+
+    int updateOrInsertThumbnail(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        return updateThumbnail(uri, values, selection, selectionArgs,
+                true /* insert if needed */);
+    }
+
+    int updateExistingThumbnail(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        return updateThumbnail(uri, values, selection, selectionArgs,
+                false /* only update, no insert */);
+    }
+
+    int updateThumbnail(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs, boolean insertIfNeeded) {
+        String url = values.getAsString(Thumbnails.URL);
+        int updated = 0;
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        trace("Updating thumbnail for URL: " + url);
+
+        updated = db.update(TABLE_THUMBNAILS, values, selection, selectionArgs);
 
         if (updated == 0 && insertIfNeeded) {
-            // Generate GUID for new image, if one is not already provided.
-            if (!values.containsKey(Images.GUID)) {
-              values.put(Images.GUID, Utils.generateGuid());
-            }
-
-            values.put(Images.DATE_CREATED, now);
-            values.put(Images.DATE_MODIFIED, now);
-
-            trace("No update, inserting image for URL: " + url);
-            db.insert(TABLE_IMAGES, Images.FAVICON, values);
+            trace("No update, inserting thumbnail for URL: " + url);
+            db.insert(TABLE_THUMBNAILS, null, values);
             updated = 1;
         }
 
@@ -2553,35 +2884,47 @@ public class BrowserProvider extends ContentProvider {
         return updateBookmarks(uri, values, selection, selectionArgs);
     }
 
-    int deleteImages(Uri uri, String selection, String[] selectionArgs) {
-        debug("Deleting images for URI: " + uri);
+    int deleteFavicons(Uri uri, String selection, String[] selectionArgs) {
+        debug("Deleting favicons for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
 
-        if (isCallerSync(uri)) {
-            return db.delete(TABLE_IMAGES, selection, null);
-        }
+        return db.delete(TABLE_FAVICONS, selection, selectionArgs);
+    }
 
-        debug("Marking images as deleted for URI: " + uri);
+    int deleteThumbnails(Uri uri, String selection, String[] selectionArgs) {
+        debug("Deleting thumbnails for URI: " + uri);
 
-        ContentValues values = new ContentValues();
-        values.put(History.IS_DELETED, 1);
+        final SQLiteDatabase db = getWritableDatabase(uri);
 
-        cleanupSomeDeletedRecords(uri, Images.CONTENT_URI, TABLE_IMAGES);
-        return updateExistingImage(uri, values, selection, null);
+        return db.delete(TABLE_THUMBNAILS, selection, selectionArgs);
     }
 
     int deleteUnusedImages(Uri uri) {
-        debug("Deleting all unused images for URI: " + uri);
+        debug("Deleting all unused favicons and thumbnails for URI: " + uri);
 
-        String selection = Images.URL + " NOT IN (SELECT " + Bookmarks.URL +
-                " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL + " IS NOT NULL AND " +
-                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " = 0) AND " +
-                Images.URL + " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY +
-                " WHERE " + History.URL + " IS NOT NULL AND " +
-                qualifyColumn(TABLE_HISTORY, History.IS_DELETED) + " = 0)";
+        String faviconSelection = Favicons._ID + " NOT IN "
+                + "(SELECT " + History.FAVICON_ID
+                + " FROM " + TABLE_HISTORY
+                + " WHERE " + History.IS_DELETED + " = 0"
+                + " AND " + History.FAVICON_ID + " IS NOT NULL"
+                + " UNION ALL SELECT " + Bookmarks.FAVICON_ID
+                + " FROM " + TABLE_BOOKMARKS
+                + " WHERE " + Bookmarks.IS_DELETED + " = 0"
+                + " AND " + Bookmarks.FAVICON_ID + " IS NOT NULL)";
 
-        return deleteImages(uri, selection, null);
+        String thumbnailSelection = Thumbnails.URL + " NOT IN "
+                + "(SELECT " + History.URL
+                + " FROM " + TABLE_HISTORY
+                + " WHERE " + History.IS_DELETED + " = 0"
+                + " AND " + History.URL + " IS NOT NULL"
+                + " UNION ALL SELECT " + Bookmarks.URL
+                + " FROM " + TABLE_BOOKMARKS
+                + " WHERE " + Bookmarks.IS_DELETED + " = 0"
+                + " AND " + Bookmarks.URL + " IS NOT NULL)";
+
+        return deleteFavicons(uri, faviconSelection, null) + 
+               deleteThumbnails(uri, thumbnailSelection, null);
     }
 
     @Override

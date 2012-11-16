@@ -522,9 +522,11 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   // Get the object. It might be a security wrapper, in which case we do a checked
   // unwrap.
   JSObject* origObj = JSVAL_TO_OBJECT(thisv);
-  JSObject* obj = js::UnwrapObjectChecked(cx, origObj);
-  if (!obj)
+  JSObject* obj = js::UnwrapObjectChecked(origObj);
+  if (!obj) {
+      JS_ReportError(cx, "Permission denied to access object");
       return false;
+  }
 
   nsISupports* native;
   if (!UnwrapDOMObjectToISupports(obj, native)) {

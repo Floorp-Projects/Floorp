@@ -10,7 +10,7 @@
 
 using namespace mozilla;
 
-#define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
+#define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 16)
 #define XPTI_HASHTABLE_SIZE             2048
 
 xptiWorkingSet::xptiWorkingSet()

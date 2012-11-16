@@ -33,6 +33,18 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 
+inline nsISupports*
+ToSupports(nsISupports* p)
+{
+    return p;
+}
+
+inline nsISupports*
+ToCanonicalSupports(nsISupports* p)
+{
+    return NULL;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 

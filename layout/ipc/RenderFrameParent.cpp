@@ -658,13 +658,15 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                     mContainer->Manager() == aManager,
                     "retaining manager changed out from under us ... HELP!");
 
-  if (mContainer && mContainer->Manager() != aManager) {
+  if (IsTempLayerManager(aManager) ||
+      (mContainer && mContainer->Manager() != aManager)) {
     // This can happen if aManager is a "temporary" manager, or if the
     // widget's layer manager changed out from under us.  We need to
     // FIXME handle the former case somehow, probably with an API to
     // draw a manager's subtree.  The latter is bad bad bad, but the
     // the NS_ABORT_IF_FALSE() above will flag it.  Returning NULL
     // here will just cause the shadow subtree not to be rendered.
+    NS_WARNING("Remote iframe not rendered");
     return nullptr;
   }
 

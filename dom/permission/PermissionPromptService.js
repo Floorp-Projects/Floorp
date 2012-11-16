@@ -87,4 +87,4 @@ PermissionPromptService.prototype = {
   },
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([PermissionPromptService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PermissionPromptService]);

@@ -15,6 +15,7 @@
 #include "Helpers.h"
 #include "PlaceInfo.h"
 #include "VisitInfo.h"
+#include "nsPlacesMacros.h"
 
 #include "mozilla/storage.h"
 #include "mozilla/dom/Link.h"
@@ -2065,6 +2066,8 @@ History::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aSource);
+
+  ENSURE_NOT_PRIVATE_BROWSING;
 
   if (mShuttingDown) {
     return NS_OK;

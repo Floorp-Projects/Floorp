@@ -116,6 +116,7 @@ this.AccessFu = {
       mm.sendAsyncMessage('AccessFu:Stop');
 
     Input.detach();
+    this.touchAdapter.detach(this.chromeWin);
 
     this.chromeWin.removeEventListener('TabOpen', this);
     this.chromeWin.removeEventListener('TabSelect', this);
@@ -299,6 +300,10 @@ var Output = {
         androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser);
       this._bridge.handleGeckoMessage(JSON.stringify({gecko: androidEvent}));
     }
+  },
+
+  Haptic: function Haptic(aDetails, aBrowser) {
+    this.chromeWin.navigator.vibrate(aDetails.pattern);
   },
 
   _adjustBounds: function(aJsonBounds, aBrowser) {

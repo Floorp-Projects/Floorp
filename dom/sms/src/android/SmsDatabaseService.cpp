@@ -112,6 +112,13 @@ SmsDatabaseService::MarkMessageRead(int32_t aMessageId, bool aValue,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsDatabaseService::GetThreadList(nsISmsRequest* aRequest)
+{
+  NS_NOTYETIMPLEMENTED("Implement me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

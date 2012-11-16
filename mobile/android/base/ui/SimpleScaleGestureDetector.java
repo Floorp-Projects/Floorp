@@ -40,6 +40,7 @@ public class SimpleScaleGestureDetector {
 
     private SimpleScaleGestureListener mListener;
     private long mLastEventTime;
+    private boolean mScaleResult;
 
     /* Information about all pointers that are down. */
     private LinkedList<PointerInfo> mPointerInfo;
@@ -206,9 +207,19 @@ public class SimpleScaleGestureDetector {
     /* Sends the requested scale gesture notification to the listener. */
     private void sendScaleGesture(EventType eventType) {
         switch (eventType) {
-        case BEGIN:     mListener.onScaleBegin(this);   break;
-        case CONTINUE:  mListener.onScale(this);        break;
-        case END:       mListener.onScaleEnd(this);     break;
+        case BEGIN:
+            mScaleResult = mListener.onScaleBegin(this);
+            break;
+        case CONTINUE:
+            if (mScaleResult) {
+                mListener.onScale(this);
+            }
+            break;
+        case END:
+            if (mScaleResult) {
+                mListener.onScaleEnd(this);
+            }
+            break;
         }
     }
 

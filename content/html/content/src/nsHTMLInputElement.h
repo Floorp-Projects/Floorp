@@ -77,7 +77,8 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
+
   virtual void Click() MOZ_OVERRIDE;
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
   virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;

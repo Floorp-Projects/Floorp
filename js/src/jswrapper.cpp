@@ -109,19 +109,18 @@ js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapObjectChecked(JSContext *cx, RawObject objArg)
+js::UnwrapObjectChecked(RawObject obj)
 {
-    RootedObject obj(cx, objArg);
     while (true) {
         JSObject *wrapper = obj;
-        obj = UnwrapOneChecked(cx, obj);
+        obj = UnwrapOneChecked(obj);
         if (!obj || obj == wrapper)
             return obj;
     }
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapOneChecked(JSContext *cx, HandleObject obj)
+js::UnwrapOneChecked(RawObject obj)
 {
     // Checked unwraps should never unwrap outer windows.
     if (!obj->isWrapper() ||
@@ -131,13 +130,7 @@ js::UnwrapOneChecked(JSContext *cx, HandleObject obj)
     }
 
     Wrapper *handler = Wrapper::wrapperHandler(obj);
-    bool rvOnFailure;
-    if (!handler->enter(cx, obj, JSID_VOID, Wrapper::PUNCTURE, &rvOnFailure))
-        return rvOnFailure ? (JSObject*) obj : NULL;
-    JSObject *ret = Wrapper::wrappedObject(obj);
-    JS_ASSERT(ret);
-
-    return ret;
+    return handler->isSafeToUnwrap() ? Wrapper::wrappedObject(obj) : NULL;
 }
 
 bool
@@ -160,6 +153,7 @@ js::IsCrossCompartmentWrapper(RawObject wrapper)
 
 Wrapper::Wrapper(unsigned flags, bool hasPrototype) : DirectProxyHandler(&sWrapperFamily)
                                                     , mFlags(flags)
+                                                    , mSafeToUnwrap(true)
 {
     setHasPrototype(hasPrototype);
 }
@@ -221,25 +215,22 @@ Wrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 }
 
 /*
- * Ordinarily, the convert trap would require a PUNCTURE. However, the default
+ * Ordinarily, the convert trap would require unwrapping. However, the default
  * implementation of convert, JS_ConvertStub, obtains a default value by calling
- * the toString/valueOf method on the wrapper, if any. Doing a PUNCTURE in this
- * case would be overly conservative. To make matters worse, XPConnect sometimes
+ * the toString/valueOf method on the wrapper, if any. Throwing if we can't unwrap
+ * in this case would be overly conservative. To make matters worse, XPConnect sometimes
  * installs a custom convert trap that obtains a default value by calling the
  * toString method on the wrapper. Doing a puncture in this case would be overly
- * conservative as well. We deal with these anomalies by clearing the pending
- * exception and falling back to the DefaultValue algorithm whenever the
- * PUNCTURE fails.
+ * conservative as well. We deal with these anomalies by falling back to the DefaultValue
+ * algorithm whenever unwrapping is forbidden.
  */
 bool
 Wrapper::defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint, Value *vp)
 {
     RootedObject wrapper(cx, wrapper_);
 
-    bool status;
-    if (!enter(cx, wrapper_, JSID_VOID, PUNCTURE, &status)) {
+    if (!wrapperHandler(wrapper)->isSafeToUnwrap()) {
         RootedValue v(cx);
-        JS_ClearPendingException(cx);
         if (!DefaultValue(cx, wrapper, hint, &v))
             return false;
         *vp = v;
@@ -796,7 +787,9 @@ CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 template <class Base>
 SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
   : Base(flags)
-{}
+{
+    Base::setSafeToUnwrap(false);
+}
 
 template <class Base>
 bool
@@ -1164,7 +1157,7 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                       const CompartmentFilter &targetFilter)
 {
-    AutoTransplantGC agc(cx);
+    AutoMaybeTouchDeadCompartments agc(cx);
 
     AutoWrapperVector toRecompute(cx);
 

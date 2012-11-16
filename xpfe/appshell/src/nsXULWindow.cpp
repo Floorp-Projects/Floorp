@@ -95,6 +95,7 @@ nsXULWindow::nsXULWindow(uint32_t aChromeFlags)
     mIgnoreXULPosition(false),
     mChromeFlagsFrozen(false),
     mIgnoreXULSizeMode(false),
+    mDestroying(false),
     mContextFlags(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
@@ -408,6 +409,13 @@ NS_IMETHODIMP nsXULWindow::Destroy()
 {
   if (!mWindow)
      return NS_OK;
+
+  // Ensure we don't reenter this code
+  if (mDestroying)
+    return NS_OK;
+
+  mozilla::AutoRestore<bool> guard(mDestroying);
+  mDestroying = true;
 
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   NS_ASSERTION(appShell, "Couldn't get appShell... xpcom shutdown?");

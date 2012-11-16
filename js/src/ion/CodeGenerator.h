@@ -36,10 +36,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool generateBody();
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
+    CodeGenerator(MIRGenerator *gen, LIRGraph *graph);
 
   public:
     bool generate();
+    bool link();
 
     bool visitLabel(LLabel *lir);
     bool visitNop(LNop *lir);
@@ -175,6 +176,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetDOMProperty(LGetDOMProperty *lir);
     bool visitSetDOMProperty(LSetDOMProperty *lir);
     bool visitCallDOMNative(LCallDOMNative *lir);
+    bool visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);

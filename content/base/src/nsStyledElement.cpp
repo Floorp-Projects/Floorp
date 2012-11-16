@@ -8,7 +8,7 @@
 #include "nsGkAtoms.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 #include "nsMutationEvent.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSAttrDeclaration.h"
@@ -23,6 +23,7 @@
 #include "nsContentUtils.h"
 
 namespace css = mozilla::css;
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // nsIContent methods
@@ -44,7 +45,7 @@ nsStyledElementNotElementCSSInlineStyle::DoGetID() const
 {
   NS_ASSERTION(HasID(), "Unexpected call");
 
-  // The nullcheck here is needed because nsGenericElement::UnsetAttr calls
+  // The nullcheck here is needed because Element::UnsetAttr calls
   // out to various code between removing the attribute and we get a chance to
   // ClearHasID().
 
@@ -107,7 +108,7 @@ nsStyledElementNotElementCSSInlineStyle::UnsetAttr(int32_t aNameSpaceID,
     RemoveFromIdTable();
   }
 
-  return nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  return Element::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 nsresult
@@ -124,8 +125,7 @@ nsStyledElementNotElementCSSInlineStyle::AfterSetAttr(int32_t aNamespaceID,
     ClearHasID();
   }
 
-  return nsGenericElement::AfterSetAttr(aNamespaceID, aAttribute, aValue,
-                                        aNotify);
+  return Element::AfterSetAttr(aNamespaceID, aAttribute, aValue, aNotify);
 }
 
 nsresult
@@ -191,10 +191,10 @@ nsStyledElementNotElementCSSInlineStyle::GetInlineStyleRule()
 // ---------------------------------------------------------------
 // Others and helpers
 
-nsIDOMCSSStyleDeclaration*
+nsICSSDeclaration*
 nsStyledElementNotElementCSSInlineStyle::GetStyle(nsresult* retval)
 {
-  nsGenericElement::nsDOMSlots *slots = DOMSlots();
+  Element::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mStyle) {
     // Just in case...

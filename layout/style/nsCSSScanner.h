@@ -9,17 +9,12 @@
 #define nsCSSScanner_h___
 
 #include "nsString.h"
-#include "nsCOMPtr.h"
-#include "mozilla/css/Loader.h"
-#include "nsCSSStyleSheet.h"
 
-// XXX turn this off for minimo builds
-#define CSS_REPORT_PARSE_ERRORS
-
-// for #ifdef CSS_REPORT_PARSE_ERRORS
-#include "nsXPIDLString.h"
-#include "nsThreadUtils.h"
-class nsIURI;
+namespace mozilla {
+namespace css {
+class ErrorReporter;
+}
+}
 
 // Token types
 enum nsCSSTokenType {
@@ -89,10 +84,8 @@ struct nsCSSToken {
     return bool((eCSSToken_Symbol == mType) && (mSymbol == aSymbol));
   }
 
-  void AppendToString(nsString& aBuffer);
+  void AppendToString(nsString& aBuffer) const;
 };
-
-class DeferredCleanupRunnable; 
 
 // CSS Scanner API. Used to tokenize an input stream using the CSS
 // forward compatible tokenization rules. This implementation is
@@ -100,20 +93,14 @@ class DeferredCleanupRunnable;
 // parser.
 class nsCSSScanner {
   public:
-  nsCSSScanner();
-  ~nsCSSScanner();
-
-  // Init the scanner.
   // |aLineNumber == 1| is the beginning of a file, use |aLineNumber == 0|
   // when the line number is unknown.
-  void Init(const nsAString& aBuffer,
-            nsIURI* aURI, uint32_t aLineNumber,
-            nsCSSStyleSheet* aSheet, mozilla::css::Loader* aLoader);
-  void Close();
+  nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber);
+  ~nsCSSScanner();
 
-  static bool InitGlobals();
-  static void ReleaseGlobals();
-
+  void SetErrorReporter(mozilla::css::ErrorReporter* aReporter) {
+    mReporter = aReporter;
+  }
   // Set whether or not we are processing SVG
   void SetSVGMode(bool aSVGMode) {
     mSVGMode = aSVGMode;
@@ -122,46 +109,8 @@ class nsCSSScanner {
     return mSVGMode;
   }
 
-#ifdef CSS_REPORT_PARSE_ERRORS
-  // Clean up any reclaimable cached resources.
-  void PerformDeferredCleanup();
-
-  void AddToError(const nsSubstring& aErrorText);
-  void OutputError();
-  void ClearError();
-
-  // aMessage must take no parameters
-  void ReportUnexpected(const char* aMessage);
-  
-private:
-  void Reset();
-
-  void ReportUnexpectedParams(const char* aMessage,
-                              const PRUnichar** aParams,
-                              uint32_t aParamsLength);
-
-public:
-  template<uint32_t N>                           
-  void ReportUnexpectedParams(const char* aMessage,
-                              const PRUnichar* (&aParams)[N])
-    {
-      return ReportUnexpectedParams(aMessage, aParams, N);
-    }
-  // aLookingFor is a plain string, not a format string
-  void ReportUnexpectedEOF(const char* aLookingFor);
-  // aLookingFor is a single character
-  void ReportUnexpectedEOF(PRUnichar aLookingFor);
-  // aMessage must take 1 parameter (for the string representation of the
-  // unexpected token)
-  void ReportUnexpectedToken(nsCSSToken& tok, const char *aMessage);
-  // aParams's first entry must be null, and we'll fill in the token
-  void ReportUnexpectedTokenParams(nsCSSToken& tok,
-                                   const char* aMessage,
-                                   const PRUnichar **aParams,
-                                   uint32_t aParamsLength);
-#endif
-
-  uint32_t GetLineNumber() { return mLineNumber; }
+  uint32_t GetLineNumber() const { return mLineNumber; }
+  uint32_t GetColumnNumber() const { return mOffset - mLineOffset + 1; }
 
   // Get the next token. Return false on EOF. aTokenResult
   // is filled in with the data for the token.
@@ -207,29 +156,20 @@ protected:
   const PRUnichar *mReadPointer;
   uint32_t mOffset;
   uint32_t mCount;
+
   PRUnichar* mPushback;
   int32_t mPushbackCount;
   int32_t mPushbackSize;
   PRUnichar mLocalPushback[4];
 
   uint32_t mLineNumber;
+  uint32_t mLineOffset;
+  uint32_t mRecordStartOffset;
+
+  mozilla::css::ErrorReporter *mReporter;
   // True if we are in SVG mode; false in "normal" CSS
   bool mSVGMode;
   bool mRecording;
-  uint32_t mRecordStartOffset;
-
-#ifdef CSS_REPORT_PARSE_ERRORS
-  nsRevocableEventPtr<DeferredCleanupRunnable> mDeferredCleaner;
-  nsCOMPtr<nsIURI> mCachedURI;  // Used to invalidate the cached filename.
-  nsString mCachedFileName;
-  uint32_t mErrorLineNumber, mColNumber, mErrorColNumber;
-  nsFixedString mError;
-  PRUnichar mErrorBuf[200];
-  uint64_t mInnerWindowID;
-  bool mWindowIDCached;
-  nsCSSStyleSheet* mSheet;
-  mozilla::css::Loader* mLoader;
-#endif
 };
 
 #endif /* nsCSSScanner_h___ */

@@ -110,6 +110,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
     ValueOperand ToOutValue(LInstruction *ins);
+    ValueOperand ToTempValue(LInstruction *ins, size_t pos);
 
     // Functions for LTestVAndBranch.
     Register splitTagForTest(const ValueOperand &value);
@@ -121,7 +122,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void linkAbsoluteLabels();
 
   public:
-    CodeGeneratorARM(MIRGenerator *gen, LIRGraph &graph);
+    CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph);
 
   public:
     bool visitBox(LBox *box);

@@ -26,7 +26,6 @@ public class BrowserContractHelpers extends BrowserContract {
         .build();
   }
 
-  public static final Uri IMAGES_CONTENT_URI               = withSyncAndDeleted(Images.CONTENT_URI);
   public static final Uri BOOKMARKS_CONTENT_URI            = withSyncAndDeleted(Bookmarks.CONTENT_URI);
   public static final Uri BOOKMARKS_PARENTS_CONTENT_URI    = withSyncAndDeleted(Bookmarks.PARENTS_CONTENT_URI);
   public static final Uri BOOKMARKS_POSITIONS_CONTENT_URI  = withSyncAndDeleted(Bookmarks.POSITIONS_CONTENT_URI);

@@ -33,6 +33,7 @@ public class testHistoryTab extends PixelTest {
     private static final String ABOUT_HOME_URL = "about:home";
     private static final String OPEN_NEW_TAB = "Open in New Tab";
     private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
+    private static ListView listview = null;
     private String[] bookmarks = new String[] {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
     };
@@ -69,22 +70,20 @@ public class testHistoryTab extends PixelTest {
         testClick(url);
     }
 
-    private ListView list;
-
     private void testList(String url) {
-        list = getHistoryList();
+        listview = getHistoryList();
         // clear VKB
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
-        mAsserter.ok(list != null, "checking that history list exists", list.toString());
+        mAsserter.ok(listview != null, "checking that history list exists", listview.toString());
 
-        mAsserter.is(list.getChildCount(), 3, "history list has 3 children");
+        mAsserter.is(listview.getChildCount(), 3, "history list has 3 children");
 
-        final int count = list.getChildCount();
+        final int count = listview.getChildCount();
         String loadUrl = "";
         for (int i = count - 1; i >= 0; i--) {
-            View child = list.getChildAt(i);
+            View child = listview.getChildAt(i);
 
             ArrayList<View> views = mSolo.getViews(child);
             ArrayList<ImageView> imageViews = new ArrayList<ImageView>();
@@ -132,7 +131,7 @@ public class testHistoryTab extends PixelTest {
     }
 
     private void testContextMenu(String url) {
-        list = getHistoryList();
+        listview = getHistoryList();
         // clear VKB
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
@@ -141,7 +140,7 @@ public class testHistoryTab extends PixelTest {
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
-                mFirstChild = list.getChildAt(1);
+                mFirstChild = listview.getChildAt(1);
                 if (mFirstChild == null) {
                     return false;
                 }
@@ -175,7 +174,7 @@ public class testHistoryTab extends PixelTest {
 
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
 
-            View child = list.getChildAt(0);
+            View child = listview.getChildAt(0);
             mSolo.clickLongOnView(child);
             mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
 
@@ -186,12 +185,12 @@ public class testHistoryTab extends PixelTest {
     }
 
     private void testClick(String url) {
-        list = getHistoryList();
+        listview = getHistoryList();
         // clear VKB
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
-        View child = list.getChildAt(0);
+        View child = listview.getChildAt(0);
         mSolo.clickOnView(child);
         // nothing should happen
 
@@ -199,7 +198,7 @@ public class testHistoryTab extends PixelTest {
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
-                mFirstChild = list.getChildAt(1);
+                mFirstChild = listview.getChildAt(1);
                 if (mFirstChild == null) {
                     return false;
                 }
@@ -219,8 +218,22 @@ public class testHistoryTab extends PixelTest {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("History");
 
-        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
-        return (ListView)tabHost.getCurrentView();
+        final ArrayList<ListView> views = mSolo.getCurrentListViews();
+
+        listview = null;
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+               for (ListView view : views) {
+                   if (view.getTag() == "history") {
+                       listview = view;
+                       return true;
+                   }
+               }
+               return false;
+            }
+        }, WAIT_FOR_CHILD_TIMEOUT);
+
+        return listview;
     }
 
     public void tearDown() throws Exception {

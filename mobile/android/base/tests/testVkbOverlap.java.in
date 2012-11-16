@@ -1,0 +1,82 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+/**
+ * A test to ensure that when an input field is focused, it is not obscured by the VKB.
+ * - Loads a page with an input field past the bottom of the visible area.
+ * - scrolls down to make the input field visible at the bottom of the screen.
+ * - taps on the input field to bring up the VKB
+ * - verifies that the input field is still visible.
+ */
+public class testVkbOverlap extends PixelTest {
+    private static final int CURSOR_BLINK_PERIOD = 500;
+    private static final int LESS_THAN_CURSOR_BLINK_PERIOD = CURSOR_BLINK_PERIOD - 50;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testVkbOverlap() {
+        blockForGeckoReady();
+        loadAndPaint(getAbsoluteUrl("/robocop/robocop_input.html"));
+
+        // scroll to the bottom of the page and let it settle
+        Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
+        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+        meh.dragSync(10, 150, 10, 50);
+
+        // the input field has a green background, so let's count the number of green pixels
+        int greenPixelCount = 0;
+
+        PaintedSurface painted = waitForPaint(paintExpecter);
+        try {
+            greenPixelCount = countGreenPixels(painted);
+        } finally {
+            painted.close();
+        }
+
+        mAsserter.ok(greenPixelCount > 0, "testInputVisible", "Found " + greenPixelCount + " green pixels after scrolling");
+
+        paintExpecter = mActions.expectPaint();
+        // the input field should be in the bottom-left corner, so tap thereabouts
+        meh.tap(5, mDriver.getGeckoHeight() - 5);
+        // now that the focus is in the text field we will repaint every 500ms as the cursor blinks, so we need to use a smaller
+        // "no paints" threshold to consider the page painted
+        paintExpecter.blockUntilClear(LESS_THAN_CURSOR_BLINK_PERIOD);
+        painted = mDriver.getPaintedSurface();
+        try {
+            // if the vkb scrolled into view as expected, then the number of green pixels now visible should be about the
+            // same as it was before, since the green pixels indicate the text input is in view. use a fudge factor of 0.9 to
+            // account for borders and such of the text input which might still be out of view.
+            int newCount = countGreenPixels(painted);
+            mAsserter.ok(newCount >= (greenPixelCount * 0.9), "testVkbOverlap", "Found " + newCount + " green pixels after tapping; expected " + greenPixelCount);
+        } finally {
+            painted.close();
+        }
+    }
+
+    private int countGreenPixels(PaintedSurface painted) {
+        int count = 0;
+        for (int y = painted.getHeight() - 1; y >= 0; y--) {
+            for (int x = painted.getWidth() - 1; x >= 0; x--) {
+                int pixel = painted.getPixelAt(x, y);
+                int r = (pixel >> 16) & 0xFF;
+                int g = (pixel >> 8) & 0xFF;
+                int b = (pixel & 0xFF);
+                if (g > (r + 0x30) && g > (b + 0x30)) {
+                    // there's more green in this pixel than red or blue, so count it.
+                    // the reason this is so hacky-looking is because even though green is supposed to
+                    // be (r,g,b) = (0x00, 0x80, 0x00), the GL readback ends up coming back quite
+                    // different.
+                    count++;
+                }
+                // uncomment for debugging:
+                // if (pixel != -1) mAsserter.dumpLog("Pixel at " + x + ", " + y + ": " + Integer.toString(pixel, 16));
+            }
+        }
+        return count;
+    }
+}

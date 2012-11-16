@@ -955,7 +955,7 @@ FlagHistogram::FactoryGet(const std::string &name, Flags flags)
     fh->InitializeBucketRange();
     fh->SetFlags(flags);
     size_t zero_index = fh->BucketIndex(0);
-    fh->Histogram::Accumulate(1, 1, zero_index);
+    fh->Histogram::Accumulate(0, 1, zero_index);
     h = StatisticsRecorder::RegisterOrDeleteDuplicate(fh);
   }
 
@@ -983,7 +983,7 @@ FlagHistogram::Accumulate(Sample value, Count count, size_t index)
   DCHECK_EQ(value, 1);
   Histogram::Accumulate(value, 1, index);
   size_t zero_index = BucketIndex(0);
-  Histogram::Accumulate(1, -1, zero_index);
+  Histogram::Accumulate(0, -1, zero_index);
 }
 
 void

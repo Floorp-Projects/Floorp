@@ -76,4 +76,10 @@ protected:
   nsDataHashtable<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
 };
 
+inline nsISupports*
+ToSupports(nsHTMLCSSStyleSheet* aPointer)
+{
+  return static_cast<nsIStyleSheet*>(aPointer);
+}
+
 #endif /* !defined(nsHTMLCSSStyleSheet_h_) */

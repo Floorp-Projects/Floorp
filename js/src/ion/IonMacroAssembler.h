@@ -51,7 +51,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     };
 
-    AutoRooter autoRooter_;
+    mozilla::Maybe<AutoRooter> autoRooter_;
     mozilla::Maybe<IonContext> ionContext_;
     mozilla::Maybe<AutoIonContextAlloc> alloc_;
     bool enoughMemory_;
@@ -69,12 +69,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     // provided, but otherwise it can be safely omitted to prevent all
     // instrumentation from being emitted.
     MacroAssembler(IonInstrumentation *sps = NULL)
-      : autoRooter_(GetIonContext()->cx, thisFromCtor()),
-        enoughMemory_(true),
+      : enoughMemory_(true),
         sps_(sps)
     {
+        JSContext *cx = GetIonContext()->cx;
+        if (cx)
+            constructRoot(cx);
+
         if (!GetIonContext()->temp)
-            alloc_.construct(GetIonContext()->cx);
+            alloc_.construct(cx);
 #ifdef JS_CPU_ARM
         m_buffer.id = GetIonContext()->getNextAssemblerId();
 #endif
@@ -83,15 +86,19 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This constructor should only be used when there is no IonContext active
     // (for example, Trampoline-$(ARCH).cpp).
     MacroAssembler(JSContext *cx)
-      : autoRooter_(cx, thisFromCtor()),
-        enoughMemory_(true),
+      : enoughMemory_(true),
         sps_(NULL) // no need for instrumentation in trampolines and such
     {
+        constructRoot(cx);
         ionContext_.construct(cx, cx->compartment, (js::ion::TempAllocator *)NULL);
         alloc_.construct(cx);
 #ifdef JS_CPU_ARM
         m_buffer.id = GetIonContext()->getNextAssemblerId();
 #endif
+    }
+
+    void constructRoot(JSContext *cx) {
+        autoRooter_.construct(cx, this);
     }
 
     MoveResolver &moveResolver() {
@@ -155,11 +162,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadJSContext(const Register &dest) {
-        movePtr(ImmWord(GetIonContext()->cx->runtime), dest);
+        movePtr(ImmWord(GetIonContext()->compartment->rt), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, ionJSContext)), dest);
     }
     void loadIonActivation(const Register &dest) {
-        movePtr(ImmWord(GetIonContext()->cx->runtime), dest);
+        movePtr(ImmWord(GetIonContext()->compartment->rt), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, ionActivation)), dest);
     }
 
@@ -370,7 +377,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchTestNeedsBarrier(Condition cond, const Register &scratch, Label *label) {
         JS_ASSERT(cond == Zero || cond == NonZero);
-        JSCompartment *comp = GetIonContext()->cx->compartment;
+        JSCompartment *comp = GetIonContext()->compartment;
         movePtr(ImmWord(comp), scratch);
         Address needsBarrierAddr(scratch, JSCompartment::OffsetOfNeedsBarrier());
         branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
@@ -381,18 +388,15 @@ class MacroAssembler : public MacroAssemblerSpecific
         JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
         Label done;
 
-        JSContext *cx = GetIonContext()->cx;
-        IonCode *preBarrier = cx->compartment->ionCompartment()->preBarrier(cx);
-        if (!preBarrier) {
-            enoughMemory_ = false;
-            return;
-        }
-
         if (type == MIRType_Value)
             branchTestGCThing(Assembler::NotEqual, address, &done);
 
         Push(PreBarrierReg);
         computeEffectiveAddress(address, PreBarrierReg);
+
+        JSCompartment *compartment = GetIonContext()->compartment;
+        IonCode *preBarrier = compartment->ionCompartment()->preBarrier();
+
         call(preBarrier);
         Pop(PreBarrierReg);
 

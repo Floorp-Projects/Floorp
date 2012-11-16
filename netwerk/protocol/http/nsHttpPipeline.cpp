@@ -422,8 +422,7 @@ nsHttpPipeline::Connection()
 }
 
 void
-nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result,
-                                     nsIEventTarget        **target)
+nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result)
 {
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
@@ -435,11 +434,9 @@ nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result,
     if (!trans)
         trans = Response(0);
     if (trans)
-        trans->GetSecurityCallbacks(result, target);
+        trans->GetSecurityCallbacks(result);
     else {
         *result = nullptr;
-        if (target)
-            *target = nullptr;
     }
 }
 
