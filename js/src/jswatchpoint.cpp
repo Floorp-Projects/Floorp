@@ -148,7 +148,7 @@ WatchpointMap::markAllIteratively(JSTracer *trc)
     JSRuntime *rt = trc->runtime;
     bool mutated = false;
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->watchpointMap)
+        if (c->isGCMarking() && c->watchpointMap)
             mutated |= c->watchpointMap->markIteratively(trc);
     }
     return mutated;

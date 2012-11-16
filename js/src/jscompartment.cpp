@@ -58,7 +58,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcBytes(0),
     gcTriggerBytes(0),
     gcHeapGrowthFactor(3.0),
-    gcNextCompartment(NULL),
     hold(false),
     isSystemCompartment(false),
     lastCodeRelease(0),
@@ -695,11 +694,12 @@ JSCompartment::sweepCrossCompartmentWrappers()
         bool keyDying = IsCellAboutToBeFinalized(&key.wrapped);
         bool valDying = IsValueAboutToBeFinalized(e.front().value.unsafeGet());
         bool dbgDying = key.debugger && IsObjectAboutToBeFinalized(&key.debugger);
-        JS_ASSERT_IF(keyDying && !valDying, key.kind == CrossCompartmentKey::StringWrapper);
-        if (keyDying || valDying || dbgDying)
+        if (keyDying || valDying || dbgDying) {
+            JS_ASSERT(key.kind != CrossCompartmentKey::StringWrapper);
             e.removeFront();
-        else if (key.wrapped != e.front().key.wrapped || key.debugger != e.front().key.debugger)
+        } else if (key.wrapped != e.front().key.wrapped || key.debugger != e.front().key.debugger) {
             e.rekeyFront(key);
+        }
     }
 }
 
