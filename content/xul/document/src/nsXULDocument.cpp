@@ -2850,12 +2850,6 @@ nsXULDocument::ResumeWalk()
                                                    &isAlternate);
                         }
                     }
-
-#ifdef MOZ_XTF
-                    if (element->GetNameSpaceID() > kNameSpaceID_LastBuiltin) {
-                        element->DoneAddingChildren(false);
-                    }
-#endif
                 }
                 // Now pop the context stack back up to the parent
                 // element and continue the prototype walk.
@@ -2926,12 +2920,6 @@ nsXULDocument::ResumeWalk()
                         // immediately.
                         AddElementToDocumentPost(child);
                     }
-#ifdef MOZ_XTF
-                    if (child &&
-                        child->GetNameSpaceID() > kNameSpaceID_LastBuiltin) {
-                        child->DoneAddingChildren(false);
-                    }
-#endif
                 }
             }
             break;
@@ -3635,12 +3623,6 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
             return rv;
 
         result = content->AsElement();
-
-#ifdef MOZ_XTF
-        if (result && xtfNi->NamespaceID() > kNameSpaceID_LastBuiltin) {
-            result->BeginAddingChildren();
-        }
-#endif
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;

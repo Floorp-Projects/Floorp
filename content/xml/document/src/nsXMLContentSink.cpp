@@ -534,9 +534,6 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
 #endif
         nodeInfo->NameAtom() == nsGkAtoms::object ||
         nodeInfo->NameAtom() == nsGkAtoms::applet))
-#ifdef MOZ_XTF
-      || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
-#endif
       || nodeInfo->NameAtom() == nsGkAtoms::title
       ) {
     aContent->DoneAddingChildren(HaveNotifiedForCurrentContent());
@@ -1016,11 +1013,6 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
       nodeInfo->SetIDAttributeAtom(IDAttr);
     }
   }
-  
-#ifdef MOZ_XTF
-  if (nameSpaceID > kNameSpaceID_LastBuiltin)
-    content->BeginAddingChildren();
-#endif
 
   // Set the attributes on the new content element
   result = AddAttributes(aAtts, content);

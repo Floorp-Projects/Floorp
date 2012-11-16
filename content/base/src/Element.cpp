@@ -1860,10 +1860,6 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, aModType);
   }
 
-  if (aNamespaceID == kNameSpaceID_XMLEvents && 
-      aName == nsGkAtoms::event && mNodeInfo->GetDocument()) {
-    mNodeInfo->GetDocument()->AddXMLEventsContent(this);
-  }
   if (aCallAfterSetAttr) {
     rv = AfterSetAttr(aNamespaceID, aName, &aValueForAfterSetAttr, aNotify);
     NS_ENSURE_SUCCESS(rv, rv);
