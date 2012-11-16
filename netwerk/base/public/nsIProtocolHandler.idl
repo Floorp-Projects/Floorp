@@ -246,6 +246,13 @@ interface nsIProtocolHandler : nsISupports
      */
     const unsigned long URI_SYNC_LOAD_IS_OK = (1<<17);
 
+    /**
+     * URI is secure to load in an https page and should not be blocked
+     * by nsMixedContentBlocker
+     */
+    const unsigned long URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT = (1<<18);
+
+
 };
 
 %{C++
