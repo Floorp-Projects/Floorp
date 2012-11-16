@@ -13,6 +13,7 @@
 #include "jsopcode.h"
 #include "gc/Heap.h"
 #include "BaselineJIT.h"
+#include "BaselineRegisters.h"
 
 namespace js {
 namespace ion {
@@ -155,7 +156,9 @@ class ICEntry
     _(ToNumber_Fallback)        \
                                 \
     _(BinaryArith_Fallback)     \
-    _(BinaryArith_Int32)
+    _(BinaryArith_Int32)        \
+                                \
+    _(Call_Fallback)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -363,6 +366,14 @@ class ICStubCompiler
 
     // Helper to generate an stubcall IonCode from a VMFunction wrapper.
     bool callVM(const VMFunction &fun, MacroAssembler &masm);
+
+    GeneralRegisterSet availableGeneralRegs() const {
+        GeneralRegisterSet regs(GeneralRegisterSet::All());
+        regs.take(BaselineFrameReg);
+        regs.take(BaselineStubReg);
+        regs.take(BaselineTailCallReg);
+        return regs;
+    }
 
   public:
     virtual ICStub *getStub() = 0;
@@ -579,6 +590,48 @@ class ICBinaryArith_Int32 : public ICStub
     };
 };
 
+class ICCallStubCompiler : public ICMultiStubCompiler
+{
+  protected:
+    ICCallStubCompiler(JSContext *cx, ICStub::Kind kind, JSOp op)
+      : ICMultiStubCompiler(cx, kind, op)
+    { }
+
+    virtual int32_t getKey() const {
+        // CALL, FUNCALL and FUNAPPLY can use the same stub code.
+        bool constructing = (op == JSOP_NEW);
+        return static_cast<int32_t>(kind) | (static_cast<int32_t>(constructing) << 16);
+    }
+
+    void pushCallArguments(MacroAssembler &masm, Register argcReg);
+};
+
+class ICCall_Fallback : public ICFallbackStub
+{
+    ICCall_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::Call_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICCall_Fallback *New(IonCode *code) {
+        return new ICCall_Fallback(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICCallStubCompiler {
+      protected:
+        IonCode *generateStubCode();
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICCallStubCompiler(cx, ICStub::Call_Fallback, op)
+        { }
+
+        ICStub *getStub() {
+            return ICCall_Fallback::New(getStubCode());
+        }
+    };
+};
 
 } // namespace ion
 } // namespace js

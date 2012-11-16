@@ -129,6 +129,8 @@ class StackValue
     }
 };
 
+enum StackAdjustment { AdjustStack, DontAdjustStack };
+
 class FrameInfo
 {
     JSContext *cx;
@@ -172,19 +174,20 @@ class FrameInfo
         JS_ASSERT(index < 0);
         return const_cast<StackValue *>(&stack[spIndex + index]);
     }
-    inline void pop(bool adjustStack = true) {
+
+    inline void pop(StackAdjustment adjust = AdjustStack) {
         spIndex--;
         StackValue *popped = &stack[spIndex];
 
-        if (adjustStack && popped->kind() == StackValue::Stack)
+        if (adjust == AdjustStack && popped->kind() == StackValue::Stack)
             masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg);
 
         // Assert when anything uses this value.
         popped->reset();
     }
-    inline void popn(uint32_t n) {
+    inline void popn(uint32_t n, StackAdjustment adjust = AdjustStack) {
         for (uint32_t i = 0; i < n; i++)
-            pop();
+            pop(adjust);
     }
     inline void push(const Value &val) {
         StackValue *sv = rawPush();
