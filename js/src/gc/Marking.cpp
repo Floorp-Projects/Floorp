@@ -133,7 +133,7 @@ MarkInternal(JSTracer *trc, T **thingp)
      * GC.
      */
     if (!trc->callback) {
-        if (thing->compartment()->isCollecting()) {
+        if (thing->compartment()->isGCMarking()) {
             PushMarkStack(static_cast<GCMarker *>(trc), thing);
             thing->compartment()->maybeAlive = true;
         }
@@ -216,7 +216,8 @@ IsMarked(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
-    if (!(*thingp)->compartment()->isCollecting())
+    JSCompartment *c = (*thingp)->compartment();
+    if (!c->isGCMarking() && !c->isGCSweeping())
         return true;
     return (*thingp)->isMarked();
 }
@@ -567,7 +568,7 @@ gc::MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslot
 void
 gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject **obj, const char *name)
 {
-    if (IS_GC_MARKING_TRACER(trc) && !(*obj)->compartment()->isCollecting())
+    if (IS_GC_MARKING_TRACER(trc) && !(*obj)->compartment()->isGCMarking())
         return;
 
     MarkObjectUnbarriered(trc, obj, name);
@@ -576,7 +577,7 @@ gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject **obj, const c
 void
 gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSScript **script, const char *name)
 {
-    if (IS_GC_MARKING_TRACER(trc) && !(*script)->compartment()->isCollecting())
+    if (IS_GC_MARKING_TRACER(trc) && !(*script)->compartment()->isGCMarking())
         return;
 
     MarkScriptUnbarriered(trc, script, name);
@@ -587,7 +588,7 @@ gc::MarkCrossCompartmentSlot(JSTracer *trc, HeapSlot *s, const char *name)
 {
     if (s->isMarkable()) {
         Cell *cell = (Cell *)s->toGCThing();
-        if (IS_GC_MARKING_TRACER(trc) && !cell->compartment()->isCollecting())
+        if (IS_GC_MARKING_TRACER(trc) && !cell->compartment()->isGCMarking())
             return;
 
         MarkSlot(trc, s, name);
@@ -625,10 +626,10 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
 /*** Push Mark Stack ***/
 
 #define JS_COMPARTMENT_ASSERT(rt, thing)                                \
-    JS_ASSERT((thing)->compartment()->isCollecting())
+    JS_ASSERT((thing)->compartment()->isGCMarking())
 
 #define JS_COMPARTMENT_ASSERT_STR(rt, thing)                            \
-    JS_ASSERT((thing)->compartment()->isCollecting() ||                 \
+    JS_ASSERT((thing)->compartment()->isGCMarking() ||                  \
               (thing)->compartment() == (rt)->atomsCompartment);
 
 #if JS_HAS_XML_SUPPORT

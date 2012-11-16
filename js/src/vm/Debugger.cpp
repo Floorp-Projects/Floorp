@@ -1443,12 +1443,12 @@ Debugger::markAllIteratively(GCMarker *trc)
 
                 /*
                  * dbg is a Debugger with at least one debuggee. Check three things:
-                 *   - dbg is actually in a compartment being GC'd
+                 *   - dbg is actually in a compartment that is being marked
                  *   - it isn't already marked
                  *   - it actually has hooks that might be called
                  */
                 HeapPtrObject &dbgobj = dbg->toJSObjectRef();
-                if (!dbgobj->compartment()->isCollecting())
+                if (!dbgobj->compartment()->isGCMarking())
                     continue;
 
                 bool dbgMarked = IsObjectMarked(&dbgobj);

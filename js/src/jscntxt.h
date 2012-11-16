@@ -701,14 +701,22 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Whether any sweeping will take place in the separate GC helper thread. */
     bool                gcSweepOnBackgroundThread;
 
-    /* List head of compartments being swept. */
+    /* Whether any black->gray edges were found during marking. */
+    bool                gcFoundBlackGrayEdges;
+
+    /* List head of compartments to be swept in the background. */
     JSCompartment       *gcSweepingCompartments;
+
+    /* Index of current compartment group (for stats). */
+    unsigned            gcCompartmentGroupIndex;
 
     /*
      * Incremental sweep state.
      */
+    JSCompartment       *gcRemainingCompartmentGroups;
+    JSCompartment       *gcCompartmentGroup;
     int                 gcSweepPhase;
-    ptrdiff_t           gcSweepCompartmentIndex;
+    JSCompartment       *gcSweepCompartment;
     int                 gcSweepKindIndex;
 
     /*
