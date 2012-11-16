@@ -262,7 +262,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
         self.env["TMPDIR"]=self.remoteTmpDir
         self.env["HOME"]=self.profileDir
-        self.pushWrapper()
+        if self.options.setup:
+          self.pushWrapper()
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
         cmd.insert(1, self.remoteHere)
