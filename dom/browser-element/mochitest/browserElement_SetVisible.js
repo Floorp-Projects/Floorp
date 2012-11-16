@@ -7,7 +7,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var iframeScript = function() {
-  content.document.addEventListener("mozvisibilitychange", function() {
+  content.document.addEventListener("visibilitychange", function() {
     sendAsyncMessage('test:visibilitychange', {
       hidden: content.document.mozHidden
     });

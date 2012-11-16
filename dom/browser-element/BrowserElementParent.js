@@ -260,9 +260,9 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
 
-  // Listen to mozvisibilitychange on the iframe's owner window, and forward it
+  // Listen to visibilitychange on the iframe's owner window, and forward it
   // down to the child.
-  this._window.addEventListener('mozvisibilitychange',
+  this._window.addEventListener('visibilitychange',
                                 this._ownerVisibilityChange.bind(this),
                                 /* useCapture = */ false,
                                 /* wantsUntrusted = */ false);
