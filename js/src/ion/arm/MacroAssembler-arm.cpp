@@ -1108,6 +1108,12 @@ MacroAssemblerARM::ma_bl(Label *dest, Assembler::Condition c)
     as_bl(dest, c);
 }
 
+void
+MacroAssemblerARM::ma_blx(Register reg, Assembler::Condition c)
+{
+    as_blx(reg, c);
+}
+
 // VFP/ALU
 void
 MacroAssemblerARM::ma_vadd(FloatRegister src1, FloatRegister src2, FloatRegister dst)
@@ -2021,6 +2027,12 @@ MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const ValueOperan
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testNumber(Assembler::Condition cond, const ValueOperand &value)
+{
+    return testNumber(cond, value.typeReg());
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const ValueOperand &value)
 {
     return testMagic(cond, value.typeReg());
@@ -2487,6 +2499,19 @@ MacroAssemblerARMCompat::pushValue(ValueOperand val) {
     ma_push(val.typeReg());
     ma_push(val.payloadReg());
 }
+void
+MacroAssemblerARMCompat::pushValue(const Address &addr)
+{
+    Operand srcOp = Operand(addr);
+    Operand payload = ToPayload(srcOp);
+    Operand type = ToType(srcOp);
+
+    ma_ldr(payload, ScratchRegister);
+    ma_push(ScratchRegister);
+    ma_ldr(type, ScratchRegister);
+    ma_push(ScratchRegister);
+}
+
 void
 MacroAssemblerARMCompat::popValue(ValueOperand val) {
     ma_pop(val.payloadReg());

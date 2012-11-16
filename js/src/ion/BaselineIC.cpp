@@ -17,6 +17,34 @@
 namespace js {
 namespace ion {
 
+IonCode *
+ICStubCompiler::getStubCode()
+{
+    IonCompartment *ion = cx->compartment->ionCompartment();
+
+    // Check for existing cached stubcode.
+    uint32_t stubKey = getKey();
+    IonCode *stubCode = ion->getStubCode(stubKey);
+    if (stubCode)
+        return stubCode;
+
+    // Compile new stubcode.
+    MacroAssembler masm;
+    AutoFlushCache afc("ICStubCompiler::getStubCode", ion);
+    if (!generateStubCode(masm))
+        return NULL;
+    Linker linker(masm);
+    Rooted<IonCode *> newStubCode(cx, linker.newCode(cx));
+    if (!newStubCode)
+        return NULL;
+
+    // Cache newly compiled stubcode.
+    if (!ion->putStubCode(stubKey, newStubCode))
+        return NULL;
+
+    return newStubCode;
+}
+
 bool
 ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 {
@@ -88,14 +116,13 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     return true;
 }
 
-IonCode *
-ICCompare_Fallback::Compiler::generateStubCode()
+bool
+ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    MacroAssembler masm;
     JS_ASSERT(R0 == JSReturnOperand);
 
-    // Pop return address.
-    masm.pop(BaselineTailCallReg);
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
 
     // Get VMFunction to call
     typedef bool (*pf)(JSContext *, ICCompare_Fallback *, HandleValue, HandleValue,
@@ -109,10 +136,9 @@ ICCompare_Fallback::Compiler::generateStubCode()
 
     // Call.
     if (!callVM(fun, masm))
-        return NULL;
+        return false;
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
 
 //
@@ -146,14 +172,13 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
     return true;
 }
 
-IonCode *
-ICToBool_Fallback::Compiler::generateStubCode()
+bool
+ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    MacroAssembler masm;
     JS_ASSERT(R0 == JSReturnOperand);
 
-    // Pop return address.
-    masm.pop(BaselineTailCallReg);
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
 
     // Get VMFunction to call
     typedef bool (*pf)(JSContext *, ICToBool_Fallback *, HandleValue, MutableHandleValue);
@@ -165,33 +190,33 @@ ICToBool_Fallback::Compiler::generateStubCode()
 
     // Call.
     if (!callVM(fun, masm))
-        return NULL;
+        return false;
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
 
 //
 // ToBool_Bool
 //
 
-IonCode *
-ICToBool_Bool::Compiler::generateStubCode()
+bool
+ICToBool_Bool::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    MacroAssembler masm;
-
     // Just guard that R0 is a boolean and leave it be if so.
     Label failure;
     masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
-    masm.ret();
+    EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
+
+//
+// ToNumber_Fallback
+//
 
 static bool
 DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, MutableHandleValue ret)
@@ -200,14 +225,13 @@ DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, Mu
     return ToNumber(cx, ret.address());
 }
 
-IonCode *
-ICToNumber_Fallback::Compiler::generateStubCode()
+bool
+ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    MacroAssembler masm;
     JS_ASSERT(R0 == JSReturnOperand);
 
-    // Pop return address.
-    masm.pop(BaselineTailCallReg);
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
 
     // Get VMFunction to call
     typedef bool (*pf)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
@@ -219,10 +243,9 @@ ICToNumber_Fallback::Compiler::generateStubCode()
 
     // Call.
     if (!callVM(fun, masm))
-        return NULL;
+        return false;
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
 
 //
@@ -272,14 +295,13 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     return true;
 }
 
-IonCode *
-ICBinaryArith_Fallback::Compiler::generateStubCode()
+bool
+ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    MacroAssembler masm;
     JS_ASSERT(R0 == JSReturnOperand);
 
-    // Pop return address.
-    masm.pop(BaselineTailCallReg);
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
 
     // Get VMFunction to call
     typedef bool (*pf)(JSContext *, ICBinaryArith_Fallback *, HandleValue, HandleValue,
@@ -293,11 +315,14 @@ ICBinaryArith_Fallback::Compiler::generateStubCode()
 
     // Call.
     if (!callVM(fun, masm))
-        return NULL;
+        return false;
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
+
+//
+// Call_Fallback
+//
 
 static bool
 DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, MutableHandleValue res)
@@ -355,19 +380,18 @@ ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, Register argcReg)
         masm.addPtr(Imm32(sizeof(Value)), argPtr);
 
         masm.sub32(Imm32(1), count);
-        masm.jmp(&loop);
+        masm.jump(&loop);
     }
     masm.bind(&done);
 }
 
-IonCode *
-ICCall_Fallback::Compiler::generateStubCode()
+bool
+ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    MacroAssembler masm;
     JS_ASSERT(R0 == JSReturnOperand);
 
-    // Pop return address.
-    masm.pop(BaselineTailCallReg);
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
 
     typedef bool (*pf)(JSContext *, ICCall_Fallback *, uint32_t, Value *, MutableHandleValue);
     static const VMFunction fun = FunctionInfo<pf>(DoCallFallback);
@@ -385,10 +409,9 @@ ICCall_Fallback::Compiler::generateStubCode()
 
     // Call.
     if (!callVM(fun, masm))
-        return NULL;
+        return false;
 
-    Linker linker(masm);
-    return linker.newCode(cx);
+    return true;
 }
 
 } // namespace ion
