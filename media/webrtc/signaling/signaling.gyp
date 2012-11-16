@@ -134,6 +134,9 @@
         './src/peerconnection/PeerConnectionCtx.h',
         './src/peerconnection/PeerConnectionImpl.cpp',
         './src/peerconnection/PeerConnectionImpl.h',
+        './src/peerconnection/PeerConnectionMedia.cpp',
+        './src/peerconnection/PeerConnectionMedia.h',
+
         # Media pipeline
         './src/mediapipeline/MediaPipeline.h',
         './src/mediapipeline/MediaPipeline.cpp',
