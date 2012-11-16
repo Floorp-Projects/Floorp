@@ -816,21 +816,21 @@ function saveMedia()
           internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
                        aChosenData, aBaseURI, gDocument);
         };
-
+      
         for (var i = 0; i < rowArray.length; i++) {
           var v = rowArray[i];
           var dir = aDirectory.clone();
           var item = gImageView.data[v][COL_IMAGE_NODE];
           var uriString = gImageView.data[v][COL_IMAGE_ADDRESS];
           var uri = makeURI(uriString);
-
+  
           try {
             uri.QueryInterface(Components.interfaces.nsIURL);
             dir.append(decodeURIComponent(uri.fileName));
           } catch(ex) {
             /* data: uris */
           }
-
+  
           if (i == 0) {
             saveAnImage(uriString, new AutoChosen(dir, uri), makeURI(item.baseURI));
           } else {
@@ -940,7 +940,7 @@ function makePreview(row)
           numFrames = image.numFrames;
       }
     }
-
+    
     if (!mimeType)
       mimeType = getContentTypeFromHeaders(cacheEntry);
 
@@ -979,33 +979,18 @@ function makePreview(row)
 
     var isProtocolAllowed = checkProtocol(gImageView.data[row]);
 
-    function updateMediaDimensions(physWidth, physHeight, width, height) {
-      var imageSize = "";
-      if (width != physWidth || height != physHeight) {
-        imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
-                                               [formatNumber(physWidth),
-                                                formatNumber(physHeight),
-                                                formatNumber(width),
-                                                formatNumber(height)]);
-      }
-      else {
-        imageSize = gBundle.getFormattedString("mediaDimensions",
-                                               [formatNumber(width),
-                                                formatNumber(height)]);
-      }
-      setItemValue("imagedimensiontext", imageSize);
-    };
-
     var newImage = new Image;
     newImage.id = "thepreviewimage";
+    var physWidth = 0, physHeight = 0;
+    var width = 0, height = 0;
 
-    function readImageDimensions() {
-      // Check if another media has been loaded in the meanwhile.
-      if (newImage.getAttribute("src") != url)
-        return;
-
-      var physWidth = newImage.width || 0;
-      var physHeight = newImage.height || 0;
+    if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
+         item instanceof HTMLImageElement ||
+         item instanceof SVGImageElement ||
+         (item instanceof HTMLObjectElement && mimeType.startsWith("image/")) || isBG) && isProtocolAllowed) {
+      newImage.setAttribute("src", url);
+      physWidth = newImage.width || 0;
+      physHeight = newImage.height || 0;
 
       // "width" and "height" attributes must be set to newImage,
       // even if there is no "width" or "height attribute in item;
@@ -1026,26 +1011,11 @@ function makePreview(row)
         newImage.height = item.height.baseVal.value;
       }
 
-      var width = newImage.width;
-      var height = newImage.height;
+      width = newImage.width;
+      height = newImage.height;
 
-      document.getElementById("theimagecontainer").collapsed = false;
+      document.getElementById("theimagecontainer").collapsed = false
       document.getElementById("brokenimagecontainer").collapsed = true;
-
-      updateMediaDimensions(physWidth, physHeight, width, height);
-    };
-
-    if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
-         item instanceof HTMLImageElement ||
-         item instanceof SVGImageElement ||
-         (item instanceof HTMLObjectElement && mimeType.startsWith("image/")) || isBG) && isProtocolAllowed) {
-      newImage.setAttribute("src", url);
-      // Hide the field by default, so it's shown only when available.
-      setItemValue("imagedimensiontext", "");
-
-      // Wait for the image to be loaded before checking its
-      // dimensions, because it may not have been cached yet.
-      newImage.onload = readImageDimensions;
     }
 #ifdef MOZ_MEDIA
     else if (item instanceof HTMLVideoElement && isProtocolAllowed) {
@@ -1053,11 +1023,11 @@ function makePreview(row)
       newImage.id = "thepreviewimage";
       newImage.mozLoadFrom(item);
       newImage.controls = true;
+      width = physWidth = item.videoWidth;
+      height = physHeight = item.videoHeight;
 
       document.getElementById("theimagecontainer").collapsed = false;
       document.getElementById("brokenimagecontainer").collapsed = true;
-
-      updateMediaDimensions(item.videoWidth, item.videoHeight, item.videoWidth, item.videoHeight);
     }
     else if (item instanceof HTMLAudioElement && isProtocolAllowed) {
       newImage = new Audio;
@@ -1068,8 +1038,6 @@ function makePreview(row)
 
       document.getElementById("theimagecontainer").collapsed = false;
       document.getElementById("brokenimagecontainer").collapsed = true;
-
-      setItemValue("imagedimensiontext", "");
     }
 #endif
     else {
@@ -1077,9 +1045,24 @@ function makePreview(row)
       // or elements not [yet] handled (e.g., object, embed).
       document.getElementById("brokenimagecontainer").collapsed = false;
       document.getElementById("theimagecontainer").collapsed = true;
-
-      setItemValue("imagedimensiontext", "");
     }
+
+    var imageSize = "";
+    if (url && !isAudio) {
+      if (width != physWidth || height != physHeight) {
+        imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
+                                               [formatNumber(physWidth),
+                                                formatNumber(physHeight),
+                                                formatNumber(width),
+                                                formatNumber(height)]);
+      }
+      else {
+        imageSize = gBundle.getFormattedString("mediaDimensions",
+                                               [formatNumber(width),
+                                                formatNumber(height)]);
+      }
+    }
+    setItemValue("imagedimensiontext", imageSize);
 
     makeBlockImage(url);
 
