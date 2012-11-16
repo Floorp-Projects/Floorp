@@ -4310,7 +4310,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName,
                                                     nsCSSProps::eEnabled);
   if (eCSSProperty_UNKNOWN == propID ||
-     (aContext == nsCSSContextType::eCSSContext_Page &&
+     (aContext == eCSSContext_Page &&
       !nsCSSProps::PropHasFlags(propID, CSS_PROPERTY_APPLIES_TO_PAGE_RULE))) { // unknown property
     if (!NonMozillaVendorIdentifier(propertyName)) {
       REPORT_UNEXPECTED_P(PEUnknownProperty, propertyName);
