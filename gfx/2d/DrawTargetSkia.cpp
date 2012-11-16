@@ -275,21 +275,15 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   MarkChanged();
 
   SkRect destRect = RectToSkRect(aDest);
-  SkRect sourceRect = RectToSkRect(aSource);
+  SkIRect sourceRect = RectToSkIRect(aSource);
 
-  SkMatrix matrix;
-  matrix.setRectToRect(sourceRect, destRect, SkMatrix::kFill_ScaleToFit);
-  
   const SkBitmap& bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
  
   AutoPaintSetup paint(mCanvas.get(), aOptions);
-  SkShader *shader = SkShader::CreateBitmapShader(bitmap, SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
-  shader->setLocalMatrix(matrix);
-  SkSafeUnref(paint.mPaint.setShader(shader));
   if (aSurfOptions.mFilter != FILTER_LINEAR) {
     paint.mPaint.setFilterBitmap(false);
   }
-  mCanvas->drawRect(destRect, paint.mPaint);
+  mCanvas->drawBitmapRect(bitmap, &sourceRect, destRect, &paint.mPaint);
 }
 
 void
