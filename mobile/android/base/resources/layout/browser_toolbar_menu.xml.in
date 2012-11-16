@@ -74,9 +74,9 @@
                      android:layout_alignParentBottom="true"
                      android:layout_centerVertical="true">
 
-            <Button android:id="@+id/awesome_bar"
-                    style="@style/AddressBar.Button"
-                    android:background="@drawable/address_bar_url_level"/>
+            <Gecko.Button android:id="@+id/awesome_bar"
+                          style="@style/AddressBar.Button"
+                          android:background="@drawable/address_bar_url"/>
 
             <LinearLayout style="@style/AddressBar.Button"
                           android:orientation="horizontal">
@@ -100,17 +100,18 @@
                              android:contentDescription="@string/site_security"
                              android:visibility="gone"/>
 
-                <TextView android:id="@+id/awesome_bar_title"
-                          style="@style/AddressBar.Button"
-                          android:layout_width="fill_parent"
-                          android:layout_height="fill_parent"
-                          android:layout_weight="1.0"
-                          android:singleLine="true"
-                          android:paddingRight="8dp"
-                          android:textColor="#222222"
-                          android:gravity="center_vertical|left"
-                          android:hint="@string/awesomebar_default_text"
-                          android:layout_gravity="center_vertical"/>
+                <Gecko.TextView android:id="@+id/awesome_bar_title"
+                                style="@style/AddressBar.Button"
+                                android:layout_width="fill_parent"
+                                android:layout_height="fill_parent"
+                                android:layout_weight="1.0"
+                                android:singleLine="true"
+                                android:paddingRight="8dp"
+                                android:textColor="@color/awesome_bar_title"
+                                android:textColorHint="@color/awesome_bar_title_hint"
+                                android:gravity="center_vertical|left"
+                                android:hint="@string/awesomebar_default_text"
+                                android:layout_gravity="center_vertical"/>
 
                 <ImageButton android:id="@+id/reader"
                              style="@style/AddressBar.ImageButton.Icon"

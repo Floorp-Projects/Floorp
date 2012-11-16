@@ -195,6 +195,7 @@ FENNEC_PP_JAVA_VIEW_FILES = \
   GeckoImageView.java \
   GeckoFrameLayout.java \
   GeckoLinearLayout.java \
+  GeckoRelativeLayout.java \
   GeckoTextView.java \
   $(NULL)
 
@@ -219,7 +220,10 @@ FENNEC_PP_JAVA_FILES = \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
+  res/color/awesome_bar_title.xml \
+  res/color/awesome_bar_title_hint.xml \
   res/drawable/address_bar_bg.xml \
+  res/drawable/address_bar_url.xml \
   res/layout/abouthome_content.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_suggestion_row.xml \
@@ -526,9 +530,10 @@ RES_DRAWABLE_BASE = \
   res/drawable/address_bar_forward_button.xml \
   res/drawable/address_bar_texture_port.png \
   res/drawable/address_bar_texture_port_pb.png \
-  res/drawable/address_bar_url.xml \
   res/drawable/address_bar_url_default.9.png \
+  res/drawable/address_bar_url_default_pb.9.png \
   res/drawable/address_bar_url_pressed.9.png \
+  res/drawable/address_bar_url_pressed_pb.9.png \
   res/drawable/doorhanger_arrow.png \
   res/drawable/doorhanger_bg.9.png \
   res/drawable/doorhanger_shadow_bg.9.png \
@@ -602,7 +607,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/address_bar_texture_port.png \
   res/drawable-hdpi/address_bar_texture_port_pb.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
+  res/drawable-hdpi/address_bar_url_default_pb.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
+  res/drawable-hdpi/address_bar_url_pressed_pb.9.png \
   res/drawable-hdpi/doorhanger_arrow.png \
   res/drawable-hdpi/doorhanger_bg.9.png \
   res/drawable-hdpi/doorhanger_shadow_bg.9.png \
@@ -641,7 +648,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/address_bar_texture_port.png \
   res/drawable-xhdpi/address_bar_texture_port_pb.png \
   res/drawable-xhdpi/address_bar_url_default.9.png \
+  res/drawable-xhdpi/address_bar_url_default_pb.9.png \
   res/drawable-xhdpi/address_bar_url_pressed.9.png \
+  res/drawable-xhdpi/address_bar_url_pressed_pb.9.png \
   res/drawable-xhdpi/alert_addon.png \
   res/drawable-xhdpi/alert_app.png \
   res/drawable-xhdpi/alert_download.png \
@@ -803,7 +812,9 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/address_bar_texture_land.png \
   res/drawable-land-mdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-mdpi-v14/address_bar_url_default.9.png \
+  res/drawable-land-mdpi-v14/address_bar_url_default_pb.9.png \
   res/drawable-land-mdpi-v14/address_bar_url_pressed.9.png \
+  res/drawable-land-mdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-mdpi-v14/remote_tabs_off.png \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tab_new.png \
@@ -821,7 +832,9 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/address_bar_texture_land.png \
   res/drawable-land-hdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-hdpi-v14/address_bar_url_default.9.png \
+  res/drawable-land-hdpi-v14/address_bar_url_default_pb.9.png \
   res/drawable-land-hdpi-v14/address_bar_url_pressed.9.png \
+  res/drawable-land-hdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-hdpi-v14/remote_tabs_off.png \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tab_new.png \
@@ -839,7 +852,9 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/address_bar_texture_land.png \
   res/drawable-land-xhdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-xhdpi-v14/address_bar_url_default.9.png \
+  res/drawable-land-xhdpi-v14/address_bar_url_default_pb.9.png \
   res/drawable-land-xhdpi-v14/address_bar_url_pressed.9.png \
+  res/drawable-land-xhdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-xhdpi-v14/remote_tabs_off.png \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tab_new.png \
@@ -859,7 +874,9 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-mdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-mdpi-v11/address_bar_url_default.9.png \
+  res/drawable-large-mdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-mdpi-v11/address_bar_url_pressed.9.png \
+  res/drawable-large-mdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-mdpi-v11/ic_awesomebar_go.png \
   res/drawable-large-mdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-mdpi-v11/ic_menu_bookmark_add.png \
@@ -883,7 +900,9 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-hdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-hdpi-v11/address_bar_url_default.9.png \
+  res/drawable-large-hdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-hdpi-v11/address_bar_url_pressed.9.png \
+  res/drawable-large-hdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-hdpi-v11/ic_awesomebar_go.png \
   res/drawable-large-hdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-hdpi-v11/ic_menu_bookmark_add.png \
@@ -907,7 +926,9 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_url_default.9.png \
+  res/drawable-large-xhdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-xhdpi-v11/address_bar_url_pressed.9.png \
+  res/drawable-large-xhdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-large-xhdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-xhdpi-v11/ic_menu_bookmark_add.png \
@@ -982,7 +1003,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/address_bar_bg_normal.xml              \
   mobile/android/base/resources/drawable/address_bar_bg_private.xml             \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
-  mobile/android/base/resources/drawable/address_bar_url_level.xml              \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
