@@ -1400,8 +1400,6 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     (void)aMIMEInfo->GetPreferredAction(&action);
   }
 
-  DownloadState startState = nsIDownloadManager::DOWNLOAD_QUEUED;
-
   int64_t id = AddDownloadToDB(dl->mDisplayName, source, target, tempPath,
                                dl->mStartTime, dl->mLastUpdate,
                                mimeType, persistentDescriptor, action);
@@ -1409,7 +1407,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   dl->mID = id;
 
   rv = AddToCurrentDownloads(dl);
-  (void)dl->SetState(startState);
+  (void)dl->SetState(nsIDownloadManager::DOWNLOAD_QUEUED);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DOWNLOAD_SCANNER
@@ -1431,7 +1429,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
         // This download will get deleted during a call to IAE's Save,
         // so go ahead and mark it as blocked and avoid the download.
         (void)CancelDownload(id);
-        startState = nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY;
+        (void)dl->SetState(nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY);
       }
     }
   }
