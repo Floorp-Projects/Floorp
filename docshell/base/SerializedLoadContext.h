@@ -67,6 +67,7 @@ struct ParamTraits<SerializedLoadContext>
   {
     WriteParam(aMsg, aParam.mIsNotNull);
     WriteParam(aMsg, aParam.mIsContent);
+    WriteParam(aMsg, aParam.mIsPrivateBitValid);
     WriteParam(aMsg, aParam.mUsePrivateBrowsing);
     WriteParam(aMsg, aParam.mAppId);
     WriteParam(aMsg, aParam.mIsInBrowserElement);
@@ -76,6 +77,7 @@ struct ParamTraits<SerializedLoadContext>
   {
     if (!ReadParam(aMsg, aIter, &aResult->mIsNotNull) ||
         !ReadParam(aMsg, aIter, &aResult->mIsContent)  ||
+        !ReadParam(aMsg, aIter, &aResult->mIsPrivateBitValid)  ||
         !ReadParam(aMsg, aIter, &aResult->mUsePrivateBrowsing)  ||
         !ReadParam(aMsg, aIter, &aResult->mAppId)  ||
         !ReadParam(aMsg, aIter, &aResult->mIsInBrowserElement)) {
