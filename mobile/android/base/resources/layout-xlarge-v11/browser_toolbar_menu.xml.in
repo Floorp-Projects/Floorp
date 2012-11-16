@@ -31,13 +31,13 @@
                                       android:paddingLeft="6dip"
                                       android:paddingRight="32dip"/>
 
-        <TextSwitcher android:id="@+id/tabs_count"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="52dip"
-                     android:layout_height="wrap_content"
-                     android:layout_marginTop="8dp"
-                     android:layout_alignLeft="@id/tabs"
-                     android:gravity="center_horizontal"/>
+        <Gecko.TextSwitcher android:id="@+id/tabs_count"
+                            style="@style/AddressBar.ImageButton"
+                            android:layout_width="52dip"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_alignLeft="@id/tabs"
+                            android:gravity="center_horizontal"/>
 
         <ImageButton android:id="@+id/menu"
                      style="@style/AddressBar.ImageButton"
