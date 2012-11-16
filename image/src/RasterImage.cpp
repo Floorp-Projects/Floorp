@@ -2591,7 +2591,7 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
 
   mFinishing = true;
   mInDecoder = true;
-  decoder->Finish();
+  decoder->Finish(aIntent);
   mInDecoder = false;
   mFinishing = false;
 
