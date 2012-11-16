@@ -30,7 +30,7 @@ MNewStringObject::templateObj() const {
     return &templateObj_->asString();
 }
 
-CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
+CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph)
   : CodeGeneratorSpecific(gen, graph)
 {
 }
@@ -2983,12 +2983,7 @@ CodeGenerator::visitGetArgument(LGetArgument *lir)
 bool
 CodeGenerator::generate()
 {
-    AssertCanGC();
-    JSContext *cx = GetIonContext()->cx;
-
-    unsigned slots = graph.localSlotCount() +
-                     (graph.argumentSlotCount() * sizeof(Value) / STACK_SLOT_SIZE);
-    if (!safepoints_.init(slots))
+    if (!safepoints_.init(graph.totalSlotCount()))
         return false;
 
     // Before generating any code, we generate type checks for all parameters.
@@ -2998,7 +2993,7 @@ CodeGenerator::generate()
         return false;
 
     if (frameClass_ != FrameSizeClass::None()) {
-        deoptTable_ = cx->compartment->ionCompartment()->getBailoutTable(frameClass_);
+        deoptTable_ = GetIonContext()->compartment->ionCompartment()->getBailoutTable(frameClass_);
         if (!deoptTable_)
             return false;
     }
@@ -3014,8 +3009,14 @@ CodeGenerator::generate()
     if (!generateOutOfLineCode())
         return false;
 
-    if (masm.oom())
-        return false;
+    return !masm.oom();
+}
+
+bool
+CodeGenerator::link()
+{
+    AssertCanGC();
+    JSContext *cx = GetIonContext()->cx;
 
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);
@@ -3039,7 +3040,7 @@ CodeGenerator::generate()
         return true;
 
     IonScript *ionScript =
-      IonScript::New(cx, slots, scriptFrameSize, snapshots_.size(),
+      IonScript::New(cx, graph.totalSlotCount(), scriptFrameSize, snapshots_.size(),
                      bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), barrierOffsets_.length(),

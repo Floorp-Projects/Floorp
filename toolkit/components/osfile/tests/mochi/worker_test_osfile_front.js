@@ -653,16 +653,26 @@ function test_info() {
   let startMs = start.getTime() - 1000;
   let stopMs  = stop.getTime() + 1000;
 
-  let birth = stat.creationDate;
-  ok(birth.getTime() <= stopMs,
-     "test_info: file was created before now - " + stop + ", " + birth);
-  // Note: Previous versions of this test checked whether the file has
-  // been created after the start of the test. Unfortunately, this sometimes
-  // failed under Windows, in specific circumstances: if the file has been
-  // removed at the start of the test and recreated immediately, the Windows
-  // file system detects this and decides that the file was actually truncated
-  // rather than recreated, hence that it should keep its previous creation date.
-  // Debugging hilarity ensues.
+  (function() {
+    let birth;
+    if ("winBirthDate" in info) {
+      birth = info.winBirthDate;
+    } else if ("macBirthDate" in info) {
+      birth = info.macBirthDate;
+    } else {
+      ok(true, "Skipping birthdate test");
+      return;
+    }
+    ok(birth.getTime() <= stopMs,
+    "test_info: file was created before now - " + stop + ", " + birth);
+    // Note: Previous versions of this test checked whether the file has
+    // been created after the start of the test. Unfortunately, this sometimes
+    // failed under Windows, in specific circumstances: if the file has been
+    // removed at the start of the test and recreated immediately, the Windows
+    // file system detects this and decides that the file was actually truncated
+    // rather than recreated, hence that it should keep its previous creation date.
+    // Debugging hilarity ensues.
+  });
 
   let change = stat.lastModificationDate;
   ok(change.getTime() >= startMs

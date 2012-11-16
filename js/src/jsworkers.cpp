@@ -283,6 +283,9 @@ WorkerThread::threadLoop()
     WorkerThreadState &state = *runtime->workerThreadState;
     state.lock();
 
+    threadData.construct(runtime);
+    js::TlsPerThreadData.set(threadData.addr());
+
     while (true) {
         JS_ASSERT(!ionBuilder);
 
@@ -303,7 +306,7 @@ WorkerThread::threadLoop()
 
         {
             ion::IonContext ictx(NULL, ionBuilder->script()->compartment(), &ionBuilder->temp());
-            ionBuilder->backgroundCompiledLir = ion::CompileBackEnd(ionBuilder);
+            ionBuilder->setBackgroundCodegen(ion::CompileBackEnd(ionBuilder));
         }
 
         state.lock();

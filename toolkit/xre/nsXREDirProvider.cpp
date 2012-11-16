@@ -1235,7 +1235,7 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile)
   static const char *const sysSExtDir = 
 #ifdef HAVE_USR_LIB64_DIR
     "/usr/lib64/mozilla/extensions";
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__FreeBSD__)
     "/usr/local/lib/mozilla/extensions";
 #else
     "/usr/lib/mozilla/extensions";
