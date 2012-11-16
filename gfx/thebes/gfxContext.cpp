@@ -1402,7 +1402,28 @@ gfxContext::Mask(gfxPattern *pattern)
   if (mCairo) {
     cairo_mask(mCairo, pattern->CairoPattern());
   } else {
+    bool needsClip = false;
+    if (pattern->GetType() == gfxPattern::PATTERN_SURFACE &&
+        pattern->Extend() == gfxPattern::EXTEND_NONE) {
+      // In this situation the mask will be fully transparent (i.e. nothing
+      // will be drawn) outside of the bounds of the surface. We can support
+      // that by clipping out drawing to that area.
+      needsClip = true;
+      nsRefPtr<gfxASurface> surf = pattern->GetSurface();
+      gfxPoint offset = surf->GetDeviceOffset();
+
+      Matrix mat = ToMatrix(pattern->GetMatrix());
+      mat.Invert();
+      mat = GetDTTransform() * mat;
+      mDT->SetTransform(mat);
+      mDT->PushClipRect(Rect(offset.x, offset.y, surf->GetSize().width, surf->GetSize().height));
+      mDT->SetTransform(GetDTTransform());
+    }
     mDT->Mask(GeneralPattern(this), *pattern->GetPattern(mDT), DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+
+    if (needsClip) {
+      mDT->PopClip();
+    }
   }
 }
 
@@ -1418,10 +1439,14 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
 
     gfxPoint pt = surface->GetDeviceOffset();
+
+    // We clip here to bind to the mask surface bounds, see above.
+    mDT->PushClipRect(Rect(offset.x, offset.y, sourceSurf->GetSize().width, sourceSurf->GetSize().height));
     mDT->Mask(GeneralPattern(this), 
               SurfacePattern(sourceSurf, EXTEND_CLAMP,
                              Matrix(1.0f, 0, 0, 1.0f, Float(offset.x - pt.x), Float(offset.y - pt.y))),
               DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+    mDT->PopClip();
   }
 }
 
