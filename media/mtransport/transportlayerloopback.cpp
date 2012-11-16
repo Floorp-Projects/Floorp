@@ -25,7 +25,7 @@
 
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport");
+MOZ_MTLOG_MODULE("mtransport")
 
 nsresult TransportLayerLoopback::Init() {
   timer_ = do_CreateInstance(NS_TIMER_CONTRACTID);
