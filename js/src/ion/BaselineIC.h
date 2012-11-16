@@ -590,18 +590,12 @@ class ICBinaryArith_Int32 : public ICStub
     };
 };
 
-class ICCallStubCompiler : public ICMultiStubCompiler
+class ICCallStubCompiler : public ICStubCompiler
 {
   protected:
-    ICCallStubCompiler(JSContext *cx, ICStub::Kind kind, JSOp op)
-      : ICMultiStubCompiler(cx, kind, op)
+    ICCallStubCompiler(JSContext *cx, ICStub::Kind kind)
+      : ICStubCompiler(cx, kind)
     { }
-
-    virtual int32_t getKey() const {
-        // CALL, FUNCALL and FUNAPPLY can use the same stub code.
-        bool constructing = (op == JSOP_NEW);
-        return static_cast<int32_t>(kind) | (static_cast<int32_t>(constructing) << 16);
-    }
 
     void pushCallArguments(MacroAssembler &masm, Register argcReg);
 };
@@ -623,8 +617,8 @@ class ICCall_Fallback : public ICFallbackStub
         IonCode *generateStubCode();
 
       public:
-        Compiler(JSContext *cx, JSOp op)
-          : ICCallStubCompiler(cx, ICStub::Call_Fallback, op)
+        Compiler(JSContext *cx)
+          : ICCallStubCompiler(cx, ICStub::Call_Fallback)
         { }
 
         ICStub *getStub() {
