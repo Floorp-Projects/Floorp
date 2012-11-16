@@ -86,7 +86,7 @@ FrameInfo::popValue(ValueOperand dest)
     }
 
     // masm.popValue already adjusted the stack pointer, don't do it twice.
-    pop(/* adjustStack = */false);
+    pop(DontAdjustStack);
 }
 
 void
