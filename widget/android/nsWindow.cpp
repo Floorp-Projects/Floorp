@@ -164,7 +164,7 @@ nsWindow::nsWindow() :
     mIMEComposing(false),
     mIMEMaskSelectionUpdate(false),
     mIMEMaskTextUpdate(false),
-    mIMEMaskEvents(true) // Mask IME events since there's no focus yet
+    mIMEMaskEventsCount(1) // Mask IME events since there's no focus yet
 {
 }
 
@@ -1883,10 +1883,11 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
     if (ae->Action() == AndroidGeckoEvent::IME_ACKNOWLEDGE_FOCUS) {
-        mIMEMaskEvents = false;
+        MOZ_ASSERT(mIMEMaskEventsCount > 0);
+        mIMEMaskEventsCount--;
         return;
     }
-    if (mIMEMaskEvents) {
+    if (mIMEMaskEventsCount > 0) {
         // Still reply to events, but don't do anything else
         if (ae->Action() == AndroidGeckoEvent::IME_SYNCHRONIZE ||
             ae->Action() == AndroidGeckoEvent::IME_REPLACE_TEXT) {
@@ -2184,7 +2185,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
         // Mask events because we lost focus. On the next focus event, Gecko will notify
         // Java, and Java will send an acknowledge focus event back to Gecko. That is
         // where we unmask event handling
-        mIMEMaskEvents = true;
+        mIMEMaskEventsCount++;
     }
 
     AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE,
