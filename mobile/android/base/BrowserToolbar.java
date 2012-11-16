@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
@@ -35,7 +36,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
@@ -54,8 +54,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
     private View mAwesomeBar;
-    private View mAwesomeBarRightEdge;
-    private View mAddressBarBg;
+    private GeckoFrameLayout mAwesomeBarRightEdge;
+    private BrowserToolbarBackground mAddressBarBg;
     private TextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
@@ -125,7 +125,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // Only used on tablet layout. We need a separate view for the background
         // because we need to slide it left/right for hiding/shoing the tabs sidebar
         // See prepareTabsAnimation().
-        mAddressBarBg = mLayout.findViewById(R.id.address_bar_bg);
+        mAddressBarBg = (BrowserToolbarBackground) mLayout.findViewById(R.id.address_bar_bg);
 
         // Only used on tablet layout. The tabs sidebar slide animation is implemented
         // in terms of translating the inner elements of the tablet toolbar to give the
@@ -133,7 +133,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // in the same position during the animation while the elements on the left
         // (favicon, back, forware, lock icon, title, ...) slide behind it.
         // See prepareTabsAnimation().
-        mAwesomeBarRightEdge = mLayout.findViewById(R.id.awesome_bar_right_edge);
+        mAwesomeBarRightEdge = (GeckoFrameLayout) mLayout.findViewById(R.id.awesome_bar_right_edge);
 
         // This will hold the translation width inside the toolbar when the tabs
         // pane is visible. It will affect the padding applied to the title TextView.
@@ -784,12 +784,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             updateTabCount(Tabs.getInstance().getCount());
             updateBackButton(tab.canDoBack());
             updateForwardButton(tab.canDoForward());
-            updateBackgroundColor(tab.isPrivate() ? 1 : 0);
-        }
-    }
 
-    private void updateBackgroundColor(int level) {
-        mAwesomeBar.getBackground().setLevel(level);
+            mAddressBarBg.setPrivateMode(tab.isPrivate());
+
+            if (mAwesomeBarRightEdge != null)
+                mAwesomeBarRightEdge.setPrivateMode(tab.isPrivate());
+        }
     }
 
     public void destroy() {
@@ -819,7 +819,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return true;
     }
 
-    public static class RightEdge extends FrameLayout
+    public static class RightEdge extends GeckoFrameLayout
                                   implements LightweightTheme.OnChangeListener { 
         private BrowserApp mActivity;
 
@@ -846,12 +846,16 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             if (drawable == null)
                 return;
 
+            StateListDrawable stateList = new StateListDrawable();
+            stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.address_bar_bg_private));
+            stateList.addState(new int[] {}, drawable);
+
             int[] padding =  new int[] { getPaddingLeft(),
                                          getPaddingTop(),
                                          getPaddingRight(),
                                          getPaddingBottom()
                                        };
-            setBackgroundDrawable(drawable);
+            setBackgroundDrawable(stateList);
             setPadding(padding[0], padding[1], padding[2], padding[3]);
         }
 
