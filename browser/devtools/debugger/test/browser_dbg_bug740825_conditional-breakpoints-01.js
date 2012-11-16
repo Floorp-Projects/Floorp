@@ -32,6 +32,8 @@ function test()
     gDebugger = gPane.contentWindow;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     gBreakpointsPane = gDebugger.DebuggerView.Breakpoints;
+
+    gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
     resumed = true;
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
@@ -83,7 +85,6 @@ function test()
 
     is(gEditor.getBreakpoints().length, 13, "thirteen breakpoints in the editor");
 
-    gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
     executeSoon(test1);
   }
 
