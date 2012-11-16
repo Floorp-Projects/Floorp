@@ -34,7 +34,7 @@ function test_watch() {
 
   let mockedDoc = mock_doc(null, TEST_URL);
   makeObserver("identity-controller-watch", function (aSubject, aTopic, aData) {
-    do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
     do_test_finished();
     run_next_test();
@@ -51,7 +51,7 @@ function test_request() {
 
   let mockedDoc = mock_doc(null, TEST_URL);
   makeObserver("identity-controller-request", function (aSubject, aTopic, aData) {
-    do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
     do_test_finished();
     run_next_test();
@@ -69,7 +69,7 @@ function test_logout() {
 
   let mockedDoc = mock_doc(null, TEST_URL);
   makeObserver("identity-controller-logout", function (aSubject, aTopic, aData) {
-    do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_test_finished();
     run_next_test();
   });
@@ -77,8 +77,6 @@ function test_logout() {
   MinimalIDService.RP.watch(mockedDoc);
   MinimalIDService.RP.logout(mockedDoc.id, {});
 }
-
-
 
 let TESTS = [
   test_overall,
