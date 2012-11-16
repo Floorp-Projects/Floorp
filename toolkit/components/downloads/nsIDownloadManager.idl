@@ -29,7 +29,7 @@ interface nsIDownloadManagerResult : nsISupports {
   void handleResult(in nsresult aStatus, in nsIDownload aDownload);
 };
 
-[scriptable, uuid(b29aac15-7ec4-4ab3-a53b-08f78aed3b34)]
+[scriptable, uuid(c2ac096c-53f9-4ef4-85f4-b920a9cc1de5)]
 interface nsIDownloadManager : nsISupports {
   /**
    * Download type for generic file download.
@@ -179,14 +179,9 @@ interface nsIDownloadManager : nsISupports {
    * in-progress.  Whereas cancelDownload simply cancels the transfer, but
    * retains information about it, removeDownload removes all knowledge of it.
    *
-   * Also notifies observers of the "download-manager-remove-download-guid"
-   * topic with the download guid as the subject to allow any DM consumers to
-   * react to the removal.
-   *
-   * Also may notify observers of the "download-manager-remove-download" topic
-   * with the download id as the subject, if the download removed is public
-   * or if global private browsing mode is in use. This notification is deprecated;
-   * the guid notification should be relied upon instead.
+   * Also notifies observers of the "download-manager-remove-download" topic
+   * with the download id as the subject to allow any DM consumers to react to
+   * the removal.
    *
    * @param aID The unique ID of the download.
    * @throws NS_ERROR_FAILURE if the download is active.
@@ -236,87 +231,35 @@ interface nsIDownloadManager : nsISupports {
    * The database connection to the downloads database.
    */
   readonly attribute mozIStorageConnection DBConnection;
-  readonly attribute mozIStorageConnection privateDBConnection;
 
   /** 
    * Whether or not there are downloads that can be cleaned up (removed)
    * i.e. downloads that have completed, have failed or have been canceled.
-   * In global private browsing mode, this reports the status of the relevant
-   * private or public downloads. In per-window mode, it only reports for
-   * public ones.
    */
   readonly attribute boolean canCleanUp;
 
   /** 
-   * Whether or not there are private downloads that can be cleaned up (removed)
-   * i.e. downloads that have completed, have failed or have been canceled.
-   */
-readonly attribute boolean canCleanUpPrivate;
-
-  /** 
    * Removes completed, failed, and canceled downloads from the list.
-   * In global private browsing mode, this operates on the relevant
-   * private or public downloads. In per-window mode, it only operates
-   * on public ones.
    *
-   * Also notifies observers of the "download-manager-remove-download-gui"
-   * and "download-manager-remove-download" topics with a null subject to
-   * allow any DM consumers to react to the removals.
+   * Also notifies observers of the "download-manager-remove-download" topic
+   * with a null subject to allow any DM consumers to react to the removals.
    */
   void cleanUp();
 
   /** 
-   * Removes completed, failed, and canceled downloads from the list
-   * of private downloads.
-   *
-   * Also notifies observers of the "download-manager-remove-download-gui"
-   * and "download-manager-remove-download" topics with a null subject to
-   * allow any DM consumers to react to the removals.
-   */
-void cleanUpPrivate();
-
-  /** 
    * The number of files currently being downloaded.
-   *
-   * In global private browsing mode, this reports the status of the relevant
-   * private or public downloads. In per-window mode, it only reports public
-   * ones.
    */
   readonly attribute long activeDownloadCount;
 
-  /** 
-   * The number of private files currently being downloaded.
-   */
-  readonly attribute long activePrivateDownloadCount;
-
   /**
    * An enumeration of active nsIDownloads
-   *
-   * In global private browsing mode, this reports the status of the relevant
-   * private or public downloads. In per-window mode, it only reports public
-   * ones.
    */
   readonly attribute nsISimpleEnumerator activeDownloads;
 
   /**
-   * An enumeration of active private nsIDownloads
-   */
-  readonly attribute nsISimpleEnumerator activePrivateDownloads;
-
-  /**
-   * Adds a listener to the download manager. It is expected that this
-   * listener will only access downloads via their deprecated integer id attribute,
-   * and when global private browsing compatibility mode is disabled, this listener
-   * will receive no notifications for downloads marked private.
+   * Adds a listener from the download manager.
    */
   void addListener(in nsIDownloadProgressListener aListener);
-
-  /**
-   * Adds a listener to the download manager. This listener must be able to
-   * understand and use the guid attribute of downloads for all interactions
-   * with the download manager.
-   */
-  void addPrivacyAwareListener(in nsIDownloadProgressListener aListener);
 
   /**
    * Removes a listener from the download manager.
