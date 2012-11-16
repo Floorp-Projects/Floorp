@@ -56,7 +56,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private View mAwesomeBar;
     private GeckoFrameLayout mAwesomeBarRightEdge;
     private BrowserToolbarBackground mAddressBarBg;
-    private TextView mTitle;
+    private GeckoTextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
     private boolean mAnimateSiteSecurity;
@@ -139,7 +139,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // pane is visible. It will affect the padding applied to the title TextView.
         mTabsPaneWidth = 0;
 
-        mTitle = (TextView) mLayout.findViewById(R.id.awesome_bar_title);
+        mTitle = (GeckoTextView) mLayout.findViewById(R.id.awesome_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
         if (Build.VERSION.SDK_INT >= 16)
             mTitle.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -787,8 +787,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
             mAddressBarBg.setPrivateMode(tab.isPrivate());
 
-            if (mAwesomeBarRightEdge != null)
-                mAwesomeBarRightEdge.setPrivateMode(tab.isPrivate());
+            if (mAwesomeBar instanceof GeckoButton)
+                ((GeckoButton) mAwesomeBar).setPrivateMode(tab.isPrivate());
+            else if (mAwesomeBar instanceof GeckoRelativeLayout)
+                ((GeckoRelativeLayout) mAwesomeBar).setPrivateMode(tab.isPrivate());
+
+            mTitle.setPrivateMode(tab.isPrivate());
         }
     }
 
