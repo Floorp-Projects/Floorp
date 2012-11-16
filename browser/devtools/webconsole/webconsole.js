@@ -2405,6 +2405,7 @@ WebConsoleFrame.prototype = {
 
     if (aSourceLine) {
       text += ":" + aSourceLine;
+      locationNode.sourceLine = aSourceLine;
     }
 
     locationNode.setAttribute("value", text);
