@@ -3,12 +3,15 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+
+const TAB_URL = EXAMPLE_URL + "browser_dbg_frame-parameters.html";
+
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;
 var gDebugger = null;
 
-const TAB_URL = EXAMPLE_URL + "browser_dbg_frame-parameters.html";
+requestLongerTimeout(2);
 
 function test() {
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
@@ -17,6 +20,8 @@ function test() {
     gPane = aPane;
     gDebugger = gPane.contentWindow;
 
+    gDebugger.DebuggerController.StackFrames.autoScopeExpand = true;
+    gDebugger.DebuggerView.Variables.nonEnumVisible = false;
     testFrameEval();
   });
 }
