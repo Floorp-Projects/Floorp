@@ -600,11 +600,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
-        move32(lhs, ScratchRegister);
+        load32(lhs, ScratchRegister);
         branch32(cond, ScratchRegister, rhs, label);
     }
     void branch32(Condition cond, const Address &lhs, Imm32 rhs, Label *label) {
-        move32(lhs, ScratchRegister);
+        load32(lhs, ScratchRegister);
         branch32(cond, ScratchRegister, rhs, label);
     }
     void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
@@ -912,11 +912,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void move32(const Imm32 &imm, const Register &dest);
 
-    void move32(const Address &src, const Register &dest);
     void movePtr(const Register &src, const Register &dest);
     void movePtr(const ImmWord &imm, const Register &dest);
     void movePtr(const ImmGCPtr &imm, const Register &dest);
-    void movePtr(const Address &src, const Register &dest);
 
     void load8SignExtend(const Address &address, const Register &dest);
     void load8SignExtend(const BaseIndex &src, const Register &dest);

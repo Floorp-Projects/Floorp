@@ -426,7 +426,7 @@ MacroAssembler::maybeRemoveOsrFrame(Register scratch)
     // indicative of working inside an existing bailout. In this case, remove
     // the OSR frame, so we don't explode the stack with repeated bailouts.
     Label osrRemoved;
-    movePtr(Address(StackPointer, IonCommonFrameLayout::offsetOfDescriptor()), scratch);
+    loadPtr(Address(StackPointer, IonCommonFrameLayout::offsetOfDescriptor()), scratch);
     and32(Imm32(FRAMETYPE_MASK), scratch);
     branch32(Assembler::NotEqual, scratch, Imm32(IonFrame_Osr), &osrRemoved);
     addPtr(Imm32(sizeof(IonOsrFrameLayout)), StackPointer);
