@@ -175,6 +175,7 @@ class IonFrameIterator
 
     // Computes the number of values on the baseline stack.
     size_t numBaselineStackValues() const;
+    Value baselineStackValue(size_t index) const;
 
     // Returns the OSI index associated with this JS frame. Incurs a lookup
     // overhead.
