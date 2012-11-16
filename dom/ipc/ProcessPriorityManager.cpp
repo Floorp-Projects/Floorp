@@ -194,7 +194,7 @@ ProcessPriorityManager::OnContentDocumentGlobalCreated(
     return;
   }
 
-  target->AddSystemEventListener(NS_LITERAL_STRING("mozvisibilitychange"),
+  target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                  this,
                                  /* useCapture = */ false,
                                  /* wantsUntrusted = */ false);

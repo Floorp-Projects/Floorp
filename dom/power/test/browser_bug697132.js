@@ -119,9 +119,9 @@ let gSteps = [
       is(gWin2.navigator.mozPower.getWakeLockState("test"), "locked-background",
          "wake lock is background");
       let doc2 = gWin2.document;
-      doc2.addEventListener("mozvisibilitychange", function onVisibilityChange(e) {
+      doc2.addEventListener("visibilitychange", function onVisibilityChange(e) {
         if (!doc2.mozHidden) {
-          doc2.removeEventListener("mozvisibilitychange", onVisibilityChange);
+          doc2.removeEventListener("visibilitychange", onVisibilityChange);
           executeSoon(runNextStep);
         }
       });

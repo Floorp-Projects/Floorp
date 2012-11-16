@@ -605,7 +605,7 @@ public:
     mDocument = do_GetWeakReference(aDocument);
 
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aDocument);
-    NS_NAMED_LITERAL_STRING(visibilitychange, "mozvisibilitychange");
+    NS_NAMED_LITERAL_STRING(visibilitychange, "visibilitychange");
     target->AddSystemEventListener(visibilitychange,
                                    this, /* listener */
                                    true, /* use capture */
@@ -664,7 +664,7 @@ VibrateWindowListener::RemoveListener()
   if (!target) {
     return;
   }
-  NS_NAMED_LITERAL_STRING(visibilitychange, "mozvisibilitychange");
+  NS_NAMED_LITERAL_STRING(visibilitychange, "visibilitychange");
   target->RemoveSystemEventListener(visibilitychange, this,
                                     true /* use capture */);
 }
