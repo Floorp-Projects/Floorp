@@ -2076,6 +2076,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
     case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
       aResult->height = GetSystemMetrics(SM_CYCAPTION);
       aResult->height += GetSystemMetrics(SM_CYFRAME);
+      aResult->height += GetSystemMetrics(SM_CXPADDEDBORDER);
       *aIsOverridable = false;
       return NS_OK;
 
@@ -2085,7 +2086,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
         QueryForButtonData(aFrame);
         aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cx;
         aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy
-                          - GetSystemMetrics(SM_CYFRAME);
+                          - GetSystemMetrics(SM_CYFRAME)
+                          - GetSystemMetrics(SM_CXPADDEDBORDER);
         if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED) {
           aResult->width += 1;
           aResult->height -= 2;
