@@ -15,9 +15,10 @@ import org.json.simple.JSONObject;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
+import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.Resource;
-import org.mozilla.gecko.sync.net.SyncResourceDelegate;
 import org.mozilla.gecko.sync.net.SyncResponse;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -29,7 +30,7 @@ import ch.boye.httpclientandroidlib.impl.cookie.DateUtils;
 /**
  * Converts HTTP resource callbacks into AnnouncementsFetchDelegate callbacks.
  */
-public class AnnouncementsFetchResourceDelegate extends SyncResourceDelegate {
+public class AnnouncementsFetchResourceDelegate extends BaseResourceDelegate {
   private static final String ACCEPT_HEADER = "application/json;charset=utf-8";
 
   private static final String LOG_TAG = "AnnounceFetchRD";
@@ -157,7 +158,7 @@ public class AnnouncementsFetchResourceDelegate extends SyncResourceDelegate {
    * We never want this to be an authenticated request.
    */
   @Override
-  public String getCredentials() {
+  public AuthHeaderProvider getAuthHeaderProvider() {
     return null;
   }
 }
