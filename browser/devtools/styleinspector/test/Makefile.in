@@ -36,6 +36,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_computedview_bug_703643_context_menu_copy.js \
   browser_ruleview_734259_style_editor_link.js \
   browser_computedview_734259_style_editor_link.js \
+  browser_bug722691_rule_view_increment.js \
   head.js \
   $(NULL)
 
