@@ -576,8 +576,13 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     }
 
     private Bitmap getBitmapFromDataURI(String dataURI) {
-        byte[] raw = Base64.decode(dataURI.substring(22), Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(raw, 0, raw.length);
+        try {
+            byte[] raw = Base64.decode(dataURI.substring(22), Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(raw, 0, raw.length);
+        } catch(Exception ex) {
+            Log.i(LOGTAG, "exception while decoding bitmap: " + dataURI, ex);
+        }
+        return null;
     }
 
     private void showSuggestionsOptIn() {
