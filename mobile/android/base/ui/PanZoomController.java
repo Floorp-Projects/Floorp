@@ -1061,4 +1061,8 @@ public class PanZoomController
     public int getOverScrollMode() {
         return mX.getOverScrollMode();
     }
+
+    public Axis.Overscroll getOverscrollY() {
+        return mY.getOverscroll();
+    }
 }
