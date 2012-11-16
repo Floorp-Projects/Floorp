@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[scriptable, uuid(f49b0fea-dc13-47bd-b43e-606044280741)]
+[scriptable, uuid(4319d74a-ef91-46e0-b6e1-b35036fc4024)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -43,7 +43,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short NETWORK_LOADING = 2;
   const unsigned short NETWORK_NO_SOURCE = 3;
   readonly attribute unsigned short networkState;
-           attribute DOMString preload;  
+           attribute DOMString preload;
   readonly attribute nsIDOMTimeRanges buffered;
   void load();
   DOMString canPlayType(in DOMString type);
@@ -110,4 +110,34 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   // the media element has a fragment URI for the currentSrc, otherwise
   // it is equal to the media duration.
   readonly attribute double mozFragmentEnd;
+
+   // Mozilla extension: an audio channel type for media elements.
+   // An exception is thrown if the app tries to change the audio channel type
+   // without the permission (manifest file for B2G apps).
+   // The supported values are:
+   // * normal (default value)
+   //   Automatically paused if "notification" or higher priority channel
+   //   is played
+   //   Use case: normal applications
+   // * content
+   //   Automatically paused if "notification" or higher priority channel
+   //   is played. Also paused if another app starts using "content"
+   //   channel. Using this channel never affects applications using
+   //   the "normal" channel.
+   //   Use case: video/audio players
+   // * notification
+   //   Automatically paused if "alarm" or higher priority channel is played.
+   //   Use case: New email, incoming SMS
+   // * alarm
+   //   Automatically paused if "telephony" or higher priority channel is
+   //   played.
+   //   User case: Alarm clock, calendar alarms
+   // * telephony
+   //   Automatically paused if "publicnotification" or higher priority
+   //   channel is played.
+   //   Use case: dialer, voip
+   // * publicnotification
+   //   Always plays in speaker, even when headphones are plugged in.
+
+   attribute DOMString mozAudioChannelType;
 };
