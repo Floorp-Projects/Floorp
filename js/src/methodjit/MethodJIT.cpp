@@ -1149,10 +1149,16 @@ JITChunk::callSites() const
     return (js::mjit::CallSite *)&inlineFrames()[nInlineFrames];
 }
 
+js::mjit::CompileTrigger *
+JITChunk::compileTriggers() const
+{
+    return (CompileTrigger *)&callSites()[nCallSites];
+}
+
 JSObject **
 JITChunk::rootedTemplates() const
 {
-    return (JSObject **)&callSites()[nCallSites];
+    return (JSObject **)&compileTriggers()[nCompileTriggers];
 }
 
 RegExpShared **
@@ -1491,6 +1497,7 @@ mjit::JITChunk::computedSizeOfIncludingThis()
            sizeof(NativeMapEntry) * nNmapPairs +
            sizeof(InlineFrame) * nInlineFrames +
            sizeof(CallSite) * nCallSites +
+           sizeof(CompileTrigger) * nCompileTriggers +
            sizeof(JSObject*) * nRootedTemplates +
            sizeof(RegExpShared*) * nRootedRegExps +
            sizeof(uint32_t) * nMonitoredBytecodes +
@@ -1531,13 +1538,47 @@ JSScript::ReleaseCode(FreeOp *fop, JITScriptHandle *jith)
     }
 }
 
-void
-mjit::ReleaseScriptCodeFromVM(JSContext *cx, JSScript *script)
+static void
+DisableScriptAtPC(JITScript *jit, jsbytecode *pc)
 {
-    if (script->hasMJITInfo()) {
-        ExpandInlineFrames(cx->compartment);
-        Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
-        ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
+    JS_ASSERT(jit->script->hasIonScript());
+
+    JITChunk *chunk = jit->chunk(pc);
+    if (!chunk)
+        return;
+
+    CompileTrigger *triggers = chunk->compileTriggers();
+    for (size_t i = 0; i < chunk->nCompileTriggers; i++) {
+        const CompileTrigger &trigger = triggers[i];
+        if (trigger.pcOffset != pc - jit->script->code)
+            continue;
+
+        // The inline jump in the trigger is 'script->useCount >= threshold',
+        // which should hold at the specified pc because the script has been
+        // compiled for Ion. Normally, if this jump passes it will then take
+        // a second jump to test for !script->ion. Patch the first jump to
+        // bypass the second jump and directly call TriggerIonCompile, which
+        // will recognize this case and destroy the chunk.
+        ic::Repatcher repatcher(chunk);
+        repatcher.relink(trigger.inlineJump, trigger.stubLabel);
+    }
+}
+
+void
+mjit::DisableScriptCodeForIon(JSScript *script, jsbytecode *osrPC)
+{
+    if (!script->hasMJITInfo())
+        return;
+
+    for (int constructing = 0; constructing <= 1; constructing++) {
+        for (int barriers = 0; barriers <= 1; barriers++) {
+            JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
+            if (jit) {
+                DisableScriptAtPC(jit, script->code);
+                if (osrPC)
+                    DisableScriptAtPC(jit, osrPC);
+            }
+        }
     }
 }
 
