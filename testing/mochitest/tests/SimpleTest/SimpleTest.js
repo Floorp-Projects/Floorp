@@ -694,6 +694,89 @@ SimpleTest.finish = function () {
 };
 
 /**
+ * Monitor console output from now until endMonitorConsole is called.
+ *
+ * Expect to receive as many console messages as there are elements of
+ * |msgs|, an array; each element is an object which may have any
+ * number of the following properties:
+ *   message, errorMessage, sourceName, sourceLine, category:
+ *     string or regexp
+ *   lineNumber, columnNumber: number
+ *   isScriptError, isWarning, isException, isStrict: boolean
+ * Strings, numbers, and booleans must compare equal to the named
+ * property of the Nth console message.  Regexps must match.  Any
+ * fields present in the message but not in the pattern object are ignored.
+ *
+ * After endMonitorConsole is called, |continuation| will be called
+ * asynchronously.  (Normally, you will want to pass |SimpleTest.finish| here.)
+ *
+ * It is incorrect to use this function in a test which has not called
+ * SimpleTest.waitForExplicitFinish.
+ */
+SimpleTest.monitorConsole = function (continuation, msgs) {
+  if (SimpleTest._stopOnLoad) {
+    ok(false, "Console monitoring requires use of waitForExplicitFinish.");
+  }
+
+  var counter = 0;
+  function listener(msg) {
+    if (msg.message === "SENTINEL" && !msg.isScriptError) {
+      is(counter, msgs.length, "monitorConsole | number of messages");
+      SimpleTest.executeSoon(continuation);
+    } else if (counter >= msgs.length) {
+      ok(false, "monitorConsole | extra message | " + JSON.stringify(msg));
+    } else {
+      var pat = msgs[counter];
+      for (k in pat) {
+        ok(k in msg, "monitorConsole | [" + counter + "]." + k + " present");
+        if (k in msg) {
+          if (pat[k] instanceof RegExp && typeof(msg[k]) === 'string') {
+            ok(pat[k].test(msg[k]),
+               "monitorConsole | [" + counter + "]." + k + " value - " +
+               msg[k].quote() + " contains /" + pat[k].source + "/");
+          } else {
+            ise(msg[k], pat[k],
+                "monitorConsole | [" + counter + "]." + k + " value");
+          }
+        }
+      }
+      counter++;
+    }
+  }
+  SpecialPowers.registerConsoleListener(listener);
+};
+
+/**
+ * Stop monitoring console output.
+ */
+SimpleTest.endMonitorConsole = function () {
+  SpecialPowers.postConsoleSentinel();
+};
+
+/**
+ * Run |testfn| synchronously, and monitor its console output.
+ *
+ * |msgs| is handled as described above for monitorConsole.
+ *
+ * After |testfn| returns, console monitoring will stop, and
+ * |continuation| will be called asynchronously.
+ */
+SimpleTest.expectConsoleMessages = function (testfn, msgs, continuation) {
+  SimpleTest.monitorConsole(continuation, msgs);
+  testfn();
+  SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
+};
+
+/**
+ * Wrapper around |expectConsoleMessages| for the case where the test has
+ * only one |testfn| to run.
+ */
+SimpleTest.runTestExpectingConsoleMessages = function(testfn, msgs) {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectConsoleMessages(testfn, msgs, SimpleTest.finish);
+};
+
+/**
  * Indicates to the test framework that the current test expects one or
  * more crashes (from plugins or IPC documents), and that the minidumps from
  * those crashes should be removed.
