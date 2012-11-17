@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string>
-#include <iostream>
 
 #include "vcm.h"
 #include "CSFLog.h"

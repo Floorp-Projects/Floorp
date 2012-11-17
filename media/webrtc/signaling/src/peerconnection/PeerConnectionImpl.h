@@ -6,7 +6,6 @@
 #define _PEER_CONNECTION_IMPL_H_
 
 #include <string>
-#include <iostream>
 #include <vector>
 #include <map>
 #include <cmath>

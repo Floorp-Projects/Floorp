@@ -32,11 +32,11 @@
       // Now load a new page
       doPageNavigation({
         uri: 'data:text/html,<title>new load</title>',
-        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        eventsToListenFor: [ "pageshow", "pagehide", "visibilitychange" ],
         expectedEvents: [ { type: "pagehide",
                             title: "initial load",
                             persisted: true },
-                          { type: "mozvisibilitychange",
+                          { type: "visibilitychange",
                             title: "initial load",
                             visibilityState: "hidden",
                             hidden: true },
@@ -52,15 +52,15 @@
       // Now go back
       doPageNavigation({
         back: true,
-        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        eventsToListenFor: [ "pageshow", "pagehide", "visibilitychange" ],
         expectedEvents: [ { type: "pagehide",
                             title: "new load",
                             persisted: true },
-                          { type: "mozvisibilitychange",
+                          { type: "visibilitychange",
                             title: "new load",
                             visibilityState: "hidden",
                             hidden: true },
-                          { type: "mozvisibilitychange",
+                          { type: "visibilitychange",
                             title: "initial load",
                             visibilityState: "visible",
                             hidden: false },
@@ -75,15 +75,15 @@
       // And forward
       doPageNavigation({
         forward: true,
-        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        eventsToListenFor: [ "pageshow", "pagehide", "visibilitychange" ],
         expectedEvents: [ { type: "pagehide",
                             title: "initial load",
                             persisted: true },
-                          { type: "mozvisibilitychange",
+                          { type: "visibilitychange",
                             title: "initial load",
                             visibilityState: "hidden",
                             hidden: true },
-                          { type: "mozvisibilitychange",
+                          { type: "visibilitychange",
                             title: "new load",
                             visibilityState: "visible",
                             hidden: false },
@@ -97,21 +97,21 @@
 
       function generateDetector(state, hidden, title, name) {
         var detector = function (event) {
-          is(event.target.mozHidden, hidden,
+          is(event.target.hidden, hidden,
              name + " hidden value does not match");
-          is(event.target.mozVisibilityState, state,
+          is(event.target.visibilityState, state,
              name + " state value does not match");
           is(event.target.title, title,
              name + " title value does not match");
           document.getElementById("content")
-                  .removeEventListener("mozvisibilitychange",
+                  .removeEventListener("visibilitychange",
                                        detector,
                                        true);
           nextTest();
         }
 
         document.getElementById("content")
-                .addEventListener("mozvisibilitychange", detector, true);
+                .addEventListener("visibilitychange", detector, true);
       }
       
       generateDetector("hidden", true, "new load", "Going hidden");
@@ -123,7 +123,7 @@
       // And navigate back; there should be no visibility state transitions
       doPageNavigation({
         back: true,
-        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        eventsToListenFor: [ "pageshow", "pagehide", "visibilitychange" ],
         expectedEvents: [ { type: "pagehide",
                             title: "new load",
                             persisted: true },
@@ -131,7 +131,7 @@
                             title: "initial load",
                             persisted: true },
                         ],
-        unexpectedEvents: [ "mozvisibilitychange" ],
+        unexpectedEvents: [ "visibilitychange" ],
         onNavComplete: nextTest
       });
       yield;
@@ -145,15 +145,15 @@
       // And forward
       doPageNavigation({
         forward: true,
-        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        eventsToListenFor: [ "pageshow", "pagehide", "visibilitychange" ],
         expectedEvents: [ { type: "pagehide",
                             title: "initial load",
                             persisted: true },
-                          { type: "mozvisibilitychange",
+                          { type: "visibilitychange",
                             title: "initial load",
                             visibilityState: "hidden",
                             hidden: true },
-                          { type: "mozvisibilitychange",
+                          { type: "visibilitychange",
                             title: "new load",
                             visibilityState: "visible",
                             hidden: false },

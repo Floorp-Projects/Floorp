@@ -8,10 +8,21 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["checkDeprecated", "checkRenamed"];
+this.EXPORTED_SYMBOLS = [
+  "checkDeprecated",
+  "checkRenamed",
+  "getRandomId",
+  "objectCopy"
+];
+
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Logger",
                                   "resource://gre/modules/identity/LogUtils.jsm");
 
@@ -43,4 +54,22 @@ this.checkRenamed = function checkRenamed(aOptions, aOldName, aNewName) {
     aOptions[aNewName] = aOptions[aOldName];
     delete(aOptions[aOldName]);
   }
+};
+
+this.getRandomId = function getRandomId() {
+  return uuidgen.generateUUID().toString();
+};
+
+/*
+ * copy source object into target, excluding private properties
+ * (those whose names begin with an underscore)
+ */
+this.objectCopy = function objectCopy(source, target){
+  let desc;
+  Object.getOwnPropertyNames(source).forEach(function(name) {
+    if (name[0] !== '_') {
+      desc = Object.getOwnPropertyDescriptor(source, name);
+      Object.defineProperty(target, name, desc);
+    }
+  });
 };
