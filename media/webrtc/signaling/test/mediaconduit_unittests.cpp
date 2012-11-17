@@ -749,12 +749,6 @@ TEST_F(TransportConduitTest, TestVideoConduitCodecAPI) {
 
 int main(int argc, char **argv)
 {
-#ifdef LINUX
-  // On Linux this needs to be conditional since the builders
-  // do not have audio capabilities
-  CHECK_ENVIRONMENT_FLAG("MOZ_WEBRTC_TESTS")
-#endif
-
   test_utils = new MtransportTestUtils();
   ::testing::InitGoogleTest(&argc, argv);
   int rv = RUN_ALL_TESTS();
