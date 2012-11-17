@@ -31,17 +31,17 @@ struct WalkState
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccTreeWalker::
-  nsAccTreeWalker(DocAccessible* aDoc, nsIContent* aContent,
-                  bool aWalkAnonContent, bool aWalkCache) :
-  mDoc(aDoc), mWalkCache(aWalkCache), mState(nullptr)
+  nsAccTreeWalker(DocAccessible* aDoc, Accessible* aContext,
+                  nsIContent* aContent, bool aWalkCache) :
+  mDoc(aDoc), mContext(aContext), mWalkCache(aWalkCache), mState(nullptr)
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
 
   if (aContent)
     mState = new WalkState(aContent);
 
-  mChildFilter = aWalkAnonContent ? nsIContent::eAllChildren :
-                                  nsIContent::eAllButXBL;
+  mChildFilter = mContext->CanHaveAnonChildren() ?
+    nsIContent::eAllChildren : nsIContent::eAllButXBL;
 
   mChildFilter |= nsIContent::eSkipPlaceholderContent;
 
