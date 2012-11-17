@@ -7,6 +7,8 @@
 
 function run_test()
 {
+  Cu.import("resource://gre/modules/jsdebugger.jsm");
+  addDebuggerToGlobal(this);
   let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Components.interfaces.mozIJSSubScriptLoader);
   loader.loadSubScript("chrome://global/content/devtools/dbg-script-actors.js");

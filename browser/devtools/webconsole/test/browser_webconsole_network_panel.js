@@ -9,6 +9,16 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test/test-image.png";
 const TEST_ENCODING_ISO_8859_1 = "http://example.com/browser/browser/devtools/webconsole/test/test-encoding-ISO-8859-1.html";
 
+const TEST_IMG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAVRJREFU" +
+  "OI2lk7FLw0AUxr+YpC1CBqcMWfsvCCLdXFzqEJCgDl1EQRGxg9AhSBEJONhFhG52UCuFDjq5dxD8" +
+  "FwoO0qGDOBQkl7vLOeWa2EQDffDBvTu+373Hu1OEEJgntGgxGD6J+7fLXKbt5VNUyhsKAChRBQcP" +
+  "FVFeWskFGH694mZroCQqCLlAwPxcgJBP254CmAD5B7C7dgHLMLF3uzoL4DQEod+Z5sP1FizDxGgy" +
+  "BqfhLID9AahX29J89bwPFgMsSEAQglAf9WobhPpScbPXr4FQHyzIADTsDizDRMPuIOC+zEeTMZo9" +
+  "BwH3EfAMACccbtfGaDKGZZg423yUZrdrg3EqxQlPr0BTdTR7joREN2uqnlBmCwW1hIJagtev4f3z" +
+  "A16/JvfiigMSYyzqJXlw/XKUyOORMUaBor6YavgdjKa8xGOnidadmwtwsnMu18q83/kHSou+bFND" +
+  "Dr4AAAAASUVORK5CYII=";
+
 let testDriver;
 
 function test() {
@@ -80,6 +90,7 @@ function testGen() {
     response: {
       headers: [],
       content: {},
+      cookies: [],
     },
     timings: {},
   };
@@ -223,6 +234,7 @@ function testGen() {
     requestFormData: false,
     requestCookie: true,
     responseContainer: true,
+    responseCookie: false,
     responseBody: true,
     responseNoBody: false,
     responseImage: false,
@@ -236,10 +248,49 @@ function testGen() {
 
   networkPanel.panel.hidePopup();
 
+  // Third run: Test for response cookies.
+  info("test 6b: response cookies");
+  httpActivity.response.cookies.push(
+    { name: "foobar", value: "boom" },
+    { name: "foobaz", value: "omg" }
+  );
+
+  networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
+  is(filterBox._netPanel, networkPanel,
+     "Network panel stored on httpActivity object");
+
+  networkPanel._onUpdate = function() {
+    networkPanel._onUpdate = null;
+    executeSoon(function() {
+      testDriver.next();
+    });
+  };
+
+  yield;
+
+  checkIsVisible(networkPanel, {
+    requestBody: true,
+    requestFormData: false,
+    requestCookie: true,
+    responseContainer: true,
+    responseCookie: true,
+    responseBody: true,
+    responseNoBody: false,
+    responseImage: false,
+    responseImageCached: false,
+    responseBodyFetchLink: false,
+  });
+
+  checkNodeKeyValue(networkPanel, "responseCookieContent", "foobar", "boom");
+  checkNodeKeyValue(networkPanel, "responseCookieContent", "foobaz", "omg");
+
+  networkPanel.panel.hidePopup();
+
   // Check image request.
   info("test 7: image request");
   httpActivity.response.headers[1].value = "image/png";
   httpActivity.response.content.mimeType = "image/png";
+  httpActivity.response.content.text = TEST_IMG_BASE64;
   httpActivity.request.url = TEST_IMG;
 
   networkPanel = hud.ui.openNetworkPanel(filterBox, httpActivity);
@@ -260,11 +311,13 @@ function testGen() {
     responseBody: false,
     responseNoBody: false,
     responseImage: true,
-    responseImageCached: false
+    responseImageCached: false,
+    responseBodyFetchLink: false,
   });
 
   let imgNode = networkPanel.document.getElementById("responseImageNode");
-  is(imgNode.getAttribute("src"), TEST_IMG, "Displayed image is correct");
+  is(imgNode.getAttribute("src"), "data:image/png;base64," + TEST_IMG_BASE64,
+      "Displayed image is correct");
 
   function checkImageResponseInfo() {
     checkNodeContent(networkPanel, "responseImageInfo", "2ms");
@@ -272,20 +325,13 @@ function testGen() {
   }
 
   // Check if the image is loaded already.
-  if (imgNode.width == 0) {
-    imgNode.addEventListener("load", function onLoad() {
-      imgNode.removeEventListener("load", onLoad, false);
-      checkImageResponseInfo();
-      networkPanel.panel.hidePopup();
-      testDriver.next();
-    }, false);
-    // Wait until the image is loaded.
-    yield;
-  }
-  else {
+  imgNode.addEventListener("load", function onLoad() {
+    imgNode.removeEventListener("load", onLoad, false);
     checkImageResponseInfo();
     networkPanel.panel.hidePopup();
-  }
+    testDriver.next();
+  }, false);
+  yield;
 
   // Check cached image request.
   info("test 8: cached image request");
@@ -315,7 +361,8 @@ function testGen() {
   });
 
   let imgNode = networkPanel.document.getElementById("responseImageCachedNode");
-  is(imgNode.getAttribute("src"), TEST_IMG, "Displayed image is correct");
+  is(imgNode.getAttribute("src"), "data:image/png;base64," + TEST_IMG_BASE64,
+     "Displayed image is correct");
 
   networkPanel.panel.hidePopup();
 

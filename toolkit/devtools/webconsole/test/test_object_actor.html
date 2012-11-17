@@ -28,7 +28,10 @@ function onAttach(aState, aResponse)
   onConsoleCall = onConsoleCall.bind(null, aState);
   aState.dbgClient.addListener("consoleAPICall", onConsoleCall);
 
+  let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
+
   window.foobarObject = Object.create(null);
+  foobarObject.tamarbuta = longString;
   foobarObject.foo = 1;
   foobarObject.foobar = "hello";
   foobarObject.foobaz = document;
@@ -45,6 +48,12 @@ function onAttach(aState, aResponse)
     get: function fooGet() { return "foo"; },
     set: function fooSet() { 1+2 },
   });
+
+  foobarObject.longStringObj = {
+    toSource: function() longString,
+    toString: function() longString,
+    boom: "explode",
+  };
 
   console.log("hello", foobarObject);
 
@@ -97,6 +106,21 @@ function onAttach(aState, aResponse)
       },
     },
     {
+      name: "longStringObj",
+      value: {
+        type: "object",
+        className: "Object",
+        actor: /[a-z]/,
+        inspectable: true,
+        displayString: {
+          type: "longString",
+          initial: longString.substring(0,
+            DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+          length: longString.length,
+        },
+      },
+    },
+    {
       name: "notInspectable",
       value: {
         type: "object",
@@ -117,6 +141,15 @@ function onAttach(aState, aResponse)
         displayString: /function _omgfn/,
         actor: /[a-z]/,
         inspectable: false,
+      },
+    },
+    {
+      name: "tamarbuta",
+      value: {
+        type: "longString",
+        initial: longString.substring(0,
+          DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+        length: longString.length,
       },
     },
     {
