@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <title>Browser Debugger Conditional Breakpoints Test</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script type="text/javascript">
+      function ermahgerd() {
+        var a = {};
+        debugger;
+        console.log("undefined");
+        console.log("null");
+        console.log("42");
+        console.log("true");
+        console.log("'nasu'");
+        console.log("/regexp/");
+        console.log("{}");
+        console.log("function() {}");
+        console.log("(function { return false; })()");
+        console.log("a");
+        console.log("a !== undefined");
+        console.log("a !== null");
+        console.log("b");
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

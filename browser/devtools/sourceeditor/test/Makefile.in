@@ -31,6 +31,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_bug731721_debugger_stepping.js \
 		browser_bug729960_block_bracket_jump.js \
 		browser_bug744021_next_prev_bracket_jump.js \
+		browser_bug725392_mouse_coords_char_offset.js \
 		head.js \
 
 include $(topsrcdir)/config/rules.mk

@@ -50,12 +50,9 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
    *        Details to be displayed in the list.
    * @param number aDepth
    *        The frame depth specified by the debugger.
-   * @param object aOptions [optional]
-   *        Additional options or flags supported by this operation:
-   *          - attachment: any kind of primitive/object to attach
    */
   addFrame:
-  function DVSF_addFrame(aFrameName, aFrameDetails, aDepth, aOptions = {}) {
+  function DVSF_addFrame(aFrameName, aFrameDetails, aDepth) {
     // Stackframes are UI elements which benefit from visible panes.
     DebuggerView.showPanesSoon();
 
@@ -64,7 +61,9 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
       forced: true,
       unsorted: true,
       relaxed: true,
-      attachment: aOptions.attachment
+      attachment: {
+        depth: aDepth
+      }
     });
 
     // Check if stackframe was already appended.
@@ -154,8 +153,16 @@ function BreakpointsView() {
   MenuContainer.call(this);
   this._createItemView = this._createItemView.bind(this);
   this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
-  this._onClick = this._onClick.bind(this);
+  this._onEditorLoad = this._onEditorLoad.bind(this);
+  this._onEditorUnload = this._onEditorUnload.bind(this);
+  this._onEditorSelection = this._onEditorSelection.bind(this);
+  this._onEditorContextMenu = this._onEditorContextMenu.bind(this);
+  this._onBreakpointClick = this._onBreakpointClick.bind(this);
   this._onCheckboxClick = this._onCheckboxClick.bind(this);
+  this._onConditionalPopupShowing = this._onConditionalPopupShowing.bind(this);
+  this._onConditionalPopupShown = this._onConditionalPopupShown.bind(this);
+  this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
+  this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
 }
 
 create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
@@ -165,12 +172,22 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
   initialize: function DVB_initialize() {
     dumpn("Initializing the BreakpointsView");
     this._container = new StackList(document.getElementById("breakpoints"));
+    this._commandset = document.getElementById("debuggerCommands");
     this._popupset = document.getElementById("debuggerPopupset");
+    this._cbPanel = document.getElementById("conditional-breakpoint-panel");
+    this._cbTextbox = document.getElementById("conditional-breakpoint-textbox");
 
     this._container.emptyText = L10N.getStr("emptyBreakpointsText");
     this._container.itemFactory = this._createItemView;
     this._container.uniquenessQualifier = 2;
-    this._container.addEventListener("click", this._onClick, false);
+
+    window.addEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
+    window.addEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
+    this._container.addEventListener("click", this._onBreakpointClick, false);
+    this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false)
+    this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false)
+    this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false)
+    this._cbTextbox.addEventListener("keypress", this._onConditionalTextboxKeyPress, false);
 
     this._cache = new Map();
   },
@@ -180,43 +197,55 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
    */
   destroy: function DVB_destroy() {
     dumpn("Destroying the BreakpointsView");
-    this._container.removeEventListener("click", this._onClick, false);
+    window.removeEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
+    window.removeEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
+    this._container.removeEventListener("click", this._onBreakpointClick, false);
+    this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
+    this._cbPanel.removeEventListener("popupshown", this._onConditionalPopupShown, false);
+    this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false)
+    this._cbTextbox.removeEventListener("keypress", this._onConditionalTextboxKeyPress, false);
   },
 
   /**
    * Adds a breakpoint in this breakpoints container.
    *
-   * @param string aLineInfo
-   *        Line information (parent source etc.) to be displayed in the list.
-   * @param string aLineText
-   *        Line text to be displayed in the list.
    * @param string aSourceLocation
    *        The breakpoint source location specified by the debugger controller.
    * @param number aLineNumber
    *        The breakpoint line number specified by the debugger controller.
-   * @parm string aId
-   *       A breakpoint identifier specified by the debugger controller.
+   * @param string aActor
+   *        A breakpoint identifier specified by the debugger controller.
+   * @param string aLineInfo
+   *        Line information (parent source etc.) to be displayed in the list.
+   * @param string aLineText
+   *        Line text to be displayed in the list.
+   * @param boolean aConditionalFlag [optional]
+   *        A flag specifying if this is a conditional breakpoint.
+   * @param boolean aOpenPopupFlag [optional]
+   *        A flag specifying if the expression popup should be shown.
    */
-  addBreakpoint:
-  function DVB_addBreakpoint(aLineInfo, aLineText, aSourceLocation, aLineNumber, aId) {
+  addBreakpoint: function DVB_addBreakpoint(aSourceLocation, aLineNumber,
+                                            aActor, aLineInfo, aLineText,
+                                            aConditionalFlag, aOpenPopupFlag) {
     // Append a breakpoint item to this container.
     let breakpointItem = this.push(aLineInfo.trim(), aLineText.trim(), {
       forced: true,
       attachment: {
         enabled: true,
         sourceLocation: aSourceLocation,
-        lineNumber: aLineNumber
+        lineNumber: aLineNumber,
+        isConditional: aConditionalFlag
       }
     });
 
     // Check if breakpoint was already appended.
     if (!breakpointItem) {
-      this.enableBreakpoint(aSourceLocation, aLineNumber, { id: aId });
+      this.enableBreakpoint(aSourceLocation, aLineNumber, { id: aActor });
       return;
     }
 
     let element = breakpointItem.target;
-    element.id = "breakpoint-" + aId;
+    element.id = "breakpoint-" + aActor;
     element.className = "dbg-breakpoint list-item";
     element.infoNode.className = "dbg-breakpoint-info plain";
     element.textNode.className = "dbg-breakpoint-text plain";
@@ -224,6 +253,12 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
 
     breakpointItem.finalize = this._onBreakpointRemoved;
     this._cache.set(this._key(aSourceLocation, aLineNumber), breakpointItem);
+
+    // If this is a conditional breakpoint, display the panes and a panel
+    // to input the corresponding conditional expression.
+    if (aConditionalFlag && aOpenPopupFlag) {
+      this.highlightBreakpoint(aSourceLocation, aLineNumber, { openPopup: true });
+    }
   },
 
   /**
@@ -267,6 +302,7 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
       if (aOptions.id) {
         breakpointItem.target.id = "breakpoint-" + aOptions.id;
       }
+
       // Update the checkbox state if necessary.
       if (!aOptions.silent) {
         breakpointItem.target.checkbox.setAttribute("checked", "true");
@@ -330,13 +366,47 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
    *        The breakpoint source location.
    * @param number aLineNumber
    *        The breakpoint line number.
+   * @param object aFlags [optional]
+   *        An object containing some of the following boolean properties:
+   *          - updateEditor: true if editor updates should be allowed
+   *          - openPopup: true if the expression popup should be shown
    */
-  highlightBreakpoint: function DVB_highlightBreakpoint(aSourceLocation, aLineNumber) {
+  highlightBreakpoint:
+  function DVB_highlightBreakpoint(aSourceLocation, aLineNumber, aFlags = {}) {
     let breakpointItem = this.getBreakpoint(aSourceLocation, aLineNumber);
     if (breakpointItem) {
+      // Update the editor source location and line number if necessary.
+      if (aFlags.updateEditor) {
+        DebuggerView.updateEditor(aSourceLocation, aLineNumber, { noDebug: true });
+      }
+
+      // If the breakpoint requires a new conditional expression, display
+      // the panes and the panel to input the corresponding expression.
+      if (aFlags.openPopup && breakpointItem.attachment.isConditional) {
+        let { sourceLocation: url, lineNumber: line } = breakpointItem.attachment;
+        let breakpointClient = DebuggerController.Breakpoints.getBreakpoint(url, line);
+
+        // The conditional expression popup can only be shown with visible panes.
+        DebuggerView.showPanesSoon(function() {
+          // Verify if the breakpoint wasn't removed before the panes were shown.
+          if (this.getBreakpoint(aSourceLocation, aLineNumber)) {
+            this._cbTextbox.value = breakpointClient.conditionalExpression || "";
+            this._cbPanel.openPopup(breakpointItem.target,
+              BREAKPOINT_CONDITIONAL_POPUP_POSITION,
+              BREAKPOINT_CONDITIONAL_POPUP_OFFSET);
+          }
+        }.bind(this));
+      } else {
+        this._cbPanel.hidePopup();
+      }
+
+      // Breakpoint is now highlighted.
       this._container.selectedItem = breakpointItem.target;
-    } else {
+    }
+    // Can't find a breakpoint at the requested source location and line number.
+    else {
       this._container.selectedIndex = -1;
+      this._cbPanel.hidePopup();
     }
   },
 
@@ -361,6 +431,19 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
    */
   getBreakpoint: function DVB_getBreakpoint(aSourceLocation, aLineNumber) {
     return this._cache.get(this._key(aSourceLocation, aLineNumber));
+  },
+
+  /**
+   * Gets the currently selected breakpoint client.
+   * @return object
+   */
+  get selectedClient() {
+    let selectedItem = this.selectedItem;
+    if (selectedItem) {
+      let { sourceLocation: url, lineNumber: line } = selectedItem.attachment;
+      return DebuggerController.Breakpoints.getBreakpoint(url, line);
+    }
+    return null;
   },
 
   /**
@@ -392,6 +475,7 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
 
     let state = document.createElement("vbox");
     state.className = "state";
+    state.setAttribute("pack", "center");
     state.appendChild(checkbox);
 
     let content = document.createElement("vbox");
@@ -435,12 +519,14 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
     createMenuItem.call(this, "disableOthers");
     createMenuItem.call(this, "deleteOthers");
     createMenuSeparator();
+    createMenuItem.call(this, "setConditional");
+    createMenuSeparator();
     createMenuItem.call(this, "enableSelf", true);
     createMenuItem.call(this, "disableSelf");
     createMenuItem.call(this, "deleteSelf");
 
     this._popupset.appendChild(menupopup);
-    document.documentElement.appendChild(commandset);
+    this._commandset.appendChild(commandset);
 
     aElementNode.commandset = commandset;
     aElementNode.menupopup = menupopup;
@@ -511,18 +597,150 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * The load listener for the source editor.
+   */
+  _onEditorLoad: function DVB__onEditorLoad({ detail: editor }) {
+    editor.addEventListener("Selection", this._onEditorSelection, false);
+    editor.addEventListener("ContextMenu", this._onEditorContextMenu, false);
+  },
+
+  /**
+   * The unload listener for the source editor.
+   */
+  _onEditorUnload: function DVB__onEditorUnload({ detail: editor }) {
+    editor.removeEventListener("Selection", this._onEditorSelection, false);
+    editor.removeEventListener("ContextMenu", this._onEditorContextMenu, false);
+  },
+
+  /**
+   * The selection listener for the source editor.
+   */
+  _onEditorSelection: function DVB__onEditorSelection(e) {
+    let { start, end } = e.newValue;
+
+    let sourceLocation = DebuggerView.Sources.selectedValue;
+    let lineStart = DebuggerView.editor.getLineAtOffset(start) + 1;
+    let lineEnd = DebuggerView.editor.getLineAtOffset(end) + 1;
+
+    if (this.getBreakpoint(sourceLocation, lineStart) && lineStart == lineEnd) {
+      this.highlightBreakpoint(sourceLocation, lineStart);
+    } else {
+      this.unhighlightBreakpoint();
+    }
+  },
+
+  /**
+   * The context menu listener for the source editor.
+   */
+  _onEditorContextMenu: function DVB__onEditorContextMenu({ x, y }) {
+    let offset = DebuggerView.editor.getOffsetAtLocation(x, y);
+    let line = DebuggerView.editor.getLineAtOffset(offset);
+    this._editorContextMenuLineNumber = line;
+  },
+
+  /**
+   * Called when the add breakpoint key sequence was pressed.
+   */
+  _onCmdAddBreakpoint: function BP__onCmdAddBreakpoint() {
+    // If this command was executed via the context menu, add the breakpoint
+    // on the currently hovered line in the source editor.
+    if (this._editorContextMenuLineNumber >= 0) {
+      DebuggerView.editor.setCaretPosition(this._editorContextMenuLineNumber);
+    }
+    // Avoid placing breakpoints incorrectly when using key shortcuts.
+    this._editorContextMenuLineNumber = -1;
+
+    let url = DebuggerView.Sources.selectedValue;
+    let line = DebuggerView.editor.getCaretPosition().line + 1;
+    let breakpointItem = this.getBreakpoint(url, line);
+
+    // If a breakpoint already existed, remove it now.
+    if (breakpointItem) {
+      let breakpointClient = DebuggerController.Breakpoints.getBreakpoint(url, line)
+      DebuggerController.Breakpoints.removeBreakpoint(breakpointClient);
+      DebuggerView.Breakpoints.unhighlightBreakpoint();
+    }
+    // No breakpoint existed at the required location, add one now.
+    else {
+      let breakpointLocation = { url: url, line: line };
+      DebuggerController.Breakpoints.addBreakpoint(breakpointLocation);
+    }
+  },
+
+  /**
+   * Called when the add conditional breakpoint key sequence was pressed.
+   */
+  _onCmdAddConditionalBreakpoint: function BP__onCmdAddConditionalBreakpoint() {
+    // If this command was executed via the context menu, add the breakpoint
+    // on the currently hovered line in the source editor.
+    if (this._editorContextMenuLineNumber >= 0) {
+      DebuggerView.editor.setCaretPosition(this._editorContextMenuLineNumber);
+    }
+    // Avoid placing breakpoints incorrectly when using key shortcuts.
+    this._editorContextMenuLineNumber = -1;
+
+    let url =  DebuggerView.Sources.selectedValue;
+    let line = DebuggerView.editor.getCaretPosition().line + 1;
+    let breakpointItem = this.getBreakpoint(url, line);
+
+    // If a breakpoint already existed or wasn't a conditional, morph it now.
+    if (breakpointItem) {
+      breakpointItem.attachment.isConditional = true;
+      this.selectedClient.conditionalExpression = "";
+      this.highlightBreakpoint(url, line, { openPopup: true });
+    }
+    // No breakpoint existed at the required location, add one now.
+    else {
+      DebuggerController.Breakpoints.addBreakpoint({ url: url, line: line }, null, {
+        conditionalExpression: "",
+        openPopup: true
+      });
+    }
+  },
+
+  /**
+   * The popup showing listener for the breakpoints conditional expression panel.
+   */
+  _onConditionalPopupShowing: function DVB__onConditionalPopupShowing() {
+    this._popupShown = true;
+  },
+
+  /**
+   * The popup shown listener for the breakpoints conditional expression panel.
+   */
+  _onConditionalPopupShown: function DVB__onConditionalPopupShown() {
+    this._cbTextbox.focus();
+    this._cbTextbox.select();
+  },
+
+  /**
+   * The popup hiding listener for the breakpoints conditional expression panel.
+   */
+  _onConditionalPopupHiding: function DVB__onConditionalPopupHiding() {
+    this._popupShown = false;
+    this.selectedClient.conditionalExpression = this._cbTextbox.value;
+  },
+
+  /**
+   * The keypress listener for the breakpoints conditional expression textbox.
+   */
+  _onConditionalTextboxKeyPress: function DVB__onConditionalTextboxKeyPress(e) {
+    if (e.keyCode == e.DOM_VK_RETURN || e.keyCode == e.DOM_VK_ENTER) {
+      this._cbPanel.hidePopup();
+    }
+  },
+
+  /**
    * The click listener for the breakpoints container.
    */
-  _onClick: function DVB__onClick(e) {
+  _onBreakpointClick: function DVB__onBreakpointClick(e) {
     let breakpointItem = this.getItemForElement(e.target);
     if (!breakpointItem) {
       // The container is empty or we didn't click on an actual item.
       return;
     }
     let { sourceLocation: url, lineNumber: line } = breakpointItem.attachment;
-
-    DebuggerView.updateEditor(url, line, { noDebug: true });
-    this.highlightBreakpoint(url, line);
+    this.highlightBreakpoint(url, line, { updateEditor: true, openPopup: e.button == 0 });
   },
 
   /**
@@ -535,14 +753,28 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
       return;
     }
     let { sourceLocation: url, lineNumber: line, enabled } = breakpointItem.attachment;
+    this[enabled ? "disableBreakpoint" : "enableBreakpoint"](url, line, { silent: true });
 
     // Don't update the editor location.
     e.preventDefault();
     e.stopPropagation();
+  },
 
-    this[enabled
-      ? "disableBreakpoint"
-      : "enableBreakpoint"](url, line, { silent: true });
+  /**
+   * Listener handling the "setConditional" menuitem command.
+   *
+   * @param object aTarget
+   *        The corresponding breakpoint element node.
+   */
+  _onSetConditional: function DVB__onSetConditional(aTarget) {
+    if (!aTarget) {
+      return;
+    }
+    let breakpointItem = this.getItemForElement(aTarget);
+    let { sourceLocation: url, lineNumber: line } = breakpointItem.attachment;
+
+    breakpointItem.attachment.isConditional = true;
+    this.highlightBreakpoint(url, line, { openPopup: true });
   },
 
   /**
@@ -684,7 +916,12 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
   },
 
   _popupset: null,
-  _cache: null
+  _commandset: null,
+  _cbPanel: null,
+  _cbTextbox: null,
+  _popupShown: false,
+  _cache: null,
+  _editorContextMenuLineNumber: -1
 });
 
 /**
@@ -1044,7 +1281,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
     let sourceResultsItem = SourceResults.getItemForElement(target);
     let lineResultsItem = LineResults.getItemForElement(target);
 
-    sourceResultsItem.instance.expand(true);
+    sourceResultsItem.instance.expand();
     this._currentlyFocusedMatch = LineResults.indexOfElement(target);
     this._scrollMatchIntoViewIfNeeded(target);
     this._bounceMatch(target);
@@ -1084,7 +1321,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
     let { clientHeight } = this._container._parent;
 
     if (top - height <= clientHeight || this._forceExpandResults) {
-      sourceResultsItem.instance.expand(true);
+      sourceResultsItem.instance.expand();
     }
   },
 
@@ -1303,7 +1540,7 @@ SourceResults.prototype = {
     aElementNode.resultsContainer = resultsContainer;
 
     if (aExpandFlag && aMatchCount < GLOBAL_SEARCH_EXPAND_MAX_RESULTS) {
-      this.expand(true);
+      this.expand();
     }
 
     let resultsBox = document.createElement("vbox");
@@ -1528,7 +1765,7 @@ LineResults.indexOfElement = function DVGS_indexOFElement(aElement) {
 SourceResults.size =
 LineResults.size = function DVGS_size() {
   let count = 0;
-  for (let [_, item] of this._itemsByElement) {
+  for (let [, item] of this._itemsByElement) {
     if (!item.nonenumerable) {
       count++;
     }

@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf8">
-  <title>Test for the network actor (POST request)</title>
+  <title>Test that the network actor uses the LongStringActor</title>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript;version=1.8" src="common.js"></script>
   <!-- Any copyright is dedicated to the Public Domain.
      - http://creativecommons.org/publicdomain/zero/1.0/ -->
 </head>
 <body>
-<p>Test for the network actor (POST request)</p>
+<p>Test that the network actor uses the LongStringActor</p>
 
 <iframe src="http://example.com/chrome/toolkit/devtools/webconsole/test/network_requests_iframe.html"></iframe>
 
@@ -26,6 +26,13 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   info("enable network request and response body logging");
+
+  window.ORIGINAL_LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_LENGTH;
+  window.ORIGINAL_LONG_STRING_INITIAL_LENGTH =
+    DebuggerServer.LONG_STRING_INITIAL_LENGTH;
+
+  DebuggerServer.LONG_STRING_LENGTH = 400;
+  DebuggerServer.LONG_STRING_INITIAL_LENGTH = 400;
 
   onSetPreferences = onSetPreferences.bind(null, aState);
   aState.client.setPreferences({
@@ -185,12 +192,18 @@ function onRequestPostData(aState, aResponse)
 
   checkObject(aResponse, {
     postData: {
-      text: /^Hello world! foobaz barr.+foobaz barr$/,
+      text: {
+        type: "longString",
+        initial: /^Hello world! foobaz barr.+foobaz barrfo$/,
+        length: 552,
+        actor: /[a-z]/,
+      },
     },
     postDataDiscarded: false,
   });
 
-  is(aResponse.postData.text.length, 552, "postData text length");
+  is(aResponse.postData.text.initial.length,
+     DebuggerServer.LONG_STRING_INITIAL_LENGTH, "postData text initial length");
 
   onResponseHeaders = onResponseHeaders.bind(null, aState);
   aState.client.getResponseHeaders(aState.netActor,
@@ -207,6 +220,13 @@ function onResponseHeaders(aState, aResponse)
   checkHeadersOrCookies(aResponse.headers, {
     "Content-Type": /^application\/(json|octet-stream)$/,
     "Content-Length": /^\d+$/,
+    "x-very-short": "hello world",
+    "x-very-long": {
+      "type": "longString",
+      "length": 521,
+      "initial": /^Lorem ipsum.+\. Donec vitae d$/,
+      "actor": /[a-z]/,
+    },
   });
 
   onResponseCookies = onResponseCookies.bind(null, aState);
@@ -231,10 +251,18 @@ function onResponseContent(aState, aResponse)
 
   checkObject(aResponse, {
     content: {
-      text: /"test JSON data"/,
+      text: {
+        type: "longString",
+        initial: /^\{ id: "test JSON data"(.|\r|\n)+ barfoo ba$/g,
+        length: 1070,
+        actor: /[a-z]/,
+      },
     },
     contentDiscarded: false,
   });
+
+  is(aResponse.content.text.initial.length,
+     DebuggerServer.LONG_STRING_INITIAL_LENGTH, "content initial length");
 
   onEventTimings = onEventTimings.bind(null, aState);
   aState.client.getEventTimings(aState.netActor,
@@ -258,6 +286,9 @@ function onEventTimings(aState, aResponse)
   });
 
   closeDebugger(aState, function() {
+    DebuggerServer.LONG_STRING_LENGTH = ORIGINAL_LONG_STRING_LENGTH;
+    DebuggerServer.LONG_STRING_INITIAL_LENGTH = ORIGINAL_LONG_STRING_INITIAL_LENGTH;
+
     SimpleTest.finish();
   });
 }
