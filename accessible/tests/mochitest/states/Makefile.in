@@ -19,6 +19,7 @@ MOCHITEST_A11Y_FILES =\
 		test_controls.html \
 		test_controls.xul \
 		test_doc.html \
+		test_doc_busy.html \
 		test_docarticle.html \
 		test_editablebody.html \
 		test_expandable.xul \
