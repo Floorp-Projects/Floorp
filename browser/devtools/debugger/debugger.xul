@@ -245,7 +245,11 @@
         <splitter class="devtools-side-splitter"/>
         <vbox id="editor" flex="1"/>
         <splitter class="devtools-side-splitter"/>
-        <vbox id="variables"/>
+        <vbox id="variables+expressions">
+          <vbox id="expressions"/>
+          <splitter class="devtools-horizontal-splitter"/>
+          <vbox id="variables" flex="1"/>
+        </vbox>
       </hbox>
     </vbox>
 
