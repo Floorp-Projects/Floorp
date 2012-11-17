@@ -9527,6 +9527,7 @@ nsDocument::PostVisibilityUpdateEvent()
 NS_IMETHODIMP
 nsDocument::GetMozHidden(bool* aHidden)
 {
+  WarnOnceAbout(ePrefixedVisibilityAPI);
   return GetHidden(aHidden);
 }
 
@@ -9540,6 +9541,7 @@ nsDocument::GetHidden(bool* aHidden)
 NS_IMETHODIMP
 nsDocument::GetMozVisibilityState(nsAString& aState)
 {
+  WarnOnceAbout(ePrefixedVisibilityAPI);
   return GetVisibilityState(aState);
 }
 
