@@ -1411,7 +1411,7 @@ static IonExecStatus
 EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 {
     AssertCanGC();
-    JS_CHECK_RECURSION(cx, return IonExec_Error);
+    JS_CHECK_RECURSION(cx, return IonExec_Aborted);
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
     JS_ASSERT(!fp->script()->ion->bailoutExpected());
