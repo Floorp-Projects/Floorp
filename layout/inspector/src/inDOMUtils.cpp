@@ -63,14 +63,6 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
 
   // Okay.  We have only white space.  Let's check the white-space
   // property now and make sure that this isn't preformatted text...
-
-  nsCOMPtr<nsIDOMWindow> win = inLayoutUtils::GetWindowFor(aDataNode);
-  if (!win) {
-    // Hmm.  Things are screwy if we have no window...
-    NS_ERROR("No window!");
-    return NS_OK;
-  }
-
   nsIFrame* frame = content->GetPrimaryFrame();
   if (frame) {
     const nsStyleText* text = frame->GetStyleText();
