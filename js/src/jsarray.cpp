@@ -206,6 +206,19 @@ StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
     return false;
 }
 
+Shape *
+GetDenseArrayShape(JSContext *cx, HandleObject globalObj)
+{
+    JS_ASSERT(globalObj);
+
+    JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
+    if (!proto)
+        return NULL;
+
+    return EmptyShape::getInitialShape(cx, &ArrayClass, proto, proto->getParent(),
+                                       gc::FINALIZE_OBJECT0);
+}
+
 }
 
 bool
