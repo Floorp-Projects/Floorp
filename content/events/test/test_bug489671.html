@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!doctype html>
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=489671
@@ -6,68 +6,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489671
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 489671</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=489671">Mozilla Bug 489671</a>
-<p id="display" onclick="throw 'Got click'"></p>
-<div id="content" style="display: none">
-  
-</div>
-<pre id="test">
-<script type="application/javascript">
-
-/** Test for Bug 489671 **/
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
-var listener = {
-  observe: function(message) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-    is(message.QueryInterface(Ci.nsIScriptError).errorMessage,
-       "uncaught exception: Got click");
-    SimpleTest.executeSoon(nextTest);
-  },
-
-  QueryInterface: function(iid) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    if (iid.equals(Ci.nsIConsoleListener) ||
-        iid.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_NOINTERFACE;
-  }
-};
-
-
-function addListener() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var consoleService =
-    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-  consoleService.reset();
-  consoleService.registerListener(listener);
-}
-
-function removeListener() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var consoleService =
-    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-  consoleService.unregisterListener(listener);
-}
-
-SimpleTest.waitForExplicitFinish();
-
-addListener();
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=489671"
+   >Mozilla Bug 489671</a>
+<p id="display" onclick="queueNextTest(); throw 'Got click 1';"></p>
+<script>
 // override window.onerror so it won't see our exceptions
 window.onerror = function() {}
 
 var testNum = 0;
-function nextTest() {
+function doTest() {
   switch(testNum++) {
     case 0:
       var event = document.createEvent("MouseEvents");
@@ -77,22 +29,27 @@ function nextTest() {
       break;
     case 1:
       var script = document.createElement("script");
-      script.textContent = "throw 'Got click'";
+      script.textContent = "queueNextTest(); throw 'Got click 2'";
       document.body.appendChild(script);
       break;
     case 2:
-      window.setTimeout("throw 'Got click'", 0);
+      window.setTimeout("queueNextTest(); throw 'Got click 3'", 0);
       break;
     case 3:
-      removeListener();
-      SimpleTest.finish();
-      break;
+      SimpleTest.endMonitorConsole();
+      return;
   }
 }
+function queueNextTest() { SimpleTest.executeSoon(doTest); }
 
-nextTest();
+SimpleTest.waitForExplicitFinish();
+SimpleTest.monitorConsole(SimpleTest.finish, [
+  { errorMessage: "uncaught exception: Got click 1" },
+  { errorMessage: "uncaught exception: Got click 2" },
+  { errorMessage: "uncaught exception: Got click 3" }
+]);
 
+doTest();
 </script>
-</pre>
 </body>
 </html>

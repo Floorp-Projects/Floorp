@@ -11,22 +11,23 @@ function SpecialPowers(window) {
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;
   this.DOMWindowUtils = bindDOMWindowUtils(window);
-  Object.defineProperty(this, 'Components', { configurable: true, enumerable: true,
-                                              get: function() { var win = this.window.get();
-                                                                if (!win)
-                                                                  return null;
-                                                                return getRawComponents(win); } });
+  Object.defineProperty(this, 'Components', {
+      configurable: true, enumerable: true, get: function() {
+          var win = this.window.get();
+          if (!win)
+              return null;
+          return getRawComponents(win);
+      }});
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
   addMessageListener("SPPingService", this._messageListener);
-  this._consoleListeners = [];
 }
 
 SpecialPowers.prototype = new SpecialPowersAPI();
 
 SpecialPowers.prototype.toString = function() { return "[SpecialPowers]"; };
 SpecialPowers.prototype.sanityCheck = function() { return "foo"; };
- 
+
 // This gets filled in in the constructor.
 SpecialPowers.prototype.DOMWindowUtils = undefined;
 SpecialPowers.prototype.Components = undefined;
