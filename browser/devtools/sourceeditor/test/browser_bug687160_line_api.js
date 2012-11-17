@@ -71,6 +71,15 @@ function editorLoaded()
     ok(pos.line == 2 && pos.col == 0, "setCaretPosition(line) works, again");
   }
 
+  let offsetLine = editor.getLineAtOffset(0);
+  is(offsetLine, 0, "getLineAtOffset() is correct for offset 0");
+
+  let offsetLine = editor.getLineAtOffset(6);
+  is(offsetLine, 1, "getLineAtOffset() is correct for offset 6");
+
+  let offsetLine = editor.getLineAtOffset(12);
+  is(offsetLine, 2, "getLineAtOffset() is correct for offset 12");
+
   editor.destroy();
 
   testWin.close();
