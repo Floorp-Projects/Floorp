@@ -32,7 +32,7 @@ PTSTR g_N_Vars;
 
 DWORD g_ConnectTimeout = 0;
 DWORD g_ReceiveTimeout = 0;
-
+bool g_WantRangeRequest = false;
 
 #define NSISPI_INITGLOBALS(N_CCH, N_Vars) do { \
   g_N_CCH = N_CCH; \
@@ -319,10 +319,15 @@ diegle:
     goto diegle;
   }
 
-  const DWORD IOURedirFlags = INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS;
-  const DWORD IOUCacheFlags = INTERNET_FLAG_RESYNCHRONIZE | INTERNET_FLAG_NO_CACHE_WRITE;
+  const DWORD IOURedirFlags = INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP |
+                              INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS;
+  const DWORD IOUCacheFlags = INTERNET_FLAG_RESYNCHRONIZE |
+                              INTERNET_FLAG_NO_CACHE_WRITE |
+                              INTERNET_FLAG_PRAGMA_NOCACHE |
+                              INTERNET_FLAG_RELOAD;
   const DWORD IOUCookieFlags = INTERNET_FLAG_NO_COOKIES;
-  DWORD IOUFlags = IOURedirFlags | IOUCacheFlags | IOUCookieFlags | INTERNET_FLAG_NO_UI | INTERNET_FLAG_EXISTING_CONNECT;
+  DWORD IOUFlags = IOURedirFlags | IOUCacheFlags | IOUCookieFlags |
+                   INTERNET_FLAG_NO_UI | INTERNET_FLAG_EXISTING_CONNECT;
 
   WCHAR protocol[16];
   WCHAR server[128];
@@ -337,18 +342,19 @@ diegle:
 
   DWORD context;
   hInetCon = InternetConnect(hInetSes, server, port, NULL, NULL,
-                             INTERNET_SERVICE_HTTP, 0, (unsigned long)&context);
+                             INTERNET_SERVICE_HTTP, IOUFlags,
+                             (unsigned long)&context);
   if (!hInetCon)
   {
     goto diegle;
   }
 
   // Setup a buffer of size 256KiB to store the downloaded data.
-  // Get at most 2MiB at a time from the partial HTTP Range requests.
+  // Get at most 4MiB at a time from the partial HTTP Range requests.
   // Biffer buffers will be faster.
   // cbRangeReadBufXF should be a multiple of cbBufXF.
   const UINT cbBufXF = 262144;
-  const UINT cbRangeReadBufXF = 2097152;
+  const UINT cbRangeReadBufXF = 4194304;
   BYTE bufXF[cbBufXF];
 
   // Up the default internal buffer size from 4096 to internalReadBufferSize.
@@ -372,24 +378,87 @@ diegle:
                       &g_ReceiveTimeout, sizeof(DWORD));
   }
 
-  // Obtain the file size using a HEAD request.
-  // Some proxy servers will hold up an entire download for GET requests, so
-  // HEAD is important here.
-  HINTERNET hInetFile = HttpOpenRequest(hInetCon, L"HEAD",
-                                        path, NULL, NULL, NULL, 0, 0);
-  if (!hInetFile)
-  {
-    goto diegle;
-  }
+  HINTERNET hInetFile;
+  DWORD cbio = sizeof(DWORD);
 
-  if (!HttpSendRequest(hInetFile, NULL, 0, NULL, 0))
-  {
-    goto diegle;
+  // Keep looping until we don't have a redirect anymore
+  int redirectCount = 0;
+  for (;;) {
+    // Make sure we aren't stuck in some kind of infinite redirect loop.
+    if (redirectCount > 15) {
+      goto diegle;
+    }
+
+    // If a range request was specified, first do a HEAD request
+    hInetFile = HttpOpenRequest(hInetCon, g_WantRangeRequest ? L"HEAD" : L"GET",
+                                path, NULL, NULL, NULL,
+                                INTERNET_FLAG_NO_AUTO_REDIRECT |
+                                INTERNET_FLAG_PRAGMA_NOCACHE |
+                                INTERNET_FLAG_RELOAD, 0);
+    if (!hInetFile)
+    {
+      goto diegle;
+    }
+
+    if (!HttpSendRequest(hInetFile, NULL, 0, NULL, 0))
+    {
+      goto diegle;
+    }
+
+    WCHAR responseText[256];
+    cbio = sizeof(responseText);
+    if (!HttpQueryInfo(hInetFile,
+                       HTTP_QUERY_STATUS_CODE,
+                       responseText, &cbio, NULL))
+    {
+      goto diegle;
+    }
+
+    int statusCode = _wtoi(responseText);
+    if (statusCode == HTTP_STATUS_REDIRECT ||
+        statusCode == HTTP_STATUS_MOVED) {
+      redirectCount++;
+      WCHAR URLBuffer[2048];
+      cbio = sizeof(URLBuffer);
+      if (!HttpQueryInfo(hInetFile,
+                         HTTP_QUERY_LOCATION,
+                         (DWORD*)URLBuffer, &cbio, NULL))
+      {
+        goto diegle;
+      }
+
+      WCHAR protocol2[16];
+      WCHAR server2[128];
+      WCHAR path2[1024];
+      INTERNET_PORT port2;
+      BasicParseURL<16, 128, 1024>(URLBuffer, &protocol2, &port2, &server2, &path2);
+      // Check if we need to reconnect to a new server
+      if (wcscmp(protocol, protocol2) || wcscmp(server, server2) ||
+          port != port2) {
+        wcscpy(server, server2);
+        port = port2;
+        InternetCloseHandle(hInetCon);
+        hInetCon = InternetConnect(hInetSes, server, port, NULL, NULL,
+                                   INTERNET_SERVICE_HTTP, IOUFlags,
+                                   (unsigned long)&context);
+        if (!hInetCon)
+        {
+          goto diegle;
+        }
+      }
+      wcscpy(path, path2);
+
+      // Close the existing handle because we'll be issuing a new request
+      // with the new request path.
+      InternetCloseHandle(hInetFile);
+      continue;
+    }
+    break;
   }
 
   // Get the file length via the Content-Length header
   FILESIZE_T cbThisFile;
-  DWORD cbio = sizeof(cbThisFile);
+  cbio = sizeof(cbThisFile);
   if (!HttpQueryInfo(hInetFile,
                      HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
                      &cbThisFile, &cbio, NULL))
@@ -400,7 +469,7 @@ diegle:
   // Determine if we should use byte range requests. We want to use it if:
   // 1. Server accepts byte range requests
   // 2. The size of the file is known and more than our Range buffer size.
-  bool useRangeRequest = true;
+  bool shouldUseRangeRequest = true;
   WCHAR rangeRequestAccepted[64] = { '\0' };
   cbio = sizeof(rangeRequestAccepted);
   if (cbThisFile != FILESIZE_UNKNOWN && cbThisFile <= cbRangeReadBufXF ||
@@ -408,17 +477,20 @@ diegle:
                      HTTP_QUERY_ACCEPT_RANGES,
                      (LPDWORD)rangeRequestAccepted, &cbio, NULL))
   {
-    useRangeRequest = false;
+    shouldUseRangeRequest = false;
   }
   else
   {
-    useRangeRequest = wcsstr(rangeRequestAccepted, L"bytes") != 0 &&
-                      cbThisFile != FILESIZE_UNKNOWN;
+    shouldUseRangeRequest = wcsstr(rangeRequestAccepted, L"bytes") != 0 &&
+                            cbThisFile != FILESIZE_UNKNOWN;
   }
 
   // If the server doesn't have range request support or doesn't have a
   // Content-Length header, then get everything all at once.
-  if (!useRangeRequest)
+  // If the user didn't want a range request, then we already issued the GET
+  // request earlier.  If the user did want a range request, then we issued only
+  // a HEAD so far.
+  if (g_WantRangeRequest && !shouldUseRangeRequest)
   {
     InternetCloseHandle(hInetFile);
     InternetCloseHandle(hInetCon);
@@ -428,6 +500,7 @@ diegle:
     {
       goto diegle;
     }
+
     // For some reason this also needs to be set on the hInetFile and
     // not just the connection.
     if (g_ReceiveTimeout > 0)
@@ -441,12 +514,14 @@ diegle:
   {
     DWORD cbio = 0,cbXF = 0;
     // If we know the file size, download it in chunks
-    if (useRangeRequest && cbThisFile != g_cbCurrXF)
+    if (g_WantRangeRequest && shouldUseRangeRequest && cbThisFile != g_cbCurrXF)
     {
       // Close the previous request, but not the connection
       InternetCloseHandle(hInetFile);
       hInetFile = HttpOpenRequest(hInetCon, L"GET", path,
-                                  NULL, NULL, NULL, 0, 0);
+                                  NULL, NULL, NULL,
+                                  INTERNET_FLAG_PRAGMA_NOCACHE |
+                                  INTERNET_FLAG_RELOAD, 0);
       if (!hInetFile)
       {
         // TODO: we could add retry here to be more tolerant
@@ -512,7 +587,7 @@ diegle:
 
       // Avoid an extra call to InternetReadFile if we already read everything
       // in the current request
-      if (cbio == cbRangeReadBufXF && useRangeRequest)
+      if (cbio == cbRangeReadBufXF && shouldUseRangeRequest)
       {
         break;
       }
@@ -560,6 +635,7 @@ diegle:
 NSISPIEXPORTFUNC Get(HWND hwndNSIS, UINT N_CCH, TCHAR*N_Vars, NSIS::stack_t**ppST, NSIS::xparams_t*pX)
 {
   pX->RegisterPluginCallback(g_hInst, NSISPluginCallback);
+  g_WantRangeRequest = false;
   for (;;)
   {
     NSIS::stack_t*pURL = StackPopItem(ppST);
@@ -568,7 +644,12 @@ NSISPIEXPORTFUNC Get(HWND hwndNSIS, UINT N_CCH, TCHAR*N_Vars, NSIS::stack_t**ppS
       break;
     }
 
-    if (lstrcmpi(pURL->text, _T("/connecttimeout")) == 0)
+    if (lstrcmpi(pURL->text, _T("/rangerequest")) == 0)
+    {
+      g_WantRangeRequest = true;
+      continue;
+    }
+    else if (lstrcmpi(pURL->text, _T("/connecttimeout")) == 0)
     {
       NSIS::stack_t*pConnectTimeout = StackPopItem(ppST);
       g_ConnectTimeout = _tcstol(pConnectTimeout->text, NULL, 10) * 1000;
