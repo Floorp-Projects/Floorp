@@ -92,9 +92,9 @@ function testFrameParameters()
           window.clearInterval(intervalID);
           return resumeAndFinish();
         }
-        if (!thisNode.fetched ||
-            !argumentsNode.fetched ||
-            !cNode.fetched) {
+        if (!thisNode._retrieved ||
+            !argumentsNode._retrieved ||
+            !cNode._retrieved) {
           return;
         }
         window.clearInterval(intervalID);
