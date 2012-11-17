@@ -49,7 +49,7 @@ namespace mozilla {
 
 ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI)
-  : MediaResource(aDecoder, aChannel, aURI),
+  : BaseMediaResource(aDecoder, aChannel, aURI),
     mOffset(0), mSuspendCount(0),
     mReopenOnError(false), mIgnoreClose(false),
     mCacheStream(this),
@@ -1153,11 +1153,11 @@ ChannelMediaResource::PossiblyResume()
   }
 }
 
-class FileMediaResource : public MediaResource
+class FileMediaResource : public BaseMediaResource
 {
 public:
   FileMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
-    MediaResource(aDecoder, aChannel, aURI),
+    BaseMediaResource(aDecoder, aChannel, aURI),
     mSize(-1),
     mLock("FileMediaResource.mLock"),
     mSizeInitialized(false)
@@ -1514,7 +1514,7 @@ MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
   return new ChannelMediaResource(aDecoder, aChannel, uri);
 }
 
-void MediaResource::MoveLoadsToBackground() {
+void BaseMediaResource::MoveLoadsToBackground() {
   NS_ASSERTION(!mLoadInBackground, "Why are you calling this more than once?");
   mLoadInBackground = true;
   if (!mChannel) {
@@ -1545,7 +1545,7 @@ void MediaResource::MoveLoadsToBackground() {
   }
 }
 
-void MediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
+void BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
 {
   nsCOMPtr<nsILoadGroup> loadGroup;
   DebugOnly<nsresult> rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
