@@ -38,7 +38,7 @@ filters::GetRow(Accessible* aAccessible)
     return eMatch | eSkipSubtree;
 
   // Look for rows inside rowgroup.
-  if (role == roles::SECTION)
+  if (role == roles::GROUPING)
     return eSkip;
 
   return eSkipSubtree;
