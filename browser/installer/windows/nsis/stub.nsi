@@ -929,7 +929,8 @@ FunctionEnd
 
 Function StartDownload
   ${NSD_KillTimer} StartDownload
-  InetBgDL::Get "${URLStubDownload}" "$PLUGINSDIR\download.exe" /END
+  InetBgDL::Get "${URLStubDownload}" "$PLUGINSDIR\download.exe" \
+                /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
   StrCpy $4 ""
   ${NSD_CreateTimer} OnDownload ${DownloadIntervalMS}
   ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
