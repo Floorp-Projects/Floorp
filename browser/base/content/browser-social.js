@@ -991,27 +991,8 @@ var SocialSidebar = {
     if (!sbrowser.hasAttribute("origin"))
       return;
 
-    // Bug 803255 - If we don't remove the sidebar browser from the DOM,
-    // the previous document leaks because it's only released when the
-    // sidebar is made visible again.
-    let container = sbrowser.parentNode;
-    container.removeChild(sbrowser);
     sbrowser.removeAttribute("origin");
-    sbrowser.removeAttribute("src");
-
-    function resetDocShell(docshellSupports) {
-      let docshell = docshellSupports.QueryInterface(Ci.nsIDocShell);
-      if (docshell.chromeEventHandler != sbrowser)
-        return;
-
-      SocialSidebar.configureSidebarDocShell(docshell);
-
-      Services.obs.removeObserver(resetDocShell, "webnavigation-create");
-    }
-    Services.obs.addObserver(resetDocShell, "webnavigation-create", false);
-
-    container.appendChild(sbrowser);
-
+    sbrowser.setAttribute("src", "about:blank");
     SocialFlyout.unload();
   },
 
