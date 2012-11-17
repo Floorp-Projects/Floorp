@@ -85,11 +85,6 @@ struct Profiler {
 
 #else
 
-static inline bool IsJaegerSpewChannelActive(JaegerSpewChannel channel)
-{
-    return false;
-}
-
 static inline void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...)
 {
 }
