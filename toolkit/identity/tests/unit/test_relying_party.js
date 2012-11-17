@@ -155,6 +155,27 @@ function test_request() {
   RelyingParty.request(mockedDoc.id, {});
 }
 
+/*
+ * ensure the forceAuthentication param can be passed through
+ */
+function test_request_forceAuthentication() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL, function(action, params) {});
+
+  RelyingParty.watch(mockedDoc);
+
+  makeObserver("identity-request", function(aSubject, aTopic, aData) {
+    dump("teh obj is " + JSON.stringify(aSubject.wrappedJSObject) + "\n");
+    do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.forceAuthentication, true);
+    do_test_finished();
+    run_next_test();
+  });
+
+  RelyingParty.request(mockedDoc.id, {forceAuthentication: true});
+}
+
 function test_logout() {
   do_test_pending();
 
@@ -204,6 +225,7 @@ let TESTS = [
   test_watch_notloggedin_ready,
   test_watch_notloggedin_logout,
   test_request,
+  test_request_forceAuthentication,
   test_logout
 ];
 
