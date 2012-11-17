@@ -66,7 +66,6 @@ let observer = {
           return sheet;
         }
       }
-      ok(false, "no sheet found");
     }
 
     executeSoon(function() {
@@ -79,10 +78,19 @@ let observer = {
         ok(SEC, "Style Editor Chrome is defined");
 
         let sheet = sheetForNode(nodes[0]);
-        checkStyleEditorForSheetAndLine(sheet, 7, function() {
+        ok(sheet, "sheet found");
+        let line = nodes[0].sourceLine;
+        ok(line, "found source line");
+
+        checkStyleEditorForSheetAndLine(sheet, line - 1, function() {
           let sheet = sheetForNode(nodes[1]);
+          ok(sheet, "sheet found");
+          let line = nodes[1].sourceLine;
+          ok(line, "found source line");
+
           EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
-          checkStyleEditorForSheetAndLine(sheet, 6, function() {
+
+          checkStyleEditorForSheetAndLine(sheet, line - 1, function() {
             window.StyleEditor.toggle();
             finishTest();
           });

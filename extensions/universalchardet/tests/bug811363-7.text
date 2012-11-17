@@ -1,0 +1,3 @@
+Four byte UTF-8, first byte 0xF1-F3, including first and last characters
+in the range: 񀀀񠀀 񠀁 񠀂󿿿
+
