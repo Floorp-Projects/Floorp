@@ -925,7 +925,11 @@ var SocialSidebar = {
 
   setSidebarVisibilityState: function(aEnabled) {
     let sbrowser = document.getElementById("social-sidebar-browser");
-    sbrowser.docShell.isActive = aEnabled;
+    // it's possible we'll be called twice with aEnabled=false so let's
+    // just assume we may often be called with the same state.
+    if (aEnabled == sbrowser.docShellIsActive)
+      return;
+    sbrowser.docShellIsActive = aEnabled;
     let evt = sbrowser.contentDocument.createEvent("CustomEvent");
     evt.initCustomEvent(aEnabled ? "socialFrameShow" : "socialFrameHide", true, true, {});
     sbrowser.contentDocument.documentElement.dispatchEvent(evt);
@@ -987,27 +991,8 @@ var SocialSidebar = {
     if (!sbrowser.hasAttribute("origin"))
       return;
 
-    // Bug 803255 - If we don't remove the sidebar browser from the DOM,
-    // the previous document leaks because it's only released when the
-    // sidebar is made visible again.
-    let container = sbrowser.parentNode;
-    container.removeChild(sbrowser);
     sbrowser.removeAttribute("origin");
-    sbrowser.removeAttribute("src");
-
-    function resetDocShell(docshellSupports) {
-      let docshell = docshellSupports.QueryInterface(Ci.nsIDocShell);
-      if (docshell.chromeEventHandler != sbrowser)
-        return;
-
-      SocialSidebar.configureSidebarDocShell(docshell);
-
-      Services.obs.removeObserver(resetDocShell, "webnavigation-create");
-    }
-    Services.obs.addObserver(resetDocShell, "webnavigation-create", false);
-
-    container.appendChild(sbrowser);
-
+    sbrowser.setAttribute("src", "about:blank");
     SocialFlyout.unload();
   },
 

@@ -58,7 +58,7 @@ WakeLock::Init(const nsAString &aTopic, nsIDOMWindow *aWindow)
   if (window) {
     nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
     NS_ENSURE_STATE(domDoc);
-    domDoc->GetMozHidden(&mHidden);
+    domDoc->GetHidden(&mHidden);
   }
 
   AttachEventListener();
@@ -100,7 +100,7 @@ WakeLock::AttachEventListener()
     nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
     if (domDoc) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDoc);
-      target->AddSystemEventListener(NS_LITERAL_STRING("mozvisibilitychange"),
+      target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                      this,
                                      /* useCapture = */ true,
                                      /* wantsUntrusted = */ false);
@@ -127,7 +127,7 @@ WakeLock::DetachEventListener()
     nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
     if (domDoc) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDoc);
-      target->RemoveSystemEventListener(NS_LITERAL_STRING("mozvisibilitychange"),
+      target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                         this,
                                         /* useCapture = */ true);
       target = do_QueryInterface(window);
@@ -170,13 +170,13 @@ WakeLock::HandleEvent(nsIDOMEvent *aEvent)
   nsAutoString type;
   aEvent->GetType(type);
 
-  if (type.EqualsLiteral("mozvisibilitychange")) {
+  if (type.EqualsLiteral("visibilitychange")) {
     nsCOMPtr<nsIDOMEventTarget> target;
     aEvent->GetTarget(getter_AddRefs(target));
     nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
     NS_ENSURE_STATE(domDoc);
     bool oldHidden = mHidden;
-    domDoc->GetMozHidden(&mHidden);
+    domDoc->GetHidden(&mHidden);
 
     if (mLocked && oldHidden != mHidden) {
       hal::ModifyWakeLock(mTopic,

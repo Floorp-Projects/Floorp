@@ -41,6 +41,7 @@ this.AppsUtils = {
       readyToApplyDownload: aApp.readyToApplyDownload,
       downloadSize: aApp.downloadSize || 0,
       lastUpdateCheck: aApp.lastUpdateCheck,
+      updateTime: aApp.updateTime,
       etag: aApp.etag
     };
   },

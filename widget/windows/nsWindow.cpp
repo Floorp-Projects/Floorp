@@ -4014,12 +4014,6 @@ void nsWindow::DispatchFocusToTopLevelWindow(bool aIsActivate)
     sJustGotActivate = false;
   sJustGotDeactivate = false;
 
-  if (!aIsActivate && BlurEventsSuppressed())
-    return;
-
-  if (!mWidgetListener)
-    return;
-
   // retrive the toplevel window or dialog
   HWND curWnd = mWnd;
   HWND toplevelWnd = NULL;
@@ -4039,11 +4033,14 @@ void nsWindow::DispatchFocusToTopLevelWindow(bool aIsActivate)
 
   if (toplevelWnd) {
     nsWindow *win = WinUtils::GetNSWindowPtr(toplevelWnd);
-    if (win) {
-      if (aIsActivate)
-        mWidgetListener->WindowActivated();
-      else
-        mWidgetListener->WindowDeactivated();
+    if (win && win->mWidgetListener) {
+      if (aIsActivate) {
+        win->mWidgetListener->WindowActivated();
+      } else {
+        if (!win->BlurEventsSuppressed()) {
+          win->mWidgetListener->WindowDeactivated();
+        }
+      }
     }
   }
 }

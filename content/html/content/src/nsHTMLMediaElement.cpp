@@ -542,18 +542,18 @@ nsHTMLMediaElement::OnChannelRedirect(nsIChannel *aChannel,
   NS_ENSURE_STATE(http);
 
   NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
- 
+
   nsAutoCString rangeVal;
   if (NS_SUCCEEDED(http->GetRequestHeader(rangeHdr, rangeVal))) {
     NS_ENSURE_STATE(!rangeVal.IsEmpty());
 
     http = do_QueryInterface(aNewChannel);
     NS_ENSURE_STATE(http);
- 
+
     nsresult rv = http->SetRequestHeader(rangeHdr, rangeVal, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
- 
+
   return NS_OK;
 }
 
@@ -674,7 +674,7 @@ public:
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 // Asynchronously awaits a stable state, whereupon aClosure runs on the main
-// thread. This adds an event which run aClosure to the appshell's list of 
+// thread. This adds an event which run aClosure to the appshell's list of
 // sections synchronous the next time control returns to the event loop.
 void AsyncAwaitStableState(nsHTMLMediaElement* aElement,
                            SyncSectionFn aClosure)
@@ -814,7 +814,7 @@ void nsHTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
 {
   // Auto manage the memory for the frame buffer, so that if we add an early
   // return-on-error here in future, we won't forget to release the memory.
-  // Otherwise we hand ownership of the memory over to the event created by 
+  // Otherwise we hand ownership of the memory over to the event created by
   // DispatchAudioAvailableEvent().
   nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
   // Do same-origin check on element and media before allowing MozAudioAvailable events.
@@ -972,7 +972,7 @@ void nsHTMLMediaElement::UpdatePreloadAction()
       Preferences::GetInt("media.preload.auto",
                           nsHTMLMediaElement::PRELOAD_ENOUGH);
     if (!val) {
-      // Attribute is not set. Use the preload action specified by the 
+      // Attribute is not set. Use the preload action specified by the
       // media.preload.default pref, or just preload metadata if not present.
       nextAction = static_cast<PreloadAction>(preloadDefault);
     } else if (val->Type() == nsAttrValue::eEnum) {
@@ -1739,7 +1739,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mMediaSecurityVerified(false),
     mCORSMode(CORS_NONE),
     mHasAudio(false),
-    mDownloadSuspendedByCache(false)
+    mDownloadSuspendedByCache(false),
+    mAudioChannelType(AUDIO_CHANNEL_NORMAL)
 {
 #ifdef PR_LOGGING
   if (!gMediaElementLog) {
@@ -1939,7 +1940,7 @@ bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
 void nsHTMLMediaElement::DoneCreatingElement()
 {
    if (HasAttr(kNameSpaceID_None, nsGkAtoms::muted))
-     mMuted = true; 
+     mMuted = true;
 }
 
 nsresult nsHTMLMediaElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
@@ -2598,6 +2599,7 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // The new stream has not been suspended by us.
   mPausedForInactiveDocument = false;
 
+  aDecoder->SetAudioChannelType(mAudioChannelType);
   aDecoder->SetAudioCaptured(mAudioCaptured);
   aDecoder->SetVolume(mMuted ? 0.0 : mVolume);
   for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
@@ -2902,7 +2904,7 @@ void nsHTMLMediaElement::FirstFrameLoaded(bool aResourceFullyLoaded)
     mSuspendedAfterFirstFrame = true;
     mDecoder->Suspend();
   } else if (mLoadedFirstFrame &&
-             mDownloadSuspendedByCache && 
+             mDownloadSuspendedByCache &&
              mDecoder &&
              !mDecoder->IsEnded()) {
     // We've already loaded the first frame, and the decoder has signalled
@@ -3442,7 +3444,7 @@ nsresult nsHTMLMediaElement::Observe(nsISupports* aSubject,
                                      const char* aTopic, const PRUnichar* aData)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-  
+
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     mShuttingDown = true;
     AddRemoveSelfReference();
@@ -3711,6 +3713,59 @@ void nsHTMLMediaElement::NotifyAudioAvailableListener()
   if (mDecoder) {
     mDecoder->NotifyAudioAvailableListener();
   }
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::GetMozAudioChannelType(nsAString& aString)
+{
+  switch (mAudioChannelType) {
+    case AUDIO_CHANNEL_NORMAL:
+      aString.AssignLiteral("normal");
+      break;
+    case AUDIO_CHANNEL_CONTENT:
+      aString.AssignLiteral("content");
+      break;
+    case AUDIO_CHANNEL_NOTIFICATION:
+      aString.AssignLiteral("notification");
+      break;
+    case AUDIO_CHANNEL_ALARM:
+      aString.AssignLiteral("alarm");
+      break;
+    case AUDIO_CHANNEL_TELEPHONY:
+      aString.AssignLiteral("telephony");
+      break;
+    case AUDIO_CHANNEL_PUBLICNOTIFICATION:
+      aString.AssignLiteral("publicnotification");
+      break;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::SetMozAudioChannelType(const nsAString& aString)
+{
+  if (mDecoder) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aString.EqualsASCII("normal")) {
+    mAudioChannelType = AUDIO_CHANNEL_NORMAL;
+  } else if (aString.EqualsASCII("content")) {
+    mAudioChannelType = AUDIO_CHANNEL_CONTENT;
+  } else if (aString.EqualsASCII("notification")) {
+    mAudioChannelType = AUDIO_CHANNEL_NOTIFICATION;
+  } else if (aString.EqualsASCII("alarm")) {
+    mAudioChannelType = AUDIO_CHANNEL_ALARM;
+  } else if (aString.EqualsASCII("telephony")) {
+    mAudioChannelType = AUDIO_CHANNEL_TELEPHONY;
+  } else if (aString.EqualsASCII("publicnotification")) {
+    mAudioChannelType = AUDIO_CHANNEL_PUBLICNOTIFICATION;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 ImageContainer* nsHTMLMediaElement::GetImageContainer()

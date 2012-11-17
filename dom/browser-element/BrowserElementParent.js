@@ -260,9 +260,9 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
 
-  // Listen to mozvisibilitychange on the iframe's owner window, and forward it
+  // Listen to visibilitychange on the iframe's owner window, and forward it
   // down to the child.
-  this._window.addEventListener('mozvisibilitychange',
+  this._window.addEventListener('visibilitychange',
                                 this._ownerVisibilityChange.bind(this),
                                 /* useCapture = */ false,
                                 /* wantsUntrusted = */ false);
@@ -365,7 +365,7 @@ BrowserElementParent.prototype = {
     // that we must do so here, rather than in the BrowserElementParent
     // constructor, because the BrowserElementChild may not be initialized when
     // we run our constructor.
-    if (this._window.document.mozHidden) {
+    if (this._window.document.hidden) {
       this._ownerVisibilityChange();
     }
   },
@@ -609,7 +609,7 @@ BrowserElementParent.prototype = {
    */
   _ownerVisibilityChange: function() {
     this._sendAsyncMsg('owner-visibility-change',
-                       {visible: !this._window.document.mozHidden});
+                       {visible: !this._window.document.hidden});
   },
 
   _exitFullscreen: function() {

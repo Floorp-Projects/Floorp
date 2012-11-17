@@ -1258,7 +1258,7 @@ protected:
   nsRefPtr<nsDOMNavigationTiming> mTiming;
 private:
   friend class nsUnblockOnloadEvent;
-  // This needs to stay in sync with the list in GetMozVisibilityState.
+  // This needs to stay in sync with the list in GetVisibilityState.
   enum VisibilityState {
     eHidden = 0,
     eVisible,

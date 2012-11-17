@@ -1417,7 +1417,8 @@ function caretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg)
  * State change checker.
  */
 function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
-                            aTargetOrFunc, aTargetFuncArg, aIsAsync)
+                            aTargetOrFunc, aTargetFuncArg, aIsAsync,
+                            aSkipCurrentStateCheck)
 {
   this.__proto__ = new invokerChecker(EVENT_STATE_CHANGE, aTargetOrFunc,
                                       aTargetFuncArg, aIsAsync);
@@ -1440,6 +1441,11 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
             "Wrong state of the statechange event.");
     is(event.isEnabled(), aIsEnabled,
       "Wrong state of statechange event state");
+
+    if (aSkipCurrentStateCheck) {
+      todo(false, "State checking was skipped!");
+      return;
+    }
 
     var state = aIsEnabled ? (aIsExtraState ? 0 : aState) : 0;
     var extraState = aIsEnabled ? (aIsExtraState ? aState : 0) : 0;
