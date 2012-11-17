@@ -358,7 +358,7 @@ HTMLTableAccessible::CacheChildren()
   // caption only, because nsAccessibilityService ensures we don't create
   // accessibles for the other captions, since only the first is actually
   // visible.
-  nsAccTreeWalker walker(mDoc, mContent, CanHaveAnonChildren());
+  nsAccTreeWalker walker(mDoc, this, mContent);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild())) {

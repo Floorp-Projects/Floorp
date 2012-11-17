@@ -2949,7 +2949,7 @@ Accessible::CacheChildren()
   DocAccessible* doc = Document();
   NS_ENSURE_TRUE_VOID(doc);
 
-  nsAccTreeWalker walker(doc, mContent, CanHaveAnonChildren());
+  nsAccTreeWalker walker(doc, this, mContent);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));
