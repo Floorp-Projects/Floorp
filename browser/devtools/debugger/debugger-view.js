@@ -42,6 +42,7 @@ let DebuggerView = {
     this.Filtering.initialize();
     this.StackFrames.initialize();
     this.Breakpoints.initialize();
+    this.WatchExpressions.initialize();
     this.GlobalSearch.initialize();
 
     this.Variables = new VariablesView(document.getElementById("variables"));
@@ -71,6 +72,7 @@ let DebuggerView = {
     this.Filtering.destroy();
     this.StackFrames.destroy();
     this.Breakpoints.destroy();
+    this.WatchExpressions.destroy();
     this.GlobalSearch.destroy();
 
     this._destroyWindow();
@@ -122,10 +124,10 @@ let DebuggerView = {
 
     this._togglePanesButton = document.getElementById("toggle-panes");
     this._stackframesAndBreakpoints = document.getElementById("stackframes+breakpoints");
-    this._variables = document.getElementById("variables");
+    this._variablesAndExpressions = document.getElementById("variables+expressions");
 
     this._stackframesAndBreakpoints.setAttribute("width", Prefs.stackframesWidth);
-    this._variables.setAttribute("width", Prefs.variablesWidth);
+    this._variablesAndExpressions.setAttribute("width", Prefs.variablesWidth);
     this.togglePanes({
       visible: Prefs.panesVisibleOnStartup,
       animated: false
@@ -139,11 +141,11 @@ let DebuggerView = {
     dumpn("Destroying the DebuggerView panes");
 
     Prefs.stackframesWidth = this._stackframesAndBreakpoints.getAttribute("width");
-    Prefs.variablesWidth = this._variables.getAttribute("width");
+    Prefs.variablesWidth = this._variablesAndExpressions.getAttribute("width");
 
     this._togglePanesButton = null;
     this._stackframesAndBreakpoints = null;
-    this._variables = null;
+    this._variablesAndExpressions = null;
   },
 
   /**
@@ -401,21 +403,21 @@ let DebuggerView = {
 
     if (aFlags.visible) {
       this._stackframesAndBreakpoints.style.marginLeft = "0";
-      this._variables.style.marginRight = "0";
+      this._variablesAndExpressions.style.marginRight = "0";
       this._togglePanesButton.removeAttribute("panesHidden");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
     } else {
       let marginL = ~~(this._stackframesAndBreakpoints.getAttribute("width")) + 1;
-      let marginR = ~~(this._variables.getAttribute("width")) + 1;
+      let marginR = ~~(this._variablesAndExpressions.getAttribute("width")) + 1;
       this._stackframesAndBreakpoints.style.marginLeft = -marginL + "px";
-      this._variables.style.marginRight = -marginR + "px";
+      this._variablesAndExpressions.style.marginRight = -marginR + "px";
       this._togglePanesButton.setAttribute("panesHidden", "true");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
 
     if (aFlags.animated) {
       this._stackframesAndBreakpoints.setAttribute("animated", "");
-      this._variables.setAttribute("animated", "");
+      this._variablesAndExpressions.setAttribute("animated", "");
 
       // Displaying the panes may have the effect of triggering scrollbars to
       // appear in the source editor, which would render the currently
@@ -429,7 +431,7 @@ let DebuggerView = {
       }, false);
     } else {
       this._stackframesAndBreakpoints.removeAttribute("animated");
-      this._variables.removeAttribute("animated");
+      this._variablesAndExpressions.removeAttribute("animated");
       aFlags.callback && aFlags.callback();
     }
   },
@@ -487,7 +489,7 @@ let DebuggerView = {
   _editorSource: null,
   _togglePanesButton: null,
   _stackframesAndBreakpoints: null,
-  _variables: null,
+  _variablesAndExpressions: null,
   _isInitialized: false,
   _isDestroyed: false
 };
@@ -609,8 +611,8 @@ MenuContainer.prototype = {
    *        The actual internal value of the item.
    * @param object aOptions [optional]
    *        Additional options or flags supported by this operation:
-   *          - forced: true to force the item to be immediately added
-   *          - unsorted: true if the items should not remain sorted
+   *          - forced: true to force the item to be immediately appended
+   *          - unsorted: true if the items should not always remain sorted
    *          - relaxed: true if this container should allow dupes & degenerates
    *          - description: an optional description of the item
    *          - attachment: some attached primitive/object
@@ -625,6 +627,10 @@ MenuContainer.prototype = {
     // Batch the item to be added later.
     if (!aOptions.forced) {
       this._stagedItems.push(item);
+    }
+    // Immediately insert the item at the specified index.
+    else if (aOptions.forced && aOptions.forced.atIndex !== undefined) {
+      return this._insertItemAt(aOptions.forced.atIndex, item, aOptions);
     }
     // Find the target position in this container and insert the item there.
     else if (!aOptions.unsorted) {
@@ -707,6 +713,18 @@ MenuContainer.prototype = {
     this._itemsByValue = new Map();
     this._itemsByElement = new Map();
     this._stagedItems = [];
+  },
+
+  /**
+   * Toggles all the items in this container hidden or visible.
+   *
+   * @param boolean aVisibleFlag
+   *        Specifies the intended visibility.
+   */
+  toggleContents: function DVMC_toggleContents(aVisibleFlag) {
+    for (let [, item] of this._itemsByElement) {
+      item.target.hidden = !aVisibleFlag;
+    }
   },
 
   /**
@@ -841,6 +859,18 @@ MenuContainer.prototype = {
   },
 
   /**
+   * Gets the item in the container having the specified index.
+   *
+   * @param number aIndex
+   *        The index used to identify the element.
+   * @return MenuItem
+   *         The matched item, or null if nothing is found.
+   */
+  getItemAtIndex: function DVMC_getItemAtIndex(aIndex) {
+    return this.getItemForElement(this._container.getItemAtIndex(aIndex));
+  },
+
+  /**
    * Gets the item in the container having the specified label.
    *
    * @param string aLabel
@@ -906,6 +936,14 @@ MenuContainer.prototype = {
       values.push(value);
     }
     return values;
+  },
+
+  /**
+   * Gets the total items in this container.
+   * @return number
+   */
+  get totalItems() {
+    return this._itemsByElement.size;
   },
 
   /**
@@ -1097,6 +1135,7 @@ MenuContainer.prototype = {
  *
  * Custom methods introduced by this view, not necessary for a MenuContainer:
  * set emptyText(aValue:string)
+ * set permaText(aValue:string)
  * set itemType(aType:string)
  * set itemFactory(aCallback:function)
  *
@@ -1107,7 +1146,6 @@ MenuContainer.prototype = {
  */
 function StackList(aAssociatedNode) {
   this._parent = aAssociatedNode;
-  this._appendEmptyNotice();
 
   // Create an internal list container.
   this._list = document.createElement("vbox");
@@ -1320,6 +1358,18 @@ StackList.prototype = {
   },
 
   /**
+   * Sets the text displayed permanently in this container's header.
+   * @param string aValue
+   */
+  set permaText(aValue) {
+    if (this._permaTextNode) {
+      this._permaTextNode.setAttribute("value", aValue);
+    }
+    this._permaTextValue = aValue;
+    this._appendPermaNotice();
+  },
+
+  /**
    * Sets the text displayed in this container when there are no available items.
    * @param string aValue
    */
@@ -1328,6 +1378,7 @@ StackList.prototype = {
       this._emptyTextNode.setAttribute("value", aValue);
     }
     this._emptyTextValue = aValue;
+    this._appendEmptyNotice();
   },
 
   /**
@@ -1370,10 +1421,26 @@ StackList.prototype = {
   },
 
   /**
+   * Creates and appends a label displayed permanently in this container's header.
+   */
+  _appendPermaNotice: function DVSL__appendPermaNotice() {
+    if (this._permaTextNode || !this._permaTextValue) {
+      return;
+    }
+
+    let label = document.createElement("label");
+    label.className = "empty list-item";
+    label.setAttribute("value", this._permaTextValue);
+
+    this._parent.insertBefore(label, this._list);
+    this._permaTextNode = label;
+  },
+
+  /**
    * Creates and appends a label signaling that this container is empty.
    */
   _appendEmptyNotice: function DVSL__appendEmptyNotice() {
-    if (this._emptyTextNode) {
+    if (this._emptyTextNode || !this._emptyTextValue) {
       return;
     }
 
@@ -1401,6 +1468,8 @@ StackList.prototype = {
   _list: null,
   _selectedIndex: -1,
   _selectedItem: null,
+  _permaTextNode: null,
+  _permaTextValue: "",
   _emptyTextNode: null,
   _emptyTextValue: ""
 };
