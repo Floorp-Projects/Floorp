@@ -7,7 +7,6 @@
 #include "AccIterator.h"
 #include "DocAccessible-inl.h"
 #include "nsAccCache.h"
-#include "nsAccessibilityService.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
@@ -15,7 +14,6 @@
 #include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "RootAccessible.h"
-#include "States.h"
 
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"
