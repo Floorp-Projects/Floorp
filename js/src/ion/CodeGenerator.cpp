@@ -1457,7 +1457,6 @@ CodeGenerator::generateBody()
             printer.construct(GetIonContext()->cx);
             if (!printer.ref().init())
                 return false;
-            masm.setPrinter(printer.addr());
         }
 
         for (; iter != current->end(); iter++) {
@@ -1476,10 +1475,8 @@ CodeGenerator::generateBody()
         if (masm.oom())
             return false;
 
-        if (counts) {
+        if (counts)
             counts->block(i).setCode(printer.ref().string());
-            masm.setPrinter(NULL);
-        }
     }
 
     JS_ASSERT(pushedArgumentSlots_.empty());
