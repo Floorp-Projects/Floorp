@@ -54,8 +54,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     static mozJSComponentLoader* Get() { return sSelf; }
 
-    void NoteSubScript(JSScript* aScript, JSObject* aThisObject);
-
  protected:
     static mozJSComponentLoader* sSelf;
 
