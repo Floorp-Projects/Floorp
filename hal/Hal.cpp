@@ -21,6 +21,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "WindowIdentifier.h"
 #include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/dom/ContentChild.h"
 
 #ifdef XP_WIN
 #include <process.h>
@@ -641,16 +642,29 @@ UnregisterWakeLockObserver(WakeLockObserver* aObserver)
 }
 
 void
-ModifyWakeLock(const nsAString &aTopic,
+ModifyWakeLock(const nsAString& aTopic,
                WakeLockControl aLockAdjust,
                WakeLockControl aHiddenAdjust)
 {
   AssertMainThread();
-  PROXY_IF_SANDBOXED(ModifyWakeLock(aTopic, aLockAdjust, aHiddenAdjust));
+  uint64_t processID = InSandbox() ? dom::ContentChild::GetSingleton()->GetID() : 0;
+  PROXY_IF_SANDBOXED(ModifyWakeLockInternal(aTopic, aLockAdjust, aHiddenAdjust, processID));
 }
 
 void
-GetWakeLockInfo(const nsAString &aTopic, WakeLockInformation *aWakeLockInfo)
+ModifyWakeLockInternal(const nsAString& aTopic,
+                       WakeLockControl aLockAdjust,
+                       WakeLockControl aHiddenAdjust,
+                       uint64_t aProcessID)
+{
+  AssertMainThread();
+  // TODO: Bug 812403 - support wake locks in nested content processes.
+  AssertMainProcess();
+  PROXY_IF_SANDBOXED(ModifyWakeLockInternal(aTopic, aLockAdjust, aHiddenAdjust, aProcessID));
+}
+
+void
+GetWakeLockInfo(const nsAString& aTopic, WakeLockInformation* aWakeLockInfo)
 {
   AssertMainThread();
   PROXY_IF_SANDBOXED(GetWakeLockInfo(aTopic, aWakeLockInfo));
