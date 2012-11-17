@@ -402,6 +402,141 @@ struct IonScript
     }
 };
 
+// Execution information for a basic block which may persist after the
+// accompanying IonScript is destroyed, for use during profiling.
+struct IonBlockCounts
+{
+  private:
+    uint32 id_;
+
+    // Approximate bytecode in the outer (not inlined) script this block
+    // was generated from.
+    uint32 offset_;
+
+    // ids for successors of this block.
+    uint32 numSuccessors_;
+    uint32 *successors_;
+
+    // Hit count for this block.
+    uint64 hitCount_;
+
+    // Information about the code generated for this block.
+    char *code_;
+
+  public:
+
+    bool init(uint32 id, uint32 offset, uint32 numSuccessors) {
+        id_ = id;
+        offset_ = offset;
+        numSuccessors_ = numSuccessors;
+        if (numSuccessors) {
+            successors_ = (uint32 *) js_calloc(numSuccessors * sizeof(uint32));
+            if (!successors_)
+                return false;
+        }
+        return true;
+    }
+
+    void destroy() {
+        if (successors_)
+            js_free(successors_);
+        if (code_)
+            js_free(code_);
+    }
+
+    uint32 id() const {
+        return id_;
+    }
+
+    uint32 offset() const {
+        return offset_;
+    }
+
+    size_t numSuccessors() const {
+        return numSuccessors_;
+    }
+
+    void setSuccessor(size_t i, uint32 id) {
+        JS_ASSERT(i < numSuccessors_);
+        successors_[i] = id;
+    }
+
+    uint32 successor(size_t i) const {
+        JS_ASSERT(i < numSuccessors_);
+        return successors_[i];
+    }
+
+    uint64 *addressOfHitCount() {
+        return &hitCount_;
+    }
+
+    uint64 hitCount() const {
+        return hitCount_;
+    }
+
+    void setCode(const char *code) {
+        char *ncode = (char *) js_malloc(strlen(code) + 1);
+        if (ncode) {
+            strcpy(ncode, code);
+            code_ = ncode;
+        }
+    }
+
+    const char *code() const {
+        return code_;
+    }
+};
+
+// Execution information for a compiled script which may persist after the
+// IonScript is destroyed, for use during profiling.
+struct IonScriptCounts
+{
+  private:
+    // Any previous invalidated compilation(s) for the script.
+    IonScriptCounts *previous_;
+
+    // Information about basic blocks in this script.
+    size_t numBlocks_;
+    IonBlockCounts *blocks_;
+
+  public:
+
+    IonScriptCounts() {
+        PodZero(this);
+    }
+
+    ~IonScriptCounts() {
+        for (size_t i = 0; i < numBlocks_; i++)
+            blocks_[i].destroy();
+        js_free(blocks_);
+        if (previous_)
+            js_delete(previous_);
+    }
+
+    bool init(size_t numBlocks) {
+        numBlocks_ = numBlocks;
+        blocks_ = (IonBlockCounts *) js_calloc(numBlocks * sizeof(IonBlockCounts));
+        return blocks_ != NULL;
+    }
+
+    size_t numBlocks() const {
+        return numBlocks_;
+    }
+
+    IonBlockCounts &block(size_t i) {
+        JS_ASSERT(i < numBlocks_);
+        return blocks_[i];
+    }
+
+    void setPrevious(IonScriptCounts *previous) {
+        previous_ = previous;
+    }
+
+    IonScriptCounts *previous() const {
+        return previous_;
+    }
+};
+
 struct VMFunction;
 
 class IonCompartment;

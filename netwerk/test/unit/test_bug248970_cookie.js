@@ -2,149 +2,133 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var _PBSvc = null;
-function get_PBSvc() {
-  if (_PBSvc)
-    return _PBSvc;
+const Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
 
-  try {
-    _PBSvc = Components.classes["@mozilla.org/privatebrowsing;1"].
-             getService(Components.interfaces.nsIPrivateBrowsingService);
-    return _PBSvc;
-  } catch (e) {}
-  return null;
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
+
+var httpserver;
+
+function inChildProcess() {
+  return Cc["@mozilla.org/xre/app-info;1"]
+           .getService(Ci.nsIXULRuntime)
+           .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;  
+}
+function makeChan(path) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var chan = ios.newChannel("http://localhost:4444/" + path, null, null)
+                .QueryInterface(Ci.nsIHttpChannel);
+  return chan;
 }
 
-var _CMSvc = null;
-function get_CookieManager() {
-  if (_CMSvc)
-    return _CMSvc;
+function setup_chan(path, isPrivate, callback) {
+  var chan = makeChan(path);
+  chan.QueryInterface(Ci.nsIPrivateBrowsingChannel).setPrivate(isPrivate);
+  chan.asyncOpen(new ChannelListener(callback), null);  
+ }
 
-  return _CMSvc = Components.classes["@mozilla.org/cookiemanager;1"].
-                  getService(Components.interfaces.nsICookieManager2);
+function set_cookie(value, callback) {
+  return setup_chan('set?cookie=' + value, false, callback);
 }
 
-function is_cookie_available1(domain, path, name, value,
-                              secure, httponly, session, expires) {
-  var cm = get_CookieManager();
-  var enumerator = cm.enumerator;
-  while (enumerator.hasMoreElements()) {
-    var cookie = enumerator.getNext().QueryInterface(Components.interfaces.nsICookie);
-    if (cookie.host == domain &&
-        cookie.path == path &&
-        cookie.name == name &&
-        cookie.value == value &&
-        cookie.isSecure == secure &&
-        cookie.expires == expires)
-      return true;
+function set_private_cookie(value, callback) {
+  return setup_chan('set?cookie=' + value, true, callback);
+}
+
+function check_cookie_presence(value, isPrivate, expected, callback) {
+  var chan = setup_chan('present?cookie=' + value.replace('=','|'), isPrivate, function(req) {
+    req.QueryInterface(Ci.nsIHttpChannel);
+    do_check_eq(req.responseStatus, expected ? 200 : 404);
+    callback(req);
+  });
+}
+
+function presentHandler(metadata, response) {
+  var present = false;
+  var match = /cookie=([^&]*)/.exec(metadata.queryString);
+  if (match) {
+    try {
+      present = metadata.getHeader("Cookie").indexOf(match[1].replace("|","=")) != -1;
+    } catch (x) {
+    }
   }
-  return false;
+  response.setStatusLine("1.0", present ? 200 : 404, "");
 }
 
-function is_cookie_available2(domain, path, name, value,
-                              secure, httponly, session, expires) {
-  var cookie = {
-    name: name,
-    value: value,
-    isDomain: true,
-    host: domain,
-    path: path,
-    isSecure: secure,
-    expires: expires,
-    status: 0,
-    policy: 0,
-    isSession: session,
-    expiry: expires,
-    isHttpOnly: httponly,
-    QueryInterface: function(iid) {
-      var validIIDs = [Components.interfaces.nsISupports,
-                       Components.interfaces.nsICookie,
-                       Components.interfaces.nsICookie2];
-      for (var i = 0; i < validIIDs.length; ++i) {
-        if (iid == validIIDs[i])
-          return this;
-      }
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-  };
-
-  var cm = get_CookieManager();
-  return cm.cookieExists(cookie);
-}
-
-var cc_observer = null;
-function setup_cookie_changed_observer() {
-  cc_observer = {
-    gotReloaded: false,
-    QueryInterface: function (iid) {
-      const interfaces = [Components.interfaces.nsIObserver,
-                          Components.interfaces.nsISupports];
-      if (!interfaces.some(function(v) iid.equals(v)))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-      return this;
-    },
-    observe: function (subject, topic, data) {
-      if (topic == "cookie-changed") {
-        if (!subject) {
-          if (data == "reload")
-            this.gotReloaded = true;
-        }
-      }
-    }
-  };
-  var os = Components.classes["@mozilla.org/observer-service;1"].
-           getService(Components.interfaces.nsIObserverService);
-  os.addObserver(cc_observer, "cookie-changed", false);
+function setHandler(metadata, response) {
+  response.setStatusLine("1.0", 200, "Cookie set");
+  var match = /cookie=([^&]*)/.exec(metadata.queryString);
+  if (match) {
+    response.setHeader("Set-Cookie", match[1]);
+  }
 }
 
 function run_test() {
-  var pb = get_PBSvc();
-  if (pb) { // Private Browsing might not be available
-    var prefBranch = Components.classes["@mozilla.org/preferences-service;1"].
-                     getService(Components.interfaces.nsIPrefBranch);
-    prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-
-    var cm = get_CookieManager();
-    do_check_neq(cm, null);
-
-    setup_cookie_changed_observer();
-    do_check_neq(cc_observer, null);
-
+  httpserver = new HttpServer();
+  httpserver.registerPathHandler("/set", setHandler);
+  httpserver.registerPathHandler("/present", presentHandler);
+  httpserver.start(4444);
+  
+  do_test_pending();
+  
+  function check_cookie(req) {
+    req.QueryInterface(Ci.nsIHttpChannel);
+    do_check_eq(req.responseStatus, 200);
     try {
-      // create Cookie-A
-      const time = (new Date("Jan 1, 2030")).getTime() / 1000;
-      cm.add("pbtest.example.com", "/", "C1", "V1", false, true, false, time);
-      // make sure Cookie-A is retrievable
-      do_check_true(is_cookie_available1("pbtest.example.com", "/", "C1", "V1", false, true, false, time));
-      do_check_true(is_cookie_available2("pbtest.example.com", "/", "C1", "V1", false, true, false, time));
-      // enter private browsing mode
-      pb.privateBrowsingEnabled = true;
-      // make sure the "cleared" notification was fired
-      do_check_true(cc_observer.gotReloaded);
-      cc_observer.gotReloaded = false;
-      // make sure Cookie-A is not retrievable
-      do_check_false(is_cookie_available1("pbtest.example.com", "/", "C1", "V1", false, true, false, time));
-      do_check_false(is_cookie_available2("pbtest.example.com", "/", "C1", "V1", false, true, false, time));
-      // create Cookie-B
-      const time2 = (new Date("Jan 2, 2030")).getTime() / 1000;
-      cm.add("pbtest2.example.com", "/", "C2", "V2", false, true, false, time2);
-      // make sure Cookie-B is retrievable
-      do_check_true(is_cookie_available1("pbtest2.example.com", "/", "C2", "V2", false, true, false, time2));
-      do_check_true(is_cookie_available2("pbtest2.example.com", "/", "C2", "V2", false, true, false, time2));
-      // exit private browsing mode
-      pb.privateBrowsingEnabled = false;
-      // make sure the "reload" notification was fired
-      do_check_true(cc_observer.gotReloaded);
-      // make sure Cookie-B is not retrievable
-      do_check_false(is_cookie_available1("pbtest2.example.com", "/", "C2", "V2", false, true, false, time2));
-      do_check_false(is_cookie_available2("pbtest2.example.com", "/", "C2", "V2", false, true, false, time2));
-      // make sure Cookie-A is retrievable
-      do_check_true(is_cookie_available1("pbtest.example.com", "/", "C1", "V1", false, true, false, time));
-      do_check_true(is_cookie_available2("pbtest.example.com", "/", "C1", "V1", false, true, false, time));
-    } catch (e) {
-      do_throw("Unexpected exception while testing cookies: " + e);
+      do_check_true(req.getResponseHeader("Set-Cookie") != "", "expected a Set-Cookie header");
+    } catch (x) {
+      do_throw("missing Set-Cookie header");
     }
 
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+    runNextTest();
   }
+
+  let tests = [];
+  
+  function runNextTest() {
+    do_execute_soon(tests.shift());
+  }
+  
+  tests.push(function() {
+    set_cookie("C1=V1", check_cookie);
+  });
+  tests.push(function() {
+    set_private_cookie("C2=V2", check_cookie);
+  });
+  tests.push(function() {
+    // Check that the first cookie is present in a non-private request
+    check_cookie_presence("C1=V1", false, true, runNextTest);
+  });
+  tests.push(function() {
+    // Check that the second cookie is present in a private request
+    check_cookie_presence("C2=V2", true, true, runNextTest);
+  });
+  tests.push(function() {
+    // Check that the first cookie is not present in a private request
+    check_cookie_presence("C1=V1", true, false, runNextTest);
+  });
+  tests.push(function() {
+    // Check that the second cookie is not present in a non-private request
+    check_cookie_presence("C2=V2", false, false, runNextTest);
+  });
+
+  // The following test only works in a non-e10s situation at the moment,
+  // since the notification needs to run in the parent process but there is
+  // no existing mechanism to make that happen.  
+  if (!inChildProcess()) {
+    tests.push(function() {
+      // Simulate all private browsing instances being closed
+      var obsvc = Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService);
+      obsvc.notifyObservers(null, "last-pb-context-exited", null);
+      // Check that all private cookies are now unavailable in new private requests
+      check_cookie_presence("C2=V2", true, false, runNextTest);
+    });
+  }
+  
+  tests.push(function() { httpserver.stop(do_test_finished); });
+  
+  runNextTest();
 }

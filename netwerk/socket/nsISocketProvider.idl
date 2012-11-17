@@ -81,7 +81,16 @@ interface nsISocketProvider : nsISupports
      * if this flag is set.
      */
     const long ANONYMOUS_CONNECT = 1 << 1;
-    
+
+    /**
+     * If set, indicates that the connection was initiated from a source
+     * defined as being private in the sense of Private Browsing. Generally,
+     * there should be no state shared between connections that are private
+     * and those that are not; it is OK for multiple private connections
+     * to share state with each other, and it is OK for multiple non-private
+     * connections to share state with each other.
+     */
+    const unsigned long NO_PERMANENT_STORAGE = 1 << 2;
 };
 
 %{C++

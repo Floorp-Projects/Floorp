@@ -1620,8 +1620,12 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     if (!stss)
         return NS_OK;
 
+    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(aCallbacks);
+    uint32_t flags = 0;
+    if (loadContext && loadContext->UsePrivateBrowsing())
+        flags |= nsISocketProvider::NO_PERMANENT_STORAGE;
     nsCOMPtr<nsIURI> clone;
-    if (NS_SUCCEEDED(stss->IsStsURI(aURI, &isStsHost)) && isStsHost) {
+    if (NS_SUCCEEDED(stss->IsStsURI(aURI, flags, &isStsHost)) && isStsHost) {
         if (NS_SUCCEEDED(aURI->Clone(getter_AddRefs(clone)))) {
             clone->SetScheme(NS_LITERAL_CSTRING("https"));
             aURI = clone.get();
@@ -1704,7 +1708,7 @@ nsHttpsHandler::GetDefaultPort(int32_t *aPort)
 NS_IMETHODIMP
 nsHttpsHandler::GetProtocolFlags(uint32_t *aProtocolFlags)
 {
-    *aProtocolFlags = NS_HTTP_PROTOCOL_FLAGS;
+    *aProtocolFlags = NS_HTTP_PROTOCOL_FLAGS | URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT;
     return NS_OK;
 }
 

@@ -801,7 +801,25 @@ stubs::TriggerIonCompile(VMFrame &f)
     RootedScript script(f.cx, f.script());
 
     if (ion::js_IonOptions.parallelCompilation) {
-        JS_ASSERT(!script->ion);
+        if (script->hasIonScript()) {
+            /*
+             * Normally TriggerIonCompile is not called if !script->ion, but the
+             * latter jump can be bypassed if DisableScriptCodeForIon wants this
+             * code to be destroyed so that the Ion code can start running.
+             */
+            ExpandInlineFrames(f.cx->compartment);
+            Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), script);
+            f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(),
+                                  /* resetUses = */ false);
+            return;
+        }
+
+        /*
+         * Also check for other possible values of script->ion, which could show up
+         * if Ion code was invalidated after calling DisableScriptCodeForIon.
+         */
+        if (!script->canIonCompile() || script->isIonCompilingOffThread())
+            return;
 
         jsbytecode *osrPC = f.regs.pc;
         if (*osrPC != JSOP_LOOPENTRY)

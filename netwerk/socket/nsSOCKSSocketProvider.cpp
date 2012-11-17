@@ -47,7 +47,7 @@ nsSOCKSSocketProvider::NewSocket(int32_t family,
                                  const char *proxyHost,
                                  int32_t proxyPort,
                                  uint32_t flags,
-                                 PRFileDesc **result, 
+                                 PRFileDesc **result,
                                  nsISupports **socksInfo)
 {
     PRFileDesc *sock;
@@ -80,7 +80,7 @@ nsSOCKSSocketProvider::AddToSocket(int32_t family,
                                    const char *proxyHost,
                                    int32_t proxyPort,
                                    uint32_t flags,
-                                   PRFileDesc *sock, 
+                                   PRFileDesc *sock,
                                    nsISupports **socksInfo)
 {
     nsresult rv = nsSOCKSIOLayerAddToSocket(family,

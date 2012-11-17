@@ -23,6 +23,7 @@ namespace js {
 
 namespace ion {
     struct IonScript;
+    struct IonScriptCounts;
 }
 
 # define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
@@ -216,6 +217,7 @@ class ScriptCounts
 {
     friend struct ::JSScript;
     friend struct ScriptAndCounts;
+
     /*
      * This points to a single block that holds an array of PCCounts followed
      * by an array of doubles.  Each element in the PCCounts array has a
@@ -223,13 +225,17 @@ class ScriptCounts
      */
     PCCounts *pcCountsVector;
 
+    /* Information about any Ion compilations for the script. */
+    ion::IonScriptCounts *ionCounts;
+
  public:
-    ScriptCounts() : pcCountsVector(NULL) { }
+    ScriptCounts() : pcCountsVector(NULL), ionCounts(NULL) { }
 
     inline void destroy(FreeOp *fop);
 
     void set(js::ScriptCounts counts) {
         pcCountsVector = counts.pcCountsVector;
+        ionCounts = counts.ionCounts;
     }
 };
 
@@ -734,6 +740,8 @@ struct JSScript : public js::gc::Cell
   public:
     bool initScriptCounts(JSContext *cx);
     js::PCCounts getPCCounts(jsbytecode *pc);
+    void addIonCounts(js::ion::IonScriptCounts *ionCounts);
+    js::ion::IonScriptCounts *getIonCounts();
     js::ScriptCounts releaseScriptCounts();
     void destroyScriptCounts(js::FreeOp *fop);
 
@@ -1242,6 +1250,10 @@ struct ScriptAndCounts
     PCCounts &getPCCounts(jsbytecode *pc) const {
         JS_ASSERT(unsigned(pc - script->code) < script->length);
         return scriptCounts.pcCountsVector[pc - script->code];
+    }
+
+    ion::IonScriptCounts *getIonCounts() const {
+        return scriptCounts.ionCounts;
     }
 };
 

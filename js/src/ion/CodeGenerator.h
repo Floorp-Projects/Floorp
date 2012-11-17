@@ -219,6 +219,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     ConstantOrRegister getSetPropertyValue(LInstruction *ins);
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
+
+    IonScriptCounts *maybeCreateScriptCounts();
 };
 
 } // namespace ion
