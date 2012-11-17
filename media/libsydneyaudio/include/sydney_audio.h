@@ -270,6 +270,22 @@ typedef enum {
     SA_ADJUST_NONE = 0
 } sa_adjust_t;
 
+typedef enum {
+    SA_STREAM_TYPE_VOICE_CALL = 0,
+    SA_STREAM_TYPE_SYSTEM = 1,
+    SA_STREAM_TYPE_RING = 2,
+    SA_STREAM_TYPE_MUSIC = 3,
+    SA_STREAM_TYPE_ALARM = 4,
+    SA_STREAM_TYPE_NOTIFICATION = 5,
+    SA_STREAM_TYPE_BLUETOOTH_SCO = 6,
+    SA_STREAM_TYPE_ENFORCED_AUDIBLE = 7,
+    SA_STREAM_TYPE_DTMF = 8,
+    SA_STREAM_TYPE_TTS = 9,
+    SA_STREAM_TYPE_FM = 10,
+
+    SA_STREAM_TYPE_MAX
+} sa_stream_type_t;
+
 /* Some kind of meta information.  */
 #define SA_META_CLIENT_NAME "sydney.client-name"     /* utf-8 */ 
 #define SA_META_PROCESS_ID "sydney.process-id"       /* getpid() */
@@ -291,6 +307,11 @@ int sa_stream_create_opaque(sa_stream_t **s, const char *client_name, sa_mode_t 
 
 /** Normal way to open a PCM device */
 int sa_stream_create_pcm(sa_stream_t **s, const char *client_name, sa_mode_t mode, sa_pcm_format_t format, unsigned int rate, unsigned int nchannels);
+
+/** Assign audio stream type.
+    This function should be called after sa_stream_create_pcm(...) and before
+    sa_stream_open(...) so the stream type can be assigned into lower layer */
+int sa_stream_set_stream_type(sa_stream_t *s, const sa_stream_type_t stream_type);
 
 /** Initialise the device */
 int sa_stream_open(sa_stream_t *s);

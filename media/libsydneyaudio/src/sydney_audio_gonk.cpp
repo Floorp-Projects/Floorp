@@ -37,6 +37,8 @@ struct sa_stream {
   int64_t timePlaying;
   int64_t amountWritten;
   unsigned int bufferSize;
+
+  int streamType;
 };
 
 /*
@@ -92,10 +94,58 @@ sa_stream_create_pcm(
 
   s->bufferSize = 0;
 
+  s->streamType = AudioSystem::SYSTEM;
+
   *_s = s;
   return SA_SUCCESS;
 }
 
+/* Assign audio stream type for argument used by AudioTrack class */
+int
+sa_stream_set_stream_type(sa_stream_t *s,  const sa_stream_type_t stream_type)
+{
+  if (s->output_unit != NULL) {
+    return SA_ERROR_INVALID;
+  }
+
+  switch (stream_type)
+ {
+    case SA_STREAM_TYPE_VOICE_CALL:
+      s->streamType = AudioSystem::VOICE_CALL;
+      break;
+    case SA_STREAM_TYPE_SYSTEM:
+      s->streamType = AudioSystem::SYSTEM;
+      break;
+    case SA_STREAM_TYPE_RING:
+      s->streamType = AudioSystem::RING;
+      break;
+    case SA_STREAM_TYPE_MUSIC:
+      s->streamType = AudioSystem::MUSIC;
+      break;
+    case SA_STREAM_TYPE_ALARM:
+      s->streamType = AudioSystem::ALARM;
+      break;
+    case SA_STREAM_TYPE_NOTIFICATION:
+      s->streamType = AudioSystem::NOTIFICATION;
+      break;
+    case SA_STREAM_TYPE_BLUETOOTH_SCO:
+      s->streamType = AudioSystem::BLUETOOTH_SCO;
+      break;
+    case SA_STREAM_TYPE_ENFORCED_AUDIBLE:
+      s->streamType = AudioSystem::ENFORCED_AUDIBLE;
+      break;
+    case SA_STREAM_TYPE_DTMF:
+      s->streamType = AudioSystem::DTMF;
+      break;
+    case SA_STREAM_TYPE_FM:
+      s->streamType = AudioSystem::FM;
+      break;
+    default:
+      return SA_ERROR_INVALID;
+ }
+
+  return SA_SUCCESS;
+}
 
 int
 sa_stream_open(sa_stream_t *s) {
@@ -111,7 +161,7 @@ sa_stream_open(sa_stream_t *s) {
     AudioSystem::CHANNEL_OUT_MONO : AudioSystem::CHANNEL_OUT_STEREO;
 
   int frameCount;
-  if (AudioTrack::getMinFrameCount(&frameCount, AudioSystem::DEFAULT,
+  if (AudioTrack::getMinFrameCount(&frameCount, s->streamType,
                                    s->rate) != NO_ERROR) {
     return SA_ERROR_INVALID;
   }
@@ -123,7 +173,7 @@ sa_stream_open(sa_stream_t *s) {
   }
 
   AudioTrack *track =
-    new AudioTrack(AudioSystem::SYSTEM,
+    new AudioTrack(s->streamType,
                    s->rate,
                    AudioSystem::PCM_16_BIT,
                    chanConfig,

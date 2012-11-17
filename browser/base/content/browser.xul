@@ -1060,7 +1060,7 @@
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   onclick="contentAreaClick(event, false);"/>
-      <chatbar id="pinnedchats" layer="true" mousethrough="always"/>
+      <chatbar id="pinnedchats" layer="true" mousethrough="always" hidden="true"/>
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
     <splitter id="devtools-side-splitter" hidden="true"/>

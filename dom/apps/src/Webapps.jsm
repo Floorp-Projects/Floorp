@@ -807,6 +807,7 @@ this.DOMApplicationRegistry = {
           app.downloading = false;
           app.downloadAvailable = false;
           app.readyToApplyDownload = true;
+          app.updateTime = Date.now();
           DOMApplicationRegistry._saveApps(function() {
             debug("About to fire Webapps:PackageEvent");
             DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
@@ -967,6 +968,7 @@ this.DOMApplicationRegistry = {
 
       app.name = aManifest.name;
       app.csp = aManifest.csp || "";
+      app.updateTime = Date.now();
 
       // Update the registry.
       this.webapps[id] = app;

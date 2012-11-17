@@ -95,7 +95,7 @@ WindowIsActive(nsIDOMWindow *window)
   NS_ENSURE_TRUE(doc, false);
 
   bool hidden = true;
-  doc->GetMozHidden(&hidden);
+  doc->GetHidden(&hidden);
   return !hidden;
 }
 
