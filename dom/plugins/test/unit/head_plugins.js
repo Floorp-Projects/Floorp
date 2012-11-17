@@ -5,7 +5,7 @@
 
 // Finds the test plugin library
 function get_test_plugin() {
-  var plugins = gDirSvc.get("CurProcD", Ci.nsILocalFile);
+  var plugins = gDirSvc.get("GreD", Ci.nsILocalFile);
   plugins.append("plugins");
   do_check_true(plugins.exists());
   var plugin = plugins.clone();
