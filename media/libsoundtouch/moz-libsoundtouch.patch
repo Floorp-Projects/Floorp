@@ -475,7 +475,7 @@ unchanged:
 -
 -    #if defined(__GNUC__) && defined(__i386__)
 -        // gcc
-+    #if defined(__GNUC__)
++    #if defined(__GNUC__) && defined (HAVE_CPUID_H)
 +        // gcc and clang
          #include "cpuid.h"
      #elif defined(_M_IX86)
