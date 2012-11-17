@@ -1511,8 +1511,7 @@ DocAccessible::CacheChildren()
 {
   // Search for accessible children starting from the document element since
   // some web pages tend to insert elements under it rather than document body.
-  nsAccTreeWalker walker(this, mDocument->GetRootElement(),
-                         CanHaveAnonChildren());
+  nsAccTreeWalker walker(this, this, mDocument->GetRootElement());
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));
@@ -1857,8 +1856,7 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
     updateFlags |= UpdateTreeInternal(child, aIsInsert, reorderEvent);
 
   } else {
-    nsAccTreeWalker walker(this, aChildNode,
-                           aContainer->CanHaveAnonChildren(), true);
+    nsAccTreeWalker walker(this, aContainer, aChildNode, true);
 
     while ((child = walker.NextChild()))
       updateFlags |= UpdateTreeInternal(child, aIsInsert, reorderEvent);

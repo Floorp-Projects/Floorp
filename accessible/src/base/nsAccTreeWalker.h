@@ -19,8 +19,8 @@ struct WalkState;
 class nsAccTreeWalker
 {
 public:
-  nsAccTreeWalker(DocAccessible* aDoc, nsIContent* aNode, 
-                  bool aWalkAnonymousContent, bool aWalkCache = false);
+  nsAccTreeWalker(DocAccessible* aDoc, Accessible* aContext, nsIContent* aNode,
+                  bool aWalkCache = false);
   virtual ~nsAccTreeWalker();
 
   /**
@@ -60,6 +60,7 @@ private:
   void PopState();
 
   DocAccessible* mDoc;
+  Accessible* mContext;
   int32_t mChildFilter;
   bool mWalkCache;
   WalkState* mState;
