@@ -43,7 +43,7 @@ function test() {
         "The debugger preferences should have a saved variablesWidth value.");
 
       stackframes = content.document.getElementById("stackframes+breakpoints");
-      variables = content.document.getElementById("variables");
+      variables = content.document.getElementById("variables+expressions");
 
       is(content.Prefs.stackframesWidth, stackframes.getAttribute("width"),
         "The stackframes pane width should be the same as the preferred value.");

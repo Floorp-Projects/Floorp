@@ -374,6 +374,8 @@ StackFrames.prototype = {
   get activeThread() DebuggerController.activeThread,
   autoScopeExpand: false,
   currentFrame: null,
+  syncedWatchExpressions: null,
+  currentWatchExpressions: null,
   currentBreakpointLocation: null,
   currentEvaluation: null,
   currentException: null,
@@ -428,7 +430,7 @@ StackFrames.prototype = {
         break;
       // If paused by a client evaluation, store the evaluated value.
       case "clientEvaluated":
-        this.currentEvaluation = aPacket.why.frameFinished.return;
+        this.currentEvaluation = aPacket.why.frameFinished;
         break;
       // If paused by an exception, store the exception value.
       case "exception":
@@ -445,6 +447,11 @@ StackFrames.prototype = {
    */
   _onResumed: function SF__onResumed() {
     DebuggerView.editor.setDebugLocation(-1);
+
+    // Prepare the watch expression evaluation string for the next pause.
+    if (!this._isWatchExpressionsEvaluation) {
+      this.currentWatchExpressions = this.syncedWatchExpressions;
+    }
   },
 
   /**
@@ -455,7 +462,6 @@ StackFrames.prototype = {
     if (!this.activeThread.cachedFrames.length) {
       return;
     }
-    DebuggerView.StackFrames.empty();
 
     // Conditional breakpoints are { breakpoint, expression } tuples. The
     // boolean evaluation of the expression decides if the active thread
@@ -468,28 +474,56 @@ StackFrames.prototype = {
         // Evaluating the current breakpoint's conditional expression will
         // cause the stack frames to be cleared and active thread to pause,
         // sending a 'clientEvaluated' packed and adding the frames again.
-        this.evaluate("(" + conditionalExpression + ")", 0);
+        this.evaluate(conditionalExpression, 0);
         this._isConditionalBreakpointEvaluation = true;
         return;
       }
     }
-
     // Got our evaluation of the current breakpoint's conditional expression.
     if (this._isConditionalBreakpointEvaluation) {
       this._isConditionalBreakpointEvaluation = false;
-
       // If the breakpoint's conditional expression evaluation is falsy,
       // automatically resume execution.
-      if (VariablesView.isFalsy({ value: this.currentEvaluation })) {
+      if (VariablesView.isFalsy({ value: this.currentEvaluation.return })) {
         this.activeThread.resume();
         return;
       }
     }
 
+
+    // Watch expressions are evaluated in the context of the topmost frame,
+    // and the results and displayed in the variables view.
+    if (this.currentWatchExpressions) {
+      // Evaluation causes the stack frames to be cleared and active thread to
+      // pause, sending a 'clientEvaluated' packed and adding the frames again.
+      this.evaluate(this.currentWatchExpressions, 0);
+      this._isWatchExpressionsEvaluation = true;
+      return;
+    }
+    // Got our evaluation of the current watch expressions.
+    if (this._isWatchExpressionsEvaluation) {
+      this._isWatchExpressionsEvaluation = false;
+      // If an error was thrown during the evaluation of the watch expressions,
+      // then at least one expression evaluation could not be performed.
+      if (this.currentEvaluation.throw) {
+        DebuggerView.WatchExpressions.removeExpression(0);
+        DebuggerController.StackFrames.syncWatchExpressions();
+        return;
+      }
+      // If the watch expressions were evaluated successfully, attach
+      // the results to the topmost frame.
+      let topmostFrame = this.activeThread.cachedFrames[0];
+      topmostFrame.watchExpressionsEvaluation = this.currentEvaluation.return;
+    }
+
+
+    // Make sure all the previous stackframes are removed before re-adding them.
+    DebuggerView.StackFrames.empty();
+
     for (let frame of this.activeThread.cachedFrames) {
       this._addFrame(frame);
     }
-    if (!this.currentFrame) {
+    if (this.currentFrame == null) {
       this.selectFrame(0);
     }
     if (this.activeThread.moreFrames) {
@@ -502,6 +536,7 @@ StackFrames.prototype = {
    */
   _onFramesCleared: function SF__onFramesCleared() {
     this.currentFrame = null;
+    this.currentWatchExpressions = null;
     this.currentBreakpointLocation = null;
     this.currentEvaluation = null;
     this.currentException = null;
@@ -523,6 +558,7 @@ StackFrames.prototype = {
     DebuggerView.StackFrames.empty();
     DebuggerView.Variables.empty(0);
     DebuggerView.Breakpoints.unhighlightBreakpoint();
+    DebuggerView.WatchExpressions.toggleContents(true);
     window.dispatchEvent("Debugger:AfterFramesCleared");
   },
 
@@ -538,7 +574,7 @@ StackFrames.prototype = {
     if (!frame) {
       return;
     }
-    let environment = frame.environment;
+    let { environment, watchExpressionsEvaluation } = frame;
     let { url, line } = frame.where;
 
     // Check if the frame does not represent the evaluation of debuggee code.
@@ -552,10 +588,26 @@ StackFrames.prototype = {
     DebuggerView.StackFrames.highlightFrame(aDepth);
     // Highlight the breakpoint at the specified url and line if it exists.
     DebuggerView.Breakpoints.highlightBreakpoint(url, line);
+    // Don't display the watch expressions textbox inputs in the pane.
+    DebuggerView.WatchExpressions.toggleContents(false);
     // Start recording any added variables or properties in any scope.
     DebuggerView.Variables.createHierarchy();
     // Clear existing scopes and create each one dynamically.
     DebuggerView.Variables.empty();
+
+    // If watch expressions evaluation results are available, create a scope
+    // to contain all the values.
+    if (watchExpressionsEvaluation) {
+      let label = L10N.getStr("watchExpressionsScopeLabel");
+      let arrow = L10N.getStr("watchExpressionsSeparatorLabel");
+      let scope = DebuggerView.Variables.addScope(label);
+      scope.separator = arrow;
+
+      // The evaluation hasn't thrown, so display the returned results and
+      // always expand the watch expressions scope by default.
+      this._fetchWatchExpressions(scope, watchExpressionsEvaluation);
+      scope.expand();
+    }
 
     do {
       // Create a scope to contain all the inspected variables.
@@ -622,6 +674,39 @@ StackFrames.prototype = {
     }
     // Make sure that properties are always available on expansion.
     aVar.onexpand = callback;
+  },
+
+  /**
+   * Adds the watch expressions evaluation results to a scope in the view.
+   *
+   * @param Scope aScope
+   *        The scope where the watch expressions will be placed into.
+   * @param object aExp
+   *        The grip of the evaluation results.
+   */
+  _fetchWatchExpressions: function SF__fetchWatchExpressions(aScope, aExp) {
+    // Retrieve the expressions only once.
+    if (aScope.fetched) {
+      return;
+    }
+    aScope.fetched = true;
+
+    // Add nodes for every watch expression in scope.
+    this.activeThread.pauseGrip(aExp).getPrototypeAndProperties(function(aResponse) {
+      let ownProperties = aResponse.ownProperties;
+      let totalExpressions = DebuggerView.WatchExpressions.totalItems;
+
+      for (let i = 0; i < totalExpressions; i++) {
+        let name = DebuggerView.WatchExpressions.getExpression(i);
+        let expVal = ownProperties[i].value;
+        let expRef = aScope.addVar(name, ownProperties[i]);
+        this._addVarExpander(expRef, expVal);
+      }
+
+      // Signal that watch expressions have been fetched.
+      window.dispatchEvent("Debugger:FetchedWatchExpressions");
+      DebuggerView.Variables.commitHierarchy();
+    }.bind(this));
   },
 
   /**
@@ -760,7 +845,7 @@ StackFrames.prototype = {
       }
 
       // Add the variable's __proto__.
-      if (prototype.type != "null") {
+      if (prototype && prototype.type != "null") {
         aVar.addProperty("__proto__", { value: prototype });
         // Expansion handlers must be set after the properties are added.
         this._addVarExpander(aVar.get("__proto__"), prototype);
@@ -831,6 +916,27 @@ StackFrames.prototype = {
   },
 
   /**
+   * Updates a list of watch expressions to evaluate on each pause.
+   */
+  syncWatchExpressions: function SF_syncWatchExpressions() {
+    let list = DebuggerView.WatchExpressions.getExpressions();
+
+    if (list.length) {
+      this.syncedWatchExpressions =
+        this.currentWatchExpressions = "[" + list.map(function(str)
+          "(function() {" +
+            "try { return eval(\"" + str.replace(/"/g, "\\$&") + "\"); }" +
+            "catch(e) { return e.name + ': ' + e.message; }" +
+          "})()"
+        ).join(",") + "]";
+    } else {
+      this.syncedWatchExpressions =
+        this.currentWatchExpressions = null;
+    }
+    this._onFrames();
+  },
+
+  /**
    * Evaluate an expression in the context of the selected frame. This is used
    * for modifying the value of variables or properties in scope.
    *
@@ -839,7 +945,7 @@ StackFrames.prototype = {
    * @param number aFrame [optional]
    *        The frame depth used for evaluation.
    */
-  evaluate: function SF_evaluate(aExpression, aFrame = this.currentFrame) {
+  evaluate: function SF_evaluate(aExpression, aFrame = this.currentFrame || 0) {
     let frame = this.activeThread.cachedFrames[aFrame];
     this.activeThread.eval(frame.actor, aExpression);
   }
@@ -958,6 +1064,10 @@ SourceScripts.prototype = {
   _onScriptsAdded: function SS__onScriptsAdded(aResponse) {
     // Add all the sources in the debugger view sources container.
     for (let script of aResponse.scripts) {
+      // Ignore scripts generated from 'clientEvaluate' packets.
+      if (script.url == "debugger eval code") {
+        continue;
+      }
       this._addSource(script);
     }
 
