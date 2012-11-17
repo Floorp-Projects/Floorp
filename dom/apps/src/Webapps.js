@@ -368,6 +368,8 @@ WebappsApplication.prototype = {
     this.removable = aApp.removable;
     this.lastUpdateCheck = aApp.lastUpdateCheck ? aApp.lastUpdateCheck
                                                 : Date.now();
+    this.updateTime = aApp.updateTime ? aApp.updateTime
+                                      : aApp.installTime;
     this.progress = NaN;
     this.downloadAvailable = aApp.downloadAvailable;
     this.downloading = aApp.downloading;
@@ -599,6 +601,7 @@ WebappsApplication.prototype = {
               this.downloading = app.downloading;
               this.downloadAvailable = app.downloadAvailable;
               this.readyToApplyDownload = app.readyToApplyDownload;
+              this.updateTime = app.updateTime;
               this._fireEvent("downloadsuccess", this._ondownloadsuccess);
               break;
             case "applied":
