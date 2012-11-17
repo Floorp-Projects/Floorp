@@ -18,7 +18,7 @@ mozilla::a11y::ARIAGridCellAccessible::TableFor(Accessible* aRow) const
     Accessible* table = aRow->Parent();
     if (table) {
       roles::Role tableRole = table->Role();
-      if (tableRole == roles::SECTION) { // if there's a rowgroup.
+      if (tableRole == roles::GROUPING) { // if there's a rowgroup.
         table = table->Parent();
         if (table)
           tableRole = table->Role();
