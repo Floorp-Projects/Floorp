@@ -9,6 +9,8 @@ const SOURCE_URL_MAX_LENGTH = 64; // chars
 const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 1048576; // 1 MB in bytes
 const PANES_APPEARANCE_DELAY = 50; // ms
 const BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH = 1000; // chars
+const BREAKPOINT_CONDITIONAL_POPUP_POSITION = "after_start";
+const BREAKPOINT_CONDITIONAL_POPUP_OFFSET = 50; // px
 const GLOBAL_SEARCH_LINE_MAX_LENGTH = 300; // chars
 const GLOBAL_SEARCH_EXPAND_MAX_RESULTS = 50;
 const GLOBAL_SEARCH_ACTION_DELAY = 150; // ms
@@ -177,6 +179,7 @@ let DebuggerView = {
     dumpn("Finished loading the DebuggerView editor");
 
     DebuggerController.Breakpoints.initialize();
+    window.dispatchEvent("Debugger:EditorLoaded", this.editor);
     this.editor.focus();
   },
 
@@ -188,6 +191,7 @@ let DebuggerView = {
     dumpn("Destroying the DebuggerView editor");
 
     DebuggerController.Breakpoints.destroy();
+    window.dispatchEvent("Debugger:EditorUnloaded", this.editor);
     this.editor = null;
   },
 
@@ -237,7 +241,7 @@ let DebuggerView = {
    *        The source object coming from the active thread.
    * @param object aOptions [optional]
    *        Additional options for showing the source. Supported options:
-   *        - targetLine: place the caret position at the given line number
+   *        - caretLine: place the caret position at the given line number
    *        - debugLine: place the debug location at the given line number
    *        - callback: function called when the source is shown
    */
@@ -264,21 +268,25 @@ let DebuggerView = {
     }
     // If the source is already loaded, display it immediately.
     else {
-      if (aSource.text.length < SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
-        this.setEditorMode(aSource.url, aSource.contentType, aSource.text);
-      } else {
-        this.editor.setMode(SourceEditor.MODES.TEXT);
+      if (this._editorSource != aSource) {
+        // Avoid setting the editor mode for very large files.
+        if (aSource.text.length < SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
+          this.setEditorMode(aSource.url, aSource.contentType, aSource.text);
+        } else {
+          this.editor.setMode(SourceEditor.MODES.TEXT);
+        }
+        this.editor.setText(aSource.text);
+        this.editor.resetUndo();
       }
-      this.editor.setText(aSource.text);
-      this.editor.resetUndo();
+      this._editorSource = aSource;
       this.updateEditor();
 
       DebuggerView.Sources.selectedValue = aSource.url;
       DebuggerController.Breakpoints.updateEditorBreakpoints();
 
       // Handle any additional options for showing the source.
-      if (aOptions.targetLine) {
-        editor.setCaretPosition(aOptions.targetLine - 1);
+      if (aOptions.caretLine) {
+        editor.setCaretPosition(aOptions.caretLine - 1);
       }
       if (aOptions.debugLine) {
         editor.setDebugLocation(aOptions.debugLine - 1);
@@ -382,10 +390,12 @@ let DebuggerView = {
    *        An object containing some of the following boolean properties:
    *        - visible: true if the pane should be shown, false for hidden
    *        - animated: true to display an animation on toggle
+   *        - callback: a function to invoke when the panes toggle finishes
    */
   togglePanes: function DV__togglePanes(aFlags = {}) {
     // Avoid useless toggles.
     if (aFlags.visible == !this.panesHidden) {
+      aFlags.callback && aFlags.callback();
       return;
     }
 
@@ -414,23 +424,29 @@ let DebuggerView = {
 
       window.addEventListener("transitionend", function onEvent() {
         window.removeEventListener("transitionend", onEvent, false);
+        aFlags.callback && aFlags.callback();
         self.updateEditor();
       }, false);
     } else {
       this._stackframesAndBreakpoints.removeAttribute("animated");
       this._variables.removeAttribute("animated");
+      aFlags.callback && aFlags.callback();
     }
   },
 
   /**
    * Sets all the panes visible after a short period of time.
+   *
+   * @param function aCallback
+   *        A function to invoke when the panes toggle finishes.
    */
-  showPanesSoon: function DV__showPanesSoon() {
+  showPanesSoon: function DV__showPanesSoon(aCallback) {
     // Try to keep animations as smooth as possible, so wait a few cycles.
     window.setTimeout(function() {
       DebuggerView.togglePanes({
         visible: true,
-        animated: true
+        animated: true,
+        callback: aCallback
       });
     }, PANES_APPEARANCE_DELAY);
   },
@@ -448,11 +464,13 @@ let DebuggerView = {
     this.GlobalSearch.clearCache();
     this.StackFrames.empty();
     this.Breakpoints.empty();
+    this.Breakpoints.unhighlightBreakpoint();
     this.Variables.empty();
     SourceUtils.clearLabelsCache();
 
     if (this.editor) {
       this.editor.setText("");
+      this._editorSource = null;
     }
   },
 
@@ -466,6 +484,7 @@ let DebuggerView = {
   GlobalSearch: null,
   Variables: null,
   _editor: null,
+  _editorSource: null,
   _togglePanesButton: null,
   _stackframesAndBreakpoints: null,
   _variables: null,
@@ -680,7 +699,7 @@ MenuContainer.prototype = {
     this._container.removeAttribute("tooltiptext");
     this._container.removeAllItems();
 
-    for (let [_, item] of this._itemsByElement) {
+    for (let [, item] of this._itemsByElement) {
       this._untangleItem(item);
     }
 
@@ -1057,7 +1076,7 @@ MenuContainer.prototype = {
    * A generator-iterator over all the items in this container.
    */
   __iterator__: function DVMC_iterator() {
-    for (let [_, item] of this._itemsByElement) {
+    for (let [, item] of this._itemsByElement) {
       yield item;
     }
   },
