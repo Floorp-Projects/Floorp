@@ -322,7 +322,7 @@ public class LayerView extends FrameLayout {
     }
 
     Bitmap getBackgroundPattern() {
-        return getDrawable(R.drawable.tabs_tray_selected_bg);
+        return getDrawable(R.drawable.abouthome_bg);
     }
 
     Bitmap getShadowPattern() {

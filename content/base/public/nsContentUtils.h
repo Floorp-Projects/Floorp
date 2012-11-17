@@ -66,7 +66,7 @@ class nsIURI;
 class imgIContainer;
 class imgINotificationObserver;
 class imgIRequest;
-class imgILoader;
+class imgLoader;
 class imgICache;
 class nsIImageLoadingContent;
 class nsIDOMHTMLFormElement;
@@ -648,8 +648,8 @@ public:
    * Obtain an image loader that respects the given document/channel's privacy status.
    * Null document/channel arguments return the public image loader.
    */
-  static imgILoader* GetImgLoaderForDocument(nsIDocument* aDoc);
-  static imgILoader* GetImgLoaderForChannel(nsIChannel* aChannel);
+  static imgLoader* GetImgLoaderForDocument(nsIDocument* aDoc);
+  static imgLoader* GetImgLoaderForChannel(nsIChannel* aChannel);
 
   /**
    * Returns whether the given URI is in the image cache.
@@ -2219,8 +2219,8 @@ private:
   static void InitImgLoader();
 
   // The following four members are initialized lazily
-  static imgILoader* sImgLoader;
-  static imgILoader* sPrivateImgLoader;
+  static imgLoader* sImgLoader;
+  static imgLoader* sPrivateImgLoader;
   static imgICache* sImgCache;
   static imgICache* sPrivateImgCache;
 

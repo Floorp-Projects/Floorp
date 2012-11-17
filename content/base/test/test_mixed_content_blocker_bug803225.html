@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Testing Whitelist of Resource Schemed for Mixed Content Blocker
+https://bugzilla.mozilla.org/show_bug.cgi?id=803225
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 803225</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script>
+
+  var origBlockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
+  var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+
+  var counter = 0;
+  var settings = [ [true, true], [true, false], [false, true], [false, false] ];
+
+  var blockActive;
+  var blockDisplay;
+
+  //Cycle through 4 different preference settings.
+  function changePrefs(x) {
+    SpecialPowers.setBoolPref("security.mixed_content.block_display_content", settings[x][0]);
+    SpecialPowers.setBoolPref("security.mixed_content.block_active_content", settings[x][1]);
+    blockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
+    blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+  }
+
+  //Set the first set of settings (true, true) and increment the counter.
+  changePrefs(counter);
+  counter++;
+
+  var testsToRun = {
+    /* https - Tests already run as part of bug 62178. */
+    about: false,
+    mozicon: false,
+    resource: false,
+    unsafe_about: false,
+    data_protocol: false,
+    javascript: false,
+    mailto: false,
+    wss: false,
+  };
+
+  function log(msg) {
+    document.getElementById("log").textContent += "\n" + msg;
+  }
+
+  function checkTestsCompleted() {
+    for (var prop in testsToRun) {
+      // some test hasn't run yet so we're not done
+      if (!testsToRun[prop])
+        return;
+    }
+    //if the testsToRun are all completed, change the pref and run the tests again until we have cycled through all the prefs.
+    if(counter < 4) {
+       for (var prop in testsToRun) {
+         testsToRun[prop] = false;
+       }
+      //call to change the preferences
+      changePrefs(counter);
+      counter++;
+      log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
+      document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/content/base/test/file_mixed_content_main_bug803225.html"></iframe>';
+    }
+    else {
+      //set the prefs back to what they were set to originally
+      SpecialPowers.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
+      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
+      SimpleTest.finish();
+    }
+  }
+
+  var firstTest = true;
+
+  // listen for a messages from the mixed content test harness
+  window.addEventListener("message", receiveMessage, false);
+  function receiveMessage(event) {
+    if(firstTest) {
+      log("blockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
+      firstTest = false;
+    }
+
+    log("test: "+event.data.test+", msg: "+event.data.msg + " logging message.");
+    // test that the load type matches the pref for this type of content
+    // (i.e. active vs. display)
+
+    switch(event.data.test) {
+
+      /* Mixed Script tests */
+      case "about":
+        ok(event.data.msg == "resource with about protocol loaded", "resource with about protocol did not load");
+        testsToRun["about"] = true;
+        break;
+
+      case "resource":
+        ok(event.data.msg == "resource with resource protocol loaded", "resource with resource protocol did not load");
+        testsToRun["resource"] = true;
+        break;
+
+      case "mozicon":
+        ok(event.data.msg == "resource with mozicon protocol loaded", "resource with mozicon protocol did not load");
+        testsToRun["mozicon"] = true;
+        break;
+
+      case "unsafe_about":
+        // This one should not load
+        ok(event.data.msg == "resource with unsafe about protocol did not load", "resource with unsafe about protocol loaded");
+        testsToRun["unsafe_about"] = true;
+        break;
+
+      case "data_protocol":
+        ok(event.data.msg == "resource with data protocol loaded", "resource with data protocol did not load");
+        testsToRun["data_protocol"] = true;
+        break;
+
+      case "javascript":
+        ok(event.data.msg == "resource with javascript protocol loaded", "resource with javascript protocol did not load");
+        testsToRun["javascript"] = true;
+        break;
+
+      case "wss":
+        ok(event.data.msg == "resource with wss protocol loaded", "resource with wss protocol did not load");
+        testsToRun["wss"] = true;
+        break;
+
+      case "mailto":
+        ok(event.data.msg == "resource with mailto protocol loaded", "resource with mailto protocol did not load");
+        testsToRun["mailto"] = true;
+        break;
+    }
+    checkTestsCompleted();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+
+<body>
+  <div id="framediv">
+    <iframe id="testHarness" src="https://example.com/tests/content/base/test/file_mixed_content_main_bug803225.html"></iframe>
+  </div>
+  <pre id="log"></pre>
+</body>
+</html>

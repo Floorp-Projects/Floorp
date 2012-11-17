@@ -683,6 +683,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         addsd(Operand(&NegativeOne), dest);
     }
 
+    void inc64(AbsoluteAddress dest) {
+        addl(Imm32(1), Operand(dest));
+        Label noOverflow;
+        j(NonZero, &noOverflow);
+        addl(Imm32(1), Operand(dest.offset(4)));
+        bind(&noOverflow);
+    }
+
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
     //

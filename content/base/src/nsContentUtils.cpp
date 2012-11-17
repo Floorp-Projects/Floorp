@@ -55,7 +55,7 @@
 #include "imgINotificationObserver.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "imgILoader.h"
+#include "imgLoader.h"
 #include "nsDocShellCID.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestor.h"
@@ -177,6 +177,8 @@ extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
 extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
                                  int ns_aware, const char** colon);
 
+class imgLoader;
+
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -191,8 +193,8 @@ nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack;
 nsIParserService *nsContentUtils::sParserService = nullptr;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
-imgILoader *nsContentUtils::sImgLoader;
-imgILoader *nsContentUtils::sPrivateImgLoader;
+imgLoader *nsContentUtils::sImgLoader;
+imgLoader *nsContentUtils::sPrivateImgLoader;
 imgICache *nsContentUtils::sImgCache;
 imgICache *nsContentUtils::sPrivateImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
@@ -515,15 +517,14 @@ nsContentUtils::InitImgLoader()
   sImgLoaderInitialized = true;
 
   // Ignore failure and just don't load images
-  nsresult rv = CallCreateInstance("@mozilla.org/image/loader;1", &sImgLoader);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Creation should have succeeded");
-  rv = CallCreateInstance("@mozilla.org/image/loader;1", &sPrivateImgLoader);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Creation should have succeeded");
+  sImgLoader = imgLoader::Create();
+  NS_ABORT_IF_FALSE(sImgLoader, "Creation should have succeeded");
 
-  rv = CallQueryInterface(sImgLoader, &sImgCache);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "imgICache and imgILoader should be paired");
-  rv = CallQueryInterface(sPrivateImgLoader, &sPrivateImgCache);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "imgICache and imgILoader should be paired");
+  sPrivateImgLoader = imgLoader::Create();
+  NS_ABORT_IF_FALSE(sPrivateImgLoader, "Creation should have succeeded");
+
+  NS_ADDREF(sImgCache = sImgLoader);
+  NS_ADDREF(sPrivateImgCache = sPrivateImgLoader);
 
   sPrivateImgCache->RespectPrivacyNotifications();
 }
@@ -2619,7 +2620,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   return NS_FAILED(rv) ? false : NS_CP_ACCEPTED(decision);
 }
 
-imgILoader*
+imgLoader*
 nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
 {
   if (!sImgLoaderInitialized)
@@ -2643,7 +2644,7 @@ nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
 }
 
 // static
-imgILoader*
+imgLoader*
 nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel)
 {
   if (!sImgLoaderInitialized)
@@ -2684,7 +2685,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   NS_PRECONDITION(aLoadingPrincipal, "Must have a principal");
   NS_PRECONDITION(aRequest, "Null out param");
 
-  imgILoader* imgLoader = GetImgLoaderForDocument(aLoadingDocument);
+  imgLoader* imgLoader = GetImgLoaderForDocument(aLoadingDocument);
   if (!imgLoader) {
     // nothing we can do here
     return NS_OK;

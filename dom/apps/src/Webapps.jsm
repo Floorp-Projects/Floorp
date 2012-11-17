@@ -1391,7 +1391,7 @@ this.DOMApplicationRegistry = {
           try {
             zipReader.open(zipFile);
             if (!zipReader.hasEntry("manifest.webapp")) {
-              throw "No manifest.webapp found.";
+              throw "MISSING_MANIFEST";
             }
 
             let istream = zipReader.getInputStream("manifest.webapp");
@@ -1417,8 +1417,12 @@ this.DOMApplicationRegistry = {
             }
             delete self.downloads[aApp.manifestURL];
           } catch (e) {
-            // XXX we may need new error messages.
-            cleanup(e);
+            // Something bad happened when reading the package.
+            if (typeof e == 'object') {
+              cleanup("INVALID_PACKAGE");
+            } else {
+              cleanup(e);
+            }
           } finally {
             zipReader.close();
           }
@@ -1426,9 +1430,8 @@ this.DOMApplicationRegistry = {
       });
     };
 
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    let deviceStorage = browser.getContentWindow().navigator
-                               .getDeviceStorage("apps");
+    let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
+                                .navigator.getDeviceStorage("apps");
     let req = deviceStorage.stat();
     req.onsuccess = req.onerror = function statResult(e) {
       // Even if we could not retrieve the device storage free space, we try
