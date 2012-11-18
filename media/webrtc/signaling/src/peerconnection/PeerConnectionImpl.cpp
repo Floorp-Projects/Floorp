@@ -278,8 +278,14 @@ PeerConnectionImpl::PeerConnectionImpl()
 
 PeerConnectionImpl::~PeerConnectionImpl()
 {
-  peerconnections.erase(mHandle);
   Close();
+  // Since this and Initialize() occur on MainThread, they can't both be
+  // running at once
+  // Might be more optimal to release off a timer (and XPCOM Shutdown)
+  // to avoid churn
+  peerconnections.erase(mHandle);
+  if (peerconnections.empty())
+    Shutdown();
 
   /* We should release mPCObserver on the main thread, but also prevent a double free.
   nsCOMPtr<nsIThread> mainThread;
