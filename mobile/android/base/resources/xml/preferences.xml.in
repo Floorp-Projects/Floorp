@@ -58,7 +58,7 @@
     <PreferenceCategory android:title="@string/pref_category_privacy">
 
         <ListPreference android:key="network.cookie.cookieBehavior"
-                        android:title="@string/pref_cookies"
+                        android:title="@string/pref_cookies_menu"
                         android:entries="@array/pref_cookies_entries"
                         android:entryValues="@array/pref_cookies_values"
                         android:persistent="false" />
