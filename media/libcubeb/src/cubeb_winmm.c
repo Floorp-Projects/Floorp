@@ -197,6 +197,11 @@ calculate_minimum_latency(void)
   OSVERSIONINFOEX osvi;
   DWORDLONG mask;
 
+  /* Running under Terminal Services results in underruns with low latency. */
+  if (GetSystemMetrics(SM_REMOTESESSION) == TRUE) {
+    return 500;
+  }
+
   /* Vista's WinMM implementation underruns when less than 200ms of audio is buffered. */
   memset(&osvi, 0, sizeof(OSVERSIONINFOEX));
   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
@@ -209,11 +214,6 @@ calculate_minimum_latency(void)
 
   if (VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION, mask) != 0) {
     return 200;
-  }
-
-  /* Running under Terminal Services results in underruns with low latency. */
-  if (GetSystemMetrics(SM_REMOTESESSION) == TRUE) {
-    return 500;
   }
 
   return 0;
