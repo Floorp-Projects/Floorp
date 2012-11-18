@@ -11,10 +11,10 @@
 #include "AccessibleWrap.h"
 #include "UIAutomation.h"
 
-class AccessibleWrap;
-
 namespace mozilla {
 namespace a11y {
+
+class AccessibleWrap;
 
 /**
  * IRawElementProviderSimple implementation (maintains IAccessibleEx approach).

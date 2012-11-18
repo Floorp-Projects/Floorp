@@ -13,8 +13,14 @@
 #include "nsWeakReference.h"
 #include "nsIPresShell.h"
 
+namespace mozilla {
+namespace a11y {
+
 class Accessible;
 class DocAccessible;
+
+} // namespace a11y
+} // namespace mozilla
 
 /**
  * Manage the document accessible life cycle.
@@ -24,6 +30,9 @@ class nsAccDocManager : public nsIWebProgressListener,
                         public nsSupportsWeakReference
 {
 public:
+  typedef mozilla::a11y::Accessible Accessible;
+  typedef mozilla::a11y::DocAccessible DocAccessible;
+
   virtual ~nsAccDocManager() { }
 
   NS_DECL_ISUPPORTS

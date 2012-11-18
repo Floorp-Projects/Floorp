@@ -14,7 +14,14 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 
+namespace mozilla {
+namespace a11y {
+
 class Accessible;
+
+} // namespace a11y
+} // namespace mozilla
+
 class nsIAccessibleTraversalRule;
 
 /**
@@ -23,6 +30,8 @@ class nsIAccessibleTraversalRule;
 class nsAccessiblePivot MOZ_FINAL : public nsIAccessiblePivot
 {
 public:
+  typedef mozilla::a11y::Accessible Accessible;
+
   nsAccessiblePivot(Accessible* aRoot);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

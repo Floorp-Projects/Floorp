@@ -24,22 +24,20 @@
 #include "nsIWeakReference.h"
 #include "nsIDocShellTreeNode.h"
 
-template<class Class, class Arg>
-class TNotification;
-class NotificationController;
+class nsAccDocManager;
+class nsAccessiblePivot;
 
 class nsIScrollableView;
-class nsAccessiblePivot;
 
 const uint32_t kDefaultCacheSize = 256;
 
 namespace mozilla {
 namespace a11y {
 
+class NotificationController;
 class RelatedAccIterator;
-
-} // namespace a11y
-} // namespace mozilla
+template<class Class, class Arg>
+class TNotification;
 
 class DocAccessible : public HyperTextAccessibleWrap,
                       public nsIAccessibleDocument,
@@ -333,7 +331,7 @@ protected:
   void NotifyOfLoad(uint32_t aLoadEventType);
   void NotifyOfLoading(bool aIsReloading);
 
-  friend class nsAccDocManager;
+  friend class ::nsAccDocManager;
 
   /**
    * Perform initial update (create accessible tree).
@@ -563,7 +561,7 @@ protected:
   typedef nsTArray<nsAutoPtr<AttrRelProvider> > AttrRelProviderArray;
   nsClassHashtable<nsStringHashKey, AttrRelProviderArray> mDependentIDsHash;
 
-  friend class mozilla::a11y::RelatedAccIterator;
+  friend class RelatedAccIterator;
 
   /**
    * Used for our caching algorithm. We store the list of nodes that should be
@@ -590,5 +588,8 @@ Accessible::AsDoc()
   return mFlags & eDocAccessible ?
     static_cast<DocAccessible*>(this) : nullptr;
 }
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

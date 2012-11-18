@@ -7,13 +7,14 @@
 
 #include "mozilla/StandardInteger.h"
 
-class Accessible;
-
 /**
  * Predefined filters used for nsAccIterator and nsAccCollector.
  */
 namespace mozilla {
 namespace a11y {
+
+class Accessible;
+
 namespace filters {
 
 enum EResult {

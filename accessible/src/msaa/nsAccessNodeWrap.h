@@ -43,12 +43,15 @@
   { }                                                                          \
   return E_FAIL;
 
+namespace mozilla {
+namespace a11y {
+
 class AccTextChangeEvent;
 
-class nsAccessNodeWrap :  public nsAccessNode,
-                          public nsIWinAccessNode,
-                          public ISimpleDOMNode,
-                          public IServiceProvider
+class nsAccessNodeWrap : public nsAccessNode,
+                         public nsIWinAccessNode,
+                         public ISimpleDOMNode,
+                         public IServiceProvider
 {
   public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -147,6 +150,9 @@ protected:
      */
     static AccTextChangeEvent* gTextEvent;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 /**
  * Converts nsresult to HRESULT.

@@ -473,7 +473,7 @@ public:
   bool PaintWindow(nsIntRegion aRegion, bool aIsAlternate);
 
 #ifdef ACCESSIBILITY
-  already_AddRefed<Accessible> GetDocumentAccessible();
+  already_AddRefed<mozilla::a11y::Accessible> GetDocumentAccessible();
 #endif
 
   virtual void CreateCompositor();

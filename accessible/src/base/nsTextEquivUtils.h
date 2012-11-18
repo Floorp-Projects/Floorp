@@ -42,6 +42,7 @@ enum ETextEquivRule
 class nsTextEquivUtils
 {
 public:
+  typedef mozilla::a11y::Accessible Accessible;
 
   /**
    * Calculates the name from accessible subtree if allowed.

@@ -117,7 +117,7 @@ private:
   // If it was on a control, then its control's selection. Otherwise, it's for
   // a document where the selection changed.
   nsCOMPtr<nsIWeakReference> mLastUsedSelection; // Weak ref to nsISelection
-  nsRefPtr<HyperTextAccessible> mLastTextAccessible;
+  nsRefPtr<mozilla::a11y::HyperTextAccessible> mLastTextAccessible;
   int32_t mLastCaretOffset;
 
   mozilla::a11y::RootAccessible* mRootAccessible;
