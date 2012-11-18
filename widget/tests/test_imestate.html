@@ -1356,7 +1356,8 @@ function runTestPasswordFieldOnDialog()
   }
 }
 
-function runBug580388Tests(aCallback)
+// Bug 580388 and bug 808287
+function runEditorReframeTests(aCallback)
 {
   if (document.activeElement) {
     document.activeElement.blur();
@@ -1394,18 +1395,36 @@ function runBug580388Tests(aCallback)
   sendChar("a");
 
   hitEventLoop(function () {
-    ok(mozIMEFocusOut > 0, "runBug580388Tests(): IME focus must be lost at reframing");
-    ok(mozIMEFocusIn > 0, "runBug580388Tests(): IME focus must be restored after reframing");
-    ok(IMEHasFocus, "runBug580388Tests(): IME must have focus after reframing");
+    ok(mozIMEFocusOut > 0, "runEditorReframeTests(): IME focus must be lost at reframing");
+    ok(mozIMEFocusIn > 0, "runEditorReframeTests(): IME focus must be restored after reframing");
+    ok(IMEHasFocus, "runEditorReframeTests(): IME must have focus after reframing");
 
-    document.removeEventListener("MozIMEFocusIn", handler, true);
-    document.removeEventListener("MozIMEFocusOut", handler, true);
-    input.removeEventListener("input", onInput, true);
+    var focusQueryHandler = function(aEvent) {
+        // Perform a style change and query during focus to trigger reframing
+        input.style.overflow = "visible";
+        synthesizeQuerySelectedText();
+    }
+    document.addEventListener("MozIMEFocusIn", focusQueryHandler, true);
+    mozIMEFocusIn = mozIMEFocusOut = 0;
 
-    input.style.overflow = "visible";
-    input.value = "";
+    input.blur();
+    input.focus();
+    sendChar("a");
 
-    hitEventLoop(aCallback, 20);
+    hitEventLoop(function() {
+        ok(IMEHasFocus, "runEditorReframeTests(): IME must have focus after reframing during focus");
+        ok(mozIMEFocusOut == mozIMEFocusIn, "runEditorReframeTests(): IME focus/blur (" + mozIMEFocusIn + "/" + mozIMEFocusOut + ") must match after reframing during focus");
+
+        document.removeEventListener("MozIMEFocusIn", focusQueryHandler, true);
+        document.removeEventListener("MozIMEFocusIn", handler, true);
+        document.removeEventListener("MozIMEFocusOut", handler, true);
+        input.removeEventListener("input", onInput, true);
+
+        input.style.overflow = "visible";
+        input.value = "";
+
+        hitEventLoop(aCallback, 20);
+    }, 20);
   }, 20);
 }
 
@@ -1461,7 +1480,7 @@ function runTests()
   //runTestPasswordFieldOnDialog();
 
   // Asynchronous tests
-  runBug580388Tests(function () {
+  runEditorReframeTests(function () {
     // This will call onFinish(), so, this test must be the last.
     runEditableSubframeTests();
   });
