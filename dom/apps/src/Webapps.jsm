@@ -1005,8 +1005,10 @@ this.DOMApplicationRegistry = {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!AppsUtils.checkManifest(manifest, app.installOrigin)) {
+        if (!AppsUtils.checkManifest(manifest)) {
           sendError("INVALID_MANIFEST");
+        } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
+          sendError("INSTALL_FROM_DENIED");
         } else {
           app.etag = xhr.getResponseHeader("Etag");
           app.lastCheckedUpdate = Date.now();
@@ -1406,8 +1408,12 @@ this.DOMApplicationRegistry = {
             let manifest = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(istream,
                                                                  istream.available()) || ""));
 
-            if (!AppsUtils.checkManifest(manifest, aApp.installOrigin)) {
+            if (!AppsUtils.checkManifest(manifest)) {
               throw "INVALID_MANIFEST";
+            }
+
+            if (!AppsUtils.checkInstallAllowed(manifest, aApp.installOrigin)) {
+              throw "INSTALL_FROM_DENIED";
             }
 
             if (!checkAppStatus(manifest)) {

@@ -30,6 +30,8 @@ var steps = [
   invalidEntryPoint,
   invalidLocaleEntryPoint,
   fileURL,
+  originNotAllowed,
+  originAllowed,
 ];
 
 runAll(steps);
@@ -167,6 +169,44 @@ function fileURL(next) {
   }
 
   next();
+}
+
+function originNotAllowed(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/installs_allowed_from_example.com.webapp";
+
+  confirmNextInstall();
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    is(this.error.name, "INSTALL_FROM_DENIED", "origin is not in installs_allowed_from");
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    ok(false, "test should fail because of installs_allowed_from");
+    this.result.uninstall().onsuccess = function onUninstall() {
+      next();
+    };
+  };
+}
+
+function originAllowed(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/installs_allowed_from_chrome_mochitests.webapp";
+
+  confirmNextInstall();
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    ok(false, "installation error: " + this.error.name);
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    ok(true, "test origin is in installs_allowed_from");
+    this.result.uninstall().onsuccess = function onUninstall() {
+      next();
+    };
+  };
 }
 
 </script>
