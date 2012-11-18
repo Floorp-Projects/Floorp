@@ -6450,6 +6450,9 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
 bool
 IonBuilder::jsop_in()
 {
+    if (oracle->inObjectIsDenseArray(script_, pc))
+        return jsop_in_dense();
+
     MDefinition *obj = current->pop();
     MDefinition *id = current->pop();
     MIn *ins = new MIn(id, obj);
@@ -6458,6 +6461,38 @@ IonBuilder::jsop_in()
     current->push(ins);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_in_dense()
+{
+    if (oracle->arrayPrototypeHasIndexedProperty())
+        return abort("JSOP_IN Array proto has indexed properties");
+
+    bool needsHoleCheck = !oracle->inArrayIsPacked(script_, pc);
+
+    MDefinition *obj = current->pop();
+    MDefinition *id = current->pop();
+
+    // Ensure id is an integer.
+    MInstruction *idInt32 = MToInt32::New(id);
+    current->add(idInt32);
+    id = idInt32;
+
+    // Get the elements vector.
+    MElements *elements = MElements::New(obj);
+    current->add(elements);
+
+    MInitializedLength *initLength = MInitializedLength::New(elements);
+    current->add(initLength);
+
+    // Check if id < initLength and elem[id] not a hole.
+    MInArray *ins = MInArray::New(elements, id, initLength, needsHoleCheck);
+
+    current->add(ins);
+    current->push(ins);
+
+    return true;
 }
 
 bool
