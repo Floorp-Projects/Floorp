@@ -60,7 +60,16 @@ public:
   nsresult OnImageIsAnimated(imgIRequest* aRequest);
 
   // non-virtual signatures like nsITreeBodyFrame
-  nsresult GetColumns(nsITreeColumns **aColumns);
+  already_AddRefed<nsTreeColumns> Columns() const
+  {
+    nsRefPtr<nsTreeColumns> cols = mColumns;
+    return cols.forget();
+  }
+  already_AddRefed<nsITreeView> GetExistingView() const
+  {
+    nsCOMPtr<nsITreeView> view = mView;
+    return view.forget();
+  }
   nsresult GetView(nsITreeView **aView);
   nsresult SetView(nsITreeView *aView);
   nsresult GetFocused(bool *aFocused);
@@ -70,9 +79,9 @@ public:
   nsresult GetRowWidth(int32_t *aValue);
   nsresult GetHorizontalPosition(int32_t *aValue);
   nsresult GetSelectionRegion(nsIScriptableRegion **aRegion);
-  nsresult GetFirstVisibleRow(int32_t *aValue);
-  nsresult GetLastVisibleRow(int32_t *aValue);
-  nsresult GetPageLength(int32_t *aValue);
+  int32_t FirstVisibleRow() const { return mTopRowIndex; }
+  int32_t LastVisibleRow() const { return mTopRowIndex + mPageLength; }
+  int32_t PageLength() const { return mPageLength; }
   nsresult EnsureRowIsVisible(int32_t aRow);
   nsresult EnsureCellIsVisible(int32_t aRow, nsITreeColumn *aCol);
   nsresult ScrollToRow(int32_t aRow);
@@ -255,10 +264,6 @@ protected:
                             const nsRect&        aRect,
                             const nsRect&        aDirtyRect);
 
-
-  int32_t GetLastVisibleRow() {
-    return mTopRowIndex + mPageLength;
-  }
 
   // An internal hit test.  aX and aY are expected to be in twips in the
   // coordinate system of this frame.

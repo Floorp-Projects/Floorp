@@ -547,13 +547,6 @@ nsTreeBodyFrame::GetTreeBody(nsIDOMElement** aElement)
 }
 
 nsresult
-nsTreeBodyFrame::GetColumns(nsITreeColumns** aColumns)
-{
-  NS_IF_ADDREF(*aColumns = mColumns);
-  return NS_OK;
-}
-
-nsresult
 nsTreeBodyFrame::GetRowHeight(int32_t* _retval)
 {
   *_retval = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
@@ -568,30 +561,9 @@ nsTreeBodyFrame::GetRowWidth(int32_t *aRowWidth)
 }
 
 nsresult
-nsTreeBodyFrame::GetFirstVisibleRow(int32_t *_retval)
-{
-  *_retval = mTopRowIndex;
-  return NS_OK;
-}
-
-nsresult
-nsTreeBodyFrame::GetLastVisibleRow(int32_t *_retval)
-{
-  *_retval = GetLastVisibleRow();
-  return NS_OK;
-}
-
-nsresult
 nsTreeBodyFrame::GetHorizontalPosition(int32_t *aHorizontalPosition)
 {
   *aHorizontalPosition = nsPresContext::AppUnitsToIntCSSPixels(mHorzPosition); 
-  return NS_OK;
-}
-
-nsresult
-nsTreeBodyFrame::GetPageLength(int32_t *_retval)
-{
-  *_retval = mPageLength;
   return NS_OK;
 }
 
@@ -619,7 +591,7 @@ nsTreeBodyFrame::GetSelectionRegion(nsIScriptableRegion **aRegion)
   int32_t x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
   int32_t y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
   int32_t top = y;
-  int32_t end = GetLastVisibleRow();
+  int32_t end = LastVisibleRow();
   int32_t rowHeight = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
   for (int32_t i = mTopRowIndex; i <= end; i++) {
     bool isSelected;
@@ -733,7 +705,7 @@ nsTreeBodyFrame::InvalidateRange(int32_t aStart, int32_t aEnd)
   if (aStart == aEnd)
     return InvalidateRow(aStart);
 
-  int32_t last = GetLastVisibleRow();
+  int32_t last = LastVisibleRow();
   if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
     return NS_OK;
 
@@ -770,7 +742,7 @@ nsTreeBodyFrame::InvalidateColumnRange(int32_t aStart, int32_t aEnd, nsITreeColu
   if (aStart == aEnd)
     return InvalidateCell(aStart, col);
 
-  int32_t last = GetLastVisibleRow();
+  int32_t last = LastVisibleRow();
   if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
     return NS_OK;
 
@@ -1827,8 +1799,8 @@ nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount)
   NS_ASSERTION(rowCount == mRowCount, "row count did not change by the amount suggested, check caller");
 #endif
 
-  int32_t count = DeprecatedAbs(aCount);
-  int32_t last = GetLastVisibleRow();
+  int32_t count = Abs(aCount);
+  int32_t last = LastVisibleRow();
   if (aIndex >= mTopRowIndex && aIndex <= last)
     InvalidateRange(aIndex, last);
     
