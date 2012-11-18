@@ -775,19 +775,19 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     return true;
 }
 
+typedef bool (*GetIntrinsicValueFn)(JSContext *cx, HandlePropertyName, MutableHandleValue);
+static const VMFunction GetIntrinsicValueInfo =
+    FunctionInfo<GetIntrinsicValueFn>(GetIntrinsicValue);
+
 bool
 CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir)
 {
-    typedef bool (*pf)(JSContext *cx, HandlePropertyName, MutableHandleValue);
-    static const VMFunction Info = FunctionInfo<pf>(GetIntrinsicValue);
-
     pushArg(ImmGCPtr(lir->mir()->name()));
-    return callVM(Info, lir);
+    return callVM(GetIntrinsicValueInfo, lir);
 }
 
 typedef bool (*InvokeFunctionFn)(JSContext *, JSFunction *, uint32, Value *, Value *);
-static const VMFunction InvokeFunctionInfo =
-    FunctionInfo<InvokeFunctionFn>(InvokeFunction);
+static const VMFunction InvokeFunctionInfo = FunctionInfo<InvokeFunctionFn>(InvokeFunction);
 
 bool
 CodeGenerator::emitCallInvokeFunction(LInstruction *call, Register calleereg,
