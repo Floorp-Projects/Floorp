@@ -78,7 +78,7 @@
   <string name="pref_telemetry">&pref_telemetry;</string>
   <string name="pref_remember_signons">&pref_remember_signons;</string>
 
-  <string name="pref_cookies">&pref_cookies;</string>
+  <string name="pref_cookies_menu">&pref_cookies_menu;</string>
   <string name="pref_cookies_accept_all">&pref_cookies_accept_all;</string>
   <string name="pref_cookies_not_accept_foreign">&pref_cookies_not_accept_foreign;</string>
   <string name="pref_cookies_disabled">&pref_cookies_disabled;</string>
