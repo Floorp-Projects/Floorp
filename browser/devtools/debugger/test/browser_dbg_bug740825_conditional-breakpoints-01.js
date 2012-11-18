@@ -226,10 +226,10 @@ function test()
                       conditionalExpression: "(function() { return false; })()"
                     });
                   }, {
-                    conditionalExpression: "function() {}"
+                    conditionalExpression: "(function() {})"
                   });
                 }, {
-                  conditionalExpression: "{}"
+                  conditionalExpression: "({})"
                 });
               }, {
                 conditionalExpression: "/regexp/"

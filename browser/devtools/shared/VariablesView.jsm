@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
 
 Components.utils.import('resource://gre/modules/Services.jsm');
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["VariablesView", "create"];
 
@@ -140,7 +142,7 @@ VariablesView.prototype = {
     this._enumVisible = aFlag;
 
     for (let [, scope] in this) {
-      scope._nonEnumVisible = aFlag;
+      scope._enumVisible = aFlag;
     }
   },
 
@@ -1119,7 +1121,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
 
     let separatorLabel = this._separatorLabel = document.createElement("label");
     separatorLabel.className = "plain";
-    separatorLabel.setAttribute("value", ":");
+    separatorLabel.setAttribute("value", this.ownerView.separator);
 
     let valueLabel = this._valueLabel = document.createElement("label");
     valueLabel.className = "value plain";
@@ -1127,10 +1129,13 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this._title.appendChild(separatorLabel);
     this._title.appendChild(valueLabel);
 
-    if (VariablesView.isPrimitive(aDescriptor)) {
+    let isPrimitive = VariablesView.isPrimitive(aDescriptor);
+    let isUndefined = VariablesView.isUndefined(aDescriptor);
+
+    if (isPrimitive || isUndefined) {
       this.hideArrow();
     }
-    if (aDescriptor.get || aDescriptor.set) {
+    if (!isUndefined && (aDescriptor.get || aDescriptor.set)) {
       this.addProperty("get", { value: aDescriptor.get });
       this.addProperty("set", { value: aDescriptor.set });
       this.expand();
@@ -1494,6 +1499,33 @@ VariablesView.isPrimitive = function VV_isPrimitive(aDescriptor) {
 };
 
 /**
+ * Returns true if the descriptor represents an undefined value.
+ *
+ * @param object aDescriptor
+ *        The variable's descriptor.
+ */
+VariablesView.isUndefined = function VV_isUndefined(aDescriptor) {
+  // For accessor property descriptors, the getter and setter need to be
+  // contained in 'get' and 'set' properties.
+  let getter = aDescriptor.get;
+  let setter = aDescriptor.set;
+  if (typeof getter == "object" && getter.type == "undefined" &&
+      typeof setter == "object" && setter.type == "undefined") {
+    return true;
+  }
+
+  // As described in the remote debugger protocol, the value grip
+  // must be contained in a 'value' property.
+  // For convenience, undefined is considered a type.
+  let grip = aDescriptor.value;
+  if (grip && grip.type == "undefined") {
+    return true;
+  }
+
+  return false;
+};
+
+/**
  * Returns true if the descriptor represents a falsy value.
  *
  * @param object aDescriptor
@@ -1610,6 +1642,30 @@ VariablesView.getClass = function VV_getClass(aGrip) {
 };
 
 /**
+ * Localization convenience methods.
+ */
+let L10N = {
+  /**
+   * L10N shortcut function.
+   *
+   * @param string aName
+   * @return string
+   */
+  getStr: function L10N_getStr(aName) {
+    return this.stringBundle.GetStringFromName(aName);
+  }
+};
+
+XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
+  return Services.strings.createBundle(DBG_STRINGS_URI);
+});
+
+/**
+ * The separator label between the variables or properties name and value.
+ */
+Scope.prototype.separator = L10N.getStr("variablesSeparatorLabel");
+
+/**
  * A monotonically-increasing counter, that guarantees the uniqueness of scope,
  * variables and properties ids.
  *
@@ -1620,9 +1676,9 @@ VariablesView.getClass = function VV_getClass(aGrip) {
  */
 let generateId = (function() {
   let count = 0;
-  return function(aName = "") {
+  return function VV_generateId(aName = "") {
     return aName.toLowerCase().trim().replace(/\s+/g, "-") + (++count);
-  }
+  };
 })();
 
 /**
