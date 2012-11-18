@@ -38,22 +38,37 @@ namespace JS {
 struct TypeInferenceSizes
 {
     TypeInferenceSizes()
-      : scripts(0)
-      , objects(0)
-      , tables(0)
-      , temporary(0)
+      : typeScripts(0)
+      , typeResults(0)
+      , analysisPool(0)
+      , typePool(0)
+      , pendingArrays(0)
+      , allocationSiteTables(0)
+      , arrayTypeTables(0)
+      , objectTypeTables(0)
+      , typeObjects(0)
     {}
 
-    size_t scripts;
-    size_t objects;
-    size_t tables;
-    size_t temporary;
+    size_t typeScripts;
+    size_t typeResults;
+    size_t analysisPool;
+    size_t typePool;
+    size_t pendingArrays;
+    size_t allocationSiteTables;
+    size_t arrayTypeTables;
+    size_t objectTypeTables;
+    size_t typeObjects;
 
     void add(TypeInferenceSizes &sizes) {
-        this->scripts   += sizes.scripts;
-        this->objects   += sizes.objects;
-        this->tables    += sizes.tables;
-        this->temporary += sizes.temporary;
+        this->typeScripts          += sizes.typeScripts;
+        this->typeResults          += sizes.typeResults;
+        this->analysisPool         += sizes.analysisPool;
+        this->typePool             += sizes.typePool;
+        this->pendingArrays        += sizes.pendingArrays;
+        this->allocationSiteTables += sizes.allocationSiteTables;
+        this->arrayTypeTables      += sizes.arrayTypeTables;
+        this->objectTypeTables     += sizes.objectTypeTables;
+        this->typeObjects          += sizes.typeObjects;
     }
 };
 
