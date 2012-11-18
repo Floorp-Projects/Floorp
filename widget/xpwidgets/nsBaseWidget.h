@@ -19,11 +19,13 @@ class nsIContent;
 class nsAutoRollup;
 class gfxContext;
 
+namespace mozilla {
 #ifdef ACCESSIBILITY
+namespace a11y {
 class Accessible;
+}
 #endif
 
-namespace mozilla {
 namespace layers {
 class BasicLayerManager;
 class CompositorChild;
@@ -172,7 +174,7 @@ public:
 
 #ifdef ACCESSIBILITY
   // Get the accessible for the window.
-  Accessible* GetAccessible();
+  mozilla::a11y::Accessible* GetAccessible();
 #endif
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }

@@ -11,8 +11,11 @@
 
 #include "AccIterator.h"
 
+namespace mozilla {
+namespace a11y {
+
 inline Accessible*
-mozilla::a11y::ARIAGridCellAccessible::TableFor(Accessible* aRow) const
+ARIAGridCellAccessible::TableFor(Accessible* aRow) const
 {
   if (aRow) {
     Accessible* table = aRow->Parent();
@@ -33,7 +36,7 @@ mozilla::a11y::ARIAGridCellAccessible::TableFor(Accessible* aRow) const
 }
 
 inline int32_t
-mozilla::a11y::ARIAGridCellAccessible::RowIndexFor(Accessible* aRow) const
+ARIAGridCellAccessible::RowIndexFor(Accessible* aRow) const
 {
   Accessible* table = TableFor(aRow);
   if (table) {
@@ -49,5 +52,8 @@ mozilla::a11y::ARIAGridCellAccessible::RowIndexFor(Accessible* aRow) const
 
   return -1;
 }
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

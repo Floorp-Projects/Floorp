@@ -116,6 +116,10 @@ __try {                                                                        \
   IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
   IMPL_IUNKNOWN_QUERY_TAIL
 
+
+namespace mozilla {
+namespace a11y {
+
 class AccessibleWrap : public Accessible,
                        public ia2AccessibleComponent,
                        public ia2AccessibleHyperlink,
@@ -369,5 +373,8 @@ protected:
     NAVRELATION_DESCRIPTION_FOR = 0x100f
   };
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

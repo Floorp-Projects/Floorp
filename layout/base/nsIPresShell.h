@@ -76,7 +76,11 @@ class nsRefreshDriver;
 class nsARefreshObserver;
 #ifdef ACCESSIBILITY
 class nsAccessibilityService;
+namespace mozilla {
+namespace a11y {
 class DocAccessible;
+} // namespace a11y
+} // namespace mozilla
 #endif
 class nsIWidget;
 struct nsArenaMemoryStats;
@@ -274,7 +278,7 @@ public:
   /**
    * Return the document accessible for this pres shell if there is one.
    */
-  DocAccessible* GetDocAccessible() const
+  mozilla::a11y::DocAccessible* GetDocAccessible() const
   {
     return mDocAccessible;
   }
@@ -282,7 +286,7 @@ public:
   /**
    * Set the document accessible for this pres shell.
    */
-  void SetDocAccessible(DocAccessible* aDocAccessible)
+  void SetDocAccessible(mozilla::a11y::DocAccessible* aDocAccessible)
   {
     mDocAccessible = aDocAccessible;
   }
@@ -1377,7 +1381,7 @@ protected:
   nsWeakPtr                 mForwardingContainer;
   nsRefreshDriver*          mHiddenInvalidationObserverRefreshDriver;
 #ifdef ACCESSIBILITY
-  DocAccessible* mDocAccessible;
+  mozilla::a11y::DocAccessible* mDocAccessible;
 #endif
 
 #ifdef DEBUG
