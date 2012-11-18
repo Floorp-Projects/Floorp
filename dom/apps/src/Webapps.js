@@ -114,9 +114,12 @@ WebappsRegistry.prototype = {
           return;
         }
 
-        if (!AppsUtils.checkManifest(manifest, installOrigin)) {
+        if (!AppsUtils.checkManifest(manifest)) {
           Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
           Cu.reportError("Error installing app from: " + installOrigin + ": " + "INVALID_MANIFEST");
+        } else if (!AppsUtils.checkInstallAllowed(manifest, installOrigin)) {
+          Services.DOMRequest.fireError(request, "INSTALL_FROM_DENIED");
+          Cu.reportError("Error installing app from: " + installOrigin + ": " + "INSTALL_FROM_DENIED");
         } else if (!this.checkAppStatus(manifest)) {
           Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
           Cu.reportError("Error installing app, '" + manifest.name + "': " + "INVALID_SECURITY_LEVEL");
@@ -218,9 +221,11 @@ WebappsRegistry.prototype = {
           Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!(AppsUtils.checkManifest(manifest, installOrigin) &&
+        if (!(AppsUtils.checkManifest(manifest) &&
               manifest.package_path)) {
           Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+        } else if (!AppsUtils.checkInstallAllowed(manifest, installOrigin)) {
+          Services.DOMRequest.fireError(request, "INSTALL_FROM_DENIED");
         } else {
           if (!this.checkAppStatus(manifest)) {
             Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
