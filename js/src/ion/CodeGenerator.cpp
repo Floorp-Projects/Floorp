@@ -4121,6 +4121,38 @@ CodeGenerator::visitIn(LIn *ins)
 }
 
 bool
+CodeGenerator::visitInArray(LInArray *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    Register initLength = ToRegister(lir->initLength());
+    Register output = ToRegister(lir->output());
+
+    // When the array is not packed we need to do a hole check in addition to the bounds check.
+    Label falseBranch, done;
+    if (lir->index()->isConstant()) {
+        masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(ToInt32(lir->index())), &falseBranch);
+        if (lir->mir()->needsHoleCheck()) {
+            masm.branchTestMagic(Assembler::Equal, Address(elements, ToInt32(lir->index()) * sizeof(Value)),
+                                 &falseBranch);
+        }
+    } else {
+        masm.branch32(Assembler::BelowOrEqual, initLength, ToRegister(lir->index()), &falseBranch);
+        if (lir->mir()->needsHoleCheck()) {
+            masm.branchTestMagic(Assembler::Equal, BaseIndex(elements, ToRegister(lir->index()), TimesEight),
+                                 &falseBranch);
+        }
+    }
+
+    masm.move32(Imm32(1), output);
+    masm.jump(&done);
+
+    masm.bind(&falseBranch);
+    masm.move32(Imm32(0), output);
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CodeGenerator::visitInstanceOfO(LInstanceOfO *ins)
 {
     Register rhs = ToRegister(ins->getOperand(1));
