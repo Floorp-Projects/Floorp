@@ -422,11 +422,9 @@ _cairo_xlib_device_create (Display *dpy)
 	    if (VendorRelease (dpy) < 10400000)
 		display->buggy_repeat = TRUE;
 
-#ifndef MOZ_EGL_XRENDER_COMPOSITE
 	    /* Too many bugs in the early drivers */
 	    if (VendorRelease (dpy) < 10699000)
 		display->buggy_pad_reflect = TRUE;
-#endif
 	}
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
 	if (VendorRelease (dpy) <= 40500000)
