@@ -69,17 +69,18 @@ protected:
   virtual void CacheChildren();
 };
 
-} // namespace a11y
-} // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcasting method
 
-inline mozilla::a11y::HTMLImageMapAccessible*
+inline HTMLImageMapAccessible*
 Accessible::AsImageMap()
 {
   return IsImageMapAccessible() ?
-    static_cast<mozilla::a11y::HTMLImageMapAccessible*>(this) : nullptr;
+    static_cast<HTMLImageMapAccessible*>(this) : nullptr;
 }
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

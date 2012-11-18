@@ -1396,7 +1396,7 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
 
 #ifdef ACCESSIBILITY
 
-Accessible*
+a11y::Accessible*
 nsBaseWidget::GetAccessible()
 {
   NS_ENSURE_TRUE(mWidgetListener, nullptr);

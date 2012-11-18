@@ -15,6 +15,9 @@
 #include "DocAccessible.h"
 #include "nsIDocShellTreeItem.h"
 
+namespace mozilla {
+namespace a11y {
+
 class DocAccessibleWrap : public DocAccessible,
                           public ISimpleDOMDocument
 {
@@ -68,5 +71,8 @@ protected:
 protected:
   void* mHWND;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

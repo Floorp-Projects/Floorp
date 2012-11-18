@@ -10,14 +10,13 @@
 #include "nsAString.h"
 #include "nscore.h"
 
-
 class nsIAccessible;
 class nsIArray;
+
 namespace mozilla {
 namespace a11y {
+
 class TableAccessible;
-}
-}
 
 class xpcAccessibleTable
 {
@@ -64,5 +63,8 @@ public:
 protected:
   mozilla::a11y::TableAccessible* mTable;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif // MOZILLA_A11Y_XPCOM_XPACCESSIBLETABLE_H_

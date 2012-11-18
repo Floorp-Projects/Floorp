@@ -10,6 +10,9 @@
 #include "Accessible.h"
 #include "nsARIAMap.h"
 
+namespace mozilla {
+namespace a11y {
+
 inline mozilla::a11y::role
 Accessible::Role()
 {
@@ -44,5 +47,8 @@ Accessible::HasNumericValue() const
 
   return mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue;
 }
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

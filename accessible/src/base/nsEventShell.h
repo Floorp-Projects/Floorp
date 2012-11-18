@@ -20,7 +20,7 @@ public:
   /**
    * Fire the accessible event.
    */
-  static void FireEvent(AccEvent* aEvent);
+  static void FireEvent(mozilla::a11y::AccEvent* aEvent);
 
   /**
    * Fire accessible event of the given type for the given accessible.
@@ -28,8 +28,9 @@ public:
    * @param  aEventType   [in] the event type
    * @param  aAccessible  [in] the event target
    */
-  static void FireEvent(uint32_t aEventType, Accessible* aAccessible,
-                        EIsFromUserInput aIsFromUserInput = eAutoDetect);
+  static void FireEvent(uint32_t aEventType,
+                        mozilla::a11y::Accessible* aAccessible,
+                        mozilla::a11y::EIsFromUserInput aIsFromUserInput = mozilla::a11y::eAutoDetect);
 
   /**
    * Append 'event-from-input' object attribute if the accessible event has
