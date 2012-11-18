@@ -36,7 +36,7 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
    */
   destroy: function DVSF_destroy() {
     dumpn("Destroying the StackFramesView");
-    this._container.removeEventListener("click", this._onClick, true);
+    this._container.removeEventListener("click", this._onClick, false);
     this._container.removeEventListener("scroll", this._onScroll, true);
     window.removeEventListener("resize", this._onScroll, true);
   },
@@ -909,7 +909,8 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
   },
 
   /**
-   * Gets an identifier for a breakpoint item for the current cache.
+   * Gets an identifier for a breakpoint item in the current cache.
+   * @return string
    */
   _key: function DVB__key(aSourceLocation, aLineNumber) {
     return aSourceLocation + aLineNumber;
@@ -922,6 +923,247 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
   _popupShown: false,
   _cache: null,
   _editorContextMenuLineNumber: -1
+});
+
+/**
+ * Functions handling the watch expressions UI.
+ */
+function WatchExpressionsView() {
+  dumpn("WatchExpressionsView was instantiated");
+  MenuContainer.call(this);
+  this._createItemView = this._createItemView.bind(this);
+  this._onClick = this._onClick.bind(this);
+  this._onClose = this._onClose.bind(this);
+  this._onBlur = this._onBlur.bind(this);
+  this._onKeyPress = this._onKeyPress.bind(this);
+  this._onMouseOver = this._onMouseOver.bind(this);
+  this._onMouseOut = this._onMouseOut.bind(this);
+}
+
+create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
+  /**
+   * Initialization function, called when the debugger is started.
+   */
+  initialize: function DVWE_initialize() {
+    dumpn("Initializing the WatchExpressionsView");
+    this._container = new StackList(document.getElementById("expressions"));
+    this._variables = document.getElementById("variables");
+
+    this._container.permaText = L10N.getStr("addWatchExpressionText");
+    this._container.itemFactory = this._createItemView;
+    this._container.addEventListener("click", this._onClick, false);
+
+    this._cache = [];
+  },
+
+  /**
+   * Destruction function, called when the debugger is closed.
+   */
+  destroy: function DVWE_destroy() {
+    dumpn("Destroying the WatchExpressionsView");
+    this._container.removeEventListener("click", this._onClick, false);
+  },
+
+  /**
+   * Adds a watch expression in this container.
+   *
+   * @param string aExpression [optional]
+   *        An optional initial watch expression text.
+   */
+  addExpression: function DVWE_addExpression(aExpression = "") {
+    // Watch expressions are UI elements which benefit from visible panes.
+    DebuggerView.showPanesSoon();
+
+    // Append a watch expression item to this container.
+    let expressionItem = this.push("", aExpression, {
+      forced: { atIndex: 0 },
+      unsorted: true,
+      relaxed: true,
+      attachment: {
+        expression: "",
+        initialExpression: aExpression,
+        id: this._generateId()
+      }
+    });
+
+    // Check if watch expression was already appended.
+    if (!expressionItem) {
+      return;
+    }
+
+    let element = expressionItem.target;
+    element.id = "expression-" + expressionItem.attachment.id;
+    element.className = "dbg-expression list-item";
+    element.arrowNode.className = "dbg-expression-arrow";
+    element.inputNode.className = "dbg-expression-input plain";
+    element.closeNode.className = "dbg-expression-delete plain devtools-closebutton";
+
+    // Automatically focus the new watch expression input and
+    // scroll the variables view to top.
+    element.inputNode.value = aExpression;
+    element.inputNode.select();
+    element.inputNode.focus();
+    this._variables.scrollTop = 0;
+
+    this._cache.splice(0, 0, expressionItem);
+  },
+
+  /**
+   * Removes the watch expression with the specified index from this container.
+   *
+   * @param number aIndex
+   *        The index used to identify the watch expression.
+   */
+  removeExpression: function DVWE_removeExpression(aIndex) {
+    this.remove(this._cache[aIndex]);
+    this._cache.splice(aIndex, 1);
+  },
+
+  /**
+   * Gets the watch expression code string for an item in this container.
+   *
+   * @param number aIndex
+   *        The index used to identify the watch expression.
+   * @return string
+   *         The watch expression code string.
+   */
+  getExpression: function DVWE_getExpression(aIndex) {
+    return this._cache[aIndex].attachment.expression;
+  },
+
+  /**
+   * Gets the watch expressions code strings for all items in this container.
+   *
+   * @return array
+   *         The watch expressions code strings.
+   */
+  getExpressions: function DVWE_getExpressions() {
+    return [item.attachment.expression for (item of this._cache)];
+  },
+
+  /**
+   * Customization function for creating an item's UI.
+   *
+   * @param nsIDOMNode aElementNode
+   *        The element associated with the displayed item.
+   * @param string aExpression
+   *        The initial watch expression text.
+   */
+  _createItemView: function DVWE__createItemView(aElementNode, aExpression) {
+    let arrowNode = document.createElement("box");
+    let inputNode = document.createElement("textbox");
+    let closeNode = document.createElement("toolbarbutton");
+
+    inputNode.setAttribute("value", aExpression);
+    inputNode.setAttribute("flex", "1");
+
+    closeNode.addEventListener("click", this._onClose, false);
+    inputNode.addEventListener("blur", this._onBlur, false);
+    inputNode.addEventListener("keypress", this._onKeyPress, false);
+    aElementNode.addEventListener("mouseover", this._onMouseOver, false);
+    aElementNode.addEventListener("mouseout", this._onMouseOut, false);
+
+    aElementNode.appendChild(arrowNode);
+    aElementNode.appendChild(inputNode);
+    aElementNode.appendChild(closeNode);
+    aElementNode.arrowNode = arrowNode;
+    aElementNode.inputNode = inputNode;
+    aElementNode.closeNode = closeNode;
+  },
+
+  /**
+   * The click listener for this container.
+   */
+  _onClick: function DVWE__onClick(e) {
+    let expressionItem = this.getItemForElement(e.target);
+    if (!expressionItem) {
+      // The container is empty or we didn't click on an actual item.
+      this.addExpression();
+    }
+  },
+
+  /**
+   * The click listener for a watch expression's close button.
+   */
+  _onClose: function DVWE__onClose(e) {
+    let expressionItem = this.getItemForElement(e.target);
+    this.removeExpression(this._cache.indexOf(expressionItem));
+
+    // Synchronize with the controller's watch expressions store.
+    DebuggerController.StackFrames.syncWatchExpressions();
+
+    e.preventDefault();
+    e.stopPropagation();
+  },
+
+  /**
+   * The blur listener for a watch expression's textbox.
+   */
+  _onBlur: function DVWE__onBlur({ target: textbox }) {
+    let expressionItem = this.getItemForElement(textbox);
+    let oldExpression = expressionItem.attachment.expression;
+    let newExpression = textbox.value;
+
+    // Remove the watch expression if it's empty.
+    if (!newExpression) {
+      this.removeExpression(this._cache.indexOf(expressionItem));
+    }
+    // Remove the watch expression if it's a duplicate.
+    else if (!oldExpression && this.getExpressions().indexOf(newExpression) != -1) {
+      this.removeExpression(this._cache.indexOf(expressionItem));
+    }
+    // Expression is eligible.
+    else {
+      // Save the watch expression code string.
+      expressionItem.attachment.expression = newExpression;
+      // Make sure the close button is hidden when the textbox is unfocused.
+      expressionItem.target.closeNode.hidden = true;
+    }
+
+    // Synchronize with the controller's watch expressions store.
+    DebuggerController.StackFrames.syncWatchExpressions();
+  },
+
+  /**
+   * The keypress listener for a watch expression's textbox.
+   */
+  _onKeyPress: function DVWE__onKeyPress(e) {
+    switch(e.keyCode) {
+      case e.DOM_VK_RETURN:
+      case e.DOM_VK_ENTER:
+      case e.DOM_VK_ESCAPE:
+        DebuggerView.editor.focus();
+        return;
+    }
+  },
+
+  /**
+   * The mouse over listener for a watch expression.
+   */
+  _onMouseOver: function DVWE__onMouseOver({ target: element }) {
+    this.getItemForElement(element).target.closeNode.hidden = false;
+  },
+
+  /**
+   * The mouse out listener for a watch expression.
+   */
+  _onMouseOut: function DVWE__onMouseOut({ target: element }) {
+    this.getItemForElement(element).target.closeNode.hidden = true;
+  },
+
+  /**
+   * Gets an identifier for a new watch expression item in the current cache.
+   * @return string
+   */
+  _generateId: (function() {
+    let count = 0;
+    return function DVWE__generateId() {
+      return (++count) + "";
+    };
+  })(),
+
+  _variables: null,
+  _cache: null
 });
 
 /**
@@ -1778,4 +2020,5 @@ LineResults.size = function DVGS_size() {
  */
 DebuggerView.StackFrames = new StackFramesView();
 DebuggerView.Breakpoints = new BreakpointsView();
+DebuggerView.WatchExpressions = new WatchExpressionsView();
 DebuggerView.GlobalSearch = new GlobalSearchView();
