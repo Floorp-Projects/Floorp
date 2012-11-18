@@ -361,6 +361,7 @@ NS_IMETHODIMP
 PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIDOMWindow* aWindow,
                                nsIThread* aThread) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aObserver);
   mPCObserver = aObserver;
 
