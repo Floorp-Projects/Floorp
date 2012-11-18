@@ -166,7 +166,6 @@ function test_request_forceAuthentication() {
   RelyingParty.watch(mockedDoc);
 
   makeObserver("identity-request", function(aSubject, aTopic, aData) {
-    dump("teh obj is " + JSON.stringify(aSubject.wrappedJSObject) + "\n");
     do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
     do_check_eq(aSubject.wrappedJSObject.forceAuthentication, true);
     do_test_finished();
@@ -176,6 +175,25 @@ function test_request_forceAuthentication() {
   RelyingParty.request(mockedDoc.id, {forceAuthentication: true});
 }
 
+/*
+ * ensure the issuer can be forced
+ */
+function test_request_forceIssuer() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL, function(action, params) {});
+
+  RelyingParty.watch(mockedDoc);
+
+  makeObserver("identity-request", function(aSubject, aTopic, aData) {
+    do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.issuer, "https://ozten.co.uk");
+    do_test_finished();
+    run_next_test();
+  });
+
+  RelyingParty.request(mockedDoc.id, {issuer: "https://ozten.co.uk"});
+}
 function test_logout() {
   do_test_pending();
 
@@ -226,6 +244,7 @@ let TESTS = [
   test_watch_notloggedin_logout,
   test_request,
   test_request_forceAuthentication,
+  test_request_forceIssuer,
   test_logout
 ];
 
