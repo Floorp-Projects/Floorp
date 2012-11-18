@@ -126,7 +126,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
  mHorizontalOverflow(false),
  mReflowCallbackPosted(false)
 {
-  mColumns = new nsTreeColumns(nullptr);
+  mColumns = new nsTreeColumns(this);
 }
 
 // Destructor
@@ -326,7 +326,6 @@ nsTreeBodyFrame::EnsureBoxObject()
               ->GetCachedTreeBody();
           ENSURE_TRUE(!innerTreeBoxObject || innerTreeBoxObject == this);
           mTreeBoxObject = realTreeBoxObject;
-          mColumns->SetTree(mTreeBoxObject);
         }
       }
     }
