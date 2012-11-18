@@ -153,6 +153,9 @@ public:
 
   nsITreeBoxObject* GetTreeBoxObject() const { return mTreeBoxObject; }
 
+  // Get the base element, <tree> or <select>
+  nsIContent* GetBaseElement();
+
   bool GetVerticalOverflow() const { return mVerticalOverflow; }
   bool GetHorizontalOverflow() const {return mHorizontalOverflow; }
 
@@ -357,9 +360,6 @@ protected:
   void EnsureBoxObject();
 
   void EnsureView();
-
-  // Get the base element, <tree> or <select>
-  nsIContent* GetBaseElement();
 
   nsresult GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
                         nsRenderingContext* aRenderingContext,
