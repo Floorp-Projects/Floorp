@@ -29,6 +29,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
+#include "HwcComposer2D.h"
 #include "LayerManagerOGL.h"
 #include "nsAutoPtr.h"
 #include "nsAppShell.h"
@@ -66,6 +67,7 @@ static nsWindow *gFocusedWindow = nullptr;
 static android::FramebufferNativeWindow *gNativeWindow = nullptr;
 static bool sFramebufferOpen;
 static bool sUsingOMTC;
+static bool sUsingHwc;
 static bool sScreenInitialized;
 static nsRefPtr<gfxASurface> sOMTCSurface;
 static pthread_t sFramebufferWatchThread;
@@ -215,6 +217,7 @@ nsWindow::nsWindow()
         // This has to happen after other init has finished.
         gfxPlatform::GetPlatform();
         sUsingOMTC = UseOffMainThreadCompositing();
+        sUsingHwc = Preferences::GetBool("layers.composer2d.enabled", false);
 
         if (sUsingOMTC) {
           sOMTCSurface = new gfxImageSurface(gfxIntSize(1, 1),
@@ -693,6 +696,18 @@ nsWindow::NeedsPaint()
     return false;
   }
   return nsIWidget::NeedsPaint();
+}
+
+Composer2D*
+nsWindow::GetComposer2D()
+{
+    if (!sUsingHwc) {
+        return nullptr;
+    }
+    if (HwcComposer2D* hwc = HwcComposer2D::GetInstance()) {
+        return hwc->Initialized() ? hwc : nullptr;
+    }
+    return nullptr;
 }
 
 // nsScreenGonk.cpp
