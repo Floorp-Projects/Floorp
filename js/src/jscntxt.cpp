@@ -298,12 +298,18 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     char *errorArgs[3] = {NULL, NULL, NULL};
     for (unsigned i = 1; i < 4 && i < args.length(); i++) {
         RootedValue val(cx, args[i]);
-        if (val.isInt32() || val.isString()) {
+        if (val.isInt32()) {
+            JSString *str = ToString(cx, val);
+            if (!str)
+                return false;
+            errorArgs[i - 1] = JS_EncodeString(cx, str);
+        } else if (val.isString()) {
             errorArgs[i - 1] = JS_EncodeString(cx, ToString(cx, val));
         } else {
-            ptrdiff_t spIndex = cx->stack.spIndexOf(val.address());
-            errorArgs[i - 1] = DecompileValueGenerator(cx, spIndex, val, NullPtr(), 1);
+            errorArgs[i - 1] = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
         }
+        if (!errorArgs[i - 1])
+            return false;
     }
 
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
@@ -311,6 +317,31 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < 3; i++)
         js_free(errorArgs[i]);
     return false;
+}
+
+/*
+ * Used to decompile values in the nearest non-builtin stack frame, falling
+ * back to decompiling in the current frame. Helpful for printing higher-order
+ * function arguments.
+ * 
+ * The user must supply the argument number of the value in question; it
+ * _cannot_ be automatically determined.
+ */
+static JSBool
+intrinsic_DecompileArg(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+
+    RootedValue value(cx, args[1]);
+    ScopedFreePtr<char> str(DecompileArgument(cx, args[0].toInt32(), value));
+    if (!str)
+        return false;
+    RootedAtom atom(cx, Atomize(cx, str, strlen(str)));
+    if (!atom)
+        return false;
+    args.rval().setString(atom);
+    return true;
 }
 
 static JSBool
@@ -331,6 +362,7 @@ JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsCallable",         intrinsic_IsCallable,           1,0),
     JS_FN("ThrowError",         intrinsic_ThrowError,           4,0),
     JS_FN("_MakeConstructible", intrinsic_MakeConstructible,    1,0),
+    JS_FN("_DecompileArg",      intrinsic_DecompileArg,         2,0),
     JS_FS_END
 };
 bool
