@@ -138,13 +138,13 @@ static const void *_NullPool[64 / sizeof (void *)];
 /* Generic nul-content Null objects. */
 template <typename Type>
 static inline const Type& Null (void) {
-  ASSERT_STATIC (Type::min_size <= sizeof (_NullPool));
+  ASSERT_STATIC (sizeof (Type) <= sizeof (_NullPool));
   return *CastP<Type> (_NullPool);
 }
 
 /* Specializaiton for arbitrary-content arbitrary-sized Null objects. */
 #define DEFINE_NULL_DATA(Type, data) \
-static const char _Null##Type[Type::min_size + 1] = data; /* +1 is for nul-termination in data */ \
+static const char _Null##Type[sizeof (Type) + 1] = data; /* +1 is for nul-termination in data */ \
 template <> \
 inline const Type& Null<Type> (void) { \
   return *CastP<Type> (_Null##Type); \
