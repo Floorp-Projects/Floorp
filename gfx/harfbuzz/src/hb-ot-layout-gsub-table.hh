@@ -1343,6 +1343,7 @@ struct SubstLookup : Lookup
     else
     {
 	/* in-place backward substitution */
+	c->buffer->remove_output ();
 	c->buffer->idx = c->buffer->len - 1;
 	do
 	{

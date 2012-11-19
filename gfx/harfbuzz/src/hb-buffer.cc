@@ -35,6 +35,29 @@
 #define HB_DEBUG_BUFFER (HB_DEBUG+0)
 #endif
 
+
+hb_bool_t
+hb_segment_properties_equal (const hb_segment_properties_t *a,
+			     const hb_segment_properties_t *b)
+{
+  return a->direction == b->direction &&
+	 a->script    == b->script    &&
+	 a->language  == b->language  &&
+	 a->reserved1 == b->reserved1 &&
+	 a->reserved2 == b->reserved2;
+
+}
+
+unsigned int
+hb_segment_properties_hash (const hb_segment_properties_t *p)
+{
+  return (unsigned int) p->direction ^
+	 (unsigned int) p->script ^
+	 (intptr_t) (p->language);
+}
+
+
+
 /* Here is how the buffer works internally:
  *
  * There are two info pointers: info and out_info.  They always have
@@ -71,7 +94,7 @@ hb_buffer_t::enlarge (unsigned int size)
   if (unlikely (_hb_unsigned_int_mul_overflows (size, sizeof (info[0]))))
     goto done;
 
-  while (size > new_allocated)
+  while (size >= new_allocated)
     new_allocated += (new_allocated >> 1) + 32;
 
   ASSERT_STATIC (sizeof (info[0]) == sizeof (pos[0]));
@@ -142,8 +165,18 @@ hb_buffer_t::reset (void)
   hb_unicode_funcs_destroy (unicode);
   unicode = hb_unicode_funcs_get_default ();
 
-  hb_segment_properties_t default_props = _HB_BUFFER_PROPS_DEFAULT;
+  clear ();
+}
+
+void
+hb_buffer_t::clear (void)
+{
+  if (unlikely (hb_object_is_inert (this)))
+    return;
+
+  hb_segment_properties_t default_props = HB_SEGMENT_PROPERTIES_DEFAULT;
   props = default_props;
+  flags = HB_BUFFER_FLAGS_DEFAULT;
 
   content_type = HB_BUFFER_CONTENT_TYPE_INVALID;
   in_error = false;
@@ -165,7 +198,6 @@ hb_buffer_t::reset (void)
 
 void
 hb_buffer_t::add (hb_codepoint_t  codepoint,
-		  hb_mask_t       mask,
 		  unsigned int    cluster)
 {
   hb_glyph_info_t *glyph;
@@ -176,10 +208,23 @@ hb_buffer_t::add (hb_codepoint_t  codepoint,
 
   memset (glyph, 0, sizeof (*glyph));
   glyph->codepoint = codepoint;
-  glyph->mask = mask;
+  glyph->mask = 1;
   glyph->cluster = cluster;
 
   len++;
+}
+
+void
+hb_buffer_t::remove_output (void)
+{
+  if (unlikely (hb_object_is_inert (this)))
+    return;
+
+  have_output = false;
+  have_positions = false;
+
+  out_len = 0;
+  out_info = info;
 }
 
 void
@@ -446,7 +491,7 @@ hb_buffer_t::merge_out_clusters (unsigned int start,
 }
 
 void
-hb_buffer_t::guess_properties (void)
+hb_buffer_t::guess_segment_properties (void)
 {
   if (unlikely (!len)) return;
   assert (content_type == HB_BUFFER_CONTENT_TYPE_UNICODE);
@@ -548,7 +593,7 @@ void hb_buffer_t::deallocate_var_all (void)
 /* Public API */
 
 hb_buffer_t *
-hb_buffer_create ()
+hb_buffer_create (void)
 {
   hb_buffer_t *buffer;
 
@@ -567,7 +612,8 @@ hb_buffer_get_empty (void)
     HB_OBJECT_HEADER_STATIC,
 
     const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_nil),
-    _HB_BUFFER_PROPS_DEFAULT,
+    HB_SEGMENT_PROPERTIES_DEFAULT,
+    HB_BUFFER_FLAGS_DEFAULT,
 
     HB_BUFFER_CONTENT_TYPE_INVALID,
     true, /* in_error */
@@ -702,11 +748,51 @@ hb_buffer_get_language (hb_buffer_t *buffer)
   return buffer->props.language;
 }
 
+void
+hb_buffer_set_segment_properties (hb_buffer_t *buffer,
+				  const hb_segment_properties_t *props)
+{
+  if (unlikely (hb_object_is_inert (buffer)))
+    return;
+
+  buffer->props = *props;
+}
+
+void
+hb_buffer_get_segment_properties (hb_buffer_t *buffer,
+				  hb_segment_properties_t *props)
+{
+  *props = buffer->props;
+}
+
+
+void
+hb_buffer_set_flags (hb_buffer_t       *buffer,
+		     hb_buffer_flags_t  flags)
+{
+  if (unlikely (hb_object_is_inert (buffer)))
+    return;
+
+  buffer->flags = flags;
+}
+
+hb_buffer_flags_t
+hb_buffer_get_flags (hb_buffer_t *buffer)
+{
+  return buffer->flags;
+}
+
 
 void
 hb_buffer_reset (hb_buffer_t *buffer)
 {
   buffer->reset ();
+}
+
+void
+hb_buffer_clear (hb_buffer_t *buffer)
+{
+  buffer->clear ();
 }
 
 hb_bool_t
@@ -724,10 +810,9 @@ hb_buffer_allocation_successful (hb_buffer_t  *buffer)
 void
 hb_buffer_add (hb_buffer_t    *buffer,
 	       hb_codepoint_t  codepoint,
-	       hb_mask_t       mask,
 	       unsigned int    cluster)
 {
-  buffer->add (codepoint, mask, cluster);
+  buffer->add (codepoint, cluster);
   buffer->clear_context (1);
 }
 
@@ -801,9 +886,9 @@ hb_buffer_reverse_clusters (hb_buffer_t *buffer)
 }
 
 void
-hb_buffer_guess_properties (hb_buffer_t *buffer)
+hb_buffer_guess_segment_properties (hb_buffer_t *buffer)
 {
-  buffer->guess_properties ();
+  buffer->guess_segment_properties ();
 }
 
 template <typename T>
@@ -828,7 +913,14 @@ hb_buffer_add_utf (hb_buffer_t  *buffer,
 
   buffer->ensure (buffer->len + item_length * sizeof (T) / 4);
 
-  if (!buffer->len)
+  /* If buffer is empty and pre-context provided, install it.
+   * This check is written this way, to make sure people can
+   * provide pre-context in one add_utf() call, then provide
+   * text in a follow-up call.  See:
+   *
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=801410#c13
+   */
+  if (!buffer->len && item_offset > 0)
   {
     /* Add pre-context */
     buffer->clear_context (0);
@@ -849,7 +941,7 @@ hb_buffer_add_utf (hb_buffer_t  *buffer,
     hb_codepoint_t u;
     const T *old_next = next;
     next = hb_utf_next (next, end, &u);
-    buffer->add (u, 1,  old_next - (const T *) text);
+    buffer->add (u, old_next - (const T *) text);
   }
 
   /* Add post-context */
@@ -971,4 +1063,232 @@ hb_buffer_normalize_glyphs (hb_buffer_t *buffer)
       start = end;
     }
   normalize_glyphs_cluster (buffer, start, end, backward);
+}
+
+
+/*
+ * Serialize
+ */
+
+static const char *serialize_formats[] = {
+  "TEXT",
+  "JSON",
+  NULL
+};
+
+const char **
+hb_buffer_serialize_list_formats (void)
+{
+  return serialize_formats;
+}
+
+hb_buffer_serialize_format_t
+hb_buffer_serialize_format_from_string (const char *str, int len)
+{
+  /* Upper-case it. */
+  return (hb_buffer_serialize_format_t) (hb_tag_from_string (str, len) & ~0x20202020);
+}
+
+const char *
+hb_buffer_serialize_format_to_string (hb_buffer_serialize_format_t format)
+{
+  switch (format)
+  {
+    case HB_BUFFER_SERIALIZE_FORMAT_TEXT:	return serialize_formats[0];
+    case HB_BUFFER_SERIALIZE_FORMAT_JSON:	return serialize_formats[1];
+    default:
+    case HB_BUFFER_SERIALIZE_FORMAT_INVALID:	return NULL;
+  }
+}
+
+static unsigned int
+_hb_buffer_serialize_glyphs_json (hb_buffer_t *buffer,
+				  unsigned int start,
+				  unsigned int end,
+				  char *buf,
+				  unsigned int buf_size,
+				  unsigned int *buf_consumed,
+				  hb_font_t *font,
+				  hb_buffer_serialize_flags_t flags)
+{
+  hb_glyph_info_t *info = hb_buffer_get_glyph_infos (buffer, NULL);
+  hb_glyph_position_t *pos = hb_buffer_get_glyph_positions (buffer, NULL);
+
+  *buf_consumed = 0;
+  for (unsigned int i = start; i < end; i++)
+  {
+    char b[1024];
+    char *p = b;
+
+    /* In the following code, we know b is large enough that no overflow can happen. */
+
+#define APPEND(s) HB_STMT_START { strcpy (p, s); p += strlen (s); } HB_STMT_END
+
+    if (i)
+      *p++ = ',';
+
+    *p++ = '{';
+
+    APPEND ("\"g\":");
+    if (!(flags & HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES))
+    {
+      char g[128];
+      hb_font_glyph_to_string (font, info[i].codepoint, g, sizeof (g));
+      *p++ = '"';
+      for (char *q = g; *q; q++) {
+        if (*q == '"')
+	  *p++ = '\\';
+	*p++ = *q;
+      }
+      *p++ = '"';
+    }
+    else
+      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), "%u", info[i].codepoint);
+
+    if (!(flags & HB_BUFFER_SERIALIZE_FLAG_NO_CLUSTERS)) {
+      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"cl\":%u", info[i].cluster);
+    }
+
+    if (!(flags & HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS))
+    {
+      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"dx\":%d,\"dy\":%d",
+		     pos[i].x_offset, pos[i].y_offset);
+      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"ax\":%d,\"ay\":%d",
+		     pos[i].x_advance, pos[i].y_advance);
+    }
+
+    *p++ = '}';
+
+    if (buf_size > (p - b))
+    {
+      unsigned int l = p - b;
+      memcpy (buf, b, l);
+      buf += l;
+      buf_size -= l;
+      *buf_consumed += l;
+      *buf = '\0';
+    } else
+      return i - start;
+  }
+
+  return end - start;
+}
+
+static unsigned int
+_hb_buffer_serialize_glyphs_text (hb_buffer_t *buffer,
+				  unsigned int start,
+				  unsigned int end,
+				  char *buf,
+				  unsigned int buf_size,
+				  unsigned int *buf_consumed,
+				  hb_font_t *font,
+				  hb_buffer_serialize_flags_t flags)
+{
+  hb_glyph_info_t *info = hb_buffer_get_glyph_infos (buffer, NULL);
+  hb_glyph_position_t *pos = hb_buffer_get_glyph_positions (buffer, NULL);
+  hb_direction_t direction = hb_buffer_get_direction (buffer);
+
+  *buf_consumed = 0;
+  for (unsigned int i = start; i < end; i++)
+  {
+    char b[1024];
+    char *p = b;
+
+    /* In the following code, we know b is large enough that no overflow can happen. */
+
+    if (i)
+      *p++ = '|';
+
+    if (!(flags & HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES))
+    {
+      hb_font_glyph_to_string (font, info[i].codepoint, p, 128);
+      p += strlen (p);
+    }
+    else
+      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), "%u", info[i].codepoint);
+
+    if (!(flags & HB_BUFFER_SERIALIZE_FLAG_NO_CLUSTERS)) {
+      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), "=%u", info[i].cluster);
+    }
+
+    if (!(flags & HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS))
+    {
+      if (pos[i].x_offset || pos[i].y_offset)
+	p += snprintf (p, ARRAY_LENGTH (b) - (p - b), "@%d,%d", pos[i].x_offset, pos[i].y_offset);
+
+      *p++ = '+';
+      if (HB_DIRECTION_IS_HORIZONTAL (direction) || pos[i].x_advance)
+	p += snprintf (p, ARRAY_LENGTH (b) - (p - b), "%d", pos[i].x_advance);
+      if (HB_DIRECTION_IS_VERTICAL (direction) || pos->y_advance)
+	p += snprintf (p, ARRAY_LENGTH (b) - (p - b), ",%d", pos[i].y_advance);
+    }
+
+    if (buf_size > (p - b))
+    {
+      unsigned int l = p - b;
+      memcpy (buf, b, l);
+      buf += l;
+      buf_size -= l;
+      *buf_consumed += l;
+      *buf = '\0';
+    } else
+      return i - start;
+  }
+
+  return end - start;
+}
+
+/* Returns number of items, starting at start, that were serialized. */
+unsigned int
+hb_buffer_serialize_glyphs (hb_buffer_t *buffer,
+			    unsigned int start,
+			    unsigned int end,
+			    char *buf,
+			    unsigned int buf_size,
+			    unsigned int *buf_consumed,
+			    hb_font_t *font, /* May be NULL */
+			    hb_buffer_serialize_format_t format,
+			    hb_buffer_serialize_flags_t flags)
+{
+  assert (start <= end && end <= buffer->len);
+
+  *buf_consumed = 0;
+
+  assert ((!buffer->len && buffer->content_type == HB_BUFFER_CONTENT_TYPE_INVALID) ||
+	  buffer->content_type == HB_BUFFER_CONTENT_TYPE_GLYPHS);
+
+  if (unlikely (start == end))
+    return 0;
+
+  if (!font)
+    font = hb_font_get_empty ();
+
+  switch (format)
+  {
+    case HB_BUFFER_SERIALIZE_FORMAT_TEXT:
+      return _hb_buffer_serialize_glyphs_text (buffer, start, end,
+					       buf, buf_size, buf_consumed,
+					       font, flags);
+
+    case HB_BUFFER_SERIALIZE_FORMAT_JSON:
+      return _hb_buffer_serialize_glyphs_json (buffer, start, end,
+					       buf, buf_size, buf_consumed,
+					       font, flags);
+
+    default:
+    case HB_BUFFER_SERIALIZE_FORMAT_INVALID:
+      return 0;
+
+  }
+}
+
+hb_bool_t
+hb_buffer_deserialize_glyphs (hb_buffer_t *buffer,
+			      const char *buf,
+			      unsigned int buf_len,
+			      unsigned int *buf_consumed,
+			      hb_font_t *font, /* May be NULL */
+			      hb_buffer_serialize_format_t format)
+{
+  return false;
 }
