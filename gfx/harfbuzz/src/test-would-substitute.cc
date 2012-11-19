@@ -99,5 +99,5 @@ main (int argc, char **argv)
       (argc > 4 &&
        !hb_font_glyph_from_string (font, argv[4], -1, &glyphs[1])))
     return 2;
-  return !hb_ot_layout_would_substitute_lookup (face, strtol (argv[2], NULL, 0), glyphs, len, false);
+  return !hb_ot_layout_lookup_would_substitute (face, strtol (argv[2], NULL, 0), glyphs, len, false);
 }
