@@ -1729,10 +1729,3 @@ if [ "$MOZ_SPEEX_RESAMPLER" ]; then
   "
 fi
 
-if [ "$MOZ_SOUNDTOUCH" ]; then
-  add_makefiles "
-    media/libsoundtouch/Makefile
-    media/libsoundtouch/src/Makefile
-  "
-fi
-
