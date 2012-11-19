@@ -729,6 +729,7 @@ abstract public class GeckoApp
     void handleThumbnailData(Tab tab, ByteBuffer data) {
         if (shouldUpdateThumbnail(tab)) {
             Bitmap b = tab.getThumbnailBitmap();
+            data.position(0);
             b.copyPixelsFromBuffer(data);
             processThumbnail(tab, b, null);
         }

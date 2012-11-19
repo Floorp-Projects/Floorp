@@ -2589,7 +2589,7 @@ for (uint32_t i = 0; i < length; ++i) {
             else:
                 declType = "NonNull<" + name + ">"
         template = (
-            "%s.%s(cx, &${val}.toObject());\n"
+            "%s.%s(&${val}.toObject());\n"
             "if (!%s.%s().inited()) {\n"
             "%s" # No newline here because onFailureBadType() handles that
             "}\n" %

@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "AudioSampleFormat.h"
+#include "AudioChannelCommon.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -65,20 +66,6 @@ nsHTMLAudioElement::~nsHTMLAudioElement()
 {
 }
 
-void
-nsHTMLAudioElement::GetItemValueText(nsAString& aValue)
-{
-  // Can't call GetSrc because we don't have a JSContext
-  GetURIAttr(nsGkAtoms::src, nullptr, aValue);
-}
-
-void
-nsHTMLAudioElement::SetItemValueText(const nsAString& aValue)
-{
-  // Can't call SetSrc because we don't have a JSContext
-  SetAttr(kNameSpaceID_None, nsGkAtoms::src, aValue, true);
-}
-
 NS_IMETHODIMP
 nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
                                JSObject *aObj, uint32_t argc, jsval *argv)
@@ -127,8 +114,8 @@ nsHTMLAudioElement::MozSetup(uint32_t aChannels, uint32_t aRate)
     mAudioStream->Shutdown();
   }
 
-  mAudioStream = nsAudioStream::AllocateStream();
-  nsresult rv = mAudioStream->Init(aChannels, aRate);
+  mAudioStream = AudioStream::AllocateStream();
+  nsresult rv = mAudioStream->Init(aChannels, aRate, mAudioChannelType);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
@@ -156,7 +143,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   JSObject* tsrc = NULL;
 
   // Allow either Float32Array or plain JS Array
-  if (JS_IsFloat32Array(darray, aCx)) {
+  if (JS_IsFloat32Array(darray)) {
     tsrc = darray;
   } else if (JS_IsArrayObject(aCx, darray)) {
     JSObject* nobj = JS_NewFloat32ArrayFromArray(aCx, darray);
@@ -169,7 +156,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   }
   tvr.setObject(tsrc);
 
-  uint32_t dataLength = JS_GetTypedArrayLength(tsrc, aCx);
+  uint32_t dataLength = JS_GetTypedArrayLength(tsrc);
 
   // Make sure that we are going to write the correct amount of data based
   // on number of channels.
@@ -180,9 +167,9 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   // Don't write more than can be written without blocking.
   uint32_t writeLen = NS_MIN(mAudioStream->Available(), dataLength / mChannels);
 
-  float* frames = JS_GetFloat32ArrayData(tsrc, aCx);
+  float* frames = JS_GetFloat32ArrayData(tsrc);
   // Convert the samples back to integers as we are using fixed point audio in
-  // the nsAudioStream.
+  // the AudioStream.
   // This could be optimized to avoid allocation and memcpy when
   // AudioDataValue is 'float', but it's not worth it for this deprecated API.
   nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[writeLen * mChannels]);

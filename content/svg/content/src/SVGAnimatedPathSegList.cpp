@@ -48,7 +48,7 @@ SVGAnimatedPathSegList::SetBaseValueString(const nsAString& aValue)
   // Only now may we modify mBaseVal!
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+  // nsSVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
   nsresult rv2 = mBaseVal.CopyFrom(newBaseValue);

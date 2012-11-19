@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource:///modules/devtools/dbg-server.jsm");
-Cu.import("resource:///modules/devtools/dbg-client.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 
 function run_test()
 {

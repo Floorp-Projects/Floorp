@@ -834,7 +834,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   // handle it correctly.
   unw_tdep_context_t *unw_ctx = reinterpret_cast<unw_tdep_context_t*> (&uc);
   mcontext_t& mcontext = reinterpret_cast<ucontext_t*> (aSample->context)->uc_mcontext;
-#define REPLACE_REG(num) unw_ctx->regs[num] = mcontext.gregs[R##num]
+#define REPLACE_REG(num) unw_ctx->regs[num] = (&mcontext.arm_r0)[num]
   REPLACE_REG(0);
   REPLACE_REG(1);
   REPLACE_REG(2);

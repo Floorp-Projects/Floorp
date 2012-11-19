@@ -49,7 +49,7 @@ bool
 ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 {
     IonCompartment *ion = cx->compartment->ionCompartment();
-    IonCode *code = ion->generateVMWrapper(cx, fun);
+    IonCode *code = ion->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -116,6 +116,10 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     return true;
 }
 
+typedef bool (*DoCompareFallbackFn)(JSContext *, ICCompare_Fallback *, HandleValue, HandleValue,
+                                    MutableHandleValue);
+static const VMFunction DoCompareFallbackInfo = FunctionInfo<DoCompareFallbackFn>(DoCompareFallback);
+
 bool
 ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -124,21 +128,11 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
-    // Get VMFunction to call
-    typedef bool (*pf)(JSContext *, ICCompare_Fallback *, HandleValue, HandleValue,
-                       MutableHandleValue);
-    static const VMFunction fun = FunctionInfo<pf>(DoCompareFallback);
-
-    // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    // Call.
-    if (!callVM(fun, masm))
-        return false;
-
-    return true;
+    return callVM(DoCompareFallbackInfo, masm);
 }
 
 //
@@ -172,6 +166,9 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
     return true;
 }
 
+typedef bool (*pf)(JSContext *, ICToBool_Fallback *, HandleValue, MutableHandleValue);
+static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback);
+
 bool
 ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -179,10 +176,6 @@ ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
-
-    // Get VMFunction to call
-    typedef bool (*pf)(JSContext *, ICToBool_Fallback *, HandleValue, MutableHandleValue);
-    static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback);
 
     // Push arguments.
     masm.pushValue(R0);
@@ -225,6 +218,9 @@ DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, Mu
     return ToNumber(cx, ret.address());
 }
 
+typedef bool (*DoToNumberFallbackFn)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
+static const VMFunction DoToNumberFallbackInfo = FunctionInfo<DoToNumberFallbackFn>(DoToNumberFallback);
+
 bool
 ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -233,19 +229,10 @@ ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
-    // Get VMFunction to call
-    typedef bool (*pf)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
-    static const VMFunction fun = FunctionInfo<pf>(DoToNumberFallback);
-
-    // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    // Call.
-    if (!callVM(fun, masm))
-        return false;
-
-    return true;
+    return callVM(DoToNumberFallbackInfo, masm);
 }
 
 //
@@ -295,6 +282,11 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     return true;
 }
 
+typedef bool (*DoBinaryArithFallbackFn)(JSContext *, ICBinaryArith_Fallback *, HandleValue, HandleValue,
+                                        MutableHandleValue);
+static const VMFunction DoBinaryArithFallbackInfo =
+    FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback);
+
 bool
 ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -303,21 +295,11 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
-    // Get VMFunction to call
-    typedef bool (*pf)(JSContext *, ICBinaryArith_Fallback *, HandleValue, HandleValue,
-                       MutableHandleValue);
-    static const VMFunction fun = FunctionInfo<pf>(DoBinaryArithFallback);
-
-    // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    // Call.
-    if (!callVM(fun, masm))
-        return false;
-
-    return true;
+    return callVM(DoBinaryArithFallbackInfo, masm);
 }
 
 //
@@ -385,6 +367,9 @@ ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, Register argcReg)
     masm.bind(&done);
 }
 
+typedef bool (*DoCallFallbackFn)(JSContext *, ICCall_Fallback *, uint32_t, Value *, MutableHandleValue);
+static const VMFunction DoCallFallbackInfo = FunctionInfo<DoCallFallbackFn>(DoCallFallback);
+
 bool
 ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -392,9 +377,6 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
-
-    typedef bool (*pf)(JSContext *, ICCall_Fallback *, uint32_t, Value *, MutableHandleValue);
-    static const VMFunction fun = FunctionInfo<pf>(DoCallFallback);
 
     // Values are on the stack left-to-right. Calling convention wants them
     // right-to-left so duplicate them on the stack in reverse order.
@@ -407,11 +389,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(R0.scratchReg());
     masm.push(BaselineStubReg);
 
-    // Call.
-    if (!callVM(fun, masm))
-        return false;
-
-    return true;
+    return callVM(DoCallFallbackInfo, masm);
 }
 
 } // namespace ion

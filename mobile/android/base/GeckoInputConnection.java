@@ -39,16 +39,6 @@ class GeckoInputConnection
     private static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoInputConnection";
 
-    // IME stuff
-    public static final int IME_STATE_DISABLED = 0;
-    public static final int IME_STATE_ENABLED = 1;
-    public static final int IME_STATE_PASSWORD = 2;
-    public static final int IME_STATE_PLUGIN = 3;
-
-    private static final int NOTIFY_IME_RESETINPUTSTATE = 0;
-    private static final int NOTIFY_IME_CANCELCOMPOSITION = 2;
-    private static final int NOTIFY_IME_FOCUSCHANGE = 3;
-
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
@@ -64,6 +54,8 @@ class GeckoInputConnection
     protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
     private final ExtractedText mUpdateExtract = new ExtractedText();
+    private boolean mBatchSelectionChanged;
+    private boolean mBatchTextChanged;
 
     public static InputConnectionHandler create(View targetView,
                                                 GeckoEditableClient editable) {
@@ -94,6 +86,16 @@ class GeckoInputConnection
         if (mBatchEditCount > 0) {
             mBatchEditCount--;
             if (mBatchEditCount == 0) {
+                if (mBatchTextChanged) {
+                    notifyTextChange();
+                    mBatchTextChanged = false;
+                }
+                if (mBatchSelectionChanged) {
+                    Editable editable = getEditable();
+                    notifySelectionChange(Selection.getSelectionStart(editable),
+                                           Selection.getSelectionEnd(editable));
+                    mBatchSelectionChanged = false;
+                }
                 mEditableClient.setUpdateGecko(true);
             }
         } else {
@@ -191,9 +193,19 @@ class GeckoInputConnection
 
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
 
-        if (mBatchEditCount > 0 || mUpdateRequest == null) {
+        if (mUpdateRequest == null) {
             return;
         }
+
+        if (mBatchEditCount > 0) {
+            // Delay notification until after the batch edit
+            mBatchTextChanged = true;
+            return;
+        }
+        notifyTextChange();
+    }
+
+    private void notifyTextChange() {
 
         final InputMethodManager imm = getInputMethodManager();
         if (imm == null) {
@@ -203,10 +215,9 @@ class GeckoInputConnection
         final Editable editable = getEditable();
 
         mUpdateExtract.flags = 0;
-        // Update from (0, oldEnd) to (0, newEnd) because some IMEs
-        // assume that updates start at zero, according to jchen.
-        mUpdateExtract.partialStartOffset = 0;
-        mUpdateExtract.partialEndOffset = editable.length();
+        // Update the entire Editable range
+        mUpdateExtract.partialStartOffset = -1;
+        mUpdateExtract.partialEndOffset = -1;
         mUpdateExtract.selectionStart =
                 Selection.getSelectionStart(editable);
         mUpdateExtract.selectionEnd =
@@ -221,8 +232,15 @@ class GeckoInputConnection
     public void onSelectionChange(int start, int end) {
 
         if (mBatchEditCount > 0) {
+            // Delay notification until after the batch edit
+            mBatchSelectionChanged = true;
             return;
         }
+        notifySelectionChange(start, end);
+    }
+
+    private void notifySelectionChange(int start, int end) {
+
         final InputMethodManager imm = getInputMethodManager();
         if (imm == null) {
             return;

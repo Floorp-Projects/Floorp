@@ -14,6 +14,8 @@
 <script class="testbody" type="text/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
 
+let gState;
+
 function startTest()
 {
   removeEventListener("load", startTest);
@@ -29,13 +31,24 @@ function onAttach(aState, aResponse)
   top.foobarObject.foobaz = 3;
   top.foobarObject.omg = 4;
   top.foobarObject.omgfoo = 5;
+  top.foobarObject.strfoo = "foobarz";
+  top.foobarObject.omgstr = "foobarz" +
+    (new Array(DebuggerServer.LONG_STRING_LENGTH * 2)).join("abb");
 
-  info("test autocomplete for 'window.foo'");
-  onAutocomplete1 = onAutocomplete1.bind(null, aState);
-  aState.client.autocomplete("window.foo", 0, onAutocomplete1);
+  gState = aState;
+
+  let tests = [doAutocomplete1, doAutocomplete2, doSimpleEval, doWindowEval,
+    doEvalWithException, doEvalWithHelper, doEvalString, doEvalLongString];
+  runTests(tests, testEnd);
 }
 
-function onAutocomplete1(aState, aResponse)
+function doAutocomplete1()
+{
+  info("test autocomplete for 'window.foo'");
+  gState.client.autocomplete("window.foo", 0, onAutocomplete1);
+}
+
+function onAutocomplete1(aResponse)
 {
   let matches = aResponse.matches;
 
@@ -43,30 +56,37 @@ function onAutocomplete1(aState, aResponse)
   is(matches.length, 1, "matches.length");
   is(matches[0], "foobarObject", "matches[0]");
 
-  info("test autocomplete for 'window.foobarObject.'");
-
-  onAutocomplete2 = onAutocomplete2.bind(null, aState);
-  aState.client.autocomplete("window.foobarObject.", 0, onAutocomplete2);
+  nextTest();
 }
 
-function onAutocomplete2(aState, aResponse)
+function doAutocomplete2()
+{
+  info("test autocomplete for 'window.foobarObject.'");
+  gState.client.autocomplete("window.foobarObject.", 0, onAutocomplete2);
+}
+
+function onAutocomplete2(aResponse)
 {
   let matches = aResponse.matches;
 
   ok(!aResponse.matchProp, "matchProp");
-  is(matches.length, 5, "matches.length");
-  checkObject(matches, ["foo", "foobar", "foobaz", "omg", "omgfoo"]);
+  is(matches.length, 7, "matches.length");
+  checkObject(matches,
+    ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
 
-  info("test eval '2+2'");
-
-  onEval1 = onEval1.bind(null, aState);
-  aState.client.evaluateJS("2+2", onEval1);
+  nextTest();
 }
 
-function onEval1(aState, aResponse)
+function doSimpleEval()
+{
+  info("test eval '2+2'");
+  gState.client.evaluateJS("2+2", onSimpleEval);
+}
+
+function onSimpleEval(aResponse)
 {
   checkObject(aResponse, {
-    from: aState.actor,
+    from: gState.actor,
     input: "2+2",
     result: 4,
   });
@@ -74,15 +94,19 @@ function onEval1(aState, aResponse)
   ok(!aResponse.error, "no js error");
   ok(!aResponse.helperResult, "no helper result");
 
-  info("test eval 'window'");
-  onEval2 = onEval2.bind(null, aState);
-  aState.client.evaluateJS("window", onEval2);
+  nextTest();
 }
 
-function onEval2(aState, aResponse)
+function doWindowEval()
+{
+  info("test eval 'window'");
+  gState.client.evaluateJS("window", onWindowEval);
+}
+
+function onWindowEval(aResponse)
 {
   checkObject(aResponse, {
-    from: aState.actor,
+    from: gState.actor,
     input: "window",
     result: {
       type: "object",
@@ -94,17 +118,19 @@ function onEval2(aState, aResponse)
   ok(!aResponse.error, "no js error");
   ok(!aResponse.helperResult, "no helper result");
 
-  info("test eval with exception");
-
-  onEvalWithException = onEvalWithException.bind(null, aState);
-  aState.client.evaluateJS("window.doTheImpossible()",
-                           onEvalWithException);
+  nextTest();
 }
 
-function onEvalWithException(aState, aResponse)
+function doEvalWithException()
+{
+  info("test eval with exception");
+  gState.client.evaluateJS("window.doTheImpossible()", onEvalWithException);
+}
+
+function onEvalWithException(aResponse)
 {
   checkObject(aResponse, {
-    from: aState.actor,
+    from: gState.actor,
     input: "window.doTheImpossible()",
     result: {
       type: "undefined",
@@ -115,16 +141,19 @@ function onEvalWithException(aState, aResponse)
   ok(aResponse.error, "js error object");
   ok(!aResponse.helperResult, "no helper result");
 
-  info("test eval with helper");
-
-  onEvalWithHelper = onEvalWithHelper.bind(null, aState);
-  aState.client.evaluateJS("clear()", onEvalWithHelper);
+  nextTest();
 }
 
-function onEvalWithHelper(aState, aResponse)
+function doEvalWithHelper()
+{
+  info("test eval with helper");
+  gState.client.evaluateJS("clear()", onEvalWithHelper);
+}
+
+function onEvalWithHelper(aResponse)
 {
   checkObject(aResponse, {
-    from: aState.actor,
+    from: gState.actor,
     input: "clear()",
     result: {
       type: "undefined",
@@ -134,7 +163,52 @@ function onEvalWithHelper(aState, aResponse)
 
   ok(!aResponse.error, "no js error");
 
-  closeDebugger(aState, function() {
+  nextTest();
+}
+
+function doEvalString()
+{
+  gState.client.evaluateJS("window.foobarObject.strfoo", onEvalString);
+}
+
+function onEvalString(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.strfoo",
+    result: "foobarz",
+  });
+
+  nextTest();
+}
+
+function doEvalLongString()
+{
+  gState.client.evaluateJS("window.foobarObject.omgstr", onEvalLongString);
+}
+
+function onEvalLongString(aResponse)
+{
+  let str = top.foobarObject.omgstr;
+  let initial = str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
+
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.omgstr",
+    result: {
+      type: "longString",
+      initial: initial,
+      length: str.length,
+    },
+  });
+
+  nextTest();
+}
+
+function testEnd()
+{
+  closeDebugger(gState, function() {
+    gState = null;
     SimpleTest.finish();
   });
 }

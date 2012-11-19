@@ -14,7 +14,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, uuid(753f0f13-681d-4de3-a6c6-11aa7e0b3afd)]
+[scriptable, uuid(bb2bb490-3ba4-4254-b8f5-8b43c7b714ea)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -49,6 +49,10 @@ interface nsISSLSocketControl : nsISupports {
       in ACString npnProtocol, /* e.g. "spdy/2" */
       in ACString hostname,
       in long port);
-    
+
+    /*
+     * The original flags from the socket provider.
+     */
+    readonly attribute uint32_t providerFlags;
 };
 

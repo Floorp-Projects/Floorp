@@ -234,13 +234,13 @@ nsDOMMultipartFile::InitInternal(JSContext* aCx,
           }
           continue;
         }
-        if (JS_IsArrayBufferViewObject(&obj, aCx)) {
-          blobSet.AppendVoidPtr(JS_GetArrayBufferViewData(&obj, aCx),
-                                JS_GetArrayBufferViewByteLength(&obj, aCx));
+        if (JS_IsArrayBufferViewObject(&obj)) {
+          blobSet.AppendVoidPtr(JS_GetArrayBufferViewData(&obj),
+                                JS_GetArrayBufferViewByteLength(&obj));
           continue;
         }
-        if (JS_IsArrayBufferObject(&obj, aCx)) {
-          blobSet.AppendArrayBuffer(&obj, aCx);
+        if (JS_IsArrayBufferObject(&obj)) {
+          blobSet.AppendArrayBuffer(&obj);
           continue;
         }
         // neither Blob nor ArrayBuffer(View)
@@ -319,8 +319,8 @@ BlobSet::AppendBlobs(const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlob)
 }
 
 nsresult
-BlobSet::AppendArrayBuffer(JSObject* aBuffer, JSContext *aCx)
+BlobSet::AppendArrayBuffer(JSObject* aBuffer)
 {
-  return AppendVoidPtr(JS_GetArrayBufferData(aBuffer, aCx),
-                       JS_GetArrayBufferByteLength(aBuffer, aCx));
+  return AppendVoidPtr(JS_GetArrayBufferData(aBuffer),
+                       JS_GetArrayBufferByteLength(aBuffer));
 }

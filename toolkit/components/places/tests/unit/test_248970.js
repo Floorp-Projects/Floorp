@@ -55,6 +55,7 @@ let nonvisited_URIs = ["http://www.google.ca/typed/",
                        "http://www.google.it/framed-link/",
                        "http://www.google.com.tr/redirect-permanent/",
                        "http://www.google.de/redirect-temporary/"];
+
 /**
  * Function fills history, one for each transition type.
  */
@@ -69,25 +70,6 @@ function fill_history_visitedURI() {
       add_visit(visited_URIs[5], PlacesUtils.history.TRANSITION_EMBED);
       add_visit(visited_URIs[6], PlacesUtils.history.TRANSITION_FRAMED_LINK);
       add_visit(visited_URIs[7], PlacesUtils.history.TRANSITION_DOWNLOAD);
-    }
-  }, null);
-}
-
-/**
- * Function fills history, one for each transition type.
- * second batch of history items
- */
-function fill_history_nonvisitedURI() {
-  PlacesUtils.history.runInBatchMode({
-    runBatched: function (aUserData) {
-      add_visit(nonvisited_URIs[0], PlacesUtils.history.TRANSITION_TYPED);
-      add_visit(nonvisited_URIs[1], PlacesUtils.history.TRANSITION_BOOKMARK);
-      add_visit(nonvisited_URIs[2], PlacesUtils.history.TRANSITION_LINK);
-      add_visit(nonvisited_URIs[3], PlacesUtils.history.TRANSITION_DOWNLOAD);
-      add_visit(nonvisited_URIs[4], PlacesUtils.history.TRANSITION_EMBED);
-      add_visit(nonvisited_URIs[5], PlacesUtils.history.TRANSITION_FRAMED_LINK);
-      add_visit(nonvisited_URIs[6], PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT);
-      add_visit(nonvisited_URIs[7], PlacesUtils.history.TRANSITION_REDIRECT_TEMPORARY);
     }
   }, null);
 }
@@ -197,25 +179,10 @@ function run_test() {
     // Enter Private Browsing Mode
     pb.privateBrowsingEnabled = true;
 
-    // History items should not retrievable by isVisited
-    visited_URIs.forEach(function (visited_uri) {
-      do_check_false(PlacesUtils.bhistory.isVisited(uri(visited_uri)));
-    });
-
     // Check if Bookmark-A has been visited, should be false
     do_check_false(is_bookmark_A_altered());
 
-    // Add a second set of history items during private browsing mode
-    // should not be viewed/stored or in any way retrievable
-    fill_history_nonvisitedURI();
-    nonvisited_URIs.forEach(function (nonvisited_uri) {
-      do_check_false(!!page_in_database(nonvisited_uri));
-      do_check_false(PlacesUtils.bhistory.isVisited(uri(nonvisited_uri)));
-    });
-
-    // We attempted to add another 7 new entries, but we still have 7 history entries
-    // and 1 history entry, Bookmark-A.
-    // Private browsing blocked the entry of the new history entries
+    // We still have 7 history entries and 1 history entry, Bookmark-A.
     check_placesItem_Count();
 
     // Check if Bookmark-A is still accessible

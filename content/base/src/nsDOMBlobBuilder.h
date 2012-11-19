@@ -88,7 +88,7 @@ public:
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
   nsresult AppendString(JSString* aString, bool nativeEOL, JSContext* aCx);
   nsresult AppendBlob(nsIDOMBlob* aBlob);
-  nsresult AppendArrayBuffer(JSObject* aBuffer, JSContext *aCx);
+  nsresult AppendArrayBuffer(JSObject* aBuffer);
   nsresult AppendBlobs(const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlob);
 
   nsTArray<nsCOMPtr<nsIDOMBlob> >& GetBlobs() { Flush(); return mBlobs; }

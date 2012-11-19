@@ -28,16 +28,16 @@ BEGIN_TEST(testTypedArrays)
 
     size_t nbytes = sizeof(double) * 8;
     RootedObject buffer(cx, JS_NewArrayBuffer(cx, nbytes));
-    CHECK(JS_IsArrayBufferObject(buffer, cx));
+    CHECK(JS_IsArrayBufferObject(buffer));
 
     RootedObject proto(cx);
     JS_GetPrototype(cx, buffer, proto.address());
-    CHECK(!JS_IsArrayBufferObject(proto, cx));
+    CHECK(!JS_IsArrayBufferObject(proto));
     RootedObject dummy(cx, JS_GetParent(proto));
-    CHECK(!JS_IsArrayBufferObject(dummy, cx));
+    CHECK(!JS_IsArrayBufferObject(dummy));
 
-    CHECK_EQUAL(JS_GetArrayBufferByteLength(buffer, cx), nbytes);
-    memset(JS_GetArrayBufferData(buffer, cx), 1, nbytes);
+    CHECK_EQUAL(JS_GetArrayBufferByteLength(buffer), nbytes);
+    memset(JS_GetArrayBufferData(buffer), 1, nbytes);
 
     ok = ok &&
         TestArrayFromBuffer<JS_NewInt8ArrayWithBuffer, JS_NewInt8ArrayFromArray, int8_t, JS_GetInt8ArrayData>(cx) &&
@@ -55,24 +55,24 @@ BEGIN_TEST(testTypedArrays)
 
 template<JSObject *Create(JSContext *, uint32_t),
          typename Element,
-         Element *GetData(JSObject *, JSContext *)>
+         Element *GetData(JSObject *)>
 bool
 TestPlainTypedArray(JSContext *cx)
 {
     RootedObject array(cx, Create(cx, 7));
-    CHECK(JS_IsTypedArrayObject(array, cx));
+    CHECK(JS_IsTypedArrayObject(array));
     RootedObject proto(cx);
     JS_GetPrototype(cx, array, proto.address());
-    CHECK(!JS_IsTypedArrayObject(proto, cx));
+    CHECK(!JS_IsTypedArrayObject(proto));
     RootedObject dummy(cx, JS_GetParent(proto));
-    CHECK(!JS_IsTypedArrayObject(dummy, cx));
+    CHECK(!JS_IsTypedArrayObject(dummy));
 
-    CHECK_EQUAL(JS_GetTypedArrayLength(array, cx), 7);
-    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array, cx), 0);
-    CHECK_EQUAL(JS_GetTypedArrayByteLength(array, cx), sizeof(Element) * 7);
+    CHECK_EQUAL(JS_GetTypedArrayLength(array), 7);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0);
+    CHECK_EQUAL(JS_GetTypedArrayByteLength(array), sizeof(Element) * 7);
 
     Element *data;
-    CHECK(data = GetData(array, cx));
+    CHECK(data = GetData(array));
     *data = 13;
     jsval v;
     CHECK(JS_GetElement(cx, array, 0, &v));
@@ -84,7 +84,7 @@ TestPlainTypedArray(JSContext *cx)
 template<JSObject *CreateWithBuffer(JSContext *, JSObject *, uint32_t, int32_t),
          JSObject *CreateFromArray(JSContext *, JSObject *),
          typename Element,
-         Element *GetData(JSObject *, JSContext *)>
+         Element *GetData(JSObject *)>
 bool
 TestArrayFromBuffer(JSContext *cx)
 {
@@ -92,32 +92,32 @@ TestArrayFromBuffer(JSContext *cx)
     size_t nbytes = elts * sizeof(Element);
     RootedObject buffer(cx, JS_NewArrayBuffer(cx, nbytes));
     uint8_t *bufdata;
-    CHECK(bufdata = JS_GetArrayBufferData(buffer, cx));
+    CHECK(bufdata = JS_GetArrayBufferData(buffer));
     memset(bufdata, 1, nbytes);
 
     RootedObject array(cx, CreateWithBuffer(cx, buffer, 0, -1));
-    CHECK_EQUAL(JS_GetTypedArrayLength(array, cx), elts);
-    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array, cx), 0);
-    CHECK_EQUAL(JS_GetTypedArrayByteLength(array, cx), nbytes);
-    CHECK_EQUAL(JS_GetArrayBufferViewBuffer(array, cx), (JSObject*) buffer);
+    CHECK_EQUAL(JS_GetTypedArrayLength(array), elts);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0);
+    CHECK_EQUAL(JS_GetTypedArrayByteLength(array), nbytes);
+    CHECK_EQUAL(JS_GetArrayBufferViewBuffer(array), (JSObject*) buffer);
 
     Element *data;
-    CHECK(data = GetData(array, cx));
-    CHECK(bufdata = JS_GetArrayBufferData(buffer, cx));
+    CHECK(data = GetData(array));
+    CHECK(bufdata = JS_GetArrayBufferData(buffer));
     CHECK_EQUAL((void*) data, (void*) bufdata);
 
     CHECK_EQUAL(*bufdata, 1);
     CHECK_EQUAL(*reinterpret_cast<uint8_t*>(data), 1);
 
     RootedObject shortArray(cx, CreateWithBuffer(cx, buffer, 0, elts / 2));
-    CHECK_EQUAL(JS_GetTypedArrayLength(shortArray, cx), elts / 2);
-    CHECK_EQUAL(JS_GetTypedArrayByteOffset(shortArray, cx), 0);
-    CHECK_EQUAL(JS_GetTypedArrayByteLength(shortArray, cx), nbytes / 2);
+    CHECK_EQUAL(JS_GetTypedArrayLength(shortArray), elts / 2);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(shortArray), 0);
+    CHECK_EQUAL(JS_GetTypedArrayByteLength(shortArray), nbytes / 2);
 
     RootedObject ofsArray(cx, CreateWithBuffer(cx, buffer, nbytes / 2, -1));
-    CHECK_EQUAL(JS_GetTypedArrayLength(ofsArray, cx), elts / 2);
-    CHECK_EQUAL(JS_GetTypedArrayByteOffset(ofsArray, cx), nbytes / 2);
-    CHECK_EQUAL(JS_GetTypedArrayByteLength(ofsArray, cx), nbytes / 2);
+    CHECK_EQUAL(JS_GetTypedArrayLength(ofsArray), elts / 2);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(ofsArray), nbytes / 2);
+    CHECK_EQUAL(JS_GetTypedArrayByteLength(ofsArray), nbytes / 2);
 
     // Make sure all 3 views reflect the same buffer at the expected locations
     jsval v = INT_TO_JSVAL(39);

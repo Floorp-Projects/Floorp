@@ -28,8 +28,17 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_localStorage_page1.html \
 		browser_privatebrowsing_localStorage_page2.html \
 		browser_privatebrowsing_opendir.js \
+		browser_privatebrowsing_openlocation.js \
+		browser_privatebrowsing_openLocationLastURL.js \
+		browser_privatebrowsing_popupblocker.js \
+		browser_privatebrowsing_protocolhandler.js \
+		browser_privatebrowsing_protocolhandler_page.html \
 		browser_privatebrowsing_theming.js \
+		browser_privatebrowsing_urlbarfocus.js \
+		browser_privatebrowsing_windowtitle.js \
+		browser_privatebrowsing_windowtitle_page.html \
 		browser_privatebrowsing_zoomrestore.js \
+		popup.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

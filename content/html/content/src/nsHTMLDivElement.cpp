@@ -5,49 +5,13 @@
 
 #include "mozilla/Util.h"
 
-#include "nsIDOMHTMLDivElement.h"
-#include "nsIDOMEventTarget.h"
+#include "nsHTMLDivElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
 
 using namespace mozilla;
-
-class nsHTMLDivElement : public nsGenericHTMLElement,
-                         public nsIDOMHTMLDivElement
-{
-public:
-  nsHTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLDivElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
-
-  // nsIDOMHTMLDivElement
-  NS_DECL_NSIDOMHTMLDIVELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
-
+using namespace mozilla::dom;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 
@@ -62,8 +26,8 @@ nsHTMLDivElement::~nsHTMLDivElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLDivElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLDivElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, Element)
 
 DOMCI_NODE_DATA(HTMLDivElement, nsHTMLDivElement)
 
@@ -75,9 +39,6 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLDivElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLDivElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLDivElement)
-
-
-NS_IMPL_STRING_ATTR(nsHTMLDivElement, Align, align)
 
 
 bool

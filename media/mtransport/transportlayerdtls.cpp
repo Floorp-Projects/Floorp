@@ -28,7 +28,7 @@
 
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport");
+MOZ_MTLOG_MODULE("mtransport")
 
 static PRDescIdentity transport_layer_identity = PR_INVALID_IO_LAYER;
 

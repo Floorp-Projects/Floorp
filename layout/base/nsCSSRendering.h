@@ -300,6 +300,14 @@ struct nsCSSRendering {
                            bool& aDrawBackgroundImage,
                            bool& aDrawBackgroundColor);
 
+  static nsRect
+  ComputeBackgroundPositioningArea(nsPresContext* aPresContext,
+                                   nsIFrame* aForFrame,
+                                   const nsRect& aBorderArea,
+                                   const nsStyleBackground& aBackground,
+                                   const nsStyleBackground::Layer& aLayer,
+                                   nsIFrame** aAttachedToFrame);
+
   static nsBackgroundLayerState
   PrepareBackgroundLayer(nsPresContext* aPresContext,
                          nsIFrame* aForFrame,

@@ -41,6 +41,7 @@ this.AppsUtils = {
       readyToApplyDownload: aApp.readyToApplyDownload,
       downloadSize: aApp.downloadSize || 0,
       lastUpdateCheck: aApp.lastUpdateCheck,
+      updateTime: aApp.updateTime,
       etag: aApp.etag
     };
   },
@@ -146,24 +147,16 @@ this.AppsUtils = {
    * from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
    * only the name property is mandatory
    */
-  checkManifest: function(aManifest, aInstallOrigin) {
+  checkManifest: function(aManifest) {
     if (aManifest.name == undefined)
       return false;
 
-    function cbCheckAllowedOrigin(aOrigin) {
-      return aOrigin == "*" || aOrigin == aInstallOrigin;
-    }
-
-    if (aManifest.installs_allowed_from && !aManifest.installs_allowed_from.some(cbCheckAllowedOrigin))
-      return false;
-
     function isAbsolute(uri) {
-      try {
-        Services.io.newURI(uri, null, null);
-      } catch (e if e.result == Cr.NS_ERROR_MALFORMED_URI) {
-        return false;
-      }
-      return true;
+      // See bug 810551
+      let foo = Services.io.newURI("http://foo", null, null);
+      let bar = Services.io.newURI("http://bar", null, null);
+      return Services.io.newURI(uri, null, foo).prePath != foo.prePath ||
+             Services.io.newURI(uri, null, bar).prePath != bar.prePath;
     }
 
     // launch_path and entry_points launch paths can't be absolute
@@ -192,11 +185,29 @@ this.AppsUtils = {
   },
 
   /**
- * Determine the type of app (app, privileged, certified)
- * that is installed by the manifest
- * @param object aManifest
- * @returns integer
- **/
+   * Determines whether the manifest allows installs for the given origin.
+   * @param object aManifest
+   * @param string aInstallOrigin
+   * @return boolean
+   **/
+  checkInstallAllowed: function checkInstallAllowed(aManifest, aInstallOrigin) {
+    if (!aManifest.installs_allowed_from) {
+      return true;
+    }
+
+    function cbCheckAllowedOrigin(aOrigin) {
+      return aOrigin == "*" || aOrigin == aInstallOrigin;
+    }
+
+    return aManifest.installs_allowed_from.some(cbCheckAllowedOrigin);
+  },
+
+  /**
+   * Determine the type of app (app, privileged, certified)
+   * that is installed by the manifest
+   * @param object aManifest
+   * @returns integer
+   **/
   getAppManifestStatus: function getAppManifestStatus(aManifest) {
     let type = aManifest.type || "web";
 
@@ -245,7 +256,7 @@ this.ManifestHelper = function(aManifest, aOrigin) {
   this._manifest = aManifest;
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry)
                                                           .QueryInterface(Ci.nsIToolkitChromeRegistry);
-  let locale = chrome.getSelectedLocale("browser").toLowerCase();
+  let locale = chrome.getSelectedLocale("global").toLowerCase();
   this._localeRoot = this._manifest;
 
   if (this._manifest.locales && this._manifest.locales[locale]) {

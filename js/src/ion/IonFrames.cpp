@@ -710,11 +710,8 @@ MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
             JS_NOT_REACHED("invalid");
             break;
           case IonFrame_Rectifier:
-          case IonFrame_Bailed_Rectifier: {
-            IonCompartment *ionCompartment = activations.activation()->compartment()->ionCompartment();
-            MarkIonCodeRoot(trc, ionCompartment->getArgumentsRectifierAddr(), "Arguments Rectifier");
+          case IonFrame_Bailed_Rectifier:
             break;
-          }
           case IonFrame_Osr:
             // The callee token will be marked by the callee JS frame;
             // otherwise, it does not need to be marked, since the frame is
@@ -1240,7 +1237,7 @@ IonFrameIterator::dumpBaseline() const
     jsbytecode *pc;
     baselineScriptAndPc(&script, &pc);
 
-    fprintf(stderr, "  script = %p, pc = %p (offset %d)\n", (void *)script, pc, pc - script->code);
+    fprintf(stderr, "  script = %p, pc = %p (offset %u)\n", (void *)script, pc, uint32_t(pc - script->code));
     fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
 
     fprintf(stderr, "  actual args: %d\n", numActualArgs());

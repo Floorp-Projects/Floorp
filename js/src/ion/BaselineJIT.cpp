@@ -75,11 +75,11 @@ CheckFrame(StackFrame *fp)
 static IonExecStatus
 EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
 {
-    JS_CHECK_RECURSION(cx, return IonExec_Error);
+    JS_CHECK_RECURSION(cx, return IonExec_Aborted);
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
 
-    EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
+    EnterIonCode enter = cx->compartment->ionCompartment()->enterJIT();
 
     // maxArgc is the maximum of arguments between the number of actual
     // arguments and the number of formal arguments. It accounts for |this|.
@@ -198,13 +198,6 @@ ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
     MethodStatus status = BaselineCompile(cx, script, fp);
     if (status != Method_Compiled)
         return status;
-
-    // This can GC, so afterward, script->baseline is not guaranteed to be valid.
-    if (!cx->compartment->ionCompartment()->enterJIT(cx))
-        return Method_Error;
-
-    if (!script->baseline)
-        return Method_Skipped;
 
     return Method_Compiled;
 }

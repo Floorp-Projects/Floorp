@@ -97,6 +97,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
 #endif
     callPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())),
+    compileTriggers(CompilerAllocPolicy(cx, *thisFromCtor())),
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
     rootedTemplates(CompilerAllocPolicy(cx, *thisFromCtor())),
     rootedRegExps(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -539,7 +540,7 @@ mjit::Compiler::performCompilation()
     JS_ASSERT(cx->compartment->activeInference);
 
     {
-        types::AutoEnterCompilation enter(cx, types::AutoEnterCompilation::JM);
+        types::AutoEnterCompilation enter(cx, types::CompilerOutput::MethodJIT);
         if (!enter.init(outerScript, isConstructing, chunkIndex)) {
             js_ReportOutOfMemory(cx);
             return Compile_Error;
@@ -1418,6 +1419,7 @@ mjit::Compiler::finishThisUp()
                       sizeof(NativeMapEntry) * nNmapLive +
                       sizeof(InlineFrame) * inlineFrames.length() +
                       sizeof(CallSite) * callSites.length() +
+                      sizeof(CompileTrigger) * compileTriggers.length() +
                       sizeof(JSObject*) * rootedTemplates.length() +
                       sizeof(RegExpShared*) * rootedRegExps.length() +
                       sizeof(uint32_t) * monitoredBytecodes.length() +
@@ -1550,6 +1552,16 @@ mjit::Compiler::finishThisUp()
          */
         if (from.loopPatch.hasPatch)
             stubCode.patch(from.loopPatch.codePatch, result + codeOffset);
+    }
+
+    CompileTrigger *jitCompileTriggers = (CompileTrigger *)cursor;
+    chunk->nCompileTriggers = compileTriggers.length();
+    cursor += sizeof(CompileTrigger) * chunk->nCompileTriggers;
+    for (size_t i = 0; i < chunk->nCompileTriggers; i++) {
+        const InternalCompileTrigger &trigger = compileTriggers[i];
+        jitCompileTriggers[i].initialize(trigger.pc - outerScript->code,
+                                         fullCode.locationOf(trigger.inlineJump),
+                                         stubCode.locationOf(trigger.stubLabel));
     }
 
     JSObject **jitRootedTemplates = (JSObject **)cursor;
@@ -3964,6 +3976,8 @@ MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
 void
 mjit::Compiler::ionCompileHelper()
 {
+    JS_ASSERT(script_ == outerScript);
+
     JS_ASSERT(IsIonEnabled(cx));
     JS_ASSERT(!inlining());
 
@@ -3994,47 +4008,58 @@ mjit::Compiler::ionCompileHelper()
 
     void *ionScriptAddress = &script_->ion;
 
+    InternalCompileTrigger trigger;
+    trigger.pc = PC;
+    trigger.stubLabel = stubcc.syncExitAndJump(Uses(0));
+
     // Trigger ion compilation if (a) the script has been used enough times for
     // this opcode, and (b) the script does not already have ion information
     // (whether successful, failed, or in progress off thread compilation)
     // *OR* off thread compilation is not being used.
     //
-    // (b) prevents repetitive stub calls while off thread compilation is in
-    // progress, but is otherwise unnecessary and negatively affects tuning
-    // on some benchmarks (see bug 774253).
-    Jump last;
+    // If off thread compilation is in use, we retain the CompileTrigger so
+    // that (b) can be short circuited to force a call to TriggerIonCompile
+    // (see DisableScriptAtPC).
+    //
+    // If off thread compilation is not in use, (b) is unnecessary and
+    // negatively affects tuning on some benchmarks (see bug 774253). Thus,
+    // we immediately short circuit the check for (b).
+
+    Label secondTest = stubcc.masm.label();
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
-    if (ion::js_IonOptions.parallelCompilation) {
-        Jump first = masm.branch32(Assembler::LessThan, AbsoluteAddress(useCountAddress),
-                                   Imm32(minUses));
-        last = masm.branch32(Assembler::Equal, AbsoluteAddress(ionScriptAddress),
-                             Imm32(0));
-        first.linkTo(masm.label(), &masm);
-    } else {
-        last = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(useCountAddress),
-                             Imm32(minUses));
-    }
-#else
+    trigger.inlineJump = masm.branch32(Assembler::GreaterThanOrEqual,
+                                       AbsoluteAddress(useCountAddress),
+                                       Imm32(minUses));
+    Jump scriptJump = stubcc.masm.branch32(Assembler::Equal, AbsoluteAddress(ionScriptAddress),
+                                           Imm32(0));
+#elif defined(JS_CPU_X64)
     /* Handle processors that can't load from absolute addresses. */
     RegisterID reg = frame.allocReg();
     masm.move(ImmPtr(useCountAddress), reg);
-    if (ion::js_IonOptions.parallelCompilation) {
-        Jump first = masm.branch32(Assembler::LessThan, Address(reg), Imm32(minUses));
-        masm.move(ImmPtr(ionScriptAddress), reg);
-        last = masm.branchPtr(Assembler::Equal, Address(reg), ImmPtr(NULL));
-        first.linkTo(masm.label(), &masm);
-    } else {
-        last = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg), Imm32(minUses));
-    }
+    trigger.inlineJump = masm.branch32(Assembler::GreaterThanOrEqual,
+                                       Address(reg),
+                                       Imm32(minUses));
+    stubcc.masm.move(ImmPtr(ionScriptAddress), reg);
+    Jump scriptJump = stubcc.masm.branchPtr(Assembler::Equal, Address(reg), ImmPtr(NULL));
     frame.freeReg(reg);
+#else
+#error "Unknown platform"
 #endif
 
-    stubcc.linkExit(last, Uses(0));
-    stubcc.leave();
+    stubcc.linkExitDirect(trigger.inlineJump,
+                          ion::js_IonOptions.parallelCompilation
+                          ? secondTest
+                          : trigger.stubLabel);
 
+    scriptJump.linkTo(trigger.stubLabel, &stubcc.masm);
+    stubcc.crossJump(stubcc.masm.jump(), masm.label());
+
+    stubcc.leave();
     OOL_STUBCALL(stubs::TriggerIonCompile, REJOIN_RESUME);
     stubcc.rejoin(Changes(0));
+
+    compileTriggers.append(trigger);
 #endif /* JS_ION */
 }
 

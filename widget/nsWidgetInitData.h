@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -102,7 +102,8 @@ struct nsWidgetInitData {
       mRTL(false),
       mNoAutoHide(false),
       mIsDragPopup(false),
-      mIsAnimationSuppressed(false)
+      mIsAnimationSuppressed(false),
+      mSupportTranslucency(false)
   {
   }
 
@@ -117,8 +118,10 @@ struct nsWidgetInitData {
   bool          mRTL;
   bool          mNoAutoHide; // true for noautohide panels
   bool          mIsDragPopup;  // true for drag feedback panels
-  bool          mIsAnimationSuppressed;  // true if window creation animation is
-                                         // suppressed, e.g. for session restore
+  // true if window creation animation is suppressed, e.g. for session restore
+  bool          mIsAnimationSuppressed;
+  // true if the window should support an alpha channel, if available.
+  bool          mSupportTranslucency;
 };
 
 #endif // nsWidgetInitData_h__

@@ -20,7 +20,7 @@ namespace gfx {
 // loss of backwards compatibility. Old streams will not work in a player
 // using a newer major revision. And new streams will not work in a player
 // using an older major revision.
-const uint16_t kMajorRevision = 1;
+const uint16_t kMajorRevision = 2;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
 const uint16_t kMinorRevision = 0;
@@ -212,7 +212,7 @@ protected:
 
   virtual ReferencePtr GetObject() const;
 
-  DrawTarget *mDT;
+  ReferencePtr mDT;
 };
 
 class RecordedDrawTargetCreation : public RecordedEvent {
@@ -801,7 +801,7 @@ private:
   friend class RecordedEvent;
 
   ReferencePtr mRefPtr;
-  DrawTarget *mDT;
+  ReferencePtr mDT;
 
   RecordedSnapshot(std::istream &aStream);
 };

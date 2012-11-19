@@ -631,6 +631,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
         props->Init();
 
+        props->SetPropertyAsUint64(NS_LITERAL_STRING("childID"), mChildID);
+
         if (AbnormalShutdown == why) {
             props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), true);
 
@@ -644,9 +646,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             nsAutoString dumpID(crashReporter->ChildDumpID());
             props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
 #endif
-
-            obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
         }
+        obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
     }
 
     MessageLoop::current()->
@@ -702,6 +703,7 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
                              ChildOSPrivileges aOSPrivileges)
     : mSubprocess(nullptr)
     , mOSPrivileges(aOSPrivileges)
+    , mChildID(-1)
     , mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
@@ -1125,7 +1127,7 @@ bool
 ContentParent::RecvGetProcessAttributes(uint64_t* aId, bool* aStartBackground,
                                         bool* aIsForApp, bool* aIsForBrowser)
 {
-    *aId = gContentChildID++;
+    *aId = mChildID = gContentChildID++;
     *aStartBackground =
         (mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
     *aIsForApp = IsForApp();

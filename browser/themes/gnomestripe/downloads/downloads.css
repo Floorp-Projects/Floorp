@@ -1,4 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -24,6 +24,7 @@
   cursor: pointer;
 }
 
+#downloadsSummary,
 #downloadsPanel[hasdownloads] > #downloadsHistory {
   border-top: 1px solid ThreeDShadow;
   background-image: -moz-linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
@@ -37,17 +38,36 @@
   outline: 1px -moz-dialogtext dotted;
 }
 
-/*** List items ***/
+/*** Downloads Summary and List items ***/
 
+#downloadsSummary,
 richlistitem[type="download"] {
   height: 6em;
+  -moz-padding-end: 0;
+  color: inherit;
+}
+
+#downloadsSummary {
+  padding: 8px 38px 8px 12px;
+  cursor: pointer;
+}
+
+#downloadsSummary > .downloadTypeIcon {
+  height: 32px;
+  width: 32px;
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
+}
+
+#downloadsSummaryDescription {
+  color: -moz-nativehyperlinktext;
+}
+
+richlistitem[type="download"] {
   margin: 0;
   border-top: 1px solid hsla(0,0%,100%,.2);
   border-bottom: 1px solid hsla(0,0%,0%,.15);
   background: transparent;
   padding: 8px;
-  -moz-padding-end: 0;
-  color: inherit;
 }
 
 richlistitem[type="download"]:first-child {
@@ -189,9 +209,12 @@ toolbar[iconsize="large"] #downloads-indicator-icon {
                               0, 24, 24, 0) center no-repeat;
 }
 
-#downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
-                              16, 32, 32, 16) center no-repeat;
+toolbar[iconsize="small"] #downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  background-image: url("chrome://browser/skin/downloads/download-glow-small.png");
+}
+
+toolbar[iconsize="large"] #downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
 #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
@@ -201,8 +224,7 @@ toolbar[iconsize="large"] #downloads-indicator-icon {
 }
 
 #downloads-indicator:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
-                                    16, 32, 32, 16);
+  background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
 /*** Event notification ***/
@@ -262,7 +284,8 @@ toolbar[iconsize="large"] #downloads-indicator-icon {
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-image: -moz-linear-gradient(#5ab9ff, #37a4ff);
+  background-color: rgb(255, 135, 94);
+  background-image: linear-gradient(transparent 1px, rgba(255, 255, 255, 0.4) 1px, rgba(255, 255, 255, 0.4) 2px, transparent 2px);
   border: 1px solid;
   border-color: rgba(0,43,86,.6) rgba(0,43,86,.4) rgba(0,43,86,.4);
   border-radius: 2px 0 0 2px;
@@ -280,7 +303,7 @@ toolbar[iconsize="large"] #downloads-indicator-icon {
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-bar {
-  background-image: -moz-linear-gradient(#dce651, #dae631);
+  background-color: rgb(220, 230, 81);
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {

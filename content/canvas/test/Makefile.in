@@ -60,6 +60,7 @@ MOCHITEST_FILES = \
 	test_bug764125.html \
 	test_drawImage_edge_cases.html \
 	test_drawImage_document_domain.html \
+  test_mozDashOffset.html \
 	file_drawImage_document_domain.html \
 	$(NULL)
 

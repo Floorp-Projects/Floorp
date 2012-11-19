@@ -52,7 +52,7 @@
 #include "nsDisplayList.h"
 
 #include "imgIContainer.h"
-#include "imgILoader.h"
+#include "imgLoader.h"
 
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMRange.h"
@@ -902,8 +902,8 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 
   if (!imageOK || !haveSize) {
     nsRect altFeedbackSize(0, 0,
-                           2*(nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+ICON_PADDING+ALT_BORDER_WIDTH)),
-                           2*(nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+ICON_PADDING+ALT_BORDER_WIDTH)));
+                           nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+2*(ICON_PADDING+ALT_BORDER_WIDTH)),
+                           nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+2*(ICON_PADDING+ALT_BORDER_WIDTH)));
     aMetrics.mOverflowAreas.UnionAllWith(altFeedbackSize);
   }
   FinishAndStoreOverflow(&aMetrics);
@@ -1817,7 +1817,7 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
   nsCOMPtr<nsIURI> realURI;
   SpecToURI(aSpec, sIOService, getter_AddRefs(realURI));
  
-  nsCOMPtr<imgILoader> il =
+  nsRefPtr<imgLoader> il =
     nsContentUtils::GetImgLoaderForDocument(aPresContext->Document());
 
   nsCOMPtr<nsILoadGroup> loadGroup;

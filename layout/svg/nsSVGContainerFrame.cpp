@@ -98,7 +98,8 @@ nsSVGDisplayContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
 {
-  if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
+  if (mContent->IsSVG() &&
+      !static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
     return NS_OK;
   }
   return BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
@@ -177,14 +178,16 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
                        HasChildrenOnlyTransform(aFromParentTransform);
   }
 
-  nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
-  if (content->GetAnimatedTransformList() ||
-      content->GetAnimateMotionTransform()) {
-    if (aOwnTransform) {
-      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
-                                  nsSVGElement::eUserSpaceToParent);
+  if (mContent->IsSVG()) {
+    nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
+    if (content->GetAnimatedTransformList() ||
+        content->GetAnimateMotionTransform()) {
+      if (aOwnTransform) {
+        *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
+                                    nsSVGElement::eUserSpaceToParent);
+      }
+      foundTransform = true;
     }
-    foundTransform = true;
   }
   return foundTransform;
 }

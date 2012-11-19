@@ -39,6 +39,7 @@ DIRS	= \
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES =\
+		dumbfile.xpi \
 		formimage.png \
 		letters.gif \
 		moz.png \

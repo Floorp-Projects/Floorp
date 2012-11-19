@@ -1051,7 +1051,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
     }
   }
 
-  return aKidFrame->DidReflow(aPresContext, aReflowState, NS_FRAME_REFLOW_FINISHED);
+  return aKidFrame->DidReflow(aPresContext, aReflowState, nsDidReflowStatus::FINISHED);
 }
 
 nsresult

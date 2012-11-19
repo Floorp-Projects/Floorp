@@ -17,7 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
 
@@ -646,7 +646,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 #define NS_SVG_VAL_IMPL_CYCLE_COLLECTION(_val, _element)                     \
 NS_IMPL_CYCLE_COLLECTION_CLASS(_val)                                         \
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_val)                                \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(_element, nsIContent) \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_element) \
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                        \
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(_val)
 

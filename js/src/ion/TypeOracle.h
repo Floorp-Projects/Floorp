@@ -96,6 +96,12 @@ class TypeOracle
         *barrier = NULL;
         return NULL;
     }
+    virtual bool inObjectIsDenseArray(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
+    virtual bool inArrayIsPacked(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
     virtual bool elementReadIsDenseArray(JSScript *script, jsbytecode *pc) {
         return false;
     }
@@ -240,6 +246,8 @@ class TypeInferenceOracle : public TypeOracle
     types::StackTypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
     types::StackTypeSet *getCallArg(JSScript *caller, uint32 argc, uint32 arg, jsbytecode *pc);
     types::StackTypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
+    bool inObjectIsDenseArray(JSScript *script, jsbytecode *pc);
+    bool inArrayIsPacked(JSScript *script, jsbytecode *pc);
     bool elementReadIsDenseArray(JSScript *script, jsbytecode *pc);
     bool elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *atype);
     bool elementReadIsString(JSScript *script, jsbytecode *pc);

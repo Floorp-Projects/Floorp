@@ -259,6 +259,10 @@ let FormAssistant = {
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
+    if (element.contentEditable && element.contentEditable == "true") {
+      return true;
+    }
+
     if (element instanceof HTMLSelectElement ||
         element instanceof HTMLTextAreaElement)
       return true;
@@ -273,7 +277,8 @@ let FormAssistant = {
 
   isTextInputElement: function fa_isTextInputElement(element) {
     return element instanceof HTMLInputElement ||
-           element instanceof HTMLTextAreaElement;
+           element instanceof HTMLTextAreaElement ||
+           (element.contentEditable && element.contentEditable == "true");
   },
 
   tryShowIme: function(element) {
@@ -294,6 +299,13 @@ FormAssistant.init();
 
 function getJSON(element) {
   let type = element.type || "";
+  let value = element.value || ""
+
+  // Treat contenteditble element as a special text field
+  if (element.contentEditable && element.contentEditable == "true") {
+    type = "text";
+    value = element.textContent;
+  }
 
   // Until the input type=date/datetime/time have been implemented
   // let's return their real type even if the platform returns 'text'
@@ -313,13 +325,13 @@ function getJSON(element) {
     }
   }
 
-  // Gecko supports the inputmode attribute on text fields (but not textareas).
-  // But it doesn't recognize "verbatim" and other modes that we're interested
-  // in in Gaia, and the inputmode property returns "auto" for any value
-  // that gecko does not support. So we must query the inputmode attribute
-  // with getAttribute() rather than just using the inputmode property here.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=746142
-  let inputmode = element.getAttribute('inputmode');
+  // Gecko has some support for @inputmode but behind a preference and
+  // it is disabled by default.
+  // Gaia is then using @x-inputmode has its proprietary way to set
+  // inputmode for fields. This shouldn't be used outside of pre-installed
+  // apps because the attribute is going to disappear as soon as a definitive
+  // solution will be find.
+  let inputmode = element.getAttribute('x-inputmode');
   if (inputmode) {
     inputmode = inputmode.toLowerCase();
   } else {
@@ -329,7 +341,7 @@ function getJSON(element) {
   return {
     "type": type.toLowerCase(),
     "choices": getListForElement(element),
-    "value": element.value,
+    "value": value,
     "inputmode": inputmode,
     "selectionStart": element.selectionStart,
     "selectionEnd": element.selectionEnd

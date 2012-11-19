@@ -2428,29 +2428,10 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 void
 PresShell::RestoreRootScrollPosition()
 {
-  // Restore frame state for the root scroll frame
-  nsCOMPtr<nsILayoutHistoryState> historyState =
-    mDocument->GetLayoutHistoryState();
-  // Make sure we don't reenter reflow via the sync paint that happens while
-  // we're scrolling to our restored position.  Entering reflow for the
-  // scrollable frame will cause it to reenter ScrollToRestoredPosition(), and
-  // it'll get all confused.
-  nsAutoScriptBlocker scriptBlocker;
-  ++mChangeNestCount;
-
-  if (historyState) {
-    nsIFrame* scrollFrame = GetRootScrollFrame();
-    if (scrollFrame) {
-      nsIScrollableFrame* scrollableFrame = do_QueryFrame(scrollFrame);
-      if (scrollableFrame) {
-        mFrameConstructor->RestoreFrameStateFor(scrollFrame, historyState,
-                                                nsIStatefulFrame::eDocumentScrollState);
-        scrollableFrame->ScrollToRestoredPosition();
-      }
-    }
+  nsIScrollableFrame* scrollableFrame = GetRootScrollFrameAsScrollable();
+  if (scrollableFrame) {
+    scrollableFrame->ScrollToRestoredPosition();
   }
-
-  --mChangeNestCount;
 }
 
 void
@@ -3540,7 +3521,7 @@ nsIPresShell::ClearMouseCapture(nsIFrame* aFrame)
 }
 
 nsresult
-PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, bool aLeavingPage)
+PresShell::CaptureHistoryState(nsILayoutHistoryState** aState)
 {
   nsresult rv = NS_OK;
 
@@ -3580,17 +3561,6 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, bool aLeavingPage
   // Capture frame state for the entire frame hierarchy
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (!rootFrame) return NS_OK;
-  // Capture frame state for the root scroll frame
-  // Don't capture state when first creating doc element hierarchy
-  // As the scroll position is 0 and this will cause us to lose
-  // our previously saved place!
-  if (aLeavingPage) {
-    nsIFrame* scrollFrame = GetRootScrollFrame();
-    if (scrollFrame) {
-      mFrameConstructor->CaptureFrameStateFor(scrollFrame, historyState,
-                                              nsIStatefulFrame::eDocumentScrollState);
-    }
-  }
 
   mFrameConstructor->CaptureFrameState(rootFrame, historyState);  
  
@@ -7127,7 +7097,9 @@ PresShell::WillPaintWindow(bool aWillSendDidPaint)
     return;
   }
 
+#ifndef XP_MACOSX
   rootPresContext->ApplyPluginGeometryUpdates();
+#endif
 }
 
 void
@@ -7560,7 +7532,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsContainerFrame::SyncWindowProperties(mPresContext, target,
                                          target->GetView(), rcx);
 
-  target->DidReflow(mPresContext, nullptr, NS_FRAME_REFLOW_FINISHED);
+  target->DidReflow(mPresContext, nullptr, nsDidReflowStatus::FINISHED);
   if (target == rootFrame && size.height == NS_UNCONSTRAINEDSIZE) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }

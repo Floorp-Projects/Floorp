@@ -1185,6 +1185,38 @@ let RIL = {
   },
 
   /**
+   * Get EF_phase.
+   * This EF is only available in SIM.
+   */
+  getICCPhase: function getICCPhase() {
+    function callback() {
+      let length = Buf.readUint32();
+
+      let phase = GsmPDUHelper.readHexOctet();
+      // If EF_phase is coded '03' or greater, an ME supporting STK shall
+      // perform the PROFILE DOWNLOAD procedure.
+      if (phase >= ICC_PHASE_2_PROFILE_DOWNLOAD_REQUIRED) {
+        this.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+      }
+
+      Buf.readStringDelimiter(length);
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_PHASE,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_GSM,
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+    });
+  },
+
+  /**
    * Get IMSI.
    *
    * @param [optional] aid
@@ -2584,6 +2616,21 @@ let RIL = {
   },
 
   /**
+   * Send STK Profile Download.
+   *
+   * @param profile Profile supported by ME.
+   */
+  sendStkTerminalProfile: function sendStkTerminalProfile(profile) {
+    Buf.newParcel(REQUEST_STK_SET_PROFILE);
+    Buf.writeUint32(profile.length * 2);
+    for (let i = 0; i < profile.length; i++) {
+      GsmPDUHelper.writeHexOctet(profile[i]);
+    }
+    Buf.writeUint32(0);
+    Buf.sendParcel();
+  },
+
+  /**
    * Send STK terminal response.
    *
    * @param command
@@ -2981,6 +3028,13 @@ let RIL = {
     this.requestNetworkInfo();
     this.getSignalStrength();
     if (newCardState == GECKO_CARDSTATE_READY) {
+      // For type SIM, we need to check EF_phase first.
+      // Other types of ICC we can send Terminal_Profile immediately.
+      if (this.appType == CARD_APPTYPE_SIM) {
+        this.getICCPhase();
+      } else {
+        this.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+      }
       this.fetchICCRecords();
       this.reportStkServiceIsRunning();
     }
@@ -4145,6 +4199,10 @@ let RIL = {
       if (DEBUG) debug("Handling parcel as " + method.name);
       method.call(this, length, options);
     }
+  },
+
+  setDebugEnabled: function setDebugEnabled(options) {
+    DEBUG = DEBUG_WORKER || options.enabled;
   }
 };
 

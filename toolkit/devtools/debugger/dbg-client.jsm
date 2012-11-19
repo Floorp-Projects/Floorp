@@ -12,7 +12,8 @@ const Cr = Components.results;
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
-                         "debuggerSocketConnect"];
+                         "debuggerSocketConnect",
+                         "LongStringClient"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -808,6 +809,21 @@ ThreadClient.prototype = {
   },
 
   /**
+   * Promote multiple pause-lifetime object actors to thread-lifetime ones.
+   *
+   * @param array aActors
+   *        An array with actor IDs to promote.
+   */
+  threadGrips: function TC_threadGrips(aActors, aOnResponse) {
+    let packet = {
+      to: this._actor,
+      type: "threadGrips",
+      actors: aActors
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
    * Request the loaded scripts for the current thread.
    *
    * @param aOnResponse integer
@@ -1169,6 +1185,7 @@ function LongStringClient(aClient, aGrip) {
 LongStringClient.prototype = {
   get actor() { return this._grip.actor; },
   get length() { return this._grip.length; },
+  get initial() { return this._grip.initial; },
 
   valid: true,
 

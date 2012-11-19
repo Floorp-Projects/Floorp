@@ -28,8 +28,8 @@ nsHTMLIFrameElement::~nsHTMLIFrameElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement,nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement,nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement, Element)
 
 DOMCI_NODE_DATA(HTMLIFrameElement, nsHTMLIFrameElement)
 

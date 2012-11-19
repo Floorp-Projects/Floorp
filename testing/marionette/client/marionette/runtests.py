@@ -510,7 +510,7 @@ class MarionetteTestRunner(object):
                 msg.appendChild(doc.createTextNode(text))
 
                 r.appendChild(msg)
-                t.appendChild(f)
+                t.appendChild(r)
 
             cls = classes[cls_name]
             cls.appendChild(t)

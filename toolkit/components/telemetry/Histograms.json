@@ -16,10 +16,6 @@
     "kind": "flag",
     "description": "has the IAccessibleTable accessibility interface been used"
   },
-  "A11Y_XFORMS_USAGE_FLAG": {
-    "kind": "flag",
-    "description": "has XForms accessibility been instantiated"
-  },
   "A11Y_UPDATE_TIME": {
     "kind": "exponential",
     "high": "10000",
@@ -457,7 +453,7 @@
     "kind": "boolean",
     "description": "Did the browser start after a successful shutdown"
   },
-  "IMAGE_DECODE_LATENCY": {
+  "IMAGE_DECODE_LATENCY_US": {
     "kind": "exponential",
     "low": 50,
     "high": "5000000",

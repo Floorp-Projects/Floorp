@@ -75,7 +75,8 @@ LogHeaders(const char *lineStart)
 //-----------------------------------------------------------------------------
 
 nsHttpTransaction::nsHttpTransaction()
-    : mRequestSize(0)
+    : mCallbacksLock("transaction mCallbacks lock")
+    , mRequestSize(0)
     , mConnection(nullptr)
     , mConnInfo(nullptr)
     , mRequestHead(nullptr)
@@ -118,6 +119,9 @@ nsHttpTransaction::nsHttpTransaction()
 nsHttpTransaction::~nsHttpTransaction()
 {
     LOG(("Destroying nsHttpTransaction @%x\n", this));
+
+    // Force the callbacks to be released right now
+    mCallbacks = nullptr;
 
     NS_IF_RELEASE(mConnection);
     NS_IF_RELEASE(mConnInfo);
@@ -388,12 +392,22 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
 }
 
 void
-nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb,
-                                        nsIEventTarget        **target)
+nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb)
 {
+    MutexAutoLock lock(mCallbacksLock);
     NS_IF_ADDREF(*cb = mCallbacks);
-    if (target)
-        NS_IF_ADDREF(*target = mConsumerTarget);
+}
+
+void
+nsHttpTransaction::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)
+{
+    {
+        MutexAutoLock lock(mCallbacksLock);
+        mCallbacks = aCallbacks;
+    }
+    if (mConnection) {
+        mConnection->SetSecurityCallbacks(aCallbacks);
+    }
 }
 
 void

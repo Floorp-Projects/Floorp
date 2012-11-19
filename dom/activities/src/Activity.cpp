@@ -6,6 +6,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
 #include "nsIDOMActivityOptions.h"
+#include "nsEventStateManager.h"
 
 using namespace mozilla::dom;
 
@@ -28,12 +29,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Activity)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Activity,
                                                   DOMRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProxy)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mProxy)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Activity,
                                                 DOMRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProxy)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mProxy)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Activity, DOMRequest)
@@ -50,6 +51,14 @@ Activity::Initialize(nsISupports* aOwner,
   NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
 
   Init(window);
+
+  if (!nsEventStateManager::IsHandlingUserInput()) {
+    nsCOMPtr<nsIDOMRequestService> rs =
+      do_GetService("@mozilla.org/dom/dom-request-service;1");
+    rs->FireErrorAsync(static_cast<DOMRequest*>(this),
+                       NS_LITERAL_STRING("NotUserInput"));
+    return NS_OK;
+  }
 
   // We expect a single argument, which is a nsIDOMMozActivityOptions.
   if (aArgc != 1 || !aArgv[0].isObject()) {

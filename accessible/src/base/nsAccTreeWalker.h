@@ -9,8 +9,15 @@
 #include "nsAutoPtr.h"
 #include "nsIContent.h"
 
+namespace mozilla {
+namespace a11y {
+
 class Accessible;
 class DocAccessible;
+
+} // namespace a11y
+} // namespace mozilla
+
 struct WalkState;
 
 /**
@@ -19,8 +26,11 @@ struct WalkState;
 class nsAccTreeWalker
 {
 public:
-  nsAccTreeWalker(DocAccessible* aDoc, nsIContent* aNode, 
-                  bool aWalkAnonymousContent, bool aWalkCache = false);
+  typedef mozilla::a11y::Accessible Accessible;
+  typedef mozilla::a11y::DocAccessible DocAccessible;
+
+  nsAccTreeWalker(DocAccessible* aDoc, Accessible* aContext, nsIContent* aNode,
+                  bool aWalkCache = false);
   virtual ~nsAccTreeWalker();
 
   /**
@@ -60,6 +70,7 @@ private:
   void PopState();
 
   DocAccessible* mDoc;
+  Accessible* mContext;
   int32_t mChildFilter;
   bool mWalkCache;
   WalkState* mState;

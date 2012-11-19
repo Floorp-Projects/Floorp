@@ -1,0 +1,2 @@
+recursive-include marionette/touch *.js
+exclude MANIFEST.in

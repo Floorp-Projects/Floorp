@@ -495,7 +495,9 @@ PopFromWorklist(MDefinitionVector &worklist)
 bool
 RangeAnalysis::analyze()
 {
+    int numBlocks = 0;
     for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
+        numBlocks++;
         MBasicBlock *curBlock = *i;
         if (!curBlock->isLoopHeader())
             continue;
@@ -531,6 +533,8 @@ RangeAnalysis::analyze()
             }
         }
         iters++;
+        if (iters >= numBlocks * 100)
+            return false;
     }
     // Cleanup (in case we stopped due to MAX_ITERS)
     for(size_t i = 0; i < worklist.length(); i++)

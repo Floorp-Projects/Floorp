@@ -8,7 +8,6 @@
 #include "nsISupports.idl"
 
 interface nsIDocShell;
-interface nsIDOMCanvasRenderingContext2D;
 interface nsITaskbarPreview;
 interface nsITaskbarPreviewButton;
 
@@ -52,7 +51,7 @@ interface nsITaskbarPreviewController : nsISupports
    *
    * @param ctx Canvas drawing context
    */
-  boolean drawPreview(in nsIDOMCanvasRenderingContext2D ctx);
+  boolean drawPreview(in nsISupports ctx);
 
   /**
    * Invoked by the taskbar preview when it needs to draw the thumbnail in the
@@ -67,7 +66,7 @@ interface nsITaskbarPreviewController : nsISupports
    * @param width The width of the surface backing the drawing context
    * @param height The height of the surface backing the drawing context
    */
-  boolean drawThumbnail(in nsIDOMCanvasRenderingContext2D ctx, in unsigned long width, in unsigned long height);
+  boolean drawThumbnail(in nsISupports ctx, in unsigned long width, in unsigned long height);
 
   /**
    * Invoked when the user presses the close button on the tab preview.

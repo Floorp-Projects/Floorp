@@ -42,18 +42,17 @@ nsDisplayBorderGeometry::MoveBy(const nsPoint& aOffset)
   mContentRect.MoveBy(aOffset);
 }
 
-nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
+nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem,
+                                                         nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
-  , mPaddingRect(aItem->GetPaddingRect())
-  , mContentRect(aItem->GetContentRect())
+  , mPositioningArea(aItem->GetPositioningArea())
 {}
 
 void
 nsDisplayBackgroundGeometry::MoveBy(const nsPoint& aOffset)
 {
   mBounds.MoveBy(aOffset);
-  mPaddingRect.MoveBy(aOffset);
-  mContentRect.MoveBy(aOffset);
+  mPositioningArea.MoveBy(aOffset);
 }
 
 nsDisplayBoxShadowInnerGeometry::nsDisplayBoxShadowInnerGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)

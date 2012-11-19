@@ -34,7 +34,6 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "nsRect.h"
-#include "nsGenericElement.h"
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"
 #include "nsScriptLoader.h"
@@ -142,8 +141,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLContentSink)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLContentSink,
                                                   nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentHead)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentHead)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocElement)
   for (uint32_t i = 0, count = tmp->mContentStack.Length(); i < count; i++) {
     const StackNode& node = tmp->mContentStack.ElementAt(i);
     cb.NoteXPCOMChild(node.mContent);
@@ -535,9 +534,6 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
 #endif
         nodeInfo->NameAtom() == nsGkAtoms::object ||
         nodeInfo->NameAtom() == nsGkAtoms::applet))
-#ifdef MOZ_XTF
-      || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
-#endif
       || nodeInfo->NameAtom() == nsGkAtoms::title
       ) {
     aContent->DoneAddingChildren(HaveNotifiedForCurrentContent());
@@ -1017,11 +1013,6 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
       nodeInfo->SetIDAttributeAtom(IDAttr);
     }
   }
-  
-#ifdef MOZ_XTF
-  if (nameSpaceID > kNameSpaceID_LastBuiltin)
-    content->BeginAddingChildren();
-#endif
 
   // Set the attributes on the new content element
   result = AddAttributes(aAtts, content);

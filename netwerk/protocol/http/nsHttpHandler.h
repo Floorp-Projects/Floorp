@@ -160,10 +160,9 @@ public:
     }
 
     nsresult SpeculativeConnect(nsHttpConnectionInfo *ci,
-                                nsIInterfaceRequestor *callbacks,
-                                nsIEventTarget *target)
+                                nsIInterfaceRequestor *callbacks)
     {
-        return mConnMgr->SpeculativeConnect(ci, callbacks, target);
+        return mConnMgr->SpeculativeConnect(ci, callbacks);
     }
 
     //

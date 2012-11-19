@@ -16,7 +16,6 @@
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
-#include "nsGenericElement.h"
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
 #include "nsWrapperCacheInlines.h"
@@ -45,7 +44,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMCSSAttributeDeclaration, mElement)
 // skipped, the attribute declaration can't be part of a garbage
 // cycle.
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMCSSAttributeDeclaration)
-  if (tmp->mElement && nsGenericElement::CanSkip(tmp->mElement, true)) {
+  if (tmp->mElement && Element::CanSkip(tmp->mElement, true)) {
     if (tmp->PreservingWrapper()) {
       // Not relying on GetWrapper to unmark us gray because the
       // side-effect thing is pretty weird.
@@ -59,12 +58,12 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsDOMCSSAttributeDeclaration)
   return tmp->IsBlack() ||
-    (tmp->mElement && nsGenericElement::CanSkipInCC(tmp->mElement));
+    (tmp->mElement && Element::CanSkipInCC(tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDOMCSSAttributeDeclaration)
   return tmp->IsBlack() ||
-    (tmp->mElement && nsGenericElement::CanSkipThis(tmp->mElement));
+    (tmp->mElement && Element::CanSkipThis(tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSAttributeDeclaration)

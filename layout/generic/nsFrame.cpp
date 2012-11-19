@@ -1495,7 +1495,7 @@ nsresult
 nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
                                         bool                    aForceBackground,
-                                        nsDisplayBackground**   aBackground)
+                                        nsDisplayBackgroundImage**   aBackground)
 {
   *aBackground = nullptr;
 
@@ -1504,7 +1504,7 @@ nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
   // true.
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    return nsDisplayBackground::AppendBackgroundItemsToTop(aBuilder, this,
+    return nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, this,
                                                            aLists.BorderBackground(),
                                                            aBackground);
   }
@@ -1530,7 +1530,7 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsDisplayBackground* bg;
+  nsDisplayBackgroundImage* bg;
   nsresult rv =
     DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground, &bg);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4197,11 +4197,11 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
                    nsDidReflowStatus         aStatus)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
-                     ("nsFrame::DidReflow: aStatus=%d", aStatus));
+                     ("nsFrame::DidReflow: aStatus=%d", static_cast<uint32_t>(aStatus)));
 
   nsSVGEffects::InvalidateDirectRenderingObservers(this, nsSVGEffects::INVALIDATE_REFLOW);
 
-  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+  if (nsDidReflowStatus::FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
                 NS_FRAME_HAS_DIRTY_CHILDREN);
   }
@@ -4765,6 +4765,46 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     return result;
   }
 
+  if (nsLayoutUtils::IsPopup(this) &&
+      GetType() == nsGkAtoms::listControlFrame) {
+    nsPresContext* presContext = PresContext();
+    nsIFrame* docRootFrame = presContext->PresShell()->GetRootFrame();
+
+    // Compute a matrix that transforms from the popup widget to the toplevel
+    // widget. We use the widgets because they're the simplest and most
+    // accurate approach --- this should work no matter how the widget position
+    // was chosen.
+    nsIWidget* widget = GetView()->GetWidget();
+    nsPresContext* rootPresContext = PresContext()->GetRootPresContext();
+    // Maybe the widget hasn't been created yet? Popups without widgets are
+    // treated as regular frames. That should work since they'll be rendered
+    // as part of the page if they're rendered at all.
+    if (widget && rootPresContext) {
+      nsIWidget* toplevel = rootPresContext->GetNearestWidget();
+      if (toplevel) {
+        nsIntRect screenBounds;
+        widget->GetClientBounds(screenBounds);
+        nsIntRect toplevelScreenBounds;
+        toplevel->GetClientBounds(toplevelScreenBounds);
+        nsIntPoint translation = screenBounds.TopLeft() - toplevelScreenBounds.TopLeft();
+
+        gfx3DMatrix transformToTop;
+        transformToTop._41 = translation.x;
+        transformToTop._42 = translation.y;
+
+        *aOutAncestor = docRootFrame;
+        gfx3DMatrix docRootTransformToTop =
+          nsLayoutUtils::GetTransformToAncestor(docRootFrame, nullptr);
+        if (docRootTransformToTop.IsSingular()) {
+          NS_WARNING("Containing document is invisible, we can't compute a valid transform");
+        } else {
+          gfx3DMatrix topToDocRootTransform = docRootTransformToTop.Inverse();
+          return transformToTop*topToDocRootTransform;
+        }
+      }
+    }
+  }
+
   *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
 
   /* Otherwise, we're not transformed.  In that case, we'll walk up the frame
@@ -4779,7 +4819,9 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     return gfx3DMatrix();
   
   /* Keep iterating while the frame can't possibly be transformed. */
-  while (!(*aOutAncestor)->IsTransformed() && *aOutAncestor != aStopAtAncestor) {
+  while (!(*aOutAncestor)->IsTransformed() &&
+         !nsLayoutUtils::IsPopup(*aOutAncestor) &&
+         *aOutAncestor != aStopAtAncestor) {
     /* If no parent, stop iterating.  Otherwise, update the ancestor. */
     nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(*aOutAncestor);
     if (!parent)

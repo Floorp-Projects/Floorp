@@ -264,7 +264,7 @@ function testEncoderGetEncoding()
 {
   var labelEncodings = [
     {encoding: "utf-8", labels: ["unicode-1-1-utf-8", "utf-8", "utf8"]},
-    {encoding: "utf-16", labels: ["utf-16", "utf-16le"]},
+    {encoding: "utf-16le", labels: ["utf-16", "utf-16"]},
     {encoding: "utf-16be", labels: ["utf-16be"]},
   ];
 

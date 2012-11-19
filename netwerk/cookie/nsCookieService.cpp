@@ -10,7 +10,6 @@
 #define FORCE_PR_LOG // Allow logging in the release build
 #endif
 
-#include "NSPRFormatTime.h" // must be before anything that includes prtime.h
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoCommon.h"
 
@@ -48,6 +47,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Likely.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
@@ -685,7 +685,7 @@ nsCookieService::Init()
   NS_ENSURE_STATE(mObserverService);
   mObserverService->AddObserver(this, "profile-before-change", true);
   mObserverService->AddObserver(this, "profile-do-change", true);
-  mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
+  mObserverService->AddObserver(this, "last-pb-context-exited", true);
 
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
   if (!mPermissionService) {
@@ -707,17 +707,7 @@ nsCookieService::InitDBStates()
   mDefaultDBState = new DBState();
   mDBState = mDefaultDBState;
 
-  // If we're in private browsing mode, create a private DBState.
-  nsCOMPtr<nsIPrivateBrowsingService> pbs =
-    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (pbs) {
-    bool inPrivateBrowsing = false;
-    pbs->GetPrivateBrowsingEnabled(&inPrivateBrowsing);
-    if (inPrivateBrowsing) {
-      mPrivateDBState = new DBState();
-      mDBState = mPrivateDBState;
-    }
-  }
+  mPrivateDBState = new DBState();
 
   // Get our cookie file.
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
@@ -1478,28 +1468,11 @@ nsCookieService::Observe(nsISupports     *aSubject,
     if (prefBranch)
       PrefChanged(prefBranch);
 
-  } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
-    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
-      NS_ASSERTION(mDefaultDBState, "don't have a default state");
-      NS_ASSERTION(mDBState == mDefaultDBState, "not in default state");
-      NS_ASSERTION(!mPrivateDBState, "already have a private state");
-
-      // Create a new DBState, and swap it in.
-      mPrivateDBState = new DBState();
-      mDBState = mPrivateDBState;
-
-    } else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
-      NS_ASSERTION(mDefaultDBState, "don't have a default state");
-      NS_ASSERTION(mDBState == mPrivateDBState, "not in private state");
-      NS_ASSERTION(!mPrivateDBState->dbConn, "private DB connection not null");
-
-      // Clear the private DBState, and restore the default one.
-      mPrivateDBState = NULL;
-      mDBState = mDefaultDBState;
-    }
-
-    NotifyChanged(nullptr, NS_LITERAL_STRING("reload").get());
+  } else if (!strcmp(aTopic, "last-pb-context-exited")) {
+    // Flush all the cookies stored by private browsing contexts
+    mPrivateDBState = new DBState();
   }
+
 
   return NS_OK;
 }
@@ -1541,9 +1514,11 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
     NS_GetAppInfo(aChannel, &appId, &inBrowserElement);
   }
 
+  bool isPrivate = aChannel && NS_UsePrivateBrowsing(aChannel);
+
   nsAutoCString result;
   GetCookieStringInternal(aHostURI, isForeign, aHttpBound, appId,
-                          inBrowserElement, result);
+                          inBrowserElement, isPrivate, result);
   *aCookie = result.IsEmpty() ? nullptr : ToNewCString(result);
   return NS_OK;
 }
@@ -1590,10 +1565,13 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
     NS_GetAppInfo(aChannel, &appId, &inBrowserElement);
   }
 
+  bool isPrivate = aChannel && NS_UsePrivateBrowsing(aChannel);
+
   nsDependentCString cookieString(aCookieHeader);
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
   SetCookieStringInternal(aHostURI, isForeign, cookieString,
-                          serverTime, aFromHttp, appId, inBrowserElement);
+                          serverTime, aFromHttp, appId, inBrowserElement,
+                          isPrivate, aChannel);
   return NS_OK;
 }
 
@@ -1604,7 +1582,9 @@ nsCookieService::SetCookieStringInternal(nsIURI             *aHostURI,
                                          const nsCString    &aServerTime,
                                          bool                aFromHttp,
                                          uint32_t            aAppId,
-                                         bool                aInBrowserElement)
+                                         bool                aInBrowserElement,
+                                         bool                aIsPrivate,
+                                         nsIChannel         *aChannel)
 {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -1612,6 +1592,9 @@ nsCookieService::SetCookieStringInternal(nsIURI             *aHostURI,
     NS_WARNING("No DBState! Profile already closed?");
     return;
   }
+
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = aIsPrivate ? mPrivateDBState : mDefaultDBState;
 
   // get the base domain for the host URI.
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
@@ -1660,7 +1643,7 @@ nsCookieService::SetCookieStringInternal(nsIURI             *aHostURI,
 
   // process each cookie in the header
   while (SetCookieInternal(aHostURI, key, requireHostMatch, cookieStatus,
-                           aCookieHeader, serverTime, aFromHttp)) {
+                           aCookieHeader, serverTime, aFromHttp, aChannel)) {
     // document.cookie can only set one cookie at a time
     if (!aFromHttp)
       break;
@@ -2468,6 +2451,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          bool aHttpBound,
                                          uint32_t aAppId,
                                          bool aInBrowserElement,
+                                         bool aIsPrivate,
                                          nsCString &aCookieString)
 {
   NS_ASSERTION(aHostURI, "null host!");
@@ -2476,6 +2460,9 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
     NS_WARNING("No DBState! Profile already closed?");
     return;
   }
+
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = aIsPrivate ? mPrivateDBState : mDefaultDBState;
 
   // get the base domain, host, and path from the URI.
   // e.g. for "www.bbc.co.uk", the base domain would be "bbc.co.uk".
@@ -2658,7 +2645,8 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                                    CookieStatus                   aStatus,
                                    nsDependentCString            &aCookieHeader,
                                    int64_t                        aServerTime,
-                                   bool                           aFromHttp)
+                                   bool                           aFromHttp,
+                                   nsIChannel                    *aChannel)
 {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -2728,11 +2716,8 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   // to determine if we can set the cookie
   if (mPermissionService) {
     bool permission;
-    // Not passing an nsIChannel here means CanSetCookie will use the currently
-    // active window to display the prompt. This isn't exactly ideal, but this
-    // code is going away. See bug 546746.
     mPermissionService->CanSetCookie(aHostURI,
-                                     nullptr,
+                                     aChannel,
                                      static_cast<nsICookie2*>(static_cast<nsCookie*>(cookie)),
                                      &cookieAttributes.isSession,
                                      &cookieAttributes.expiryTime,

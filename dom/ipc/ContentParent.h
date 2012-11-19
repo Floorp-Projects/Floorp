@@ -311,6 +311,7 @@ private:
     GeckoChildProcessHost* mSubprocess;
     ChildOSPrivileges mOSPrivileges;
 
+    uint64_t mChildID;
     int32_t mGeolocationWatchID;
     int mRunToCompletionDepth;
     bool mShouldCallUnblockChild;

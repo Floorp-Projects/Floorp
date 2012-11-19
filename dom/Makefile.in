@@ -74,6 +74,7 @@ PARALLEL_DIRS += \
   identity \
   workers \
   camera \
+  audiochannel \
   $(NULL)
 
 ifdef MOZ_B2G_RIL

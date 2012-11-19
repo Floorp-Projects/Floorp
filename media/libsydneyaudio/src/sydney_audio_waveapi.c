@@ -723,7 +723,7 @@ UNSUPPORTED(int sa_stream_get_user_data(sa_stream_t *s, void **value))
 UNSUPPORTED(int sa_stream_get_xrun_mode(sa_stream_t *s, sa_xrun_mode_t *mode))
 UNSUPPORTED(int sa_stream_get_non_interleaved(sa_stream_t *s, int *enabled))
 UNSUPPORTED(int sa_stream_get_dynamic_rate(sa_stream_t *s, int *enabled))
-UNSUPPORTED(int sa_stream_get_driver(sa_stream_t *s, char *driver_name, size_t *size))            
+UNSUPPORTED(int sa_stream_get_driver(sa_stream_t *s, char *driver_name, size_t *size))
 UNSUPPORTED(int sa_stream_get_read_volume(sa_stream_t *s, int32_t vol[], unsigned int *n))
 UNSUPPORTED(int sa_stream_get_meta_data(sa_stream_t *s, const char *name, void*data, size_t *size))
 UNSUPPORTED(int sa_stream_get_adjust_rate(sa_stream_t *s, sa_adjust_t *direction))
@@ -752,6 +752,8 @@ UNSUPPORTED(int sa_stream_pwrite_ni(sa_stream_t *s, unsigned int channel, const 
 
 /** Query how much can be read without blocking */
 UNSUPPORTED(int sa_stream_get_read_size(sa_stream_t *s, size_t *size))
+
+UNSUPPORTED(int sa_stream_set_stream_type(sa_stream_t *s, const sa_stream_type_t stream_type))
 
 /** Return a human readable error */
 const char *sa_strerror(int code);

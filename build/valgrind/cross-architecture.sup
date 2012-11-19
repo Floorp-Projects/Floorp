@@ -63,6 +63,14 @@
    ...
 }
 {
+   Bug 793533 (all 64-bit systems)
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN3xpc18CreateGlobalObjectEP9JSContextP7JSClassP12nsIPrincipal
+   ...
+}
+{
    Bug 793536 (all 64-bit systems)
    Memcheck:Leak
    fun:malloc
@@ -211,5 +219,38 @@
    fun:_ZN8SkBitmap10freePixelsEv
    fun:_ZN8SkBitmapD1Ev
    fun:_ZN7mozilla3gfx5ScaleEPhiiiS1_iiiNS0_13SurfaceFormatE
+   ...
+}
+{
+   Bug 812421 (all 32-bit systems)
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN3JSC19ExecutableAllocator10createPoolEj
+   fun:_ZN3JSC19ExecutableAllocator11poolForSizeEj
+   ...
+}
+{
+   Bug 812421 (all 64-bit systems)
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN3JSC19ExecutableAllocator10createPoolEm
+   fun:_ZN3JSC19ExecutableAllocator11poolForSizeEm
+   ...
+}
+{
+   Bug 812422
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_Z22NS_NewComputedDOMStylePN7mozilla3dom7ElementERK18nsAString_internalP12nsIPresShellN18nsComputedDOMStyle9StyleTypeE
+   fun:_ZN14nsGlobalWindow22GetComputedStyleHelperEP13nsIDOMElementRK18nsAString_internalbPP25nsIDOMCSSStyleDeclaration
+   ...
+}
+{
+   Bug 812423
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN2js15ArgumentsObject6createI18CopyStackFrameArgsEEPS0_P9JSContextN2JS6HandleIP8JSScriptEENS7_IP10JSFunctionEEjRT_
+   fun:_ZN2js15ArgumentsObject14createExpectedEP9JSContextPNS_10StackFrameE
    ...
 }

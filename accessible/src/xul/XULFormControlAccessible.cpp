@@ -188,7 +188,7 @@ XULButtonAccessible::CacheChildren()
   Accessible* menupopup = nullptr;
   Accessible* button = nullptr;
 
-  nsAccTreeWalker walker(mDoc, mContent, true);
+  nsAccTreeWalker walker(mDoc, this, mContent);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild())) {
@@ -827,7 +827,7 @@ XULTextFieldAccessible::CacheChildren()
   if (!inputContent)
     return;
 
-  nsAccTreeWalker walker(mDoc, inputContent, false);
+  nsAccTreeWalker walker(mDoc, this, inputContent);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));

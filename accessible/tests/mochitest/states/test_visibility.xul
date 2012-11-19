@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL elements visibility states testing">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      testStates("deck_pane1", STATE_INVISIBLE, 0, STATE_OFFSCREEN);
+      testStates("deck_pane2", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
+      testStates("tabs_pane1", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
+      testStates("tabs_pane2", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+     <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=810260"
+         title=" xul:deck hidden pages shouldn't be offscreen">
+        Mozilla Bug 810260
+     </a>
+
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+
+      <deck selectedIndex="1">
+        <description value="This is the first page" id="deck_pane1"/>
+        <button label="This is the second page" id="deck_pane2"/>
+      </deck>
+
+      <tabbox>
+        <tabs>
+          <tab>tab1</tab>
+          <tab>tab2</tab>
+        </tabs>
+        <tabpanels>
+          <description value="This is the first page" id="tabs_pane1"/>
+          <button label="This is the second page" id="tabs_pane2"/>
+        </tabpanels>
+      </tabbox>
+
+    </vbox>
+  </hbox>
+
+</window>
+

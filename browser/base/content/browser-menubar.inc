@@ -203,13 +203,11 @@
                   <menupopup id="viewSidebarMenu">
                     <menuitem id="menu_bookmarksSidebar"
                               key="viewBookmarksSidebarKb"
-                              observes="viewBookmarksSidebar"
-                              accesskey="&bookmarksButton.accesskey;"/>
+                              observes="viewBookmarksSidebar"/>
                     <menuitem id="menu_historySidebar"
                               key="key_gotoHistory"
                               observes="viewHistorySidebar"
-                              label="&historyButton.label;"
-                              accesskey="&historySidebarCmd.accesskey;"/>
+                              label="&historyButton.label;"/>
                     <menuitem id="menu_socialSidebar"
                               type="checkbox"
                               autocheck="false"
@@ -507,27 +505,37 @@
                         accesskey="&addons.accesskey;"
                         key="key_openAddons"
                         command="Tools:Addons"/>
-              <menuitem id="menu_socialToggle"
-                        type="checkbox"
-                        autocheck="false"
-                        command="Social:Toggle"/>
-              <menu id="menu_socialAmbientMenu"
-                    class="show-only-for-keyboard">
-                <menupopup id="menu_socialAmbientMenuPopup">
+              <menu id="menu_socialAmbientMenu">
+                <menupopup id="menu_social-statusarea-popup">
+                  <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
+                            oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
+                    <image class="social-statusarea-user-portrait"
+                           observes="socialBroadcaster_userPortrait"/>
+                    <vbox>
+                      <label class="social-statusarea-loggedInStatus"
+                             observes="socialBroadcaster_loggedInStatus"/>
+                    </vbox>
+                  </menuitem>
+#ifndef XP_WIN
+                  <menuseparator class="social-statusarea-separator"/>
+#endif
                   <menuseparator id="socialAmbientMenuSeparator"
                                  hidden="true"/>
-                  <menuitem id="social-toggle-sidebar-keyboardmenuitem"
+                  <menuitem class="social-toggle-sidebar-menuitem"
                             type="checkbox"
                             autocheck="false"
                             command="Social:ToggleSidebar"
                             label="&social.toggleSidebar.label;"
                             accesskey="&social.toggleSidebar.accesskey;"/>
-                  <menuitem id="social-toggle-notifications-keyboardmenuitem"
+                  <menuitem class="social-toggle-notifications-menuitem"
                             type="checkbox"
                             autocheck="false"
                             command="Social:ToggleNotifications"
                             label="&social.toggleNotifications.label;"
                             accesskey="&social.toggleNotifications.accesskey;"/>
+                  <menuseparator class="social-statusarea-separator"/>
+                  <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
+                  <menuitem class="social-remove-menuitem" command="Social:Remove"/>
                 </menupopup>
               </menu>
 #ifdef MOZ_SERVICES_SYNC

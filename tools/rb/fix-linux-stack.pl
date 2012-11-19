@@ -26,44 +26,53 @@ use File::Basename;
 # XXX Hard-coded to gdb defaults (works on Fedora).
 my $global_debug_dir = '/usr/lib/debug';
 
-# addr2line wants offsets relative to the base address for shared
-# libraries, but it wants addresses including the base address offset
-# for executables.  This function returns the appropriate address
-# adjustment to add to an offset within file.  See bug 230336.
-my %address_adjustments;
-sub address_adjustment($) {
-    my ($file) = @_;
-    unless (exists $address_adjustments{$file}) {
-        # find out if it's an executable (as opposed to a shared library)
-        my $elftype;
-        open(ELFHDR, '-|', 'readelf', '-h', $file);
-        while (<ELFHDR>) {
-            if (/^\s*Type:\s+(\S+)/) {
-                $elftype = $1;
+# We record several things for each file encountered.
+#
+# - {pipe_read}, {pipe_write}: these constitute a bidirectional pipe to an
+#   addr2line process that gives symbol information for a file.
+#
+# - {cache}: this table holds the results of lookups that we've done
+#   previously for (pre-adjustment) addresses, which lets us avoid redundant
+#   calls to addr2line.
+#
+# - {address_adjustment}: addr2line wants offsets relative to the base address
+#   for shared libraries, but it wants addresses including the base address
+#   offset for executables.  This holds the appropriate address adjustment to
+#   add to an offset within file.  See bug 230336.
+#
+my %file_infos;
+
+sub set_address_adjustment($$) {
+    my ($file, $file_info) = @_;
+
+    # find out if it's an executable (as opposed to a shared library)
+    my $elftype;
+    open(ELFHDR, '-|', 'readelf', '-h', $file);
+    while (<ELFHDR>) {
+        if (/^\s*Type:\s+(\S+)/) {
+            $elftype = $1;
+            last;
+        }
+    }
+    close(ELFHDR);
+
+    # If it's an executable, make adjustment the base address.
+    # Otherwise, leave it zero.
+    my $adjustment = 0;
+    if ($elftype eq 'EXEC') {
+        open(ELFSECS, '-|', 'readelf', '-S', $file);
+        while (<ELFSECS>) {
+            if (/^\s*\[\s*\d+\]\s+\.text\s+\w+\s+(\w+)\s+(\w+)\s+/) {
+                # Subtract the .text section's offset within the
+                # file from its base address.
+                $adjustment = hex($1) - hex($2);
                 last;
             }
         }
-        close(ELFHDR);
-
-        # If it's an executable, make adjustment the base address.
-        # Otherwise, leave it zero.
-        my $adjustment = 0;
-        if ($elftype eq 'EXEC') {
-            open(ELFSECS, '-|', 'readelf', '-S', $file);
-            while (<ELFSECS>) {
-                if (/^\s*\[\s*\d+\]\s+\.text\s+\w+\s+(\w+)\s+(\w+)\s+/) {
-                    # Subtract the .text section's offset within the
-                    # file from its base address.
-                    $adjustment = hex($1) - hex($2);
-                    last;
-                }
-            }
-            close(ELFSECS);
-        }
-
-        $address_adjustments{$file} = $adjustment;
+        close(ELFSECS);
     }
-    return $address_adjustments{$file};
+
+    $file_info->{address_adjustment} = $adjustment;
 }
 
 # Files sometimes contain a link to a separate object file that contains
@@ -191,24 +200,21 @@ sub separate_debug_file_for($) {
     return '';
 }
 
-# Return a reference to a hash whose {read} and {write} entries are a
-# bidirectional pipe to an addr2line process that gives symbol
-# information for a file.
-my %pipes;
-sub addr2line_pipe($) {
+sub get_file_info($) {
     my ($file) = @_;
-    my $pipe;
-    unless (exists $pipes{$file}) {
+    my $file_info = $file_infos{$file};
+    unless (defined $file_info) {
         my $debug_file = separate_debug_file_for($file);
         $debug_file = $file if ($debug_file eq '');
 
-        my $pid = open2($pipe->{read}, $pipe->{write},
+        my $pid = open2($file_info->{pipe_read}, $file_info->{pipe_write},
                         '/usr/bin/addr2line', '-C', '-f', '-e', $debug_file);
-        $pipes{$file} = $pipe;
-    } else {
-        $pipe = $pipes{$file};
+
+        set_address_adjustment($file, $file_info);
+
+        $file_infos{$file} = $file_info;
     }
-    return $pipe;
+    return $file_info;
 }
 
 # Ignore SIGPIPE as a workaround for addr2line crashes in some situations.
@@ -225,19 +231,23 @@ while (<>) {
         my $after = $5; # allow preservation of counts
 
         if (-f $file) {
-            my $pipe = addr2line_pipe($file);
-            $address += address_adjustment($file);
-
-            my $out = $pipe->{write};
-            my $in = $pipe->{read};
-            printf {$out} "0x%X\n", $address;
-            chomp(my $symbol = <$in>);
-            chomp(my $fileandline = <$in>);
-            if (!$symbol || $symbol eq '??') { $symbol = $badsymbol; }
-            if (!$fileandline || $fileandline eq '??:0') {
-                $fileandline = $file;
+            my $file_info = get_file_info($file);
+            my $result = $file_info->{cache}->{$address};
+            if (not defined $result) {
+                my $address2 = $address + $file_info->{address_adjustment};
+                my $out = $file_info->{pipe_write};
+                my $in = $file_info->{pipe_read};
+                printf {$out} "0x%X\n", $address2;
+                chomp(my $symbol = <$in>);
+                chomp(my $fileandline = <$in>);
+                if (!$symbol || $symbol eq '??') { $symbol = $badsymbol; }
+                if (!$fileandline || $fileandline eq '??:0') {
+                    $fileandline = $file;
+                }
+                $result = "$symbol ($fileandline)";
+                $file_info->{cache}->{$address} = $result;
             }
-            print "$before$symbol ($fileandline)$after\n";
+            print "$before$result$after\n";
         } else {
             print STDERR "Warning: File \"$file\" does not exist.\n";
             print $line;

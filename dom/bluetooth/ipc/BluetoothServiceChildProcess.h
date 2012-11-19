@@ -129,7 +129,7 @@ public:
                            bool aAllow,
                            BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual bool
+  virtual void
   Connect(const nsAString& aDeviceAddress,
           const nsAString& aAdapterPath,
           const uint16_t aProfileId,

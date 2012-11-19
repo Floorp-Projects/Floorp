@@ -9,10 +9,10 @@
 
 #include "nsTArray.h"
 
-class Accessible;
-
 namespace mozilla {
 namespace a11y {
+
+class Accessible;
 
 /**
  * Collect accessible children complying with filter function. Provides quick
@@ -86,7 +86,7 @@ protected:
 
   virtual void AppendObject(Accessible* aAccessible);
 
-  friend class ::Accessible;
+  friend class Accessible;
 };
 
 } // namespace a11y
