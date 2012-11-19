@@ -59,9 +59,9 @@ public:
     return mLength;
   }
 
-  float Duration() const
+  double Duration() const
   {
-    return mLength / mSampleRate;
+    return mLength / static_cast<double> (mSampleRate);
   }
 
   uint32_t NumberOfChannels() const
