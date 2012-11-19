@@ -1470,7 +1470,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
                                                    uint32_t aLayer,
                                                    bool aIsThemed,
                                                    const nsStyleBackground* aBackgroundStyle)
-  : nsDisplayItem(aBuilder, aFrame)
+  : nsDisplayImageContainer(aBuilder, aFrame)
   , mBackgroundStyle(aBackgroundStyle)
   , mLayer(aLayer)
   , mIsThemed(aIsThemed)
@@ -1711,7 +1711,7 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
 
   nsImageRenderer* imageRenderer = &state.mImageRenderer;
   // We only care about images here, not gradients.
-  if (imageRenderer->IsRasterImage())
+  if (!imageRenderer->IsRasterImage())
     return false;
 
   nsRefPtr<ImageContainer> imageContainer = imageRenderer->GetContainer();
@@ -1735,6 +1735,18 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
 
   // Ok, we can turn this into a layer if needed.
   return true;
+}
+
+already_AddRefed<ImageContainer>
+nsDisplayBackgroundImage::GetContainer(nsDisplayListBuilder *aBuilder)
+{
+  if (!TryOptimizeToImageLayer(aBuilder)) {
+    return nullptr;
+  }
+
+  nsRefPtr<ImageContainer> container = mImageContainer;
+
+  return container.forget();
 }
 
 LayerState
@@ -1779,12 +1791,12 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
   layer->SetContainer(mImageContainer);
-  ConfigureLayer(layer);
+  ConfigureLayer(layer, aParameters.mOffset);
   return layer.forget();
 }
 
 void
-nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer)
+nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
 
@@ -1792,7 +1804,7 @@ nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer)
   NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
 
   gfxMatrix transform;
-  transform.Translate(mDestRect.TopLeft());
+  transform.Translate(mDestRect.TopLeft() + aOffset);
   transform.Scale(mDestRect.width/imageSize.width,
                   mDestRect.height/imageSize.height);
   aLayer->SetBaseTransform(gfx3DMatrix::From2D(transform));
