@@ -279,6 +279,11 @@ double MediaDecoder::GetDuration()
   return std::numeric_limits<double>::quiet_NaN();
 }
 
+int64_t MediaDecoder::GetMediaDuration()
+{
+  return GetStateMachine()->GetDuration();
+}
+
 void MediaDecoder::SetInfinite(bool aInfinite)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -1179,6 +1184,11 @@ void MediaDecoder::SetDuration(double aDuration)
   UpdatePlaybackRate();
 }
 
+void MediaDecoder::SetMediaDuration(int64_t aDuration)
+{
+  GetStateMachine()->SetDuration(aDuration);
+}
+
 void MediaDecoder::SetSeekable(bool aSeekable)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -1193,6 +1203,11 @@ bool MediaDecoder::IsSeekable()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   return mSeekable;
+}
+
+bool MediaDecoder::IsMediaSeekable()
+{
+  return GetStateMachine()->IsSeekable();
 }
 
 nsresult MediaDecoder::GetSeekable(nsTimeRanges* aSeekable)
@@ -1216,13 +1231,18 @@ nsresult MediaDecoder::GetSeekable(nsTimeRanges* aSeekable)
   }
 }
 
-void MediaDecoder::SetEndTime(double aTime)
+void MediaDecoder::SetFragmentEndTime(double aTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mDecoderStateMachine) {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     mDecoderStateMachine->SetFragmentEndTime(static_cast<int64_t>(aTime * USECS_PER_S));
   }
+}
+
+void MediaDecoder::SetMediaEndTime(int64_t aTime)
+{
+  GetStateMachine()->SetMediaEndTime(aTime);
 }
 
 void MediaDecoder::Suspend()
@@ -1353,8 +1373,16 @@ void MediaDecoder::UpdatePlaybackPosition(int64_t aTime)
 }
 
 // Provide access to the state machine object
-MediaDecoderStateMachine* MediaDecoder::GetStateMachine() {
+MediaDecoderStateMachine* MediaDecoder::GetStateMachine() const {
   return mDecoderStateMachine;
+}
+
+bool MediaDecoder::IsShutdown() const {
+  return GetStateMachine()->IsShutdown();
+}
+
+int64_t MediaDecoder::GetEndMediaTime() const {
+  return GetStateMachine()->GetEndMediaTime();
 }
 
 // Drop reference to state machine.  Only called during shutdown dance.
