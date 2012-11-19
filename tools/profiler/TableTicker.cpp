@@ -801,12 +801,8 @@ void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
   array->count++;
 }
 
-void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+static void doMergeBacktrace(ThreadProfile &aProfile, TickSample* aSample, void* aThread)
 {
-#ifndef XP_MACOSX
-  uintptr_t thread = GetThreadHandle(platform_data());
-  MOZ_ASSERT(thread);
-#endif
   void* pc_array[1000];
   void* sp_array[1000];
   PCArray array = {
@@ -820,7 +816,13 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   StackWalkCallback(aSample->pc, aSample->sp, &array);
 
 #ifdef XP_MACOSX
-  pthread_t pt = GetProfiledThread(platform_data());
+  pthread_t pt;
+  if (aThread) {
+    pt = (pthread_t)aThread;
+  } else {
+    pt = pthread_self();
+  }
+
   void *stackEnd = reinterpret_cast<void*>(-1);
   if (pt)
     stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
@@ -828,6 +830,9 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd)
     rv = FramePointerStackWalk(StackWalkCallback, 0, &array, reinterpret_cast<void**>(aSample->fp), stackEnd);
 #else
+  uintptr_t thread = (uintptr_t)aThread;
+  GetThreadHandle(platform_data());
+  MOZ_ASSERT(thread);
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
 #endif
   if (NS_SUCCEEDED(rv)) {
@@ -869,6 +874,16 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
     }
   }
 }
+
+void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+{
+#ifdef XP_MACOSX
+  doMergeBacktrace(aProfile, aSample, GetProfiledThread(platform_data()));
+#else
+  doMergeBacktrace(aProfile, aSample, GetThreadHandle(platform_data()));
+#endif
+}
+
 #endif
 
 #if defined(USE_LIBUNWIND) && defined(ANDROID)
@@ -1265,6 +1280,17 @@ void print_callback(const ProfileEntry& entry, const char* tagStringData) {
     case 's':
     case 'c':
       printf_stderr("  %s\n", tagStringData);
+      break;
+    case 'l':
+      unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
+      nsCodeAddressDetails details;
+      NS_DescribeCodeAddress((void*)pc, &details);
+      if (details.function) {
+        printf_stderr("  %s\n", details.function);
+      } else {
+        printf_stderr("  %#llx\n", pc);
+      }
+      break;
   }
 }
 
@@ -1279,8 +1305,28 @@ void mozilla_sampler_print_location()
     return;
   }
 
-  ThreadProfile threadProfile(1000, stack);
+  ThreadProfile threadProfile(2000, stack);
+#ifdef USE_NS_STACKWALK
+  // Get the frame pointer
+  void **bp;
+#if defined(__i386)
+  __asm__( "movl %%ebp, %0" : "=g"(bp));
+#else
+  // It would be nice if this worked uniformly, but at least on i386 and
+  // x86_64, it stopped working with gcc 4.1, because it points to the
+  // end of the saved registers instead of the start.
+  bp = (void**) __builtin_frame_address(0);
+#endif
+
+  TickSample sample;
+  sample.fp = (unsigned char*)bp;
+  sample.pc = nullptr;
+  sample.sp = (unsigned char*)&stack;
+
+  doMergeBacktrace(threadProfile, &sample, 0);
+#else
   doSampleStackTrace(stack, threadProfile, NULL);
+#endif
 
   threadProfile.flush();
 
