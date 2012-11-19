@@ -472,6 +472,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     }
   }
 
+  nsCSSRendering::BeginFrameTreesLocked();
   PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
 }
 
@@ -653,6 +654,8 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   NS_ASSERTION(mPresShellStates.Length() == 0,
                "All presshells should have been exited");
   NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
+
+  nsCSSRendering::EndFrameTreesLocked();
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
@@ -1155,7 +1158,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
 
-  nsCSSRendering::DidPaint();
   layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
 }
 
