@@ -1204,6 +1204,17 @@ void print_callback(const ProfileEntry& entry, const char* tagStringData) {
     case 's':
     case 'c':
       printf_stderr("  %s\n", tagStringData);
+      break;
+    case 'l':
+      unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
+      nsCodeAddressDetails details;
+      NS_DescribeCodeAddress((void*)pc, &details);
+      if (details.function) {
+        printf_stderr("  %s\n", details.function);
+      } else {
+        printf_stderr("  %#llx\n", pc);
+      }
+      break;
   }
 }
 
@@ -1218,8 +1229,28 @@ void mozilla_sampler_print_location()
     return;
   }
 
-  ThreadProfile threadProfile(1000, stack);
+  ThreadProfile threadProfile(2000, stack);
+#if defined(XP_MACOSX) && defined(USE_NS_STACKWALK)
+  // Get the frame pointer
+  void **bp;
+#if defined(__i386)
+  __asm__( "movl %%ebp, %0" : "=g"(bp));
+#else
+  // It would be nice if this worked uniformly, but at least on i386 and
+  // x86_64, it stopped working with gcc 4.1, because it points to the
+  // end of the saved registers instead of the start.
+  bp = (void**) __builtin_frame_address(0);
+#endif
+
+  TickSample sample;
+  sample.fp = (unsigned char*)bp;
+  sample.pc = nullptr;
+  sample.sp = (unsigned char*)&stack;
+
+  doMergeBacktrace(threadProfile, &sample, 0);
+#else
   doSampleStackTrace(stack, threadProfile, NULL);
+#endif
 
   threadProfile.flush();
 
