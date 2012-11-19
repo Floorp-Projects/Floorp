@@ -26,48 +26,17 @@ class MacOSFontEntry : public gfxFontEntry
 public:
     friend class gfxMacPlatformFontList;
 
-    virtual ~MacOSFontEntry() {
-        ::CGFontRelease(mFontRef);
-    }
-
-    virtual CGFontRef GetFontRef() = 0;
-
-    virtual nsresult GetFontTable(uint32_t aTableTag,
-                                  FallibleTArray<uint8_t>& aBuffer) = 0;
-
-    nsresult ReadCMAP();
-
-    bool RequiresAATLayout() const { return mRequiresAAT; }
-
-    bool IsCFF();
-
-protected:
     MacOSFontEntry(const nsAString& aPostscriptName, int32_t aWeight,
                    gfxFontFamily *aFamily, bool aIsStandardFace = false);
 
-    virtual gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
-
-    virtual bool HasFontTable(uint32_t aTableTag) = 0;
-
-    CGFontRef mFontRef; // owning reference to the CGFont, released on destruction
-
-    bool mFontRefInitialized;
-    bool mRequiresAAT;
-    bool mIsCFF;
-    bool mIsCFFInitialized;
-};
-
-// concrete subclass of MacOSFontEntry: CGFontEntry for 10.6+
-class CGFontEntry : public MacOSFontEntry
-{
-public:
-    CGFontEntry(const nsAString& aPostscriptName, int32_t aWeight,
-                gfxFontFamily *aFamily, bool aIsStandardFace = false);
-
     // for use with data fonts
-    CGFontEntry(const nsAString& aPostscriptName, CGFontRef aFontRef,
-                uint16_t aWeight, uint16_t aStretch, uint32_t aItalicStyle,
-                bool aIsUserFont, bool aIsLocal);
+    MacOSFontEntry(const nsAString& aPostscriptName, CGFontRef aFontRef,
+                   uint16_t aWeight, uint16_t aStretch, uint32_t aItalicStyle,
+                   bool aIsUserFont, bool aIsLocal);
+
+    virtual ~MacOSFontEntry() {
+        ::CGFontRelease(mFontRef);
+    }
 
     virtual CGFontRef GetFontRef();
 
@@ -77,8 +46,23 @@ public:
     virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                      FontListSizes*    aSizes) const;
 
+    nsresult ReadCMAP();
+
+    bool RequiresAATLayout() const { return mRequiresAAT; }
+
+    bool IsCFF();
+
 protected:
+    virtual gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
+
     virtual bool HasFontTable(uint32_t aTableTag);
+
+    CGFontRef mFontRef; // owning reference to the CGFont, released on destruction
+
+    bool mFontRefInitialized;
+    bool mRequiresAAT;
+    bool mIsCFF;
+    bool mIsCFFInitialized;
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {
@@ -112,9 +96,6 @@ private:
 
     // special case font faces treated as font families (set via prefs)
     void InitSingleFaceList();
-
-    gfxFontEntry* MakePlatformFontCG(const gfxProxyFontEntry *aProxyEntry,
-                                     const uint8_t *aFontData, uint32_t aLength);
 
     static void ATSNotification(ATSFontNotificationInfoRef aInfo, void* aUserArg);
 
