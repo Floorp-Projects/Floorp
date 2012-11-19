@@ -13,9 +13,11 @@ import platform
 import shutil
 import socket
 import subprocess
+import sys
 from telnetlib import Telnet
 import tempfile
 import time
+import traceback
 
 from emulator_battery import EmulatorBattery
 from emulator_geo import EmulatorGeo
@@ -387,33 +389,43 @@ waitFor(
         push_attempts = 10
 
         print 'installing gecko binaries...'
-        # need to remount so we can write to /system/b2g
-        self._run_adb(['remount'])
-        for root, dirs, files in os.walk(gecko_path):
-            for filename in files:
-                rel_path = os.path.relpath(os.path.join(root, filename), gecko_path)
-                system_b2g_file = os.path.join('/system/b2g', rel_path)
-                for retry in range(1, push_attempts+1):
-                    print 'pushing', system_b2g_file, '(attempt %s of %s)' % (retry, push_attempts)
-                    try:
-                        self.dm.pushFile(os.path.join(root, filename), system_b2g_file)
-                        break
-                    except DMError:
-                        if retry == push_attempts:
-                            raise
 
-        print 'restarting B2G'
-        # see bug 809437 for the path that lead to this madness
-        time.sleep(5)
-        self.dm.shellCheckOutput(['stop', 'b2g'])
-        time.sleep(10)
-        self.dm.shellCheckOutput(['start', 'b2g'])
-        time.sleep(5)
+        try:
+            # need to remount so we can write to /system/b2g
+            self._run_adb(['remount'])
+            for root, dirs, files in os.walk(gecko_path):
+                for filename in files:
+                    rel_path = os.path.relpath(os.path.join(root, filename), gecko_path)
+                    system_b2g_file = os.path.join('/system/b2g', rel_path)
+                    for retry in range(1, push_attempts+1):
+                        print 'pushing', system_b2g_file, '(attempt %s of %s)' % (retry, push_attempts)
+                        try:
+                            self.dm.pushFile(os.path.join(root, filename), system_b2g_file)
+                            break
+                        except DMError:
+                            if retry == push_attempts:
+                                raise
 
-        if not self.wait_for_port():
-            raise TimeoutException("Timeout waiting for marionette on port '%s'" % self.marionette_port)
-        self.wait_for_system_message(marionette)
+            print 'restarting B2G'
+            # see bug 809437 for the path that lead to this madness
+            self.dm.shellCheckOutput(['stop', 'b2g'])
+            time.sleep(10)
+            self.dm.shellCheckOutput(['start', 'b2g'])
 
+            if not self.wait_for_port():
+                raise TimeoutException("Timeout waiting for marionette on port '%s'" % self.marionette_port)
+            self.wait_for_system_message(marionette)
+
+        except (DMError, MarionetteException):
+            # Bug 812395 - raise a single exception type for these so we can
+            # explicitly catch them elsewhere.
+
+            # print exception, but hide from mozharness error detection
+            exc = traceback.format_exc()
+            exc = exc.replace('Traceback', '_traceback')
+            print exc
+
+            raise InstallGeckoError("unable to restart B2G after installing gecko")
 
     def rotate_log(self, srclog, index=1):
         """ Rotate a logfile, by recursively rotating logs further in the sequence,

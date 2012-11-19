@@ -480,7 +480,7 @@ def main(args=sys.argv[1:]):
         kwargs['port'] = int(port)
     if options.geckoPath:
         kwargs['gecko_path'] = options.geckoPath
-    marionette = Marionette(**kwargs)
+    marionette = Marionette.getMarionetteOrExit(**kwargs)
     auto.marionette = marionette
 
     # create the DeviceManager
