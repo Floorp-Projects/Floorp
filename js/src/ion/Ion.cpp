@@ -204,6 +204,12 @@ IonCompartment::IonCompartment(IonRuntime *rt)
 {
 }
 
+bool
+IonCompartment::initialize(JSContext *cx)
+{
+    return true;
+}
+
 void
 ion::FinishOffThreadBuilder(IonBuilder *builder)
 {
