@@ -271,6 +271,7 @@ this.PermissionsTable =  { "resource-lock": {
 this.expandPermissions = function expandPermissions(aPermName, aAccess) {
   if (!PermissionsTable[aPermName]) {
     Cu.reportError("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
+    dump("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
     return [];
   }
 
@@ -286,7 +287,10 @@ this.expandPermissions = function expandPermissions(aPermName, aAccess) {
       aAccess && !tableEntry.access) {
     Cu.reportError("PermissionsTable.jsm: expandPermissions: Invalid Manifest : " +
                    aPermName + " " + aAccess + "\n");
-    throw new Error("PermissionsTable.jsm: expandPermissions: Invalid Manifest");
+    dump("PermissionsTable.jsm: expandPermissions: Invalid Manifest: " +
+         aPermName + " " + aAccess + "\n");
+    throw new Error("PermissionsTable.jsm: expandPermissions: Invalid Manifest: " +
+                    aPermName + " " + aAccess + "\n");
   }
 
   let expandedPerms = [];
@@ -424,6 +428,8 @@ this.PermissionsInstaller = {
         if (!PermissionsTable[permName]) {
           Cu.reportError("PermissionsInstaller.jsm: '" + permName + "'" +
                          " is not a valid Webapps permission type.");
+          dump("PermissionsInstaller.jsm: '" + permName + "'" +
+               " is not a valid Webapps permission type.");
           continue;
         }
 
@@ -437,7 +443,7 @@ this.PermissionsInstaller = {
       }
     }
     catch (ex) {
-      debug("Caught webapps install permissions error");
+      dump("Caught webapps install permissions error for " + aApp.origin);
       Cu.reportError(ex);
       if (aOnError) {
         aOnError();

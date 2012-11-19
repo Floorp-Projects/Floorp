@@ -27,15 +27,17 @@ const TEST_ORIGIN_URL = "http://mochi.test:8888";
 const installedPermsToTest = {
   "geolocation": "prompt",
   "alarms": "allow",
-  "contacts": "prompt",
-  "device-storage:apps": "prompt",
+  "contacts-write": "prompt",
+  "contacts-read": "prompt",
+  "device-storage:apps-read": "prompt",
+  "device-storage:apps-write": "unknown"
 };
 
 const uninstalledPermsToTest = {
   "geolocation": "unknown",
   "alarms": "unknown",
-  "contacts": "unknown",
-  "device-storage:apps": "unknown",
+  "contacts-read": "unknown",
+  "device-storage:apps-read": "unknown",
 };
 
 var gWindow, gNavigator;
@@ -68,7 +70,7 @@ function test() {
       ok(nav.mozApps, "we have a mozApps property");
       var navMozPerms = nav.mozPermissionSettings;
       ok(navMozPerms, "mozPermissions is available");
-      Math.sin(0);
+
       // INSTALL app
       var pendingInstall = nav.mozApps.install(TEST_MANIFEST_URL, null);
       pendingInstall.onsuccess = function onsuccess()
