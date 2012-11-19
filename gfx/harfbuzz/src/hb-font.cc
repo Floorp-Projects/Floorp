@@ -34,6 +34,7 @@
 #include "hb-blob.h"
 #include "hb-open-file-private.hh"
 #include "hb-ot-head-table.hh"
+#include "hb-ot-maxp-table.hh"
 
 #include "hb-cache-private.hh"
 
@@ -520,6 +521,7 @@ static const hb_face_t _hb_face_nil = {
 
   0,    /* index */
   1000, /* upem */
+  0,    /* num_glyphs */
 
   {
 #define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
@@ -549,6 +551,7 @@ hb_face_create_for_tables (hb_reference_table_func_t  reference_table_func,
   face->destroy = destroy;
 
   face->upem = 0;
+  face->num_glyphs = (unsigned int) -1;
 
   return face;
 }
@@ -736,7 +739,6 @@ hb_face_get_upem (hb_face_t *face)
   return face->get_upem ();
 }
 
-
 void
 hb_face_t::load_upem (void) const
 {
@@ -744,6 +746,31 @@ hb_face_t::load_upem (void) const
   const OT::head *head_table = OT::Sanitizer<OT::head>::lock_instance (head_blob);
   upem = head_table->get_upem ();
   hb_blob_destroy (head_blob);
+}
+
+void
+hb_face_set_glyph_count (hb_face_t    *face,
+			 unsigned int  glyph_count)
+{
+  if (hb_object_is_inert (face))
+    return;
+
+  face->num_glyphs = glyph_count;
+}
+
+unsigned int
+hb_face_get_glyph_count (hb_face_t *face)
+{
+  return face->get_num_glyphs ();
+}
+
+void
+hb_face_t::load_num_glyphs (void) const
+{
+  hb_blob_t *maxp_blob = OT::Sanitizer<OT::maxp>::sanitize (reference_table (HB_OT_TAG_maxp));
+  const OT::maxp *maxp_table = OT::Sanitizer<OT::maxp>::lock_instance (maxp_blob);
+  num_glyphs = maxp_table->get_num_glyphs ();
+  hb_blob_destroy (maxp_blob);
 }
 
 

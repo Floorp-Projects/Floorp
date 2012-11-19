@@ -47,8 +47,9 @@ CPPSRCS	=                        \
   hb-ot-layout.cc                \
   hb-ot-map.cc                   \
   hb-ot-shape-complex-arabic.cc  \
+  hb-ot-shape-complex-default.cc \
   hb-ot-shape-complex-indic.cc   \
-  hb-ot-shape-complex-misc.cc    \
+  hb-ot-shape-complex-thai.cc    \
   hb-ot-shape-fallback.cc        \
   hb-ot-shape-normalize.cc       \
   hb-ot-shape.cc                 \

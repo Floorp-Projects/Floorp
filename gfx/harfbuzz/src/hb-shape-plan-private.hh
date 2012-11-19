@@ -28,9 +28,8 @@
 #define HB_SHAPE_PLAN_PRIVATE_HH
 
 #include "hb-private.hh"
-
 #include "hb-shape-plan.h"
-
+#include "hb-object-private.hh"
 #include "hb-shaper-private.hh"
 
 
