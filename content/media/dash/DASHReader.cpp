@@ -14,7 +14,7 @@
 
 #include "nsTimeRanges.h"
 #include "VideoFrameContainer.h"
-#include "MediaDecoder.h"
+#include "AbstractMediaDecoder.h"
 #include "DASHReader.h"
 
 namespace mozilla {
@@ -181,7 +181,7 @@ DASHReader::GetBuffered(nsTimeRanges* aBuffered,
   NS_ENSURE_ARG(aBuffered);
 
   MediaResource* resource = nullptr;
-  MediaDecoder* decoder = nullptr;
+  AbstractMediaDecoder* decoder = nullptr;
 
   // Need to find intersect of |nsTimeRanges| for audio and video.
   nsTimeRanges audioBuffered, videoBuffered;

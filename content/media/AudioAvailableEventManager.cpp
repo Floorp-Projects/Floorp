@@ -16,7 +16,7 @@ static const nsTArray< nsCOMPtr<nsIRunnable> >::size_type MAX_PENDING_EVENTS = 1
 class nsAudioAvailableEventRunner : public nsRunnable
 {
 private:
-  nsCOMPtr<MediaDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
   nsAutoArrayPtr<float> mFrameBuffer;
 public:
   nsAudioAvailableEventRunner(MediaDecoder* aDecoder, float* aFrameBuffer,
