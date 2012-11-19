@@ -29,9 +29,6 @@
 #include <cstdio>
 #include <dbus/dbus.h>
 
-#include "nsIDOMDOMRequest.h"
-#include "nsIObserverService.h"
-#include "AudioManager.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsDebug.h"
@@ -201,7 +198,7 @@ public:
     // thread and then back out to the command thread. There has to be a better
     // way to do this.
     if (NS_FAILED(bs->PrepareAdapterInternal(mPath))) {
-      NS_WARNING("prepare adapter failed");
+      NS_WARNING("Prepare adapter failed");
       return NS_ERROR_FAILURE;
     }
     return NS_OK;
@@ -236,11 +233,12 @@ public:
     // thread and then back out to the command thread. There has to be a better
     // way to do this.
     if (NS_FAILED(bs->GetDevicePropertiesInternal(mSignal))) {
-      NS_WARNING("get properties failed");
+      NS_WARNING("Get device properties failed");
       return NS_ERROR_FAILURE;
     }
     return NS_OK;
   }
+
 private:
   BluetoothSignal mSignal;
 };
@@ -275,26 +273,6 @@ IsDBusMessageError(DBusMessage* aMsg, DBusError* aErr, nsAString& aErrorStr)
     }
   }
   return false;
-}
-
-static void
-DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
-                       const BluetoothValue& aValue, const nsAString& aErrorStr)
-{
-  // Reply will be deleted by the runnable after running on main thread
-  BluetoothReply* reply;
-  if (!aErrorStr.IsEmpty()) {
-    nsString err(aErrorStr);
-    reply = new BluetoothReply(BluetoothReplyError(err));
-  } else {
-    MOZ_ASSERT(aValue.type() != BluetoothValue::T__None);
-    reply = new BluetoothReply(BluetoothReplySuccess(aValue));
-  }
-
-  aRunnable->SetReply(reply);
-  if (NS_FAILED(NS_DispatchToMainThread(aRunnable))) {
-    NS_WARNING("Failed to dispatch to main thread!");
-  }
 }
 
 static void
@@ -537,9 +515,8 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
   }
 
   BluetoothSignal signal(signalName, signalPath, v);
-
-  nsRefPtr<DistributeBluetoothSignalTask> t = new DistributeBluetoothSignalTask(signal);
-
+  nsRefPtr<DistributeBluetoothSignalTask> t =
+    new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
      NS_WARNING("Failed to dispatch to main thread!");
   }
@@ -754,14 +731,19 @@ public:
   NS_IMETHOD
   Run()
   {
-    BluetoothHfpManager* h = BluetoothHfpManager::Get();
-    if (h) {
-      h->CloseSocket();
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    if (hfp) {
+      hfp->CloseSocket();
     }
 
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (opp) {
       opp->CloseSocket();
+    }
+
+    BluetoothScoManager* sco = BluetoothScoManager::Get();
+    if (sco) {
+      sco->CloseSocket();
     }
 
     return NS_OK;
@@ -1301,7 +1283,6 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
         v.get_ArrayOfBluetoothNamedValue()
           .AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("Path"),
                                              path));
-
       }
     } else {
       errorStr.AssignLiteral("DBus device found message structure not as expected!");
@@ -1411,7 +1392,6 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   }
 
   BluetoothSignal signal(signalName, signalPath, v);
-
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
@@ -1731,7 +1711,6 @@ public:
       NS_WARNING("Getting properties failed!");
       return NS_ERROR_FAILURE;
     }
-
     InfallibleTArray<BluetoothNamedValue> properties = prop.get_ArrayOfBluetoothNamedValue();
     if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue) {
       // Return original dbus message parameters and also device name
@@ -1768,7 +1747,6 @@ public:
 
     nsRefPtr<DistributeBluetoothSignalTask> t =
       new DistributeBluetoothSignalTask(mSignal);
-
     if (NS_FAILED(NS_DispatchToMainThread(t))) {
        NS_WARNING("Failed to dispatch to main thread!");
        return NS_ERROR_FAILURE;
@@ -2483,7 +2461,7 @@ public:
     int channel = GetDeviceServiceChannel(mObjectPath, mServiceUUID, 0x0004);
     BluetoothValue v;
     nsString replyError;
-    if(channel < 0) {
+    if (channel < 0) {
       replyError.AssignLiteral("DeviceChannelRetrievalError");
       DispatchBluetoothReply(mRunnable, v, replyError);
       return NS_OK;
