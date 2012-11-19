@@ -80,6 +80,10 @@ add_test(function test_prefs() {
   do_check_false(prefs.get("dataSubmissionPolicyAccepted", true));
   do_check_false(policy.dataSubmissionPolicyAccepted);
 
+  do_check_false(policy.dataSubmissionPolicyBypassAcceptance);
+  prefs.set("dataSubmissionPolicyBypassAcceptance", true);
+  do_check_true(policy.dataSubmissionPolicyBypassAcceptance);
+
   policy.lastDataSubmissionRequestedDate = now;
   do_check_eq(prefs.get("lastDataSubmissionRequestedTime"), nowT);
   do_check_eq(policy.lastDataSubmissionRequestedDate.getTime(), nowT);
@@ -150,6 +154,19 @@ add_test(function test_initial_submission_notification() {
   do_check_eq(policy.dataSubmissionPolicyNotifiedDate.getTime(),
               policy._dataSubmissionPolicyNotifiedDate.getTime());
   do_check_eq(policy.notifyState, policy.STATE_NOTIFY_WAIT);
+
+  run_next_test();
+});
+
+add_test(function test_bypass_acceptance() {
+  let [policy, prefs, listener] = getPolicy("bypass_acceptance");
+
+  prefs.set("dataSubmissionPolicyBypassAcceptance", true);
+  do_check_false(policy.dataSubmissionPolicyAccepted);
+  do_check_true(policy.dataSubmissionPolicyBypassAcceptance);
+  defineNow(policy, new Date(policy.nextDataSubmissionDate.getTime()));
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 1);
 
   run_next_test();
 });
