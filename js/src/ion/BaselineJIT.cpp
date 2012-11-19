@@ -11,6 +11,8 @@
 #include "CompileInfo.h"
 #include "IonSpewer.h"
 
+#include "vm/Stack-inl.h"
+
 using namespace js;
 using namespace js::ion;
 
