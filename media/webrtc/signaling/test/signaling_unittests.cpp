@@ -506,7 +506,7 @@ class SignalingAgent {
   void Close()
   {
     cout << "Close" << endl;
-    pc->Close();
+    pc->Close(false);
     // Shutdown is synchronous evidently.
     // ASSERT_TRUE(pObserver->WaitForObserverCall());
     // ASSERT_EQ(pc->sipcc_state(), sipcc::PeerConnectionInterface::kIdle);
