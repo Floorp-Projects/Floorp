@@ -10,6 +10,7 @@ pref("healthreport.logging.consoleLevel", "Warn");
 pref("healthreport.policy.currentDaySubmissionFailureCount", 0);
 pref("healthreport.policy.dataSubmissionEnabled", true);
 pref("healthreport.policy.dataSubmissionPolicyAccepted", false);
+pref("healthreport.policy.dataSubmissionPolicyBypassAcceptance", false);
 pref("healthreport.policy.dataSubmissionPolicyNotifiedTime", "0");
 pref("healthreport.policy.dataSubmissionPolicyResponseType", "");
 pref("healthreport.policy.dataSubmissionPolicyResponseTime", "0");
