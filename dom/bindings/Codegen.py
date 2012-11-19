@@ -987,6 +987,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
       return false;
   }
 
+  // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
   nsISupports* native =
     nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, instance);
   nsCOMPtr<%s> qiResult = do_QueryInterface(native);
