@@ -1762,8 +1762,14 @@ nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
 
   nsRefPtr<nsPluginHost> pluginHost =
     already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
-  if (!pluginHost ||
-      !pluginHost->IsPluginClickToPlayForType(mMIMEType)) {
+  if (!pluginHost) {
+    return;
+  }
+
+  bool isClickToPlay;
+  nsAutoCString mimeType(mMIMEType);
+  rv = pluginHost->IsPluginClickToPlayForType(mimeType, &isClickToPlay);
+  if (NS_FAILED(rv) || !isClickToPlay) {
     return;
   }
 
