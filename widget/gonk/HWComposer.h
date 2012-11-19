@@ -17,8 +17,9 @@
 #ifndef ANDROID_SF_HWCOMPOSER_H
 #define ANDROID_SF_HWCOMPOSER_H
 
-#include <hardware/hwcomposer.h>
 #include <utils/Vector.h>
+
+#include "hardware/hwcomposer.h"
 
 namespace android {
 // ---------------------------------------------------------------------------
