@@ -278,7 +278,7 @@ PeerConnectionImpl::PeerConnectionImpl()
 
 PeerConnectionImpl::~PeerConnectionImpl()
 {
-  Close();
+  Close(false);
   // Since this and Initialize() occur on MainThread, they can't both be
   // running at once
   // Might be more optimal to release off a timer (and XPCOM Shutdown)
@@ -935,7 +935,7 @@ PeerConnectionImpl::GetIceState(uint32_t* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::Close()
+PeerConnectionImpl::Close(bool aIsSynchronous)
 {
   if (mCall != NULL)
     mCall->endCall();
@@ -944,7 +944,7 @@ PeerConnectionImpl::Close()
     mDataConnection->CloseAll();
 #endif
 
-  ShutdownMedia();
+  ShutdownMedia(aIsSynchronous);
 
   // DataConnection will need to stay alive until all threads/runnables exit
 
@@ -952,7 +952,7 @@ PeerConnectionImpl::Close()
 }
 
 void
-PeerConnectionImpl::ShutdownMedia()
+PeerConnectionImpl::ShutdownMedia(bool aIsSynchronous)
 {
   // Check that we are on the main thread.
   if (mThread) {
@@ -969,10 +969,15 @@ PeerConnectionImpl::ShutdownMedia()
   // This avoids reentrancy issues with the garbage collector.
   // Note that no media calls may be made after this point
   // because we have removed the pointer.
+  // For the aIsSynchronous case, we *know* the PeerConnection is
+  // still alive, and are shutting it down on network teardown/etc, so
+  // recursive GC isn't an issue. (Recursive GC should assert)
+
   // Forget the reference so that we can transfer it to
   // SelfDestruct().
   RUN_ON_THREAD(mThread, WrapRunnable(mMedia.forget().get(),
-        &PeerConnectionMedia::SelfDestruct), NS_DISPATCH_NORMAL);
+                                      &PeerConnectionMedia::SelfDestruct),
+                aIsSynchronous ? NS_DISPATCH_SYNC : NS_DISPATCH_NORMAL);
 }
 
 void
