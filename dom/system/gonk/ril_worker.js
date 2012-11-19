@@ -6618,6 +6618,9 @@ let StkCommandParamsFactory = {
       case STK_CMD_REFRESH:
         param = this.processRefresh(cmdDetails, ctlvs);
         break;
+      case STK_CMD_MORE_TIME:
+        param = this.processMoreTime(cmdDetails, ctlvs);
+        break;
       case STK_CMD_POLL_INTERVAL:
         param = this.processPollInterval(cmdDetails, ctlvs);
         break;
@@ -6690,6 +6693,21 @@ let StkCommandParamsFactory = {
         break;
     }
     return {};
+  },
+
+  /**
+   * Construct a param for MORE TIME.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processMoreTime: function processMoreTime(cmdDetails, ctlvs) {
+    RIL.sendStkTerminalResponse({
+      command: cmdDetails,
+      resultCode: STK_RESULT_OK});
+    return null;
   },
 
   /**
