@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsCycleCollectionNoteChild.h"
 
 #include "nsIDocShell.h"
 
@@ -841,18 +842,18 @@ public:
     void StencilOp(WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass);
     void StencilOpSeparate(WebGLenum face, WebGLenum sfail, WebGLenum dpfail,
                            WebGLenum dppass);
-    void TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLsizei width,
                     WebGLsizei height, WebGLint border, WebGLenum format,
                     WebGLenum type, dom::ArrayBufferView *pixels,
                     ErrorResult& rv);
-    void TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
                     dom::ImageData* pixels, ErrorResult& rv);
     // Allow whatever element types the bindings are willing to pass
     // us in TexImage2D
     template<class ElementType>
-    void TexImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
+    void TexImage2D(WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
                     ElementType* elt, ErrorResult& rv) {
         if (!IsContextStable())
@@ -878,18 +879,18 @@ public:
         TexParameter_base(target, pname, &param, nullptr);
     }
     
-    void TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset,
                        WebGLsizei width, WebGLsizei height, WebGLenum format,
                        WebGLenum type, dom::ArrayBufferView* pixels,
                        ErrorResult& rv);
-    void TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
+    void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
                        WebGLenum type, dom::ImageData* pixels, ErrorResult& rv);
     // Allow whatever element types the bindings are willing to pass
     // us in TexSubImage2D
     template<class ElementType>
-    void TexSubImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
+    void TexSubImage2D(WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
                        WebGLenum type, ElementType* elt, ErrorResult& rv) {
         if (!IsContextStable())
@@ -1525,11 +1526,6 @@ struct WebGLVertexAttribData {
     GLuint actualStride() const {
         if (stride) return stride;
         return size * componentSize();
-    }
-
-    // for cycle collection
-    WebGLBuffer* get() {
-        return buf.get();
     }
 };
 
@@ -3452,6 +3448,39 @@ private:
   WebGLContext *mContext;
 };
 
+} // namespace mozilla
+
+inline void ImplCycleCollectionUnlink(mozilla::WebGLVertexAttribData& aField)
+{
+  aField.buf = nullptr;
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            mozilla::WebGLVertexAttribData& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
+  aCallback.NoteXPCOMChild(aField.buf);
+}
+
+template <typename T>
+inline void
+ImplCycleCollectionUnlink(mozilla::WebGLRefPtr<T>& aField)
+{
+  aField = nullptr;
+}
+
+template <typename T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            mozilla::WebGLRefPtr<T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
+  aCallback.NoteXPCOMChild(aField);
 }
 
 #endif

@@ -15,7 +15,7 @@
  * not be redefined.
  */
 #if !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__) \
-    && !defined(DARWIN) && !defined(NEXTSTEP)
+    && !defined(DARWIN)
 #ifndef FD_SETSIZE
 #define FD_SETSIZE  4096
 #endif
@@ -147,7 +147,7 @@ extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
 #define PROT_NONE 0x0
 #endif
 
-#if defined(DEBUG) && !defined(DARWIN) && !defined(NEXTSTEP)
+#if defined(DEBUG) && !defined(DARWIN)
 #if !defined(SOLARIS)	
 #include <string.h>  /* for memset() */
 #define _MD_INIT_STACK(ts,REDZONE)					\

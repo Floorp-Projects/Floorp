@@ -32,7 +32,27 @@ function ThreadActor(aHooks, aGlobal)
   this._hooks = {};
   this._hooks = aHooks;
   this.global = aGlobal;
+
+  /**
+   * A script cache that maps script URLs to arrays of different Debugger.Script
+   * instances that have the same URL. For example, when an inline <script> tag
+   * in a web page contains a function declaration, the JS engine creates two
+   * Debugger.Script objects, one for the function and one for the script tag
+   * as a whole. The two objects will usually have different startLine and/or
+   * lineCount properties. For the edge case where two scripts are contained in
+   * the same line we need column support.
+   *
+   * The sparse array that is mapped to each URL serves as an additional mapping
+   * from startLine numbers to Debugger.Script objects, facilitating retrieval
+   * of the scripts that contain a particular line number. For example, if a
+   * cache holds two scripts with the URL http://foo.com/ starting at lines 4
+   * and 10, then the corresponding cache will be:
+   * this._scripts: {
+   *   'http://foo.com/': [,,,,[Debugger.Script],,,,,,[Debugger.Script]]
+   * }
+   */
   this._scripts = {};
+
   this.findGlobals = this.globalManager.findGlobals.bind(this);
   this.onNewGlobal = this.globalManager.onNewGlobal.bind(this);
 }
@@ -57,6 +77,7 @@ ThreadActor.prototype = {
     if (!this._threadLifetimePool) {
       this._threadLifetimePool = new ActorPool(this.conn);
       this.conn.addActorPool(this._threadLifetimePool);
+      this._threadLifetimePool.objectActors = new WeakMap();
     }
     return this._threadLifetimePool;
   },
@@ -488,13 +509,15 @@ ThreadActor.prototype = {
   _setBreakpoint: function TA__setBreakpoint(aLocation) {
     // Fetch the list of scripts in that url.
     let scripts = this._scripts[aLocation.url];
-    // Fetch the specified script in that list.
+    // Fetch the outermost script in that list.
     let script = null;
-    for (let i = aLocation.line; i >= 0; i--) {
+    for (let i = 0; i <= aLocation.line; i++) {
       // Stop when the first script that contains this location is found.
       if (scripts[i]) {
         // If that first script does not contain the line specified, it's no
-        // good.
+        // good. Note that |i === scripts[i].startLine| in this case, so the
+        // following check makes sure we are not considering a script that does
+        // not include |aLocation.line|.
         if (i + scripts[i].lineCount < aLocation.line) {
           continue;
         }
@@ -524,25 +547,35 @@ ThreadActor.prototype = {
       return { error: "noScript", actor: bpActor.actorID };
     }
 
-    script = this._getInnermostContainer(script, aLocation.line);
-    bpActor.addScript(script, this);
+    let inner, codeFound = false;
+    // We need to set the breakpoint in every script that has bytecode in the
+    // specified line.
+    for (let s of this._getContainers(script, aLocation.line)) {
+      // The first result of the iteration is the innermost script.
+      if (!inner) {
+        inner = s;
+      }
 
-    let offsets = script.getLineOffsets(aLocation.line);
-    let codeFound = false;
-    for (let i = 0; i < offsets.length; i++) {
-      script.setBreakpoint(offsets[i], bpActor);
-      codeFound = true;
+      let offsets = s.getLineOffsets(aLocation.line);
+      if (offsets.length) {
+        bpActor.addScript(s, this);
+        for (let i = 0; i < offsets.length; i++) {
+          s.setBreakpoint(offsets[i], bpActor);
+          codeFound = true;
+        }
+      }
     }
 
     let actualLocation;
-    if (offsets.length == 0) {
-      // No code at that line in any script, skipping forward.
-      let lines = script.getAllOffsets();
+    if (!codeFound) {
+      // No code at that line in any script, skipping forward in the innermost
+      // script.
+      let lines = inner.getAllOffsets();
       let oldLine = aLocation.line;
       for (let line = oldLine; line < lines.length; ++line) {
         if (lines[line]) {
           for (let i = 0; i < lines[line].length; i++) {
-            script.setBreakpoint(lines[line][i], bpActor);
+            inner.setBreakpoint(lines[line][i], bpActor);
             codeFound = true;
           }
           actualLocation = {
@@ -559,6 +592,7 @@ ThreadActor.prototype = {
         }
       }
     }
+
     if (!codeFound) {
       return  { error: "noCodeAtLineColumn", actor: bpActor.actorID };
     }
@@ -567,28 +601,32 @@ ThreadActor.prototype = {
   },
 
   /**
-   * Get the innermost script that contains this line, by looking through child
-   * scripts of the supplied script.
+   * A recursive generator function for iterating over the scripts that contain
+   * the specified line, by looking through child scripts of the supplied
+   * script. As an example, an inline <script> tag has the top-level functions
+   * declared in it as its children.
    *
    * @param aScript Debugger.Script
    *        The source script.
    * @param aLine number
    *        The line number.
    */
-  _getInnermostContainer: function TA__getInnermostContainer(aScript, aLine) {
+  _getContainers: function TA__getContainers(aScript, aLine) {
     let children = aScript.getChildScripts();
     if (children.length > 0) {
       for (let i = 0; i < children.length; i++) {
         let child = children[i];
-        // Stop when the first script that contains this location is found.
+        // Iterate over the children that contain this location.
         if (child.startLine <= aLine &&
             child.startLine + child.lineCount > aLine) {
-          return this._getInnermostContainer(child, aLine);
+          for (let j of this._getContainers(child, aLine)) {
+            yield j;
+          }
         }
       }
     }
-    // Location not found in children, this is the innermost containing script.
-    return aScript;
+    // Include this script in the iteration, too.
+    yield aScript;
   },
 
   /**
@@ -909,6 +947,8 @@ ThreadActor.prototype = {
 
     if (aPool.objectActors.has(aValue)) {
       return aPool.objectActors.get(aValue).grip();
+    } else if (this.threadLifetimePool.objectActors.has(aValue)) {
+      return this.threadLifetimePool.objectActors.get(aValue).grip();
     }
 
     let actor = new ObjectActor(aValue, this);
@@ -938,14 +978,37 @@ ThreadActor.prototype = {
    *        The object actor.
    */
   threadObjectGrip: function TA_threadObjectGrip(aActor) {
-    if (!this.threadLifetimePool.objectActors) {
-      this.threadLifetimePool.objectActors = new WeakMap();
-    }
     // We want to reuse the existing actor ID, so we just remove it from the
     // current pool's weak map and then let pool.addActor do the rest.
     aActor.registeredPool.objectActors.delete(aActor.obj);
     this.threadLifetimePool.addActor(aActor);
     this.threadLifetimePool.objectActors.set(aActor.obj, aActor);
+  },
+
+  /**
+   * Handle a protocol request to promote multiple pause-lifetime grips to
+   * thread-lifetime grips.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
+  onThreadGrips: function OA_onThreadGrips(aRequest) {
+    if (this.state != "paused") {
+      return { error: "wrongState" };
+    }
+
+    if (!aRequest.actors) {
+      return { error: "missingParameter",
+               message: "no actors were specified" };
+    }
+
+    for (let actorID of aRequest.actors) {
+      let actor = this._pausePool.get(actorID);
+      if (actor) {
+        this.threadObjectGrip(actor);
+      }
+    }
+    return {};
   },
 
   /**
@@ -1165,7 +1228,8 @@ ThreadActor.prototype.requestTypes = {
   "interrupt": ThreadActor.prototype.onInterrupt,
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
-  "scripts": ThreadActor.prototype.onScripts
+  "scripts": ThreadActor.prototype.onScripts,
+  "threadGrips": ThreadActor.prototype.onThreadGrips
 };
 
 
@@ -1691,12 +1755,26 @@ LongStringActor.prototype = {
       "from": this.actorID,
       "substring": this.string.substring(aRequest.start, aRequest.end)
     };
-  }
+  },
 
+  /**
+   * Handle a request to release this LongStringActor instance.
+   */
+  onRelease: function LSA_onRelease() {
+    // TODO: also check if registeredPool === threadActor.threadLifetimePool
+    // when the web console moves aray from manually releasing pause-scoped
+    // actors.
+    if (this.registeredPool.longStringActors) {
+      delete this.registeredPool.longStringActors[this.actorID];
+    }
+    this.registeredPool.removeActor(this);
+    return {};
+  },
 };
 
 LongStringActor.prototype.requestTypes = {
-  "substring": LongStringActor.prototype.onSubstring
+  "substring": LongStringActor.prototype.onSubstring,
+  "release": LongStringActor.prototype.onRelease
 };
 
 
@@ -2114,6 +2192,42 @@ function getFunctionName(aFunction) {
   }
   return name;
 }
+
+/**
+ * Override the toString method in order to get more meaningful script output
+ * for debugging the debugger.
+ */
+Debugger.Script.prototype.toString = function() {
+  let output = "";
+  if (this.url) {
+    output += this.url;
+  }
+  if (typeof this.startLine != "undefined") {
+    output += ":" + this.startLine;
+    if (this.lineCount && this.lineCount > 1) {
+      output += "-" + (this.startLine + this.lineCount - 1);
+    }
+  }
+  if (this.strictMode) {
+    output += ":strict";
+  }
+  return output;
+};
+
+/**
+ * Helper property for quickly getting to the line number a stack frame is
+ * currently paused at.
+ */
+Object.defineProperty(Debugger.Frame.prototype, "line", {
+  configurable: true,
+  get: function() {
+    if (this.script) {
+      return this.script.getOffsetLine(this.offset);
+    } else {
+      return null;
+    }
+  }
+});
 
 
 /**

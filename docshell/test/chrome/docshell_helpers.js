@@ -315,13 +315,13 @@ function pageEventListener(event) {
   }
 
   if ("visibilityState" in expected) {
-    is(event.originalTarget.mozVisibilityState, expected.visibilityState,
+    is(event.originalTarget.visibilityState, expected.visibilityState,
        "The visibilityState property of the document on page " +
        event.originalTarget.location + " had an unexpected value");
   }
 
   if ("hidden" in expected) {
-    is(event.originalTarget.mozHidden, expected.hidden,
+    is(event.originalTarget.hidden, expected.hidden,
        "The hidden property of the document on page " +
        event.originalTarget.location + " had an unexpected value");
   }

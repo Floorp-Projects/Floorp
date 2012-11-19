@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mozDashOffset</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display">
+<canvas id="c" width="100" height="100"><p class="fallback">FAIL (fallback content)</p></canvas>
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script>
+try {
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  ctx.mozDash = [1, 1];
+  
+  ctx.mozDashOffset = 1;
+  ctx.mozDashOffset = Infinity;
+  ok(ctx.mozDashOffset === 1, "ctx.mozDashOffset === 1");
+
+  ctx.mozDashOffset = 1;
+  ctx.mozDashOffset = -Infinity;
+  ok(ctx.mozDashOffset === 1, "ctx.mozDashOffset === 1");
+
+  ctx.mozDashOffset = 1;
+  ctx.mozDashOffset = NaN;
+  ok(ctx.mozDashOffset === 1, "ctx.mozDashOffset === 1");
+} catch(e) {
+  ok(false, "unexpected exception thrown in: test_mozDashOffset.html");
+}
+</script>
+</pre>
+</body>
+</html>

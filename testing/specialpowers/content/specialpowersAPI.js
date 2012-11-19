@@ -9,12 +9,13 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
 
-Components.utils.import("resource://specialpowers/MockFilePicker.jsm");
-Components.utils.import("resource://specialpowers/MockPermissionPrompt.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://specialpowers/MockFilePicker.jsm");
+Cu.import("resource://specialpowers/MockPermissionPrompt.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function SpecialPowersAPI() { 
+function SpecialPowersAPI() {
   this._consoleListeners = [];
   this._encounteredCrashDumpFiles = [];
   this._unexpectedCrashDumpFiles = { };
@@ -377,6 +378,58 @@ SpecialPowersHandler.prototype.enumerate = function() {
   var t = this;
   var filt = function(name) { return t.getPropertyDescriptor(name).enumerable; };
   return this.getPropertyNames().filter(filt);
+};
+
+// SPConsoleListener reflects nsIConsoleMessage objects into JS in a
+// tidy, XPCOM-hiding way.  Messages that are nsIScriptError objects
+// have their properties exposed in detail.  It also auto-unregisters
+// itself when it receives a "sentinel" message.
+function SPConsoleListener(callback) {
+  this.callback = callback;
+}
+
+SPConsoleListener.prototype = {
+  observe: function(msg) {
+    let m = { message: msg.message,
+              errorMessage: null,
+              sourceName: null,
+              sourceLine: null,
+              lineNumber: null,
+              columnNumber: null,
+              category: null,
+              windowID: null,
+              isScriptError: false,
+              isWarning: false,
+              isException: false,
+              isStrict: false };
+    if (msg instanceof Ci.nsIScriptError) {
+      m.errorMessage  = msg.errorMessage;
+      m.sourceName    = msg.sourceName;
+      m.sourceLine    = msg.sourceLine;
+      m.lineNumber    = msg.lineNumber;
+      m.columnNumber  = msg.columnNumber;
+      m.category      = msg.category;
+      m.windowID      = msg.outerWindowID;
+      m.isScriptError = true;
+      m.isWarning     = ((msg.flags & Ci.nsIScriptError.warningFlag) === 1);
+      m.isException   = ((msg.flags & Ci.nsIScriptError.exceptionFlag) === 1);
+      m.isStrict      = ((msg.flags & Ci.nsIScriptError.strictFlag) === 1);
+    }
+
+    // expose all props of 'm' as read-only
+    let expose = {};
+    for (let prop in m)
+      expose[prop] = 'r';
+    m.__exposedProps__ = expose;
+    Object.freeze(m);
+
+    this.callback.call(undefined, m);
+
+    if (!m.isScriptError && m.message === "SENTINEL")
+      Services.console.unregisterListener(this);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener])
 };
 
 SpecialPowersAPI.prototype = {
@@ -749,6 +802,15 @@ SpecialPowersAPI.prototype = {
     return(this._sendSyncMessage('SPPrefService', msg)[0]);
   },
 
+  _getDocShell: function(window) {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .QueryInterface(Ci.nsIDocShell);
+  },
+  _getMUDV: function(window) {
+    return this._getDocShell(window).contentViewer
+               .QueryInterface(Ci.nsIMarkupDocumentViewer);
+  },
   //XXX: these APIs really ought to be removed, they're not e10s-safe.
   // (also they're pretty Firefox-specific)
   _getTopChromeWindow: function(window) {
@@ -759,15 +821,6 @@ SpecialPowersAPI.prototype = {
                  .QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIDOMWindow)
                  .QueryInterface(Ci.nsIDOMChromeWindow);
-  },
-  _getDocShell: function(window) {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShell);
-  },
-  _getMUDV: function(window) {
-    return this._getDocShell(window).contentViewer
-               .QueryInterface(Ci.nsIMarkupDocumentViewer);
   },
   _getAutoCompletePopup: function(window) {
     return this._getTopChromeWindow(window).document
@@ -800,6 +853,7 @@ SpecialPowersAPI.prototype = {
                                       .getElementById("Browser:Back")
                                       .hasAttribute("disabled");
   },
+  //XXX end of problematic APIs
 
   addChromeEventListener: function(type, listener, capture, allowUntrusted) {
     addEventListener(type, listener, capture, allowUntrusted);
@@ -808,36 +862,21 @@ SpecialPowersAPI.prototype = {
     removeEventListener(type, listener, capture);
   },
 
-  addErrorConsoleListener: function(listener) {
-    var consoleListener = {
-      userListener: listener,
-      observe: function(consoleMessage) {
-        var fileName;
-        try {
-          fileName = consoleMessage.QueryInterface(Ci.nsIScriptError)
-                                   .sourceName;
-        } catch (e) {
-        }
-        this.userListener(consoleMessage.message, fileName);
-      }
-    };
-
-    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
-                                       .registerListener(consoleListener);
-
-    this._consoleListeners.push(consoleListener);
+  // Note: each call to registerConsoleListener MUST be paired with a
+  // call to postConsoleSentinel; when the callback receives the
+  // sentinel it will unregister itself (_after_ calling the
+  // callback).  SimpleTest.expectConsoleMessages does this for you.
+  // If you register more than one console listener, a call to
+  // postConsoleSentinel will zap all of them.
+  registerConsoleListener: function(callback) {
+    let listener = new SPConsoleListener(callback);
+    Services.console.registerListener(listener);
   },
-
-  removeErrorConsoleListener: function(listener) {
-    for (var index in this._consoleListeners) {
-      var consoleListener = this._consoleListeners[index];
-      if (consoleListener.userListener == listener) {
-        Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
-                                           .unregisterListener(consoleListener);
-        this._consoleListeners = this._consoleListeners.splice(index, 1);
-        break;
-      }
-    }
+  postConsoleSentinel: function() {
+    Services.console.logStringMessage("SENTINEL");
+  },
+  resetConsole: function() {
+    Services.console.reset();
   },
 
   getMaxLineBoxWidth: function(window) {
@@ -899,11 +938,11 @@ SpecialPowersAPI.prototype = {
   },
 
   forceGC: function() {
-    Components.utils.forceGC();
+    Cu.forceGC();
   },
 
   forceCC: function() {
-    Components.utils.forceCC();
+    Cu.forceCC();
   },
 
   exactGC: function(win, callback) {
@@ -921,14 +960,14 @@ SpecialPowersAPI.prototype = {
         }
       }
 
-      Components.utils.schedulePreciseGC(scheduledGCCallback);
+      Cu.schedulePreciseGC(scheduledGCCallback);
     }
 
     doPreciseGCandCC();
   },
 
   setGCZeal: function(zeal) {
-    Components.utils.setGCZeal(zeal);
+    Cu.setGCZeal(zeal);
   },
 
   isMainProcess: function() {
@@ -1202,7 +1241,7 @@ SpecialPowersAPI.prototype = {
     } else if (arg.manifestURL) {
       // It's a thing representing an app.
       let tmp = {};
-      Components.utils.import("resource://gre/modules/Webapps.jsm", tmp);
+      Cu.import("resource://gre/modules/Webapps.jsm", tmp);
 
       let app = tmp.DOMApplicationRegistry.getAppByManifestURL(arg.manifestURL);
       if (!app) {

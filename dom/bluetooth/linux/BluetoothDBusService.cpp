@@ -2325,7 +2325,7 @@ BluetoothDBusService::PrepareAdapterInternal(const nsAString& aPath)
   return NS_OK;
 }
 
-bool
+void
 BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
                               const nsAString& aAdapterPath,
                               const uint16_t aProfileId,
@@ -2333,34 +2333,34 @@ BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
 
+  BluetoothValue v;
   nsString errorStr;
-  BluetoothValue v = true;
   if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     if (!hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
                       true, aRunnable)) {
-      errorStr.AssignLiteral("Failed to connect with device.");
+      errorStr.AssignLiteral("BluetoothHfpManager has connected/is connecting to a headset!");
       DispatchBluetoothReply(aRunnable, v, errorStr);
-      return false;
     }
-    return true;
   } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::Headset >> 32)) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     if (!hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
                       false, aRunnable)) {
-      errorStr.AssignLiteral("Failed to connect with device.");
+      errorStr.AssignLiteral("BluetoothHfpManager has connected/is connecting to a headset!");
       DispatchBluetoothReply(aRunnable, v, errorStr);
-      return false;
     }
-    return true;
   } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
-    return opp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
-                        aRunnable);
+    if (!opp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
+                      aRunnable)) {
+      errorStr.AssignLiteral("BluetoothOppManager has connected/is connecting!");
+      DispatchBluetoothReply(aRunnable, v, errorStr);
+    }
   }
 
-  NS_WARNING("Unknow Profile");
-  return false;
+#ifdef DEBUG
+  NS_WARNING("Unknown Profile");
+#endif
 }
 
 void

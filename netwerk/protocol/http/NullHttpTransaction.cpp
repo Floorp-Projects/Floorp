@@ -16,12 +16,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(NullHttpTransaction)
 
 NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
                                          nsIInterfaceRequestor *callbacks,
-                                         nsIEventTarget *target,
                                          uint8_t caps)
   : mStatus(NS_OK)
   , mCaps(caps | NS_HTTP_ALLOW_KEEPALIVE)
   , mCallbacks(callbacks)
-  , mEventTarget(target)
   , mConnectionInfo(ci)
   , mRequestHead(nullptr)
   , mIsDone(false)
@@ -30,11 +28,7 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
 
 NullHttpTransaction::~NullHttpTransaction()
 {
-  if (mCallbacks) {
-    nsIInterfaceRequestor *cbs = nullptr;
-    mCallbacks.swap(cbs);
-    NS_ProxyRelease(mEventTarget, cbs);
-  }
+  mCallbacks = nullptr;
   delete mRequestHead;
 }
 
@@ -51,18 +45,11 @@ NullHttpTransaction::Connection()
 }
 
 void
-NullHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **outCB,
-                                           nsIEventTarget **outTarget)
+NullHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
 {
   nsCOMPtr<nsIInterfaceRequestor> copyCB(mCallbacks);
   *outCB = copyCB;
   copyCB.forget();
-
-  if (outTarget) {
-    nsCOMPtr<nsIEventTarget> copyET(mEventTarget);
-    *outTarget = copyET;
-    copyET.forget();
-  }
 }
 
 void

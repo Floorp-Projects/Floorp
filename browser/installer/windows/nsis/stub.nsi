@@ -68,6 +68,7 @@ Var TmpVal
 Var InstallCounterStep
 
 Var ExitCode
+Var DownloadStartTime
 Var SecondsToDownload
 Var ExistingProfile
 Var ExistingInstall
@@ -892,7 +893,7 @@ Function createInstall
   System::Int64Op $1 * 0x100000000
   Pop $1
   System::Int64Op $1 + $0
-  Pop $SecondsToDownload
+  Pop $DownloadStartTime
 
   ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
 
@@ -910,10 +911,8 @@ Function leaveInstall
 # Need a ping?
 FunctionEnd
 
-; This function is not idempotent. It calculates the amount of time between now
-; and $SecondsToDownload and stores the results back into $SecondsToDownload.
-; For that reason it should only be called once for the purpose of determining
-; the number of elapsed seconds to download.
+; GetSecondsToDownload calculates the amount of time between $DownloadStartTime
+; and now, and stores the results into $SecondsToDownload.
 Function GetSecondsToDownload
   GetTempFileName $2
   GetFileTime $2 $1 $0
@@ -922,15 +921,16 @@ Function GetSecondsToDownload
   Pop $1
   System::Int64Op $1 + $0
   Pop $0
-  System::Int64Op $0 - $SecondsToDownload
-  Pop $SecondsToDownload
-  System::Int64Op $SecondsToDownload / 10000000
+  System::Int64Op $0 - $DownloadStartTime
+  Pop $4
+  System::Int64Op $4 / 10000000
   Pop $SecondsToDownload
 FunctionEnd
 
 Function StartDownload
   ${NSD_KillTimer} StartDownload
-  InetBgDL::Get "${URLStubDownload}" "$PLUGINSDIR\download.exe" /END
+  InetBgDL::Get "${URLStubDownload}" "$PLUGINSDIR\download.exe" \
+                /RANGEREQUEST /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
   StrCpy $4 ""
   ${NSD_CreateTimer} OnDownload ${DownloadIntervalMS}
   ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"

@@ -135,20 +135,20 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFocusManager)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFocusManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFocusManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mActiveWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedContent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBlurEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstFocusEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mWindowBeingLowered)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedContent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstBlurEvent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstFocusEvent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowBeingLowered)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFocusManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mActiveWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFocusedWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFocusedContent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBlurEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstFocusEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mWindowBeingLowered)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActiveWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstBlurEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstFocusEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowBeingLowered)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 nsFocusManager* nsFocusManager::sInstance = nullptr;
@@ -1755,6 +1755,8 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // if switching to a new document, first fire the focus event on the
   // document and then the window.
   if (aIsNewDocument) {
+    nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
+                                     GetFocusMoveActionCause(aFlags));
     nsIDocument* doc = aWindow->GetExtantDoc();
     if (doc)
       SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,

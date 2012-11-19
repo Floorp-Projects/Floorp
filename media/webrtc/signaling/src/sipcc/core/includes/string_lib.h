@@ -42,6 +42,7 @@ string_t strlib_empty(void);
 void strlib_debug_init(void);
 long strlib_mem_used(void);
 int strlib_test_memory_is_string(void *mem);
+void strlib_init (void);
 
 #ifndef __STRINGLIB_INTERNAL__
 #define strlib_malloc(x,y) strlib_malloc(x,y,__FILE__,__LINE__)

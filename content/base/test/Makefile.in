@@ -574,6 +574,8 @@ MOCHITEST_FILES_B = \
 		test_bug749367.html \
 		test_bug753278.html \
 		test_bug761120.html \
+		test_bug787778.html \
+		file_bug787778.sjs \
 		test_XHR_onuploadprogress.html \
 		test_XHR_anon.html \
 		file_XHR_anon.sjs \
@@ -583,6 +585,10 @@ MOCHITEST_FILES_B = \
 		test_mixed_content_blocker.html \
 		file_mixed_content_main.html \
 		file_mixed_content_server.sjs \
+    test_mixed_content_blocker_bug803225.html \
+    file_mixed_content_main_bug803225.html \
+    file_mixed_content_main_bug803225_websocket_wsh.py \
+    bug803225_test_mailto.html \
 		test_bug789856.html \
 		file_bug804395.jar \
 		test_bug804395.html \

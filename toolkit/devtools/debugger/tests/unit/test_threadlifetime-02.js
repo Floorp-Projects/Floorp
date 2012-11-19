@@ -33,6 +33,8 @@ function test_thread_lifetime()
       // Successful promotion won't return an error.
       do_check_eq(aResponse.error, undefined);
       gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+        // Verify that the promoted actor is returned again.
+        do_check_eq(pauseGrip.actor, aPacket.frame.arguments[0].actor);
         // Now that we've resumed, release the thread-lifetime grip.
         gClient.release(pauseGrip.actor, function(aResponse) {
           gClient.request({ to: pauseGrip.actor, type: "bogusRequest" }, function(aResponse) {

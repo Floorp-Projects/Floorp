@@ -875,8 +875,8 @@ var BrowserApp = {
         // preferences to be actual booleans.
         switch (prefName) {
           case "network.cookie.cookieBehavior":
-            pref.type = "bool";
-            pref.value = pref.value == 0;
+            pref.type = "string";
+            pref.value = pref.value.toString();
             break;
           case "font.size.inflation.minTwips":
             pref.type = "string";
@@ -923,7 +923,7 @@ var BrowserApp = {
     switch (json.name) {
       case "network.cookie.cookieBehavior":
         json.type = "int";
-        json.value = (json.value ? 0 : 2);
+        json.value = parseInt(json.value);
         break;
       case "font.size.inflation.minTwips":
         json.type = "int";
@@ -3802,7 +3802,7 @@ var BrowserEventHandler = {
     if (closest) {
       let uri = this._getLinkURI(closest);
       if (uri) {
-        Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null, null);
+        Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
       }
       this._doTapHighlight(closest);
     }
@@ -6502,7 +6502,8 @@ var SearchEngines = {
     let method = form.method.toUpperCase();
     let formData = [];
 
-    for each (let el in form.elements) {
+    for (let i = 0; i < form.elements.length; ++i) {
+      let el = form.elements[i];
       if (!el.type)
         continue;
 
@@ -6546,7 +6547,7 @@ var SearchEngines = {
     let dbFile = FileUtils.getFile("ProfD", ["browser.db"]);
     let mDBConn = Services.storage.openDatabase(dbFile);
     let stmts = [];
-    stmts[0] = mDBConn.createStatement("SELECT favicon FROM images WHERE url_key = ?");
+    stmts[0] = mDBConn.createStatement("SELECT favicon FROM history_with_favicons WHERE url = ?");
     stmts[0].bindStringParameter(0, docURI.spec);
     let favicon = null;
     Services.search.init(function addEngine_cb(rv) {
@@ -6569,7 +6570,8 @@ var SearchEngines = {
           Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
           let engine = Services.search.getEngineByName(name);
           engine.wrappedJSObject._queryCharset = charset;
-          for each (let param in formData) {
+          for (let i = 0; i < formData.length; ++i) {
+            let param = formData[i];
             if (param.name && param.value)
               engine.addParam(param.name, param.value, null);
           }
@@ -7117,7 +7119,7 @@ let Reader = {
   // Version of the cache database schema
   DB_VERSION: 1,
 
-  DEBUG: 1,
+  DEBUG: 0,
 
   // Don't try to parse the page if it has too many elements (for memory and
   // performance reasons)

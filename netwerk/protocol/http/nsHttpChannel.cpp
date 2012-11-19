@@ -370,7 +370,8 @@ nsHttpChannel::Connect()
         NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
 
         bool isStsHost = false;
-        rv = stss->IsStsURI(mURI, &isStsHost);
+        uint32_t flags = mPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
+        rv = stss->IsStsURI(mURI, flags, &isStsHost);
 
         // if STS fails, there's no reason to cancel the load, but it's
         // worrisome.
@@ -537,7 +538,7 @@ nsHttpChannel::SpeculativeConnect()
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
     mConnectionInfo->SetPrivate(mPrivateBrowsing);
     gHttpHandler->SpeculativeConnect(mConnectionInfo,
-                                     callbacks, NS_GetCurrentThread());
+                                     callbacks);
 }
 
 void
@@ -883,6 +884,28 @@ nsresult
 nsHttpChannel::CallOnStartRequest()
 {
     mTracingEnabled = false;
+
+    // Allow consumers to override our content type
+    if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
+        gIOService->GetContentSniffers().Count() != 0) {
+        // NOTE: We can have both a txn pump and a cache pump when the cache
+        // content is partial. In that case, we need to read from the cache,
+        // because that's the one that has the initial contents. If that fails
+        // then give the transaction pump a shot.
+
+        nsIChannel* thisChannel = static_cast<nsIChannel*>(this);
+
+        bool typeSniffersCalled = false;
+        if (mCachePump) {
+          typeSniffersCalled =
+            NS_SUCCEEDED(mCachePump->PeekStream(CallTypeSniffers, thisChannel));
+        }
+        
+        if (!typeSniffersCalled && mTransactionPump) {
+          mTransactionPump->PeekStream(CallTypeSniffers, thisChannel);
+        }
+    }
+
     bool shouldSniff = mResponseHead && (mResponseHead->ContentType().IsEmpty() ||
         ((mResponseHead->ContentType().EqualsLiteral(APPLICATION_OCTET_STREAM) &&
         (mLoadFlags & LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN))));
@@ -927,26 +950,6 @@ nsHttpChannel::CallOnStartRequest()
         nsresult rv = mCacheEntry->SetPredictedDataSize(
             mResponseHead->ContentLength());
         NS_ENSURE_SUCCESS(rv, rv);
-    }
-    // Allow consumers to override our content type
-    if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
-        gIOService->GetContentSniffers().Count() != 0) {
-        // NOTE: We can have both a txn pump and a cache pump when the cache
-        // content is partial. In that case, we need to read from the cache,
-        // because that's the one that has the initial contents. If that fails
-        // then give the transaction pump a shot.
-
-        nsIChannel* thisChannel = static_cast<nsIChannel*>(this);
-
-        bool typeSniffersCalled = false;
-        if (mCachePump) {
-          typeSniffersCalled =
-            NS_SUCCEEDED(mCachePump->PeekStream(CallTypeSniffers, thisChannel));
-        }
-        
-        if (!typeSniffersCalled && mTransactionPump) {
-          mTransactionPump->PeekStream(CallTypeSniffers, thisChannel);
-        }
     }
 
     LOG(("  calling mListener->OnStartRequest\n"));
@@ -1112,7 +1115,9 @@ nsHttpChannel::ProcessSTSHeader()
     // If this wasn't an STS host, errors are allowed, but no more STS processing
     // will happen during the session.
     bool wasAlreadySTSHost;
-    rv = stss->IsStsURI(mURI, &wasAlreadySTSHost);
+    uint32_t flags =
+      NS_UsePrivateBrowsing(this) ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
+    rv = stss->IsStsURI(mURI, flags, &wasAlreadySTSHost);
     // Failure here means STS is broken.  Don't prevent the load, but this
     // shouldn't fail.
     NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -1140,7 +1145,7 @@ nsHttpChannel::ProcessSTSHeader()
     // All other failures are fatal.
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stss->ProcessStsHeader(mURI, stsHeader.get(), NULL, NULL);
+    rv = stss->ProcessStsHeader(mURI, stsHeader.get(), flags, NULL, NULL);
     if (NS_FAILED(rv)) {
         LOG(("STS: Failed to parse STS header, continuing load.\n"));
         return NS_OK;
@@ -5923,6 +5928,43 @@ nsHttpChannel::AsyncOnExamineCachedResponse()
 {
     gHttpHandler->OnExamineCachedResponse(this);
 
+}
+
+void
+nsHttpChannel::UpdateAggregateCallbacks()
+{
+    if (!mTransaction) {
+        return;
+    }
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
+                                           NS_GetCurrentThread(),
+                                           getter_AddRefs(callbacks));
+    mTransaction->SetSecurityCallbacks(callbacks);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread.");
+
+    nsresult rv = HttpBaseChannel::SetLoadGroup(aLoadGroup);
+    if (NS_SUCCEEDED(rv)) {
+        UpdateAggregateCallbacks();
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread.");
+
+    nsresult rv = HttpBaseChannel::SetNotificationCallbacks(aCallbacks);
+    if (NS_SUCCEEDED(rv)) {
+        UpdateAggregateCallbacks();
+    }
+    return rv;
 }
 
 } } // namespace mozilla::net

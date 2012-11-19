@@ -34,6 +34,10 @@ enum DataType {
 // argument, and are treated as re-entrant into the VM and therefore fallible.
 struct VMFunction
 {
+    // Global linked list of all VMFunctions.
+    static VMFunction *functions;
+    VMFunction *next;
+
     // Address of the C function.
     void *wrapped;
 
@@ -168,6 +172,16 @@ struct VMFunction
         JS_ASSERT_IF(outParam != Type_Void, returnType == Type_Bool);
         JS_ASSERT(returnType == Type_Bool || returnType == Type_Object);
     }
+
+    VMFunction(const VMFunction &o)
+    {
+        *this = o;
+        addToFunctions();
+    }
+
+  private:
+    // Add this to the global list of VMFunctions.
+    void addToFunctions();
 };
 
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
@@ -446,6 +460,8 @@ bool SPSEnter(JSContext *cx, HandleScript script);
 bool SPSExit(JSContext *cx, HandleScript script);
 
 bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out);
+
+bool GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval);
 
 } // namespace ion
 } // namespace js

@@ -359,7 +359,11 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_SHARE_EXTENSION_PARENT_DIR)) {
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
+    static const char *const sysLExtDir = "/usr/local/share/mozilla/extensions";
+#else
     static const char *const sysLExtDir = "/usr/share/mozilla/extensions";
+#endif
     return NS_NewNativeLocalFile(nsDependentCString(sysLExtDir),
                                  false, aFile);
 #else
@@ -1231,6 +1235,8 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile)
   static const char *const sysSExtDir = 
 #ifdef HAVE_USR_LIB64_DIR
     "/usr/lib64/mozilla/extensions";
+#elif defined(__OpenBSD__) || defined(__FreeBSD__)
+    "/usr/local/lib/mozilla/extensions";
 #else
     "/usr/lib/mozilla/extensions";
 #endif

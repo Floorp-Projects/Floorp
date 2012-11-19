@@ -35,6 +35,8 @@ class MacroAssemblerARM : public Assembler
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
+    void inc64(AbsoluteAddress dest);
+
     // somewhat direct wrappers for the low-level assembler funcitons
     // bitops
     // attempt to encode a virtual alu instruction using
@@ -268,38 +270,40 @@ class MacroAssemblerARM : public Assembler
     void ma_vmul(FloatRegister src1, FloatRegister src2, FloatRegister dst);
     void ma_vdiv(FloatRegister src1, FloatRegister src2, FloatRegister dst);
 
-    void ma_vneg(FloatRegister src, FloatRegister dest);
-    void ma_vmov(FloatRegister src, FloatRegister dest);
-    void ma_vabs(FloatRegister src, FloatRegister dest);
+    void ma_vneg(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vmov(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vabs(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
-    void ma_vimm(double value, FloatRegister dest);
+    void ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
-    void ma_vcmp(FloatRegister src1, FloatRegister src2);
-    void ma_vcmpz(FloatRegister src1);
+    void ma_vimm(double value, FloatRegister dest, Condition cc = Always);
+
+    void ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc = Always);
+    void ma_vcmpz(FloatRegister src1, Condition cc = Always);
 
     // source is F64, dest is I32
-    void ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest);
-    void ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest);
+    void ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
     // source is I32, dest is F64
-    void ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest);
-    void ma_vcvt_U32_F64(FloatRegister src, FloatRegister dest);
+    void ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vcvt_U32_F64(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
-    void ma_vxfer(FloatRegister src, Register dest);
-    void ma_vxfer(FloatRegister src, Register dest1, Register dest2);
+    void ma_vxfer(FloatRegister src, Register dest, Condition cc = Always);
+    void ma_vxfer(FloatRegister src, Register dest1, Register dest2, Condition cc = Always);
 
-    void ma_vxfer(VFPRegister src, Register dest);
-    void ma_vxfer(VFPRegister src, Register dest1, Register dest2);
+    void ma_vxfer(VFPRegister src, Register dest, Condition cc = Always);
+    void ma_vxfer(VFPRegister src, Register dest1, Register dest2, Condition cc = Always);
 
     void ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister dest, Condition cc = Always);
 
-    void ma_vldr(VFPAddr addr, VFPRegister dest);
-    void ma_vldr(const Operand &addr, VFPRegister dest);
+    void ma_vldr(VFPAddr addr, VFPRegister dest, Condition cc = Always);
+    void ma_vldr(const Operand &addr, VFPRegister dest, Condition cc = Always);
 
-    void ma_vstr(VFPRegister src, VFPAddr addr);
-    void ma_vstr(VFPRegister src, const Operand &addr);
+    void ma_vstr(VFPRegister src, VFPAddr addr, Condition cc = Always);
+    void ma_vstr(VFPRegister src, const Operand &addr, Condition cc = Always);
 
-    void ma_vstr(VFPRegister src, Register base, Register index, int32 shift = defaultShift);
+    void ma_vstr(VFPRegister src, Register base, Register index, int32 shift = defaultShift, Condition cc = Always);
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);
     // callso an Ion function, assuming that sp has already been decremented
@@ -611,11 +615,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
-        move32(lhs, ScratchRegister);
+        load32(lhs, ScratchRegister);
         branch32(cond, ScratchRegister, rhs, label);
     }
     void branch32(Condition cond, const Address &lhs, Imm32 rhs, Label *label) {
-        move32(lhs, ScratchRegister);
+        load32(lhs, ScratchRegister);
         branch32(cond, ScratchRegister, rhs, label);
     }
     void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
@@ -933,11 +937,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void move32(const Imm32 &imm, const Register &dest);
 
-    void move32(const Address &src, const Register &dest);
     void movePtr(const Register &src, const Register &dest);
     void movePtr(const ImmWord &imm, const Register &dest);
     void movePtr(const ImmGCPtr &imm, const Register &dest);
-    void movePtr(const Address &src, const Register &dest);
 
     void load8SignExtend(const Address &address, const Register &dest);
     void load8SignExtend(const BaseIndex &src, const Register &dest);

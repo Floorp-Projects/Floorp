@@ -93,6 +93,7 @@ using namespace mozilla::dom;
 #endif
 
 using namespace mozilla;
+using namespace mozilla::layers;
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
@@ -964,7 +965,7 @@ static const moz2javaCharset charsets[] =
     {"windows-1257",    "Cp1257"},
     {"windows-1258",    "Cp1258"},
     {"EUC-JP",          "EUC_JP"},
-    {"EUC-KR",          "EUC_KR"},
+    {"EUC-KR",          "MS949"},
     {"x-euc-tw",        "EUC_TW"},
     {"gb18030",         "GB18030"},
     {"gbk",             "GBK"},
@@ -982,7 +983,6 @@ static const moz2javaCharset charsets[] =
     {"x-johab",         "Johab"},
     {"KOI8-R",          "KOI8_R"},
     {"TIS-620",         "MS874"},
-    {"x-windows-949",   "MS949"},
     {"x-mac-arabic",    "MacArabic"},
     {"x-mac-croatian",  "MacCroatia"},
     {"x-mac-cyrillic",  "MacCyrillic"},

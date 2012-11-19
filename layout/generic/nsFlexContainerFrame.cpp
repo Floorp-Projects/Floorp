@@ -570,7 +570,7 @@ nsFlexContainerFrame::AppendFlexItemForChild(
       // FinishReflowChild() (e.g. moving the frame's rect) to happen until we
       // do our "real" reflow of the child.
       rv = aChildFrame->DidReflow(aPresContext, &childRSForMeasuringHeight,
-                                  NS_FRAME_REFLOW_FINISHED);
+                                  nsDidReflowStatus::FINISHED);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Subtract border/padding in vertical axis, to get _just_

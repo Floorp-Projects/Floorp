@@ -327,12 +327,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
     if (tmp->mTemplateBuilderTable)
         tmp->mTemplateBuilderTable->EnumerateRead(TraverseTemplateBuilders, &cb);
         
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mCurrentPrototype,
-                                                     nsIScriptGlobalObjectOwner)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mMasterPrototype,
-                                                     nsIScriptGlobalObjectOwner)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mCommandDispatcher,
-                                                     nsIDOMXULCommandDispatcher)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentPrototype)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMasterPrototype)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
 
     uint32_t i, count = tmp->mPrototypes.Length();
     for (i = 0; i < count; ++i) {
@@ -340,7 +337,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
         cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(tmp->mPrototypes[i]));
     }
 
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLocalStore)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStore)
 
     if (tmp->mOverlayLoadObservers.IsInitialized())
         tmp->mOverlayLoadObservers.EnumerateRead(TraverseObservers, &cb);
@@ -352,7 +349,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
     delete tmp->mTemplateBuilderTable;
     tmp->mTemplateBuilderTable = nullptr;
 
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCommandDispatcher)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
     //XXX We should probably unlink all the objects we traverse.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -2853,12 +2850,6 @@ nsXULDocument::ResumeWalk()
                                                    &isAlternate);
                         }
                     }
-
-#ifdef MOZ_XTF
-                    if (element->GetNameSpaceID() > kNameSpaceID_LastBuiltin) {
-                        element->DoneAddingChildren(false);
-                    }
-#endif
                 }
                 // Now pop the context stack back up to the parent
                 // element and continue the prototype walk.
@@ -2929,12 +2920,6 @@ nsXULDocument::ResumeWalk()
                         // immediately.
                         AddElementToDocumentPost(child);
                     }
-#ifdef MOZ_XTF
-                    if (child &&
-                        child->GetNameSpaceID() > kNameSpaceID_LastBuiltin) {
-                        child->DoneAddingChildren(false);
-                    }
-#endif
                 }
             }
             break;
@@ -3638,12 +3623,6 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
             return rv;
 
         result = content->AsElement();
-
-#ifdef MOZ_XTF
-        if (result && xtfNi->NamespaceID() > kNameSpaceID_LastBuiltin) {
-            result->BeginAddingChildren();
-        }
-#endif
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;

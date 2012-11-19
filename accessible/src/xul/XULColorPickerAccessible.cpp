@@ -141,7 +141,7 @@ XULColorPickerAccessible::CacheChildren()
 {
   NS_ENSURE_TRUE_VOID(mDoc);
 
-  nsAccTreeWalker walker(mDoc, mContent, true);
+  nsAccTreeWalker walker(mDoc, this, mContent);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild())) {

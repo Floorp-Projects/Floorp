@@ -44,7 +44,7 @@ WorkerAPI.prototype = {
     try {
       handler.call(this, data);
     } catch (ex) {
-      Cu.reportError("WorkerAPI: failed to handle message '" + topic + "': " + ex);
+      Cu.reportError("WorkerAPI: failed to handle message '" + topic + "': " + ex + "\n" + ex.stack);
     }
   },
 
@@ -58,9 +58,14 @@ WorkerAPI.prototype = {
     },
     "social.user-profile": function (data) {
       this._provider.updateUserProfile(data);
+      // get the info we need for 'recommend' support.
+      this._port.postMessage({topic: "social.user-recommend-prompt"});
     },
     "social.ambient-notification": function (data) {
       this._provider.setAmbientNotification(data);
+    },
+    "social.user-recommend-prompt-response": function(data) {
+      this._provider.recommendInfo = data;
     },
     "social.cookies-get": function(data) {
       let document = this._port._window.document;

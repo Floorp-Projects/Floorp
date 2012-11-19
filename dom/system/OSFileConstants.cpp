@@ -407,6 +407,11 @@ static dom::ConstantSpec gLibcProperties[] =
   { "OSFILE_OFFSETOF_STAT_ST_CTIME", INT_TO_JSVAL(offsetof (struct stat, st_ctime)) },
 #endif // defined(HAVE_ST_ATIME)
 
+  // Several OSes have a birthtime field. For the moment, supporting only Darwin.
+#if defined(_DARWIN_FEATURE_64_BIT_INODE)
+  { "OSFILE_OFFSETOF_STAT_ST_BIRTHTIME", INT_TO_JSVAL(offsetof (struct stat, st_birthtime)) },
+#endif // defined(_DARWIN_FEATURE_64_BIT_INODE)
+
 #endif // defined(XP_UNIX)
 
 

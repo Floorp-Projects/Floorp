@@ -17,6 +17,7 @@
 #include "nsIAssociatedContentSecurity.h"
 #include "nsNSSShutDown.h"
 #include "nsDataHashtable.h"
+#include "nsISocketTransport.h"
 
 namespace mozilla { namespace psm {
 

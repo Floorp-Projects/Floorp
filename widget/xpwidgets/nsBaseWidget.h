@@ -19,11 +19,13 @@ class nsIContent;
 class nsAutoRollup;
 class gfxContext;
 
+namespace mozilla {
 #ifdef ACCESSIBILITY
+namespace a11y {
 class Accessible;
+}
 #endif
 
-namespace mozilla {
 namespace layers {
 class BasicLayerManager;
 class CompositorChild;
@@ -139,9 +141,9 @@ public:
   virtual nsresult        ForceUpdateNativeMenuAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              ResetInputState() { return NS_OK; }
   NS_IMETHOD              CancelIMEComposition() { return NS_OK; }
-  NS_IMETHOD              SetAcceleratedRendering(bool aEnabled);
-  virtual bool            GetAcceleratedRendering();
-  virtual bool            GetShouldAccelerate();
+  NS_IMETHOD              SetLayersAcceleration(bool aEnabled);
+  virtual bool            GetLayersAcceleration() { return mUseLayersAcceleration; }
+  virtual bool            ComputeShouldAccelerate(bool aDefault);
   NS_IMETHOD              GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMEFocusChange(bool aFocus) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd) { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -172,7 +174,7 @@ public:
 
 #ifdef ACCESSIBILITY
   // Get the accessible for the window.
-  Accessible* GetAccessible();
+  mozilla::a11y::Accessible* GetAccessible();
 #endif
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }
@@ -338,7 +340,7 @@ protected:
   nsCursor          mCursor;
   nsWindowType      mWindowType;
   nsBorderStyle     mBorderStyle;
-  bool              mUseAcceleratedRendering;
+  bool              mUseLayersAcceleration;
   bool              mForceLayersAcceleration;
   bool              mTemporarilyUseBasicLayerManager;
   bool              mUseAttachedEvents;

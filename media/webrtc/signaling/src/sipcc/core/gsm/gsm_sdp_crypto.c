@@ -949,18 +949,16 @@ gsmsdp_check_answer_crypto_param (fsmdef_dcb_t *dcb_p, cc_sdp_t * cc_sdp_p,
  */
 static sdp_transport_e
 gsmsdp_negotiate_offer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
-                               fsmdef_media_t *media, uint16_t *crypto_inst)
+                               fsmdef_media_t *media, uint16_t *crypto_inst, uint16 dest_level)
 {
     sdp_transport_e remote_transport;
     sdp_transport_e negotiated_transport = SDP_TRANSPORT_INVALID;
     void           *sdp_p = cc_sdp_p->dest_sdp;
-    uint16_t       level;
     int            sdpmode = 0;
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
-    level = media->level;
     *crypto_inst     = 0;
-    remote_transport = sdp_get_media_transport(sdp_p, level);
+    remote_transport = sdp_get_media_transport(sdp_p, dest_level);
 
     /* negotiate media transport */
     switch (remote_transport) {
@@ -975,7 +973,7 @@ gsmsdp_negotiate_offer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         if (((sip_regmgr_get_sec_level(dcb_p->line) == ENCRYPTED) &&
             FSM_CHK_FLAGS(media->flags, FSM_MEDIA_F_SUPPORT_SECURITY)) || sdpmode) {
             /* The signalling with this line is encrypted, try to use SRTP */
-            if (gsmsdp_select_offer_crypto(dcb_p, sdp_p, level, crypto_inst)) {
+            if (gsmsdp_select_offer_crypto(dcb_p, sdp_p, dest_level, crypto_inst)) {
                 /* Found a suitable crypto line from the remote offer */
                 negotiated_transport = SDP_TRANSPORT_RTPSAVP;
             }
@@ -1113,14 +1111,14 @@ gsmsdp_negotiate_answer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
 sdp_transport_e
 gsmsdp_negotiate_media_transport (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
                                   boolean offer, fsmdef_media_t *media,
-                                  uint16_t *crypto_inst)
+                                  uint16_t *crypto_inst, uint16 level)
 {
     sdp_transport_e transport;
 
     /* negotiate media transport based on offer or answer from the remote */
     if (offer) {
         transport = gsmsdp_negotiate_offer_crypto(dcb_p, cc_sdp_p, media,
-                                                  crypto_inst);
+                                                  crypto_inst, level);
     } else {
         transport = gsmsdp_negotiate_answer_crypto(dcb_p, cc_sdp_p, media,
                                                    crypto_inst);
@@ -1693,7 +1691,8 @@ gsmsdp_update_negotiated_transport (fsmdef_dcb_t *dcb_p,
                                     cc_sdp_t *cc_sdp_p,
                                     fsmdef_media_t *media,
                                     uint16_t crypto_inst,
-                                    sdp_transport_e transport)
+                                    sdp_transport_e transport,
+                                    uint16 dest_level)
 {
     const char *fname = "gsmsdp_update_negotiated_transport";
     sdp_srtp_crypto_suite_t crypto_suite;
@@ -1702,7 +1701,7 @@ gsmsdp_update_negotiated_transport (fsmdef_dcb_t *dcb_p,
     vcm_crypto_key_t        key;
     uint16_t                level;
 
-    level = media->level;
+    level = dest_level;
     /*
      * Also detect changes of the crypto parameters for Tx and Rx.
      * It is done here to avoid adding last crypto parameters for Tx and

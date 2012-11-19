@@ -2119,8 +2119,7 @@ SpdySession2::SetConnection(nsAHttpConnection *)
 }
 
 void
-SpdySession2::GetSecurityCallbacks(nsIInterfaceRequestor **,
-                                  nsIEventTarget **)
+SpdySession2::GetSecurityCallbacks(nsIInterfaceRequestor **)
 {
   // This is unexpected
   NS_ABORT_IF_FALSE(false, "SpdySession2::GetSecurityCallbacks()");

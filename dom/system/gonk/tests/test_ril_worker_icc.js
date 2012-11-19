@@ -95,28 +95,7 @@ add_test(function test_read_8bit_unpacked_to_string() {
 });
 
 /**
- * Verify isICCServiceAvailable.
- */
-add_test(function test_is_icc_service_available() {
-  let worker = newUint8Worker();
-
-  function test_table(sst, geckoService, simEnabled, usimEnabled) {
-    worker.RIL.iccInfo.sst = sst;
-    worker.RIL.appType = CARD_APPTYPE_SIM;
-    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), simEnabled);
-    worker.RIL.appType = CARD_APPTYPE_USIM;
-    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), usimEnabled);
-  }
-
-  test_table([0x08], "ADN", true, false);
-  test_table([0x08], "FDN", false, false);
-  test_table([0x08], "SDN", false, true);
-
-  run_next_test();
-});
-
-/**
- * Verify writeDiallingNumber
+ * Verify GsmPDUHelper.writeDiallingNumber
  */
 add_test(function test_write_dialling_number() {
   let worker = newUint8Worker();
@@ -138,6 +117,47 @@ add_test(function test_write_dialling_number() {
   len = 5;
   helper.writeDiallingNumber(number);
   do_check_eq(helper.readDiallingNumber(len), number);
+
+  run_next_test();
+});
+
+/**
+ * Verify RIL.isICCServiceAvailable.
+ */
+add_test(function test_is_icc_service_available() {
+  let worker = newUint8Worker();
+
+  function test_table(sst, geckoService, simEnabled, usimEnabled) {
+    worker.RIL.iccInfo.sst = sst;
+    worker.RIL.appType = CARD_APPTYPE_SIM;
+    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), simEnabled);
+    worker.RIL.appType = CARD_APPTYPE_USIM;
+    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), usimEnabled);
+  }
+
+  test_table([0x08], "ADN", true, false);
+  test_table([0x08], "FDN", false, false);
+  test_table([0x08], "SDN", false, true);
+
+  run_next_test();
+});
+
+/**
+ * Verify RIL.sendStkTerminalProfile
+ */
+add_test(function test_send_stk_terminal_profile() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+  let buf = worker.Buf;
+
+  ril.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+
+  buf.seekIncoming(8);
+  let profile = buf.readString();
+  for (let i = 0; i < STK_SUPPORTED_TERMINAL_PROFILE.length; i++) {
+    do_check_eq(parseInt(profile.substring(2 * i, 2 * i + 2), 16),
+                STK_SUPPORTED_TERMINAL_PROFILE[i]);
+  }
 
   run_next_test();
 });
@@ -200,8 +220,7 @@ add_test(function test_write_location_info_tlv() {
   lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
   do_check_eq(lac, 10291);
 
-  cellId = (pduHelper.readHexOctet() << 8)  |
-               (pduHelper.readHexOctet());
+  cellId = (pduHelper.readHexOctet() << 8) | (pduHelper.readHexOctet());
   do_check_eq(cellId, 65534);
 
   // Test with 3-digit mnc, and gsmCellId obtained from GSM network.
@@ -226,8 +245,7 @@ add_test(function test_write_location_info_tlv() {
   lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
   do_check_eq(lac, 10291);
 
-  cellId = (pduHelper.readHexOctet() << 8) |
-           (pduHelper.readHexOctet());
+  cellId = (pduHelper.readHexOctet() << 8) | (pduHelper.readHexOctet());
   do_check_eq(cellId, 65534);
 
   run_next_test();
@@ -250,6 +268,61 @@ add_test(function test_write_disconnecting_cause() {
   do_check_eq(standard, 0x60);
   let cause = pduHelper.readHexOctet();
   do_check_eq(cause, 0x80 | ERROR_GENERIC_FAILURE);
+
+  run_next_test();
+});
+
+/**
+ * Verify ComprehensionTlvHelper.getSizeOfLengthOctets
+ */
+add_test(function test_get_size_of_length_octets() {
+  let worker = newUint8Worker();
+  let tlvHelper = worker.ComprehensionTlvHelper;
+
+  let length = 0x70;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 1);
+
+  length = 0x80;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 2);
+
+  length = 0x180;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 3);
+
+  length = 0x18000;
+  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 4);
+
+  run_next_test();
+});
+
+/**
+ * Verify ComprehensionTlvHelper.writeLength
+ */
+add_test(function test_write_length() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let tlvHelper = worker.ComprehensionTlvHelper;
+
+  let length = 0x70;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), length);
+
+  length = 0x80;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), 0x81);
+  do_check_eq(pduHelper.readHexOctet(), length);
+
+  length = 0x180;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), 0x82);
+  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
+  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
+
+  length = 0x18000;
+  tlvHelper.writeLength(length);
+  do_check_eq(pduHelper.readHexOctet(), 0x83);
+  do_check_eq(pduHelper.readHexOctet(), (length >> 16) & 0xff);
+  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
+  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
 
   run_next_test();
 });
@@ -395,59 +468,3 @@ add_test(function test_stk_proactive_command_event_list() {
 
   run_next_test();
 });
-
-/**
- * Verify ComprehensionTlvHelper.getSizeOfLengthOctets
- */
-add_test(function test_get_size_of_length_octets() {
-  let worker = newUint8Worker();
-  let tlvHelper = worker.ComprehensionTlvHelper;
-
-  let length = 0x70;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 1);
-
-  length = 0x80;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 2);
-
-  length = 0x180;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 3);
-
-  length = 0x18000;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 4);
-
-  run_next_test();
-});
-
-/**
- * Verify ComprehensionTlvHelper.writeLength
- */
-add_test(function test_write_length() {
-  let worker = newUint8Worker();
-  let pduHelper = worker.GsmPDUHelper;
-  let tlvHelper = worker.ComprehensionTlvHelper;
-
-  let length = 0x70;
-  tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), length);
-
-  length = 0x80;
-  tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), 0x81);
-  do_check_eq(pduHelper.readHexOctet(), length);
-
-  length = 0x180;
-  tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), 0x82);
-  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
-  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
-
-  length = 0x18000;
-  tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), 0x83);
-  do_check_eq(pduHelper.readHexOctet(), (length >> 16) & 0xff);
-  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
-  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
-
-  run_next_test();
-});
-

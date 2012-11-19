@@ -11,9 +11,8 @@
 #include "mozilla/RefPtr.h"
 #include "nsColor.h"
 #include "nsHTMLCanvasElement.h"
-#include "CanvasUtils.h"
-#include "nsHTMLImageElement.h"
 #include "nsHTMLVideoElement.h"
+#include "CanvasUtils.h"
 #include "gfxFont.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ImageData.h"
@@ -23,6 +22,8 @@
     {0x28425a6a, 0x90e0, 0x4d42, {0x9c, 0x75, 0xff, 0x60, 0x09, 0xb3, 0x10, 0xa8}}
 #define NS_CANVASPATTERNAZURE_PRIVATE_IID \
     {0xc9bacc25, 0x28da, 0x421e, {0x9a, 0x4b, 0xbb, 0xd6, 0x93, 0x05, 0x12, 0xbc}}
+
+class nsIDOMXULElement;
 
 namespace mozilla {
 namespace gfx {
@@ -127,7 +128,6 @@ class CanvasRenderingContext2DUserData;
  ** CanvasRenderingContext2D
  **/
 class CanvasRenderingContext2D :
-  public nsIDOMCanvasRenderingContext2D,
   public nsICanvasRenderingContextInternal,
   public nsWrapperCache
 {
@@ -295,9 +295,9 @@ public:
   already_AddRefed<mozilla::dom::ImageData>
     GetImageData(JSContext* cx, double sx, double sy, double sw, double sh,
                  mozilla::ErrorResult& error);
-  void PutImageData(JSContext* cx, mozilla::dom::ImageData& imageData,
+  void PutImageData(mozilla::dom::ImageData& imageData,
                     double dx, double dy, mozilla::ErrorResult& error);
-  void PutImageData(JSContext* cx, mozilla::dom::ImageData& imageData,
+  void PutImageData(mozilla::dom::ImageData& imageData,
                     double dx, double dy, double dirtyX, double dirtyY,
                     double dirtyWidth, double dirtyHeight,
                     mozilla::ErrorResult& error);
@@ -428,8 +428,7 @@ public:
   {
     return CurrentState().dashOffset;
   }
-
-  void SetMozDashOffset(double mozDashOffset, mozilla::ErrorResult& error);
+  void SetMozDashOffset(double mozDashOffset);
 
   void GetMozTextStyle(nsAString& mozTextStyle)
   {
@@ -496,11 +495,13 @@ public:
   // nsISupports interface + CC
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CanvasRenderingContext2D,
-                                                                   nsIDOMCanvasRenderingContext2D)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(CanvasRenderingContext2D)
 
-  // nsIDOMCanvasRenderingContext2D interface
-  NS_DECL_NSIDOMCANVASRENDERINGCONTEXT2D
+  enum CanvasMultiGetterType {
+    CMG_STYLE_STRING = 0,
+    CMG_STYLE_PATTERN = 1,
+    CMG_STYLE_GRADIENT = 2
+  };
 
   enum Style {
     STYLE_STROKE = 0,
@@ -543,6 +544,11 @@ protected:
                              uint32_t aWidth, uint32_t aHeight,
                              JSObject** aRetval);
 
+  nsresult PutImageData_explicit(int32_t x, int32_t y, uint32_t w, uint32_t h,
+                                 unsigned char *aData, uint32_t aDataLen,
+                                 bool hasDirtyRect, int32_t dirtyX, int32_t dirtyY,
+                                 int32_t dirtyWidth, int32_t dirtyHeight);
+
   /**
    * Internal method to complete initialisation, expects mTarget to have been set
    */
@@ -583,7 +589,6 @@ protected:
     CurrentState().SetPatternStyle(whichStyle, pattern);
   }
 
-  void SetStyleFromStringOrInterface(const nsAString& aStr, nsISupports *aInterface, Style aWhichStyle);
   nsISupports* GetStyleAsStringOrInterface(nsAString& aStr, CanvasMultiGetterType& aType, Style aWhichStyle);
 
   // Returns whether a color was successfully parsed.
@@ -662,32 +667,6 @@ protected:
     GetCurrentFontStyle();
 
     return CurrentState().font;
-  }
-
-  static bool
-  ToHTMLImageOrCanvasOrVideoElement(nsIDOMElement* html,
-                                    HTMLImageOrCanvasOrVideoElement& element)
-  {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(html);
-    if (content) {
-      if (content->IsHTML(nsGkAtoms::canvas)) {
-        element.SetAsHTMLCanvasElement() =
-          static_cast<nsHTMLCanvasElement*>(html);
-        return true;
-      }
-      if (content->IsHTML(nsGkAtoms::img)) {
-        element.SetAsHTMLImageElement() =
-          static_cast<nsHTMLImageElement*>(html);
-        return true;
-      }
-      if (content->IsHTML(nsGkAtoms::video)) {
-        element.SetAsHTMLVideoElement() =
-          static_cast<nsHTMLVideoElement*>(html);
-        return true;
-      }
-    }
-
-    return false;
   }
 
   // Member vars

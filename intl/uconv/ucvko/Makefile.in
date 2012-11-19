@@ -17,8 +17,6 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS		= \
-		nsEUCKRToUnicode.cpp \
-		nsUnicodeToEUCKR.cpp \
 		nsISO2022KRToUnicode.cpp \
 		nsCP949ToUnicode.cpp \
 		nsUnicodeToCP949.cpp \

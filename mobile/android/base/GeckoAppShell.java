@@ -97,6 +97,9 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
+import java.net.ProxySelector;
+import java.net.Proxy;
+import java.net.URI;
 
 public class GeckoAppShell
 {
@@ -444,6 +447,32 @@ public class GeckoAppShell
         // setup the app-specific cache path
         f = context.getCacheDir();
         GeckoAppShell.putenv("CACHE_DIRECTORY=" + f.getPath());
+
+        /* We really want to use this code, but it requires bumping up the SDK to 17 so for now
+           we will use reflection. See https://bugzilla.mozilla.org/show_bug.cgi?id=811763#c11
+        
+        if (Build.VERSION.SDK_INT >= 17) {
+            android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
+            if (um != null) {
+                GeckoAppShell.putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
+            } else {
+                Log.d(LOGTAG, "Unable to obtain user manager service on a device with SDK version " + Build.VERSION.SDK_INT);
+            }
+        }
+        */
+        try {
+            Object userManager = context.getSystemService("user");
+            if (userManager != null) {
+                // if userManager is non-null that means we're running on 4.2+ and so the rest of this
+                // should just work
+                Object userHandle = android.os.Process.class.getMethod("myUserHandle", (Class[])null).invoke(null);
+                Object userSerial = userManager.getClass().getMethod("getSerialNumberForUser", userHandle.getClass()).invoke(userManager, userHandle);
+                GeckoAppShell.putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + userSerial.toString());
+            }
+        } catch (Exception e) {
+            // Guard against any unexpected failures
+            Log.d(LOGTAG, "Unable to set the user serial number", e);
+        }
 
         putLocaleEnv();
     }
@@ -2232,5 +2261,45 @@ public class GeckoAppShell
             return true;
         }
         return false;
+    }
+
+    public static String getProxyForURI(String spec, String scheme, String host, int port) {
+        URI uri = null;
+        try {
+            uri = new URI(spec);
+        } catch(java.net.URISyntaxException uriEx) {
+            try {
+                uri = new URI(scheme, null, host, port, null, null, null);
+            } catch(java.net.URISyntaxException uriEx2) {
+                Log.d("GeckoProxy", "Failed to create uri from spec", uriEx);
+                Log.d("GeckoProxy", "Failed to create uri from parts", uriEx2);
+            }
+        }
+        if (uri != null) {
+            ProxySelector ps = ProxySelector.getDefault();
+            if (ps != null) {
+                List<Proxy> proxies = ps.select(uri);
+                if (proxies != null && !proxies.isEmpty()) {
+                    Proxy proxy = proxies.get(0);
+                    if (!Proxy.NO_PROXY.equals(proxy)) {
+                        final String proxyStr;
+                        switch (proxy.type()) {
+                        case HTTP:
+                            proxyStr = "PROXY " + proxy.address().toString();
+                            break;
+                        case SOCKS:
+                            proxyStr = "SOCKS " + proxy.address().toString();
+                            break;
+                        case DIRECT:
+                        default:
+                            proxyStr = "DIRECT";
+                            break;
+                        }
+                        return proxyStr;
+                    }
+                }
+            }
+        }
+        return "DIRECT";
     }
 }

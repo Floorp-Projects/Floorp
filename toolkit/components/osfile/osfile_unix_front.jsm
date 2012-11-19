@@ -16,9 +16,6 @@
 
     throw new Error("osfile_unix_front.jsm cannot be used from the main thread yet");
   }
-  importScripts("resource://gre/modules/osfile/osfile_unix_back.jsm");
-  importScripts("resource://gre/modules/osfile/ospath_unix_back.jsm");
-  importScripts("resource://gre/modules/osfile/osfile_shared_front.jsm");
   (function(exports) {
      "use strict";
 
@@ -738,6 +735,10 @@
        this._st_atime = stat.st_atime;
        this._st_mtime = stat.st_mtime;
        this._st_ctime = stat.st_ctime;
+       // Some platforms (e.g. MacOS X, some BSDs) store a file creation date
+       if ("OSFILE_OFFSETOF_STAT_ST_BIRTHTIME" in OS.Constants.libc) {
+         this._st_birthtime = stat.st_birthtime;
+       }
        this._st_size = stat.st_size;
      };
      File.Info.prototype = {
@@ -764,16 +765,12 @@
        get size() {
          return exports.OS.Shared.Type.size_t.importFromC(this._st_size);
        },
-       /**
-        * The date of creation of this file
-        *
-        * @type {Date}
-        */
+       // Deprecated, use macBirthDate/winBirthDate instead
        get creationDate() {
-         delete this.creationDate;
-         let date = new Date(this._st_ctime * 1000);
-         Object.defineProperty(this, "creationDate", { value: date });
-         return date;
+         // On the Macintosh, returns the birth date if available.
+         // On other Unix, as the birth date is not available,
+         // returns the epoch.
+         return this.macBirthDate || new Date(0);
        },
        /**
         * The date of last access to this file.
@@ -799,6 +796,17 @@
          return date;
        },
        /**
+        * Return the date at which the status of this file was last modified
+        * (this is the date of the latest write/renaming/mode change/...
+        * of the file)
+        */
+       get unixLastStatusChangeDate() {
+         delete this.unixLastStatusChangeDate;
+         let date = new Date(this._st_ctime * 1000);
+         Object.defineProperty(this, "unixLastStatusChangeDate", {value: date});
+         return date;
+       },
+       /**
         * Return the Unix owner of this file.
         */
        get unixOwner() {
@@ -817,6 +825,32 @@
          return exports.OS.Shared.Type.mode_t.importFromC(this._st_mode & MODE_MASK);
        }
      };
+
+    /**
+     * The date of creation of this file.
+     *
+     * Note that the date returned by this method is not always
+     * reliable. Not all file systems are able to provide this
+     * information.
+     *
+     * @type {Date}
+     */
+     if ("OSFILE_OFFSETOF_STAT_ST_BIRTHTIME" in OS.Constants.libc) {
+       Object.defineProperty(
+         File.Info.prototype,
+         "macBirthDate",
+         {
+           get: function macBirthDate() {
+             delete this.macBirthDate;
+             let time;
+             time = this._st_birthtime;
+             let date = new Date(time * 1000);
+             Object.defineProperty(this, "macBirthDate", { value: date });
+             return date;
+           }
+         }
+       );
+     }
 
      /**
       * Return a version of an instance of File.Info that can be sent

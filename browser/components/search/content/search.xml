@@ -498,12 +498,15 @@
 	var connector =
             Services.io.QueryInterface(Components.interfaces.nsISpeculativeConnect);
         var searchURI = engine.getSubmission("dummy").uri;
-        connector.speculativeConnect(searchURI, null, null);
+        let callbacks = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIWebNavigation)
+                              .QueryInterface(Components.interfaces.nsILoadContext);
+        connector.speculativeConnect(searchURI, callbacks);
 
         if (engine.supportsResponseType(SUGGEST_TYPE)) {
 	  var suggestURI = engine.getSubmission("dummy", SUGGEST_TYPE).uri;
           if (suggestURI.prePath != searchURI.prePath)
-            connector.speculativeConnect(suggestURI, null, null);
+            connector.speculativeConnect(suggestURI, callbacks);
         }
       ]]></handler>
     </handlers>

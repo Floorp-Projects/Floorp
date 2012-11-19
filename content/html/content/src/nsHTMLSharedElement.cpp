@@ -21,6 +21,7 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // XXX nav4 has type= start= (same as OL/UL)
 extern nsAttrValue::EnumTable kListTypeTable[];
@@ -47,7 +48,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLParamElement
   NS_DECL_NSIDOMHTMLPARAMELEMENT
@@ -121,8 +122,8 @@ nsHTMLSharedElement::~nsHTMLSharedElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSharedElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLSharedElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLSharedElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSharedElement, Element)
 
 
 DOMCI_DATA(HTMLParamElement, nsHTMLSharedElement)

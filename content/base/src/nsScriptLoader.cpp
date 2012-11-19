@@ -40,7 +40,7 @@
 #include "nsChannelPolicy.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsSandboxFlags.h"
 
@@ -1245,7 +1245,7 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
 
   nsRefPtr<nsScriptLoadRequest> request =
     new nsScriptLoadRequest(nullptr, 0,
-                            nsGenericElement::StringToCORSMode(aCrossOrigin));
+                            Element::StringToCORSMode(aCrossOrigin));
   request->mURI = aURI;
   request->mIsInline = false;
   request->mLoading = true;

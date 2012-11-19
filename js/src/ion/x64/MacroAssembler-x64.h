@@ -190,9 +190,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         push(Operand(addr));
     }
 
-    void movePtr(Operand op, const Register &dest) {
-        movq(op, dest);
-    }
     void moveValue(const Value &val, const Register &dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         movq(ImmWord(jv.asPtr), dest);
@@ -469,9 +466,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         movq(imm, dest);
-    }
-    void movePtr(const Address &address, const Register &dest) {
-        movq(Operand(address), dest);
     }
     void loadPtr(const AbsoluteAddress &address, Register dest) {
         movq(ImmWord(address.addr), ScratchReg);
@@ -847,6 +841,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cvtsq2sd(src, dest);
     }
 
+    void inc64(AbsoluteAddress dest) {
+        mov(ImmWord(dest.addr), ScratchReg);
+        addPtr(Imm32(1), Address(ScratchReg, 0));
+    }
+
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
     //
@@ -883,7 +882,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Save an exit frame (which must be aligned to the stack pointer) to
     // ThreadData::ionTop.
     void linkExitFrame() {
-        mov(ImmWord(GetIonContext()->cx->runtime), ScratchReg);
+        mov(ImmWord(GetIonContext()->compartment->rt), ScratchReg);
         mov(StackPointer, Operand(ScratchReg, offsetof(JSRuntime, ionTop)));
     }
 

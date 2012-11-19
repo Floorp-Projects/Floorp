@@ -10,15 +10,16 @@
 #include "nsColor.h"
 #include "nsStyleConsts.h"
 
-class HyperTextAccessible;
 class nsIFrame;
 class nsIPersistentProperties;
 class nsIContent;
-class Accessible;
 class nsDeviceContext;
 
 namespace mozilla {
 namespace a11y {
+
+class Accessible;
+class HyperTextAccessible;
 
 /**
  * Used to expose text attributes for the hyper text accessible (see

@@ -318,6 +318,21 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 
         pc = next;
     }
+
+    ion::IonScriptCounts *ionCounts = script->getIonCounts();
+
+    while (ionCounts) {
+        Sprint(sp, "IonScript [%lu blocks]:\n", ionCounts->numBlocks());
+        for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
+            const ion::IonBlockCounts &block = ionCounts->block(i);
+            Sprint(sp, "BB #%lu [%05u]", block.id(), block.offset());
+            for (size_t j = 0; j < block.numSuccessors(); j++)
+                Sprint(sp, " -> #%lu", block.successor(j));
+            Sprint(sp, " :: %llu hits\n", block.hitCount());
+            Sprint(sp, "%s\n", block.code());
+        }
+        ionCounts = ionCounts->previous();
+    }
 }
 
 /*
@@ -6371,6 +6386,9 @@ static int
 SimulateOp(JSScript *script, JSOp op, const JSCodeSpec *cs,
            jsbytecode *pc, jsbytecode **pcstack, unsigned &pcdepth)
 {
+    if (cs->format & JOF_DECOMPOSE)
+        return pcdepth;
+
     unsigned nuses = StackUses(script, pc);
     unsigned ndefs = StackDefs(script, pc);
     LOCAL_ASSERT(pcdepth >= nuses);
@@ -6422,11 +6440,24 @@ SimulateOp(JSScript *script, JSOp op, const JSCodeSpec *cs,
     return pcdepth;
 }
 
+/* Ensure that script analysis reports the same stack depth. */
+static void
+AssertPCDepth(JSScript *script, jsbytecode *pc, unsigned pcdepth) {
+    /*
+     * If this assertion fails, run the failing test case under gdb and use the
+     * following gdb command to understand the execution path of this function.
+     *
+     *     call js_DumpScriptDepth(cx, script, pc)
+     */
+    JS_ASSERT_IF(script->hasAnalysis() && script->analysis()->maybeCode(pc),
+                 script->analysis()->getCode(pc).stackDepth == pcdepth);
+}
+
 static int
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbytecode **pcstack)
 {
     /*
-     * Walk forward from script->main and compute the stack depth and stack of
+     * Walk forward from script->code and compute the stack depth and stack of
      * operand-generating opcode PCs in pcstack.
      *
      * FIXME: Code to compute oplen copied from js_Disassemble1 and reduced.
@@ -6434,122 +6465,83 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
      */
 
     LOCAL_ASSERT(script->code <= target && target < script->code + script->length);
-    jsbytecode *pc = script->code;
-    unsigned pcdepth = 0;
     unsigned hpcdepth = unsigned(-1);
+    unsigned cpcdepth = unsigned(-1);
+
+    jsbytecode *pc;
+    unsigned pcdepth;
     ptrdiff_t oplen;
-    for (; pc < target; pc += oplen) {
-        JS_ASSERT_IF(script->hasAnalysis() && script->analysis()->maybeCode(pc),
-                     script->analysis()->getCode(pc).stackDepth ==
-                     ((hpcdepth == unsigned(-1)) ? pcdepth : hpcdepth));
+    for (pc = script->code, pcdepth = 0; ; pc += oplen) {
         JSOp op = JSOp(*pc);
-        const JSCodeSpec *cs = &js_CodeSpec[op];
         oplen = GetBytecodeLength(pc);
-
-        if (cs->format & JOF_DECOMPOSE)
-            continue;
-
-        if (op == JSOP_GOTO) {
-            ptrdiff_t jmpoff = GET_JUMP_OFFSET(pc);
-            if (0 < jmpoff && pc + jmpoff <= target) {
-                pc += jmpoff;
-                oplen = 0;
-                /* Use the Hidden pc count if we follow the goto */
-                if (hpcdepth != unsigned(-1)) {
-                    pcdepth = hpcdepth;
-                    hpcdepth = unsigned(-1);
-                }
-                continue;
-            }
-
-            /*
-             * If we do not follow a goto we look for another mean to continue
-             * at the next PC.
-             */
-            if (script->hasTrynotes()) {
-                JSTryNote *tn = script->trynotes()->vector;
-                JSTryNote *tnEnd = tn + script->trynotes()->length;
-                for (; tn != tnEnd; tn++) {
-                    jsbytecode *start = script->main() + tn->start;
-                    jsbytecode *end = start + tn->length;
-                    if (start < pc && pc <= end && end <= target)
-                        break;
-                }
-
-                if (tn != tnEnd) {
-                    pcdepth = tn->stackDepth;
-                    hpcdepth = unsigned(-1);
-                    oplen = 0;
-                    pc = script->main() + tn->start + tn->length;
-                    continue;
-                }
-            }
-
-            /*
-             * JSOP_THROWING compensates for hidden JSOP_DUP at the start of the
-             * previous guarded catch (see EmitTry in BytecodeEmitter.cpp).
-             */
-            if (JSOp(*(pc + oplen)) == JSOP_THROWING)
-                hpcdepth = pcdepth + 2;
-            else
-                /* Use the normal pc count if continue after the goto */
-                hpcdepth = unsigned(-1);
-
-            continue;
-        }
-
-        /*
-         * A (C ? T : E) expression requires skipping either T (if target is in
-         * E) or both T and E (if target is after the whole expression) before
-         * adjusting pcdepth based on the JSOP_IFEQ at pc that tests condition
-         * C. We know that the stack depth can't change from what it was with
-         * C on top of stack.
-         */
+        const JSCodeSpec *cs = &js_CodeSpec[op];
         jssrcnote *sn = js_GetSrcNote(cx, script, pc);
-        if (sn && SN_TYPE(sn) == SRC_COND) {
-            ptrdiff_t jmpoff = js_GetSrcNoteOffset(sn, 0);
-            if (pc + jmpoff < target) {
-                pc += jmpoff;
-                op = JSOp(*pc);
-                JS_ASSERT(op == JSOP_GOTO);
-                cs = &js_CodeSpec[op];
-                oplen = cs->length;
-                JS_ASSERT(oplen > 0);
-                ptrdiff_t jmplen = GET_JUMP_OFFSET(pc);
-                if (pc + jmplen < target) {
-                    oplen = (unsigned) jmplen;
-                    continue;
-                }
 
-                /*
-                 * Ok, target lies in E. Manually pop C off the model stack,
-                 * since we have moved beyond the IFEQ now.
-                 */
-                LOCAL_ASSERT(pcdepth != 0);
-                --pcdepth;
-            }
-        }
+        bool exitPath =
+            op == JSOP_GOTO ||
+            op == JSOP_RETRVAL ||
+            op == JSOP_THROW;
 
-        /*
-         * SRC_HIDDEN instructions annotate early-exit paths and do not affect
-         * the stack depth when not taken. However, when pc points into an
-         * early-exit path, hidden instructions need to be taken into account.
-         */
+        bool isHiddenGoto = false;
+
         if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
+            isHiddenGoto = op == JSOP_GOTO;
             if (hpcdepth == unsigned(-1))
                 hpcdepth = pcdepth;
-            if (SimulateOp(script, op, cs, pc, pcstack, hpcdepth) < 0)
-                return -1;
-        } else {
+        } else if (!exitPath) {
             hpcdepth = unsigned(-1);
-            if (SimulateOp(script, op, cs, pc, pcstack, pcdepth) < 0)
-                return -1;
         }
 
+        if (op == JSOP_LEAVEBLOCK && sn && SN_TYPE(sn) == SRC_CATCH) {
+            LOCAL_ASSERT(cpcdepth == unsigned(-1));
+            cpcdepth = pcdepth;
+        } else if (sn && SN_TYPE(sn) == SRC_HIDDEN &&
+                   (op == JSOP_THROW || op == JSOP_THROWING))
+        {
+            LOCAL_ASSERT(cpcdepth != unsigned(-1));
+            pcdepth = cpcdepth + 1;
+            cpcdepth = unsigned(-1);
+        } else if (!(op == JSOP_GOTO && sn && SN_TYPE(sn) == SRC_HIDDEN) &&
+                   !(op == JSOP_GOSUB && cpcdepth != unsigned(-1)))
+        {
+            if (cpcdepth != unsigned(-1))
+                LOCAL_ASSERT((op == JSOP_NOP && sn && SN_TYPE(sn) == SRC_ENDBRACE) ||
+                             op == JSOP_FINALLY);
+            cpcdepth = unsigned(-1);
+        }
+
+        /* At this point, pcdepth is the stack depth *before* the insn at pc. */
+        AssertPCDepth(script, pc, pcdepth);
+        if (pc >= target)
+            break;
+
+        /* Simulate the instruction at pc. */
+        if (SimulateOp(script, op, cs, pc, pcstack, pcdepth) < 0)
+            return -1;
+
+        /* At this point, pcdepth is the stack depth *after* the insn at pc. */
+
+        if (exitPath && hpcdepth != unsigned(-1)) {
+            pcdepth = hpcdepth;
+            if (!isHiddenGoto)
+                hpcdepth = unsigned(-1);
+        }
+
+        /*
+         * A (C ? T : E) expression requires skipping T if target is in E or
+         * after the whole expression, because this expression is pushing a
+         * result on the stack and the goto cannot be skipped.
+         */
+        if (sn && SN_TYPE(sn) == SRC_COND) {
+            ptrdiff_t jmplen = GET_JUMP_OFFSET(pc);
+            if (pc + jmplen <= target) {
+                /* Target does not lie in T. */
+                oplen = jmplen;
+            }
+        }
     }
     LOCAL_ASSERT(pc == target);
-    if (hpcdepth != unsigned(-1))
-        return hpcdepth;
+    AssertPCDepth(script, pc, pcdepth);
     return pcdepth;
 }
 
@@ -6725,6 +6717,18 @@ GetPCCountScriptSummary(JSContext *cx, size_t index)
     AppendArrayJSONProperties(cx, buf, arithTotals, countArithNames,
                               JS_ARRAY_LENGTH(arithTotals), comma);
 
+    uint64_t ionActivity = 0;
+    ion::IonScriptCounts *ionCounts = sac.getIonCounts();
+    while (ionCounts) {
+        for (size_t i = 0; i < ionCounts->numBlocks(); i++)
+            ionActivity += ionCounts->block(i).hitCount();
+        ionCounts = ionCounts->previous();
+    }
+    if (ionActivity) {
+        AppendJSONProperty(buf, "ion", comma);
+        NumberValueToStringBuffer(cx, DoubleValue(ionActivity), buf);
+    }
+
     buf.append('}');
     buf.append('}');
 
@@ -6861,6 +6865,54 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
     }
 
     buf.append(']');
+
+    ion::IonScriptCounts *ionCounts = sac.getIonCounts();
+    if (ionCounts) {
+        AppendJSONProperty(buf, "ion");
+        buf.append('[');
+        bool comma = false;
+        while (ionCounts) {
+            if (comma)
+                buf.append(',');
+            comma = true;
+
+            buf.append('[');
+            for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
+                if (i)
+                    buf.append(',');
+                const ion::IonBlockCounts &block = ionCounts->block(i);
+
+                buf.append('{');
+                AppendJSONProperty(buf, "id", NO_COMMA);
+                NumberValueToStringBuffer(cx, Int32Value(block.id()), buf);
+                AppendJSONProperty(buf, "offset");
+                NumberValueToStringBuffer(cx, Int32Value(block.offset()), buf);
+                AppendJSONProperty(buf, "successors");
+                buf.append('[');
+                for (size_t j = 0; j < block.numSuccessors(); j++) {
+                    if (j)
+                        buf.append(',');
+                    NumberValueToStringBuffer(cx, Int32Value(block.successor(j)), buf);
+                }
+                buf.append(']');
+                AppendJSONProperty(buf, "hits");
+                NumberValueToStringBuffer(cx, DoubleValue(block.hitCount()), buf);
+
+                AppendJSONProperty(buf, "code");
+                JSString *str = JS_NewStringCopyZ(cx, block.code());
+                if (!str || !(str = JS_ValueToSource(cx, StringValue(str))))
+                    return false;
+                buf.append(str);
+
+                buf.append('}');
+            }
+            buf.append(']');
+
+            ionCounts = ionCounts->previous();
+        }
+        buf.append(']');
+    }
+
     buf.append('}');
 
     return !cx->isExceptionPending();

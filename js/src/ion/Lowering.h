@@ -169,6 +169,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallGetProperty(MCallGetProperty *ins);
     bool visitDeleteProperty(MDeleteProperty *ins);
     bool visitGetNameCache(MGetNameCache *ins);
+    bool visitCallGetIntrinsicValue(MCallGetIntrinsicValue *ins);
     bool visitCallGetElement(MCallGetElement *ins);
     bool visitCallSetElement(MCallSetElement *ins);
     bool visitSetPropertyCache(MSetPropertyCache *ins);
@@ -182,6 +183,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGetArgument(MGetArgument *ins);
     bool visitThrow(MThrow *ins);
     bool visitIn(MIn *ins);
+    bool visitInArray(MInArray *ins);
     bool visitInstanceOf(MInstanceOf *ins);
     bool visitFunctionBoundary(MFunctionBoundary *ins);
     bool visitSetDOMProperty(MSetDOMProperty *ins);

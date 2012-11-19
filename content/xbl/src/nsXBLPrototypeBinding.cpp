@@ -230,7 +230,7 @@ nsFixedSizeAllocator* nsXBLInsertionPointEntry::kPool;
 
 NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPointEntry)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPointEntry)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInsertionParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInsertionParent)
   if (tmp->mDefaultContent) {
     nsAutoScriptBlocker scriptBlocker;
     // mDefaultContent is a sort of anonymous content within the XBL
@@ -241,8 +241,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPointEntry)
   }      
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLInsertionPointEntry)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInsertionParent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDefaultContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInsertionParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDefaultContent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXBLInsertionPointEntry, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXBLInsertionPointEntry, Release)
@@ -341,9 +341,7 @@ TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
     *static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
   nsXBLInsertionPointEntry* entry =
     static_cast<nsXBLInsertionPointEntry*>(aData);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry,
-                                               nsXBLInsertionPointEntry,
-                                               "[insertion point table] value")
+  CycleCollectionNoteChild(cb, entry, "[insertion point table] value");
   return kHashEnumerateNext;
 }
 

@@ -7,6 +7,7 @@
 import re, sys, os
 import subprocess
 import runxpcshelltests as xpcshell
+import tempfile
 from automationutils import *
 from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
 
@@ -29,11 +30,14 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteTmpDir = self.remoteJoin(self.remoteTestRoot, "tmp")
         self.remoteScriptsDir = self.remoteTestRoot
         self.remoteComponentsDir = self.remoteJoin(self.remoteTestRoot, "c")
+        self.remoteModulesDir = self.remoteJoin(self.remoteTestRoot, "m")
         self.profileDir = self.remoteJoin(self.remoteTestRoot, "p")
         self.remoteDebugger = options.debugger
         self.remoteDebuggerArgs = options.debuggerArgs
+        self.testingModulesDir = options.testingModulesDir
         if options.setup:
           self.setupUtilities()
+          self.setupModules()
           self.setupTestDir()
         if options.localAPK:
           self.remoteAPK = self.remoteJoin(self.remoteBinDir, os.path.basename(options.localAPK))
@@ -109,8 +113,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
         self.pushLibs()
 
-        self.device.chmodDir(self.remoteBinDir)
-
     def pushLibs(self):
         if self.options.localAPK:
           localLib = os.path.join(self.options.objdir, "dist/fennec")
@@ -139,6 +141,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 remoteFile = self.remoteJoin(self.remoteBinDir, file)
                 self.device.pushFile(os.path.join(root, file), remoteFile)
 
+    def setupModules(self):
+        if self.testingModulesDir:
+            self.device.pushDir(self.testingModulesDir, self.remoteModulesDir)
 
     def setupTestDir(self):
         xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
@@ -156,19 +161,19 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
           self.pathMapping.append(PathMapping(testdir, remoteScriptDir))
 
     def buildXpcsCmd(self, testdir):
-        self.xpcsCmd = [
-           self.remoteJoin(self.remoteBinDir, "xpcshell"),
-           '-r', self.remoteJoin(self.remoteComponentsDir, 'httpd.manifest')]
-        # If using an APK, --greomni must be specified before any -e arguments.
+        # change base class' paths to remote paths and use base class to build command
+        self.xpcshell = self.remoteJoin(self.remoteBinDir, "xpcw")
+        self.headJSPath = self.remoteJoin(self.remoteScriptsDir, 'head.js')
+        self.httpdJSPath = self.remoteJoin(self.remoteComponentsDir, 'httpd.js')
+        self.httpdManifest = self.remoteJoin(self.remoteComponentsDir, 'httpd.manifest')
+        self.testingModulesDir = self.remoteModulesDir
+        self.testharnessdir = self.remoteScriptsDir
+        xpcshell.XPCShellTests.buildXpcsCmd(self, testdir)
+        # remove "-g <dir> -a <dir>" and add "--greomni <apk>"
+        del(self.xpcsCmd[1:5])
         if self.options.localAPK:
-          self.xpcsCmd.extend(['--greomni', self.remoteAPK])
-        self.xpcsCmd.extend([
-           '-m',
-           '-n',
-           '-s',
-           '-e', 'const _HTTPD_JS_PATH = "%s";' % self.remoteJoin(self.remoteComponentsDir, 'httpd.js'),
-           '-e', 'const _HEAD_JS_PATH = "%s";' % self.remoteJoin(self.remoteScriptsDir, 'head.js'),
-           '-f', self.remoteScriptsDir+'/head.js'])
+          self.xpcsCmd.insert(3, '--greomni')
+          self.xpcsCmd.insert(4, self.remoteAPK)
 
         if self.remoteDebugger:
           # for example, "/data/local/gdbserver" "localhost:12345"
@@ -219,20 +224,37 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.log.info("TEST-INFO | %s | environment: %s" % (name, self.env))
 
     def setupLeakLogging(self):
-        # Leak logging disabled on Android because it makes the command
-        # line too long: bug 752126
-
-        # filename = "leaks"
-        # leakLogFile = self.remoteJoin(self.profileDir, filename)
-        # self.env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
-        leakLogFile = ""
-        return leakLogFile
+        self.env["XPCOM_MEM_LEAK_LOG"] = self.remoteJoin(self.profileDir, "leaks.log")
+        return self.env["XPCOM_MEM_LEAK_LOG"]
 
     def setLD_LIBRARY_PATH(self, env):
         env["LD_LIBRARY_PATH"]=self.remoteBinDir
 
+    def pushWrapper(self):
+        # Rather than executing xpcshell directly, this wrapper script is
+        # used. By setting environment variables and the cwd in the script,
+        # the length of the per-test command line is shortened. This is
+        # often important when using ADB, as there is a limit to the length
+        # of the ADB command line.
+        localWrapper = tempfile.mktemp()
+        f = open(localWrapper, "w")
+        f.write("#!/system/bin/sh\n")
+        for envkey, envval in self.env.iteritems():
+            f.write("export %s=%s\n" % (envkey, envval))
+        f.write("cd $1\n")
+        f.write("echo xpcw: cd $1\n")
+        f.write("shift\n")
+        f.write("echo xpcw: xpcshell \"$@\"\n")
+        f.write("%s/xpcshell \"$@\"\n" % self.remoteBinDir)
+        f.close()
+        remoteWrapper = self.remoteJoin(self.remoteBinDir, "xpcw")
+        self.device.pushFile(localWrapper, remoteWrapper)
+        os.remove(localWrapper)
+        self.device.chmodDir(self.remoteBinDir)
+
     def buildEnvironment(self):
         self.env = {}
+        self.buildCoreEnvironment()
         self.setLD_LIBRARY_PATH(self.env)
         self.env["MOZ_LINKER_CACHE"]=self.remoteBinDir
         if self.options.localAPK and self.appRoot:
@@ -240,12 +262,14 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
         self.env["TMPDIR"]=self.remoteTmpDir
         self.env["HOME"]=self.profileDir
+        if self.options.setup:
+          self.pushWrapper()
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
-        cmd[0] = self.remoteJoin(self.remoteBinDir, "xpcshell")
+        cmd.insert(1, self.remoteHere)
         outputFile = "xpcshelloutput"
         f = open(outputFile, "w+")
-        self.shellReturnCode = self.device.shell(cmd, f, cwd=self.remoteHere, env=env)
+        self.shellReturnCode = self.device.shell(cmd, f)
         f.close()
         # The device manager may have timed out waiting for xpcshell.
         # Guard against an accumulation of hung processes by killing
