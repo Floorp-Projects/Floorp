@@ -413,7 +413,6 @@ public class GeckoLayerClient
         // user starts scrolling on a page that contains animated content that
         // is slow to draw.
         if (!aHasPendingNewThebesContent) {
-            Log.d(LOGTAG, "Aborting update due to more relevant display-port in event queue");
             mProgressiveUpdateData.abort = true;
             return mProgressiveUpdateData;
         }
