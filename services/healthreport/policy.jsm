@@ -360,6 +360,16 @@ HealthReportPolicy.prototype = {
   },
 
   /**
+   * Short circuit policy checking and always assume acceptance.
+   *
+   * This shuld never be set by the user. Instead, it is a per-application or
+   * per-deployment default pref.
+   */
+  get dataSubmissionPolicyBypassAcceptance() {
+    return this._prefs.get("dataSubmissionPolicyBypassAcceptance", false);
+  },
+
+  /**
    * When the user was notified that data submission could occur.
    *
    * This is used for logging purposes. this._dataSubmissionPolicyNotifiedDate
@@ -754,7 +764,7 @@ HealthReportPolicy.prototype = {
     }
 
     // User has opted out of data submission.
-    if (!this.dataSubmissionPolicyAccepted) {
+    if (!this.dataSubmissionPolicyAccepted && !this.dataSubmissionPolicyBypassAcceptance) {
       this._log.debug("Data submission has been disabled per user request.");
       return;
     }
@@ -780,6 +790,10 @@ HealthReportPolicy.prototype = {
    * @return bool Whether user has responded to data policy.
    */
   ensureNotifyResponse: function ensureNotifyResponse(now) {
+    if (this.dataSubmissionPolicyBypassAcceptance) {
+      return true;
+    }
+
     let notifyState = this.notifyState;
 
     if (notifyState == this.STATE_NOTIFY_UNNOTIFIED) {
