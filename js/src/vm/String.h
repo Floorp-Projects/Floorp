@@ -653,11 +653,11 @@ JS_STATIC_ASSERT(sizeof(JSInlineString) == sizeof(JSString));
 
 class JSShortString : public JSInlineString
 {
-    /* This can be any value that is a multiple of Cell::CellSize. */
+    /* This can be any value that is a multiple of CellSize. */
     static const size_t INLINE_EXTENSION_CHARS = sizeof(JSString::Data) / sizeof(jschar);
 
     static void staticAsserts() {
-        JS_STATIC_ASSERT(INLINE_EXTENSION_CHARS % js::gc::Cell::CellSize == 0);
+        JS_STATIC_ASSERT(INLINE_EXTENSION_CHARS % js::gc::CellSize == 0);
         JS_STATIC_ASSERT(MAX_SHORT_LENGTH + 1 ==
                          (sizeof(JSShortString) -
                           offsetof(JSShortString, d.inlineStorage)) / sizeof(jschar));
