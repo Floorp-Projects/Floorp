@@ -153,7 +153,7 @@ public:
 
   // The following can be called on the main thread only:
   // Get the URI
-  virtual nsIURI* URI() const { return nullptr; }
+  nsIURI* URI() const { return mURI; }
   // Close the resource, stop any listeners, channels, etc.
   // Cancels any currently blocking Read request and forces that request to
   // return an error.
@@ -227,7 +227,7 @@ public:
   // Moves any existing channel loads into the background, so that they don't
   // block the load event. Any new loads initiated (for example to seek)
   // will also be in the background.
-  virtual void MoveLoadsToBackground() {}
+  void MoveLoadsToBackground();
   // Ensures that the value returned by IsSuspendedByCache below is up to date
   // (i.e. the cache has examined this stream at least once).
   virtual void EnsureCacheUpToDate() {}
@@ -307,21 +307,15 @@ public:
    * aRanges is being used.
    */
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) = 0;
-};
-
-class BaseMediaResource : public MediaResource {
-public:
-  virtual nsIURI* URI() const { return mURI; }
-  virtual void MoveLoadsToBackground();
 
 protected:
-  BaseMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  MediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
     mChannel(aChannel),
     mURI(aURI),
     mLoadInBackground(false)
   {
-    MOZ_COUNT_CTOR(BaseMediaResource);
+    MOZ_COUNT_CTOR(MediaResource);
   }
 
   // Set the request's load flags to aFlags.  If the request is part of a
@@ -355,7 +349,7 @@ protected:
  * All synchronization is performed by MediaCacheStream; all off-main-
  * thread operations are delegated directly to that object.
  */
-class ChannelMediaResource : public BaseMediaResource
+class ChannelMediaResource : public MediaResource
 {
 public:
   ChannelMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
