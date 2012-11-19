@@ -8,6 +8,7 @@
 /* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
 
+#include "Composer2D.h"
 #include "LayerManagerOGL.h"
 #include "ThebesLayerOGL.h"
 #include "ContainerLayerOGL.h"
@@ -583,6 +584,8 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
     NS_DispatchToMainThread(new ReadDrawFPSPref());
   }
 
+  mComposer2D = mWidget->GetComposer2D();
+
   reporter.SetSuccessful();
   return true;
 }
@@ -671,7 +674,31 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
     mThebesLayerCallbackData = aCallbackData;
     SetCompositingDisabled(aFlags & END_NO_COMPOSITE);
 
-    Render();
+    bool needGLRender = true;
+    if (mComposer2D && mComposer2D->TryRender(mRoot, mWorldMatrix)) {
+      needGLRender = false;
+
+      if (sDrawFPS) {
+        if (!mFPS) {
+          mFPS = new FPSState();
+        }
+        double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
+        printf_stderr("HWComposer: FPS is %g\n", fps);
+      }
+
+      // This lets us reftest and screenshot content rendered by the
+      // 2d composer.
+      if (mTarget) {
+        MakeCurrent();
+        CopyToTarget(mTarget);
+        mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+      }
+      MOZ_ASSERT(!needGLRender);
+    }
+
+    if (needGLRender) {
+      Render();
+    }
 
     mThebesLayerCallback = nullptr;
     mThebesLayerCallbackData = nullptr;
