@@ -30,7 +30,6 @@ CPPSRCS = \
   nsAccUtils.cpp \
   nsAccessibilityService.cpp \
   nsAccessiblePivot.cpp \
-  nsAccTreeWalker.cpp \
   nsEventShell.cpp \
   nsCaretAccessible.cpp \
   nsTextEquivUtils.cpp \
@@ -38,6 +37,7 @@ CPPSRCS = \
   StyleInfo.cpp \
   TextAttrs.cpp \
   TextUpdater.cpp \
+  TreeWalker.cpp \
   $(NULL)
 
 ifneq ($(A11Y_LOG),0)
