@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PAudio;
 include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
@@ -213,7 +212,6 @@ rpc protocol PContent
     parent opens PCompositor;
     parent opens PImageBridge;
 
-    manages PAudio;
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
@@ -334,8 +332,6 @@ parent:
                  bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline);
-
-    PAudio(int32_t aNumChannels, int32_t aRate);
 
     PDeviceStorageRequest(DeviceStorageParams params);
 
