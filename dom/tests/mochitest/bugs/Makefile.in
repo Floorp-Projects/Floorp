@@ -135,6 +135,7 @@ MOCHITEST_FILES	= \
 		file_bug809290_b2.html \
 		file_bug809290_c.html \
 		file_empty.html \
+		test_sizetocontent_clamp.html \
 		$(NULL)
 
 ifneq (Linux,$(OS_ARCH))
