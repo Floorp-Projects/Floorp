@@ -1124,7 +1124,10 @@ FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallb
   }
   
   for (uint32_t i = 0; i < array->Length(); i++) {
-    aCallback(aFrame, array->ElementAt(i));
+    DisplayItemData* data = array->ElementAt(i);
+    if (data->mDisplayItemKey != nsDisplayItem::TYPE_ZERO) {
+      aCallback(aFrame, data);
+    }
   }
 }
 
@@ -2775,7 +2778,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           const gfx3DMatrix* aTransform)
 {
   uint32_t containerDisplayItemKey =
-    aContainerItem ? aContainerItem->GetPerFrameKey() : 0;
+    aContainerItem ? aContainerItem->GetPerFrameKey() : nsDisplayItem::TYPE_ZERO;
   NS_ASSERTION(aContainerFrame, "Container display items here should have a frame");
   NS_ASSERTION(!aContainerItem ||
                aContainerItem->GetUnderlyingFrame() == aContainerFrame,
