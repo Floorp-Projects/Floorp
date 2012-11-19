@@ -15,7 +15,8 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
-  "AppInfoProvider"
+  "AppInfoProvider",
+  "SysInfoProvider",
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
@@ -28,6 +29,8 @@ Cu.import("resource://services-common/utils.js");
 
 
 const REQUIRED_STRING_TYPE = {type: "TYPE_STRING"};
+const OPTIONAL_STRING_TYPE = {type: "TYPE_STRING", optional: true};
+const REQUIRED_UINT32_TYPE = {type: "TYPE_UINT32"};
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
@@ -151,4 +154,101 @@ AppInfoProvider.prototype = {
 };
 
 Object.freeze(AppInfoProvider.prototype);
+
+
+function SysInfoMeasurement() {
+  MetricsMeasurement.call(this, "sysinfo", 1);
+}
+
+SysInfoMeasurement.prototype = {
+  __proto__: MetricsMeasurement.prototype,
+
+  fields: {
+    cpuCount: REQUIRED_UINT32_TYPE,
+    memoryMB: REQUIRED_UINT32_TYPE,
+    manufacturer: OPTIONAL_STRING_TYPE,
+    device: OPTIONAL_STRING_TYPE,
+    hardware: OPTIONAL_STRING_TYPE,
+    name: OPTIONAL_STRING_TYPE,
+    version: OPTIONAL_STRING_TYPE,
+    architecture: OPTIONAL_STRING_TYPE,
+  },
+},
+
+Object.freeze(SysInfoMeasurement.prototype);
+
+
+this.SysInfoProvider = function SysInfoProvider() {
+  MetricsProvider.call(this, "sys-info");
+};
+
+SysInfoProvider.prototype = {
+  __proto__: MetricsProvider.prototype,
+
+  sysInfoFields: {
+    cpucount: "cpuCount",
+    memsize: "memoryMB",
+    manufacturer: "manufacturer",
+    device: "device",
+    hardware: "hardware",
+    name: "name",
+    version: "version",
+    arch: "architecture",
+  },
+
+  INT_FIELDS: new Set("cpucount", "memsize"),
+
+  collectConstantMeasurements: function collectConstantMeasurements() {
+    let result = this.createResult();
+    result.expectMeasurement("sysinfo");
+
+    result.populate = this._populateConstants.bind(this);
+
+    return result;
+  },
+
+  _populateConstants: function _populateConstants(result) {
+    result.addMeasurement(new SysInfoMeasurement());
+
+    let si = Cc["@mozilla.org/system-info;1"]
+               .getService(Ci.nsIPropertyBag2);
+
+    for (let [k, v] in Iterator(this.sysInfoFields)) {
+      try {
+        if (!si.hasKey(k)) {
+          this._log.debug("Property not available: " + k);
+          continue;
+        }
+
+        let value = si.getProperty(k);
+
+        if (this.INT_FIELDS.has(k)) {
+          let converted = parseInt(value, 10);
+          if (Number.isNaN(converted)) {
+            result.addError(new Error("Value is not an integer: " + k + "=" +
+                                      value));
+            continue;
+          }
+
+          value = converted;
+        }
+
+        // Round memory to mebibytes.
+        if (k == "memsize") {
+          value = Math.round(value / 1048576);
+        }
+
+        result.setValue("sysinfo", v, value);
+      } catch (ex) {
+        this._log.warn("Error obtaining system info field: " + k + " " +
+                       CommonUtils.exceptionStr(ex));
+        result.addError(ex);
+      }
+    }
+
+    result.finish();
+  },
+};
+
+Object.freeze(SysInfoProvider.prototype);
 
