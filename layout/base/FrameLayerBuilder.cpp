@@ -368,7 +368,7 @@ protected:
      * supports being optimized to an ImageLayer (TYPE_RASTER only) returns
      * an ImageContainer for the image.
      */
-    already_AddRefed<ImageContainer> CanOptimizeImageLayer();
+    already_AddRefed<ImageContainer> CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder);
 
     /**
      * The region of visible content in the layer, relative to the
@@ -1124,7 +1124,10 @@ FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallb
   }
   
   for (uint32_t i = 0; i < array->Length(); i++) {
-    aCallback(aFrame, array->ElementAt(i));
+    DisplayItemData* data = array->ElementAt(i);
+    if (data->mDisplayItemKey != nsDisplayItem::TYPE_ZERO) {
+      aCallback(aFrame, data);
+    }
   }
 }
 
@@ -1525,13 +1528,13 @@ ContainerState::ThebesLayerData::UpdateCommonClipCount(
 }
 
 already_AddRefed<ImageContainer>
-ContainerState::ThebesLayerData::CanOptimizeImageLayer()
+ContainerState::ThebesLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder)
 {
   if (!mImage) {
     return nullptr;
   }
 
-  return mImage->GetContainer();
+  return mImage->GetContainer(aBuilder);
 }
 
 void
@@ -1543,7 +1546,7 @@ ContainerState::PopThebesLayerData()
   ThebesLayerData* data = mThebesLayerDataStack[lastIndex];
 
   nsRefPtr<Layer> layer;
-  nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer();
+  nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
 
   if ((data->mIsSolidColorInVisibleRegion || imageContainer) &&
       data->mLayer->GetValidRegion().IsEmpty()) {
@@ -1735,8 +1738,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
    * we are the first visible item in the ThebesLayerData object.
    */
   if (mVisibleRegion.IsEmpty() &&
-      (aItem->GetType() == nsDisplayItem::TYPE_IMAGE ||
-       aItem->GetType() == nsDisplayItem::TYPE_XUL_IMAGE)) {
+      aItem->SupportsOptimizingToImage()) {
     mImage = static_cast<nsDisplayImageContainer*>(aItem);
   } else {
     mImage = nullptr;
@@ -2776,7 +2778,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           const gfx3DMatrix* aTransform)
 {
   uint32_t containerDisplayItemKey =
-    aContainerItem ? aContainerItem->GetPerFrameKey() : 0;
+    aContainerItem ? aContainerItem->GetPerFrameKey() : nsDisplayItem::TYPE_ZERO;
   NS_ASSERTION(aContainerFrame, "Container display items here should have a frame");
   NS_ASSERTION(!aContainerItem ||
                aContainerItem->GetUnderlyingFrame() == aContainerFrame,
