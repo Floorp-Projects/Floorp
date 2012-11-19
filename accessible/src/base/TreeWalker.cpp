@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAccTreeWalker.h"
+#include "TreeWalker.h"
 
 #include "Accessible.h"
 #include "nsAccessibilityService.h"
@@ -17,6 +17,9 @@ using namespace mozilla::a11y;
 // WalkState
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace mozilla {
+namespace a11y {
+
 struct WalkState
 {
   WalkState(nsIContent *aContent) :
@@ -28,14 +31,17 @@ struct WalkState
   WalkState *prevState;
 };
 
+} // namespace a11y
+} // namespace mozilla
+
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccTreeWalker
+// TreeWalker
 ////////////////////////////////////////////////////////////////////////////////
 
-nsAccTreeWalker::
-  nsAccTreeWalker(DocAccessible* aDoc, Accessible* aContext,
-                  nsIContent* aContent, bool aWalkCache) :
-  mDoc(aDoc), mContext(aContext), mWalkCache(aWalkCache), mState(nullptr)
+TreeWalker::
+  TreeWalker(Accessible* aContext, nsIContent* aContent, bool aWalkCache) :
+  mDoc(aContext->Document()), mContext(aContext),
+  mWalkCache(aWalkCache), mState(nullptr)
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
 
@@ -47,23 +53,23 @@ nsAccTreeWalker::
 
   mChildFilter |= nsIContent::eSkipPlaceholderContent;
 
-  MOZ_COUNT_CTOR(nsAccTreeWalker);
+  MOZ_COUNT_CTOR(TreeWalker);
 }
 
-nsAccTreeWalker::~nsAccTreeWalker()
+TreeWalker::~TreeWalker()
 {
   // Clear state stack from memory
   while (mState)
     PopState();
 
-  MOZ_COUNT_DTOR(nsAccTreeWalker);
+  MOZ_COUNT_DTOR(TreeWalker);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccTreeWalker: private
+// TreeWalker: private
 
 Accessible*
-nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
+TreeWalker::NextChildInternal(bool aNoWalkUp)
 {
   if (!mState || !mState->content)
     return nullptr;
@@ -104,7 +110,7 @@ nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
 }
 
 void
-nsAccTreeWalker::PopState()
+TreeWalker::PopState()
 {
   WalkState* prevToLastState = mState->prevState;
   delete mState;
@@ -112,7 +118,7 @@ nsAccTreeWalker::PopState()
 }
 
 bool
-nsAccTreeWalker::PushState(nsIContent* aContent)
+TreeWalker::PushState(nsIContent* aContent)
 {
   WalkState* nextToLastState = new WalkState(aContent);
   if (!nextToLastState)
