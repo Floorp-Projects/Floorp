@@ -546,13 +546,6 @@ js::TraceWeakMaps(WeakMapTracer *trc)
     WatchpointMap::traceAll(trc);
 }
 
-JS_FRIEND_API(bool)
-js::GCThingIsMarkedGray(void *thing)
-{
-    JS_ASSERT(thing);
-    return reinterpret_cast<gc::Cell *>(thing)->isMarked(gc::GRAY);
-}
-
 JS_FRIEND_API(JSGCTraceKind)
 js::GCThingTraceKind(void *thing)
 {
@@ -882,18 +875,6 @@ JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSContext *cx)
 {
     return IsIncrementalBarrierNeeded(cx->runtime);
-}
-
-JS_FRIEND_API(bool)
-IsIncrementalBarrierNeededOnObject(RawObject obj)
-{
-    return obj->compartment()->needsBarrier();
-}
-
-JS_FRIEND_API(bool)
-IsIncrementalBarrierNeededOnScript(JSScript *script)
-{
-    return script->compartment()->needsBarrier();
 }
 
 extern JS_FRIEND_API(void)
