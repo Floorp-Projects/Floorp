@@ -388,7 +388,7 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 }
 
 already_AddRefed<ImageContainer>
-nsDisplayXULImage::GetContainer()
+nsDisplayXULImage::GetContainer(nsDisplayListBuilder* aBuilder)
 {
   return static_cast<nsImageBoxFrame*>(mFrame)->GetContainer();
 }
