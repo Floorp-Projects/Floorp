@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsAccTreeWalker_H_
-#define _nsAccTreeWalker_H_
+#ifndef mozilla_a11y_TreeWalker_h_
+#define mozilla_a11y_TreeWalker_h_
 
 #include "nsAutoPtr.h"
 #include "nsIContent.h"
@@ -15,23 +15,16 @@ namespace a11y {
 class Accessible;
 class DocAccessible;
 
-} // namespace a11y
-} // namespace mozilla
-
 struct WalkState;
 
 /**
  * This class is used to walk the DOM tree to create accessible tree.
  */
-class nsAccTreeWalker
+class TreeWalker
 {
 public:
-  typedef mozilla::a11y::Accessible Accessible;
-  typedef mozilla::a11y::DocAccessible DocAccessible;
-
-  nsAccTreeWalker(DocAccessible* aDoc, Accessible* aContext, nsIContent* aNode,
-                  bool aWalkCache = false);
-  virtual ~nsAccTreeWalker();
+  TreeWalker(Accessible* aContext, nsIContent* aNode, bool aWalkCache = false);
+  virtual ~TreeWalker();
 
   /**
    * Return the next child accessible.
@@ -46,6 +39,9 @@ public:
   }
 
 private:
+  TreeWalker();
+  TreeWalker(const TreeWalker&);
+  TreeWalker& operator =(const TreeWalker&);
 
   /**
    * Return the next child accessible.
@@ -76,4 +72,7 @@ private:
   WalkState* mState;
 };
 
-#endif 
+} // namespace a11y
+} // namespace mozilla
+
+#endif // mozilla_a11y_TreeWalker_h_
