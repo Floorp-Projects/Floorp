@@ -120,16 +120,19 @@ class ResultsSink:
             show = self.options.show
             if self.options.failed_only and dev_label not in ('REGRESSIONS', 'TIMEOUTS'):
                 show = False
+            if show:
+                self.pb.beginline()
 
-            if show and self.options.show_output:
-                print >> self.fp, '## %s: rc = %d, run time = %f' % (output.test.path, output.rc, output.dt)
+            if show:
+                if self.options.show_output:
+                    print >> self.fp, '## %s: rc = %d, run time = %f' % (output.test.path, output.rc, output.dt)
 
-            if show and self.options.show_cmd:
-                print >> self.fp, escape_cmdline(output.cmd)
+                if self.options.show_cmd:
+                    print >> self.fp, escape_cmdline(output.cmd)
 
-            if show and self.options.show_output:
-                self.fp.write(output.out)
-                self.fp.write(output.err)
+                if self.options.show_output:
+                    self.fp.write(output.out)
+                    self.fp.write(output.err)
 
             self.n += 1
 
