@@ -975,9 +975,17 @@ void nsXULWindow::OnChromeLoaded()
       // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
       nsCOMPtr<nsIContentViewer> cv;
       mDocShell->GetContentViewer(getter_AddRefs(cv));
-      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-      if (markupViewer)
-        markupViewer->SizeToContent();
+      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer = do_QueryInterface(cv);
+      if (markupViewer) {
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = do_QueryInterface(mDocShell);
+        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+        docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+        if (treeOwner) {
+          int32_t width, height;
+          markupViewer->GetContentSize(&width, &height);
+          treeOwner->SizeShellTo(docShellAsItem, width, height);
+        }
+      }
     }
 
     bool positionSet = !mIgnoreXULPosition;
