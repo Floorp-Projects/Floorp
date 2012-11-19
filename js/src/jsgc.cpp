@@ -321,7 +321,7 @@ inline bool
 Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
 {
     /* Enforce requirements on size of T. */
-    JS_ASSERT(thingSize % Cell::CellSize == 0);
+    JS_ASSERT(thingSize % CellSize == 0);
     JS_ASSERT(thingSize <= 255);
 
     JS_ASSERT(aheader.allocated());
