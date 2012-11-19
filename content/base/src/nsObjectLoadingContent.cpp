@@ -2505,7 +2505,11 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   nsRefPtr<nsPluginHost> pluginHost =
     already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
 
-  bool isCTP = pluginHost->IsPluginClickToPlayForType(mContentType.get());
+  bool isCTP;
+  nsresult rv = pluginHost->IsPluginClickToPlayForType(mContentType, &isCTP);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
 
   if (!isCTP || mActivated) {
     return true;
@@ -2515,7 +2519,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   aReason = eFallbackClickToPlay;
   // (if it's click-to-play, it might be because of the blocklist)
   uint32_t state;
-  nsresult rv = pluginHost->GetBlocklistStateForType(mContentType.get(), &state);
+  rv = pluginHost->GetBlocklistStateForType(mContentType.get(), &state);
   NS_ENSURE_SUCCESS(rv, false);
   if (state == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
     aReason = eFallbackVulnerableUpdatable;
