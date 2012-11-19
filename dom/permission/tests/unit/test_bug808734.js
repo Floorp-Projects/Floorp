@@ -2,32 +2,25 @@ const Cu = Components.utils;
 const READWRITE = "readwrite";
 const UNKNOWN = "foobar";
 
-/*
- * Remove "contacts" from first test expected array and
- * "settings" and "indexedDB-chrome-settings" from second
- * test when this is fixed
- * http://mxr.mozilla.org/mozilla-central/source/dom/apps/src/PermissionsInstaller.jsm#316
- */
 var gData = [
 // test normal expansion
 {
   permission: "contacts",
   access: READWRITE,
-  expected: ["contacts", "contacts-read", "contacts-create",
+  expected: ["contacts-read", "contacts-create",
              "contacts-write"] 
 },
 // test additional expansion and access not having read+create+write
 {
   permission: "settings",
   access: READWRITE,
-  expected: ["settings", "settings-read", "settings-write",
-             "indexedDB-chrome-settings", "indexedDB-chrome-settings-read",
+  expected: ["settings-read", "settings-write",
+             "indexedDB-chrome-settings-read",
              "indexedDB-chrome-settings-write"] 
 },
 // test substitute
 {
   permission: "storage",
-  access: READWRITE,
   expected: ["indexedDB-unlimited", "offline-app", "pin-app"]
 },
 // test unknown access
