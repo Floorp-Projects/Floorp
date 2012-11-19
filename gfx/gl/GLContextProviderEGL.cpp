@@ -19,7 +19,7 @@
 #define GET_NATIVE_WINDOW(aWidget) (EGLNativeWindowType)static_cast<QWidget*>(aWidget->GetNativeData(NS_NATIVE_SHELLWIDGET))->winId()
 #elif defined(MOZ_WIDGET_GONK)
 #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
-#include "HWComposer.h"
+#include "HwcComposer2D.h"
 #endif
 
 #if defined(MOZ_X11)
@@ -265,12 +265,14 @@ public:
         printf_stderr("Initializing context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
 #ifdef MOZ_WIDGET_GONK
-        if (!aIsOffscreen)
-            mHwc = new HWComposer();
+        if (!aIsOffscreen) {
+            mHwc = HwcComposer2D::GetInstance();
+            MOZ_ASSERT(!mHwc->Initialized());
 
-        if (mHwc && mHwc->init()) {
-            NS_WARNING("HWComposer initialization failed!");
-            mHwc = nullptr;
+            if (mHwc->Init(EGL_DISPLAY(), mSurface)) {
+                NS_WARNING("HWComposer initialization failed!");
+                mHwc = nullptr;
+            }
         }
 #endif
     }
@@ -672,7 +674,7 @@ protected:
     bool mCanBindToTexture;
     bool mShareWithEGLImage;
 #ifdef MOZ_WIDGET_GONK
-    nsAutoPtr<HWComposer> mHwc;
+    nsRefPtr<HwcComposer2D> mHwc;
 #endif
 
     // A dummy texture ID that can be used when we need a texture object whose
