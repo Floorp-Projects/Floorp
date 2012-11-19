@@ -41,11 +41,11 @@ hb_ot_map_t::add_lookups (hb_face_t    *face,
   offset = 0;
   do {
     len = ARRAY_LENGTH (lookup_indices);
-    hb_ot_layout_feature_get_lookup_indexes (face,
-					     table_tags[table_index],
-					     feature_index,
-					     offset, &len,
-					     lookup_indices);
+    hb_ot_layout_feature_get_lookups (face,
+				      table_tags[table_index],
+				      feature_index,
+				      offset, &len,
+				      lookup_indices);
 
     for (unsigned int i = 0; i < len; i++) {
       hb_ot_map_t::lookup_map_t *lookup = lookups[table_index].push ();
@@ -59,6 +59,30 @@ hb_ot_map_t::add_lookups (hb_face_t    *face,
   } while (len == ARRAY_LENGTH (lookup_indices));
 }
 
+hb_ot_map_builder_t::hb_ot_map_builder_t (hb_face_t *face_,
+					  const hb_segment_properties_t *props_)
+{
+  memset (this, 0, sizeof (*this));
+
+  face = face_;
+  props = *props_;
+
+
+  /* Fetch script/language indices for GSUB/GPOS.  We need these later to skip
+   * features not available in either table and not waste precious bits for them. */
+
+  hb_tag_t script_tags[3] = {HB_TAG_NONE, HB_TAG_NONE, HB_TAG_NONE};
+  hb_tag_t language_tag;
+
+  hb_ot_tags_from_script (props.script, &script_tags[0], &script_tags[1]);
+  language_tag = hb_ot_tag_from_language (props.language);
+
+  for (unsigned int table_index = 0; table_index < 2; table_index++) {
+    hb_tag_t table_tag = table_tags[table_index];
+    found_script[table_index] = hb_ot_layout_table_choose_script (face, table_tag, script_tags, &script_index[table_index], &chosen_script[table_index]);
+    hb_ot_layout_script_find_language (face, table_tag, script_index[table_index], language_tag, &language_index[table_index]);
+  }
+}
 
 void hb_ot_map_builder_t::add_feature (hb_tag_t tag, unsigned int value, bool global, bool has_fallback)
 {
@@ -114,11 +138,10 @@ void hb_ot_map_t::position (const hb_ot_shape_plan_t *plan, hb_font_t *font, hb_
     hb_ot_layout_position_lookup (font, buffer, lookups[table_index][i].index, lookups[table_index][i].mask);
 }
 
-void hb_ot_map_t::substitute_closure (const hb_ot_shape_plan_t *plan, hb_face_t *face, hb_set_t *glyphs) const
+void hb_ot_map_t::collect_lookups (unsigned int table_index, hb_set_t *lookups_out) const
 {
-  unsigned int table_index = 0;
   for (unsigned int i = 0; i < lookups[table_index].len; i++)
-    hb_ot_layout_substitute_closure_lookup (face, lookups[table_index][i].index, glyphs);
+    hb_set_add (lookups_out, lookups[table_index][i].index);
 }
 
 void hb_ot_map_builder_t::add_pause (unsigned int table_index, hb_ot_map_t::pause_func_t pause_func)
@@ -133,32 +156,17 @@ void hb_ot_map_builder_t::add_pause (unsigned int table_index, hb_ot_map_t::paus
 }
 
 void
-hb_ot_map_builder_t::compile (hb_face_t *face,
-			      const hb_segment_properties_t *props,
-			      hb_ot_map_t &m)
+hb_ot_map_builder_t::compile (hb_ot_map_t &m)
 {
- m.global_mask = 1;
+  m.global_mask = 1;
+
+  for (unsigned int table_index = 0; table_index < 2; table_index++) {
+    m.chosen_script[table_index] = chosen_script[table_index];
+    m.found_script[table_index] = found_script[table_index];
+  }
 
   if (!feature_infos.len)
     return;
-
-
-  /* Fetch script/language indices for GSUB/GPOS.  We need these later to skip
-   * features not available in either table and not waste precious bits for them. */
-
-  hb_tag_t script_tags[3] = {HB_TAG_NONE};
-  hb_tag_t language_tag;
-
-  hb_ot_tags_from_script (props->script, &script_tags[0], &script_tags[1]);
-  language_tag = hb_ot_tag_from_language (props->language);
-
-  unsigned int script_index[2], language_index[2];
-  for (unsigned int table_index = 0; table_index < 2; table_index++) {
-    hb_tag_t table_tag = table_tags[table_index];
-    hb_ot_layout_table_choose_script (face, table_tag, script_tags, &script_index[table_index], &m.chosen_script[table_index]);
-    hb_ot_layout_script_find_language (face, table_tag, script_index[table_index], language_tag, &language_index[table_index]);
-  }
-
 
   /* Sort features and merge duplicates */
   {

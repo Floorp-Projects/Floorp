@@ -242,7 +242,7 @@ hb_ft_get_glyph_name (hb_font_t *font HB_UNUSED,
   FT_Face ft_face = (FT_Face) font_data;
 
   hb_bool_t ret = !FT_Get_Glyph_Name (ft_face, glyph, name, size);
-  if (!ret)
+  if (!ret || (size && !*name))
     snprintf (name, size, "gid%u", glyph);
 
   return ret;

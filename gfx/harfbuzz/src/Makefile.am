@@ -43,7 +43,6 @@ HBSOURCES =  \
 	hb-shape.cc \
 	hb-shape-plan-private.hh \
 	hb-shape-plan.cc \
-	hb-shape-plan.h \
 	hb-shaper-list.hh \
 	hb-shaper-impl-private.hh \
 	hb-shaper-private.hh \
@@ -62,6 +61,7 @@ HBHEADERS = \
 	hb-font.h \
 	hb-set.h \
 	hb-shape.h \
+	hb-shape-plan.h \
 	hb-unicode.h \
 	hb-version.h \
 	$(NULL)
@@ -81,11 +81,12 @@ HBSOURCES += \
 	hb-ot-shape-complex-arabic.cc \
 	hb-ot-shape-complex-arabic-fallback.hh \
 	hb-ot-shape-complex-arabic-table.hh \
+	hb-ot-shape-complex-default.cc \
 	hb-ot-shape-complex-indic.cc \
 	hb-ot-shape-complex-indic-machine.hh \
 	hb-ot-shape-complex-indic-private.hh \
 	hb-ot-shape-complex-indic-table.hh \
-	hb-ot-shape-complex-misc.cc \
+	hb-ot-shape-complex-thai.cc \
 	hb-ot-shape-complex-private.hh \
 	hb-ot-shape-normalize-private.hh \
 	hb-ot-shape-normalize.cc \
@@ -242,7 +243,7 @@ arabic-table: gen-arabic-table.py ArabicShaping.txt UnicodeData.txt
 .PHONY: unicode-tables arabic-table indic-table
 
 EXTRA_DIST += hb-ot-shape-complex-indic-machine.rl
-hb-ot-shape-complex-indic-machine.hh: hb-ot-shape-complex-indic-machine.rl
+$(srcdir)/hb-ot-shape-complex-indic-machine.hh: hb-ot-shape-complex-indic-machine.rl
 	$(AM_V_GEN)$(top_srcdir)/missing --run ragel -e -F1 -o "$@.tmp" "$<" && \
 	mv "$@.tmp" "$@" || ( $(RM) "$@.tmp" && false )
 
