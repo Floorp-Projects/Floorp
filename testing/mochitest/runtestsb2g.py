@@ -482,7 +482,8 @@ def main():
         host,port = options.marionette.split(':')
         kwargs['host'] = host
         kwargs['port'] = int(port)
-    marionette = Marionette(**kwargs)
+
+    marionette = Marionette.getMarionetteOrExit(**kwargs)
 
     auto.marionette = marionette
 
