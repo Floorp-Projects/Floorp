@@ -21,17 +21,6 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-XULTreeGridAccessible::
-  XULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  XULTreeAccessible(aContent, aDoc), xpcAccessibleTable(this)
-{
-  mGenericTypes |= eTable;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridAccessible: nsISupports implementation
 
 NS_IMPL_ISUPPORTS_INHERITED1(XULTreeGridAccessible,
