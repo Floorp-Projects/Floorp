@@ -1644,25 +1644,43 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   cStats.debuggeesSet,
                   "Memory used by the debuggees set.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/script-main"),
-                  cStats.typeInferenceSizes.scripts,
-                  "Memory used during type inference to store type sets of "
-                  "variables and dynamically observed types.");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
+                  cStats.typeInferenceSizes.typeScripts,
+                  "Memory used by type sets associated with scripts.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-main"),
-                  cStats.typeInferenceSizes.objects,
-                  "Memory used during type inference to store types and "
-                  "possible property types of JS objects.");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-results"),
+                  cStats.typeInferenceSizes.typeResults,
+                  "Memory used by dynamic type results produced by scripts.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/tables"),
-                  cStats.typeInferenceSizes.tables,
-                  "Memory used during type inference for compartment-wide "
-                  "tables.");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/analysis-pool"),
+                  cStats.typeInferenceSizes.analysisPool,
+                  "Memory holding transient analysis information used during type inference and "
+                  "compilation.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("analysis-temporary"),
-                  cStats.typeInferenceSizes.temporary,
-                  "Memory used during type inference and compilation to hold "
-                  "transient analysis information.  Cleared on GC.");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-pool"),
+                  cStats.typeInferenceSizes.typePool,
+                  "Memory holding contents of type sets and related data.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/pending-arrays"),
+                  cStats.typeInferenceSizes.pendingArrays,
+                  "Memory used for solving constraints during type inference.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
+                  cStats.typeInferenceSizes.allocationSiteTables,
+                  "Memory indexing type objects associated with allocation sites.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/array-type-tables"),
+                  cStats.typeInferenceSizes.arrayTypeTables,
+                  "Memory indexing type objects associated with array literals.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-type-tables"),
+                  cStats.typeInferenceSizes.objectTypeTables,
+                  "Memory indexing type objects associated with object literals.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-objects"),
+                  cStats.typeInferenceSizes.typeObjects,
+                  "Memory holding miscellaneous additional information associated with type "
+                  "objects.");
 
     CREPORT_BYTES2(cJSPathPrefix + NS_LITERAL_CSTRING("string-chars/non-huge"),
                    cStats.stringCharsNonHuge, nsPrintfCString(

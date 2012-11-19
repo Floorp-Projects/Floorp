@@ -166,7 +166,7 @@ private:
   }
 
   // Shut down media. Called on any thread.
-  void ShutdownMedia();
+  void ShutdownMedia(bool isSynchronous);
 
   nsresult MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aStream);
   nsresult MakeRemoteSource(nsDOMMediaStream* aStream, RemoteSourceStreamInfo** aInfo);

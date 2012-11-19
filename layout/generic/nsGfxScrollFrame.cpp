@@ -1700,7 +1700,7 @@ bool nsGfxScrollFrameInner::IsAlwaysActive() const
 
   // If we have scrolled before, then we should stay active.
   if (mHasBeenScrolled) {
-   return true;
+    return true;
   }
  
   // If we're overflow:hidden, then start as inactive until
@@ -1721,10 +1721,10 @@ void nsGfxScrollFrameInner::MarkInactive()
 
 void nsGfxScrollFrameInner::MarkActive()
 {
+  mScrollingActive = true;
   if (IsAlwaysActive())
     return;
 
-  mScrollingActive = true;
   if (mActivityExpirationState.IsTracked()) {
     gScrollFrameActivityTracker->MarkUsed(this);
   } else {
