@@ -1455,6 +1455,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   , mUpdateScrollbarAttributes(false)
   , mCollapsedResizer(false)
   , mShouldBuildLayer(false)
+  , mHasBeenScrolled(false)
 {
   mScrollingActive = IsAlwaysActive();
 
@@ -1670,56 +1671,6 @@ CanScrollWithBlitting(nsIFrame* aFrame)
   return true;
 }
 
-static void
-InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
-                                        nsIFrame* aMovingFrame,
-                                        const nsDisplayList& aList)
-{
-  for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
-    nsDisplayList* sublist = item->GetSameCoordinateSystemChildren();
-    if (sublist) {
-      InvalidateFixedBackgroundFramesFromList(aBuilder, aMovingFrame, *sublist);
-      continue;
-    }
-    nsIFrame* f = item->GetUnderlyingFrame();
-    if (f &&
-        item->IsVaryingRelativeToMovingFrame(aBuilder, aMovingFrame)) {
-      if (FrameLayerBuilder::NeedToInvalidateFixedDisplayItem(aBuilder, item)) {
-        // FrameLayerBuilder does not take care of scrolling this one
-        f->InvalidateFrame();
-      }
-    }
-  }
-}
-
-static void
-InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
-                                nsIFrame* aMovingFrame,
-                                const nsRect& aUpdateRect)
-{
-  if (!aMovingFrame->PresContext()->MayHaveFixedBackgroundFrames())
-    return;
-
-  NS_ASSERTION(aRootFrame != aMovingFrame,
-               "The root frame shouldn't be the one that's moving, that makes no sense");
-
-  // Build the 'after' display list over the whole area of interest.
-  nsDisplayListBuilder builder(aRootFrame, nsDisplayListBuilder::OTHER, true);
-  builder.EnterPresShell(aRootFrame, aUpdateRect);
-  nsDisplayList list;
-  nsresult rv =
-    aRootFrame->BuildDisplayListForStackingContext(&builder, aUpdateRect, &list);
-  builder.LeavePresShell(aRootFrame, aUpdateRect);
-  if (NS_FAILED(rv))
-    return;
-
-  nsRegion visibleRegion(aUpdateRect);
-  list.ComputeVisibilityForRoot(&builder, &visibleRegion);
-
-  InvalidateFixedBackgroundFramesFromList(&builder, aMovingFrame, list);
-  list.DeleteAll();
-}
-
 bool nsGfxScrollFrameInner::IsIgnoringViewportClipping() const
 {
   if (!mIsRoot)
@@ -1740,11 +1691,23 @@ bool nsGfxScrollFrameInner::ShouldClampScrollPosition() const
 
 bool nsGfxScrollFrameInner::IsAlwaysActive() const
 {
-  // The root scrollframe for a non-chrome document which is the direct
-  // child of a chrome document is always treated as "active".
-  // XXX maybe we should extend this so that IFRAMEs which are fill the
-  // entire viewport (like GMail!) are always active
-  return mIsRoot && mOuter->PresContext()->IsRootContentDocument();
+  // Unless this is the root scrollframe for a non-chrome document 
+  // which is the direct child of a chrome document, we default to not
+  // being "active".
+  if (!(mIsRoot && mOuter->PresContext()->IsRootContentDocument())) {
+     return false;
+  }
+
+  // If we have scrolled before, then we should stay active.
+  if (mHasBeenScrolled) {
+   return true;
+  }
+ 
+  // If we're overflow:hidden, then start as inactive until
+  // we get scrolled manually.
+  ScrollbarStyles styles = GetScrollbarStylesFromFrame();
+  return (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
+          styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
 }
 
 void nsGfxScrollFrameInner::MarkInactive()
@@ -1774,17 +1737,20 @@ void nsGfxScrollFrameInner::MarkActive()
 
 void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
 {
+  // Mark this frame as having been scrolled. If this is the root
+  // scroll frame of a content document, then IsAlwaysActive()
+  // will return true from now on and MarkInactive() won't
+  // have any effect.
+  mHasBeenScrolled = true;
+
   AdjustViews(mScrolledFrame);
   // We need to call this after fixing up the view positions
   // to be consistent with the frame hierarchy.
-  bool invalidate = false;
   bool canScrollWithBlitting = CanScrollWithBlitting(mOuter);
   mOuter->RemoveStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   if (IsScrollingActive()) {
     if (!canScrollWithBlitting) {
       MarkInactive();
-    } else {
-      invalidate = true;
     }
   }
   if (canScrollWithBlitting) {
@@ -1792,16 +1758,6 @@ void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
   }
 
   mOuter->SchedulePaint();
-
-  if (invalidate) {
-    nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
-    nsRect update =
-      GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot);
-    nsRect displayRootUpdate = update.ConvertAppUnitsRoundOut(
-      mOuter->PresContext()->AppUnitsPerDevPixel(),
-      displayRoot->PresContext()->AppUnitsPerDevPixel());
-    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame, displayRootUpdate);
-  }
 }
 
 /**
@@ -3843,14 +3799,8 @@ nsGfxScrollFrameInner::GetCoordAttribute(nsIFrame* aBox, nsIAtom* aAtom,
 }
 
 nsPresState*
-nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
+nsGfxScrollFrameInner::SaveState()
 {
-  // Don't save "normal" state for the root scrollframe; that's
-  // handled via the eDocumentScrollState state id
-  if (mIsRoot && aStateID == nsIStatefulFrame::eNoID) {
-    return nullptr;
-  }
-
   nsIScrollbarMediator* mediator = do_QueryFrame(GetScrolledFrame());
   if (mediator) {
     // child handles its own scroll state, so don't bother saving state here

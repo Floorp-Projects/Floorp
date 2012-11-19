@@ -12,6 +12,7 @@
 
 #include <string.h>
 
+#include "nsCycleCollectionNoteChild.h"
 #include "nsAlgorithm.h"
 #include "nscore.h"
 #include "nsQuickSort.h"
@@ -1268,10 +1269,31 @@ protected:
   }
 };
 
+template <typename E, typename Alloc>
+inline void
+ImplCycleCollectionUnlink(nsTArray<E, Alloc>& aField)
+{
+  aField.Clear();
+}
+
+template <typename E, typename Alloc>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsTArray<E, Alloc>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aFlags |= CycleCollectionEdgeNameArrayFlag;
+  size_t length = aField.Length();
+  for (size_t i = 0; i < length; ++i) {
+    ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
+  }
+}
+
 //
 // Convenience subtypes of nsTArray.
 //
-template<class E>
+template <class E>
 class FallibleTArray : public nsTArray<E, nsTArrayFallibleAllocator>
 {
 public:
@@ -1283,8 +1305,30 @@ public:
   FallibleTArray(const FallibleTArray& other) : base_type(other) {}
 };
 
+template <typename E>
+inline void
+ImplCycleCollectionUnlink(FallibleTArray<E>& aField)
+{
+  aField.Clear();
+}
+
+template <typename E>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            FallibleTArray<E>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aFlags |= CycleCollectionEdgeNameArrayFlag;
+  size_t length = aField.Length();
+  for (size_t i = 0; i < length; ++i) {
+    ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
+  }
+}
+
+
 #ifdef MOZALLOC_HAVE_XMALLOC
-template<class E>
+template <class E>
 class InfallibleTArray : public nsTArray<E, nsTArrayInfallibleAllocator>
 {
 public:
@@ -1295,9 +1339,30 @@ public:
   explicit InfallibleTArray(size_type capacity) : base_type(capacity) {}
   InfallibleTArray(const InfallibleTArray& other) : base_type(other) {}
 };
+
+template <typename E>
+inline void ImplCycleCollectionUnlink(InfallibleTArray<E>& aField)
+{
+  aField.Clear();
+}
+
+template <typename E>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            InfallibleTArray<E>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aFlags |= CycleCollectionEdgeNameArrayFlag;
+  size_t length = aField.Length();
+  for (size_t i = 0; i < length; ++i) {
+    ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
+  }
+}
+
 #endif
 
-template<class TArrayBase, uint32_t N>
+template <class TArrayBase, uint32_t N>
 class nsAutoArrayBase : public TArrayBase
 {
 public:

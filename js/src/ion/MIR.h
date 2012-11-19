@@ -4755,6 +4755,27 @@ class MGetNameCache
     }
 };
 
+class MCallGetIntrinsicValue : public MNullaryInstruction
+{
+    CompilerRootPropertyName name_;
+
+    MCallGetIntrinsicValue(HandlePropertyName name)
+      : name_(name)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CallGetIntrinsicValue);
+
+    static MCallGetIntrinsicValue *New(HandlePropertyName name) {
+        return new MCallGetIntrinsicValue(name);
+    }
+    PropertyName *name() const {
+        return name_;
+    }
+};
+
 class MSetPropertyInstruction : public MBinaryInstruction
 {
     CompilerRootPropertyName name_;
@@ -5245,6 +5266,49 @@ class MIn
 
     TypePolicy *typePolicy() {
         return this;
+    }
+};
+
+
+// Test whether the index is in the array bounds or a hole.
+class MInArray
+  : public MTernaryInstruction
+{
+    bool needsHoleCheck_;
+
+    MInArray(MDefinition *elements, MDefinition *index, MDefinition *initLength, bool needsHoleCheck)
+      : MTernaryInstruction(elements, index, initLength),
+        needsHoleCheck_(needsHoleCheck)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(initLength->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(InArray);
+
+    static MInArray *New(MDefinition *elements, MDefinition *index,
+                         MDefinition *initLength, bool needsHoleCheck) {
+        return new MInArray(elements, index, initLength, needsHoleCheck);
+    }
+
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *initLength() const {
+        return getOperand(2);
+    }
+    bool needsHoleCheck() const {
+        return needsHoleCheck_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Element);
     }
 };
 

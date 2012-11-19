@@ -337,9 +337,9 @@ Preferences.prototype = {
         this._set("WebKitDefaultTextEncodingName", "intl.charset.default",
           function(webkitCharset) {
             // We don't support x-mac-korean (see bug 713516), but it mostly matches
-            // x-windows-949.
+            // EUC-KR.
             if (webkitCharset == "x-mac-korean")
-              return "x-windows-949";
+              return "EUC-KR";
 
             // getCharsetAlias throws if an invalid value is passed in.
             try {

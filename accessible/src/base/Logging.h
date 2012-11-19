@@ -10,10 +10,6 @@
 #include "nscore.h"
 #include "nsAString.h"
 
-class AccEvent;
-class Accessible;
-class DocAccessible;
-
 class nsIDocument;
 class nsINode;
 class nsIRequest;
@@ -23,6 +19,9 @@ class nsIWebProgress;
 namespace mozilla {
 namespace a11y {
 
+class AccEvent;
+class Accessible;
+class DocAccessible;
 class OuterDocAccessible;
 
 namespace logging {

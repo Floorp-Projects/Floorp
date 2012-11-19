@@ -19,11 +19,11 @@ namespace dom {
  * or array buffer object.
  */
 template<typename T,
-         JSObject* UnboxArray(JSContext*, JSObject*, uint32_t*, T**)>
+         JSObject* UnboxArray(JSObject*, uint32_t*, T**)>
 struct TypedArray_base {
-  TypedArray_base(JSContext* cx, JSObject* obj)
+  TypedArray_base(JSObject* obj)
   {
-    mObj = UnboxArray(cx, obj, &mLength, &mData);
+    mObj = UnboxArray(obj, &mLength, &mData);
   }
 
 private:
@@ -54,12 +54,12 @@ public:
 
 
 template<typename T,
-         T* GetData(JSObject*, JSContext*),
-         JSObject* UnboxArray(JSContext*, JSObject*, uint32_t*, T**),
+         T* GetData(JSObject*),
+         JSObject* UnboxArray(JSObject*, uint32_t*, T**),
          JSObject* CreateNew(JSContext*, uint32_t)>
 struct TypedArray : public TypedArray_base<T,UnboxArray> {
-  TypedArray(JSContext* cx, JSObject* obj) :
-    TypedArray_base<T,UnboxArray>(cx, obj)
+  TypedArray(JSObject* obj) :
+    TypedArray_base<T,UnboxArray>(obj)
   {}
 
   static inline JSObject*
@@ -75,7 +75,7 @@ struct TypedArray : public TypedArray_base<T,UnboxArray> {
       return NULL;
     }
     if (data) {
-      T* buf = static_cast<T*>(GetData(obj, cx));
+      T* buf = static_cast<T*>(GetData(obj));
       memcpy(buf, data, length*sizeof(T));
     }
     return obj;

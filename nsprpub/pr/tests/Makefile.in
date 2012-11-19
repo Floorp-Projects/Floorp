@@ -296,56 +296,19 @@ endif
 
 # Solaris
 ifeq ($(OS_ARCH), SunOS)
-    ifneq ($(OS_RELEASE), 4.1.3_U1)
-        ifdef NS_USE_GCC
-            LDOPTS += -Xlinker -R -Xlinker $(ABSOLUTE_LIB_DIR)
-        else
-            ifeq ($(USE_CPLUS), 1)
-                CC = CC
-            endif
-            LDOPTS += -R $(ABSOLUTE_LIB_DIR)
+    ifdef NS_USE_GCC
+        LDOPTS += -Xlinker -R -Xlinker $(ABSOLUTE_LIB_DIR)
+    else
+        ifeq ($(USE_CPLUS), 1)
+            CC = CC
         endif
+        LDOPTS += -R $(ABSOLUTE_LIB_DIR)
     endif
 
     ifdef USE_PTHREADS
         EXTRA_LIBS = -lpthread
     endif
 endif # SunOS
-
-ifeq ($(OS_ARCH), NEC)
-    EXTRA_LIBS = $(OS_LIBS)
-# This hardcodes in the executable programs the directory to find
-# libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
-# option for ld on other platforms.
-    export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
-endif
-
-ifeq ($(OS_ARCH), NCR)
-# NCR needs to link against -lsocket -lnsl -ldl (and -lc, which is
-# linked implicitly by $(CC)).  Note that we did not link with these
-# system libraries when we built libnspr.so.
-    EXTRA_LIBS = -lsocket -lnsl -ldl
-# This hardcodes in the executable programs the directory to find
-# libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
-# option for ld on other platforms.
-    export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
-endif
-
-ifeq ($(OS_ARCH), NEXTSTEP)
-# balazs.pataki@sztaki.hu: linkage is done in a different pass in the `tests'
-# modeul, so we have to pass the `-posix' flag by "hand" to `ld'
-LDOPTS += -posix
-endif
-
-ifeq ($(OS_ARCH), NEWS-OS)
-# This hardcodes in the executable programs the directory to find
-# libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
-# option for ld on other platforms.
-#export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
-    LIBNSPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
-    LIBPLC = $(dist_libdir)/libplc$(MOD_MAJOR_VERSION).a
-    EXTRA_LIBS = -lsocket -lnsl -lgen -lresolv
-endif
 
 ifeq (,$(filter-out Linux GNU GNU_%,$(OS_ARCH)))
     LDOPTS += -Xlinker -rpath $(ABSOLUTE_LIB_DIR)
@@ -360,14 +323,6 @@ ifeq ($(OS_ARCH), SCOOS)
 EXTRA_LIBS = -lsocket
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
-# option for ld on other platforms.
-export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
-endif
-
-ifeq ($(OS_ARCH),SINIX)
-EXTRA_LIBS = -lsocket -lnsl -lresolv -ldl
-# This hardcodes in the executable programs the directory to find
-# libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.
 export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
 endif
@@ -484,14 +439,12 @@ clean::
 # The following tests call BSD socket functions, so they need to link
 # with -lsocket on some platforms.
 ifeq ($(OS_ARCH),SunOS)
-ifneq ($(OS_RELEASE),4.1.3_U1)
 ifeq ($(USE_IPV6),1)
 $(OBJDIR)/gethost: $(OBJDIR)/gethost.o
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) -lsocket $(EXTRA_LIBS) -o $@
 endif
 $(OBJDIR)/prpoll: $(OBJDIR)/prpoll.o
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) -lsocket $(EXTRA_LIBS) -o $@
-endif
 endif
 
 ifeq ($(USE_PTHREADS), 1)

@@ -1078,7 +1078,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
                          0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
         if (NS_FAILED(rv)) return rv;
         rowFrame->SetSize(nsSize(rowMetrics.width, rowMetrics.height));
-        rowFrame->DidReflow(aPresContext, nullptr, NS_FRAME_REFLOW_FINISHED);
+        rowFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
         rowFrame->DidResize();
 
         if (!aRowForcedPageBreak && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&

@@ -293,7 +293,14 @@ CertErrorRunnable::CheckCertOverrides()
   nsCOMPtr<nsIStrictTransportSecurityService> stss
     = do_GetService(NS_STSSERVICE_CONTRACTID, &nsrv);
   if (NS_SUCCEEDED(nsrv)) {
+    nsCOMPtr<nsISSLSocketControl> sslSocketControl = do_QueryInterface(
+      NS_ISUPPORTS_CAST(nsITransportSecurityInfo*, mInfoObject));
+    uint32_t flags = 0;
+    if (sslSocketControl) {
+      sslSocketControl->GetProviderFlags(&flags);
+    }
     nsrv = stss->IsStsHost(mInfoObject->GetHostName(),
+                           flags,
                            &strictTransportSecurityEnabled);
   }
   if (NS_FAILED(nsrv)) {

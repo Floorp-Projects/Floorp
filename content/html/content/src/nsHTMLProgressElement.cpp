@@ -9,6 +9,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsEventStateManager.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLProgressElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLProgressElement
@@ -27,7 +28,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLProgressElement
   NS_DECL_NSIDOMHTMLPROGRESSELEMENT
@@ -76,8 +77,8 @@ nsHTMLProgressElement::~nsHTMLProgressElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLProgressElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLProgressElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLProgressElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLProgressElement, Element)
 
 DOMCI_NODE_DATA(HTMLProgressElement, nsHTMLProgressElement)
 

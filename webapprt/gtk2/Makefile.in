@@ -30,6 +30,8 @@ LIBS = \
   $(MOZ_GTK2_LIBS) \
   $(NULL)
 
+NSDISTMODE = copy
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += \

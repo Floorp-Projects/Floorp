@@ -14,12 +14,12 @@ LIBRARY_NAME	= gkconomx_s
 LIBXUL_LIBRARY 	= 1
 
 EXPORTS		+= \
-		nsMediaOmxDecoder.h \
+		MediaOmxDecoder.h \
 		$(NULL)
 
 CPPSRCS		= \
-		nsMediaOmxDecoder.cpp \
-		nsMediaOmxReader.cpp \
+		MediaOmxDecoder.cpp \
+		MediaOmxReader.cpp \
 		OmxDecoder.cpp \
 		$(NULL)
 

@@ -7,7 +7,7 @@
 #define MOZILLA_MEDIASTREAMGRAPH_H_
 
 #include "mozilla/Mutex.h"
-#include "nsAudioStream.h"
+#include "AudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
@@ -442,7 +442,7 @@ protected:
     // Amount of time that we've wanted to play silence because of the stream
     // blocking.
     MediaTime mBlockedAudioTime;
-    nsRefPtr<nsAudioStream> mStream;
+    nsRefPtr<AudioStream> mStream;
     TrackID mTrackID;
   };
   nsTArray<AudioOutputStream> mAudioOutputStreams;

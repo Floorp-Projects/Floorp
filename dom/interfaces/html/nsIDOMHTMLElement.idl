@@ -51,8 +51,8 @@ interface nsIDOMHTMLElement : nsIDOMElement
   [binaryname(DOMClick)]
   void click();
            attribute long             tabIndex;
-  [binaryname(DOMFocus)]
   void focus();
+  [binaryname(DOMBlur)]
   void blur();
            attribute DOMString        accessKey;
   readonly attribute DOMString        accessKeyLabel;
@@ -64,7 +64,6 @@ interface nsIDOMHTMLElement : nsIDOMElement
 
 
   // DOM Parsing and Serialization
-  [binaryname(DOMInnerHTML)]
            attribute DOMString        innerHTML;
            attribute DOMString        outerHTML;
   void insertAdjacentHTML(in DOMString position,

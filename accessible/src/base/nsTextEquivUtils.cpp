@@ -32,7 +32,7 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
     return NS_OK;
 
   gInitiatorAcc = aAccessible;
-  if (GetRoleRule(aAccessible->Role()) == eFromSubtree) {
+  if (GetRoleRule(aAccessible->Role()) == eNameFromSubtreeRule) {
     //XXX: is it necessary to care the accessible is not a document?
     if (aAccessible->IsContent()) {
       nsAutoString name;
@@ -213,7 +213,7 @@ nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   // it's not root and not control.
   if (isEmptyTextEquiv) {
     uint32_t nameRule = GetRoleRule(aAccessible->Role());
-    if (nameRule & eFromSubtreeIfRec) {
+    if (nameRule & eNameFromSubtreeIfReqRule) {
       rv = AppendFromAccessibleChildren(aAccessible, aString);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -235,7 +235,7 @@ nsresult
 nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
                                   nsAString *aString)
 {
-  if (GetRoleRule(aAccessible->Role()) != eFromValue)
+  if (GetRoleRule(aAccessible->Role()) != eNameFromValueRule)
     return NS_OK_NO_NAME_CLAUSE_HANDLED;
 
   // Implementation of step f. of text equivalent computation. If the given

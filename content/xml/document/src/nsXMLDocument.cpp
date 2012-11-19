@@ -51,7 +51,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIHTMLDocument.h"
-#include "nsGenericElement.h"
+#include "mozilla/dom/Element.h" // DOMCI_NODE_DATA
 
 // ==================================================================
 // =

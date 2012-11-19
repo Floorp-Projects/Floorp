@@ -286,15 +286,15 @@ private:
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(txMozillaXSLTProcessor)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(txMozillaXSLTProcessor)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEmbeddedStylesheetRoot)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSource)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrincipal)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeddedStylesheetRoot)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrincipal)
     tmp->mVariables.clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(txMozillaXSLTProcessor)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEmbeddedStylesheetRoot)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSource)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeddedStylesheetRoot)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
     txOwningExpandedNameMap<txIGlobalParameter>::iterator iter(tmp->mVariables);
     while (iter.next()) {
         cb.NoteXPCOMChild(static_cast<txVariable*>(iter.value())->getValue());

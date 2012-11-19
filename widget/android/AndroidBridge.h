@@ -366,7 +366,11 @@ public:
     void UnregisterSurfaceTextureFrameListener(jobject surfaceTexture);
 
     void GetGfxInfoData(nsACString& aRet);
-
+    nsresult GetProxyForURI(const nsACString & aSpec,
+                            const nsACString & aScheme,
+                            const nsACString & aHost,
+                            const int32_t      aPort,
+                            nsACString & aResult);
 protected:
     static AndroidBridge *sBridge;
     static StaticAutoPtr<nsTArray<nsCOMPtr<nsISmsRequest> > > sSmsRequests;
@@ -466,6 +470,7 @@ protected:
     jmethodID jShowSurface;
     jmethodID jHideSurface;
     jmethodID jDestroySurface;
+    jmethodID jGetProxyForURI;
 
     jmethodID jNumberOfMessages;
     jmethodID jSendMessage;
@@ -532,6 +537,40 @@ protected:
     int (* Surface_unlockAndPost)(void* surface);
     void (* Region_constructor)(void* region);
     void (* Region_set)(void* region, void* rect);
+};
+
+class AutoJObject {
+public:
+    AutoJObject(JNIEnv* aJNIEnv = NULL) : mObject(NULL)
+    {
+        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+    }
+
+    AutoJObject(JNIEnv* aJNIEnv, jobject aObject)
+    {
+        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+        mObject = aObject;
+    }
+
+    ~AutoJObject() {
+        if (mObject)
+            mJNIEnv->DeleteLocalRef(mObject);
+    }
+
+    jobject operator=(jobject aObject)
+    {
+        if (mObject) {
+            mJNIEnv->DeleteLocalRef(mObject);
+        }
+        return mObject = aObject;
+    }
+
+    operator jobject() {
+        return mObject;
+    }
+private:
+    JNIEnv* mJNIEnv;
+    jobject mObject;
 };
 
 class AutoLocalJNIFrame {

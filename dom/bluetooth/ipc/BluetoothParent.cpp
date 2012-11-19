@@ -505,10 +505,12 @@ BluetoothRequestParent::DoRequest(const ConnectRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TConnectRequest);
 
-  return mService->Connect(aRequest.address(),
-                           aRequest.adapterPath(),
-                           aRequest.profileId(),
-                           mReplyRunnable.get());
+  mService->Connect(aRequest.address(),
+                    aRequest.adapterPath(),
+                    aRequest.profileId(),
+                    mReplyRunnable.get());
+
+  return true;
 }
 
 bool

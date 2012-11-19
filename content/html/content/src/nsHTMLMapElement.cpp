@@ -10,6 +10,7 @@
 #include "nsContentList.h"
 #include "nsCOMPtr.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLMapElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMapElement
@@ -27,7 +28,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLMapElement
   NS_DECL_NSIDOMHTMLMAPELEMENT
@@ -56,12 +57,11 @@ nsHTMLMapElement::nsHTMLMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLMapElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLMapElement,
                                                   nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mAreas,
-                                                       nsIDOMNodeList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAreas)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, Element)
 
 
 DOMCI_NODE_DATA(HTMLMapElement, nsHTMLMapElement)

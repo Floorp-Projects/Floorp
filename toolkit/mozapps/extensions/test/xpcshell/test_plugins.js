@@ -18,7 +18,7 @@ function run_test() {
 
 // Finds the test plugin library
 function get_test_plugin() {
-  var plugins = Services.dirsvc.get("CurProcD", AM_Ci.nsIFile);
+  var plugins = Services.dirsvc.get("GreD", AM_Ci.nsIFile);
   plugins.append("plugins");
   do_check_true(plugins.exists());
 
@@ -104,7 +104,10 @@ function run_test_1() {
         do_check_neq(p.scope, AddonManager.SCOPE_APPLICATION);
         do_check_neq(p.scope, AddonManager.SCOPE_PROFILE);
       } else {
-        do_check_eq(p.scope, AddonManager.SCOPE_APPLICATION);
+        // XXX Prior to landing bug 755724 on mc this will be application,
+        // afterward it will be system.
+        do_check_true(p.scope == AddonManager.SCOPE_APPLICATION ||
+                      p.scope == AddonManager.SCOPE_SYSTEM);
       }
       do_check_true("isCompatibleWith" in p);
       do_check_true("findUpdates" in p);

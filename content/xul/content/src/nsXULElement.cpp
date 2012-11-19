@@ -685,7 +685,7 @@ nsXULElement::MaybeAddPopupListener(nsIAtom* aLocalName)
 void
 nsXULElement::UpdateEditableState(bool aNotify)
 {
-    // Don't call through to nsGenericElement here because the things
+    // Don't call through to Element here because the things
     // it does don't work for cases when we're an editable control.
     nsIContent *parent = GetParent();
 
@@ -1851,11 +1851,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
                 cb.NoteXPCOMChild(name.NodeInfo());
             }
         }
-        for (i = 0; i < elem->mChildren.Length(); ++i) {
-            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i].get(),
-                                                         nsXULPrototypeNode,
-                                                         "mChildren[i]")
-        }
+        ImplCycleCollectionTraverse(cb, elem->mChildren, "mChildren");
     }
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

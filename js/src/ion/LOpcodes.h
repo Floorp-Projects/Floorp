@@ -145,6 +145,7 @@
     _(BindNameCache)                \
     _(CallGetProperty)              \
     _(GetNameCache)                 \
+    _(CallGetIntrinsicValue)        \
     _(CallGetElement)               \
     _(CallSetElement)               \
     _(CallSetProperty)              \
@@ -167,6 +168,7 @@
     _(Floor)                        \
     _(Round)                        \
     _(In)                           \
+    _(InArray)                      \
     _(InstanceOfO)                  \
     _(InstanceOfV)                  \
     _(InterruptCheck)               \

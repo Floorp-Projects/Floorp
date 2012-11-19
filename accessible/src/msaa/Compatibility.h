@@ -9,10 +9,10 @@
 
 #include "mozilla/StandardInteger.h"
 
-class nsAccessNodeWrap;
-
 namespace mozilla {
 namespace a11y {
+
+class nsAccessNodeWrap;
 
 /**
  * Used to get compatibility modes. Note, modes are computed at accessibility

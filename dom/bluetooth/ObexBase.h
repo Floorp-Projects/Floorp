@@ -148,8 +148,14 @@ public:
 
     for (int i = 0; i < length; ++i) {
       if (mHeaders[i]->mId == ObexHeaderId::Name) {
+        /*
+         * According to section 2.2.2 [Name] of IrOBEX spec, we know that
+         * the Name header is "a null terminated Unicode text string describing
+         * the name of the object.", and that's the reason why we need to minus
+         * 1 to get the real length of the file name.
+         */
+        int nameLength = mHeaders[i]->mDataLength / 2 - 1;
         uint8_t* ptr = mHeaders[i]->mData.get();
-        int nameLength = mHeaders[i]->mDataLength / 2;
 
         for (int j = 0; j < nameLength; ++j) {
           PRUnichar c = ((((uint32_t)ptr[j * 2]) << 8) | ptr[j * 2 + 1]);

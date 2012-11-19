@@ -258,13 +258,18 @@ typedef enum {
     SDP_T38_MAX_UDPEC
 } sdp_t38_udpec_e;
 
+/* Bitmaps for manipulating sdp_direction_e */
+typedef enum {
+    SDP_DIRECTION_FLAG_SEND=0x01,
+    SDP_DIRECTION_FLAG_RECV=0x02
+} sdp_direction_flag_e;
 
 /* Media flow direction */
 typedef enum {
-    SDP_DIRECTION_INACTIVE,
-    SDP_DIRECTION_SENDONLY,
-    SDP_DIRECTION_RECVONLY,
-    SDP_DIRECTION_SENDRECV,
+    SDP_DIRECTION_INACTIVE = 0,
+    SDP_DIRECTION_SENDONLY = SDP_DIRECTION_FLAG_SEND,
+    SDP_DIRECTION_RECVONLY = SDP_DIRECTION_FLAG_RECV,
+    SDP_DIRECTION_SENDRECV = SDP_DIRECTION_FLAG_SEND | SDP_DIRECTION_FLAG_RECV,
     SDP_MAX_QOS_DIRECTIONS
 } sdp_direction_e;
 

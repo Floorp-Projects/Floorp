@@ -83,7 +83,6 @@ endif
 
 # Solaris
 ifeq ($(OS_ARCH), SunOS)
-ifneq ($(OS_RELEASE), 4.1.3_U1)
 ifdef NS_USE_GCC
 LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(dist_libdir)
 else
@@ -94,26 +93,7 @@ ifdef USE_PTHREADS
 EXTRA_LIBS = -lpthread
 endif # USE_PTHREADS
 endif # NS_USE_GCC
-endif # 4.1.3_U1
 endif # SunOS
-
-ifeq ($(OS_ARCH), NCR)
-# XXX: We see some strange problems when we link with libnspr.so.
-# So for now we use static libraries on NCR.  The shared library
-# stuff below is commented out.
-LIBPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
-LIBPRSTRMS = $(dist_libdir)/libprstrms$(MOD_MAJOR_VERSION).a
-EXTRA_LIBS = -lsocket -lnsl -ldl
-
-# NCR needs to link against -lsocket -lnsl (and -lc, which is linked
-# implicitly by $(CC)) again even though we already linked with these
-# system libraries when we built libnspr.so.
-#EXTRA_LIBS = -lsocket -lnsl
-# This hardcodes in the executable programs the directory to find
-# libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
-# option for ld on other platforms.
-#export LD_RUN_PATH = $(PWD)/$(dist_libdir)
-endif
 
 ifeq ($(OS_ARCH), SCOOS)
 # SCO Unix needs to link against -lsocket again even though we

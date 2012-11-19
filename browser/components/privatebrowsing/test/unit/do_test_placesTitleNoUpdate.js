@@ -38,44 +38,6 @@ function do_test()
   {
     do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
 
-    pb.privateBrowsingEnabled = true;
-
-    let place = {
-      uri: TEST_URI,
-      title: TITLE_2,
-      visits: [{
-        visitDate: Date.now() * 2000,
-        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
-      }]
-    };
-
-    PlacesUtils.asyncHistory.updatePlaces(place, {
-      handleError: function (aResultCode) {
-        // We expect this error in Private Browsing mode.
-        do_check_eq(aResultCode, Cr.NS_ERROR_ILLEGAL_VALUE);
-      },
-      handleResult: function () do_throw("Unexpected success adding visit."),
-      handleCompletion: function () afterAddSecondVisit()
-    });
-  }
-
-  function afterAddSecondVisit()
-  {
-    do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
-
-    pb.privateBrowsingEnabled = false;
-
-    do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
-
-    pb.privateBrowsingEnabled = true;
-
-    PlacesUtils.bhistory.setPageTitle(TEST_URI, TITLE_2);
-    do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
-
-    pb.privateBrowsingEnabled = false;
-
-    do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
-
     waitForClearHistory(do_test_finished);
   }
 }

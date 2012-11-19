@@ -50,15 +50,16 @@ function test()
       startTime: 1180493839859230,
       endTime: 1180493839859239,
       state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-      currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+      currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+      guid: "a1bcD23eF4g5"
     };
     let db = Cc["@mozilla.org/download-manager;1"].
              getService(Ci.nsIDownloadManager).DBConnection;
     let stmt = db.createStatement(
       "INSERT INTO moz_downloads (name, source, target, startTime, endTime, " +
-        "state, currBytes, maxBytes, preferredAction, autoResume) " +
+        "state, currBytes, maxBytes, preferredAction, autoResume, guid) " +
       "VALUES (:name, :source, :target, :startTime, :endTime, :state, " +
-        ":currBytes, :maxBytes, :preferredAction, :autoResume)");
+        ":currBytes, :maxBytes, :preferredAction, :autoResume, :guid)");
     try {
       for (let prop in data)
         stmt.params[prop] = data[prop];

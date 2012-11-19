@@ -24,8 +24,6 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
-
 #include "hb-shape-plan-private.hh"
 #include "hb-shaper-private.hh"
 #include "hb-font-private.hh"
@@ -119,7 +117,7 @@ hb_shape_plan_get_empty (void)
 
     true, /* default_shaper_list */
     NULL, /* face */
-    _HB_BUFFER_PROPS_DEFAULT, /* props */
+    HB_SEGMENT_PROPERTIES_DEFAULT, /* props */
 
     NULL, /* shaper_func */
 
@@ -153,9 +151,26 @@ hb_shape_plan_destroy (hb_shape_plan_t *shape_plan)
   free (shape_plan);
 }
 
+hb_bool_t
+hb_shape_plan_set_user_data (hb_shape_plan_t    *shape_plan,
+			     hb_user_data_key_t *key,
+			     void *              data,
+			     hb_destroy_func_t   destroy,
+			     hb_bool_t           replace)
+{
+  return hb_object_set_user_data (shape_plan, key, data, destroy, replace);
+}
+
+void *
+hb_shape_plan_get_user_data (hb_shape_plan_t    *shape_plan,
+			     hb_user_data_key_t *key)
+{
+  return hb_object_get_user_data (shape_plan, key);
+}
+
 
 hb_bool_t
-hb_shape_plan_execute (hb_shape_plan      *shape_plan,
+hb_shape_plan_execute (hb_shape_plan_t    *shape_plan,
 		       hb_font_t          *font,
 		       hb_buffer_t        *buffer,
 		       const hb_feature_t *features,

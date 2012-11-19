@@ -12,13 +12,14 @@
                 android:padding="7dip">
 
     <ImageView android:id="@+id/suggestion_icon"
-               android:layout_width="32dip"
-               android:layout_height="32dip"
+               android:layout_width="@dimen/awesomebar_row_favicon_bg"
+               android:layout_height="@dimen/awesomebar_row_favicon_bg"
                android:layout_marginLeft="6dip"
                android:layout_marginRight="6dip"
-               android:minWidth="32dip"
-               android:minHeight="32dip"
-               android:scaleType="fitCenter"/>
+               android:minWidth="@dimen/awesomebar_row_favicon_bg"
+               android:minHeight="@dimen/awesomebar_row_favicon_bg"
+               android:scaleType="center"
+               android:background="@drawable/awesomebar_row_favicon_bg"/>
 
     <org.mozilla.gecko.FlowLayout android:id="@+id/suggestion_layout"
                                   android:layout_toRightOf="@id/suggestion_icon"

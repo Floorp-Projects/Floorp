@@ -20,7 +20,6 @@
 #include "nsDOMAttributeMap.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStubMutationObserver.h"
-#include "nsGenericElement.h"
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr and nsIDOMNode

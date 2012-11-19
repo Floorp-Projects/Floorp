@@ -30,6 +30,7 @@
 #include "nsEventDispatcher.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsMediaError.h"
+#include "MediaDecoder.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -75,20 +76,6 @@ nsHTMLVideoElement::nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
 nsHTMLVideoElement::~nsHTMLVideoElement()
 {
-}
-
-void
-nsHTMLVideoElement::GetItemValueText(nsAString& aValue)
-{
-  // Can't call GetSrc because we don't have a JSContext
-  GetURIAttr(nsGkAtoms::src, nullptr, aValue);
-}
-
-void
-nsHTMLVideoElement::SetItemValueText(const nsAString& aValue)
-{
-  // Can't call SetSrc because we don't have a JSContext
-  SetAttr(kNameSpaceID_None, nsGkAtoms::src, aValue, true);
 }
 
 nsresult nsHTMLVideoElement::GetVideoSize(nsIntSize* size)

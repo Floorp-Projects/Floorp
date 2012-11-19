@@ -118,6 +118,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_parse_ident.html \
 		test_parse_rule.html \
 		test_parse_url.html \
+		test_parser_diagnostics_unprintables.html \
 		test_pixel_lengths.html \
 		test_pointer-events.html \
 		test_property_database.html \
@@ -187,6 +188,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		visited_image_loading_frame_empty.html \
 		test_load_events_on_stylesheets.html \
 		test_bug721136.html \
+		test_page_parser.html \
 		test_bug732153.html \
 		test_bug732209.html \
 		bug732209-css.sjs \

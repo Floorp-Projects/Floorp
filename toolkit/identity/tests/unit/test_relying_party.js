@@ -155,6 +155,45 @@ function test_request() {
   RelyingParty.request(mockedDoc.id, {});
 }
 
+/*
+ * ensure the forceAuthentication param can be passed through
+ */
+function test_request_forceAuthentication() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL, function(action, params) {});
+
+  RelyingParty.watch(mockedDoc);
+
+  makeObserver("identity-request", function(aSubject, aTopic, aData) {
+    do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.forceAuthentication, true);
+    do_test_finished();
+    run_next_test();
+  });
+
+  RelyingParty.request(mockedDoc.id, {forceAuthentication: true});
+}
+
+/*
+ * ensure the issuer can be forced
+ */
+function test_request_forceIssuer() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL, function(action, params) {});
+
+  RelyingParty.watch(mockedDoc);
+
+  makeObserver("identity-request", function(aSubject, aTopic, aData) {
+    do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.issuer, "https://ozten.co.uk");
+    do_test_finished();
+    run_next_test();
+  });
+
+  RelyingParty.request(mockedDoc.id, {issuer: "https://ozten.co.uk"});
+}
 function test_logout() {
   do_test_pending();
 
@@ -197,12 +236,17 @@ function test_logout() {
   });
 }
 
-let TESTS = [];
-
-TESTS = TESTS.concat([test_watch_loggedin_ready, test_watch_loggedin_login, test_watch_loggedin_logout]);
-TESTS = TESTS.concat([test_watch_notloggedin_ready, test_watch_notloggedin_logout]);
-TESTS.push(test_request);
-TESTS.push(test_logout);
+let TESTS = [
+  test_watch_loggedin_ready,
+  test_watch_loggedin_login,
+  test_watch_loggedin_logout,
+  test_watch_notloggedin_ready,
+  test_watch_notloggedin_logout,
+  test_request,
+  test_request_forceAuthentication,
+  test_request_forceIssuer,
+  test_logout
+];
 
 TESTS.forEach(add_test);
 

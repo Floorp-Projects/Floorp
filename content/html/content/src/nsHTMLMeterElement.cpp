@@ -10,6 +10,7 @@
 #include "nsEventStateManager.h"
 #include "nsAlgorithm.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLMeterElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLMeterElement
@@ -28,7 +29,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   /* nsIDOMHTMLElement */
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   /* nsIDOMHTMLMeterElement */
   NS_DECL_NSIDOMHTMLMETERELEMENT
@@ -95,8 +96,8 @@ nsHTMLMeterElement::~nsHTMLMeterElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLMeterElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLMeterElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLMeterElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLMeterElement, Element)
 
 DOMCI_NODE_DATA(HTMLMeterElement, nsHTMLMeterElement)
 

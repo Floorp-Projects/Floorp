@@ -36,8 +36,10 @@ const OBSERVING = [
   "quit-application-requested", "quit-application-granted",
   "browser-lastwindow-close-granted",
   "quit-application", "browser:purge-session-history",
-  "private-browsing", "browser:purge-domain-data",
-  "private-browsing-change-granted"
+  "browser:purge-domain-data"
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+  ,"private-browsing", "private-browsing-change-granted"
+#endif
 ];
 
 // XUL Window properties to (re)store
@@ -79,6 +81,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/debug.js");
 Cu.import("resource:///modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -259,8 +263,10 @@ let SessionStoreInternal = {
   // counts the number of crashes since the last clean start
   _recentCrashes: 0,
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
   // whether we are in private browsing mode
   _inPrivateBrowsing: false,
+#endif
 
   // whether the last window was closed and should be restored
   _restoreLastWindow: false,
@@ -299,8 +305,12 @@ let SessionStoreInternal = {
 
   /* ........ Public Getters .............. */
   get canRestoreLastSession() {
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    return this._lastSessionState;
+#else
     // Always disallow restoring the previous session when in private browsing
     return this._lastSessionState && !this._inPrivateBrowsing;
+#endif
   },
 
   set canRestoreLastSession(val) {
@@ -321,9 +331,11 @@ let SessionStoreInternal = {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     var pbs = Cc["@mozilla.org/privatebrowsing;1"].
               getService(Ci.nsIPrivateBrowsingService);
     this._inPrivateBrowsing = pbs.privateBrowsingEnabled;
+#endif
 
     this._initPrefs();
 
@@ -441,7 +453,16 @@ let SessionStoreInternal = {
         this._prefBranch.getBoolPref("sessionstore.resume_session_once"))
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
 
+    this._initEncoding();
+
     this._initialized = true;
+  },
+
+  _initEncoding : function ssi_initEncoding() {
+    // The (UTF-8) encoder used to write to files.
+    XPCOMUtils.defineLazyGetter(this, "_writeFileEncoder", function () {
+      return new TextEncoder();
+    });
   },
 
   _initPrefs : function() {
@@ -571,12 +592,14 @@ let SessionStoreInternal = {
       case "timer-callback": // timer call back for delayed saving
         this.onTimerCallback();
         break;
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
       case "private-browsing":
         this.onPrivateBrowsing(aSubject, aData);
         break;
       case "private-browsing-change-granted":
         this.onPrivateBrowsingChangeGranted(aData);
         break;
+#endif
     }
   },
 
@@ -658,6 +681,10 @@ let SessionStoreInternal = {
     // and create its internal data object
     this._internalWindows[aWindow.__SSi] = { hosts: {} }
 
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    if (PrivateBrowsingUtils.isWindowPrivate(aWindow))
+      this._windows[aWindow.__SSi].isPrivate = true;
+#endif
     if (!this._isWindowLoaded(aWindow))
       this._windows[aWindow.__SSi]._restoring = true;
     if (!aWindow.toolbar.visible)
@@ -696,8 +723,12 @@ let SessionStoreInternal = {
       this.restoreWindow(aWindow, this._statesToRestore[aWindow.__SS_restoreID], true, followUp);
     }
     else if (this._restoreLastWindow && aWindow.toolbar.visible &&
-             this._closedWindows.length &&
-             !this._inPrivateBrowsing) {
+             this._closedWindows.length
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+             && !this._inPrivateBrowsing
+#endif
+             ) {
+      
       // default to the most-recently closed window
       // don't use popup windows
       let closedWindowState = null;
@@ -1125,6 +1156,7 @@ let SessionStoreInternal = {
     this.saveState();
   },
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
   /**
    * On private browsing
    * @param aSubject
@@ -1181,6 +1213,7 @@ let SessionStoreInternal = {
 
     this._clearRestoringWindows();
   },
+#endif
 
   /**
    * set up listeners for a new tab
@@ -3620,7 +3653,11 @@ let SessionStoreInternal = {
       this._dirtyWindows[aWindow.__SSi] = true;
     }
 
-    if (!this._saveTimer && !this._inPrivateBrowsing) {
+    if (!this._saveTimer
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+        && !this._inPrivateBrowsing
+#endif
+       ) {
       // interval until the next disk operation is allowed
       var minimalDelay = this._lastSaveTime + this._interval - Date.now();
 
@@ -3642,9 +3679,11 @@ let SessionStoreInternal = {
    *        Bool update all windows
    */
   saveState: function ssi_saveState(aUpdateAll) {
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     // if we're in private browsing mode, do nothing
     if (this._inPrivateBrowsing)
       return;
+#endif
 
     // If crash recovery is disabled, we only want to resume with pinned tabs
     // if we crash.
@@ -3657,6 +3696,20 @@ let SessionStoreInternal = {
       TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_MS");
       return;
     }
+
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    // Forget about private windows.
+    for (let i = oState.windows.length - 1; i >= 0; i--) {
+      if (oState.windows[i].isPrivate) {
+        oState.windows.splice(i, 1);
+      }
+    }
+    for (let i = oState._closedWindows.length - 1; i >= 0; i--) {
+      if (oState._closedWindows[i].isPrivate) {
+        oState._closedWindows.splice(i, 1);
+      }
+    }
+#endif
 
 #ifndef XP_MACOSX
     // We want to restore closed windows that are marked with _shouldRestore.
@@ -3821,6 +3874,12 @@ let SessionStoreInternal = {
       if (aFeature in winState && !isNaN(winState[aFeature]))
         features += "," + aFeature + "=" + winState[aFeature];
     });
+
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    if (winState.isPrivate) {
+      features += ",private";
+    }
+#endif
 
     var window =
       Services.ww.openWindow(null, this._prefBranch.getCharPref("chromeURL"),
@@ -4435,27 +4494,21 @@ let SessionStoreInternal = {
   _writeFile: function ssi_writeFile(aFile, aData) {
     let refObj = {};
     TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
-    // Initialize the file output stream.
-    var ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                  createInstance(Ci.nsIFileOutputStream);
-    ostream.init(aFile, 0x02 | 0x08 | 0x20, 0600, ostream.DEFER_OPEN);
+    let path = aFile.path;
+    let encoded = this._writeFileEncoder.encode(aData);
+    let promise = OS.File.writeAtomic(path, encoded, {tmpPath: path + ".tmp"});
 
-    // Obtain a converter to convert our data to a UTF-8 encoded input stream.
-    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    // Asynchronously copy the data to the file.
-    var istream = converter.convertToInputStream(aData);
-    var self = this;
-    NetUtil.asyncCopy(istream, ostream, function(rc) {
-      if (Components.isSuccessCode(rc)) {
+    promise.then(
+      function onSuccess() {
         TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
         Services.obs.notifyObservers(null,
-                                     "sessionstore-state-write-complete",
-                                     "");
-      }
-    });
+                                      "sessionstore-state-write-complete",
+                                      "");
+      },
+      function onFailure(reason) {
+        TelemetryStopwatch.cancel("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
+        Components.reportError("ssi_writeFile failure " + reason);
+      });
   }
 };
 

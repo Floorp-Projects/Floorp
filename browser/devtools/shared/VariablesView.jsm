@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
 
 Components.utils.import('resource://gre/modules/Services.jsm');
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["VariablesView", "create"];
 
@@ -139,8 +141,8 @@ VariablesView.prototype = {
   set enumVisible(aFlag) {
     this._enumVisible = aFlag;
 
-    for (let [_, scope] in this) {
-      scope._nonEnumVisible = aFlag;
+    for (let [, scope] in this) {
+      scope._enumVisible = aFlag;
     }
   },
 
@@ -151,7 +153,7 @@ VariablesView.prototype = {
   set nonEnumVisible(aFlag) {
     this._nonEnumVisible = aFlag;
 
-    for (let [_, scope] in this) {
+    for (let [, scope] in this) {
       scope._nonEnumVisible = aFlag;
     }
   },
@@ -216,13 +218,17 @@ VariablesView.prototype = {
    *        The variable or property to search for.
    */
   performSearch: function VV_performSerch(aQuery) {
-    if (!aQuery) {
-      for (let [_, item] of this._currHierarchy) {
-        item._match = true;
-      }
-    } else {
-      for (let [_, scope] in this) {
-        scope._performSearch(aQuery.toLowerCase());
+    for (let [, scope] in this) {
+      switch (aQuery) {
+        case "":
+          scope.expand();
+          // fall through
+        case null:
+          scope._performSearch("");
+          break;
+        default:
+          scope._performSearch(aQuery.toLowerCase());
+          break;
       }
     }
   },
@@ -231,8 +237,8 @@ VariablesView.prototype = {
    * Expands the first search results in this container.
    */
   expandFirstSearchResults: function VV_expandFirstSearchResults() {
-    for (let [_, scope] in this) {
-      for (let [_, variable] in scope) {
+    for (let [, scope] in this) {
+      for (let [, variable] in scope) {
         if (variable._isMatch) {
           variable.expand();
           break;
@@ -366,6 +372,8 @@ function Scope(aView, aName, aFlags = {}) {
   this.expand = this.expand.bind(this);
   this.collapse = this.collapse.bind(this);
   this.toggle = this.toggle.bind(this);
+  this._openEnum = this._openEnum.bind(this);
+  this._openNonEnum = this._openNonEnum.bind(this);
 
   this.ownerView = aView;
   this.eval = aView.eval;
@@ -443,24 +451,16 @@ Scope.prototype = {
 
   /**
    * Expands the scope, showing all the added details.
-   *
-   * @param boolean aSkipAnimationFlag
-   *        Pass true to not show an opening animation.
    */
-  expand: function S_expand(aSkipAnimationFlag) {
+  expand: function S_expand() {
     if (this._isExpanded || this._locked) {
       return;
     }
     if (this._variablesView._enumVisible) {
-      this._arrow.setAttribute("open", "");
-      this._enum.setAttribute("open", "");
+      this._openEnum();
     }
     if (this._variablesView._nonEnumVisible) {
-      this._nonenum.setAttribute("open", "");
-    }
-    if (!aSkipAnimationFlag) {
-      this._enum.setAttribute("animated", "");
-      this._nonenum.setAttribute("animated", "");
+      Services.tm.currentThread.dispatch({ run: this._openNonEnum }, 0);
     }
     this._isExpanded = true;
 
@@ -479,8 +479,6 @@ Scope.prototype = {
     this._arrow.removeAttribute("open");
     this._enum.removeAttribute("open");
     this._nonenum.removeAttribute("open");
-    this._enum.removeAttribute("animated");
-    this._nonenum.removeAttribute("animated");
     this._isExpanded = false;
 
     if (this.oncollapse) {
@@ -495,6 +493,11 @@ Scope.prototype = {
     this._wasToggled = true;
     this.expanded ^= 1;
 
+    // Make sure the scope and its contents are visibile.
+    for (let [, variable] in this) {
+      variable.header = true;
+      variable._match = true;
+    }
     if (this.ontoggle) {
       this.ontoggle(this);
     }
@@ -504,6 +507,9 @@ Scope.prototype = {
    * Shows the scope's title header.
    */
   showHeader: function S_showHeader() {
+    if (this._isHeaderVisible) {
+      return;
+    }
     this._target.removeAttribute("non-header");
     this._isHeaderVisible = true;
   },
@@ -513,6 +519,9 @@ Scope.prototype = {
    * This action will automatically expand the scope.
    */
   hideHeader: function S_hideHeader() {
+    if (!this._isHeaderVisible) {
+      return;
+    }
     this.expand();
     this._target.setAttribute("non-header", "");
     this._isHeaderVisible = false;
@@ -522,6 +531,9 @@ Scope.prototype = {
    * Shows the scope's expand/collapse arrow.
    */
   showArrow: function S_showArrow() {
+    if (this._isArrowVisible) {
+      return;
+    }
     this._arrow.removeAttribute("invisible");
     this._isArrowVisible = true;
   },
@@ -530,6 +542,9 @@ Scope.prototype = {
    * Hides the scope's expand/collapse arrow.
    */
   hideArrow: function S_hideArrow() {
+    if (!this._isArrowVisible) {
+      return;
+    }
     this._arrow.setAttribute("invisible", "");
     this._isArrowVisible = false;
   },
@@ -664,11 +679,34 @@ Scope.prototype = {
   },
 
   /**
+   * Adds an event listener for the mouse over event on the title element.
+   * @param function aCallback
+   */
+  set onmouseover(aCallback) {
+    this._title.addEventListener("mouseover", aCallback, false);
+  },
+
+  /**
+   * Opens the enumerable items container.
+   */
+  _openEnum: function S__openEnum() {
+    this._arrow.setAttribute("open", "");
+    this._enum.setAttribute("open", "");
+  },
+
+  /**
+   * Opens the non-enumerable items container.
+   */
+  _openNonEnum: function S__openNonEnum() {
+    this._nonenum.setAttribute("open", "");
+  },
+
+  /**
    * Specifies if enumerable properties and variables should be displayed.
    * @param boolean aFlag
    */
   set _enumVisible(aFlag) {
-    for (let [_, variable] in this) {
+    for (let [, variable] in this) {
       variable._enumVisible = aFlag;
 
       if (!this.expanded) {
@@ -687,7 +725,7 @@ Scope.prototype = {
    * @param boolean aFlag
    */
   set _nonEnumVisible(aFlag) {
-    for (let [_, variable] in this) {
+    for (let [, variable] in this) {
       variable._nonEnumVisible = aFlag;
 
       if (!this.expanded) {
@@ -709,7 +747,7 @@ Scope.prototype = {
    *        The lowercased name of the variable or property to search for.
    */
   _performSearch: function S__performSearch(aLowerCaseQuery) {
-    for (let [_, variable] in this) {
+    for (let [, variable] in this) {
       let currentObject = variable;
       let lowerCaseName = variable._nameString.toLowerCase();
       let lowerCaseValue = variable._valueString.toLowerCase();
@@ -727,8 +765,11 @@ Scope.prototype = {
         // contain some matched properties, so make sure they're visible
         // ("expand downwards").
 
-        if (variable._wasToggled) {
-          variable.expand(true);
+        if (variable._wasToggled && aLowerCaseQuery) {
+          variable.expand();
+        }
+        if (variable._isExpanded && !aLowerCaseQuery) {
+          variable._wasToggled = true;
         }
 
         // If the variable is contained in another scope (variable or property),
@@ -742,12 +783,14 @@ Scope.prototype = {
 
           // Show and expand the parent, as it is certainly accessible.
           variable._match = true;
-          variable.expand(true);
+          aLowerCaseQuery && variable.expand();
         }
       }
 
       // Proceed with the search recursively inside this variable or property.
-      if (variable._wasToggled || variable.expanded || variable.getter || variable.setter) {
+      if (currentObject._wasToggled ||
+          currentObject.getter ||
+          currentObject.setter) {
         currentObject._performSearch(aLowerCaseQuery);
       }
     }
@@ -836,6 +879,7 @@ Scope.prototype = {
  *        The variable's descriptor.
  */
 function Variable(aScope, aName, aDescriptor) {
+  this._displayTooltip = this._displayTooltip.bind(this);
   this._activateInput = this._activateInput.bind(this);
   this._deactivateInput = this._deactivateInput.bind(this);
   this._saveInput = this._saveInput.bind(this);
@@ -918,6 +962,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (this.fetched) {
       return;
     }
+    this.fetched = true;
 
     // Sort all of the properties before adding them.
     let sortedPropertyNames = Object.getOwnPropertyNames(aObject).sort();
@@ -936,8 +981,6 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (prototype) {
       this._addRawValueProperty("__proto__", {}, prototype);
     }
-
-    this.fetched = true;
   },
 
   /**
@@ -1056,7 +1099,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this._idString = generateId(this._nameString = aName);
     this._createScope(aName, "variable");
     this._displayVariable(aDescriptor);
-    this._displayTooltip();
+    this._prepareTooltip();
     this._setAttributes(aName, aDescriptor);
     this._addEventListeners();
 
@@ -1078,7 +1121,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
 
     let separatorLabel = this._separatorLabel = document.createElement("label");
     separatorLabel.className = "plain";
-    separatorLabel.setAttribute("value", ":");
+    separatorLabel.setAttribute("value", this.ownerView.separator);
 
     let valueLabel = this._valueLabel = document.createElement("label");
     valueLabel.className = "value plain";
@@ -1086,22 +1129,33 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this._title.appendChild(separatorLabel);
     this._title.appendChild(valueLabel);
 
-    if (VariablesView.isPrimitive(aDescriptor)) {
+    let isPrimitive = VariablesView.isPrimitive(aDescriptor);
+    let isUndefined = VariablesView.isUndefined(aDescriptor);
+
+    if (isPrimitive || isUndefined) {
       this.hideArrow();
     }
-    if (aDescriptor.get || aDescriptor.set) {
+    if (!isUndefined && (aDescriptor.get || aDescriptor.set)) {
       this.addProperty("get", { value: aDescriptor.get });
       this.addProperty("set", { value: aDescriptor.set });
-      this.expand(true);
+      this.expand();
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
     }
   },
 
   /**
+   * Prepares a tooltip for this variable.
+   */
+  _prepareTooltip: function V__prepareTooltip() {
+    this._target.addEventListener("mouseover", this._displayTooltip, false);
+  },
+
+  /**
    * Creates a tooltip for this variable.
    */
   _displayTooltip: function V__displayTooltip() {
+    this._target.removeEventListener("mouseover", this._displayTooltip, false);
     let document = this.document;
 
     let tooltip = document.createElement("tooltip");
@@ -1173,6 +1227,8 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (!this.eval) {
       return;
     }
+    let window = this.window;
+    let document = this.document;
 
     let title = this._title;
     let valueLabel = this._valueLabel;
@@ -1182,8 +1238,8 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     // element's value location.
     let input = this.document.createElement("textbox");
     input.setAttribute("value", initialString);
-    input.className = "element-input";
-    input.width = valueLabel.clientWidth + 1;
+    input.className = "plain element-input";
+    input.width = this._target.clientWidth;
 
     title.removeChild(valueLabel);
     title.appendChild(input);
@@ -1238,9 +1294,11 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this._deactivateInput(e);
 
     if (initialString != currentString) {
+      this._arrow.setAttribute("invisible", "");
       this._separatorLabel.hidden = true;
       this._valueLabel.hidden = true;
-      this.collapse();
+      this._enum.hidden = true;
+      this._nonenum.hidden = true;
       this.eval("(" + this._symbolicName + "=" + currentString + ")");
     }
   },
@@ -1304,7 +1362,7 @@ create({ constructor: Property, proto: Variable.prototype }, {
     this._idString = generateId(this._nameString = aName);
     this._createScope(aName, "property");
     this._displayVariable(aDescriptor);
-    this._displayTooltip();
+    this._prepareTooltip();
     this._setAttributes(aName, aDescriptor);
     this._addEventListeners();
 
@@ -1350,29 +1408,34 @@ VariablesView.prototype.commitHierarchy = function VV_commitHierarchy() {
     if (currVariable._committed) {
       continue;
     }
+    // Avoid performing expensive operations.
+    if (this.commitHierarchyIgnoredItems[currVariable._nameString]) {
+      continue;
+    }
 
     // Try to get the previous instance of the inspected variable to
     // determine the difference in state.
     let prevVariable = prevHierarchy.get(absoluteName);
+    let expanded = false;
     let changed = false;
 
     // If the inspected variable existed in a previous hierarchy, check if
-    // the displayed value (a representation of the grip) has changed.
+    // the displayed value (a representation of the grip) has changed and if
+    // it was previously expanded.
     if (prevVariable) {
-      let prevString = prevVariable._valueString;
-      let currString = currVariable._valueString;
-      changed = prevString != currString;
-
-      // Re-expand the variable if not previously collapsed.
-      if (prevVariable.expanded) {
-        currVariable.expand(true);
-      }
+      expanded = prevVariable._isExpanded;
+      changed = prevVariable._valueString != currVariable._valueString;
     }
 
     // Make sure this variable is not handled in ulteror commits for the
     // same hierarchy.
     currVariable._committed = true;
 
+    // Re-expand the variable if not previously collapsed.
+    if (expanded) {
+      currVariable._wasToggled = prevVariable._wasToggled;
+      currVariable.expand();
+    }
     // This variable was either not changed or removed, no need to continue.
     if (!changed) {
       continue;
@@ -1391,6 +1454,13 @@ VariablesView.prototype.commitHierarchy = function VV_commitHierarchy() {
     }.bind(this, currVariable.target), LAZY_EMPTY_DELAY + 1);
   }
 };
+
+// Some variables are likely to contain a very large number of properties.
+// It would be a bad idea to re-expand them or perform expensive operations.
+VariablesView.prototype.commitHierarchyIgnoredItems = Object.create(null, {
+  "window": { value: true },
+  "this": { value: true }
+});
 
 /**
  * Returns true if the descriptor represents an undefined, null or
@@ -1421,7 +1491,61 @@ VariablesView.isPrimitive = function VV_isPrimitive(aDescriptor) {
 
   // For convenience, undefined and null are both considered types.
   let type = grip.type;
-  if (["undefined", "null"].indexOf(type + "") != -1) {
+  if (type == "undefined" || type == "null") {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Returns true if the descriptor represents an undefined value.
+ *
+ * @param object aDescriptor
+ *        The variable's descriptor.
+ */
+VariablesView.isUndefined = function VV_isUndefined(aDescriptor) {
+  // For accessor property descriptors, the getter and setter need to be
+  // contained in 'get' and 'set' properties.
+  let getter = aDescriptor.get;
+  let setter = aDescriptor.set;
+  if (typeof getter == "object" && getter.type == "undefined" &&
+      typeof setter == "object" && setter.type == "undefined") {
+    return true;
+  }
+
+  // As described in the remote debugger protocol, the value grip
+  // must be contained in a 'value' property.
+  // For convenience, undefined is considered a type.
+  let grip = aDescriptor.value;
+  if (grip && grip.type == "undefined") {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Returns true if the descriptor represents a falsy value.
+ *
+ * @param object aDescriptor
+ *        The variable's descriptor.
+ */
+VariablesView.isFalsy = function VV_isFalsy(aDescriptor) {
+  if (!aDescriptor || typeof aDescriptor != "object") {
+    return true;
+  }
+
+  // As described in the remote debugger protocol, the value grip
+  // must be contained in a 'value' property.
+  let grip = aDescriptor.value;
+  if (typeof grip != "object") {
+    return !grip;
+  }
+
+  // For convenience, undefined and null are both considered types.
+  let type = grip.type;
+  if (type == "undefined" || type == "null") {
     return true;
   }
 
@@ -1518,6 +1642,30 @@ VariablesView.getClass = function VV_getClass(aGrip) {
 };
 
 /**
+ * Localization convenience methods.
+ */
+let L10N = {
+  /**
+   * L10N shortcut function.
+   *
+   * @param string aName
+   * @return string
+   */
+  getStr: function L10N_getStr(aName) {
+    return this.stringBundle.GetStringFromName(aName);
+  }
+};
+
+XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
+  return Services.strings.createBundle(DBG_STRINGS_URI);
+});
+
+/**
+ * The separator label between the variables or properties name and value.
+ */
+Scope.prototype.separator = L10N.getStr("variablesSeparatorLabel");
+
+/**
  * A monotonically-increasing counter, that guarantees the uniqueness of scope,
  * variables and properties ids.
  *
@@ -1528,9 +1676,9 @@ VariablesView.getClass = function VV_getClass(aGrip) {
  */
 let generateId = (function() {
   let count = 0;
-  return function(aName = "") {
+  return function VV_generateId(aName = "") {
     return aName.toLowerCase().trim().replace(/\s+/g, "-") + (++count);
-  }
+  };
 })();
 
 /**

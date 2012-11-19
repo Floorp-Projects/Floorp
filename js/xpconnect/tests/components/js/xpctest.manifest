@@ -13,4 +13,7 @@ contract @mozilla.org/js/xpc/test/js/InterfaceA;1 {3c8fd2f5-970c-42c6-b5dd-cda1c
 component {ff528c3a-2410-46de-acaa-449aa6403a33} xpctest_interfaces.js
 contract @mozilla.org/js/xpc/test/js/InterfaceB;1 {ff528c3a-2410-46de-acaa-449aa6403a33}
 
+component {90ec5c9e-f6da-406b-9a38-14d00f59db76} xpctest_interfaces.js
+contract @mozilla.org/js/xpc/test/js/TestInterfaceAll;1 {90ec5c9e-f6da-406b-9a38-14d00f59db76}
+
 interfaces xpctest.xpt

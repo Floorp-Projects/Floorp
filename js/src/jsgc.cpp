@@ -213,6 +213,14 @@ const uint32_t Arena::FirstThingOffsets[] = {
  * Finalization order for incrementally swept things.
  */
 
+static const AllocKind FinalizePhaseStrings[] = {
+    FINALIZE_EXTERNAL_STRING
+};
+
+static const AllocKind FinalizePhaseScripts[] = {
+    FINALIZE_SCRIPT
+};
+
 static const AllocKind FinalizePhaseShapes[] = {
     FINALIZE_SHAPE,
     FINALIZE_BASE_SHAPE,
@@ -220,15 +228,21 @@ static const AllocKind FinalizePhaseShapes[] = {
 };
 
 static const AllocKind* FinalizePhases[] = {
+    FinalizePhaseStrings,
+    FinalizePhaseScripts,
     FinalizePhaseShapes
 };
 static const int FinalizePhaseCount = sizeof(FinalizePhases) / sizeof(AllocKind*);
 
 static const int FinalizePhaseLength[] = {
+    sizeof(FinalizePhaseStrings) / sizeof(AllocKind),
+    sizeof(FinalizePhaseScripts) / sizeof(AllocKind),
     sizeof(FinalizePhaseShapes) / sizeof(AllocKind)
 };
 
 static const gcstats::Phase FinalizePhaseStatsPhase[] = {
+    gcstats::PHASE_SWEEP_STRING,
+    gcstats::PHASE_SWEEP_SCRIPT,
     gcstats::PHASE_SWEEP_SHAPE
 };
 
@@ -1703,14 +1717,14 @@ ArenaLists::queueStringsForSweep(FreeOp *fop)
     queueForBackgroundSweep(fop, FINALIZE_SHORT_STRING);
     queueForBackgroundSweep(fop, FINALIZE_STRING);
 
-    finalizeNow(fop, FINALIZE_EXTERNAL_STRING);
+    queueForForegroundSweep(fop, FINALIZE_EXTERNAL_STRING);
 }
 
 void
 ArenaLists::queueScriptsForSweep(FreeOp *fop)
 {
     gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SCRIPT);
-    finalizeNow(fop, FINALIZE_SCRIPT);
+    queueForForegroundSweep(fop, FINALIZE_SCRIPT);
 }
 
 void
@@ -2514,8 +2528,15 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
             MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
-    if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->isCollecting())
+    if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->isCollecting()) {
         MarkAtoms(trc);
+#ifdef JS_ION
+        /* Any Ion wrappers survive until the runtime is being torn down. */
+        if (rt->hasContexts())
+            ion::IonRuntime::Mark(trc);
+#endif
+    }
+
     rt->staticStrings.trace(trc);
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
@@ -4010,6 +4031,10 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
         if (rt->gcIsFull)
             SweepScriptFilenames(rt);
 
+        /* Clear out any small pools that we're hanging on to. */
+        if (JSC::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
+            execAlloc->purge();
+
         /*
          * This removes compartments from rt->compartment, so we do it last to make
          * sure we don't miss sweeping any compartments.
@@ -4574,7 +4599,7 @@ IsDeterministicGCReason(gcreason::Reason reason)
 #endif
 
 static bool
-ShouldCleanUpEverything(JSRuntime *rt, gcreason::Reason reason)
+ShouldCleanUpEverything(JSRuntime *rt, gcreason::Reason reason, JSGCInvocationKind gckind)
 {
     // During shutdown, we must clean everything up, for the sake of leak
     // detection. When a runtime has no contexts, or we're doing a GC before a
@@ -4585,7 +4610,8 @@ ShouldCleanUpEverything(JSRuntime *rt, gcreason::Reason reason)
     // we need to clear everything away.
     return !rt->hasContexts() ||
            reason == gcreason::SHUTDOWN_CC ||
-           reason == gcreason::DEBUG_MODE_GC;
+           reason == gcreason::DEBUG_MODE_GC ||
+           gckind == GC_SHRINK;
 }
 
 static void
@@ -4653,7 +4679,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
             collectedCount++;
     }
 
-    rt->gcShouldCleanUpEverything = ShouldCleanUpEverything(rt, reason);
+    rt->gcShouldCleanUpEverything = ShouldCleanUpEverything(rt, reason, gckind);
 
     gcstats::AutoGCSlice agc(rt->gcStats, collectedCount, compartmentCount, reason);
 
@@ -5876,8 +5902,7 @@ PurgeJITCaches(JSCompartment *c)
 #ifdef JS_ION
 
         /* Discard Ion caches. */
-        if (script->hasIonScript())
-            script->ion->purgeCaches(c);
+        ion::PurgeCaches(script, c);
 
 #endif
     }

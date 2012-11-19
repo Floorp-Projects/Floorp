@@ -12,12 +12,8 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PannerNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PannerNode, AudioNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mConeGain)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDistanceGain)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PannerNode, AudioNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(tmp->mConeGain, AudioParam, "cone gain value")
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(tmp->mDistanceGain, AudioParam, "distance gain value")
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PannerNode)
@@ -39,8 +35,6 @@ PannerNode::PannerNode(AudioContext* aContext)
   , mConeInnerAngle(360.f)
   , mConeOuterAngle(360.f)
   , mConeOuterGain(0.f)
-  , mConeGain(new AudioParam(aContext, 1.f, 0.f, 1.f))
-  , mDistanceGain(new AudioParam(aContext, 1.f, 0.f, 1.f))
 {
 }
 

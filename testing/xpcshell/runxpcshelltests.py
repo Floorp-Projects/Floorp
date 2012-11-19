@@ -121,12 +121,10 @@ class XPCShellTests(object):
     if self.mozInfo is None:
       self.mozInfo = os.path.join(self.testharnessdir, "mozinfo.json")
 
-  def buildEnvironment(self):
+  def buildCoreEnvironment(self):
     """
-      Create and returns a dictionary of self.env to include all the appropriate env variables and values.
-      On a remote system, we overload this to set different values and are missing things like os.environ and PATH.
+      Add environment variables likely to be used across all platforms, including remote systems.
     """
-    self.env = dict(os.environ)
     # Make assertions fatal
     self.env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
     # Don't launch the crash reporter client
@@ -135,6 +133,13 @@ class XPCShellTests(object):
     # disabled by automation.py too
     self.env["NS_TRACE_MALLOC_DISABLE_STACKS"] = "1"
 
+  def buildEnvironment(self):
+    """
+      Create and returns a dictionary of self.env to include all the appropriate env variables and values.
+      On a remote system, we overload this to set different values and are missing things like os.environ and PATH.
+    """
+    self.env = dict(os.environ)
+    self.buildCoreEnvironment()
     if sys.platform == 'win32':
       self.env["PATH"] = self.env["PATH"] + ";" + self.xrePath
     elif sys.platform in ('os2emx', 'os2knix'):

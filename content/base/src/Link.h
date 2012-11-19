@@ -11,11 +11,13 @@
 #ifndef mozilla_dom_Link_h__
 #define mozilla_dom_Link_h__
 
-#include "mozilla/dom/Element.h"
 #include "mozilla/IHistory.h"
+#include "nsIContent.h"
 
 namespace mozilla {
 namespace dom {
+
+class Element;
 
 #define MOZILLA_DOM_LINK_IMPLEMENTATION_IID \
   { 0x7EA57721, 0xE373, 0x458E, \

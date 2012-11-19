@@ -9,11 +9,16 @@
 #include "nsDOMString.h"
 #include "nsContentUtils.h"
 #include "nsIDOMSmsMessage.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "SmsCursor.h"
 #include "SmsMessage.h"
 #include "SmsManager.h"
 #include "mozilla/dom/DOMError.h"
 #include "SmsParent.h"
+#include "jsapi.h"
+#include "DictionaryHelpers.h"
+#include "xpcpublic.h"
 
 #define SUCCESS_EVENT_NAME NS_LITERAL_STRING("success")
 #define ERROR_EVENT_NAME   NS_LITERAL_STRING("error")
@@ -31,8 +36,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(SmsRequest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCursor)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mError)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCursor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsRequest,
@@ -41,8 +46,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsRequest,
     tmp->mResult = JSVAL_VOID;
     tmp->UnrootResult();
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCursor)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mError)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCursor)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(SmsRequest,
@@ -145,12 +150,7 @@ SmsRequest::SetSuccess(nsIDOMMozSmsMessage* aMessage)
 void
 SmsRequest::SetSuccess(bool aResult)
 {
-  NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
-  NS_PRECONDITION(!mError, "mError shouldn't have been set!");
-  NS_PRECONDITION(mResult == JSVAL_NULL, "mResult shouldn't have been set!");
-
-  mResult.setBoolean(aResult);
-  mDone = true;
+  SetSuccess(aResult ? JSVAL_TRUE : JSVAL_FALSE);
 }
 
 void
@@ -166,6 +166,17 @@ SmsRequest::SetSuccess(nsIDOMMozSmsCursor* aCursor)
   if (!mCursor) {
     mCursor = aCursor;
   }
+}
+
+void
+SmsRequest::SetSuccess(const jsval& aResult)
+{
+  NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
+  NS_PRECONDITION(!mError, "mError shouldn't have been set!");
+  NS_PRECONDITION(JSVAL_IS_VOID(mResult), "mResult shouldn't have been set!");
+
+  mResult = aResult;
+  mDone = true;
 }
 
 bool
@@ -443,6 +454,134 @@ SmsRequest::NotifyMarkMessageReadFailed(int32_t aError)
     return SendMessageReply(MessageReply(ReplyMarkeMessageReadFail(aError)));
   }
   return NotifyError(aError);
+}
+
+NS_IMETHODIMP
+SmsRequest::NotifyThreadList(const jsval& aThreadList, JSContext* aCx)
+{
+  MOZ_ASSERT(aThreadList.isObject());
+
+  if (mParent) {
+    JSObject* array = const_cast<JSObject*>(&aThreadList.toObject());
+
+    uint32_t length;
+    bool ok = JS_GetArrayLength(aCx, array, &length);
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    ReplyThreadList reply;
+    InfallibleTArray<ThreadListItem>& ipcItems = reply.items();
+
+    if (length) {
+      ipcItems.SetCapacity(length);
+
+      for (uint32_t i = 0; i < length; i++) {
+        jsval arrayEntry;
+        ok = JS_GetElement(aCx, array, i, &arrayEntry);
+        NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+        MOZ_ASSERT(arrayEntry.isObject());
+
+        SmsThreadListItem item;
+        nsresult rv = item.Init(aCx, &arrayEntry);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        ThreadListItem* ipcItem = ipcItems.AppendElement();
+        ipcItem->senderOrReceiver() = item.senderOrReceiver;
+        ipcItem->timestamp() = item.timestamp;
+        ipcItem->body() = item.body;
+        ipcItem->unreadCount() = item.unreadCount;
+      }
+    }
+
+    return SendMessageReply(reply);
+  }
+
+  return NotifySuccess(aThreadList);
+}
+
+NS_IMETHODIMP
+SmsRequest::NotifyThreadListFailed(int32_t aError)
+{
+  if (mParent) {
+    return SendMessageReply(MessageReply(ReplyThreadListFail(aError)));
+  }
+  return NotifyError(aError);
+}
+
+void
+SmsRequest::NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems)
+{
+  MOZ_ASSERT(!mParent);
+  MOZ_ASSERT(GetOwner());
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_ENSURE_TRUE_VOID(sc);
+
+  JSContext* cx = sc->GetNativeContext();
+  MOZ_ASSERT(cx);
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(GetOwner());
+
+  JSObject* ownerObj = sgo->GetGlobalJSObject();
+  NS_ENSURE_TRUE_VOID(ownerObj);
+
+  nsCxPusher pusher;
+  NS_ENSURE_TRUE_VOID(pusher.Push(cx, false));
+
+  JSAutoRequest ar(cx);
+  JSAutoCompartment ac(cx, ownerObj);
+
+  JSObject* array = JS_NewArrayObject(cx, aItems.Length(), nullptr);
+  NS_ENSURE_TRUE_VOID(array);
+
+  bool ok;
+
+  for (uint32_t i = 0; i < aItems.Length(); i++) {
+    const ThreadListItem& source = aItems[i];
+
+    nsString temp = source.senderOrReceiver();
+
+    jsval senderOrReceiver;
+    ok = xpc::StringToJsval(cx, temp, &senderOrReceiver);
+    NS_ENSURE_TRUE_VOID(ok);
+
+    JSObject* timestampObj = JS_NewDateObjectMsec(cx, source.timestamp());
+    NS_ENSURE_TRUE_VOID(timestampObj);
+
+    jsval timestamp = OBJECT_TO_JSVAL(timestampObj);
+
+    temp = source.body();
+
+    jsval body;
+    ok = xpc::StringToJsval(cx, temp, &body);
+    NS_ENSURE_TRUE_VOID(ok);
+
+    jsval unreadCount = JS_NumberValue(double(source.unreadCount()));
+
+    JSObject* elementObj = JS_NewObject(cx, nullptr, nullptr, nullptr);
+    NS_ENSURE_TRUE_VOID(elementObj);
+
+    ok = JS_SetProperty(cx, elementObj, "senderOrReceiver", &senderOrReceiver);
+    NS_ENSURE_TRUE_VOID(ok);
+
+    ok = JS_SetProperty(cx, elementObj, "timestamp", &timestamp);
+    NS_ENSURE_TRUE_VOID(ok);
+
+    ok = JS_SetProperty(cx, elementObj, "body", &body);
+    NS_ENSURE_TRUE_VOID(ok);
+
+    ok = JS_SetProperty(cx, elementObj, "unreadCount", &unreadCount);
+    NS_ENSURE_TRUE_VOID(ok);
+
+    jsval element = OBJECT_TO_JSVAL(elementObj);
+
+    ok = JS_SetElement(cx, array, i, &element);
+    NS_ENSURE_TRUE_VOID(ok);
+  }
+
+  NotifyThreadList(OBJECT_TO_JSVAL(array), cx);
 }
 
 } // namespace sms

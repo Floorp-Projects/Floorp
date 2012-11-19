@@ -9,34 +9,12 @@
 #include <math.h> // must be first due to symbol conflicts
 
 #include "nsCSSScanner.h"
-#include "nsString.h"
-#include "nsCRT.h"
+#include "nsStyleUtil.h"
+#include "mozilla/css/ErrorReporter.h"
+#include "mozilla/Likely.h"
 #include "mozilla/Util.h"
 
-// for #ifdef CSS_REPORT_PARSE_ERRORS
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
-#include "nsReadableUtils.h"
-#include "nsIURI.h"
-#include "nsIConsoleService.h"
-#include "nsIScriptError.h"
-#include "nsIStringBundle.h"
-#include "nsIDocument.h"
-#include "mozilla/Services.h"
-#include "mozilla/css/Loader.h"
-#include "nsCSSStyleSheet.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Likely.h"
-
-using namespace mozilla;
-
-#ifdef CSS_REPORT_PARSE_ERRORS
-static bool gReportErrors = true;
-static nsIConsoleService *gConsoleService;
-static nsIFactory *gScriptErrorFactory;
-static nsIStringBundle *gStringBundle;
-#endif
+using mozilla::ArrayLength;
 
 static const uint8_t IS_HEX_DIGIT  = 0x01;
 static const uint8_t START_IDENT   = 0x02;
@@ -164,67 +142,88 @@ nsCSSToken::nsCSSToken()
 }
 
 void
-nsCSSToken::AppendToString(nsString& aBuffer)
+nsCSSToken::AppendToString(nsString& aBuffer) const
 {
   switch (mType) {
-    case eCSSToken_AtKeyword:
-      aBuffer.Append(PRUnichar('@')); // fall through intentional
     case eCSSToken_Ident:
-    case eCSSToken_WhiteSpace:
-    case eCSSToken_Function:
-    case eCSSToken_HTMLComment:
-    case eCSSToken_URange:
-      aBuffer.Append(mIdent);
-      if (mType == eCSSToken_Function)
-        aBuffer.Append(PRUnichar('('));
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
       break;
+
+    case eCSSToken_AtKeyword:
+      aBuffer.Append('@');
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
+      break;
+
+    case eCSSToken_ID:
+    case eCSSToken_Ref:
+      aBuffer.Append('#');
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
+      break;
+
+    case eCSSToken_Function:
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
+      aBuffer.Append('(');
+      break;
+
     case eCSSToken_URL:
     case eCSSToken_Bad_URL:
       aBuffer.AppendLiteral("url(");
       if (mSymbol != PRUnichar(0)) {
-        aBuffer.Append(mSymbol);
-      }
-      aBuffer.Append(mIdent);
-      if (mSymbol != PRUnichar(0)) {
-        aBuffer.Append(mSymbol);
+        nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
+      } else {
+        aBuffer.Append(mIdent);
       }
       if (mType == eCSSToken_URL) {
         aBuffer.Append(PRUnichar(')'));
       }
       break;
+
     case eCSSToken_Number:
       if (mIntegerValid) {
         aBuffer.AppendInt(mInteger, 10);
-      }
-      else {
+      } else {
         aBuffer.AppendFloat(mNumber);
       }
       break;
+
     case eCSSToken_Percentage:
       NS_ASSERTION(!mIntegerValid, "How did a percentage token get this set?");
       aBuffer.AppendFloat(mNumber * 100.0f);
       aBuffer.Append(PRUnichar('%'));
       break;
+
     case eCSSToken_Dimension:
       if (mIntegerValid) {
         aBuffer.AppendInt(mInteger, 10);
-      }
-      else {
+      } else {
         aBuffer.AppendFloat(mNumber);
       }
-      aBuffer.Append(mIdent);
+      nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
       break;
+
+    case eCSSToken_Bad_String:
+      nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
+      // remove the trailing quote character
+      aBuffer.Truncate(aBuffer.Length() - 1);
+      break;
+
     case eCSSToken_String:
-      aBuffer.Append(mSymbol);
-      aBuffer.Append(mIdent); // fall through intentional
+      nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
+      break;
+
     case eCSSToken_Symbol:
       aBuffer.Append(mSymbol);
       break;
-    case eCSSToken_ID:
-    case eCSSToken_Ref:
-      aBuffer.Append(PRUnichar('#'));
+
+    case eCSSToken_WhiteSpace:
+      aBuffer.Append(' ');
+      break;
+
+    case eCSSToken_HTMLComment:
+    case eCSSToken_URange:
       aBuffer.Append(mIdent);
       break;
+
     case eCSSToken_Includes:
       aBuffer.AppendLiteral("~=");
       break;
@@ -240,397 +239,35 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Containsmatch:
       aBuffer.AppendLiteral("*=");
       break;
-    case eCSSToken_Bad_String:
-      aBuffer.Append(mSymbol);
-      aBuffer.Append(mIdent);
-      break;
+
     default:
       NS_ERROR("invalid token type");
       break;
   }
 }
 
-class DeferredCleanupRunnable : public nsRunnable
-{
-public:
-  DeferredCleanupRunnable(nsCSSScanner* aToClean)
-    : mToClean(aToClean)
-  {}
-
-  NS_IMETHOD Run() {
-    if (mToClean) {
-      mToClean->PerformDeferredCleanup();
-    }
-
-    return NS_OK;
-  }
-
-  void Revoke() {
-    mToClean = nullptr;
-  }
-
-private:
-  nsCSSScanner* mToClean;
-};
-
-nsCSSScanner::nsCSSScanner()
-  : mReadPointer(nullptr)
+nsCSSScanner::nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber)
+  : mReadPointer(aBuffer.BeginReading())
+  , mOffset(0)
+  , mCount(aBuffer.Length())
+  , mPushback(mLocalPushback)
+  , mPushbackCount(0)
+  , mPushbackSize(ArrayLength(mLocalPushback))
+  , mLineNumber(aLineNumber)
+  , mLineOffset(0)
+  , mRecordStartOffset(0)
+  , mReporter(nullptr)
   , mSVGMode(false)
-#ifdef CSS_REPORT_PARSE_ERRORS
-  , mError(mErrorBuf, ArrayLength(mErrorBuf), 0)
-  , mInnerWindowID(0)
-  , mWindowIDCached(false)
-  , mSheet(nullptr)
-  , mLoader(nullptr)
-#endif
+  , mRecording(false)
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
-  mPushback = mLocalPushback;
-  mPushbackSize = ArrayLength(mLocalPushback);
-  // No need to init the other members, since they represent state
-  // which can get cleared.  We'll init them every time Init() is
-  // called.
 }
 
 nsCSSScanner::~nsCSSScanner()
 {
   MOZ_COUNT_DTOR(nsCSSScanner);
-  Reset();
   if (mLocalPushback != mPushback) {
     delete [] mPushback;
-  }
-}
-
-#ifdef CSS_REPORT_PARSE_ERRORS
-void
-nsCSSScanner::PerformDeferredCleanup()
-{
-  // Clean up all short term caches.
-  mCachedURI = nullptr;
-  mCachedFileName.Truncate();
-
-  // Release our DeferredCleanupRunnable.
-  mDeferredCleaner.Forget();
-}
-
-#define CSS_ERRORS_PREF "layout.css.report_errors"
-
-static int
-CSSErrorsPrefChanged(const char *aPref, void *aClosure)
-{
-  gReportErrors = Preferences::GetBool(CSS_ERRORS_PREF, true);
-  return 0;
-}
-#endif
-
-/* static */ bool
-nsCSSScanner::InitGlobals()
-{
-#ifdef CSS_REPORT_PARSE_ERRORS
-  if (gConsoleService && gScriptErrorFactory)
-    return true;
-  
-  nsresult rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &gConsoleService);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  rv = CallGetClassObject(NS_SCRIPTERROR_CONTRACTID, &gScriptErrorFactory);
-  NS_ENSURE_SUCCESS(rv, false);
-  NS_ASSERTION(gConsoleService && gScriptErrorFactory,
-               "unexpected null pointer without failure");
-
-  Preferences::RegisterCallback(CSSErrorsPrefChanged, CSS_ERRORS_PREF);
-  CSSErrorsPrefChanged(CSS_ERRORS_PREF, nullptr);
-#endif
-  return true;
-}
-
-/* static */ void
-nsCSSScanner::ReleaseGlobals()
-{
-#ifdef CSS_REPORT_PARSE_ERRORS
-  Preferences::UnregisterCallback(CSSErrorsPrefChanged, CSS_ERRORS_PREF);
-  NS_IF_RELEASE(gConsoleService);
-  NS_IF_RELEASE(gScriptErrorFactory);
-  NS_IF_RELEASE(gStringBundle);
-#endif
-}
-
-void
-nsCSSScanner::Init(const nsAString& aBuffer,
-                   nsIURI* aURI, uint32_t aLineNumber,
-                   nsCSSStyleSheet* aSheet, mozilla::css::Loader* aLoader)
-{
-  NS_PRECONDITION(!mReadPointer, "Should not have an existing input buffer!");
-
-  mReadPointer = aBuffer.BeginReading();
-  mCount = aBuffer.Length();
-
-#ifdef CSS_REPORT_PARSE_ERRORS
-  // If aURI is different from mCachedURI, invalidate the filename cache.
-  if (aURI != mCachedURI) {
-    mCachedURI = aURI;
-    mCachedFileName.Truncate();
-  }
-#endif // CSS_REPORT_PARSE_ERRORS
-
-  mLineNumber = aLineNumber;
-
-  // Reset variables that we use to keep track of our progress through the input
-  mOffset = 0;
-  mPushbackCount = 0;
-  mRecording = false;
-
-#ifdef CSS_REPORT_PARSE_ERRORS
-  mColNumber = 0;
-  mSheet = aSheet;
-  mLoader = aLoader;
-#endif
-}
-
-#ifdef CSS_REPORT_PARSE_ERRORS
-
-// @see REPORT_UNEXPECTED_EOF in nsCSSParser.cpp
-#define REPORT_UNEXPECTED_EOF(lf_) \
-  ReportUnexpectedEOF(#lf_)
-
-void
-nsCSSScanner::AddToError(const nsSubstring& aErrorText)
-{
-  if (mError.IsEmpty()) {
-    mErrorLineNumber = mLineNumber;
-    mErrorColNumber = mColNumber;
-    mError = aErrorText;
-  } else {
-    mError.Append(NS_LITERAL_STRING("  ") + aErrorText);
-  }
-}
-
-void
-nsCSSScanner::ClearError()
-{
-  mError.Truncate();
-}
-
-void
-nsCSSScanner::OutputError()
-{
-  if (mError.IsEmpty()) return;
- 
-  // Log it to the Error console
-
-  if (InitGlobals() && gReportErrors) {
-    if (!mWindowIDCached) {
-      if (mSheet) {
-        mInnerWindowID = mSheet->FindOwningWindowInnerID();
-      }
-      if (mInnerWindowID == 0 && mLoader) {
-        nsIDocument* doc = mLoader->GetDocument();
-        if (doc) {
-          mInnerWindowID = doc->InnerWindowID();
-        }
-      }
-      mWindowIDCached = true;
-    }
-
-    nsresult rv;
-    nsCOMPtr<nsIScriptError> errorObject =
-      do_CreateInstance(gScriptErrorFactory, &rv);
-
-    if (NS_SUCCEEDED(rv)) {
-      // Update the cached filename if needed.
-      if (mCachedFileName.IsEmpty()) {
-        if (mCachedURI) {
-          nsAutoCString cFileName;
-          mCachedURI->GetSpec(cFileName);
-          CopyUTF8toUTF16(cFileName, mCachedFileName);
-        } else {
-          mCachedFileName.AssignLiteral("from DOM");
-        }
-      }
-
-      rv = errorObject->InitWithWindowID(mError,
-                                         mCachedFileName,
-                                         EmptyString(),
-                                         mErrorLineNumber,
-                                         mErrorColNumber,
-                                         nsIScriptError::warningFlag,
-                                         "CSS Parser",
-                                         mInnerWindowID);
-      if (NS_SUCCEEDED(rv)) {
-        gConsoleService->LogMessage(errorObject);
-      }
-    }
-  }
-  ClearError();
-}
-
-static bool
-InitStringBundle()
-{
-  if (gStringBundle)
-    return true;
-
-  nsCOMPtr<nsIStringBundleService> sbs =
-    mozilla::services::GetStringBundleService();
-  if (!sbs)
-    return false;
-
-  nsresult rv = 
-    sbs->CreateBundle("chrome://global/locale/css.properties", &gStringBundle);
-  if (NS_FAILED(rv)) {
-    gStringBundle = nullptr;
-    return false;
-  }
-
-  return true;
-}
-
-#define ENSURE_STRINGBUNDLE \
-  PR_BEGIN_MACRO if (!InitStringBundle()) return; PR_END_MACRO
-
-// aMessage must take no parameters
-void nsCSSScanner::ReportUnexpected(const char* aMessage)
-{
-  ENSURE_STRINGBUNDLE;
-
-  nsXPIDLString str;
-  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
-                                   getter_Copies(str));
-  AddToError(str);
-}
-  
-void
-nsCSSScanner::ReportUnexpectedParams(const char* aMessage,
-                                     const PRUnichar **aParams,
-                                     uint32_t aParamsLength)
-{
-  NS_PRECONDITION(aParamsLength > 0, "use the non-params version");
-  ENSURE_STRINGBUNDLE;
-
-  nsXPIDLString str;
-  gStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
-                                      aParams, aParamsLength,
-                                      getter_Copies(str));
-  AddToError(str);
-}
-
-// aLookingFor is a plain string, not a format string
-void
-nsCSSScanner::ReportUnexpectedEOF(const char* aLookingFor)
-{
-  ENSURE_STRINGBUNDLE;
-
-  nsXPIDLString innerStr;
-  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aLookingFor).get(),
-                                   getter_Copies(innerStr));
-
-  const PRUnichar *params[] = {
-    innerStr.get()
-  };
-  nsXPIDLString str;
-  gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
-                                      params, ArrayLength(params),
-                                      getter_Copies(str));
-  AddToError(str);
-}
-
-// aLookingFor is a single character
-void
-nsCSSScanner::ReportUnexpectedEOF(PRUnichar aLookingFor)
-{
-  ENSURE_STRINGBUNDLE;
-
-  const PRUnichar lookingForStr[] = {
-    PRUnichar('\''), aLookingFor, PRUnichar('\''), PRUnichar(0)
-  };
-  const PRUnichar *params[] = { lookingForStr };
-  nsXPIDLString str;
-  gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
-                                      params, ArrayLength(params),
-                                      getter_Copies(str));
-  AddToError(str);
-}
-
-// aMessage must take 1 parameter (for the string representation of the
-// unexpected token)
-void
-nsCSSScanner::ReportUnexpectedToken(nsCSSToken& tok,
-                                    const char *aMessage)
-{
-  ENSURE_STRINGBUNDLE;
-  
-  nsAutoString tokenString;
-  tok.AppendToString(tokenString);
-
-  const PRUnichar *params[] = {
-    tokenString.get()
-  };
-
-  ReportUnexpectedParams(aMessage, params);
-}
-
-// aParams's first entry must be null, and we'll fill in the token
-void
-nsCSSScanner::ReportUnexpectedTokenParams(nsCSSToken& tok,
-                                          const char* aMessage,
-                                          const PRUnichar **aParams,
-                                          uint32_t aParamsLength)
-{
-  NS_PRECONDITION(aParamsLength > 1, "use the non-params version");
-  NS_PRECONDITION(aParams[0] == nullptr, "first param should be empty");
-
-  ENSURE_STRINGBUNDLE;
-  
-  nsAutoString tokenString;
-  tok.AppendToString(tokenString);
-  aParams[0] = tokenString.get();
-
-  ReportUnexpectedParams(aMessage, aParams, aParamsLength);
-}
-
-#else
-
-#define REPORT_UNEXPECTED_EOF(lf_)
-
-#endif // CSS_REPORT_PARSE_ERRORS
-
-void
-nsCSSScanner::Close()
-{
-  Reset();
-
-  // Schedule deferred cleanup for cached data. We want to strike a balance
-  // between performance and memory usage, so we only allow short-term caching.
-#ifdef CSS_REPORT_PARSE_ERRORS
-  if (!mDeferredCleaner.IsPending()) {
-    mDeferredCleaner = new DeferredCleanupRunnable(this);
-    if (NS_FAILED(NS_DispatchToCurrentThread(mDeferredCleaner.get()))) {
-      // Peform the "deferred" cleanup immediately if the dispatch fails.
-      // This will also have the effect of clearing mDeferredCleaner.
-      nsCSSScanner::PerformDeferredCleanup();
-    }
-  }
-#endif
-}
-
-void
-nsCSSScanner::Reset()
-{
-  mReadPointer = nullptr;
-
-  // Clean things up so we don't hold on to memory if our parser gets recycled.
-#ifdef CSS_REPORT_PARSE_ERRORS
-  mError.Truncate();
-  mInnerWindowID = 0;
-  mWindowIDCached = false;
-  mSheet = nullptr;
-  mLoader = nullptr;
-#endif
-
-  if (mPushback != mLocalPushback) {
-    delete [] mPushback;
-    mPushback = mLocalPushback;
-    mPushbackSize = ArrayLength(mLocalPushback);
   }
 }
 
@@ -660,11 +297,7 @@ nsCSSScanner::Read()
       // 0 is a magical line number meaning that we don't know (i.e., script)
       if (mLineNumber != 0)
         ++mLineNumber;
-#ifdef CSS_REPORT_PARSE_ERRORS
-      mColNumber = 0;
-    } else {
-      mColNumber++;
-#endif
+      mLineOffset = 0;
     }
   }
   return rv;
@@ -1043,8 +676,8 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, bool aInString)
         Pushback(ch);
     }
     return true;
-  } 
-  // "Any character except a hexidecimal digit can be escaped to
+  }
+  // "Any character except a hexadecimal digit can be escaped to
   // remove its special meaning by putting a backslash in front"
   // -- CSS1 spec section 7.1
   if (ch == '\n') {
@@ -1097,9 +730,6 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
       }
       // Add to the token what we have so far
       if (n > mOffset) {
-#ifdef CSS_REPORT_PARSE_ERRORS
-        mColNumber += n - mOffset;
-#endif
         aIdent.Append(&mReadPointer[mOffset], n - mOffset);
         mOffset = n;
       }
@@ -1344,7 +974,7 @@ nsCSSScanner::SkipCComment()
     }
   }
 
-  REPORT_UNEXPECTED_EOF(PECommentEOF);
+  mReporter->ReportUnexpectedEOF("PECommentEOF");
   return false;
 }
 
@@ -1366,9 +996,6 @@ nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
             (nextChar == '\n') || (nextChar == '\r') || (nextChar == '\f')) {
           break;
         }
-#ifdef CSS_REPORT_PARSE_ERRORS
-        ++mColNumber;
-#endif
       }
       // Add to the token what we have so far
       if (n > mOffset) {
@@ -1382,16 +1009,13 @@ nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
     }
     if (ch == '\n') {
       aToken.mType = eCSSToken_Bad_String;
-#ifdef CSS_REPORT_PARSE_ERRORS
-      ReportUnexpectedToken(aToken, "SEUnterminatedString");
-#endif
+      mReporter->ReportUnexpected("SEUnterminatedString", aToken);
       break;
     }
     if (ch == '\\') {
       if (!ParseAndAppendEscape(aToken.mIdent, true)) {
         aToken.mType = eCSSToken_Bad_String;
         Pushback(ch);
-#ifdef CSS_REPORT_PARSE_ERRORS
         // For strings, the only case where ParseAndAppendEscape will
         // return false is when there's a backslash to start an escape
         // immediately followed by end-of-stream.  In that case, the
@@ -1399,8 +1023,7 @@ nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
         // the backslash, but as far as the author is concerned, it
         // works pretty much the same as an unterminated string, so we
         // use the same error message.
-        ReportUnexpectedToken(aToken, "SEUnterminatedString");
-#endif
+        mReporter->ReportUnexpected("SEUnterminatedString", aToken);
         break;
       }
     } else {

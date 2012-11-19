@@ -459,7 +459,7 @@ static inline bool match_input (hb_apply_context_t *c,
 
     if (!skippy_iter.next (&property)) return TRACE_RETURN (false);
 
-    if (likely (!match_func (c->buffer->info[skippy_iter.idx].codepoint, input[i - 1], match_data))) return false;
+    if (likely (!match_func (c->buffer->info[skippy_iter.idx].codepoint, input[i - 1], match_data))) return TRACE_RETURN (false);
 
     unsigned int this_lig_id = get_lig_id (c->buffer->info[skippy_iter.idx]);
     unsigned int this_lig_comp = get_lig_comp (c->buffer->info[skippy_iter.idx]);
@@ -491,7 +491,7 @@ static inline bool match_input (hb_apply_context_t *c,
   if (p_total_component_count)
     *p_total_component_count = total_component_count;
 
-  return true;
+  return TRACE_RETURN (true);
 }
 static inline void ligate_input (hb_apply_context_t *c,
 				 unsigned int count, /* Including the first glyph (not matched) */
@@ -655,9 +655,10 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 				 const LookupRecord lookupRecord[], /* Array of LookupRecords--in design order */
 				 apply_lookup_func_t apply_func)
 {
+  hb_auto_trace_t<HB_DEBUG_APPLY> trace (&c->debug_depth, "APPLY", NULL, HB_FUNC, "idx %d codepoint %u", c->buffer->idx, c->buffer->cur().codepoint);
   unsigned int end = c->buffer->len;
   if (unlikely (count == 0 || c->buffer->idx + count > end))
-    return false;
+    return TRACE_RETURN (false);
 
   /* TODO We don't support lookupRecord arrays that are not increasing:
    *      Should be easy for in_place ones at least. */
@@ -669,13 +670,13 @@ static inline bool apply_lookup (hb_apply_context_t *c,
   for (unsigned int i = 0; i < count; /* NOP */)
   {
     if (unlikely (c->buffer->idx == end))
-      return true;
+      return TRACE_RETURN (true);
     while (c->should_mark_skip_current_glyph ())
     {
       /* No lookup applied for this index */
       c->buffer->next_glyph ();
       if (unlikely (c->buffer->idx == end))
-	return true;
+	return TRACE_RETURN (true);
     }
 
     if (lookupCount && i == lookupRecord->sequenceIndex)
@@ -690,7 +691,7 @@ static inline bool apply_lookup (hb_apply_context_t *c,
       /* Err, this is wrong if the lookup jumped over some glyphs */
       i += c->buffer->idx - old_pos;
       if (unlikely (c->buffer->idx == end))
-	return true;
+	return TRACE_RETURN (true);
 
       if (!done)
 	goto not_applied;
@@ -704,7 +705,7 @@ static inline bool apply_lookup (hb_apply_context_t *c,
     }
   }
 
-  return true;
+  return TRACE_RETURN (true);
 }
 
 

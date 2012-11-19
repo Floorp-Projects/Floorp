@@ -322,16 +322,6 @@ public:
   LayerManager* GetRetainingLayerManager() { return mRetainingManager; }
 
   /**
-   * Returns true if the given item (which we assume here is
-   * background-attachment:fixed) needs to be repainted as we scroll in its
-   * document.
-   * Returns false if it doesn't need to be repainted because the layer system
-   * is ensuring its fixed-ness for us.
-   */
-  static bool NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
-                                                 nsDisplayItem* aItem);
-
-  /**
    * Returns true if the given display item was rendered during the previous
    * paint. Returns false otherwise.
    */

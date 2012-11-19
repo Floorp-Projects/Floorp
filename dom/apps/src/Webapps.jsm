@@ -807,6 +807,7 @@ this.DOMApplicationRegistry = {
           app.downloading = false;
           app.downloadAvailable = false;
           app.readyToApplyDownload = true;
+          app.updateTime = Date.now();
           DOMApplicationRegistry._saveApps(function() {
             debug("About to fire Webapps:PackageEvent");
             DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
@@ -967,6 +968,7 @@ this.DOMApplicationRegistry = {
 
       app.name = aManifest.name;
       app.csp = aManifest.csp || "";
+      app.updateTime = Date.now();
 
       // Update the registry.
       this.webapps[id] = app;
@@ -1003,8 +1005,10 @@ this.DOMApplicationRegistry = {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!AppsUtils.checkManifest(manifest, app.installOrigin)) {
+        if (!AppsUtils.checkManifest(manifest)) {
           sendError("INVALID_MANIFEST");
+        } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
+          sendError("INSTALL_FROM_DENIED");
         } else {
           app.etag = xhr.getResponseHeader("Etag");
           app.lastCheckedUpdate = Date.now();
@@ -1300,6 +1304,7 @@ this.DOMApplicationRegistry = {
     let id = this._appIdForManifestURL(aApp.manifestURL);
     let app = this.webapps[id];
 
+    let self = this;
     // Removes the directory we created, and sends an error to the DOM side.
     function cleanup(aError) {
       debug("Cleanup: " + aError);
@@ -1307,10 +1312,10 @@ this.DOMApplicationRegistry = {
       try {
         dir.remove(true);
       } catch (e) { }
-        this.broadcastMessage("Webapps:PackageEvent",
+        self.broadcastMessage("Webapps:PackageEvent",
                               { type: "error",
                                 manifestURL:  aApp.manifestURL,
-                                error: aError});
+                                error: aError });
     }
 
     function getInferedStatus() {
@@ -1335,94 +1340,126 @@ this.DOMApplicationRegistry = {
       return (AppsUtils.getAppManifestStatus(aManifest) <= getInferedStatus());
     }
 
-    debug("About to download " + aManifest.fullPackagePath());
+    function download() {
+      debug("About to download " + aManifest.fullPackagePath());
 
-    let requestChannel = NetUtil.newChannel(aManifest.fullPackagePath())
-                                .QueryInterface(Ci.nsIHttpChannel);
-    this.downloads[aApp.manifestURL] =
-      { channel:requestChannel,
-        appId: id,
-        previousState: aIsUpdate ? "installed" : "pending"
-      };
-    requestChannel.notificationCallbacks = {
-      QueryInterface: function notifQI(aIID) {
-        if (aIID.equals(Ci.nsISupports)          ||
-            aIID.equals(Ci.nsIProgressEventSink))
-          return this;
+      let requestChannel = NetUtil.newChannel(aManifest.fullPackagePath())
+                                  .QueryInterface(Ci.nsIHttpChannel);
+      self.downloads[aApp.manifestURL] =
+        { channel:requestChannel,
+          appId: id,
+          previousState: aIsUpdate ? "installed" : "pending"
+        };
+      requestChannel.notificationCallbacks = {
+        QueryInterface: function notifQI(aIID) {
+          if (aIID.equals(Ci.nsISupports)          ||
+              aIID.equals(Ci.nsIProgressEventSink))
+            return this;
 
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      },
-      getInterface: function notifGI(aIID) {
-        return this.QueryInterface(aIID);
-      },
-      onProgress: function notifProgress(aRequest, aContext,
-                                         aProgress, aProgressMax) {
-        debug("onProgress: " + aProgress + "/" + aProgressMax);
-        app.progress = aProgress;
-        DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
-                                                { type: "progress",
-                                                  manifestURL: aApp.manifestURL,
-                                                  progress: aProgress });
-      },
-      onStatus: function notifStatus(aRequest, aContext, aStatus, aStatusArg) { }
-    }
-
-    NetUtil.asyncFetch(requestChannel,
-    function(aInput, aResult, aRequest) {
-      if (!Components.isSuccessCode(aResult)) {
-        // We failed to fetch the zip.
-        cleanup("NETWORK_ERROR");
-        return;
+          throw Cr.NS_ERROR_NO_INTERFACE;
+        },
+        getInterface: function notifGI(aIID) {
+          return this.QueryInterface(aIID);
+        },
+        onProgress: function notifProgress(aRequest, aContext,
+                                           aProgress, aProgressMax) {
+          debug("onProgress: " + aProgress + "/" + aProgressMax);
+          app.progress = aProgress;
+          self.broadcastMessage("Webapps:PackageEvent",
+                                { type: "progress",
+                                  manifestURL: aApp.manifestURL,
+                                  progress: aProgress });
+        },
+        onStatus: function notifStatus(aRequest, aContext, aStatus, aStatusArg) { }
       }
-      // Copy the zip on disk.
-      let zipFile = FileUtils.getFile("TmpD",
-                                      ["webapps", id, "application.zip"], true);
-      let ostream = FileUtils.openSafeFileOutputStream(zipFile);
-      NetUtil.asyncCopy(aInput, ostream, function (aResult) {
+      NetUtil.asyncFetch(requestChannel,
+      function(aInput, aResult, aRequest) {
         if (!Components.isSuccessCode(aResult)) {
-          // We failed to save the zip.
-          cleanup("DOWNLOAD_ERROR");
+          // We failed to fetch the zip.
+          cleanup("NETWORK_ERROR");
           return;
         }
-
-        let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                        .createInstance(Ci.nsIZipReader);
-        try {
-          zipReader.open(zipFile);
-          if (!zipReader.hasEntry("manifest.webapp")) {
-            throw "No manifest.webapp found.";
+        // Copy the zip on disk.
+        let zipFile = FileUtils.getFile("TmpD",
+                                        ["webapps", id, "application.zip"], true);
+        let ostream = FileUtils.openSafeFileOutputStream(zipFile);
+        NetUtil.asyncCopy(aInput, ostream, function (aResult) {
+          if (!Components.isSuccessCode(aResult)) {
+            // We failed to save the zip.
+            cleanup("DOWNLOAD_ERROR");
+            return;
           }
 
-          let istream = zipReader.getInputStream("manifest.webapp");
+          let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
+                          .createInstance(Ci.nsIZipReader);
+          try {
+            zipReader.open(zipFile);
+            if (!zipReader.hasEntry("manifest.webapp")) {
+              throw "MISSING_MANIFEST";
+            }
 
-          // Obtain a converter to read from a UTF-8 encoded input stream.
-          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                          .createInstance(Ci.nsIScriptableUnicodeConverter);
-          converter.charset = "UTF-8";
+            let istream = zipReader.getInputStream("manifest.webapp");
 
-          let manifest = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(istream,
-                                                               istream.available()) || ""));
+            // Obtain a converter to read from a UTF-8 encoded input stream.
+            let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                            .createInstance(Ci.nsIScriptableUnicodeConverter);
+            converter.charset = "UTF-8";
 
-          if (!AppsUtils.checkManifest(manifest, aApp.installOrigin)) {
-            throw "INVALID_MANIFEST";
+            let manifest = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(istream,
+                                                                 istream.available()) || ""));
+
+            if (!AppsUtils.checkManifest(manifest)) {
+              throw "INVALID_MANIFEST";
+            }
+
+            if (!AppsUtils.checkInstallAllowed(manifest, aApp.installOrigin)) {
+              throw "INSTALL_FROM_DENIED";
+            }
+
+            if (!checkAppStatus(manifest)) {
+              throw "INVALID_SECURITY_LEVEL";
+            }
+
+            if (aOnSuccess) {
+              aOnSuccess(id, manifest);
+            }
+            delete self.downloads[aApp.manifestURL];
+          } catch (e) {
+            // Something bad happened when reading the package.
+            if (typeof e == 'object') {
+              cleanup("INVALID_PACKAGE");
+            } else {
+              cleanup(e);
+            }
+          } finally {
+            zipReader.close();
           }
-
-          if (!checkAppStatus(manifest)) {
-            throw "INVALID_SECURITY_LEVEL";
-          }
-
-          if (aOnSuccess) {
-            aOnSuccess(id, manifest);
-          }
-          delete DOMApplicationRegistry.downloads[aApp.manifestURL];
-        } catch (e) {
-          // XXX we may need new error messages.
-          cleanup(e);
-        } finally {
-          zipReader.close();
-        }
+        });
       });
-    });
+    };
+
+    let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
+                                .navigator.getDeviceStorage("apps");
+    let req = deviceStorage.stat();
+    req.onsuccess = req.onerror = function statResult(e) {
+      // Even if we could not retrieve the device storage free space, we try
+      // to download the package.
+      if (!e.target.result) {
+        download();
+        return;
+      }
+
+      let freeBytes = e.target.result.freeBytes;
+      if (freeBytes) {
+        debug("Free storage: " + freeBytes + ". Download size: " +
+              aApp.downloadSize);
+        if (freeBytes <= aApp.downloadSize) {
+          cleanup("INSUFFICIENT_STORAGE");
+          return;
+        }
+      }
+      download();
+    }
   },
 
   uninstall: function(aData, aMm) {
