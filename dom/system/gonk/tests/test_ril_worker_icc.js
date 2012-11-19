@@ -468,3 +468,32 @@ add_test(function test_stk_proactive_command_event_list() {
 
   run_next_test();
 });
+
+/**
+ * Verify Proactive Command : More Time
+ */
+add_test(function test_stk_proactive_command_more_time() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let more_time_1 = [
+    0xD0,
+    0x09,
+    0x81, 0x03, 0x01, 0x02, 0x00,
+    0x82, 0x02, 0x81, 0x82];
+
+  for(let i = 0 ; i < more_time_1.length; i++) {
+    pduHelper.writeHexOctet(more_time_1[i]);
+  }
+
+  let berTlv = berHelper.decode(more_time_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_MORE_TIME);
+  do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  run_next_test();
+});
