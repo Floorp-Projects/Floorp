@@ -15,6 +15,7 @@
 interface DOMStringMap;
 interface HTMLMenuElement;
 
+[PrefControlled]
 interface HTMLElement : Element {
   // metadata attributes
            attribute DOMString title;
@@ -200,17 +201,17 @@ interface HTMLElement : Element {
   // FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
 
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchstart;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchend;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchmove;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchenter;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchleave;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchcancel;
 
   [SetterThrows]
