@@ -157,6 +157,7 @@ function BreakpointsView() {
   this._onEditorUnload = this._onEditorUnload.bind(this);
   this._onEditorSelection = this._onEditorSelection.bind(this);
   this._onEditorContextMenu = this._onEditorContextMenu.bind(this);
+  this._onEditorContextMenuPopupHidden = this._onEditorContextMenuPopupHidden.bind(this);
   this._onBreakpointClick = this._onBreakpointClick.bind(this);
   this._onCheckboxClick = this._onCheckboxClick.bind(this);
   this._onConditionalPopupShowing = this._onConditionalPopupShowing.bind(this);
@@ -174,6 +175,7 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
     this._container = new StackList(document.getElementById("breakpoints"));
     this._commandset = document.getElementById("debuggerCommands");
     this._popupset = document.getElementById("debuggerPopupset");
+    this._cmPopup = document.getElementById("sourceEditorContextMenu");
     this._cbPanel = document.getElementById("conditional-breakpoint-panel");
     this._cbTextbox = document.getElementById("conditional-breakpoint-textbox");
 
@@ -184,6 +186,7 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
     window.addEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
     window.addEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
     this._container.addEventListener("click", this._onBreakpointClick, false);
+    this._cmPopup.addEventListener("popuphidden", this._onEditorContextMenuPopupHidden, false);
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false)
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false)
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false)
@@ -200,6 +203,7 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
     window.removeEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
     window.removeEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
     this._container.removeEventListener("click", this._onBreakpointClick, false);
+    this._cmPopup.removeEventListener("popuphidden", this._onEditorContextMenuPopupHidden, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false)
@@ -641,6 +645,13 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * The context menu popup hiding listener for the source editor.
+   */
+  _onEditorContextMenuPopupHidden: function DVB__onEditorContextMenuPopupHidden() {
+    this._editorContextMenuLineNumber = -1;
+  },
+
+  /**
    * Called when the add breakpoint key sequence was pressed.
    */
   _onCmdAddBreakpoint: function BP__onCmdAddBreakpoint() {
@@ -920,6 +931,7 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
 
   _popupset: null,
   _commandset: null,
+  _cmPopup: null,
   _cbPanel: null,
   _cbTextbox: null,
   _popupShown: false,
