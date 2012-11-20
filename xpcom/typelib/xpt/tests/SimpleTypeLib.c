@@ -88,16 +88,16 @@ main(int argc, char **argv)
     meth = &id->method_descriptors[0];
     ok = XPT_FillMethodDescriptor(arena, meth, 0, "method1", 0);
     TRY("FillMethodDescriptor", ok);
-    meth->result->flags = 0;
-    meth->result->type.prefix.flags = TD_VOID;
+    meth->result.flags = 0;
+    meth->result.type.prefix.flags = TD_VOID;
 
     /* wstring method2(in uint32_t, in bool) */
     meth = &id->method_descriptors[1];
     ok = XPT_FillMethodDescriptor(arena, meth, 0, "method2", 2);
     TRY("FillMethodDescriptor", ok);
 
-    meth->result->flags = 0;
-    meth->result->type.prefix.flags = TD_PSTRING | XPT_TDP_POINTER;
+    meth->result.flags = 0;
+    meth->result.type.prefix.flags = TD_PSTRING | XPT_TDP_POINTER;
     meth->params[0].type.prefix.flags = TD_UINT32;
     meth->params[0].flags = XPT_PD_IN;
     meth->params[1].type.prefix.flags = TD_BOOL;
