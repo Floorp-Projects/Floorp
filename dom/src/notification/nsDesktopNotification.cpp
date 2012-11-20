@@ -109,7 +109,7 @@ nsDOMDesktopNotification::Init()
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     nsRefPtr<nsDesktopNotificationRequest> copy = request;
 
-    child->SendPContentPermissionRequestConstructor(request,
+    child->SendPContentPermissionRequestConstructor(copy.forget().get(),
                                                     NS_LITERAL_CSTRING("desktop-notification"),
                                                     NS_LITERAL_CSTRING("unused"),
                                                     IPC::Principal(mPrincipal));
