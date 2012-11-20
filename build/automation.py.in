@@ -998,7 +998,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
           self.killPid(processPID)
 
   def checkForCrashes(self, profileDir, symbolsPath):
-    automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath, self.lastTestSeen)
+    return automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath, self.lastTestSeen)
 
   def runApp(self, testURL, env, app, profileDir, extraArgs,
              runSSLTunnel = False, utilityPath = None,
@@ -1066,7 +1066,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     # Do a final check for zombie child processes.
     self.checkForZombies(processLog)
-    self.checkForCrashes(profileDir, symbolsPath)
+
+    crashed = self.checkForCrashes(profileDir, symbolsPath)
+
+    if crashed:
+      status = 1
 
     if os.path.exists(processLog):
       os.unlink(processLog)
