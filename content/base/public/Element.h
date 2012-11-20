@@ -282,33 +282,34 @@ public:
    */
   virtual nsIAtom *GetClassAttributeName() const;
 
-  inline Directionality GetDirectionality() const {
+  inline directionality::Directionality GetDirectionality() const {
     if (HasFlag(NODE_HAS_DIRECTION_RTL)) {
-      return eDir_RTL;
+      return directionality::eDir_RTL;
     }
 
     if (HasFlag(NODE_HAS_DIRECTION_LTR)) {
-      return eDir_LTR;
+      return directionality::eDir_LTR;
     }
 
-    return eDir_NotSet;
+    return directionality::eDir_NotSet;
   }
 
-  inline void SetDirectionality(Directionality aDir, bool aNotify) {
+  inline void SetDirectionality(directionality::Directionality aDir,
+                                bool aNotify) {
     UnsetFlags(NODE_ALL_DIRECTION_FLAGS);
     if (!aNotify) {
       RemoveStatesSilently(DIRECTION_STATES);
     }
 
     switch (aDir) {
-      case (eDir_RTL):
+      case (directionality::eDir_RTL):
         SetFlags(NODE_HAS_DIRECTION_RTL);
         if (!aNotify) {
           AddStatesSilently(NS_EVENT_STATE_RTL);
         }
         break;
 
-      case(eDir_LTR):
+      case(directionality::eDir_LTR):
         SetFlags(NODE_HAS_DIRECTION_LTR);
         if (!aNotify) {
           AddStatesSilently(NS_EVENT_STATE_LTR);
@@ -330,15 +331,6 @@ public:
   }
 
   bool GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult);
-
-  // The bdi element defaults to dir=auto if it has no dir attribute set.
-  // Other elements will only have dir=auto if they have an explicit dir=auto,
-  // which will mean that HasValidDir() returns true but HasFixedDir() returns
-  // false
-  inline bool HasDirAuto() const {
-    return (!HasFixedDir() &&
-            (HasValidDir() || NodeInfo()->Equals(nsGkAtoms::bdi)));
-  }
 
 protected:
   /**

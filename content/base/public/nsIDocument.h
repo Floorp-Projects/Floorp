@@ -419,7 +419,7 @@ public:
     mSandboxFlags = sandboxFlags;
   }
 
-  inline mozilla::Directionality GetDocumentDirectionality() {
+  inline mozilla::directionality::Directionality GetDocumentDirectionality() {
     return mDirectionality;
   }
   
@@ -1916,7 +1916,7 @@ protected:
   uint32_t mSandboxFlags;
 
   // The root directionality of this document.
-  mozilla::Directionality mDirectionality;
+  mozilla::directionality::Directionality mDirectionality;
 
   nsCString mContentLanguage;
 private:
