@@ -46,7 +46,7 @@ nsEmptyStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 nsEmptyStyleRule::List(FILE* out, int32_t aIndent) const
 {
   for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
-  printf("[empty style rule] {}\n");
+  fputs("[empty style rule] {}\n", out);
 }
 #endif
 
@@ -92,7 +92,7 @@ nsInitialStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 nsInitialStyleRule::List(FILE* out, int32_t aIndent) const
 {
   for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
-  printf("[initial style rule] {}\n");
+  fputs("[initial style rule] {}\n", out);
 }
 #endif
 
