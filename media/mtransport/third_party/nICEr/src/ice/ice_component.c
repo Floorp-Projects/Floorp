@@ -80,6 +80,15 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
     component=*componentp;
     *componentp=0;
 
+    /* Detach ourselves from the sockets */
+    if (component->local_component){
+      nr_ice_socket *isock=STAILQ_FIRST(&component->local_component->sockets);
+      while(isock){
+        nr_stun_server_remove_client(isock->stun_server, component);
+        isock=STAILQ_NEXT(isock, entry);
+      }
+    }
+
     STAILQ_FOREACH_SAFE(s1, &component->sockets, entry, s2){
       STAILQ_REMOVE(&component->sockets,s1,nr_ice_socket_,entry);
       nr_ice_socket_destroy(&s1);
