@@ -1470,6 +1470,15 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, Type type)
     RootedScript script(cx, script_);
 
     /*
+     * Builtin scripts do not adhere to normal assumptions about transforming
+     * 'this'.
+     */
+    if (script->function() && script->function()->isSelfHostedBuiltin()) {
+        target->addType(cx, type);
+        return;
+    }
+
+    /*
      * Note: if |this| is null or undefined, the pushed value is the outer window. We
      * can't use script->getGlobalType() here because it refers to the inner window.
      */
