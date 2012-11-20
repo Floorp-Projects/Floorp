@@ -377,7 +377,7 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     attribute boolean strict_mode;
-    
+
     [implicit_jscontext]
     attribute boolean ion;
 
