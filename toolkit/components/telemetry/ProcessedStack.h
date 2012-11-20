@@ -35,13 +35,6 @@ public:
     // The file name, /foo/bar/libxul.so for example.
     std::string mName;
 
-    // The address it was loaded to.
-    // FIXME: remove this once chrome hang has switched to using offsets.
-    uintptr_t mStart;
-
-    // The size of this mapping. May or may not be the entire file.
-    // FIXME: remove this. It was only used as a sanity check.
-    size_t mMappingSize;
     // Windows specific fields. On other platforms they are 0/empty.
     int mPdbAge;
     std::string mPdbSignature;
@@ -65,10 +58,8 @@ private:
 // Get the current list of loaded modules, filter and pair it to the provided
 // stack. We let the caller collect the stack since different callers have
 // different needs (current thread X main thread, stopping the thread, etc).
-// FIXME: remove the aRelative option once chrome hang has switched to using
-// offsets.
 ProcessedStack
-GetStackAndModules(const std::vector<uintptr_t> &aPCs, bool aRelative);
+GetStackAndModules(const std::vector<uintptr_t> &aPCs);
 
 } // namespace Telemetry
 } // namespace mozilla
