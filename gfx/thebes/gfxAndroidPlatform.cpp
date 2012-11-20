@@ -49,8 +49,8 @@ NS_MEMORY_REPORTER_IMPLEMENT(Freetype,
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(FreetypeMallocSizeOfForCounterInc, "freetype")
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN_UN(FreetypeMallocSizeOfForCounterDec)
 
-static void
-*CountingAlloc(FT_Memory memory, long size)
+static void*
+CountingAlloc(FT_Memory memory, long size)
 {
     void *p = malloc(size);
     sFreetypeMemoryUsed += FreetypeMallocSizeOfForCounterInc(p);
@@ -64,8 +64,8 @@ CountingFree(FT_Memory memory, void* p)
     free(p);
 }
 
-static void
-*CountingRealloc(FT_Memory memory, long cur_size, long new_size, void* p)
+static void*
+CountingRealloc(FT_Memory memory, long cur_size, long new_size, void* p)
 {
     sFreetypeMemoryUsed -= FreetypeMallocSizeOfForCounterDec(p);
     void *pnew = realloc(p, new_size);
