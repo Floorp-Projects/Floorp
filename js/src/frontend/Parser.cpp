@@ -6464,7 +6464,7 @@ Parser::atomNode(ParseNodeKind kind, JSOp op)
     // them, so we don't wait for a long time for compression to finish at the
     // end of compilation.
     const size_t HUGE_STRING = 50000;
-    if (sct && kind == PNK_STRING && node->pn_atom->length() >= HUGE_STRING)
+    if (sct && sct->active() && kind == PNK_STRING && node->pn_atom->length() >= HUGE_STRING)
         sct->abort();
 
     return node;

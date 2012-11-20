@@ -1256,9 +1256,9 @@ SourceCompressionToken::complete()
 {
     JS_ASSERT_IF(!ss, !chars);
 #ifdef JS_THREADSAFE
-    if (ss) {
+    if (active()) {
         cx->runtime->sourceCompressorThread.waitOnCompression(this);
-        JS_ASSERT(!ss);
+        JS_ASSERT(!active());
     }
     if (oom) {
         JS_ReportOutOfMemory(cx);
@@ -1271,6 +1271,7 @@ SourceCompressionToken::complete()
 void
 SourceCompressionToken::abort()
 {
+    JS_ASSERT(active());
 #ifdef JS_THREADSAFE
     cx->runtime->sourceCompressorThread.abort(this);
 #endif
