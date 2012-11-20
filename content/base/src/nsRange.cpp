@@ -500,7 +500,27 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
         newRoot = IsValidBoundary(newEndNode);
       }
     }
+    // When the removed text node's parent is one of our boundary nodes we may
+    // need to adjust the offset to account for the removed node. However,
+    // there will also be a ContentRemoved notification later so the only cases
+    // we need to handle here is when the removed node is the text node after
+    // the boundary.  (The m*Offset > 0 check is an optimization - a boundary
+    // point before the first child is never affected by normalize().)
+    nsINode* parentNode = aContent->GetParentNode();
+    if (parentNode == mStartParent && mStartOffset > 0 &&
+        mStartOffset < parentNode->GetChildCount() &&
+        removed == parentNode->GetChildAt(mStartOffset)) {
+      newStartNode = aContent;
+      newStartOffset = aInfo->mChangeStart;
+    }
+    if (parentNode == mEndParent && mEndOffset > 0 &&
+        mEndOffset < parentNode->GetChildCount() &&
+        removed == parentNode->GetChildAt(mEndOffset)) {
+      newEndNode = aContent;
+      newEndOffset = aInfo->mChangeEnd;
+    }
   }
+
   if (newStartNode || newEndNode) {
     if (!newStartNode) {
       newStartNode = mStartParent;
