@@ -29,7 +29,7 @@
 
     Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm");
 
-    function spelledTextInvoker(aID, aText, aTests)
+    function spelledTextInvoker(aID)
     {
       this.DOMNode = getNode(aID);
 
@@ -46,7 +46,7 @@
         //var spellchecker = editor.getInlineSpellChecker(true);
         //spellchecker.enableRealTimeSpell = true;
 
-        this.DOMNode.value = aText;
+        this.DOMNode.value = "valid text inalid tixt";
       }
 
       this.finalCheck = function spelledTextInvoker_finalCheck()
@@ -61,11 +61,10 @@
           "invalid": "spelling"
         };
 
-        for (var i = 0; i < aTests.length; i++) {
-          testTextAttrs(aID, aTests[i].start,
-                        aTests[i].misspelled ? misspelledAttrs : attrs,
-                        defAttrs, aTests[i].start, aTests[i].end);
-        }
+        testTextAttrs(aID, 0, attrs, defAttrs, 0, 11);
+        testTextAttrs(aID, 11, misspelledAttrs, defAttrs, 11, 17);
+        testTextAttrs(aID, 17, attrs, defAttrs, 17, 18);
+        testTextAttrs(aID, 18, misspelledAttrs, defAttrs, 18, 22);
       }
 
       this.getID = function spelledTextInvoker_getID()
@@ -88,32 +87,7 @@
 
       gQueue = new eventQueue();
       gQueue.push(new synthFocus("input"));
-
-      var tests = [
-        { misspelled: false, start: 0, end: 11},
-        { misspelled: true, start: 11, end: 17},
-        { misspelled: false, start: 17, end: 18},
-        { misspelled: true, start: 18, end: 22}
-      ];
-      gQueue.push(new spelledTextInvoker("input", "valid text inalid tixt",
-                                         tests));
-
-      tests = [
-        { misspelled: false, start: 0, end: 4}
-      ];
-      gQueue.push(new spelledTextInvoker("input", "that", tests));
-
-      tests = [
-        { misspelled: true, start: 0, end: 4}
-      ];
-      gQueue.push(new spelledTextInvoker("input", "taht", tests));
-
-      tests = [
-        { misspelled: true, start: 0, end: 4},
-        { misspelled: false, start: 4, end: 8}
-      ];
-      gQueue.push(new spelledTextInvoker("input", "taht cat", tests));
-
+      gQueue.push(new spelledTextInvoker("input"));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -128,11 +102,6 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=345759"
      title="Implement text attributes">
     Mozilla Bug 345759
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=770564"
-     title="improve performance of getting spelling text attribute"
-    Mozilla Bug 770564
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
