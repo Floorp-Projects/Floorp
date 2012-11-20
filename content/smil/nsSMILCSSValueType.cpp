@@ -412,6 +412,6 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
                     "Unexpected SMIL value type");
   const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
   return !wrapper ||
-    nsStyleAnimation::UncomputeValue(wrapper->mPropID, wrapper->mPresContext,
+    nsStyleAnimation::UncomputeValue(wrapper->mPropID,
                                      wrapper->mCSSValue, aString);
 }
