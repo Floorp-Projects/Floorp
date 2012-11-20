@@ -50,10 +50,6 @@ class nsHashKey;
  */
 #define NS_EVENT                           1
 #define NS_GUI_EVENT                       2
-#define NS_SIZE_EVENT                      3
-#define NS_SIZEMODE_EVENT                  4
-#define NS_ZLEVEL_EVENT                    5
-#define NS_PAINT_EVENT                     6
 #define NS_SCROLLBAR_EVENT                 7
 #define NS_INPUT_EVENT                     8
 #define NS_KEY_EVENT                       9
@@ -80,7 +76,6 @@ class nsHashKey;
 #define NS_QUERY_CONTENT_EVENT            33
 
 #define NS_DRAG_EVENT                     35
-#define NS_NOTIFYPAINT_EVENT              36
 #define NS_SIMPLE_GESTURE_EVENT           37
 #define NS_SELECTION_EVENT                38
 #define NS_CONTENT_COMMAND_EVENT          39
