@@ -185,7 +185,16 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 /* virtual */ void
 AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 {
-  // WRITE ME?
+  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
+  printf("[anim values] { ");
+  for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
+    const PropertyValuePair &pair = mPropertyValuePairs[i];
+    nsAutoString value;
+    nsStyleAnimation::UncomputeValue(pair.mProperty, pair.mValue, value);
+    printf("%s: %s; ", nsCSSProps::GetStringValue(pair.mProperty).get(),
+                       NS_ConvertUTF16toUTF8(value).get());
+  }
+  printf("}\n");
 }
 #endif
 
