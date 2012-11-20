@@ -659,8 +659,6 @@ function test18e() {
   ok(objLoadingContent.activated, "Test 18e, Plugin should be activated");
 
   unregisterFakeBlocklistService();
-  var plugin = getTestPlugin();
-  plugin.clicktoplay = false;
   Services.perms.removeAll();
 
   prepareTest(test19a, gTestRoot + "plugin_test.html");

@@ -6,7 +6,6 @@ import datetime
 from errors import *
 from mozdevice import devicemanagerADB, DMError
 from mozprocess import ProcessHandlerMixin
-import multiprocessing
 import os
 import re
 import platform
@@ -252,7 +251,7 @@ class Emulator(object):
                 os.remove(self._tmp_sdcard)
                 self._tmp_sdcard = None
             return retcode
-        if self.logcat_proc:
+        if self.logcat_proc and self.logcat_proc.proc.poll() is None:
             self.logcat_proc.kill()
         return 0
 
@@ -370,13 +369,6 @@ waitFor(
         # setup DNS fix for networking
         self._run_adb(['shell', 'setprop', 'net.dns1', '10.0.2.3'])
 
-    def _save_logcat_proc(self, filename, cmd):
-        self.logcat_proc = LogcatProc(filename, cmd)
-        self.logcat_proc.run()
-        self.logcat_proc.processOutput()
-        self.logcat_proc.waitForFinish()
-        self.logcat_proc = None
-
     def install_gecko(self, gecko_path, marionette):
         """
         Install gecko into the emulator using adb push.  Restart b2g after the
@@ -447,12 +439,8 @@ waitFor(
             self.rotate_log(filename)
         cmd = [self.adb, '-s', 'emulator-%d' % self.port, 'logcat']
 
-        # We do this in a separate process because we call mozprocess's
-        # waitForFinish method to process logcat's output, and this method
-        # blocks.
-        proc = multiprocessing.Process(target=self._save_logcat_proc, args=(filename, cmd))
-        proc.daemon = True
-        proc.start()
+        self.logcat_proc = LogcatProc(filename, cmd)
+        self.logcat_proc.run()
 
     def setup_port_forwarding(self, remote_port):
         """ Set up TCP port forwarding to the specified port on the device,

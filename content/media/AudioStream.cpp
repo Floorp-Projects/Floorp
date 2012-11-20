@@ -3,13 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/PAudioChild.h"
-#include "mozilla/dom/AudioChild.h"
-#include "nsXULAppAPI.h"
-using namespace mozilla::dom;
-
 #include <stdio.h>
 #include <math.h>
 #include "prlog.h"
@@ -19,6 +12,7 @@ using namespace mozilla::dom;
 #include "AudioStream.h"
 #include "nsAlgorithm.h"
 #include "VideoUtils.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
@@ -45,12 +39,6 @@ namespace mozilla {
 #define SA_PER_STREAM_VOLUME 1
 #endif
 
-// Android's audio backend is not available in content processes, so
-// audio must be remoted to the parent chrome process.
-#if defined(MOZ_WIDGET_ANDROID)
-#define REMOTE_AUDIO 1
-#endif
-
 #ifdef PR_LOGGING
 PRLogModuleInfo* gAudioStreamLog = nullptr;
 #endif
@@ -69,7 +57,7 @@ class nsNativeAudioStream : public AudioStream
   nsNativeAudioStream();
 
   nsresult Init(int32_t aNumChannels, int32_t aRate,
-                const AudioChannelType aAudioChannelType);
+                const dom::AudioChannelType aAudioChannelType);
   void Shutdown();
   nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
   uint32_t Available();
@@ -94,198 +82,6 @@ class nsNativeAudioStream : public AudioStream
   bool mInError;
 
 };
-
-#if defined(REMOTE_AUDIO)
-class nsRemotedAudioStream : public AudioStream
-{
- public:
-  NS_DECL_ISUPPORTS
-
-  nsRemotedAudioStream();
-  ~nsRemotedAudioStream();
-
-  nsresult Init(int32_t aNumChannels, int32_t aRate,
-                const AudioChannelType aAudioChannelType);
-  void Shutdown();
-  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
-  uint32_t Available();
-  void SetVolume(double aVolume);
-  void Drain();
-  void Pause();
-  void Resume();
-  int64_t GetPosition();
-  int64_t GetPositionInFrames();
-  bool IsPaused();
-  int32_t GetMinWriteSize();
-
-private:
-  nsRefPtr<AudioChild> mAudioChild;
-
-  int32_t mBytesPerFrame;
-
-  // True if this audio stream is paused.
-  bool mPaused;
-
-  friend class AudioInitEvent;
-};
-
-class AudioInitEvent : public nsRunnable
-{
- public:
-  AudioInitEvent(nsRemotedAudioStream* owner)
-  {
-    mOwner = owner;
-  }
-
-  NS_IMETHOD Run()
-  {
-    ContentChild * cpc = ContentChild::GetSingleton();
-    NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    mOwner->mAudioChild =  static_cast<AudioChild*>(cpc->SendPAudioConstructor(mOwner->mChannels,
-                                                                               mOwner->mRate));
-    return NS_OK;
-  }
-
-  nsRefPtr<nsRemotedAudioStream> mOwner;
-};
-
-class AudioWriteEvent : public nsRunnable
-{
- public:
-  AudioWriteEvent(AudioChild* aChild,
-                  const AudioDataValue* aBuf,
-                  uint32_t aNumberOfFrames,
-                  uint32_t aBytesPerFrame)
-  {
-    mAudioChild = aChild;
-    mBytesPerFrame = aBytesPerFrame;
-    mBuffer.Assign(reinterpret_cast<const char*>(aBuf),
-                   aNumberOfFrames * aBytesPerFrame);
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (!mAudioChild->IsIPCOpen())
-      return NS_OK;
-
-    mAudioChild->SendWrite(mBuffer, mBuffer.Length() / mBytesPerFrame);
-    return NS_OK;
-  }
-
-  nsRefPtr<AudioChild> mAudioChild;
-  nsCString mBuffer;
-  uint32_t mBytesPerFrame;
-};
-
-class AudioSetVolumeEvent : public nsRunnable
-{
- public:
-  AudioSetVolumeEvent(AudioChild* aChild, double aVolume)
-  {
-    mAudioChild = aChild;
-    mVolume = aVolume;
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (!mAudioChild->IsIPCOpen())
-      return NS_OK;
-
-    mAudioChild->SendSetVolume(mVolume);
-    return NS_OK;
-  }
-
-  nsRefPtr<AudioChild> mAudioChild;
-  double mVolume;
-};
-
-
-class AudioMinWriteSizeEvent : public nsRunnable
-{
- public:
-  AudioMinWriteSizeEvent(AudioChild* aChild)
-  {
-    mAudioChild = aChild;
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (!mAudioChild->IsIPCOpen())
-      return NS_OK;
-
-    mAudioChild->SendMinWriteSize();
-    return NS_OK;
-  }
-
-  nsRefPtr<AudioChild> mAudioChild;
-};
-
-class AudioDrainEvent : public nsRunnable
-{
- public:
-  AudioDrainEvent(AudioChild* aChild)
-  {
-    mAudioChild = aChild;
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (!mAudioChild->IsIPCOpen())
-      return NS_OK;
-
-    mAudioChild->SendDrain();
-    return NS_OK;
-  }
-
-  nsRefPtr<AudioChild> mAudioChild;
-};
-
-
-class AudioPauseEvent : public nsRunnable
-{
- public:
-  AudioPauseEvent(AudioChild* aChild, bool pause)
-  {
-    mAudioChild = aChild;
-    mPause = pause;
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (!mAudioChild->IsIPCOpen())
-      return NS_OK;
-
-    if (mPause)
-      mAudioChild->SendPause();
-    else
-      mAudioChild->SendResume();
-
-    return NS_OK;
-  }
-
-  nsRefPtr<AudioChild> mAudioChild;
-  bool mPause;
-};
-
-
-class AudioShutdownEvent : public nsRunnable
-{
- public:
-  AudioShutdownEvent(AudioChild* aChild)
-  {
-    mAudioChild = aChild;
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (mAudioChild->IsIPCOpen())
-      mAudioChild->SendShutdown();
-    return NS_OK;
-  }
-
-  nsRefPtr<AudioChild> mAudioChild;
-};
-#endif
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_USE_CUBEB "media.use_cubeb"
@@ -359,20 +155,20 @@ static uint32_t GetCubebLatency()
 }
 #endif
 
-static sa_stream_type_t ConvertChannelToSAType(AudioChannelType aType)
+static sa_stream_type_t ConvertChannelToSAType(dom::AudioChannelType aType)
 {
   switch(aType) {
-    case AUDIO_CHANNEL_NORMAL:
+    case dom::AUDIO_CHANNEL_NORMAL:
       return SA_STREAM_TYPE_SYSTEM;
-    case AUDIO_CHANNEL_CONTENT:
+    case dom::AUDIO_CHANNEL_CONTENT:
       return SA_STREAM_TYPE_MUSIC;
-    case AUDIO_CHANNEL_NOTIFICATION:
+    case dom::AUDIO_CHANNEL_NOTIFICATION:
       return SA_STREAM_TYPE_NOTIFICATION;
-    case AUDIO_CHANNEL_ALARM:
+    case dom::AUDIO_CHANNEL_ALARM:
       return SA_STREAM_TYPE_ALARM;
-    case AUDIO_CHANNEL_TELEPHONY:
+    case dom::AUDIO_CHANNEL_TELEPHONY:
       return SA_STREAM_TYPE_VOICE_CALL;
-    case AUDIO_CHANNEL_PUBLICNOTIFICATION:
+    case dom::AUDIO_CHANNEL_PUBLICNOTIFICATION:
       return SA_STREAM_TYPE_ENFORCED_AUDIBLE;
     default:
       NS_ERROR("The value of AudioChannelType is invalid");
@@ -458,7 +254,7 @@ nsNativeAudioStream::~nsNativeAudioStream()
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsNativeAudioStream)
 
 nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
-                                   const AudioChannelType aAudioChannelType)
+                                   const dom::AudioChannelType aAudioChannelType)
 {
   mRate = aRate;
   mChannels = aNumChannels;
@@ -633,143 +429,6 @@ int32_t nsNativeAudioStream::GetMinWriteSize()
   return static_cast<int32_t>(size / mChannels / sizeof(short));
 }
 
-#if defined(REMOTE_AUDIO)
-nsRemotedAudioStream::nsRemotedAudioStream()
- : mAudioChild(nullptr),
-   mBytesPerFrame(0),
-   mPaused(false)
-{}
-
-nsRemotedAudioStream::~nsRemotedAudioStream()
-{
-  Shutdown();
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsRemotedAudioStream)
-
-nsresult
-nsRemotedAudioStream::Init(int32_t aNumChannels,
-                           int32_t aRate, AudioChannelType aAudioChannelType)
-{
-  mRate = aRate;
-  mChannels = aNumChannels;
-  mBytesPerFrame = sizeof(AudioDataValue) * mChannels;
-
-  nsCOMPtr<nsIRunnable> event = new AudioInitEvent(this);
-  NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
-  return NS_OK;
-}
-
-void
-nsRemotedAudioStream::Shutdown()
-{
-  if (!mAudioChild)
-    return;
-  nsCOMPtr<nsIRunnable> event = new AudioShutdownEvent(mAudioChild);
-  NS_DispatchToMainThread(event);
-  mAudioChild = nullptr;
-}
-
-nsresult
-nsRemotedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
-{
-  if (!mAudioChild)
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mAudioChild,
-                                                    aBuf,
-                                                    aFrames,
-                                                    mBytesPerFrame);
-  NS_DispatchToMainThread(event);
-  mAudioChild->WaitForWrite();
-  return NS_OK;
-}
-
-uint32_t
-nsRemotedAudioStream::Available()
-{
-  return FAKE_BUFFER_SIZE;
-}
-
-int32_t nsRemotedAudioStream::GetMinWriteSize()
-{
-  if (!mAudioChild)
-    return -1;
-  nsCOMPtr<nsIRunnable> event = new AudioMinWriteSizeEvent(mAudioChild);
-  NS_DispatchToMainThread(event);
-  return mAudioChild->WaitForMinWriteSize();
-}
-
-void
-nsRemotedAudioStream::SetVolume(double aVolume)
-{
-  if (!mAudioChild)
-    return;
-  nsCOMPtr<nsIRunnable> event = new AudioSetVolumeEvent(mAudioChild, aVolume);
-  NS_DispatchToMainThread(event);
-}
-
-void
-nsRemotedAudioStream::Drain()
-{
-  if (!mAudioChild)
-    return;
-  nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(mAudioChild);
-  NS_DispatchToMainThread(event);
-  mAudioChild->WaitForDrain();
-}
-
-void
-nsRemotedAudioStream::Pause()
-{
-  mPaused = true;
-  if (!mAudioChild)
-    return;
-  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mAudioChild, true);
-  NS_DispatchToMainThread(event);
-}
-
-void
-nsRemotedAudioStream::Resume()
-{
-  mPaused = false;
-  if (!mAudioChild)
-    return;
-  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mAudioChild, false);
-  NS_DispatchToMainThread(event);
-}
-
-int64_t nsRemotedAudioStream::GetPosition()
-{
-  int64_t position = GetPositionInFrames();
-  if (position >= 0) {
-    return ((USECS_PER_S * position) / mRate);
-  }
-  return 0;
-}
-
-int64_t
-nsRemotedAudioStream::GetPositionInFrames()
-{
-  if(!mAudioChild)
-    return 0;
-
-  int64_t position = mAudioChild->GetLastKnownPosition();
-  if (position == -1)
-    return 0;
-
-  int64_t time = mAudioChild->GetLastKnownPositionTimestamp();
-  int64_t dt = PR_IntervalToMilliseconds(PR_IntervalNow() - time);
-
-  return position + (mRate * dt / MS_PER_S);
-}
-
-bool
-nsRemotedAudioStream::IsPaused()
-{
-  return mPaused;
-}
-#endif
-
 #if defined(MOZ_CUBEB)
 class nsCircularByteBuffer
 {
@@ -845,7 +504,7 @@ class nsBufferedAudioStream : public AudioStream
   ~nsBufferedAudioStream();
 
   nsresult Init(int32_t aNumChannels, int32_t aRate,
-                const AudioChannelType aAudioChannelType);
+                const dom::AudioChannelType aAudioChannelType);
   void Shutdown();
   nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
   uint32_t Available();
@@ -919,11 +578,6 @@ private:
 
 AudioStream* AudioStream::AllocateStream()
 {
-#if defined(REMOTE_AUDIO)
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    return new nsRemotedAudioStream();
-  }
-#endif
 #if defined(MOZ_CUBEB)
   if (GetUseCubeb()) {
     return new nsBufferedAudioStream();
@@ -948,7 +602,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsBufferedAudioStream)
 
 nsresult
 nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
-                            const AudioChannelType aAudioChannelType)
+                            const dom::AudioChannelType aAudioChannelType)
 {
   cubeb* cubebContext = GetCubebContext();
 

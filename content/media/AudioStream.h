@@ -52,7 +52,7 @@ public:
   // Unsafe to call with a monitor held due to synchronous event execution
   // on the main thread, which may attempt to acquire any held monitor.
   virtual nsresult Init(int32_t aNumChannels, int32_t aRate,
-                        const mozilla::dom::AudioChannelType aAudioStreamType) = 0;
+                        const dom::AudioChannelType aAudioStreamType) = 0;
 
   // Closes the stream. All future use of the stream is an error.
   // Unsafe to call with a monitor held due to synchronous event execution
