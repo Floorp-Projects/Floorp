@@ -44,6 +44,9 @@ function runTests() {
   is(state1, false, "Browser returned incorrect private mode state.");
   is(state2, false, "Browser returned incorrect private mode state.");
 
+  pluginElement1.setCookie("foo");
+  is(pluginElement1.getCookie(), "foo", "Cookie was set and retrieved correctly in public mode.");
+
   // change private mode pref
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
   var keepCurrentSession;
@@ -76,9 +79,17 @@ function runTests() {
   is(officialState1, state1, "Private mode reported and queried is inconsistent.");
   is(officialState2, state2, "Private mode reported and queried is inconsistent.");
 
+  // It would be nice to assert that we don't see the public cookie in private mode,
+  // but the NPAPI complains when the resulting string is empty.
+  // is(pluginElement1.getCookie(), "", "Public cookie was not retrieved in private mode.");
+  pluginElement1.setCookie("bar");
+  is(pluginElement1.getCookie(), "bar", "Cookie was set and retrieved correctly in private mode.");
+
   // reset preference states
   privateBrowsing.privateBrowsingEnabled = false;
   prefs.setBoolPref("browser.privatebrowsing.keep_current_session", keepCurrentSession);
+
+  is(pluginElement1.getCookie(), "foo", "Private cookie was not retrieved in public mode.");
 
   SimpleTest.finish();
 }

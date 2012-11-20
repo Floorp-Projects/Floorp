@@ -70,7 +70,7 @@ extern "C" {
 
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport");
+MOZ_MTLOG_MODULE("mtransport")
 
 // NrIceMediaStream
 RefPtr<NrIceMediaStream>

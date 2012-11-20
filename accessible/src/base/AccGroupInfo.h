@@ -8,6 +8,9 @@
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
 
+namespace mozilla {
+namespace a11y {
+
 /**
  * Calculate and store group information.
  */
@@ -75,5 +78,8 @@ private:
   uint32_t mSetSize;
   Accessible* mParent;
 };
+
+} // namespace mozilla
+} // namespace a11y
 
 #endif

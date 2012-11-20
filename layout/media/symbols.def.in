@@ -90,6 +90,7 @@ sa_stream_open
 sa_stream_pause
 sa_stream_resume
 sa_stream_write
+sa_stream_set_stream_type
 #endif
 #ifdef MOZ_SPEEX_RESAMPLER
 speex_resampler_init

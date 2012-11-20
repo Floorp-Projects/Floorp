@@ -108,6 +108,9 @@ imgRequest::imgRequest(imgLoader* aLoader)
 
 imgRequest::~imgRequest()
 {
+  // The status tracker can outlive this request, and needs to know it's dying.
+  GetStatusTracker().ClearRequest();
+
   if (mURI) {
     nsAutoCString spec;
     mURI->GetSpec(spec);

@@ -3353,13 +3353,13 @@ html|*#gcli-output-frame {
 }
 
 /* social toolbar provider menu */
-#social-statusarea-popup {
+.social-statusarea-popup {
   margin-top: 0;
   margin-left: -12px;
   margin-right: -12px;
 }
 
-#social-statusarea-user {
+.social-statusarea-user {
   -moz-appearance: none;
   border-bottom: 1px solid rgb(221,221,221);
   background-color: -moz-Dialog;
@@ -3367,15 +3367,14 @@ html|*#gcli-output-frame {
   cursor: pointer;
 }
 
-#social-statusarea-user-portrait {
+.social-statusarea-user-portrait {
   width: 32px;
   height: 32px;
   border-radius: 2px;
   margin: 10px;
 }
 
-#social-statusarea-user > vbox > #social-statusarea-notloggedin,
-#social-statusarea-user > vbox > #social-statusarea-username {
+.social-statusarea-loggedInStatus {
   -moz-appearance: none;
   background: transparent;
   border: none;
@@ -3385,8 +3384,7 @@ html|*#gcli-output-frame {
   list-style-image: none;
 }
 
-#social-statusarea-user[_moz-menuactive] > vbox > #social-statusarea-notloggedin,
-#social-statusarea-user[_moz-menuactive] > vbox > #social-statusarea-username {
+.social-statusarea-user[_moz-menuactive] > vbox > .social-statusarea-loggedInStatus {
   text-decoration: underline;
 }
 

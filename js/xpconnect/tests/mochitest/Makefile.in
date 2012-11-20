@@ -87,6 +87,7 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		test_bug800864.html \
 		test_bug802557.html \
 		file_bug802557.html \
+		test_bug803730.html \
 		test_bug809547.html \
 		$(NULL)
 

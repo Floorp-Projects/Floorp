@@ -64,15 +64,31 @@ static unsigned int get_joining_type (hb_codepoint_t u, hb_unicode_general_categ
       return j_type;
   }
 
-  /* Mongolian joining data is not in ArabicJoining.txt yet */
+  /* Mongolian joining data is not in ArabicJoining.txt yet. */
   if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x1800, 0x18AF)))
   {
+    if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x1880, 0x1886)))
+      return JOINING_TYPE_U;
+
     /* All letters, SIBE SYLLABLE BOUNDARY MARKER, and NIRUGU are D */
-    if (gen_cat == HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER || u == 0x1807 || u == 0x180A)
+    if ((FLAG(gen_cat) & (FLAG (HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER) |
+			  FLAG (HB_UNICODE_GENERAL_CATEGORY_MODIFIER_LETTER)))
+	|| u == 0x1807 || u == 0x180A)
       return JOINING_TYPE_D;
   }
 
-  if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x200C, 0x200D))) {
+  /* 'Phags-pa joining data is not in ArabicJoining.txt yet. */
+  if (unlikely (hb_in_range<hb_codepoint_t> (u, 0xA840, 0xA872)))
+  {
+      if (unlikely (u == 0xA872))
+	/* XXX Looks like this should be TYPE_L, but we don't support that yet! */
+	return JOINING_TYPE_R;
+
+      return JOINING_TYPE_D;
+  }
+
+  if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x200C, 0x200D)))
+  {
     return u == 0x200C ? JOINING_TYPE_U : JOINING_TYPE_C;
   }
 
@@ -178,8 +194,9 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
   map->add_bool_feature (HB_TAG('c','a','l','t'));
   map->add_gsub_pause (NULL);
 
-  /* ArabicOT spec enables 'cswh' for Arabic where as for basic shaper it's disabled by default. */
   map->add_bool_feature (HB_TAG('c','s','w','h'));
+  map->add_bool_feature (HB_TAG('d','l','i','g'));
+  map->add_bool_feature (HB_TAG('m','s','e','t'));
 }
 
 #include "hb-ot-shape-complex-arabic-fallback.hh"
@@ -234,17 +251,18 @@ arabic_joining (hb_buffer_t *buffer)
   HB_BUFFER_ALLOCATE_VAR (buffer, arabic_shaping_action);
 
   /* Check pre-context */
-  for (unsigned int i = 0; i < buffer->context_len[0]; i++)
-  {
-    unsigned int this_type = get_joining_type (buffer->context[0][i], buffer->unicode->general_category (buffer->context[0][i]));
+  if (!(buffer->flags & HB_BUFFER_FLAG_BOT))
+    for (unsigned int i = 0; i < buffer->context_len[0]; i++)
+    {
+      unsigned int this_type = get_joining_type (buffer->context[0][i], buffer->unicode->general_category (buffer->context[0][i]));
 
-    if (unlikely (this_type == JOINING_TYPE_T))
-      continue;
+      if (unlikely (this_type == JOINING_TYPE_T))
+	continue;
 
-    const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
-    state = entry->next_state;
-    break;
-  }
+      const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
+      state = entry->next_state;
+      break;
+    }
 
   for (unsigned int i = 0; i < count; i++)
   {
@@ -266,18 +284,19 @@ arabic_joining (hb_buffer_t *buffer)
     state = entry->next_state;
   }
 
-  for (unsigned int i = 0; i < buffer->context_len[1]; i++)
-  {
-    unsigned int this_type = get_joining_type (buffer->context[1][i], buffer->unicode->general_category (buffer->context[0][i]));
+  if (!(buffer->flags & HB_BUFFER_FLAG_EOT))
+    for (unsigned int i = 0; i < buffer->context_len[1]; i++)
+    {
+      unsigned int this_type = get_joining_type (buffer->context[1][i], buffer->unicode->general_category (buffer->context[1][i]));
 
-    if (unlikely (this_type == JOINING_TYPE_T))
-      continue;
+      if (unlikely (this_type == JOINING_TYPE_T))
+	continue;
 
-    const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
-    if (entry->prev_action != NONE && prev != (unsigned int) -1)
-      buffer->info[prev].arabic_shaping_action() = entry->prev_action;
-    break;
-  }
+      const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
+      if (entry->prev_action != NONE && prev != (unsigned int) -1)
+	buffer->info[prev].arabic_shaping_action() = entry->prev_action;
+      break;
+    }
 
 
   HB_BUFFER_DEALLOCATE_VAR (buffer, arabic_shaping_action);
@@ -332,6 +351,9 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_arabic =
   data_destroy_arabic,
   NULL, /* preprocess_text_arabic */
   NULL, /* normalization_preference */
+  NULL, /* decompose */
+  NULL, /* compose */
   setup_masks_arabic,
   true, /* zero_width_attached_marks */
+  true, /* fallback_position */
 };

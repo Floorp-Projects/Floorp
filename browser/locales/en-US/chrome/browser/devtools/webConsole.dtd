@@ -10,9 +10,9 @@
 
 <!ENTITY window.title "Web Console">
 
-<!ENTITY networkPanel.requestURL                  "Request URL">
-<!ENTITY networkPanel.requestMethod               "Request Method">
-<!ENTITY networkPanel.statusCode                  "Status Code">
+<!ENTITY networkPanel.requestURLColon             "Request URL:">
+<!ENTITY networkPanel.requestMethodColon          "Request Method:">
+<!ENTITY networkPanel.statusCodeColon             "Status Code:">
 
 <!ENTITY networkPanel.requestHeaders              "Request Headers">
 <!ENTITY networkPanel.requestCookie               "Sent Cookie">
@@ -20,6 +20,7 @@
 <!ENTITY networkPanel.requestFormData             "Sent Form Data">
 
 <!ENTITY networkPanel.responseHeaders             "Response Headers">
+<!ENTITY networkPanel.responseCookie              "Received Cookie">
 <!ENTITY networkPanel.responseBody                "Response Body">
 <!ENTITY networkPanel.responseBodyCached          "Cached Data">
 <!ENTITY networkPanel.responseBodyUnknownType     "Unknown Content Type">

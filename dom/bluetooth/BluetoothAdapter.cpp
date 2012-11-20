@@ -744,15 +744,11 @@ BluetoothAdapter::Connect(const nsAString& aDeviceAddress,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<BluetoothVoidReplyRunnable> result = new BluetoothVoidReplyRunnable(req);
-
-  if (!bs->Connect(aDeviceAddress, mPath, aProfileId, result)) {
-    NS_WARNING("Creating RFCOMM socket failed or unknown profile.");
-    return NS_ERROR_FAILURE;
-  }
+  nsRefPtr<BluetoothVoidReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(req);
+  bs->Connect(aDeviceAddress, mPath, aProfileId, results);
 
   req.forget(aRequest);
-
   return NS_OK;
 }
 
@@ -779,12 +775,11 @@ BluetoothAdapter::Disconnect(uint16_t aProfileId,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<BluetoothVoidReplyRunnable> result = new BluetoothVoidReplyRunnable(req);
-
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(req);
   bs->Disconnect(aProfileId, result);
 
   req.forget(aRequest);
-
   return NS_OK;
 }
 

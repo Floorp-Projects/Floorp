@@ -353,10 +353,12 @@ private:
 // done on the decode thread. Never hold the decoder monitor when
 // calling into this class. Unless otherwise specified, methods and fields of
 // this class can only be accessed on the decode thread.
-class MediaDecoderReader : public nsRunnable {
+class MediaDecoderReader {
 public:
   MediaDecoderReader(MediaDecoder* aDecoder);
   virtual ~MediaDecoderReader();
+
+  NS_INLINE_DECL_REFCOUNTING(MediaDecoderReader)
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.

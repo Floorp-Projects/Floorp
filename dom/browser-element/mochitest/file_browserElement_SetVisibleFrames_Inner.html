@@ -9,8 +9,8 @@ addEventListener('load', function() {
   }, 0);
 });
 
-addEventListener('mozvisibilitychange', function() {
-  alert(name + ':' + (document.mozHidden ? 'hidden' : 'visible'));
+addEventListener('visibilitychange', function() {
+  alert(name + ':' + (document.hidden ? 'hidden' : 'visible'));
 });
 
 </script>

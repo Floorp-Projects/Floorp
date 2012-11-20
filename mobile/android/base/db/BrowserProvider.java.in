@@ -198,6 +198,8 @@ public class BrowserProvider extends ContentProvider {
         static final String TABLE_HISTORY_JOIN_IMAGES = TABLE_HISTORY + " LEFT OUTER JOIN " +
                 Obsolete.TABLE_IMAGES + " ON " + qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
                 qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL);
+
+        static final String FAVICON_DB = "favicon_urls.db";
     }
 
     static {
@@ -1343,8 +1345,6 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void upgradeDatabaseFrom12to13(SQLiteDatabase db) {
-            final String FAVICON_DB = "favicon_urls.db";
-
             // Update images table with favicon URLs
             SQLiteDatabase faviconsDb = null;
             Cursor c = null;
@@ -1353,7 +1353,7 @@ public class BrowserProvider extends ContentProvider {
                 final String FAVICON_URL = "favicon_url";
                 final String FAVICON_PAGE = "page_url";
 
-                String dbPath = mContext.getDatabasePath(FAVICON_DB).getPath();
+                String dbPath = mContext.getDatabasePath(Obsolete.FAVICON_DB).getPath();
                 faviconsDb = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY);
                 String[] columns = new String[] { FAVICON_URL, FAVICON_PAGE };
                 c = faviconsDb.query(FAVICON_TABLE, columns, null, null, null, null, null, null);
@@ -1366,6 +1366,11 @@ public class BrowserProvider extends ContentProvider {
                     values.put(FAVICON_URL, faviconUrl);
                     db.update(Obsolete.TABLE_IMAGES, values, Obsolete.Images.URL + " = ?", new String[] { pageUrl });
                 }
+            } catch (SQLException e) {
+                // If we can't read from the database for some reason, we won't
+                // be able to import the favicon URLs. This isn't a fatal
+                // error, so continue the upgrade.
+                Log.e(LOGTAG, "Exception importing from " + Obsolete.FAVICON_DB, e);
             } finally {
                 if (c != null)
                     c.close();
@@ -1382,33 +1387,49 @@ public class BrowserProvider extends ContentProvider {
                     + " ADD COLUMN " + Bookmarks.FAVICON_ID + " INTEGER");
 
             try {
-                c = db.rawQuery("SELECT " + Obsolete.Images.URL + ", "
-                        + Obsolete.Images.FAVICON_URL + ", "
-                        + Obsolete.Images.FAVICON + ", "
-                        + Obsolete.Images.DATE_CREATED + ", "
-                        + Obsolete.Images.DATE_MODIFIED
-                        + " FROM " + Obsolete.TABLE_IMAGES
-                        + " WHERE " + Obsolete.Images.FAVICON_URL + " IS NOT NULL"
-                        + " GROUP BY " + Obsolete.Images.FAVICON_URL
-                        + " UNION ALL SELECT " + Obsolete.Images.URL + ", "
-                        + Obsolete.Images.FAVICON_URL + ", "
-                        + Obsolete.Images.FAVICON + ", "
-                        + Obsolete.Images.DATE_CREATED + ", "
-                        + Obsolete.Images.DATE_MODIFIED
-                        + " FROM " + Obsolete.TABLE_IMAGES
-                        + " WHERE " + Obsolete.Images.FAVICON_URL + " IS NULL",
-                        null);
+                c = db.query(Obsolete.TABLE_IMAGES,
+                        new String[] {
+                            Obsolete.Images.URL,
+                            Obsolete.Images.FAVICON_URL,
+                            Obsolete.Images.FAVICON,
+                            Obsolete.Images.DATE_MODIFIED,
+                            Obsolete.Images.DATE_CREATED
+                        },
+                        Obsolete.Images.FAVICON + " IS NOT NULL",
+                        null, null, null, null);
 
                 while (c.moveToNext()) {
-                    ContentValues values = new ContentValues(4);
-                    values.put(Favicons.URL, c.getString(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL)));
-                    values.put(Favicons.DATA, c.getBlob(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON)));
-                    values.put(Favicons.DATE_MODIFIED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_MODIFIED)));
-                    values.put(Favicons.DATE_CREATED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_CREATED)));
-                    long favicon_id = db.insert(TABLE_FAVICONS, null, values);
+                    String faviconUrl = c.getString(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL));
+                    long faviconId = -1;
 
-                    values = new ContentValues(1);
-                    values.put(FaviconColumns.FAVICON_ID, favicon_id);
+                    if (faviconUrl != null) {
+                        Cursor c2 = null;
+                        try {
+                            c2 = db.query(TABLE_FAVICONS,
+                                    new String[] { Favicons._ID },
+                                    Favicons.URL + " = ?",
+                                    new String[] { faviconUrl },
+                                    null, null, null);
+                            if (c2.moveToFirst()) {
+                                faviconId = c2.getLong(c2.getColumnIndexOrThrow(Favicons._ID));
+                            }
+                        } finally {
+                            if (c2 != null)
+                                c2.close();
+                        }
+                    }
+
+                    if (faviconId == -1) {
+                        ContentValues values = new ContentValues(4);
+                        values.put(Favicons.URL, faviconUrl);
+                        values.put(Favicons.DATA, c.getBlob(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON)));
+                        values.put(Favicons.DATE_MODIFIED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_MODIFIED)));
+                        values.put(Favicons.DATE_CREATED, c.getLong(c.getColumnIndexOrThrow(Obsolete.Images.DATE_CREATED)));
+                        faviconId = db.insert(TABLE_FAVICONS, null, values);
+                    }
+
+                    ContentValues values = new ContentValues(1);
+                    values.put(FaviconColumns.FAVICON_ID, faviconId);
                     db.update(TABLE_HISTORY, values, History.URL + " = ?",
                             new String[] { c.getString(c.getColumnIndexOrThrow(Obsolete.Images.URL)) });
                     db.update(TABLE_BOOKMARKS, values, Bookmarks.URL + " = ?",
@@ -1439,7 +1460,6 @@ public class BrowserProvider extends ContentProvider {
             createCombinedViewOn13(db);
 
             db.execSQL("DROP TABLE IF EXISTS " + Obsolete.TABLE_IMAGES);
-            mContext.deleteDatabase(FAVICON_DB);
         }
 
         @Override
@@ -1500,11 +1520,21 @@ public class BrowserProvider extends ContentProvider {
                     case 13:
                         upgradeDatabaseFrom12to13(db);
                         break;
-                 }
-             }
+                }
+            }
 
-             db.setTransactionSuccessful();
-             db.endTransaction();
+            // If an upgrade after 12->13 fails, the entire upgrade is rolled
+            // back, but we can't undo the deletion of favicon_urls.db if we
+            // delete this in step 13; therefore, we wait until all steps are
+            // complete before removing it.
+            if (oldVersion < 13 && newVersion >= 13
+                                && mContext.getDatabasePath(Obsolete.FAVICON_DB).exists()
+                                && !mContext.deleteDatabase(Obsolete.FAVICON_DB)) {
+                throw new SQLException("Could not delete " + Obsolete.FAVICON_DB);
+            }
+
+            db.setTransactionSuccessful();
+            db.endTransaction();
         }
 
         @Override

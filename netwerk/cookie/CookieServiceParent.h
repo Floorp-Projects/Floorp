@@ -37,9 +37,6 @@ protected:
                                    const IPC::SerializedLoadContext&
                                          loadContext);
 
-  void GetAppInfoFromLoadContext(const IPC::SerializedLoadContext& aLoadContext,
-                                 uint32_t& aAppId, bool& aIsInBrowserElement);
-
   nsRefPtr<nsCookieService> mCookieService;
 };
 

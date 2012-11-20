@@ -11,6 +11,27 @@
 
 using namespace mozilla::ipc;
 
+static void
+GetAppInfoFromLoadContext(const IPC::SerializedLoadContext &aLoadContext,
+                          uint32_t& aAppId,
+                          bool& aIsInBrowserElement,
+                          bool& aIsPrivate)
+{
+  // TODO: bug 782542: what to do when we get null loadContext?  For now assume
+  // NECKO_NO_APP_ID.
+  aAppId = NECKO_NO_APP_ID;
+  aIsInBrowserElement = false;
+  aIsPrivate = false;
+
+  if (aLoadContext.IsNotNull()) {
+    aAppId = aLoadContext.mAppId;
+    aIsInBrowserElement = aLoadContext.mIsInBrowserElement;
+  }
+
+  if (aLoadContext.IsPrivateBitValid())
+    aIsPrivate = aLoadContext.mUsePrivateBrowsing;
+}
+
 namespace mozilla {
 namespace net {
 
@@ -48,11 +69,11 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
     return false;
 
   uint32_t appId;
-  bool isInBrowserElement;
-  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement);
+  bool isInBrowserElement, isPrivate;
+  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement, isPrivate);
 
   mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aFromHttp, appId,
-                                          isInBrowserElement, *aResult);
+                                          isInBrowserElement, isPrivate, *aResult);
   return true;
 }
 
@@ -75,31 +96,15 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
     return false;
 
   uint32_t appId;
-  bool isInBrowserElement;
-  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement);
+  bool isInBrowserElement, isPrivate;
+  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement, isPrivate);
 
   nsDependentCString cookieString(aCookieString, 0);
+  //TODO: bug 812475, pass a real channel object
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
                                           aServerTime, aFromHttp, appId,
-                                          isInBrowserElement);
+                                          isInBrowserElement, isPrivate, nullptr);
   return true;
-}
-
-void
-CookieServiceParent::GetAppInfoFromLoadContext(
-                       const IPC::SerializedLoadContext &aLoadContext,
-                        uint32_t& aAppId,
-                        bool& aIsInBrowserElement)
-{
-  // TODO: bug 782542: what to do when we get null loadContext?  For now assume
-  // NECKO_NO_APP_ID.
-  aAppId = NECKO_NO_APP_ID;
-  aIsInBrowserElement = false;
-
-  if (aLoadContext.IsNotNull()) {
-    aAppId = aLoadContext.mAppId;
-    aIsInBrowserElement = aLoadContext.mIsInBrowserElement;
-  }
 }
 
 }

@@ -7,6 +7,8 @@
 
 #import "mozAccessible.h"
 
+using namespace mozilla::a11y;
+
 DocAccessibleWrap::
   DocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
                     nsIPresShell* aPresShell) :

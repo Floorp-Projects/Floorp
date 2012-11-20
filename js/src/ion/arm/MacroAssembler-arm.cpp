@@ -65,6 +65,12 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register
     ma_b(fail, Assembler::Equal);
 }
 
+void
+MacroAssemblerARM::inc64(AbsoluteAddress dest)
+{
+    JS_NOT_REACHED("NYI");
+}
+
 bool
 MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
                            SetCond_ sc, Condition c)
@@ -1482,11 +1488,6 @@ MacroAssemblerARMCompat::move32(const Imm32 &imm, const Register &dest)
     ma_mov(imm, dest);
 }
 void
-MacroAssemblerARMCompat::move32(const Address &src, const Register &dest)
-{
-    movePtr(src, dest);
-}
-void
 MacroAssemblerARMCompat::movePtr(const Register &src, const Register &dest)
 {
     ma_mov(src, dest);
@@ -1500,11 +1501,6 @@ void
 MacroAssemblerARMCompat::movePtr(const ImmGCPtr &imm, const Register &dest)
 {
     ma_mov(imm, dest);
-}
-void
-MacroAssemblerARMCompat::movePtr(const Address &src, const Register &dest)
-{
-    loadPtr(src, dest);
 }
 void
 MacroAssemblerARMCompat::load8ZeroExtend(const Address &address, const Register &dest)

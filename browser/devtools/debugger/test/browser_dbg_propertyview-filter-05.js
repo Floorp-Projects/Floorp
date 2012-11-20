@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure that the property view correctly filters nodes by value.
+ * Make sure that the property view correctly filters nodes.
  */
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_with-frame.html";
@@ -14,6 +14,8 @@ var gDebugger = null;
 var gDebuggee = null;
 var gSearchBox = null;
 
+requestLongerTimeout(2);
+
 function test()
 {
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
@@ -22,6 +24,7 @@ function test()
     gDebugger = gPane.contentWindow;
     gDebuggee = aDebuggee;
 
+    gDebugger.DebuggerController.StackFrames.autoScopeExpand = true;
     prepareVariables(testVariablesFiltering);
   });
 }
@@ -258,7 +261,7 @@ function prepareVariables(aCallback)
 
 function ignoreExtraMatchedProperties()
 {
-  for (let [_, item] of gDebugger.DebuggerView.Variables._currHierarchy) {
+  for (let [, item] of gDebugger.DebuggerView.Variables._currHierarchy) {
     let name = item.name.toLowerCase();
     let value = item._valueString || "";
 

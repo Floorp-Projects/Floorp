@@ -186,11 +186,7 @@ GLLibraryEGL::EnsureInitialized()
         return false;
     }
 
-#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    mEGLDisplay = fGetDisplay((EGLNativeDisplayType) gdk_x11_get_default_xdisplay());
-#else
     mEGLDisplay = fGetDisplay(EGL_DEFAULT_DISPLAY);
-#endif
     if (!fInitialize(mEGLDisplay, NULL, NULL))
         return false;
 

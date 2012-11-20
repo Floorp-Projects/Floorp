@@ -4138,6 +4138,21 @@ fi
 
 dnl ========================================================
 dnl =
+dnl = Options for generating the shell as a script
+dnl =
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(qemu-exe,
+[  --with-qemu-exe=path   Use path as an arm emulator on host platforms],
+    QEMU_EXE=$withval)
+AC_SUBST(QEMU_EXE)
+MOZ_ARG_WITH_STRING(cross-lib,
+[  --with-cross-lib=dir   Use dir as the location for arm libraries],
+    CROSS_LIB=$withval,
+    CROSS_LIB=/usr/$target)
+AC_SUBST(CROSS_LIB)
+dnl ========================================================
+dnl =
 dnl = Maintainer debug option (no --enable equivalent)
 dnl =
 dnl ========================================================

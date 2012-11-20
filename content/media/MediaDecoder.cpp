@@ -22,6 +22,7 @@
 #include "mozilla/Preferences.h"
 
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 
 namespace mozilla {
 
@@ -308,7 +309,8 @@ MediaDecoder::MediaDecoder() :
   mOwner(nullptr),
   mFrameBufferLength(0),
   mPinnedForSeek(false),
-  mShuttingDown(false)
+  mShuttingDown(false),
+  mAudioChannelType(AUDIO_CHANNEL_NORMAL)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");

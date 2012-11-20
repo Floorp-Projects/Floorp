@@ -1,0 +1,4 @@
+{
+  "name": "An application which only allows chrome://mochitests to install it",
+  "installs_allowed_from": ["chrome://mochitests"]
+}

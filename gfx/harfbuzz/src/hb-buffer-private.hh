@@ -36,45 +36,8 @@
 #include "hb-unicode-private.hh"
 
 
-
 ASSERT_STATIC (sizeof (hb_glyph_info_t) == 20);
 ASSERT_STATIC (sizeof (hb_glyph_info_t) == sizeof (hb_glyph_position_t));
-
-
-/*
- * hb_segment_properties_t
- */
-
-typedef struct hb_segment_properties_t {
-    hb_direction_t      direction;
-    hb_script_t         script;
-    hb_language_t       language;
-    ASSERT_POD ();
-} hb_segment_properties_t;
-
-#define _HB_BUFFER_PROPS_DEFAULT { HB_DIRECTION_INVALID, HB_SCRIPT_INVALID, HB_LANGUAGE_INVALID }
-
-static inline hb_bool_t
-hb_segment_properties_equal (const hb_segment_properties_t *a,
-			     const hb_segment_properties_t *b)
-{
-  return a->direction == b->direction &&
-	 a->script    == b->script    &&
-	 a->language  == b->language;
-}
-
-
-#if 0
-static inline unsigned int
-hb_segment_properties_hash (const hb_segment_properties_t *p)
-{
-  /* TODO improve */
-  return (unsigned int) p->direction +
-	 (unsigned int) p->script +
-	 (intptr_t) (p->language);
-}
-#endif
-
 
 
 /*
@@ -89,6 +52,7 @@ struct hb_buffer_t {
 
   hb_unicode_funcs_t *unicode; /* Unicode functions */
   hb_segment_properties_t props; /* Script, language, direction */
+  hb_buffer_flags_t flags; /* BOT / EOT / etc. */
 
   /* Buffer contents */
 
@@ -133,6 +97,7 @@ struct hb_buffer_t {
   /* Methods */
 
   HB_INTERNAL void reset (void);
+  HB_INTERNAL void clear (void);
 
   inline unsigned int backtrack_len (void) const
   { return have_output? out_len : idx; }
@@ -144,15 +109,15 @@ struct hb_buffer_t {
   HB_INTERNAL void deallocate_var_all (void);
 
   HB_INTERNAL void add (hb_codepoint_t  codepoint,
-			hb_mask_t       mask,
 			unsigned int    cluster);
 
   HB_INTERNAL void reverse_range (unsigned int start, unsigned int end);
   HB_INTERNAL void reverse (void);
   HB_INTERNAL void reverse_clusters (void);
-  HB_INTERNAL void guess_properties (void);
+  HB_INTERNAL void guess_segment_properties (void);
 
   HB_INTERNAL void swap_buffers (void);
+  HB_INTERNAL void remove_output (void);
   HB_INTERNAL void clear_output (void);
   HB_INTERNAL void clear_positions (void);
 

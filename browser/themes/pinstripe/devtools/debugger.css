@@ -37,7 +37,7 @@
 
 .list-item.empty {
   color: GrayText;
-  padding: 4px;
+  padding: 2px;
 }
 
 /**
@@ -133,12 +133,25 @@
 }
 
 /**
+ * Variables and watch expressions pane
+ */
+
+#variables\+expressions {
+  background-color: white;
+  min-width: 50px;
+}
+
+#variables\+expressions[animated] {
+  transition: margin 0.25s ease-in-out;
+}
+
+/**
  * Stack frames view
  */
 
 #stackframes {
   background-color: white;
-  min-height: 30px;
+  min-height: 10px;
 }
 
 .dbg-stackframe {
@@ -147,7 +160,6 @@
 }
 
 .dbg-stackframe-name {
-  -moz-padding-end: 4px;
   font-weight: 600;
 }
 
@@ -157,12 +169,16 @@
 
 #breakpoints {
   background-color: white;
-  min-height: 30px;
+  min-height: 10px;
 }
 
 #breakpoints > vbox:not(:empty) {
-  min-height: 30px;
+  min-height: 10px;
   max-height: 200px;
+}
+
+.dbg-breakpoint:not(:last-child) {
+  border-bottom: 1px solid #eee;
 }
 
 .dbg-breakpoint-info {
@@ -173,17 +189,53 @@
   font: 8pt monospace;
 }
 
+#conditional-breakpoint-panel .description {
+  margin: -6px 0 8px 0;
+}
+
+#conditional-breakpoint-panel textbox {
+  margin: 0 0 -2px 0;
+}
+
+/**
+ * Watch expressions view
+ */
+
+#expressions {
+  background-color: white;
+  min-height: 10px;
+}
+
+.dbg-expression {
+  height: 20px;
+  -moz-padding-start: 8px;
+}
+
+.dbg-expression:last-child {
+  margin-bottom: 4px;
+}
+
+.dbg-expression-arrow {
+  width: 10px;
+  height: auto;
+  background: url("chrome://browser/skin/devtools/commandline.png") 0px 4px no-repeat;
+}
+
+.dbg-expression-input {
+  font: 9pt monospace;
+}
+
+.dbg-expression-delete {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
 /**
  * Variables view
  */
 
 #variables {
   background-color: white;
-  min-width: 50px;
-}
-
-#variables[animated] {
-  transition: margin 0.25s ease-in-out;
+  min-height: 10px;
 }
 
 /**
@@ -211,22 +263,14 @@
 .variable {
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
-  transition: background 1s ease-in-out;
+  border-bottom: 1px solid #eee;
   background: #fff;
-}
-
-.variable:not(:last-child) {
-  border-bottom: 1px dotted #ddd;
-  border-radius: 8px;
-}
-
-.variable:last-child {
-  margin-bottom: 2px;
+  transition: background 1s ease-in-out;
 }
 
 .variable[changed] {
-  transition-duration: 0.4s;
   background: rgba(255, 255, 0, 0.65);
+  transition-duration: 0.4s;
 }
 
 .variable > .title > .name {
@@ -247,14 +291,13 @@
  */
 
 .property {
-  transition: background 1s ease-in-out;
   background: #fff;
-  border-radius: 8px;
+  transition: background 1s ease-in-out;
 }
 
 .property[changed] {
-  transition-duration: 0.4s;
   background: rgba(255, 255, 0, 0.65);
+  transition-duration: 0.4s;
 }
 
 .property > .title > .name {
@@ -329,6 +372,14 @@
 }
 
 /**
+ * Variables and properties editing
+ */
+
+#variables .element-input {
+  -moz-margin-start: 5px !important;
+}
+
+/**
  * Variables and properties searching
  */
 
@@ -384,30 +435,6 @@
 
 .arrow[invisible] {
   visibility: hidden;
-}
-
-/**
- * Animations
- */
-
-#variables .details[open][animated],
-#globalsearch .dbg-results-container[open][animated] {
-  animation-duration: 0.25s;
-  animation-name: showblock;
-}
-
-@keyframes showblock {
-  from {
-    opacity: 0;
-    transform-origin: top;
-    transform: scaleY(0);
-  }
-
-  to {
-    opacity: 1;
-    transform-origin: top;
-    transform: scaleY(1);
-  }
 }
 
 /**

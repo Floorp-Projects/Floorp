@@ -7,9 +7,9 @@
 SimpleTest.waitForExplicitFinish();
 
 var iframeScript = function() {
-  content.document.addEventListener("mozvisibilitychange", function() {
+  content.document.addEventListener("visibilitychange", function() {
     sendAsyncMessage('test:visibilitychange', {
-      hidden: content.document.mozHidden
+      hidden: content.document.hidden
     });
   }, false);
 }
@@ -32,18 +32,18 @@ function runTest() {
     numEvents++;
     if (numEvents === 1) {
       ok(true, 'iframe recieved visibility changed');
-      ok(msg.json.hidden === true, 'mozHidden attribute correctly set');
+      ok(msg.json.hidden === true, 'hidden attribute correctly set');
       iframe1.setVisible(false);
       iframe1.setVisible(true);
     } else if (numEvents === 2) {
-      ok(msg.json.hidden === false, 'mozHidden attribute correctly set');
+      ok(msg.json.hidden === false, 'hidden attribute correctly set');
       // Allow some time in case we generate too many events
       setTimeout(function() {
         mm.removeMessageListener('test:visibilitychange', recvVisibilityChanged);
         SimpleTest.finish();
       }, 100);
     } else {
-      ok(false, 'Too many mozhidden events');
+      ok(false, 'Too many visibilitychange events');
     }
   }
 

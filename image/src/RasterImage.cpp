@@ -1078,9 +1078,20 @@ RasterImage::GetFrame(uint32_t aWhichFrame,
 already_AddRefed<layers::Image>
 RasterImage::GetCurrentImage()
 {
+  if (!mDecoded) {
+    // We can't call StartDecoding because that can synchronously notify
+    // which can cause DOM modification
+    RequestDecode();
+    return nullptr;
+  }
+
   nsRefPtr<gfxASurface> imageSurface;
-  nsresult rv = GetFrame(FRAME_CURRENT, FLAG_SYNC_DECODE, getter_AddRefs(imageSurface));
+  nsresult rv = GetFrame(FRAME_CURRENT, FLAG_NONE, getter_AddRefs(imageSurface));
   NS_ENSURE_SUCCESS(rv, nullptr);
+
+  if (!imageSurface) {
+    return nullptr;
+  }
 
   if (!mImageContainer) {
     mImageContainer = LayerManager::CreateImageContainer();
@@ -1110,10 +1121,10 @@ RasterImage::GetImageContainer(ImageContainer **_retval)
     NS_ADDREF(*_retval);
     return NS_OK;
   }
-  
+
   nsRefPtr<layers::Image> image = GetCurrentImage();
   if (!image) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
   mImageContainer->SetCurrentImageInTransaction(image);
 
@@ -2511,7 +2522,11 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
       mDecoder = new nsGIFDecoder2(*this, observer);
       break;
     case eDecoderType_jpeg:
-      mDecoder = new nsJPEGDecoder(*this, observer);
+      // If we have all the data we don't want to waste cpu time doing
+      // a progressive decode
+      mDecoder = new nsJPEGDecoder(*this, observer,
+                                   mHasBeenDecoded ? Decoder::DecodeStyle::SEQUENTIAL :
+                                                     Decoder::DecodeStyle::PROGRESSIVE);
       break;
     case eDecoderType_bmp:
       mDecoder = new nsBMPDecoder(*this, observer);
