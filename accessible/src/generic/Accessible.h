@@ -127,6 +127,11 @@ public:
   // Public methods
 
   /**
+   * Initialize the accessible.
+   */
+  virtual void Init();
+
+  /**
    * Get the description of this accessible.
    */
   virtual void Description(nsString& aDescription);

@@ -150,6 +150,9 @@ public:
   // nsIAccessibleTableCell
   NS_FORWARD_NSIACCESSIBLETABLECELL(xpcAccessibleTableCell::)
 
+  // nsAccessNode
+  virtual void Init();
+
   // Accessible
   virtual TableCellAccessible* AsTableCell() { return this; }
   virtual void Shutdown();
