@@ -870,7 +870,16 @@ class XPCShellTests(object):
             self.todoCount += 1
             xunitResult["todo"] = True
 
-        checkForCrashes(testdir, self.symbolsPath, testName=name)
+        if checkForCrashes(testdir, self.symbolsPath, testName=name):
+          message = "PROCESS-CRASH | %s | application crashed" % name
+          self.failCount += 1
+          xunitResult["passed"] = False
+          xunitResult["failure"] = {
+            "type": "PROCESS-CRASH",
+            "message": message,
+            "text": stdout
+          }
+
         # Find child process(es) leak log(s), if any: See InitLog() in
         # xpcom/base/nsTraceRefcntImpl.cpp for logfile naming logic
         leakLogs = [self.leakLogFile]
