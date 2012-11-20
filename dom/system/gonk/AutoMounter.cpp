@@ -22,6 +22,7 @@
 #include "base/message_loop.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"
+#include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -285,7 +286,7 @@ private:
   VolumeArray                     mAutoVolume;
 };
 
-static RefPtr<AutoMounter> sAutoMounter;
+static StaticRefPtr<AutoMounter> sAutoMounter;
 
 /***************************************************************************/
 
@@ -524,8 +525,8 @@ public:
   }
 };
 
-static RefPtr<UsbCableObserver> sUsbCableObserver;
-static RefPtr<AutoMounterSetting> sAutoMounterSetting;
+static StaticRefPtr<UsbCableObserver> sUsbCableObserver;
+static StaticRefPtr<AutoMounterSetting> sAutoMounterSetting;
 
 void
 InitAutoMounter()
