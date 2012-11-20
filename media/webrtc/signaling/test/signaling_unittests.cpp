@@ -506,7 +506,7 @@ class SignalingAgent {
   void Close()
   {
     cout << "Close" << endl;
-    pc->Close();
+    pc->Close(false);
     // Shutdown is synchronous evidently.
     // ASSERT_TRUE(pObserver->WaitForObserverCall());
     // ASSERT_EQ(pc->sipcc_state(), sipcc::PeerConnectionInterface::kIdle);
@@ -1203,6 +1203,9 @@ TEST_F(SignalingTest, FullCallTrickle)
 } // End namespace test.
 
 int main(int argc, char **argv) {
+  // This test can cause intermittent oranges on the builders
+  CHECK_ENVIRONMENT_FLAG("MOZ_WEBRTC_TESTS")
+
   test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(NULL);
   NSS_SetDomesticPolicy();
