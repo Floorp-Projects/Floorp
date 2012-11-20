@@ -196,6 +196,12 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
     if (!ionCompartment_)
         return false;
 
+    if (!ionCompartment_->initialize(cx)) {
+        js_delete(ionCompartment_);
+        ionCompartment_ = NULL;
+        return false;
+    }
+
     return true;
 }
 #endif

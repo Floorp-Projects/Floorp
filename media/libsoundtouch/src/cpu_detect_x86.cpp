@@ -43,7 +43,7 @@
 #include "STTypes.h"
 
 #if defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
-    #if defined(__GNUC__)
+    #if defined(__GNUC__) && defined (HAVE_CPUID_H)
         // gcc and clang
         #include "cpuid.h"
     #elif defined(_M_IX86)

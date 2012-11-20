@@ -1061,7 +1061,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   NotifySubDocInvalidationFunc computeInvalidFunc =
     presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
   bool computeInvalidRect = (computeInvalidFunc ||
-                             (layerManager->GetBackendType() == LAYERS_BASIC)) &&
+                             !layerManager->IsCompositingCheap()) &&
                             widgetTransaction;
 
   nsAutoPtr<LayerProperties> props(computeInvalidRect ? 

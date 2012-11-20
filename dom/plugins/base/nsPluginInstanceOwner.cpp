@@ -2569,6 +2569,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
          mInstance->HandleEvent(pluginEvent, nullptr);
        }
      }
+     break;
+
+    default:
+      break;
     }
     rv = nsEventStatus_eConsumeNoDefault;
 #endif

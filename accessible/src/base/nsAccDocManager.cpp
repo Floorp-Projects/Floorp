@@ -400,9 +400,8 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     // the same document.
     // Note: don't use AccReorderEvent to avoid coalsecense and special reorder
     // events processing.
-    nsRefPtr<AccEvent> reorderEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, ApplicationAcc());
-    docAcc->FireDelayedAccessibleEvent(reorderEvent);
+    docAcc->FireDelayedEvent(nsIAccessibleEvent::EVENT_REORDER,
+                             ApplicationAcc());
 
   } else {
     parentDocAcc->BindChildDocument(docAcc);

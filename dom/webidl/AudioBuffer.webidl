@@ -17,7 +17,7 @@ interface AudioBuffer {
     readonly attribute long length;
 
     // in seconds 
-    readonly attribute float duration;
+    readonly attribute double duration;
 
     readonly attribute long numberOfChannels;
 
