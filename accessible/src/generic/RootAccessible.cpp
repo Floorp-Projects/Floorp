@@ -151,17 +151,16 @@ RootAccessible::NativeState()
   return state;
 }
 
-const char* const docEvents[] = {
+const char* const kEventTypes[] = {
 #ifdef DEBUG_DRAGDROPSTART
   // Capture mouse over events and fire fake DRAGDROPSTART event to simplify
-  // debugging a11y objects with event viewers
+  // debugging a11y objects with event viewers.
   "mouseover",
 #endif
-  // capture Form change events 
+  // Fired when list or tree selection changes.
   "select",
-  // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
+  // Fired when value changes immediately, wether or not focused changed.
   "ValueChange",
-  // capture AlertActive events (fired whenever alert pops up)
   "AlertActive",
   "TreeRowCountChanged",
   "TreeInvalidated",
@@ -190,8 +189,8 @@ RootAccessible::AddEventListeners()
   nsCOMPtr<nsIDOMEventTarget> nstarget(do_QueryInterface(mDocumentNode));
 
   if (nstarget) {
-    for (const char* const* e = docEvents,
-                   * const* e_end = ArrayEnd(docEvents);
+    for (const char* const* e = kEventTypes,
+                   * const* e_end = ArrayEnd(kEventTypes);
          e < e_end; ++e) {
       nsresult rv = nstarget->AddEventListener(NS_ConvertASCIItoUTF16(*e),
                                                this, true, true, 2);
@@ -211,8 +210,8 @@ RootAccessible::RemoveEventListeners()
 {
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocumentNode));
   if (target) { 
-    for (const char* const* e = docEvents,
-                   * const* e_end = ArrayEnd(docEvents);
+    for (const char* const* e = kEventTypes,
+                   * const* e_end = ArrayEnd(kEventTypes);
          e < e_end; ++e) {
       nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, true);
       NS_ENSURE_SUCCESS(rv, rv);

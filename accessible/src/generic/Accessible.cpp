@@ -190,11 +190,6 @@ Accessible::~Accessible()
 {
 }
 
-void
-Accessible::Init()
-{
-}
-
 NS_IMETHODIMP
 Accessible::GetDocument(nsIAccessibleDocument** aDocument)
 {

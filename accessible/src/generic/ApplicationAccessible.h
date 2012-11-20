@@ -58,7 +58,6 @@ public:
   NS_DECL_NSIACCESSIBLEAPPLICATION
 
   // nsAccessNode
-  virtual void Init();
   virtual void Shutdown();
 
   // Accessible
