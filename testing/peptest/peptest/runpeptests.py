@@ -172,15 +172,15 @@ class Peptest():
             except:
                 testName = "unknown"
 
-        foundCrash = False
         dumpDir = os.path.join(self.profile.profile, 'minidumps')
         dumps = glob.glob(os.path.join(dumpDir, '*.dmp'))
+        if len(dumps) == 0:
+            return False
 
         symbolsPath = self.options.symbolsPath
 
         for d in dumps:
             import subprocess
-            foundCrash = True
             self.logger.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
             print "Crash dump filename: " + d
 
@@ -213,7 +213,7 @@ class Peptest():
         if utils.isURL(self.options.symbolsPath):
             if os.path.exists(symbolsPath):
                 shutil.rmtree(symbolsPath)
-        return foundCrash
+        return True
 
 class FirefoxPeptest(Peptest):
     profile_class = FirefoxProfile
