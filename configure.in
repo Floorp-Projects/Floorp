@@ -6690,20 +6690,6 @@ if test $MOZ_PLATFORM_MAEMO; then
 fi
 
 dnl ========================================================
-dnl = XRender Composite
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(egl-xrender-composite,
-[  --enable-egl-xrender-composite
-                          Enable EGL xrender composite optimizations],
-    MOZ_EGL_XRENDER_COMPOSITE=1)
-
-if test -n "$MOZ_EGL_XRENDER_COMPOSITE"; then
-    AC_DEFINE(MOZ_EGL_XRENDER_COMPOSITE)
-fi
-
-AC_SUBST(MOZ_EGL_XRENDER_COMPOSITE)
-
-dnl ========================================================
 dnl GL provider
 dnl ========================================================
 MOZ_GL_PROVIDER=

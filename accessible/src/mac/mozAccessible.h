@@ -36,7 +36,7 @@ GetNativeFromGeckoAccessible(nsIAccessible* aAccessible)
   /**
    * Weak reference; it owns us.
    */
-  AccessibleWrap* mGeckoAccessible;
+  mozilla::a11y::AccessibleWrap* mGeckoAccessible;
   
   /**
    * Strong ref to array of children
@@ -55,7 +55,7 @@ GetNativeFromGeckoAccessible(nsIAccessible* aAccessible)
 }
 
 // inits with the gecko owner.
-- (id)initWithAccessible:(AccessibleWrap*)geckoParent;
+- (id)initWithAccessible:(mozilla::a11y::AccessibleWrap*)geckoParent;
 
 // our accessible parent (AXParent)
 - (id <mozAccessible>)parent;
@@ -116,7 +116,7 @@ GetNativeFromGeckoAccessible(nsIAccessible* aAccessible)
 /** 
  * Append a child if they are already cached.
  */
-- (void)appendChild:(Accessible*)aAccessible;
+- (void)appendChild:(mozilla::a11y::Accessible*)aAccessible;
 
 // makes ourselves "expired". after this point, we might be around if someone
 // has retained us (e.g., a third-party), but we really contain no information.

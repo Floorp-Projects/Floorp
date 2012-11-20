@@ -19,6 +19,7 @@ MOCHITEST_A11Y_FILES =\
 		test_controls.html \
 		test_controls.xul \
 		test_doc.html \
+		test_doc_busy.html \
 		test_docarticle.html \
 		test_editablebody.html \
 		test_expandable.xul \
@@ -31,6 +32,7 @@ MOCHITEST_A11Y_FILES =\
 		test_textbox.xul \
 		test_tree.xul \
 		test_visibility.html \
+		test_visibility.xul \
 		z_frames.html \
 		z_frames_article.html \
 		z_frames_checkbox.html \

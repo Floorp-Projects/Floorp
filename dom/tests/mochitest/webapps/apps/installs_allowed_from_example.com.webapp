@@ -1,0 +1,4 @@
+{
+  "name": "An application which only allows https://example.com to install it",
+  "installs_allowed_from": ["https://example.com"]
+}

@@ -121,17 +121,25 @@ function check_cookie_exists(aDomain, aExists)
  */
 function add_download(aURIString, aIsActive)
 {
+  function makeGUID() {
+    let guid = "";
+    for (var i = 0; i < 12; i++)
+      guid += Math.floor(Math.random() * 10);
+    return guid;
+  }
+
   check_downloaded(aURIString, false);
   let db = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager).
            DBConnection;
   let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (source, state) " +
-    "VALUES (:source, :state)"
+    "INSERT INTO moz_downloads (source, state, guid) " +
+    "VALUES (:source, :state, :guid)"
   );
   stmt.params.source = aURIString;
   stmt.params.state = aIsActive ? Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING :
                                   Ci.nsIDownloadManager.DOWNLOAD_FINISHED;
+  stmt.params.guid = makeGUID();
   try {
     stmt.execute();
   }

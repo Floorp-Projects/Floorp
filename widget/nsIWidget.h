@@ -42,6 +42,7 @@ namespace dom {
 class TabChild;
 }
 namespace layers {
+class Composer2D;
 class CompositorChild;
 class LayerManager;
 class PLayersChild;
@@ -91,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xb7c60bda, 0xe16c, 0x4e89, \
-    { 0x86, 0x8c, 0xc3, 0x2e, 0x62, 0x40, 0x05, 0xb2 } }
+  { 0xdb9b0931, 0xebf9, 0x4e0d, \
+    { 0xb2, 0x0a, 0xf7, 0x5f, 0xcb, 0x17, 0xe6, 0xe1 } }
 
 /*
  * Window shadow styles
@@ -413,6 +414,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::dom::TabChild TabChild;
 
   public:
+    typedef mozilla::layers::Composer2D Composer2D;
     typedef mozilla::layers::CompositorChild CompositorChild;
     typedef mozilla::layers::LayerManager LayerManager;
     typedef mozilla::layers::LayersBackend LayersBackend;
@@ -1497,9 +1499,9 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD_(InputContext) GetInputContext() = 0;
 
     /**
-     * Set accelerated rendering to 'True' or 'False'
+     * Set layers acceleration to 'True' or 'False'
      */
-    NS_IMETHOD SetAcceleratedRendering(bool aEnabled) = 0;
+    NS_IMETHOD SetLayersAcceleration(bool aEnabled) = 0;
 
     /*
      * Get toggled key states.
@@ -1671,6 +1673,16 @@ class nsIWidget : public nsISupports {
      * return the compositor which is doing that on our behalf.
      */
     virtual CompositorChild* GetRemoteRenderer()
+    { return nullptr; }
+
+    /**
+     * If this widget has a more efficient composer available for its
+     * native framebuffer, return it.
+     *
+     * This can be called from a non-main thread, but that thread must
+     * hold a strong reference to this.
+     */
+    virtual Composer2D* GetComposer2D()
     { return nullptr; }
 
 protected:

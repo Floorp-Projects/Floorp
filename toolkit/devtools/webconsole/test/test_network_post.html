@@ -114,7 +114,7 @@ function onNetworkEventUpdate(aState, aType, aPacket)
       break;
     case "responseContent":
       expectedPacket = {
-        mimeType: /^application\/(json|octet-stream)$/,
+        mimeType: "application/json",
         contentSize: /^\d+$/,
         discardResponseBody: false,
       };
@@ -185,10 +185,12 @@ function onRequestPostData(aState, aResponse)
 
   checkObject(aResponse, {
     postData: {
-      text: "Hello world!",
+      text: /^Hello world! foobaz barr.+foobaz barr$/,
     },
     postDataDiscarded: false,
   });
+
+  is(aResponse.postData.text.length, 552, "postData text length");
 
   onResponseHeaders = onResponseHeaders.bind(null, aState);
   aState.client.getResponseHeaders(aState.netActor,

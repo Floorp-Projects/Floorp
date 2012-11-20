@@ -192,12 +192,15 @@ destroying the MediaDecoder object.
 #include "mozilla/ReentrantMonitor.h"
 #include "MediaStreamGraph.h"
 #include "MediaDecoderOwner.h"
+#include "AudioChannelCommon.h"
 
 class nsIStreamListener;
 class nsTimeRanges;
 class nsIMemoryReporter;
 class nsIPrincipal;
 class nsITimer;
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace layers {
@@ -601,6 +604,10 @@ public:
   // mDecoderStateMachine). This must be called with the decode monitor
   // held.
   void UpdatePlaybackPosition(int64_t aTime);
+
+  void SetAudioChannelType(AudioChannelType aType) { mAudioChannelType = aType; }
+  AudioChannelType GetAudioChannelType() { return mAudioChannelType; }
+
   /******
    * The following methods must only be called on the main
    * thread.
@@ -1027,6 +1034,10 @@ protected:
   // being run that operates on the element and decoder during shutdown.
   // Read/Write from the main thread only.
   bool mShuttingDown;
+
+  // Be assigned from media element during the initialization and pass to
+  // AudioStream Class.
+  AudioChannelType mAudioChannelType;
 };
 
 } // namespace mozilla

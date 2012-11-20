@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport");
+MOZ_MTLOG_MODULE("mtransport")
 
 DtlsIdentity::~DtlsIdentity() {
   // XXX: make cert_ a smart pointer to avoid this, after we figure

@@ -8,7 +8,7 @@
 interface nsIDOMDOMRequest;
 interface nsIDOMDOMError;
 
-[scriptable, uuid(b00a5908-1228-46bf-a42b-091dce3abde1)]
+[scriptable, uuid(84524e5f-c4ab-4dce-8364-4aac71851ff1)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
@@ -41,9 +41,14 @@ interface mozIDOMApplication  : nsISupports
   attribute nsIDOMEventListener onprogress;
 
   /**
-   * The date of the last update.
+   * The date of the last update check.
    */
   readonly attribute unsigned long long lastUpdateCheck;
+
+  /**
+   * The date of the last updated manifest.
+   */
+  readonly attribute unsigned long long updateTime;
 
   /**
    * Starts the process of looking for an update.

@@ -1035,7 +1035,7 @@ AttachFinishedCompilations(JSContext *cx)
 
             if (success) {
                 if (script->hasIonScript())
-                    mjit::ReleaseScriptCodeFromVM(cx, script);
+                    mjit::DisableScriptCodeForIon(script, script->ionScript()->osrPc());
             } else {
                 // Silently ignore OOM during code generation, we're at an
                 // operation callback and can't propagate failures.
@@ -1411,7 +1411,7 @@ static IonExecStatus
 EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 {
     AssertCanGC();
-    JS_CHECK_RECURSION(cx, return IonExec_Error);
+    JS_CHECK_RECURSION(cx, return IonExec_Aborted);
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
     JS_ASSERT(!fp->script()->ion->bailoutExpected());
@@ -1872,9 +1872,11 @@ ion::FinishInvalidation(FreeOp *fop, JSScript *script)
 }
 
 void
-ion::MarkFromIon(JSCompartment *comp, Value *vp)
+ion::MarkFromIon(JSRuntime *rt, Value *vp)
 {
-    gc::MarkValueUnbarriered(comp->barrierTracer(), vp, "write barrier");
+    JS_ASSERT_IF(vp->isMarkable(),
+                 ((gc::Cell*)vp->toGCThing())->compartment()->needsBarrier());
+    gc::MarkValueUnbarriered(&rt->gcMarker, vp, "write barrier");
 }
 
 void

@@ -26,9 +26,9 @@ var tests = {
     }
     Social.provider.updateUserProfile(profile);
     // check dom values
-    let portrait = document.getElementById("social-statusarea-user-portrait").getAttribute("src");
+    let portrait = document.getElementsByClassName("social-statusarea-user-portrait")[0].getAttribute("src");
     is(profile.portrait, portrait, "portrait is set");
-    let userButton = document.getElementById("social-statusarea-username");
+    let userButton = document.getElementsByClassName("social-statusarea-loggedInStatus")[0];
     ok(!userButton.hidden, "username is visible");
     is(userButton.value, profile.userName, "username is set");
     next();
@@ -46,7 +46,7 @@ var tests = {
       toolsPopup.removeEventListener("popupshown", ontoolspopupshownNoAmbient);
       let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
       ok(socialToggleMore, "Keyboard accessible social menu should exist");
-      is(socialToggleMore.querySelectorAll("menuitem").length, 2, "The minimum number of menuitems is two when there are no ambient notifications.");
+      is(socialToggleMore.querySelectorAll("menuitem").length, 5, "The minimum number of menuitems is two when there are no ambient notifications.");
       is(socialToggleMore.hidden, false, "Menu should be visible since we show some non-ambient notifications in the menu.");
       toolsPopup.hidePopup();
       next();
@@ -104,9 +104,9 @@ var tests = {
         toolsPopup.removeEventListener("popupshown", ontoolspopupshownAmbient);
         let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
         ok(socialToggleMore, "Keyboard accessible social menu should exist");
-        is(socialToggleMore.querySelectorAll("menuitem").length, 5, "The number of menuitems is minimum plus three ambient notification menuitems.");
+        is(socialToggleMore.querySelectorAll("menuitem").length, 8, "The number of menuitems is minimum plus three ambient notification menuitems.");
         is(socialToggleMore.hidden, false, "Menu is visible when ambient notifications have label & menuURL");
-        let menuitem = socialToggleMore.querySelector("menuitem");
+        let menuitem = socialToggleMore.querySelector(".ambient-menuitem");
         is(menuitem.getAttribute("label"), "Test Ambient 1", "Keyboard accessible ambient menuitem should have specified label");
         toolsPopup.hidePopup();
         next();
@@ -117,8 +117,6 @@ var tests = {
   testProfileUnset: function(next) {
     Social.provider.updateUserProfile({});
     // check dom values
-    let userButton = document.getElementById("social-statusarea-username");
-    ok(userButton.hidden, "username is not visible");
     let ambientIcons = document.querySelectorAll("#social-toolbar-item > box");
     for (let ambientIcon of ambientIcons) {
       ok(ambientIcon.collapsed, "ambient icon (" + ambientIcon.id + ") is collapsed");
@@ -126,18 +124,15 @@ var tests = {
     
     next();
   },
-  testShowSidebarMenuitemExists: function(next) {
-    let toggleSidebarMenuitem = document.getElementById("social-toggle-sidebar-menuitem");
-    ok(toggleSidebarMenuitem, "Toggle Sidebar menuitem exists");
-    let toggleSidebarKeyboardMenuitem = document.getElementById("social-toggle-sidebar-keyboardmenuitem");
-    ok(toggleSidebarKeyboardMenuitem, "Toggle Sidebar keyboard menuitem exists");
-    next();
-  },
-  testShowDesktopNotificationsMenuitemExists: function(next) {
-    let toggleDesktopNotificationsMenuitem = document.getElementById("social-toggle-notifications-menuitem");
-    ok(toggleDesktopNotificationsMenuitem, "Toggle notifications menuitem exists");
-    let toggleDesktopNotificationsKeyboardMenuitem = document.getElementById("social-toggle-notifications-keyboardmenuitem");
-    ok(toggleDesktopNotificationsKeyboardMenuitem, "Toggle notifications keyboard menuitem exists");
+  testMenuitemsExist: function(next) {
+    let toggleSidebarMenuitems = document.getElementsByClassName("social-toggle-sidebar-menuitem");
+    is(toggleSidebarMenuitems.length, 2, "Toggle Sidebar menuitems exist");
+    let toggleDesktopNotificationsMenuitems = document.getElementsByClassName("social-toggle-notifications-menuitem");
+    is(toggleDesktopNotificationsMenuitems.length, 2, "Toggle notifications menuitems exist");
+    let toggleSocialMenuitems = document.getElementsByClassName("social-toggle-menuitem");
+    is(toggleSocialMenuitems.length, 2, "Toggle Social menuitems exist");
+    let removeSocialMenuitems = document.getElementsByClassName("social-remove-menuitem");
+    is(removeSocialMenuitems.length, 2, "Remove Social menuitems exist");
     next();
   }
 }

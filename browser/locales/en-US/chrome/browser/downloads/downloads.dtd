@@ -25,6 +25,21 @@
      -->
 <!ENTITY downloadDetails.width            "50ch">
 
+<!-- LOCALIZATION NOTE (downloadsSummary.minWidth):
+     Minimum width for the main description of the downloads summary,
+     which is displayed at the bottom of the Downloads Panel if the
+     number of downloads exceeds the limit that the panel can display.
+
+     A good rule of thumb here is to look at the otherDownloads string
+     in downloads.properties, and make a reasonable estimate of its
+     maximum length. For English, this seems like a reasonable limit:
+
+     +999 other current downloads
+
+     that's 28 characters, so we set the minimum width to 28ch.
+     -->
+<!ENTITY downloadsSummary.minWidth        "28ch">
+
 <!ENTITY cmd.pause.label                  "Pause">
 <!ENTITY cmd.pause.accesskey              "P">
 <!ENTITY cmd.resume.label                 "Resume">
@@ -50,3 +65,10 @@
 <!ENTITY cmd.clearList.label              "Clear List">
 <!ENTITY cmd.clearList.accesskey          "a">
 
+<!-- LOCALIZATION NOTE (downloadsHistory.label, downloadsHistory.accesskey):
+     This string is shown at the bottom of the Downloads Panel when all the
+     downloads fit in the available space, or when there are no downloads in
+     the panel at all.
+     -->
+<!ENTITY downloadsHistory.label           "Show All Downloads">
+<!ENTITY downloadsHistory.accesskey       "S">

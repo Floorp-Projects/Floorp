@@ -43,6 +43,10 @@
              oncommand="DebuggerView.Filtering._doGlobalSearch()"/>
     <command id="variableSearchCommand"
              oncommand="DebuggerView.Filtering._doVariableSearch()"/>
+    <command id="addBreakpointCommand"
+             oncommand="DebuggerView.Breakpoints._onCmdAddBreakpoint()"/>
+    <command id="addConditionalBreakpointCommand"
+             oncommand="DebuggerView.Breakpoints._onCmdAddConditionalBreakpoint()"/>
     <command id="togglePauseOnExceptions"
              oncommand="DebuggerView.Options._togglePauseOnExceptions()"/>
     <command id="toggleShowPanesOnStartup"
@@ -56,6 +60,15 @@
   <popupset id="debuggerPopupset">
     <menupopup id="sourceEditorContextMenu"
                onpopupshowing="goUpdateSourceEditorMenuItems()">
+      <menuitem id="se-dbg-cMenu-addBreakpoint"
+                label="&debuggerUI.seMenuBreak;"
+                key="addBreakpointKey"
+                command="addBreakpointCommand"/>
+      <menuitem id="se-dbg-cMenu-addConditionalBreakpoint"
+                label="&debuggerUI.seMenuCondBreak;"
+                key="addConditionalBreakpointKey"
+                command="addConditionalBreakpointCommand"/>
+      <menuseparator/>
       <menuitem id="se-cMenu-copy"/>
       <menuseparator/>
       <menuitem id="se-cMenu-selectAll"/>
@@ -128,6 +141,14 @@
          key="V"
          modifiers="control shift"
          command="variableSearchCommand"/>
+    <key id="addBreakpointKey"
+         key="B"
+         modifiers="accel"
+         command="addBreakpointCommand"/>
+    <key id="addConditionalBreakpointKey"
+         key="B"
+         modifiers="accel shift"
+         command="addConditionalBreakpointCommand"/>
   </keyset>
 
   <vbox id="body" flex="1">
@@ -201,6 +222,16 @@
       </vbox>
     </panel>
 
+    <panel id="conditional-breakpoint-panel"
+           type="arrow"
+           noautofocus="true"
+           position="after_start">
+      <vbox>
+        <label class="description" value="&debuggerUI.condBreakPanelTitle;"/>
+        <textbox id="conditional-breakpoint-textbox"/>
+      </vbox>
+    </panel>
+
     <vbox id="dbg-content" flex="1">
       <vbox id="globalsearch" hidden="true"/>
       <splitter id="globalsearch-splitter"
@@ -214,7 +245,11 @@
         <splitter class="devtools-side-splitter"/>
         <vbox id="editor" flex="1"/>
         <splitter class="devtools-side-splitter"/>
-        <vbox id="variables"/>
+        <vbox id="variables+expressions">
+          <vbox id="expressions"/>
+          <splitter class="devtools-horizontal-splitter"/>
+          <vbox id="variables" flex="1"/>
+        </vbox>
       </hbox>
     </vbox>
 

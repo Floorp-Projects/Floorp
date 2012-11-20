@@ -372,8 +372,9 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   }
   switch (aValue.GetUnit()) {
     case eCSSUnit_EM: {
+      // CSS2.1 specifies that this unit scales to the computed font
+      // size, not the em-width in the font metrics, despite the name.
       return ScaleCoord(aValue, float(aFontSize));
-      // XXX scale against font metrics height instead?
     }
     case eCSSUnit_XHeight: {
       nsRefPtr<nsFontMetrics> fm =

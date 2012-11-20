@@ -8,7 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsError.h"
-#include "imgILoader.h"
+#include "imgLoader.h"
 #include "imgICache.h"
 #include "imgIContainer.h"
 #include "imgIEncoder.h"

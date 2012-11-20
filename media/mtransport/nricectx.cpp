@@ -84,7 +84,7 @@ extern "C" {
 
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport");
+MOZ_MTLOG_MODULE("mtransport")
 
 static bool initialized = false;
 

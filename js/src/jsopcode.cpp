@@ -318,6 +318,21 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 
         pc = next;
     }
+
+    ion::IonScriptCounts *ionCounts = script->getIonCounts();
+
+    while (ionCounts) {
+        Sprint(sp, "IonScript [%lu blocks]:\n", ionCounts->numBlocks());
+        for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
+            const ion::IonBlockCounts &block = ionCounts->block(i);
+            Sprint(sp, "BB #%lu [%05u]", block.id(), block.offset());
+            for (size_t j = 0; j < block.numSuccessors(); j++)
+                Sprint(sp, " -> #%lu", block.successor(j));
+            Sprint(sp, " :: %llu hits\n", block.hitCount());
+            Sprint(sp, "%s\n", block.code());
+        }
+        ionCounts = ionCounts->previous();
+    }
 }
 
 /*
@@ -6702,6 +6717,18 @@ GetPCCountScriptSummary(JSContext *cx, size_t index)
     AppendArrayJSONProperties(cx, buf, arithTotals, countArithNames,
                               JS_ARRAY_LENGTH(arithTotals), comma);
 
+    uint64_t ionActivity = 0;
+    ion::IonScriptCounts *ionCounts = sac.getIonCounts();
+    while (ionCounts) {
+        for (size_t i = 0; i < ionCounts->numBlocks(); i++)
+            ionActivity += ionCounts->block(i).hitCount();
+        ionCounts = ionCounts->previous();
+    }
+    if (ionActivity) {
+        AppendJSONProperty(buf, "ion", comma);
+        NumberValueToStringBuffer(cx, DoubleValue(ionActivity), buf);
+    }
+
     buf.append('}');
     buf.append('}');
 
@@ -6838,6 +6865,54 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
     }
 
     buf.append(']');
+
+    ion::IonScriptCounts *ionCounts = sac.getIonCounts();
+    if (ionCounts) {
+        AppendJSONProperty(buf, "ion");
+        buf.append('[');
+        bool comma = false;
+        while (ionCounts) {
+            if (comma)
+                buf.append(',');
+            comma = true;
+
+            buf.append('[');
+            for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
+                if (i)
+                    buf.append(',');
+                const ion::IonBlockCounts &block = ionCounts->block(i);
+
+                buf.append('{');
+                AppendJSONProperty(buf, "id", NO_COMMA);
+                NumberValueToStringBuffer(cx, Int32Value(block.id()), buf);
+                AppendJSONProperty(buf, "offset");
+                NumberValueToStringBuffer(cx, Int32Value(block.offset()), buf);
+                AppendJSONProperty(buf, "successors");
+                buf.append('[');
+                for (size_t j = 0; j < block.numSuccessors(); j++) {
+                    if (j)
+                        buf.append(',');
+                    NumberValueToStringBuffer(cx, Int32Value(block.successor(j)), buf);
+                }
+                buf.append(']');
+                AppendJSONProperty(buf, "hits");
+                NumberValueToStringBuffer(cx, DoubleValue(block.hitCount()), buf);
+
+                AppendJSONProperty(buf, "code");
+                JSString *str = JS_NewStringCopyZ(cx, block.code());
+                if (!str || !(str = JS_ValueToSource(cx, StringValue(str))))
+                    return false;
+                buf.append(str);
+
+                buf.append('}');
+            }
+            buf.append(']');
+
+            ionCounts = ionCounts->previous();
+        }
+        buf.append(']');
+    }
+
     buf.append('}');
 
     return !cx->isExceptionPending();

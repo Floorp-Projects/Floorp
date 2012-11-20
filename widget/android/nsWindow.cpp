@@ -60,12 +60,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
 
-#ifdef MOZ_ANDROID_OMTC
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
-#endif
 
 
 class ContentCreationNotifier;
@@ -164,7 +162,7 @@ nsWindow::nsWindow() :
     mIMEComposing(false),
     mIMEMaskSelectionUpdate(false),
     mIMEMaskTextUpdate(false),
-    mIMEMaskEvents(true) // Mask IME events since there's no focus yet
+    mIMEMaskEventsCount(1) // Mask IME events since there's no focus yet
 {
 }
 
@@ -175,9 +173,7 @@ nsWindow::~nsWindow()
     if (top->mFocus == this)
         top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
-#ifdef MOZ_ANDROID_OMTC
     SetCompositor(NULL, NULL);
-#endif
 }
 
 bool
@@ -692,9 +688,8 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         return mLayerManager;
     }
 
-    mUseAcceleratedRendering = GetShouldAccelerate();
+    mUseLayersAcceleration = ComputeShouldAccelerate(mUseLayersAcceleration);
 
-#ifdef MOZ_ANDROID_OMTC
     bool useCompositor = UseOffMainThreadCompositing();
 
     if (useCompositor) {
@@ -707,9 +702,8 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         // If we get here, then off main thread compositing failed to initialize.
         sFailedToCreateGLContext = true;
     }
-#endif
 
-    if (!mUseAcceleratedRendering ||
+    if (!mUseLayersAcceleration ||
         sFailedToCreateGLContext)
     {
         printf_stderr(" -- creating basic, not accelerated\n");
@@ -772,14 +766,12 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             if (ae->Type() == AndroidGeckoEvent::FORCED_RESIZE || nw != gAndroidBounds.width ||
                 nh != gAndroidBounds.height) {
 
-#ifdef MOZ_ANDROID_OMTC
                 if (sCompositorParent != 0 && gAndroidBounds.width == 0) {
                     // Propagate size change to compositor. This is sometimes essential
                     // on startup, because the window size may not have been available
                     // when the compositor was created.
                     ScheduleResumeComposition(nw, nh);
                 }
-#endif
 
                 gAndroidBounds.width = nw;
                 gAndroidBounds.height = nh;
@@ -925,7 +917,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             sValidSurface = false;
             break;
 
-#ifdef MOZ_ANDROID_OMTC
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
             // The compositor gets paused when the app is about to go into the
             // background. While the compositor is paused, we need to ensure that
@@ -948,7 +939,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             sCompositorPaused = false;
             win->RedrawAll();
             break;
-#endif
 
         case AndroidGeckoEvent::GECKO_EVENT_SYNC:
             AndroidBridge::Bridge()->AcknowledgeEventSync();
@@ -1102,7 +1092,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     AutoLocalJNIFrame jniFrame;
 
-#ifdef MOZ_ANDROID_OMTC
     // We're paused, or we haven't been given a window-size yet, so do nothing
     if (sCompositorPaused || gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
         return;
@@ -1122,128 +1111,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         DrawTo(targetSurface, ae->Rect());
     }
     layers::renderTraceEventEnd("Widget draw to", "434646");
-    return;
-#endif
-
-    if (!sSurfaceExists) {
-        return;
-    }
-
-    AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
-
-    NS_ASSERTION(!sview.isNull(), "SurfaceView is null!");
-
-    AndroidBridge::Bridge()->HideProgressDialogOnce();
-
-    if (GetLayerManager(nullptr)->GetBackendType() == mozilla::layers::LAYERS_BASIC) {
-        if (sNativeWindow) {
-            unsigned char *bits;
-            int width, height, format, stride;
-            if (!AndroidBridge::Bridge()->LockWindow(sNativeWindow, &bits, &width, &height, &format, &stride)) {
-                ALOG("failed to lock buffer - skipping draw");
-                return;
-            }
-
-            if (!bits || format != AndroidBridge::WINDOW_FORMAT_RGB_565 ||
-                width != mBounds.width || height != mBounds.height) {
-
-                ALOG("surface is not expected dimensions or format - skipping draw");
-                AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
-                return;
-            }
-
-            nsRefPtr<gfxImageSurface> targetSurface =
-                new gfxImageSurface(bits,
-                                    gfxIntSize(mBounds.width, mBounds.height),
-                                    stride * 2,
-                                    gfxASurface::ImageFormatRGB16_565);
-            if (targetSurface->CairoStatus()) {
-                ALOG("### Failed to create a valid surface from the bitmap");
-            } else {
-                DrawTo(targetSurface);
-            }
-
-            AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
-        } else if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
-            jobject bitmap = sview.GetSoftwareDrawBitmap(&jniFrame);
-            if (!bitmap) {
-                ALOG("no bitmap to draw into - skipping draw");
-                return;
-            }
-
-            if (!AndroidBridge::Bridge()->ValidateBitmap(bitmap, mBounds.width, mBounds.height))
-                return;
-
-            void *buf = AndroidBridge::Bridge()->LockBitmap(bitmap);
-            if (buf == nullptr) {
-                ALOG("### Software drawing, but failed to lock bitmap.");
-                return;
-            }
-
-            nsRefPtr<gfxImageSurface> targetSurface =
-                new gfxImageSurface((unsigned char *)buf,
-                                    gfxIntSize(mBounds.width, mBounds.height),
-                                    mBounds.width * 2,
-                                    gfxASurface::ImageFormatRGB16_565);
-            if (targetSurface->CairoStatus()) {
-                ALOG("### Failed to create a valid surface from the bitmap");
-            } else {
-                DrawTo(targetSurface);
-            }
-
-            AndroidBridge::Bridge()->UnlockBitmap(bitmap);
-            sview.Draw2D(bitmap, mBounds.width, mBounds.height);
-        } else {
-            jobject bytebuf = sview.GetSoftwareDrawBuffer(&jniFrame);
-            if (!bytebuf) {
-                ALOG("no buffer to draw into - skipping draw");
-                return;
-            }
-
-            void *buf = env->GetDirectBufferAddress(bytebuf);
-            int cap = env->GetDirectBufferCapacity(bytebuf);
-            if (!buf || cap != (mBounds.width * mBounds.height * 2)) {
-                ALOG("### Software drawing, but unexpected buffer size %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
-                return;
-            }
-
-            nsRefPtr<gfxImageSurface> targetSurface =
-                new gfxImageSurface((unsigned char *)buf,
-                                    gfxIntSize(mBounds.width, mBounds.height),
-                                    mBounds.width * 2,
-                                    gfxASurface::ImageFormatRGB16_565);
-            if (targetSurface->CairoStatus()) {
-                ALOG("### Failed to create a valid surface");
-            } else {
-                DrawTo(targetSurface);
-            }
-
-            sview.Draw2D(bytebuf, mBounds.width * 2);
-        }
-    } else {
-        int drawType = sview.BeginDrawing();
-
-        if (drawType == AndroidGeckoSurfaceView::DRAW_DISABLED) {
-            return;
-        }
-
-        if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
-            ALOG("##### BeginDrawing failed!");
-            return;
-        }
-
-        if (!sValidSurface) {
-            sGLContext->RenewSurface();
-            sValidSurface = true;
-        }
-
-
-        NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
-
-        DrawTo(nullptr);
-
-        sview.EndDrawing();
-    }
 }
 
 void
@@ -1883,10 +1750,11 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
     if (ae->Action() == AndroidGeckoEvent::IME_ACKNOWLEDGE_FOCUS) {
-        mIMEMaskEvents = false;
+        MOZ_ASSERT(mIMEMaskEventsCount > 0);
+        mIMEMaskEventsCount--;
         return;
     }
-    if (mIMEMaskEvents) {
+    if (mIMEMaskEventsCount > 0) {
         // Still reply to events, but don't do anything else
         if (ae->Action() == AndroidGeckoEvent::IME_SYNCHRONIZE ||
             ae->Action() == AndroidGeckoEvent::IME_REPLACE_TEXT) {
@@ -2184,7 +2052,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
         // Mask events because we lost focus. On the next focus event, Gecko will notify
         // Java, and Java will send an acknowledge focus event back to Gecko. That is
         // where we unmask event handling
-        mIMEMaskEvents = true;
+        mIMEMaskEventsCount++;
     }
 
     AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE,
@@ -2247,7 +2115,6 @@ nsWindow::GetIMEUpdatePreference()
     return nsIMEUpdatePreference(true, true);
 }
 
-#ifdef MOZ_ANDROID_OMTC
 void
 nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 {
@@ -2378,5 +2245,4 @@ nsWindow::NeedsPaint()
   return !bounds.IsEmpty();
 }
 
-#endif
 

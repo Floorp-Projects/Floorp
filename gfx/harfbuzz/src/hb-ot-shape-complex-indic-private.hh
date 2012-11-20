@@ -39,7 +39,7 @@
 #define indic_position() complex_var_u8_1() /* indic_matra_category_t */
 
 
-#define INDIC_TABLE_ELEMENT_TYPE uint8_t
+#define INDIC_TABLE_ELEMENT_TYPE uint16_t
 
 /* Cateories used in the OpenType spec:
  * https://www.microsoft.com/typography/otfntdev/devanot/shaping.aspx
@@ -63,7 +63,8 @@ enum indic_category_t {
   OT_RS, /* Register Shifter, used in Khmer OT spec */
   OT_Coeng,
   OT_Repha,
-  OT_Ra /* Not explicitly listed in the OT spec, but used in the grammar. */
+  OT_Ra, /* Not explicitly listed in the OT spec, but used in the grammar. */
+  OT_CM
 };
 
 /* Visual positions in a syllable from left to right. */
@@ -103,7 +104,7 @@ enum indic_syllabic_category_t {
   INDIC_SYLLABIC_CATEGORY_CONSONANT_DEAD	= OT_C,
   INDIC_SYLLABIC_CATEGORY_CONSONANT_FINAL	= OT_C,
   INDIC_SYLLABIC_CATEGORY_CONSONANT_HEAD_LETTER	= OT_C,
-  INDIC_SYLLABIC_CATEGORY_CONSONANT_MEDIAL	= OT_C,
+  INDIC_SYLLABIC_CATEGORY_CONSONANT_MEDIAL	= OT_CM,
   INDIC_SYLLABIC_CATEGORY_CONSONANT_PLACEHOLDER	= OT_NBSP,
   INDIC_SYLLABIC_CATEGORY_CONSONANT_SUBJOINED	= OT_C,
   INDIC_SYLLABIC_CATEGORY_CONSONANT_REPHA	= OT_Repha,
@@ -111,7 +112,7 @@ enum indic_syllabic_category_t {
   INDIC_SYLLABIC_CATEGORY_NUKTA			= OT_N,
   INDIC_SYLLABIC_CATEGORY_REGISTER_SHIFTER	= OT_RS,
   INDIC_SYLLABIC_CATEGORY_TONE_LETTER		= OT_X,
-  INDIC_SYLLABIC_CATEGORY_TONE_MARK		= OT_X,
+  INDIC_SYLLABIC_CATEGORY_TONE_MARK		= OT_N,
   INDIC_SYLLABIC_CATEGORY_VIRAMA		= OT_H,
   INDIC_SYLLABIC_CATEGORY_VISARGA		= OT_SM,
   INDIC_SYLLABIC_CATEGORY_VOWEL			= OT_V,
@@ -138,16 +139,16 @@ enum indic_matra_category_t {
   INDIC_MATRA_CATEGORY_TOP_AND_RIGHT		= INDIC_MATRA_CATEGORY_RIGHT,
 
   INDIC_MATRA_CATEGORY_INVISIBLE		= INDIC_MATRA_CATEGORY_NOT_APPLICABLE,
-  INDIC_MATRA_CATEGORY_OVERSTRUCK		= INDIC_MATRA_CATEGORY_NOT_APPLICABLE,
-  INDIC_MATRA_CATEGORY_VISUAL_ORDER_LEFT	= INDIC_MATRA_CATEGORY_NOT_APPLICABLE
+  INDIC_MATRA_CATEGORY_OVERSTRUCK		= POS_AFTER_MAIN,
+  INDIC_MATRA_CATEGORY_VISUAL_ORDER_LEFT	= POS_PRE_M
 };
 
 /* Note: We use ASSERT_STATIC_EXPR_ZERO() instead of ASSERT_STATIC_EXPR() and the comma operation
  * because gcc fails to optimize the latter and fills the table in at runtime. */
 #define INDIC_COMBINE_CATEGORIES(S,M) \
   (ASSERT_STATIC_EXPR_ZERO (M == INDIC_MATRA_CATEGORY_NOT_APPLICABLE || (S == INDIC_SYLLABIC_CATEGORY_VIRAMA || S == INDIC_SYLLABIC_CATEGORY_VOWEL_DEPENDENT)) + \
-   ASSERT_STATIC_EXPR_ZERO (S < 16 && M < 16) + \
-   ((M << 4) | S))
+   ASSERT_STATIC_EXPR_ZERO (S < 255 && M < 255) + \
+   ((M << 8) | S))
 
 
 #include "hb-ot-shape-complex-indic-table.hh"
@@ -221,7 +222,7 @@ matra_position (hb_codepoint_t u, indic_position_t side)
     case POS_ABOVE_C:	return MATRA_POS_TOP (u);
     case POS_BELOW_C:	return MATRA_POS_BOTTOM (u);
   };
-  abort ();
+  return side;
 }
 
 
@@ -285,7 +286,7 @@ is_joiner (const hb_glyph_info_t &info)
  * We treat Vowels and placeholders as if they were consonants.  This is safe because Vowels
  * cannot happen in a consonant syllable.  The plus side however is, we can call the
  * consonant syllable logic from the vowel syllable function and get it all right! */
-#define CONSONANT_FLAGS (FLAG (OT_C) | FLAG (OT_Ra) | FLAG (OT_V) | FLAG (OT_NBSP) | FLAG (OT_DOTTEDCIRCLE))
+#define CONSONANT_FLAGS (FLAG (OT_C) | FLAG (OT_CM) | FLAG (OT_Ra) | FLAG (OT_V) | FLAG (OT_NBSP) | FLAG (OT_DOTTEDCIRCLE))
 static inline bool
 is_consonant (const hb_glyph_info_t &info)
 {
@@ -304,8 +305,8 @@ set_indic_properties (hb_glyph_info_t &info)
 {
   hb_codepoint_t u = info.codepoint;
   unsigned int type = get_indic_categories (u);
-  indic_category_t cat = (indic_category_t) (type & 0x0F);
-  indic_position_t pos = (indic_position_t) (type >> 4);
+  indic_category_t cat = (indic_category_t) (type & 0x7F);
+  indic_position_t pos = (indic_position_t) (type >> 8);
 
 
   /*

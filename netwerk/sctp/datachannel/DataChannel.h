@@ -287,7 +287,7 @@ public:
 
   ~DataChannel();
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannel);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannel)
 
   // Close this DataChannel.  Can be called multiple times.
   void Close();

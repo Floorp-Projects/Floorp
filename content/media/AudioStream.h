@@ -11,6 +11,7 @@
 #include "nsIThread.h"
 #include "nsAutoPtr.h"
 #include "AudioSampleFormat.h"
+#include "AudioChannelCommon.h"
 
 namespace mozilla {
 
@@ -50,7 +51,8 @@ public:
   // (22050Hz, 44100Hz, etc).
   // Unsafe to call with a monitor held due to synchronous event execution
   // on the main thread, which may attempt to acquire any held monitor.
-  virtual nsresult Init(int32_t aNumChannels, int32_t aRate) = 0;
+  virtual nsresult Init(int32_t aNumChannels, int32_t aRate,
+                        const mozilla::dom::AudioChannelType aAudioStreamType) = 0;
 
   // Closes the stream. All future use of the stream is an error.
   // Unsafe to call with a monitor held due to synchronous event execution

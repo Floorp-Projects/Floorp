@@ -4,7 +4,7 @@
 // Copied from strings/stringpiece.cc with modifications
 
 #include <algorithm>
-#include <iostream>
+#include <ostream>
 
 #include "base/string_piece.h"
 

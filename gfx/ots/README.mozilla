@@ -1,6 +1,6 @@
 This is the Sanitiser for OpenType project, from http://code.google.com/p/ots/.
 
-Current revision: r92
+Current revision: r95
 
 Applied local patches:
     ots-fix-vc10.patch - workaround for VS10 STL wrappers (bug 602558)
@@ -10,3 +10,5 @@ Applied local patches:
     ots-graphite.patch - preserve Graphite layout tables (bug 631479)
 
     ots-visibility.patch - make Process function externally visible for Windows DLL (bug 711079)
+
+Patches from https://bugzilla.mozilla.org/show_bug.cgi?id=670901.

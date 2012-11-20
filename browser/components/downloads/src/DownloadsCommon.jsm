@@ -54,6 +54,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
+                                  "resource://gre/modules/DownloadUtils.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -72,7 +74,7 @@ const kDownloadsStringsRequiringFormatting = {
 };
 
 const kDownloadsStringsRequiringPluralForm = {
-  showMoreDownloads: true
+  otherDownloads: true
 };
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
@@ -184,7 +186,145 @@ this.DownloadsCommon = {
    * This does not need to be a lazy getter, since no initialization is required
    * at present.
    */
-  get indicatorData() DownloadsIndicatorData
+  get indicatorData() DownloadsIndicatorData,
+
+  /**
+   * Returns a reference to the DownloadsSummaryData singleton - creating one
+   * in the process if one hasn't been instantiated yet.
+   *
+   * @param aNumToExclude
+   *        The number of items on the top of the downloads list to exclude
+   *        from the summary.
+   */
+  _summary: null,
+  getSummary: function DC_getSummary(aNumToExclude)
+  {
+    if (this._summary) {
+      return this._summary;
+    }
+    return this._summary = new DownloadsSummaryData(aNumToExclude);
+  },
+
+  /**
+   * Given an iterable collection of nsIDownload's, generates and returns
+   * statistics about that collection.
+   *
+   * @param aDownloads An iterable collection of nsIDownloads.
+   *
+   * @return Object whose properties are the generated statistics. Currently,
+   *         we return the following properties:
+   *
+   *         numActive       : The total number of downloads.
+   *         numPaused       : The total number of paused downloads.
+   *         numScanning     : The total number of downloads being scanned.
+   *         numDownloading  : The total number of downloads being downloaded.
+   *         totalSize       : The total size of all downloads once completed.
+   *         totalTransferred: The total amount of transferred data for these
+   *                           downloads.
+   *         slowestSpeed    : The slowest download rate.
+   *         rawTimeLeft     : The estimated time left for the downloads to
+   *                           complete.
+   *         percentComplete : The percentage of bytes successfully downloaded.
+   */
+  summarizeDownloads: function DC_summarizeDownloads(aDownloads)
+  {
+    let summary = {
+      numActive: 0,
+      numPaused: 0,
+      numScanning: 0,
+      numDownloading: 0,
+      totalSize: 0,
+      totalTransferred: 0,
+      // slowestSpeed is Infinity so that we can use Math.min to
+      // find the slowest speed. We'll set this to 0 afterwards if
+      // it's still at Infinity by the time we're done iterating all
+      // downloads.
+      slowestSpeed: Infinity,
+      rawTimeLeft: -1,
+      percentComplete: -1
+    }
+
+    // If no download has been loaded, don't use the methods of the Download
+    // Manager service, so that it is not initialized unnecessarily.
+    for (let download of aDownloads) {
+      summary.numActive++;
+      switch (download.state) {
+        case nsIDM.DOWNLOAD_PAUSED:
+          summary.numPaused++;
+          break;
+        case nsIDM.DOWNLOAD_SCANNING:
+          summary.numScanning++;
+          break;
+        case nsIDM.DOWNLOAD_DOWNLOADING:
+          summary.numDownloading++;
+          if (download.size > 0 && download.speed > 0) {
+            let sizeLeft = download.size - download.amountTransferred;
+            summary.rawTimeLeft = Math.max(summary.rawTimeLeft,
+                                           sizeLeft / download.speed);
+            summary.slowestSpeed = Math.min(summary.slowestSpeed,
+                                            download.speed);
+          }
+          break;
+      }
+      // Only add to total values if we actually know the download size.
+      if (download.size > 0 &&
+          download.state != nsIDM.DOWNLOAD_CANCELED &&
+          download.state != nsIDM.DOWNLOAD_FAILED) {
+        summary.totalSize += download.size;
+        summary.totalTransferred += download.amountTransferred;
+      }
+    }
+
+    if (summary.numActive != 0 && summary.totalSize != 0 &&
+        summary.numActive != summary.numScanning) {
+      summary.percentComplete = (summary.totalTransferred /
+                                 summary.totalSize) * 100;
+    }
+
+    if (summary.slowestSpeed == Infinity) {
+      summary.slowestSpeed = 0;
+    }
+
+    return summary;
+  },
+
+  /**
+   * If necessary, smooths the estimated number of seconds remaining for one
+   * or more downloads to complete.
+   *
+   * @param aSeconds
+   *        Current raw estimate on number of seconds left for one or more
+   *        downloads. This is a floating point value to help get sub-second
+   *        accuracy for current and future estimates.
+   */
+  smoothSeconds: function DC_smoothSeconds(aSeconds, aLastSeconds)
+  {
+    // We apply an algorithm similar to the DownloadUtils.getTimeLeft function,
+    // though tailored to a single time estimation for all downloads.  We never
+    // apply sommothing if the new value is less than half the previous value.
+    let shouldApplySmoothing = aLastSeconds >= 0 &&
+                               aSeconds > aLastSeconds / 2;
+    if (shouldApplySmoothing) {
+      // Apply hysteresis to favor downward over upward swings.  Trust only 30%
+      // of the new value if lower, and 10% if higher (exponential smoothing).
+      let (diff = aSeconds - aLastSeconds) {
+        aSeconds = aLastSeconds + (diff < 0 ? .3 : .1) * diff;
+      }
+
+      // If the new time is similar, reuse something close to the last time
+      // left, but subtract a little to provide forward progress.
+      let diff = aSeconds - aLastSeconds;
+      let diffPercent = diff / aLastSeconds * 100;
+      if (Math.abs(diff) < 5 || Math.abs(diffPercent) < 5) {
+        aSeconds = aLastSeconds - (diff < 0 ? .4 : .2);
+      }
+    }
+
+    // In the last few seconds of downloading, we are always subtracting and
+    // never adding to the time left.  Ensure that we never fall below one
+    // second left until all downloads are actually finished.
+    return aLastSeconds = Math.max(aSeconds, 1);
+  }
 };
 
 /**
@@ -613,6 +753,7 @@ const DownloadsData = {
     dataItem.startTime = Math.round(aDownload.startTime / 1000);
     dataItem.currBytes = aDownload.amountTransferred;
     dataItem.maxBytes = aDownload.size;
+    dataItem.download = aDownload;
 
     this._views.forEach(
       function (view) view.getViewItem(dataItem).onStateChange()
@@ -919,19 +1060,13 @@ DownloadsDataItem.prototype = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-//// DownloadsIndicatorData
+//// DownloadsViewPrototype
 
 /**
- * This object registers itself with DownloadsData as a view, and transforms the
- * notifications it receives into overall status data, that is then broadcast to
- * the registered download status indicators.
- *
- * Note that using this object does not automatically start the Download Manager
- * service.  Consumers will see an empty list of downloads until the service is
- * actually started.  This is useful to display a neutral progress indicator in
- * the main browser window until the autostart timeout elapses.
+ * A prototype for an object that registers itself with DownloadsData as soon
+ * as a view is registered with it.
  */
-const DownloadsIndicatorData = {
+const DownloadsViewPrototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// Registration of views
 
@@ -946,10 +1081,10 @@ const DownloadsIndicatorData = {
    * The specified object is initialized with the currently available status.
    *
    * @param aView
-   *        DownloadsIndicatorView object to be added.  This reference must be
+   *        View object to be added.  This reference must be
    *        passed to removeView before termination.
    */
-  addView: function DID_addView(aView)
+  addView: function DVP_addView(aView)
   {
     // Start receiving events when the first of our views is registered.
     if (this._views.length == 0) {
@@ -964,11 +1099,12 @@ const DownloadsIndicatorData = {
    * Updates the properties of an object previously added using addView.
    *
    * @param aView
-   *        DownloadsIndicatorView object to be updated.
+   *        View object to be updated.
    */
-  refreshView: function DID_refreshView(aView)
+  refreshView: function DVP_refreshView(aView)
   {
     // Update immediately even if we are still loading data asynchronously.
+    // Subclasses must provide these two functions!
     this._refreshProperties();
     this._updateView(aView);
   },
@@ -977,9 +1113,9 @@ const DownloadsIndicatorData = {
    * Removes an object previously added using addView.
    *
    * @param aView
-   *        DownloadsIndicatorView object to be removed.
+   *        View object to be removed.
    */
-  removeView: function DID_removeView(aView)
+  removeView: function DVP_removeView(aView)
   {
     let index = this._views.indexOf(aView);
     if (index != -1) {
@@ -989,7 +1125,6 @@ const DownloadsIndicatorData = {
     // Stop receiving events when the last of our views is unregistered.
     if (this._views.length == 0) {
       DownloadsCommon.data.removeView(this);
-      this._itemCount = 0;
     }
   },
 
@@ -1004,7 +1139,7 @@ const DownloadsIndicatorData = {
   /**
    * Called before multiple downloads are about to be loaded.
    */
-  onDataLoadStarting: function DID_onDataLoadStarting()
+  onDataLoadStarting: function DVP_onDataLoadStarting()
   {
     this._loading = true;
   },
@@ -1012,9 +1147,134 @@ const DownloadsIndicatorData = {
   /**
    * Called after data loading finished.
    */
-  onDataLoadCompleted: function DID_onDataLoadCompleted()
+  onDataLoadCompleted: function DVP_onDataLoadCompleted()
   {
     this._loading = false;
+  },
+
+  /**
+   * Called when the downloads database becomes unavailable (for example, we
+   * entered Private Browsing Mode and the database backend changed).
+   * References to existing data should be discarded.
+   *
+   * @note Subclasses should override this.
+   */
+  onDataInvalidated: function DVP_onDataInvalidated()
+  {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Called when a new download data item is available, either during the
+   * asynchronous data load or when a new download is started.
+   *
+   * @param aDataItem
+   *        DownloadsDataItem object that was just added.
+   * @param aNewest
+   *        When true, indicates that this item is the most recent and should be
+   *        added in the topmost position.  This happens when a new download is
+   *        started.  When false, indicates that the item is the least recent
+   *        with regard to the items that have been already added. The latter
+   *        generally happens during the asynchronous data load.
+   *
+   * @note Subclasses should override this.
+   */
+  onDataItemAdded: function DVP_onDataItemAdded(aDataItem, aNewest)
+  {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Called when a data item is removed, ensures that the widget associated with
+   * the view item is removed from the user interface.
+   *
+   * @param aDataItem
+   *        DownloadsDataItem object that is being removed.
+   *
+   * @note Subclasses should override this.
+   */
+  onDataItemRemoved: function DVP_onDataItemRemoved(aDataItem)
+  {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Returns the view item associated with the provided data item for this view.
+   *
+   * @param aDataItem
+   *        DownloadsDataItem object for which the view item is requested.
+   *
+   * @return Object that can be used to notify item status events.
+   *
+   * @note Subclasses should override this.
+   */
+  getViewItem: function DID_getViewItem(aDataItem)
+  {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Private function used to refresh the internal properties being sent to
+   * each registered view.
+   *
+   * @note Subclasses should override this.
+   */
+  _refreshProperties: function DID_refreshProperties()
+  {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Private function used to refresh an individual view.
+   *
+   * @note Subclasses should override this.
+   */
+  _updateView: function DID_updateView()
+  {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadsIndicatorData
+
+/**
+ * This object registers itself with DownloadsData as a view, and transforms the
+ * notifications it receives into overall status data, that is then broadcast to
+ * the registered download status indicators.
+ *
+ * Note that using this object does not automatically start the Download Manager
+ * service.  Consumers will see an empty list of downloads until the service is
+ * actually started.  This is useful to display a neutral progress indicator in
+ * the main browser window until the autostart timeout elapses.
+ */
+const DownloadsIndicatorData = {
+  __proto__: DownloadsViewPrototype,
+
+  /**
+   * Removes an object previously added using addView.
+   *
+   * @param aView
+   *        DownloadsIndicatorView object to be removed.
+   */
+  removeView: function DID_removeView(aView)
+  {
+    DownloadsViewPrototype.removeView.call(this, aView);
+
+    if (this._views.length == 0) {
+      this._itemCount = 0;
+    }
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Callback functions from DownloadsData
+
+  /**
+   * Called after data loading finished.
+   */
+  onDataLoadCompleted: function DID_onDataLoadCompleted()
+  {
+    DownloadsViewPrototype.onDataLoadCompleted.call(this);
     this._updateViews();
   },
 
@@ -1179,40 +1439,21 @@ const DownloadsIndicatorData = {
   _lastTimeLeft: -1,
 
   /**
-   * Update the estimated time until all in-progress downloads will finish.
-   *
-   * @param aSeconds
-   *        Current raw estimate on number of seconds left for all downloads.
-   *        This is a floating point value to help get sub-second accuracy for
-   *        current and future estimates.
+   * A generator function for the downloads that this summary is currently
+   * interested in. This generator is passed off to summarizeDownloads in order
+   * to generate statistics about the downloads we care about - in this case,
+   * it's all active downloads.
    */
-  _updateTimeLeft: function DID_updateTimeLeft(aSeconds)
+  _activeDownloads: function DID_activeDownloads()
   {
-    // We apply an algorithm similar to the DownloadUtils.getTimeLeft function,
-    // though tailored to a single time estimation for all downloads.  We never
-    // apply sommothing if the new value is less than half the previous value.
-    let shouldApplySmoothing = this._lastTimeLeft >= 0 &&
-                               aSeconds > this._lastTimeLeft / 2;
-    if (shouldApplySmoothing) {
-      // Apply hysteresis to favor downward over upward swings.  Trust only 30%
-      // of the new value if lower, and 10% if higher (exponential smoothing).
-      let (diff = aSeconds - this._lastTimeLeft) {
-        aSeconds = this._lastTimeLeft + (diff < 0 ? .3 : .1) * diff;
-      }
-
-      // If the new time is similar, reuse something close to the last time
-      // left, but subtract a little to provide forward progress.
-      let diff = aSeconds - this._lastTimeLeft;
-      let diffPercent = diff / this._lastTimeLeft * 100;
-      if (Math.abs(diff) < 5 || Math.abs(diffPercent) < 5) {
-        aSeconds = this._lastTimeLeft - (diff < 0 ? .4 : .2);
+    // If no download has been loaded, don't use the methods of the Download
+    // Manager service, so that it is not initialized unnecessarily.
+    if (this._itemCount > 0) {
+      let downloads = Services.downloads.activeDownloads;
+      while (downloads.hasMoreElements()) {
+        yield downloads.getNext().QueryInterface(Ci.nsIDownload);
       }
     }
-
-    // In the last few seconds of downloading, we are always subtracting and
-    // never adding to the time left.  Ensure that we never fall below one
-    // second left until all downloads are actually finished.
-    this._lastTimeLeft = Math.max(aSeconds, 1);
   },
 
   /**
@@ -1220,69 +1461,236 @@ const DownloadsIndicatorData = {
    */
   _refreshProperties: function DID_refreshProperties()
   {
-    let numActive = 0;
-    let numPaused = 0;
-    let numScanning = 0;
-    let totalSize = 0;
-    let totalTransferred = 0;
-    let rawTimeLeft = -1;
-
-    // If no download has been loaded, don't use the methods of the Download
-    // Manager service, so that it is not initialized unnecessarily.
-    if (this._itemCount > 0) {
-      let downloads = Services.downloads.activeDownloads;
-      while (downloads.hasMoreElements()) {
-        let download = downloads.getNext().QueryInterface(Ci.nsIDownload);
-        numActive++;
-        switch (download.state) {
-          case nsIDM.DOWNLOAD_PAUSED:
-            numPaused++;
-            break;
-          case nsIDM.DOWNLOAD_SCANNING:
-            numScanning++;
-            break;
-          case nsIDM.DOWNLOAD_DOWNLOADING:
-            if (download.size > 0 && download.speed > 0) {
-              let sizeLeft = download.size - download.amountTransferred;
-              rawTimeLeft = Math.max(rawTimeLeft, sizeLeft / download.speed);
-            }
-            break;
-        }
-        // Only add to total values if we actually know the download size.
-        if (download.size > 0) {
-          totalSize += download.size;
-          totalTransferred += download.amountTransferred;
-        }
-      }
-    }
+    let summary =
+      DownloadsCommon.summarizeDownloads(this._activeDownloads());
 
     // Determine if the indicator should be shown or get attention.
     this._hasDownloads = (this._itemCount > 0);
 
-    if (numActive == 0 || totalSize == 0 || numActive == numScanning) {
-      // Don't display the current progress.
-      this._percentComplete = -1;
-    } else {
-      // Display the current progress.
-      this._percentComplete = (totalTransferred / totalSize) * 100;
-    }
-
     // If all downloads are paused, show the progress indicator as paused.
-    this._paused = numActive > 0 && numActive == numPaused;
+    this._paused = summary.numActive > 0 &&
+                   summary.numActive == summary.numPaused;
+
+    this._percentComplete = summary.percentComplete;
 
     // Display the estimated time left, if present.
-    if (rawTimeLeft == -1) {
+    if (summary.rawTimeLeft == -1) {
       // There are no downloads with a known time left.
       this._lastRawTimeLeft = -1;
       this._lastTimeLeft = -1;
       this._counter = "";
     } else {
       // Compute the new time left only if state actually changed.
-      if (this._lastRawTimeLeft != rawTimeLeft) {
-        this._lastRawTimeLeft = rawTimeLeft;
-        this._updateTimeLeft(rawTimeLeft);
+      if (this._lastRawTimeLeft != summary.rawTimeLeft) {
+        this._lastRawTimeLeft = summary.rawTimeLeft;
+        this._lastTimeLeft = DownloadsCommon.smoothSeconds(summary.rawTimeLeft,
+                                                           this._lastTimeLeft);
       }
       this._counter = DownloadsCommon.formatTimeLeft(this._lastTimeLeft);
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadsSummaryData
+
+/**
+ * DownloadsSummaryData is a view for DownloadsData that produces a summary
+ * of all downloads after a certain exclusion point aNumToExclude. For example,
+ * if there were 5 downloads in progress, and a DownloadsSummaryData was
+ * constructed with aNumToExclude equal to 3, then that DownloadsSummaryData
+ * would produce a summary of the last 2 downloads.
+ *
+ * @param aNumToExclude
+ *        The number of items to exclude from the summary, starting from the
+ *        top of the list.
+ */
+function DownloadsSummaryData(aNumToExclude) {
+  this._numToExclude = aNumToExclude;
+  // Since we can have multiple instances of DownloadsSummaryData, we
+  // override these values from the prototype so that each instance can be
+  // completely separated from one another.
+  this._views = [];
+  this._loading = false;
+
+  this._dataItems = [];
+
+  // Floating point value indicating the last number of seconds estimated until
+  // the longest download will finish.  We need to store this value so that we
+  // don't continuously apply smoothing if the actual download state has not
+  // changed.  This is set to -1 if the previous value is unknown.
+  this._lastRawTimeLeft = -1;
+
+  // Last number of seconds estimated until all in-progress downloads with a
+  // known size and speed will finish.  This value is stored to allow smoothing
+  // in case of small variations.  This is set to -1 if the previous value is
+  // unknown.
+  this._lastTimeLeft = -1;
+
+  // The following properties are updated by _refreshProperties and are then
+  // propagated to the views.
+  this._showingProgress = false;
+  this._details = "";
+  this._description = "";
+  this._numActive = 0;
+  this._percentComplete = -1;
+}
+
+DownloadsSummaryData.prototype = {
+  __proto__: DownloadsViewPrototype,
+
+  /**
+   * Removes an object previously added using addView.
+   *
+   * @param aView
+   *        DownloadsSummary view to be removed.
+   */
+  removeView: function DSD_removeView(aView)
+  {
+    DownloadsViewPrototype.removeView.call(this, aView);
+
+    if (this._views.length == 0) {
+      // Clear out our collection of DownloadsDataItems. If we ever have
+      // another view registered with us, this will get re-populated.
+      this._dataItems = [];
+    }
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Callback functions from DownloadsData - see the documentation in
+  //// DownloadsViewPrototype for more information on what these functions
+  //// are used for.
+
+  onDataLoadCompleted: function DSD_onDataLoadCompleted()
+  {
+    DownloadsViewPrototype.onDataLoadCompleted.call(this);
+    this._updateViews();
+  },
+
+  onDataInvalidated: function DSD_onDataInvalidated()
+  {
+    this._dataItems = [];
+  },
+
+  onDataItemAdded: function DSD_onDataItemAdded(aDataItem, aNewest)
+  {
+    if (aNewest) {
+      this._dataItems.unshift(aDataItem);
+    } else {
+      this._dataItems.push(aDataItem);
+    }
+
+    this._updateViews();
+  },
+
+  onDataItemRemoved: function DSD_onDataItemRemoved(aDataItem)
+  {
+    let itemIndex = this._dataItems.indexOf(aDataItem);
+    this._dataItems.splice(itemIndex, 1);
+    this._updateViews();
+  },
+
+  getViewItem: function DSD_getViewItem(aDataItem)
+  {
+    let self = this;
+    return Object.freeze({
+      onStateChange: function DIVI_onStateChange()
+      {
+        // Since the state of a download changed, reset the estimated time left.
+        self._lastRawTimeLeft = -1;
+        self._lastTimeLeft = -1;
+        self._updateViews();
+      },
+      onProgressChange: function DIVI_onProgressChange()
+      {
+        self._updateViews();
+      }
+    });
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Propagation of properties to our views
+
+  /**
+   * Computes aggregate values and propagates the changes to our views.
+   */
+  _updateViews: function DSD_updateViews()
+  {
+    // Do not update the status indicators during batch loads of download items.
+    if (this._loading) {
+      return;
+    }
+
+    this._refreshProperties();
+    this._views.forEach(this._updateView, this);
+  },
+
+  /**
+   * Updates the specified view with the current aggregate values.
+   *
+   * @param aView
+   *        DownloadsIndicatorView object to be updated.
+   */
+  _updateView: function DSD_updateView(aView)
+  {
+    aView.showingProgress = this._showingProgress;
+    aView.percentComplete = this._percentComplete;
+    aView.description = this._description;
+    aView.details = this._details;
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Property updating based on current download status
+
+  /**
+   * A generator function for the downloads that this summary is currently
+   * interested in. This generator is passed off to summarizeDownloads in order
+   * to generate statistics about the downloads we care about - in this case,
+   * it's the downloads in this._dataItems after the first few to exclude,
+   * which was set when constructing this DownloadsSummaryData instance.
+   */
+  _downloadsForSummary: function DSD_downloadsForSummary()
+  {
+    if (this._dataItems.length > 0) {
+      for (let i = this._numToExclude; i < this._dataItems.length; ++i) {
+        yield this._dataItems[i].download;
+      }
+    }
+  },
+
+  /**
+   * Computes aggregate values based on the current state of downloads.
+   */
+  _refreshProperties: function DSD_refreshProperties()
+  {
+    // Pre-load summary with default values.
+    let summary =
+      DownloadsCommon.summarizeDownloads(this._downloadsForSummary());
+
+    this._description = DownloadsCommon.strings
+                                       .otherDownloads(summary.numActive);
+    this._percentComplete = summary.percentComplete;
+
+    // If all downloads are paused, show the progress indicator as paused.
+    this._showingProgress = summary.numDownloading > 0 ||
+                            summary.numPaused > 0;
+
+    // Display the estimated time left, if present.
+    if (summary.rawTimeLeft == -1) {
+      // There are no downloads with a known time left.
+      this._lastRawTimeLeft = -1;
+      this._lastTimeLeft = -1;
+      this._details = "";
+    } else {
+      // Compute the new time left only if state actually changed.
+      if (this._lastRawTimeLeft != summary.rawTimeLeft) {
+        this._lastRawTimeLeft = summary.rawTimeLeft;
+        this._lastTimeLeft = DownloadsCommon.smoothSeconds(summary.rawTimeLeft,
+                                                           this._lastTimeLeft);
+      }
+      [this._details] = DownloadUtils.getDownloadStatusNoRate(
+        summary.totalTransferred, summary.totalSize, summary.slowestSpeed,
+        this._lastTimeLeft);
     }
   }
 }

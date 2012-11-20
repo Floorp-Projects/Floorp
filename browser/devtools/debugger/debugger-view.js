@@ -9,6 +9,8 @@ const SOURCE_URL_MAX_LENGTH = 64; // chars
 const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 1048576; // 1 MB in bytes
 const PANES_APPEARANCE_DELAY = 50; // ms
 const BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH = 1000; // chars
+const BREAKPOINT_CONDITIONAL_POPUP_POSITION = "after_start";
+const BREAKPOINT_CONDITIONAL_POPUP_OFFSET = 50; // px
 const GLOBAL_SEARCH_LINE_MAX_LENGTH = 300; // chars
 const GLOBAL_SEARCH_EXPAND_MAX_RESULTS = 50;
 const GLOBAL_SEARCH_ACTION_DELAY = 150; // ms
@@ -40,6 +42,7 @@ let DebuggerView = {
     this.Filtering.initialize();
     this.StackFrames.initialize();
     this.Breakpoints.initialize();
+    this.WatchExpressions.initialize();
     this.GlobalSearch.initialize();
 
     this.Variables = new VariablesView(document.getElementById("variables"));
@@ -69,6 +72,7 @@ let DebuggerView = {
     this.Filtering.destroy();
     this.StackFrames.destroy();
     this.Breakpoints.destroy();
+    this.WatchExpressions.destroy();
     this.GlobalSearch.destroy();
 
     this._destroyWindow();
@@ -120,10 +124,10 @@ let DebuggerView = {
 
     this._togglePanesButton = document.getElementById("toggle-panes");
     this._stackframesAndBreakpoints = document.getElementById("stackframes+breakpoints");
-    this._variables = document.getElementById("variables");
+    this._variablesAndExpressions = document.getElementById("variables+expressions");
 
     this._stackframesAndBreakpoints.setAttribute("width", Prefs.stackframesWidth);
-    this._variables.setAttribute("width", Prefs.variablesWidth);
+    this._variablesAndExpressions.setAttribute("width", Prefs.variablesWidth);
     this.togglePanes({
       visible: Prefs.panesVisibleOnStartup,
       animated: false
@@ -137,11 +141,11 @@ let DebuggerView = {
     dumpn("Destroying the DebuggerView panes");
 
     Prefs.stackframesWidth = this._stackframesAndBreakpoints.getAttribute("width");
-    Prefs.variablesWidth = this._variables.getAttribute("width");
+    Prefs.variablesWidth = this._variablesAndExpressions.getAttribute("width");
 
     this._togglePanesButton = null;
     this._stackframesAndBreakpoints = null;
-    this._variables = null;
+    this._variablesAndExpressions = null;
   },
 
   /**
@@ -177,6 +181,7 @@ let DebuggerView = {
     dumpn("Finished loading the DebuggerView editor");
 
     DebuggerController.Breakpoints.initialize();
+    window.dispatchEvent("Debugger:EditorLoaded", this.editor);
     this.editor.focus();
   },
 
@@ -188,6 +193,7 @@ let DebuggerView = {
     dumpn("Destroying the DebuggerView editor");
 
     DebuggerController.Breakpoints.destroy();
+    window.dispatchEvent("Debugger:EditorUnloaded", this.editor);
     this.editor = null;
   },
 
@@ -237,7 +243,7 @@ let DebuggerView = {
    *        The source object coming from the active thread.
    * @param object aOptions [optional]
    *        Additional options for showing the source. Supported options:
-   *        - targetLine: place the caret position at the given line number
+   *        - caretLine: place the caret position at the given line number
    *        - debugLine: place the debug location at the given line number
    *        - callback: function called when the source is shown
    */
@@ -264,21 +270,25 @@ let DebuggerView = {
     }
     // If the source is already loaded, display it immediately.
     else {
-      if (aSource.text.length < SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
-        this.setEditorMode(aSource.url, aSource.contentType, aSource.text);
-      } else {
-        this.editor.setMode(SourceEditor.MODES.TEXT);
+      if (this._editorSource != aSource) {
+        // Avoid setting the editor mode for very large files.
+        if (aSource.text.length < SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
+          this.setEditorMode(aSource.url, aSource.contentType, aSource.text);
+        } else {
+          this.editor.setMode(SourceEditor.MODES.TEXT);
+        }
+        this.editor.setText(aSource.text);
+        this.editor.resetUndo();
       }
-      this.editor.setText(aSource.text);
-      this.editor.resetUndo();
+      this._editorSource = aSource;
       this.updateEditor();
 
       DebuggerView.Sources.selectedValue = aSource.url;
       DebuggerController.Breakpoints.updateEditorBreakpoints();
 
       // Handle any additional options for showing the source.
-      if (aOptions.targetLine) {
-        editor.setCaretPosition(aOptions.targetLine - 1);
+      if (aOptions.caretLine) {
+        editor.setCaretPosition(aOptions.caretLine - 1);
       }
       if (aOptions.debugLine) {
         editor.setDebugLocation(aOptions.debugLine - 1);
@@ -382,30 +392,32 @@ let DebuggerView = {
    *        An object containing some of the following boolean properties:
    *        - visible: true if the pane should be shown, false for hidden
    *        - animated: true to display an animation on toggle
+   *        - callback: a function to invoke when the panes toggle finishes
    */
   togglePanes: function DV__togglePanes(aFlags = {}) {
     // Avoid useless toggles.
     if (aFlags.visible == !this.panesHidden) {
+      aFlags.callback && aFlags.callback();
       return;
     }
 
     if (aFlags.visible) {
       this._stackframesAndBreakpoints.style.marginLeft = "0";
-      this._variables.style.marginRight = "0";
+      this._variablesAndExpressions.style.marginRight = "0";
       this._togglePanesButton.removeAttribute("panesHidden");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
     } else {
       let marginL = ~~(this._stackframesAndBreakpoints.getAttribute("width")) + 1;
-      let marginR = ~~(this._variables.getAttribute("width")) + 1;
+      let marginR = ~~(this._variablesAndExpressions.getAttribute("width")) + 1;
       this._stackframesAndBreakpoints.style.marginLeft = -marginL + "px";
-      this._variables.style.marginRight = -marginR + "px";
+      this._variablesAndExpressions.style.marginRight = -marginR + "px";
       this._togglePanesButton.setAttribute("panesHidden", "true");
       this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
     }
 
     if (aFlags.animated) {
       this._stackframesAndBreakpoints.setAttribute("animated", "");
-      this._variables.setAttribute("animated", "");
+      this._variablesAndExpressions.setAttribute("animated", "");
 
       // Displaying the panes may have the effect of triggering scrollbars to
       // appear in the source editor, which would render the currently
@@ -414,23 +426,29 @@ let DebuggerView = {
 
       window.addEventListener("transitionend", function onEvent() {
         window.removeEventListener("transitionend", onEvent, false);
+        aFlags.callback && aFlags.callback();
         self.updateEditor();
       }, false);
     } else {
       this._stackframesAndBreakpoints.removeAttribute("animated");
-      this._variables.removeAttribute("animated");
+      this._variablesAndExpressions.removeAttribute("animated");
+      aFlags.callback && aFlags.callback();
     }
   },
 
   /**
    * Sets all the panes visible after a short period of time.
+   *
+   * @param function aCallback
+   *        A function to invoke when the panes toggle finishes.
    */
-  showPanesSoon: function DV__showPanesSoon() {
+  showPanesSoon: function DV__showPanesSoon(aCallback) {
     // Try to keep animations as smooth as possible, so wait a few cycles.
     window.setTimeout(function() {
       DebuggerView.togglePanes({
         visible: true,
-        animated: true
+        animated: true,
+        callback: aCallback
       });
     }, PANES_APPEARANCE_DELAY);
   },
@@ -448,11 +466,13 @@ let DebuggerView = {
     this.GlobalSearch.clearCache();
     this.StackFrames.empty();
     this.Breakpoints.empty();
+    this.Breakpoints.unhighlightBreakpoint();
     this.Variables.empty();
     SourceUtils.clearLabelsCache();
 
     if (this.editor) {
       this.editor.setText("");
+      this._editorSource = null;
     }
   },
 
@@ -466,9 +486,10 @@ let DebuggerView = {
   GlobalSearch: null,
   Variables: null,
   _editor: null,
+  _editorSource: null,
   _togglePanesButton: null,
   _stackframesAndBreakpoints: null,
-  _variables: null,
+  _variablesAndExpressions: null,
   _isInitialized: false,
   _isDestroyed: false
 };
@@ -590,8 +611,8 @@ MenuContainer.prototype = {
    *        The actual internal value of the item.
    * @param object aOptions [optional]
    *        Additional options or flags supported by this operation:
-   *          - forced: true to force the item to be immediately added
-   *          - unsorted: true if the items should not remain sorted
+   *          - forced: true to force the item to be immediately appended
+   *          - unsorted: true if the items should not always remain sorted
    *          - relaxed: true if this container should allow dupes & degenerates
    *          - description: an optional description of the item
    *          - attachment: some attached primitive/object
@@ -606,6 +627,10 @@ MenuContainer.prototype = {
     // Batch the item to be added later.
     if (!aOptions.forced) {
       this._stagedItems.push(item);
+    }
+    // Immediately insert the item at the specified index.
+    else if (aOptions.forced && aOptions.forced.atIndex !== undefined) {
+      return this._insertItemAt(aOptions.forced.atIndex, item, aOptions);
     }
     // Find the target position in this container and insert the item there.
     else if (!aOptions.unsorted) {
@@ -680,7 +705,7 @@ MenuContainer.prototype = {
     this._container.removeAttribute("tooltiptext");
     this._container.removeAllItems();
 
-    for (let [_, item] of this._itemsByElement) {
+    for (let [, item] of this._itemsByElement) {
       this._untangleItem(item);
     }
 
@@ -688,6 +713,18 @@ MenuContainer.prototype = {
     this._itemsByValue = new Map();
     this._itemsByElement = new Map();
     this._stagedItems = [];
+  },
+
+  /**
+   * Toggles all the items in this container hidden or visible.
+   *
+   * @param boolean aVisibleFlag
+   *        Specifies the intended visibility.
+   */
+  toggleContents: function DVMC_toggleContents(aVisibleFlag) {
+    for (let [, item] of this._itemsByElement) {
+      item.target.hidden = !aVisibleFlag;
+    }
   },
 
   /**
@@ -822,6 +859,18 @@ MenuContainer.prototype = {
   },
 
   /**
+   * Gets the item in the container having the specified index.
+   *
+   * @param number aIndex
+   *        The index used to identify the element.
+   * @return MenuItem
+   *         The matched item, or null if nothing is found.
+   */
+  getItemAtIndex: function DVMC_getItemAtIndex(aIndex) {
+    return this.getItemForElement(this._container.getItemAtIndex(aIndex));
+  },
+
+  /**
    * Gets the item in the container having the specified label.
    *
    * @param string aLabel
@@ -887,6 +936,14 @@ MenuContainer.prototype = {
       values.push(value);
     }
     return values;
+  },
+
+  /**
+   * Gets the total items in this container.
+   * @return number
+   */
+  get totalItems() {
+    return this._itemsByElement.size;
   },
 
   /**
@@ -1057,7 +1114,7 @@ MenuContainer.prototype = {
    * A generator-iterator over all the items in this container.
    */
   __iterator__: function DVMC_iterator() {
-    for (let [_, item] of this._itemsByElement) {
+    for (let [, item] of this._itemsByElement) {
       yield item;
     }
   },
@@ -1078,6 +1135,7 @@ MenuContainer.prototype = {
  *
  * Custom methods introduced by this view, not necessary for a MenuContainer:
  * set emptyText(aValue:string)
+ * set permaText(aValue:string)
  * set itemType(aType:string)
  * set itemFactory(aCallback:function)
  *
@@ -1088,7 +1146,6 @@ MenuContainer.prototype = {
  */
 function StackList(aAssociatedNode) {
   this._parent = aAssociatedNode;
-  this._appendEmptyNotice();
 
   // Create an internal list container.
   this._list = document.createElement("vbox");
@@ -1301,6 +1358,18 @@ StackList.prototype = {
   },
 
   /**
+   * Sets the text displayed permanently in this container's header.
+   * @param string aValue
+   */
+  set permaText(aValue) {
+    if (this._permaTextNode) {
+      this._permaTextNode.setAttribute("value", aValue);
+    }
+    this._permaTextValue = aValue;
+    this._appendPermaNotice();
+  },
+
+  /**
    * Sets the text displayed in this container when there are no available items.
    * @param string aValue
    */
@@ -1309,6 +1378,7 @@ StackList.prototype = {
       this._emptyTextNode.setAttribute("value", aValue);
     }
     this._emptyTextValue = aValue;
+    this._appendEmptyNotice();
   },
 
   /**
@@ -1351,10 +1421,26 @@ StackList.prototype = {
   },
 
   /**
+   * Creates and appends a label displayed permanently in this container's header.
+   */
+  _appendPermaNotice: function DVSL__appendPermaNotice() {
+    if (this._permaTextNode || !this._permaTextValue) {
+      return;
+    }
+
+    let label = document.createElement("label");
+    label.className = "empty list-item";
+    label.setAttribute("value", this._permaTextValue);
+
+    this._parent.insertBefore(label, this._list);
+    this._permaTextNode = label;
+  },
+
+  /**
    * Creates and appends a label signaling that this container is empty.
    */
   _appendEmptyNotice: function DVSL__appendEmptyNotice() {
-    if (this._emptyTextNode) {
+    if (this._emptyTextNode || !this._emptyTextValue) {
       return;
     }
 
@@ -1382,6 +1468,8 @@ StackList.prototype = {
   _list: null,
   _selectedIndex: -1,
   _selectedItem: null,
+  _permaTextNode: null,
+  _permaTextValue: "",
   _emptyTextNode: null,
   _emptyTextValue: ""
 };

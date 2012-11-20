@@ -1471,10 +1471,12 @@ var gBrowserInit = {
     }
 
     // Enable Error Console?
-    let consoleEnabled = gPrefService.getBoolPref("devtools.errorconsole.enabled") ||
+    // Temporarily enabled. See bug 798925.
+    let consoleEnabled = true || gPrefService.getBoolPref("devtools.errorconsole.enabled") ||
                          gPrefService.getBoolPref("devtools.chrome.enabled");
     if (consoleEnabled) {
       let cmd = document.getElementById("Tools:ErrorConsole");
+      cmd.removeAttribute("disabled");
       cmd.removeAttribute("hidden");
     }
 
