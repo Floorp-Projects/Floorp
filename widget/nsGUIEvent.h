@@ -56,7 +56,6 @@ enum nsEventStructType {
 
   // Mouse related events
   NS_MOUSE_EVENT,                    // nsMouseEvent
-  NS_POPUP_EVENT,                    // nsMouseEvent
   NS_MOUSE_SCROLL_EVENT,             // nsMouseScrollEvent
   NS_DRAG_EVENT,                     // nsDragEvent
   NS_WHEEL_EVENT,                    // widget::WheelEvent
