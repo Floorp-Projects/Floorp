@@ -174,9 +174,7 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 #ifdef DEBUG
         bool ok =
 #endif
-          nsStyleAnimation::UncomputeValue(cv.mProperty,
-                                           aRuleData->mPresContext,
-                                           cv.mValue, *prop);
+          nsStyleAnimation::UncomputeValue(cv.mProperty, cv.mValue, *prop);
         NS_ABORT_IF_FALSE(ok, "could not store computed value");
       }
     }
