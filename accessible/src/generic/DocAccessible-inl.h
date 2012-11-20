@@ -12,8 +12,30 @@
 #include "NotificationController.h"
 #include "States.h"
 
+#ifdef A11Y_LOG
+#include "Logging.h"
+#endif
+
 namespace mozilla {
 namespace a11y {
+
+inline void
+DocAccessible::FireDelayedEvent(AccEvent* aEvent)
+{
+#ifdef A11Y_LOG
+  if (logging::IsEnabled(logging::eDocLoad))
+    logging::DocLoadEventFired(aEvent);
+#endif
+
+  mNotificationController->QueueEvent(aEvent);
+}
+
+inline void
+DocAccessible::FireDelayedEvent(uint32_t aEventType, Accessible* aTarget)
+{
+  nsRefPtr<AccEvent> event = new AccEvent(aEventType, aTarget);
+  FireDelayedEvent(event);
+}
 
 inline void
 DocAccessible::BindChildDocument(DocAccessible* aDocument)
@@ -54,20 +76,16 @@ DocAccessible::NotifyOfLoad(uint32_t aLoadEventType)
   if (HasLoadState(eCompletelyLoaded) && IsLoadEventTarget()) {
     nsRefPtr<AccEvent> stateEvent =
       new AccStateChangeEvent(this, states::BUSY, false);
-    FireDelayedAccessibleEvent(stateEvent);
+    FireDelayedEvent(stateEvent);
   }
 }
 
 inline void
 DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible)
 {
-  mozilla::a11y::role role = aAccessible->Role();
-  if (role == roles::ENTRY || role == roles::COMBOBOX) {
-    nsRefPtr<AccEvent> valueChangeEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
-                   eAutoDetect, AccEvent::eRemoveDupes);
-    FireDelayedAccessibleEvent(valueChangeEvent);
-  }
+  a11y::role role = aAccessible->Role();
+  if (role == roles::ENTRY || role == roles::COMBOBOX)
+    FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
 }
 
 } // namespace a11y

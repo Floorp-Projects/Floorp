@@ -22,7 +22,7 @@ nsEventShell::FireEvent(AccEvent* aEvent)
   Accessible* accessible = aEvent->GetAccessible();
   NS_ENSURE_TRUE_VOID(accessible);
 
-  nsINode* node = aEvent->GetNode();
+  nsINode* node = accessible->GetNode();
   if (node) {
     sEventTargetNode = node;
     sEventFromUserInput = aEvent->IsFromUserInput();

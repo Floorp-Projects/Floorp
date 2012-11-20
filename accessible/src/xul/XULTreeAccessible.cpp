@@ -6,6 +6,7 @@
 
 #include "XULTreeAccessible.h"
 
+#include "DocAccessible-inl.h"
 #include "nsAccCache.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
@@ -663,7 +664,7 @@ XULTreeAccessible::TreeViewChanged(nsITreeView* aView)
   // show/hide events on tree items because it can be expensive to fire them for
   // each tree item.
   nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
-  Document()->FireDelayedAccessibleEvent(reorderEvent);
+  Document()->FireDelayedEvent(reorderEvent);
 
   // Clear cache.
   ClearCache(mAccessibleCache);

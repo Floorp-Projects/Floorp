@@ -243,10 +243,8 @@ nsCaretAccessible::NormalSelectionChanged(nsISelection* aSelection)
   mLastCaretOffset = caretOffset;
   mLastTextAccessible = textAcc;
 
-  nsRefPtr<AccEvent> event =
-    new AccCaretMoveEvent(mLastTextAccessible->GetNode());
-  if (event)
-    mLastTextAccessible->Document()->FireDelayedAccessibleEvent(event);
+  nsRefPtr<AccEvent> event = new AccCaretMoveEvent(mLastTextAccessible);
+  mLastTextAccessible->Document()->FireDelayedEvent(event);
 }
 
 void
@@ -258,15 +256,13 @@ nsCaretAccessible::SpellcheckSelectionChanged(nsISelection* aSelection)
   // misspelled word). If spellchecking is disabled (for example,
   // @spellcheck="false" on html:body) then we won't fire any event.
 
-  HyperTextAccessible* textAcc =
+  HyperTextAccessible* hyperText =
     nsAccUtils::GetTextAccessibleFromSelection(aSelection);
-  if (!textAcc)
-    return;
-
-  nsRefPtr<AccEvent> event =
-    new AccEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED, textAcc);
-  if (event)
-    textAcc->Document()->FireDelayedAccessibleEvent(event);
+  if (hyperText) {
+    hyperText->Document()->
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED,
+                       hyperText);
+  }
 }
 
 nsIntRect
