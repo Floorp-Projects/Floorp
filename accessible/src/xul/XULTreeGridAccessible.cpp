@@ -469,6 +469,15 @@ XULTreeGridCellAccessible::
 {
   mParent = aRowAcc;
   mFlags |= eSharedNode;
+
+  NS_ASSERTION(mTreeView, "mTreeView is null");
+
+  int16_t type = -1;
+  mColumn->GetType(&type);
+  if (type == nsITreeColumn::TYPE_CHECKBOX)
+    mTreeView->GetCellValue(mRow, mColumn, mCachedTextEquiv);
+  else
+    mTreeView->GetCellText(mRow, mColumn, mCachedTextEquiv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -703,24 +712,6 @@ XULTreeGridCellAccessible::Selected()
   bool selected = false;
   selection->IsSelected(mRow, &selected);
   return selected;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridCellAccessible: nsAccessNode implementation
-
-void
-XULTreeGridCellAccessible::Init()
-{
-  LeafAccessible::Init();
-
-  NS_ASSERTION(mTreeView, "mTreeView is null");
-
-  int16_t type;
-  mColumn->GetType(&type);
-  if (type == nsITreeColumn::TYPE_CHECKBOX)
-    mTreeView->GetCellValue(mRow, mColumn, mCachedTextEquiv);
-  else
-    mTreeView->GetCellText(mRow, mColumn, mCachedTextEquiv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
