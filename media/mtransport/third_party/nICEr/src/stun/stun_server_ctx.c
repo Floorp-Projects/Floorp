@@ -121,6 +121,25 @@ int nr_stun_server_add_client(nr_stun_server_ctx *ctx, char *client_label, char 
     return(_status);
   }
 
+int nr_stun_server_remove_client(nr_stun_server_ctx *ctx, void *cb_arg)
+  {
+    nr_stun_server_client *clnt1,*clnt2;
+    int found = 0;
+
+    STAILQ_FOREACH_SAFE(clnt1, &ctx->clients, entry, clnt2) {
+      if(clnt1->cb_arg == cb_arg) {
+        STAILQ_REMOVE(&ctx->clients, clnt1, nr_stun_server_client_, entry);
+        nr_stun_server_destroy_client(clnt1);
+        found++;
+      }
+    }
+
+    if (!found)
+      ERETURN(R_NOT_FOUND);
+
+    return 0;
+  }
+
 static int nr_stun_server_get_password(void *arg, nr_stun_message *msg, Data **password)
   {
     int _status;
