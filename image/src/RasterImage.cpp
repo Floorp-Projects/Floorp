@@ -2525,8 +2525,8 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
       // If we have all the data we don't want to waste cpu time doing
       // a progressive decode
       mDecoder = new nsJPEGDecoder(*this, observer,
-                                   mHasBeenDecoded ? Decoder::DecodeStyle::SEQUENTIAL :
-                                                     Decoder::DecodeStyle::PROGRESSIVE);
+                                   mHasBeenDecoded ? Decoder::SEQUENTIAL :
+                                                     Decoder::PROGRESSIVE);
       break;
     case eDecoderType_bmp:
       mDecoder = new nsBMPDecoder(*this, observer);
