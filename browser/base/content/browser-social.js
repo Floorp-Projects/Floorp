@@ -673,12 +673,19 @@ var SocialToolbar = {
     // social:profile-changed
     let profile = Social.provider.profile || {};
     let userPortrait = profile.portrait || "chrome://global/skin/icons/information-32.png";
-    document.getElementById("socialBroadcaster_userPortrait").setAttribute("src", userPortrait);
 
-    let loggedInStatusBroadcaster = document.getElementById("socialBroadcaster_loggedInStatus");
-    let notLoggedInString = loggedInStatusBroadcaster.getAttribute("notLoggedInLabel");
-    let loggedInStatusValue = profile.userName ? profile.userName : notLoggedInString;
-    loggedInStatusBroadcaster.setAttribute("value", loggedInStatusValue);
+    let userDetailsBroadcaster = document.getElementById("socialBroadcaster_userDetails");
+    let loggedInStatusValue = profile.userName ?
+                              profile.userName :
+                              userDetailsBroadcaster.getAttribute("notLoggedInLabel");;
+
+    // "image" and "label" are used by Mac's native menus that do not render the menuitem's children
+    // elements. "src" and "value" are used by the image/label children on the other platforms.
+    userDetailsBroadcaster.setAttribute("src", userPortrait);
+    userDetailsBroadcaster.setAttribute("image", userPortrait);
+
+    userDetailsBroadcaster.setAttribute("value", loggedInStatusValue);
+    userDetailsBroadcaster.setAttribute("label", loggedInStatusValue);
   },
 
   updateButton: function SocialToolbar_updateButton() {
