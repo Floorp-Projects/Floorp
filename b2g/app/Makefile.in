@@ -24,13 +24,6 @@ endif
 
 CPPSRCS = nsBrowserApp.cpp
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += BootAnimation.cpp
-LIBS += -lpng -lGLESv2 -lEGL -lui -lhardware_legacy -lhardware -lcutils
-LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/external/libpng
-OS_LDFLAGS += -Wl,--export-dynamic
-endif
-
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
