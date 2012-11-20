@@ -392,7 +392,6 @@ XPT_FreeInterfaceDescriptor(XPTArena *arena, XPTInterfaceDescriptor* id)
         for (; md < mdend; md++) {
             XPT_FREEIF(arena, md->name);
             XPT_FREEIF(arena, md->params);
-            XPT_FREEIF(arena, md->result);
         }
         XPT_FREEIF(arena, id->method_descriptors);
 
@@ -514,10 +513,10 @@ SizeOfMethodDescriptor(XPTMethodDescriptor *md, XPTInterfaceDescriptor *id)
 {
     uint32_t i, size =  1 /* flags */ + 4 /* name */ + 1 /* num_args */;
 
-    for (i = 0; i < md->num_args; i++) 
+    for (i = 0; i < md->num_args; i++)
         size += 1 + SizeOfTypeDescriptor(&md->params[i].type, id);
 
-    size += 1 + SizeOfTypeDescriptor(&md->result->type, id);
+    size += 1 + SizeOfTypeDescriptor(&md->result.type, id);
     return size;
 }
 
@@ -711,9 +710,6 @@ XPT_FillMethodDescriptor(XPTArena *arena, XPTMethodDescriptor *meth,
     } else {
         meth->params = NULL;
     }
-    meth->result = XPT_NEWZAP(arena, XPTParamDescriptor);
-    if (!meth->result)
-        goto free_params;
     return PR_TRUE;
 
  free_params:
@@ -746,14 +742,7 @@ DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md,
             goto error;
     }
     
-    if (mode == XPT_DECODE) {
-        md->result = XPT_NEWZAP(arena, XPTParamDescriptor);
-        if (!md->result)
-            return PR_FALSE;
-    }
-
-    if (!md->result ||
-        !DoParamDescriptor(arena, cursor, md->result, id))
+    if (!DoParamDescriptor(arena, cursor, &md->result, id))
         goto error;
     
     return PR_TRUE;
