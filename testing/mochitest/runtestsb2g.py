@@ -533,7 +533,7 @@ def main():
             mochitest.cleanup(None, options)
         except:
             pass
-            sys.exit(1)
+        retVal = 1
 
     sys.exit(retVal)
 
