@@ -3721,6 +3721,11 @@ var BrowserEventHandler = {
         }
       });
       return;
+    } else if (aTopic == "nsPref:changed") {
+      if (aData == "browser.zoom.reflowOnZoom") {
+        this.updateReflozPref();
+      }
+      return;
     }
 
     // the remaining events are all dependent on the browser content document being the
@@ -3800,10 +3805,6 @@ var BrowserEventHandler = {
       this.onPinch(aData);
     } else if (aTopic == "MozMagnifyGesture") {
       this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
-    } else if (aTopic == "nsPref:changed") {
-      if (aData == "browser.zoom.reflowOnZoom") {
-        this.updateReflozPref();
-      }
     }
   },
 
