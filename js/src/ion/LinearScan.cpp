@@ -470,6 +470,29 @@ NextInstructionHasFixedUses(LBlock *block, LInstruction *ins)
     }
     return false;
 }
+
+// Returns true iff ins has a def/temp reusing the input allocation.
+static bool
+IsInputReused(LInstruction *ins, LUse *use)
+{
+    for (size_t i = 0; i < ins->numDefs(); i++) {
+        if (ins->getDef(i)->policy() == LDefinition::MUST_REUSE_INPUT &&
+            ins->getOperand(ins->getDef(i)->getReusedInput())->toUse() == use)
+        {
+            return true;
+        }
+    }
+
+    for (size_t i = 0; i < ins->numTemps(); i++) {
+        if (ins->getTemp(i)->policy() == LDefinition::MUST_REUSE_INPUT &&
+            ins->getOperand(ins->getTemp(i)->getReusedInput())->toUse() == use)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 #endif
 
 /*
@@ -618,6 +641,9 @@ LinearScanAllocator::buildLivenessInfo()
                 }
             }
 
+            DebugOnly<bool> hasUseRegister = false;
+            DebugOnly<bool> hasUseRegisterAtStart = false;
+
             for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
                 if (alloc->isUse()) {
                     LUse *use = alloc->toUse();
@@ -637,6 +663,20 @@ LinearScanAllocator::buildLivenessInfo()
                         for (size_t i = 0; i < ins->numTemps(); i++)
                             JS_ASSERT(vregs[ins->getTemp(i)].isDouble() != vregs[use].isDouble());
                     }
+
+                    // If there are both useRegisterAtStart(x) and useRegister(y)
+                    // uses, we may assign the same register to both operands due to
+                    // interval splitting (bug 772830). Don't allow this for now.
+                    if (use->policy() == LUse::REGISTER) {
+                        if (use->usedAtStart()) {
+                            if (!IsInputReused(*ins, use))
+                                hasUseRegisterAtStart = true;
+                        } else {
+                            hasUseRegister = true;
+                        }
+                    }
+
+                    JS_ASSERT(!(hasUseRegister && hasUseRegisterAtStart));
 #endif
 
                     CodePosition to;
