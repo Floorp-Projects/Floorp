@@ -204,6 +204,8 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
     this._cbPanel.removeEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false)
     this._cbTextbox.removeEventListener("keypress", this._onConditionalTextboxKeyPress, false);
+
+    this._cbPanel.hidePopup();
   },
 
   /**
