@@ -48,41 +48,61 @@ class nsHashKey;
 /**
  * Event Struct Types
  */
-#define NS_EVENT                           1
-#define NS_GUI_EVENT                       2
-#define NS_SCROLLBAR_EVENT                 7
-#define NS_INPUT_EVENT                     8
-#define NS_KEY_EVENT                       9
-#define NS_MOUSE_EVENT                    10
-#define NS_SCRIPT_ERROR_EVENT             12
-#define NS_TEXT_EVENT                     13
-#define NS_COMPOSITION_EVENT              14
-#define NS_MOUSE_SCROLL_EVENT             16
-#define NS_SCROLLPORT_EVENT               18
-#define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
-#define NS_FORM_EVENT                     21
-#define NS_FOCUS_EVENT                    22
-#define NS_POPUP_EVENT                    23
-#define NS_COMMAND_EVENT                  24
-#define NS_SCROLLAREA_EVENT               25
-#define NS_TRANSITION_EVENT               26
-#define NS_ANIMATION_EVENT                27
+enum nsEventStructType {
+  // Generic events
+  NS_EVENT,                          // nsEvent
+  NS_GUI_EVENT,                      // nsGUIEvent
+  NS_INPUT_EVENT,                    // nsInputEvent
 
-#define NS_UI_EVENT                       28
-#define NS_SVG_EVENT                      30
-#define NS_SVGZOOM_EVENT                  31
-#define NS_SMIL_TIME_EVENT                32
+  // Mouse related events
+  NS_MOUSE_EVENT,                    // nsMouseEvent
+  NS_POPUP_EVENT,                    // nsMouseEvent
+  NS_MOUSE_SCROLL_EVENT,             // nsMouseScrollEvent
+  NS_DRAG_EVENT,                     // nsDragEvent
+  NS_WHEEL_EVENT,                    // widget::WheelEvent
 
-#define NS_QUERY_CONTENT_EVENT            33
+  // Touchpad related events
+  NS_GESTURENOTIFY_EVENT,            // nsGestureNotifyEvent
+  NS_SIMPLE_GESTURE_EVENT,           // nsSimpleGestureEvent
+  NS_TOUCH_EVENT,                    // nsTouchEvent
 
-#define NS_DRAG_EVENT                     35
-#define NS_SIMPLE_GESTURE_EVENT           37
-#define NS_SELECTION_EVENT                38
-#define NS_CONTENT_COMMAND_EVENT          39
-#define NS_GESTURENOTIFY_EVENT            40
-#define NS_PLUGIN_EVENT                   43
-#define NS_TOUCH_EVENT                    44
-#define NS_WHEEL_EVENT                    45
+  // Key or IME events
+  NS_KEY_EVENT,                      // nsKeyEvent
+  NS_COMPOSITION_EVENT,              // nsCompositionEvent
+  NS_TEXT_EVENT,                     // nsTextEvent
+
+  // IME related events
+  NS_QUERY_CONTENT_EVENT,            // nsQueryContentEvent
+  NS_SELECTION_EVENT,                // nsSelectionEvent
+
+  // Scroll related events
+  NS_SCROLLBAR_EVENT,                // nsScrollbarEvent
+  NS_SCROLLPORT_EVENT,               // nsScrollPortEvent
+  NS_SCROLLAREA_EVENT,               // nsScrollAreaEvent
+
+  // DOM events
+  NS_UI_EVENT,                       // nsUIEvent
+  NS_SCRIPT_ERROR_EVENT,             // nsScriptErrorEvent
+  NS_MUTATION_EVENT,                 // nsMutationEvent
+  NS_FORM_EVENT,                     // nsFormEvent
+  NS_FOCUS_EVENT,                    // nsFocusEvent
+
+  // SVG events
+  NS_SVG_EVENT,                      // nsEvent or nsGUIEvent
+  NS_SVGZOOM_EVENT,                  // nsGUIEvent
+  NS_SMIL_TIME_EVENT,                // nsUIEvent
+
+  // CSS events
+  NS_TRANSITION_EVENT,               // nsTransitionEvent
+  NS_ANIMATION_EVENT,                // nsAnimationEvent
+
+  // Command events
+  NS_COMMAND_EVENT,                  // nsCommandEvent
+  NS_CONTENT_COMMAND_EVENT,          // nsContentCommandEvent
+
+  // Plugin event
+  NS_PLUGIN_EVENT                    // nsPluginEvent
+};
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -496,7 +516,7 @@ enum nsWindowZ {
 class nsEvent
 {
 protected:
-  nsEvent(bool isTrusted, uint32_t msg, uint8_t structType)
+  nsEvent(bool isTrusted, uint32_t msg, nsEventStructType structType)
     : eventStructType(structType),
       message(msg),
       refPoint(0, 0),
@@ -538,7 +558,7 @@ public:
   }
 
   // See event struct types
-  uint8_t     eventStructType;
+  nsEventStructType eventStructType;
   // See GUI MESSAGES,
   uint32_t    message;
   // Relative to the widget of the event, or if there is no widget then it is
@@ -567,7 +587,8 @@ public:
 class nsGUIEvent : public nsEvent
 {
 protected:
-  nsGUIEvent(bool isTrusted, uint32_t msg, nsIWidget *w, uint8_t structType)
+  nsGUIEvent(bool isTrusted, uint32_t msg, nsIWidget *w,
+             nsEventStructType structType)
     : nsEvent(isTrusted, msg, structType),
       widget(w), pluginEvent(nullptr)
   {
@@ -660,7 +681,7 @@ class nsInputEvent : public nsGUIEvent
 {
 protected:
   nsInputEvent(bool isTrusted, uint32_t msg, nsIWidget *w,
-               uint8_t structType)
+               nsEventStructType structType)
     : nsGUIEvent(isTrusted, msg, w, structType),
       modifiers(0)
   {
@@ -777,7 +798,8 @@ public:
   {
   }
 
-  nsMouseEvent_base(bool isTrusted, uint32_t msg, nsIWidget *w, uint8_t type)
+  nsMouseEvent_base(bool isTrusted, uint32_t msg, nsIWidget *w,
+                    nsEventStructType type)
     : nsInputEvent(isTrusted, msg, w, type), button(0), buttons(0),
       pressure(0), inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {}
 
@@ -822,7 +844,7 @@ public:
 
 protected:
   nsMouseEvent(bool isTrusted, uint32_t msg, nsIWidget *w,
-               uint8_t structType, reasonType aReason)
+               nsEventStructType structType, reasonType aReason)
     : nsMouseEvent_base(isTrusted, msg, w, structType),
       acceptActivation(false), ignoreRootScrollFrame(false),
       reason(aReason), context(eNormal), exit(eChild), clickCount(0)

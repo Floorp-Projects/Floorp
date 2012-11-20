@@ -1020,6 +1020,8 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       }
     }
     break;
+  default:
+    break;
   }
 
   return abuse;
