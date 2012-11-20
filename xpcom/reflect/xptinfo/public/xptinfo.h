@@ -172,7 +172,7 @@ public:
             return params[idx];
         }
     const nsXPTParamInfo GetResult() const
-        {return *result;}
+        {return result;}
 private:
     nsXPTMethodInfo();  // no implementation
 // NO DATA - this a flyweight wrapper
