@@ -763,10 +763,10 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_ANIMATION_EVENT:
       return NS_NewDOMAnimationEvent(aDOMEvent, aPresContext,
                                      static_cast<nsAnimationEvent*>(aEvent));
+    default:
+      // For all other types of events, create a vanilla event object.
+      return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
     }
-
-    // For all other types of events, create a vanilla event object.
-    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
   }
 
   // And if we didn't get an event, check the type argument.
