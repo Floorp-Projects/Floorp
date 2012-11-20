@@ -584,6 +584,9 @@ pref("network.activity.blipIntervalMilliseconds", 250);
 
 pref("jsloader.reuseGlobal", true);
 
+// Enable font inflation for browser tab content.
+pref("font.size.inflation.minTwips", 120);
+
 // Enable freeing dirty pages when minimizing memory; this reduces memory
 // consumption when applications are sent to the background.
 pref("memory.free_dirty_pages", true);
