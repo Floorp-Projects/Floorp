@@ -1,7 +1,7 @@
 [
 {
-"size": 648867404,
-"digest": "4d11978695ca3e3086a872b48d5bb0cff8cc01a8bfa4fcf4a341f84336bdfe272c1665ea79967e4466bcdc247ce411c1d67aef3c3fe8ddf4ab181377aa942824",
+"size": 635809312,
+"digest": "4c6d39ea37c473637adc9cb460ee70055cd754ca9914f7b2493ef36640dcad5fee0c3906e7e267dd25c6c349ca3abe6cbe70da847e568326c282d89e39ab23f5",
 "algorithm": "sha512",
 "filename": "gonk.tar.xz"
 }
