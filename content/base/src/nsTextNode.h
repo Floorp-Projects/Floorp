@@ -40,12 +40,6 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-
   nsresult AppendTextForNormalize(const PRUnichar* aBuffer, uint32_t aLength,
                                   bool aNotify, nsIContent* aNextSibling);
 
