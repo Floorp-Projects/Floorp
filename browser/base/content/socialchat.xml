@@ -179,11 +179,11 @@
         <getter><![CDATA[
           // A generator yielding all collapsed chatboxes, in the order in
           // which they should be restored.
-          let child = this.lastChild;
+          let child = this.lastElementChild;
           while (child) {
             if (child.collapsed)
               yield child;
-            child = child.previousSibling;
+            child = child.previousElementSibling;
           }
         ]]></getter>
       </property>
@@ -191,11 +191,11 @@
       <property name="visibleChildren">
         <getter><![CDATA[
           // A generator yielding all non-collapsed chatboxes.
-          let child = this.firstChild;
+          let child = this.firstElementChild;
           while (child) {
             if (!child.collapsed)
               yield child;
-            child = child.nextSibling;
+            child = child.nextElementSibling;
           }
         ]]></getter>
       </property>
@@ -359,8 +359,8 @@
       <method name="removeAll">
         <body><![CDATA[
           this.selectedChat = null;
-          while (this.firstChild) {
-            this._remove(this.firstChild);
+          while (this.firstElementChild) {
+            this._remove(this.firstElementChild);
           }
           // and the nub/popup must also die.
           this.nub.collapsed = true;
