@@ -3536,15 +3536,18 @@ function OpenBrowserWindow(options)
   var wintype = document.documentElement.getAttribute('windowtype');
 
   var extraFeatures = "";
+  var forcePrivate = false;
 #ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-  if (typeof options == "object" &&
-      "private" in options &&
-      options.private) {
+  forcePrivate = typeof options == "object" && "private" in options && options.private;
+#else
+  forcePrivate = gPrivateBrowsingUI.privateBrowsingEnabled;
+#endif
+
+  if (forcePrivate) {
     extraFeatures = ",private";
     // Force the new window to load about:privatebrowsing instead of the default home page
     defaultArgs = "about:privatebrowsing";
   }
-#endif
 
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
