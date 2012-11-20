@@ -13,7 +13,6 @@ import org.mozilla.gecko.ScreenshotHandler;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
-import org.mozilla.gecko.ui.Axis;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
@@ -691,12 +690,8 @@ public class GeckoLayerClient
                 if (BrowserApp.mBrowserToolbar == null) {
                     return;
                 }
-                Axis.Overscroll overscroll = mPanZoomController.getOverscrollY();
-                if (overscroll == Axis.Overscroll.PLUS || overscroll == Axis.Overscroll.NONE) {
-                    BrowserApp.mBrowserToolbar.setShadowVisibility(true);
-                } else {
-                    BrowserApp.mBrowserToolbar.setShadowVisibility(false);
-                }
+                ImmutableViewportMetrics m = mViewportMetrics;
+                BrowserApp.mBrowserToolbar.setShadowVisibility(m.viewportRectTop >= m.pageRectTop);
             }
         });
     }
