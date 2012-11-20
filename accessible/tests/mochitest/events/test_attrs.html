@@ -58,7 +58,7 @@
 
       if (!MAC) { // Mac failure is bug 541093
         var checker =
-          new eventFromInputChecker(EVENT_TEXT_CARET_MOVED, id, "false", noTargetId);
+          new eventFromInputChecker(EVENT_TEXT_CARET_MOVED, id, "true", noTargetId);
         gQueue.push(new synthHomeKey(id, checker));
       }
 

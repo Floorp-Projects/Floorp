@@ -385,7 +385,7 @@ NotificationController::CoalesceEvents()
         AccEvent* accEvent = mEvents[index];
         if (accEvent->mEventType == tailEvent->mEventType &&
             accEvent->mEventRule == tailEvent->mEventRule &&
-            accEvent->mNode == tailEvent->mNode) {
+            accEvent->mAccessible == tailEvent->mAccessible) {
           tailEvent->mEventRule = AccEvent::eDoNotEmit;
           return;
         }
@@ -705,12 +705,11 @@ NotificationController::ProcessEventQueue()
 
       // Dispatch caret moved and text selection change events.
       if (event->mEventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
+        AccCaretMoveEvent* caretMoveEvent = downcast_accEvent(event);
         HyperTextAccessible* hyperText = target->AsHyperText();
-        int32_t caretOffset = -1;
         if (hyperText &&
-          NS_SUCCEEDED(hyperText->GetCaretOffset(&caretOffset))) {
-          nsRefPtr<AccEvent> caretMoveEvent =
-            new AccCaretMoveEvent(hyperText, caretOffset);
+            NS_SUCCEEDED(hyperText->GetCaretOffset(&caretMoveEvent->mCaretOffset))) {
+
           nsEventShell::FireEvent(caretMoveEvent);
 
           // There's a selection so fire selection change as well.
