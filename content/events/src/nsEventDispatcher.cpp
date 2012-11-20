@@ -724,7 +724,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
       return NS_NewDOMCompositionEvent(
         aDOMEvent, aPresContext, static_cast<nsCompositionEvent*>(aEvent));
     case NS_MOUSE_EVENT:
-    case NS_POPUP_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
                                  static_cast<nsInputEvent*>(aEvent));
     case NS_MOUSE_SCROLL_EVENT:
