@@ -68,7 +68,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsHTMLFormElement.h"
 #include "nsFocusManager.h"
-#include "nsAttrValueOrString.h"
 
 #include "nsMutationEvent.h"
 
@@ -103,6 +102,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::directionality;
 
 class nsINodeInfo;
 class nsIDOMNodeList;
@@ -347,9 +347,8 @@ nsGenericHTMLElement::ClearDataset()
 }
 
 static const nsAttrValue::EnumTable kDirTable[] = {
-  { "ltr", eDir_LTR },
-  { "rtl", eDir_RTL },
-  { "auto", eDir_Auto },
+  { "ltr", NS_STYLE_DIRECTION_LTR },
+  { "rtl", NS_STYLE_DIRECTION_RTL },
   { 0 }
 };
 
@@ -1700,23 +1699,6 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 }
 
 nsresult
-nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                    const nsAttrValueOrString* aValue,
-                                    bool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::dir &&
-      HasDirAuto()) {
-      // setting dir on an element that currently has dir=auto
-    WalkDescendantsClearAncestorDirAuto(this);
-    SetHasDirAuto();
-  }
-
-  return nsGenericHTMLElementBase::BeforeSetAttr(aNamespaceID, aName,
-                                                 aValue, aNotify);
-}
-
-nsresult
 nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValue* aValue, bool aNotify)
 {
@@ -1737,28 +1719,16 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
       SyncEditorsOnSubtree(this);
     }
     else if (aName == nsGkAtoms::dir) {
-      Directionality dir = eDir_LTR;
-      if (aValue && aValue->Type() == nsAttrValue::eEnum) {
+      Directionality dir;
+      if (aValue &&
+          (aValue->Equals(nsGkAtoms::ltr, eIgnoreCase) ||
+           aValue->Equals(nsGkAtoms::rtl, eIgnoreCase))) {
         SetHasValidDir();
-        Directionality dirValue = (Directionality)aValue->GetEnumValue();
-        if (dirValue == eDir_Auto) {
-          SetHasDirAuto();
-          ClearHasFixedDir();
-        } else {
-          dir = dirValue;
-          SetDirectionality(dir, aNotify);
-          ClearHasDirAuto();
-          ClearHasDirAutoSet();
-          SetHasFixedDir();
-        }
+        dir = aValue->Equals(nsGkAtoms::rtl, eIgnoreCase) ? eDir_RTL : eDir_LTR;
+        SetDirectionality(dir, aNotify);
       } else {
         ClearHasValidDir();
-        ClearHasFixedDir();
-        if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
-          SetHasDirAuto();
-        } else {
-          dir = RecomputeDirectionality(this, aNotify);
-        }
+        dir = RecomputeDirectionality(this, aNotify);
       }
       SetDirectionalityOnDescendants(this, dir, aNotify);
     }
