@@ -7,6 +7,8 @@
 #include "nsIURI.h"
 #include "nsMaiHyperlink.h"
 
+using namespace mozilla::a11y;
+
 /* MaiAtkHyperlink */
 
 #define MAI_TYPE_ATK_HYPERLINK      (mai_atk_hyperlink_get_type ())

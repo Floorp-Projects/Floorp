@@ -14,7 +14,6 @@
 #include "nsAccEvent.h"
 #include "nsAccessibleRelation.h"
 #include "nsAccessibilityService.h"
-#include "nsAccTreeWalker.h"
 #include "nsIAccessibleRelation.h"
 #include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
@@ -23,6 +22,7 @@
 #include "RootAccessible.h"
 #include "States.h"
 #include "StyleInfo.h"
+#include "TreeWalker.h"
 
 #include "nsContentUtils.h"
 #include "nsIDOMElement.h"
@@ -621,11 +621,17 @@ Accessible::VisibilityState()
     if (view && view->GetVisibility() == nsViewVisibility_kHide)
       return states::INVISIBLE;
 
-    // Offscreen state for background tab content.
+    // Offscreen state for background tab content and invisible for not selected
+    // deck panel.
     nsIFrame* parentFrame = curFrame->GetParent();
     nsDeckFrame* deckFrame = do_QueryFrame(parentFrame);
-    if (deckFrame && deckFrame->GetSelectedBox() != curFrame)
-      return states::OFFSCREEN;
+    if (deckFrame && deckFrame->GetSelectedBox() != curFrame) {
+      if (deckFrame->GetContent()->IsXUL() &&
+          deckFrame->GetContent()->Tag() == nsGkAtoms::tabpanels)
+        return states::OFFSCREEN;
+
+      return states::INVISIBLE;
+    }
 
     // If contained by scrollable frame then check that at least 12 pixels
     // around the object is visible, otherwise the object is offscreen.
@@ -2943,7 +2949,7 @@ Accessible::CacheChildren()
   DocAccessible* doc = Document();
   NS_ENSURE_TRUE_VOID(doc);
 
-  nsAccTreeWalker walker(doc, mContent, CanHaveAnonChildren());
+  TreeWalker walker(this, mContent);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));

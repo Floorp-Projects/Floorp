@@ -54,16 +54,15 @@ static int sHeadsetState;
 static int kBtSampleRate = 8000;
 
 static bool
-IsFmRadioAudioOn()
+IsDeviceOn(audio_devices_t device)
 {
   if (static_cast<
       audio_policy_dev_state_t (*) (audio_devices_t, const char *)
-      >(AudioSystem::getDeviceConnectionState)) {
-    return AudioSystem::getDeviceConnectionState(AUDIO_DEVICE_OUT_FM, "") ==
-           AUDIO_POLICY_DEVICE_STATE_AVAILABLE ? true : false;
-  } else {
-    return false;
-  }
+      >(AudioSystem::getDeviceConnectionState))
+    return AudioSystem::getDeviceConnectionState(device, "") ==
+           AUDIO_POLICY_DEVICE_STATE_AVAILABLE;
+
+  return false;
 }
 
 NS_IMPL_ISUPPORTS2(AudioManager, nsIAudioManager, nsIObserver)
@@ -102,7 +101,7 @@ InternalSetAudioRoutesICS(SwitchState aState)
 
   // The audio volume is not consistent when we plug and unplug the headset.
   // Set the fm volume again here.
-  if (IsFmRadioAudioOn()) {
+  if (IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
     float masterVolume;
     AudioSystem::getMasterVolume(&masterVolume);
     AudioSystem::setFmVolume(masterVolume);
@@ -256,7 +255,8 @@ AudioManager::SetMasterVolume(float aMasterVolume)
     return NS_ERROR_FAILURE;
   }
 
-  if (IsFmRadioAudioOn() && AudioSystem::setFmVolume(aMasterVolume)) {
+  if (IsDeviceOn(AUDIO_DEVICE_OUT_FM) &&
+      AudioSystem::setFmVolume(aMasterVolume)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -311,6 +311,13 @@ NS_IMETHODIMP
 AudioManager::SetForceForUse(int32_t aUsage, int32_t aForce)
 {
   status_t status = 0;
+
+  if (IsDeviceOn(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET) &&
+      aUsage == nsIAudioManager::USE_COMMUNICATION &&
+      aForce == nsIAudioManager::FORCE_NONE) {
+    aForce = nsIAudioManager::FORCE_BT_SCO;
+  }
+
   if (static_cast<
       status_t (*)(AudioSystem::force_use, AudioSystem::forced_config)
       >(AudioSystem::setForceUse)) {
@@ -347,7 +354,7 @@ AudioManager::GetForceForUse(int32_t aUsage, int32_t* aForce) {
 NS_IMETHODIMP
 AudioManager::GetFmRadioAudioEnabled(bool *aFmRadioAudioEnabled)
 {
-  *aFmRadioAudioEnabled = IsFmRadioAudioOn();
+  *aFmRadioAudioEnabled = IsDeviceOn(AUDIO_DEVICE_OUT_FM);
   return NS_OK;
 }
 

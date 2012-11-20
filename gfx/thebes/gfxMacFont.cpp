@@ -384,12 +384,6 @@ gfxMacFont::GetFontTable(uint32_t aTag)
 void
 gfxMacFont::InitMetricsFromPlatform()
 {
-    if (gfxMacPlatformFontList::UseATSFontEntry()) {
-        ATSFontEntry *fe = static_cast<ATSFontEntry*>(GetFontEntry());
-        InitMetricsFromATSMetrics(fe->GetATSFontRef());
-        return;
-    }
-
     CTFontRef ctFont = ::CTFontCreateWithGraphicsFont(mCGFont,
                                                       mAdjustedSize,
                                                       NULL, NULL);
@@ -422,41 +416,6 @@ gfxMacFont::InitMetricsFromPlatform()
     mMetrics.xHeight = ::CTFontGetXHeight(ctFont);
 
     ::CFRelease(ctFont);
-
-    mIsValid = true;
-}
-
-// For OS X 10.5, try to initialize font metrics via ATS font metrics APIs,
-// and set mIsValid = TRUE on success.
-void
-gfxMacFont::InitMetricsFromATSMetrics(ATSFontRef aFontRef)
-{
-    ATSFontMetrics atsMetrics;
-    OSStatus err;
-
-    err = ::ATSFontGetHorizontalMetrics(aFontRef, kATSOptionFlagsDefault,
-                                        &atsMetrics);
-    if (err != noErr) {
-#ifdef DEBUG
-        char warnBuf[1024];
-        sprintf(warnBuf, "Bad font metrics for: %s err: %8.8x",
-                NS_ConvertUTF16toUTF8(mFontEntry->Name()).get(), uint32_t(err));
-        NS_WARNING(warnBuf);
-#endif
-        return;
-    }
-
-    mMetrics.underlineOffset = atsMetrics.underlinePosition * mAdjustedSize;
-    mMetrics.underlineSize = atsMetrics.underlineThickness * mAdjustedSize;
-
-    mMetrics.externalLeading = atsMetrics.leading * mAdjustedSize;
-
-    mMetrics.maxAscent = atsMetrics.ascent * mAdjustedSize;
-    mMetrics.maxDescent = -atsMetrics.descent * mAdjustedSize;
-
-    mMetrics.maxAdvance = atsMetrics.maxAdvanceWidth * mAdjustedSize;
-    mMetrics.aveCharWidth = atsMetrics.avgAdvanceWidth * mAdjustedSize;
-    mMetrics.xHeight = atsMetrics.xHeight * mAdjustedSize;
 
     mIsValid = true;
 }

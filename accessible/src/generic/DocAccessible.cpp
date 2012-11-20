@@ -7,15 +7,13 @@
 #include "AccIterator.h"
 #include "DocAccessible-inl.h"
 #include "nsAccCache.h"
-#include "nsAccessibilityService.h"
 #include "nsAccessiblePivot.h"
-#include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
 #include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "RootAccessible.h"
-#include "States.h"
+#include "TreeWalker.h"
 
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"
@@ -1513,8 +1511,7 @@ DocAccessible::CacheChildren()
 {
   // Search for accessible children starting from the document element since
   // some web pages tend to insert elements under it rather than document body.
-  nsAccTreeWalker walker(this, mDocument->GetRootElement(),
-                         CanHaveAnonChildren());
+  TreeWalker walker(this, mDocument->GetRootElement());
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));
@@ -1859,8 +1856,7 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
     updateFlags |= UpdateTreeInternal(child, aIsInsert, reorderEvent);
 
   } else {
-    nsAccTreeWalker walker(this, aChildNode,
-                           aContainer->CanHaveAnonChildren(), true);
+    TreeWalker walker(aContainer, aChildNode, true);
 
     while ((child = walker.NextChild()))
       updateFlags |= UpdateTreeInternal(child, aIsInsert, reorderEvent);

@@ -13,6 +13,8 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+using namespace mozilla::a11y;
+
 // IAccessibleEditableText
 
 STDMETHODIMP

@@ -212,7 +212,7 @@ bool ParseFormat4(ots::OpenTypeFile *file, int platform, int encoding,
   // A format 4 CMAP subtable is complex. To be safe we simulate a lookup of
   // each code-point defined in the table and make sure that they are all valid
   // glyphs and that we don't access anything out-of-bounds.
-  for (unsigned i = 1; i < segcount; ++i) {
+  for (unsigned i = 0; i < segcount; ++i) {
     for (unsigned cp = ranges[i].start_range; cp <= ranges[i].end_range; ++cp) {
       const uint16_t code_point = cp;
       if (ranges[i].id_range_offset == 0) {

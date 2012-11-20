@@ -30,16 +30,13 @@ function test_remove_breakpoint()
   let done = false;
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let path = getFilePath('test_breakpoint-09.js');
-    let location = { url: path, line: gDebuggee.line0 + 1};
+    let location = { url: path, line: gDebuggee.line0 + 2};
     gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
-      // Check that the breakpoint has properly skipped forward one line.
-      do_check_eq(aResponse.actualLocation.url, location.url);
-      do_check_eq(aResponse.actualLocation.line, location.line + 1);
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
         do_check_eq(aPacket.frame.where.url, path);
-        do_check_eq(aPacket.frame.where.line, location.line + 1);
+        do_check_eq(aPacket.frame.where.line, location.line);
         do_check_eq(aPacket.why.type, "breakpoint");
         do_check_eq(aPacket.why.actors[0], bpClient.actor);
         // Check that the breakpoint worked.

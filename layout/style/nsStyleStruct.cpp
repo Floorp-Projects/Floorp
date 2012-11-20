@@ -1833,7 +1833,7 @@ nsStyleBackground::Position::SetInitialValues()
 }
 
 bool
-nsStyleBackground::Size::DependsOnFrameSize(const nsStyleImage& aImage) const
+nsStyleBackground::Size::DependsOnPositioningAreaSize(const nsStyleImage& aImage) const
 {
   NS_ABORT_IF_FALSE(aImage.GetType() != eStyleImageType_Null,
                     "caller should have handled this");
@@ -1963,14 +1963,15 @@ nsStyleBackground::Layer::SetInitialValues()
 }
 
 bool
-nsStyleBackground::Layer::RenderingMightDependOnFrameSize() const
+nsStyleBackground::Layer::RenderingMightDependOnPositioningAreaSizeChange() const
 {
   // Do we even have an image?
   if (mImage.IsEmpty()) {
     return false;
   }
 
-  return mPosition.DependsOnFrameSize() || mSize.DependsOnFrameSize(mImage);
+  return mPosition.DependsOnPositioningAreaSize() ||
+      mSize.DependsOnPositioningAreaSize(mImage);
 }
 
 bool

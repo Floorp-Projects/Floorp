@@ -15,6 +15,7 @@ MOCHITEST_A11Y_FILES =\
 		dockids.html \
 	$(warning test_applicationacc.xul temporarily disabled, see bug 561508) \
 		test_aria_globals.html \
+		test_aria_grid.html \
 		test_aria_imgmap.html \
 		test_aria_menu.html \
 		test_aria_presentation.html \

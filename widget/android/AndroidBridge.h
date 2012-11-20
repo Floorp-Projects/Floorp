@@ -539,6 +539,40 @@ protected:
     void (* Region_set)(void* region, void* rect);
 };
 
+class AutoJObject {
+public:
+    AutoJObject(JNIEnv* aJNIEnv = NULL) : mObject(NULL)
+    {
+        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+    }
+
+    AutoJObject(JNIEnv* aJNIEnv, jobject aObject)
+    {
+        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+        mObject = aObject;
+    }
+
+    ~AutoJObject() {
+        if (mObject)
+            mJNIEnv->DeleteLocalRef(mObject);
+    }
+
+    jobject operator=(jobject aObject)
+    {
+        if (mObject) {
+            mJNIEnv->DeleteLocalRef(mObject);
+        }
+        return mObject = aObject;
+    }
+
+    operator jobject() {
+        return mObject;
+    }
+private:
+    JNIEnv* mJNIEnv;
+    jobject mObject;
+};
+
 class AutoLocalJNIFrame {
 public:
     AutoLocalJNIFrame(int nEntries = 128)

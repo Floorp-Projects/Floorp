@@ -130,7 +130,7 @@ public:
   }
 #endif
 
-  virtual already_AddRefed<ImageContainer> GetContainer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ImageContainer> GetContainer(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) MOZ_OVERRIDE;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   {

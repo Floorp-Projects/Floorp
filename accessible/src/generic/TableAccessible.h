@@ -11,10 +11,10 @@
 #include "nsTArray.h"
 #include "prtypes.h"
 
-class Accessible;
-
 namespace mozilla {
 namespace a11y {
+
+class Accessible;
 
 /**
  * Accessible table interface.

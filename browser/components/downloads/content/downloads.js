@@ -540,11 +540,10 @@ const DownloadsView = {
       DownloadsPanel.panel.removeAttribute("hasdownloads");
     }
 
-    let s = DownloadsCommon.strings;
-    this.downloadsHistory.label = (hiddenCount > 0)
-                                  ? s.showMoreDownloads(hiddenCount)
-                                  : s.showAllDownloads;
-    this.downloadsHistory.accessKey = s.showDownloadsAccessKey;
+    // If we've got some hidden downloads, we should show the summary just
+    // below the list.
+    this.downloadsHistory.collapsed = hiddenCount > 0;
+    DownloadsSummary.visible = this.downloadsHistory.collapsed;
   },
 
   /**
@@ -1409,3 +1408,155 @@ DownloadsViewItemController.prototype = {
     protocolSvc.loadUrl(makeFileURI(aFile));
   }
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadsSummary
+
+/**
+ * Manages the summary at the bottom of the downloads panel list if the number
+ * of items in the list exceeds the panels limit.
+ */
+const DownloadsSummary = {
+
+  /**
+   * Sets the collapsed state of the summary, and automatically subscribes or
+   * unsubscribes from the DownloadsCommon DownloadsSummaryData singleton.
+   *
+   * @param aVisible
+   *        True if the summary should be shown.
+   */
+  set visible(aVisible)
+  {
+    if (aVisible == this._visible || !this._summaryNode) {
+      return;
+    }
+    if (aVisible) {
+      DownloadsCommon.getSummary(DownloadsView.kItemCountLimit)
+                     .addView(this);
+    } else {
+      DownloadsCommon.getSummary(DownloadsView.kItemCountLimit)
+                     .removeView(this);
+    }
+    this._summaryNode.collapsed = !aVisible;
+    return this._visible = aVisible;
+  },
+  _visible: false,
+
+  /**
+   * Sets whether or not we show the progress bar.
+   *
+   * @param aShowingProgress
+   *        True if we should show the progress bar.
+   */
+  set showingProgress(aShowingProgress)
+  {
+    if (aShowingProgress) {
+      this._summaryNode.setAttribute("inprogress", "true");
+    } else {
+      this._summaryNode.removeAttribute("inprogress");
+    }
+  },
+
+  /**
+   * Sets the amount of progress that is visible in the progress bar.
+   *
+   * @param aValue
+   *        A value between 0 and 100 to represent the progress of the
+   *        summarized downloads.
+   */
+  set percentComplete(aValue)
+  {
+    if (this._progressNode) {
+      this._progressNode.setAttribute("value", aValue);
+    }
+    return aValue;
+  },
+
+  /**
+   * Sets the description for the download summary.
+   *
+   * @param aValue
+   *        A string representing the description of the summarized
+   *        downloads.
+   */
+  set description(aValue)
+  {
+    if (this._descriptionNode) {
+      this._descriptionNode.setAttribute("value", aValue);
+      this._descriptionNode.setAttribute("tooltiptext", aValue);
+    }
+    return aValue;
+  },
+
+  /**
+   * Sets the details for the download summary, such as the time remaining,
+   * the amount of bytes transferred, etc.
+   *
+   * @param aValue
+   *        A string representing the details of the summarized
+   *        downloads.
+   */
+  set details(aValue)
+  {
+    if (this._detailsNode) {
+      this._detailsNode.setAttribute("value", aValue);
+      this._detailsNode.setAttribute("tooltiptext", aValue);
+    }
+    return aValue;
+  },
+
+  /**
+   * Element corresponding to the root of the downloads summary.
+   */
+  get _summaryNode()
+  {
+    let node = document.getElementById("downloadsSummary");
+    if (!node) {
+      return null;
+    }
+    delete this._summaryNode;
+    return this._summaryNode = node;
+  },
+
+  /**
+   * Element corresponding to the progress bar in the downloads summary.
+   */
+  get _progressNode()
+  {
+    let node = document.getElementById("downloadsSummaryProgress");
+    if (!node) {
+      return null;
+    }
+    delete this._progressNode;
+    return this._progressNode = node;
+  },
+
+  /**
+   * Element corresponding to the main description of the downloads
+   * summary.
+   */
+  get _descriptionNode()
+  {
+    let node = document.getElementById("downloadsSummaryDescription");
+    if (!node) {
+      return null;
+    }
+    delete this._descriptionNode;
+    return this._descriptionNode = node;
+  },
+
+  /**
+   * Element corresponding to the secondary description of the downloads
+   * summary.
+   */
+  get _detailsNode()
+  {
+    let node = document.getElementById("downloadsSummaryDetails");
+    if (!node) {
+      return null;
+    }
+    delete this._detailsNode;
+    return this._detailsNode = node;
+  }
+}

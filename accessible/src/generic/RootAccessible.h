@@ -9,7 +9,6 @@
 #include "nsCaretAccessible.h"
 #include "DocAccessibleWrap.h"
 
-
 #include "nsHashtable.h"
 #include "nsCaretAccessible.h"
 #include "nsIDocument.h"
@@ -83,14 +82,14 @@ protected:
     nsRefPtr<nsCaretAccessible> mCaretAccessible;
 };
 
-} // namespace a11y
-} // namespace mozilla
-
-inline mozilla::a11y::RootAccessible*
+inline RootAccessible*
 Accessible::AsRoot()
 {
   return mFlags & eRootAccessible ?
     static_cast<mozilla::a11y::RootAccessible*>(this) : nullptr;
 }
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

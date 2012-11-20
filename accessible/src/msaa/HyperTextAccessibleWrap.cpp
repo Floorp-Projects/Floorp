@@ -9,6 +9,9 @@
 
 #include "nsEventShell.h"
 
+using namespace mozilla;
+using namespace mozilla::a11y;
+
 NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap,
                              HyperTextAccessible)
 

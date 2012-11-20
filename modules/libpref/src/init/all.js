@@ -3027,10 +3027,10 @@ pref("font.name.monospace.he", "Droid Sans Mono");
 pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Droid Sans");
 
 pref("font.name.serif.ja", "Droid Serif");
-pref("font.name.sans-serif.ja", "Droid Sans Japanese");
+pref("font.name.sans-serif.ja", "Droid Sans");
 pref("font.name.monospace.ja", "MotoyaLMaru");
-pref("font.name-list.sans-serif.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
-pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar");
+pref("font.name-list.sans-serif.ja", "Roboto, Droid Sans, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
+pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Mono");
 
 pref("font.name.serif.ko", "Droid Serif");
 pref("font.name.sans-serif.ko", "Droid Sans");
@@ -3665,6 +3665,9 @@ pref("layers.acceleration.draw-fps", false);
 pref("layers.offmainthreadcomposition.animate-opacity", false);
 pref("layers.offmainthreadcomposition.animate-transform", false);
 pref("layers.offmainthreadcomposition.log-animations", false);
+
+// Whether to (try) to use a Composer2D if available on this platform.
+pref("layers.composer2d.enabled", false);
 
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2

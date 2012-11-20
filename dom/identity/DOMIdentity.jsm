@@ -11,6 +11,7 @@ this.EXPORTED_SYMBOLS = ["DOMIdentity"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/IdentityUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
 #ifdef MOZ_B2G_VERSION
@@ -31,8 +32,8 @@ function log(...aMessageArgs) {
   Logger.log.apply(Logger, ["DOMIdentity"].concat(aMessageArgs));
 }
 
-function IDDOMMessage(aID) {
-  this.id = aID;
+function IDDOMMessage(aOptions) {
+  objectCopy(aOptions, this);
 }
 
 function IDPProvisioningContext(aID, aOrigin, aTargetMM) {
@@ -46,7 +47,7 @@ IDPProvisioningContext.prototype = {
   get origin() this._origin,
 
   doBeginProvisioningCallback: function IDPPC_doBeginProvCB(aID, aCertDuration) {
-    let message = new IDDOMMessage(this.id);
+    let message = new IDDOMMessage({id: this.id});
     message.identity = aID;
     message.certDuration = aCertDuration;
     this._mm.sendAsyncMessage("Identity:IDP:CallBeginProvisioningCallback",
@@ -55,7 +56,7 @@ IDPProvisioningContext.prototype = {
 
   doGenKeyPairCallback: function IDPPC_doGenKeyPairCallback(aPublicKey) {
     log("doGenKeyPairCallback");
-    let message = new IDDOMMessage(this.id);
+    let message = new IDDOMMessage({id: this.id});
     message.publicKey = aPublicKey;
     this._mm.sendAsyncMessage("Identity:IDP:CallGenKeyPairCallback", message);
   },
@@ -76,7 +77,7 @@ IDPAuthenticationContext.prototype = {
   get origin() this._origin,
 
   doBeginAuthenticationCallback: function IDPAC_doBeginAuthCB(aIdentity) {
-    let message = new IDDOMMessage(this.id);
+    let message = new IDDOMMessage({id: this.id});
     message.identity = aIdentity;
     this._mm.sendAsyncMessage("Identity:IDP:CallBeginAuthenticationCallback",
                               message);
@@ -87,34 +88,37 @@ IDPAuthenticationContext.prototype = {
   },
 };
 
-function RPWatchContext(aID, aOrigin, aLoggedInUser, aTargetMM) {
-  this._id = aID;
-  this._origin = aOrigin;
-  this._loggedInUser = aLoggedInUser;
+function RPWatchContext(aOptions, aTargetMM) {
+  objectCopy(aOptions, this);
+
+  // id and origin are required
+  if (! (this.id && this.origin)) {
+    throw new Error("id and origin are required for RP watch context");
+  }
+
+  // default for no loggedInUser is undefined, not null
+  this.loggedInUser = aOptions.loggedInUser;
+
   this._mm = aTargetMM;
 }
 
 RPWatchContext.prototype = {
-  get id() this._id,
-  get origin() this._origin,
-  get loggedInUser() this._loggedInUser,
-
   doLogin: function RPWatchContext_onlogin(aAssertion) {
     log("doLogin: " + this.id);
-    let message = new IDDOMMessage(this.id);
+    let message = new IDDOMMessage({id: this.id});
     message.assertion = aAssertion;
     this._mm.sendAsyncMessage("Identity:RP:Watch:OnLogin", message);
   },
 
   doLogout: function RPWatchContext_onlogout() {
-    log("doLogout :" + this.id);
-    let message = new IDDOMMessage(this.id);
+    log("doLogout: " + this.id);
+    let message = new IDDOMMessage({id: this.id});
     this._mm.sendAsyncMessage("Identity:RP:Watch:OnLogout", message);
   },
 
   doReady: function RPWatchContext_onready() {
     log("doReady: " + this.id);
-    let message = new IDDOMMessage(this.id);
+    let message = new IDDOMMessage({id: this.id});
     this._mm.sendAsyncMessage("Identity:RP:Watch:OnReady", message);
   },
 
@@ -212,7 +216,7 @@ this.DOMIdentity = {
     if (!aContext._mm) {
       throw new Error("ERROR: Trying to reset an invalid context");
     }
-    let message = new IDDOMMessage(aContext.id);
+    let message = new IDDOMMessage({id: aContext.id});
     aContext._mm.sendAsyncMessage("Identity:ResetState", message);
   },
 
@@ -220,8 +224,7 @@ this.DOMIdentity = {
     log("DOMIdentity__watch: " + message.id);
     // Pass an object with the watch members to Identity.jsm so it can call the
     // callbacks.
-    let context = new RPWatchContext(message.id, message.origin,
-                                     message.loggedInUser, targetMM);
+    let context = new RPWatchContext(message, targetMM);
     IdentityService.RP.watch(context);
   },
 
@@ -230,7 +233,7 @@ this.DOMIdentity = {
   },
 
   _logout: function DOMIdentity__logout(message) {
-    IdentityService.RP.logout(message.id, message.origin);
+    IdentityService.RP.logout(message.id, message.origin, message);
   },
 
   _beginProvisioning: function DOMIdentity__beginProvisioning(message, targetMM) {

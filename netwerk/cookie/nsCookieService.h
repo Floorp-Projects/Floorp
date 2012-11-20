@@ -267,10 +267,10 @@ class nsCookieService : public nsICookieService
     nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
-    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, uint32_t aAppId, bool aInBrowserElement, nsCString &aCookie);
+  void                            GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, uint32_t aAppId, bool aInBrowserElement, bool aIsPrivate, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);
-    void                          SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, uint32_t aAppId, bool aInBrowserElement);
-    bool                          SetCookieInternal(nsIURI *aHostURI, const nsCookieKey& aKey, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp);
+  void                            SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, uint32_t aAppId, bool aInBrowserElement, bool aIsPrivate, nsIChannel* aChannel);
+    bool                          SetCookieInternal(nsIURI *aHostURI, const nsCookieKey& aKey, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel);
     void                          AddInternal(const nsCookieKey& aKey, nsCookie *aCookie, int64_t aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, bool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = NULL);
     void                          AddCookieToList(const nsCookieKey& aKey, nsCookie *aCookie, DBState *aDBState, mozIStorageBindingParamsArray *aParamsArray, bool aWriteToDB = true);
@@ -316,8 +316,8 @@ class nsCookieService : public nsICookieService
     nsCOMPtr<mozIStorageService>     mStorageService;
 
     // we have two separate DB states: one for normal browsing and one for
-    // private browsing, switching between them as appropriate. this state
-    // encapsulates both the in-memory table and the on-disk DB.
+    // private browsing, switching between them on a per-cookie-request basis.
+    // this state encapsulates both the in-memory table and the on-disk DB.
     // note that the private states' dbConn should always be null - we never
     // want to be dealing with the on-disk DB when in private browsing.
     DBState                      *mDBState;

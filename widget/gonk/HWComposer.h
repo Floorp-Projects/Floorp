@@ -17,8 +17,9 @@
 #ifndef ANDROID_SF_HWCOMPOSER_H
 #define ANDROID_SF_HWCOMPOSER_H
 
-#include <hardware/hwcomposer.h>
 #include <utils/Vector.h>
+
+#include "hardware/hwcomposer.h"
 
 namespace android {
 // ---------------------------------------------------------------------------
@@ -37,7 +38,7 @@ public:
     // swap buffers using vendor specific implementation
     status_t swapBuffers(hwc_display_t dpy, hwc_surface_t surf) const;
 
-private:
+protected:
     struct cb_context {
         hwc_procs_t procs;
         HWComposer* hwc;

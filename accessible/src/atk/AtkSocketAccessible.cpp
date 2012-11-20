@@ -11,6 +11,8 @@
 #include "nsMai.h"
 #include "mozilla/Likely.h"
 
+using namespace mozilla::a11y;
+
 AtkSocketEmbedType AtkSocketAccessible::g_atk_socket_embed = NULL;
 GType AtkSocketAccessible::g_atk_socket_type = G_TYPE_INVALID;
 const char* AtkSocketAccessible::sATKSocketEmbedSymbol = "atk_socket_embed";

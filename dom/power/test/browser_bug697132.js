@@ -114,14 +114,14 @@ let gSteps = [
     browser.addEventListener("load", function onLoad(e) {
       browser.removeEventListener("load", onLoad, true);
       gLock2 = gWin2.navigator.requestWakeLock("test");
-      is(gWin2.document.mozHidden, true,
+      is(gWin2.document.hidden, true,
          "window is background")
       is(gWin2.navigator.mozPower.getWakeLockState("test"), "locked-background",
          "wake lock is background");
       let doc2 = gWin2.document;
-      doc2.addEventListener("mozvisibilitychange", function onVisibilityChange(e) {
-        if (!doc2.mozHidden) {
-          doc2.removeEventListener("mozvisibilitychange", onVisibilityChange);
+      doc2.addEventListener("visibilitychange", function onVisibilityChange(e) {
+        if (!doc2.hidden) {
+          doc2.removeEventListener("visibilitychange", onVisibilityChange);
           executeSoon(runNextStep);
         }
       });
@@ -129,7 +129,7 @@ let gSteps = [
     }, true);
   },
   function crossTabWakeLock2() {
-    is(gWin2.document.mozHidden, false,
+    is(gWin2.document.hidden, false,
        "window is foreground")
     is(gWin2.navigator.mozPower.getWakeLockState("test"), "locked-foreground",
       "wake lock is foreground");
@@ -157,7 +157,7 @@ let gSteps = [
   },
   function crossTabWakeLock5() {
     // Test again in background tab
-    is(gWin2.document.mozHidden, true,
+    is(gWin2.document.hidden, true,
        "window is background")
     is(gWin2.navigator.mozPower.getWakeLockState("test"), "locked-background",
       "wake lock is background");
@@ -185,9 +185,9 @@ let gSteps = [
     executeSoon(runNextStep);
   },
   function crossTabWakeLock8() {
-    is(gWin1.document.mozHidden, true,
+    is(gWin1.document.hidden, true,
        "gWin1 is background");
-    is(gWin2.document.mozHidden, false,
+    is(gWin2.document.hidden, false,
        "gWin2 is foreground");
 
     gLock1 = gWin1.navigator.requestWakeLock("test");

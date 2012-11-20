@@ -263,6 +263,31 @@ TypeInferenceOracle::propertyReadAccessGetter(JSScript *script, jsbytecode *pc)
 }
 
 bool
+TypeInferenceOracle::inObjectIsDenseArray(JSScript *script, jsbytecode *pc)
+{
+    // Check whether the object is a dense array and index is int32 or double.
+    StackTypeSet *id = script->analysis()->poppedTypes(pc, 1);
+    StackTypeSet *obj = script->analysis()->poppedTypes(pc, 0);
+
+    JSValueType idType = id->getKnownTypeTag();
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
+        return false;
+
+    JSValueType objType = obj->getKnownTypeTag();
+    if (objType != JSVAL_TYPE_OBJECT)
+        return false;
+
+    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+}
+
+bool
+TypeInferenceOracle::inArrayIsPacked(JSScript *script, jsbytecode *pc)
+{
+    StackTypeSet *types = script->analysis()->poppedTypes(pc, 0);
+    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+}
+
+bool
 TypeInferenceOracle::elementReadIsDenseArray(JSScript *script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.

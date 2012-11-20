@@ -91,20 +91,20 @@ function testPaneCollapse1() {
 }
 
 function testPaneCollapse2() {
-  let variables =
-    gDebugger.document.getElementById("variables");
+  let variablesAndExpressions =
+    gDebugger.document.getElementById("variables+expressions");
   let togglePanesButton =
     gDebugger.document.getElementById("toggle-panes");
 
-  let width = parseInt(variables.getAttribute("width"));
+  let width = parseInt(variablesAndExpressions.getAttribute("width"));
   is(width, gDebugger.Prefs.variablesWidth,
-    "The variables pane has an incorrect width.");
-  is(variables.style.marginRight, "0px",
-    "The variables pane has an incorrect right margin.");
-  ok(!variables.hasAttribute("animated"),
-    "The variables pane has an incorrect animated attribute.");
+    "The variables and expressions pane has an incorrect width.");
+  is(variablesAndExpressions.style.marginRight, "0px",
+    "The variables and expressions pane has an incorrect right margin.");
+  ok(!variablesAndExpressions.hasAttribute("animated"),
+    "The variables and expressions pane has an incorrect animated attribute.");
   ok(!togglePanesButton.getAttribute("panesHidden"),
-    "The variables pane should at this point be visible.");
+    "The variables and expressions pane should at this point be visible.");
 
   gView.togglePanes({ visible: false, animated: true });
 
@@ -115,13 +115,13 @@ function testPaneCollapse2() {
 
   let margin = -(width + 1) + "px";
   is(width, gDebugger.Prefs.variablesWidth,
-    "The variables pane has an incorrect width after collapsing.");
-  is(variables.style.marginRight, margin,
-    "The variables pane has an incorrect right margin after collapsing.");
-  ok(variables.hasAttribute("animated"),
-    "The variables pane has an incorrect attribute after an animated collapsing.");
+    "The variables and expressions pane has an incorrect width after collapsing.");
+  is(variablesAndExpressions.style.marginRight, margin,
+    "The variables and expressions pane has an incorrect right margin after collapsing.");
+  ok(variablesAndExpressions.hasAttribute("animated"),
+    "The variables and expressions pane has an incorrect attribute after an animated collapsing.");
   ok(togglePanesButton.hasAttribute("panesHidden"),
-    "The variables pane should not be visible after collapsing.");
+    "The variables and expressions pane should not be visible after collapsing.");
 
   gView.togglePanes({ visible: true, animated: false });
 
@@ -131,20 +131,20 @@ function testPaneCollapse2() {
     "The options menu item should still not be checked.");
 
   is(width, gDebugger.Prefs.variablesWidth,
-    "The variables pane has an incorrect width after uncollapsing.");
-  is(variables.style.marginRight, "0px",
-    "The variables pane has an incorrect right margin after uncollapsing.");
-  ok(!variables.hasAttribute("animated"),
-    "The variables pane has an incorrect attribute after an unanimated uncollapsing.");
+    "The variables and expressions pane has an incorrect width after uncollapsing.");
+  is(variablesAndExpressions.style.marginRight, "0px",
+    "The variables and expressions pane has an incorrect right margin after uncollapsing.");
+  ok(!variablesAndExpressions.hasAttribute("animated"),
+    "The variables and expressions pane has an incorrect attribute after an unanimated uncollapsing.");
   ok(!togglePanesButton.getAttribute("panesHidden"),
-    "The variables pane should be visible again after uncollapsing.");
+    "The variables and expressions pane should be visible again after uncollapsing.");
 }
 
 function testPanesStartupPref(aCallback) {
   let stackframesAndBrekpoints =
     gDebugger.document.getElementById("stackframes+breakpoints");
-  let variables =
-    gDebugger.document.getElementById("variables");
+  let variablesAndExpressions =
+    gDebugger.document.getElementById("variables+expressions");
   let togglePanesButton =
     gDebugger.document.getElementById("toggle-panes");
 
