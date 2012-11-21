@@ -269,6 +269,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
                                                       const nsIntRegion& aOldValidRegion,
                                                       nsIntRegion& aRegionToPaint,
                                                       const gfx3DMatrix& aTransform,
+                                                      const nsIntRect& aCompositionBounds,
                                                       const gfx::Point& aScrollOffset,
                                                       const gfxSize& aResolution,
                                                       bool aIsRepeated)
@@ -281,18 +282,16 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
   bool drawingLowPrecision = aTiledBuffer.IsLowPrecision();
 
   // Find out if we have any non-stale content to update.
-  nsIntRegion freshRegion;
-  if (!mFirstPaint) {
-    freshRegion.And(aInvalidRegion, aOldValidRegion);
-    freshRegion.Sub(aInvalidRegion, freshRegion);
-  }
+  nsIntRegion staleRegion;
+  staleRegion.And(aInvalidRegion, aOldValidRegion);
 
   // Find out the current view transform to determine which tiles to draw
   // first, and see if we should just abort this paint. Aborting is usually
   // caused by there being an incoming, more relevant paint.
   gfx::Rect viewport;
   float scaleX, scaleY;
-  if (BasicManager()->ProgressiveUpdateCallback(!freshRegion.IsEmpty(), viewport,
+  if (BasicManager()->ProgressiveUpdateCallback(!staleRegion.Contains(aInvalidRegion),
+                                                viewport,
                                                 scaleX, scaleY, !drawingLowPrecision)) {
     SAMPLE_MARKER("Abort painting");
     aRegionToPaint.SetEmpty();
@@ -304,10 +303,16 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     RoundedTransformViewportBounds(viewport, aScrollOffset, aResolution,
                                    scaleX, scaleY, aTransform);
 
-  // Paint tiles that have no content before tiles that only have stale content.
-  bool drawingStale = freshRegion.IsEmpty();
+  // Paint tiles that have stale content or that intersected with the screen
+  // at the time of issuing the draw command in a single transaction first.
+  // This is to avoid rendering glitches on animated page content, and when
+  // layers change size/shape.
+  nsIntRect criticalViewportRect = roundedTransformedViewport.Intersect(aCompositionBounds);
+  aRegionToPaint.And(aInvalidRegion, criticalViewportRect);
+  aRegionToPaint.Or(aRegionToPaint, staleRegion);
+  bool drawingStale = !aRegionToPaint.IsEmpty();
   if (!drawingStale) {
-    aRegionToPaint = freshRegion;
+    aRegionToPaint = aInvalidRegion;
   }
 
   // Prioritise tiles that are currently visible on the screen.
@@ -316,6 +321,10 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     aRegionToPaint.And(aRegionToPaint, roundedTransformedViewport);
     paintVisible = true;
   }
+
+  // Paint area that's visible and overlaps previously valid content to avoid
+  // visible glitches in animated elements, such as gifs.
+  bool paintInSingleTransaction = paintVisible && (drawingStale || mFirstPaint);
 
   // The following code decides what order to draw tiles in, based on the
   // current scroll direction of the primary scrollable layer.
@@ -364,11 +373,12 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     // The region needed to paint is larger then our progressive chunk size
     // therefore update what we want to paint and ask for a new paint transaction.
 
-    // If we're drawing stale, visible content, make sure that it happens
-    // in one go by repeating this work without calling the painted
-    // callback. The remaining content is then drawn tile-by-tile in
-    // multiple transactions.
-    if (!drawingLowPrecision && paintVisible && drawingStale) {
+    // If we need to draw more than one tile to maintain coherency, make
+    // sure it happens in the same transaction by requesting this work be
+    // repeated immediately.
+    // If this is unnecessary, the remaining work will be done tile-by-tile in
+    // subsequent transactions.
+    if (!drawingLowPrecision && paintInSingleTransaction) {
       repeatImmediately = true;
     } else {
       BasicManager()->SetRepeatTransaction();
@@ -384,6 +394,7 @@ BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
                                          nsIntRegion& aInvalidRegion,
                                          const nsIntRegion& aOldValidRegion,
                                          const gfx3DMatrix& aTransform,
+                                         const nsIntRect& aCompositionBounds,
                                          const gfx::Point& aScrollOffset,
                                          const gfxSize& aResolution,
                                          LayerManager::DrawThebesLayerCallback aCallback,
@@ -399,6 +410,7 @@ BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
                                             aOldValidRegion,
                                             regionToPaint,
                                             aTransform,
+                                            aCompositionBounds,
                                             aScrollOffset,
                                             aResolution,
                                             repeat);
@@ -497,12 +509,20 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     resolution.height *= metrics.mResolution.height;
   }
 
-  // Calculate the scroll offset since the last transaction.
+  // Calculate the scroll offset since the last transaction, and the
+  // composition bounds.
+  nsIntRect compositionBounds;
   gfx::Point scrollOffset(0, 0);
   Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
   if (primaryScrollable) {
     const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
     scrollOffset = metrics.mScrollOffset;
+    gfxRect transformedViewport = transform.TransformBounds(
+      gfxRect(metrics.mCompositionBounds.x, metrics.mCompositionBounds.y,
+              metrics.mCompositionBounds.width, metrics.mCompositionBounds.height));
+    transformedViewport.RoundOut();
+    compositionBounds = nsIntRect(transformedViewport.x, transformedViewport.y,
+                                  transformedViewport.width, transformedViewport.height);
   }
 
   // Only draw progressively when the resolution is unchanged.
@@ -528,8 +548,8 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     }
 
     if (!ProgressiveUpdate(mTiledBuffer, mValidRegion, invalidRegion,
-                           oldValidRegion, transform, scrollOffset, resolution,
-                           aCallback, aCallbackData))
+                           oldValidRegion, transform, compositionBounds,
+                           scrollOffset, resolution, aCallback, aCallbackData))
       return;
   } else {
     mTiledBuffer.SetFrameResolution(resolution);
@@ -594,7 +614,8 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       updatedLowPrecision =
         ProgressiveUpdate(mLowPrecisionTiledBuffer, mLowPrecisionValidRegion,
                           lowPrecisionInvalidRegion, oldValidRegion, transform,
-                          scrollOffset, resolution, aCallback, aCallbackData);
+                          compositionBounds, scrollOffset, resolution, aCallback,
+                          aCallbackData);
     }
 
     // Re-add the high-precision valid region intersection so that we can
