@@ -81,7 +81,6 @@ public:
                                nsPluginInstanceOwner *aOwner);
   nsresult IsPluginEnabledForType(const char* aMimeType);
   nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
-  bool     IsPluginClickToPlayForType(const char *aMimeType);
   bool     IsPluginPlayPreviewForType(const char *aMimeType);
   nsresult GetBlocklistStateForType(const char *aMimeType, uint32_t *state);
 

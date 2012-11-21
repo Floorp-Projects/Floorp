@@ -1221,137 +1221,135 @@ NS_IMETHODIMP
 TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 {
   MutexAutoLock hangReportMutex(mHangReportsMutex);
+
+  JSObject *fullReportObj = JS_NewObject(cx, nullptr, nullptr, nullptr);
+  if (!fullReportObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *ret = OBJECT_TO_JSVAL(fullReportObj);
+
+  JSObject *moduleArray = JS_NewArrayObject(cx, 0, nullptr);
+  if (!moduleArray) {
+    return NS_ERROR_FAILURE;
+  }
+  JSBool ok = JS_DefineProperty(cx, fullReportObj, "memoryMap",
+                                OBJECT_TO_JSVAL(moduleArray),
+                                NULL, NULL, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const uint32_t moduleCount = mHangReports.GetModuleCount();
+  for (size_t moduleIndex = 0; moduleIndex < moduleCount; ++moduleIndex) {
+    // Current module
+    const Telemetry::ProcessedStack::Module& module =
+      mHangReports.GetModule(moduleIndex);
+
+    JSObject *moduleInfoArray = JS_NewArrayObject(cx, 0, nullptr);
+    if (!moduleInfoArray) {
+      return NS_ERROR_FAILURE;
+    }
+    jsval val = OBJECT_TO_JSVAL(moduleInfoArray);
+    if (!JS_SetElement(cx, moduleArray, moduleIndex, &val)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    unsigned index = 0;
+
+    // Module name
+    JSString *str = JS_NewStringCopyZ(cx, module.mName.c_str());
+    if (!str) {
+      return NS_ERROR_FAILURE;
+    }
+    val = STRING_TO_JSVAL(str);
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // "PDB Age" identifier
+    val = INT_TO_JSVAL(module.mPdbAge);
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // "PDB Signature" GUID
+    str = JS_NewStringCopyZ(cx, module.mPdbSignature.c_str());
+    if (!str) {
+      return NS_ERROR_FAILURE;
+    }
+    val = STRING_TO_JSVAL(str);
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Name of associated PDB file
+    str = JS_NewStringCopyZ(cx, module.mPdbName.c_str());
+    if (!str) {
+      return NS_ERROR_FAILURE;
+    }
+    val = STRING_TO_JSVAL(str);
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   JSObject *reportArray = JS_NewArrayObject(cx, 0, nullptr);
   if (!reportArray) {
     return NS_ERROR_FAILURE;
   }
-  *ret = OBJECT_TO_JSVAL(reportArray);
+  ok = JS_DefineProperty(cx, fullReportObj, "stacks",
+                         OBJECT_TO_JSVAL(reportArray),
+                         NULL, NULL, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // Each hang report is an object in the 'chromeHangs' array
-  for (size_t i = 0; i < mHangReports.GetStackCount(); ++i) {
-    const CombinedStacks::Stack &stack = mHangReports.GetStack(i);
-    JSObject *reportObj = JS_NewObject(cx, NULL, NULL, NULL);
-    if (!reportObj) {
+  JSObject *durationArray = JS_NewArrayObject(cx, 0, nullptr);
+  ok = JS_DefineProperty(cx, fullReportObj, "durations",
+                         OBJECT_TO_JSVAL(durationArray),
+                         NULL, NULL, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (size_t i = 0, n = mHangReports.GetStackCount(); i < n; ++i) {
+    jsval duration = INT_TO_JSVAL(mHangReports.GetDuration(i));
+    if (!JS_SetElement(cx, durationArray, i, &duration)) {
       return NS_ERROR_FAILURE;
     }
-    jsval reportObjVal = OBJECT_TO_JSVAL(reportObj);
-    if (!JS_SetElement(cx, reportArray, i, &reportObjVal)) {
-      return NS_ERROR_FAILURE;
-    }
 
-    // Record the hang duration (expressed in seconds)
-    JSBool ok = JS_DefineProperty(cx, reportObj, "duration",
-                                  INT_TO_JSVAL(mHangReports.GetDuration(i)),
-                                  NULL, NULL, JSPROP_ENUMERATE);
-    if (!ok) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Represent call stack PCs as strings
-    // (JS can't represent all 64-bit integer values)
+    // Represent call stack PCs as (module index, offset) pairs.
     JSObject *pcArray = JS_NewArrayObject(cx, 0, nullptr);
     if (!pcArray) {
       return NS_ERROR_FAILURE;
     }
-    ok = JS_DefineProperty(cx, reportObj, "stack", OBJECT_TO_JSVAL(pcArray),
-                           NULL, NULL, JSPROP_ENUMERATE);
-    if (!ok) {
+
+    jsval pcArrayVal = OBJECT_TO_JSVAL(pcArray);
+    if (!JS_SetElement(cx, reportArray, i, &pcArrayVal)) {
       return NS_ERROR_FAILURE;
     }
 
+    const CombinedStacks::Stack& stack = mHangReports.GetStack(i);
     const uint32_t pcCount = stack.size();
     for (size_t pcIndex = 0; pcIndex < pcCount; ++pcIndex) {
-      nsAutoCString pcString;
-      const Telemetry::ProcessedStack::Frame &Frame = stack[pcIndex];
-      pcString.AppendPrintf("0x%p", Frame.mOffset);
-      JSString *str = JS_NewStringCopyZ(cx, pcString.get());
-      if (!str) {
+      const Telemetry::ProcessedStack::Frame& frame = stack[pcIndex];
+      JSObject *framePair = JS_NewArrayObject(cx, 0, nullptr);
+      if (!framePair) {
         return NS_ERROR_FAILURE;
       }
-      jsval v = STRING_TO_JSVAL(str);
-      if (!JS_SetElement(cx, pcArray, pcIndex, &v)) {
+      int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex) ?
+        -1 : frame.mModIndex;
+      jsval modIndexVal = INT_TO_JSVAL(modIndex);
+      if (!JS_SetElement(cx, framePair, 0, &modIndexVal)) {
         return NS_ERROR_FAILURE;
       }
-    }
-
-    // Record memory map info
-    JSObject *moduleArray = JS_NewArrayObject(cx, 0, nullptr);
-    if (!moduleArray) {
-      return NS_ERROR_FAILURE;
-    }
-    ok = JS_DefineProperty(cx, reportObj, "memoryMap",
-                           OBJECT_TO_JSVAL(moduleArray),
-                           NULL, NULL, JSPROP_ENUMERATE);
-    if (!ok) {
-      return NS_ERROR_FAILURE;
-    }
-
-    const uint32_t moduleCount = (i == 0) ? mHangReports.GetModuleCount() : 0;
-    for (size_t moduleIndex = 0; moduleIndex < moduleCount; ++moduleIndex) {
-      // Current module
-      const Telemetry::ProcessedStack::Module &module =
-        mHangReports.GetModule(moduleIndex);
-
-      JSObject *moduleInfoArray = JS_NewArrayObject(cx, 0, nullptr);
-      if (!moduleInfoArray) {
+      jsval mOffsetVal = INT_TO_JSVAL(frame.mOffset);
+      if (!JS_SetElement(cx, framePair, 1, &mOffsetVal)) {
         return NS_ERROR_FAILURE;
       }
-      jsval val = OBJECT_TO_JSVAL(moduleInfoArray);
-      if (!JS_SetElement(cx, moduleArray, moduleIndex, &val)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Start address
-      nsAutoCString addressString;
-      addressString.AppendPrintf("0x%p", module.mStart);
-      JSString *str = JS_NewStringCopyZ(cx, addressString.get());
-      if (!str) {
-        return NS_ERROR_FAILURE;
-      }
-      val = STRING_TO_JSVAL(str);
-      if (!JS_SetElement(cx, moduleInfoArray, 0, &val)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Module name
-      str = JS_NewStringCopyZ(cx, module.mName.c_str());
-      if (!str) {
-        return NS_ERROR_FAILURE;
-      }
-      val = STRING_TO_JSVAL(str);
-      if (!JS_SetElement(cx, moduleInfoArray, 1, &val)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Module size in memory
-      val = INT_TO_JSVAL(int32_t(module.mMappingSize));
-      if (!JS_SetElement(cx, moduleInfoArray, 2, &val)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // "PDB Age" identifier
-      val = INT_TO_JSVAL(module.mPdbAge);
-      if (!JS_SetElement(cx, moduleInfoArray, 3, &val)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // "PDB Signature" GUID
-      str = JS_NewStringCopyZ(cx, module.mPdbSignature.c_str());
-      if (!str) {
-        return NS_ERROR_FAILURE;
-      }
-      val = STRING_TO_JSVAL(str);
-      if (!JS_SetElement(cx, moduleInfoArray, 4, &val)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Name of associated PDB file
-      str = JS_NewStringCopyZ(cx, module.mPdbName.c_str());
-      if (!str) {
-        return NS_ERROR_FAILURE;
-      }
-      val = STRING_TO_JSVAL(str);
-      if (!JS_SetElement(cx, moduleInfoArray, 5, &val)) {
+      jsval framePairVal = OBJECT_TO_JSVAL(framePair);
+      if (!JS_SetElement(cx, pcArray, pcIndex, &framePairVal)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -1763,8 +1761,6 @@ void ProcessedStack::Clear() {
 
 bool ProcessedStack::Module::operator==(const Module& aOther) const {
   return  mName == aOther.mName &&
-    mStart == aOther.mStart &&
-    mMappingSize == aOther.mMappingSize &&
     mPdbAge == aOther.mPdbAge &&
     mPdbSignature == aOther.mPdbSignature &&
     mPdbName == aOther.mPdbName;
@@ -1790,7 +1786,8 @@ static bool CompareByIndex(const StackFrame &a, const StackFrame &b)
 }
 #endif
 
-ProcessedStack GetStackAndModules(const std::vector<uintptr_t> &aPCs, bool aRelative)
+ProcessedStack
+GetStackAndModules(const std::vector<uintptr_t>& aPCs)
 {
   std::vector<StackFrame> rawStack;
   for (std::vector<uintptr_t>::const_iterator i = aPCs.begin(),
@@ -1828,8 +1825,7 @@ ProcessedStack GetStackAndModules(const std::vector<uintptr_t> &aPCs, bool aRela
         // If the current PC is within the current module, mark
         // module as used
         moduleReferenced = true;
-        if (aRelative)
-          rawStack[stackIndex].mPC -= moduleStart;
+        rawStack[stackIndex].mPC -= moduleStart;
         rawStack[stackIndex].mModIndex = moduleIndex;
       } else {
         // PC does not belong to any module. It is probably from
@@ -1870,8 +1866,6 @@ ProcessedStack GetStackAndModules(const std::vector<uintptr_t> &aPCs, bool aRela
     const SharedLibrary &info = rawModules.GetEntry(i);
     ProcessedStack::Module module = {
       info.GetName(),
-      info.GetStart(),
-      info.GetEnd() - info.GetStart(),
 #ifdef XP_WIN
       info.GetPdbAge(),
       "", // mPdbSignature

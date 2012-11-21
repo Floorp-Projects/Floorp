@@ -105,6 +105,10 @@ class B2GOptions(ReftestOptions):
                         help="the path to a gecko distribution that should "
                         "be installed on the emulator prior to test")
         defaults["geckoPath"] = None
+        self.add_option("--logcat-dir", action="store",
+                        type="string", dest="logcat_dir",
+                        help="directory to store logcat dump files")
+        defaults["logcat_dir"] = None
         defaults["remoteTestRoot"] = None
         defaults["logFile"] = "reftest.log"
         defaults["autorun"] = True
@@ -132,6 +136,9 @@ class B2GOptions(ReftestOptions):
 
         if options.geckoPath and not options.emulator:
             self.error("You must specify --emulator if you specify --gecko-path")
+
+        if options.logcat_dir and not options.emulator:
+            self.error("You must specify --emulator if you specify --logcat-dir")
 
         #if not options.emulator and not options.deviceIP:
         #    print "ERROR: you must provide a device IP"
@@ -470,6 +477,10 @@ def main(args=sys.argv[1:]):
         auto.setEmulator(True)
         if options.noWindow:
             kwargs['noWindow'] = True
+        if options.geckoPath:
+            kwargs['gecko_path'] = options.geckoPath
+        if options.logcat_dir:
+            kwargs['logcat_dir'] = options.logcat_dir
     if options.emulator_res:
         kwargs['emulator_res'] = options.emulator_res
     if options.b2gPath:
@@ -478,9 +489,7 @@ def main(args=sys.argv[1:]):
         host,port = options.marionette.split(':')
         kwargs['host'] = host
         kwargs['port'] = int(port)
-    if options.geckoPath:
-        kwargs['gecko_path'] = options.geckoPath
-    marionette = Marionette(**kwargs)
+    marionette = Marionette.getMarionetteOrExit(**kwargs)
     auto.marionette = marionette
 
     # create the DeviceManager

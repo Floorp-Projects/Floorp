@@ -18,7 +18,7 @@ class AudioContext;
 class DelayNode : public AudioNode
 {
 public:
-  DelayNode(AudioContext* aContext, float aMaxDelay);
+  DelayNode(AudioContext* aContext, double aMaxDelay);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DelayNode, AudioNode)

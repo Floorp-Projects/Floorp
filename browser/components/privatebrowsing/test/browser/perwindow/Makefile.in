@@ -25,11 +25,15 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_geoprompt_page.html \
 		browser_privatebrowsing_lastpbcontextexited.js \
 		browser_privatebrowsing_localStorage.js \
+		browser_privatebrowsing_localStorage_before_after.js \
+		browser_privatebrowsing_localStorage_before_after_page.html \
+		browser_privatebrowsing_localStorage_before_after_page2.html \
 		browser_privatebrowsing_localStorage_page1.html \
 		browser_privatebrowsing_localStorage_page2.html \
 		browser_privatebrowsing_opendir.js \
 		browser_privatebrowsing_openlocation.js \
 		browser_privatebrowsing_openLocationLastURL.js \
+		browser_privatebrowsing_placestitle.js \
 		browser_privatebrowsing_popupblocker.js \
 		browser_privatebrowsing_protocolhandler.js \
 		browser_privatebrowsing_protocolhandler_page.html \
@@ -39,6 +43,7 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_windowtitle_page.html \
 		browser_privatebrowsing_zoomrestore.js \
 		popup.html \
+		title.sjs \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -164,6 +164,15 @@
       testName("submit", "Submit Query");
       testName("image_submit", "Submit Query");
 
+      //////////////////////////////////////////////////////////////////////////
+      // controls having a value used as a part of computed name
+
+      testName("ctrlvalue_progressbar:input", "foo 5 baz");
+      testName("ctrlvalue_scrollbar:input", "foo 5 baz");
+      testName("ctrlvalue_slider:input", "foo 5 baz");
+      testName("ctrlvalue_spinbutton:input", "foo 5 baz");
+
+
       /////////////////////////////////////////////////////////////////////////
       // label with nested combobox (test for 'f' item of name computation guide)
 
@@ -245,6 +254,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=704416"
      title="HTML acronym and abbr names should be provided by @title">
     Mozilla Bug 704416
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=812041"
+     title="ARIA slider and spinbutton don't provide a value for name computation">
+    Mozilla Bug 812041
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -444,6 +458,38 @@
   <!-- submit buttons -->
   <input type="submit" id="submit">
   <input type="image" id="image_submit">
+
+  <!-- controls having a value used as part of computed name -->
+  <input type="checkbox" id="ctrlvalue_progressbar:input">
+  <label for="ctrlvalue_progressbar:input">
+    foo <span role="progressbar"
+               aria-valuenow="5" aria-valuemin="1"
+               aria-valuemax="10">5</span> baz
+  </label>
+
+  <input type="checkbox" id="ctrlvalue_scrollbar:input" />
+  <label for="ctrlvalue_scrollbar:input">
+    foo <span role="scrollbar"
+              aria-valuenow="5" aria-valuemin="1"
+              aria-valuemax="10">5</span> baz
+  </label>
+
+  <input type="checkbox" id="ctrlvalue_slider:input">
+  <label for="ctrlvalue_slider:input">
+    foo <input role="slider" type="range"
+               value="5" min="1" max="10"
+               aria-valuenow="5" aria-valuemin="1"
+               aria-valuemax="10"> baz
+  </label>
+
+  <input type="checkbox" id="ctrlvalue_spinbutton:input">
+  <label for="ctrlvalue_spinbutton:input">
+    foo <input role="spinbutton" type="number"
+               value="5" min="1" max="10"
+               aria-valuenow="5" aria-valuemin="1"
+               aria-valuemax="10">
+    baz
+  </label>
 
   <!-- a label with a nested control in the start, middle and end -->
   <form>

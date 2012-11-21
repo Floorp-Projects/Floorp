@@ -147,7 +147,7 @@ public:
   // Called while decoding metadata to set the end time of the media
   // resource. The decoder monitor must be obtained before calling this.
   // aEndTime is in microseconds.
-  void SetEndTime(int64_t aEndTime);
+  void SetMediaEndTime(int64_t aEndTime);
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.

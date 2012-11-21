@@ -6548,10 +6548,8 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
 #undef LOCAL_ASSERT
 #undef LOCAL_ASSERT_RV
 
-namespace js {
-
 bool
-CallResultEscapes(jsbytecode *pc)
+js::CallResultEscapes(jsbytecode *pc)
 {
     /*
      * If we see any of these sequences, the result is unused:
@@ -6577,7 +6575,7 @@ CallResultEscapes(jsbytecode *pc)
 }
 
 extern bool
-IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
+js::IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
 {
     // This could be faster (by following jump instructions if the target is <= offset).
     for (BytecodeRange r(script); !r.empty(); r.popFront()) {
@@ -6589,7 +6587,7 @@ IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
 }
 
 JS_FRIEND_API(size_t)
-GetPCCountScriptCount(JSContext *cx)
+js::GetPCCountScriptCount(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -6626,7 +6624,7 @@ AppendArrayJSONProperties(JSContext *cx, StringBuffer &buf,
 }
 
 JS_FRIEND_API(JSString *)
-GetPCCountScriptSummary(JSContext *cx, size_t index)
+js::GetPCCountScriptSummary(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -6919,7 +6917,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
 }
 
 JS_FRIEND_API(JSString *)
-GetPCCountScriptContents(JSContext *cx, size_t index)
+js::GetPCCountScriptContents(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -6944,5 +6942,3 @@ GetPCCountScriptContents(JSContext *cx, size_t index)
 
     return buf.finishString();
 }
-
-} // namespace js

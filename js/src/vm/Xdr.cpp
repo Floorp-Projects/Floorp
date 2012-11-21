@@ -28,8 +28,6 @@ using namespace js;
 
 using mozilla::DebugOnly;
 
-namespace js {
-
 void
 XDRBuffer::freeBuffer()
 {
@@ -167,8 +165,5 @@ XDRDecoder::XDRDecoder(JSContext *cx, const void *data, uint32_t length,
     this->originPrincipals = JSScript::normalizeOriginPrincipals(principals, originPrincipals);
 }
 
-template class XDRState<XDR_ENCODE>;
-template class XDRState<XDR_DECODE>;
-
-} /* namespace js */
-
+template class js::XDRState<XDR_ENCODE>;
+template class js::XDRState<XDR_DECODE>;

@@ -116,7 +116,7 @@ static int64_t DurationToUsecs(TimeDuration aDuration) {
 class nsAudioMetadataEventRunner : public nsRunnable
 {
 private:
-  nsCOMPtr<MediaDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
 public:
   nsAudioMetadataEventRunner(MediaDecoder* aDecoder, uint32_t aChannels,
                              uint32_t aRate, bool aHasAudio,
@@ -1382,7 +1382,7 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
   }
 }
 
-void MediaDecoderStateMachine::SetEndTime(int64_t aEndTime)
+void MediaDecoderStateMachine::SetMediaEndTime(int64_t aEndTime)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();

@@ -64,7 +64,6 @@ protected:
 
     void InitMetrics();
     void InitMetricsFromPlatform();
-    void InitMetricsFromATSMetrics(ATSFontRef aFontRef);
 
     // Get width and glyph ID for a character; uses aConvFactor
     // to convert font units as returned by CG to actual dimensions

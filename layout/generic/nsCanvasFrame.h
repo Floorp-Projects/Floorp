@@ -184,6 +184,10 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
+ 
+  // We still need to paint a background color as well as an image for this item, 
+  // so we can't support this yet.
+  virtual bool SupportsOptimizingToImage() { return false; }
 
   void SetExtraBackgroundColor(nscolor aColor)
   {
