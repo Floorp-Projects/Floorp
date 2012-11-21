@@ -1772,7 +1772,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsContentUtils::AddScriptRunner(
     NS_NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
 
-  bool reUseInnerWindow = aForceReuseInnerWindow || wouldReuseInnerWindow;
+  // Sometimes, WouldReuseInnerWindow() returns true even if there's no inner
+  // window (see bug 776497). Be safe.
+  bool reUseInnerWindow = (aForceReuseInnerWindow || wouldReuseInnerWindow) &&
+                          GetCurrentInnerWindowInternal();
 
   nsresult rv = NS_OK;
 
@@ -5474,12 +5477,32 @@ nsGlobalWindow::SizeToContent()
 
   // The content viewer does a check to make sure that it's a content
   // viewer for a toplevel docshell.
-  
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
   NS_ENSURE_TRUE(markupViewer, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(markupViewer->SizeToContent(), NS_ERROR_FAILURE);
+
+  int32_t width, height;
+  NS_ENSURE_SUCCESS(markupViewer->GetContentSize(&width, &height),
+                    NS_ERROR_FAILURE);
+
+  // Make sure the new size is following the CheckSecurityWidthAndHeight
+  // rules.
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
+
+  nsIntSize cssSize(DevToCSSIntPixels(nsIntSize(width, height)));
+  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&cssSize.width,
+                                                &cssSize.height),
+                    NS_ERROR_FAILURE);
+
+  nsIntSize newDevSize(CSSToDevIntPixels(cssSize));
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = do_QueryInterface(mDocShell);
+  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem,
+                                           newDevSize.width, newDevSize.height),
+                    NS_ERROR_FAILURE);
 
   return NS_OK;
 }

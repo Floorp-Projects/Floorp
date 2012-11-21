@@ -32,8 +32,16 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(Ci.nsICrashReporter);
-const oldServerPref = Services.prefs.getCharPref("toolkit.crashreporter.pluginHangSubmitURL");
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
+
+const serverPrefName = "toolkit.crashreporter.pluginHangSubmitURL";
+
+var oldServerPref;
+try {
+  oldServerPref = Services.prefs.getCharPref(serverPrefName);
+}
+catch(e) {
+}
 
 const oldTimeoutPref = Services.prefs.getIntPref("dom.ipc.plugins.timeoutSecs");
 
@@ -81,7 +89,12 @@ var testObserver = {
     env.set("MOZ_CRASHREPORTER_NO_REPORT", "1");
 
     // Finally re-set prefs
-    Services.prefs.setCharPref("toolkit.crashreporter.pluginHangSubmitURL", oldServerPref);
+    if (oldServerPref === undefined) {
+      Services.prefs.clearUserPref(serverPrefName);
+    }
+    else {
+      Services.prefs.setCharPref(serverPrefName, oldServerPref);
+    }
     Services.prefs.setIntPref("dom.ipc.plugins.timeoutSecs", oldTimeoutPref);
     SimpleTest.finish();
   },

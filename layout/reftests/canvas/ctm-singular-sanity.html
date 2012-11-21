@@ -36,7 +36,7 @@ window.onload = function() {
         var m = [ 1, 2, 3, 4, 5, 6 ];
         ctx.mozCurrentTransform = m;
         ctx.mozCurrentTransformInverse = singular;
-        assert(isSameTM(m, ctx.mozCurrentTransform,
+        assert(isSameTM(m, ctx.mozCurrentTransform),
                         "Setting currentTransformInverse to a singular matrix is a no-op");
         ctx.mozCurrentTransform = IM;
     } catch (e) {

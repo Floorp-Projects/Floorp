@@ -140,17 +140,23 @@ xpc_GCThingIsGrayCCThing(void *thing);
 extern void
 xpc_UnmarkGrayGCThingRecursive(void *thing, JSGCTraceKind kind);
 
+// Unmark gray for known-nonnull cases
+MOZ_ALWAYS_INLINE void
+xpc_UnmarkNonNullGrayObject(JSObject *obj)
+{
+    if (xpc_IsGrayGCThing(obj))
+        xpc_UnmarkGrayGCThingRecursive(obj, JSTRACE_OBJECT);
+    else if (js::IsIncrementalBarrierNeededOnObject(obj))
+        js::IncrementalReferenceBarrier(obj);
+}
+
 // Remove the gray color from the given JSObject and any other objects that can
 // be reached through it.
-inline JSObject *
+MOZ_ALWAYS_INLINE JSObject *
 xpc_UnmarkGrayObject(JSObject *obj)
 {
-    if (obj) {
-        if (xpc_IsGrayGCThing(obj))
-            xpc_UnmarkGrayGCThingRecursive(obj, JSTRACE_OBJECT);
-        else if (js::IsIncrementalBarrierNeededOnObject(obj))
-            js::IncrementalReferenceBarrier(obj);
-    }
+    if (obj)
+        xpc_UnmarkNonNullGrayObject(obj);
     return obj;
 }
 

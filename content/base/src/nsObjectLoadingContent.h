@@ -350,13 +350,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
                             bool aSync, bool aNotify);
 
     /**
-     * Fires the nsPluginErrorEvent. This function doesn't do any checks
-     * whether it should be fired, or whether the given state translates to a
-     * meaningful event
-     */
-    void FirePluginError(FallbackType aFallbackType);
-
-    /**
      * Returns a ObjectType value corresponding to the type of content we would
      * support the given MIME type as, taking capabilities and plugin state
      * into account

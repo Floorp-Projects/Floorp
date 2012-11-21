@@ -22,13 +22,13 @@
 
 #include "gc/Barrier-inl.h"
 
-namespace js {
-namespace gcstats {
+using namespace js;
+using namespace js::gcstats;
 
 /* Except for the first and last, slices of less than 42ms are not reported. */
 static const int64_t SLICE_MIN_REPORT_TIME = 42 * PRMJ_USEC_PER_MSEC;
 
-class StatisticsSerializer
+class gcstats::StatisticsSerializer
 {
     typedef Vector<char, 128, SystemAllocPolicy> CharBuffer;
     CharBuffer buf_;
@@ -682,6 +682,3 @@ Statistics::computeMMU(int64_t window)
 
     return double(window - gcMax) / window;
 }
-
-} /* namespace gcstats */
-} /* namespace js */

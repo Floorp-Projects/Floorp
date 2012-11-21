@@ -38,7 +38,7 @@ MOCHITEST_FILES += \
 		test_pointerlock-api.html \
 		$(NULL)
 else
-$(warning test_pointerlock-api.html is disabled on Linux for intermittent failures. Bug 788164)
+$(filter disabled-on-linux-for-intermittent-failures--bug-788164, test_pointerlock-api.html)
 endif
 
 include $(topsrcdir)/config/rules.mk

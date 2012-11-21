@@ -12,6 +12,8 @@
 #include <string.h>
 #include <stdint.h>
 
+using namespace js;
+
 #ifndef TRACE_LOG_DIR
 # if defined(_WIN32)
 #  define TRACE_LOG_DIR ""
@@ -20,11 +22,9 @@
 # endif
 #endif
 
-namespace js {
-
 #if defined(__i386__)
 static __inline__ uint64_t
-rdtsc(void)
+js::rdtsc(void)
 {
     uint64_t x;
     __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
@@ -32,7 +32,7 @@ rdtsc(void)
 }
 #elif defined(__x86_64__)
 static __inline__ uint64_t
-rdtsc(void)
+js::rdtsc(void)
 {
     unsigned hi, lo;
     __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
@@ -40,7 +40,7 @@ rdtsc(void)
 }
 #elif defined(__powerpc__)
 static __inline__ uint64_t
-rdtsc(void)
+js::rdtsc(void)
 {
     uint64_t result=0;
     uint32_t upper, lower,tmp;
@@ -242,19 +242,19 @@ TraceLogging::releaseDefaultLogger()
 
 /* Helper functions for asm calls */
 void
-TraceLog(TraceLogging* logger, TraceLogging::Type type, JSScript* script)
+js::TraceLog(TraceLogging* logger, TraceLogging::Type type, JSScript* script)
 {
     logger->log(type, script);
 }
+
 void
-TraceLog(TraceLogging* logger, const char* log)
+js::TraceLog(TraceLogging* logger, const char* log)
 {
     logger->log(log);
 }
+
 void
-TraceLog(TraceLogging* logger, TraceLogging::Type type)
+js::TraceLog(TraceLogging* logger, TraceLogging::Type type)
 {
     logger->log(type);
 }
-
-}  /* namespace js */

@@ -135,6 +135,7 @@ MOCHITEST_FILES	= \
 		file_bug809290_b2.html \
 		file_bug809290_c.html \
 		file_empty.html \
+		test_sizetocontent_clamp.html \
 		$(NULL)
 
 ifneq (Linux,$(OS_ARCH))
@@ -142,7 +143,7 @@ MOCHITEST_FILES += \
 		test_resize_move_windows.html \
 		$(NULL)
 else
-$(warning test_resize_move_windows.html is disabled on Linux for timeouts. Bug 677841)
+$(filter disabled-on-linux-for-timeouts--bug-677841, test_resize_move_windows.html)
 endif
 
 include $(topsrcdir)/config/rules.mk
