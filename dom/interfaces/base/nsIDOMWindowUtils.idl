@@ -149,6 +149,18 @@ interface nsIDOMWindowUtils : nsISupports {
                                 in nsIDOMElement aElement);
 
   /**
+   * When a display port is set, this allows a sub-section of that
+   * display port to be marked as 'critical'. In this scenario, the
+   * area outside of this rectangle may be rendered at a lower
+   * detail (for example, by reducing its resolution), or not rendered
+   * at all under some circumstances.
+   * This call will have no effect if a display port has not been set.
+   */
+  void setCriticalDisplayPortForElement(in float aXPx, in float aYPx,
+                                        in float aWidthPx, in float aHeightPx,
+                                        in nsIDOMElement aElement);
+
+  /**
    * Get/set the resolution at which rescalable web content is drawn.
    * Currently this is only (some) thebes content.
    *
