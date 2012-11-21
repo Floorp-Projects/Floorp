@@ -205,6 +205,11 @@ class FrameInfo
         StackValue *sv = rawPush();
         sv->setArgSlot(arg);
     }
+    inline void pushScratchValue() {
+        masm.pushValue(addressOfScratchValue());
+        StackValue *sv = rawPush();
+        sv->setStack();
+    }
     inline Address addressOfLocal(size_t local) const {
         JS_ASSERT(local < nlocals());
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(local));
@@ -218,6 +223,9 @@ class FrameInfo
         size_t slot = value - &stack[0];
         JS_ASSERT(slot < stackDepth());
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(nlocals() + slot));
+    }
+    inline Address addressOfScratchValue() const {
+        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScratchValue());
     }
 
     void popValue(ValueOperand dest);

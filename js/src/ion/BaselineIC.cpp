@@ -393,6 +393,46 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+static bool
+DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, HandleValue objv,
+                  HandleValue index)
+{
+    RootedObject obj(cx, ToObject(cx, objv));
+    if (!obj)
+        return false;
+
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    if (!SetObjectElement(cx, obj, index, rhs, script->strictModeCode))
+        return false;
+
+    return true;
+}
+
+typedef bool (*DoSetElemFallbackFn)(JSContext *, ICSetElem_Fallback *, HandleValue, HandleValue,
+                                    HandleValue);
+static const VMFunction DoSetElemFallbackInfo = FunctionInfo<DoSetElemFallbackFn>(DoSetElemFallback);
+
+bool
+ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    EmitRestoreTailCallReg(masm);
+
+    // Push key and object.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+
+    // Push RHS. On x86 and ARM two push instructions are emitted so use a
+    // separate register to store the old stack pointer.
+    masm.mov(BaselineStackReg, R0.scratchReg());
+    masm.pushValue(Address(R0.scratchReg(), 2 * sizeof(Value)));
+
+    masm.push(BaselineStubReg);
+
+    return callVM(DoSetElemFallbackInfo, masm);
+}
+
 //
 // Call_Fallback
 //
