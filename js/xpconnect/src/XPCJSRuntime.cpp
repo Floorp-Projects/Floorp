@@ -533,27 +533,23 @@ class XPCIncrementalReleaseRunnable : public nsRunnable
 };
 
 bool
-ReleaseSliceNow(int32_t slice, void* data)
+ReleaseSliceNow(uint32_t slice, void* data)
 {
+    MOZ_ASSERT(slice > 0, "nonsensical/useless call with slice == 0");
     nsTArray<nsISupports *>* items =
         static_cast<nsTArray<nsISupports *>*>(data);
-    int32_t counter = 0;
-    while (1) {
-        uint32_t count = items->Length();
-        if (!count) {
-            break;
-        }
 
-        nsISupports *wrapper = items->ElementAt(count - 1);
-        items->RemoveElementAt(count - 1);
+    slice = NS_MIN(slice, items->Length());
+    for (uint32_t i = 0; i < slice; ++i) {
+        // Remove (and NS_RELEASE) the last entry in "items":
+        uint32_t lastItemIdx = items->Length() - 1;
+
+        nsISupports *wrapper = items->ElementAt(lastItemIdx);
+        items->RemoveElementAt(lastItemIdx);
         NS_RELEASE(wrapper);
-
-        if (slice > 0 && ++counter == slice) {
-            return items->IsEmpty();
-        }
     }
 
-    return true;
+    return items->IsEmpty();
 }
 
 
@@ -614,7 +610,7 @@ XPCIncrementalReleaseRunnable::ReleaseNow(bool limited)
                 break;
             }
         } else {
-            function.run(-1, function.data);
+            function.run(UINT32_MAX, function.data);
             MOZ_ASSERT(!items.Length());
             ++finalizeFunctionToRun;
         }
@@ -714,7 +710,7 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
                 for (uint32_t i = 0; i < self->mDeferredFinalizeFunctions.Length(); ++i) {
                     void* data = self->mDeferredFinalizeFunctions[i].start();
                     if (data) {
-                        self->mDeferredFinalizeFunctions[i].run(-1, data);
+                        self->mDeferredFinalizeFunctions[i].run(UINT32_MAX, data);
                     }
                 }
             }
