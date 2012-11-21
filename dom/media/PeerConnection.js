@@ -133,7 +133,8 @@ IceCandidate.prototype = {
     if (candidateInitDict !== undefined) {
       this.candidate = candidateInitDict.candidate || null;
       this.sdpMid = candidateInitDict.sdbMid || null;
-      this.sdpMLineIndex = candidateInitDict.sdpMLineIndex || null;
+      this.sdpMLineIndex = candidateInitDict.sdpMLineIndex === null ?
+            null : candidateInitDict.sdpMLineIndex + 1;
     } else {
       this.candidate = this.sdpMid = this.sdpMLineIndex = null;
     }
