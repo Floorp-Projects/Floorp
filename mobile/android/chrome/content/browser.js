@@ -3721,14 +3721,22 @@ var BrowserEventHandler = {
         }
       });
       return;
+    } else if (aTopic == "nsPref:changed") {
+      if (aData == "browser.zoom.reflowOnZoom") {
+        this.updateReflozPref();
+      }
+      return;
     }
 
     // the remaining events are all dependent on the browser content document being the
     // same as the browser displayed document. if they are not the same, we should ignore
     // the event.
-    if (!BrowserApp.isBrowserContentDocumentDisplayed())
-      return;
+    if (BrowserApp.isBrowserContentDocumentDisplayed()) {
+      this.handleUserEvent(aTopic, aData);
+    }
+  },
 
+  handleUserEvent: function(aTopic, aData) {
     if (aTopic == "Gesture:Scroll") {
       // If we've lost our scrollable element, return. Don't cancel the
       // override, as we probably don't want Java to handle panning until the
@@ -3800,10 +3808,6 @@ var BrowserEventHandler = {
       this.onPinch(aData);
     } else if (aTopic == "MozMagnifyGesture") {
       this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
-    } else if (aTopic == "nsPref:changed") {
-      if (aData == "browser.zoom.reflowOnZoom") {
-        this.updateReflozPref();
-      }
     }
   },
 

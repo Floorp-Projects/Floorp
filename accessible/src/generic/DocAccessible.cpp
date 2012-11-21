@@ -96,7 +96,7 @@ DocAccessible::
   if (!mDocument)
     return;
 
-  // nsAccDocManager creates document accessible when scrollable frame is
+  // DocManager creates document accessible when scrollable frame is
   // available already, it should be safe time to add scroll listener.
   AddScrollListener();
 

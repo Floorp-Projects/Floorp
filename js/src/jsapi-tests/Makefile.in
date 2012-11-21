@@ -57,6 +57,7 @@ CPPSRCS = \
   testScriptInfo.cpp \
   testScriptObject.cpp \
   testSetProperty.cpp \
+  testSourcePolicy.cpp \
   testStringBuffer.cpp \
   testTrap.cpp \
   testTypedArrays.cpp \

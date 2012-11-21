@@ -1104,6 +1104,7 @@ this.DOMApplicationRegistry = {
     appObject.localId = localId;
     appObject.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true).path;
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+    dir.permissions = FileUtils.PERMS_DIRECTORY;
     let manFile = dir.clone();
     manFile.append(manifestName);
     let jsonManifest = aData.isPackage ? app.updateManifest : app.manifest;
@@ -1180,6 +1181,7 @@ this.DOMApplicationRegistry = {
         let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
         let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
         zipFile.moveTo(dir, "application.zip");
+        zipFile.permissions = FileUtils.PERMS_FILE;
         let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
         try {
           tmpDir.remove(true);

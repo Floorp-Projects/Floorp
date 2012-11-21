@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=803924
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 803924</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=803924">Mozilla Bug 803924</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 803924 **/
+
+var sel = document.getSelection();
+var flush = true;
+var dry = true;
+var run = "";
+var empty_range;
+var empty_first_text_range;
+var empty_last_text_range;
+var full_range;
+
+function check(range, expected, test)
+{
+  is(""+range, expected, test);
+  is(""+empty_range, "", "empty range test after: "+test);
+  is(""+empty_first_text_range, "", "empty first text range test after: "+test);
+  if (empty_last_text_range) is(""+empty_last_text_range, "", "empty last text range test after: "+test);
+  is(""+full_range, full_range.startContainer.textContent, "full range test after: "+test);
+}
+
+function newDiv()
+{
+  var div = document.createElement('div');
+  for (var i = 0; i < arguments.length; ++i) {
+    div.appendChild(document.createTextNode(arguments[i]));
+  }
+  document.body.appendChild(div)
+  empty_range = document.createRange();
+  empty_range.setStart(div,0);
+  empty_range.setEnd(div,0);
+  var firstTextNode = div.childNodes[0];
+  var lastTextNode = div.childNodes[div.childNodes.length - 1];
+  empty_first_text_range = document.createRange();
+  empty_first_text_range.setStart(firstTextNode,0);
+  empty_first_text_range.setEnd(firstTextNode,0);
+  empty_last_text_range = null;
+  if (firstTextNode != lastTextNode) {
+    empty_last_text_range = document.createRange();
+    empty_last_text_range.setStart(lastTextNode,0);
+    empty_last_text_range.setEnd(lastTextNode,0);
+  }
+  full_range = document.createRange();
+  full_range.setStart(div,0);
+  full_range.setEnd(div,div.childNodes.length);
+  return div;
+}
+
+function selEnd(div,child,index,split,s)
+{
+  var start = div.childNodes[child];
+  var r = document.createRange();
+  sel.addRange(r);
+  r.setStart(start, index);
+  r.setEnd(div, div.childNodes.length);
+  if (!dry) start.splitText(split);
+  check(r,s,run+" selEnd "+child+","+index+","+split);
+}
+
+function selStart(div,child,index,split,s)
+{
+  if (flush) document.body.getClientRects();
+  var start = div.childNodes[child];
+  var r = document.createRange();
+  sel.addRange(r);
+  r.setStart(div, 0);
+  r.setEnd(start, index);
+  if (!dry) start.splitText(split);
+  check(r,s,run+" selStart "+child+","+index+","+split);
+}
+
+function selMiddleStart(div,child,index,split,s)
+{
+  if (flush) document.body.getClientRects();
+  var start = div.childNodes[child];
+  var r = document.createRange();
+  sel.addRange(r);
+  r.setStart(div, 1);
+  r.setEnd(start, index);
+  if (!dry) start.splitText(split);
+  check(r,s,run+" selMiddleStart "+child+","+index+","+split);
+}
+
+function selMiddleEnd(div,child,index,split,s)
+{
+  if (flush) document.body.getClientRects();
+  var start = div.childNodes[child];
+  var r = document.createRange();
+  sel.addRange(r);
+  r.setStart(start, index);
+  r.setEnd(div, 2);
+  if (!dry) start.splitText(split);
+  check(r,s,run+" selMiddleEnd "+child+","+index+","+split);
+}
+
+function splitBefore(div,child,index,split,s)
+{
+  if (flush) document.body.getClientRects();
+  var start = div.childNodes[child];
+  var r = document.createRange();
+  sel.addRange(r);
+  r.setStart(div, 1);
+  r.setEnd(start, index);
+  if (!dry) div.childNodes[0].splitText(split);
+  check(r,s,run+" splitBefore "+child+","+index+","+split);
+}
+
+function runTests(s)
+{
+  run = s+":";
+  selEnd(newDiv('111'), 0,0,0,'111');
+  selEnd(newDiv('111'), 0,0,1,'111');
+  selEnd(newDiv('111'), 0,0,3,'111');
+  selEnd(newDiv(''), 0,0,0,'');
+  selEnd(newDiv('111'), 0,1,0,'11');
+  selEnd(newDiv('111'), 0,2,1,'1');
+  selEnd(newDiv('111'), 0,1,3,'11');
+  selEnd(newDiv('111','222'), 0,1,0,'11222');
+  selEnd(newDiv('111','222'), 0,2,1,'1222');
+  selEnd(newDiv('111','222'), 0,1,3,'11222');
+  selEnd(newDiv('111','222'), 1,1,0,'22');
+  selEnd(newDiv('111','222'), 1,2,1,'2');
+  selEnd(newDiv('','222'), 1,1,1,'22');
+  selEnd(newDiv('','222'), 0,0,0,'222');
+  selEnd(newDiv('111',''), 0,1,0,'11');
+  selEnd(newDiv('111','222'), 1,1,3,'22');
+  selEnd(newDiv('111','222','333'), 1,1,0,'22333');
+  selEnd(newDiv('111','222','333'), 1,2,1,'2333');
+  selEnd(newDiv('111','222','333'), 1,1,3,'22333');
+  selEnd(newDiv('111','222',''), 1,1,3,'22');
+  selEnd(newDiv('111','','333'), 0,1,3,'11333');
+
+  selStart(newDiv('111'), 0,0,0,'');
+  selStart(newDiv('111'), 0,0,1,'');
+  selStart(newDiv('111'), 0,0,3,'');
+  selStart(newDiv('111'), 0,1,0,'1');
+  selStart(newDiv('111'), 0,2,1,'11');
+  selStart(newDiv('111'), 0,1,3,'1');
+  selStart(newDiv(''), 0,0,0,'');
+  selStart(newDiv('111','222'), 0,1,0,'1');
+  selStart(newDiv('111','222'), 0,2,1,'11');
+  selStart(newDiv('111','222'), 0,1,3,'1');
+  selStart(newDiv('111','222'), 1,1,0,'1112');
+  selStart(newDiv('111','222'), 1,2,1,'11122');
+  selStart(newDiv('111','222'), 1,1,3,'1112');
+  selStart(newDiv('','222'), 1,1,2,'2');
+  selStart(newDiv('','222'), 0,0,0,'');
+  selStart(newDiv('111',''), 1,0,0,'111');
+  selStart(newDiv('111','222','333'), 1,1,0,'1112');
+  selStart(newDiv('111','222','333'), 1,2,1,'11122');
+  selStart(newDiv('111','222','333'), 1,1,3,'1112');
+  selStart(newDiv('111','','333'), 1,0,0,'111');
+  selStart(newDiv('111','222',''), 1,1,3,'1112');
+
+  selMiddleStart(newDiv('111','222','333'), 1,1,0,'2');
+  selMiddleStart(newDiv('111','222','333'), 1,2,1,'22');
+  selMiddleStart(newDiv('111','222','333'), 1,1,3,'2');
+  selMiddleStart(newDiv('111','222','333'), 2,1,0,'2223');
+  selMiddleStart(newDiv('111','222','333'), 2,2,1,'22233');
+  selMiddleStart(newDiv('111','222','333'), 2,1,3,'2223');
+  selMiddleStart(newDiv('111','','333'), 2,1,2,'3');
+  selMiddleStart(newDiv('111','','333'), 1,0,0,'');
+
+  selMiddleEnd(newDiv('111','222','333'), 0,1,0,'11222');
+  selMiddleEnd(newDiv('111','222','333'), 0,2,1,'1222');
+  selMiddleEnd(newDiv('111','222','333'), 0,1,3,'11222');
+  selMiddleEnd(newDiv('111','222','333'), 1,1,0,'22');
+  selMiddleEnd(newDiv('111','222','333'), 1,2,1,'2');
+  selMiddleEnd(newDiv('111','222','333'), 1,1,3,'22');
+  selMiddleEnd(newDiv('111','','333'), 0,1,2,'11');
+  selMiddleEnd(newDiv('111','','333'), 0,1,3,'11');
+  selMiddleEnd(newDiv('111','','333'), 1,0,0,'');
+
+  splitBefore(newDiv('111','222','333'), 1,1,0,'2');
+  splitBefore(newDiv('111','222','333'), 1,2,1,'22');
+  splitBefore(newDiv('111','222','333'), 1,1,3,'2');
+  splitBefore(newDiv('111','222','333'), 2,1,0,'2223');
+  splitBefore(newDiv('111','222','333'), 2,2,1,'22233');
+  splitBefore(newDiv('111','222','333'), 2,1,3,'2223');
+  splitBefore(newDiv('','222','333'), 1,1,0,'2');
+  splitBefore(newDiv('','','333'), 1,0,0,'');
+  splitBefore(newDiv('','222',''), 2,0,0,'222');
+  splitBefore(newDiv('111','','333'), 2,1,2,'3');
+}
+
+function boom()
+{
+  runTests("dry run");  // this is to verify the result strings without splitText()
+  dry = false;
+  flush = false;
+  runTests("no flush");
+  flush = true;
+  runTests("flush");
+}
+
+boom();
+
+
+</script>
+</pre>
+</body>
+</html>

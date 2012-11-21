@@ -966,13 +966,6 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-namespace js {
-
-JSBool
-CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp);
-
-}
-
 static const uint32_t JSSLOT_BOUND_FUNCTION_THIS       = 0;
 static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 1;
 
@@ -1046,11 +1039,9 @@ JSFunction::getBoundFunctionArgumentCount() const
     return getSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT).toPrivateUint32();
 }
 
-namespace js {
-
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */
 JSBool
-CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
+js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     JSFunction *fun = vp[0].toObject().toFunction();
     JS_ASSERT(fun->isBoundFunction());
@@ -1091,8 +1082,6 @@ CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 
     *vp = args.rval();
     return true;
-}
-
 }
 
 #if JS_HAS_GENERATORS
@@ -1200,9 +1189,7 @@ OnBadFormal(JSContext *cx, TokenKind tt)
     return false;
 }
 
-namespace js {
-
-JSFunctionSpec function_methods[] = {
+JSFunctionSpec js::function_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
 #endif
@@ -1217,7 +1204,7 @@ JSFunctionSpec function_methods[] = {
 };
 
 JSBool
-Function(JSContext *cx, unsigned argc, Value *vp)
+js::Function(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedString arg(cx);   // used multiple times below
@@ -1412,16 +1399,15 @@ Function(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-IsBuiltinFunctionConstructor(JSFunction *fun)
+js::IsBuiltinFunctionConstructor(JSFunction *fun)
 {
     return fun->maybeNative() == Function;
 }
 
-} /* namespace js */
-
 JSFunction *
 js_NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned nargs,
-               JSFunction::Flags flags, HandleObject parent, HandleAtom atom, js::gc::AllocKind kind)
+               JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
+               js::gc::AllocKind kind)
 {
     JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));

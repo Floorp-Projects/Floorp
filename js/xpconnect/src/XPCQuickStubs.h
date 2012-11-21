@@ -526,7 +526,7 @@ xpc_qsUnwrapArg(JSContext *cx, jsval v, Interface **ppArg,
     return rv;
 }
 
-inline nsISupports*
+MOZ_ALWAYS_INLINE nsISupports*
 castNativeArgFromWrapper(JSContext *cx,
                          jsval v,
                          uint32_t bit,

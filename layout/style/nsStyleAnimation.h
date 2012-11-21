@@ -169,13 +169,11 @@ public:
    * @return true on success, false on failure.
    */
   static bool UncomputeValue(nsCSSProperty aProperty,
-                               nsPresContext* aPresContext,
-                               const Value& aComputedValue,
-                               nsCSSValue& aSpecifiedValue);
+                             const Value& aComputedValue,
+                             nsCSSValue& aSpecifiedValue);
   static bool UncomputeValue(nsCSSProperty aProperty,
-                               nsPresContext* aPresContext,
-                               const Value& aComputedValue,
-                               nsAString& aSpecifiedValue);
+                             const Value& aComputedValue,
+                             nsAString& aSpecifiedValue);
 
   /**
    * Gets the computed value for the given property from the given style
