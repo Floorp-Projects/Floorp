@@ -1906,7 +1906,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 int32_t
 nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
-  if (!aFrame->IsPositioned())
+  if (!aFrame->IsPositioned() && !aFrame->IsFlexItem())
     return 0;
 
   const nsStylePosition* position =
