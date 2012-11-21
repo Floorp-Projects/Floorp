@@ -37,10 +37,8 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    // Compare payload regs of R0 and R1.
-    masm.unboxNonDouble(R0, rdx);
-    masm.unboxNonDouble(R1, ScratchReg);
-    masm.cmpq(rdx, ScratchReg);
+    // Directly compare the int32 payload of R0 and R1.
+    masm.cmpl(R0.valueReg(), R1.valueReg());
     masm.setCC(cond, ScratchReg);
     masm.movzxbl(ScratchReg, ScratchReg);
 
