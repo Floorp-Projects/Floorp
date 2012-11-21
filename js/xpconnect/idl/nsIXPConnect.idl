@@ -67,7 +67,7 @@ interface nsIXPConnectJSObjectHolder : nsISupports
     readonly attribute JSObjectPtr      JSObject;
 };
 
-[uuid(f819a95a-6ab5-4a02-bda6-32861e859581)]
+[uuid(92e98688-0154-4b65-971b-0d4afe8fd7cb)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -81,6 +81,7 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
     readonly attribute nsIXPConnect XPConnect;
     nsIInterfaceInfo FindInterfaceWithMember(in jsid nameID);
     nsIInterfaceInfo FindInterfaceWithName(in jsid nameID);
+    [notxpcom] bool HasNativeMember(in jsid name);
 
     void debugDump(in short depth);
 
