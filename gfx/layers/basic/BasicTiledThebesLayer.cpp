@@ -264,7 +264,8 @@ RoundedTransformViewportBounds(const gfx::Rect& aViewport,
 }
 
 bool
-BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvalidRegion,
+BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTiledBuffer,
+                                                      const nsIntRegion& aInvalidRegion,
                                                       const nsIntRegion& aOldValidRegion,
                                                       nsIntRegion& aRegionToPaint,
                                                       const gfx3DMatrix& aTransform,
@@ -273,6 +274,11 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
                                                       bool aIsRepeated)
 {
   aRegionToPaint = aInvalidRegion;
+
+  // If this is a low precision buffer, we force progressive updates. The
+  // assumption is that the contents is less important, so visual coherency
+  // is lower priority than speed.
+  bool forceProgressive = aTiledBuffer.IsLowPrecision();
 
   // Find out if we have any non-stale content to update.
   nsIntRegion freshRegion;
@@ -316,20 +322,20 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
   nsIntRect paintBounds = aRegionToPaint.GetBounds();
 
   int startX, incX, startY, incY;
-  int tileLength = mTiledBuffer.GetScaledTileLength();
+  int tileLength = aTiledBuffer.GetScaledTileLength();
   if (aScrollOffset.x >= mLastScrollOffset.x) {
-    startX = mTiledBuffer.RoundDownToTileEdge(paintBounds.x);
+    startX = aTiledBuffer.RoundDownToTileEdge(paintBounds.x);
     incX = tileLength;
   } else {
-    startX = mTiledBuffer.RoundDownToTileEdge(paintBounds.XMost() - 1);
+    startX = aTiledBuffer.RoundDownToTileEdge(paintBounds.XMost() - 1);
     incX = -tileLength;
   }
 
   if (aScrollOffset.y >= mLastScrollOffset.y) {
-    startY = mTiledBuffer.RoundDownToTileEdge(paintBounds.y);
+    startY = aTiledBuffer.RoundDownToTileEdge(paintBounds.y);
     incY = tileLength;
   } else {
-    startY = mTiledBuffer.RoundDownToTileEdge(paintBounds.YMost() - 1);
+    startY = aTiledBuffer.RoundDownToTileEdge(paintBounds.YMost() - 1);
     incY = -tileLength;
   }
 
@@ -361,17 +367,66 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
     // in one go by repeating this work without calling the painted
     // callback. The remaining content is then drawn tile-by-tile in
     // multiple transactions.
-    if (paintVisible && drawingStale) {
+    if (!forceProgressive && paintVisible && drawingStale) {
       repeatImmediately = true;
     } else {
       BasicManager()->SetRepeatTransaction();
     }
-  } else {
-    // The transaction is completed, store the last scroll offset.
-    mLastScrollOffset = aScrollOffset;
   }
 
   return repeatImmediately;
+}
+
+bool
+BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
+                                         nsIntRegion& aValidRegion,
+                                         nsIntRegion& aInvalidRegion,
+                                         const nsIntRegion& aOldValidRegion,
+                                         const gfx3DMatrix& aTransform,
+                                         const gfx::Point& aScrollOffset,
+                                         const gfxSize& aResolution,
+                                         LayerManager::DrawThebesLayerCallback aCallback,
+                                         void* aCallbackData)
+{
+  bool repeat = false;
+  do {
+    // Compute the region that should be updated. Repeat as many times as
+    // is required.
+    nsIntRegion regionToPaint;
+    repeat = ComputeProgressiveUpdateRegion(aTiledBuffer,
+                                            aInvalidRegion,
+                                            aOldValidRegion,
+                                            regionToPaint,
+                                            aTransform,
+                                            aScrollOffset,
+                                            aResolution,
+                                            repeat);
+
+    // There's no further work to be done, return if nothing has been
+    // drawn, or give what has been drawn to the shadow layer to upload.
+    if (regionToPaint.IsEmpty()) {
+      if (repeat) {
+        break;
+      } else {
+        return false;
+      }
+    }
+
+    // Keep track of what we're about to refresh.
+    aValidRegion.Or(aValidRegion, regionToPaint);
+
+    // aValidRegion may have been altered by InvalidateRegion, but we still
+    // want to display stale content until it gets progressively updated.
+    // Create a region that includes stale content.
+    nsIntRegion validOrStale;
+    validOrStale.Or(aValidRegion, aOldValidRegion);
+
+    // Paint the computed region and subtract it from the invalid region.
+    aTiledBuffer.PaintThebes(this, validOrStale, regionToPaint, aCallback, aCallbackData);
+    aInvalidRegion.Sub(aInvalidRegion, regionToPaint);
+  } while (repeat);
+
+  return true;
 }
 
 void
@@ -393,6 +448,9 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
 
   if (mTiledBuffer.HasFormatChanged(this)) {
     mValidRegion = nsIntRegion();
+  }
+  if (mLowPrecisionTiledBuffer.HasFormatChanged(this)) {
+    mLowPrecisionValidRegion = nsIntRegion();
   }
 
   nsIntRegion invalidRegion = mVisibleRegion;
@@ -438,6 +496,14 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     resolution.height *= metrics.mResolution.height;
   }
 
+  // Calculate the scroll offset since the last transaction.
+  gfx::Point scrollOffset(0, 0);
+  Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
+  if (primaryScrollable) {
+    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
+    scrollOffset = metrics.mScrollOffset;
+  }
+
   // Only draw progressively when the resolution is unchanged.
   if (gfxPlatform::UseProgressiveTilePainting() &&
       !BasicManager()->HasShadowTarget() &&
@@ -450,7 +516,6 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     if (!layerDisplayPort.IsEmpty()) {
       oldValidRegion.And(oldValidRegion, layerDisplayPort);
     }
-    mTiledBuffer.ClearPaintedRegion();
 
     // Make sure that tiles that fall outside of the visible region are
     // discarded on the first update.
@@ -461,52 +526,11 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       }
     }
 
-    // Calculate the scroll offset since the last transaction.
-    gfx::Point scrollOffset(0, 0);
-    Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
-    if (primaryScrollable) {
-      const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-      scrollOffset = metrics.mScrollOffset;
-    }
-
-    bool repeat = false;
-    do {
-      // Compute the region that should be updated. Repeat as many times as
-      // is required.
-      nsIntRegion regionToPaint;
-      repeat = ComputeProgressiveUpdateRegion(invalidRegion,
-                                              oldValidRegion,
-                                              regionToPaint,
-                                              transform,
-                                              scrollOffset,
-                                              resolution,
-                                              repeat);
-
-      // There's no further work to be done, return if nothing has been
-      // drawn, or give what has been drawn to the shadow layer to upload.
-      if (regionToPaint.IsEmpty()) {
-        if (repeat) {
-          break;
-        } else {
-          return;
-        }
-      }
-
-      // Keep track of what we're about to refresh.
-      mValidRegion.Or(mValidRegion, regionToPaint);
-
-      // mValidRegion would have been altered by InvalidateRegion, but we still
-      // want to display stale content until it gets progressively updated.
-      // Create a region that includes stale content.
-      nsIntRegion validOrStale;
-      validOrStale.Or(mValidRegion, oldValidRegion);
-
-      // Paint the computed region and subtract it from the invalid region.
-      mTiledBuffer.PaintThebes(this, validOrStale, regionToPaint, aCallback, aCallbackData);
-      invalidRegion.Sub(invalidRegion, regionToPaint);
-    } while (repeat);
+    if (!ProgressiveUpdate(mTiledBuffer, mValidRegion, invalidRegion,
+                           oldValidRegion, transform, scrollOffset, resolution,
+                           aCallback, aCallbackData))
+      return;
   } else {
-    mTiledBuffer.ClearPaintedRegion();
     mTiledBuffer.SetFrameResolution(resolution);
     mValidRegion = mVisibleRegion;
     if (!layerDisplayPort.IsEmpty()) {
@@ -530,6 +554,67 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   BasicTiledLayerBuffer *heapCopy = new BasicTiledLayerBuffer(mTiledBuffer);
 
   BasicManager()->PaintedTiledLayerBuffer(BasicManager()->Hold(this), heapCopy);
+  mTiledBuffer.ClearPaintedRegion();
+
+  // If we have a critical display-port defined, render the full display-port
+  // progressively in the low-precision tiled buffer.
+  bool clearedLowPrecision = false;
+  bool updatedLowPrecision = false;
+  if (!criticalDisplayPort.IsEmpty() &&
+      !nsIntRegion(layerDisplayPort).Contains(mVisibleRegion)) {
+    nsIntRegion oldValidRegion = mLowPrecisionTiledBuffer.GetValidRegion();
+    oldValidRegion.And(oldValidRegion, mVisibleRegion);
+
+    // If the frame resolution has changed, invalidate the buffer
+    if (mLowPrecisionTiledBuffer.GetFrameResolution() != resolution) {
+      if (!mLowPrecisionValidRegion.IsEmpty()) {
+        clearedLowPrecision = true;
+      }
+      oldValidRegion.SetEmpty();
+      mLowPrecisionValidRegion.SetEmpty();
+      mLowPrecisionTiledBuffer.SetFrameResolution(resolution);
+    }
+
+    // Invalidate previously valid content that is no longer visible
+    if (!BasicManager()->IsRepeatTransaction()) {
+      mLowPrecisionValidRegion.And(mLowPrecisionValidRegion, mVisibleRegion);
+    }
+
+    nsIntRegion lowPrecisionInvalidRegion;
+    lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
+
+    if (!lowPrecisionInvalidRegion.IsEmpty()) {
+      updatedLowPrecision =
+        ProgressiveUpdate(mLowPrecisionTiledBuffer, mLowPrecisionValidRegion,
+                          lowPrecisionInvalidRegion, oldValidRegion, transform,
+                          scrollOffset, resolution, aCallback, aCallbackData);
+    }
+  } else if (!mLowPrecisionValidRegion.IsEmpty()) {
+    // Clear the low precision tiled buffer
+    clearedLowPrecision = true;
+    mLowPrecisionValidRegion.SetEmpty();
+    mLowPrecisionTiledBuffer.PaintThebes(this, mLowPrecisionValidRegion,
+                                         mLowPrecisionValidRegion, aCallback,
+                                         aCallbackData);
+  }
+
+  // We send a Painted callback if we clear the valid region of the low
+  // precision buffer, so that the shadow buffer's valid region can be updated
+  // and the associated resources can be freed.
+  if (clearedLowPrecision || updatedLowPrecision) {
+    mLowPrecisionTiledBuffer.ReadLock();
+    BasicTiledLayerBuffer *heapCopy = new BasicTiledLayerBuffer(mLowPrecisionTiledBuffer);
+
+    // The GL layer manager uses the buffer resolution to distinguish calls
+    // to PaintedTiledLayerBuffer.
+    BasicManager()->PaintedTiledLayerBuffer(BasicManager()->Hold(this), heapCopy);
+    mLowPrecisionTiledBuffer.ClearPaintedRegion();
+  }
+
+  // The transaction is completed, store the last scroll offset.
+  if (!BasicManager()->GetRepeatTransaction()) {
+    mLastScrollOffset = scrollOffset;
+  }
   mFirstPaint = false;
 }
 
