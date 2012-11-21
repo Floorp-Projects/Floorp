@@ -405,6 +405,10 @@ public:
     // Break large OMTC tiled thebes layer painting into small paints.
     static bool UseProgressiveTilePainting();
 
+    // When a critical display-port is set, render the visible area outside of
+    // it into a buffer at a lower precision. Requires tiled buffers.
+    static bool UseLowPrecisionBuffer();
+
     // Retain some invalid tiles when the valid region of a layer changes and
     // excludes previously valid tiles.
     static bool UseReusableTileStore();
