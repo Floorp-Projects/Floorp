@@ -591,7 +591,8 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   // If we have a critical display-port defined, render the full display-port
   // progressively in the low-precision tiled buffer.
   bool updatedLowPrecision = false;
-  if (!criticalDisplayPort.IsEmpty() &&
+  if (gfxPlatform::UseLowPrecisionBuffer() &&
+      !criticalDisplayPort.IsEmpty() &&
       !nsIntRegion(layerDisplayPort).Contains(mVisibleRegion)) {
     nsIntRegion oldValidRegion = mLowPrecisionTiledBuffer.GetValidRegion();
     oldValidRegion.And(oldValidRegion, mVisibleRegion);
