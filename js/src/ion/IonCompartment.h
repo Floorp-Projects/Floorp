@@ -57,10 +57,6 @@ class IonRuntime
     typedef WeakCache<const VMFunction *, IonCode *> VMWrapperMap;
     VMWrapperMap *functionWrappers_;
 
-    // Map ICStub keys to ICStub shared code objects.
-    typedef WeakValueCache<uint32_t, ReadBarriered<IonCode> > ICStubCodeMap;
-    ICStubCodeMap *stubCodes_;
-
   private:
     IonCode *generateEnterJIT(JSContext *cx);
     IonCode *generateArgumentsRectifier(JSContext *cx);
@@ -94,6 +90,10 @@ class IonCompartment
     // Keep track of memoryregions that are going to be flushed.
     AutoFlushCache *flusher_;
 
+    // Map ICStub keys to ICStub shared code objects.
+    typedef WeakValueCache<uint32_t, ReadBarriered<IonCode> > ICStubCodeMap;
+    ICStubCodeMap *stubCodes_;
+
   public:
     IonCode *getVMWrapper(const VMFunction &f);
 
@@ -102,7 +102,7 @@ class IonCompartment
     }
 
     IonCode *getStubCode(uint32_t key) {
-        IonRuntime::ICStubCodeMap::AddPtr p = rt->stubCodes_->lookupForAdd(key);
+        ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
         if (p)
             return p->value;
         return NULL;
@@ -111,13 +111,14 @@ class IonCompartment
         // Make sure to do a lookupForAdd(key) and then insert into that slot, because
         // that way if stubCode gets moved due to a GC caused by lookupForAdd, then
         // we still write the correct pointer.
-        JS_ASSERT(!rt->stubCodes_->has(key));
-        IonRuntime::ICStubCodeMap::AddPtr p = rt->stubCodes_->lookupForAdd(key);
-        return rt->stubCodes_->add(p, key, stubCode.get());
+        JS_ASSERT(!stubCodes_->has(key));
+        ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
+        return stubCodes_->add(p, key, stubCode.get());
     }
 
   public:
     IonCompartment(IonRuntime *rt);
+    ~IonCompartment();
 
     bool initialize(JSContext *cx);
 
