@@ -26,6 +26,7 @@
 #include "jsprototypes.h"
 #include "jsutil.h"
 #include "prmjtime.h"
+#include "vm/threadpool.h"
 
 #include "ds/LifoAlloc.h"
 #include "gc/Statistics.h"
@@ -1024,6 +1025,8 @@ struct JSRuntime : js::RuntimeFriendFields
 
     // Cache for ion::GetPcScript().
     js::ion::PcScriptCache *ionPcScriptCache;
+
+    js::ThreadPool threadPool;
 
   private:
     // In certain cases, we want to optimize certain opcodes to typed instructions,
