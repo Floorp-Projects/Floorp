@@ -523,7 +523,6 @@ pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
 pref("layers.progressive-paint", true);
-pref("layers.low-precision-buffer", true);
 
 pref("notification.feature.enabled", true);
 

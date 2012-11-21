@@ -875,8 +875,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     // We synchronise the viewport information with Java after sending the above
     // notifications, so that Java can take these into account in its response.
     // Calculate the absolute display port to send to Java
-    gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
-                                      metrics.mDisplayPort : metrics.mCriticalDisplayPort);
+    gfx::Rect displayPortLayersPixels(metrics.mDisplayPort);
     nsIntRect displayPortDevPixels(
       NS_lround(displayPortLayersPixels.x * devPixelRatioX),
       NS_lround(displayPortLayersPixels.y * devPixelRatioY),
