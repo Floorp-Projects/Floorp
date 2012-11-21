@@ -143,6 +143,7 @@ public:
     Update(nsIntRegion(), nsIntRegion());
     mResolution = aResolution;
   }
+  bool IsLowPrecision() const { return mResolution < 1; }
 
 protected:
   // The implementor should call Update() to change
