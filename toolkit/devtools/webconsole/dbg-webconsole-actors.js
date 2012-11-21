@@ -98,12 +98,12 @@ WebConsoleActor.prototype =
   _prefs: null,
 
   /**
-   * Tells the current page location associated to the sandbox. When the page
-   * location is changed, we recreate the sandbox.
+   * Tells the current inner window associated to the sandbox. When the page
+   * is navigated, we recreate the sandbox.
    * @private
    * @type object
    */
-  _sandboxLocation: null,
+  _sandboxWindowId: 0,
 
   /**
    * The JavaScript Sandbox where code is evaluated.
@@ -201,7 +201,8 @@ WebConsoleActor.prototype =
     }
     this.conn.removeActorPool(this.actorPool);
     this._actorPool = null;
-    this._sandboxLocation = this.sandbox = null;
+    this.sandbox = null;
+    this._sandboxWindowId = 0;
     this.conn = this._window = null;
   },
 
@@ -565,7 +566,7 @@ WebConsoleActor.prototype =
    */
   _createSandbox: function WCA__createSandbox()
   {
-    this._sandboxLocation = this.window.location;
+    this._sandboxWindowId = WebConsoleUtils.getInnerWindowId(this.window);
     this.sandbox = new Cu.Sandbox(this.window, {
       sandboxPrototype: this.window,
       wantXrays: false,
@@ -588,7 +589,7 @@ WebConsoleActor.prototype =
   {
     // If the user changed to a different location, we need to update the
     // sandbox.
-    if (this._sandboxLocation !== this.window.location) {
+    if (this._sandboxWindowId !== WebConsoleUtils.getInnerWindowId(this.window)) {
       this._createSandbox();
     }
 
