@@ -872,6 +872,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     ionStackLimit(0),
     ionActivation(NULL),
     ionPcScriptCache(NULL),
+    threadPool(this),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads)
 {
@@ -935,6 +936,9 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
     if (!scriptFilenameTable.init())
+        return false;
+
+    if (!threadPool.init())
         return false;
 
 #ifdef JS_THREADSAFE
