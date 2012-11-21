@@ -74,7 +74,7 @@ function go() {
     ifr.src = 'http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug802557.html';
   }
   else if (loadCount == 3) {
-    gTestFunctions = ifr.contentWindow.gTests;
+    gTestFunctions = ifr.contentWindow.getAllTests();
     var win = ifr.contentWindow;
     for (fun in gTestFunctions)
        is(gTestFunctions[fun](), win.location.toString(), "allowed via " + fun);
