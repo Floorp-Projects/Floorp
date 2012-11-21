@@ -158,7 +158,10 @@ class ICEntry
     _(BinaryArith_Fallback)     \
     _(BinaryArith_Int32)        \
                                 \
-    _(Call_Fallback)
+    _(Call_Fallback)            \
+                                \
+    _(GetElem_Fallback)
+
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -571,6 +574,33 @@ class ICBinaryArith_Int32 : public ICStub
 
         ICStub *getStub() {
             return ICBinaryArith_Int32::New(getStubCode());
+        }
+    };
+};
+
+class ICGetElem_Fallback : public ICFallbackStub
+{
+    ICGetElem_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::GetElem_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICGetElem_Fallback *New(IonCode *code) {
+        return new ICGetElem_Fallback(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetElem_Fallback)
+        { }
+
+        ICStub *getStub() {
+            return ICGetElem_Fallback::New(getStubCode());
         }
     };
 };

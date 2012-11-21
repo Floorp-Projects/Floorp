@@ -492,6 +492,30 @@ BaselineCompiler::emitCompare()
 }
 
 bool
+BaselineCompiler::emit_JSOP_GETELEM()
+{
+    // Allocate IC entry and stub.
+    ICGetElem_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    if (!entry)
+        return false;
+
+    // Keep top two stack values in R0 and R1.
+    frame.popRegsAndSync(2);
+
+    // Call IC.
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    // Mark R0 as pushed stack value.
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
     uint32_t local = GET_SLOTNO(pc);
