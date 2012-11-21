@@ -412,18 +412,6 @@ public class GeckoLayerClient
             return mProgressiveUpdateData;
         }
 
-        // There's no new content (where new content is considered to be an
-        // update in a region that wasn't previously visible), and we've sent a
-        // more recent display-port.
-        // Aborting in this situation helps us recover more quickly when the
-        // user starts scrolling on a page that contains animated content that
-        // is slow to draw.
-        if (!aHasPendingNewThebesContent) {
-            Log.d(LOGTAG, "Aborting update due to more relevant display-port in event queue");
-            mProgressiveUpdateData.abort = true;
-            return mProgressiveUpdateData;
-        }
-
         return mProgressiveUpdateData;
     }
 
