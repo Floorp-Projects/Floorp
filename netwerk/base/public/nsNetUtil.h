@@ -79,6 +79,8 @@
 #include "nsIPrivateBrowsingChannel.h"
 #include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIOfflineCacheUpdate.h"
+#include "nsIContentSniffer.h"
+#include "nsCategoryCache.h"
 
 #include <limits>
 
@@ -2152,6 +2154,50 @@ NS_GenerateHostPort(const nsCString& host, int32_t port,
         hostLine.AppendInt(port);
     }
     return NS_OK;
+}
+
+/**
+ * Sniff the content type for a given request or a given buffer.
+ *
+ * aSnifferType can be either NS_CONTENT_SNIFFER_CATEGORY or
+ * NS_DATA_SNIFFER_CATEGORY.  The function returns the sniffed content type
+ * in the aSniffedType argument.  This argument will not be modified if the
+ * content type could not be sniffed.
+ */
+inline void
+NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
+                const uint8_t* aData, uint32_t aLength,
+                nsACString& aSniffedType)
+{
+  typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
+  extern NS_HIDDEN_(ContentSnifferCache*) gNetSniffers;
+  extern NS_HIDDEN_(ContentSnifferCache*) gDataSniffers;
+  ContentSnifferCache* cache = nullptr;
+  if (!strcmp(aSnifferType, NS_CONTENT_SNIFFER_CATEGORY)) {
+    if (!gNetSniffers) {
+      gNetSniffers = new ContentSnifferCache(NS_CONTENT_SNIFFER_CATEGORY);
+    }
+    cache = gNetSniffers;
+  } else if (!strcmp(aSnifferType, NS_DATA_SNIFFER_CATEGORY)) {
+    if (!gDataSniffers) {
+      gDataSniffers = new ContentSnifferCache(NS_DATA_SNIFFER_CATEGORY);
+    }
+    cache = gDataSniffers;
+  } else {
+    // Invalid content sniffer type was requested
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  const nsCOMArray<nsIContentSniffer>& sniffers = cache->GetEntries();
+  for (int32_t i = 0; i < sniffers.Count(); ++i) {
+    nsresult rv = sniffers[i]->GetMIMETypeFromContent(aRequest, aData, aLength, aSniffedType);
+    if (NS_SUCCEEDED(rv) && !aSniffedType.IsEmpty()) {
+      return;
+    }
+  }
+
+  aSniffedType.Truncate();
 }
 
 #endif // !nsNetUtil_h__
