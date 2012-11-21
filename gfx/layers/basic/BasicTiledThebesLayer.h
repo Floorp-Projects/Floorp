@@ -12,8 +12,6 @@
 #include "BasicImplData.h"
 #include <algorithm>
 
-#define LOW_PRECISION_RESOLUTION 0.25
-
 namespace mozilla {
 namespace layers {
 
@@ -109,8 +107,8 @@ public:
     }
   }
 
-  const gfxSize& GetFrameResolution() { return mFrameResolution; }
-  void SetFrameResolution(const gfxSize& aResolution) { mFrameResolution = aResolution; }
+  const gfxSize& GetResolution() { return mResolution; }
+  void SetResolution(const gfxSize& aResolution) { mResolution = aResolution; }
 
   bool HasFormatChanged(BasicTiledThebesLayer* aThebesLayer) const;
 protected:
@@ -135,7 +133,7 @@ private:
   BasicTiledThebesLayer* mThebesLayer;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
-  gfxSize mFrameResolution;
+  gfxSize mResolution;
   bool mLastPaintOpaque;
 
   // The buffer we use when UseSinglePaintBuffer() above is true.
@@ -168,7 +166,6 @@ public:
     , mFirstPaint(true)
   {
     MOZ_COUNT_CTOR(BasicTiledThebesLayer);
-    mLowPrecisionTiledBuffer.SetResolution(LOW_PRECISION_RESOLUTION);
   }
 
   ~BasicTiledThebesLayer()
@@ -182,7 +179,6 @@ public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
     mInvalidRegion.Or(mInvalidRegion, aRegion);
     mValidRegion.Sub(mValidRegion, aRegion);
-    mLowPrecisionValidRegion.Sub(mLowPrecisionValidRegion, aRegion);
   }
 
   // Shadow methods
@@ -224,14 +220,12 @@ private:
    * at once to maintain visual coherency.
    *
    * aInvalidRegion is the current invalid region.
-   * aOldValidRegion is the valid region of aTiledBuffer at the beginning of the
+   * aOldValidRegion is the valid region of mTiledBuffer at the beginning of the
    * current transaction.
    * aRegionToPaint will be filled with the region to update. This may be empty,
    * which indicates that there is no more work to do.
    * aTransform is the transform required to convert from screen-space to
    * layer-space.
-   * aCompositionBounds is the composition bounds from the primary scrollable
-   * layer, transformed into layer coordinates.
    * aScrollOffset is the current scroll offset of the primary scrollable layer.
    * aResolution is the render resolution of the layer.
    * aIsRepeated should be true if this function has already been called during
@@ -240,35 +234,16 @@ private:
    * Returns true if it should be called again, false otherwise. In the case
    * that aRegionToPaint is empty, this will return aIsRepeated for convenience.
    */
-  bool ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTiledBuffer,
-                                      const nsIntRegion& aInvalidRegion,
+  bool ComputeProgressiveUpdateRegion(const nsIntRegion& aInvalidRegion,
                                       const nsIntRegion& aOldValidRegion,
                                       nsIntRegion& aRegionToPaint,
                                       const gfx3DMatrix& aTransform,
-                                      const nsIntRect& aCompositionBounds,
                                       const gfx::Point& aScrollOffset,
                                       const gfxSize& aResolution,
                                       bool aIsRepeated);
 
-  /**
-   * Performs a progressive update of a given tiled buffer.
-   * See ComputeProgressiveUpdateRegion above for parameter documentation.
-   */
-  bool ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
-                         nsIntRegion& aValidRegion,
-                         nsIntRegion& aInvalidRegion,
-                         const nsIntRegion& aOldValidRegion,
-                         const gfx3DMatrix& aTransform,
-                         const nsIntRect& aCompositionBounds,
-                         const gfx::Point& aScrollOffset,
-                         const gfxSize& aResolution,
-                         LayerManager::DrawThebesLayerCallback aCallback,
-                         void* aCallbackData);
-
   // Members
   BasicTiledLayerBuffer mTiledBuffer;
-  BasicTiledLayerBuffer mLowPrecisionTiledBuffer;
-  nsIntRegion mLowPrecisionValidRegion;
   gfx::Point mLastScrollOffset;
   bool mFirstPaint;
 };

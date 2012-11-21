@@ -76,7 +76,6 @@ public class GeckoLayerClient
 
     /* Used as the return value of progressiveUpdateCallback */
     private final ProgressiveUpdateData mProgressiveUpdateData;
-    private boolean mProgressiveUpdateIsCurrent;
 
     /* This is written by the compositor thread and read by the UI thread. */
     private volatile boolean mCompositorCreated;
@@ -360,14 +359,21 @@ public class GeckoLayerClient
     // is useful for slow-to-render pages when the display-port starts lagging
     // behind enough that continuing to draw it is wasted effort.
     public ProgressiveUpdateData progressiveUpdateCallback(boolean aHasPendingNewThebesContent,
-                                                           float x, float y, float width, float height,
-                                                           float resolution, boolean lowPrecision) {
+                                                           float x, float y, float width, float height, float resolution) {
         // Grab a local copy of the last display-port sent to Gecko and the
         // current viewport metrics to avoid races when accessing them.
         DisplayPortMetrics displayPort = mDisplayPort;
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         mProgressiveUpdateData.setViewport(viewportMetrics);
         mProgressiveUpdateData.abort = false;
+
+        // Always abort updates if the resolution has changed. There's no use
+        // in drawing at the incorrect resolution.
+        if (!FloatUtils.fuzzyEquals(resolution, displayPort.resolution)) {
+            Log.d(LOGTAG, "Aborting draw due to resolution change");
+            mProgressiveUpdateData.abort = true;
+            return mProgressiveUpdateData;
+        }
 
         // XXX All sorts of rounding happens inside Gecko that becomes hard to
         //     account exactly for. Given we align the display-port to tile
@@ -379,22 +385,10 @@ public class GeckoLayerClient
         // display-port. If we abort updating when we shouldn't, we can end up
         // with blank regions on the screen and we open up the risk of entering
         // an endless updating cycle.
-        if (!lowPrecision) {
-            mProgressiveUpdateIsCurrent =
-              Math.abs(displayPort.getLeft() - x) <= 2 &&
-              Math.abs(displayPort.getTop() - y) <= 2 &&
-              Math.abs(displayPort.getBottom() - (y + height)) <= 2 &&
-              Math.abs(displayPort.getRight() - (x + width)) <= 2;
-        }
-        if (mProgressiveUpdateIsCurrent) {
-            return mProgressiveUpdateData;
-        }
-
-        // Always abort updates if the resolution has changed. There's no use
-        // in drawing at the incorrect resolution.
-        if (!FloatUtils.fuzzyEquals(resolution, displayPort.resolution)) {
-            Log.d(LOGTAG, "Aborting draw due to resolution change");
-            mProgressiveUpdateData.abort = true;
+        if (Math.abs(displayPort.getLeft() - x) <= 2 &&
+            Math.abs(displayPort.getTop() - y) <= 2 &&
+            Math.abs(displayPort.getBottom() - (y + height)) <= 2 &&
+            Math.abs(displayPort.getRight() - (x + width)) <= 2) {
             return mProgressiveUpdateData;
         }
 
@@ -408,6 +402,18 @@ public class GeckoLayerClient
             Math.min(viewportMetrics.viewportRectRight, viewportMetrics.pageRectRight) - 1 > x + width ||
             Math.min(viewportMetrics.viewportRectBottom, viewportMetrics.pageRectBottom) - 1 > y + height) {
             Log.d(LOGTAG, "Aborting update due to viewport not in display-port");
+            mProgressiveUpdateData.abort = true;
+            return mProgressiveUpdateData;
+        }
+
+        // There's no new content (where new content is considered to be an
+        // update in a region that wasn't previously visible), and we've sent a
+        // more recent display-port.
+        // Aborting in this situation helps us recover more quickly when the
+        // user starts scrolling on a page that contains animated content that
+        // is slow to draw.
+        if (!aHasPendingNewThebesContent) {
+            Log.d(LOGTAG, "Aborting update due to more relevant display-port in event queue");
             mProgressiveUpdateData.abort = true;
             return mProgressiveUpdateData;
         }
