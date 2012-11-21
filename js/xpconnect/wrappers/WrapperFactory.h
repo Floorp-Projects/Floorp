@@ -69,12 +69,6 @@ class WrapperFactory {
     static JSObject *WrapForSameCompartment(JSContext *cx,
                                             JSObject *obj);
 
-    // Return true if this is a location object.
-    static bool IsLocationObject(JSObject *obj);
-
-    // Wrap a location object.
-    static JSObject *WrapLocationObject(JSContext *cx, JSObject *obj);
-
     // Wrap wrapped object into a waiver wrapper and then re-wrap it.
     static bool WaiveXrayAndWrap(JSContext *cx, jsval *vp);
 
