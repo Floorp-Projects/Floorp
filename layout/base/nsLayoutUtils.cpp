@@ -2528,7 +2528,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 
   // If we have a specified width (or a specified 'min-width' greater
   // than the specified 'max-width', which works out to the same thing),
-  // don't even bother getting the frame's intrinsic width.
+  // don't even bother getting the frame's intrinsic width, because in
+  // this case GetAbsoluteCoord(styleWidth, w) will always succeed, so
+  // we'll never need the intrinsic dimensions.
   if (styleWidth.GetUnit() == eStyleUnit_Enumerated &&
       (styleWidth.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
        styleWidth.GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT)) {
@@ -2537,7 +2539,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
     // For -moz-max-content and -moz-min-content, we handle them like
     // specified widths, but ignore -moz-box-sizing.
     boxSizing = NS_STYLE_BOX_SIZING_CONTENT;
-  } else if (styleWidth.GetUnit() != eStyleUnit_Coord &&
+  } else if (!styleWidth.ConvertsToLength() &&
              !(haveFixedMinWidth && haveFixedMaxWidth && maxw <= minw)) {
 #ifdef DEBUG_INTRINSIC_WIDTH
     ++gNoiseIndent;
