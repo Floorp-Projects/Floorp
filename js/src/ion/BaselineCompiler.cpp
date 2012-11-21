@@ -151,6 +151,14 @@ BaselineCompiler::emitBody()
         SPEW_OPCODE();
         JSOp op = JSOp(*pc);
         IonSpew(IonSpew_Scripts, "Compiling op: %s", js_CodeName[op]);
+
+        // Fully sync the stack if there are incoming jumps.
+        analyze::Bytecode *code = script->analysis()->maybeCode(pc);
+        if (code && code->jumpTarget) {
+            frame.syncStack(0);
+            frame.setStackDepth(code->stackDepth);
+        }
+
         frame.assertValidState(pc);
 
         masm.bind(labelOf(pc));
@@ -234,7 +242,7 @@ BaselineCompiler::emit_JSOP_GOTO()
 }
 
 bool
-BaselineCompiler::emit_JSOP_IFNE()
+BaselineCompiler::emitToBoolean()
 {
     // Allocate IC entry and stub.
     ICToBool_Fallback::Compiler stubCompiler(cx);
@@ -243,9 +251,6 @@ BaselineCompiler::emit_JSOP_IFNE()
         return false;
 
     // CODEGEN
-    
-    // Keep top JSStack value in R0
-    frame.popRegsAndSync(1);
 
     // Call IC
     CodeOffsetLabel patchOffset;
@@ -254,10 +259,57 @@ BaselineCompiler::emit_JSOP_IFNE()
     if (!addICLoadLabel(patchOffset))
         return false;
 
-    // IC will leave a JSBool value (guaranteed) in R0, just need to branch on it.
-    masm.branchTestBooleanTruthy(true, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
-
     return true;
+}
+
+bool
+BaselineCompiler::emitTest(bool branchIfTrue)
+{
+    // Keep top stack value in R0.
+    frame.popRegsAndSync(1);
+
+    emitToBoolean();
+
+    // IC will leave a JSBool value (guaranteed) in R0, just need to branch on it.
+    masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_IFEQ()
+{
+    return emitTest(false);
+}
+
+bool
+BaselineCompiler::emit_JSOP_IFNE()
+{
+    return emitTest(true);
+}
+
+bool
+BaselineCompiler::emitAndOr(bool branchIfTrue)
+{
+    // AND and OR leave the original value on the stack.
+    frame.syncStack(0);
+
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+    emitToBoolean();
+
+    masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_AND()
+{
+    return emitAndOr(false);
+}
+
+bool
+BaselineCompiler::emit_JSOP_OR()
+{
+    return emitAndOr(true);
 }
 
 bool
