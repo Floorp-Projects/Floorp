@@ -388,6 +388,37 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (invalidRegion.IsEmpty())
     return;
 
+  // Calculate the transform required to convert screen space into layer space
+  gfx3DMatrix transform = GetEffectiveTransform();
+  // XXX Not sure if this code for intermediate surfaces is correct.
+  //     It rarely gets hit though, and shouldn't have terrible consequences
+  //     even if it is wrong.
+  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
+    if (parent->UseIntermediateSurface()) {
+      transform.PreMultiply(parent->GetEffectiveTransform());
+    }
+  }
+  transform.Invert();
+
+  nsIntRect layerDisplayPort;
+  const gfx::Rect& criticalDisplayPort = GetParent()->GetFrameMetrics().mCriticalDisplayPort;
+  if (!criticalDisplayPort.IsEmpty()) {
+    // Find the critical display port in layer space.
+    gfxRect transformedCriticalDisplayPort = transform.TransformBounds(
+      gfxRect(criticalDisplayPort.x, criticalDisplayPort.y,
+              criticalDisplayPort.width, criticalDisplayPort.height));
+    transformedCriticalDisplayPort.RoundOut();
+    layerDisplayPort = nsIntRect(transformedCriticalDisplayPort.x,
+                                 transformedCriticalDisplayPort.y,
+                                 transformedCriticalDisplayPort.width,
+                                 transformedCriticalDisplayPort.height);
+
+    // Clip the invalid region to the critical display-port
+    invalidRegion.And(invalidRegion, layerDisplayPort);
+    if (invalidRegion.IsEmpty())
+      return;
+  }
+
   gfxSize resolution(1, 1);
   for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
     const FrameMetrics& metrics = parent->GetFrameMetrics();
@@ -399,29 +430,23 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (gfxPlatform::UseProgressiveTilePainting() &&
       !BasicManager()->HasShadowTarget() &&
       mTiledBuffer.GetResolution() == resolution) {
-    // Calculate the transform required to convert screen space into layer space
-    gfx3DMatrix transform = GetEffectiveTransform();
-    // XXX Not sure if this code for intermediate surfaces is correct.
-    //     It rarely gets hit though, and shouldn't have terrible consequences
-    //     even if it is wrong.
-    for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-      if (parent->UseIntermediateSurface()) {
-        transform.PreMultiply(parent->GetEffectiveTransform());
-      }
-    }
-    transform.Invert();
-
     // Store the old valid region, then clear it before painting.
     // We clip the old valid region to the visible region, as it only gets
     // used to decide stale content (currently valid and previously visible)
     nsIntRegion oldValidRegion = mTiledBuffer.GetValidRegion();
     oldValidRegion.And(oldValidRegion, mVisibleRegion);
+    if (!layerDisplayPort.IsEmpty()) {
+      oldValidRegion.And(oldValidRegion, layerDisplayPort);
+    }
     mTiledBuffer.ClearPaintedRegion();
 
     // Make sure that tiles that fall outside of the visible region are
     // discarded on the first update.
     if (!BasicManager()->IsRepeatTransaction()) {
       mValidRegion.And(mValidRegion, mVisibleRegion);
+      if (!layerDisplayPort.IsEmpty()) {
+        mValidRegion.And(mValidRegion, layerDisplayPort);
+      }
     }
 
     // Calculate the scroll offset since the last transaction.
@@ -472,6 +497,9 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     mTiledBuffer.ClearPaintedRegion();
     mTiledBuffer.SetResolution(resolution);
     mValidRegion = mVisibleRegion;
+    if (!layerDisplayPort.IsEmpty()) {
+      mValidRegion.And(mValidRegion, layerDisplayPort);
+    }
     mTiledBuffer.PaintThebes(this, mValidRegion, invalidRegion, aCallback, aCallbackData);
   }
 
