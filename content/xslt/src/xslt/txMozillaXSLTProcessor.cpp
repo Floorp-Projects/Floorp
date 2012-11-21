@@ -48,8 +48,10 @@ class txToDocHandlerFactory : public txAOutputHandlerFactory
 public:
     txToDocHandlerFactory(txExecutionState* aEs,
                           nsIDOMDocument* aSourceDocument,
-                          nsITransformObserver* aObserver)
-        : mEs(aEs), mSourceDocument(aSourceDocument), mObserver(aObserver)
+                          nsITransformObserver* aObserver,
+                          bool aDocumentIsData)
+        : mEs(aEs), mSourceDocument(aSourceDocument), mObserver(aObserver),
+          mDocumentIsData(aDocumentIsData)
     {
     }
 
@@ -59,6 +61,7 @@ private:
     txExecutionState* mEs;
     nsCOMPtr<nsIDOMDocument> mSourceDocument;
     nsCOMPtr<nsITransformObserver> mObserver;
+    bool mDocumentIsData;
 };
 
 class txToFragmentHandlerFactory : public txAOutputHandlerFactory
@@ -95,7 +98,8 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
             nsresult rv = handler->createResultDocument(EmptyString(),
                                                         kNameSpaceID_None,
-                                                        mSourceDocument);
+                                                        mSourceDocument,
+                                                        mDocumentIsData);
             if (NS_SUCCEEDED(rv)) {
                 *aHandler = handler.forget();
             }
@@ -108,7 +112,8 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
             nsAutoPtr<txMozillaTextOutput> handler(
                 new txMozillaTextOutput(mObserver));
 
-            nsresult rv = handler->createResultDocument(mSourceDocument);
+            nsresult rv = handler->createResultDocument(mSourceDocument,
+                                                        mDocumentIsData);
             if (NS_SUCCEEDED(rv)) {
                 *aHandler = handler.forget();
             }
@@ -143,7 +148,8 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
                 new txMozillaXMLOutput(aFormat, mObserver));
 
             nsresult rv = handler->createResultDocument(aName, aNsID,
-                                                        mSourceDocument);
+                                                        mSourceDocument,
+                                                        mDocumentIsData);
             if (NS_SUCCEEDED(rv)) {
                 *aHandler = handler.forget();
             }
@@ -156,7 +162,8 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
             nsAutoPtr<txMozillaTextOutput> handler(
                 new txMozillaTextOutput(mObserver));
 
-            nsresult rv = handler->createResultDocument(mSourceDocument);
+            nsresult rv = handler->createResultDocument(mSourceDocument,
+                                                        mDocumentIsData);
             if (NS_SUCCEEDED(rv)) {
                 *aHandler = handler.forget();
             }
@@ -522,7 +529,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    mProcessor->TransformToDoc(nullptr);
+    mProcessor->TransformToDoc(nullptr, false);
     return NS_OK;
   }
 };
@@ -612,11 +619,12 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
 
     mSource = aSource;
 
-    return TransformToDoc(aResult);
+    return TransformToDoc(aResult, true);
 }
 
 nsresult
-txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult)
+txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
+                                       bool aCreateDataDocument)
 {
     nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(mSource));
     if (!sourceNode) {
@@ -633,7 +641,9 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult)
 
     // XXX Need to add error observers
 
-    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, mObserver);
+    // If aResult is non-null, we're a data document
+    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, mObserver,
+                                         aCreateDataDocument);
     es.mOutputHandlerFactory = &handlerFactory;
 
     nsresult rv = es.init(*sourceNode, &mVariables);
