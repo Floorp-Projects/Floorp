@@ -302,6 +302,34 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     return callVM(DoBinaryArithFallbackInfo, masm);
 }
 
+static bool
+DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+{
+    if (!GetElementMonitored(cx, lhs, rhs, res))
+        return false;
+
+    return true;
+}
+
+typedef bool (*DoGetElemFallbackFn)(JSContext *, ICGetElem_Fallback *, HandleValue, HandleValue,
+                                    MutableHandleValue);
+static const VMFunction DoGetElemFallbackInfo = FunctionInfo<DoGetElemFallbackFn>(DoGetElemFallback);
+
+bool
+ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return callVM(DoGetElemFallbackInfo, masm);
+}
+
 //
 // Call_Fallback
 //

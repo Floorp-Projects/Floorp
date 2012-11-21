@@ -57,6 +57,7 @@ namespace ion {
     _(JSOP_ADD)                \
     _(JSOP_LT)                 \
     _(JSOP_GT)                 \
+    _(JSOP_GETELEM)            \
     _(JSOP_GETLOCAL)           \
     _(JSOP_CALLLOCAL)          \
     _(JSOP_SETLOCAL)           \
