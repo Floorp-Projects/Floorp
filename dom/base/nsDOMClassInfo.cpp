@@ -6637,8 +6637,13 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
       }
     } else {
       JSAutoCompartment ac(cx, winobj);
-      dot_prototype = ::JS_NewObject(cx, &sDOMConstructorProtoClass, proto,
-                                     winobj);
+      if (!proto) {
+        proto = JS_GetObjectPrototype(cx, winobj);
+      }
+      dot_prototype = ::JS_NewObjectWithUniqueType(cx,
+                                                   &sDOMConstructorProtoClass,
+                                                   proto,
+                                                   winobj);
       NS_ENSURE_TRUE(dot_prototype, NS_ERROR_OUT_OF_MEMORY);
     }
   }
