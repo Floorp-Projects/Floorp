@@ -15,6 +15,9 @@
 namespace js {
 namespace ion {
 
+// Distance from sp to the top Value inside an IC stub (no return address on the stack on ARM).
+static const size_t ICStackValueOffset = 0;
+
 inline void
 EmitRestoreTailCallReg(MacroAssembler &masm)
 {
