@@ -1247,6 +1247,22 @@ gfxPlatform::UseProgressiveTilePainting()
 }
 
 bool
+gfxPlatform::UseLowPrecisionBuffer()
+{
+    static bool sUseLowPrecisionBuffer;
+    static bool sUseLowPrecisionBufferPrefCached = false;
+
+    if (!sUseLowPrecisionBufferPrefCached) {
+        sUseLowPrecisionBufferPrefCached = true;
+        mozilla::Preferences::AddBoolVarCache(&sUseLowPrecisionBuffer,
+                                              "layers.low-precision-buffer",
+                                              false);
+    }
+
+    return sUseLowPrecisionBuffer;
+}
+
+bool
 gfxPlatform::UseReusableTileStore()
 {
     static bool sUseReusableTileStore;
