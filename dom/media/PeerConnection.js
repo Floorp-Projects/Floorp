@@ -144,13 +144,17 @@ SessionDescription.prototype = {
     Ci.nsIDOMRTCSessionDescription, Ci.nsIDOMGlobalObjectConstructor
   ]),
 
-  constructor: function(win, type, sdp) {
+  constructor: function(win, descriptionInitDict) {
     if (this._win) {
       throw new Error("Constructor already called");
     }
     this._win = win;
-    this.type = type;
-    this.sdp = sdp;
+    if (descriptionInitDict !== undefined) {
+      this.type = descriptionInitDict.type || null;
+      this.sdp = descriptionInitDict.sdp || null;
+    } else {
+      this.type = this.sdp = null;
+    }
   },
 
   toString: function() {
