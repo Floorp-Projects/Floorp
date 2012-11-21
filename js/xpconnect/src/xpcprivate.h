@@ -730,11 +730,11 @@ public:
     // buffer with things to finalize in the return value.
     typedef void* (*DeferredFinalizeStartFunction)();
 
-    // Called to finalize a number of objects. Slice is the number of objects to
-    // finalize, if it's -1 all objects should be finalized. data is the pointer
-    // returned by DeferredFinalizeStartFunction. Should return if it finalized
-    // all objects remaining in the buffer.
-    typedef bool (*DeferredFinalizeFunction)(int32_t slice, void* data);
+    // Called to finalize a number of objects. Slice is the number of objects
+    // to finalize, or if it's UINT32_MAX, all objects should be finalized.
+    // data is the pointer returned by DeferredFinalizeStartFunction.
+    // Return value indicates whether it finalized all objects in the buffer.
+    typedef bool (*DeferredFinalizeFunction)(uint32_t slice, void* data);
 
 private:
     struct DeferredFinalizeFunctions
