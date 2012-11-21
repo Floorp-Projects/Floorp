@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Set and unset dir="foopy"</title>
+    <script type="text/javascript" src="setDir.js"></script>
+    <style>
+     textarea { resize: none; }
+    </style>
+  </head>
+  <body onload="setAllDir('rtl')">
+    <div><input type="text" value="ABC אבג" id="set0" dir="foopy"></div>
+    <div><span id="set1" dir="foopy">ABC אבג</span></div>
+    <div><textarea id="set2" dir="foopy">ABC אבג</textarea></div>
+    <div><button id="set3" dir="foopy">ABC אבג</button></div>
+    <div><span id="set4" dir="foopy">ABC אבג</bdi></div>
+  </body>
+</html>
