@@ -92,10 +92,6 @@
 # include "nsPermissionManager.h"
 #endif
 
-#ifdef MOZ_SYDNEYAUDIO
-# include "AudioParent.h"
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 # include "AndroidBridge.h"
 #endif
@@ -1442,29 +1438,6 @@ ContentParent::DeallocPTestShell(PTestShellParent* shell)
   return true;
 }
  
-PAudioParent*
-ContentParent::AllocPAudio(const int32_t& numChannels,
-                           const int32_t& rate)
-{
-#if defined(MOZ_SYDNEYAUDIO)
-    AudioParent *parent = new AudioParent(numChannels, rate);
-    NS_ADDREF(parent);
-    return parent;
-#else
-    return nullptr;
-#endif
-}
-
-bool
-ContentParent::DeallocPAudio(PAudioParent* doomed)
-{
-#if defined(MOZ_SYDNEYAUDIO)
-    AudioParent *parent = static_cast<AudioParent*>(doomed);
-    NS_RELEASE(parent);
-#endif
-    return true;
-}
-
 PNeckoParent* 
 ContentParent::AllocPNecko()
 {

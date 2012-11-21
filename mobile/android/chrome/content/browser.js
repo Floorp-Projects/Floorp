@@ -2546,9 +2546,8 @@ Tab.prototype = {
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("MozScrolledAreaChanged", this, true);
-    this.browser.addEventListener("PluginClickToPlay", this, true);
-    this.browser.addEventListener("PluginPlayPreview", this, true);
-    this.browser.addEventListener("PluginNotFound", this, true);
+    // Note that the XBL binding is untrusted
+    this.browser.addEventListener("PluginBindingAttached", this, true, true);
     this.browser.addEventListener("pageshow", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
@@ -2654,9 +2653,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
-    this.browser.removeEventListener("PluginClickToPlay", this, true);
-    this.browser.removeEventListener("PluginPlayPreview", this, true);
-    this.browser.removeEventListener("PluginNotFound", this, true);
+    this.browser.removeEventListener("PluginBindingAttached", this, true);
     this.browser.removeEventListener("pageshow", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
@@ -3173,116 +3170,8 @@ Tab.prototype = {
         break;
       }
 
-      case "PluginClickToPlay": {
-        let plugin = aEvent.target;
-
-        // Check if plugins have already been activated for this page, or if the user
-        // has set a permission to always play plugins on the site
-        if (this.clickToPlayPluginsActivated ||
-            Services.perms.testPermission(this.browser.currentURI, "plugins") == Services.perms.ALLOW_ACTION) {
-          PluginHelper.playPlugin(plugin);
-          return;
-        }
-
-        // Force a style flush, so that we ensure our binding is attached.
-        plugin.clientTop;
-
-        // If the plugin is hidden, or if the overlay is too small, show a doorhanger notification
-        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-        if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
-          // To avoid showing the doorhanger if there are also visible plugin overlays on the page,
-          // delay showing the doorhanger to check if visible plugins get added in the near future.
-          if (!this.pluginDoorhangerTimeout) {
-            this.pluginDoorhangerTimeout = setTimeout(function() {
-              if (this.shouldShowPluginDoorhanger)
-                PluginHelper.showDoorHanger(this);
-            }.bind(this), 500);
-          }
-
-          // No overlay? We're done here.
-          if (!overlay)
-            return;
-
-        } else {
-          // There's a large enough visible overlay that we don't need to show the doorhanger.
-          this.shouldShowPluginDoorhanger = false;
-        }
-
-        // Add click to play listener to the overlay
-        overlay.addEventListener("click", function(e) {
-          if (e) {
-            if (!e.isTrusted)
-              return;
-            e.preventDefault();
-          }
-          let win = e.target.ownerDocument.defaultView.top;
-          let tab = BrowserApp.getTabForWindow(win);
-          tab.clickToPlayPluginsActivated = true;
-          PluginHelper.playAllPlugins(win);
-
-          NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
-        }, true);
-        break;
-      }
-
-      case "PluginPlayPreview": {
-        let plugin = aEvent.target;
-
-        // Force a style flush, so that we ensure our binding is attached.
-        plugin.clientTop;
-
-        let doc = plugin.ownerDocument;
-        let previewContent = doc.getAnonymousElementByAttribute(plugin, "class", "previewPluginContent");
-        if (!previewContent) {
-          // If the plugin is hidden, fallback to click-to-play logic
-          PluginHelper.stopPlayPreview(plugin, false);
-          break;
-        }
-        let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
-        if (!iframe) {
-          // lazy initialization of the iframe
-          iframe = doc.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
-          iframe.className = "previewPluginContentFrame";
-          previewContent.appendChild(iframe);
-
-          // Force a style flush, so that we ensure our binding is attached.
-          plugin.clientTop;
-        }
-        let mimeType = PluginHelper.getPluginMimeType(plugin);
-        let playPreviewUri = "data:application/x-moz-playpreview;," + mimeType;
-        iframe.src = playPreviewUri;
-
-        // MozPlayPlugin event can be dispatched from the extension chrome
-        // code to replace the preview content with the native plugin
-        previewContent.addEventListener("MozPlayPlugin", function playPluginHandler(e) {
-          if (!e.isTrusted)
-            return;
-
-          previewContent.removeEventListener("MozPlayPlugin", playPluginHandler, true);
-
-          let playPlugin = !aEvent.detail;
-          PluginHelper.stopPlayPreview(plugin, playPlugin);
-
-          // cleaning up: removes overlay iframe from the DOM
-          let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
-          if (iframe)
-            previewContent.removeChild(iframe);
-        }, true);
-        break;
-      }
-
-      case "PluginNotFound": {
-        let plugin = aEvent.target;
-        plugin.clientTop; // force style flush
-
-        // On devices where we don't support Flash, there will be a "Learn More..." link in
-        // the missing plugin error message.
-        let learnMoreLink = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "unsupportedLearnMoreLink");
-        if (learnMoreLink) {
-          let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
-          learnMoreUrl += "why-cant-firefox-mobile-play-flash-on-my-device";
-          learnMoreLink.href = learnMoreUrl;
-        }
+      case "PluginBindingAttached": {
+        PluginHelper.handlePluginBindingAttached(this, aEvent);
         break;
       }
 
@@ -3832,14 +3721,22 @@ var BrowserEventHandler = {
         }
       });
       return;
+    } else if (aTopic == "nsPref:changed") {
+      if (aData == "browser.zoom.reflowOnZoom") {
+        this.updateReflozPref();
+      }
+      return;
     }
 
     // the remaining events are all dependent on the browser content document being the
     // same as the browser displayed document. if they are not the same, we should ignore
     // the event.
-    if (!BrowserApp.isBrowserContentDocumentDisplayed())
-      return;
+    if (BrowserApp.isBrowserContentDocumentDisplayed()) {
+      this.handleUserEvent(aTopic, aData);
+    }
+  },
 
+  handleUserEvent: function(aTopic, aData) {
     if (aTopic == "Gesture:Scroll") {
       // If we've lost our scrollable element, return. Don't cancel the
       // override, as we probably don't want Java to handle panning until the
@@ -3911,10 +3808,6 @@ var BrowserEventHandler = {
       this.onPinch(aData);
     } else if (aTopic == "MozMagnifyGesture") {
       this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
-    } else if (aTopic == "nsPref:changed") {
-      if (aData == "browser.zoom.reflowOnZoom") {
-        this.updateReflozPref();
-      }
     }
   },
 
@@ -5889,7 +5782,131 @@ var PluginHelper = {
     }
 
     return tagMimetype;
-  }
+  },
+
+  handlePluginBindingAttached: function (aTab, aEvent) {
+    let plugin = aEvent.target;
+    let doc = plugin.ownerDocument;
+    let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+    if (!overlay || overlay._bindingHandled) {
+      return;
+    }
+    overlay._bindingHandled = true;
+
+    let eventType = PluginHelper._getBindingType(plugin);
+    if (!eventType) {
+      // Not all bindings have handlers
+      return;
+    }
+
+    switch  (eventType) {
+      case "PluginClickToPlay": {
+        // Check if plugins have already been activated for this page, or if
+        // the user has set a permission to always play plugins on the site
+        if (aTab.clickToPlayPluginsActivated ||
+            Services.perms.testPermission(aTab.browser.currentURI, "plugins") ==
+            Services.perms.ALLOW_ACTION) {
+          PluginHelper.playPlugin(plugin);
+          return;
+        }
+
+        // If the plugin is hidden, or if the overlay is too small, show a 
+        // doorhanger notification
+        if (PluginHelper.isTooSmall(plugin, overlay)) {
+          // To avoid showing the doorhanger if there are also visible plugin
+          // overlays on the page, delay showing the doorhanger to check if
+          // visible plugins get added in the near future.
+          if (!aTab.pluginDoorhangerTimeout) {
+            aTab.pluginDoorhangerTimeout = setTimeout(function() {
+              if (this.shouldShowPluginDoorhanger) {
+                PluginHelper.showDoorHanger(this);
+              }
+            }.bind(aTab), 500);
+          }
+
+        } else {
+          // There's a large enough visible overlay that we don't need to show
+          // the doorhanger.
+          aTab.shouldShowPluginDoorhanger = false;
+        }
+
+        // Add click to play listener to the overlay
+        overlay.addEventListener("click", function(e) {
+          if (!e.isTrusted)
+            return;
+          e.preventDefault();
+          let win = e.target.ownerDocument.defaultView.top;
+          let tab = BrowserApp.getTabForWindow(win);
+          tab.clickToPlayPluginsActivated = true;
+          PluginHelper.playAllPlugins(win);
+
+          NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
+        }, true);
+        break;
+      }
+
+      case "PluginPlayPreview": {
+        let previewContent = doc.getAnonymousElementByAttribute(plugin, "class", "previewPluginContent");
+        let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
+        if (!iframe) {
+          // lazy initialization of the iframe
+          iframe = doc.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+          iframe.className = "previewPluginContentFrame";
+          previewContent.appendChild(iframe);
+        }
+        let mimeType = PluginHelper.getPluginMimeType(plugin);
+        let playPreviewUri = "data:application/x-moz-playpreview;," + mimeType;
+        iframe.src = playPreviewUri;
+
+        // MozPlayPlugin event can be dispatched from the extension chrome
+        // code to replace the preview content with the native plugin
+        previewContent.addEventListener("MozPlayPlugin", function playPluginHandler(e) {
+          if (!e.isTrusted)
+            return;
+
+          previewContent.removeEventListener("MozPlayPlugin", playPluginHandler, true);
+
+          let playPlugin = !aEvent.detail;
+          PluginHelper.stopPlayPreview(plugin, playPlugin);
+
+          // cleaning up: removes overlay iframe from the DOM
+          let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
+          if (iframe)
+            previewContent.removeChild(iframe);
+        }, true);
+        break;
+      }
+
+      case "PluginNotFound": {
+        // On devices where we don't support Flash, there will be a
+        // "Learn More..." link in the missing plugin error message.
+        let learnMoreLink = doc.getAnonymousElementByAttribute(plugin, "class", "unsupportedLearnMoreLink");
+        let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
+        learnMoreUrl += "why-cant-firefox-mobile-play-flash-on-my-device";
+        learnMoreLink.href = learnMoreUrl;
+        break;
+      }
+    }
+  },
+
+  // Helper to get the binding handler type from a plugin object
+  _getBindingType: function(plugin) {
+    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+      return;
+
+    switch (plugin.pluginFallbackType) {
+      case Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED:
+        return "PluginNotFound";
+      case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
+        return "PluginClickToPlay";
+      case Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW:
+        return "PluginPlayPreview";
+      default:
+        // Not all states map to a handler
+        return;
+    }
+  },
+
 };
 
 var PermissionsHelper = {

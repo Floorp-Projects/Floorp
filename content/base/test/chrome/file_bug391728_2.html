@@ -21,21 +21,10 @@ object:-moz-type-unsupported {
 }
 </style>
 <script type="text/javascript">
-function unknown_plugin_detected(event) {
-  window.parent.unknown_plugin_detected(event);
+function plugin_binding_attached(event) {
+  window.parent.plugin_binding_attached(event);
 }
-
-function blocked_plugin_detected(event) {
-  window.parent.blocked_plugin_detected(event);
-}
-
-function disabled_plugin_detected(event) {
-  window.parent.disabled_plugin_detected(event);
-}
-
-document.addEventListener("PluginNotFound", unknown_plugin_detected, true);
-document.addEventListener("PluginDisabled", disabled_plugin_detected, true);
-document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
+document.addEventListener("PluginBindingAttached", plugin_binding_attached, true, true);
 </script>
 </head>
 <body>
@@ -43,7 +32,7 @@ document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
 <div><embed id="plugin1" style="width: 100px; height: 100px" type="application/x-unknown"></div>
 <div><embed id="plugin2" style="width: 100px; height: 100px" src="data:application/x-unknown,test"></div>
 
-<!-- So do objects with no content and no pluginurl -->
+<!-- So do objects with a type/uri and no content -->
 <div><object id="plugin3" style="width: 100px; height: 100px" type="application/x-unknown"></object></div>
 <div><object id="plugin4" style="width: 100px; height: 100px" data="data:application/x-unknown,test"></object></div>
 
@@ -69,16 +58,6 @@ document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
   
 </object></div>
 
-<!-- Pluginurl forces the psuedo class and error event regardless of content -->
-<div><object id="plugin11" style="width: 100px; height: 100px" type="application/x-unknown">
-  <param name="pluginurl" value="http://foo">
-  <p>Fallback content</p>
-</object></div>
-<div><object id="plugin12" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
-  <param name="pluginurl" value="http://foo">
-  <p>Fallback content</p>
-</object></div>
-
 <!-- No errors or psuedo classes for objects with fallback content -->
 <div><object id="fallback1" style="width: 100px; height: 100px" type="application/x-unknown">
   <p>Fallback content</p>
@@ -90,10 +69,21 @@ document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
 <!-- Even other plugins are considered content so no errors dispatched from these
      objects, but the inner embeds do get processed -->
 <div><object id="fallback3" style="width: 100px; height: 100px" type="application/x-unknown">
-  <embed id="plugin13" style="width: 100px; height: 100px" type="application/x-unknown">
+  <embed id="plugin11" style="width: 100px; height: 100px" type="application/x-unknown">
 </object></div>
 <div><object id="fallback4" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
-  <embed id="plugin14" style="width: 100px; height: 100px" type="application/x-unknown">
+  <embed id="plugin12" style="width: 100px; height: 100px" type="application/x-unknown">
 </object></div>
+
+<!-- pluginurl was removed in bug 548133, and should not affect fallback -->
+<div><object id="plugin13" style="width: 100px; height: 100px" type="application/x-unknown">
+    <param name="pluginurl">
+</object></div>
+
+<div><object id="fallback5" style="width: 100px; height: 100px" type="applicatin/x-unknown">
+    <param name="pluginurl">
+    Fallback content
+</object></div>
+
 </body>
 </html>

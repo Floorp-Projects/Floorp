@@ -105,14 +105,14 @@ void TestSpecExample()
   ErrorResultMock rv;
 
   // This test is copied from the example in the Web Audio spec
-  const float t0 = 0.0f,
-              t1 = 0.1f,
-              t2 = 0.2f,
-              t3 = 0.3f,
-              t4 = 0.4f,
-              t5 = 0.6f,
-              t6 = 0.7f/*,
-              t7 = 1.0f*/;
+  const float t0 = 0.0,
+              t1 = 0.1,
+              t2 = 0.2,
+              t3 = 0.3,
+              t4 = 0.4,
+              t5 = 0.6,
+              t6 = 0.7/*,
+              t7 = 1.0*/;
   timeline.SetValueAtTime(0.2f, t0, rv);
   is(rv, NS_OK, "SetValueAtTime succeeded");
   timeline.SetValueAtTime(0.3f, t1, rv);
@@ -156,35 +156,35 @@ void TestInvalidEvents()
 
   ErrorResultMock rv;
 
-  timeline.SetValueAtTime(NaN, 0.1f, rv);
+  timeline.SetValueAtTime(NaN, 0.1, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetValueAtTime(Infinity, 0.1f, rv);
+  timeline.SetValueAtTime(Infinity, 0.1, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetValueAtTime(-Infinity, 0.1f, rv);
+  timeline.SetValueAtTime(-Infinity, 0.1, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.LinearRampToValueAtTime(NaN, 0.2f, rv);
+  timeline.LinearRampToValueAtTime(NaN, 0.2, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.LinearRampToValueAtTime(Infinity, 0.2f, rv);
+  timeline.LinearRampToValueAtTime(Infinity, 0.2, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.LinearRampToValueAtTime(-Infinity, 0.2f, rv);
+  timeline.LinearRampToValueAtTime(-Infinity, 0.2, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.ExponentialRampToValueAtTime(NaN, 0.3f, rv);
+  timeline.ExponentialRampToValueAtTime(NaN, 0.3, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.ExponentialRampToValueAtTime(Infinity, 0.3f, rv);
+  timeline.ExponentialRampToValueAtTime(Infinity, 0.3, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.ExponentialRampToValueAtTime(-Infinity, 0.4f, rv);
+  timeline.ExponentialRampToValueAtTime(-Infinity, 0.4, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetTargetAtTime(NaN, 0.4f, 1.0f, rv);
+  timeline.SetTargetAtTime(NaN, 0.4, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetTargetAtTime(Infinity, 0.4f, 1.0f, rv);
+  timeline.SetTargetAtTime(Infinity, 0.4, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetTargetAtTime(-Infinity, 0.4f, 1.0f, rv);
+  timeline.SetTargetAtTime(-Infinity, 0.4, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetTargetAtTime(0.4f, NaN, 1.0f, rv);
+  timeline.SetTargetAtTime(0.4f, NaN, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetTargetAtTime(0.4f, Infinity, 1.0f, rv);
+  timeline.SetTargetAtTime(0.4f, Infinity, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  timeline.SetTargetAtTime(0.4f, -Infinity, 1.0f, rv);
+  timeline.SetTargetAtTime(0.4f, -Infinity, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
   // TODO: Test SetValueCurveAtTime
 }
@@ -196,13 +196,13 @@ void TestEventReplacement()
   ErrorResultMock rv;
 
   is(timeline.GetEventCount(), 0, "No events yet");
-  timeline.SetValueAtTime(10.0f, 0.1f, rv);
+  timeline.SetValueAtTime(10.0f, 0.1, rv);
   is(timeline.GetEventCount(), 1, "One event scheduled now");
-  timeline.SetValueAtTime(20.0f, 0.1f, rv);
+  timeline.SetValueAtTime(20.0f, 0.1, rv);
   is(rv, NS_OK, "Event scheduling should be successful");
   is(timeline.GetEventCount(), 1, "Event should be replaced");
   is(timeline.GetValueAtTime(0.1f), 20.0f, "The first event should be overwritten");
-  timeline.LinearRampToValueAtTime(30.0f, 0.1f, rv);
+  timeline.LinearRampToValueAtTime(30.0f, 0.1, rv);
   is(rv, NS_OK, "Event scheduling should be successful");
   is(timeline.GetEventCount(), 2, "Different event type should be appended");
   is(timeline.GetValueAtTime(0.1f), 30.0f, "The first event should be overwritten");
@@ -214,16 +214,16 @@ void TestEventRemoval()
 
   ErrorResultMock rv;
 
-  timeline.SetValueAtTime(10.0f, 0.1f, rv);
-  timeline.SetValueAtTime(15.0f, 0.15f, rv);
-  timeline.SetValueAtTime(20.0f, 0.2f, rv);
-  timeline.LinearRampToValueAtTime(30.0f, 0.3f, rv);
+  timeline.SetValueAtTime(10.0f, 0.1, rv);
+  timeline.SetValueAtTime(15.0f, 0.15, rv);
+  timeline.SetValueAtTime(20.0f, 0.2, rv);
+  timeline.LinearRampToValueAtTime(30.0f, 0.3, rv);
   is(timeline.GetEventCount(), 4, "Should have three events initially");
-  timeline.CancelScheduledValues(0.4f);
+  timeline.CancelScheduledValues(0.4);
   is(timeline.GetEventCount(), 4, "Trying to delete past the end of the array should have no effect");
-  timeline.CancelScheduledValues(0.3f);
+  timeline.CancelScheduledValues(0.3);
   is(timeline.GetEventCount(), 3, "Should successfully delete one event");
-  timeline.CancelScheduledValues(0.12f);
+  timeline.CancelScheduledValues(0.12);
   is(timeline.GetEventCount(), 1, "Should successfully delete two events");
 }
 
@@ -233,7 +233,7 @@ void TestBeforeFirstEvent()
 
   ErrorResultMock rv;
 
-  timeline.SetValueAtTime(20.0f, 1.0f, rv);
+  timeline.SetValueAtTime(20.0f, 1.0, rv);
   is(timeline.GetValueAtTime(0.5f), 10.0f, "Retrun the default value before the first event");
 }
 
@@ -243,7 +243,7 @@ void TestAfterLastValueEvent()
 
   ErrorResultMock rv;
 
-  timeline.SetValueAtTime(20.0f, 1.0f, rv);
+  timeline.SetValueAtTime(20.0f, 1.0, rv);
   is(timeline.GetValueAtTime(1.5f), 20.0f, "Return the last value after the last SetValue event");
 }
 
@@ -253,7 +253,7 @@ void TestAfterLastTargetValueEvent()
 
   ErrorResultMock rv;
 
-  timeline.SetTargetAtTime(20.0f, 1.0f, 5.0f, rv);
+  timeline.SetTargetAtTime(20.0f, 1.0, 5.0, rv);
   is(timeline.GetValueAtTime(10.f), (20.f + (10.f - 20.f) * expf(-9.0f / 5.0f)), "Return the value after the last SetTarget event based on the curve");
 }
 
@@ -264,7 +264,7 @@ void TestAfterLastTargetValueEventWithValueSet()
   ErrorResultMock rv;
 
   timeline.SetValue(50.f);
-  timeline.SetTargetAtTime(20.0f, 1.0f, 5.0f, rv);
+  timeline.SetTargetAtTime(20.0f, 1.0, 5.0, rv);
   is(timeline.GetValueAtTime(10.f), (20.f + (50.f - 20.f) * expf(-9.0f / 5.0f)), "Return the value after SetValue and the last SetTarget event based on the curve");
 }
 
@@ -277,7 +277,7 @@ void TestValue()
   is(timeline.Value(), 10.0f, "value should initially match the default value");
   timeline.SetValue(20.0f);
   is(timeline.Value(), 20.0f, "Should be able to set the value");
-  timeline.SetValueAtTime(20.0f, 1.0f, rv);
+  timeline.SetValueAtTime(20.0f, 1.0, rv);
   // TODO: The following check needs to change when we compute the value based on the current time of the context
   is(timeline.Value(), 20.0f, "TODO...");
   timeline.SetValue(30.0f);
@@ -290,7 +290,7 @@ void TestLinearRampAtZero()
 
   ErrorResultMock rv;
 
-  timeline.LinearRampToValueAtTime(20.0f, 0.0f, rv);
+  timeline.LinearRampToValueAtTime(20.0f, 0.0, rv);
   is(timeline.GetValueAtTime(0.0f), 20.0f, "Should get the correct value when t0 == t1 == 0");
 }
 
@@ -300,7 +300,7 @@ void TestExponentialRampAtZero()
 
   ErrorResultMock rv;
 
-  timeline.ExponentialRampToValueAtTime(20.0f, 0.0f, rv);
+  timeline.ExponentialRampToValueAtTime(20.0f, 0.0, rv);
   is(timeline.GetValueAtTime(0.0f), 20.0f, "Should get the correct value when t0 == t1 == 0");
 }
 
@@ -310,8 +310,8 @@ void TestLinearRampAtSameTime()
 
   ErrorResultMock rv;
 
-  timeline.SetValueAtTime(5.0f, 1.0f, rv);
-  timeline.LinearRampToValueAtTime(20.0f, 1.0f, rv);
+  timeline.SetValueAtTime(5.0f, 1.0, rv);
+  timeline.LinearRampToValueAtTime(20.0f, 1.0, rv);
   is(timeline.GetValueAtTime(1.0f), 20.0f, "Should get the correct value when t0 == t1");
 }
 
@@ -321,8 +321,8 @@ void TestExponentialRampAtSameTime()
 
   ErrorResultMock rv;
 
-  timeline.SetValueAtTime(5.0f, 1.0f, rv);
-  timeline.ExponentialRampToValueAtTime(20.0f, 1.0f, rv);
+  timeline.SetValueAtTime(5.0f, 1.0, rv);
+  timeline.ExponentialRampToValueAtTime(20.0f, 1.0, rv);
   is(timeline.GetValueAtTime(1.0f), 20.0f, "Should get the correct value when t0 == t1");
 }
 
@@ -332,7 +332,7 @@ void TestSetTargetZeroTimeConstant()
 
   ErrorResultMock rv;
 
-  timeline.SetTargetAtTime(20.0f, 1.0f, 0.0f, rv);
+  timeline.SetTargetAtTime(20.0f, 1.0, 0.0, rv);
   is(timeline.GetValueAtTime(10.f), 20.f, "Should get the correct value with timeConstant == 0");
 }
 

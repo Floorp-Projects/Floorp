@@ -6,7 +6,7 @@
 
 #include "nsError.h"
 #include "MediaDecoderStateMachine.h"
-#include "MediaDecoder.h"
+#include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
 #include "GStreamerReader.h"
 #include "VideoUtils.h"
@@ -47,7 +47,7 @@ typedef enum {
   GST_PLAY_FLAG_SOFT_COLORBALANCE = (1 << 10)
 } PlayFlags;
 
-GStreamerReader::GStreamerReader(MediaDecoder* aDecoder)
+GStreamerReader::GStreamerReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
   mPlayBin(NULL),
   mBus(NULL),
@@ -296,7 +296,7 @@ nsresult GStreamerReader::ReadMetadata(nsVideoInfo* aInfo,
     LOG(PR_LOG_DEBUG, ("returning duration %" GST_TIME_FORMAT,
           GST_TIME_ARGS (duration)));
     duration = GST_TIME_AS_USECONDS (duration);
-    mDecoder->GetStateMachine()->SetDuration(duration);
+    mDecoder->SetMediaDuration(duration);
   }
 
   int n_video = 0, n_audio = 0;
@@ -391,12 +391,6 @@ bool GStreamerReader::DecodeAudioData()
   mAudioQueue.Push(audio);
   gst_buffer_unref(buffer);
 
-  if (mAudioQueue.GetSize() < 2) {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameAvailable);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-  }
-
   return true;
 }
 
@@ -413,7 +407,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
       mVideoQueue.Finish();
       break;
     }
-    mDecoder->GetFrameStatistics().NotifyDecodedFrames(0, 1);
+    mDecoder->NotifyDecodedFrames(0, 1);
 
     buffer = gst_app_sink_pull_buffer(mVideoAppSink);
     bool isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DISCONT);
@@ -488,12 +482,6 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
                                        mPicture);
   mVideoQueue.Push(video);
   gst_buffer_unref(buffer);
-
-  if (mVideoQueue.GetSize() < 2) {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameAvailable);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-  }
 
   return true;
 }
@@ -797,7 +785,7 @@ void GStreamerReader::NewVideoBuffer()
   /* We have a new video buffer queued in the video sink. Increment the counter
    * and notify the decode thread potentially blocked in DecodeVideoFrame
    */
-  mDecoder->GetFrameStatistics().NotifyDecodedFrames(1, 0);
+  mDecoder->NotifyDecodedFrames(1, 0);
   mVideoSinkBufferCount++;
   mon.NotifyAll();
 }

@@ -78,7 +78,7 @@ private:
 
   Class* mInstance;
   Callback mCallback;
-  nsCOMPtr<Arg> mArg;
+  nsRefPtr<Arg> mArg;
 };
 
 /**

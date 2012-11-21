@@ -375,6 +375,8 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
                               nsIContent* aContent,
                               CharacterDataChangeInfo* aInfo)
 {
+  MOZ_ASSERT(mAssertNextInsertOrAppendIndex == -1,
+             "splitText failed to notify insert/append?");
   NS_ASSERTION(mIsPositioned, "shouldn't be notified if not positioned");
 
   nsINode* newRoot = nullptr;
@@ -382,6 +384,35 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
   nsINode* newEndNode = nullptr;
   uint32_t newStartOffset = 0;
   uint32_t newEndOffset = 0;
+
+  if (aInfo->mDetails &&
+      aInfo->mDetails->mType == CharacterDataChangeInfo::Details::eSplit) {
+    // If the splitted text node is immediately before a range boundary point
+    // that refers to a child index (i.e. its parent is the boundary container)
+    // then we need to increment the corresponding offset to account for the new
+    // text node that will be inserted.  If so, we need to prevent the next
+    // ContentInserted or ContentAppended for this range from incrementing it
+    // again (when the new text node is notified).
+    nsINode* parentNode = aContent->GetParentNode();
+    int32_t index = -1;
+    if (parentNode == mEndParent && mEndOffset > 0 &&
+        (index = parentNode->IndexOf(aContent)) + 1 == mEndOffset) {
+      ++mEndOffset;
+      mEndOffsetWasIncremented = true;
+    }
+    if (parentNode == mStartParent && mStartOffset > 0 &&
+        (index != -1 ? index : parentNode->IndexOf(aContent)) + 1 == mStartOffset) {
+      ++mStartOffset;
+      mStartOffsetWasIncremented = true;
+    }
+#ifdef DEBUG
+    if (mStartOffsetWasIncremented || mEndOffsetWasIncremented) {
+      mAssertNextInsertOrAppendIndex =
+        (mStartOffsetWasIncremented ? mStartOffset : mEndOffset) - 1;
+      mAssertNextInsertOrAppendNode = aInfo->mDetails->mNextSibling;
+    }
+#endif
+  }
 
   // If the changed node contains our start boundary and the change starts
   // before the boundary we'll need to adjust the offset.
@@ -469,7 +500,27 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
         newRoot = IsValidBoundary(newEndNode);
       }
     }
+    // When the removed text node's parent is one of our boundary nodes we may
+    // need to adjust the offset to account for the removed node. However,
+    // there will also be a ContentRemoved notification later so the only cases
+    // we need to handle here is when the removed node is the text node after
+    // the boundary.  (The m*Offset > 0 check is an optimization - a boundary
+    // point before the first child is never affected by normalize().)
+    nsINode* parentNode = aContent->GetParentNode();
+    if (parentNode == mStartParent && mStartOffset > 0 &&
+        mStartOffset < parentNode->GetChildCount() &&
+        removed == parentNode->GetChildAt(mStartOffset)) {
+      newStartNode = aContent;
+      newStartOffset = aInfo->mChangeStart;
+    }
+    if (parentNode == mEndParent && mEndOffset > 0 &&
+        mEndOffset < parentNode->GetChildCount() &&
+        removed == parentNode->GetChildAt(mEndOffset)) {
+      newEndNode = aContent;
+      newEndOffset = aInfo->mChangeEnd;
+    }
   }
+
   if (newStartNode || newEndNode) {
     if (!newStartNode) {
       newStartNode = mStartParent;
@@ -504,6 +555,17 @@ nsRange::ContentAppended(nsIDocument* aDocument,
       child = child->GetNextSibling();
     }
   }
+
+  if (mStartOffsetWasIncremented || mEndOffsetWasIncremented) {
+    MOZ_ASSERT(mAssertNextInsertOrAppendIndex == aNewIndexInContainer);
+    MOZ_ASSERT(mAssertNextInsertOrAppendNode == aFirstNewContent);
+    MOZ_ASSERT(aFirstNewContent->IsNodeOfType(nsINode::eTEXT));
+    mStartOffsetWasIncremented = mEndOffsetWasIncremented = false;
+#ifdef DEBUG
+    mAssertNextInsertOrAppendIndex = -1;
+    mAssertNextInsertOrAppendNode = nullptr;
+#endif
+  }
 }
 
 void
@@ -517,16 +579,29 @@ nsRange::ContentInserted(nsIDocument* aDocument,
   nsINode* container = NODE_FROM(aContainer, aDocument);
 
   // Adjust position if a sibling was inserted.
-  if (container == mStartParent && aIndexInContainer < mStartOffset) {
+  if (container == mStartParent && aIndexInContainer < mStartOffset &&
+      !mStartOffsetWasIncremented) {
     ++mStartOffset;
   }
-  if (container == mEndParent && aIndexInContainer < mEndOffset) {
+  if (container == mEndParent && aIndexInContainer < mEndOffset &&
+      !mEndOffsetWasIncremented) {
     ++mEndOffset;
   }
   if (container->IsSelectionDescendant() &&
       !aChild->IsDescendantOfCommonAncestorForRangeInSelection()) {
     MarkDescendants(aChild);
     aChild->SetDescendantOfCommonAncestorForRangeInSelection();
+  }
+
+  if (mStartOffsetWasIncremented || mEndOffsetWasIncremented) {
+    MOZ_ASSERT(mAssertNextInsertOrAppendIndex == aIndexInContainer);
+    MOZ_ASSERT(mAssertNextInsertOrAppendNode == aChild);
+    MOZ_ASSERT(aChild->IsNodeOfType(nsINode::eTEXT));
+    mStartOffsetWasIncremented = mEndOffsetWasIncremented = false;
+#ifdef DEBUG
+    mAssertNextInsertOrAppendIndex = -1;
+    mAssertNextInsertOrAppendNode = nullptr;
+#endif
   }
 }
 
@@ -538,6 +613,9 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
                         nsIContent* aPreviousSibling)
 {
   NS_ASSERTION(mIsPositioned, "shouldn't be notified if not positioned");
+  MOZ_ASSERT(!mStartOffsetWasIncremented && !mEndOffsetWasIncremented &&
+             mAssertNextInsertOrAppendIndex == -1,
+             "splitText failed to notify insert/append?");
 
   nsINode* container = NODE_FROM(aContainer, aDocument);
   bool gravitateStart = false;
@@ -581,6 +659,9 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
 void
 nsRange::ParentChainChanged(nsIContent *aContent)
 {
+  MOZ_ASSERT(!mStartOffsetWasIncremented && !mEndOffsetWasIncremented &&
+             mAssertNextInsertOrAppendIndex == -1,
+             "splitText failed to notify insert/append?");
   NS_ASSERTION(mRoot == aContent, "Wrong ParentChainChanged notification?");
   nsINode* newRoot = IsValidBoundary(mStartParent);
   NS_ASSERTION(newRoot, "No valid boundary or root found!");

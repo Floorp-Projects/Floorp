@@ -475,13 +475,16 @@ public:
 // non-wrapper-cached object using WebIDL bindings.  "value" must implement a
 // WrapObject() method taking a JSContext and a scope.
 template <class T>
-inline bool
+MOZ_ALWAYS_INLINE bool
 WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
 {
-  JSObject* obj = value->GetWrapper();
-  if (obj && js::GetObjectCompartment(obj) == js::GetObjectCompartment(scope)) {
-    *vp = JS::ObjectValue(*obj);
-    return true;
+  JSObject* obj = value->GetWrapperPreserveColor();
+  if (obj) {
+    xpc_UnmarkNonNullGrayObject(obj);
+    if (js::GetObjectCompartment(obj) == js::GetObjectCompartment(scope)) {
+      *vp = JS::ObjectValue(*obj);
+      return true;
+    }
   }
 
   if (!obj) {
