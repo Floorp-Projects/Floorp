@@ -168,7 +168,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 
 
 nsresult
-NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
+NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
 {
   nsXMLDocument* doc = new nsXMLDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
@@ -181,6 +181,7 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   }
 
   *aInstancePtrResult = doc;
+  doc->SetLoadedAsData(aLoadedAsData);
 
   return rv;
 }
