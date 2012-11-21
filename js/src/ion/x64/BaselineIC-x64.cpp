@@ -63,28 +63,82 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    // Add R0 and R1.  Don't need to explicitly unbox, just use the TailCallReg which
-    // should be available.
-    masm.unboxNonDouble(R0, rdx);
-    masm.unboxNonDouble(R1, ScratchReg);
-
-    switch(op) {
+    Label revertRegister;
+    switch(op_) {
       case JSOP_ADD:
-        masm.addl(rdx, ScratchReg);
+        masm.unboxInt32(R1, ExtractTemp0);
+        // Just jump to failure on overflow. R0 and R1 are preserved, so we can just jump to
+        // the next stub.
+        masm.addl(R0.valueReg(), ExtractTemp0);
+        masm.j(Assembler::Overflow, &failure);
+
+        // Box the result
+        masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
+        break;
+      case JSOP_BITOR:
+        // We can overide R0, because the instruction is unfailable.
+        // Because the tag bits are the same, we don't need to retag.
+        masm.orq(R1.valueReg(), R0.valueReg());
+        break;
+      case JSOP_BITXOR:
+        masm.xorl(R1.valueReg(), R0.valueReg());
+        masm.boxValue(JSVAL_TYPE_INT32, R0.valueReg(), R0.valueReg());
+        break;
+      case JSOP_BITAND:
+        masm.andq(R1.valueReg(), R0.valueReg());
+        break;
+      case JSOP_LSH:
+        masm.unboxInt32(R0, ExtractTemp0);
+        masm.unboxInt32(R1, ecx); // Unboxing R1 to ecx, clobbers R0.
+        masm.shll_cl(ExtractTemp0);
+        masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
+        break;
+      case JSOP_RSH:
+        masm.unboxInt32(R0, ExtractTemp0);
+        masm.unboxInt32(R1, ecx);
+        masm.sarl_cl(ExtractTemp0);
+        masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
+        break;
+      case JSOP_URSH:
+        if (!allowDouble_)
+            masm.movq(R0.valueReg(), ScratchReg);
+
+        masm.unboxInt32(R0, ExtractTemp0);
+        masm.unboxInt32(R1, ecx); // This clobbers R0
+
+        masm.shrl_cl(ExtractTemp0);
+        masm.testl(ExtractTemp0, ExtractTemp0);
+        if (allowDouble_) {
+            Label toUint;
+            masm.j(Assembler::Signed, &toUint);
+
+            // Box and return.
+            masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
+            EmitReturnFromIC(masm);
+
+            masm.bind(&toUint);
+            masm.convertUInt32ToDouble(ExtractTemp0, ScratchFloatReg);
+            masm.boxDouble(ScratchFloatReg, R0);
+        } else {
+            masm.j(Assembler::Signed, &revertRegister);
+            masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
+        }
         break;
       default:
-        JS_ASSERT(!"Unhandled op for BinaryArith_Int32!");
-        return false;
+        JS_NOT_REACHED("Unhandled op in BinaryArith_Int32");
+        return NULL;
     }
 
-    // Just jump to failure on overflow.  R0 and R1 are preserved, so we can just jump to
-    // the next stub.
-    masm.j(Assembler::Overflow, &failure);
-
-    // Box the result and return
-    masm.boxValue(JSVAL_TYPE_INT32, ScratchReg, R0.valueReg());
+    // Return from stub.
     EmitReturnFromIC(masm);
 
+    // Revert the content of R0 in the fallible >>> case.
+    if (op_ == JSOP_URSH && !allowDouble_) {
+        masm.bind(&revertRegister);
+        // Restore tag and payload.
+        masm.movq(ScratchReg, R0.valueReg());
+        // Fall through to failure.
+    }
     // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
