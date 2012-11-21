@@ -230,6 +230,8 @@ private:
    * which indicates that there is no more work to do.
    * aTransform is the transform required to convert from screen-space to
    * layer-space.
+   * aCompositionBounds is the composition bounds from the primary scrollable
+   * layer, transformed into layer coordinates.
    * aScrollOffset is the current scroll offset of the primary scrollable layer.
    * aResolution is the render resolution of the layer.
    * aIsRepeated should be true if this function has already been called during
@@ -243,18 +245,21 @@ private:
                                       const nsIntRegion& aOldValidRegion,
                                       nsIntRegion& aRegionToPaint,
                                       const gfx3DMatrix& aTransform,
+                                      const nsIntRect& aCompositionBounds,
                                       const gfx::Point& aScrollOffset,
                                       const gfxSize& aResolution,
                                       bool aIsRepeated);
 
   /**
    * Performs a progressive update of a given tiled buffer.
+   * See ComputeProgressiveUpdateRegion above for parameter documentation.
    */
   bool ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
                          nsIntRegion& aValidRegion,
                          nsIntRegion& aInvalidRegion,
                          const nsIntRegion& aOldValidRegion,
                          const gfx3DMatrix& aTransform,
+                         const nsIntRect& aCompositionBounds,
                          const gfx::Point& aScrollOffset,
                          const gfxSize& aResolution,
                          LayerManager::DrawThebesLayerCallback aCallback,
