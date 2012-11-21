@@ -583,12 +583,22 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     nsIntRegion lowPrecisionInvalidRegion;
     lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
 
+    // Remove the valid high-precision region from the invalid low-precision
+    // region. We don't want to spend time drawing things twice.
+    nsIntRegion invalidHighPrecisionIntersect;
+    invalidHighPrecisionIntersect.And(lowPrecisionInvalidRegion, mValidRegion);
+    lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, invalidHighPrecisionIntersect);
+
     if (!lowPrecisionInvalidRegion.IsEmpty()) {
       updatedLowPrecision =
         ProgressiveUpdate(mLowPrecisionTiledBuffer, mLowPrecisionValidRegion,
                           lowPrecisionInvalidRegion, oldValidRegion, transform,
                           scrollOffset, resolution, aCallback, aCallbackData);
     }
+
+    // Re-add the high-precision valid region intersection so that we can
+    // maintain coherency when the valid region changes.
+    lowPrecisionInvalidRegion.Or(lowPrecisionInvalidRegion, invalidHighPrecisionIntersect);
   } else if (!mLowPrecisionValidRegion.IsEmpty()) {
     // Clear the low precision tiled buffer
     clearedLowPrecision = true;
