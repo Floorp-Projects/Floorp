@@ -24,13 +24,13 @@ MOCHITEST_BROWSER_FILES = \
 	browser_library_search.js \
 	browser_history_sidebar_search.js \
 	browser_bookmarksProperties.js \
-	$(warning browser_forgetthissite_single.js temporarily disabled because of very frequent oranges, see bug 551540) \
+	$(filter disabled-for-very-frequent-oranges--bug-551540, browser_forgetthissite_single.js) \
 	browser_library_left_pane_commands.js \
 	browser_drag_bookmarks_on_toolbar.js \
 	browser_library_middleclick.js \
 	browser_library_views_liveupdate.js \
 	browser_views_liveupdate.js \
-	$(warning browser_sidebarpanels_click.js temporarily disabled cause it breaks the treeview, see bug 658744) \
+	$(filter temporarily-disabled-for-breaking-the-treeview--bug-658744, browser_sidebarpanels_click.js) \
 	sidebarpanels_click_test_page.html \
 	browser_library_infoBox.js \
 	browser_markPageAsFollowedLink.js \

@@ -156,67 +156,67 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(TestObserver, IPeerConnectionObserver)
 NS_IMETHODIMP
 TestObserver::OnCreateOfferSuccess(const char* offer)
 {
+  lastString = strdup(offer);
   state = stateSuccess;
   cout << "onCreateOfferSuccess = " << offer << endl;
-  lastString = strdup(offer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnCreateOfferError(uint32_t code)
 {
+  lastStatusCode = code;
   state = stateError;
   cout << "onCreateOfferError" << endl;
-  lastStatusCode = code;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnCreateAnswerSuccess(const char* answer)
 {
+  lastString = strdup(answer);
   state = stateSuccess;
   cout << "onCreateAnswerSuccess = " << answer << endl;
-  lastString = strdup(answer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnCreateAnswerError(uint32_t code)
 {
-  state = stateError;
   lastStatusCode = code;
+  state = stateError;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetLocalDescriptionSuccess(uint32_t code)
 {
-  state = stateSuccess;
   lastStatusCode = code;
+  state = stateSuccess;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetRemoteDescriptionSuccess(uint32_t code)
 {
-  state = stateSuccess;
   lastStatusCode = code;
+  state = stateSuccess;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetLocalDescriptionError(uint32_t code)
 {
-  state = stateError;
   lastStatusCode = code;
+  state = stateError;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetRemoteDescriptionError(uint32_t code)
 {
-  state = stateError;
   lastStatusCode = code;
+  state = stateError;
   return NS_OK;
 }
 
