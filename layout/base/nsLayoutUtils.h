@@ -79,6 +79,11 @@ public:
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
 
   /**
+   * Get the critical display port for the given element.
+   */
+  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
+
+  /**
    * Use heuristics to figure out the child list that
    * aChildFrame is currently in.
    */
