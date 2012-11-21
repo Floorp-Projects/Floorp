@@ -80,6 +80,7 @@ interface nsIDOMRTCPeerConnection : nsISupports
 
   /* Event handlers. TODO: Use real EventTarget */
   attribute RTCPeerConnectionCallback onaddstream;
+  attribute RTCPeerConnectionCallback onopen;
   attribute RTCPeerConnectionCallback onremovestream;
   attribute RTCPeerConnectionCallback onicecandidate;
   attribute RTCPeerConnectionCallback onstatechange;
