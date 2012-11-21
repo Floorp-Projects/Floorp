@@ -1269,6 +1269,10 @@ class Assembler
     static const uint32 * getPtr32Target(Iter *iter, Register *dest = NULL, RelocStyle *rs = NULL);
 
     bool oom() const;
+
+    void setPrinter(Sprinter *sp) {
+    }
+
   private:
     bool isFinished;
   public:

@@ -22,17 +22,8 @@
 #define ISPFX "        "
 #ifdef JS_METHODJIT_SPEW
 # define MAYBE_PAD (isOOLPath ? ">  " : "")
-# define PRETTY_PRINT_OFFSET(os) (((os)<0)?"-":""), (((os)<0)?-(os):(os))
-# define FIXME_INSN_PRINTING                                \
-    do {                                                    \
-        js::JaegerSpew(js::JSpew_Insns,                     \
-                       ISPFX "FIXME insn printing %s:%d\n", \
-                       __FILE__, __LINE__);                 \
-    } while (0)
 #else
 # define MAYBE_PAD ""
-# define FIXME_INSN_PRINTING ((void) 0)
-# define PRETTY_PRINT_OFFSET(os) "", 0
 #endif
 
 namespace JSC {
@@ -118,19 +109,12 @@ namespace JSC {
 
     } // namespace SparcRegisters
 
-    class SparcAssembler {
+    class SparcAssembler : public GenericAssembler {
     public:
         typedef SparcRegisters::RegisterID RegisterID;
         typedef SparcRegisters::FPRegisterID FPRegisterID;
         AssemblerBuffer m_buffer;
         bool oom() const { return m_buffer.oom(); }
-
-#ifdef JS_METHODJIT_SPEW
-        bool isOOLPath;
-        SparcAssembler() : isOOLPath(false) { }
-#else
-        SparcAssembler() { }
-#endif
 
         // Sparc conditional constants
         typedef enum {
