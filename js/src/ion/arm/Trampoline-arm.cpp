@@ -5,12 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ion/IonSpewer.h"
 #include "jscompartment.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
+#include "ion/IonSpewer.h"
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
 
