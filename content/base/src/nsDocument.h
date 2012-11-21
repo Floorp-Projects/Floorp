@@ -1053,7 +1053,7 @@ protected:
   nsresult SetFirstBaseNodeWithHref(nsIContent *node);
 
   inline void
-  SetDocumentDirectionality(mozilla::directionality::Directionality aDir)
+  SetDocumentDirectionality(mozilla::Directionality aDir)
   {
     mDirectionality = aDir;
   }
