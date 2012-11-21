@@ -1772,7 +1772,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsContentUtils::AddScriptRunner(
     NS_NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
 
-  bool reUseInnerWindow = aForceReuseInnerWindow || wouldReuseInnerWindow;
+  // Sometimes, WouldReuseInnerWindow() returns true even if there's no inner
+  // window (see bug 776497). Be safe.
+  bool reUseInnerWindow = (aForceReuseInnerWindow || wouldReuseInnerWindow) &&
+                          GetCurrentInnerWindowInternal();
 
   nsresult rv = NS_OK;
 

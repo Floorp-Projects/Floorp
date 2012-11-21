@@ -62,7 +62,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_bug391221.html \
 		test_bug397427.html \
 		test_bug399349.html \
-		$(warning test_bug401046.html is disabled for intermittent failures. Bug 701060) \
+		$(filter disabled-for-intermittent-failures--bug-701060, test_bug401046.html) \
 		test_bug405818.html \
 		test_bug412901.html \
 		test_bug437915.html \
