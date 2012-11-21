@@ -416,11 +416,7 @@ var gPluginHandler = {
   },
 
   reshowClickToPlayNotification: function PH_reshowClickToPlayNotification() {
-    if (!Services.prefs.getBoolPref("plugins.click_to_play"))
-      return;
-
     let browser = gBrowser.selectedBrowser;
-
     let pluginsPermission = Services.perms.testPermission(browser.currentURI, "plugins");
     if (pluginsPermission == Ci.nsIPermissionManager.DENY_ACTION)
       return;
