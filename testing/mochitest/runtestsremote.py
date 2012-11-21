@@ -497,6 +497,8 @@ def main():
             try:
                 dm.recordLogcat()
                 result = mochitest.runTests(options)
+                if result != 0:
+                    print "ERROR: runTests() exited with code %s" % result
                 # Ensure earlier failures aren't overwritten by success on this run
                 if retVal is None or retVal == 0:
                     retVal = result
