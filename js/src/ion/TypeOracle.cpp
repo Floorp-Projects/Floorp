@@ -556,7 +556,7 @@ bool
 TypeInferenceOracle::canEnterInlinedFunction(JSFunction *target)
 {
     AssertCanGC();
-    RootedScript script(cx, target->script());
+    RootedScript script(cx, target->nonLazyScript());
     if (!script->hasAnalysis() || !script->analysis()->ranInference())
         return false;
 

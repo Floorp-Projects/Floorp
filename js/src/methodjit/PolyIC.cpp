@@ -2217,7 +2217,7 @@ frameCountersOffset(VMFrame &f)
         uint32_t index = cx->regs().inlined()->inlineIndex;
         InlineFrame *frames = f.chunk()->inlineFrames();
         for (unsigned i = 0; i < index; i++)
-            offset += frames[i].fun->script()->length;
+            offset += frames[i].fun->nonLazyScript()->length;
     }
 
     jsbytecode *pc;
