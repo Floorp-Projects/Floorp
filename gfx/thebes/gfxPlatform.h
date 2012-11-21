@@ -405,6 +405,10 @@ public:
     // Break large OMTC tiled thebes layer painting into small paints.
     static bool UseProgressiveTilePainting();
 
+    // Retain some invalid tiles when the valid region of a layer changes and
+    // excludes previously valid tiles.
+    static bool UseReusableTileStore();
+
     static bool OffMainThreadCompositingEnabled();
 
     /**
