@@ -80,7 +80,9 @@ public:
 
   TiledTexture GetPlaceholderTile() const { return TiledTexture(); }
 
-  const gfxSize& GetResolution() { return mResolution; }
+  // Stores the absolute resolution of the containing frame, calculated
+  // by the sum of the resolutions of all parent layers' FrameMetrics.
+  const gfxSize& GetFrameResolution() { return mFrameResolution; }
 
 protected:
   TiledTexture ValidateTile(TiledTexture aTile,
@@ -96,7 +98,7 @@ protected:
 private:
   nsRefPtr<gl::GLContext> mContext;
   const BasicTiledLayerBuffer* mMainMemoryTiledBuffer;
-  gfxSize mResolution;
+  gfxSize mFrameResolution;
 
   void GetFormatAndTileForImageFormat(gfxASurface::gfxImageFormat aFormat,
                                       GLenum& aOutFormat,
