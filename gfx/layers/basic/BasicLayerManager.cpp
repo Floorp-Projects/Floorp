@@ -1311,10 +1311,12 @@ BasicShadowLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesCont
     const gfx3DMatrix& rootTransform = GetRoot()->GetTransform();
     float devPixelRatioX = 1 / rootTransform.GetXScale();
     float devPixelRatioY = 1 / rootTransform.GetYScale();
-    gfx::Rect displayPort((metrics.mDisplayPort.x + metrics.mScrollOffset.x) * devPixelRatioX,
-                          (metrics.mDisplayPort.y + metrics.mScrollOffset.y) * devPixelRatioY,
-                          metrics.mDisplayPort.width * devPixelRatioX,
-                          metrics.mDisplayPort.height * devPixelRatioY);
+    const gfx::Rect& metricsDisplayPort = metrics.mCriticalDisplayPort.IsEmpty() ?
+      metrics.mDisplayPort : metrics.mCriticalDisplayPort;
+    gfx::Rect displayPort((metricsDisplayPort.x + metrics.mScrollOffset.x) * devPixelRatioX,
+                          (metricsDisplayPort.y + metrics.mScrollOffset.y) * devPixelRatioY,
+                          metricsDisplayPort.width * devPixelRatioX,
+                          metricsDisplayPort.height * devPixelRatioY);
 
     return AndroidBridge::Bridge()->ProgressiveUpdateCallback(
       aHasPendingNewThebesContent, displayPort, devPixelRatioX,
