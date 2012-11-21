@@ -99,6 +99,7 @@ MOCHITEST_FILES = \
 		test_bug716822.html \
 		test_bug742376.html \
 		test_dragstart.html \
+		test_bug812744.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
