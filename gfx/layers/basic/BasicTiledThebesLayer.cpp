@@ -105,11 +105,15 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
     const nsIntRect bounds = aPaintRegion.GetBounds();
     {
       SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
-      mSinglePaintBuffer = new gfxImageSurface(gfxIntSize(bounds.width, bounds.height), GetFormat(), !aLayer->CanUseOpaqueSurface());
+      mSinglePaintBuffer = new gfxImageSurface(
+        gfxIntSize(ceilf(bounds.width * mResolution),
+                   ceilf(bounds.height * mResolution)),
+        GetFormat(), !aLayer->CanUseOpaqueSurface());
       mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
     }
     nsRefPtr<gfxContext> ctxt = new gfxContext(mSinglePaintBuffer);
     ctxt->NewPath();
+    ctxt->Scale(mResolution, mResolution);
     ctxt->Translate(gfxPoint(-bounds.x, -bounds.y));
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
     if (PR_IntervalNow() - start > 3) {
@@ -165,9 +169,6 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
     aTile = BasicTiledLayerTile(tmpTile);
   }
 
-  gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
-                   aDirtyRect.width, aDirtyRect.height);
-
   // Use the gfxReusableSurfaceWrapper, which will reuse the surface
   // if the compositor no longer has a read lock, otherwise the surface
   // will be copied into a new writable surface.
@@ -176,23 +177,35 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 
   // Bug 742100, this gfxContext really should live on the stack.
   nsRefPtr<gfxContext> ctxt = new gfxContext(writableSurface);
+
   if (mSinglePaintBuffer) {
+    gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
+                     aDirtyRect.width, aDirtyRect.height);
+
     ctxt->SetOperator(gfxContext::OPERATOR_SOURCE);
     ctxt->NewPath();
     ctxt->SetSource(mSinglePaintBuffer.get(),
-                    gfxPoint(mSinglePaintBufferOffset.x - aDirtyRect.x + drawRect.x,
-                             mSinglePaintBufferOffset.y - aDirtyRect.y + drawRect.y));
+                    gfxPoint((mSinglePaintBufferOffset.x - aDirtyRect.x + drawRect.x) *
+                             mResolution,
+                             (mSinglePaintBufferOffset.y - aDirtyRect.y + drawRect.y) *
+                             mResolution));
+    drawRect.Scale(mResolution, mResolution);
     ctxt->Rectangle(drawRect, true);
     ctxt->Fill();
   } else {
     ctxt->NewPath();
+    ctxt->Scale(mResolution, mResolution);
     ctxt->Translate(gfxPoint(-aTileOrigin.x, -aTileOrigin.y));
-    nsIntPoint a = aTileOrigin;
-    mCallback(mThebesLayer, ctxt, nsIntRegion(nsIntRect(a, nsIntSize(GetTileLength(), GetTileLength()))), nsIntRegion(), mCallbackData);
+    nsIntPoint a = nsIntPoint(aTileOrigin.x, aTileOrigin.y);
+    mCallback(mThebesLayer, ctxt,
+              nsIntRegion(nsIntRect(a, nsIntSize(GetScaledTileLength(),
+                                                 GetScaledTileLength()))),
+              nsIntRegion(), mCallbackData);
   }
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
-  DrawDebugOverlay(writableSurface, aTileOrigin.x, aTileOrigin.y);
+  DrawDebugOverlay(writableSurface, aTileOrigin.x * mResolution,
+                   aTileOrigin.y * mResolution);
 #endif
 
   return aTile;
@@ -303,26 +316,25 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
   nsIntRect paintBounds = aRegionToPaint.GetBounds();
 
   int startX, incX, startY, incY;
+  int tileLength = mTiledBuffer.GetScaledTileLength();
   if (aScrollOffset.x >= mLastScrollOffset.x) {
     startX = mTiledBuffer.RoundDownToTileEdge(paintBounds.x);
-    incX = mTiledBuffer.GetTileLength();
+    incX = tileLength;
   } else {
     startX = mTiledBuffer.RoundDownToTileEdge(paintBounds.XMost() - 1);
-    incX = -mTiledBuffer.GetTileLength();
+    incX = -tileLength;
   }
 
   if (aScrollOffset.y >= mLastScrollOffset.y) {
     startY = mTiledBuffer.RoundDownToTileEdge(paintBounds.y);
-    incY = mTiledBuffer.GetTileLength();
+    incY = tileLength;
   } else {
     startY = mTiledBuffer.RoundDownToTileEdge(paintBounds.YMost() - 1);
-    incY = -mTiledBuffer.GetTileLength();
+    incY = -tileLength;
   }
 
   // Find a tile to draw.
-  nsIntRect tileBounds(startX, startY,
-                       mTiledBuffer.GetTileLength(),
-                       mTiledBuffer.GetTileLength());
+  nsIntRect tileBounds(startX, startY, tileLength, tileLength);
   int32_t scrollDiffX = aScrollOffset.x - mLastScrollOffset.x;
   int32_t scrollDiffY = aScrollOffset.y - mLastScrollOffset.y;
   // This loop will always terminate, as there is at least one tile area
@@ -429,7 +441,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   // Only draw progressively when the resolution is unchanged.
   if (gfxPlatform::UseProgressiveTilePainting() &&
       !BasicManager()->HasShadowTarget() &&
-      mTiledBuffer.GetResolution() == resolution) {
+      mTiledBuffer.GetFrameResolution() == resolution) {
     // Store the old valid region, then clear it before painting.
     // We clip the old valid region to the visible region, as it only gets
     // used to decide stale content (currently valid and previously visible)
@@ -495,7 +507,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     } while (repeat);
   } else {
     mTiledBuffer.ClearPaintedRegion();
-    mTiledBuffer.SetResolution(resolution);
+    mTiledBuffer.SetFrameResolution(resolution);
     mValidRegion = mVisibleRegion;
     if (!layerDisplayPort.IsEmpty()) {
       mValidRegion.And(mValidRegion, layerDisplayPort);

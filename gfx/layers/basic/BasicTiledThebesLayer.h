@@ -107,8 +107,8 @@ public:
     }
   }
 
-  const gfxSize& GetResolution() { return mResolution; }
-  void SetResolution(const gfxSize& aResolution) { mResolution = aResolution; }
+  const gfxSize& GetFrameResolution() { return mFrameResolution; }
+  void SetFrameResolution(const gfxSize& aResolution) { mFrameResolution = aResolution; }
 
   bool HasFormatChanged(BasicTiledThebesLayer* aThebesLayer) const;
 protected:
@@ -133,7 +133,7 @@ private:
   BasicTiledThebesLayer* mThebesLayer;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
-  gfxSize mResolution;
+  gfxSize mFrameResolution;
   bool mLastPaintOpaque;
 
   // The buffer we use when UseSinglePaintBuffer() above is true.
