@@ -33,7 +33,7 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         cond = Assembler::GreaterThan;
         break;
       default:
-        JS_ASSERT(!"Unhandled op for ICCompare_Int32!");
+        JS_NOT_REACHED("Unhandled op for ICCompare_Int32.");
         return false;
     }
 
@@ -71,22 +71,47 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     // Add R0 and R1.  Don't need to explicitly unbox, just use R2's payloadReg.
     Register scratchReg = R2.payloadReg();
 
-    switch(op) {
+    switch(op_) {
       case JSOP_ADD:
         masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg);
+
+        // Just jump to failure on overflow.  R0 and R1 are preserved, so we can just jump to
+        // the next stub.
+        masm.j(Assembler::Overflow, &failure);
+
+        // Box the result and return.  We know R0.typeReg() already contains the integer
+        // tag, so we just need to move the result value into place.
+        masm.movePtr(scratchReg, R0.payloadReg());
         break;
+      case JSOP_BITOR:
+        masm.ma_orr(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
+        break;
+      case JSOP_BITXOR:
+        masm.ma_eor(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
+        break;
+      case JSOP_BITAND:
+        masm.ma_and(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
+        break;
+      case JSOP_LSH:
+        // ARM will happily try to shift by more than 0x1f.
+        masm.ma_and(Imm32(0x1F), R1.payloadReg(), R1.payloadReg());
+        masm.ma_lsl(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
+        break;
+      case JSOP_RSH:
+        masm.ma_and(Imm32(0x1F), R1.payloadReg(), R1.payloadReg());
+        masm.ma_asr(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
+      case JSOP_URSH:
+        masm.ma_and(Imm32(0x1F), R1.payloadReg(), scratchReg);
+        masm.ma_lsr(scratchReg, R0.payloadReg(), scratchReg);
+        masm.ma_cmp(scratchReg, Imm32(0));
+        masm.j(Assembler::LessThan, &failure);
+        // Move result for return.
+        masm.movePtr(scratchReg, R0.payloadReg());
       default:
-        JS_ASSERT(!"Unhandled op for BinaryArith_Int32!");
+        JS_NOT_REACHED("Unhandled op for BinaryArith_Int32.");
         return false;
     }
 
-    // Just jump to failure on overflow.  R0 and R1 are preserved, so we can just jump to
-    // the next stub.
-    masm.j(Assembler::Overflow, &failure);
-
-    // Box the result and return.  We know R0.typeReg() already contains the integer
-    // tag, so we just need to move the result value into place.
-    masm.movePtr(scratchReg, R0.payloadReg());
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub

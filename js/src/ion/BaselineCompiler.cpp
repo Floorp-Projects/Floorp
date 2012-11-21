@@ -480,7 +480,49 @@ BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
 }
 
 bool
+BaselineCompiler::emit_JSOP_BITOR()
+{
+    return emitBinaryArith();
+}
+
+bool
+BaselineCompiler::emit_JSOP_BITXOR()
+{
+    return emitBinaryArith();
+}
+
+bool
+BaselineCompiler::emit_JSOP_BITAND()
+{
+    return emitBinaryArith();
+}
+
+bool
+BaselineCompiler::emit_JSOP_LSH()
+{
+    return emitBinaryArith();
+}
+
+bool
+BaselineCompiler::emit_JSOP_RSH()
+{
+    return emitBinaryArith();
+}
+
+bool
+BaselineCompiler::emit_JSOP_URSH()
+{
+    return emitBinaryArith();
+}
+
+bool
 BaselineCompiler::emit_JSOP_ADD()
+{
+    return emitBinaryArith();
+}
+
+bool
+BaselineCompiler::emitBinaryArith()
 {
     // Allocate IC entry and stub.
     ICBinaryArith_Fallback::Compiler stubCompiler(cx);
@@ -488,8 +530,6 @@ BaselineCompiler::emit_JSOP_ADD()
     if (!entry)
         return false;
 
-    // CODEGEN
-    
     // Keep top JSStack value in R0 and R2
     frame.popRegsAndSync(2);
 
