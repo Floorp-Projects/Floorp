@@ -424,7 +424,7 @@ class ICMultiStubCompiler : public ICStubCompiler
       : ICStubCompiler(cx, kind), op(op) {}
 };
 
-// Compare - shared fallback stub for:
+// Compare
 //      JSOP_LT
 //      JSOP_GT
 
@@ -480,7 +480,7 @@ class ICCompare_Int32 : public ICFallbackStub
     };
 };
 
-// ToBool_Fallback - shared fallback stub for:
+// ToBool
 //      JSOP_IFNE
 
 class ICToBool_Fallback : public ICFallbackStub
@@ -535,7 +535,7 @@ class ICToBool_Bool : public ICStub
     };
 };
 
-// ToNumber_Fallback - shared fallback stub for:
+// ToNumber
 //     JSOP_POS
 
 class ICToNumber_Fallback : public ICFallbackStub
@@ -563,7 +563,7 @@ class ICToNumber_Fallback : public ICFallbackStub
     };
 };
 
-// BinaryArith_Fallback - shared fallback stub for:
+// BinaryArith
 //      JSOP_ADD
 
 class ICBinaryArith_Fallback : public ICFallbackStub
@@ -618,6 +618,9 @@ class ICBinaryArith_Int32 : public ICStub
     };
 };
 
+// GetElem
+//      JSOP_GETELEM
+
 class ICGetElem_Fallback : public ICFallbackStub
 {
     ICGetElem_Fallback(IonCode *stubCode)
@@ -671,6 +674,9 @@ class ICGetElem_Dense : public ICStub
     };
 };
 
+// SetElem
+//      JSOP_SETELEM
+
 class ICSetElem_Fallback : public ICFallbackStub
 {
     ICSetElem_Fallback(IonCode *stubCode)
@@ -723,6 +729,12 @@ class ICSetElem_Dense : public ICStub
         }
     };
 };
+
+// Call
+//      JSOP_CALL
+//      JSOP_FUNAPPLY
+//      JSOP_FUNCALL
+//      JSOP_NEW
 
 class ICCallStubCompiler : public ICStubCompiler
 {
