@@ -35,6 +35,9 @@ static const ValueOperand R2(r1, r0);
 static const Register BaselineTailCallReg = r14;
 static const Register BaselineStubReg     = r9;
 
+static const Register ExtractTemp0        = InvalidReg;
+static const Register ExtractTemp1        = InvalidReg;
+
 // R6 - R9 are generally available for use within stubcode.
 
 // Note that BaselineTailCallReg is actually just the link

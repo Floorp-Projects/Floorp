@@ -25,6 +25,9 @@ static const ValueOperand R2(rax);
 static const Register BaselineTailCallReg = rsi;
 static const Register BaselineStubReg     = rdi;
 
+static const Register ExtractTemp0        = r14;
+static const Register ExtractTemp1        = r15;
+
 } // namespace ion
 } // namespace js
 

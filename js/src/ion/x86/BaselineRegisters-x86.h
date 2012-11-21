@@ -26,6 +26,8 @@ static const ValueOperand R2(esi, edi);
 static const Register BaselineTailCallReg = esi;
 static const Register BaselineStubReg     = edi;
 
+static const Register ExtractTemp0        = InvalidReg;
+static const Register ExtractTemp1        = InvalidReg;
 
 } // namespace ion
 } // namespace js
