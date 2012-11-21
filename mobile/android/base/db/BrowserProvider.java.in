@@ -2717,7 +2717,7 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
-    private void updateFaviconIdsForUrl(SQLiteDatabase db, String pageUrl, long faviconId) {
+    private void updateFaviconIdsForUrl(SQLiteDatabase db, String pageUrl, Long faviconId) {
         ContentValues updateValues = new ContentValues(1);
         updateValues.put(FaviconColumns.FAVICON_ID, faviconId);
         db.update(TABLE_HISTORY,

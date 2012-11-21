@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsError.h"
-#include "MediaDecoder.h"
+#include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
 #include "WaveReader.h"
 #include "nsTimeRanges.h"
@@ -104,7 +104,7 @@ namespace {
   }
 }
 
-WaveReader::WaveReader(MediaDecoder* aDecoder)
+WaveReader::WaveReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
 {
   MOZ_COUNT_CTOR(WaveReader);
@@ -141,7 +141,7 @@ nsresult WaveReader::ReadMetadata(nsVideoInfo* aInfo,
 
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  mDecoder->GetStateMachine()->SetDuration(
+  mDecoder->SetMediaDuration(
     static_cast<int64_t>(BytesToTime(GetDataLength()) * USECS_PER_S));
 
   return NS_OK;

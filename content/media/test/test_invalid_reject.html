@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Test rejection of invalid files</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  manager.started(token);
+
+  // Set up event handlers. Seeing any of these is a failure.
+  function badEvent(type) { return function(e) {
+    ok(false, test.name + " should not fire '" + type + "' event");
+  }};
+  var events = [
+      'loadedmetadata', 'load',
+      'canplay', 'canplaythrough',
+      'playing'
+  ];
+  events.forEach( function(e) {
+    v.addEventListener(e, badEvent(e));
+  });
+
+  // Seeing a decoder error is a success.
+  v.addEventListener("error", function(e) {
+    is(v.error.code, v.error.MEDIA_ERR_DECODE,
+      "decoder should reject " + test.name);
+    manager.finished(token);
+  });
+
+  // Now try to load and play the file, which should result in the
+  // error event handler above being called, terminating the test.
+  document.body.appendChild(v);
+  v.src = test.name;
+  v.play();
+}
+
+manager.runTests(gInvalidTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

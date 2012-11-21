@@ -1635,6 +1635,18 @@
     "n_buckets": 10,
     "description": "Total Time spent (ms) during disk cache revalidation"
   },
+  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent in nsDiskCacheOutputStream::Close() on non-main thread (ms)"
+  },
+  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)"
+  },
   "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL": {
     "kind": "exponential",
     "high": "10000",
@@ -1820,6 +1832,13 @@
     "high": "500",
     "n_buckets": 10,
     "description": "PLACES: Time for first autocomplete result if > 50ms (ms)"
+  },
+  "PLACES_AUTOCOMPLETE_URLINLINE_DOMAIN_QUERY_TIME_MS": {
+    "kind": "exponential",
+    "low": 50,
+    "high": 2000,
+    "n_buckets": 10,
+    "description": "PLACES: Duration of the domain query for the url inline autocompletion (ms)"
   },
   "PLACES_IDLE_FRECENCY_DECAY_TIME_MS": {
     "kind": "exponential",

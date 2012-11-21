@@ -6,7 +6,7 @@
 #define MOZILLA_IMAGELIB_ENDIAN_H_
 
 
-#if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
+#if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN || defined __BIG_ENDIAN__
 // We must ensure that the entity is unsigned
 // otherwise, if it is signed/negative, the MSB will be
 // propagated when we shift

@@ -193,6 +193,7 @@ destroying the MediaDecoder object.
 #include "MediaStreamGraph.h"
 #include "MediaDecoderOwner.h"
 #include "AudioChannelCommon.h"
+#include "AbstractMediaDecoder.h"
 
 class nsIStreamListener;
 class nsTimeRanges;
@@ -227,7 +228,8 @@ static inline bool IsCurrentThread(nsIThread* aThread) {
   return NS_GetCurrentThread() == aThread;
 }
 
-class MediaDecoder : public nsIObserver
+class MediaDecoder : public nsIObserver,
+                     public AbstractMediaDecoder
 {
 public:
   typedef mozilla::layers::Image Image;
@@ -288,7 +290,10 @@ public:
 
   // Get the current MediaResource being used. Its URI will be returned
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.
-  virtual MediaResource* GetResource() { return mResource; }
+  MediaResource* GetResource() const MOZ_FINAL MOZ_OVERRIDE
+  {
+    return mResource;
+  }
 
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
@@ -435,6 +440,9 @@ public:
   // Return the duration of the video in seconds.
   virtual double GetDuration();
 
+  // Return the duration of the video in seconds.
+  int64_t GetMediaDuration() MOZ_FINAL MOZ_OVERRIDE;
+
   // A media stream is assumed to be infinite if the metadata doesn't
   // contain the duration, and range requests are not supported, and
   // no headers give a hint of a possible duration (Content-Length,
@@ -473,7 +481,9 @@ public:
 
   // Called by the decode thread to keep track of the number of bytes read
   // from the resource.
-  void NotifyBytesConsumed(int64_t aBytes);
+  void NotifyBytesConsumed(int64_t aBytes) MOZ_FINAL MOZ_OVERRIDE;
+
+  int64_t GetEndMediaTime() const MOZ_FINAL MOZ_OVERRIDE;
 
   // Return true if we are currently seeking in the media resource.
   // Call on the main thread only.
@@ -488,18 +498,24 @@ public:
   // from a content header. Must be called from the main thread only.
   virtual void SetDuration(double aDuration);
 
+  void SetMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
+
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(bool aSeekable);
 
   // Return true if seeking is supported.
   virtual bool IsSeekable();
+  bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
 
   // Return the time ranges that can be seeked into.
   virtual nsresult GetSeekable(nsTimeRanges* aSeekable);
 
   // Set the end time of the media resource. When playback reaches
   // this point the media pauses. aTime is in seconds.
-  virtual void SetEndTime(double aTime);
+  virtual void SetFragmentEndTime(double aTime);
+
+  // Set the end time of the media. aTime is in microseconds.
+  void SetMediaEndTime(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
 
   // Invalidate the frame.
   void Invalidate();
@@ -539,13 +555,16 @@ public:
   // has changed.
   void DurationChanged();
 
-  virtual bool OnStateMachineThread() const;
+  bool OnStateMachineThread() const MOZ_OVERRIDE;
 
-  virtual bool OnDecodeThread() const;
+  bool OnDecodeThread() const MOZ_OVERRIDE;
 
   // Returns the monitor for other threads to synchronise access to
   // state.
-  virtual ReentrantMonitor& GetReentrantMonitor();
+  ReentrantMonitor& GetReentrantMonitor() MOZ_OVERRIDE;
+
+  // Returns true if the decoder is shut down
+  bool IsShutdown() const MOZ_FINAL MOZ_OVERRIDE;
 
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
@@ -556,8 +575,11 @@ public:
   virtual int64_t VideoQueueMemoryInUse();
   virtual int64_t AudioQueueMemoryInUse();
 
-  VideoFrameContainer* GetVideoFrameContainer() { return mVideoFrameContainer; }
-  virtual mozilla::layers::ImageContainer* GetImageContainer();
+  VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE
+  {
+    return mVideoFrameContainer;
+  }
+  mozilla::layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.
   // The new size must be between 512 and 16384.
@@ -603,7 +625,7 @@ public:
   // the reader on the decoder thread (Assertions for this checked by
   // mDecoderStateMachine). This must be called with the decode monitor
   // held.
-  void UpdatePlaybackPosition(int64_t aTime);
+  void UpdatePlaybackPosition(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
 
   void SetAudioChannelType(AudioChannelType aType) { mAudioChannelType = aType; }
   AudioChannelType GetAudioChannelType() { return mAudioChannelType; }
@@ -620,7 +642,7 @@ public:
 
   // Called when the metadata from the media file has been read by the reader.
   // Call on the decode thread only.
-  virtual void OnReadMetadataCompleted() { }
+  void OnReadMetadataCompleted() MOZ_OVERRIDE { }
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
@@ -673,7 +695,7 @@ public:
   void UpdatePlaybackOffset(int64_t aOffset);
 
   // Provide access to the state machine object
-  MediaDecoderStateMachine* GetStateMachine();
+  MediaDecoderStateMachine* GetStateMachine() const;
 
   // Drop reference to state machine.  Only called during shutdown dance.
   virtual void ReleaseStateMachine();
@@ -823,24 +845,15 @@ public:
     uint32_t mPresentedFrames;
   };
 
-  // Stack based class to assist in notifying the frame statistics of
-  // parsed and decoded frames. Use inside video demux & decode functions
-  // to ensure all parsed and decoded frames are reported on all return paths.
-  class AutoNotifyDecoded {
-  public:
-    AutoNotifyDecoded(MediaDecoder* aDecoder, uint32_t& aParsed, uint32_t& aDecoded)
-      : mDecoder(aDecoder), mParsed(aParsed), mDecoded(aDecoded) {}
-    ~AutoNotifyDecoded() {
-      mDecoder->GetFrameStatistics().NotifyDecodedFrames(mParsed, mDecoded);
-    }
-  private:
-    MediaDecoder* mDecoder;
-    uint32_t& mParsed;
-    uint32_t& mDecoded;
-  };
-
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return mFrameStats; }
+
+  // Increments the parsed and decoded frame counters by the passed in counts.
+  // Can be called on any thread.
+  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_FINAL MOZ_OVERRIDE
+  {
+    GetFrameStatistics().NotifyDecodedFrames(aParsed, aDecoded);
+  }
 
   /******
    * The following members should be accessed with the decoder lock held.

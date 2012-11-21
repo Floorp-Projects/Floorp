@@ -98,5 +98,4 @@ extern char const *nodeTypeNames[];
 
 } /* namespace js */
 
-
 #endif /* jsreflect_h___ */

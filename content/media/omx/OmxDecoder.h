@@ -8,7 +8,7 @@
 #include "GonkIOSurfaceImage.h"
 #include "MPAPI.h"
 #include "MediaResource.h"
-#include "MediaDecoder.h"
+#include "AbstractMediaDecoder.h"
 
 namespace mozilla {
 namespace layers {
@@ -31,13 +31,13 @@ namespace android {
 // MediaStreamSource is a DataSource that reads from a MPAPI media stream.
 class MediaStreamSource : public DataSource {
   typedef mozilla::MediaResource MediaResource;
-  typedef mozilla::MediaDecoder MediaDecoder;
+  typedef mozilla::AbstractMediaDecoder AbstractMediaDecoder;
 
   MediaResource *mResource;
-  MediaDecoder *mDecoder;
+  AbstractMediaDecoder *mDecoder;
 public:
   MediaStreamSource(MediaResource *aResource,
-                    MediaDecoder *aDecoder);
+                    AbstractMediaDecoder *aDecoder);
 
   virtual status_t initCheck() const;
   virtual ssize_t readAt(off64_t offset, void *data, size_t size);
@@ -66,13 +66,13 @@ class OmxDecoder {
   typedef MPAPI::AudioFrame AudioFrame;
   typedef MPAPI::VideoFrame VideoFrame;
   typedef mozilla::MediaResource MediaResource;
-  typedef mozilla::MediaDecoder MediaDecoder;
+  typedef mozilla::AbstractMediaDecoder AbstractMediaDecoder;
 
   enum {
     kPreferSoftwareCodecs = 1
   };
 
-  MediaDecoder *mDecoder;
+  AbstractMediaDecoder *mDecoder;
   MediaResource *mResource;
   sp<GonkNativeWindow> mNativeWindow;
   sp<MediaSource> mVideoTrack;
@@ -110,7 +110,7 @@ class OmxDecoder {
   bool ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, size_t aDataOffset, size_t aSize,
                     int32_t aAudioChannels, int32_t aAudioSampleRate);
 public:
-  OmxDecoder(MediaResource *aResource, MediaDecoder *aDecoder);
+  OmxDecoder(MediaResource *aResource, AbstractMediaDecoder *aDecoder);
   ~OmxDecoder();
 
   bool Init();

@@ -68,7 +68,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_scripts-searching-popup.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_update-editor-mode.js \
-	$(warning browser_dbg_select-line.js temporarily disabled due to oranges, see bug 726609) \
+	$(filter temporarily-disabled-due-to-oranges--bug-726609, browser_dbg_select-line.js) \
 	browser_dbg_clean-exit.js \
 	browser_dbg_bug723069_editor-breakpoints.js \
 	browser_dbg_bug723071_editor-breakpoints-pane.js \
@@ -88,10 +88,9 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_bug737803_editor_actual_location.js \
 	browser_dbg_progress-listener-bug.js \
 	browser_dbg_chrome-debugging.js \
+	$(filter disabled-for-intermittent-failures--bug-753225, browser_dbg_createRemote.js) \
 	head.js \
 	$(NULL)
-
-$(warning browser_dbg_createRemote.js is disabled for intermittent failures. Bug 753225)
 
 MOCHITEST_BROWSER_PAGES = \
 	browser_dbg_tab1.html \

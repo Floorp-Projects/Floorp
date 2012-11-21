@@ -442,7 +442,7 @@ def main(args):
         if options.bootstrap:
             cmdlineArgs = []
         dm.recordLogcat()
-        reftest.runTests(manifest, options, cmdlineArgs)
+        retVal = reftest.runTests(manifest, options, cmdlineArgs)
     except:
         print "Automation Error: Exception caught while running tests"
         traceback.print_exc()

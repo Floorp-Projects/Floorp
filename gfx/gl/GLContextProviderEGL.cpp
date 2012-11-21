@@ -2606,7 +2606,8 @@ GLContextProviderEGL::GetGlobalContext(const ContextFlags)
 {
 // Don't want a global context on Android as 1) share groups across 2 threads fail on many Tegra drivers (bug 759225)
 // and 2) some mobile devices have a very strict limit on global number of GL contexts (bug 754257)
-#ifdef MOZ_ANDROID_OMTC
+// and 3) each EGL context eats 750k on B2G (bug 813783)
+#ifdef ANDROID
     return nullptr;
 #endif
 

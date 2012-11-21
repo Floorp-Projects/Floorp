@@ -151,12 +151,6 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
-ifdef MOZ_SOUNDTOUCH
-tier_platform_dirs += \
-		media/libsoundtouch \
-		$(NULL)
-endif
-
 ifdef MOZ_CUBEB
 tier_platform_dirs += \
 		media/libcubeb \
@@ -307,9 +301,7 @@ tier_platform_dirs += testing/tools/screenshot
 tier_platform_dirs += testing/peptest
 tier_platform_dirs += testing/mozbase
 ifdef MOZ_WEBRTC
-ifdef MOZ_WEBRTC_TESTS
 tier_platform_dirs += media/webrtc/signaling/test
 tier_platform_dirs += media/mtransport/test
-endif
 endif
 endif

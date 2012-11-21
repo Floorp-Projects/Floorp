@@ -14,7 +14,7 @@ function test() {
   var newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("PluginNotFound", pluginNotFound, true);
+  gTestBrowser.addEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
   var consoleService = Cc["@mozilla.org/consoleservice;1"]
                          .getService(Ci.nsIConsoleService);
   var errorListener = {
@@ -25,7 +25,7 @@ function test() {
   };
   consoleService.registerListener(errorListener);
   registerCleanupFunction(function() {
-    gTestBrowser.removeEventListener("PluginNotFound", pluginNotFound, true);
+    gTestBrowser.removeEventListener("PluginBindingAttached", pluginBindingAttached, true);
     consoleService.unregisterListener(errorListener);
     gBrowser.removeCurrentTab();
     window.focus();
@@ -33,7 +33,7 @@ function test() {
   gTestBrowser.contentWindow.location = gHttpTestRoot + "plugin_bug797677.html";
 }
 
-function pluginNotFound() {
+function pluginBindingAttached() {
   // Let browser-plugins.js handle the PluginNotFound event, then run the test
   executeSoon(runTest);
 }

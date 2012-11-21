@@ -6,7 +6,7 @@
 
 #include "GonkIOSurfaceImage.h"
 #include "MediaDecoderReader.h"
-#include "MediaDecoder.h"
+#include "AbstractMediaDecoder.h"
 #include "MediaDecoderStateMachine.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
@@ -321,7 +321,7 @@ void* MediaDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
   return nullptr;
 }
 
-MediaDecoderReader::MediaDecoderReader(MediaDecoder* aDecoder)
+MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   : mDecoder(aDecoder)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
@@ -349,7 +349,7 @@ VideoData* MediaDecoderReader::DecodeToFirstVideoData()
   while (!eof && mVideoQueue.GetSize() == 0) {
     {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetStateMachine()->IsShutdown()) {
+      if (mDecoder->IsShutdown()) {
         return nullptr;
       }
     }
@@ -366,7 +366,7 @@ AudioData* MediaDecoderReader::DecodeToFirstAudioData()
   while (!eof && mAudioQueue.GetSize() == 0) {
     {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetStateMachine()->IsShutdown()) {
+      if (mDecoder->IsShutdown()) {
         return nullptr;
       }
     }
@@ -421,7 +421,7 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
         eof = !DecodeVideoFrame(skip, 0);
         {
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-          if (mDecoder->GetStateMachine()->IsShutdown()) {
+          if (mDecoder->IsShutdown()) {
             return NS_ERROR_FAILURE;
           }
         }
@@ -448,7 +448,7 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
     }
     {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetStateMachine()->IsShutdown()) {
+      if (mDecoder->IsShutdown()) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -463,7 +463,7 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
         eof = !DecodeAudioData();
         {
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-          if (mDecoder->GetStateMachine()->IsShutdown()) {
+          if (mDecoder->IsShutdown()) {
             return NS_ERROR_FAILURE;
           }
         }
