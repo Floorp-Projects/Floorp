@@ -289,7 +289,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(e28a33ce-dfe9-4816-ae20-0f1dc8077230)]
+[uuid(b551afea-f38c-46d4-bc93-f1e05aebfec2)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -519,7 +519,7 @@ interface nsIXPConnect : nsISupports
     setFunctionThisTranslator(in nsIIDRef aIID,
                               in nsIXPCFunctionThisTranslator aTranslator);
 
-    nsIXPConnectJSObjectHolder
+    void
     reparentWrappedNativeIfFound(in JSContextPtr aJSContext,
                                  in JSObjectPtr  aScope,
                                  in JSObjectPtr  aNewParent,
