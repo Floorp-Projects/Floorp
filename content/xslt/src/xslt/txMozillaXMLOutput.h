@@ -74,8 +74,7 @@ public:
     nsresult closePrevious(bool aFlushText);
 
     nsresult createResultDocument(const nsSubstring& aName, int32_t aNsID,
-                                  nsIDOMDocument* aSourceDocument,
-                                  bool aLoadedAsData);
+                                  nsIDOMDocument* aSourceDocument);
 
 private:
     nsresult createTxWrapper();
