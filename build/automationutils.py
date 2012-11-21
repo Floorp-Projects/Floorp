@@ -146,7 +146,6 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
   if len(dumps) == 0:
     return False
 
-  foundCrash = False
   removeSymbolsPath = False
 
   # If our symbols are at a remote URL, download them now
@@ -198,12 +197,11 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
       extra = os.path.splitext(d)[0] + ".extra"
       if os.path.exists(extra):
         os.remove(extra)
-      foundCrash = True
   finally:
     if removeSymbolsPath:
       shutil.rmtree(symbolsPath)
 
-  return foundCrash
+  return True
 
 def getFullPath(directory, path):
   "Get an absolute path relative to 'directory'."

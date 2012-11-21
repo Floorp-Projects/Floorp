@@ -81,6 +81,7 @@ MOCHITEST_FILES = \
 		test_delay_load.html \
 		test_error_on_404.html \
 		test_info_leak.html \
+		test_invalid_reject.html \
 		test_load.html \
 		test_load_candidates.html \
 		test_load_same_resource.html \
@@ -246,6 +247,16 @@ MOCHITEST_FILES += \
 # Other files
 MOCHITEST_FILES += \
 		bogus.duh \
+		invalid-m0c0.opus \
+		invalid-m0c3.opus \
+		invalid-m1c0.opus \
+		invalid-m1c9.opus \
+		invalid-m2c0.opus \
+		invalid-m2c1.opus \
+		invalid-cmap-short.opus \
+		invalid-cmap-s0c0.opus \
+		invalid-cmap-s0c2.opus \
+		invalid-cmap-s1c2.opus \
 		$(NULL)
 
 # These tests contain backend-specific tests. Try to write backend

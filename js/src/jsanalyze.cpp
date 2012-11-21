@@ -13,9 +13,8 @@
 #include "jsobjinlines.h"
 
 using mozilla::DebugOnly;
-
-namespace js {
-namespace analyze {
+using namespace js;
+using namespace js::analyze;
 
 /////////////////////////////////////////////////////////////////////
 // Bytecode
@@ -23,7 +22,7 @@ namespace analyze {
 
 #ifdef DEBUG
 void
-PrintBytecode(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
+analyze::PrintBytecode(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
 {
     RootedScript script(cx, scriptArg);
 
@@ -36,7 +35,7 @@ PrintBytecode(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
 }
 #endif
 
-inline bool
+static inline bool
 IsJumpOpcode(JSOp op)
 {
     uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
@@ -2129,6 +2128,3 @@ ScriptAnalysis::assertMatchingDebugMode()
 }
 
 #endif  /* DEBUG */
-
-} /* namespace analyze */
-} /* namespace js */

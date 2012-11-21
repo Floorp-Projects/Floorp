@@ -266,6 +266,9 @@ struct WeakMapTracer {
 extern JS_FRIEND_API(void)
 TraceWeakMaps(WeakMapTracer *trc);
 
+extern JS_FRIEND_API(bool)
+GCThingIsMarkedGray(void *thing);
+
 JS_FRIEND_API(void)
 UnmarkGrayGCThing(void *thing);
 
@@ -881,6 +884,12 @@ IsIncrementalBarrierNeeded(JSRuntime *rt);
 
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSContext *cx);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeededOnObject(RawObject obj);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeededOnScript(JSScript *obj);
 
 extern JS_FRIEND_API(void)
 IncrementalReferenceBarrier(void *ptr);
