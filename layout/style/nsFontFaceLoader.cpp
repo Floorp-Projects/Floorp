@@ -385,12 +385,12 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
       new nsCORSListenerProxy(streamLoader, principal,
                               false);
     rv = listener->Init(channel);
+    if (NS_SUCCEEDED(rv)) {
+      rv = channel->AsyncOpen(listener, nullptr);
+    }
     if (NS_FAILED(rv)) {
       fontLoader->DropChannel();  // explicitly need to break ref cycle
     }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = channel->AsyncOpen(listener, nullptr);
   }
 
   if (NS_SUCCEEDED(rv)) {
