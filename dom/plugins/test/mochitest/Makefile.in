@@ -122,7 +122,7 @@ endif
 ifdef MOZ_CRASHREPORTER
 MOCHITEST_FILES += \
   test_crashing.html \
-  $(warning test_crashing2.html disabled due to random orange; see bug 566049) \
+  $(filter disabled-for-random-orange--bug-566049, test_crashing2.html) \
   test_hanging.html \
   $(NULL)
 
