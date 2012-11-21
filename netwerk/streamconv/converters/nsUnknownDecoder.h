@@ -60,7 +60,6 @@ protected:
   
   // Various sniffer functions.  Returning true means that a type
   // was determined; false means no luck.
-  bool TryContentSniffers(nsIRequest* aRequest);
   bool SniffForHTML(nsIRequest* aRequest);
   bool SniffForXML(nsIRequest* aRequest);
 
