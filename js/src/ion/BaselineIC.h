@@ -161,8 +161,9 @@ class ICEntry
     _(Call_Fallback)            \
                                 \
     _(GetElem_Fallback)         \
-    _(GetElem_Dense)
-
+    _(GetElem_Dense)            \
+                                \
+    _(SetElem_Fallback)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -661,6 +662,35 @@ class ICGetElem_Dense : public ICStub
 
         ICStub *getStub() {
             return ICGetElem_Dense::New(getStubCode());
+        }
+    };
+};
+
+class ICSetElem_Fallback : public ICFallbackStub
+{
+    ICSetElem_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::SetElem_Fallback, stubCode)
+    { }
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static inline ICSetElem_Fallback *New(IonCode *code) {
+        return new ICSetElem_Fallback(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::SetElem_Fallback)
+        { }
+
+        ICStub *getStub() {
+            return ICSetElem_Fallback::New(getStubCode());
         }
     };
 };
