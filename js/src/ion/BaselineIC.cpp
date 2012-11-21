@@ -14,6 +14,8 @@
 #include "VMFunctions.h"
 #include "IonFrames-inl.h"
 
+#include "jsinterpinlines.h"
+
 namespace js {
 namespace ion {
 
@@ -255,8 +257,48 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
             return false;
         break;
       }
+      case JSOP_BITOR: {
+        int32_t result;
+        if (!BitOr(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITXOR: {
+        int32_t result;
+        if (!BitXor(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITAND: {
+        int32_t result;
+        if (!BitAnd(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_LSH: {
+        int32_t result;
+        if (!BitLsh(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_RSH: {
+        int32_t result;
+        if (!BitRsh(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_URSH: {
+        if (!UrshOperation(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+            return false;
+        break;
+      }
       default:
-        JS_ASSERT(!"Unhandled baseline compare op");
+        JS_NOT_REACHED("Unhandled baseline arith op");
         return false;
     }
 
@@ -267,18 +309,30 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         return true;
     }
 
+    if (!lhs.isInt32() || !rhs.isInt32())
+        return true;
+
     // Try to generate new stubs.
-    if (lhs.isInt32()) {
-        if (rhs.isInt32()) {
-            ICBinaryArith_Int32::Compiler compilerInt32(cx, op);
-            ICStub *int32Stub = compilerInt32.getStub();
-            if (!int32Stub)
-                return false;
-
-            stub->addNewStub(int32Stub);
-        }
+    switch(op) {
+      case JSOP_BITOR:
+      case JSOP_BITXOR:
+      case JSOP_BITAND:
+      case JSOP_LSH:
+      case JSOP_RSH:
+      case JSOP_URSH:
+      case JSOP_ADD: {
+        bool allowDouble = ret.isDouble();
+        ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
+        ICStub *int32Stub = compilerInt32.getStub();
+        if (!int32Stub)
+            return false;
+        stub->addNewStub(int32Stub);
+        break;
+      }
+      default:
+        JS_NOT_REACHED("Unhandled baseline arith op");
+        return false;
     }
-
     return true;
 }
 

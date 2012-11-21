@@ -565,6 +565,8 @@ class ICToNumber_Fallback : public ICFallbackStub
 
 // BinaryArith
 //      JSOP_ADD
+//      JSOP_BITAND, JSOP_BITXOR, JSOP_BITOR
+//      JSOP_LSH, JSOP_RSH, JSOP_URSH
 
 class ICBinaryArith_Fallback : public ICFallbackStub
 {
@@ -604,13 +606,23 @@ class ICBinaryArith_Int32 : public ICStub
     }
 
     // Compiler for this stub kind.
-    class Compiler : public ICMultiStubCompiler {
+    class Compiler : public ICStubCompiler {
       protected:
+        JSOp op_;
+        bool allowDouble_;
+
         bool generateStubCode(MacroAssembler &masm);
 
+        // Stub keys shift-stubs need to encode the kind, the JSOp and if we allow doubles.
+        virtual int32_t getKey() const {
+            return (static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
+                    (static_cast<int32_t>(allowDouble_) << 24));
+        }
+
       public:
-        Compiler(JSContext *cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::BinaryArith_Int32, op) {}
+        Compiler(JSContext *cx, JSOp op, bool allowDouble)
+          : ICStubCompiler(cx, ICStub::BinaryArith_Int32),
+            op_(op), allowDouble_(allowDouble) {}
 
         ICStub *getStub() {
             return ICBinaryArith_Int32::New(getStubCode());

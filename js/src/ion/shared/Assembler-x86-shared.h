@@ -797,6 +797,9 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void andl(const Register &src, const Register &dest) {
+        masm.andl_rr(src.code(), dest.code());
+    }
     void andl(Imm32 imm, const Register &dest) {
         masm.andl_ir(imm.value, dest.code());
     }

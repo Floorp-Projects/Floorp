@@ -57,6 +57,12 @@ namespace ion {
     _(JSOP_UINT24)             \
     _(JSOP_DOUBLE)             \
     _(JSOP_STRING)             \
+    _(JSOP_BITOR)              \
+    _(JSOP_BITXOR)             \
+    _(JSOP_BITAND)             \
+    _(JSOP_LSH)                \
+    _(JSOP_RSH)                \
+    _(JSOP_URSH)               \
     _(JSOP_ADD)                \
     _(JSOP_LT)                 \
     _(JSOP_GT)                 \
@@ -103,6 +109,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
 
+    // JSOP_BITXOR, JSOP_LSH, JSOP_ADD etc.
+    bool emitBinaryArith();
     // Handles JSOP_LT, JSOP_GT, and friends
     bool emitCompare();
     bool emitToBoolean();
