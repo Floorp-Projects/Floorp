@@ -1299,7 +1299,8 @@ bool
 BasicShadowLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
                                                    gfx::Rect& aViewport,
                                                    float& aScaleX,
-                                                   float& aScaleY)
+                                                   float& aScaleY,
+                                                   bool aDrawingCritical)
 {
 #ifdef MOZ_WIDGET_ANDROID
   Layer* primaryScrollable = GetPrimaryScrollableLayer();
@@ -1311,15 +1312,16 @@ BasicShadowLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesCont
     const gfx3DMatrix& rootTransform = GetRoot()->GetTransform();
     float devPixelRatioX = 1 / rootTransform.GetXScale();
     float devPixelRatioY = 1 / rootTransform.GetYScale();
-    const gfx::Rect& metricsDisplayPort = metrics.mCriticalDisplayPort.IsEmpty() ?
-      metrics.mDisplayPort : metrics.mCriticalDisplayPort;
+    const gfx::Rect& metricsDisplayPort =
+      (aDrawingCritical && !metrics.mCriticalDisplayPort.IsEmpty()) ?
+        metrics.mCriticalDisplayPort : metrics.mDisplayPort;
     gfx::Rect displayPort((metricsDisplayPort.x + metrics.mScrollOffset.x) * devPixelRatioX,
                           (metricsDisplayPort.y + metrics.mScrollOffset.y) * devPixelRatioY,
                           metricsDisplayPort.width * devPixelRatioX,
                           metricsDisplayPort.height * devPixelRatioY);
 
     return AndroidBridge::Bridge()->ProgressiveUpdateCallback(
-      aHasPendingNewThebesContent, displayPort, devPixelRatioX,
+      aHasPendingNewThebesContent, displayPort, devPixelRatioX, aDrawingCritical,
       aViewport, aScaleX, aScaleY);
   }
 #endif
