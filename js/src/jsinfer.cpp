@@ -5653,8 +5653,6 @@ JSObject::splicePrototype(JSContext *cx, Handle<TaggedProto> proto)
     Rooted<TypeObject*> protoType(cx, NULL);
     if (proto.isObject()) {
         protoType = proto.toObject()->getType(cx);
-        if (!proto.toObject()->getNewType(cx))
-            return false;
     }
 
     if (!cx->typeInferenceEnabled()) {

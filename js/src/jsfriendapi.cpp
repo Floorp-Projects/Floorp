@@ -116,8 +116,16 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *protoArg, JS
 {
     RootedObject proto(cx, protoArg);
     RootedObject parent(cx, parentArg);
-    RootedObject obj(cx, JS_NewObject(cx, clasp, proto, parent));
+    /*
+     * Create our object with a null proto and then splice in the correct proto
+     * after we setSingletonType, so that we don't pollute the default
+     * TypeObject attached to our proto with information about our object, since
+     * we're not going to be using that TypeObject anyway.
+     */
+    RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, clasp, NULL, parent));
     if (!obj || !JSObject::setSingletonType(cx, obj))
+        return NULL;
+    if (!JS_SplicePrototype(cx, obj, proto))
         return NULL;
     return obj;
 }
