@@ -138,7 +138,7 @@ GetChromeHangReport(Telemetry::ProcessedStack &aStack)
   ret = ::ResumeThread(winMainThreadHandle);
   if (ret == -1)
     return;
-  aStack = Telemetry::GetStackAndModules(rawStack, false);
+  aStack = Telemetry::GetStackAndModules(rawStack);
 }
 #endif
 

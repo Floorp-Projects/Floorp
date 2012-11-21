@@ -496,7 +496,10 @@ def main():
 
             try:
                 dm.recordLogcat()
-                retVal = mochitest.runTests(options)
+                result = mochitest.runTests(options)
+                # Ensure earlier failures aren't overwritten by success on this run
+                if retVal is None or retVal == 0:
+                    retVal = result
                 mochitest.addLogData()
             except:
                 print "Automation Error: Exception caught while running tests"

@@ -22,7 +22,7 @@ import java.util.Map;
  * like displacement, velocity, viewport dimensions, etc. pertaining to
  * a particular axis.
  */
-public abstract class Axis {
+abstract class Axis {
     private static final String LOGTAG = "GeckoAxis";
 
     private static final String PREF_SCROLLING_FRICTION_SLOW = "ui.scrolling.friction_slow";
@@ -117,7 +117,7 @@ public abstract class Axis {
         FLINGING,
     }
 
-    public enum Overscroll {
+    private enum Overscroll {
         NONE,
         MINUS,      // Overscrolled in the negative direction
         PLUS,       // Overscrolled in the positive direction
@@ -203,7 +203,7 @@ public abstract class Axis {
         return getOverscroll() != Overscroll.NONE;
     }
 
-    public Overscroll getOverscroll() {
+    private Overscroll getOverscroll() {
         boolean minus = (getOrigin() < getPageStart());
         boolean plus = (getViewportEnd() > getPageEnd());
         if (minus && plus) {

@@ -24,7 +24,7 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(DelayNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(DelayNode, AudioNode)
 
-DelayNode::DelayNode(AudioContext* aContext, float aMaxDelay)
+DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
   : AudioNode(aContext)
   , mDelay(new AudioParam(aContext, 0.0f, 0.0f, aMaxDelay))
 {

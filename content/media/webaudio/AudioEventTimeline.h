@@ -41,11 +41,11 @@ private:
       SetValueCurve
     };
 
-    Event(Type aType, float aTime, float aValue, float aTimeConstant = 0.0,
+    Event(Type aType, double aTime, float aValue, double aTimeConstant = 0.0,
           float aDuration = 0.0, FloatArrayWrapper aCurve = FloatArrayWrapper())
       : mType(aType)
-      , mTime(aTime)
       , mValue(aValue)
+      , mTime(aTime)
       , mTimeConstant(aTimeConstant)
       , mDuration(aDuration)
     {
@@ -63,10 +63,10 @@ private:
     }
 
     Type mType;
-    float mTime;
     float mValue;
-    float mTimeConstant;
-    float mDuration;
+    double mTime;
+    double mTimeConstant;
+    double mDuration;
     FloatArrayWrapper mCurve;
 
   private:
@@ -125,33 +125,33 @@ public:
     return mDefaultValue;
   }
 
-  void SetValueAtTime(float aValue, float aStartTime, ErrorResult& aRv)
+  void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
   {
     InsertEvent(Event(Event::SetValue, aStartTime, aValue), aRv);
   }
 
-  void LinearRampToValueAtTime(float aValue, float aEndTime, ErrorResult& aRv)
+  void LinearRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
     InsertEvent(Event(Event::LinearRamp, aEndTime, aValue), aRv);
   }
 
-  void ExponentialRampToValueAtTime(float aValue, float aEndTime, ErrorResult& aRv)
+  void ExponentialRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
     InsertEvent(Event(Event::ExponentialRamp, aEndTime, aValue), aRv);
   }
 
-  void SetTargetAtTime(float aTarget, float aStartTime, float aTimeConstant, ErrorResult& aRv)
+  void SetTargetAtTime(float aTarget, double aStartTime, double aTimeConstant, ErrorResult& aRv)
   {
     InsertEvent(Event(Event::SetTarget, aStartTime, aTarget, aTimeConstant), aRv);
   }
 
-  void SetValueCurveAtTime(const FloatArrayWrapper& aValues, float aStartTime, float aDuration, ErrorResult& aRv)
+  void SetValueCurveAtTime(const FloatArrayWrapper& aValues, double aStartTime, double aDuration, ErrorResult& aRv)
   {
     // TODO: implement
     // InsertEvent(Event(Event::SetValueCurve, aStartTime, 0.0f, 0.0f, aDuration, aValues), aRv);
   }
 
-  void CancelScheduledValues(float aStartTime)
+  void CancelScheduledValues(double aStartTime)
   {
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
       if (mEvents[i].mTime >= aStartTime) {
@@ -169,7 +169,7 @@ public:
   }
 
   // This method computes the AudioParam value at a given time based on the event timeline
-  float GetValueAtTime(float aTime) const
+  float GetValueAtTime(double aTime) const
   {
     const Event* previous = nullptr;
     const Event* next = nullptr;
@@ -222,10 +222,10 @@ public:
         return mValue;
       case Event::LinearRamp:
         // Use t=0 as T0 and v=defaultValue as V0
-        return LinearInterpolate(0.0f, mValue, next->mTime, next->mValue, aTime);
+        return LinearInterpolate(0.0, mValue, next->mTime, next->mValue, aTime);
       case Event::ExponentialRamp:
         // Use t=0 as T0 and v=defaultValue as V0
-        return ExponentialInterpolate(0.0f, mValue, next->mTime, next->mValue, aTime);
+        return ExponentialInterpolate(0.0, mValue, next->mTime, next->mValue, aTime);
       case Event::SetValueCurve:
         // TODO: implement
         return 0.0f;
@@ -296,17 +296,17 @@ public:
     return mEvents.Length();
   }
 
-  static float LinearInterpolate(float t0, float v0, float t1, float v1, float t)
+  static float LinearInterpolate(double t0, float v0, double t1, float v1, double t)
   {
     return v0 + (v1 - v0) * ((t - t0) / (t1 - t0));
   }
 
-  static float ExponentialInterpolate(float t0, float v0, float t1, float v1, float t)
+  static float ExponentialInterpolate(double t0, float v0, double t1, float v1, double t)
   {
     return v0 * powf(v1 / v0, (t - t0) / (t1 - t0));
   }
 
-  static float ExponentialApproach(float t0, float v0, float v1, float timeConstant, float t)
+  static float ExponentialApproach(double t0, double v0, float v1, double timeConstant, double t)
   {
     return v1 + (v0 - v1) * expf(-(t - t0) / timeConstant);
   }

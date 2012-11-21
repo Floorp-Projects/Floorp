@@ -119,8 +119,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
 
     JS::CompileOptions options(cx);
     options.setPrincipals(nsJSPrincipals::get(principal))
-           .setFileAndLine(uriStr, 1)
-           .setSourcePolicy(JS::CompileOptions::LAZY_SOURCE);
+           .setFileAndLine(uriStr, 1);
     js::RootedObject target_obj_root(cx, target_obj);
     if (!charset.IsVoid()) {
         nsString script;
@@ -134,6 +133,9 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
         *scriptp = JS::Compile(cx, target_obj_root, options,
                                reinterpret_cast<const jschar*>(script.get()), script.Length());
     } else {
+        // We only use LAZY_SOURCE when no special encoding is specified because
+        // the lazy source loader doesn't know the encoding.
+        options.setSourcePolicy(JS::CompileOptions::LAZY_SOURCE);
         *scriptp = JS::Compile(cx, target_obj_root, options, buf.get(), len);
     }
 

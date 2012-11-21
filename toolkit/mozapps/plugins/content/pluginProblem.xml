@@ -58,5 +58,11 @@
         <html:div class="previewPluginContent"><!-- iframe and its src will be set at runtime --></html:div>
         <html:div style="display:none;"><children/></html:div>
     </content>
+    <implementation>
+      <constructor>
+        // Notify browser-plugins.js that we were attached
+        this.dispatchEvent(new CustomEvent("PluginBindingAttached"));
+      </constructor>
+    </implementation>
 </binding>
 </bindings>

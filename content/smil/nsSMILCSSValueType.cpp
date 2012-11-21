@@ -21,13 +21,11 @@ using namespace mozilla::dom;
 /*static*/ nsSMILCSSValueType nsSMILCSSValueType::sSingleton;
 
 struct ValueWrapper {
-  ValueWrapper(nsCSSProperty aPropID, const nsStyleAnimation::Value& aValue,
-               nsPresContext* aPresContext) :
-    mPropID(aPropID), mCSSValue(aValue), mPresContext(aPresContext) {}
+  ValueWrapper(nsCSSProperty aPropID, const nsStyleAnimation::Value& aValue) :
+    mPropID(aPropID), mCSSValue(aValue) {}
 
   nsCSSProperty mPropID;
   nsStyleAnimation::Value mCSSValue;
-  nsPresContext* mPresContext;
 };
 
 // Helper "zero" values of various types
@@ -194,7 +192,6 @@ nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
       // Both non-null
       NS_WARN_IF_FALSE(leftWrapper != rightWrapper,
                        "Two nsSMILValues with matching ValueWrapper ptr");
-      // mPresContext doesn't really matter for equality comparison
       return (leftWrapper->mPropID == rightWrapper->mPropID &&
               leftWrapper->mCSSValue == rightWrapper->mCSSValue);
     }
@@ -247,7 +244,7 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   // Handle barely-initialized "zero" destination.
   if (!destWrapper) {
     aDest.mU.mPtr = destWrapper =
-      new ValueWrapper(property, *destValue, valueToAddWrapper->mPresContext);
+      new ValueWrapper(property, *destValue);
   }
 
   return nsStyleAnimation::Add(property,
@@ -311,8 +308,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
   if (nsStyleAnimation::Interpolate(endWrapper->mPropID,
                                     *startCSSValue, *endCSSValue,
                                     aUnitDistance, resultValue)) {
-    aResult.mU.mPtr = new ValueWrapper(endWrapper->mPropID, resultValue,
-                                       endWrapper->mPresContext);
+    aResult.mU.mPtr = new ValueWrapper(endWrapper->mPropID, resultValue);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -399,7 +395,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
   if (ValueFromStringHelper(aPropID, aTargetElement, presContext,
                             aString, parsedValue, aIsContextSensitive)) {
     sSingleton.Init(aValue);
-    aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue, presContext);
+    aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue);
   }
 }
 
@@ -412,6 +408,6 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
                     "Unexpected SMIL value type");
   const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
   return !wrapper ||
-    nsStyleAnimation::UncomputeValue(wrapper->mPropID, wrapper->mPresContext,
+    nsStyleAnimation::UncomputeValue(wrapper->mPropID,
                                      wrapper->mCSSValue, aString);
 }
