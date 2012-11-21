@@ -2745,7 +2745,26 @@ Tab.prototype = {
         Math.abs(displayPort.y - this._oldDisplayPort.y) > epsilon ||
         Math.abs(displayPort.width - this._oldDisplayPort.width) > epsilon ||
         Math.abs(displayPort.height - this._oldDisplayPort.height) > epsilon) {
-      cwu.setDisplayPortForElement(displayPort.x, displayPort.y, displayPort.width, displayPort.height, element);
+      // Set the display-port to be 4x the size of the critical display-port,
+      // on each dimension, giving us a 0.25x lower precision buffer around the
+      // critical display-port. Spare area is *not* redistributed to the other
+      // axis, as display-list building and invalidation cost scales with the
+      // size of the display-port.
+      let pageRect = cwu.getRootBounds();
+      let pageXMost = pageRect.right - geckoScrollX;
+      let pageYMost = pageRect.bottom - geckoScrollY;
+
+      let dpW = Math.min(pageRect.right - pageRect.left, displayPort.width * 4);
+      let dpH = Math.min(pageRect.bottom - pageRect.top, displayPort.height * 4);
+
+      let dpX = Math.min(Math.max(displayPort.x - displayPort.width * 1.5,
+                                  pageRect.left - geckoScrollX), pageXMost - dpW);
+      let dpY = Math.min(Math.max(displayPort.y - displayPort.height * 1.5,
+                                  pageRect.top - geckoScrollY), pageYMost - dpH);
+      cwu.setDisplayPortForElement(dpX, dpY, dpW, dpH, element);
+      cwu.setCriticalDisplayPortForElement(displayPort.x, displayPort.y,
+                                           displayPort.width, displayPort.height,
+                                           element);
     }
 
     this._oldDisplayPort = displayPort;
