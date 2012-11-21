@@ -1423,8 +1423,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                                          XPCWrappedNativeScope* aOldScope,
                                          XPCWrappedNativeScope* aNewScope,
                                          JSObject* aNewParent,
-                                         nsISupports* aCOMObj,
-                                         XPCWrappedNative** aWrapper)
+                                         nsISupports* aCOMObj)
 {
     XPCNativeInterface* iface =
         XPCNativeInterface::GetISupports(ccx);
@@ -1455,10 +1454,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             flat = wrapper->GetFlatJSObject();
     }
 
-    if (!flat) {
-        *aWrapper = nullptr;
+    if (!flat)
         return NS_OK;
-    }
 
     // ReparentWrapperIfFound is really only meant to be called from DOM code
     // which must happen only on the main thread. Bail if we're on some other
@@ -1657,9 +1654,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         }
     }
 
-    *aWrapper = nullptr;
-    wrapper.swap(*aWrapper);
-
     return NS_OK;
 }
 
@@ -1755,10 +1749,9 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
     // We've been orphaned. Find where our parent went, and follow it.
     JSObject *parentGhost = js::GetObjectParent(mFlatJSObject);
     JSObject *realParent = js::UnwrapObject(parentGhost);
-    nsRefPtr<XPCWrappedNative> ignored;
     return ReparentWrapperIfFound(ccx, GetObjectScope(parentGhost),
                                   GetObjectScope(realParent),
-                                  realParent, mIdentity, getter_AddRefs(ignored));
+                                  realParent, mIdentity);
 }
 
 #define IS_TEAROFF_CLASS(clazz)                                               \
