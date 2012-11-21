@@ -116,7 +116,7 @@ namespace js {
 class AutoDebugModeGC;
 }
 
-struct JSCompartment : private JS::shadow::Compartment
+struct JSCompartment
 {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
@@ -156,6 +156,7 @@ struct JSCompartment : private JS::shadow::Compartment
 #endif
 
   private:
+    bool                         needsBarrier_;
     bool                         ionUsingBarriers_;
   public:
 

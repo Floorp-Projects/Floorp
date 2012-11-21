@@ -42,9 +42,15 @@ isnot(src.indexOf("return"), -1, "subscript should have source");
 var base = /.*\//.exec(window.location.href)[0];
 var reg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 var resolvedBase = reg.convertChromeURL(NetUtil.newURI(base)).spec;
+
 ns = {};
 Services.scriptloader.loadSubScript(resolvedBase + "subscript.js", ns);
 src = ns.NetUtil.asyncFetch.toSource();
 isnot(src.indexOf("return"), -1, "subscript of a subscript should have source");
+
+ns = {};
+Services.scriptloader.loadSubScript(resolvedBase + "utf8_subscript.js", ns, "UTF-8");
+src = ns.f.toSource();
+isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
   ]]></script>
 </window>

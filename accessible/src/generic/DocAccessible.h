@@ -24,7 +24,6 @@
 #include "nsIWeakReference.h"
 #include "nsIDocShellTreeNode.h"
 
-class nsAccDocManager;
 class nsAccessiblePivot;
 
 class nsIScrollableView;
@@ -34,6 +33,7 @@ const uint32_t kDefaultCacheSize = 256;
 namespace mozilla {
 namespace a11y {
 
+class DocManager;
 class NotificationController;
 class RelatedAccIterator;
 template<class Class, class Arg>
@@ -319,7 +319,7 @@ protected:
   void NotifyOfLoad(uint32_t aLoadEventType);
   void NotifyOfLoading(bool aIsReloading);
 
-  friend class ::nsAccDocManager;
+  friend class DocManager;
 
   /**
    * Perform initial update (create accessible tree).

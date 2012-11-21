@@ -545,10 +545,6 @@ GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
 extern void
 PrepareForDebugGC(JSRuntime *rt);
 
-} /* namespace js */
-
-namespace js {
-
 void
 InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
 
@@ -904,7 +900,7 @@ struct GCMarker : public JSTracer {
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(StackTagMask >= uintptr_t(LastTag));
-        JS_STATIC_ASSERT(StackTagMask <= gc::CellMask);
+        JS_STATIC_ASSERT(StackTagMask <= gc::Cell::CellMask);
     }
 
   public:

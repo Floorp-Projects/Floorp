@@ -2833,10 +2833,8 @@ ReportBadXMLName(JSContext *cx, const Value &idval)
     js_ReportValueError(cx, JSMSG_BAD_XML_NAME, JSDVG_IGNORE_STACK, val, NullPtr());
 }
 
-namespace js {
-
 bool
-GetLocalNameFromFunctionQName(JSObject *qn, JSAtom **namep, JSContext *cx)
+js::GetLocalNameFromFunctionQName(JSObject *qn, JSAtom **namep, JSContext *cx)
 {
     JSAtom *atom = cx->names().functionNamespaceURI;
     JSLinearString *uri = qn->getNameURI();
@@ -2846,8 +2844,6 @@ GetLocalNameFromFunctionQName(JSObject *qn, JSAtom **namep, JSContext *cx)
     }
     return false;
 }
-
-} /* namespace js */
 
 bool
 js_GetLocalNameFromFunctionQName(JSObject *obj, jsid *funidp, JSContext *cx)
@@ -7467,8 +7463,6 @@ js_InitXMLClasses(JSContext *cx, HandleObject obj)
     return js_InitXMLClass(cx, obj);
 }
 
-namespace js {
-
 bool
 GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
 {
@@ -7497,8 +7491,6 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
     *vp = v;
     return true;
 }
-
-} // namespace js
 
 /*
  * Note the asymmetry between js_GetDefaultXMLNamespace and js_SetDefaultXML-

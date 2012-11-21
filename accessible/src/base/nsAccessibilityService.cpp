@@ -125,7 +125,7 @@ ApplicationAccessible* nsAccessibilityService::gApplicationAccessible = nullptr;
 bool nsAccessibilityService::gIsShutdown = true;
 
 nsAccessibilityService::nsAccessibilityService() :
-  nsAccDocManager(), FocusManager()
+  DocManager(), FocusManager()
 {
 }
 
@@ -139,7 +139,7 @@ nsAccessibilityService::~nsAccessibilityService()
 // nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsAccessibilityService,
-                             nsAccDocManager,
+                             DocManager,
                              nsIAccessibilityService,
                              nsIAccessibleRetrieval,
                              nsIObserver)
@@ -621,7 +621,7 @@ nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
   // caches. If we don't find it, and the given node is itself a document, check
   // our cache of document accessibles (document cache). Note usually shutdown
   // document accessibles are not stored in the document cache, however an
-  // "unofficially" shutdown document (i.e. not from nsAccDocManager) can still
+  // "unofficially" shutdown document (i.e. not from DocManager) can still
   // exist in the document cache.
   Accessible* accessible = FindAccessibleInCache(node);
   if (!accessible) {
@@ -975,7 +975,7 @@ bool
 nsAccessibilityService::Init()
 {
   // Initialize accessible document manager.
-  if (!nsAccDocManager::Init())
+  if (!DocManager::Init())
     return false;
 
   // Add observers.
@@ -1026,7 +1026,7 @@ nsAccessibilityService::Shutdown()
   }
 
   // Stop accessible document loader.
-  nsAccDocManager::Shutdown();
+  DocManager::Shutdown();
 
   // Application is going to be closed, shutdown accessibility and mark
   // accessibility service as shutdown to prevent calls of its methods.
