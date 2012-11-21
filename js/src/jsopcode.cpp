@@ -6326,13 +6326,14 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
     if (!pcStack.init(cx, script, current))
         return false;
 
-    if (formalIndex + 2 >= pcStack.depth())
+    uint32_t formalStackIndex = pcStack.depth() - GET_ARGC(current) + formalIndex;
+    if (formalStackIndex >= pcStack.depth())
         return true;
 
     ExpressionDecompiler ed(cx, script, fun);
     if (!ed.init())
         return false;
-    if (!ed.decompilePC(pcStack[formalIndex + 2]))
+    if (!ed.decompilePC(pcStack[formalStackIndex]))
         return false;
 
     return ed.getOutput(res);
