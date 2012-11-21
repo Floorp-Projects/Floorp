@@ -2458,6 +2458,7 @@ function Tab(aURL, aParams) {
   this.desktopMode = false;
   this.originalURI = null;
   this.savedArticle = null;
+  this.hasTouchListener = false;
 
   this.create(aURL, aParams);
 }
@@ -3328,6 +3329,7 @@ Tab.prototype = {
       // XXX This code assumes that this is the earliest hook we have at which
       // browser.contentDocument is changed to the new document we're loading
       this.contentDocumentIsDisplayed = false;
+      this.hasTouchListener = false;
     } else {
       this.sendViewportUpdate();
     }
@@ -3730,9 +3732,10 @@ var BrowserEventHandler = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "dom-touch-listener-added") {
       let tab = BrowserApp.getTabForWindow(aSubject.top);
-      if (!tab)
+      if (!tab || tab.hasTouchListener)
         return;
 
+      tab.hasTouchListener = true;
       sendMessageToJava({
         gecko: {
           type: "Tab:HasTouchListener",
