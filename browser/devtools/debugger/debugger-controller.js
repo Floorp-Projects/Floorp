@@ -924,10 +924,13 @@ StackFrames.prototype = {
     if (list.length) {
       this.syncedWatchExpressions =
         this.currentWatchExpressions = "[" + list.map(function(str)
-          "(function() {" +
+          // Avoid yielding an empty pseudo-array when evaluating `arguments`,
+          // since they're overridden by the expression's closure scope.
+          "(function(arguments) {" +
+            // Make sure all the quotes are escaped in the expression's syntax.
             "try { return eval(\"" + str.replace(/"/g, "\\$&") + "\"); }" +
             "catch(e) { return e.name + ': ' + e.message; }" +
-          "})()"
+          "})(arguments)"
         ).join(",") + "]";
     } else {
       this.syncedWatchExpressions =
