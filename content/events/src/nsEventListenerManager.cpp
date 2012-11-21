@@ -604,11 +604,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
     // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
     // if that's the XBL document?
     doc = node->OwnerDoc();
-    MOZ_ASSERT(!doc->IsLoadedAsData(), "Should not get in here at all");
-
-    // We want to allow compiling an event handler even in an unloaded
-    // document, so use GetScopeObject here, not GetScriptHandlingObject.
-    global = doc->GetScopeObject();
+    global = doc->GetScriptGlobalObject();
   } else {
     nsCOMPtr<nsPIDOMWindow> win = GetTargetAsInnerWindow();
     if (win) {
@@ -626,13 +622,6 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
     // loaded as data.
     return NS_OK;
   }
-
-#ifdef DEBUG
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(global);
-  if (win) {
-    MOZ_ASSERT(win->IsInnerWindow(), "We should not have an outer window here!");
-  }
-#endif
 
   nsresult rv = NS_OK;
   // return early preventing the event listener from being added
