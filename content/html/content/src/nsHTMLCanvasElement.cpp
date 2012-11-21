@@ -307,7 +307,7 @@ nsHTMLCanvasElement::IsPrintCallbackDone()
   return mPrintState->mIsDone;
 }
 
-nsIDOMHTMLCanvasElement*
+nsHTMLCanvasElement*
 nsHTMLCanvasElement::GetOriginalCanvas()
 {
   return mOriginalCanvas ? mOriginalCanvas.get() : this;
