@@ -791,22 +791,19 @@ void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, const nsString& aVal
 
 nsresult
 txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, int32_t aNsID,
-                                         nsIDOMDocument* aSourceDocument,
-                                         bool aLoadedAsData)
+                                         nsIDOMDocument* aSourceDocument)
 {
     nsresult rv;
 
     // Create the document
     if (mOutputFormat.mMethod == eHTMLOutput) {
-        rv = NS_NewHTMLDocument(getter_AddRefs(mDocument),
-                                aLoadedAsData);
+        rv = NS_NewHTMLDocument(getter_AddRefs(mDocument));
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
         // We should check the root name/namespace here and create the
         // appropriate document
-        rv = NS_NewXMLDocument(getter_AddRefs(mDocument),
-                               aLoadedAsData);
+        rv = NS_NewXMLDocument(getter_AddRefs(mDocument));
         NS_ENSURE_SUCCESS(rv, rv);
     }
     // This should really be handled by nsIDocument::BeginLoad

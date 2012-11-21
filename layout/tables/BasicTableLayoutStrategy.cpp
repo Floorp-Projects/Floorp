@@ -137,11 +137,10 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
 
     const nsStyleCoord &width = stylePos->mWidth;
     nsStyleUnit unit = width.GetUnit();
-    // NOTE: We're ignoring calc() units with percentages here, for lack of a
-    // sensible idea for what to do with them.  This means calc() with
-    // percentages is basically handled like 'auto' for table cells and
-    // columns.
-    if (width.ConvertsToLength()) {
+    // NOTE: We're ignoring calc() units here, for lack of a sensible
+    // idea for what to do with them.  This means calc() is basically
+    // handled like 'auto' for table cells and columns.
+    if (unit == eStyleUnit_Coord) {
         hasSpecifiedWidth = true;
         // Note: since ComputeWidthValue was designed to return content-box
         // width, it will (in some cases) subtract the box-sizing edges.
@@ -193,7 +192,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
     unit = maxWidth.GetUnit();
     // XXX To really implement 'max-width' well, we'd need to store
     // it separately on the columns.
-    if (maxWidth.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
+    if (unit == eStyleUnit_Coord || unit == eStyleUnit_Enumerated) {
         nscoord w =
             nsLayoutUtils::ComputeWidthValue(aRenderingContext, aFrame,
                                              0, 0, 0, maxWidth);
@@ -206,7 +205,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         if (p < prefPercent)
             prefPercent = p;
     }
-    // treat calc() with percentages on max-width just like 'none'.
+    // treat calc() on max-width just like 'none'.
 
     nsStyleCoord minWidth(stylePos->mMinWidth);
     if (minWidth.GetUnit() == eStyleUnit_Enumerated) {
@@ -219,7 +218,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
                                  eStyleUnit_Enumerated);
     }
     unit = minWidth.GetUnit();
-    if (minWidth.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
+    if (unit == eStyleUnit_Coord || unit == eStyleUnit_Enumerated) {
         nscoord w =
             nsLayoutUtils::ComputeWidthValue(aRenderingContext, aFrame,
                                              0, 0, 0, minWidth);
@@ -232,7 +231,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         if (p > prefPercent)
             prefPercent = p;
     }
-    // treat calc() with percentages on min-width just like '0'.
+    // treat calc() on min-width just like '0'.
 
     // XXX Should col frame have border/padding considered?
     if (aIsCell) {
