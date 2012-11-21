@@ -8,6 +8,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
@@ -76,6 +78,9 @@ const kBrowserUrlbarAutocompleteEnabledPref = "autocomplete.enabled";
 const kBrowserUrlbarAutofillPref = "autoFill";
 // Whether to search only typed entries.
 const kBrowserUrlbarAutofillTypedPref = "autoFill.typed";
+
+// The Telemetry histogram for urlInlineComplete query on domain
+const DOMAIN_QUERY_TELEMETRY = "PLACES_AUTOCOMPLETE_URLINLINE_DOMAIN_QUERY_TIME_MS";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
@@ -1391,7 +1396,11 @@ urlInlineComplete.prototype = {
     if (lastSlashIndex == -1) {
       var hasDomainResult = false;
       var domain, untrimmedDomain;
+      TelemetryStopwatch.start(DOMAIN_QUERY_TELEMETRY);
       try {
+        // Execute the query synchronously.
+        // This is by design, to avoid race conditions between the
+        // user typing and the connection searching for the result.
         hasDomainResult = query.executeStep();
         if (hasDomainResult) {
           domain = query.getString(0);
@@ -1400,6 +1409,7 @@ urlInlineComplete.prototype = {
       } finally {
         query.reset();
       }
+      TelemetryStopwatch.finish(DOMAIN_QUERY_TELEMETRY);
 
       if (hasDomainResult) {
         // We got a match for a domain, we can add it immediately.
