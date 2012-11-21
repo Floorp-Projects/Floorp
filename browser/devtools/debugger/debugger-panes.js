@@ -1722,6 +1722,11 @@ SourceResults.prototype = {
   },
 
   /**
+   * Relaxes the auto-expand rules to always show as many results as possible.
+   */
+  alwaysExpand: true,
+
+  /**
    * Gets this element's expanded state.
    * @return boolean
    */
@@ -1795,7 +1800,8 @@ SourceResults.prototype = {
     aElementNode.resultsHeader = resultsHeader;
     aElementNode.resultsContainer = resultsContainer;
 
-    if (aExpandFlag && aMatchCount < GLOBAL_SEARCH_EXPAND_MAX_RESULTS) {
+    if ((aExpandFlag || this.alwaysExpand) &&
+         aMatchCount < GLOBAL_SEARCH_EXPAND_MAX_RESULTS) {
       this.expand();
     }
 
