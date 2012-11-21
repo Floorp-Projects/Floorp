@@ -278,7 +278,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
   // If this is a low precision buffer, we force progressive updates. The
   // assumption is that the contents is less important, so visual coherency
   // is lower priority than speed.
-  bool forceProgressive = aTiledBuffer.IsLowPrecision();
+  bool drawingLowPrecision = aTiledBuffer.IsLowPrecision();
 
   // Find out if we have any non-stale content to update.
   nsIntRegion freshRegion;
@@ -292,7 +292,8 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
   // caused by there being an incoming, more relevant paint.
   gfx::Rect viewport;
   float scaleX, scaleY;
-  if (BasicManager()->ProgressiveUpdateCallback(!freshRegion.IsEmpty(), viewport, scaleX, scaleY)) {
+  if (BasicManager()->ProgressiveUpdateCallback(!freshRegion.IsEmpty(), viewport,
+                                                scaleX, scaleY, !drawingLowPrecision)) {
     SAMPLE_MARKER("Abort painting");
     aRegionToPaint.SetEmpty();
     return aIsRepeated;
@@ -367,7 +368,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     // in one go by repeating this work without calling the painted
     // callback. The remaining content is then drawn tile-by-tile in
     // multiple transactions.
-    if (!forceProgressive && paintVisible && drawingStale) {
+    if (!drawingLowPrecision && paintVisible && drawingStale) {
       repeatImmediately = true;
     } else {
       BasicManager()->SetRepeatTransaction();
