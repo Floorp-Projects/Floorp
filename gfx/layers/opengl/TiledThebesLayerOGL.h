@@ -131,6 +131,7 @@ public:
   }
   void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* mTiledBuffer);
   void ProcessUploadQueue();
+  void ProcessLowPrecisionUploadQueue();
 
   void MemoryPressure();
 
@@ -144,10 +145,20 @@ public:
                   Layer* aMaskLayer);
 
 private:
+  void RenderLayerBuffer(TiledLayerBufferOGL& aLayerBuffer,
+                         const nsIntRegion& aValidRegion,
+                         const nsIntPoint& aOffset,
+                         const nsIntRegion& aMaskRegion);
+
   nsIntRegion                  mRegionToUpload;
+  nsIntRegion                  mLowPrecisionRegionToUpload;
   BasicTiledLayerBuffer        mMainMemoryTiledBuffer;
+  BasicTiledLayerBuffer        mLowPrecisionMainMemoryTiledBuffer;
   TiledLayerBufferOGL          mVideoMemoryTiledBuffer;
+  TiledLayerBufferOGL          mLowPrecisionVideoMemoryTiledBuffer;
   ReusableTileStoreOGL*        mReusableTileStore;
+  bool                         mPendingUpload : 1;
+  bool                         mPendingLowPrecisionUpload : 1;
 };
 
 } // layers

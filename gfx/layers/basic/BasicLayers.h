@@ -276,6 +276,7 @@ public:
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
 
   void SetRepeatTransaction() { mRepeatTransaction = true; }
+  bool GetRepeatTransaction() { return mRepeatTransaction; }
 
   bool IsRepeatTransaction() { return mIsRepeatTransaction; }
 
