@@ -3189,6 +3189,15 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid name, nsIInterfaceInf
     return NS_OK;
 }
 
+/* [notxpcom] bool HasNativeMember (in jsval name); */
+NS_IMETHODIMP_(bool)
+XPCWrappedNative::HasNativeMember(jsid name)
+{
+    XPCNativeMember *member = nullptr;
+    uint16_t ignored;
+    return GetSet()->FindMember(name, &member, &ignored) && !!member;
+}
+
 inline nsresult UnexpectedFailure(nsresult rv)
 {
     NS_ERROR("This is not supposed to fail!");
