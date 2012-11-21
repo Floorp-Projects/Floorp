@@ -92,7 +92,7 @@ class FontSizePreference extends DialogPreference {
         mIncreaseFontButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 updatePreviewFontSize(mFontTwipValues[++mPreviewFontIndex]);
-        
+
                 mDecreaseFontButton.setEnabled(true);
                 // If we reached the maximum index, disable the button.
                 if (mPreviewFontIndex == mFontTwipValues.length - 1) {
@@ -182,6 +182,6 @@ class FontSizePreference extends DialogPreference {
     }
 
     private float convertTwipStrToPT(String twip) {
-        return Float.parseFloat(twip) / TWIP_TO_PT_RATIO; 
+        return Float.parseFloat(twip) / TWIP_TO_PT_RATIO;
     }
 }
