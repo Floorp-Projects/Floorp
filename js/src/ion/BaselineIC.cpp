@@ -405,6 +405,26 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     if (!SetObjectElement(cx, obj, index, rhs, script->strictModeCode))
         return false;
 
+    if (stub->numOptimizedStubs() >= ICSetElem_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
+        // But for now we just bail.
+        return true;
+    }
+
+    // Try to generate new stubs.
+    if (obj->isDenseArray() && index.isInt32()) {
+        // Don't attach multiple dense array stubs.
+        if (stub->hasStub(ICStub::SetElem_Dense))
+            return true;
+
+        ICSetElem_Dense::Compiler compiler(cx);
+        ICStub *denseStub = compiler.getStub();
+        if (!denseStub)
+            return false;
+
+        stub->addNewStub(denseStub);
+    }
+
     return true;
 }
 
@@ -431,6 +451,48 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return callVM(DoSetElemFallbackInfo, masm);
+}
+
+bool
+ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+
+    RootedShape shape(cx, GetDenseArrayShape(cx, cx->global()));
+    if (!shape)
+        return false;
+
+    // Unbox R0 and guard it's a dense array.
+    Register obj = masm.extractObject(R0, ExtractTemp0);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, shape, &failure);
+
+    // Load obj->elements in scratchReg.
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratchReg = regs.takeAny();
+    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
+
+    // Unbox key.
+    Register key = masm.extractInt32(R1, ExtractTemp1);
+
+    // Bounds check.
+    Address initLength(scratchReg, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, key, &failure);
+
+    // Hole check.
+    BaseIndex element(scratchReg, key, TimesEight);
+    masm.branchTestMagic(Assembler::Equal, element, &failure);
+
+    // It's safe to overwrite R0 now.
+    masm.loadValue(Address(BaselineStackReg, ICStackValueOffset), R0);
+    masm.storeValue(R0, element);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //
