@@ -764,7 +764,7 @@ this.DOMApplicationRegistry = {
     this._saveApps((function() {
       this.broadcastMessage("Webapps:PackageEvent",
                              { type: "canceled",
-                               manifestURL:  aApp.manifestURL,
+                               manifestURL:  app.manifestURL,
                                app: app,
                                error: "DOWNLOAD_CANCELED" });
     }).bind(this));
@@ -1314,10 +1314,18 @@ this.DOMApplicationRegistry = {
       try {
         dir.remove(true);
       } catch (e) { }
-        self.broadcastMessage("Webapps:PackageEvent",
-                              { type: "error",
-                                manifestURL:  aApp.manifestURL,
-                                error: aError });
+
+      // We avoid notifying the error to the DOM side if the app download
+      // was cancelled via cancelDownload, which already sends its own
+      // notification.
+      if (!app.downloading && !app.downloadAvailable && !app.downloadSize) {
+        return;
+      }
+
+      self.broadcastMessage("Webapps:PackageEvent",
+                            { type: "error",
+                              manifestURL:  aApp.manifestURL,
+                              error: aError });
     }
 
     function getInferedStatus() {
