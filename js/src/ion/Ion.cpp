@@ -1564,7 +1564,7 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
 {
     JS_CHECK_RECURSION(cx, return IonExec_Error);
 
-    RootedScript script(cx, fun->script());
+    RootedScript script(cx, fun->nonLazyScript());
     IonScript *ion = script->ionScript();
     IonCode *code = ion->method();
     void *jitcode = code->raw();

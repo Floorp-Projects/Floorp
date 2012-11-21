@@ -311,7 +311,7 @@ CodeGenerator::visitLambda(LLambda *lir)
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-    masm.storePtr(ImmGCPtr(fun->script().unsafeGet()),
+    masm.storePtr(ImmGCPtr(fun->nonLazyScript().unsafeGet()),
                   Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
     masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
@@ -926,7 +926,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
     ExecutionMode executionMode = gen->info().executionMode();
-    RootedScript targetScript(cx, target->script());
+    RootedScript targetScript(cx, target->nonLazyScript());
     if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT) {
         if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))
             return false;
