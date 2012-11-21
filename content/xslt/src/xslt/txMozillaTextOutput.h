@@ -28,7 +28,8 @@ public:
     TX_DECL_TXAXMLEVENTHANDLER
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
-    nsresult createResultDocument(nsIDOMDocument* aSourceDocument);
+    nsresult createResultDocument(nsIDOMDocument* aSourceDocument,
+                                  bool aLoadedAsData);
 
 private:
     nsresult createXHTMLElement(nsIAtom* aName, nsIContent** aResult);
