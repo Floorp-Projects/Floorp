@@ -114,14 +114,18 @@ IceCandidate.prototype = {
     Ci.nsIDOMRTCIceCandidate, Ci.nsIDOMGlobalObjectConstructor
   ]),
 
-  constructor: function(win, cand, mid, mline) {
+  constructor: function(win, candidateInitDict) {
     if (this._win) {
       throw new Error("Constructor already called");
     }
     this._win = win;
-    this.candidate = cand;
-    this.sdpMid = mid;
-    this.sdpMLineIndex = mline;
+    if (candidateInitDict !== undefined) {
+      this.candidate = candidateInitDict.candidate || null;
+      this.sdpMid = candidateInitDict.sdbMid || null;
+      this.sdpMLineIndex = candidateInitDict.sdpMLineIndex || null;
+    } else {
+      this.candidate = this.sdpMid = this.sdpMLineIndex = null;
+    }
   }
 };
 
