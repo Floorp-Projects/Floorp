@@ -15,7 +15,7 @@ TESTROOT = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 USE_STATIC_LIBS = 1
 
 _BROWSER_FILES = \
-  $(warning browser_bug435788.js has been disabled due to leaks - see bug 751100) \
+  $(filter disabled-for-leaks--bug-751100, browser_bug435788.js) \
   pfs_bug435788_1.rdf \
   pfs_bug435788_2.rdf \
   GoodExtension.xpi \
