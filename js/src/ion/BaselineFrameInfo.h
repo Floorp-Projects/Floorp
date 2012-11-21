@@ -170,6 +170,10 @@ class FrameInfo
     inline size_t stackDepth() const {
         return spIndex;
     }
+    inline void setStackDepth(uint32_t newDepth) {
+        JS_ASSERT(newDepth <= stackDepth());
+        spIndex = newDepth;
+    }
     inline StackValue *peek(int32_t index) const {
         JS_ASSERT(index < 0);
         return const_cast<StackValue *>(&stack[spIndex + index]);

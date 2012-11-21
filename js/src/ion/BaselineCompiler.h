@@ -36,7 +36,10 @@ namespace ion {
     _(JSOP_POP)                \
     _(JSOP_DUP)                \
     _(JSOP_GOTO)               \
+    _(JSOP_IFEQ)               \
     _(JSOP_IFNE)               \
+    _(JSOP_AND)                \
+    _(JSOP_OR)                 \
     _(JSOP_POS)                \
     _(JSOP_LOOPHEAD)           \
     _(JSOP_LOOPENTRY)          \
@@ -102,6 +105,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     // Handles JSOP_LT, JSOP_GT, and friends
     bool emitCompare();
+    bool emitToBoolean();
+    bool emitTest(bool branchIfTrue);
+    bool emitAndOr(bool branchIfTrue);
     bool emitCall();
 };
 
