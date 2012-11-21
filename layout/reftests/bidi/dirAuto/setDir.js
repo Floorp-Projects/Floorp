@@ -59,3 +59,141 @@ function addRTLAutoElements()
     addOneElement('<button id="set3" dir="auto">אבג ABC</button>');
     addOneElement('<bdi id="set4">אבג ABC</bdi>');
 }
+
+function setAllTextValuesTo(newText)
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        if (theElement.tagName == "INPUT" ||
+	    theElement.tagName == "TEXTAREA") {
+            theElement.value = newText;
+	} else {
+            theElement.firstChild.textContent = newText;
+	}
+    }
+}
+
+function setAllTextDefaultValuesTo(newText)
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        if (theElement.tagName == "INPUT" ||
+	    theElement.tagName == "TEXTAREA") {
+            theElement.defaultValue = newText;
+	} else {
+            theElement.firstChild.textContent = newText;
+	}
+    }
+}
+
+function setAllTextChildrenTo(newText)
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        if (theElement.tagName == "INPUT") {
+            theElement.value = newText;
+	} else {
+            theElement.firstChild.textContent = newText;
+	}
+    }
+}
+
+function appendTextFromArray(textArray)
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        for (var j = 0; j < textArray.length; ++j) {
+            if (theElement.tagName == "INPUT") {
+                theElement.value += textArray[j];
+            } else {
+                var textNode = document.createTextNode(textArray[j]);
+                theElement.appendChild(textNode);
+            }
+        }
+    }
+}
+
+function appendSpansFromArray(textArray)
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        for (var j = 0; j < textArray.length; ++j) {
+	    // fake the result for elements that can't have markup content
+            if (theElement.tagName == "INPUT") {
+                theElement.value += textArray[j];
+	    } else if (theElement.tagName == "TEXTAREA") {
+		theElement.innerHTML += textArray[j];
+            } else {
+                var span = document.createElement("span");
+		span.innerHTML = textArray[j];
+                theElement.appendChild(span);
+            }
+        }
+    }
+}
+
+function prependTextFromArray(textArray)
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        for (var j = 0; j < textArray.length; ++j) {
+            if (theElement.tagName == "INPUT") {
+                theElement.value = textArray[j] + theElement.value;
+            } else {
+                var textNode = document.createTextNode(textArray[j]);
+                theElement.insertBefore(textNode, theElement.firstChild);
+            }
+        }
+    }
+}
+
+function prependSpansFromArray(textArray)
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        for (var j = 0; j < textArray.length; ++j) {
+	    // fake the result for elements that can't have markup content
+            if (theElement.tagName == "INPUT") {
+                theElement.value = textArray[j] + theElement.value;
+	    } else if (theElement.tagName == "TEXTAREA") {
+		theElement.innerHTML = textArray[j] + theElement.innerHTML;
+            } else {
+                var span = document.createElement("span");
+		span.innerHTML = textArray[j];
+                theElement.insertBefore(span, theElement.firstChild);
+            }
+        }
+    }
+}
+
+function removeElements()
+{
+    for (var i = 0; ; ++i) {
+        theElement = document.getElementById("set" + i);
+        if (!theElement) {
+            break;
+        }
+        theElement.parentNode.removeChild(theElement);
+    }
+}
