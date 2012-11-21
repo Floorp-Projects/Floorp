@@ -33,6 +33,7 @@ public:
     : mCompositionBounds(0, 0, 0, 0)
     , mContentRect(0, 0, 0, 0)
     , mDisplayPort(0, 0, 0, 0)
+    , mCriticalDisplayPort(0, 0, 0, 0)
     , mViewport(0, 0, 0, 0)
     , mScrollOffset(0, 0)
     , mScrollId(NULL_SCROLL_ID)
@@ -50,6 +51,7 @@ public:
     return mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
            mContentRect.IsEqualEdges(aOther.mContentRect) &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
+           mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mViewport.IsEqualEdges(aOther.mViewport) &&
            mScrollOffset == aOther.mScrollOffset &&
            mScrollId == aOther.mScrollId &&
@@ -148,6 +150,14 @@ public:
   // This is only valid on the root layer. Nested iframes do not have a
   // displayport set on them. See bug 775452.
   gfx::Rect mDisplayPort;
+
+  // If non-empty, the area of a frame's contents that is considered critical
+  // to paint. Area outside of this area (i.e. area inside mDisplayPort, but
+  // outside of mCriticalDisplayPort) is considered low-priority, and may be
+  // painted with lower precision, or not painted at all.
+  //
+  // The same restrictions for mDisplayPort apply here.
+  gfx::Rect mCriticalDisplayPort;
 
   // The CSS viewport, which is the dimensions we're using to constrain the
   // <html> element of this frame, relative to the top-left of the layer. Note
