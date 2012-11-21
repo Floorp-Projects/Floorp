@@ -349,6 +349,16 @@ class TypedRegisterSet
         JS_ASSERT(has(reg));
         bits_ &= ~(1 << reg.code());
     }
+    void take(ValueOperand value) {
+#if defined(JS_NUNBOX32)
+        take(value.payloadReg());
+        take(value.typeReg());
+#elif defined(JS_PUNBOX64)
+        take(value.valueReg());
+#else
+#error "Bad architecture"
+#endif
+    }
     T getAny() const {
         JS_ASSERT(!empty());
         int ireg;

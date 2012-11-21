@@ -744,6 +744,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxObject(value, scratch);
         return scratch;
     }
+    Register extractInt32(const ValueOperand &value, Register scratch) {
+        JS_ASSERT(scratch != ScratchReg);
+        unboxInt32(value, scratch);
+        return scratch;
+    }
     Register extractTag(const Address &address, Register scratch) {
         JS_ASSERT(scratch != ScratchReg);
         loadPtr(address, scratch);

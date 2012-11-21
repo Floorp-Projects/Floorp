@@ -160,7 +160,8 @@ class ICEntry
                                 \
     _(Call_Fallback)            \
                                 \
-    _(GetElem_Fallback)
+    _(GetElem_Fallback)         \
+    _(GetElem_Dense)
 
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
@@ -332,6 +333,17 @@ class ICFallbackStub : public ICStub
         lastStubPtrAddr_ = stub->addressOfNext();
         numOptimizedStubs_++;
     }
+    bool hasStub(ICStub::Kind kind) {
+        ICStub *stub = icEntry_->firstStub();
+        do {
+            if (stub->kind() == kind)
+                return true;
+
+            stub = stub->next();
+        } while (stub);
+
+        return false;
+    }
 };
 
 // Base class for stubcode compilers.
@@ -355,11 +367,33 @@ class ICStubCompiler
     // Helper to generate an stubcall IonCode from a VMFunction wrapper.
     bool callVM(const VMFunction &fun, MacroAssembler &masm);
 
-    GeneralRegisterSet availableGeneralRegs() const {
+    inline GeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
         GeneralRegisterSet regs(GeneralRegisterSet::All());
+        JS_ASSERT(!regs.has(BaselineStackReg));
+#ifdef JS_CPU_ARM
+        JS_ASSERT(!regs.has(BaselineTailCallReg));
+#endif
         regs.take(BaselineFrameReg);
         regs.take(BaselineStubReg);
-        regs.take(BaselineTailCallReg);
+#ifdef JS_CPU_X64
+        regs.take(ExtractTemp0);
+        regs.take(ExtractTemp1);
+#endif
+
+        switch (numInputs) {
+          case 0:
+            break;
+          case 1:
+            regs.take(R0);
+            break;
+          case 2:
+            regs.take(R0);
+            regs.take(R1);
+            break;
+          default:
+            JS_NOT_REACHED("Invalid numInputs");
+        }
+
         return regs;
     }
 
@@ -585,6 +619,8 @@ class ICGetElem_Fallback : public ICFallbackStub
     { }
 
   public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
     static inline ICGetElem_Fallback *New(IonCode *code) {
         return new ICGetElem_Fallback(code);
     }
@@ -601,6 +637,30 @@ class ICGetElem_Fallback : public ICFallbackStub
 
         ICStub *getStub() {
             return ICGetElem_Fallback::New(getStubCode());
+        }
+    };
+};
+
+class ICGetElem_Dense : public ICStub
+{
+    ICGetElem_Dense(IonCode *stubCode)
+      : ICStub(GetElem_Dense, stubCode) {}
+
+  public:
+    static inline ICGetElem_Dense *New(IonCode *code) {
+        return new ICGetElem_Dense(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetElem_Dense) {}
+
+        ICStub *getStub() {
+            return ICGetElem_Dense::New(getStubCode());
         }
     };
 };
