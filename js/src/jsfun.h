@@ -73,6 +73,8 @@ struct JSFunction : public JSObject
     } u;
   private:
     js::HeapPtrAtom  atom_;       /* name for diagnostics and decompiling */
+
+    bool initializeLazyScript(JSContext *cx);
   public:
 
     /* A function can be classified as either native (C++) or interpreted (JS): */
@@ -176,9 +178,34 @@ struct JSFunction : public JSObject
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
-    js::Return<JSScript*> script() const {
+    js::Return<JSScript*> getOrCreateScript(JSContext *cx) {
+        JS_ASSERT(isInterpreted());
+        if (isInterpretedLazy()) {
+            js::RootedFunction self(cx, this);
+            js::MaybeCheckStackRoots(cx);
+            if (!initializeLazyScript(cx))
+                return js::NullPtr();
+        }
         JS_ASSERT(hasScript());
         return JS::HandleScript::fromMarkedLocation(&u.i.script_);
+    }
+
+    bool maybeGetOrCreateScript(JSContext *cx, js::MutableHandle<JSScript*> script) {
+        if (isNative()) {
+            script.set(NULL);
+            return true;
+        }
+        script.set(getOrCreateScript(cx).unsafeGet());
+        return hasScript();
+    }
+
+    js::Return<JSScript*> nonLazyScript() const {
+        JS_ASSERT(hasScript());
+        return JS::HandleScript::fromMarkedLocation(&u.i.script_);
+    }
+
+    js::Return<JSScript*> maybeNonLazyScript() const {
+        return isInterpreted() ? nonLazyScript() : JS::NullPtr();
     }
 
     js::HeapPtrScript &mutableScript() {
@@ -188,10 +215,6 @@ struct JSFunction : public JSObject
 
     inline void setScript(JSScript *script_);
     inline void initScript(JSScript *script_);
-
-    js::Return<JSScript*> maybeScript() const {
-        return isInterpreted() ? script() : JS::NullPtr();
-    }
 
     JSNative native() const {
         JS_ASSERT(isNative());
@@ -343,9 +366,6 @@ XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope,
 
 extern JSObject *
 CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleFunction fun);
-
-bool
-InitializeLazyFunctionScript(JSContext *cx, HandleFunction fun);
 
 /*
  * Report an error that call.thisv is not compatible with the specified class,

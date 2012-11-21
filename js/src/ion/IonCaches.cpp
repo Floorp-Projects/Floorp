@@ -1624,7 +1624,7 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         CallObject *callObj = &scopeObj->asCall();
         if (!callObj->isForEval()) {
             RawFunction fun = &callObj->callee();
-            RawScript script = fun->script().get(nogc);
+            RawScript script = fun->nonLazyScript().get(nogc);
             if (!script->funHasExtensibleScope)
                 return;
         }

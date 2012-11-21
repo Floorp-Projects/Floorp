@@ -4871,8 +4871,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg
      * script, we cannot clone it without breaking the compiler's assumptions.
      */
     RootedFunction fun(cx, funobj->toFunction());
-    if (fun->isInterpreted() && (fun->script()->enclosingStaticScope() ||
-        (fun->script()->compileAndGo && !parent->isGlobal())))
+    if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
+        (fun->nonLazyScript()->compileAndGo && !parent->isGlobal())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return NULL;

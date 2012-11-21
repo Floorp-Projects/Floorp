@@ -250,7 +250,7 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
     uint8_t* codeStart = (uint8_t *)chunk->code.m_code.executableAddress();
 
     InlineFrame *inner = &chunk->inlineFrames()[inlined->inlineIndex];
-    jsbytecode *innerpc = inner->fun->script()->code + inlined->pcOffset;
+    jsbytecode *innerpc = inner->fun->nonLazyScript()->code + inlined->pcOffset;
 
     StackFrame *innerfp = expandInlineFrameChain(fp, inner);
 

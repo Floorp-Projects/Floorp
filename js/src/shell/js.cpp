@@ -1456,7 +1456,8 @@ ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
     if (!fun)
         return NULL;
 
-    RootedScript script(cx, fun->maybeScript());
+    RootedScript script(cx);
+    fun->maybeGetOrCreateScript(cx, &script);
     if (!script)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_SCRIPTS_ONLY);
 
@@ -1924,8 +1925,9 @@ DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines,
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
                 RawFunction fun = obj->toFunction();
-                RawScript nested = fun->maybeScript().unsafeGet();
-                if (!DisassembleScript(cx, nested, fun, lines, recursive, sp))
+                RootedScript script(cx);
+                fun->maybeGetOrCreateScript(cx, &script);
+                if (!DisassembleScript(cx, script.get(), fun, lines, recursive, sp))
                     return false;
             }
         }
@@ -2351,7 +2353,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
     }
     if (funobj->compartment() != cx->compartment) {
         JSFunction *fun = funobj->toFunction();
-        if (fun->hasScript() && fun->script()->compileAndGo) {
+        if (fun->hasScript() && fun->nonLazyScript()->compileAndGo) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                                  "function", "compile-and-go");
             return false;

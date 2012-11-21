@@ -368,7 +368,7 @@ js::IsObjectInContextCompartment(RawObject obj, const JSContext *cx)
 JS_FRIEND_API(bool)
 js::IsOriginalScriptFunction(JSFunction *fun)
 {
-    return fun->script()->function() == fun;
+    return fun->nonLazyScript()->function() == fun;
 }
 
 JS_FRIEND_API(JSScript *)
@@ -382,7 +382,7 @@ js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx)
         return NULL;
 
     JSFunction *scriptedCaller = fp->fun();
-    RootedScript outermost(cx, scriptedCaller->script());
+    RootedScript outermost(cx, scriptedCaller->nonLazyScript());
     for (StaticScopeIter i(scriptedCaller); !i.done(); i++) {
         if (i.type() == StaticScopeIter::FUNCTION)
             outermost = i.funScript();
