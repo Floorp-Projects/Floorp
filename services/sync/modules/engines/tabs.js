@@ -18,13 +18,8 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-common/preferences.js");
 
-// It is safer to inspect the private browsing preferences rather than
-// the flags of nsIPrivateBrowsingService.  The user may have turned on
-// "Never remember history" in the same session, or Firefox was started
-// with the -private command line argument.  In both cases, the
-// "autoStarted" flag of nsIPrivateBrowsingService will be wrong.
-const PBPrefs = new Preferences("browser.privatebrowsing.");
-
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 this.TabSetRecord = function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
@@ -128,6 +123,9 @@ TabStore.prototype = {
     let currentState = JSON.parse(Svc.Session.getBrowserState());
     let tabLastUsed = this.tabLastUsed;
     currentState.windows.forEach(function(window) {
+      if (window.isPrivate) {
+        return;
+      }
       window.tabs.forEach(function(tab) {
         // Make sure there are history entries to look at.
         if (!tab.entries.length)
@@ -159,12 +157,6 @@ TabStore.prototype = {
     let record = new TabSetRecord(collection, id);
     record.clientName = this.engine.service.clientsEngine.localName;
 
-    // Don't provide any tabs to compare against and ignore the update later.
-    if (Svc.Private && Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart")) {
-      record.tabs = [];
-      return record;
-    }
-
     // Sort tabs in descending-used order to grab the most recently used
     let tabs = this.getAllTabs(true).sort(function(a, b) {
       return b.lastUsed - a.lastUsed;
@@ -195,10 +187,26 @@ TabStore.prototype = {
   },
 
   getAllIDs: function TabStore_getAllIds() {
-    // Don't report any tabs if we're in private browsing for first syncs.
+    // Don't report any tabs if all windows are in private browsing for
+    // first syncs.
     let ids = {};
-    if (Svc.Private && Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart"))
+    let allWindowsArePrivate = false;
+    let wins = Services.wm.getEnumerator("navigator:browser");
+    while (wins.hasMoreElements()) {
+      if (PrivateBrowsingUtils.isWindowPrivate(wins.getNext())) {
+        // Ensure that at least there is a private window.
+        allWindowsArePrivate = true;
+      } else {
+        // If there is a not private windown then finish and continue.
+        allWindowsArePrivate = false;
+        break;
+      }
+    }
+
+    if (allWindowsArePrivate &&
+        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
       return ids;
+    }
 
     ids[this.engine.service.clientsEngine.localID] = true;
     return ids;
@@ -280,7 +288,9 @@ TabTracker.prototype = {
     switch (aTopic) {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
           Svc.Obs.add("private-browsing", this);
+#endif
           Svc.Obs.add("domwindowopened", this);
           let wins = Services.wm.getEnumerator("navigator:browser");
           while (wins.hasMoreElements())
@@ -290,7 +300,9 @@ TabTracker.prototype = {
         break;
       case "weave:engine:stop-tracking":
         if (this._enabled) {
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
           Svc.Obs.remove("private-browsing", this);
+#endif
           Svc.Obs.remove("domwindowopened", this);
           let wins = Services.wm.getEnumerator("navigator:browser");
           while (wins.hasMoreElements())
@@ -307,16 +319,22 @@ TabTracker.prototype = {
           self._registerListenersForWindow(aSubject);
         }, false);
         break;
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
       case "private-browsing":
-        if (aData == "enter" && !PBPrefs.get("autostart"))
+        if (aData == "enter" && !PrivateBrowsingUtils.permanentPrivateBrowsing)
           this.modified = false;
+#endif
     }
   },
 
   onTab: function onTab(event) {
-    if (Svc.Private && Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart")) {
-      this._log.trace("Ignoring tab event from private browsing.");
-      return;
+    if (event.originalTarget.linkedBrowser) {
+      let win = event.originalTarget.linkedBrowser.contentWindow;
+      if (PrivateBrowsingUtils.isWindowPrivate(win) &&
+          !PrivateBrowsingUtils.permanentPrivateBrowsing) {
+        this._log.trace("Ignoring tab event from private browsing.");
+        return;
+      }
     }
 
     this._log.trace("onTab event: " + event.type);

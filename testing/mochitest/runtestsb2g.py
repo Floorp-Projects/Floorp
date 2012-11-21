@@ -98,6 +98,10 @@ class B2GOptions(MochitestOptions):
                         help="the path to a gecko distribution that should "
                         "be installed on the emulator prior to test")
         defaults["geckoPath"] = None
+        self.add_option("--logcat-dir", action="store",
+                        type="string", dest="logcat_dir",
+                        help="directory to store logcat dump files")
+        defaults["logcat_dir"] = None
 
         defaults["remoteTestRoot"] = None
         defaults["logFile"] = "mochitest.log"
@@ -120,11 +124,13 @@ class B2GOptions(MochitestOptions):
                 options.remoteWebServer = automation.getLanIp()
             else:
                 self.error("You must specify a --remote-webserver=<ip address>")
+        options.webServer = options.remoteWebServer
 
         if options.geckoPath and not options.emulator:
             self.error("You must specify --emulator if you specify --gecko-path")
 
-        options.webServer = options.remoteWebServer
+        if options.logcat_dir and not options.emulator:
+            self.error("You must specify --emulator if you specify --logcat-dir")
 
         #if not options.emulator and not options.deviceIP:
         #    print "ERROR: you must provide a device IP"
@@ -473,6 +479,8 @@ def main():
             kwargs['noWindow'] = True
         if options.geckoPath:
             kwargs['gecko_path'] = options.geckoPath
+        if options.logcat_dir:
+            kwargs['logcat_dir'] = options.logcat_dir
     # needless to say sdcard is only valid if using an emulator
     if options.sdcard:
         kwargs['sdcard'] = options.sdcard
@@ -482,7 +490,8 @@ def main():
         host,port = options.marionette.split(':')
         kwargs['host'] = host
         kwargs['port'] = int(port)
-    marionette = Marionette(**kwargs)
+
+    marionette = Marionette.getMarionetteOrExit(**kwargs)
 
     auto.marionette = marionette
 
@@ -524,7 +533,7 @@ def main():
             mochitest.cleanup(None, options)
         except:
             pass
-            sys.exit(1)
+        retVal = 1
 
     sys.exit(retVal)
 

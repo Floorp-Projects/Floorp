@@ -1068,8 +1068,6 @@ ScopeIterKey::match(ScopeIterKey si1, ScopeIterKey si2)
 
 /*****************************************************************************/
 
-namespace js {
-
 /*
  * DebugScopeProxy is the handler for DebugScopeObject proxy objects. Having a
  * custom handler (rather than trying to reuse js::Wrapper) gives us several
@@ -1460,8 +1458,6 @@ class DebugScopeProxy : public BaseProxyHandler
                                         JSDVG_IGNORE_STACK, idval, NullPtr(), NULL, NULL);
     }
 };
-
-}  /* namespace js */
 
 int DebugScopeProxy::family = 0;
 DebugScopeProxy DebugScopeProxy::singleton;

@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import socket
+import sys
+import traceback
 
 from client import MarionetteClient
 from application_cache import ApplicationCache
@@ -10,6 +12,7 @@ from keys import Keys
 from errors import *
 from emulator import Emulator
 from geckoinstance import GeckoInstance
+
 
 class HTMLElement(object):
 
@@ -74,7 +77,7 @@ class HTMLElement(object):
 
     def is_displayed(self):
         return self.marionette._send_message('isElementDisplayed', 'value', element=self.id)
-     
+
     @property
     def size(self):
         return self.marionette._send_message('getElementSize', 'value', element=self.id)
@@ -154,6 +157,26 @@ class Marionette(object):
             self.instance.close()
         for qemu in self.extra_emulators:
             qemu.emulator.close()
+
+    @classmethod
+    def getMarionetteOrExit(cls, *args, **kwargs):
+        try:
+            m = cls(*args, **kwargs)
+            return m
+        except InstallGeckoError:
+            # Bug 812395 - the process of installing gecko into the emulator
+            # and then restarting B2G tickles some bug in the emulator/b2g
+            # that intermittently causes B2G to fail to restart.  To work
+            # around this in TBPL runs, we will fail gracefully from this
+            # error so that the mozharness script can try the run again.
+
+            # This string will get caught by mozharness and will cause it
+            # to retry the tests.
+            print "Error installing gecko!"
+
+            # Exit without a normal exception to prevent mozharness from
+            # flagging the error.
+            sys.exit()
 
     def _send_message(self, command, response_key, **kwargs):
         if not self.session and command not in ('newSession', 'getStatus'):

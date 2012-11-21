@@ -589,7 +589,5 @@ function getPopupWidth() {
 
 function closeAllChats() {
   let chatbar = window.SocialChatBar.chatbar;
-  while (chatbar.selectedChat) {
-    chatbar.selectedChat.close();
-  }
+  chatbar.removeAll();
 }

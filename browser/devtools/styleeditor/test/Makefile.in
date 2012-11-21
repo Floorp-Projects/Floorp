@@ -23,7 +23,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_passedinsheet.js \
                  browser_styleeditor_pretty.js \
                  browser_styleeditor_readonly.js \
-                 $(warning browser_styleeditor_reopen.js is disabled for intermittent failures. Bug 707891) \
+		 $(filter disabled-for-intermittent-failures--bug-707891, browser_styleeditor_reopen.js) \
                  browser_styleeditor_sv_keynav.js \
                  browser_styleeditor_sv_resize.js \
                  four.html \

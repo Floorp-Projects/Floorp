@@ -156,67 +156,67 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(TestObserver, IPeerConnectionObserver)
 NS_IMETHODIMP
 TestObserver::OnCreateOfferSuccess(const char* offer)
 {
+  lastString = strdup(offer);
   state = stateSuccess;
   cout << "onCreateOfferSuccess = " << offer << endl;
-  lastString = strdup(offer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnCreateOfferError(uint32_t code)
 {
+  lastStatusCode = code;
   state = stateError;
   cout << "onCreateOfferError" << endl;
-  lastStatusCode = code;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnCreateAnswerSuccess(const char* answer)
 {
+  lastString = strdup(answer);
   state = stateSuccess;
   cout << "onCreateAnswerSuccess = " << answer << endl;
-  lastString = strdup(answer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnCreateAnswerError(uint32_t code)
 {
-  state = stateError;
   lastStatusCode = code;
+  state = stateError;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetLocalDescriptionSuccess(uint32_t code)
 {
-  state = stateSuccess;
   lastStatusCode = code;
+  state = stateSuccess;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetRemoteDescriptionSuccess(uint32_t code)
 {
-  state = stateSuccess;
   lastStatusCode = code;
+  state = stateSuccess;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetLocalDescriptionError(uint32_t code)
 {
-  state = stateError;
   lastStatusCode = code;
+  state = stateError;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::OnSetRemoteDescriptionError(uint32_t code)
 {
-  state = stateError;
   lastStatusCode = code;
+  state = stateError;
   return NS_OK;
 }
 
@@ -506,7 +506,7 @@ class SignalingAgent {
   void Close()
   {
     cout << "Close" << endl;
-    pc->Close();
+    pc->Close(false);
     // Shutdown is synchronous evidently.
     // ASSERT_TRUE(pObserver->WaitForObserverCall());
     // ASSERT_EQ(pc->sipcc_state(), sipcc::PeerConnectionInterface::kIdle);
@@ -1203,6 +1203,9 @@ TEST_F(SignalingTest, FullCallTrickle)
 } // End namespace test.
 
 int main(int argc, char **argv) {
+  // This test can cause intermittent oranges on the builders
+  CHECK_ENVIRONMENT_FLAG("MOZ_WEBRTC_TESTS")
+
   test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(NULL);
   NSS_SetDomesticPolicy();

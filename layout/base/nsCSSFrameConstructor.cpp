@@ -8048,7 +8048,13 @@ NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
     positionMask = (1 << NS_STYLE_POSITION_FIXED) |
         (1 << NS_STYLE_POSITION_ABSOLUTE);
   }
-  return FrameHasPositionedPlaceholderDescendants(aFrame, positionMask);
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+    if (FrameHasPositionedPlaceholderDescendants(f, positionMask)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 nsresult

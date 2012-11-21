@@ -541,8 +541,6 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
     js_delete(cx);
 }
 
-namespace js {
-
 bool
 AutoResolving::alreadyStartedSlow() const
 {
@@ -555,8 +553,6 @@ AutoResolving::alreadyStartedSlow() const
     } while (!!(cursor = cursor->link));
     return false;
 }
-
-} /* namespace js */
 
 static void
 ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
@@ -754,11 +750,9 @@ js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap)
     return warning;
 }
 
-namespace js {
-
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 void
-ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
+js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
 {
     const char *usageStr = "usage";
     PropertyName *usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
@@ -784,8 +778,8 @@ ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
 }
 
 bool
-PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report,
-           bool reportWarnings)
+js::PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report,
+               bool reportWarnings)
 {
     if (!report) {
         fprintf(file, "%s\n", message);
@@ -854,8 +848,6 @@ PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report
     JS_free(cx, prefix);
     return true;
 }
-
-} /* namespace js */
 
 /*
  * The arguments from ap need to be packaged up into an array and stored
@@ -1610,8 +1602,6 @@ JSContext::mark(JSTracer *trc)
     MarkValueRoot(trc, &iterValue, "iterValue");
 }
 
-namespace JS {
-
 #if defined JS_THREADSAFE && defined DEBUG
 
 AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
@@ -1629,5 +1619,3 @@ AutoCheckRequestDepth::~AutoCheckRequestDepth()
 }
 
 #endif
-
-} // namespace JS

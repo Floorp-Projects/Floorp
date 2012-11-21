@@ -96,7 +96,7 @@ bool ValidWriteAssert(bool ok)
     std::vector<uintptr_t> rawStack;
 
     NS_StackWalk(RecordStackWalker, 0, reinterpret_cast<void*>(&rawStack), 0);
-    Telemetry::ProcessedStack stack = Telemetry::GetStackAndModules(rawStack, true);
+    Telemetry::ProcessedStack stack = Telemetry::GetStackAndModules(rawStack);
 
     nsPrintfCString nameAux("%s%s", sProfileDirectory,
                             "/Telemetry.LateWriteTmpXXXXXX");

@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIPrincipal;
+
 /**
  * Interface for a class that manages updates of the url classifier database.
  */
@@ -16,7 +18,7 @@ interface nsIUrlListManagerCallback : nsISupports {
 };
 
 
-[scriptable, uuid(9c5598ec-9986-40cf-af40-b5e0d817a3a0)]
+[scriptable, uuid(5b4645b6-f9ca-4cb1-a821-2bdb3c3902f8)]
 interface nsIUrlListManager : nsISupports
 {
     /**
@@ -60,7 +62,7 @@ interface nsIUrlListManager : nsISupports
      * function with a comma-separated list of tables to which the key
      * belongs.
      */
-    void safeLookup(in ACString key,
+    void safeLookup(in nsIPrincipal key,
                     in nsIUrlListManagerCallback cb);
 
     void checkForUpdates();
