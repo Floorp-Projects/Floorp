@@ -1592,18 +1592,10 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             JSObject *ww = wrapper->GetWrapper();
             if (ww) {
                 JSObject *newwrapper;
-                MOZ_ASSERT(!xpc::WrapperFactory::IsComponentsObject(flat), 
-                           "Components object should never get here");
-                if (xpc::WrapperFactory::IsLocationObject(flat)) {
-                    newwrapper = xpc::WrapperFactory::WrapLocationObject(ccx, newobj);
-                    if (!newwrapper)
-                        MOZ_CRASH();
-                } else {
-                    NS_ASSERTION(wrapper->NeedsSOW(), "weird wrapper wrapper");
-                    newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
-                    if (!newwrapper)
-                        MOZ_CRASH();
-                }
+                MOZ_ASSERT(wrapper->NeedsSOW(), "weird wrapper wrapper");
+                newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
+                if (!newwrapper)
+                    MOZ_CRASH();
 
                 // Ok, now we do the special object-plus-wrapper transplant.
                 ww = xpc::TransplantObjectWithWrapper(ccx, flat, ww, newobj,
@@ -2213,11 +2205,7 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
     // Check the possibilities. Note that we need to check for null in each
     // case in order to distinguish between the 'no need for wrapper' and
     // 'wrapping failed' cases.
-    if (xpc::WrapperFactory::IsLocationObject(flat)) {
-        wrapper = xpc::WrapperFactory::WrapLocationObject(cx, flat);
-        if (!wrapper)
-            return NULL;
-    } else if (NeedsSOW()) {
+    if (NeedsSOW()) {
         wrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
         if (!wrapper)
             return NULL;
