@@ -60,6 +60,9 @@ const TLV_EVENT_LIST_SIZE = 3;
 const TLV_LOCATION_STATUS_SIZE = 3;
 const TLV_LOCATION_INFO_GSM_SIZE = 9;
 const TLV_LOCATION_INFO_UMTS_SIZE = 11;
+const TLV_IMEI_SIZE = 10;
+const TLV_DATE_TIME_ZONE_SIZE = 9;
+const TLV_LANGUAGE_SIZE = 4;
 
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
@@ -3118,11 +3121,13 @@ let RIL = {
    * Send STK terminal response.
    *
    * @param command
+   * @param deviceIdentities
    * @param resultCode
    * @param [optional] itemIdentifier
    * @param [optional] input
    * @param [optional] isYesNo
    * @param [optional] hasConfirmed
+   * @param [optional] localInfo
    */
   sendStkTerminalResponse: function sendStkTerminalResponse(response) {
     if (response.hasConfirmed !== undefined) {
@@ -3154,6 +3159,18 @@ let RIL = {
                 TLV_RESULT_SIZE +
                 (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
                 (textLen ? textLen + 3 : 0)) * 2;
+    if (response.localInfo) {
+      let localInfo = response.localInfo;
+      size = size +
+             (((localInfo.locationInfo ?
+               (localInfo.locationInfo.gsmCellId > 0xffff ?
+                 TLV_LOCATION_INFO_UMTS_SIZE :
+                 TLV_LOCATION_INFO_GSM_SIZE) :
+               0) +
+             (localInfo.imei ? TLV_IMEI_SIZE : 0) +
+             (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
+             (localInfo.language ? TLV_LANGUAGE_SIZE : 0)) * 2);
+    }
     Buf.writeUint32(size);
 
     // Command Details
@@ -3235,6 +3252,40 @@ let RIL = {
             }
             break;
         }
+      }
+    }
+
+    // Local Information
+    if (response.localInfo) {
+      let localInfo = response.localInfo;
+
+      // Location Infomation
+      if (localInfo.locationInfo) {
+        ComprehensionTlvHelper.writeLocationInfoTlv(localInfo.locationInfo);
+      }
+
+      // IMEI
+      if (localInfo.imei) {
+        let imei = localInfo.imei;
+        if(imei.length == 15) {
+          imei = imei + "0";
+        }
+
+        GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_IMEI);
+        GsmPDUHelper.writeHexOctet(8);
+        for (let i = 0; i < imei.length / 2; i++) {
+          GsmPDUHelper.writeHexOctet(parseInt(imei.substr(i * 2, 2), 16));
+        }
+      }
+
+      // Date and Time Zone
+      if (localInfo.date) {
+        ComprehensionTlvHelper.writeDateTimeZoneTlv(localInfo.date);
+      }
+
+      // Language
+      if (localInfo.language) {
+        ComprehensionTlvHelper.writeLanguageTlv(localInfo.language);
       }
     }
 
@@ -6121,6 +6172,20 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Convert a BCD number to an octet (number)
+   *
+   * Only take two digits with absolute value.
+   *
+   * @param bcd
+   *
+   * @return the corresponding octet.
+   */
+  BCDToOctet: function BCDToOctet(bcd) {
+    bcd = Math.abs(bcd);
+    return ((bcd % 10) << 4) + (Math.floor(bcd / 10) % 10);
+  },
+
+  /**
    * Convert a semi-octet (number) to a GSM BCD char.
    */
   bcdChars: "0123456789*#,;",
@@ -6197,6 +6262,24 @@ let GsmPDUHelper = {
     data = data.toString();
     if (data.length % 2) {
       data += "F";
+    }
+    for (let i = 0; i < data.length; i += 2) {
+      Buf.writeUint16(data.charCodeAt(i + 1));
+      Buf.writeUint16(data.charCodeAt(i));
+    }
+  },
+
+  /**
+   * Write numerical data as swapped nibble BCD.
+   * If the number of digit of data is even, add '0' at the beginning.
+   *
+   * @param data
+   *        Data to write (as a string or a number)
+   */
+  writeSwappedNibbleBCDNum: function writeSwappedNibbleBCDNum(data) {
+    data = data.toString();
+    if (data.length % 2) {
+      data = "0" + data;
     }
     for (let i = 0; i < data.length; i += 2) {
       Buf.writeUint16(data.charCodeAt(i + 1));
@@ -7029,6 +7112,43 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Write GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
+   *
+   * @see 3GPP TS 23.040 9.2.3.11
+   */
+  writeTimestamp: function writeTimestamp(date) {
+    this.writeSwappedNibbleBCDNum(date.getFullYear() - PDU_TIMESTAMP_YEAR_OFFSET);
+
+    // The value returned by getMonth() is an integer between 0 and 11.
+    // 0 is corresponds to January, 1 to February, and so on.
+    this.writeSwappedNibbleBCDNum(date.getMonth() + 1);
+    this.writeSwappedNibbleBCDNum(date.getDate());
+    this.writeSwappedNibbleBCDNum(date.getHours());
+    this.writeSwappedNibbleBCDNum(date.getMinutes());
+    this.writeSwappedNibbleBCDNum(date.getSeconds());
+
+    // the value returned by getTimezoneOffset() is the difference,
+    // in minutes, between UTC and local time.
+    // For example, if your time zone is UTC+10 (Australian Eastern Standard Time),
+    // -600 will be returned.
+    // In TS 23.040 9.2.3.11, the Time Zone field of TP-SCTS indicates
+    // the different between the local time and GMT.
+    // And expressed in quarters of an hours. (so need to divid by 15)
+    let zone = date.getTimezoneOffset() / 15;
+    let octet = this.BCDToOctet(zone);
+
+    // the bit3 of the Time Zone field represents the algebraic sign.
+    // (0: positive, 1: negative).
+    // For example, if the time zone is -0800 GMT,
+    // 480 will be returned by getTimezoneOffset().
+    // In this case, need to mark sign bit as 1. => 0x08
+    if (zone > 0) {
+      octet = octet | 0x08;
+    }
+    this.writeHexOctet(octet);
+  },
+
+  /**
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
    *
@@ -7738,6 +7858,9 @@ let StkCommandParamsFactory = {
       case STK_CMD_POLL_OFF:
         param = this.processPollOff(cmdDetails, ctlvs);
         break;
+      case STK_CMD_PROVIDE_LOCAL_INFO:
+        param = this.processProvideLocalInfo(cmdDetails, ctlvs);
+        break;
       case STK_CMD_SET_UP_EVENT_LIST:
         param = this.processSetUpEventList(cmdDetails, ctlvs);
         break;
@@ -8145,6 +8268,21 @@ let StkCommandParamsFactory = {
     playTone.isVibrate = (cmdDetails.commandQualifier & 0x01) != 0x00;
 
     return playTone;
+  },
+
+  /**
+   * Construct a param for Provide Local Information
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processProvideLocalInfo: function processProvideLocalInfo(cmdDetails, ctlvs) {
+    let provideLocalInfo = {
+      localInfoType: cmdDetails.commandQualifier
+    };
+    return provideLocalInfo;
   }
 };
 
@@ -8662,6 +8800,24 @@ let ComprehensionTlvHelper = {
     // | Ext = 1 (1 bit) |          Cause (7 bits)          |
     // +-----------------+----------------------------------+
     GsmPDUHelper.writeHexOctet(0x80 | cause);
+  },
+
+  writeDateTimeZoneTlv: function writeDataTimeZoneTlv(date) {
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DATE_TIME_ZONE);
+    GsmPDUHelper.writeHexOctet(7);
+    GsmPDUHelper.writeTimestamp(date);
+  },
+
+  writeLanguageTlv: function writeLanguageTlv(language) {
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_LANGUAGE);
+    GsmPDUHelper.writeHexOctet(2);
+
+    // ISO 639-1, Alpha-2 code
+    // TS 123.038, clause 6.2.1, GSM 7 bit Default Alphabet
+    GsmPDUHelper.writeHexOctet(
+      PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT].indexOf(language[0]));
+    GsmPDUHelper.writeHexOctet(
+      PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT].indexOf(language[1]));
   },
 
   getSizeOfLengthOctets: function getSizeOfLengthOctets(length) {
