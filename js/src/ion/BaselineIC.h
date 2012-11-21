@@ -195,7 +195,7 @@ class ICStub
     uint16_t kind_;
 
     // The raw jitcode to call for this stub.
-    void *stubCode_;
+    uint8_t *stubCode_;
 
     // Pointer to next IC stub.  This is null for the last IC stub, which should
     // either be a fallback or inert IC stub.
@@ -270,6 +270,10 @@ class ICStub
 
     inline ICStub **addressOfNext() {
         return &next_;
+    }
+
+    inline IonCode *ionCode() {
+        return IonCode::FromExecutable(stubCode_);
     }
 
     static inline size_t offsetOfNext() {

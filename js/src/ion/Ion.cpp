@@ -159,10 +159,6 @@ IonRuntime::initialize(JSContext *cx)
     if (!functionWrappers_ || !functionWrappers_->init())
         return false;
 
-    stubCodes_ = cx->new_<ICStubCodeMap>(cx);
-    if (!stubCodes_ || !stubCodes_->init())
-        return false;
-
     if (!bailoutTables_.reserve(FrameSizeClass::ClassLimit().classId()))
         return false;
 
@@ -206,13 +202,23 @@ IonRuntime::initialize(JSContext *cx)
 
 IonCompartment::IonCompartment(IonRuntime *rt)
   : rt(rt),
-    flusher_(NULL)
+    flusher_(NULL),
+    stubCodes_(NULL)
 {
+}
+
+IonCompartment::~IonCompartment()
+{
+    if (stubCodes_)
+        js_delete(stubCodes_);
 }
 
 bool
 IonCompartment::initialize(JSContext *cx)
 {
+    stubCodes_ = cx->new_<ICStubCodeMap>(cx);
+    if (!stubCodes_ || !stubCodes_->init())
+        return false;
     return true;
 }
 
@@ -266,6 +272,7 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 void
 IonCompartment::sweep(FreeOp *fop)
 {
+    stubCodes_->sweep(fop);
 }
 
 IonCode *

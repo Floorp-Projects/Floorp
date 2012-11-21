@@ -235,6 +235,15 @@ void
 BaselineScript::trace(JSTracer *trc)
 {
     MarkIonCode(trc, &method_, "baseline-method");
+
+    // Mark all IC stub codes hanging off the IC stub entries.
+    for (size_t i = 0; i < numICEntries(); i++) {
+        ICEntry &ent = icEntry(i);
+        for (ICStub *stub = ent.firstStub(); stub; stub = stub->next()) {
+            IonCode *stubIonCode = stub->ionCode();
+            MarkIonCodeUnbarriered(trc, &stubIonCode, "baseline-stub-ioncode");
+        }
+    }
 }
 
 void
