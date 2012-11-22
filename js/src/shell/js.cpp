@@ -40,6 +40,7 @@
 #include "jsscript.h"
 #include "jstypedarray.h"
 #include "jstypedarrayinlines.h"
+#include "jsworkers.h"
 #include "jsxml.h"
 #include "jsperf.h"
 
@@ -4748,6 +4749,12 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption('D'))
         enableDisassemblyDumps = true;
 
+#ifdef JS_THREADSAFE
+    int32_t threadCount = op->getIntOption("thread-count");
+    if (threadCount >= 0)
+        cx->runtime->requestHelperThreadCount(threadCount);
+#endif /* JS_THREADSAFE */
+
 #if defined(JS_ION)
     if (op->getBoolOption("no-ion")) {
         enableIon = false;
@@ -4832,8 +4839,8 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 #ifdef JS_THREADSAFE
     if (const char *str = op->getStringOption("ion-parallel-compile")) {
         if (strcmp(str, "on") == 0) {
-            if (GetCPUCount() <= 1) {
-                fprintf(stderr, "Parallel compilation not available on single core machines");
+            if (cx->runtime->helperThreadCount() == 0) {
+                fprintf(stderr, "Parallel compilation not available without helper threads");
                 return EXIT_FAILURE;
             }
             ion::js_IonOptions.parallelCompilation = true;
@@ -5025,6 +5032,10 @@ main(int argc, char **argv, char **envp)
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |arguments| in the "
                                          "shell's global")
+#ifdef JS_THREADSAFE
+        || !op.addIntOption('\0', "thread-count", "COUNT", "Use COUNT auxiliary threads "
+                            "(default: # of cores - 1)", -1)
+#endif
         || !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)")
         || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
