@@ -716,6 +716,29 @@
     "n_values": 16,
     "description": "NPN Results (0=none, 1=negotiated, 2=no-overlap)"
   },
+  "CERT_VALIDATION_HTTP_REQUEST_RESULT": {
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "HTTP result of OCSP, etc.. (0=canceled, 1=OK, 2=FAILED, 3=internal-error)"
+  },
+  "CERT_VALIDATION_HTTP_REQUEST_CANCELED_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 200,
+    "description": "ms elapsed time of OCSP etc.. that was canceled"
+  },
+  "CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 200,
+    "description": "ms elapsed time of OCSP etc.. that succeeded"
+  },
+  "CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 200,
+    "description": "ms elapsed time of OCSP etc.. that failed"
+  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "kind": "enumerated",
     "n_values": 16,

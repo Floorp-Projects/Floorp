@@ -7,6 +7,7 @@
 #include "nsNSSCallbacks.h"
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 
 #include "nsNSSIOLayer.h"
 #include "nsIWebProgressListener.h"
@@ -47,6 +48,7 @@ public:
   
   nsCOMPtr<nsHTTPListener> mListener;
   bool mResponsibleForDoneSignal;
+  TimeStamp mStartTime;
 };
 
 nsHTTPDownloadEvent::nsHTTPDownloadEvent()
@@ -128,8 +130,10 @@ nsHTTPDownloadEvent::Run()
   rv = NS_NewStreamLoader(getter_AddRefs(mListener->mLoader), 
                           mListener);
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
+    mStartTime = TimeStamp::Now();
     rv = hchan->AsyncOpen(mListener->mLoader, nullptr);
+  }
 
   if (NS_FAILED(rv)) {
     mListener->mResponsibleForDoneSignal = false;
@@ -367,6 +371,13 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
     bool running_on_main_thread = NS_IsMainThread();
     if (running_on_main_thread)
     {
+      // The result of running this on the main thread
+      // is a series of small timeouts mixed with spinning the
+      // event loop - this is always dangerous as there is so much main
+      // thread code that does not expect to be called re-entrantly. Your
+      // app really shouldn't do that.
+      NS_WARNING("Security network blocking I/O on Main Thread");
+
       // let's process events quickly
       wait_interval = PR_MicrosecondsToInterval(50);
     }
@@ -416,6 +427,31 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
         }
       }
     }
+  }
+
+  if (!event->mStartTime.IsNull()) {
+    if (request_canceled) {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 0);
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_CANCELED_TIME,
+        event->mStartTime, TimeStamp::Now());
+    }
+    else if (NS_SUCCEEDED(mListener->mResultCode) &&
+             mListener->mHttpResponseCode == 200) {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 1);
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME,
+        event->mStartTime, TimeStamp::Now());
+    }
+    else {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 2);
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME,
+        event->mStartTime, TimeStamp::Now());
+    }
+  }
+  else {
+    Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 3);
   }
 
   if (request_canceled)
