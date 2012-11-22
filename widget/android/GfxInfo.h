@@ -48,10 +48,10 @@ public:
 
   void EnsureInitializedFromGfxInfoData();
 
-  virtual const nsAString& Model() const;
-  virtual const nsAString& Hardware() const;
-  virtual const nsAString& Product() const;
-  virtual const nsAString& Manufacturer() const;
+  virtual nsString Model() const;
+  virtual nsString Hardware() const;
+  virtual nsString Product() const;
+  virtual nsString Manufacturer() const;
 
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
