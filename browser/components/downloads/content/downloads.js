@@ -783,6 +783,12 @@ const DownloadsView = {
       case KeyEvent.DOM_VK_RETURN:
         goDoCommand("downloadsCmd_doDefault");
         break;
+      case KeyEvent.DOM_VK_DOWN:
+        // Are we focused on the last element in the list?
+        if (this.richListBox.currentIndex == (this.richListBox.itemCount - 1)) {
+          DownloadsFooter.focus();
+        }
+        break;
     }
   },
 
@@ -1429,7 +1435,7 @@ const DownloadsSummary = {
   set visible(aVisible)
   {
     if (aVisible == this._visible || !this._summaryNode) {
-      return;
+      return this._visible;
     }
     if (aVisible) {
       DownloadsCommon.getSummary(DownloadsView.kItemCountLimit)
@@ -1441,6 +1447,15 @@ const DownloadsSummary = {
     this._summaryNode.collapsed = !aVisible;
     return this._visible = aVisible;
   },
+
+  /**
+   * Returns the collapsed state of the downloads summary.
+   */
+  get visible()
+  {
+    return this._visible;
+  },
+
   _visible: false,
 
   /**
@@ -1507,6 +1522,42 @@ const DownloadsSummary = {
   },
 
   /**
+   * Focuses the root element of the summary.
+   */
+  focus: function()
+  {
+    if (this._summaryNode) {
+      this._summaryNode.focus();
+    }
+  },
+
+  /**
+   * Respond to keypress events on the Downloads Summary node.
+   *
+   * @param aEvent
+   *        The keypress event being handled.
+   */
+  onKeyPress: function DS_onKeyPress(aEvent)
+  {
+    if (aEvent.charCode == " ".charCodeAt(0) ||
+        aEvent.keyCode == KeyEvent.DOM_VK_ENTER ||
+        aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
+      DownloadsPanel.showDownloadsHistory();
+    }
+  },
+
+  /**
+   * Respond to click events on the Downloads Summary node.
+   *
+   * @param aEvent
+   *        The click event being handled.
+   */
+  onClick: function DS_onClick(aEvent)
+  {
+    DownloadsPanel.showDownloadsHistory();
+  },
+
+  /**
    * Element corresponding to the root of the downloads summary.
    */
   get _summaryNode()
@@ -1560,3 +1611,42 @@ const DownloadsSummary = {
     return this._detailsNode = node;
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadsFooter
+
+/**
+ * Manages events sent to to the footer vbox, which contains both the
+ * DownloadsSummary as well as the "Show All Downloads" button.
+ */
+const DownloadsFooter = {
+
+  /**
+   * Focuses the appropriate element within the footer. If the summary
+   * is visible, focus it. If not, focus the "Show All Downloads"
+   * button.
+   */
+  focus: function DF_focus()
+  {
+    if (DownloadsSummary.visible) {
+      DownloadsSummary.focus();
+    } else {
+      DownloadsView.downloadsHistory.focus();
+    }
+  },
+
+  /**
+   * Handles keypress events on the footer element.
+   */
+  onKeyPress: function DF_onKeyPress(aEvent)
+  {
+    // If the up key is pressed, and the downloads list has at least 1 element
+    // in it, focus the last element in the list.
+    if (aEvent.keyCode == KeyEvent.DOM_VK_UP &&
+        DownloadsView.richListBox.itemCount > 0) {
+      DownloadsView.richListBox.focus();
+      DownloadsView.richListBox.selectedIndex =
+        (DownloadsView.richListBox.itemCount - 1);
+    }
+  }
+};
