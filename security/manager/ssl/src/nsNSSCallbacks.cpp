@@ -978,6 +978,15 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
       // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
       unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
       Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
+
+      SSLCipherSuiteInfo cipherInfo;
+      if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                                 sizeof (cipherInfo)) == SECSuccess) {
+        // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
+        Telemetry::Accumulate(Telemetry::SSL_KEY_EXCHANGE_ALGORITHM,
+                              cipherInfo.keaType);
+      }
+      
     }
     infoObject->SetHandshakeCompleted();
   }
