@@ -121,10 +121,6 @@ function startListeners() {
   addMessageListenerId("Marionette:importScript", importScript);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
-  addMessageListenerId("Marionette:addCookie", addCookie);
-  addMessageListenerId("Marionette:getAllCookies", getAllCookies);
-  addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
-  addMessageListenerId("Marionette:deleteCookie", deleteCookie);
 }
 
 /**
@@ -190,9 +186,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:importScript", importScript);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
-  removeMessageListenerId("Marionette:addCookie", addCookie);
-  removeMessageListenerId("Marionette:getAllCookies", getAllCookies);
-  removeMessageListenerId("Marionette:deleteCookie", deleteCookie);
   this.elementManager.reset();
   // reset frame to the top-most frame
   curWindow = content;
@@ -788,141 +781,6 @@ function getElementPosition(msg) {
   catch (e) {
     sendError(e.message, e.code, e.stack);
   }
-}
-
-/**
- * Add a cookie to the document
- */
-function addCookie(msg) {
-  cookie = msg.json.cookie;
-
-  if (!cookie.expiry) {
-    var date = new Date();
-    var thePresent = new Date(Date.now());
-    date.setYear(thePresent.getFullYear() + 20);
-    cookie.expiry = date.getTime() / 1000;  // Stored in seconds.
-  }
-
-  if (!cookie.domain) {
-    var location = curWindow.document.location;
-    cookie.domain = location.hostname;
-  }
-  else {
-    var currLocation = curWindow.location;
-    var currDomain = currLocation.host;
-    if (currDomain.indexOf(cookie.domain) == -1) {
-      sendError("You may only set cookies for the current domain", 24, null);
-    }
-  }
-
-  // The cookie's domain may include a port. Which is bad. Remove it
-  // We'll catch ip6 addresses by mistake. Since no-one uses those
-  // this will be okay for now. See Bug 814416
-  if (cookie.domain.match(/:\d+$/)) {
-    cookie.domain = cookie.domain.replace(/:\d+$/, '');
-  }
-
-  var document = curWindow.document;
-  if (!document || !document.contentType.match(/html/i)) {
-    sendError('You may only set cookies on html documents', 25, null);
-  }
-  var cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager2);
-  cookieManager.add(cookie.domain, cookie.path, cookie.name, cookie.value,
-                   cookie.secure, false, false, cookie.expiry);
-  sendOk();
-}
-
-/**
- * Get All the cookies for a location
- */
-function getAllCookies() {
-  var toReturn = [];
-  var cookies = getVisibleCookies(curWindow.location);
-  for (var i = 0; i < cookies.length; i++) {
-    var cookie = cookies[i];
-    var expires = cookie.expires;
-    if (expires == 0) {  // Session cookie, don't return an expiry.
-      expires = null;
-    } else if (expires == 1) { // Date before epoch time, cap to epoch.
-      expires = 0;
-    }
-    toReturn.push({
-      'name': cookie.name,
-      'value': cookie.value,
-      'path': cookie.path,
-      'domain': cookie.host,
-      'secure': cookie.isSecure,
-      'expiry': expires
-    });
-  }
-
-  sendResponse({value: toReturn});
-}
-
-/**
- * Delete a cookie by name
- */
-function deleteCookie(msg) {
-  var toDelete = msg.json.name;
-  var cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager);
-
-  var cookies = getVisibleCookies(curWindow.location);
-  for (var i = 0; i < cookies.length; i++) {
-    var cookie = cookies[i];
-    if (cookie.name == toDelete) {
-      cookieManager.remove(cookie.host, cookie.name, cookie.path, false);
-    }
-  }
-
-  sendOk();
-}
-
-/**
- * Delete all the visibile cookies on a page
- */
-function deleteAllCookies() {
-  let cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager);
-  let cookies = getVisibleCookies(curWindow.location);
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i];
-    cookieManager.remove(cookie.host, cookie.name, cookie.path, false);
-  }
-  sendOk();
-}
-
-/**
- * Get all the visible cookies from a location
- */
-function getVisibleCookies(location) {
-  let results = [];
-  let currentPath = location.pathname;
-  if (!currentPath) currentPath = '/';
-  let isForCurrentPath = function(aPath) {
-    return currentPath.indexOf(aPath) != -1;
-  }
-
-  let cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager);
-  let enumerator = cookieManager.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci['nsICookie']);
-
-    // Take the hostname and progressively shorten
-    let hostname = location.hostname;
-    do {
-      if ((cookie.host == '.' + hostname || cookie.host == hostname)
-          && isForCurrentPath(cookie.path)) {
-        results.push(cookie);
-        break;
-      }
-      hostname = hostname.replace(/^.*?\./, '');
-    } while (hostname.indexOf('.') != -1);
-  }
-
-  return results;
 }
 
 /**
