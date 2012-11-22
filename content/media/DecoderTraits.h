@@ -22,11 +22,13 @@ class DecoderTraits {
 public:
   // Returns the CanPlayStatus indicating if we can handle this
   // MIME type. The MIME type should not include the codecs parameter.
-  // If it returns anything other than CANPLAY_NO then it also
-  // returns a null-terminated list of supported codecs
-  // in *aSupportedCodecs. This list should not be freed, it is static data.
+  // That parameter should be passed in aCodecs, and will only be
+  // used if whether a given MIME type being handled depends on the
+  // codec that will be used.  If the codecs parameter has not been
+  // specified, pass false in aHaveRequestedCodecs.
   static CanPlayStatus CanHandleMediaType(const char* aMIMEType,
-                                          char const *const ** aSupportedCodecs);
+                                          bool aHaveRequestedCodecs,
+                                          const nsAString& aRequestedCodecs);
 
   // Returns true if we should handle this MIME type when it appears
   // as an <object> or as a toplevel page. If, in practice, our support
