@@ -66,10 +66,9 @@ function runTest() {
     postMessage(events);
   };
 
-  var count = 0;
   xhr.onreadystatechange = function(event) {
     pushEvent(event);
-    if (++count == 3) {
+    if (xhr.readyState == xhr.HEADERS_RECEIVED) {
       xhr.abort();
     }
   };
