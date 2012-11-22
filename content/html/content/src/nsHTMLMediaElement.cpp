@@ -3463,26 +3463,29 @@ nsHTMLMediaElement::GetMozAudioChannelType(nsAString& aString)
 NS_IMETHODIMP
 nsHTMLMediaElement::SetMozAudioChannelType(const nsAString& aString)
 {
-  if (mDecoder) {
-    return NS_ERROR_FAILURE;
-  }
+  AudioChannelType tmpType;
 
   if (aString.EqualsASCII("normal")) {
-    mAudioChannelType = AUDIO_CHANNEL_NORMAL;
+    tmpType = AUDIO_CHANNEL_NORMAL;
   } else if (aString.EqualsASCII("content")) {
-    mAudioChannelType = AUDIO_CHANNEL_CONTENT;
+    tmpType = AUDIO_CHANNEL_CONTENT;
   } else if (aString.EqualsASCII("notification")) {
-    mAudioChannelType = AUDIO_CHANNEL_NOTIFICATION;
+    tmpType = AUDIO_CHANNEL_NOTIFICATION;
   } else if (aString.EqualsASCII("alarm")) {
-    mAudioChannelType = AUDIO_CHANNEL_ALARM;
+    tmpType = AUDIO_CHANNEL_ALARM;
   } else if (aString.EqualsASCII("telephony")) {
-    mAudioChannelType = AUDIO_CHANNEL_TELEPHONY;
+    tmpType = AUDIO_CHANNEL_TELEPHONY;
   } else if (aString.EqualsASCII("publicnotification")) {
-    mAudioChannelType = AUDIO_CHANNEL_PUBLICNOTIFICATION;
+    tmpType = AUDIO_CHANNEL_PUBLICNOTIFICATION;
   } else {
     return NS_ERROR_FAILURE;
   }
 
+  if (tmpType != mAudioChannelType && mDecoder) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mAudioChannelType = tmpType;
   return NS_OK;
 }
 
