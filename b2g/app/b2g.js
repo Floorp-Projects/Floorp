@@ -615,3 +615,6 @@ pref("memory.free_dirty_pages", true);
 // UAProfile settings
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
+
+// Wait up to this much milliseconds when orientation changed
+pref("layers.orientation.sync.timeout", 1000);
