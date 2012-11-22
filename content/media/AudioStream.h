@@ -7,9 +7,6 @@
 #define AudioStream_h_
 
 #include "nscore.h"
-#include "nsISupportsImpl.h"
-#include "nsIThread.h"
-#include "nsAutoPtr.h"
 #include "AudioSampleFormat.h"
 #include "AudioChannelCommon.h"
 
@@ -19,7 +16,7 @@ namespace mozilla {
 // callers, or made from a single thread.  One exception is that access to
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels}
 // is thread-safe without external synchronization.
-class AudioStream : public nsISupports
+class AudioStream
 {
 public:
   AudioStream()
@@ -36,10 +33,6 @@ public:
   // Shutdown Audio Library. Some Audio backends require shutting down the
   // library after using it.
   static void ShutdownLibrary();
-
-  // Thread that is shared between audio streams.
-  // This may return null in the child process
-  nsIThread *GetThread();
 
   // AllocateStream will return either a local stream or a remoted stream
   // depending on where you call it from.  If you call this from a child process,
@@ -96,7 +89,6 @@ public:
   int GetChannels() { return mChannels; }
 
 protected:
-  nsCOMPtr<nsIThread> mAudioPlaybackThread;
   int mRate;
   int mChannels;
 };
