@@ -2853,7 +2853,7 @@ CanvasRenderingContext2D::IsPointInPath(double x, double y)
 }
 
 bool
-CanvasRenderingContext2D::MozIsPointInStroke(double x, double y)
+CanvasRenderingContext2D::IsPointInStroke(double x, double y)
 {
   if (!FloatValidate(x,y)) {
     return false;

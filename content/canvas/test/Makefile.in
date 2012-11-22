@@ -13,6 +13,7 @@ DIRS		+= webgl crossorigin chrome
 include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
 	test_canvas.html \
+	test_isPointInStroke.html \
 	image_transparent50.png \
 	image_redtransparent.png \
 	image_yellow.png \
@@ -98,7 +99,6 @@ MOCHITEST_FILES = \
 	test_toDataURL_lowercase_ascii.html \
 	test_toDataURL_parameters.html \
 	test_mozGetAsFile.html \
-	test_mozIsPointInStroke.html \
 	test_canvas_strokeStyle_getter.html \
 	test_bug613794.html \
 	test_bug753758.html \

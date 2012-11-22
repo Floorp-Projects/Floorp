@@ -242,7 +242,7 @@ public:
   void Stroke();
   void Clip();
   bool IsPointInPath(double x, double y);
-  bool MozIsPointInStroke(double x, double y);
+  bool IsPointInStroke(double x, double y);
   void FillText(const nsAString& text, double x, double y,
                 const mozilla::dom::Optional<double>& maxWidth,
                 mozilla::ErrorResult& error);
