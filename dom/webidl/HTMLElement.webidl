@@ -200,13 +200,6 @@ interface HTMLElement : Element {
   // FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
 
-  [SetterThrows,LenientThis]
-           attribute EventHandler onmouseenter;
-  [SetterThrows,LenientThis]
-           attribute EventHandler onmouseleave;
-  [SetterThrows]
-           attribute EventHandler onwheel;
-
   [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
            attribute EventHandler ontouchstart;
   [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
