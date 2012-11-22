@@ -234,6 +234,7 @@ class Configuration:
         self.customIncludes = config.get('customIncludes', [])
         self.customReturnInterfaces = config.get('customReturnInterfaces', [])
         self.customMethodCalls = config.get('customMethodCalls', {})
+        self.newBindingProperties = config.get('newBindingProperties', {})
 
 def readConfigFile(filename, includePath, cachedir):
     # Read the config file.
@@ -257,6 +258,7 @@ def readConfigFile(filename, includePath, cachedir):
                                 % (interfaceName, idlFile))
             iface = idl.getName(interfaceName, errorLoc)
             iface.stubMembers = []
+            iface.newBindingProperties = 'nullptr'
             interfaces.append(iface)
             interfacesByName[interfaceName] = iface
         return iface
@@ -311,6 +313,12 @@ def readConfigFile(filename, includePath, cachedir):
                     stubbedInterfaces.append(member.iface)
             else:
                 removeStubMember(memberId, member)
+
+    for (interfaceName, v) in conf.newBindingProperties.iteritems():
+        iface = getInterface(interfaceName, errorLoc='looking for %r' % interfaceName)
+        iface.newBindingProperties = v
+        if iface not in stubbedInterfaces:
+            stubbedInterfaces.append(iface)
 
     # Now go through and check all the interfaces' members
     for iface in stubbedInterfaces:
@@ -1130,7 +1138,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
     for iface in interfaces:
         # This if-statement discards interfaces specified with
         # "nsInterfaceName.*" that don't have any stub-able members.
-        if iface.stubMembers:
+        if iface.stubMembers or iface.newBindingProperties:
             h = hashIID(iface.attributes.uuid)
             buckets[h % size].append(iface)
 
@@ -1147,7 +1155,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
                 arraySize += 1
 
     entries = ["    {{0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}}, "
-               "0, 0, 0, 0, XPC_QS_NULL_INDEX, XPC_QS_NULL_INDEX}"
+               "0, 0, 0, 0, nullptr, XPC_QS_NULL_INDEX, XPC_QS_NULL_INDEX}"
                for i in range(arraySize)]
     for i, bucket in enumerate(buckets):
         for j, iface in enumerate(bucket):
@@ -1195,9 +1203,10 @@ def writeDefiner(f, conf, stringtable, interfaces):
                 chain = str(k)
 
             # add entry
-            entry = "    /* %s */ {%s, %d, %d, %d, %d, %s, %s}" % (
+            entry = "    /* %s */ {%s, %d, %d, %d, %d, %s, %s, %s}" % (
                 iface.name, iid, prop_index, prop_n_entries,
-                func_index, func_n_entries, parentInterface, chain)
+                func_index, func_n_entries, iface.newBindingProperties,
+                parentInterface, chain)
             entries[entryIndexes[iface.attributes.uuid]] = entry
 
     f.write("static const xpc_qsHashEntry tableData[] = {\n")

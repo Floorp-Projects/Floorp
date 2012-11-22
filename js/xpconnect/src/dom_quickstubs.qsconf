@@ -131,7 +131,6 @@ members = [
     'nsIDOMElement.mozMatchesSelector',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMNode.*',
     'nsIDOMNodeSelector.querySelector',
     'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
@@ -483,18 +482,14 @@ customIncludes = [
     'nsDOMStringMap.h',
     'HTMLPropertiesCollection.h',
     'nsHTMLMenuElement.h',
-    'nsICSSDeclaration.h'
+    'nsICSSDeclaration.h',
+    'mozilla/dom/NodeBinding.h'
     ]
 
 customReturnInterfaces = [
     'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
     ]
-
-nsIDOMNode_GetChildNodes_customMethodCallCode = """
-    nsChildContentList* result = static_cast<nsChildContentList*>(self->ChildNodes());
-    rv = NS_OK;
-"""
 
 nsIDOMHTMLDocument_Write_customMethodCallCode = """
     nsAString &str = arg0;
@@ -518,114 +513,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
 """
 
 customMethodCalls = {
-    'nsIDOMNode_GetNextSibling': {
-        'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetNextSibling();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetFirstChild': {
-        'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetFirstChild();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetChildNodes': {
-        'thisType': 'nsINode',
-        'code': nsIDOMNode_GetChildNodes_customMethodCallCode
-        },
-    'nsIDOMNode_GetPreviousSibling': {
-        'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetPreviousSibling();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetLastChild': {
-        'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetLastChild();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetOwnerDocument': {
-        'thisType': 'nsINode',
-        'code': '    nsIDocument *result = self->GetOwnerDocument();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetParentNode': {
-        'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetParentNode();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetParentElement': {
-        'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetElementParent();',
-        'canFail': False
-        },
-    'nsIDOMNode_InsertBefore': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'arg1Type': 'nsINode',
-        'code': '    nsINode* result;'
-                '    if (arg0) {\n'
-                '        mozilla::ErrorResult error;\n'
-                '        result = self->InsertBefore(*arg0, arg1, error);\n'
-                '        rv = error.ErrorCode();\n'
-                '    } else {\n'
-                '        rv = NS_ERROR_NULL_POINTER;\n'
-                '        result = nullptr;\n'
-                '    }'
-        },
-    'nsIDOMNode_ReplaceChild': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'arg1Type': 'nsINode',
-        'code': '    nsINode* result;'
-                '    if (arg0 && arg1) {\n'
-                '        mozilla::ErrorResult error;\n'
-                '        result = self->ReplaceChild(*arg0, *arg1, error);\n'
-                '        rv = error.ErrorCode();\n'
-                '    } else {\n'
-                '        rv = NS_ERROR_NULL_POINTER;\n'
-                '        result = nullptr;\n'
-                '    }'
-        },
-    'nsIDOMNode_RemoveChild': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    nsINode* result;\n'
-                '    if (arg0) {\n'
-                '        mozilla::ErrorResult error;\n'
-                '        result = self->RemoveChild(*arg0, error);\n'
-                '        rv = error.ErrorCode();\n'
-                '    } else {\n'
-                '        rv = NS_ERROR_NULL_POINTER;\n'
-                '        result = nullptr;\n'
-                '    }'
-        },
-    'nsIDOMNode_AppendChild': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    nsINode* result;\n'
-                '    if (arg0) {\n'
-                '        mozilla::ErrorResult error;\n'
-                '        result = self->AppendChild(*arg0, error);\n'
-                '        rv = error.ErrorCode();\n'
-                '    } else {\n'
-                '        rv = NS_ERROR_NULL_POINTER;\n'
-                '        result = nullptr;\n'
-                '    }'
-        },
-    'nsIDOMNode_GetNodeType': {
-        'thisType': 'nsINode',
-        'code': 'uint16_t result = self->NodeType();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetNodeName': {
-        'thisType': 'nsINode',
-        'code': 'nsString result = self->NodeName();',
-        'canFail': False
-        },
-    'nsIDOMNode_GetLocalName': {
-        'thisType': 'nsINode',
-        'code': 'nsString result = self->LocalName();',
-        'canFail': False
-        },
     'nsIDOMHTMLDocument_': {
         'thisType': 'nsHTMLDocument'
         },
@@ -763,59 +650,6 @@ customMethodCalls = {
         'code': '    mozilla::ErrorResult error;\n'
                 '    nsCOMPtr<nsINodeList> result = self->QuerySelectorAll(arg0, error);\n'
                 '    rv = error.ErrorCode();'
-        },
-    'nsIDOMNode_Normalize': {
-        'thisType': 'nsINode',
-        'canFail': False
-        },
-    'nsIDOMNode_GetBaseURI': {
-        'thisType': 'nsINode',
-        'canFail': False
-        },
-    'nsIDOMNode_CompareDocumentPosition': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    uint16_t result;\n'
-                '    if (arg0) {\n'
-                '        result = self->CompareDocumentPosition(*arg0);\n'
-                '        rv = NS_OK;\n'
-                '    } else {\n'
-                '        rv = NS_ERROR_INVALID_ARG;\n'
-                '    }',
-        'canFail': True
-        },
-    'nsIDOMNode_GetTextContent': {
-        'thisType': 'nsINode',
-        'canFail': False
-        },
-    'nsIDOMNode_LookupPrefix': {
-        'thisType': 'nsINode',
-        'canFail': False
-        },
-    'nsIDOMNode_IsDefaultNamespace': {
-        'thisType': 'nsINode',
-        'code': '    bool result = self->IsDefaultNamespace(arg0);',
-        'canFail': False
-        },
-    'nsIDOMNode_LookupNamespaceURI': {
-        'thisType': 'nsINode',
-        'canFail': False
-        },
-    'nsIDOMNode_IsEqualNode': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    bool result = self->IsEqualNode(arg0);',
-        'canFail': False
-        },
-    'nsIDOMNode_GetUserData': {
-        'thisType': 'nsINode',
-        'canFail': False
-        },
-    'nsIDOMNode_Contains': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    bool result = self->Contains(arg0);',
-        'canFail': False
         },
     'nsIDOMHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
@@ -1218,4 +1052,8 @@ customMethodCalls = {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
         }
+    }
+
+newBindingProperties = {
+    'nsIDOMNode': 'mozilla::dom::NodeBinding::sNativePropertyHooks.mNativeProperties.regular'
     }
