@@ -199,6 +199,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LOCAL_INCLUDES += \
         -I$(topsrcdir)/content/events/src \
+        -I$(topsrcdir)/hal \
         -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright \
         -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
         $(NULL)
