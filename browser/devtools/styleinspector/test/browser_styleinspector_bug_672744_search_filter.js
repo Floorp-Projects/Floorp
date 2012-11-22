@@ -5,7 +5,8 @@
 // Tests that the search filter works properly.
 
 let doc;
-let stylePanel;
+let inspector;
+let computedView;
 
 function createDocument()
 {
@@ -14,9 +15,20 @@ function createDocument()
     '<span id="matches" class="matches">Some styled text</span>' +
     '</div>';
   doc.title = "Style Inspector Search Filter Test";
-  // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = new ComputedViewPanel(window);
-  stylePanel.createPanel(doc.body, runStyleInspectorTests);
+
+  openInspector(openComputedView);
+}
+
+function openComputedView(aInspector)
+{
+  inspector = aInspector;
+
+  inspector.sidebar.once("computedview-ready", function() {
+    inspector.sidebar.select("computedview");
+    computedView = getComputedView(inspector);
+
+    runStyleInspectorTests();
+  });
 }
 
 function runStyleInspectorTests()
@@ -30,12 +42,11 @@ function SI_inspectNode()
   var span = doc.querySelector("#matches");
   ok(span, "captain, we have the matches span");
 
-  let htmlTree = stylePanel.cssHtmlTree;
-  stylePanel.selectNode(span);
+  inspector.selection.setNode(span);
 
-  is(span, htmlTree.viewedElement,
+  is(span, computedView.viewedElement,
     "style inspector node matches the selected node");
-  is(htmlTree.viewedElement, stylePanel.cssLogic.viewedElement,
+  is(computedView.viewedElement, computedView.cssLogic.viewedElement,
      "cssLogic node matches the cssHtmlTree node");
 }
 
@@ -45,32 +56,34 @@ function SI_toggleDefaultStyles()
 
   info("clearing \"only user styles\" checkbox");
 
-  let iframe = stylePanel.iframe;
-  let checkbox = iframe.contentDocument.querySelector(".onlyuserstyles");
+  let doc = computedView.styleDocument;
+  let checkbox = doc.querySelector(".onlyuserstyles");
   Services.obs.addObserver(SI_AddFilterText, "StyleInspector-populated", false);
-  EventUtils.synthesizeMouse(checkbox, 5, 5, {}, iframe.contentWindow);
+  checkbox.click();
 }
 
 function SI_AddFilterText()
 {
   Services.obs.removeObserver(SI_AddFilterText, "StyleInspector-populated", false);
 
-  let iframe = stylePanel.iframe;
-  let searchbar = iframe.contentDocument.querySelector(".searchfield");
+  let doc = computedView.styleDocument;
+  let searchbar = doc.querySelector(".searchfield");
   Services.obs.addObserver(SI_checkFilter, "StyleInspector-populated", false);
   info("setting filter text to \"color\"");
   searchbar.focus();
-  EventUtils.synthesizeKey("c", {}, iframe.contentWindow);
-  EventUtils.synthesizeKey("o", {}, iframe.contentWindow);
-  EventUtils.synthesizeKey("l", {}, iframe.contentWindow);
-  EventUtils.synthesizeKey("o", {}, iframe.contentWindow);
-  EventUtils.synthesizeKey("r", {}, iframe.contentWindow);
+
+  let win =computedView.styleWindow;
+  EventUtils.synthesizeKey("c", {}, win);
+  EventUtils.synthesizeKey("o", {}, win);
+  EventUtils.synthesizeKey("l", {}, win);
+  EventUtils.synthesizeKey("o", {}, win);
+  EventUtils.synthesizeKey("r", {}, win);
 }
 
 function SI_checkFilter()
 {
   Services.obs.removeObserver(SI_checkFilter, "StyleInspector-populated", false);
-  let propertyViews = stylePanel.cssHtmlTree.propertyViews;
+  let propertyViews = computedView.propertyViews;
 
   info("check that the correct properties are visible");
   propertyViews.forEach(function(propView) {
@@ -79,13 +92,12 @@ function SI_checkFilter()
       "span " + name + " property visibility check");
   });
 
-  stylePanel.destroy();
   finishUp();
 }
 
 function finishUp()
 {
-  doc = stylePanel = null;
+  doc = inspector = computedView = null;
   gBrowser.removeCurrentTab();
   finish();
 }

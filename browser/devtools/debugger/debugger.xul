@@ -153,11 +153,6 @@
 
   <vbox id="body" flex="1">
     <toolbar id="dbg-toolbar" class="devtools-toolbar">
-#ifdef XP_MACOSX
-      <toolbarbutton id="close"
-                     class="devtools-closebutton"
-                     tooltiptext="&debuggerUI.closeButton.tooltip;"/>
-#endif
       <hbox id="debugger-controls">
         <toolbarbutton id="resume"
                        class="devtools-toolbarbutton"
@@ -186,11 +181,6 @@
                      class="devtools-option-toolbarbutton"
                      tooltiptext="&debuggerUI.optsButton.tooltip;"
                      popup="debuggerPrefsContextMenu"/>
-#ifndef XP_MACOSX
-      <toolbarbutton id="close"
-                     class="devtools-closebutton"
-                     tooltiptext="&debuggerUI.closeButton.tooltip;"/>
-#endif
     </toolbar>
 
     <panel id="searchbox-panel"

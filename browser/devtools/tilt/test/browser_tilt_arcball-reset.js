@@ -29,7 +29,7 @@ function test() {
           info("Killing arcball reset test.");
 
           Services.obs.addObserver(cleanup, DESTROYED, false);
-          InspectorUI.closeInspectorUI();
+          Tilt.destroy(Tilt.currentWindowId);
         });
       }
     }, false, function suddenDeath()

@@ -69,6 +69,8 @@ this.StyleEditorChrome = function StyleEditorChrome(aRoot, aContentWindow)
 }
 
 StyleEditorChrome.prototype = {
+  _styleSheetToSelect: null,
+
   /**
    * Retrieve the content window attached to this chrome.
    *
@@ -274,7 +276,7 @@ StyleEditorChrome.prototype = {
   /**
    * Reset the chrome UI to an empty and ready state.
    */
-  _resetChrome: function SEC__resetChrome()
+  resetChrome: function SEC__resetChrome()
   {
     this._editors.forEach(function (aEditor) {
       aEditor.removeActionListener(this);
@@ -297,7 +299,7 @@ StyleEditorChrome.prototype = {
    */
   _populateChrome: function SEC__populateChrome()
   {
-    this._resetChrome();
+    this.resetChrome();
 
     let document = this.contentDocument;
     this._document.title = _("chromeWindowTitle",
@@ -337,49 +339,60 @@ StyleEditorChrome.prototype = {
    */
   selectStyleSheet: function SEC_selectSheet(aSheet, aLine, aCol)
   {
-    let select = function DEC_select(aEditor) {
-      let summary = aSheet ? this.getSummaryElementForEditor(aEditor)
-                           : this._view.getSummaryElementByOrdinal(0);
-      let setCaret = false;
+    let alreadyCalled = !!this._styleSheetToSelect;
 
-      if (aLine || aCol) {
-        aLine = aLine || 1;
-        aCol = aCol || 1;
-        setCaret = true;
-      }
-      if (!aEditor.sourceEditor) {
-        // If a line or column was specified we move the caret appropriately.
-        if (setCaret) {
+    this._styleSheetToSelect = {
+      sheet: aSheet,
+      line: aLine,
+      col: aCol,
+    };
+
+    if (alreadyCalled) {
+      return;
+    }
+
+    let select = function DEC_select(aEditor) {
+      let sheet = this._styleSheetToSelect.sheet;
+      let line = this._styleSheetToSelect.line;
+      let col = this._styleSheetToSelect.col;
+      let summary = sheet ? this.getSummaryElementForEditor(aEditor)
+                          : this._view.getSummaryElementByOrdinal(0);
+
+      if (line) {
+        col = col || 1;
+
+        if (!aEditor.sourceEditor) {
+          // If a line or column was specified we move the caret appropriately.
           let self = this;
           aEditor.addActionListener({
             onAttach: function SEC_selectSheet_onAttach()
             {
               aEditor.removeActionListener(this);
               self.selectedStyleSheetIndex = aEditor.styleSheetIndex;
-              aEditor.sourceEditor.setCaretPosition(aLine - 1, aCol - 1);
+              aEditor.sourceEditor.setCaretPosition(line - 1, col - 1);
             }
           });
-        }
-        this._view.activeSummary = summary;
-      } else {
-        this._view.activeSummary = summary;
-
-        // If a line or column was specified we move the caret appropriately.
-        if (setCaret) {
-          aEditor.sourceEditor.setCaretPosition(aLine - 1, aCol - 1);
+        } else {
+          // If a line or column was specified we move the caret appropriately.
+          aEditor.sourceEditor.setCaretPosition(line - 1, col - 1);
         }
       }
+
+      this._view.activeSummary = summary;
       this.selectedStyleSheetIndex = aEditor.styleSheetIndex;
+      this._styleSheetToSelect = null;
     }.bind(this);
 
     if (!this.editors.length) {
       // We are in the main initialization phase so we wait for the editor
       // containing the target stylesheet to be added and select the target
       // stylesheet, optionally moving the cursor to a selected line.
+      let self = this;
       this.addChromeListener({
         onEditorAdded: function SEC_selectSheet_onEditorAdded(aChrome, aEditor) {
-          if ((!aSheet && aEditor.styleSheetIndex == 0) ||
-              aEditor.styleSheet == aSheet) {
+          let sheet = self._styleSheetToSelect.sheet;
+          if ((sheet && aEditor.styleSheet == sheet) ||
+              aEditor.styleSheetIndex == 0) {
             aChrome.removeChromeListener(this);
             select(aEditor);
           }

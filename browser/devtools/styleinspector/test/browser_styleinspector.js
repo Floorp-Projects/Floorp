@@ -5,7 +5,8 @@
 // Tests that the style inspector works properly
 
 let doc;
-let stylePanel;
+let inspector;
+let computedView;
 
 function createDocument()
 {
@@ -26,8 +27,20 @@ function createDocument()
     '<p>Inspect using inspectstyle(document.querySelectorAll("span")[0])</p>' +
     '</div>';
   doc.title = "Style Inspector Test";
-  stylePanel = new ComputedViewPanel(window);
-  stylePanel.createPanel(doc.body, runStyleInspectorTests);
+
+  openInspector(openComputedView);
+}
+
+function openComputedView(aInspector)
+{
+  inspector = aInspector;
+
+  inspector.sidebar.once("computedview-ready", function() {
+    computedView = getComputedView(inspector);
+
+    inspector.sidebar.select("computedview");
+    runStyleInspectorTests();
+  });
 }
 
 function runStyleInspectorTests()
@@ -35,25 +48,22 @@ function runStyleInspectorTests()
   var spans = doc.querySelectorAll("span");
   ok(spans, "captain, we have the spans");
 
-  let htmlTree = stylePanel.cssHtmlTree;
-
   for (var i = 0, numSpans = spans.length; i < numSpans; i++) {
-    stylePanel.selectNode(spans[i]);
+    inspector.selection.setNode(spans[i]);
 
-    is(spans[i], htmlTree.viewedElement,
+    is(spans[i], computedView.viewedElement,
       "style inspector node matches the selected node");
-    is(htmlTree.viewedElement, stylePanel.cssLogic.viewedElement,
+    is(computedView.viewedElement, computedView.cssLogic.viewedElement,
        "cssLogic node matches the cssHtmlTree node");
   }
 
   SI_CheckProperty();
-  stylePanel.destroy();
   finishUp();
 }
 
 function SI_CheckProperty()
 {
-  let cssLogic = stylePanel.cssLogic;
+  let cssLogic = computedView.cssLogic;
   let propertyInfo = cssLogic.getPropertyInfo("color");
   ok(propertyInfo.matchedRuleCount > 0, "color property has matching rules");
   //ok(propertyInfo.unmatchedRuleCount > 0, "color property has unmatched rules");
@@ -61,7 +71,7 @@ function SI_CheckProperty()
 
 function finishUp()
 {
-  doc = stylePanel = null;
+  doc = computedView = null;
   gBrowser.removeCurrentTab();
   finish();
 }
