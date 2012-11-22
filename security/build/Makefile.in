@@ -336,7 +336,7 @@ libs::
 # NSS installs headers to dist/public and we want them in dist/include
 	$(NSINSTALL) -D $(DIST)/include/nss
 	(cd $(DIST)/public/nss && tar $(TAR_CREATE_FLAGS) - .) | \
-	  (cd $(DIST)/include && tar -xf -)
+	  (cd $(DIST)/include/nss && tar -xf -)
 
 endif # MOZ_NATIVE_NSS
 
