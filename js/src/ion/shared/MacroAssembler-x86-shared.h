@@ -175,6 +175,9 @@ class MacroAssemblerX86Shared : public Assembler
     void jump(RepatchLabel *label) {
         jmp(label);
     }
+    void jump(Register reg) {
+        jmp(Operand(reg));
+    }
 
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest) {
         cvtsi2sd(Operand(src), dest);
