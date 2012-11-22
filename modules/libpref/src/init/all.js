@@ -3701,6 +3701,9 @@ pref("layers.prefer-opengl", false);
 pref("layers.prefer-d3d9", false);
 #endif
 
+// Force all possible layers to be always active layers
+pref("layers.force-active", false);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 

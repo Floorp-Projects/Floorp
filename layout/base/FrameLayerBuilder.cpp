@@ -2031,6 +2031,10 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     itemVisibleRect.IntersectRect(itemVisibleRect, itemDrawRect);
 
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
+    if (layerState == LAYER_INACTIVE &&
+        nsDisplayItem::ForceActiveLayers()) {
+      layerState = LAYER_ACTIVE;
+    }
 
     bool isFixed;
     bool forceInactive;
@@ -2824,6 +2828,10 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
 
   LayerState state = aContainerItem ? aContainerItem->GetLayerState(aBuilder, aManager, aParameters) : LAYER_ACTIVE;
+  if (state == LAYER_INACTIVE &&
+      nsDisplayItem::ForceActiveLayers()) {
+    state = LAYER_ACTIVE;
+  }
 
   if (aContainerItem && state == LAYER_ACTIVE_EMPTY) {
     // Empty layers only have metadata and should never have display items. We

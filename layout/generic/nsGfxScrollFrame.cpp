@@ -1691,6 +1691,10 @@ bool nsGfxScrollFrameInner::ShouldClampScrollPosition() const
 
 bool nsGfxScrollFrameInner::IsAlwaysActive() const
 {
+  if (nsDisplayItem::ForceActiveLayers()) {
+    return true;
+  }
+
   // Unless this is the root scrollframe for a non-chrome document 
   // which is the direct child of a chrome document, we default to not
   // being "active".
