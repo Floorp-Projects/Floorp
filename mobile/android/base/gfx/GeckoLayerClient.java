@@ -76,7 +76,7 @@ public class GeckoLayerClient
 
     /* Used as the return value of progressiveUpdateCallback */
     private final ProgressiveUpdateData mProgressiveUpdateData;
-    private boolean mProgressiveUpdateIsCurrent;
+    private RectF mProgressiveUpdateDisplayPort;
 
     /* This is written by the compositor thread and read by the UI thread. */
     private volatile boolean mCompositorCreated;
@@ -116,6 +116,7 @@ public class GeckoLayerClient
         mDrawTimingQueue = new DrawTimingQueue();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
         mProgressiveUpdateData = new ProgressiveUpdateData();
+        mProgressiveUpdateDisplayPort = new RectF();
         mCompositorCreated = false;
 
         mForceRedraw = true;
@@ -369,6 +370,14 @@ public class GeckoLayerClient
         mProgressiveUpdateData.setViewport(viewportMetrics);
         mProgressiveUpdateData.abort = false;
 
+        // Always abort updates if the resolution has changed. There's no use
+        // in drawing at the incorrect resolution.
+        if (!FloatUtils.fuzzyEquals(resolution, viewportMetrics.zoomFactor)) {
+            Log.d(LOGTAG, "Aborting draw due to resolution change");
+            mProgressiveUpdateData.abort = true;
+            return mProgressiveUpdateData;
+        }
+
         // XXX All sorts of rounding happens inside Gecko that becomes hard to
         //     account exactly for. Given we align the display-port to tile
         //     boundaries (and so they rarely vary by sub-pixel amounts), just
@@ -380,21 +389,12 @@ public class GeckoLayerClient
         // with blank regions on the screen and we open up the risk of entering
         // an endless updating cycle.
         if (!lowPrecision) {
-            mProgressiveUpdateIsCurrent =
-              Math.abs(displayPort.getLeft() - x) <= 2 &&
-              Math.abs(displayPort.getTop() - y) <= 2 &&
-              Math.abs(displayPort.getBottom() - (y + height)) <= 2 &&
-              Math.abs(displayPort.getRight() - (x + width)) <= 2;
+            mProgressiveUpdateDisplayPort.set(x, y, x + width, y + height);
         }
-        if (mProgressiveUpdateIsCurrent) {
-            return mProgressiveUpdateData;
-        }
-
-        // Always abort updates if the resolution has changed. There's no use
-        // in drawing at the incorrect resolution.
-        if (!FloatUtils.fuzzyEquals(resolution, displayPort.resolution)) {
-            Log.d(LOGTAG, "Aborting draw due to resolution change");
-            mProgressiveUpdateData.abort = true;
+        if (Math.abs(displayPort.getLeft() - mProgressiveUpdateDisplayPort.left) <= 2 &&
+            Math.abs(displayPort.getTop() - mProgressiveUpdateDisplayPort.top) <= 2 &&
+            Math.abs(displayPort.getBottom() - mProgressiveUpdateDisplayPort.bottom) <= 2 &&
+            Math.abs(displayPort.getRight() - mProgressiveUpdateDisplayPort.right) <= 2) {
             return mProgressiveUpdateData;
         }
 
