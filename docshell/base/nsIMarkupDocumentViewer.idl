@@ -23,7 +23,7 @@ interface nsIMarkupDocumentViewer;
 
 [ref] native nsIMarkupDocumentViewerTArray(nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >);
 
-[scriptable, uuid(1016d5e8-690f-4d97-8ac5-d50ffa341c46)]
+[scriptable, uuid(02d37b31-e654-4b74-9bc3-14dfe0020bb3)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -68,10 +68,10 @@ interface nsIMarkupDocumentViewer : nsISupports
 
 	//void GetCharacterSetHint(in wstring hintCharset, in int32_t charsetSource);
 
-	/**
-	* Tell the container to shrink-to-fit or grow-to-fit its contents
-	*/
-	void sizeToContent();
+  /**
+   * Requests the size of the content to the container.
+   */
+  void getContentSize(out long width, out long height);
 
   /**
    * Options for Bidi presentation.

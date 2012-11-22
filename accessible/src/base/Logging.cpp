@@ -471,12 +471,9 @@ logging::DocLoadEventHandled(AccEvent* aEvent)
 
   MsgBegin(sDocEventTitle, "handled '%s' event", strEventType.get());
 
-  nsINode* node = aEvent->GetNode();
-  if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
-    nsIDocument* documentNode = static_cast<nsIDocument*>(node);
-    DocAccessible* document = aEvent->GetDocAccessible();
-    LogDocInfo(documentNode, document);
-  }
+  DocAccessible* document = aEvent->GetAccessible()->AsDoc();
+  if (document)
+    LogDocInfo(document->DocumentNode(), document);
 
   MsgEnd();
 }

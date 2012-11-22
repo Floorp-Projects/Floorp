@@ -56,6 +56,7 @@ struct hb_ot_complex_shaper_t
   /* collect_features()
    * Called during shape_plan().
    * Shapers should use plan->map to add their features and callbacks.
+   * May be NULL.
    */
   void (*collect_features) (hb_ot_shape_planner_t *plan);
 
@@ -63,6 +64,7 @@ struct hb_ot_complex_shaper_t
    * Called during shape_plan().
    * Shapers should use plan->map to override features and add callbacks after
    * common features are added.
+   * May be NULL.
    */
   void (*override_features) (hb_ot_shape_planner_t *plan);
 
@@ -78,13 +80,15 @@ struct hb_ot_complex_shaper_t
    * Called when the shape_plan is being destroyed.
    * plan->data is passed here for destruction.
    * If NULL is returned, means a plan failure.
-   * May be NULL. */
+   * May be NULL.
+   */
   void (*data_destroy) (void *data);
 
 
   /* preprocess_text()
    * Called during shape().
    * Shapers can use to modify text before shaping starts.
+   * May be NULL.
    */
   void (*preprocess_text) (const hb_ot_shape_plan_t *plan,
 			   hb_buffer_t              *buffer,
@@ -93,20 +97,41 @@ struct hb_ot_complex_shaper_t
 
   /* normalization_preference()
    * Called during shape().
+   * May be NULL.
    */
   hb_ot_shape_normalization_mode_t
-  (*normalization_preference) (const hb_ot_shape_plan_t *plan);
+  (*normalization_preference) (const hb_segment_properties_t *props);
+
+  /* decompose()
+   * Called during shape()'s normalization.
+   * May be NULL.
+   */
+  bool (*decompose) (const hb_ot_shape_normalize_context_t *c,
+		     hb_codepoint_t  ab,
+		     hb_codepoint_t *a,
+		     hb_codepoint_t *b);
+
+  /* compose()
+   * Called during shape()'s normalization.
+   * May be NULL.
+   */
+  bool (*compose) (const hb_ot_shape_normalize_context_t *c,
+		   hb_codepoint_t  a,
+		   hb_codepoint_t  b,
+		   hb_codepoint_t *ab);
 
   /* setup_masks()
    * Called during shape().
    * Shapers should use map to get feature masks and set on buffer.
    * Shapers may NOT modify characters.
+   * May be NULL.
    */
   void (*setup_masks) (const hb_ot_shape_plan_t *plan,
 		       hb_buffer_t              *buffer,
 		       hb_font_t                *font);
 
   bool zero_width_attached_marks;
+  bool fallback_position;
 };
 
 #define HB_COMPLEX_SHAPER_IMPLEMENT(name) extern HB_INTERNAL const hb_ot_complex_shaper_t _hb_ot_complex_shaper_##name;
@@ -115,9 +140,9 @@ HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
 
 
 static inline const hb_ot_complex_shaper_t *
-hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
+hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 {
-  switch ((hb_tag_t) props->script)
+  switch ((hb_tag_t) planner->props.script)
   {
     default:
       return &_hb_ot_complex_shaper_default;
@@ -130,11 +155,18 @@ hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
 
     /* Unicode-5.0 additions */
     case HB_SCRIPT_NKO:
+    case HB_SCRIPT_PHAGS_PA:
 
     /* Unicode-6.0 additions */
     case HB_SCRIPT_MANDAIC:
 
-      return &_hb_ot_complex_shaper_arabic;
+      /* For Arabic script, use the Arabic shaper even if no OT script tag was found.
+       * This is because we do fallback shaping for Arabic script (and not others). */
+      if (planner->map.chosen_script[0] != HB_OT_TAG_DEFAULT_SCRIPT ||
+	  planner->props.script == HB_SCRIPT_ARABIC)
+	return &_hb_ot_complex_shaper_arabic;
+      else
+	return &_hb_ot_complex_shaper_default;
 
 
     /* Unicode-1.1 additions */
@@ -170,9 +202,6 @@ hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
     /* Unicode-5.1 additions */
     case HB_SCRIPT_SAURASHTRA:
 
-    /* Unicode-5.2 additions */
-    case HB_SCRIPT_MEETEI_MAYEK:
-
     /* Unicode-6.0 additions */
     case HB_SCRIPT_BATAK:
     case HB_SCRIPT_BRAHMI:
@@ -197,22 +226,14 @@ hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
     case HB_SCRIPT_TAI_LE:
 
     /* Unicode-4.1 additions */
+    case HB_SCRIPT_KHAROSHTHI:
     case HB_SCRIPT_SYLOTI_NAGRI:
-
-    /* Unicode-5.0 additions */
-    case HB_SCRIPT_PHAGS_PA:
 
     /* Unicode-5.1 additions */
     case HB_SCRIPT_KAYAH_LI:
 
     /* Unicode-5.2 additions */
     case HB_SCRIPT_TAI_VIET:
-
-
-    /* May need Indic treatment in the future? */
-
-    /* Unicode-3.0 additions */
-    case HB_SCRIPT_MYANMAR:
 
 
 #endif
@@ -229,12 +250,10 @@ hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
     case HB_SCRIPT_TELUGU:
 
     /* Unicode-3.0 additions */
-    case HB_SCRIPT_KHMER:
     case HB_SCRIPT_SINHALA:
 
     /* Unicode-4.1 additions */
     case HB_SCRIPT_BUGINESE:
-    case HB_SCRIPT_KHAROSHTHI:
     case HB_SCRIPT_NEW_TAI_LUE:
 
     /* Unicode-5.0 additions */
@@ -249,14 +268,46 @@ hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
     /* Unicode-5.2 additions */
     case HB_SCRIPT_JAVANESE:
     case HB_SCRIPT_KAITHI:
+    case HB_SCRIPT_MEETEI_MAYEK:
     case HB_SCRIPT_TAI_THAM:
+
 
     /* Unicode-6.1 additions */
     case HB_SCRIPT_CHAKMA:
     case HB_SCRIPT_SHARADA:
     case HB_SCRIPT_TAKRI:
 
-      return &_hb_ot_complex_shaper_indic;
+      /* Only use Indic shaper if the font has Indic tables. */
+      if (planner->map.found_script[0])
+	return &_hb_ot_complex_shaper_indic;
+      else
+	return &_hb_ot_complex_shaper_default;
+
+
+    case HB_SCRIPT_KHMER:
+      /* A number of Khmer fonts in the wild don't have a 'pref' feature,
+       * and as such won't shape properly via the Indic shaper;
+       * however, they typically have 'liga' / 'clig' features that implement
+       * the necessary "reordering" by means of ligature substitutions.
+       * So we send such pref-less fonts through the generic shaper instead;
+       * use Indic only if the 'khmr' script has the 'pref' feature. */
+      if (planner->map.found_script[0] &&
+	  hb_ot_layout_language_find_feature (planner->face, HB_OT_TAG_GSUB,
+					      planner->map.script_index[0],
+					      planner->map.language_index[0],
+					      HB_TAG ('p','r','e','f'), NULL))
+	return &_hb_ot_complex_shaper_indic;
+      else
+	return &_hb_ot_complex_shaper_default;
+
+
+    case HB_SCRIPT_MYANMAR:
+      /* For Myanmar, we only want to use the Indic shaper if the "new" script
+       * tag is found.  For "old" script tag we want to use the default shaper. */
+      if (planner->map.chosen_script[0] == HB_TAG ('m','y','m','2'))
+	return &_hb_ot_complex_shaper_indic;
+      else
+	return &_hb_ot_complex_shaper_default;
   }
 }
 

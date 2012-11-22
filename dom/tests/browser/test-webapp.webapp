@@ -10,10 +10,10 @@
       "description": "alarm"
     },
     "contacts": {
-      "description": "contacts"
+      "access": "readwrite"
     },
     "device-storage:apps": {
-      "description": "storage"
+      "access": "readonly"
     }
   }
 }

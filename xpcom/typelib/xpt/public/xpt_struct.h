@@ -206,11 +206,16 @@ XPT_DestroyInterfaceDirectoryEntry(XPTArena *arena,
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
+    /* This field ordering minimizes the size of this struct.
+    *  The fields are serialized on disk in a different order.
+    *  See DoInterfaceDescriptor().
+    */
+    XPTMethodDescriptor     *method_descriptors;
+    XPTConstDescriptor      *const_descriptors;
+    XPTTypeDescriptor       *additional_types;
     uint16_t                parent_interface;
     uint16_t                num_methods;
-    XPTMethodDescriptor     *method_descriptors;
     uint16_t                num_constants;
-    XPTConstDescriptor      *const_descriptors;
     uint8_t                 flags;
 
     /* additional_types are used for arrays where we may need multiple
@@ -229,7 +234,6 @@ struct XPTInterfaceDescriptor {
     *  for that.
     */
 
-    XPTTypeDescriptor       *additional_types;
     uint16_t                num_additional_types;
 };
 
@@ -449,7 +453,7 @@ XPT_FillParamDescriptor(XPTArena *arena,
 struct XPTMethodDescriptor {
     char                *name;
     XPTParamDescriptor  *params;
-    XPTParamDescriptor  *result;
+    XPTParamDescriptor  result;
     uint8_t             flags;
     uint8_t             num_args;
 };

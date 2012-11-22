@@ -1643,6 +1643,10 @@ public:
     return sFontSizeInflationLineThreshold;
   }
 
+  static bool FontSizeInflationForceEnabled() {
+    return sFontSizeInflationForceEnabled;
+  }
+
   /**
    * See comment above "font.size.inflation.mappingIntercept" in
    * modules/libpref/src/init/all.js .
@@ -1761,6 +1765,7 @@ private:
   static uint32_t sFontSizeInflationLineThreshold;
   static int32_t  sFontSizeInflationMappingIntercept;
   static uint32_t sFontSizeInflationMaxRatio;
+  static bool sFontSizeInflationForceEnabled;
 };
 
 template<typename PointType, typename RectType, typename CoordType>

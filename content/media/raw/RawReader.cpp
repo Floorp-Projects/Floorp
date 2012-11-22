@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDecoderStateMachine.h"
-#include "MediaDecoder.h"
+#include "AbstractMediaDecoder.h"
 #include "RawReader.h"
 #include "RawDecoder.h"
 #include "VideoUtils.h"
 
 using namespace mozilla;
 
-RawReader::RawReader(MediaDecoder* aDecoder)
+RawReader::RawReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
     mCurrentFrame(0), mFrameSize(0)
 {
@@ -99,9 +99,9 @@ nsresult RawReader::ReadMetadata(nsVideoInfo* aInfo,
   int64_t length = resource->GetLength();
   if (length != -1) {
     ReentrantMonitorAutoEnter autoMonitor(mDecoder->GetReentrantMonitor());
-    mDecoder->GetStateMachine()->SetDuration(USECS_PER_S *
-                                           (length - sizeof(RawVideoHeader)) /
-                                           (mFrameSize * mFrameRate));
+    mDecoder->SetMediaDuration(USECS_PER_S *
+                                      (length - sizeof(RawVideoHeader)) /
+                                      (mFrameSize * mFrameRate));
   }
 
   *aInfo = mInfo;
@@ -150,7 +150,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   uint32_t parsed = 0, decoded = 0;
-  MediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
   if (!mFrameSize)
     return false; // Metadata read failed.  We should refuse to play.
@@ -258,7 +258,7 @@ nsresult RawReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, in
 
     {
       ReentrantMonitorAutoEnter autoMonitor(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetStateMachine()->IsShutdown()) {
+      if (mDecoder->IsShutdown()) {
         mCurrentFrame = frame;
         return NS_ERROR_FAILURE;
       }

@@ -14,9 +14,13 @@
 #include "Logging.h"
 #endif
 
+class nsIContent;
+
+namespace mozilla {
+namespace a11y {
+
 class Accessible;
 class DocAccessible;
-class nsIContent;
 
 /**
  * Notification interface.
@@ -74,7 +78,7 @@ private:
 
   Class* mInstance;
   Callback mCallback;
-  nsCOMPtr<Arg> mArg;
+  nsRefPtr<Arg> mArg;
 };
 
 /**
@@ -346,5 +350,8 @@ private:
    */
   nsTArray<nsRefPtr<AccEvent> > mEvents;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

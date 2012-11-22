@@ -173,6 +173,7 @@ public:
   virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize);
 
   virtual Layer* GetLayer();
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);

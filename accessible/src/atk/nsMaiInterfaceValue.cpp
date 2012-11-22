@@ -10,6 +10,8 @@
 #include "AccessibleWrap.h"
 #include "nsMai.h"
 
+using namespace mozilla::a11y;
+
 extern "C" {
 
 static void

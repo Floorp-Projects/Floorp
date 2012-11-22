@@ -1377,20 +1377,6 @@ mjit::Compiler::tryConvertInteger(FrameEntry *fe, Uses uses)
     frame.learnType(fe, JSVAL_TYPE_INT32, reg);
 }
 
-/* Get the common shape used by all dense arrays with a prototype at globalObj. */
-static inline Shape *
-GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
-{
-    JS_ASSERT(globalObj);
-
-    JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
-    if (!proto)
-        return NULL;
-
-    return EmptyShape::getInitialShape(cx, &ArrayClass, proto,
-                                       proto->getParent(), gc::FINALIZE_OBJECT0);
-}
-
 bool
 mjit::Compiler::jsop_setelem(bool popGuaranteed)
 {

@@ -374,12 +374,12 @@ hb_ot_layout_language_find_feature (hb_face_t    *face,
 }
 
 unsigned int
-hb_ot_layout_feature_get_lookup_indexes (hb_face_t    *face,
-					 hb_tag_t      table_tag,
-					 unsigned int  feature_index,
-					 unsigned int  start_offset,
-					 unsigned int *lookup_count /* IN/OUT */,
-					 unsigned int *lookup_indexes /* OUT */)
+hb_ot_layout_feature_get_lookups (hb_face_t    *face,
+				  hb_tag_t      table_tag,
+				  unsigned int  feature_index,
+				  unsigned int  start_offset,
+				  unsigned int *lookup_count /* IN/OUT */,
+				  unsigned int *lookup_indexes /* OUT */)
 {
   const OT::GSUBGPOS &g = get_gsubgpos_table (face, table_tag);
   const OT::Feature &f = g.get_feature (feature_index);
@@ -399,18 +399,18 @@ hb_ot_layout_has_substitution (hb_face_t *face)
 }
 
 hb_bool_t
-hb_ot_layout_would_substitute_lookup (hb_face_t            *face,
+hb_ot_layout_lookup_would_substitute (hb_face_t            *face,
 				      unsigned int          lookup_index,
 				      const hb_codepoint_t *glyphs,
 				      unsigned int          glyphs_length,
 				      hb_bool_t             zero_context)
 {
   if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return false;
-  return hb_ot_layout_would_substitute_lookup_fast (face, lookup_index, glyphs, glyphs_length, zero_context);
+  return hb_ot_layout_lookup_would_substitute_fast (face, lookup_index, glyphs, glyphs_length, zero_context);
 }
 
 hb_bool_t
-hb_ot_layout_would_substitute_lookup_fast (hb_face_t            *face,
+hb_ot_layout_lookup_would_substitute_fast (hb_face_t            *face,
 					   unsigned int          lookup_index,
 					   const hb_codepoint_t *glyphs,
 					   unsigned int          glyphs_length,
@@ -452,7 +452,7 @@ hb_ot_layout_substitute_finish (hb_font_t *font, hb_buffer_t *buffer)
 }
 
 void
-hb_ot_layout_substitute_closure_lookup (hb_face_t    *face,
+hb_ot_layout_lookup_substitute_closure (hb_face_t    *face,
 				        unsigned int  lookup_index,
 				        hb_set_t     *glyphs)
 {

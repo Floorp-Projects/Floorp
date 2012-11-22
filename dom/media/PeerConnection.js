@@ -22,8 +22,10 @@ const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
 function GlobalPCList() {
-  this._list = {};
+  this._list = [];
   Services.obs.addObserver(this, "inner-window-destroyed", true);
+  Services.obs.addObserver(this, "profile-change-net-teardown", true);
+  Services.obs.addObserver(this, "network:offline-about-to-go-offline", true);
 }
 GlobalPCList.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -63,19 +65,32 @@ GlobalPCList.prototype = {
   },
 
   observe: function(subject, topic, data) {
-    if (topic != "inner-window-destroyed") {
-      return;
+    if (topic == "inner-window-destroyed") {
+      let winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+      if (this._list[winID]) {
+        this._list[winID].forEach(function(pc) {
+          pc._pc.close(false);
+          delete pc._observer;
+          pc._pc = null;
+        });
+        delete this._list[winID];
+      }
+    } else if (topic == "profile-change-net-teardown" ||
+               topic == "network:offline-about-to-go-offline") {
+      // Delete all peerconnections on shutdown - synchronously (we need
+      // them to be done deleting transports before we return)!
+      // Also kill them if "Work Offline" is selected - more can be created 
+      // while offline, but attempts to connect them should fail.
+      let array;
+      while ((array = this._list.pop()) != undefined) {
+        array.forEach(function(pc) {
+          pc._pc.close(true);
+          delete pc._observer;
+          pc._pc = null;
+        });
+      };
     }
-    let winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    if (this._list[winID]) {
-      this._list[winID].forEach(function(pc) {
-        pc._pc.close();
-        delete pc._observer;
-        pc._pc = null;
-      });
-      delete this._list[winID];
-    }
-  }
+  },
 };
 let _globalPCList = new GlobalPCList();
 
@@ -99,14 +114,18 @@ IceCandidate.prototype = {
     Ci.nsIDOMRTCIceCandidate, Ci.nsIDOMGlobalObjectConstructor
   ]),
 
-  constructor: function(win, cand, mid, mline) {
+  constructor: function(win, candidateInitDict) {
     if (this._win) {
       throw new Error("Constructor already called");
     }
     this._win = win;
-    this.candidate = cand;
-    this.sdpMid = mid;
-    this.sdpMLineIndex = mline;
+    if (candidateInitDict !== undefined) {
+      this.candidate = candidateInitDict.candidate || null;
+      this.sdpMid = candidateInitDict.sdbMid || null;
+      this.sdpMLineIndex = candidateInitDict.sdpMLineIndex || null;
+    } else {
+      this.candidate = this.sdpMid = this.sdpMLineIndex = null;
+    }
   }
 };
 
@@ -129,13 +148,17 @@ SessionDescription.prototype = {
     Ci.nsIDOMRTCSessionDescription, Ci.nsIDOMGlobalObjectConstructor
   ]),
 
-  constructor: function(win, type, sdp) {
+  constructor: function(win, descriptionInitDict) {
     if (this._win) {
       throw new Error("Constructor already called");
     }
     this._win = win;
-    this.type = type;
-    this.sdp = sdp;
+    if (descriptionInitDict !== undefined) {
+      this.type = descriptionInitDict.type || null;
+      this.sdp = descriptionInitDict.sdp || null;
+    } else {
+      this.type = this.sdp = null;
+    }
   },
 
   toString: function() {
@@ -169,6 +192,7 @@ function PeerConnection() {
 
   // Public attributes.
   this.onaddstream = null;
+  this.onopen = null;
   this.onremovestream = null;
   this.onicecandidate = null;
   this.onstatechange = null;
@@ -453,7 +477,7 @@ PeerConnection.prototype = {
   close: function() {
     this._queueOrRun({
       func: this._pc.close,
-      args: [],
+      args: [false],
       wait: false
     });
     this._closed = true;

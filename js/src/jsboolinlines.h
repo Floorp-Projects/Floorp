@@ -13,6 +13,8 @@
 
 namespace js {
 
+bool BooleanGetPrimitiveValueSlow(JSContext *, JSObject &, Value *);
+
 inline bool
 BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp)
 {
@@ -21,7 +23,6 @@ BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp)
         return true;
     }
 
-    extern bool BooleanGetPrimitiveValueSlow(JSContext *, JSObject &, Value *);
     return BooleanGetPrimitiveValueSlow(cx, obj, vp);
 }
 

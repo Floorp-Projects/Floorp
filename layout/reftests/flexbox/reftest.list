@@ -93,6 +93,9 @@ pref(layout.css.flexbox.enabled,true) == flexbox-float-1d.xhtml  flexbox-float-1
 test-pref(layout.css.flexbox.enabled,true) == flexbox-float-2a.xhtml  flexbox-float-2-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
 
+# Tests for flex items as stacking contexts
+test-pref(layout.css.flexbox.enabled,true) == flexbox-items-as-stacking-contexts-1.xhtml flexbox-items-as-stacking-contexts-1-ref.xhtml
+
 # Tests for (default) "min-width: auto" / "min-height: auto" in flex containers
 test-pref(layout.css.flexbox.enabled,true) == flexbox-minSize-horiz-1.xhtml flexbox-minSize-horiz-1-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml

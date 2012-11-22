@@ -20,12 +20,13 @@
 #include "nsContentUtils.h"
 #include "nsIAudioManager.h"
 #include "nsIObserverService.h"
+#include "nsISettingsService.h"
 #include "nsIRadioInterfaceLayer.h"
 
 #include <unistd.h> /* usleep() */
 
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
-#define AUDIO_VOLUME_MASTER "audio.volume.bt_sco"
+#define AUDIO_VOLUME_BT_SCO "audio.volume.bt_sco"
 #define HANDSFREE_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree
 #define HEADSET_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Headset
 
@@ -138,6 +139,40 @@ public:
   }
 };
 
+class GetVolumeTask : public nsISettingsServiceCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD
+  Handle(const nsAString& aName, const jsval& aResult)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    JSContext *cx = nsContentUtils::GetCurrentJSContext();
+    NS_ENSURE_TRUE(cx, NS_OK);
+
+    if (!aResult.isNumber()) {
+      NS_WARNING("'" AUDIO_VOLUME_BT_SCO "' is not a number!");
+      return NS_OK;
+    }
+
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    hfp->SetVolume(aResult.toNumber());
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  HandleError(const nsAString& aName)
+  {
+    NS_WARNING("Unable to get value for '" AUDIO_VOLUME_BT_SCO "'");
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(GetVolumeTask, nsISettingsServiceCallback);
+
 namespace {
   StaticRefPtr<BluetoothHfpManager> gBluetoothHfpManager;
   StaticRefPtr<BluetoothHfpManagerObserver> sHfpObserver;
@@ -178,15 +213,12 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (sStopSendingRingFlag) {
-      return;
-    }
+    NS_ENSURE_FALSE_VOID(sStopSendingRingFlag);
 
     if (!gBluetoothHfpManager) {
       NS_WARNING("BluetoothHfpManager no longer exists, cannot send ring!");
       return;
     }
-
     gBluetoothHfpManager->SendLine("RING");
 
     MessageLoop::current()->
@@ -241,6 +273,8 @@ BluetoothHfpManager::BluetoothHfpManager()
 bool
 BluetoothHfpManager::Init()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mSocketStatus = GetConnectionStatus();
 
   sHfpObserver = new BluetoothHfpManagerObserver();
@@ -254,17 +288,17 @@ BluetoothHfpManager::Init()
     return false;
   }
 
-  float volume;
-  nsCOMPtr<nsIAudioManager> am = do_GetService("@mozilla.org/telephony/audiomanager;1");
-  if (!am) {
-    NS_WARNING("Failed to get AudioManager Service!");
-    return false;
-  }
-  am->GetMasterVolume(&volume);
+  nsCOMPtr<nsISettingsService> settings =
+    do_GetService("@mozilla.org/settingsService;1");
+  NS_ENSURE_TRUE(settings, false);
 
-  // AG volume range: [0.0, 1.0]
-  // HS volume range: [0, 15]
-  mCurrentVgs = floor(volume * 15);
+  nsCOMPtr<nsISettingsServiceLock> settingsLock;
+  nsresult rv = settings->CreateLock(getter_AddRefs(settingsLock));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsRefPtr<GetVolumeTask> callback = new GetVolumeTask();
+  rv = settingsLock->Get(AUDIO_VOLUME_BT_SCO, callback);
+  NS_ENSURE_SUCCESS(rv, false);
 
   return true;
 }
@@ -316,6 +350,12 @@ BluetoothHfpManager::Get()
 }
 
 void
+BluetoothHfpManager::SetVolume(const int aVolume)
+{
+  mCurrentVgs = aVolume;
+}
+
+void
 BluetoothHfpManager::NotifySettings()
 {
   nsString type, name;
@@ -324,11 +364,8 @@ BluetoothHfpManager::NotifySettings()
   type.AssignLiteral("bluetooth-hfp-status-changed");
 
   name.AssignLiteral("connected");
-  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
-    v = true;
-  } else {
-    v = false;
-  }
+  v = (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED)
+    ? true : false ;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("address");
@@ -336,7 +373,7 @@ BluetoothHfpManager::NotifySettings()
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   if (!BroadcastSystemMessage(type, parameters)) {
-    NS_WARNING("Failed to broadcast system message to dialer");
+    NS_WARNING("Failed to broadcast system message to settings");
     return;
   }
 }
@@ -364,11 +401,12 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
   MOZ_ASSERT(NS_IsMainThread());
 
   // The string that we're interested in will be a JSON string that looks like:
-  //  {"key":"volumeup", "value":1.0}
-  //  {"key":"volumedown", "value":0.2}
+  //  {"key":"volumeup", "value":10}
+  //  {"key":"volumedown", "value":2}
 
   JSContext* cx = nsContentUtils::GetSafeJSContext();
   if (!cx) {
+    NS_WARNING("Failed to get JSContext");
     return NS_OK;
   }
 
@@ -394,7 +432,7 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
   }
 
   JSBool match;
-  if (!JS_StringEqualsAscii(cx, key.toString(), AUDIO_VOLUME_MASTER, &match)) {
+  if (!JS_StringEqualsAscii(cx, key.toString(), AUDIO_VOLUME_BT_SCO, &match)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -413,21 +451,18 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
     return NS_ERROR_UNEXPECTED;
   }
 
-  // AG volume range: [0.0, 1.0]
-  // HS volume range: [0, 15]
-  float volume = value.toNumber();
-  mCurrentVgs = floor(volume * 15);
+  mCurrentVgs = value.toNumber();
 
+  // Adjust volume by headset and we don't have to send volume back to headset
   if (mReceiveVgsFlag) {
     mReceiveVgsFlag = false;
     return NS_OK;
   }
 
-  if (GetConnectionStatus() != SocketConnectionStatus::SOCKET_CONNECTED) {
-    return NS_OK;
+  // Only send volume back when there's a connected headset
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
+    SendCommand("+VGS: ", mCurrentVgs);
   }
-
-  SendCommand("+VGS: ", mCurrentVgs);
 
   return NS_OK;
 }
@@ -497,6 +532,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     }
     SendLine("OK");
   } else if (!strncmp(msg, "AT+VGS=", 7)) {
+    // Adjust volume by headset
     mReceiveVgsFlag = true;
 
     int length = strlen(msg) - 8;
@@ -517,13 +553,9 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     NS_ASSERTION(newVgs >= 0 && newVgs <= 15, "Received invalid VGS value");
 #endif
 
-    // HS volume range: [0, 15]
-    // sound_manager volume range: [0, 10]
     nsString data;
-    int volume;
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    volume = ceil((float)newVgs / 15.0 * 10.0);
-    data.AppendInt(volume);
+    data.AppendInt(newVgs);
     os->NotifyObservers(nullptr, "bluetooth-volume-change", data.get());
 
     SendLine("OK");
@@ -576,7 +608,7 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (gInShutdown) {
-    MOZ_ASSERT(false, "Connect called while in shutdown!");
+    NS_WARNING("Connect called while in shutdown!");
     return false;
   }
 
@@ -589,10 +621,7 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
   CloseSocket();
 
   BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    NS_WARNING("BluetoothService not available!");
-    return false;
-  }
+  NS_ENSURE_TRUE(bs, false);
 
   nsString serviceUuidStr;
   if (aIsHandsfree) {
@@ -627,10 +656,7 @@ BluetoothHfpManager::Listen()
   CloseSocket();
 
   BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    NS_WARNING("BluetoothService not available!");
-    return false;
-  }
+  NS_ENSURE_TRUE(bs, false);
 
   nsresult rv = bs->ListenSocketViaService(BluetoothReservedChannels::HANDSFREE_AG,
                                            BluetoothSocketType::RFCOMM,
@@ -647,7 +673,7 @@ void
 BluetoothHfpManager::Disconnect()
 {
   if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_DISCONNECTED) {
-    NS_WARNING("BluetoothHfpManager has disconnected!");
+    NS_WARNING("BluetoothHfpManager has been disconnected!");
     return;
   }
 
@@ -902,14 +928,15 @@ BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
 void
 BluetoothHfpManager::OnConnectSuccess()
 {
+  // For active connection request, we need to reply the DOMRequest
   if (mRunnable) {
-    BluetoothReply* reply = new BluetoothReply(BluetoothReplySuccess(true));
-    mRunnable->SetReply(reply);
-    if (NS_FAILED(NS_DispatchToMainThread(mRunnable))) {
-      NS_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothValue v = true;
+    nsString errorStr;
+    DispatchBluetoothReply(mRunnable, v, errorStr);
+
     mRunnable.forget();
   }
+
   // Cache device path for NotifySettings() since we can't get socket address
   // when a headset disconnect with us
   GetSocketAddr(mDevicePath);
@@ -917,9 +944,7 @@ BluetoothHfpManager::OnConnectSuccess()
 
   nsCOMPtr<nsIRILContentHelper> ril =
     do_GetService("@mozilla.org/ril/content-helper;1");
-  if (!ril) {
-    MOZ_ASSERT("Failed to get RIL Content Helper");
-  }
+  NS_ENSURE_TRUE_VOID(ril);
   ril->EnumerateCalls(mListener->GetCallback());
 
   NotifySettings();
@@ -928,26 +953,27 @@ BluetoothHfpManager::OnConnectSuccess()
 void
 BluetoothHfpManager::OnConnectError()
 {
+  // For active connection request, we need to reply the DOMRequest
   if (mRunnable) {
+    BluetoothValue v;
     nsString errorStr;
     errorStr.AssignLiteral("Failed to connect with a bluetooth headset!");
-    BluetoothReply* reply = new BluetoothReply(BluetoothReplyError(errorStr));
-    mRunnable->SetReply(reply);
-    if (NS_FAILED(NS_DispatchToMainThread(mRunnable))) {
-      NS_WARNING("Failed to dispatch to main thread!");
-    }
+    DispatchBluetoothReply(mRunnable, v, errorStr);
+
     mRunnable.forget();
   }
 
+  // If connecting for some reason didn't work, restart listening
   CloseSocket();
   mSocketStatus = GetConnectionStatus();
-  // If connecting for some reason didn't work, restart listening
   Listen();
 }
 
 void
 BluetoothHfpManager::OnDisconnect()
 {
+  // When we close a connected socket, then restart listening again and
+  // notify Settings app.
   if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     Listen();
     NotifySettings();

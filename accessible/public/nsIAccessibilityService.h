@@ -12,7 +12,14 @@
 
 #include "nsAutoPtr.h"
 
+namespace mozilla {
+namespace a11y {
+
 class Accessible;
+
+} // namespace a11y
+} // namespace mozilla
+
 class nsINode;
 class nsIContent;
 class nsIFrame;
@@ -37,15 +44,17 @@ public:
    * @param aCanCreate  [in] points whether the root document accessible
    *                        should be returned from the cache or can be created
    */
-  virtual Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                bool aCanCreate) = 0;
+  virtual mozilla::a11y::Accessible*
+    GetRootDocumentAccessible(nsIPresShell* aPresShell, bool aCanCreate) = 0;
 
    /**
    * Adds/remove ATK root accessible for gtk+ native window to/from children
    * of the application accessible.
    */
-  virtual Accessible* AddNativeRootAccessible(void* aAtkAccessible) = 0;
-  virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible) = 0;
+  virtual mozilla::a11y::Accessible*
+    AddNativeRootAccessible(void* aAtkAccessible) = 0;
+  virtual void
+    RemoveNativeRootAccessible(mozilla::a11y::Accessible* aRootAccessible) = 0;
 
   /**
    * Fire accessible event of the given type for the given target.
@@ -53,7 +62,8 @@ public:
    * @param aEvent   [in] accessible event type
    * @param aTarget  [in] target of accessible event
    */
-  virtual void FireAccessibleEvent(uint32_t aEvent, Accessible* aTarget) = 0;
+  virtual void FireAccessibleEvent(uint32_t aEvent,
+                                   mozilla::a11y::Accessible* aTarget) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAccessibilityService,

@@ -202,7 +202,8 @@ public:
     {     return fwdObject ? (fwdObject)->BytesWritten() : 0; } \
     void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) \
     {                                                       \
-        (fwdObject)->SetSecurityCallbacks(aCallbacks); \
+        if (fwdObject)                                      \
+            (fwdObject)->SetSecurityCallbacks(aCallbacks);  \
     }
 
 #endif // nsAHttpConnection_h__

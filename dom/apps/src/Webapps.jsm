@@ -764,7 +764,7 @@ this.DOMApplicationRegistry = {
     this._saveApps((function() {
       this.broadcastMessage("Webapps:PackageEvent",
                              { type: "canceled",
-                               manifestURL:  aApp.manifestURL,
+                               manifestURL:  app.manifestURL,
                                app: app,
                                error: "DOWNLOAD_CANCELED" });
     }).bind(this));
@@ -1005,8 +1005,10 @@ this.DOMApplicationRegistry = {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!AppsUtils.checkManifest(manifest, app.installOrigin)) {
+        if (!AppsUtils.checkManifest(manifest)) {
           sendError("INVALID_MANIFEST");
+        } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
+          sendError("INSTALL_FROM_DENIED");
         } else {
           app.etag = xhr.getResponseHeader("Etag");
           app.lastCheckedUpdate = Date.now();
@@ -1102,6 +1104,7 @@ this.DOMApplicationRegistry = {
     appObject.localId = localId;
     appObject.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true).path;
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+    dir.permissions = FileUtils.PERMS_DIRECTORY;
     let manFile = dir.clone();
     manFile.append(manifestName);
     let jsonManifest = aData.isPackage ? app.updateManifest : app.manifest;
@@ -1178,6 +1181,7 @@ this.DOMApplicationRegistry = {
         let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
         let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
         zipFile.moveTo(dir, "application.zip");
+        zipFile.permissions = FileUtils.PERMS_FILE;
         let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
         try {
           tmpDir.remove(true);
@@ -1310,10 +1314,18 @@ this.DOMApplicationRegistry = {
       try {
         dir.remove(true);
       } catch (e) { }
-        self.broadcastMessage("Webapps:PackageEvent",
-                              { type: "error",
-                                manifestURL:  aApp.manifestURL,
-                                error: aError });
+
+      // We avoid notifying the error to the DOM side if the app download
+      // was cancelled via cancelDownload, which already sends its own
+      // notification.
+      if (!app.downloading && !app.downloadAvailable && !app.downloadSize) {
+        return;
+      }
+
+      self.broadcastMessage("Webapps:PackageEvent",
+                            { type: "error",
+                              manifestURL:  aApp.manifestURL,
+                              error: aError });
     }
 
     function getInferedStatus() {
@@ -1406,8 +1418,12 @@ this.DOMApplicationRegistry = {
             let manifest = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(istream,
                                                                  istream.available()) || ""));
 
-            if (!AppsUtils.checkManifest(manifest, aApp.installOrigin)) {
+            if (!AppsUtils.checkManifest(manifest)) {
               throw "INVALID_MANIFEST";
+            }
+
+            if (!AppsUtils.checkInstallAllowed(manifest, aApp.installOrigin)) {
+              throw "INSTALL_FROM_DENIED";
             }
 
             if (!checkAppStatus(manifest)) {

@@ -472,6 +472,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     }
   }
 
+  nsCSSRendering::BeginFrameTreesLocked();
   PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
 }
 
@@ -653,6 +654,8 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   NS_ASSERTION(mPresShellStates.Length() == 0,
                "All presshells should have been exited");
   NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
+
+  nsCSSRendering::EndFrameTreesLocked();
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
@@ -1058,7 +1061,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   NotifySubDocInvalidationFunc computeInvalidFunc =
     presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
   bool computeInvalidRect = (computeInvalidFunc ||
-                             (layerManager->GetBackendType() == LAYERS_BASIC)) &&
+                             !layerManager->IsCompositingCheap()) &&
                             widgetTransaction;
 
   nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
@@ -1155,7 +1158,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
 
-  nsCSSRendering::DidPaint();
   layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
 }
 
@@ -1470,7 +1472,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
                                                    uint32_t aLayer,
                                                    bool aIsThemed,
                                                    const nsStyleBackground* aBackgroundStyle)
-  : nsDisplayItem(aBuilder, aFrame)
+  : nsDisplayImageContainer(aBuilder, aFrame)
   , mBackgroundStyle(aBackgroundStyle)
   , mLayer(aLayer)
   , mIsThemed(aIsThemed)
@@ -1711,7 +1713,7 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
 
   nsImageRenderer* imageRenderer = &state.mImageRenderer;
   // We only care about images here, not gradients.
-  if (imageRenderer->IsRasterImage())
+  if (!imageRenderer->IsRasterImage())
     return false;
 
   nsRefPtr<ImageContainer> imageContainer = imageRenderer->GetContainer();
@@ -1735,6 +1737,18 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
 
   // Ok, we can turn this into a layer if needed.
   return true;
+}
+
+already_AddRefed<ImageContainer>
+nsDisplayBackgroundImage::GetContainer(nsDisplayListBuilder *aBuilder)
+{
+  if (!TryOptimizeToImageLayer(aBuilder)) {
+    return nullptr;
+  }
+
+  nsRefPtr<ImageContainer> container = mImageContainer;
+
+  return container.forget();
 }
 
 LayerState
@@ -1779,12 +1793,12 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
   layer->SetContainer(mImageContainer);
-  ConfigureLayer(layer);
+  ConfigureLayer(layer, aParameters.mOffset);
   return layer.forget();
 }
 
 void
-nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer)
+nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
 
@@ -1792,7 +1806,7 @@ nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer)
   NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
 
   gfxMatrix transform;
-  transform.Translate(mDestRect.TopLeft());
+  transform.Translate(mDestRect.TopLeft() + aOffset);
   transform.Scale(mDestRect.width/imageSize.width,
                   mDestRect.height/imageSize.height);
   aLayer->SetBaseTransform(gfx3DMatrix::From2D(transform));

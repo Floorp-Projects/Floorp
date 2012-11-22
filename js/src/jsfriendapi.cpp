@@ -402,7 +402,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *objArg, const char *name
     if (!atom)
         return NULL;
     Rooted<jsid> id(cx, AtomToId(atom));
-    return js_DefineFunction(cx, obj, id, call, nargs, attrs, NullPtr(), JSFunction::ExtendedFinalizeKind);
+    return js_DefineFunction(cx, obj, id, call, nargs, attrs, JSFunction::ExtendedFinalizeKind);
 }
 
 JS_FRIEND_API(JSFunction *)
@@ -502,6 +502,7 @@ js::SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback)
  * sufficient data has been harvested.
  */
 
+// Defined in jsxml.cpp.
 extern size_t sE4XObjectsCreated;
 
 JS_FRIEND_API(size_t)
@@ -511,6 +512,7 @@ JS_GetE4XObjectsCreated(JSContext *)
 }
 
 namespace js {
+// Defined in vm/GlobalObject.cpp.
 extern size_t sSetProtoCalled;
 }
 
@@ -520,6 +522,7 @@ JS_SetProtoCalled(JSContext *)
     return sSetProtoCalled;
 }
 
+// Defined in jsiter.cpp.
 extern size_t sCustomIteratorCount;
 
 JS_FRIEND_API(size_t)
@@ -717,29 +720,27 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
     fflush(dtrc.output);
 }
 
-namespace js {
-
 JS_FRIEND_API(const JSStructuredCloneCallbacks *)
-GetContextStructuredCloneCallbacks(JSContext *cx)
+js::GetContextStructuredCloneCallbacks(JSContext *cx)
 {
     return cx->runtime->structuredCloneCallbacks;
 }
 
 JS_FRIEND_API(JSVersion)
-VersionSetMoarXML(JSVersion version, bool enable)
+js::VersionSetMoarXML(JSVersion version, bool enable)
 {
     return enable ? JSVersion(uint32_t(version) | VersionFlags::MOAR_XML)
                   : JSVersion(uint32_t(version) & ~VersionFlags::MOAR_XML);
 }
 
 JS_FRIEND_API(bool)
-CanCallContextDebugHandler(JSContext *cx)
+js::CanCallContextDebugHandler(JSContext *cx)
 {
     return !!cx->runtime->debugHooks.debuggerHandler;
 }
 
 JS_FRIEND_API(JSTrapStatus)
-CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
+js::CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
 {
     if (!cx->runtime->debugHooks.debuggerHandler)
         return JSTRAP_RETURN;
@@ -750,51 +751,51 @@ CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *
 
 #ifdef JS_THREADSAFE
 void *
-GetOwnerThread(const JSContext *cx)
+js::GetOwnerThread(const JSContext *cx)
 {
     return cx->runtime->ownerThread();
 }
 
 JS_FRIEND_API(bool)
-ContextHasOutstandingRequests(const JSContext *cx)
+js::ContextHasOutstandingRequests(const JSContext *cx)
 {
     return cx->outstandingRequests > 0;
 }
 #endif
 
 JS_FRIEND_API(JSCompartment *)
-GetContextCompartment(const JSContext *cx)
+js::GetContextCompartment(const JSContext *cx)
 {
     return cx->compartment;
 }
 
 JS_FRIEND_API(bool)
-HasUnrootedGlobal(const JSContext *cx)
+js::HasUnrootedGlobal(const JSContext *cx)
 {
     return cx->hasRunOption(JSOPTION_UNROOTED_GLOBAL);
 }
 
 JS_FRIEND_API(void)
-SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg)
+js::SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg)
 {
     rt->activityCallback = cb;
     rt->activityCallbackArg = arg;
 }
 
 JS_FRIEND_API(bool)
-IsContextRunningJS(JSContext *cx)
+js::IsContextRunningJS(JSContext *cx)
 {
     return !cx->stack.empty();
 }
 
 JS_FRIEND_API(const CompartmentVector&)
-GetRuntimeCompartments(JSRuntime *rt)
+js::GetRuntimeCompartments(JSRuntime *rt)
 {
     return rt->compartments;
 }
 
 JS_FRIEND_API(GCSliceCallback)
-SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
+js::SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
 {
     GCSliceCallback old = rt->gcSliceCallback;
     rt->gcSliceCallback = callback;
@@ -802,7 +803,7 @@ SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
 }
 
 JS_FRIEND_API(bool)
-WasIncrementalGC(JSRuntime *rt)
+js::WasIncrementalGC(JSRuntime *rt)
 {
     return rt->gcIsIncremental;
 }
@@ -820,7 +821,7 @@ GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
 }
 
 JS_FRIEND_API(AnalysisPurgeCallback)
-SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback)
+js::SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback)
 {
     AnalysisPurgeCallback old = rt->analysisPurgeCallback;
     rt->analysisPurgeCallback = callback;
@@ -828,7 +829,7 @@ SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback)
 }
 
 JS_FRIEND_API(void)
-NotifyDidPaint(JSRuntime *rt)
+js::NotifyDidPaint(JSRuntime *rt)
 {
     if (rt->gcZeal() == gc::ZealFrameVerifierPreValue) {
         gc::VerifyBarriers(rt, gc::PreBarrierVerifier);
@@ -854,50 +855,50 @@ NotifyDidPaint(JSRuntime *rt)
     rt->gcInterFrameGC = false;
 }
 
-extern JS_FRIEND_API(bool)
-IsIncrementalGCEnabled(JSRuntime *rt)
+JS_FRIEND_API(bool)
+js::IsIncrementalGCEnabled(JSRuntime *rt)
 {
     return rt->gcIncrementalEnabled && rt->gcMode == JSGC_MODE_INCREMENTAL;
 }
 
 JS_FRIEND_API(bool)
-IsIncrementalGCInProgress(JSRuntime *rt)
+js::IsIncrementalGCInProgress(JSRuntime *rt)
 {
     return (rt->gcIncrementalState != gc::NO_INCREMENTAL && !rt->gcVerifyPreData);
 }
 
-extern JS_FRIEND_API(void)
-DisableIncrementalGC(JSRuntime *rt)
+JS_FRIEND_API(void)
+js::DisableIncrementalGC(JSRuntime *rt)
 {
     rt->gcIncrementalEnabled = false;
 }
 
 JS_FRIEND_API(bool)
-IsIncrementalBarrierNeeded(JSRuntime *rt)
+js::IsIncrementalBarrierNeeded(JSRuntime *rt)
 {
     return (rt->gcIncrementalState == gc::MARK && !rt->isHeapBusy());
 }
 
 JS_FRIEND_API(bool)
-IsIncrementalBarrierNeeded(JSContext *cx)
+js::IsIncrementalBarrierNeeded(JSContext *cx)
 {
     return IsIncrementalBarrierNeeded(cx->runtime);
 }
 
 JS_FRIEND_API(bool)
-IsIncrementalBarrierNeededOnObject(RawObject obj)
+js::IsIncrementalBarrierNeededOnObject(RawObject obj)
 {
     return obj->compartment()->needsBarrier();
 }
 
 JS_FRIEND_API(bool)
-IsIncrementalBarrierNeededOnScript(JSScript *script)
+js::IsIncrementalBarrierNeededOnScript(JSScript *script)
 {
     return script->compartment()->needsBarrier();
 }
 
-extern JS_FRIEND_API(void)
-IncrementalReferenceBarrier(void *ptr)
+JS_FRIEND_API(void)
+js::IncrementalReferenceBarrier(void *ptr)
 {
     if (!ptr)
         return;
@@ -924,20 +925,20 @@ IncrementalReferenceBarrier(void *ptr)
         JS_NOT_REACHED("invalid trace kind");
 }
 
-extern JS_FRIEND_API(void)
-IncrementalValueBarrier(const Value &v)
+JS_FRIEND_API(void)
+js::IncrementalValueBarrier(const Value &v)
 {
     HeapValue::writeBarrierPre(v);
 }
 
-extern JS_FRIEND_API(void)
-PokeGC(JSRuntime *rt)
+JS_FRIEND_API(void)
+js::PokeGC(JSRuntime *rt)
 {
     rt->gcPoke = true;
 }
 
 JS_FRIEND_API(JSObject *)
-GetTestingFunctions(JSContext *cx)
+js::GetTestingFunctions(JSContext *cx)
 {
     RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
     if (!obj)
@@ -950,32 +951,31 @@ GetTestingFunctions(JSContext *cx)
 }
 
 JS_FRIEND_API(void)
-SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size,
-                         uint32_t max)
+js::SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size, uint32_t max)
 {
     rt->spsProfiler.setProfilingStack(stack, size, max);
 }
 
 JS_FRIEND_API(void)
-EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
+js::EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
 {
     rt->spsProfiler.enable(enabled);
 }
 
 JS_FRIEND_API(jsbytecode*)
-ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip)
+js::ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip)
 {
     return rt->spsProfiler.ipToPC(script, size_t(ip));
 }
 
 JS_FRIEND_API(void)
-SetDOMCallbacks(JSRuntime *rt, const DOMCallbacks *callbacks)
+js::SetDOMCallbacks(JSRuntime *rt, const DOMCallbacks *callbacks)
 {
     rt->DOMcallbacks = callbacks;
 }
 
 JS_FRIEND_API(const DOMCallbacks *)
-GetDOMCallbacks(JSRuntime *rt)
+js::GetDOMCallbacks(JSRuntime *rt)
 {
     return rt->DOMcallbacks;
 }
@@ -984,22 +984,20 @@ static void *gListBaseHandlerFamily = NULL;
 static uint32_t gListBaseExpandoSlot = 0;
 
 JS_FRIEND_API(void)
-SetListBaseInformation(void *listBaseHandlerFamily, uint32_t listBaseExpandoSlot)
+js::SetListBaseInformation(void *listBaseHandlerFamily, uint32_t listBaseExpandoSlot)
 {
     gListBaseHandlerFamily = listBaseHandlerFamily;
     gListBaseExpandoSlot = listBaseExpandoSlot;
 }
 
 void *
-GetListBaseHandlerFamily()
+js::GetListBaseHandlerFamily()
 {
     return gListBaseHandlerFamily;
 }
 
 uint32_t
-GetListBaseExpandoSlot()
+js::GetListBaseExpandoSlot()
 {
     return gListBaseExpandoSlot;
 }
-
-} // namespace js

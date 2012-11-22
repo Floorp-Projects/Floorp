@@ -5269,6 +5269,49 @@ class MIn
     }
 };
 
+
+// Test whether the index is in the array bounds or a hole.
+class MInArray
+  : public MTernaryInstruction
+{
+    bool needsHoleCheck_;
+
+    MInArray(MDefinition *elements, MDefinition *index, MDefinition *initLength, bool needsHoleCheck)
+      : MTernaryInstruction(elements, index, initLength),
+        needsHoleCheck_(needsHoleCheck)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(initLength->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(InArray);
+
+    static MInArray *New(MDefinition *elements, MDefinition *index,
+                         MDefinition *initLength, bool needsHoleCheck) {
+        return new MInArray(elements, index, initLength, needsHoleCheck);
+    }
+
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *initLength() const {
+        return getOperand(2);
+    }
+    bool needsHoleCheck() const {
+        return needsHoleCheck_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Element);
+    }
+};
+
 // Implementation for instanceof operator.
 class MInstanceOf
   : public MBinaryInstruction,

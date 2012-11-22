@@ -48,7 +48,7 @@ public:
 #ifdef DEBUG
     gfxIntSize prevSize = gfxIntSize(BufferRect().width, BufferRect().height);
     gfxIntSize newSize = aBuffer->GetSize();
-    NS_ABORT_IF_FALSE(newSize == prevSize,
+    NS_ABORT_IF_FALSE(newSize == prevSize || prevSize == gfxIntSize(0,0),
                       "Swapped-in buffer size doesn't match old buffer's!");
 #endif
     nsRefPtr<gfxASurface> oldBuffer;

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsError.h"
 #include "MediaDecoderStateMachine.h"
-#include "MediaDecoder.h"
+#include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
 #include "WebMReader.h"
 #include "WebMBufferedParser.h"
@@ -59,8 +59,8 @@ static const int SEEK_DECODE_MARGIN = 250000;
 // decoder from which the media resource is obtained.
 static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
 {
-  NS_ASSERTION(aUserData, "aUserData must point to a valid MediaDecoder");
-  MediaDecoder* decoder = reinterpret_cast<MediaDecoder*>(aUserData);
+  NS_ASSERTION(aUserData, "aUserData must point to a valid AbstractMediaDecoder");
+  AbstractMediaDecoder* decoder = reinterpret_cast<AbstractMediaDecoder*>(aUserData);
   MediaResource* resource = decoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");
 
@@ -85,8 +85,8 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
 
 static int webm_seek(int64_t aOffset, int aWhence, void *aUserData)
 {
-  NS_ASSERTION(aUserData, "aUserData must point to a valid MediaDecoder");
-  MediaDecoder* decoder = reinterpret_cast<MediaDecoder*>(aUserData);
+  NS_ASSERTION(aUserData, "aUserData must point to a valid AbstractMediaDecoder");
+  AbstractMediaDecoder* decoder = reinterpret_cast<AbstractMediaDecoder*>(aUserData);
   MediaResource* resource = decoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");
   nsresult rv = resource->Seek(aWhence, aOffset);
@@ -95,14 +95,14 @@ static int webm_seek(int64_t aOffset, int aWhence, void *aUserData)
 
 static int64_t webm_tell(void *aUserData)
 {
-  NS_ASSERTION(aUserData, "aUserData must point to a valid MediaDecoder");
-  MediaDecoder* decoder = reinterpret_cast<MediaDecoder*>(aUserData);
+  NS_ASSERTION(aUserData, "aUserData must point to a valid AbstractMediaDecoder");
+  AbstractMediaDecoder* decoder = reinterpret_cast<AbstractMediaDecoder*>(aUserData);
   MediaResource* resource = decoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");
   return resource->Tell();
 }
 
-WebMReader::WebMReader(MediaDecoder* aDecoder)
+WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
   mContext(nullptr),
   mPacketCount(0),
@@ -196,7 +196,7 @@ nsresult WebMReader::ReadMetadata(nsVideoInfo* aInfo,
   io.read = webm_read;
   io.seek = webm_seek;
   io.tell = webm_tell;
-  io.userdata = static_cast<MediaDecoder*>(mDecoder);
+  io.userdata = mDecoder;
   int64_t maxOffset = mInitByteRange.IsNull() ? -1 : mInitByteRange.mEnd;
   int r = nestegg_init(&mContext, io, nullptr, maxOffset);
   if (r == -1) {
@@ -207,7 +207,7 @@ nsresult WebMReader::ReadMetadata(nsVideoInfo* aInfo,
   r = nestegg_duration(mContext, &duration);
   if (r == 0) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->GetStateMachine()->SetDuration(duration / NS_PER_USEC);
+    mDecoder->SetMediaDuration(duration / NS_PER_USEC);
   }
 
   unsigned int ntracks = 0;
@@ -606,7 +606,7 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   uint32_t parsed = 0, decoded = 0;
-  MediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
   nsAutoRef<NesteggPacketHolder> holder(NextPacket(VIDEO));
   if (!holder) {
@@ -648,9 +648,7 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
       mVideoPackets.PushFront(next_holder.disown());
     } else {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      MediaDecoderStateMachine* s =
-        static_cast<MediaDecoderStateMachine*>(mDecoder->GetStateMachine());
-      int64_t endTime = s->GetEndMediaTime();
+      int64_t endTime = mDecoder->GetEndMediaTime();
       if (endTime == -1) {
         return false;
       }

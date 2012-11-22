@@ -278,8 +278,14 @@ PeerConnectionImpl::PeerConnectionImpl()
 
 PeerConnectionImpl::~PeerConnectionImpl()
 {
+  Close(false);
+  // Since this and Initialize() occur on MainThread, they can't both be
+  // running at once
+  // Might be more optimal to release off a timer (and XPCOM Shutdown)
+  // to avoid churn
   peerconnections.erase(mHandle);
-  Close();
+  if (peerconnections.empty())
+    Shutdown();
 
   /* We should release mPCObserver on the main thread, but also prevent a double free.
   nsCOMPtr<nsIThread> mainThread;
@@ -361,8 +367,17 @@ NS_IMETHODIMP
 PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIDOMWindow* aWindow,
                                nsIThread* aThread) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aObserver);
   mPCObserver = aObserver;
+
+  nsresult res;
+
+#ifdef MOZILLA_INTERNAL_API
+  // This code interferes with the C++ unit test startup code.
+  nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &res);
+  NS_ENSURE_SUCCESS(res, res);
+#endif
 
 #ifdef MOZILLA_INTERNAL_API
   // Currently no standalone unit tests for DataChannel,
@@ -389,7 +404,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mMedia->SignalIceCompleted.connect(this, &PeerConnectionImpl::IceCompleted);
 
   // Initialize the media object.
-  nsresult res = mMedia->Init();
+  res = mMedia->Init();
   if (NS_FAILED(res)) {
     CSFLogErrorS(logTag, __FUNCTION__ << ": Couldn't initialize media object");
     return res;
@@ -928,7 +943,7 @@ PeerConnectionImpl::GetIceState(uint32_t* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::Close()
+PeerConnectionImpl::Close(bool aIsSynchronous)
 {
   if (mCall != NULL)
     mCall->endCall();
@@ -937,7 +952,7 @@ PeerConnectionImpl::Close()
     mDataConnection->CloseAll();
 #endif
 
-  ShutdownMedia();
+  ShutdownMedia(aIsSynchronous);
 
   // DataConnection will need to stay alive until all threads/runnables exit
 
@@ -945,7 +960,7 @@ PeerConnectionImpl::Close()
 }
 
 void
-PeerConnectionImpl::ShutdownMedia()
+PeerConnectionImpl::ShutdownMedia(bool aIsSynchronous)
 {
   // Check that we are on the main thread.
   if (mThread) {
@@ -962,10 +977,15 @@ PeerConnectionImpl::ShutdownMedia()
   // This avoids reentrancy issues with the garbage collector.
   // Note that no media calls may be made after this point
   // because we have removed the pointer.
+  // For the aIsSynchronous case, we *know* the PeerConnection is
+  // still alive, and are shutting it down on network teardown/etc, so
+  // recursive GC isn't an issue. (Recursive GC should assert)
+
   // Forget the reference so that we can transfer it to
   // SelfDestruct().
   RUN_ON_THREAD(mThread, WrapRunnable(mMedia.forget().get(),
-        &PeerConnectionMedia::SelfDestruct), NS_DISPATCH_NORMAL);
+                                      &PeerConnectionMedia::SelfDestruct),
+                aIsSynchronous ? NS_DISPATCH_SYNC : NS_DISPATCH_NORMAL);
 }
 
 void

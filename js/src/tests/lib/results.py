@@ -111,26 +111,28 @@ class ResultsSink:
             self.n += 1
         else:
             result = TestResult.from_output(output)
-
-            show = self.options.show
-            if self.options.failed_only and result.result == 'PASS':
-                show = False
-
-            if show and self.options.show_output:
-                print >> self.fp, '## %s: rc = %d, run time = %f' % (output.test.path, output.rc, output.dt)
-
-            if show and self.options.show_cmd:
-                print >> self.fp, escape_cmdline(output.cmd)
-
-            if show and self.options.show_output:
-                self.fp.write(output.out)
-                self.fp.write(output.err)
-
             tup = (result.result, result.test.expect, result.test.random)
             dev_label = self.LABELS[tup][1]
             if output.timed_out:
                 dev_label = 'TIMEOUTS'
             self.groups.setdefault(dev_label, []).append(result.test.path)
+
+            show = self.options.show
+            if self.options.failed_only and dev_label not in ('REGRESSIONS', 'TIMEOUTS'):
+                show = False
+            if show:
+                self.pb.beginline()
+
+            if show:
+                if self.options.show_output:
+                    print >> self.fp, '## %s: rc = %d, run time = %f' % (output.test.path, output.rc, output.dt)
+
+                if self.options.show_cmd:
+                    print >> self.fp, escape_cmdline(output.cmd)
+
+                if self.options.show_output:
+                    self.fp.write(output.out)
+                    self.fp.write(output.err)
 
             self.n += 1
 

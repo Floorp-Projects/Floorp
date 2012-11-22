@@ -127,12 +127,11 @@ You tell mach the command you want to perform and it does it for you.
 Some common commands are:
 
     %(prog)s build     Build/compile the source tree.
-    %(prog)s test      Run tests.
     %(prog)s help      Show full help, including the list of all commands.
 
 To see more help for a specific command, run:
 
-  %(prog)s <command> --help
+  %(prog)s help <command>
 """
 
     def __init__(self, cwd):

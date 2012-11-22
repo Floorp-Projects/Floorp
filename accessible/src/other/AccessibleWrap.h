@@ -7,11 +7,14 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-#ifndef _AccessibleWrap_H_
-#define _AccessibleWrap_H_
+#ifndef mozilla_a11y_AccessibleWrap_h_
+#define mozilla_a11y_AccessibleWrap_h_
 
 #include "nsCOMPtr.h"
 #include "Accessible.h"
+
+namespace mozilla {
+namespace a11y {
 
 class AccessibleWrap : public Accessible
 {
@@ -25,5 +28,8 @@ public: // construction, destruction
       return NS_OK;
     }
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

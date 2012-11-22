@@ -100,6 +100,8 @@ class IonCompartment
   public:
     IonCompartment(IonRuntime *rt);
 
+    bool initialize(JSContext *cx);
+
     void mark(JSTracer *trc, JSCompartment *compartment);
     void sweep(FreeOp *fop);
 

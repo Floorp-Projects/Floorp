@@ -2522,7 +2522,11 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
       mDecoder = new nsGIFDecoder2(*this, observer);
       break;
     case eDecoderType_jpeg:
-      mDecoder = new nsJPEGDecoder(*this, observer);
+      // If we have all the data we don't want to waste cpu time doing
+      // a progressive decode
+      mDecoder = new nsJPEGDecoder(*this, observer,
+                                   mHasBeenDecoded ? Decoder::SEQUENTIAL :
+                                                     Decoder::PROGRESSIVE);
       break;
     case eDecoderType_bmp:
       mDecoder = new nsBMPDecoder(*this, observer);
