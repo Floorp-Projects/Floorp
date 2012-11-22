@@ -166,6 +166,7 @@ struct CompartmentStats
       , objectsExtraArgumentsData(0)
       , objectsExtraRegExpStatics(0)
       , objectsExtraPropertyIteratorData(0)
+      , objectsExtraCtypesData(0)
       , objectsExtraPrivate(0)
       , stringCharsNonHuge(0)
       , shapesExtraTreeTables(0)
@@ -208,6 +209,7 @@ struct CompartmentStats
       , objectsExtraArgumentsData(other.objectsExtraArgumentsData)
       , objectsExtraRegExpStatics(other.objectsExtraRegExpStatics)
       , objectsExtraPropertyIteratorData(other.objectsExtraPropertyIteratorData)
+      , objectsExtraCtypesData(other.objectsExtraCtypesData)
       , objectsExtraPrivate(other.objectsExtraPrivate)
       , stringCharsNonHuge(other.stringCharsNonHuge)
       , shapesExtraTreeTables(other.shapesExtraTreeTables)
@@ -258,6 +260,7 @@ struct CompartmentStats
     size_t objectsExtraArgumentsData;
     size_t objectsExtraRegExpStatics;
     size_t objectsExtraPropertyIteratorData;
+    size_t objectsExtraCtypesData;
     size_t objectsExtraPrivate;
     size_t stringCharsNonHuge;
     size_t shapesExtraTreeTables;
@@ -306,6 +309,7 @@ struct CompartmentStats
         ADD(objectsExtraArgumentsData);
         ADD(objectsExtraRegExpStatics);
         ADD(objectsExtraPropertyIteratorData);
+        ADD(objectsExtraCtypesData);
         ADD(objectsExtraPrivate);
         ADD(stringCharsNonHuge);
         ADD(shapesExtraTreeTables);

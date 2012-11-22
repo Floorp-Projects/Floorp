@@ -1001,7 +1001,8 @@ JSObject::computedSizeOfThisSlotsElements() const
 inline void
 JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *slotsSize,
                               size_t *elementsSize, size_t *argumentsDataSize,
-                              size_t *regExpStaticsSize, size_t *propertyIteratorDataSize) const
+                              size_t *regExpStaticsSize, size_t *propertyIteratorDataSize,
+                              size_t *ctypesDataSize) const
 {
     *slotsSize = 0;
     if (hasDynamicSlots()) {
@@ -1017,12 +1018,16 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *slotsSize,
     *argumentsDataSize = 0;
     *regExpStaticsSize = 0;
     *propertyIteratorDataSize = 0;
+    *ctypesDataSize = 0;
     if (isArguments()) {
         *argumentsDataSize += asArguments().sizeOfMisc(mallocSizeOf);
     } else if (isRegExpStatics()) {
         *regExpStaticsSize += js::SizeOfRegExpStaticsData(this, mallocSizeOf);
     } else if (isPropertyIterator()) {
         *propertyIteratorDataSize += asPropertyIterator().sizeOfMisc(mallocSizeOf);
+    } else {
+        // This must be the last case.
+        *ctypesDataSize += js::SizeOfDataIfCDataObject(mallocSizeOf, const_cast<JSObject *>(this));
     }
 }
 

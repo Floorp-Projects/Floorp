@@ -371,7 +371,8 @@ struct JSObject : public js::ObjectImpl
     inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *slotsSize,
                                     size_t *elementsSize, size_t *argumentsDataSize,
                                     size_t *regExpStaticsSize,
-                                    size_t *propertyIteratorDataSize) const;
+                                    size_t *propertyIteratorDataSize,
+                                    size_t *ctypesDataSize) const;
 
     bool hasIdempotentProtoChain() const;
 
