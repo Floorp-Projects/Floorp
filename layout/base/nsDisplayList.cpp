@@ -1422,8 +1422,23 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
   ::Sort(this, Count(), aCmp, aClosure);
 }
 
-bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
-                                          nsRegion* aVisibleRegion) {
+/* static */ bool
+nsDisplayItem::ForceActiveLayers()
+{
+  static bool sForce = false;
+  static bool sForceCached = false;
+
+  if (!sForceCached) {
+    Preferences::AddBoolVarCache(&sForce, "layers.force-active", false);
+    sForceCached = true;
+  }
+
+  return sForce;
+}
+
+bool
+nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion) {
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
 
