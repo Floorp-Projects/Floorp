@@ -1407,7 +1407,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
 #ifndef MOZ_ANDROID_OMTC
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
-  gfxPoint activeScrolledRootTopLeft = scaledOffset - matrix.GetTranslation();
+  gfxPoint activeScrolledRootTopLeft = scaledOffset - matrix.GetTranslation() + mParameters.mOffset;
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
