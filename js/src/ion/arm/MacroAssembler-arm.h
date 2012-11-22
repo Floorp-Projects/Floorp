@@ -486,6 +486,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void jump(Label *label) {
         as_b(label);
     }
+    void jump(Register reg) {
+        ma_bx(reg);
+    }
 
     void neg32(Register reg) {
         ma_neg(reg, reg, SetCond);
