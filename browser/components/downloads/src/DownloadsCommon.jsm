@@ -825,7 +825,6 @@ const DownloadsData = {
       return;
     }
 
-    browserWin.focus();
     if (this.panelHasShownBefore) {
       // For new downloads after the first one, don't show the panel
       // automatically, but provide a visible notification in the topmost
