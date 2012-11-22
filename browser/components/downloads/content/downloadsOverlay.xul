@@ -105,33 +105,37 @@
                    oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
                    ondragstart="DownloadsView.onDownloadDragStart(event);"/>
 
-      <hbox id="downloadsSummary"
-            collapsed="true"
-            align="center"
-            orient="horizontal"
-            onclick="DownloadsPanel.showDownloadsHistory();">
-        <image class="downloadTypeIcon" />
-        <vbox>
-          <description id="downloadsSummaryDescription"
-                       class="downloadTarget"
-                       style="min-width: &downloadsSummary.minWidth;"/>
-          <progressmeter id="downloadsSummaryProgress"
-                         class="downloadProgress"
-                         min="0"
-                         max="100"
-                         mode="normal" />
-          <description id="downloadsSummaryDetails"
-                       class="downloadDetails"
-                       style="width: &downloadDetails.width;"
-                       crop="end"/>
-        </vbox>
-      </hbox>
+      <vbox id="downloadsFooter"
+            onkeypress="DownloadsFooter.onKeyPress(event);">
+        <hbox id="downloadsSummary"
+              collapsed="true"
+              align="center"
+              orient="horizontal"
+              onkeypress="DownloadsSummary.onKeyPress(event);"
+              onclick="DownloadsSummary.onClick(event);">
+          <image class="downloadTypeIcon" />
+          <vbox>
+            <description id="downloadsSummaryDescription"
+                         class="downloadTarget"
+                         style="min-width: &downloadsSummary.minWidth;"/>
+            <progressmeter id="downloadsSummaryProgress"
+                           class="downloadProgress"
+                           min="0"
+                           max="100"
+                           mode="normal" />
+            <description id="downloadsSummaryDetails"
+                         class="downloadDetails"
+                         style="width: &downloadDetails.width;"
+                         crop="end"/>
+          </vbox>
+        </hbox>
 
-      <button id="downloadsHistory"
-              class="plain"
-              label="&downloadsHistory.label;"
-              accesskey="&downloadsHistory.accesskey;"
-              oncommand="DownloadsPanel.showDownloadsHistory();"/>
+        <button id="downloadsHistory"
+                class="plain"
+                label="&downloadsHistory.label;"
+                accesskey="&downloadsHistory.accesskey;"
+                oncommand="DownloadsPanel.showDownloadsHistory();"/>
+      </vbox>
     </panel>
   </popupset>
 </overlay>
