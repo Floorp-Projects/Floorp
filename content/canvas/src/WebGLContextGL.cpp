@@ -3156,7 +3156,6 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
     WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
-    void* data = pixels->Data();
     uint32_t dataByteLen = JS_GetTypedArrayByteLength(pixels->Obj());
     int dataType = JS_GetTypedArrayType(pixels->Obj());
 
@@ -3214,6 +3213,12 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
 
     if (checked_neededByteLength.value() > dataByteLen)
         return ErrorInvalidOperation("readPixels: buffer too small");
+
+    void* data = pixels->Data();
+    if (!data) {
+        ErrorOutOfMemory("readPixels: buffer storage is null. Did we run out of memory?");
+        return rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    }
 
     // Check the format and type params to assure they are an acceptable pair (as per spec)
     switch (format) {
