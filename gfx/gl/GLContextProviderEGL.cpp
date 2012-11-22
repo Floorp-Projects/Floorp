@@ -2601,38 +2601,13 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
 #endif
 }
 
-GLContext *
-GLContextProviderEGL::GetGlobalContext(const ContextFlags)
-{
 // Don't want a global context on Android as 1) share groups across 2 threads fail on many Tegra drivers (bug 759225)
 // and 2) some mobile devices have a very strict limit on global number of GL contexts (bug 754257)
 // and 3) each EGL context eats 750k on B2G (bug 813783)
-#ifdef ANDROID
+GLContext *
+GLContextProviderEGL::GetGlobalContext(const ContextFlags)
+{
     return nullptr;
-#endif
-
-// Don't want a global context on Windows as we don't use it for WebGL surface sharing and it makes
-// context creation fail after a context loss (bug 764578)
-#ifdef XP_WIN
-    return nullptr;
-#endif
-
-
-    static bool triedToCreateContext = false;
-    if (!triedToCreateContext && !gGlobalContext) {
-        triedToCreateContext = true;
-        // Don't assign directly to gGlobalContext here, because
-        // CreateOffscreen can call us re-entrantly.
-        nsRefPtr<GLContext> ctx =
-            GLContextProviderEGL::CreateOffscreen(gfxIntSize(16, 16),
-                                                  ContextFormat(ContextFormat::BasicRGB24),
-                                                  GLContext::ContextFlagsGlobal);
-        gGlobalContext = ctx;
-        if (gGlobalContext)
-            gGlobalContext->SetIsGlobalSharedContext(true);
-    }
-
-    return gGlobalContext;
 }
 
 void
