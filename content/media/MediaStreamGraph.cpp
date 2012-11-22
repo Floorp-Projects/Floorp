@@ -2216,9 +2216,11 @@ MediaInputPort::Graph()
   return gGraph;
 }
 
-MediaInputPort*
+already_AddRefed<MediaInputPort>
 ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags)
 {
+  // This method creates two references to the MediaInputPort: one for
+  // the main thread, and one for the MediaStreamGraph.
   class Message : public ControlMessage {
   public:
     Message(MediaInputPort* aPort)
@@ -2227,13 +2229,14 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags)
     virtual void Run()
     {
       mPort->Init();
+      // The graph holds its reference implicitly
+      mPort.forget();
     }
-    MediaInputPort* mPort;
+    nsRefPtr<MediaInputPort> mPort;
   };
-  MediaInputPort* port = new MediaInputPort(aStream, this, aFlags);
-  NS_ADDREF(port);
+  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this, aFlags);
   GraphImpl()->AppendMessage(new Message(port));
-  return port;
+  return port.forget();
 }
 
 void
