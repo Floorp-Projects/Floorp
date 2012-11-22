@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=812415
+-->
+<window title="Mozilla Bug 812415"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=812415"
+     target="_blank">Mozilla Bug 812415</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 812415 **/
+
+  const Cu = Components.utils;
+  SimpleTest.waitForExplicitFinish();
+  function go() {
+    var iwin = document.getElementById('ifr').contentWindow;
+    var sb = new Components.utils.Sandbox(iwin);
+    sb.win = iwin;
+    is(Cu.evalInSandbox('win', sb), iwin, "Basic identity works");
+    is(Cu.evalInSandbox('win.wrappedJSObject', sb), iwin.wrappedJSObject, "Waivers work via .wrappedJSObject");
+    is(Cu.evalInSandbox('XPCNativeWrapper.unwrap(win)', sb), iwin.wrappedJSObject, "Waivers work via XPCNativeWrapper.unwrap");
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>
