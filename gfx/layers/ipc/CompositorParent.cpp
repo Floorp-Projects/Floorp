@@ -720,12 +720,6 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                                                 numIterations,
                                                 animation.direction());
 
-    if (positionInIteration == -1) {
-      animations.RemoveElementAt(i);
-      animationData.RemoveElementAt(i);
-      continue;
-    }
-
     NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
                       positionInIteration <= 1.0,
                       "position should be in [0-1]");
