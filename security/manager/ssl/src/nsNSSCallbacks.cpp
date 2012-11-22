@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
+
+#include "mozilla/Telemetry.h"
+
 #include "nsNSSIOLayer.h"
 #include "nsIWebProgressListener.h"
 #include "nsProtectedAuthThread.h"
@@ -20,6 +23,7 @@
 #include "nsCRT.h"
 
 #include "ssl.h"
+#include "sslproto.h"
 #include "ocsp.h"
 #include "nssb64.h"
 
@@ -930,6 +934,13 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     else
       infoObject->SetNegotiatedNPN(nullptr, 0);
 
+    SSLChannelInfo channelInfo;
+    if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
+      // Get the protocol version for telemetry
+      // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
+      unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
+      Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
+    }
     infoObject->SetHandshakeCompleted();
   }
 
