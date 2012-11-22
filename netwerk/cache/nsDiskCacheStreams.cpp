@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "nsCache.h"
 #include "nsDiskCache.h"
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheStreams.h"
