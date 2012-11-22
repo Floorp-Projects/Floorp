@@ -1620,9 +1620,12 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
 
     CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/property-iterator-data"),
                   cStats.objectsExtraPropertyIteratorData,
-                  "Memory allocated for data belonging to property iterator "
-                  "objects.");
+                  "Memory allocated for data belonging to property iterator objects.");
 
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/ctypes-data"),
+                  cStats.objectsExtraCtypesData,
+                  "Memory allocated for data belonging to ctypes objects.");
+ 
     // Note that we use cDOMPathPrefix here.  This is because we measure orphan
     // DOM nodes in the JS multi-reporter, but we want to report them in a
     // "dom" sub-tree rather than a "js" sub-tree.
