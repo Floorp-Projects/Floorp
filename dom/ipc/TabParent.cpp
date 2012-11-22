@@ -51,6 +51,7 @@
 #include "nsThreadUtils.h"
 #include "StructuredCloneUtils.h"
 #include "TabChild.h"
+#include "Hal.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -256,7 +257,10 @@ TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
   if (mIsDestroyed) {
     return;
   }
-  unused << SendUpdateDimensions(rect, size);
+  hal::ScreenConfiguration config;
+  hal::GetCurrentScreenConfiguration(&config);
+
+  unused << SendUpdateDimensions(rect, size, config.orientation());
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     rfp->NotifyDimensionsChanged(size.width, size.height);
   }
