@@ -2856,9 +2856,11 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   nsRect bounds;
   nsIntRect pixBounds;
   int32_t appUnitsPerDevPixel;
-  uint32_t stateFlags =
-    (aContainerFrame->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) ?
-      ContainerState::NO_COMPONENT_ALPHA : 0;
+  uint32_t stateFlags = 0;
+  if ((aContainerFrame->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) &&
+      mRetainingManager && !mRetainingManager->AreComponentAlphaLayersEnabled()) {
+    stateFlags = ContainerState::NO_COMPONENT_ALPHA;
+  }
   uint32_t flags;
   while (true) {
     ContainerState state(aBuilder, aManager, aManager->GetLayerBuilder(),
