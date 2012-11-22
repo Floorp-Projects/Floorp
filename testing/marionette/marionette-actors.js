@@ -1440,34 +1440,6 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
-   * Add a cookie to the document.
-   */
-  addCookie: function MDA_addCookie(aRequest) {
-    this.sendAsync("addCookie", {cookie:aRequest.cookie});
-  },
-
-  /**
-   * Get all visible cookies for a document
-   */
-  getAllCookies: function MDA_getAllCookies() {
-    this.sendAsync("getAllCookies");
-  },
-
-  /**
-   * Delete all cookies that are visible to a document
-   */
-  deleteAllCookies: function MDA_deleteAllCookies() {
-    this.sendAsync("deleteAllCookies");
-  },
-
-  /**
-   * Delete a cookie by name
-   */
-  deleteCookie: function MDA_deleteCookie(aRequest) {
-    this.sendAsync("deleteCookie", {name:aRequest.name});
-  },
-
-  /**
    * Closes the Browser Window.
    *
    * If it is B2G it returns straight away and does not do anything
@@ -1792,11 +1764,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "importScript": MarionetteDriverActor.prototype.importScript,
   "getAppCacheStatus": MarionetteDriverActor.prototype.getAppCacheStatus,
   "closeWindow": MarionetteDriverActor.prototype.closeWindow,
-  "setTestName": MarionetteDriverActor.prototype.setTestName,
-  "addCookie": MarionetteDriverActor.prototype.addCookie,
-  "getAllCookies": MarionetteDriverActor.prototype.getAllCookies,
-  "deleteAllCookies": MarionetteDriverActor.prototype.deleteAllCookies,
-  "deleteCookie": MarionetteDriverActor.prototype.deleteCookie
+  "setTestName": MarionetteDriverActor.prototype.setTestName
 };
 
 /**
