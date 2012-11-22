@@ -1250,7 +1250,7 @@ class CallCompiler : public BaseCompiler
                 !ic.hasIonStub() &&
                 ic.frameSize.isStatic() &&
                 ic.frameSize.staticArgc() <= ion::SNAPSHOT_MAX_NARGS &&
-                fun->script()->hasIonScript())
+                fun->hasScript() && fun->script()->hasIonScript())
             {
                 if (!generateIonStub())
                     THROWV(NULL);

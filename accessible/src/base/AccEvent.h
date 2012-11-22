@@ -115,13 +115,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(AccEvent)
 
 protected:
-
-  /**
-   * Determine whether the event is from user input by event state manager if
-   * it's not pointed explicetly.
-   */
-  void CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput);
-
   bool mIsFromUserInput;
   uint32_t mEventType;
   EEventRule mEventRule;

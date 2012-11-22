@@ -97,6 +97,10 @@ LOCAL_INCLUDES += \
  $(NULL)
 
 ifneq ($(OS_TARGET),WINNT)
+ifdef JS_SHARED_LIBRARY
+LIBS += $(MOZ_ZLIB_LIBS)
+endif
+
 CPP_UNIT_TESTS = \
   signaling_unittests.cpp \
   mediapipeline_unittest.cpp \
