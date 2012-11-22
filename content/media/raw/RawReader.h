@@ -14,7 +14,7 @@ namespace mozilla {
 class RawReader : public MediaDecoderReader
 {
 public:
-  RawReader(MediaDecoder* aDecoder);
+  RawReader(AbstractMediaDecoder* aDecoder);
   ~RawReader();
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);

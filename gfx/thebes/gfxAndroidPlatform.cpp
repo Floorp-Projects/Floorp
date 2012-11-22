@@ -19,6 +19,8 @@
 
 #include "ft2build.h"
 #include FT_FREETYPE_H
+#include FT_MODULE_H
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -27,9 +29,69 @@ static FT_Library gPlatformFTLibrary = NULL;
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoFonts" , ## args)
 
+static int64_t sFreetypeMemoryUsed;
+static FT_MemoryRec_ sFreetypeMemoryRecord;
+
+static int64_t
+GetFreetypeSize()
+{
+    return sFreetypeMemoryUsed;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(Freetype,
+    "explicit/freetype",
+    KIND_HEAP,
+    UNITS_BYTES,
+    GetFreetypeSize,
+    "Memory used by Freetype."
+)
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(FreetypeMallocSizeOfForCounterInc, "freetype")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN_UN(FreetypeMallocSizeOfForCounterDec)
+
+static void*
+CountingAlloc(FT_Memory memory, long size)
+{
+    void *p = malloc(size);
+    sFreetypeMemoryUsed += FreetypeMallocSizeOfForCounterInc(p);
+    return p;
+}
+
+static void
+CountingFree(FT_Memory memory, void* p)
+{
+    sFreetypeMemoryUsed -= FreetypeMallocSizeOfForCounterDec(p);
+    free(p);
+}
+
+static void*
+CountingRealloc(FT_Memory memory, long cur_size, long new_size, void* p)
+{
+    sFreetypeMemoryUsed -= FreetypeMallocSizeOfForCounterDec(p);
+    void *pnew = realloc(p, new_size);
+    if (pnew) {
+        sFreetypeMemoryUsed += FreetypeMallocSizeOfForCounterInc(pnew);
+    } else {
+        // realloc failed;  undo the decrement from above
+        sFreetypeMemoryUsed += FreetypeMallocSizeOfForCounterInc(p);
+    }
+    return pnew;
+}
+
 gfxAndroidPlatform::gfxAndroidPlatform()
 {
-    FT_Init_FreeType(&gPlatformFTLibrary);
+    // A custom allocator.  It counts allocations, enabling memory reporting.
+    sFreetypeMemoryRecord.user    = nullptr;
+    sFreetypeMemoryRecord.alloc   = CountingAlloc;
+    sFreetypeMemoryRecord.free    = CountingFree;
+    sFreetypeMemoryRecord.realloc = CountingRealloc;
+
+    // These two calls are equivalent to FT_Init_FreeType(), but allow us to
+    // provide a custom memory allocator.
+    FT_New_Library(&sFreetypeMemoryRecord, &gPlatformFTLibrary);
+    FT_Add_Default_Modules(gPlatformFTLibrary);
+
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(Freetype));
 
     nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
     nsCOMPtr<nsIScreen> screen;
@@ -46,7 +108,7 @@ gfxAndroidPlatform::~gfxAndroidPlatform()
 {
     cairo_debug_reset_static_data();
 
-    FT_Done_FreeType(gPlatformFTLibrary);
+    FT_Done_Library(gPlatformFTLibrary);
     gPlatformFTLibrary = NULL;
 }
 

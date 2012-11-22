@@ -81,13 +81,11 @@ input::-moz-placeholder {
    cmd_switchTextDirection (which applies a dir attribute to the input box's
    anonymous div. */
 @-moz-document url-prefix(chrome://) {
-  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div,
-  input.uri-element-right-align:-moz-locale-dir(rtl)::-moz-placeholder {
+  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div {
     text-align: right !important;
   }
 
-  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div[dir=ltr],
-  input.uri-element-right-align:-moz-locale-dir(rtl)::-moz-placeholder[dir=ltr] {
+  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div[dir=ltr] {
     text-align: left !important;
   }
 }

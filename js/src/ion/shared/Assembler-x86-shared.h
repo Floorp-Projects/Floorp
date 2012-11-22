@@ -128,6 +128,10 @@ class AssemblerX86Shared
                dataRelocations_.oom();
     }
 
+    void setPrinter(Sprinter *sp) {
+        masm.setPrinter(sp);
+    }
+
     void executableCopy(void *buffer);
     void processDeferredData(IonCode *code, uint8 *data);
     void processCodeLabels(IonCode *code);

@@ -19,7 +19,7 @@
 #define GET_NATIVE_WINDOW(aWidget) (EGLNativeWindowType)static_cast<QWidget*>(aWidget->GetNativeData(NS_NATIVE_SHELLWIDGET))->winId()
 #elif defined(MOZ_WIDGET_GONK)
 #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
-#include "HWComposer.h"
+#include "HwcComposer2D.h"
 #endif
 
 #if defined(MOZ_X11)
@@ -155,11 +155,6 @@ static bool
 CreateConfig(EGLConfig* aConfig);
 #ifdef MOZ_X11
 
-#ifdef MOZ_EGL_XRENDER_COMPOSITE
-static EGLSurface
-CreateBasicEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig);
-#endif
-
 static EGLConfig
 CreateEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig = nullptr);
 #endif
@@ -270,12 +265,14 @@ public:
         printf_stderr("Initializing context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
 #ifdef MOZ_WIDGET_GONK
-        if (!aIsOffscreen)
-            mHwc = new HWComposer();
+        if (!aIsOffscreen) {
+            mHwc = HwcComposer2D::GetInstance();
+            MOZ_ASSERT(!mHwc->Initialized());
 
-        if (mHwc && mHwc->init()) {
-            NS_WARNING("HWComposer initialization failed!");
-            mHwc = nullptr;
+            if (mHwc->Init(EGL_DISPLAY(), mSurface)) {
+                NS_WARNING("HWComposer initialization failed!");
+                mHwc = nullptr;
+            }
         }
 #endif
     }
@@ -375,17 +372,6 @@ public:
     {
         return sEGLLibrary.IsANGLE();
     }
-
-#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    gfxASurface* GetOffscreenPixmapSurface()
-    {
-      return mThebesSurface;
-    }
-    
-    virtual bool WaitNative() {
-      return sEGLLibrary.fWaitNative(LOCAL_EGL_CORE_NATIVE_ENGINE);
-    }
-#endif
 
     bool BindTexImage()
     {
@@ -624,14 +610,6 @@ public:
                                     const ContextFormat& aFormat,
                                     bool aShare);
 
-#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    static already_AddRefed<GLContextEGL>
-    CreateBasicEGLPixmapOffscreenContext(const gfxIntSize& aSize,
-                                         const ContextFormat& aFormat);
-
-    bool ResizeOffscreenPixmapSurface(const gfxIntSize& aNewSize);
-#endif
-
     static already_AddRefed<GLContextEGL>
     CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
                                      const ContextFormat& aFormat,
@@ -696,7 +674,7 @@ protected:
     bool mCanBindToTexture;
     bool mShareWithEGLImage;
 #ifdef MOZ_WIDGET_GONK
-    nsAutoPtr<HWComposer> mHwc;
+    nsRefPtr<HwcComposer2D> mHwc;
 #endif
 
     // A dummy texture ID that can be used when we need a texture object whose
@@ -1178,13 +1156,6 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
         return true;
     }
-
-#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    if (ResizeOffscreenPixmapSurface(aNewSize)) {
-        if (ResizeOffscreenFBOs(aNewSize, true))
-            return true;
-    }
-#endif
 
     return ResizeOffscreenFBOs(aNewSize, true);
 }
@@ -2611,17 +2582,6 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nullptr;
 
     return glContext.forget();
-#elif defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    nsRefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, aFormat);
-
-    if (!glContext)
-        return nullptr;
-
-    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBOs(glContext->OffscreenActualSize(), true))
-        return nullptr;
-
-    return glContext.forget();
 #elif defined(MOZ_X11)
     nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateEGLPixmapOffscreenContext(gfxIntSize(16, 16), aFormat, true);
@@ -2646,7 +2606,8 @@ GLContextProviderEGL::GetGlobalContext(const ContextFlags)
 {
 // Don't want a global context on Android as 1) share groups across 2 threads fail on many Tegra drivers (bug 759225)
 // and 2) some mobile devices have a very strict limit on global number of GL contexts (bug 754257)
-#ifdef MOZ_ANDROID_OMTC
+// and 3) each EGL context eats 750k on B2G (bug 813783)
+#ifdef ANDROID
     return nullptr;
 #endif
 
@@ -2679,177 +2640,6 @@ GLContextProviderEGL::Shutdown()
 {
     gGlobalContext = nullptr;
 }
-
-//------------------------------------------------------------------------------
-// The following methods exist to support an accelerated WebGL XRender composite
-// path for BasicLayers. This is a potentially temporary change that can be
-// removed when performance of GL layers is superior on mobile linux platforms.
-//------------------------------------------------------------------------------
-#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-
-EGLSurface
-CreateBasicEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig)
-{
-  gfxXlibSurface* xsurface = static_cast<gfxXlibSurface*>(aSurface);
-
-  bool opaque =
-    aSurface->GetContentType() == gfxASurface::CONTENT_COLOR;
-
-  EGLSurface surface = nullptr;
-  if (aConfig && *aConfig) {
-    surface = sEGLLibrary.fCreatePixmapSurface(EGL_DISPLAY(), *aConfig,
-                                               xsurface->XDrawable(),
-                                               0);
-
-    if (surface != EGL_NO_SURFACE)
-      return surface;
-  }
-
-  EGLConfig configs[32];
-  int numConfigs = 32;
-
-  static EGLint pixmap_config[] = {
-      LOCAL_EGL_SURFACE_TYPE,         LOCAL_EGL_PIXMAP_BIT,
-      LOCAL_EGL_RENDERABLE_TYPE,      LOCAL_EGL_OPENGL_ES2_BIT,
-      0x30E2, 0x30E3,
-      LOCAL_EGL_DEPTH_SIZE,           16,
-      LOCAL_EGL_NONE
-  };
-
-  if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(),
-                                 pixmap_config,
-                                 configs, numConfigs, &numConfigs))
-      return nullptr;
-
-  if (numConfigs == 0)
-      return nullptr;
-
-  int i = 0;
-  for (i = 0; i < numConfigs; ++i) {
-    surface = sEGLLibrary.fCreatePixmapSurface(EGL_DISPLAY(), configs[i],
-                                               xsurface->XDrawable(),
-                                               0);
-
-    if (surface != EGL_NO_SURFACE)
-      break;
-  }
-
-  if (!surface) {
-    return nullptr;
-  }
-
-  if (aConfig)
-  {
-    *aConfig = configs[i];
-  }
-
-  return surface;
-}
-
-already_AddRefed<GLContextEGL>
-GLContextEGL::CreateBasicEGLPixmapOffscreenContext(const gfxIntSize& aSize,
-                                              const ContextFormat& aFormat)
-{
-  gfxASurface *thebesSurface = nullptr;
-  EGLNativePixmapType pixmap = 0;
-
-  XRenderPictFormat* format = gfxXlibSurface::FindRenderFormat(DefaultXDisplay(), gfxASurface::ImageFormatARGB32);
-
-  nsRefPtr<gfxXlibSurface> xsurface =
-    gfxXlibSurface::Create(DefaultScreenOfDisplay(DefaultXDisplay()), format, aSize);
-
-  // XSync required after gfxXlibSurface::Create, otherwise EGL will fail with BadDrawable error
-  XSync(DefaultXDisplay(), False);
-  if (xsurface->CairoStatus() != 0)
-  {
-    return nullptr;
-  }
-
-  thebesSurface = xsurface;
-
-  pixmap = xsurface->XDrawable();
-
-  if (!pixmap) {
-    return nullptr;
-  }
-
-  EGLSurface surface = 0;
-  EGLConfig config = 0;
-
-  surface = CreateBasicEGLSurfaceForXSurface(xsurface, &config);
-
-  if (!config) {
-    return nullptr;
-  }
-
-  EGLContext context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
-                                                  config,
-                                                  EGL_NO_CONTEXT,
-                                                  sEGLLibrary.HasRobustness() ? gContextAttribsRobustness
-                                                                              : gContextAttribs);
-  if (!context) {
-    sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);
-    return nullptr;
-  }
-
-  nsRefPtr<GLContextEGL> glContext = new GLContextEGL(aFormat, nullptr,
-                                                      config, surface, context,
-                                                      true);
-
-  if (!glContext->Init())
-  {
-    return nullptr;
-  }
-
-  glContext->HoldSurface(thebesSurface);
-
-  return glContext.forget();
-}
-
-bool GLContextEGL::ResizeOffscreenPixmapSurface(const gfxIntSize& aNewSize)
-{
-  gfxASurface *thebesSurface = nullptr;
-  EGLNativePixmapType pixmap = 0;
-
-  XRenderPictFormat* format = gfxXlibSurface::FindRenderFormat(DefaultXDisplay(), gfxASurface::ImageFormatARGB32);
-
-  nsRefPtr<gfxXlibSurface> xsurface =
-    gfxXlibSurface::Create(DefaultScreenOfDisplay(DefaultXDisplay()),
-                           format,
-                           aNewSize);
-
-  // XSync required after gfxXlibSurface::Create, otherwise EGL will fail with BadDrawable error
-  XSync(DefaultXDisplay(), False);
-  if (xsurface->CairoStatus() != 0)
-    return nullptr;
-
-  thebesSurface = xsurface;
-
-  pixmap = xsurface->XDrawable();
-
-  if (!pixmap) {
-    return nullptr;
-  }
-
-  EGLSurface surface = 0;
-  EGLConfig config = 0;
-  surface = CreateBasicEGLSurfaceForXSurface(xsurface, &config);
-  if (!surface) {
-    NS_WARNING("Failed to resize pbuffer");
-    return nullptr;
-  }
-
-  sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
-
-  mSurface = surface;
-  HoldSurface(thebesSurface);
-  SetOffscreenSize(aNewSize, aNewSize);
-  MakeCurrent(true);
-
-  return true;
-}
-
-#endif
 
 } /* namespace gl */
 } /* namespace mozilla */

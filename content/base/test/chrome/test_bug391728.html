@@ -19,25 +19,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391728
 <script class="testbody" type="text/javascript">
 /** Test for Bug 391728 **/
 // Plugins that should dispatch error events and have the pseudo classes set
-const PLUGIN_COUNT = 14;
+const PLUGIN_COUNT = 13;
 // Plugins that should neither dispatch error events or have the pseudo classes set
-const FALLBACK_COUNT = 4;
+const FALLBACK_COUNT = 5;
+const OBJLC = Components.interfaces.nsIObjectLoadingContent;
 
 var gNextTest = null;
 var gUnknown = [];
 var gBlocked = [];
 var gDisabled = [];
 
-function disabled_plugin_detected(event) {
-  gDisabled.push(event.target.id);
-}
-
-function blocked_plugin_detected(event) {
-  gBlocked.push(event.target.id);
-}
-
-function unknown_plugin_detected(event) {
-  gUnknown.push(event.target.id);
+function plugin_binding_attached(event) {
+  var plugin = event.target;
+  plugin instanceof OBJLC;
+  switch (SpecialPowers.wrap(plugin).pluginFallbackType) {
+    case OBJLC.PLUGIN_DISABLED:
+      gDisabled.push(plugin.id);
+      break;
+    case OBJLC.PLUGIN_BLOCKLISTED:
+      gBlocked.push(plugin.id);
+      break;
+    case OBJLC.PLUGIN_UNSUPPORTED:
+      gUnknown.push(plugin.id);
+      break;
+  }
 }
 
 function init_test() {

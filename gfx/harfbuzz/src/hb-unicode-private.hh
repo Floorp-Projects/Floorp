@@ -119,47 +119,73 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
 						   0xE0100, 0xE01EF));  /* VARIATION SELECTOR-17..256 */
   }
 
-  /* Zero-Width invisible characters:
+  /* Default_Ignorable codepoints:
    *
-   *  00AD  SOFT HYPHEN
-   *  034F  COMBINING GRAPHEME JOINER
+   * Note that as of Oct 2012 (Unicode 6.2), U+180E MONGOLIAN VOWEL SEPARATOR
+   * is NOT Default_Ignorable, but it really behaves in a way that it should
+   * be.  That has been reported to the Unicode Technical Committee for
+   * consideration.  As such, we include it here, since Uniscribe removes it.
    *
-   *  180E  MONGOLIAN VOWEL SEPARATOR
+   * Gathered from:
+   * http://unicode.org/cldr/utility/list-unicodeset.jsp?a=[:DI:]&abb=on&ucd=on&esc=on
    *
-   *  200B  ZERO WIDTH SPACE
-   *  200C  ZERO WIDTH NON-JOINER
-   *  200D  ZERO WIDTH JOINER
-   *  200E  LEFT-TO-RIGHT MARK
-   *  200F  RIGHT-TO-LEFT MARK
+   * Last updated to the page with the following versions:
+   * Version 3.6; ICU version: 50.0.1.0; Unicode version: 6.1.0.0
    *
-   *  2028  LINE SEPARATOR
+   * 4,167 Code Points
    *
-   *  202A  LEFT-TO-RIGHT EMBEDDING
-   *  202B  RIGHT-TO-LEFT EMBEDDING
-   *  202C  POP DIRECTIONAL FORMATTING
-   *  202D  LEFT-TO-RIGHT OVERRIDE
-   *  202E  RIGHT-TO-LEFT OVERRIDE
+   * [\u00AD\u034F\u115F\u1160\u17B4\u17B5\u180B-\u180D\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF0-\uFFF8\U0001D173-\U0001D17A\U000E0000-\U000E0FFF]
    *
-   *  2060  WORD JOINER
-   *  2061  FUNCTION APPLICATION
-   *  2062  INVISIBLE TIMES
-   *  2063  INVISIBLE SEPARATOR
-   *
-   *  FEFF  ZERO WIDTH NO-BREAK SPACE
+   * 00AD ;SOFT HYPHEN
+   * 034F ;COMBINING GRAPHEME JOINER
+   * 115F ;HANGUL CHOSEONG FILLER
+   * 1160 ;HANGUL JUNGSEONG FILLER
+   * 17B4 ;KHMER VOWEL INHERENT AQ
+   * 17B5 ;KHMER VOWEL INHERENT AA
+   * 180B..180D ;MONGOLIAN FREE VARIATION SELECTOR THREE
+   * 200B..200F ;RIGHT-TO-LEFT MARK
+   * 202A..202E ;RIGHT-TO-LEFT OVERRIDE
+   * 2060..206F ;NOMINAL DIGIT SHAPES
+   * 3164 ;HANGUL FILLER
+   * FE00..FE0F ;VARIATION SELECTOR-16
+   * FEFF ;ZERO WIDTH NO-BREAK SPACE
+   * FFA0 ;HALFWIDTH HANGUL FILLER
+   * FFF0..FFF8 ;<unassigned-FFF8>
+   * 1D173..1D17A ;MUSICAL SYMBOL END PHRASE
+   * E0000..E0FFF ;<unassigned-E0FFF>
    */
   inline hb_bool_t
-  is_zero_width (hb_codepoint_t ch)
+  is_default_ignorable (hb_codepoint_t ch)
   {
-    return ((ch & ~0x007F) == 0x2000 && (hb_in_ranges<hb_codepoint_t> (ch,
-								       0x200B, 0x200F,
-								       0x202A, 0x202E,
-								       0x2060, 0x2064) ||
-					 (ch == 0x2028))) ||
-	    unlikely (ch == 0x0009 ||
-		      ch == 0x00AD ||
-		      ch == 0x034F ||
-		      ch == 0x180E ||
-		      ch == 0xFEFF);
+    hb_codepoint_t plane = ch >> 16;
+    if (likely (plane == 0))
+    {
+      /* BMP */
+      hb_codepoint_t page = ch >> 8;
+      switch (page) {
+	case 0x00: return unlikely (ch == 0x00AD);
+	case 0x03: return unlikely (ch == 0x034F);
+	case 0x11: return hb_in_range<hb_codepoint_t> (ch, 0x115F, 0x1160);
+	case 0x17: return hb_in_range<hb_codepoint_t> (ch, 0x17B4, 0x17B5);
+	case 0x18: return hb_in_range<hb_codepoint_t> (ch, 0x180B, 0x180E);
+	case 0x20: return hb_in_ranges<hb_codepoint_t> (ch, 0x200B, 0x200F,
+							    0x202A, 0x202E,
+							    0x2060, 0x206F);
+	case 0x31: return unlikely (ch == 0x3164);
+	case 0xFE: return hb_in_range<hb_codepoint_t> (ch, 0xFE00, 0xFE0F) || ch == 0xFEFF;
+	case 0xFF: return hb_in_range<hb_codepoint_t> (ch, 0xFFF0, 0xFFF8) || ch == 0xFFA0;
+	default: return false;
+      }
+    }
+    else
+    {
+      /* Other planes */
+      switch (plane) {
+	case 0x01: return hb_in_range<hb_codepoint_t> (ch, 0x0001D173, 0x0001D17A);
+	case 0x0E: return hb_in_range<hb_codepoint_t> (ch, 0x000E0000, 0x000E0FFF);
+	default: return false;
+      }
+    }
   }
 
 

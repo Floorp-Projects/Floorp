@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Set and unset dir="auto"</title>
+    <script type="text/javascript" src="setDir.js"></script>
+    <style>
+     textarea { resize: none; }
+    </style>
+  </head>
+  <body onload="removeElements()">
+    <div><input type="text" value="ABC אבג" dir="auto"></div>
+    <div><span dir="auto"><span id="set0">גדה </span>ABC אבג</span></div>
+    <div><textarea dir="auto">ABC אבג</textarea></div>
+    <div><button dir="auto"><span id="set1">גדה </span>ABC אבג</button></div>
+    <div><bdi><span id="set2">גדה </span>ABC אבג</bdi></div>
+  </body>
+</html>

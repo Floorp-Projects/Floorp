@@ -206,8 +206,6 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
     return js_anonymous_str;
 }
 
-extern JSFunctionSpec function_methods[];
-
 extern JSBool
 Function(JSContext *cx, unsigned argc, Value *vp);
 

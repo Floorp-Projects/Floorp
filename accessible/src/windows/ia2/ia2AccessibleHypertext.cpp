@@ -11,6 +11,8 @@
 
 #include "HyperTextAccessibleWrap.h"
 
+using namespace mozilla::a11y;
+
 // IAccessibleHypertext
 
 STDMETHODIMP

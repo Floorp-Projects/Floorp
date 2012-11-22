@@ -10,7 +10,7 @@
 {
   // both of these are the same old mGeckoAccessible, but already
   // QI'd for us, to the right type, for convenience.
-  HyperTextAccessible *mGeckoTextAccessible; // strong
+  mozilla::a11y::HyperTextAccessible* mGeckoTextAccessible; // strong
   nsIAccessibleEditableText *mGeckoEditableTextAccessible; // strong
 }
 @end

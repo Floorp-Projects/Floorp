@@ -1124,11 +1124,47 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-PsSwWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-PsSwWxCijmIn] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
 extern JSClass global_class;
+
+static void
+ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
+{
+    for (int i = 0; i < argc; i++) {
+        if (argv[i][0] != '-' || argv[i][1] == '\0')
+            break;
+
+        switch (argv[i][1]) {
+          case 'v':
+          case 'f':
+          case 'e':
+            if (++i == argc)
+                return;
+            break;
+        case 'S':
+            JS_ToggleOptions(cx, JSOPTION_WERROR);
+        case 's':
+            JS_ToggleOptions(cx, JSOPTION_STRICT);
+            break;
+        case 'x':
+            JS_ToggleOptions(cx, JSOPTION_MOAR_XML);
+            break;
+        case 'm':
+            JS_ToggleOptions(cx, JSOPTION_METHODJIT);
+            break;
+        case 'I':
+            JS_ToggleOptions(cx, JSOPTION_COMPILE_N_GO);
+            JS_ToggleOptions(cx, JSOPTION_ION);
+            break;
+        case 'n':
+            JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+            break;
+        }
+    }
+}
 
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
@@ -1210,13 +1246,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'w':
             reportWarnings = true;
             break;
-        case 'S':
-            JS_ToggleOptions(cx, JSOPTION_WERROR);
-        case 's':
-            JS_ToggleOptions(cx, JSOPTION_STRICT);
-            break;
         case 'x':
-            JS_ToggleOptions(cx, JSOPTION_MOAR_XML);
             break;
         case 'd':
             xpc_ActivateDebugMode();
@@ -1254,11 +1284,12 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             compileOnly = true;
             isInteractive = false;
             break;
+        case 'S':
+        case 's':
         case 'm':
-            JS_ToggleOptions(cx, JSOPTION_METHODJIT);
-            break;
+        case 'I':
         case 'n':
-            JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+            // These options are processed in ProcessArgsForCompartment.
             break;
         default:
             return usage();
@@ -1775,6 +1806,10 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        argc--;
+        argv++;
+        ProcessArgsForCompartment(cx, argv, argc);
+
         JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ALLOW_XML);
         xpc_LocalizeContext(cx);
 
@@ -1886,9 +1921,6 @@ main(int argc, char **argv, char **envp)
 
             JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
                               GetLocationProperty, NULL, 0);
-
-            argc--;
-            argv++;
 
             result = ProcessArgs(cx, glob, argv, argc);
 
@@ -2077,6 +2109,13 @@ XPCShellDirProvider::GetFiles(const char *prop, nsISimpleEnumerator* *result)
             NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("preferences"))))
             return NS_ERROR_FAILURE;
 
+        dirs.AppendObject(file);
+        return NS_NewArrayEnumerator(result, dirs);
+    } else if (!strcmp(prop, NS_APP_PLUGINS_DIR_LIST)) {
+        nsCOMPtr<nsIFile> file;
+        mGREDir->Clone(getter_AddRefs(file));
+        file->AppendNative(NS_LITERAL_CSTRING("plugins"));
+        nsCOMArray<nsIFile> dirs;
         dirs.AppendObject(file);
         return NS_NewArrayEnumerator(result, dirs);
     }

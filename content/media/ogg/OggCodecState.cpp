@@ -938,19 +938,46 @@ bool OpusState::DecodeHeader(ogg_packet* aPacket)
       mChannelMapping = aPacket->packet[18];
 
       if (mChannelMapping == 0) {
+        // Mapping family 0 only allows two channels
+        if (mChannels>2) {
+          LOG(PR_LOG_DEBUG, ("Invalid Opus file: too many channels (%d) for"
+                             " mapping family 0.", mChannels));
+          return false;
+        }
         mStreams = 1;
         mCoupledStreams = mChannels - 1;
         mMappingTable[0] = 0;
         mMappingTable[1] = 1;
-      } else if (aPacket->bytes>20+mChannels) {
-        mStreams = aPacket->packet[19];
-        mCoupledStreams = aPacket->packet[20];
-        int i;
-        for (i=0; i<mChannels; i++)
-          mMappingTable[i] = aPacket->packet[21+i];
+      } else if (mChannelMapping == 1) {
+        // Currently only up to 8 channels are defined for mapping family 1
+        if (mChannels>8) {
+          LOG(PR_LOG_DEBUG, ("Invalid Opus file: too many channels (%d) for"
+                             " mapping family 1.", mChannels));
+          return false;
+        }
+        if (aPacket->bytes>20+mChannels) {
+          mStreams = aPacket->packet[19];
+          mCoupledStreams = aPacket->packet[20];
+          int i;
+          for (i=0; i<mChannels; i++)
+            mMappingTable[i] = aPacket->packet[21+i];
+        } else {
+          LOG(PR_LOG_DEBUG, ("Invalid Opus file: channel mapping %d,"
+                             " but no channel mapping table", mChannelMapping));
+          return false;
+        }
       } else {
-        LOG(PR_LOG_DEBUG, ("Invalid Opus file: channel mapping %d,"
-                           " but no channel mapping table", mChannelMapping));
+        LOG(PR_LOG_DEBUG, ("Invalid Opus file: unsupported channel mapping "
+                           "family %d", mChannelMapping));
+        return false;
+      }
+      if (mStreams < 1) {
+        LOG(PR_LOG_DEBUG, ("Invalid Opus file: no streams"));
+        return false;
+      }
+      if (mCoupledStreams > mStreams) {
+        LOG(PR_LOG_DEBUG, ("Invalid Opus file: more coupled streams (%d) than "
+                           "total streams (%d)", mCoupledStreams, mStreams));
         return false;
       }
 

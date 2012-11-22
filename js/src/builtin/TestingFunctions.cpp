@@ -14,6 +14,7 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
+#include "builtin/TestingFunctions.h"
 #include "methodjit/MethodJIT.h"
 
 #include "vm/Stack-inl.h"
@@ -925,12 +926,8 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FS_HELP_END
 };
 
-namespace js {
-
 bool
-DefineTestingFunctions(JSContext *cx, HandleObject obj)
+js::DefineTestingFunctions(JSContext *cx, HandleObject obj)
 {
     return JS_DefineFunctionsWithHelp(cx, obj, TestingFunctions);
 }
-
-} /* namespace js */

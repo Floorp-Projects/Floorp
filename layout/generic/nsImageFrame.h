@@ -370,7 +370,7 @@ public:
    * Returns an ImageContainer for this image if the image type
    * supports it (TYPE_RASTER only).
    */
-  virtual already_AddRefed<ImageContainer> GetContainer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ImageContainer> GetContainer(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
   gfxRect GetDestRect();
 

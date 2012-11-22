@@ -126,6 +126,7 @@ public:
   // LayerOGL impl
   void Destroy();
   Layer* GetLayer();
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
   virtual void CleanupResources();

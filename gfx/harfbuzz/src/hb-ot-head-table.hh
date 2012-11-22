@@ -47,7 +47,7 @@ struct head
 
   inline unsigned int get_upem (void) const {
     unsigned int upem = unitsPerEm;
-    /* If no valid head table found, assume 1000, which matches typicaly Type1 usage. */
+    /* If no valid head table found, assume 1000, which matches typical Type1 usage. */
     return 16 <= upem && upem <= 16384 ? upem : 1000;
   }
 

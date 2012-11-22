@@ -393,10 +393,16 @@ struct nsCSSRendering {
                                        const nsStyleBackground::Layer& aLayer);
 
   /**
-   * Called by the presShell when painting is finished, so we can clear our
-   * inline background data cache.
+   * Called when we start creating a display list. The frame tree will not
+   * change until a matching EndFrameTreeLocked is called.
    */
-  static void DidPaint();
+  static void BeginFrameTreesLocked();
+  /**
+   * Called when we've finished using a display list. When all
+   * BeginFrameTreeLocked calls have been balanced by an EndFrameTreeLocked,
+   * the frame tree may start changing again.
+   */
+  static void EndFrameTreesLocked();
 
   // Draw a border segment in the table collapsing border model without
   // beveling corners

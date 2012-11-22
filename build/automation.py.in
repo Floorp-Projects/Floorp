@@ -978,27 +978,32 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   def checkForZombies(self, processLog):
     """ Look for hung processes """
     if not os.path.exists(processLog):
-      self.log.info('INFO | automation.py | PID log not found: %s', processLog)
-    else:
-      self.log.info('INFO | automation.py | Reading PID log: %s', processLog)
-      processList = []
-      pidRE = re.compile(r'launched child process (\d+)$')
-      processLogFD = open(processLog)
-      for line in processLogFD:
-        self.log.info(line.rstrip())
-        m = pidRE.search(line)
-        if m:
-          processList.append(int(m.group(1)))
-      processLogFD.close()
+      self.log.info('Automation Error: PID log not found: %s', processLog)
+      # Whilst no hung process was found, the run should still display as a failure
+      return True
 
-      for processPID in processList:
-        self.log.info("INFO | automation.py | Checking for orphan process with PID: %d", processPID)
-        if self.isPidAlive(processPID):
-          self.log.info("TEST-UNEXPECTED-FAIL | automation.py | child process %d still alive after shutdown", processPID)
-          self.killPid(processPID)
+    foundZombie = False
+    self.log.info('INFO | automation.py | Reading PID log: %s', processLog)
+    processList = []
+    pidRE = re.compile(r'launched child process (\d+)$')
+    processLogFD = open(processLog)
+    for line in processLogFD:
+      self.log.info(line.rstrip())
+      m = pidRE.search(line)
+      if m:
+        processList.append(int(m.group(1)))
+    processLogFD.close()
+
+    for processPID in processList:
+      self.log.info("INFO | automation.py | Checking for orphan process with PID: %d", processPID)
+      if self.isPidAlive(processPID):
+        foundZombie = True
+        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | child process %d still alive after shutdown", processPID)
+        self.killPid(processPID)
+    return foundZombie
 
   def checkForCrashes(self, profileDir, symbolsPath):
-    automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath, self.lastTestSeen)
+    return automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath, self.lastTestSeen)
 
   def runApp(self, testURL, env, app, profileDir, extraArgs,
              runSSLTunnel = False, utilityPath = None,
@@ -1065,8 +1070,12 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.
-    self.checkForZombies(processLog)
-    self.checkForCrashes(profileDir, symbolsPath)
+    zombieProcesses = self.checkForZombies(processLog)
+
+    crashed = self.checkForCrashes(profileDir, symbolsPath)
+
+    if crashed or zombieProcesses:
+      status = 1
 
     if os.path.exists(processLog):
       os.unlink(processLog)

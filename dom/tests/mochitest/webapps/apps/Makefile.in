@@ -22,6 +22,8 @@ MOCHITEST_CHROME_FILES	= \
     bad_content_type.webapp \
     utf8.webapp \
     utf8.webapp^headers^ \
+    installs_allowed_from_chrome_mochitests.webapp \
+    installs_allowed_from_example.com.webapp \
     invalid_launch_path.webapp \
     invalid_launch_path.webapp^headers^ \
     invalid_launch_path2.webapp \

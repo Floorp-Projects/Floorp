@@ -62,6 +62,44 @@ function test_request() {
 }
 
 /*
+ * Test that the forceAuthentication flag can be sent
+ */
+function test_request_forceAuthentication() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL);
+  makeObserver("identity-controller-request", function (aSubject, aTopic, aData) {
+    do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
+    do_check_eq(aSubject.wrappedJSObject.forceAuthentication, true);
+    do_test_finished();
+    run_next_test();
+   });
+
+  MinimalIDService.RP.watch(mockedDoc);
+  MinimalIDService.RP.request(mockedDoc.id, {forceAuthentication: true});
+}
+
+/*
+ * Test that the issuer can be forced
+ */
+function test_request_forceIssuer() {
+  do_test_pending();
+
+  let mockedDoc = mock_doc(null, TEST_URL);
+  makeObserver("identity-controller-request", function (aSubject, aTopic, aData) {
+    do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
+    do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
+    do_check_eq(aSubject.wrappedJSObject.issuer, "https://jed.gov");
+    do_test_finished();
+    run_next_test();
+   });
+
+  MinimalIDService.RP.watch(mockedDoc);
+  MinimalIDService.RP.request(mockedDoc.id, {issuer: "https://jed.gov"});
+}
+
+/*
  * Test that the "identity-controller-logout" signal is emitted correctly
  */
 function test_logout() {
@@ -83,6 +121,8 @@ let TESTS = [
   test_mock_doc,
   test_watch,
   test_request,
+  test_request_forceAuthentication,
+  test_request_forceIssuer,
   test_logout
 ];
 

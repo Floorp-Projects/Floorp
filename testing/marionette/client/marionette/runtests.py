@@ -8,13 +8,11 @@ import inspect
 import logging
 from optparse import OptionParser
 import os
-import types
 import unittest
 import socket
 import sys
 import time
 import platform
-import weakref
 import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
@@ -276,7 +274,8 @@ class MarionetteTestRunner(object):
         elif self.address:
             host, port = self.address.split(':')
             if self.emulator:
-                self.marionette = Marionette(host=host, port=int(port),
+                self.marionette = Marionette.getMarionetteOrExit(
+                                             host=host, port=int(port),
                                              connectToRunningEmulator=True,
                                              homedir=self.homedir,
                                              baseurl=self.baseurl,
@@ -287,7 +286,8 @@ class MarionetteTestRunner(object):
                                              port=int(port),
                                              baseurl=self.baseurl)
         elif self.emulator:
-            self.marionette = Marionette(emulator=self.emulator,
+            self.marionette = Marionette.getMarionetteOrExit(
+                                         emulator=self.emulator,
                                          emulatorBinary=self.emulatorBinary,
                                          emulatorImg=self.emulatorImg,
                                          emulator_res=self.emulator_res,

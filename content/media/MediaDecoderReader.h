@@ -18,7 +18,7 @@
 
 namespace mozilla {
 
-class MediaDecoder;
+class AbstractMediaDecoder;
 
 // Stores info relevant to presenting media frames.
 class nsVideoInfo {
@@ -353,10 +353,12 @@ private:
 // done on the decode thread. Never hold the decoder monitor when
 // calling into this class. Unless otherwise specified, methods and fields of
 // this class can only be accessed on the decode thread.
-class MediaDecoderReader : public nsRunnable {
+class MediaDecoderReader {
 public:
-  MediaDecoderReader(MediaDecoder* aDecoder);
+  MediaDecoderReader(AbstractMediaDecoder* aDecoder);
   virtual ~MediaDecoderReader();
+
+  NS_INLINE_DECL_REFCOUNTING(MediaDecoderReader)
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -462,7 +464,7 @@ public:
   virtual MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
 
   // Returns a pointer to the decoder.
-  MediaDecoder* GetDecoder() {
+  AbstractMediaDecoder* GetDecoder() {
     return mDecoder;
   }
 
@@ -486,7 +488,7 @@ protected:
   nsresult DecodeToTarget(int64_t aTarget);
 
   // Reference to the owning decoder object.
-  MediaDecoder* mDecoder;
+  AbstractMediaDecoder* mDecoder;
 
   // Stores presentation info required for playback.
   nsVideoInfo mInfo;

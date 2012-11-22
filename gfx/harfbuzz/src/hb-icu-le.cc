@@ -30,7 +30,7 @@
 
 #include "hb-icu-le/PortableFontInstance.h"
 
-#include "layout/LayoutEngine.h"
+#include "layout/loengine.h"
 #include "unicode/unistr.h"
 
 #include "hb-icu.h"
@@ -117,13 +117,13 @@ _hb_icu_le_shape (hb_shape_plan_t    *shape_plan,
   le_int32 language_code = -1 /* TODO */;
   le_int32 typography_flags = 3; // essential for ligatures and kerning
   LEErrorCode status = LE_NO_ERROR;
-  LayoutEngine *le = LayoutEngine::layoutEngineFactory (font_instance,
-							script_code,
-							language_code,
-							typography_flags,
-							status);
+  le_engine *le = le_create ((const le_font *) font_instance,
+			     script_code,
+			     language_code,
+			     typography_flags,
+			     &status);
   if (status != LE_NO_ERROR)
-  { delete (le); return false; }
+  { le_close (le); return false; }
 
 retry:
 
@@ -138,20 +138,22 @@ retry:
   ALLOCATE_ARRAY (LEUnicode, chars, buffer->len);
   ALLOCATE_ARRAY (unsigned int, clusters, buffer->len);
 
+  /* XXX Use UTF-16 decoder! */
   for (unsigned int i = 0; i < buffer->len; i++) {
     chars[i] = buffer->info[i].codepoint;
     clusters[i] = buffer->info[i].cluster;
   }
 
-  unsigned int glyph_count = le->layoutChars(chars,
+  unsigned int glyph_count = le_layoutChars (le,
+					     chars,
 					     0,
 					     buffer->len,
 					     buffer->len,
 					     HB_DIRECTION_IS_BACKWARD (buffer->props.direction),
 					     0., 0.,
-					     status);
+					     &status);
   if (status != LE_NO_ERROR)
-  { delete (le); return false; }
+  { le_close (le); return false; }
 
   unsigned int num_glyphs = scratch_size / (sizeof (LEGlyphID) +
 					    sizeof (le_int32) +
@@ -160,7 +162,7 @@ retry:
   if (unlikely (glyph_count >= num_glyphs || glyph_count > buffer->allocated)) {
     buffer->ensure (buffer->allocated * 2);
     if (buffer->in_error)
-    { delete (le); return false; }
+    { le_close (le); return false; }
     goto retry;
   }
 
@@ -168,9 +170,9 @@ retry:
   ALLOCATE_ARRAY (le_int32, indices, glyph_count);
   ALLOCATE_ARRAY (float, positions, glyph_count * 2 + 2);
 
-  le->getGlyphs(glyphs, status);
-  le->getCharIndices(indices, status);
-  le->getGlyphPositions(positions, status);
+  le_getGlyphs (le, glyphs, &status);
+  le_getCharIndices (le, indices, &status);
+  le_getGlyphPositions (le, positions, &status);
 
 #undef ALLOCATE_ARRAY
 
@@ -187,7 +189,7 @@ retry:
     info[j].codepoint = glyphs[i];
     info[j].cluster = clusters[indices[i]];
 
-    /* icu-le doesn't seem to have separapte advance values. */
+    /* icu-le doesn't seem to have separate advance values. */
     info[j].mask = positions[2 * i + 2] - positions[2 * i];
     info[j].var1.u32 = 0;
     info[j].var2.u32 = -positions[2 * i + 1];
@@ -208,6 +210,6 @@ retry:
     pos->y_offset = info->var2.u32;
   }
 
-  delete (le);
+  le_close (le);
   return true;
 }
