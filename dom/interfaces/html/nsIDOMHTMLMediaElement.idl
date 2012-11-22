@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[scriptable, uuid(4319d74a-ef91-46e0-b6e1-b35036fc4024)]
+[scriptable, uuid(efa52d52-a876-486f-8739-87e1a13bc42d)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -62,6 +62,9 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   readonly attribute double initialTime;
   readonly attribute double duration;
   readonly attribute boolean paused;
+           attribute double defaultPlaybackRate;
+           attribute double playbackRate;
+           attribute boolean mozPreservesPitch;
   readonly attribute nsIDOMTimeRanges played;
   readonly attribute nsIDOMTimeRanges seekable;
   readonly attribute boolean ended;

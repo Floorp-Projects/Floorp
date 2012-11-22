@@ -333,6 +333,9 @@ public:
   // of our audio.
   virtual void SetAudioCaptured(bool aCaptured);
 
+  void SetPlaybackRate(double aPlaybackRate);
+  void SetPreservesPitch(bool aPreservesPitch);
+
   // All MediaStream-related data is protected by mReentrantMonitor.
   // We have at most one DecodedStreamData per MediaDecoder. Its stream
   // is used as the input for each ProcessedMediaStream created by calls to
@@ -1047,6 +1050,9 @@ protected:
   // being run that operates on the element and decoder during shutdown.
   // Read/Write from the main thread only.
   bool mShuttingDown;
+
+  // True if the playback is paused because the playback rate member is 0.0.
+  bool mPausedForPlaybackRateNull;
 
   // Be assigned from media element during the initialization and pass to
   // AudioStream Class.

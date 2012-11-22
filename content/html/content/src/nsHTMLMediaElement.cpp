@@ -123,6 +123,18 @@ using namespace mozilla::layers;
 // Number of milliseconds between timeupdate events as defined by spec
 #define TIMEUPDATE_MS 250
 
+// These constants are arbitrary
+// Minimum playbackRate for a media
+static const double MIN_PLAYBACKRATE = 0.25;
+// Maximum playbackRate for a media
+static const double MAX_PLAYBACKRATE = 5.0;
+// These are the limits beyonds which SoundTouch does not perform too well and when
+// speech is hard to understand anyway.
+// Threshold above which audio is muted
+static const double THRESHOLD_HIGH_PLAYBACKRATE_AUDIO = 4.0;
+// Threshold under which audio is muted
+static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.5;
+
 // Under certain conditions there may be no-one holding references to
 // a media element from script, DOM parent, etc, but the element may still
 // fire meaningful events in the future so we can't destroy it yet:
@@ -709,6 +721,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
   SetPlayedOrSeeked(false);
   mIsRunningLoadMethod = true;
   AbortExistingLoads();
+  SetPlaybackRate(mDefaultPlaybackRate);
   QueueSelectResourceTask();
   mIsRunningLoadMethod = false;
   return NS_OK;
@@ -1185,6 +1198,7 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
     return rv;
   }
 
+  SetPlaybackRate(mDefaultPlaybackRate);
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
@@ -1215,6 +1229,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
     return rv;
   }
 
+  SetPlaybackRate(mDefaultPlaybackRate);
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
@@ -1532,14 +1547,9 @@ NS_IMETHODIMP nsHTMLMediaElement::GetMuted(bool *aMuted)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
+void nsHTMLMediaElement::SetMutedInternal(bool aMuted)
 {
-  if (aMuted == mMuted)
-    return NS_OK;
-
-  mMuted = aMuted;
-
-  float effectiveVolume = mMuted ? 0.0f : float(mVolume);
+  float effectiveVolume = aMuted ? 0.0f : float(mVolume);
   if (mDecoder) {
     mDecoder->SetVolume(effectiveVolume);
   } else if (mAudioStream) {
@@ -1547,6 +1557,15 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
   } else if (mSrcStream) {
     GetSrcMediaStream()->SetAudioOutputVolume(this, effectiveVolume);
   }
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
+{
+  if (aMuted == mMuted)
+    return NS_OK;
+
+  mMuted = aMuted;
+  SetMutedInternal(aMuted);
 
   DispatchAsyncEvent(NS_LITERAL_STRING("volumechange"));
 
@@ -1713,6 +1732,9 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mLastCurrentTime(0.0),
     mFragmentStart(-1.0),
     mFragmentEnd(-1.0),
+    mDefaultPlaybackRate(1.0),
+    mPlaybackRate(1.0),
+    mPreservesPitch(true),
     mCurrentPlayRangeStart(-1.0),
     mAllowAudioData(false),
     mBegun(false),
@@ -1857,7 +1879,6 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
 
   // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
-  // TODO: The playback rate must be set to the default playback rate.
   if (mPaused) {
     if (mSrcStream) {
       GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
@@ -1878,6 +1899,8 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
       break;
     }
   }
+
+  SetPlaybackRate(mDefaultPlaybackRate);
 
   mPaused = false;
   mAutoplaying = false;
@@ -3713,6 +3736,82 @@ void nsHTMLMediaElement::NotifyAudioAvailableListener()
   if (mDecoder) {
     mDecoder->NotifyAudioAvailableListener();
   }
+}
+
+static double ClampPlaybackRate(double aPlaybackRate)
+{
+  if (aPlaybackRate == 0.0) {
+    return aPlaybackRate;
+  }
+  if (NS_ABS(aPlaybackRate) < MIN_PLAYBACKRATE) {
+    return aPlaybackRate < 0 ? -MIN_PLAYBACKRATE : MIN_PLAYBACKRATE;
+  }
+  if (NS_ABS(aPlaybackRate) > MAX_PLAYBACKRATE) {
+    return aPlaybackRate < 0 ? -MAX_PLAYBACKRATE : MAX_PLAYBACKRATE;
+  }
+  return aPlaybackRate;
+}
+
+/* attribute double defaultPlaybackRate; */
+NS_IMETHODIMP nsHTMLMediaElement::GetDefaultPlaybackRate(double* aDefaultPlaybackRate)
+{
+  *aDefaultPlaybackRate = mDefaultPlaybackRate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate)
+{
+  if (aDefaultPlaybackRate < 0) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  mDefaultPlaybackRate = ClampPlaybackRate(aDefaultPlaybackRate);
+  DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
+  return NS_OK;
+}
+
+/* attribute double playbackRate; */
+NS_IMETHODIMP nsHTMLMediaElement::GetPlaybackRate(double* aPlaybackRate)
+{
+  *aPlaybackRate = mPlaybackRate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetPlaybackRate(double aPlaybackRate)
+{
+  if (aPlaybackRate < 0) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  mPlaybackRate = ClampPlaybackRate(aPlaybackRate);
+
+  if (mPlaybackRate < 0 ||
+      mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
+      mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO) {
+    SetMutedInternal(true);
+  } else {
+    SetMutedInternal(false);
+  }
+
+  if (mDecoder) {
+    mDecoder->SetPlaybackRate(mPlaybackRate);
+  }
+  DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
+  return NS_OK;
+}
+
+/* attribute bool mozPreservesPitch; */
+NS_IMETHODIMP nsHTMLMediaElement::GetMozPreservesPitch(bool* aPreservesPitch)
+{
+  *aPreservesPitch = mPreservesPitch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch)
+{
+  mPreservesPitch = aPreservesPitch;
+  mDecoder->SetPreservesPitch(aPreservesPitch);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
