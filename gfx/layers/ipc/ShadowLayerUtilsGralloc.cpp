@@ -14,6 +14,8 @@
 
 #include "ShadowLayerUtilsGralloc.h"
 
+#include "nsIMemoryReporter.h"
+
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 
@@ -153,6 +155,41 @@ ContentTypeFromPixelFormat(android::PixelFormat aFormat)
   return gfxASurface::ContentFromFormat(ImageFormatForPixelFormat(aFormat));
 }
 
+static size_t sCurrentAlloc;
+static int64_t GetGrallocSize() { return sCurrentAlloc; }
+
+NS_MEMORY_REPORTER_IMPLEMENT(GrallocBufferActor,
+  "gralloc",
+  KIND_OTHER,
+  UNITS_BYTES,
+  GetGrallocSize,
+  "Special RAM that can be shared between processes and directly "
+  "accessed by both the CPU and GPU.  Gralloc memory is usually a "
+  "relatively precious resource, with much less available than generic "
+  "RAM.  When it's exhausted, graphics performance can suffer. "
+  "This value can be incorrect because of race conditions.");
+
+GrallocBufferActor::GrallocBufferActor()
+: mAllocBytes(0)
+{
+  static bool registered;
+  if (!registered) {
+    // We want to be sure that the first call here will always run on
+    // the main thread.
+    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(GrallocBufferActor));
+    registered = true;
+  }
+}
+
+GrallocBufferActor::~GrallocBufferActor()
+{
+  if (mAllocBytes > 0) {
+    sCurrentAlloc -= mAllocBytes;
+  }
+}
+
 /*static*/ PGrallocBufferParent*
 GrallocBufferActor::Create(const gfxIntSize& aSize,
                            const gfxContentType& aContent,
@@ -169,6 +206,11 @@ GrallocBufferActor::Create(const gfxIntSize& aSize,
                       GraphicBuffer::USAGE_HW_TEXTURE));
   if (buffer->initCheck() != OK)
     return actor;
+
+  size_t bpp = gfxASurface::BytePerPixelFromFormat(
+      gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent));
+  actor->mAllocBytes = aSize.width * aSize.height * bpp;
+  sCurrentAlloc += actor->mAllocBytes;
 
   actor->mGraphicBuffer = buffer;
   *aOutHandle = MagicGrallocBufferHandle(buffer);
