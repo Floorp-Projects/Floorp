@@ -163,6 +163,16 @@ public:
     }
   }
 
+  /**
+   * Returns true if the current code is being executed as a result of user input.
+   * This includes timers or anything else that is initiated from user input.
+   * However, mouse over events are not counted as user input, nor are
+   * page load events. If this method is called from asynchronously executed code,
+   * such as during layout reflows, it will return false. If more time has elapsed
+   * since the user input than is specified by the
+   * dom.event.handling-user-input-time-limit pref (default 1 second), this
+   * function also returns false.
+   */
   static bool IsHandlingUserInput()
   {
     if (sUserInputEventDepth <= 0) {
@@ -173,18 +183,6 @@ public:
            (TimeStamp::Now() - sHandlingInputStart) <= timeout;
   }
 
-  /**
-   * Returns true if the current code is being executed as a result of user input.
-   * This includes timers or anything else that is initiated from user input.
-   * However, mouse hover events are not counted as user input, nor are
-   * page load events. If this method is called from asynchronously executed code,
-   * such as during layout reflows, it will return false. If more time has elapsed
-   * since the user input than is specified by the
-   * dom.event.handling-user-input-time-limit pref (default 1 second), this
-   * function also returns false.
-   */
-  NS_IMETHOD_(bool) IsHandlingUserInputExternal() { return IsHandlingUserInput(); }
-  
   nsPresContext* GetPresContext() { return mPresContext; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,

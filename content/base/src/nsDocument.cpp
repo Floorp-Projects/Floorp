@@ -177,7 +177,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::directionality;
 
 typedef nsTArray<Link*> LinkArray;
 
