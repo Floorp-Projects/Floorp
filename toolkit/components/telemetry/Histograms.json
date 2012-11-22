@@ -739,6 +739,11 @@
     "n_buckets": 200,
     "description": "ms elapsed time of OCSP etc.. that failed"
   },
+  "SSL_KEY_EXCHANGE_ALGORITHM": {
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "SSL Handshake Key Exchange Algorithm (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
+  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "kind": "enumerated",
     "n_values": 16,
