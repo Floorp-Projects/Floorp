@@ -19,12 +19,7 @@ MOCHITEST_FILES := \
   test_Event-constructors.html.json \
   test_Event-defaultPrevented.html.json \
   test_EventTarget-dispatchEvent.html.json \
-  test_Node-appendChild.html.json \
-  test_Node-constants.html.json \
-  test_Node-contains.xml.json \
-  test_Node-insertBefore.html.json \
   test_Node-isEqualNode.xhtml.json \
-  test_Node-removeChild.html.json \
   test_Node-replaceChild.html.json \
   test_NodeFilter-constants.html.json \
   test_Range-attributes.html.json \
