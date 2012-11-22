@@ -32,7 +32,7 @@ interface Element : Node {
   FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
 */
-  readonly attribute DOMTokenList classList;
+  readonly attribute DOMTokenList? classList;
 
   //readonly attribute Attr[] attributes;
   DOMString? getAttribute(DOMString name);
@@ -73,6 +73,13 @@ interface Element : Node {
 */
 
   // Mozilla specific stuff
+
+  [SetterThrows,LenientThis]
+           attribute EventHandler onmouseenter;
+  [SetterThrows,LenientThis]
+           attribute EventHandler onmouseleave;
+  [SetterThrows]
+           attribute EventHandler onwheel;
 
   // Selectors API
   /**
@@ -125,7 +132,7 @@ interface Element : Node {
   [Throws]
   Attr removeAttributeNode(Attr oldAttr);
   [Throws]
-  Attr getAttributeNodeNS(DOMString namespaceURI, DOMString localName);
+  Attr getAttributeNodeNS(DOMString? namespaceURI, DOMString localName);
   [Throws]
   Attr setAttributeNodeNS(Attr newAttr);
 /*
