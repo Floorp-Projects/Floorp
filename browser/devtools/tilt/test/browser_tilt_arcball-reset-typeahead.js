@@ -31,7 +31,7 @@ function test() {
 
           Services.prefs.setBoolPref("accessibility.typeaheadfind", false);
           Services.obs.addObserver(cleanup, DESTROYED, false);
-          InspectorUI.closeInspectorUI();
+          Tilt.destroy(Tilt.currentWindowId);
         });
       }
     }, false, function suddenDeath()
