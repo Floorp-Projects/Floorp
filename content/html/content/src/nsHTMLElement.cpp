@@ -7,6 +7,7 @@
 #include "nsIDOMHTMLElement.h"
 
 #include "nsContentUtils.h"
+#include "mozilla/dom/HTMLElementBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -38,6 +39,10 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 // Here, we expand 'NS_IMPL_NS_NEW_HTML_ELEMENT()' by hand.
@@ -52,6 +57,7 @@ NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 nsHTMLElement::nsHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 nsHTMLElement::~nsHTMLElement()
@@ -90,3 +96,8 @@ nsHTMLElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
   nsGenericHTMLElement::GetInnerHTML(aInnerHTML, aError);
 }
 
+JSObject*
+nsHTMLElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return dom::HTMLElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
