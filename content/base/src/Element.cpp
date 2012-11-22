@@ -447,12 +447,12 @@ Element::GetLastElementChild() const
 }
 
 nsDOMTokenList*
-Element::ClassList()
+Element::GetClassList()
 {
   Element::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mClassList) {
-    nsCOMPtr<nsIAtom> classAttr = GetClassAttributeName();
+    nsIAtom* classAttr = GetClassAttributeName();
     if (classAttr) {
       slots->mClassList = new nsDOMTokenList(this, classAttr);
     }
@@ -464,7 +464,7 @@ Element::ClassList()
 void
 Element::GetClassList(nsIDOMDOMTokenList** aClassList)
 {
-  NS_IF_ADDREF(*aClassList = ClassList());
+  NS_IF_ADDREF(*aClassList = GetClassList());
 }
 
 already_AddRefed<nsIHTMLCollection>
