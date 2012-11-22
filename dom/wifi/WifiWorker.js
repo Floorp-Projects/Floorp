@@ -40,18 +40,21 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
-  function getSdkVersion() {
+  function getStartupPrefs() {
     Cu.import("resource://gre/modules/systemlibs.js");
-    let sdkVersion = libcutils.property_get("ro.build.version.sdk");
-    return parseInt(sdkVersion, 10);
+    return {
+      sdkVersion: parseInt(libcutils.property_get("ro.build.version.sdk"), 10),
+      schedScanRecovery: libcutils.property_get("ro.moz.wifi.sched_scan_recover") === "false" ? false : true
+    };
   }
 
-  let sdkVersion = getSdkVersion();
+  let {sdkVersion, schedScanRecovery} = getStartupPrefs();
 
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
 
   var manager = {};
+  manager.schedScanRecovery = schedScanRecovery;
 
   // Callbacks to invoke when a reply arrives from the controlWorker.
   var controlCallbacks = Object.create(null);
@@ -1605,9 +1608,11 @@ function WifiWorker() {
   this._turnOnBackgroundScan = false;
 
   function startScanStuckTimer() {
-    self._scanStuckTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    self._scanStuckTimer.initWithCallback(scanIsStuck, SCAN_STUCK_WAIT,
-                                          Ci.nsITimer.TYPE_ONE_SHOT);
+    if (WifiManager.schedScanRecovery) {
+      self._scanStuckTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      self._scanStuckTimer.initWithCallback(scanIsStuck, SCAN_STUCK_WAIT,
+                                            Ci.nsITimer.TYPE_ONE_SHOT);
+    }
   }
 
   function scanIsStuck() {
