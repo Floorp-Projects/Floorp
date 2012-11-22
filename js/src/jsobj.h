@@ -28,6 +28,10 @@
 #include "vm/ObjectImpl.h"
 #include "vm/String.h"
 
+namespace JS {
+struct ObjectsExtraSizes;
+}
+
 namespace js {
 
 class AutoPropDescArrayRooter;
@@ -368,11 +372,7 @@ struct JSObject : public js::ObjectImpl
 
     inline size_t computedSizeOfThisSlotsElements() const;
 
-    inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *slotsSize,
-                                    size_t *elementsSize, size_t *argumentsDataSize,
-                                    size_t *regExpStaticsSize,
-                                    size_t *propertyIteratorDataSize,
-                                    size_t *ctypesDataSize) const;
+    inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, JS::ObjectsExtraSizes *sizes);
 
     bool hasIdempotentProtoChain() const;
 
