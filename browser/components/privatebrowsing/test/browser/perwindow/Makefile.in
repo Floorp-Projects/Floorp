@@ -42,6 +42,7 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_urlbarfocus.js \
 		browser_privatebrowsing_windowtitle.js \
 		browser_privatebrowsing_windowtitle_page.html \
+		browser_privatebrowsing_zoom.js \
 		browser_privatebrowsing_zoomrestore.js \
 		popup.html \
 		title.sjs \
