@@ -469,14 +469,17 @@ StackFrames.prototype = {
     if (this.currentBreakpointLocation) {
       let { url, line } = this.currentBreakpointLocation;
       let breakpointClient = DebuggerController.Breakpoints.getBreakpoint(url, line);
-      let conditionalExpression = breakpointClient.conditionalExpression;
-      if (conditionalExpression) {
-        // Evaluating the current breakpoint's conditional expression will
-        // cause the stack frames to be cleared and active thread to pause,
-        // sending a 'clientEvaluated' packed and adding the frames again.
-        this.evaluate(conditionalExpression, 0);
-        this._isConditionalBreakpointEvaluation = true;
-        return;
+      if (breakpointClient) {
+        // Make sure a breakpoint actually exists at the specified url and line.
+        let conditionalExpression = breakpointClient.conditionalExpression;
+        if (conditionalExpression) {
+          // Evaluating the current breakpoint's conditional expression will
+          // cause the stack frames to be cleared and active thread to pause,
+          // sending a 'clientEvaluated' packed and adding the frames again.
+          this.evaluate(conditionalExpression, 0);
+          this._isConditionalBreakpointEvaluation = true;
+          return;
+        }
       }
     }
     // Got our evaluation of the current breakpoint's conditional expression.
@@ -924,10 +927,13 @@ StackFrames.prototype = {
     if (list.length) {
       this.syncedWatchExpressions =
         this.currentWatchExpressions = "[" + list.map(function(str)
-          "(function() {" +
+          // Avoid yielding an empty pseudo-array when evaluating `arguments`,
+          // since they're overridden by the expression's closure scope.
+          "(function(arguments) {" +
+            // Make sure all the quotes are escaped in the expression's syntax.
             "try { return eval(\"" + str.replace(/"/g, "\\$&") + "\"); }" +
             "catch(e) { return e.name + ': ' + e.message; }" +
-          "})()"
+          "})(arguments)"
         ).join(",") + "]";
     } else {
       this.syncedWatchExpressions =
