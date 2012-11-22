@@ -121,6 +121,7 @@ function startListeners() {
   addMessageListenerId("Marionette:importScript", importScript);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
+  addMessageListenerId("Marionette:setState", setState);
 }
 
 /**
@@ -140,6 +141,21 @@ function newSession(msg) {
 function sleepSession(msg) {
   deleteSession();
   addMessageListener("Marionette:restart", restart);
+}
+
+/**
+ * Sets script-wide state variables; used after frame switching.
+ */
+function setState(msg) {
+  marionetteTimeout = msg.json.scriptTimeout;
+  try {
+    elementManager.setSearchTimeout(msg.json.searchTimeout);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack);
+    return;
+  }
+  sendOk();
 }
 
 /**
@@ -186,6 +202,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:importScript", importScript);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
+  removeMessageListenerId("Marionette:setState", setState);
   this.elementManager.reset();
   // reset frame to the top-most frame
   curWindow = content;
