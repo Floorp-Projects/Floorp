@@ -16,6 +16,11 @@
         '<(webrtc_root)/common_video/common_video.gyp:webrtc_libyuv',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
+
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+      ],
+
       'include_dirs': [
         '../interface',
         '../../../interface',
