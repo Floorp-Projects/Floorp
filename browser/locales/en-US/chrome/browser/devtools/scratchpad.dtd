@@ -117,9 +117,3 @@
   -  the same name in browser.dtd.
   -->
 <!ENTITY errorConsoleCmd.commandkey   "j">
-
-<!-- LOCALIZATION NOTE (webConsoleCmd.commandkey): This command key launches
-  -  the browser WebConsole, the key should be identical to the property of
-  -  the same name in browser.dtd.
-  -->
-<!ENTITY webConsoleCmd.commandkey     "k">

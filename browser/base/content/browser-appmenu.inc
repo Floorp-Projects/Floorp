@@ -150,20 +150,27 @@
       <menu id="appmenu_webDeveloper"
             label="&appMenuWebDeveloper.label;">
         <menupopup id="appmenu_webDeveloper_popup">
-          <menuitem id="appmenu_devToolbar" observes="devtoolsMenuBroadcaster_DevToolbar"/>
-          <menuitem id="appmenu_webConsole" observes="devtoolsMenuBroadcaster_WebConsole"/>
-          <menuitem id="appmenu_remoteWebConsole" observes="devtoolsMenuBroadcaster_RemoteWebConsole"/>
-          <menuitem id="appmenu_pageinspect" observes="devtoolsMenuBroadcaster_Inspect"/>
-          <menuitem id="appmenu_responsiveUI" observes="devtoolsMenuBroadcaster_ResponsiveUI"/>
-          <menuitem id="appmenu_debugger" observes="devtoolsMenuBroadcaster_Debugger"/>
-          <menuitem id="appmenu_remoteDebugger" observes="devtoolsMenuBroadcaster_RemoteDebugger"/>
-          <menuitem id="appmenu_chromeDebugger" observes="devtoolsMenuBroadcaster_ChromeDebugger"/>
-          <menuitem id="appmenu_scratchpad" observes="devtoolsMenuBroadcaster_Scratchpad"/>
-          <menuitem id="appmenu_styleeditor" observes="devtoolsMenuBroadcaster_StyleEditor"/>
-          <menuitem id="appmenu_pageSource" observes="devtoolsMenuBroadcaster_PageSource"/>
-          <menuitem id="appmenu_errorConsole" observes="devtoolsMenuBroadcaster_ErrorConsole"/>
+          <menuitem id="appmenu_devToolbox"
+                    observes="devtoolsMenuBroadcaster_DevToolbox"/>
+          <menuseparator id="appmenu_devtools_separator"/>
+          <menuitem id="appmenu_devToolbar"
+                    observes="devtoolsMenuBroadcaster_DevToolbar"/>
+          <menuitem id="appmenu_remoteWebConsole"
+                    observes="devtoolsMenuBroadcaster_RemoteWebConsole"/>
+          <menuitem id="appmenu_responsiveUI"
+                    observes="devtoolsMenuBroadcaster_ResponsiveUI"/>
+          <menuitem id="appmenu_scratchpad"
+                    observes="devtoolsMenuBroadcaster_Scratchpad"/>
+          <menuitem id="appmenu_pageSource"
+                    observes="devtoolsMenuBroadcaster_PageSource"/>
+          <menuitem id="appmenu_errorConsole"
+                    observes="devtoolsMenuBroadcaster_ErrorConsole"/>
+          <menuseparator id="appmenu_devToolsConnectSeparator"/>
+          <menuitem id="appmenu_devtools_connect"
+                    observes="devtoolsMenuBroadcaster_connect"/>
           <menuseparator id="appmenu_devToolsEndSeparator"/>
-          <menuitem id="appmenu_getMoreDevtools" observes="devtoolsMenuBroadcaster_GetMoreTools"/>
+          <menuitem id="appmenu_getMoreDevtools"
+                    observes="devtoolsMenuBroadcaster_GetMoreTools"/>
           <menuseparator/>
 #define ID_PREFIX appmenu_developer_
 #define OMIT_ACCESSKEYS
