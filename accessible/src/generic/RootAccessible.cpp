@@ -311,8 +311,6 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   if (!accessible)
     return;
 
-  nsINode* targetNode = accessible->GetNode();
-
 #ifdef MOZ_XUL
   XULTreeAccessible* treeAcc = accessible->AsXULTree();
   if (treeAcc) {
@@ -383,6 +381,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     return;
   }
 
+  nsINode* targetNode = accessible->GetNode();
   if (treeItemAcc && eventType.EqualsLiteral("select")) {
     // XXX: We shouldn't be based on DOM select event which doesn't provide us
     // any context info. We should integrate into nsTreeSelection instead.
@@ -478,10 +477,10 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 
     //We don't process 'ValueChange' events for progress meters since we listen
     //@value attribute change for them.
-    if (!accessible->IsProgress())
-      targetDocument->
-        FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-                                   targetNode);
+    if (!accessible->IsProgress()) {
+      targetDocument->FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                                       accessible);
+    }
   }
 #ifdef DEBUG_DRAGDROPSTART
   else if (eventType.EqualsLiteral("mouseover")) {
@@ -677,7 +676,7 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   if (notifyOf & kNotifyOfState) {
     nsRefPtr<AccEvent> event =
       new AccStateChangeEvent(widget, states::EXPANDED, false);
-    document->FireDelayedAccessibleEvent(event);
+    document->FireDelayedEvent(event);
   }
 }
 

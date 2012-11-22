@@ -36,11 +36,10 @@
 
 #include "hb-common.h"
 #include "hb-unicode.h"
+#include "hb-font.h"
 
 HB_BEGIN_DECLS
 
-
-typedef struct hb_buffer_t hb_buffer_t;
 
 typedef struct hb_glyph_info_t {
   hb_codepoint_t codepoint;
@@ -62,12 +61,36 @@ typedef struct hb_glyph_position_t {
   hb_var_int_t   var;
 } hb_glyph_position_t;
 
-typedef enum {
-  HB_BUFFER_CONTENT_TYPE_INVALID = 0,
-  HB_BUFFER_CONTENT_TYPE_UNICODE,
-  HB_BUFFER_CONTENT_TYPE_GLYPHS
-} hb_buffer_content_type_t;
 
+typedef struct hb_segment_properties_t {
+  hb_direction_t  direction;
+  hb_script_t     script;
+  hb_language_t   language;
+  /*< private >*/
+  void           *reserved1;
+  void           *reserved2;
+} hb_segment_properties_t;
+
+#define HB_SEGMENT_PROPERTIES_DEFAULT {HB_DIRECTION_INVALID, \
+				       HB_SCRIPT_INVALID, \
+				       HB_LANGUAGE_INVALID, \
+				       NULL, \
+				       NULL}
+
+hb_bool_t
+hb_segment_properties_equal (const hb_segment_properties_t *a,
+			     const hb_segment_properties_t *b);
+
+unsigned int
+hb_segment_properties_hash (const hb_segment_properties_t *p);
+
+
+
+/*
+ * hb_buffer_t
+ */
+
+typedef struct hb_buffer_t hb_buffer_t;
 
 hb_buffer_t *
 hb_buffer_create (void);
@@ -92,6 +115,12 @@ void *
 hb_buffer_get_user_data (hb_buffer_t        *buffer,
 			 hb_user_data_key_t *key);
 
+
+typedef enum {
+  HB_BUFFER_CONTENT_TYPE_INVALID = 0,
+  HB_BUFFER_CONTENT_TYPE_UNICODE,
+  HB_BUFFER_CONTENT_TYPE_GLYPHS
+} hb_buffer_content_type_t;
 
 void
 hb_buffer_set_content_type (hb_buffer_t              *buffer,
@@ -126,14 +155,45 @@ void
 hb_buffer_set_language (hb_buffer_t   *buffer,
 			hb_language_t  language);
 
+
 hb_language_t
 hb_buffer_get_language (hb_buffer_t *buffer);
+
+void
+hb_buffer_set_segment_properties (hb_buffer_t *buffer,
+				  const hb_segment_properties_t *props);
+
+void
+hb_buffer_get_segment_properties (hb_buffer_t *buffer,
+				  hb_segment_properties_t *props);
+
+void
+hb_buffer_guess_segment_properties (hb_buffer_t *buffer);
+
+
+typedef enum {
+  HB_BUFFER_FLAGS_DEFAULT			= 0x00000000,
+  HB_BUFFER_FLAG_BOT				= 0x00000001, /* Beginning-of-text */
+  HB_BUFFER_FLAG_EOT				= 0x00000002, /* End-of-text */
+  HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES	= 0x00000004
+} hb_buffer_flags_t;
+
+void
+hb_buffer_set_flags (hb_buffer_t       *buffer,
+		     hb_buffer_flags_t  flags);
+
+hb_buffer_flags_t
+hb_buffer_get_flags (hb_buffer_t *buffer);
 
 
 /* Resets the buffer.  Afterwards it's as if it was just created,
  * except that it has a larger buffer allocated perhaps... */
 void
 hb_buffer_reset (hb_buffer_t *buffer);
+
+/* Like reset, but does NOT clear unicode_funcs. */
+void
+hb_buffer_clear (hb_buffer_t *buffer);
 
 /* Returns false if allocation failed */
 hb_bool_t
@@ -151,16 +211,12 @@ hb_buffer_reverse (hb_buffer_t *buffer);
 void
 hb_buffer_reverse_clusters (hb_buffer_t *buffer);
 
-void
-hb_buffer_guess_properties (hb_buffer_t *buffer);
-
 
 /* Filling the buffer in */
 
 void
 hb_buffer_add (hb_buffer_t    *buffer,
 	       hb_codepoint_t  codepoint,
-	       hb_mask_t       mask,
 	       unsigned int    cluster);
 
 void
@@ -213,11 +269,53 @@ hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
 void
 hb_buffer_normalize_glyphs (hb_buffer_t *buffer);
 
+
 /*
- * NOT IMPLEMENTED
- void
- hb_buffer_normalize_characters (hb_buffer_t *buffer);
-*/
+ * Serialize
+ */
+
+typedef enum {
+  HB_BUFFER_SERIALIZE_FLAGS_DEFAULT		= 0x00000000,
+  HB_BUFFER_SERIALIZE_FLAG_NO_CLUSTERS		= 0x00000001,
+  HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS		= 0x00000002,
+  HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES	= 0x00000004
+} hb_buffer_serialize_flags_t;
+
+typedef enum {
+  HB_BUFFER_SERIALIZE_FORMAT_TEXT	= HB_TAG('T','E','X','T'),
+  HB_BUFFER_SERIALIZE_FORMAT_JSON	= HB_TAG('J','S','O','N'),
+  HB_BUFFER_SERIALIZE_FORMAT_INVALID	= HB_TAG_NONE
+} hb_buffer_serialize_format_t;
+
+/* len=-1 means str is NUL-terminated. */
+hb_buffer_serialize_format_t
+hb_buffer_serialize_format_from_string (const char *str, int len);
+
+const char *
+hb_buffer_serialize_format_to_string (hb_buffer_serialize_format_t format);
+
+const char **
+hb_buffer_serialize_list_formats (void);
+
+/* Returns number of items, starting at start, that were serialized. */
+unsigned int
+hb_buffer_serialize_glyphs (hb_buffer_t *buffer,
+			    unsigned int start,
+			    unsigned int end,
+			    char *buf,
+			    unsigned int buf_size,
+			    unsigned int *buf_consumed,
+			    hb_font_t *font, /* May be NULL */
+			    hb_buffer_serialize_format_t format,
+			    hb_buffer_serialize_flags_t flags);
+
+hb_bool_t
+hb_buffer_deserialize_glyphs (hb_buffer_t *buffer,
+			      const char *buf,
+			      unsigned int buf_len,
+			      unsigned int *buf_consumed,
+			      hb_font_t *font, /* May be NULL */
+			      hb_buffer_serialize_format_t format);
 
 
 HB_END_DECLS

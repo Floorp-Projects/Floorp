@@ -1128,7 +1128,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->fun = fun;
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
-    if (fun && fun->isInterpreted()) {
+    if (fun && fun->hasScript()) {
         if (!SetPrinterLocalNames(cx, fun->script().unsafeGet(), jp)) {
             js_DestroyPrinter(jp);
             return NULL;
@@ -6269,11 +6269,100 @@ js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
         if (!fallback)
             return NULL;
     }
-    size_t length = fallback->length();
-    const jschar *chars = fallback->getChars(cx);
-    if (!chars)
+
+    Rooted<JSStableString *> stable(cx, fallback->ensureStable(cx));
+    if (!stable)
         return NULL;
-    return DeflateString(cx, chars, length);
+    return DeflateString(cx, stable->chars().get(), stable->length());
+}
+
+static bool
+DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
+{
+    JS_ASSERT(formalIndex >= 0);
+
+    *res = NULL;
+
+#ifdef JS_MORE_DETERMINISTIC
+    /* See note in DecompileExpressionFromStack. */
+    return true;
+#endif
+
+    /*
+     * Settle on the nearest script frame, which should be the builtin that
+     * called the intrinsic.
+     */
+    StackIter frameIter(cx);
+    while (!frameIter.done() && !frameIter.isScript())
+        ++frameIter;
+    JS_ASSERT(!frameIter.done());
+
+    /*
+     * Get the second-to-top frame, the caller of the builtin that called the
+     * intrinsic.
+     */
+    ++frameIter;
+
+    /*
+     * If this frame isn't a script, we can't decompile. Even if it is a
+     * script but we popped a call frame during the last bump, assume that we
+     * just came from a frameless native and bail conservatively.
+     */
+    if (frameIter.done() || frameIter.poppedCallDuringSettle() || !frameIter.isScript())
+        return true;
+
+    RootedScript script(cx, frameIter.script());
+    jsbytecode *current = frameIter.pc();
+    RootedFunction fun(cx, frameIter.isFunctionFrame()
+                       ? frameIter.callee()
+                       : NULL);
+
+    JS_ASSERT(script->code <= current && current < script->code + script->length);
+
+    if (current < script->main())
+        return true;
+
+    PCStack pcStack;
+    if (!pcStack.init(cx, script, current))
+        return false;
+
+    uint32_t formalStackIndex = pcStack.depth() - GET_ARGC(current) + formalIndex;
+    if (formalStackIndex >= pcStack.depth())
+        return true;
+
+    ExpressionDecompiler ed(cx, script, fun);
+    if (!ed.init())
+        return false;
+    if (!ed.decompilePC(pcStack[formalStackIndex]))
+        return false;
+
+    return ed.getOutput(res);
+}
+
+char *
+js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
+{
+    AssertCanGC();
+    {
+        char *result;
+        if (!DecompileArgumentFromStack(cx, formalIndex, &result))
+            return NULL;
+        if (result) {
+            if (strcmp(result, "(intermediate value)"))
+                return result;
+            js_free(result);
+        }
+    }
+    if (v.isUndefined())
+        return JS_strdup(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
+    RootedString fallback(cx, js_ValueToSource(cx, v));
+    if (!fallback)
+        return NULL;
+
+    Rooted<JSStableString *> stable(cx, fallback->ensureStable(cx));
+    if (!stable)
+        return NULL;
+    return DeflateString(cx, stable->chars().get(), stable->length());
 }
 
 static char *
@@ -6548,10 +6637,8 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
 #undef LOCAL_ASSERT
 #undef LOCAL_ASSERT_RV
 
-namespace js {
-
 bool
-CallResultEscapes(jsbytecode *pc)
+js::CallResultEscapes(jsbytecode *pc)
 {
     /*
      * If we see any of these sequences, the result is unused:
@@ -6577,7 +6664,7 @@ CallResultEscapes(jsbytecode *pc)
 }
 
 extern bool
-IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
+js::IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
 {
     // This could be faster (by following jump instructions if the target is <= offset).
     for (BytecodeRange r(script); !r.empty(); r.popFront()) {
@@ -6589,7 +6676,7 @@ IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
 }
 
 JS_FRIEND_API(size_t)
-GetPCCountScriptCount(JSContext *cx)
+js::GetPCCountScriptCount(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -6626,7 +6713,7 @@ AppendArrayJSONProperties(JSContext *cx, StringBuffer &buf,
 }
 
 JS_FRIEND_API(JSString *)
-GetPCCountScriptSummary(JSContext *cx, size_t index)
+js::GetPCCountScriptSummary(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -6919,7 +7006,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
 }
 
 JS_FRIEND_API(JSString *)
-GetPCCountScriptContents(JSContext *cx, size_t index)
+js::GetPCCountScriptContents(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -6944,5 +7031,3 @@ GetPCCountScriptContents(JSContext *cx, size_t index)
 
     return buf.finishString();
 }
-
-} // namespace js

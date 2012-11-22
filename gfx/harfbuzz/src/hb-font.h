@@ -105,6 +105,13 @@ hb_face_set_upem (hb_face_t    *face,
 unsigned int
 hb_face_get_upem (hb_face_t *face);
 
+void
+hb_face_set_glyph_count (hb_face_t    *face,
+			 unsigned int  glyph_count);
+
+unsigned int
+hb_face_get_glyph_count (hb_face_t *face);
+
 
 /*
  * hb_font_funcs_t

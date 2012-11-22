@@ -25,6 +25,9 @@
 @class mozAccessible;
 #endif
 
+namespace mozilla {
+namespace a11y {
+
 class AccessibleWrap : public Accessible
 {
 public: // construction, destruction
@@ -107,5 +110,8 @@ private:
    */
   bool mNativeInited;  
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

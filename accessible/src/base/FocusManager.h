@@ -8,12 +8,12 @@
 #include "nsAutoPtr.h"
 #include "mozilla/dom/Element.h"
 
+namespace mozilla {
+namespace a11y {
+
 class AccEvent;
 class Accessible;
 class DocAccessible;
-
-namespace mozilla {
-namespace a11y {
 
 /**
  * Manage the accessible focus. Used to fire and process accessible events.

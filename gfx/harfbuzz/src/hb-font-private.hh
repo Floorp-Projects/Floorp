@@ -100,6 +100,7 @@ struct hb_face_t {
 
   unsigned int index;
   mutable unsigned int upem;
+  mutable unsigned int num_glyphs;
 
   struct hb_shaper_data_t shaper_data;
 
@@ -130,8 +131,16 @@ struct hb_face_t {
     return upem;
   }
 
+  inline unsigned int get_num_glyphs (void) const
+  {
+    if (unlikely (num_glyphs == (unsigned int) -1))
+      load_num_glyphs ();
+    return num_glyphs;
+  }
+
   private:
   HB_INTERNAL void load_upem (void) const;
+  HB_INTERNAL void load_num_glyphs (void) const;
 };
 
 #define HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS

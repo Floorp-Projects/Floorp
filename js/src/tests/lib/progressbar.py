@@ -12,6 +12,7 @@ class NullProgressBar(object):
     def update(self, current, data): pass
     def poke(self): pass
     def finish(self, complete=True): pass
+    def beginline(self): pass
     def message(self, msg): sys.stdout.write(msg + '\n')
     def update_granularity(self): return timedelta.max
 
@@ -21,6 +22,7 @@ class ProgressBar(object):
         assert limit < 9999
 
         self.prior = None
+        self.atLineStart = True
         self.counters_fmt = fmt # [{str:str}] Describtion of how to lay out each
                                 #             field in the counters map.
         self.limit = limit # int: The value of 'current' equal to 100%.
@@ -40,6 +42,7 @@ class ProgressBar(object):
     def update(self, current, data):
         # Record prior for poke.
         self.prior = (current, data)
+        self.atLineStart = False
 
         # Build counters string.
         sys.stdout.write('\r[')
@@ -79,8 +82,13 @@ class ProgressBar(object):
         self.update(final_count, self.prior[1])
         sys.stdout.write('\n')
 
+    def beginline(self):
+        if not self.atLineStart:
+            sys.stdout.write('\n')
+            self.atLineStart = True
+
     def message(self, msg):
-        sys.stdout.write('\n')
+        self.beginline()
         sys.stdout.write(msg)
         sys.stdout.write('\n')
 

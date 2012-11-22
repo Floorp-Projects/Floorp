@@ -26,6 +26,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
 
+#include "jsboolinlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
@@ -192,17 +193,15 @@ js_BooleanToString(JSContext *cx, JSBool b)
     return b ? cx->runtime->atomState.true_ : cx->runtime->atomState.false_;
 }
 
-namespace js {
-
 JS_PUBLIC_API(bool)
-ToBooleanSlow(const Value &v)
+js::ToBooleanSlow(const Value &v)
 {
     JS_ASSERT(v.isString());
     return v.toString()->length() != 0;
 }
 
 bool
-BooleanGetPrimitiveValueSlow(JSContext *cx, JSObject &obj, Value *vp)
+js::BooleanGetPrimitiveValueSlow(JSContext *cx, JSObject &obj, Value *vp)
 {
     InvokeArgsGuard ag;
     if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
@@ -214,7 +213,3 @@ BooleanGetPrimitiveValueSlow(JSContext *cx, JSObject &obj, Value *vp)
     *vp = ag.rval();
     return true;
 }
-
-}  /* namespace js */
-
-

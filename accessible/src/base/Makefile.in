@@ -21,16 +21,15 @@ CPPSRCS = \
   AccIterator.cpp \
   Filters.cpp \
   ARIAStateMap.cpp \
+  DocManager.cpp \
   FocusManager.cpp \
   NotificationController.cpp \
-  nsAccDocManager.cpp \
   nsAccessNode.cpp \
   nsARIAMap.cpp \
   nsCoreUtils.cpp \
   nsAccUtils.cpp \
   nsAccessibilityService.cpp \
   nsAccessiblePivot.cpp \
-  nsAccTreeWalker.cpp \
   nsEventShell.cpp \
   nsCaretAccessible.cpp \
   nsTextEquivUtils.cpp \
@@ -38,6 +37,7 @@ CPPSRCS = \
   StyleInfo.cpp \
   TextAttrs.cpp \
   TextUpdater.cpp \
+  TreeWalker.cpp \
   $(NULL)
 
 ifneq ($(A11Y_LOG),0)
@@ -48,7 +48,6 @@ endif
 
 EXPORTS = \
   AccEvent.h \
-  nsAccDocManager.h \
   nsAccessibilityService.h \
   nsAccessNode.h \
   $(NULL)
@@ -56,6 +55,7 @@ EXPORTS = \
 EXPORTS_NAMESPACES = mozilla/a11y
 
 EXPORTS_mozilla/a11y = \
+  DocManager.h \
   FocusManager.h \
   AccTypes.h \
   States.h \

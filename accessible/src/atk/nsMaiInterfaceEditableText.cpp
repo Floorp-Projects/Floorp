@@ -12,6 +12,8 @@
 #include "nsString.h"
 #include "mozilla/Likely.h"
 
+using namespace mozilla::a11y;
+
 extern "C" {
 static void
 setTextContentsCB(AtkEditableText *aText, const gchar *aString)

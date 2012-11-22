@@ -76,7 +76,11 @@ class nsRefreshDriver;
 class nsARefreshObserver;
 #ifdef ACCESSIBILITY
 class nsAccessibilityService;
+namespace mozilla {
+namespace a11y {
 class DocAccessible;
+} // namespace a11y
+} // namespace mozilla
 #endif
 class nsIWidget;
 struct nsArenaMemoryStats;
@@ -274,7 +278,7 @@ public:
   /**
    * Return the document accessible for this pres shell if there is one.
    */
-  DocAccessible* GetDocAccessible() const
+  mozilla::a11y::DocAccessible* GetDocAccessible() const
   {
     return mDocAccessible;
   }
@@ -282,7 +286,7 @@ public:
   /**
    * Set the document accessible for this pres shell.
    */
-  void SetDocAccessible(DocAccessible* aDocAccessible)
+  void SetDocAccessible(mozilla::a11y::DocAccessible* aDocAccessible)
   {
     mDocAccessible = aDocAccessible;
   }
@@ -1290,6 +1294,10 @@ public:
     return mFontSizeInflationLineThreshold;
   }
 
+  bool FontSizeInflationForceEnabled() const {
+    return mFontSizeInflationForceEnabled;
+  }
+
   virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) = 0;
 
   void InvalidatePresShellIfHidden();
@@ -1377,7 +1385,7 @@ protected:
   nsWeakPtr                 mForwardingContainer;
   nsRefreshDriver*          mHiddenInvalidationObserverRefreshDriver;
 #ifdef ACCESSIBILITY
-  DocAccessible* mDocAccessible;
+  mozilla::a11y::DocAccessible* mDocAccessible;
 #endif
 
 #ifdef DEBUG
@@ -1441,6 +1449,7 @@ protected:
   uint32_t mFontSizeInflationEmPerLine;
   uint32_t mFontSizeInflationMinTwips;
   uint32_t mFontSizeInflationLineThreshold;
+  bool mFontSizeInflationForceEnabled;
 
   // The maximum width of a line box. Text on a single line that exceeds this
   // width will be wrapped. A value of 0 indicates that no limit is enforced.

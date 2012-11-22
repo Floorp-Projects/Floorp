@@ -14,6 +14,8 @@
 
 #include "nsIPersistentProperties2.h"
 
+using namespace mozilla::a11y;
+
 // IAccessibleText
 
 STDMETHODIMP

@@ -724,7 +724,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
       return NS_NewDOMCompositionEvent(
         aDOMEvent, aPresContext, static_cast<nsCompositionEvent*>(aEvent));
     case NS_MOUSE_EVENT:
-    case NS_POPUP_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
                                  static_cast<nsInputEvent*>(aEvent));
     case NS_MOUSE_SCROLL_EVENT:
@@ -763,10 +762,10 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_ANIMATION_EVENT:
       return NS_NewDOMAnimationEvent(aDOMEvent, aPresContext,
                                      static_cast<nsAnimationEvent*>(aEvent));
+    default:
+      // For all other types of events, create a vanilla event object.
+      return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
     }
-
-    // For all other types of events, create a vanilla event object.
-    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
   }
 
   // And if we didn't get an event, check the type argument.

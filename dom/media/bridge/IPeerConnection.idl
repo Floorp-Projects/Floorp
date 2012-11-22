@@ -65,7 +65,7 @@ interface IPeerConnectionObserver : nsISupports
   void foundIceCandidate(in string candidate);
 };
 
-[scriptable, uuid(f6819246-f5af-40f2-ab82-e166d5da7ba0)]
+[scriptable, uuid(c86903c7-0a2e-42b4-903c-1518f03b9ba5)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
@@ -113,7 +113,7 @@ interface IPeerConnection : nsISupports
   void addIceCandidate(in string candidate, in string mid, in unsigned short level);
 
   /* Puts the SIPCC engine back to 'kIdle', shuts down threads, deletes state */
-  void close();
+  void close(in bool isSynchronous);
 
   /* Attributes */
   readonly attribute string localDescription;

@@ -2667,7 +2667,7 @@ nsWindow::createQWidget(MozQWidget *parent,
         }
 
 #if defined(MOZ_PLATFORM_MAEMO) || defined(MOZ_GL_PROVIDER)
-        if (GetShouldAccelerate()) {
+        if (ComputeShouldAccelerate(mUseLayersAcceleration)) {
             // Only create new OGL widget if it is not yet installed
             if (!HasGLContext()) {
                 MozQGraphicsView *qview = qobject_cast<MozQGraphicsView*>(newView);

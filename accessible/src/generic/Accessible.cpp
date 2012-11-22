@@ -14,7 +14,6 @@
 #include "nsAccEvent.h"
 #include "nsAccessibleRelation.h"
 #include "nsAccessibilityService.h"
-#include "nsAccTreeWalker.h"
 #include "nsIAccessibleRelation.h"
 #include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
@@ -23,6 +22,7 @@
 #include "RootAccessible.h"
 #include "States.h"
 #include "StyleInfo.h"
+#include "TreeWalker.h"
 
 #include "nsContentUtils.h"
 #include "nsIDOMElement.h"
@@ -2949,7 +2949,7 @@ Accessible::CacheChildren()
   DocAccessible* doc = Document();
   NS_ENSURE_TRUE_VOID(doc);
 
-  nsAccTreeWalker walker(doc, mContent, CanHaveAnonChildren());
+  TreeWalker walker(this, mContent);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));

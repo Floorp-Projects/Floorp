@@ -100,7 +100,7 @@ class PacketQueue : private nsDeque {
 class WebMReader : public MediaDecoderReader
 {
 public:
-  WebMReader(MediaDecoder* aDecoder);
+  WebMReader(AbstractMediaDecoder* aDecoder);
   ~WebMReader();
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);

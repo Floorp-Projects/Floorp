@@ -52,7 +52,7 @@ class RasterImage;
 class nsJPEGDecoder : public Decoder
 {
 public:
-  nsJPEGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver);
+  nsJPEGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver, Decoder::DecodeStyle aDecodeStyle);
   virtual ~nsJPEGDecoder();
 
   virtual void InitInternal();
@@ -90,6 +90,8 @@ public:
   qcms_transform *mTransform;
 
   bool mReading;
+
+  const Decoder::DecodeStyle mDecodeStyle;
 
   uint32_t mCMSMode;
 };

@@ -2884,7 +2884,7 @@ void nsHTMLMediaElement::MetadataLoaded(uint32_t aChannels,
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
   if (mDecoder && mDecoder->IsSeekable()) {
     ProcessMediaFragmentURI();
-    mDecoder->SetEndTime(mFragmentEnd);
+    mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
 }
 
@@ -3661,7 +3661,7 @@ void nsHTMLMediaElement::FireTimeUpdate(bool aPeriodic)
     Pause();
     mFragmentEnd = -1.0;
     mFragmentStart = -1.0;
-    mDecoder->SetEndTime(mFragmentEnd);
+    mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
 }
 

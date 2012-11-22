@@ -37,7 +37,7 @@ MOCHITEST_FILES =	\
 		test_bug93077-5.html \
 		test_bug93077-6.html \
 		test_bug114649.html \
-		$(warning test_bug369950.html disabled due to random orange; see bug 492575) \
+		$(filter disabled-for-random-orange--bug-492575, test_bug369950.html) \
 		test_bug386575.xhtml \
 		test_bug388019.html \
 		test_bug394057.html \
@@ -348,7 +348,7 @@ endif
 ifeq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # THESE TESTS (BELOW) DO NOT RUN ON MAC
 MOCHITEST_FILES += \
-		$(warning test_flush_on_paint.html disabled due to random orange; see bug 539356) \
+		$(filter disabled-for-random-orange--bug-539356, test_flush_on_paint.html) \
 		$(NULL)
 # THESE TESTS (ABOVE) DO NOT RUN ON MAC
 endif

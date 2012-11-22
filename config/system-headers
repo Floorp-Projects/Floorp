@@ -982,7 +982,6 @@ plarenas.h
 plarena.h
 plhash.h
 speex/speex_resampler.h
-soundtouch/SoundTouch.h
 #if MOZ_NATIVE_PNG==1
 png.h
 #endif

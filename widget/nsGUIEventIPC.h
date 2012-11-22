@@ -20,7 +20,7 @@ struct ParamTraits<nsEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.eventStructType);
+    WriteParam(aMsg, (uint8_t) aParam.eventStructType);
     WriteParam(aMsg, aParam.message);
     WriteParam(aMsg, aParam.refPoint);
     WriteParam(aMsg, aParam.time);
@@ -29,11 +29,14 @@ struct ParamTraits<nsEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->eventStructType) &&
-           ReadParam(aMsg, aIter, &aResult->message) &&
-           ReadParam(aMsg, aIter, &aResult->refPoint) &&
-           ReadParam(aMsg, aIter, &aResult->time) &&
-           ReadParam(aMsg, aIter, &aResult->flags);
+    uint8_t eventStructType = 0;
+    bool ret = ReadParam(aMsg, aIter, &eventStructType) &&
+               ReadParam(aMsg, aIter, &aResult->message) &&
+               ReadParam(aMsg, aIter, &aResult->refPoint) &&
+               ReadParam(aMsg, aIter, &aResult->time) &&
+               ReadParam(aMsg, aIter, &aResult->flags);
+    aResult->eventStructType = static_cast<nsEventStructType>(eventStructType);
+    return ret;
   }
 };
 

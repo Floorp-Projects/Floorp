@@ -1444,18 +1444,6 @@ IonCacheGetElement::attachGetProp(JSContext *cx, IonScript *ion, HandleObject ob
     return true;
 }
 
-// Get the common shape used by all dense arrays with a prototype at globalObj.
-static inline Shape *
-GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
-{
-    JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
-    if (!proto)
-        return NULL;
-
-    return EmptyShape::getInitialShape(cx, &ArrayClass, proto,
-                                       proto->getParent(), gc::FINALIZE_OBJECT0);
-}
-
 bool
 IonCacheGetElement::attachDenseArray(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval)
 {
@@ -1466,7 +1454,8 @@ IonCacheGetElement::attachDenseArray(JSContext *cx, IonScript *ion, JSObject *ob
     MacroAssembler masm;
 
     // Guard object is a dense array.
-    RootedShape shape(cx, GetDenseArrayShape(cx, &script->global()));
+    RootedObject globalObj(cx, &script->global());
+    RootedShape shape(cx, GetDenseArrayShape(cx, globalObj));
     if (!shape)
         return false;
     masm.branchTestObjShape(Assembler::NotEqual, object(), shape, &failures);

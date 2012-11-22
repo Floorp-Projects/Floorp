@@ -69,7 +69,7 @@ WebGLProgram::UpdateInfo()
  */
 
 bool
-WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
+WebGLContext::ValidateBuffers(uint32_t *maxAllowedCount, const char *info)
 {
 #ifdef DEBUG
     GLint currentProgram = 0;
@@ -81,13 +81,12 @@ WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
         return false;
 #endif
 
-    if (mMinInUseAttribArrayLength != -1) {
+    if (mMinInUseAttribArrayLengthCached) {
         *maxAllowedCount = mMinInUseAttribArrayLength;
         return true;
     }
 
-    *maxAllowedCount = -1;
-
+    uint32_t maxAllowed = UINT32_MAX;
     uint32_t attribs = mAttribBuffers.Length();
     for (uint32_t i = 0; i < attribs; ++i) {
         const WebGLVertexAttribData& vd = mAttribBuffers[i];
@@ -108,34 +107,40 @@ WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
             continue;
 
         // the base offset
-        CheckedInt32 checked_byteLength
-          = CheckedInt32(vd.buf->ByteLength()) - vd.byteOffset;
-        CheckedInt32 checked_sizeOfLastElement
-          = CheckedInt32(vd.componentSize()) * vd.size;
+        CheckedUint32 checked_byteLength
+            = CheckedUint32(vd.buf->ByteLength()) - vd.byteOffset;
+        CheckedUint32 checked_sizeOfLastElement
+            = CheckedUint32(vd.componentSize()) * vd.size;
 
         if (!checked_byteLength.isValid() ||
             !checked_sizeOfLastElement.isValid())
         {
-          ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-          return false;
+            ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
+            return false;
         }
 
         if (checked_byteLength.value() < checked_sizeOfLastElement.value()) {
-          *maxAllowedCount = 0;
+            maxAllowed = 0;
+            break;
         } else {
-          CheckedInt32 checked_maxAllowedCount
-            = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
+            CheckedUint32 checked_maxAllowedCount
+                = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
 
-          if (!checked_maxAllowedCount.isValid()) {
-            ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-            return false;
-          }
+            if (!checked_maxAllowedCount.isValid()) {
+                ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
+                return false;
+            }
 
-          if (*maxAllowedCount == -1 || *maxAllowedCount > checked_maxAllowedCount.value())
-              *maxAllowedCount = checked_maxAllowedCount.value();
+            if (maxAllowed > checked_maxAllowedCount.value())
+                maxAllowed = checked_maxAllowedCount.value();
         }
     }
+
+    *maxAllowedCount = maxAllowed;
+
+    mMinInUseAttribArrayLengthCached = true;
     mMinInUseAttribArrayLength = *maxAllowedCount;
+
     return true;
 }
 

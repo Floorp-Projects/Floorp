@@ -517,18 +517,16 @@ VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVecto
     return true;
 }
 
-namespace js {
-
 bool
-VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
-                    MutableHandleValue vp)
+js::VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
+                        MutableHandleValue vp)
 {
     return VectorToKeyIterator(cx, obj, flags, props, 0, 0, vp);
 }
 
 bool
-VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &keys,
-                      MutableHandleValue vp)
+js::VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &keys,
+                          MutableHandleValue vp)
 {
     JS_ASSERT(flags & JSITER_FOREACH);
 
@@ -555,8 +553,8 @@ VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVec
 }
 
 bool
-EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
-                             MutableHandleValue vp)
+js::EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags,
+                                 AutoIdVector &props, MutableHandleValue vp)
 {
     if (!(flags & JSITER_FOREACH))
         return VectorToKeyIterator(cx, obj, flags, props, vp);
@@ -573,7 +571,7 @@ UpdateNativeIterator(NativeIterator *ni, RawObject obj)
 }
 
 bool
-GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue vp)
+js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue vp)
 {
     if (flags == JSITER_FOR_OF) {
         // for-of loop. The iterator is simply |obj.iterator()|.
@@ -729,15 +727,13 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
 }
 
 JSObject *
-GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
+js::GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
 {
     RootedValue value(cx);
     if (!GetIterator(cx, obj, flags, &value))
         return NULL;
     return &value.toObject();
 }
-
-} /* namespace js */
 
 JSBool
 js_ThrowStopIteration(JSContext *cx)

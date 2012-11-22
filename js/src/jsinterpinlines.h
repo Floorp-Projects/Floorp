@@ -1019,7 +1019,7 @@ class FastInvokeGuard
     void initFunction(const Value &fval) {
         if (fval.isObject() && fval.toObject().isFunction()) {
             JSFunction *fun = fval.toObject().toFunction();
-            if (fun->isInterpreted()) {
+            if (fun->hasScript()) {
                 fun_ = fun;
                 script_ = fun->script();
             }
