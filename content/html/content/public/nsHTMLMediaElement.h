@@ -646,6 +646,11 @@ protected:
    */
   void ProcessMediaFragmentURI();
 
+  /**
+   * Mute or unmute the audio, without changing the value that |muted| reports.
+   */
+  void SetMutedInternal(bool aMuted);
+
   // Get the nsHTMLMediaElement object if the decoder is being used from an
   // HTML media element, and null otherwise.
   virtual nsHTMLMediaElement* GetMediaElement() MOZ_FINAL MOZ_OVERRIDE
@@ -788,6 +793,20 @@ protected:
   // from any media fragments. A negative value indicates that no
   // fragment time has been set. Read/Write from the main thread only.
   double mFragmentEnd;
+
+  // The defaultPlaybackRate attribute gives the desired speed at which the
+  // media resource is to play, as a multiple of its intrinsic speed.
+  double mDefaultPlaybackRate;
+
+  // The playbackRate attribute gives the speed at which the media resource
+  // plays, as a multiple of its intrinsic speed. If it is not equal to the
+  // defaultPlaybackRate, then the implication is that the user is using a
+  // feature such as fast forward or slow motion playback.
+  double mPlaybackRate;
+
+  // True if pitch correction is applied when playbackRate is set to a
+  // non-intrinsic value.
+  bool mPreservesPitch;
 
   nsRefPtr<gfxASurface> mPrintSurface;
 
