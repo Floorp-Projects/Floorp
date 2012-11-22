@@ -385,8 +385,8 @@ typedef struct cc_sdp_data_t_ {
 } cc_sdp_data_t;
 
 typedef struct cc_sdp_t_ {
-    void          *src_sdp;     /* pointer to source SDP */
-    void          *dest_sdp;    /* pointer to received SDP */
+    sdp_t         *src_sdp;     /* pointer to source SDP */
+    sdp_t         *dest_sdp;    /* pointer to received SDP */
 } cc_sdp_t;
 
 typedef enum

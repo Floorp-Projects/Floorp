@@ -173,7 +173,7 @@ protected:
   void CallPrintCallback();
 
   nsString mCurrentContextId;
-  nsCOMPtr<nsIDOMHTMLCanvasElement> mOriginalCanvas;
+  nsRefPtr<nsHTMLCanvasElement> mOriginalCanvas;
   nsCOMPtr<nsIPrintCallback> mPrintCallback;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
   nsCOMPtr<nsHTMLCanvasPrintState> mPrintState;
@@ -193,7 +193,7 @@ public:
 
   void ResetPrintCallback();
 
-  nsIDOMHTMLCanvasElement* GetOriginalCanvas();
+  nsHTMLCanvasElement* GetOriginalCanvas();
 };
 
 inline nsISupports*

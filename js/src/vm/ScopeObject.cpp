@@ -42,7 +42,7 @@ StaticScopeIter::operator++(int)
         obj = obj->asStaticBlock().enclosingStaticScope();
     } else if (onNamedLambda || !obj->toFunction()->isNamedLambda()) {
         onNamedLambda = false;
-        obj = obj->toFunction()->script()->enclosingStaticScope();
+        obj = obj->toFunction()->nonLazyScript()->enclosingStaticScope();
     } else {
         onNamedLambda = true;
     }
@@ -86,7 +86,7 @@ StaticScopeIter::funScript() const
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(type() == FUNCTION);
-    return obj->toFunction()->script().get(nogc);
+    return obj->toFunction()->nonLazyScript().get(nogc);
 }
 
 /*****************************************************************************/
@@ -1040,7 +1040,7 @@ ScopeIter::settle()
         CallObject &callobj = cur_->asCall();
         type_ = callobj.isForEval() ? StrictEvalScope : Call;
         hasScopeObject_ = true;
-        JS_ASSERT_IF(type_ == Call, callobj.callee().script() == fp_->script());
+        JS_ASSERT_IF(type_ == Call, callobj.callee().nonLazyScript() == fp_->script());
     } else {
         JS_ASSERT(!cur_->isScope());
         JS_ASSERT(fp_->isGlobalFrame() || fp_->isDebuggerFrame());
@@ -1122,7 +1122,7 @@ class DebugScopeProxy : public BaseProxyHandler
         /* Handle unaliased formals, vars, and consts at function scope. */
         if (scope->isCall() && !scope->asCall().isForEval()) {
             CallObject &callobj = scope->asCall();
-            RootedScript script(cx, callobj.callee().script());
+            RootedScript script(cx, callobj.callee().nonLazyScript());
             if (!script->ensureHasTypes(cx))
                 return false;
 
@@ -1247,7 +1247,7 @@ class DebugScopeProxy : public BaseProxyHandler
     static bool isMissingArgumentsBinding(ScopeObject &scope)
     {
         return isFunctionScope(scope) &&
-               !scope.asCall().callee().script()->argumentsHasVarBinding();
+               !scope.asCall().callee().nonLazyScript()->argumentsHasVarBinding();
     }
 
     /*
@@ -1265,7 +1265,7 @@ class DebugScopeProxy : public BaseProxyHandler
         if (!isArguments(cx, id) || !isFunctionScope(scope))
             return true;
 
-        if (scope.asCall().callee().script()->needsArgsObj())
+        if (scope.asCall().callee().nonLazyScript()->needsArgsObj())
             return true;
 
         StackFrame *maybefp = cx->runtime->debugScopes->hasLiveFrame(scope);
@@ -1399,7 +1399,7 @@ class DebugScopeProxy : public BaseProxyHandler
          * they must be manually appended here.
          */
         if (scope.isCall() && !scope.asCall().isForEval()) {
-            RootedScript script(cx, scope.asCall().callee().script());
+            RootedScript script(cx, scope.asCall().callee().nonLazyScript());
             for (BindingIter bi(script); bi; bi++) {
                 if (!bi->aliased() && !props.append(NameToId(bi->name())))
                     return false;
@@ -1438,7 +1438,7 @@ class DebugScopeProxy : public BaseProxyHandler
          * a manual search is necessary.
          */
         if (!found && scope->isCall() && !scope->asCall().isForEval()) {
-            RootedScript script(cx, scope->asCall().callee().script());
+            RootedScript script(cx, scope->asCall().callee().nonLazyScript());
             for (BindingIter bi(script); bi; bi++) {
                 if (!bi->aliased() && NameToId(bi->name()) == id) {
                     found = true;

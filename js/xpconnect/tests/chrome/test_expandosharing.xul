@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
   // Wait for all child frames to load.
   var gLoadCount = 0;
   function frameLoaded() {
-    if (++gLoadCount == 4)
+    if (++gLoadCount == window.frames.length)
       go();
   }
 
@@ -50,6 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
     // C: sub1.test1.example.org
     window.gWinA1 = document.getElementById('frameA1').contentWindow;
     window.gWinA2 = document.getElementById('frameA2').contentWindow;
+    window.gWinA3 = document.getElementById('frameA3').contentWindow;
     window.gWinB = document.getElementById('frameB').contentWindow;
     window.gWinC = document.getElementById('frameC').contentWindow;
 
@@ -63,8 +64,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
     testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetNodeList));
     testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetXHR));
 
-    // Test XOWs using Location objects.
-    testLocation();
+    // Test Content Xrays.
+    testContentXrays();
 
     SimpleTest.finish();
   }
@@ -102,39 +103,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
     is(Cu.evalInSandbox("target.prop", sb2), "sandbox2", "Sandbox 2 sees its own value");
   }
 
-  // Location is special in that same-origin access for content still involves
-  // an Xray wrapper. This gives us a good opportunity to test that we don't
+  // Make sure that the origin tagging machinery works correctly and that we don't
   // mix up chrome and content expandos.
-  function testLocation() {
+  function testContentXrays() {
 
-    // Each scope has an Xray wrapper to Location. make sure the sharing happens.
-    gWinA1.wrappedJSObject.placeExpando('A1_expando', 11, gWinA2.location);
-    gWinA2.wrappedJSObject.placeExpando('A2_expando', 22, gWinA2.location);
-    gWinA2.location.Chrome_expando = 33;
+    // Give A1 and A3 xrays to (same-origin) A2.
+    Components.utils.setWantXrays(gWinA1);
+    Components.utils.setWantXrays(gWinA3);
 
-    is(gWinA2.location.Chrome_expando, 33, "Read chrome expando properly");
-    is(typeof gWinA2.location.A1_expando, 'undefined', "Chrome doesn't see content expandos");
-    is(typeof gWinA2.location.A2_expando, 'undefined', "Chrome doesn't see content expandos");
-    gWinA1.wrappedJSObject.checkExpando('A1_expando', 11, gWinA2.location, "Content sees proper expandos");
-    gWinA2.wrappedJSObject.checkExpando('A1_expando', 11, gWinA2.location, "Content sees proper expandos");
-    gWinA1.wrappedJSObject.checkExpando('A2_expando', 22, gWinA2.location, "Content sees proper expandos");
-    gWinA2.wrappedJSObject.checkExpando('A2_expando', 22, gWinA2.location, "Content sees proper expandos");
-    gWinA1.wrappedJSObject.checkExpando('Chrome_expando', null, gWinA2.location, "Content doesn't see chrome expandos");
-    gWinA2.wrappedJSObject.checkExpando('Chrome_expando', null, gWinA2.location, "Content doesn't see chrome expandos");
+    gWinA1.wrappedJSObject.placeExpando('A1_expando', 11, gWinA2.document);
+    gWinA3.wrappedJSObject.placeExpando('A3_expando', 33, gWinA2.document);
+    gWinA2.document.Chrome_expando = 33;
+
+    is(gWinA2.document.Chrome_expando, 33, "Read chrome expando properly");
+    is(typeof gWinA2.document.A1_expando, 'undefined', "Chrome doesn't see content expandos");
+    is(typeof gWinA2.document.A3_expando, 'undefined', "Chrome doesn't see content expandos");
+    gWinA1.wrappedJSObject.checkExpando('A1_expando', 11, gWinA2.document, "Content sees proper expandos");
+    gWinA3.wrappedJSObject.checkExpando('A1_expando', 11, gWinA2.document, "Content sees proper expandos");
+    gWinA1.wrappedJSObject.checkExpando('A3_expando', 33, gWinA2.document, "Content sees proper expandos");
+    gWinA3.wrappedJSObject.checkExpando('A3_expando', 33, gWinA2.document, "Content sees proper expandos");
+    gWinA1.wrappedJSObject.checkExpando('Chrome_expando', null, gWinA2.document, "Content doesn't see chrome expandos");
+    gWinA3.wrappedJSObject.checkExpando('Chrome_expando', null, gWinA2.document, "Content doesn't see chrome expandos");
 
     // We very explicitly do not support expando sharing via document.domain.
     // A comment in the implementation explains why.
     gWinA1.document.domain = 'test1.example.org';
     gWinA2.document.domain = 'test1.example.org';
+    gWinA3.document.domain = 'test1.example.org';
     gWinC.document.domain = 'test1.example.org';
-    gWinC.wrappedJSObject.checkExpando('A1_expando', null, gWinA2.location, "document.domain should have no effect here");
-    gWinC.wrappedJSObject.checkExpando('A2_expando', null, gWinA2.location, "document.domain should have no effect here");
+    gWinC.wrappedJSObject.checkExpando('A1_expando', null, gWinA2.document, "document.domain should have no effect here");
+    gWinC.wrappedJSObject.checkExpando('A3_expando', null, gWinA2.document, "document.domain should have no effect here");
   }
 
   ]]>
   </script>
   <iframe id="frameA1" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
   <iframe id="frameA2" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameA3" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
   <iframe id="frameB" onload="frameLoaded();" type="content" src="http://test2.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
   <iframe id="frameC" onload="frameLoaded();" type="content" src="http://sub1.test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
 </window>

@@ -23,7 +23,7 @@ public class ProgressiveUpdateData {
         this.x = viewport.viewportRectLeft;
         this.y = viewport.viewportRectTop;
         this.width = viewport.viewportRectRight - this.x;
-        this.height = viewport.viewportRectBottom - this.x;
+        this.height = viewport.viewportRectBottom - this.y;
         this.scale = viewport.zoomFactor;
     }
 }

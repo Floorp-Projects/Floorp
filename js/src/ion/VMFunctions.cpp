@@ -41,8 +41,8 @@ static inline bool
 ShouldMonitorReturnType(JSFunction *fun)
 {
     return fun->isInterpreted() &&
-           (!fun->script()->hasAnalysis() ||
-            !fun->script()->analysis()->ranInference());
+           (!fun->nonLazyScript()->hasAnalysis() ||
+            !fun->nonLazyScript()->analysis()->ranInference());
 }
 
 bool
@@ -50,23 +50,22 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
 {
     Value fval = ObjectValue(*fun);
 
-    if (fun->isInterpretedLazy()) {
-        Rooted<JSFunction*> rootedFun(cx, fun);
-        if (!InitializeLazyFunctionScript(cx, rootedFun))
-            return false;
-    }
-
     // In order to prevent massive bouncing between Ion and JM, see if we keep
     // hitting functions that are uncompilable.
-    
-    if (fun->isInterpreted() && !fun->script()->canIonCompile()) {
-        JSScript *script = GetTopIonJSScript(cx);
-        if (script->hasIonScript() && ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit) {
-            AutoFlushCache afc("InvokeFunction");
+    if (fun->isInterpreted()) {
+        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx).unsafeGet())
+            return false;
+        if (!fun->nonLazyScript()->canIonCompile()) {
+            JSScript *script = GetTopIonJSScript(cx);
+            if (script->hasIonScript() &&
+                ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit)
+            {
+                AutoFlushCache afc("InvokeFunction");
 
-            // Poison the script so we don't try to run it again. This will
-            // trigger invalidation.
-            ForbidCompilation(cx, script);
+                // Poison the script so we don't try to run it again. This will
+                // trigger invalidation.
+                ForbidCompilation(cx, script);
+            }
         }
     }
 
@@ -98,10 +97,10 @@ InvokeConstructor(JSContext *cx, JSObject *obj, uint32 argc, Value *argv, Value 
     bool needsMonitor;
 
     if (obj->isFunction()) {
-        if (obj->toFunction()->isInterpretedLazy()) {
-            Rooted<JSFunction*> rootedFun(cx, obj->toFunction());
-            if (!InitializeLazyFunctionScript(cx, rootedFun))
-                return false;
+        if (obj->toFunction()->isInterpretedLazy() &&
+            !obj->toFunction()->getOrCreateScript(cx).unsafeGet())
+        {
+            return false;
         }
         needsMonitor = ShouldMonitorReturnType(obj->toFunction());
     } else {
