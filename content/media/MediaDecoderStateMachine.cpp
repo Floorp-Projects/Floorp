@@ -549,8 +549,12 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
 
   aAudio->EnsureAudioBuffer();
   nsRefPtr<SharedBuffer> buffer = aAudio->mAudioBuffer;
-  aOutput->AppendFrames(buffer.forget(), aAudio->mFrames, int32_t(offset), aAudio->mFrames,
-                        AUDIO_OUTPUT_FORMAT);
+  AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
+  nsAutoTArray<const AudioDataValue*,2> channels;
+  for (uint32_t i = 0; i < aAudio->mChannels; ++i) {
+    channels.AppendElement(bufferData + i*aAudio->mFrames + offset);
+  }
+  aOutput->AppendFrames(buffer.forget(), channels, aAudio->mFrames);
   LOG(PR_LOG_DEBUG, ("%p Decoder writing %d frames of data to MediaStream for AudioData at %lld",
                      mDecoder.get(), aAudio->mFrames - int32_t(offset), aAudio->mTime));
   aStream->mAudioFramesWritten += aAudio->mFrames - int32_t(offset);
