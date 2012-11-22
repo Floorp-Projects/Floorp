@@ -1664,6 +1664,9 @@ var SelectionHandler = {
           // Knowing when the page is done drawing is hard, so let's just cancel
           // the selection when the window changes. We should fix this later.
           this.endSelection();
+        } else if (this._activeType == this.TYPE_CURSOR) {
+          //  Hide the cursor if the window changes
+          this.hideThumb();
         }
         break;
       }
