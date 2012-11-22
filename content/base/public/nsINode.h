@@ -1295,8 +1295,21 @@ private:
     NodeIsContent,
     // Set if the node has animations or transitions
     ElementHasAnimations,
-    // Set if node has a dir attribute with a valid value (ltr or rtl)
+    // Set if node has a dir attribute with a valid value (ltr, rtl, or auto)
     NodeHasValidDirAttribute,
+    // Set if node has a dir attribute with a fixed value (ltr or rtl, NOT auto)
+    NodeHasFixedDir,
+    // Set if the node has dir=auto and has a property pointing to the text
+    // node that determines its direction
+    NodeHasDirAutoSet,
+    // Set if the node is a text node descendant of a node with dir=auto
+    // and has a TextNodeDirectionalityMap property listing the elements whose
+    // direction it determines.
+    NodeHasTextNodeDirectionalityMap,
+    // Set if the node has dir=auto.
+    NodeHasDirAuto,
+    // Set if a node in the node's parent chain has dir=auto.
+    NodeAncestorHasDirAuto,
     // Guard value
     BooleanFlagCount
   };
@@ -1367,6 +1380,52 @@ public:
   void SetHasValidDir() { SetBoolFlag(NodeHasValidDirAttribute); }
   void ClearHasValidDir() { ClearBoolFlag(NodeHasValidDirAttribute); }
   bool HasValidDir() const { return GetBoolFlag(NodeHasValidDirAttribute); }
+  void SetHasFixedDir() {
+    MOZ_ASSERT(NodeType() != nsIDOMNode::TEXT_NODE,
+               "SetHasFixedDir on text node");
+    SetBoolFlag(NodeHasFixedDir);
+  }
+  void ClearHasFixedDir() {
+    MOZ_ASSERT(NodeType() != nsIDOMNode::TEXT_NODE,
+               "ClearHasFixedDir on text node");
+    ClearBoolFlag(NodeHasFixedDir);
+  }
+  bool HasFixedDir() const { return GetBoolFlag(NodeHasFixedDir); }
+  void SetHasDirAutoSet() {
+    MOZ_ASSERT(NodeType() != nsIDOMNode::TEXT_NODE,
+               "SetHasDirAutoSet on text node");
+    SetBoolFlag(NodeHasDirAutoSet);
+  }
+  void ClearHasDirAutoSet() {
+    MOZ_ASSERT(NodeType() != nsIDOMNode::TEXT_NODE,
+               "ClearHasDirAutoSet on text node");
+    ClearBoolFlag(NodeHasDirAutoSet);
+  }
+  bool HasDirAutoSet() const
+    { return GetBoolFlag(NodeHasDirAutoSet); }
+  void SetHasTextNodeDirectionalityMap() {
+    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE,
+               "SetHasTextNodeDirectionalityMap on non-text node");
+    SetBoolFlag(NodeHasTextNodeDirectionalityMap);
+  }
+  void ClearHasTextNodeDirectionalityMap() {
+    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE,
+               "ClearHasTextNodeDirectionalityMap on non-text node");
+    ClearBoolFlag(NodeHasTextNodeDirectionalityMap);
+  }
+  bool HasTextNodeDirectionalityMap() const
+    { return GetBoolFlag(NodeHasTextNodeDirectionalityMap); }
+
+  void SetHasDirAuto() { SetBoolFlag(NodeHasDirAuto); }
+  void ClearHasDirAuto() { ClearBoolFlag(NodeHasDirAuto); }
+  bool HasDirAuto() const { return GetBoolFlag(NodeHasDirAuto); }
+
+  void SetAncestorHasDirAuto() { SetBoolFlag(NodeAncestorHasDirAuto); }
+  void ClearAncestorHasDirAuto() { ClearBoolFlag(NodeAncestorHasDirAuto); }
+  bool AncestorHasDirAuto() const { return GetBoolFlag(NodeAncestorHasDirAuto); }
+
+  bool NodeOrAncestorHasDirAuto() const
+    { return HasDirAuto() || AncestorHasDirAuto(); }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
