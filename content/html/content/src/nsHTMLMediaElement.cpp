@@ -41,7 +41,6 @@
 #include "nsMediaError.h"
 #include "MediaDecoder.h"
 #include "nsICategoryManager.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "MediaResource.h"
 
 #include "nsIDOMHTMLVideoElement.h"
@@ -2049,16 +2048,6 @@ void nsHTMLMediaElement::UnbindFromTree(bool aDeep,
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-static bool
-CodecListContains(char const *const * aCodecs, const nsAString& aCodec)
-{
-  for (int32_t i = 0; aCodecs[i]; ++i) {
-    if (aCodec.EqualsASCII(aCodecs[i]))
-      return true;
-  }
-  return false;
-}
-
 /* static */
 CanPlayStatus
 nsHTMLMediaElement::GetCanPlay(const nsAString& aType)
@@ -2069,39 +2058,13 @@ nsHTMLMediaElement::GetCanPlay(const nsAString& aType)
   if (NS_FAILED(rv))
     return CANPLAY_NO;
 
-  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
-  char const *const * supportedCodecs;
-  CanPlayStatus status = DecoderTraits::CanHandleMediaType(mimeTypeUTF8.get(),
-                                                           &supportedCodecs);
-  if (status == CANPLAY_NO)
-    return CANPLAY_NO;
-
   nsAutoString codecs;
   rv = parser.GetParameter("codecs", codecs);
-  if (NS_FAILED(rv)) {
-    // Parameter not found or whatever
-    return status;
-  }
 
-  CanPlayStatus result = CANPLAY_YES;
-  // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
-  // of the 'codecs' parameter
-  nsCharSeparatedTokenizer tokenizer(codecs, ',');
-  bool expectMoreTokens = false;
-  while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& token = tokenizer.nextToken();
-
-    if (!CodecListContains(supportedCodecs, token)) {
-      // Totally unsupported codec
-      return CANPLAY_NO;
-    }
-    expectMoreTokens = tokenizer.lastTokenEndedWithSeparator();
-  }
-  if (expectMoreTokens) {
-    // Last codec name was empty
-    return CANPLAY_NO;
-  }
-  return result;
+  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
+  return DecoderTraits::CanHandleMediaType(mimeTypeUTF8.get(),
+                                           NS_SUCCEEDED(rv),
+                                           codecs);
 }
 
 NS_IMETHODIMP
