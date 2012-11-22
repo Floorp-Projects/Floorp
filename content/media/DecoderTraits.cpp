@@ -6,12 +6,23 @@
 
 #include "DecoderTraits.h"
 #include "MediaDecoder.h"
+#include "nsCharSeparatedTokenizer.h"
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
 #endif
 
 namespace mozilla
 {
+
+static bool
+CodecListContains(char const *const * aCodecs, const nsAString& aCodec)
+{
+  for (int32_t i = 0; aCodecs[i]; ++i) {
+    if (aCodec.EqualsASCII(aCodecs[i]))
+      return true;
+  }
+  return false;
+}
 
 #ifdef MOZ_RAW
 static const char gRawTypes[2][16] = {
@@ -305,57 +316,82 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
 /* static */
 CanPlayStatus
 DecoderTraits::CanHandleMediaType(const char* aMIMEType,
-                                       char const *const ** aCodecList)
+                                  bool aHaveRequestedCodecs,
+                                  const nsAString& aRequestedCodecs)
 {
+  char const* const* codecList = nullptr;
+  CanPlayStatus result = CANPLAY_NO;
 #ifdef MOZ_RAW
   if (IsRawType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gRawCodecs;
-    return CANPLAY_MAYBE;
+    codecList = gRawCodecs;
+    result = CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType))) {
-    *aCodecList = MediaDecoder::IsOpusEnabled() ? gOggCodecsWithOpus : gOggCodecs;
-    return CANPLAY_MAYBE;
+    codecList = MediaDecoder::IsOpusEnabled() ? gOggCodecsWithOpus : gOggCodecs;
+    result = CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_WAVE
   if (IsWaveType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gWaveCodecs;
-    return CANPLAY_MAYBE;
+    codecList = gWaveCodecs;
+    result = CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_WEBM
   if (IsWebMType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gWebMCodecs;
-    return CANPLAY_YES;
+    codecList = gWebMCodecs;
+    result = CANPLAY_YES;
   }
 #endif
 #ifdef MOZ_DASH
   if (IsDASHMPDType(nsDependentCString(aMIMEType))) {
     // DASH manifest uses WebM codecs only.
-    *aCodecList = gWebMCodecs;
-    return CANPLAY_YES;
+    codecList = gWebMCodecs;
+    result = CANPLAY_YES;
   }
 #endif
 
 #ifdef MOZ_GSTREAMER
   if (IsH264Type(nsDependentCString(aMIMEType))) {
-    *aCodecList = gH264Codecs;
-    return CANPLAY_MAYBE;
+    codecList = gH264Codecs;
+    result = CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_WIDGET_GONK
   if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gH264Codecs;
-    return CANPLAY_MAYBE;
+    codecList = gH264Codecs;
+    result = CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), aCodecList))
-    return CANPLAY_MAYBE;
+  if (MediaDecoder::IsMediaPluginsEnabled() &&
+      GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), &codecList))
+    result = CANPLAY_MAYBE;
 #endif
-  return CANPLAY_NO;
+  if (result == CANPLAY_NO || !aHaveRequestedCodecs) {
+    return result;
+  }
+
+  // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
+  // of the 'codecs' parameter
+  nsCharSeparatedTokenizer tokenizer(aRequestedCodecs, ',');
+  bool expectMoreTokens = false;
+  while (tokenizer.hasMoreTokens()) {
+    const nsSubstring& token = tokenizer.nextToken();
+
+    if (!CodecListContains(codecList, token)) {
+      // Totally unsupported codec
+      return CANPLAY_NO;
+    }
+    expectMoreTokens = tokenizer.lastTokenEndedWithSeparator();
+  }
+  if (expectMoreTokens) {
+    // Last codec name was empty
+    return CANPLAY_NO;
+  }
+  return CANPLAY_YES;
 }
 
 }
