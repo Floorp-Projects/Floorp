@@ -59,7 +59,7 @@ class NS_COM_GLUE nsCategoryObserver MOZ_FINAL : public nsIObserver {
  * then get the name of the category.
  */
 template<class T>
-class nsCategoryCache MOZ_FINAL : protected nsCategoryListener {
+class nsCategoryCache : protected nsCategoryListener {
   public:
     explicit nsCategoryCache(const char* aCategory);
     ~nsCategoryCache() { if (mObserver) mObserver->ListenerDied(); }

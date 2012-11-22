@@ -34,8 +34,6 @@
 #include "nsDNSPrefetch.h"
 #include "nsAboutProtocolHandler.h"
 #include "nsXULAppAPI.h"
-#include "nsCategoryCache.h"
-#include "nsIContentSniffer.h"
 
 #include "nsNetCID.h"
 
@@ -46,10 +44,6 @@
 #else
 #define BUILD_BINHEX_DECODER 1
 #endif
-
-typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
-NS_HIDDEN_(ContentSnifferCache*) gNetSniffers = nullptr;
-NS_HIDDEN_(ContentSnifferCache*) gDataSniffers = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -649,11 +643,6 @@ static void nsNetShutdown()
     // Release the Websocket Admission Manager
     mozilla::net::WebSocketChannel::Shutdown();
 #endif // NECKO_PROTOCOL_websocket
-
-    delete gNetSniffers;
-    gNetSniffers = nullptr;
-    delete gDataSniffers;
-    gDataSniffers = nullptr;
 }
 
 NS_DEFINE_NAMED_CID(NS_IOSERVICE_CID);
