@@ -398,6 +398,9 @@ bool
 DefineUnforgeableAttributes(JSContext* cx, JSObject* obj,
                             Prefable<JSPropertySpec>* props);
 
+bool
+DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const NativeProperties* properties);
+
 // If *vp is an object and *vp and obj are not in the same compartment, wrap *vp
 // into the compartment of obj (typically by replacing it with an Xray or
 // cross-compartment wrapper around the original object).

@@ -20,17 +20,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291377
 /* Do something that causes an XPConnect exception */
 var threw = true;
 try {
-  document.appendChild();  /* Not enough arguments */
+  SpecialPowers.Cc["@mozilla.org/network/io-service;1"].getService(SpecialPowers.Ci.nsIIOService).newURI();  /* Not enough arguments */
   threw = false;
 } catch (e) {
   /* Check that we can touch various properties */
-  is(e.lineNumber, 23, "Unexpected line number"); //This line number is dependent on the line number of document.appendChild()
+  isnot(e.lineNumber, undefined, "Unexpected line number"); //This line number is dependent on the implementation of the SpecialPowers API
   is(e.name, "NS_ERROR_XPC_NOT_ENOUGH_ARGS", "Unexpected exception name");
   isnot(e.message, "", "Should have a message");
   isnot(e.result, 0, "Should have a result");
   
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  is(e.result, Components.results.NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+  is(e.result, SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 }
 
 is(threw, true, "Not enough arguments to a call should throw");

@@ -14,7 +14,7 @@ printStatus (summary);
 
 if (typeof HTMLElement != 'undefined')
 {
-  expect = /Exception/;
+  expect = /TypeError/;
   try 
   {
     print(HTMLElement.prototype.nodeName);
