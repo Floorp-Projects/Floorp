@@ -30,8 +30,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=769771
 /** Test for Bug 769771 **/
 SimpleTest.waitForExplicitFinish();
 
-window.open("mozFrameType_window.xul", "mozFrameType",
-            "chrome,width=600,height=600");
+addLoadEvent(function () {
+  window.open("mozFrameType_window.xul", "mozFrameType",
+              "chrome,width=600,height=600");
+});
 
 ]]>
 </script>

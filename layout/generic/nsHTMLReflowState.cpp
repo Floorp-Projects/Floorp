@@ -1968,8 +1968,9 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
         rowOrRowGroup = true;
       }
 
-      // calc() acts like auto on internal table elements
-      if (eStyleUnit_Auto == widthUnit || width.IsCalcUnit()) {
+      // calc() with percentages acts like auto on internal table elements
+      if (eStyleUnit_Auto == widthUnit ||
+          (width.IsCalcUnit() && width.CalcHasPercent())) {
         mComputedWidth = availableWidth;
 
         if ((mComputedWidth != NS_UNCONSTRAINEDSIZE) && !rowOrRowGroup){
@@ -1996,8 +1997,9 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
         // 'height' property doesn't apply to table columns and column groups
         heightUnit = eStyleUnit_Auto;
       }
-      // calc() acts like 'auto' on internal table elements
-      if (eStyleUnit_Auto == heightUnit || height.IsCalcUnit()) {
+      // calc() with percentages acts like 'auto' on internal table elements
+      if (eStyleUnit_Auto == heightUnit ||
+          (height.IsCalcUnit() && height.CalcHasPercent())) {
         mComputedHeight = NS_AUTOHEIGHT;
       } else {
         NS_ASSERTION(heightUnit == mStylePosition->mHeight.GetUnit(),
@@ -2541,8 +2543,8 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
 
   // Check for percentage based values and a containing block height that
   // depends on the content height. Treat them like 'auto'
-  // Likewise, check for calc() on internal table elements; calc() on
-  // such elements is unsupported.
+  // Likewise, check for calc() with percentages on internal table elements;
+  // that's treated as 'auto' too.
   // Likewise, if we're a child of a flex container who's measuring our
   // intrinsic height, then we want to disregard our min-height.
 
@@ -2555,7 +2557,7 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
       (NS_AUTOHEIGHT == aContainingBlockHeight &&
        minHeight.HasPercent()) ||
       (mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE &&
-       minHeight.IsCalcUnit()) ||
+       minHeight.IsCalcUnit() && minHeight.CalcHasPercent()) ||
       mFlags.mIsFlexContainerMeasuringHeight) {
     mComputedMinHeight = 0;
   } else {
@@ -2571,14 +2573,14 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
   } else {
     // Check for percentage based values and a containing block height that
     // depends on the content height. Treat them like 'none'
-    // Likewise, check for calc() on internal table elements; calc() on
-    // such elements is unsupported.
+    // Likewise, check for calc() with percentages on internal table elements;
+    // that's treated as 'auto' too.
     // Likewise, if we're a child of a flex container who's measuring our
     // intrinsic height, then we want to disregard our max-height.
     if ((NS_AUTOHEIGHT == aContainingBlockHeight && 
          maxHeight.HasPercent()) ||
         (mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE &&
-         maxHeight.IsCalcUnit()) ||
+         maxHeight.IsCalcUnit() && maxHeight.CalcHasPercent()) ||
         mFlags.mIsFlexContainerMeasuringHeight) {
       mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
     } else {

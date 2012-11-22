@@ -24,7 +24,7 @@ function checkThrows(f) {
     f();
     ok(false, "Didn't throw a security exception like we should");
   } catch(e) {
-    ok(/denied/.exec(e), "Should throw |denied| exception. Got: " + e);
+    ok(/denied|insecure/.exec(e), "Should throw security exception. Got: " + e);
   }
 }
 
@@ -38,7 +38,8 @@ function go() {
 
 function check() {
   checkThrows(function() { loc.toString(); });
-  checkThrows(function() { loc.valueOf(); });
+  checkThrows(function() { loc.valueOf().toString(); });
+  checkThrows(function() { loc.href; });
   checkThrows(function() { loc + ''; });
   SimpleTest.finish();
 }

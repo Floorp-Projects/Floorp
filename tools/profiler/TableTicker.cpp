@@ -800,7 +800,9 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   void *stackEnd = reinterpret_cast<void*>(-1);
   if (pt)
     stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
-  nsresult rv = FramePointerStackWalk(StackWalkCallback, 0, &array, reinterpret_cast<void**>(aSample->fp), stackEnd);
+  nsresult rv = NS_OK;
+  if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd)
+    rv = FramePointerStackWalk(StackWalkCallback, 0, &array, reinterpret_cast<void**>(aSample->fp), stackEnd);
 #else
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
 #endif

@@ -139,7 +139,7 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
                             LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
-    JS_ASSERT(callee.script() == script);
+    JS_ASSERT(callee.nonLazyScript() == script);
 
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | flagsArg;
@@ -413,7 +413,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
                            JSFunction *fun, JSScript *script, StackFrame::Flags *flags) const
 {
     AssertCanGC();
-    JS_ASSERT(fun->script() == script);
+    JS_ASSERT(fun->nonLazyScript() == script);
     unsigned nformal = fun->nargs;
 
     Value *firstUnused = args.end();
@@ -458,7 +458,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
-    JS_ASSERT(callee.script() == script);
+    JS_ASSERT(callee.nonLazyScript() == script);
 
     StackFrame::Flags flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, report, args, &callee, script, &flags);
@@ -495,8 +495,8 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
 {
     AssertCanGC();
     JS_ASSERT(onTop());
-    JS_ASSERT(fun->script() == args.callee().toFunction()->script());
-    JS_ASSERT(fun->script() == script);
+    JS_ASSERT(fun->nonLazyScript() == args.callee().toFunction()->nonLazyScript());
+    JS_ASSERT(fun->nonLazyScript() == script);
 
     StackFrame::Flags flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, report, args, fun, script, &flags);
@@ -564,7 +564,7 @@ ContextStack::currentScript(jsbytecode **ppc,
         mjit::JITChunk *chunk = fp->jit()->chunk(regs.pc);
         JS_ASSERT(inlined->inlineIndex < chunk->nInlineFrames);
         mjit::InlineFrame *frame = &chunk->inlineFrames()[inlined->inlineIndex];
-        RawScript script = frame->fun->script().get(nogc);
+        RawScript script = frame->fun->nonLazyScript().get(nogc);
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
             return NULL;
         if (ppc)

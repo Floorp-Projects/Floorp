@@ -1069,7 +1069,7 @@ VMFrame::script()
 {
     AutoAssertNoGC nogc;
     if (regs.inlined())
-        return chunk()->inlineFrames()[regs.inlined()->inlineIndex].fun->script();
+        return chunk()->inlineFrames()[regs.inlined()->inlineIndex].fun->nonLazyScript();
     return fp()->script();
 }
 
