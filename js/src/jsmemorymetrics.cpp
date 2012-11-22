@@ -152,15 +152,16 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             cStats->gcHeapObjectsOrdinary += thingSize;
         }
         size_t slotsSize, elementsSize, argumentsDataSize, regExpStaticsSize,
-               propertyIteratorDataSize;
+               propertyIteratorDataSize, ctypesDataSize;
         obj->sizeOfExcludingThis(rtStats->mallocSizeOf, &slotsSize, &elementsSize,
                                  &argumentsDataSize, &regExpStaticsSize,
-                                 &propertyIteratorDataSize);
+                                 &propertyIteratorDataSize, &ctypesDataSize);
         cStats->objectsExtraSlots += slotsSize;
         cStats->objectsExtraElements += elementsSize;
         cStats->objectsExtraArgumentsData += argumentsDataSize;
         cStats->objectsExtraRegExpStatics += regExpStaticsSize;
         cStats->objectsExtraPropertyIteratorData += propertyIteratorDataSize;
+        cStats->objectsExtraCtypesData += ctypesDataSize;
 
         if (ObjectPrivateVisitor *opv = closure->opv) {
             js::Class *clazz = js::GetObjectClass(obj);
