@@ -14,8 +14,9 @@
 namespace mozilla
 {
 
+template <class String>
 static bool
-CodecListContains(char const *const * aCodecs, const nsAString& aCodec)
+CodecListContains(char const *const * aCodecs, const String& aCodec)
 {
   for (int32_t i = 0; aCodecs[i]; ++i) {
     if (aCodec.EqualsASCII(aCodecs[i]))
@@ -25,9 +26,10 @@ CodecListContains(char const *const * aCodecs, const nsAString& aCodec)
 }
 
 #ifdef MOZ_RAW
-static const char gRawTypes[2][16] = {
+static const char* gRawTypes[3] = {
   "video/x-raw",
-  "video/x-raw-yuv"
+  "video/x-raw-yuv",
+  nullptr
 };
 
 static const char* gRawCodecs[1] = {
@@ -42,23 +44,18 @@ DecoderTraits::IsRawType(const nsACString& aType)
     return false;
   }
 
-  for (uint32_t i = 0; i < ArrayLength(gRawTypes); ++i) {
-    if (aType.EqualsASCII(gRawTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
+  return CodecListContains(gRawTypes, aType);
 }
 #endif
 
 #ifdef MOZ_OGG
 // See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
 // of Ogg media types and codec types
-static const char gOggTypes[3][16] = {
+static const char* const gOggTypes[4] = {
   "video/ogg",
   "audio/ogg",
-  "application/ogg"
+  "application/ogg",
+  nullptr
 };
 
 static char const *const gOggCodecs[3] = {
@@ -81,13 +78,7 @@ DecoderTraits::IsOggType(const nsACString& aType)
     return false;
   }
 
-  for (uint32_t i = 0; i < ArrayLength(gOggTypes); ++i) {
-    if (aType.EqualsASCII(gOggTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
+  return CodecListContains(gOggTypes, aType);
 }
 #endif
 
@@ -95,11 +86,12 @@ DecoderTraits::IsOggType(const nsACString& aType)
 // See http://www.rfc-editor.org/rfc/rfc2361.txt for the definitions
 // of WAVE media types and codec types. However, the audio/vnd.wave
 // MIME type described there is not used.
-static const char gWaveTypes[4][15] = {
+static const char* const gWaveTypes[5] = {
   "audio/x-wav",
   "audio/wav",
   "audio/wave",
-  "audio/x-pn-wav"
+  "audio/x-pn-wav",
+  nullptr
 };
 
 static char const *const gWaveCodecs[2] = {
@@ -114,20 +106,15 @@ DecoderTraits::IsWaveType(const nsACString& aType)
     return false;
   }
 
-  for (uint32_t i = 0; i < ArrayLength(gWaveTypes); ++i) {
-    if (aType.EqualsASCII(gWaveTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
+  return CodecListContains(gWaveTypes, aType);
 }
 #endif
 
 #ifdef MOZ_WEBM
-static const char gWebMTypes[2][11] = {
+static const char* const gWebMTypes[3] = {
   "video/webm",
-  "audio/webm"
+  "audio/webm",
+  nullptr
 };
 
 static char const *const gWebMCodecs[4] = {
@@ -144,21 +131,16 @@ DecoderTraits::IsWebMType(const nsACString& aType)
     return false;
   }
 
-  for (uint32_t i = 0; i < ArrayLength(gWebMTypes); ++i) {
-    if (aType.EqualsASCII(gWebMTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
+  return CodecListContains(gWebMTypes, aType);
 }
 #endif
 
 #ifdef MOZ_GSTREAMER
-static const char gH264Types[3][16] = {
+static const char* const gH264Types[4] = {
   "video/mp4",
   "video/3gpp",
   "video/quicktime",
+  nullptr
 };
 
 bool
@@ -184,22 +166,18 @@ DecoderTraits::IsGStreamerSupportedType(const nsACString& aMimeType)
 bool
 DecoderTraits::IsH264Type(const nsACString& aType)
 {
-  for (uint32_t i = 0; i < ArrayLength(gH264Types); ++i) {
-    if (aType.EqualsASCII(gH264Types[i])) {
-      return true;
-    }
-  }
-  return false;
+  return CodecListContains(gH264Types, aType);
 }
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-static const char gOmxTypes[5][16] = {
+static const char* const gOmxTypes[6] = {
   "audio/mpeg",
   "audio/mp4",
   "video/mp4",
   "video/3gpp",
   "video/quicktime",
+  nullptr
 };
 
 bool
@@ -209,13 +187,7 @@ DecoderTraits::IsOmxSupportedType(const nsACString& aType)
     return false;
   }
 
-  for (uint32_t i = 0; i < ArrayLength(gOmxTypes); ++i) {
-    if (aType.EqualsASCII(gOmxTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
+  return CodecListContains(gOmxTypes, aType);
 }
 #endif
 
@@ -242,21 +214,17 @@ DecoderTraits::IsMediaPluginsType(const nsACString& aType)
   }
 
   static const char* supportedTypes[] = {
-    "audio/mpeg", "audio/mp4", "video/mp4"
+    "audio/mpeg", "audio/mp4", "video/mp4", nullptr
   };
-  for (uint32_t i = 0; i < ArrayLength(supportedTypes); ++i) {
-    if (aType.EqualsASCII(supportedTypes[i])) {
-      return true;
-    }
-  }
-  return false;
+  return CodecListContains(supportedTypes, aType);
 }
 #endif
 
 #ifdef MOZ_DASH
 /* static */
-static const char gDASHMPDTypes[1][21] = {
-  "application/dash+xml"
+static const char* const gDASHMPDTypes[2] = {
+  "application/dash+xml",
+  nullptr
 };
 
 /* static */
@@ -267,13 +235,7 @@ DecoderTraits::IsDASHMPDType(const nsACString& aType)
     return false;
   }
 
-  for (uint32_t i = 0; i < ArrayLength(gDASHMPDTypes); ++i) {
-    if (aType.EqualsASCII(gDASHMPDTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
+  return CodecListContains(gDASHMPDTypes, aType);
 }
 #endif
 
