@@ -242,37 +242,17 @@ DecoderTraits::IsDASHMPDType(const nsACString& aType)
 /* static */
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
 {
-#ifdef MOZ_RAW
-  if (IsRawType(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_OGG
-  if (IsOggType(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_WEBM
-  if (IsWebMType(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_GSTREAMER
-  if (IsH264Type(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_WIDGET_GONK
-  if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
-    return true;
+#ifdef MOZ_WAVE
+  if (IsWaveType(nsDependentCString(aMIMEType))) {
+    // We should not return true for Wave types, since there are some
+    // Wave codecs actually in use in the wild that we don't support, and
+    // we should allow those to be handled by plugins or helper apps.
+    // Furthermore people can play Wave files on most platforms by other
+    // means.
+    return false;
   }
 #endif
-#ifdef MOZ_MEDIA_PLUGINS
-  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), NULL))
-    return true;
-#endif
-  // We should not return true for Wave types, since there are some
-  // Wave codecs actually in use in the wild that we don't support, and
-  // we should allow those to be handled by plugins or helper apps.
-  // Furthermore people can play Wave files on most platforms by other
-  // means.
-  return false;
+  return CanHandleMediaType(aMIMEType, false, EmptyString()) != CANPLAY_NO;
 }
 
 /* static */
