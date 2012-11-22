@@ -7,8 +7,11 @@
 #include "jscntxt.h"
 #include "jslock.h"
 #include "vm/threadpool.h"
-#include "prthread.h"
 #include "monitor.h"
+
+#ifdef JS_THREADSAFE
+#  include "prthread.h"
+#endif
 
 namespace js {
 
@@ -81,6 +84,9 @@ ThreadPoolWorker::init()
 bool
 ThreadPoolWorker::start()
 {
+#ifndef JS_THREADSAFE
+    return false;
+#else
     JS_ASSERT(state_ == CREATED);
 
     // Set state to active now, *before* the thread starts:
@@ -98,6 +104,7 @@ ThreadPoolWorker::start()
     }
 
     return true;
+#endif
 }
 
 void
@@ -197,7 +204,7 @@ ThreadPool::~ThreadPool() {
 bool
 ThreadPool::init()
 {
-#ifdef JS_THREADSAFE_ION
+#ifdef JS_THREADSAFE
     // Compute desired number of workers based on env var or # of CPUs.
     size_t numWorkers = 0;
     char *pathreads = getenv("PATHREADS");
