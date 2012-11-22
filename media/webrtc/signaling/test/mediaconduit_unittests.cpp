@@ -113,7 +113,7 @@ class AudioSendAndReceive
 {
 public:
   static const unsigned int PLAYOUT_SAMPLE_FREQUENCY; //default is 16000
-  static const unsigned int PLAYOUT_SAMPLE_LENGTH; //default is 160
+  static const unsigned int PLAYOUT_SAMPLE_LENGTH; //default is 160000
 
   AudioSendAndReceive()
   {
@@ -150,7 +150,7 @@ private:
 };
 
 const unsigned int AudioSendAndReceive::PLAYOUT_SAMPLE_FREQUENCY = 16000;
-const unsigned int AudioSendAndReceive::PLAYOUT_SAMPLE_LENGTH  = 160;
+const unsigned int AudioSendAndReceive::PLAYOUT_SAMPLE_LENGTH  = 160000;
 
 int AudioSendAndReceive::WriteWaveHeader(int rate, int channels, FILE* outFile)
 {
@@ -271,7 +271,7 @@ void AudioSendAndReceive::GenerateAndReadSamples()
    int16_t audioOutput[PLAYOUT_SAMPLE_LENGTH];
    short* inbuf;
    int sampleLengthDecoded = 0;
-   int SAMPLES = (PLAYOUT_SAMPLE_FREQUENCY * 10)/1000; //10 milliseconds
+   int SAMPLES = (PLAYOUT_SAMPLE_FREQUENCY * 10); //10 seconds
    int CHANNELS = 1; //mono audio
    int sampleLengthInBytes = sizeof(audioInput);
    //generated audio buffer
@@ -329,7 +329,7 @@ void AudioSendAndReceive::GenerateAndReadSamples()
       cerr << "Couldn't Write " << sampleLengthInBytes << "bytes" << endl;
       break;
     }
-   }while(numSamplesReadFromInput <= (SAMPLES));
+   }while(numSamplesReadFromInput < SAMPLES);
 
    FinishWaveHeader(outFile);
    fclose(outFile);
