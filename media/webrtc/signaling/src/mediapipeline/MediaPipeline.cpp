@@ -667,7 +667,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   nsAutoArrayPtr<int16_t> samples(new int16_t[chunk.mDuration]);
 
   if (chunk.mBuffer) {
-    switch(chunk.mBufferFormat) {
+    switch (chunk.mBufferFormat) {
       case AUDIO_FORMAT_FLOAT32:
         MOZ_MTLOG(PR_LOG_ERROR, "Can't process audio except in 16-bit PCM yet");
         MOZ_ASSERT(PR_FALSE);
@@ -675,8 +675,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
         break;
       case AUDIO_FORMAT_S16:
         {
-          const short* buf = static_cast<const short *>(chunk.mBuffer->Data()) +
-            chunk.mOffset;
+          const short* buf = static_cast<const short *>(chunk.mChannelData[0]);
           ConvertAudioSamplesWithScale(buf, samples, chunk.mDuration, chunk.mVolume);
         }
         break;
@@ -833,11 +832,12 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   while (MillisecondsToMediaTime(played_) < desired_time) {
     // TODO(ekr@rtfm.com): Is there a way to avoid mallocating here?
     nsRefPtr<SharedBuffer> samples = SharedBuffer::Create(1000);
+    int16_t *samples_data = static_cast<int16_t *>(samples->Data());
     int samples_length;
 
     MediaConduitErrorCode err =
         static_cast<AudioSessionConduit*>(conduit_.get())->GetAudioFrame(
-            static_cast<int16_t *>(samples->Data()),
+            samples_data,
             16000,  // Sampling rate fixed at 16 kHz for now
             0,  // TODO(ekr@rtfm.com): better estimate of capture delay
             samples_length);
@@ -849,8 +849,9 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
 
     AudioSegment segment;
     segment.Init(1);
-    segment.AppendFrames(samples.forget(), samples_length,
-                         0, samples_length, AUDIO_FORMAT_S16);
+    nsAutoTArray<const int16_t*,1> channels;
+    channels.AppendElement(samples_data);
+    segment.AppendFrames(samples.forget(), channels, samples_length);
 
     source_->AppendToTrack(1,  // TODO(ekr@rtfm.com): Track ID
                            &segment);

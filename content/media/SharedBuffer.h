@@ -13,6 +13,16 @@
 namespace mozilla {
 
 /**
+ * Base class for objects with a thread-safe refcount and a virtual
+ * destructor.
+ */
+class ThreadSharedObject {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadSharedObject)
+  virtual ~ThreadSharedObject() {}
+};
+
+/**
  * Heap-allocated chunk of arbitrary data with threadsafe refcounting.
  * Typically you would allocate one of these, fill it in, and then treat it as
  * immutable while it's shared.
@@ -20,15 +30,10 @@ namespace mozilla {
  * simply assume that the refcount is at least 4-byte aligned and its size
  * is divisible by 4.
  */
-class SharedBuffer {
+class SharedBuffer : public ThreadSharedObject {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedBuffer)
-  ~SharedBuffer() {}
-
   void* Data() { return this + 1; }
 
-  // Takes ownership of aData (which will be freed via moz_free()).
-  // aData consists of aChannels consecutive buffers, each of aLength samples.
   static already_AddRefed<SharedBuffer> Create(size_t aSize)
   {
     void* m = moz_xmalloc(sizeof(SharedBuffer) + aSize);
