@@ -8,7 +8,6 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "prdtoa.h"
-#include "nsAutoPtr.h"
 #include "AudioStream.h"
 #include "nsAlgorithm.h"
 #include "VideoUtils.h"
@@ -17,7 +16,6 @@
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
 }
-#include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 
 #if defined(MOZ_CUBEB)
@@ -51,8 +49,6 @@ static const int64_t MS_PER_S = 1000;
 class nsNativeAudioStream : public AudioStream
 {
  public:
-  NS_DECL_ISUPPORTS
-
   ~nsNativeAudioStream();
   nsNativeAudioStream();
 
@@ -209,33 +205,8 @@ void AudioStream::ShutdownLibrary()
 #endif
 }
 
-nsIThread *
-AudioStream::GetThread()
-{
-  if (!mAudioPlaybackThread) {
-    NS_NewNamedThread("Audio Stream",
-                      getter_AddRefs(mAudioPlaybackThread),
-                      nullptr,
-                      MEDIA_THREAD_STACK_SIZE);
-  }
-  return mAudioPlaybackThread;
-}
-
-class AsyncShutdownPlaybackThread : public nsRunnable
-{
-public:
-  AsyncShutdownPlaybackThread(nsIThread* aThread) : mThread(aThread) {}
-  NS_IMETHODIMP Run() { return mThread->Shutdown(); }
-private:
-  nsCOMPtr<nsIThread> mThread;
-};
-
 AudioStream::~AudioStream()
 {
-  if (mAudioPlaybackThread) {
-    nsCOMPtr<nsIRunnable> event = new AsyncShutdownPlaybackThread(mAudioPlaybackThread);
-    NS_DispatchToMainThread(event);
-  }
 }
 
 nsNativeAudioStream::nsNativeAudioStream() :
@@ -250,8 +221,6 @@ nsNativeAudioStream::~nsNativeAudioStream()
 {
   Shutdown();
 }
-
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsNativeAudioStream)
 
 nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
                                    const dom::AudioChannelType aAudioChannelType)
@@ -498,8 +467,6 @@ private:
 class nsBufferedAudioStream : public AudioStream
 {
  public:
-  NS_DECL_ISUPPORTS
-
   nsBufferedAudioStream();
   ~nsBufferedAudioStream();
 
@@ -597,8 +564,6 @@ nsBufferedAudioStream::~nsBufferedAudioStream()
 {
   Shutdown();
 }
-
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsBufferedAudioStream)
 
 nsresult
 nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
