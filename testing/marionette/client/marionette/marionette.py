@@ -495,6 +495,55 @@ class Marionette(object):
             js = f.read()
         return self._send_message('importScript', 'ok', script=js)
 
+    def add_cookie(self, cookie):
+        """
+           Adds a cookie to your current session.
+
+           :Args:
+           - cookie_dict: A dictionary object, with required keys - "name" and "value";
+           optional keys - "path", "domain", "secure", "expiry"
+
+           Usage:
+              driver.add_cookie({'name' : 'foo', 'value' : 'bar'})
+              driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
+              driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/',
+                                 'secure':True})
+        """
+        return self._send_message('addCookie', 'ok', cookie=cookie)
+
+    def delete_all_cookies(self):
+        """
+            Delete all cookies in the scope of the session.
+            :Usage:
+                driver.delete_all_cookies()
+        """
+        return self._send_message('deleteAllCookies', 'ok')
+
+    def delete_cookie(self, name):
+        """
+            Delete a cookie by its name
+            :Usage:
+                driver.delete_cookie('foo')
+
+        """
+        return self._send_message('deleteCookie', 'ok', name=name);
+
+    def get_cookie(self, name):
+        """
+            Get a single cookie by name. Returns the cookie if found, None if not.
+
+            :Usage:
+                driver.get_cookie('my_cookie')
+        """
+        cookies = self.get_cookies()
+        for cookie in cookies:
+            if cookie['name'] == name:
+                return cookie
+        return None
+
+    def get_cookies(self):
+        return self._send_message("getAllCookies", "value")
+
     @property
     def application_cache(self):
         return ApplicationCache(self)
