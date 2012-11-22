@@ -65,7 +65,7 @@ class GrallocBufferActor : public PGrallocBufferChild
   typedef android::GraphicBuffer GraphicBuffer;
 
 public:
-  virtual ~GrallocBufferActor() {}
+  virtual ~GrallocBufferActor();
 
   static PGrallocBufferParent*
   Create(const gfxIntSize& aSize, const gfxContentType& aContent,
@@ -82,11 +82,15 @@ public:
   GetFrom(const SurfaceDescriptorGralloc& aDescriptor);
 
 private:
-  GrallocBufferActor() {}
+  GrallocBufferActor();
 
   void InitFromHandle(const MagicGrallocBufferHandle& aHandle);
 
   android::sp<GraphicBuffer> mGraphicBuffer;
+
+  // This value stores the number of bytes allocated in this
+  // BufferActor. This will be used for the memory reporter.
+  size_t mAllocBytes;
 };
 
 } // namespace layers
