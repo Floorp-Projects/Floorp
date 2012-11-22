@@ -32,15 +32,13 @@ function checkThrows(fun, desc, skipMessageCheck) {
     ok(false, "Didn't throw when " + desc);
   } catch(e) {
     ok(true, "Threw when " + desc + " " + e);
-    if (!skipMessageCheck)
-      ok(/denied|insecure/.exec(e), "Should be security exception");
+    (skipMessageCheck ? todo : ok)(/denied|insecure/.exec(e), "Should be security exception");
   }
 }
 
 var loadCount = 0;
 var ifr = document.getElementById('ifr');
 var iWin = ifr.contentWindow;
-function boundTo(item, l) { return item[3] && item[2] === l; };
 function go() {
   ++loadCount;
 
@@ -48,19 +46,19 @@ function go() {
     gLoc = iWin.location;
     // Note that accessors pulled off Xrays are currently bound. This is bug 658909.
     // [getter, description, locationObj, bound]
-    gGetters = [[ location.toString, 'toString from LW', location, true ],
-                [ gLoc.toString, 'toString from XLW', gLoc, true ],
-                [ Location.prototype.toString, 'toString from Location.prototype', location, false ],
-                [ iWin.Location.prototype.toString, 'toString from iWin.Location.prototype', gLoc, false ],
-                [ Object.__lookupGetter__.call(location, 'href'), 'href getter from LW', location, true ],
-                [ Object.__lookupGetter__.call(gLoc, 'href'), 'href getter from XLW', gLoc, true ],
-                [ Object.getOwnPropertyDescriptor(Location.prototype, 'href').get, 'href getter from Location.prototype', location, false ],
-                [ Object.getOwnPropertyDescriptor(iWin.Location.prototype, 'href').get, 'href getter from iWin.Location.prototype', gLoc, false ],
-                [ function() { return this + ''; }, 'implicit conversion via [[DefaultValue]]', location, false]];
+    gGetters = [[ location.toString, 'toString from LW' ],
+                [ gLoc.toString, 'toString from XLW' ],
+                [ Location.prototype.toString, 'toString from Location.prototype' ],
+                [ iWin.Location.prototype.toString, 'toString from iWin.Location.prototype' ],
+                [ Object.__lookupGetter__.call(location, 'href'), 'href getter from LW' ],
+                [ Object.__lookupGetter__.call(gLoc, 'href'), 'href getter from XLW' ],
+                [ Object.getOwnPropertyDescriptor(Location.prototype, 'href').get, 'href getter from Location.prototype' ],
+                [ Object.getOwnPropertyDescriptor(iWin.Location.prototype, 'href').get, 'href getter from iWin.Location.prototype' ],
+                [ function() { return this + ''; }, 'implicit conversion via [[DefaultValue]]', /* doMessageCheck = */ true ]];
     gGetters.forEach(function(item) {
       try {
-        (boundTo(item, gLoc) ? todo_is : is)(item[0].call(location), location.toString(), 'Same-origin LW: ' + item[1]);
-        (boundTo(item, location) ? todo_is : is)(item[0].call(gLoc), gLoc.toString(), 'Same-origin XLW: ' + item[1]);
+        is(item[0].call(location), location.toString(), 'Same-origin LW: ' + item[1]);
+        is(item[0].call(gLoc), gLoc.toString(), 'Same-origin XLW: ' + item[1]);
       } catch (e) {
         ok(false, "Threw while applying " + item[1] + " to same-origin location object: " + e);
       }
@@ -69,16 +67,14 @@ function go() {
   }
   else if (loadCount == 2) {
     gGetters.forEach(function(item) {
-      // If the getter is bound to our local window.location, it's not going to throw
-      if (!boundTo(item, window.location))
-        checkThrows(function() { item[0].call(gLoc); },
-                    'call()ing ' + item[1] + ' after navigation cross-origin',
-                    /* skipMessageCheck = */ true);
+      checkThrows(function() { item[0].call(gLoc); },
+                  'call()ing ' + item[1] + ' after navigation cross-origin',
+                  /* skipMessageCheck = */ false);
     });
     ifr.src = 'http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug802557.html';
   }
   else if (loadCount == 3) {
-    gTestFunctions = ifr.contentWindow.gTests;
+    gTestFunctions = ifr.contentWindow.getAllTests();
     var win = ifr.contentWindow;
     for (fun in gTestFunctions)
        is(gTestFunctions[fun](), win.location.toString(), "allowed via " + fun);

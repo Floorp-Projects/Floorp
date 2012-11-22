@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCache.h"
 #include "nsMemoryCacheDevice.h"
 #include "nsCacheService.h"
 #include "nsICacheService.h"
 #include "nsIStorageStream.h"
 #include "nsICacheVisitor.h"
 #include "nsCRT.h"
-#include "nsCache.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Telemetry.h"
 

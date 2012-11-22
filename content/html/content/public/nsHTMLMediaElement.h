@@ -796,7 +796,7 @@ protected:
   nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
-  nsRefPtr<AudioStream> mAudioStream;
+  nsAutoPtr<AudioStream> mAudioStream;
 
   // Range of time played.
   nsTimeRanges mPlayed;

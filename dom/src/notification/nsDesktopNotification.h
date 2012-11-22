@@ -72,7 +72,6 @@ class nsDOMDesktopNotification : public nsDOMEventTargetHelper,
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDesktopNotification,nsDOMEventTargetHelper)
   NS_DECL_NSIDOMDESKTOPNOTIFICATION
 
   nsDOMDesktopNotification(const nsAString & title,

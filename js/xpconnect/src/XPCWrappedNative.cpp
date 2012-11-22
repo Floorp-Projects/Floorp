@@ -1423,8 +1423,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                                          XPCWrappedNativeScope* aOldScope,
                                          XPCWrappedNativeScope* aNewScope,
                                          JSObject* aNewParent,
-                                         nsISupports* aCOMObj,
-                                         XPCWrappedNative** aWrapper)
+                                         nsISupports* aCOMObj)
 {
     XPCNativeInterface* iface =
         XPCNativeInterface::GetISupports(ccx);
@@ -1455,10 +1454,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             flat = wrapper->GetFlatJSObject();
     }
 
-    if (!flat) {
-        *aWrapper = nullptr;
+    if (!flat)
         return NS_OK;
-    }
 
     // ReparentWrapperIfFound is really only meant to be called from DOM code
     // which must happen only on the main thread. Bail if we're on some other
@@ -1595,18 +1592,10 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             JSObject *ww = wrapper->GetWrapper();
             if (ww) {
                 JSObject *newwrapper;
-                MOZ_ASSERT(!xpc::WrapperFactory::IsComponentsObject(flat), 
-                           "Components object should never get here");
-                if (xpc::WrapperFactory::IsLocationObject(flat)) {
-                    newwrapper = xpc::WrapperFactory::WrapLocationObject(ccx, newobj);
-                    if (!newwrapper)
-                        MOZ_CRASH();
-                } else {
-                    NS_ASSERTION(wrapper->NeedsSOW(), "weird wrapper wrapper");
-                    newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
-                    if (!newwrapper)
-                        MOZ_CRASH();
-                }
+                MOZ_ASSERT(wrapper->NeedsSOW(), "weird wrapper wrapper");
+                newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
+                if (!newwrapper)
+                    MOZ_CRASH();
 
                 // Ok, now we do the special object-plus-wrapper transplant.
                 ww = xpc::TransplantObjectWithWrapper(ccx, flat, ww, newobj,
@@ -1656,9 +1645,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             MOZ_CRASH();
         }
     }
-
-    *aWrapper = nullptr;
-    wrapper.swap(*aWrapper);
 
     return NS_OK;
 }
@@ -1755,10 +1741,9 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
     // We've been orphaned. Find where our parent went, and follow it.
     JSObject *parentGhost = js::GetObjectParent(mFlatJSObject);
     JSObject *realParent = js::UnwrapObject(parentGhost);
-    nsRefPtr<XPCWrappedNative> ignored;
     return ReparentWrapperIfFound(ccx, GetObjectScope(parentGhost),
                                   GetObjectScope(realParent),
-                                  realParent, mIdentity, getter_AddRefs(ignored));
+                                  realParent, mIdentity);
 }
 
 #define IS_TEAROFF_CLASS(clazz)                                               \
@@ -2220,11 +2205,7 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
     // Check the possibilities. Note that we need to check for null in each
     // case in order to distinguish between the 'no need for wrapper' and
     // 'wrapping failed' cases.
-    if (xpc::WrapperFactory::IsLocationObject(flat)) {
-        wrapper = xpc::WrapperFactory::WrapLocationObject(cx, flat);
-        if (!wrapper)
-            return NULL;
-    } else if (NeedsSOW()) {
+    if (NeedsSOW()) {
         wrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
         if (!wrapper)
             return NULL;
@@ -3187,6 +3168,15 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid name, nsIInterfaceInf
     } else
         *_retval = nullptr;
     return NS_OK;
+}
+
+/* [notxpcom] bool HasNativeMember (in jsval name); */
+NS_IMETHODIMP_(bool)
+XPCWrappedNative::HasNativeMember(jsid name)
+{
+    XPCNativeMember *member = nullptr;
+    uint16_t ignored;
+    return GetSet()->FindMember(name, &member, &ignored) && !!member;
 }
 
 inline nsresult UnexpectedFailure(nsresult rv)

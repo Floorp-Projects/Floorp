@@ -30,8 +30,9 @@ function checkThrows(f, desc, skipMessageCheck) {
   }
 }
 
-checkThrows(function() { location.valueOf = 'hah'; }, 'Shadow with string');
-checkThrows(function() { location.valueOf = function() { return {a: 'hah'};} }, 'Shadow with function');
+// NB: These sets will be no-ops (throw in strict mode) because setting an inherited readonly value prop has those semantics.
+checkThrows(function() { "use strict"; location.valueOf = 'hah'; }, 'Shadow with string', /* skipMessageCheck = */ true);
+checkThrows(function() { "use strict"; location.valueOf = function() { return {a: 'hah'};} }, 'Shadow with function', /* skipMessageCheck = */ true);
 checkThrows(function() { Object.defineProperty(location, 'valueOf', { value: function() { return 'hah'; } }); }, 'defineProperty with value');
 checkThrows(function() { delete location.valueOf; Object.defineProperty(location, 'valueOf', { value: function() { return 'hah'; } }); }, 'delete + defineProperty with value');
 checkThrows(function() { Object.defineProperty(location, 'valueOf', { getter: function() { return 'hah'; } }); }, 'defineProperty with getter');

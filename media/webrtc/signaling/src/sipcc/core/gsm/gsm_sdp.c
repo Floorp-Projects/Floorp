@@ -2855,13 +2855,12 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                 }
 
                 if (media->type == SDP_MEDIA_AUDIO) {
-
-                    if (media->payload == RTP_ILBC) {
+                    if (payload == RTP_ILBC) {
                         media->mode = (uint16_t)sdp_attr_get_fmtp_mode_for_payload_type
                                                        (sdp_p->dest_sdp, level, 0,
                                                         media->remote_dynamic_payload_type_value);
                     }
-                    if (media->payload == RTP_OPUS) {
+                    if (payload == RTP_OPUS) {
                         u16 a_inst;
                         if (!sdp_attr_rtpmap_payload_valid(sdp_p->dest_sdp, level, 0, &a_inst,
                                                                remote_dynamic_payload_type_value) ||
@@ -2875,7 +2874,7 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                         }
 
                         maxptime = sdp_attr_get_simple_u32(sdp_p->dest_sdp,
-                        		                          SDP_ATTR_MAXPTIME, level, 0, 1);
+                                                                  SDP_ATTR_MAXPTIME, level, 0, 1);
                         if (maxptime != 0) {
                             media->max_packetization_period = (uint16_t) maxptime;
                         }
@@ -2884,7 +2883,7 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                                                      0, 1, &max_average_bitrate);
 
                         maxcodedaudiobandwidth = sdp_attr_get_fmtp_maxcodedaudiobandwidth
-                        		          (sdp_p->dest_sdp, level, 0, 1);
+                                                  (sdp_p->dest_sdp, level, 0, 1);
 
                         sdp_attr_get_fmtp_usedtx (sdp_p->dest_sdp, level, 0, 1, &usedtx);
 
