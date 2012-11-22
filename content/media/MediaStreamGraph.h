@@ -743,7 +743,8 @@ public:
    * Allocates a new input port attached to source aStream.
    * This stream can be removed by calling MediaInputPort::Remove().
    */
-  MediaInputPort* AllocateInputPort(MediaStream* aStream, uint32_t aFlags = 0);
+  already_AddRefed<MediaInputPort> AllocateInputPort(MediaStream* aStream,
+                                                     uint32_t aFlags = 0);
   /**
    * Force this stream into the finished state.
    */
