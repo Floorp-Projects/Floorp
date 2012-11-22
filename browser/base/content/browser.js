@@ -62,9 +62,8 @@ XPCOMUtils.defineLazyGetter(window, "gFindBar", function() {
   return findbar;
 });
 
-__defineGetter__("gPrefService", function() {
-  delete this.gPrefService;
-  return this.gPrefService = Services.prefs;
+XPCOMUtils.defineLazyGetter(this, "gPrefService", function() {
+  return Services.prefs;
 });
 
 __defineGetter__("AddonManager", function() {
@@ -87,17 +86,14 @@ __defineSetter__("PluralForm", function (val) {
 });
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
-                                  "resource://gre/modules/TelemetryStopwatch.jsm");
+  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
-                                  "resource:///modules/AboutHomeUtils.jsm");
+  "resource:///modules/AboutHomeUtils.jsm");
 
 #ifdef MOZ_SERVICES_SYNC
-XPCOMUtils.defineLazyGetter(this, "Weave", function() {
-  let tmp = {};
-  Cu.import("resource://services-sync/main.js", tmp);
-  return tmp.Weave;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "Weave",
+  "resource://services-sync/main.js");
 #endif
 
 XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
@@ -136,21 +132,15 @@ XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
   return new tmp.Tilt(window);
 });
 
-XPCOMUtils.defineLazyGetter(this, "Social", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/Social.jsm", tmp);
-  return tmp.Social;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "Social",
+  "resource:///modules/Social.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource:///modules/PageThumbs.jsm");
 
 #ifdef MOZ_SAFE_BROWSING
-XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
-  let tmp = {};
-  Cu.import("resource://gre/modules/SafeBrowsing.jsm", tmp);
-  return tmp.SafeBrowsing;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
+  "resource://gre/modules/SafeBrowsing.jsm");
 #endif
 
 XPCOMUtils.defineLazyModuleGetter(this, "gBrowserNewTabPreloader",
