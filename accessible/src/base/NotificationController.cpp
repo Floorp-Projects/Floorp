@@ -60,12 +60,12 @@ NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(NotificationController)
 
 NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(NotificationController)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationController)
   if (tmp->mDocument)
     tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(NotificationController)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDocument");
   cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mDocument.get()));
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHangingChildDocuments)
@@ -866,11 +866,11 @@ NotificationController::ContentInsertion::
 
 NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController::ContentInsertion)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(NotificationController::ContentInsertion)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationController::ContentInsertion)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContainer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(NotificationController::ContentInsertion)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController::ContentInsertion)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContainer");
   cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mContainer.get()));
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
