@@ -54,29 +54,32 @@ ElementAnimations::GetPositionInIteration(TimeStamp aStartTime, TimeStamp aCurre
     currentTimeDuration / aDuration;
   bool dispatchStartOrIteration = false;
   if (currentIterationCount >= aIterationCount) {
-    if (!aAnimation) {
-      // We are on the compositor, so send a signal that the animation is over.
-      // The main thread will fire the animationend event.
-      return -1;
-    }
-    // Dispatch 'animationend' when needed.
-    if (aIsForElement &&
-        aAnimation->mLastNotification !=
-          ElementAnimation::LAST_NOTIFICATION_END) {
-      aAnimation->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
-      // XXXdz: if this animation was done on the compositor, we should
-      // invalidate the frame and update style once we start throttling style
-      // updates.
-      AnimationEventInfo ei(aEa->mElement, aAnimation->mName, NS_ANIMATION_END,
-                            currentTimeDuration);
-      aEventsToDispatch->AppendElement(ei);
-    }
+    if (aAnimation) {
+      // Dispatch 'animationend' when needed.
+      if (aIsForElement &&
+          aAnimation->mLastNotification !=
+            ElementAnimation::LAST_NOTIFICATION_END) {
+        aAnimation->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
+        // XXXdz: if this animation was done on the compositor, we should
+        // invalidate the frame and update style once we start throttling style
+        // updates.
+        AnimationEventInfo ei(aEa->mElement, aAnimation->mName, NS_ANIMATION_END,
+                              currentTimeDuration);
+        aEventsToDispatch->AppendElement(ei);
+      }
 
-    if (!aAnimation->FillsForwards()) {
-      // No animation data.
-      return -1;
+      if (!aAnimation->FillsForwards()) {
+        // No animation data.
+        return -1;
+      }
+    } else {
+      // If aAnimation is null, that means we're on the compositor
+      // thread.  We want to just keep filling forwards until the main
+      // thread gets around to updating the compositor thread (which
+      // might take a little while).  So just assume we fill fowards and
+      // move on.
     }
-    currentIterationCount = double(aAnimation->mIterationCount);
+    currentIterationCount = aIterationCount;
   } else {
     if (aAnimation && !aAnimation->IsPaused()) {
       aEa->mNeedsRefreshes = true;
