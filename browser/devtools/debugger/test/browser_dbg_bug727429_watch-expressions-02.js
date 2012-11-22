@@ -42,6 +42,7 @@ function test()
     gWatch.addExpression("y = [1, 2, 3]; y.test = 4");
     gWatch.addExpression("z = [1, 2, 3]; z.test = 4; z");
     gWatch.addExpression("t = [1, 2, 3]; t.test = 4; !t");
+    gWatch.addExpression("arguments[0]");
     gWatch.addExpression("encodeURI(\"\\\")");
     gWatch.addExpression("decodeURI(\"\\\")");
   }
@@ -50,8 +51,8 @@ function test()
   {
     is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 13,
-      "There should be 13 visible nodes in the watch expressions container");
+    is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 14,
+      "There should be 14 visible nodes in the watch expressions container");
 
     test1(function() {
       test2(function() {
@@ -78,8 +79,8 @@ function test()
   {
     is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 12,
-      "There should be 12 visible nodes in the watch expressions container");
+    is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 13,
+      "There should be 13 visible nodes in the watch expressions container");
 
     closeDebuggerAndFinish();
   }
@@ -87,7 +88,7 @@ function test()
   function test1(callback) {
     waitForWatchExpressions(function() {
       info("Performing test1");
-      checkWatchExpressions("ReferenceError: a is not defined");
+      checkWatchExpressions("ReferenceError: a is not defined", undefined);
       callback();
     });
     executeSoon(function() {
@@ -98,7 +99,7 @@ function test()
   function test2(callback) {
     waitForWatchExpressions(function() {
       info("Performing test2");
-      checkWatchExpressions(undefined);
+      checkWatchExpressions(undefined, "sensational");
       callback();
     });
     EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -109,7 +110,7 @@ function test()
   function test3(callback) {
     waitForWatchExpressions(function() {
       info("Performing test3");
-      checkWatchExpressions({ type: "object", class: "Object" });
+      checkWatchExpressions({ type: "object", class: "Object" }, "sensational");
       callback();
     });
     EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -120,7 +121,7 @@ function test()
   function test4(callback) {
     waitForWatchExpressions(function() {
       info("Performing test4");
-      checkWatchExpressions(5, 12);
+      checkWatchExpressions(5, "sensational", 13);
       callback();
     });
     executeSoon(function() {
@@ -132,7 +133,7 @@ function test()
   function test5(callback) {
     waitForWatchExpressions(function() {
       info("Performing test5");
-      checkWatchExpressions(5, 12);
+      checkWatchExpressions(5, "sensational", 13);
       callback();
     });
     executeSoon(function() {
@@ -144,7 +145,7 @@ function test()
   function test6(callback) {
     waitForWatchExpressions(function() {
       info("Performing test6");
-      checkWatchExpressions(5, 12);
+      checkWatchExpressions(5, "sensational", 13);
       callback();
     })
     executeSoon(function() {
@@ -156,7 +157,7 @@ function test()
   function test7(callback) {
     waitForWatchExpressions(function() {
       info("Performing test7");
-      checkWatchExpressions(5, 12);
+      checkWatchExpressions(5, "sensational", 13);
       callback();
     });
     executeSoon(function() {
@@ -168,7 +169,7 @@ function test()
   function test8(callback) {
     waitForWatchExpressions(function() {
       info("Performing test8");
-      checkWatchExpressions(5, 12);
+      checkWatchExpressions(5, "sensational", 13);
       callback();
     });
     executeSoon(function() {
@@ -201,7 +202,7 @@ function test()
     }, false);
   }
 
-  function checkWatchExpressions(expected, total = 11) {
+  function checkWatchExpressions(expected_a, expected_arguments, total = 12) {
     is(gWatch._container._parent.querySelectorAll(".dbg-expression[hidden=true]").length, total,
       "There should be " + total + " hidden nodes in the watch expressions container");
     is(gWatch._container._parent.querySelectorAll(".dbg-expression:not([hidden=true])").length, 0,
@@ -223,8 +224,9 @@ function test()
     let w8 = scope.get("y = [1, 2, 3]; y.test = 4");
     let w9 = scope.get("z = [1, 2, 3]; z.test = 4; z");
     let w10 = scope.get("t = [1, 2, 3]; t.test = 4; !t");
-    let w11 = scope.get("encodeURI(\"\\\")");
-    let w12 = scope.get("decodeURI(\"\\\")");
+    let w11 = scope.get("arguments[0]");
+    let w12 = scope.get("encodeURI(\"\\\")");
+    let w13 = scope.get("decodeURI(\"\\\")");
 
     ok(w1, "The first watch expression should be present in the scope");
     ok(w2, "The second watch expression should be present in the scope");
@@ -236,8 +238,9 @@ function test()
     ok(w8, "The eight watch expression should be present in the scope");
     ok(w9, "The ninth watch expression should be present in the scope");
     ok(w10, "The tenth watch expression should be present in the scope");
-    ok(!w11, "The eleventh watch expression should not be present in the scope");
+    ok(w11, "The eleventh watch expression should be present in the scope");
     ok(!w12, "The twelveth watch expression should not be present in the scope");
+    ok(!w13, "The thirteenth watch expression should not be present in the scope");
 
     is(w1.value, "a", "The first value is correct");
     is(w2.value, "a", "The second value is correct");
@@ -245,22 +248,20 @@ function test()
     is(w4.value, "a''", "The fourth value is correct");
     is(w5.value, "SyntaxError: syntax error", "The fifth value is correct");
 
-    if (typeof expected == "object") {
-      is(w6.value.type, expected.type, "The sixth value type is correct");
-      is(w6.value.class, expected.class, "The sixth value class is correct");
+    if (typeof expected_a == "object") {
+      is(w6.value.type, expected_a.type, "The sixth value type is correct");
+      is(w6.value.class, expected_a.class, "The sixth value class is correct");
     } else {
-      is(w6.value, expected, "The sixth value is correct");
+      is(w6.value, expected_a, "The sixth value is correct");
     }
 
     is(w7.value.type, "object", "The seventh value type is correct");
     is(w7.value.class, "Array", "The seventh value class is correct");
-
     is(w8.value, "4", "The eight value is correct");
-
     is(w9.value.type, "object", "The ninth value type is correct");
     is(w9.value.class, "Array", "The ninth value class is correct");
-
     is(w10.value, false, "The tenth value is correct");
+    is(w11.value, expected_arguments, "The eleventh value is correct");
   }
 
   registerCleanupFunction(function() {
