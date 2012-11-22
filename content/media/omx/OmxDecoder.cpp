@@ -89,6 +89,11 @@ ssize_t MediaStreamSource::readAt(off64_t offset, void *data, size_t size)
         NS_FAILED(mResource->Read(ptr, todo, &bytesRead))) {
       return ERROR_IO;
     }
+
+    if (bytesRead == 0) {
+      return size - todo;
+    }
+
     offset += bytesRead;
     todo -= bytesRead;
     ptr += bytesRead;
