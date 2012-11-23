@@ -1886,8 +1886,6 @@ ion::FinishInvalidation(FreeOp *fop, JSScript *script)
 void
 ion::MarkFromIon(JSRuntime *rt, Value *vp)
 {
-    JS_ASSERT_IF(vp->isMarkable(),
-                 ((gc::Cell*)vp->toGCThing())->compartment()->needsBarrier());
     gc::MarkValueUnbarriered(&rt->gcMarker, vp, "write barrier");
 }
 
