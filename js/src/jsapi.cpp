@@ -703,6 +703,12 @@ JS::InNoGCScope()
 }
 
 JS_FRIEND_API(bool)
+JS::isGCEnabled()
+{
+    return !TlsPerThreadData.get()->suppressGC;
+}
+
+JS_FRIEND_API(bool)
 JS::NeedRelaxedRootChecks()
 {
     return TlsPerThreadData.get()->gcRelaxRootChecks;
@@ -711,17 +717,19 @@ JS::NeedRelaxedRootChecks()
 JS_FRIEND_API(void) JS::EnterAssertNoGCScope() {}
 JS_FRIEND_API(void) JS::LeaveAssertNoGCScope() {}
 JS_FRIEND_API(bool) JS::InNoGCScope() { return false; }
+JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
 JS_FRIEND_API(bool) JS::NeedRelaxedRootChecks() { return false; }
 #endif
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
 PerThreadData::PerThreadData(JSRuntime *runtime)
-  : runtime_(runtime)
+  : runtime_(runtime),
 #ifdef DEBUG
-  , gcRelaxRootChecks(false)
-  , gcAssertNoGCDepth(0)
+    gcRelaxRootChecks(false),
+    gcAssertNoGCDepth(0),
 #endif
+    suppressGC(0)
 {}
 
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
@@ -865,7 +873,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
 #endif
-    inOOMReport(0),
     jitHardening(false),
     ionTop(NULL),
     ionJSContext(NULL),
