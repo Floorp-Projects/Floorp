@@ -163,6 +163,17 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
             return false;
 
         stub->addNewStub(boolStub);
+        return true;
+    }
+
+    if (arg.isInt32()) {
+        ICToBool_Int32::Compiler compiler(cx);
+        ICStub *int32Stub = compiler.getStub();
+        if (!int32Stub)
+            return false;
+
+        stub->addNewStub(int32Stub);
+        return true;
     }
 
     return true;
@@ -206,6 +217,33 @@ ICToBool_Bool::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
 
+    return true;
+}
+
+//
+// ToBool_Int32
+//
+
+bool
+ICToBool_Int32::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+
+    Label ifFalse;
+    Assembler::Condition cond = masm.testInt32Truthy(false, R0);
+    masm.j(cond, &ifFalse);
+
+    masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&ifFalse);
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
     return true;
 }
 
