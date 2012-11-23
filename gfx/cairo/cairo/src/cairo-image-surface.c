@@ -2890,6 +2890,8 @@ _composite_boxes (cairo_image_surface_t *dst,
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    return CAIRO_STATUS_SUCCESS;
 	need_clip_mask = status == CAIRO_INT_STATUS_UNSUPPORTED;
 	if (need_clip_mask &&
 	    (op == CAIRO_OPERATOR_SOURCE || ! extents->is_bounded))
@@ -3205,20 +3207,10 @@ _clip_and_composite_trapezoids (cairo_image_surface_t *dst,
 static cairo_clip_path_t *
 _clip_get_single_path (cairo_clip_t *clip)
 {
-    cairo_clip_path_t *iter = clip->path;
-    cairo_clip_path_t *path = NULL;
+    if (clip->path->prev == NULL)
+      return clip->path;
 
-    do {
-	if ((iter->flags & CAIRO_CLIP_PATH_IS_BOX) == 0) {
-	    if (path != NULL)
-		return FALSE;
-
-	    path = iter;
-	}
-	iter = iter->prev;
-    } while (iter != NULL);
-
-    return path;
+    return NULL;
 }
 
 /* high level image interface */
