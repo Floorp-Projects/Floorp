@@ -60,7 +60,7 @@ AudioContext::WrapObject(JSContext* aCx, JSObject* aScope,
 /* static */ already_AddRefed<AudioContext>
 AudioContext::Constructor(nsISupports* aGlobal, ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -68,6 +68,7 @@ AudioContext::Constructor(nsISupports* aGlobal, ErrorResult& aRv)
 
   AudioContext* object = new AudioContext(window);
   NS_ADDREF(object);
+  window->AddAudioContext(object);
   return object;
 }
 
