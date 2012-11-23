@@ -160,8 +160,7 @@ ion::EnterBaselineMethod(JSContext *cx, StackFrame *fp)
 static MethodStatus
 BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
 {
-    if (script->hasBaselineScript())
-        return Method_Compiled;
+    JS_ASSERT(!script->baseline);
 
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     if (!alloc)
@@ -180,12 +179,24 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
         return Method_Error;
 
     AutoFlushCache afc("BaselineJIT", cx->compartment->ionCompartment());
-    return compiler.compile();
+    MethodStatus status = compiler.compile();
+
+    JS_ASSERT_IF(status == Method_Compiled, script->baseline);
+    JS_ASSERT_IF(status != Method_Compiled, !script->baseline);
+
+    if (status == Method_CantCompile)
+        script->baseline = BASELINE_DISABLED_SCRIPT;
+
+    return status;
 }
 
 MethodStatus
 ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
 {
+    // Skip if the script has been disabled.
+    if (script->baseline == BASELINE_DISABLED_SCRIPT)
+        return Method_Skipped;
+
     if (cx->compartment->debugMode()) {
         IonSpew(IonSpew_Abort, "BASELINE FIXME: Not compiling in debug mode!");
         return Method_CantCompile;
@@ -197,11 +208,10 @@ ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
     if (!cx->compartment->ensureIonCompartmentExists(cx))
         return Method_Error;
 
-    MethodStatus status = BaselineCompile(cx, script, fp);
-    if (status != Method_Compiled)
-        return status;
+    if (script->hasBaselineScript())
+        return Method_Compiled;
 
-    return Method_Compiled;
+    return BaselineCompile(cx, script, fp);
 }
 
 // Be safe, align IC entry list to 8 in all cases.
