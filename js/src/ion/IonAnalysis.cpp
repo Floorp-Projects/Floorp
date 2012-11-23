@@ -83,8 +83,18 @@ IsPhiObservable(MPhi *phi)
     }
 
     // If the Phi is of the |this| value, it must always be observable.
-    if (phi->slot() == 1)
+    uint32 slot = phi->slot();
+    if (slot == 1)
         return true;
+
+    CompileInfo &info = phi->block()->info();
+    if (info.fun() && info.hasArguments()) {
+        // We do not support arguments object inside inline frames yet.
+        JS_ASSERT(!phi->block()->callerResumePoint());
+        uint32 first = info.firstArgSlot();
+        if (first <= slot && slot - first < info.nargs())
+            return true;
+    }
     return false;
 }
 
