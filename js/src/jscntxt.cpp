@@ -702,9 +702,8 @@ js_ReportOutOfMemory(JSContext *cx)
      */
     cx->clearPendingException();
     if (onError) {
-        ++cx->runtime->inOOMReport;
+        AutoSuppressGC suppressGC(cx);
         onError(cx, msg, &report);
-        --cx->runtime->inOOMReport;
     }
 }
 
