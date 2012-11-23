@@ -2715,7 +2715,8 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerParameters& aContainerParameters) {
-  if (mFrame->GetStyleDisplay()->mOpacity == 0) {
+  if (mFrame->GetStyleDisplay()->mOpacity == 0 && mFrame->GetContent() &&
+      !nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(), eCSSProperty_opacity)) {
     return nullptr;
   }
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
