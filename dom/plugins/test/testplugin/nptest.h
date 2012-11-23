@@ -151,6 +151,7 @@ typedef struct InstanceData {
   NPAsyncSurface *frontBuffer;
   NPAsyncSurface *backBuffer;
   int32_t mouseUpEventCount;
+  int32_t bugMode;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);
