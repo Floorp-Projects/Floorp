@@ -32,7 +32,10 @@ AccEvent::AccEvent(uint32_t aEventType, Accessible* aAccessible,
                    EIsFromUserInput aIsFromUserInput, EEventRule aEventRule) :
   mEventType(aEventType), mEventRule(aEventRule), mAccessible(aAccessible)
 {
-  CaptureIsFromUserInput(aIsFromUserInput);
+  if (aIsFromUserInput == eAutoDetect)
+    mIsFromUserInput = nsEventStateManager::IsHandlingUserInput();
+  else
+    mIsFromUserInput = aIsFromUserInput == eFromUserInput ? true : false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,40 +54,17 @@ AccEvent::CreateXPCOMObject()
 
 NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(AccEvent)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(AccEvent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AccEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessible)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(AccEvent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AccEvent)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mAccessible");
   cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mAccessible));
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AccEvent, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AccEvent, Release)
-
-////////////////////////////////////////////////////////////////////////////////
-// AccEvent protected methods
-
-void
-AccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
-{
-  if (aIsFromUserInput != eAutoDetect) {
-    mIsFromUserInput = aIsFromUserInput == eFromUserInput ? true : false;
-    return;
-  }
-
-  DocAccessible* document = mAccessible->Document();
-  if (!document) {
-    NS_ASSERTION(mAccessible == ApplicationAcc(),
-                 "Accessible other than application should always have a doc!");
-    return;
-  }
-
-  mIsFromUserInput =
-    document->PresContext()->EventStateManager()->IsHandlingUserInputExternal();
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // AccStateChangeEvent

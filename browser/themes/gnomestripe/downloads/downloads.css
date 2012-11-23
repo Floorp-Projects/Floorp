@@ -25,7 +25,7 @@
 }
 
 #downloadsSummary,
-#downloadsPanel[hasdownloads] > #downloadsHistory {
+#downloadsPanel[hasdownloads] #downloadsHistory {
   border-top: 1px solid ThreeDShadow;
   background-image: -moz-linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }
@@ -50,6 +50,12 @@ richlistitem[type="download"] {
 #downloadsSummary {
   padding: 8px 38px 8px 12px;
   cursor: pointer;
+  -moz-user-focus: normal;
+}
+
+#downloadsSummary:-moz-focusring {
+  outline: 1px -moz-dialogtext dotted;
+  outline-offset: -5px;
 }
 
 #downloadsSummary > .downloadTypeIcon {

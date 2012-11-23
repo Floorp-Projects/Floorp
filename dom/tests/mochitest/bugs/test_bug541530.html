@@ -80,19 +80,6 @@ try {
 } catch (e) {
 }
 
-// Make sure watch works correctly.
-var watchTest = {a: 42};
-var watchHandler = function(prop, oldval, newval) { return 22; }
-Object.prototype.watch.call(watchTest, 'a', watchHandler);
-watchTest.a = 1;
-is(watchTest.a, 22, "Watch works correctly");
-
-// Now make sure we can't watch location.
-try {
-    Object.prototype.watch.call(location, 'href', function(prop, oldval, newval) {});
-    ok(false, "shouldn't be able to set a watchpoint on location");
-} catch (e) {}
-
 ok(window === orig, "can't override window");
 ok(window.location === origLocation, "properties are properly aliased");
 ok(document.location === origLocation, "properties are properly aliased");

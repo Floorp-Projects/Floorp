@@ -14,6 +14,7 @@
 #include "nsDataHashtable.h"
 #include "nsTHashtable.h"
 #include "nsISocketTransport.h"
+#include "mozilla/TimeStamp.h"
 
 class nsNSSSocketInfo : public mozilla::psm::TransportSecurityInfo,
                         public nsISSLSocketControl,
@@ -51,7 +52,7 @@ public:
                 const nsNSSShutDownPreventionLock & proofOfLock);
   
   void SetNegotiatedNPN(const char *value, uint32_t length);
-  void SetHandshakeCompleted() { mHandshakeCompleted = true; }
+  void SetHandshakeCompleted();
 
   bool GetJoined() { return mJoined; }
   void SetSentClientCert() { mSentClientCert = true; }
@@ -103,6 +104,7 @@ private:
   bool      mSentClientCert;
 
   uint32_t mProviderFlags;
+  mozilla::TimeStamp mSocketCreationTimestamp;
 };
 
 class nsSSLIOLayerHelpers

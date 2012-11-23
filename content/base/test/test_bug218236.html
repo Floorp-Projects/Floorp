@@ -36,7 +36,7 @@ var tests = [
   ["200 OK",                            url_200,                [1, 2, 3, 4, "load"], 0, null],
   ["404 Not Found",                     url_404,                [1, 2, 3, 4, "load"], 0, null],
   ["connection error",                  url_connection_error,   [1, 2, 4, "error"],   0, null],
-  ["abort() call on readyState = 1",    url_200,                [1, 4],               0, doAbort1],
+  ["abort() call on readyState = 1",    url_200,                [1, 4],               0, null, doAbort1],
   ["abort() call on readyState = 2",    url_200,                [1, 2, 4],            0, doAbort2],
   ["multipart document",                url_multipart,          [1, 2, 3, 4, "load",
                                                                  1, 2, 3, 4, "load",
@@ -71,23 +71,26 @@ function runNextTest() {
 
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-    // Prepare request object
-    request = new XMLHttpRequest();
-    request.multipart = test[3];
-    request.open("GET", test[1]);
-    request.onreadystatechange = onReadyStateChange;
-    request.onload = onLoad;
-    request.onerror = onError;
-
     // Initialize state variables
     testName = test[0]
     currentState = 0;
     currentSequence = [];
     expectedSequence = test[2];
     currentCallback = test[4];
+    postSendCallback = test[5];
+
+    // Prepare request object
+    request = new XMLHttpRequest();
+    request.multipart = test[3];
+    request.onreadystatechange = onReadyStateChange;
+    request.open("GET", test[1]);
+    request.onload = onLoad;
+    request.onerror = onError;
 
     // Start request
     request.send(null);
+    if (postSendCallback)
+      postSendCallback();
   }
   else
     SimpleTest.finish();
@@ -104,11 +107,8 @@ function onReadyStateChange() {
   clearTimeout(finalizeTimeoutID);
   finalizeTimeoutID = null;
 
-  // Ignore duplicated calls for the same ready state
-  if (request.readyState != currentState) {
-    currentState = request.readyState;
-    currentSequence.push(currentState);
-  }
+  currentState = request.readyState;
+  currentSequence.push(currentState);
 
   if (currentState == 4) {
     // Allow remaining event to fire but then we are finished with this test

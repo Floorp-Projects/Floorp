@@ -333,8 +333,8 @@ private:
     // optionally place a jump to ensure we don't start executing the pool.
     void flushConstantPool(bool useBarrier = true)
     {
-        js::JaegerSpew(js::JSpew_Insns, " -- FLUSHING CONSTANT POOL WITH %d CONSTANTS --\n",
-                       m_numConsts);
+        GenericAssembler::staticSpew(" -- FLUSHING CONSTANT POOL WITH %d CONSTANTS --\n",
+                                     m_numConsts);
         if (m_numConsts == 0)
             return;
         m_flushCount++;

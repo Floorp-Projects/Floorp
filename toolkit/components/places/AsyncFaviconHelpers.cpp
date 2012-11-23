@@ -6,7 +6,6 @@
 
 #include "AsyncFaviconHelpers.h"
 
-#include "nsIContentSniffer.h"
 #include "nsICacheService.h"
 #include "nsICacheVisitor.h"
 #include "nsICachingChannel.h"
@@ -22,8 +21,6 @@
 #if !(defined(MOZ_PER_WINDOW_PRIVATE_BROWSING)) && defined(DEBUG)
 #include "nsIPrivateBrowsingService.h"
 #endif
-
-#define CONTENT_SNIFFING_SERVICES "content-sniffing-services"
 
 using namespace mozilla::places;
 using namespace mozilla::storage;
@@ -285,55 +282,6 @@ FetchIconURL(nsRefPtr<Database>& aDB,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return NS_OK;
-}
-
-/**
- * Tries to guess the mimeType from icon data.
- *
- * @param aRequest
- *        The network request object.
- * @param aData
- *        Data for this icon.
- * @param _mimeType
- *        The guessed mime-type or empty string if a valid one can't be found.
- */
-nsresult
-SniffMimeTypeForIconData(nsIRequest* aRequest,
-                         const nsCString& aData,
-                         nsCString& _mimeType)
-{
-  NS_PRECONDITION(NS_IsMainThread(),
-                  "This should be called on the main thread");
-
-  nsCOMPtr<nsICategoryManager> categoryManager =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(categoryManager, NS_ERROR_OUT_OF_MEMORY);
-  nsCOMPtr<nsISimpleEnumerator> sniffers;
-  nsresult rv = categoryManager->EnumerateCategory(CONTENT_SNIFFING_SERVICES,
-                                                   getter_AddRefs(sniffers));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore = false;
-  while (_mimeType.IsEmpty() &&
-         NS_SUCCEEDED(sniffers->HasMoreElements(&hasMore)) &&
-         hasMore) {
-    nsCOMPtr<nsISupports> snifferCIDSupports;
-    rv = sniffers->GetNext(getter_AddRefs(snifferCIDSupports));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsISupportsCString> snifferCIDSupportsCString =
-      do_QueryInterface(snifferCIDSupports);
-    NS_ENSURE_STATE(snifferCIDSupports);
-    nsAutoCString snifferCID;
-    rv = snifferCIDSupportsCString->GetData(snifferCID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIContentSniffer> sniffer = do_GetService(snifferCID.get());
-    NS_ENSURE_STATE(sniffer);
-
-     // Ignore errors: we'll try the next sniffer.
-    (void)sniffer->GetMIMETypeFromContent(aRequest, TO_INTBUFFER(aData),
-                                          aData.Length(), _mimeType);
-  }
   return NS_OK;
 }
 
@@ -696,18 +644,21 @@ AsyncFetchAndSetIconFromNetwork::OnStopRequest(nsIRequest* aRequest,
   nsFaviconService* favicons = nsFaviconService::GetFaviconService();
   NS_ENSURE_STATE(favicons);
 
+  nsresult rv;
+
   // If fetching the icon failed, add it to the failed cache.
   if (NS_FAILED(aStatusCode) || mIcon.data.Length() == 0) {
     nsCOMPtr<nsIURI> iconURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
+    rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = favicons->AddFailedFavicon(iconURI);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
-  nsresult rv = SniffMimeTypeForIconData(aRequest, mIcon.data, mIcon.mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, aRequest,
+                  TO_INTBUFFER(mIcon.data), mIcon.data.Length(),
+                  mIcon.mimeType);
 
   // If the icon does not have a valid MIME type, add it to the failed cache.
   if (mIcon.mimeType.IsEmpty()) {

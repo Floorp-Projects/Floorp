@@ -25,7 +25,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_addons_locales.js \
   browser_appmenu.js \
   browser_autocompletesearch.js \
-  $(info browser_awesomescreen.js is disabled because the localepicker is disabled (bug 693524)) \
+  $(filter disabled-because-localepicker-is-disabled--bug-693524, browser_awesomescreen.js) \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_blank_03.html \
@@ -37,35 +37,35 @@ MOCHITEST_BROWSER_FILES = \
   browser_focus.html \
   browser_focus.js \
   browser_forms.html \
-  $(warning browser_forms.js disabled due to failures) \
+  $(filter disabled-for-failures, browser_forms.js) \
   browser_formsZoom.html \
-  $(warning browser_formsZoom.js disabled due to failures) \
-  $(info browser_history.js is disabled because it is random orange on XUL fennec (bug 700537)) \
-  $(info browser_localepicker.js is disabled because the localepicker is disabled (bug 694047)) \
+  $(filter disabled-for-failures, browser_formsZoom.js) \
+  $(filter disabled-for-random-orange-on-XUL-fennec--bug-700537, browser_history.js) \
+  $(filter disabled-because-localepicker-is-disabled--bug-694047, browser_localepicker.js) \
   browser_localepicker_escape.js \
   browser_mainui.js \
   browser_preferences_text.js \
   browser_preferences_fulltoggle.js \
   browser_rect.js \
-  $(info browser_rememberPassword.js is disabled because it is random orange on XUL fennec (bug 698387)) \
+  $(filter disabled-for-random-orange-on-XUL-fennec--bug-698387, browser_rememberPassword.js) \
   browser_scroll.js \
   browser_scroll.html \
   browser_scrollbar.js \
   browser_select.html \
   browser_select.js \
   browser_sessionstore.js \
-  $(info browser_tabs.js is disabled because it is random orange on XUL fennec (bug 700537)) \
-  $(info browser_tapping.js is disabled because it is random orange on XUL fennec (bug 698387)) \
-  $(info browser_tap_content.html is disabled because it is random orange on XUL fennec (bug 698387)) \
+  $(filter disabled-for-random-orange-on-XUL-fennec--bug-700537, browser_tabs.js) \
+  $(filter disabled-for-random-orange-on-XUL-fennec--bug-698387, browser_tapping.js) \
+  $(filter disabled-for-random-orange-on-XUL-fennec--bug-698387, browser_tap_content.html) \
   browser_tapping_edit.js \
   browser_tap_contentedit.html \
   browser_test.js \
   browser_vkb.js \
-  $(warning browser_viewport.js disabled due to failures) \
+  $(filter disabled-for-failures, browser_viewport.js) \
   browser_viewport.sjs \
   browser_scrollbar.sjs \
   browser_title.sjs \
-  $(info browser_thumbnails.js is disabled because it is random orange on XUL fennec (bug 700537)) \
+  $(filter disabled-for-random-orange-on-XUL-fennec--bug-700537, browser_thumbnails.js) \
   browser_install.xml \
   browser_upgrade.rdf\
   browser_localerepository.js \

@@ -718,7 +718,7 @@ add_test(function test_TypeValue_decode() {
   wsp_decode_test(WSP.TypeValue, [0x33 | 0x80],
                   "application/vnd.wap.multipart.related");
   // Test for NotWellKnownEncodingError
-  wsp_decode_test(WSP.TypeValue, [0x80], null, "NotWellKnownEncodingError");
+  wsp_decode_test(WSP.TypeValue, [0x59 | 0x80], null, "NotWellKnownEncodingError");
 
   run_next_test();
 });
@@ -1046,10 +1046,12 @@ add_test(function test_ContentTypeValue_decodeConstrainedMedia() {
   // Test for string-typed return value from ConstrainedEncoding
   wsp_decode_test_ex(func, [65, 0], {media: "a", params: null});
   // Test for number-typed return value from ConstrainedEncoding
-  wsp_decode_test_ex(func, [0x33 | 0x80],
-                     {media: "application/vnd.wap.multipart.related", params: null});
+  for(let ix = 0; ix <WSP.WSP_WELL_KNOWN_CONTENT_TYPES.length ; ++ix){
+    wsp_decode_test_ex(func, [WSP.WSP_WELL_KNOWN_CONTENT_TYPES[ix].number | 0x80],
+      {media: WSP.WSP_WELL_KNOWN_CONTENT_TYPES[ix].value, params: null});
+  }
   // Test for NotWellKnownEncodingError
-  wsp_decode_test_ex(func, [0x80], null, "NotWellKnownEncodingError");
+  wsp_decode_test_ex(func, [0x59 | 0x80], null, "NotWellKnownEncodingError");
 
   run_next_test();
 });
@@ -1065,7 +1067,7 @@ add_test(function test_ContentTypeValue_decodeMedia() {
   wsp_decode_test_ex(func, [65, 0], "a");
   // Test for IntegerValue
   wsp_decode_test_ex(func, [0x3E | 0x80], "application/vnd.wap.mms-message");
-  wsp_decode_test_ex(func, [0x80], null, "NotWellKnownEncodingError");
+  wsp_decode_test_ex(func, [0x59 | 0x80], null, "NotWellKnownEncodingError");
 
   run_next_test();
 });
@@ -1126,8 +1128,12 @@ add_test(function test_ContentTypeValue_encodeConstrainedMedia() {
   wsp_encode_test_ex(func, {media: "a", params: [{a: "b"}]}, null, "CodeError");
   wsp_encode_test_ex(func, {media: "no/such.type"},
                      [110, 111, 47, 115, 117, 99, 104, 46, 116, 121, 112, 101, 0]);
-  wsp_encode_test_ex(func, {media: "application/vnd.wap.multipart.related"},
-                     [0x33 | 0x80]);
+  for(let ix = 0; ix <WSP.WSP_WELL_KNOWN_CONTENT_TYPES.length ; ++ix){
+    wsp_encode_test_ex(func, {media: WSP.WSP_WELL_KNOWN_CONTENT_TYPES[ix].value},
+    [WSP.WSP_WELL_KNOWN_CONTENT_TYPES[ix].number | 0x80]);
+  }
+  wsp_encode_test_ex(func, {media: "TexT/X-hdml"}, [0x04 | 0x80]);
+  wsp_encode_test_ex(func, {media: "appLication/*"}, [0x10 | 0x80]);
 
   run_next_test();
 });

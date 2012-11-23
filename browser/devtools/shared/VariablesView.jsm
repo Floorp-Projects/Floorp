@@ -7,6 +7,7 @@
 
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
+const SEARCH_ACTION_MAX_DELAY = 1000; // ms
 
 Components.utils.import('resource://gre/modules/Services.jsm');
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -211,13 +212,48 @@ VariablesView.prototype = {
   get searchEnabled() !!this._searchboxContainer,
 
   /**
+   * Allows searches to be scheduled and delayed to avoid redundant calls.
+   */
+  delayedSearch: true,
+
+  /**
+   * Schedules searching for variables or properties matching the query.
+   *
+   * @param string aQuery
+   *        The variable or property to search for.
+   */
+  scheduleSearch: function VV_scheduleSearch(aQuery) {
+    if (!this.delayedSearch) {
+      this.performSearch(aQuery);
+      return;
+    }
+    let delay = Math.max(SEARCH_ACTION_MAX_DELAY / aQuery.length, 0);
+
+    this.window.clearTimeout(this._searchTimeout);
+    this._searchFunction = this._startSearch.bind(this, aQuery);
+    this._searchTimeout = this.window.setTimeout(this._searchFunction, delay);
+  },
+
+  /**
+   * Immediately searches for variables or properties matching the query.
+   *
+   * @param string aQuery
+   *        The variable or property to search for.
+   */
+  performSearch: function VV_performSearch(aQuery) {
+    this.window.clearTimeout(this._searchTimeout);
+    this._searchFunction = null;
+    this._startSearch(aQuery);
+  },
+
+  /**
    * Performs a case insensitive search for variables or properties matching
    * the query, and hides non-matched items.
    *
    * @param string aQuery
    *        The variable or property to search for.
    */
-  performSearch: function VV_performSerch(aQuery) {
+  _startSearch: function VV__startSearch(aQuery) {
     for (let [, scope] in this) {
       switch (aQuery) {
         case "":
@@ -344,6 +380,8 @@ VariablesView.prototype = {
   _prevHierarchy: null,
   _currHierarchy: null,
   _emptyTimeout: null,
+  _searchTimeout: null,
+  _searchFunction: null,
   _enumVisible: true,
   _nonEnumVisible: true,
   _parent: null,

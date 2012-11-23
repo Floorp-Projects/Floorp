@@ -150,7 +150,7 @@ NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsEventListenerManager)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsEventListenerManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsEventListenerManager, Release)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   uint32_t count = tmp->mListeners.Length();
   for (uint32_t i = 0; i < count; i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mListeners[i] mListener");
@@ -158,7 +158,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsEventListenerManager)
   }  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventListenerManager)
   tmp->Disconnect();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -604,7 +604,11 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
     // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
     // if that's the XBL document?
     doc = node->OwnerDoc();
-    global = doc->GetScriptGlobalObject();
+    MOZ_ASSERT(!doc->IsLoadedAsData(), "Should not get in here at all");
+
+    // We want to allow compiling an event handler even in an unloaded
+    // document, so use GetScopeObject here, not GetScriptHandlingObject.
+    global = doc->GetScopeObject();
   } else {
     nsCOMPtr<nsPIDOMWindow> win = GetTargetAsInnerWindow();
     if (win) {
@@ -622,6 +626,13 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
     // loaded as data.
     return NS_OK;
   }
+
+#ifdef DEBUG
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(global);
+  if (win) {
+    MOZ_ASSERT(win->IsInnerWindow(), "We should not have an outer window here!");
+  }
+#endif
 
   nsresult rv = NS_OK;
   // return early preventing the event listener from being added

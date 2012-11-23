@@ -8,7 +8,6 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "prdtoa.h"
-#include "nsAutoPtr.h"
 #include "AudioStream.h"
 #include "nsAlgorithm.h"
 #include "VideoUtils.h"
@@ -17,7 +16,6 @@
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
 }
-#include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 
 #if defined(MOZ_CUBEB)
@@ -51,8 +49,6 @@ static const int64_t MS_PER_S = 1000;
 class nsNativeAudioStream : public AudioStream
 {
  public:
-  NS_DECL_ISUPPORTS
-
   ~nsNativeAudioStream();
   nsNativeAudioStream();
 
@@ -67,10 +63,13 @@ class nsNativeAudioStream : public AudioStream
   void Resume();
   int64_t GetPosition();
   int64_t GetPositionInFrames();
+  int64_t GetPositionInFramesInternal();
   bool IsPaused();
   int32_t GetMinWriteSize();
 
  private:
+  int32_t WriteToBackend(const float* aBuffer, uint32_t aFrames);
+  int32_t WriteToBackend(const short* aBuffer, uint32_t aFrames);
 
   double mVolume;
   void* mAudioHandle;
@@ -176,6 +175,13 @@ static sa_stream_type_t ConvertChannelToSAType(dom::AudioChannelType aType)
   }
 }
 
+AudioStream::AudioStream()
+: mInRate(0),
+  mOutRate(0),
+  mChannels(0),
+  mAudioClock(this)
+{}
+
 void AudioStream::InitLibrary()
 {
 #ifdef PR_LOGGING
@@ -209,33 +215,68 @@ void AudioStream::ShutdownLibrary()
 #endif
 }
 
-nsIThread *
-AudioStream::GetThread()
-{
-  if (!mAudioPlaybackThread) {
-    NS_NewNamedThread("Audio Stream",
-                      getter_AddRefs(mAudioPlaybackThread),
-                      nullptr,
-                      MEDIA_THREAD_STACK_SIZE);
-  }
-  return mAudioPlaybackThread;
-}
-
-class AsyncShutdownPlaybackThread : public nsRunnable
-{
-public:
-  AsyncShutdownPlaybackThread(nsIThread* aThread) : mThread(aThread) {}
-  NS_IMETHODIMP Run() { return mThread->Shutdown(); }
-private:
-  nsCOMPtr<nsIThread> mThread;
-};
-
 AudioStream::~AudioStream()
 {
-  if (mAudioPlaybackThread) {
-    nsCOMPtr<nsIRunnable> event = new AsyncShutdownPlaybackThread(mAudioPlaybackThread);
-    NS_DispatchToMainThread(event);
+}
+
+bool AudioStream::EnsureTimeStretcherInitialized()
+{
+  if (mTimeStretcher)
+    return true;
+  soundtouch::SoundTouch* state = new soundtouch::SoundTouch();
+  if (!state) {
+    return false;
   }
+  mTimeStretcher.own(state);
+  mTimeStretcher->setSampleRate(mInRate);
+  mTimeStretcher->setChannels(mChannels);
+  mTimeStretcher->setPitch(1.0);
+  return true;
+}
+
+nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
+{
+  NS_ASSERTION(aPlaybackRate > 0.0,
+               "Can't handle negative or null playbackrate in the AudioStream.");
+  // Avoid instantiating the resampler if we are not changing the playback rate.
+  if (aPlaybackRate == mAudioClock.GetPlaybackRate()) {
+    return NS_OK;
+  }
+  mAudioClock.SetPlaybackRate(aPlaybackRate);
+  mOutRate = mInRate / aPlaybackRate;
+  if (!EnsureTimeStretcherInitialized()) {
+    return NS_ERROR_FAILURE;
+  }
+  if (mAudioClock.GetPreservesPitch()) {
+    mTimeStretcher->setTempo(aPlaybackRate);
+    mTimeStretcher->setRate(1.0f);
+  } else {
+    mTimeStretcher->setTempo(1.0f);
+    mTimeStretcher->setRate(aPlaybackRate);
+  }
+  return NS_OK;
+}
+
+nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch)
+{
+  // Avoid instantiating the timestretcher instance if not needed.
+  if (aPreservesPitch == mAudioClock.GetPreservesPitch()) {
+    return NS_OK;
+  }
+  if (!EnsureTimeStretcherInitialized()) {
+    return NS_ERROR_FAILURE;
+  }
+  if (aPreservesPitch == true) {
+    mTimeStretcher->setTempo(mAudioClock.GetPlaybackRate());
+    mTimeStretcher->setRate(1.0f);
+  } else {
+    mTimeStretcher->setTempo(1.0f);
+    mTimeStretcher->setRate(mAudioClock.GetPlaybackRate());
+  }
+
+  mAudioClock.SetPreservesPitch(aPreservesPitch);
+
+  return NS_OK;
 }
 
 nsNativeAudioStream::nsNativeAudioStream() :
@@ -251,12 +292,10 @@ nsNativeAudioStream::~nsNativeAudioStream()
   Shutdown();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsNativeAudioStream)
-
 nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
                                    const dom::AudioChannelType aAudioChannelType)
 {
-  mRate = aRate;
+  mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
 
   if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
@@ -289,6 +328,8 @@ nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   }
   mInError = false;
 
+  mAudioClock.Init();
+
   return NS_OK;
 }
 
@@ -302,6 +343,22 @@ void nsNativeAudioStream::Shutdown()
   mInError = true;
 }
 
+int32_t nsNativeAudioStream::WriteToBackend(const AudioDataValue* aBuffer, uint32_t aSamples)
+{
+  double scaledVolume = GetVolumeScale() * mVolume;
+
+  nsAutoArrayPtr<short> outputBuffer(new short[aSamples]);
+  ConvertAudioSamplesWithScale(aBuffer, outputBuffer.get(), aSamples, scaledVolume);
+
+  if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
+                      outputBuffer,
+                      aSamples * sizeof(short)) != SA_SUCCESS) {
+    return -1;
+  }
+  mAudioClock.UpdateWritePosition(aSamples / mChannels);
+  return aSamples;
+}
+
 nsresult nsNativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 {
   NS_ASSERTION(!mPaused, "Don't write audio when paused, you'll block");
@@ -310,15 +367,31 @@ nsresult nsNativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames
     return NS_ERROR_FAILURE;
 
   uint32_t samples = aFrames * mChannels;
-  nsAutoArrayPtr<short> s_data(new short[samples]);
+  int32_t written = -1;
 
-  float scaled_volume = float(GetVolumeScale() * mVolume);
-  ConvertAudioSamplesWithScale(aBuf, s_data.get(), samples, scaled_volume);
+  if (mInRate != mOutRate) {
+    if (!EnsureTimeStretcherInitialized()) {
+      return NS_ERROR_FAILURE;
+    }
+    mTimeStretcher->putSamples(aBuf, aFrames);
+    uint32_t numFrames = mTimeStretcher->numSamples();
+    uint32_t arraySize = numFrames * mChannels * sizeof(AudioDataValue);
+    nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[arraySize]);
+    uint32_t framesAvailable = mTimeStretcher->receiveSamples(data, numFrames);
+    NS_ASSERTION(mTimeStretcher->numSamples() == 0,
+                 "We did not get all the data from the SoundTouch pipeline.");
+    // It is possible to have nothing to write: the data are in the processing
+    // pipeline, and will be written to the backend next time.
+    if (framesAvailable) {
+      written = WriteToBackend(data, framesAvailable * mChannels);
+    } else {
+      written = 0;
+    }
+  } else {
+    written = WriteToBackend(aBuf, samples);
+  }
 
-  if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
-                      s_data.get(),
-                      samples * sizeof(short)) != SA_SUCCESS)
-  {
+  if (written == -1) {
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_write error"));
     mInError = true;
     return NS_ERROR_FAILURE;
@@ -357,6 +430,26 @@ void nsNativeAudioStream::Drain()
 {
   NS_ASSERTION(!mPaused, "Don't drain audio when paused, it won't finish!");
 
+  // Write all the frames still in the time stretcher pipeline.
+  if (mTimeStretcher) {
+    uint32_t numFrames = mTimeStretcher->numSamples();
+    uint32_t arraySize = numFrames * mChannels * sizeof(AudioDataValue);
+    nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[arraySize]);
+    uint32_t framesAvailable = mTimeStretcher->receiveSamples(data, numFrames);
+    int32_t written = 0;
+    if (framesAvailable) {
+      written = WriteToBackend(data, framesAvailable * mChannels);
+    }
+
+    if (written == -1) {
+      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_write error"));
+      mInError = true;
+    }
+
+    NS_ASSERTION(mTimeStretcher->numSamples() == 0,
+                 "We did not get all the data from the SoundTouch pipeline.");
+  }
+
   if (mInError)
     return;
 
@@ -385,14 +478,15 @@ void nsNativeAudioStream::Resume()
 
 int64_t nsNativeAudioStream::GetPosition()
 {
-  int64_t position = GetPositionInFrames();
-  if (position >= 0) {
-    return ((USECS_PER_S * position) / mRate);
-  }
-  return -1;
+  return mAudioClock.GetPosition();
 }
 
 int64_t nsNativeAudioStream::GetPositionInFrames()
+{
+  return mAudioClock.GetPositionInFrames();
+}
+
+int64_t nsNativeAudioStream::GetPositionInFramesInternal()
 {
   if (mInError) {
     return -1;
@@ -498,8 +592,6 @@ private:
 class nsBufferedAudioStream : public AudioStream
 {
  public:
-  NS_DECL_ISUPPORTS
-
   nsBufferedAudioStream();
   ~nsBufferedAudioStream();
 
@@ -514,6 +606,7 @@ class nsBufferedAudioStream : public AudioStream
   void Resume();
   int64_t GetPosition();
   int64_t GetPositionInFrames();
+  int64_t GetPositionInFramesInternal();
   bool IsPaused();
   int32_t GetMinWriteSize();
 
@@ -530,6 +623,11 @@ private:
 
   long DataCallback(void* aBuffer, long aFrames);
   void StateCallback(cubeb_state aState);
+
+  long GetUnprocessed(void* aBuffer, long aFrames);
+
+  long GetTimeStretched(void* aBuffer, long aFrames);
+
 
   // Shared implementation of underflow adjusted position calculation.
   // Caller must own the monitor.
@@ -559,6 +657,17 @@ private:
   nsAutoRef<cubeb_stream> mCubebStream;
 
   uint32_t mBytesPerFrame;
+
+  uint32_t BytesToFrames(uint32_t aBytes) {
+    NS_ASSERTION(aBytes % mBytesPerFrame == 0,
+                 "Byte count not aligned on frames size.");
+    return aBytes / mBytesPerFrame;
+  }
+
+  uint32_t FramesToBytes(uint32_t aFrames) {
+    return aFrames * mBytesPerFrame;
+  }
+
 
   enum StreamState {
     INITIALIZED, // Initialized, playback has not begun.
@@ -598,8 +707,6 @@ nsBufferedAudioStream::~nsBufferedAudioStream()
   Shutdown();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsBufferedAudioStream)
-
 nsresult
 nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
                             const dom::AudioChannelType aAudioChannelType)
@@ -610,7 +717,7 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
     return NS_ERROR_FAILURE;
   }
 
-  mRate = aRate;
+  mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
 
   cubeb_stream_params params;
@@ -622,6 +729,8 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
     params.format = CUBEB_SAMPLE_FLOAT32NE;
   }
   mBytesPerFrame = sizeof(AudioDataValue) * aNumChannels;
+
+  mAudioClock.Init();
 
   {
     cubeb_stream* stream;
@@ -638,7 +747,7 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   // Size mBuffer for one second of audio.  This value is arbitrary, and was
   // selected based on the observed behaviour of the existing AudioStream
   // implementations.
-  uint32_t bufferLimit = aRate * mBytesPerFrame;
+  uint32_t bufferLimit = FramesToBytes(aRate);
   NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
   mBuffer.SetCapacity(bufferLimit);
 
@@ -663,14 +772,16 @@ nsBufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
   if (!mCubebStream || mState == ERRORED) {
     return NS_ERROR_FAILURE;
   }
-  NS_ASSERTION(mState == INITIALIZED || mState == STARTED, "Stream write in unexpected state.");
+  NS_ASSERTION(mState == INITIALIZED || mState == STARTED,
+    "Stream write in unexpected state.");
 
   const uint8_t* src = reinterpret_cast<const uint8_t*>(aBuf);
-  uint32_t bytesToCopy = aFrames * mBytesPerFrame;
+  uint32_t bytesToCopy = FramesToBytes(aFrames);
 
   while (bytesToCopy > 0) {
     uint32_t available = NS_MIN(bytesToCopy, mBuffer.Available());
-    NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0, "Must copy complete frames.");
+    NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0,
+        "Must copy complete frames.");
 
     mBuffer.AppendElements(src, available);
     src += available;
@@ -702,7 +813,7 @@ nsBufferedAudioStream::Available()
 {
   MonitorAutoLock mon(mMonitor);
   NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Buffer invariant violated.");
-  return mBuffer.Available() / mBytesPerFrame;
+  return BytesToFrames(mBuffer.Available());
 }
 
 int32_t
@@ -771,12 +882,7 @@ nsBufferedAudioStream::Resume()
 int64_t
 nsBufferedAudioStream::GetPosition()
 {
-  MonitorAutoLock mon(mMonitor);
-  int64_t frames = GetPositionInFramesUnlocked();
-  if (frames >= 0) {
-    return USECS_PER_S * frames / mRate;
-  }
-  return -1;
+  return mAudioClock.GetPosition();
 }
 
 // This function is miscompiled by PGO with MSVC 2010.  See bug 768333.
@@ -786,12 +892,18 @@ nsBufferedAudioStream::GetPosition()
 int64_t
 nsBufferedAudioStream::GetPositionInFrames()
 {
-  MonitorAutoLock mon(mMonitor);
-  return GetPositionInFramesUnlocked();
+  return mAudioClock.GetPositionInFrames();
 }
 #ifdef _MSC_VER
 #pragma optimize("", on)
 #endif
+
+int64_t
+nsBufferedAudioStream::GetPositionInFramesInternal()
+{
+  MonitorAutoLock mon(mMonitor);
+  return GetPositionInFramesUnlocked();
+}
 
 int64_t
 nsBufferedAudioStream::GetPositionInFramesUnlocked()
@@ -827,52 +939,101 @@ nsBufferedAudioStream::IsPaused()
 }
 
 long
+nsBufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames)
+{
+  uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
+
+  // Flush the timestretcher pipeline, if we were playing using a playback rate
+  // other than 1.0.
+  uint32_t flushedFrames = 0;
+  if (mTimeStretcher && mTimeStretcher->numSamples()) {
+    flushedFrames = mTimeStretcher->receiveSamples(reinterpret_cast<AudioDataValue*>(wpos), aFrames);
+    wpos += FramesToBytes(flushedFrames);
+  }
+  uint32_t toPopBytes = FramesToBytes(aFrames - flushedFrames);
+  uint32_t available = NS_MIN(toPopBytes, mBuffer.Length());
+
+  void* input[2];
+  uint32_t input_size[2];
+  mBuffer.PopElements(available, &input[0], &input_size[0], &input[1], &input_size[1]);
+  memcpy(wpos, input[0], input_size[0]);
+  wpos += input_size[0];
+  memcpy(wpos, input[1], input_size[1]);
+  return BytesToFrames(available) + flushedFrames;
+}
+
+long
+nsBufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
+{
+  long processedFrames = 0;
+  if (!EnsureTimeStretcherInitialized()) {
+    return -1;
+  }
+  uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
+  double playbackRate = static_cast<double>(mInRate) / mOutRate;
+  uint32_t toPopBytes = FramesToBytes(ceil(aFrames / playbackRate));
+  uint32_t available = 0;
+  bool lowOnBufferedData = false;
+  do {
+    // Check if we already have enough data in the time stretcher pipeline.
+    if (mTimeStretcher->numSamples() <= static_cast<uint32_t>(aFrames)) {
+      void* input[2];
+      uint32_t input_size[2];
+      available = NS_MIN(mBuffer.Length(), toPopBytes);
+      if (available != toPopBytes) {
+        lowOnBufferedData = true;
+      }
+      mBuffer.PopElements(available, &input[0], &input_size[0],
+                                     &input[1], &input_size[1]);
+      for(uint32_t i = 0; i < 2; i++) {
+        mTimeStretcher->putSamples(reinterpret_cast<AudioDataValue*>(input[i]), BytesToFrames(input_size[i]));
+      }
+    }
+    uint32_t receivedFrames = mTimeStretcher->receiveSamples(reinterpret_cast<AudioDataValue*>(wpos), aFrames - processedFrames);
+    wpos += FramesToBytes(receivedFrames);
+    processedFrames += receivedFrames;
+  } while (processedFrames < aFrames && !lowOnBufferedData);
+
+  return processedFrames;
+}
+
+long
 nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
 {
   MonitorAutoLock mon(mMonitor);
-  uint32_t bytesWanted = aFrames * mBytesPerFrame;
-
-  // Adjust bytesWanted to fit what is available in mBuffer.
-  uint32_t available = NS_MIN(bytesWanted, mBuffer.Length());
+  uint32_t available = NS_MIN(static_cast<uint32_t>(FramesToBytes(aFrames)), mBuffer.Length());
   NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0, "Must copy complete frames");
+  uint32_t underrunFrames = 0;
+  uint32_t servicedFrames = 0;
 
-  if (available > 0) {
-    // Copy each sample from mBuffer to aBuffer, adjusting the volume during the copy.
+  if (available) {
+    AudioDataValue* output = reinterpret_cast<AudioDataValue*>(aBuffer);
+    if (mInRate == mOutRate) {
+      servicedFrames = GetUnprocessed(output, aFrames);
+    } else {
+      servicedFrames = GetTimeStretched(output, aFrames);
+    }
     float scaled_volume = float(GetVolumeScale() * mVolume);
 
-    // Fetch input pointers from the ring buffer.
-    void* input[2];
-    uint32_t input_size[2];
-    mBuffer.PopElements(available, &input[0], &input_size[0], &input[1], &input_size[1]);
-
-    uint8_t* output = static_cast<uint8_t*>(aBuffer);
-    for (int i = 0; i < 2; ++i) {
-      const AudioDataValue* src = static_cast<const AudioDataValue*>(input[i]);
-      AudioDataValue* dst = reinterpret_cast<AudioDataValue*>(output);
-
-      ConvertAudioSamplesWithScale(src, dst, input_size[i]/sizeof(AudioDataValue),
-                                   scaled_volume);
-      output += input_size[i];
-    }
+    ScaleAudioSamples(output, aFrames * mChannels, scaled_volume);
 
     NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
 
     // Notify any blocked Write() call that more space is available in mBuffer.
     mon.NotifyAll();
-
-    // Calculate remaining bytes requested by caller.  If the stream is not
-    // draining an underrun has occurred, so fill the remaining buffer with
-    // silence.
-    bytesWanted -= available;
   }
+
+  underrunFrames = aFrames - servicedFrames;
 
   if (mState != DRAINING) {
-    memset(static_cast<uint8_t*>(aBuffer) + available, 0, bytesWanted);
-    mLostFrames += bytesWanted / mBytesPerFrame;
-    bytesWanted = 0;
+    uint8_t* rpos = static_cast<uint8_t*>(aBuffer) + FramesToBytes(aFrames - underrunFrames);
+    memset(rpos, 0, FramesToBytes(underrunFrames));
+    mLostFrames += underrunFrames;
+    servicedFrames += underrunFrames;
   }
 
-  return aFrames - (bytesWanted / mBytesPerFrame);
+  mAudioClock.UpdateWritePosition(servicedFrames);
+  return servicedFrames;
 }
 
 void
@@ -886,6 +1047,108 @@ nsBufferedAudioStream::StateCallback(cubeb_state aState)
   }
   mon.NotifyAll();
 }
+
 #endif
 
+AudioClock::AudioClock(AudioStream* aStream)
+ :mAudioStream(aStream),
+  mOldOutRate(0),
+  mBasePosition(0),
+  mBaseOffset(0),
+  mOldBaseOffset(0),
+  mPlaybackRateChangeOffset(0),
+  mPreviousPosition(0),
+  mWritten(0),
+  mOutRate(0),
+  mInRate(0),
+  mPreservesPitch(true),
+  mPlaybackRate(1.0),
+  mCompensatingLatency(false)
+{}
+
+void AudioClock::Init()
+{
+  mOutRate = mAudioStream->GetRate();
+  mInRate = mAudioStream->GetRate();
+  mPlaybackRate = 1.0;
+}
+
+void AudioClock::UpdateWritePosition(uint32_t aCount)
+{
+  mWritten += aCount;
+}
+
+uint64_t AudioClock::GetPosition()
+{
+  NS_ASSERTION(mInRate != 0 && mOutRate != 0, "AudioClock not initialized.");
+  int64_t position = mAudioStream->GetPositionInFramesInternal();
+  int64_t diffOffset;
+  if (position >= 0) {
+    if (position < mPlaybackRateChangeOffset) {
+      // See if we are still playing frames pushed with the old playback rate in
+      // the backend. If we are, use the old output rate to compute the
+      // position.
+      mCompensatingLatency = true;
+      diffOffset = position - mOldBaseOffset;
+      position = static_cast<uint64_t>(mOldBasePosition +
+        static_cast<float>(USECS_PER_S * diffOffset) / mOldOutRate);
+      mPreviousPosition = position;
+      return position;
+    }
+
+    if (mCompensatingLatency) {
+      diffOffset = position - mPlaybackRateChangeOffset;
+      mCompensatingLatency = false;
+      mBasePosition = mPreviousPosition;
+    } else {
+      diffOffset = position - mPlaybackRateChangeOffset;
+    }
+    position =  static_cast<uint64_t>(mBasePosition +
+      (static_cast<float>(USECS_PER_S * diffOffset) / mOutRate));
+    return position;
+  }
+  return -1;
+}
+
+uint64_t AudioClock::GetPositionInFrames()
+{
+  return (GetPosition() * mOutRate) / USECS_PER_S;
+}
+
+void AudioClock::SetPlaybackRate(double aPlaybackRate)
+{
+  int64_t position = mAudioStream->GetPositionInFramesInternal();
+  if (position > mPlaybackRateChangeOffset) {
+    mOldBasePosition = mBasePosition;
+    mBasePosition = GetPosition();
+    mOldBaseOffset = mPlaybackRateChangeOffset;
+    mBaseOffset = position;
+    mPlaybackRateChangeOffset = mWritten;
+    mOldOutRate = mOutRate;
+    mOutRate = static_cast<int>(mInRate / aPlaybackRate);
+  } else {
+    // The playbackRate has been changed before the end of the latency
+    // compensation phase. We don't update the mOld* variable. That way, the
+    // last playbackRate set is taken into account.
+    mBasePosition = GetPosition();
+    mBaseOffset = position;
+    mPlaybackRateChangeOffset = mWritten;
+    mOutRate = static_cast<int>(mInRate / aPlaybackRate);
+  }
+}
+
+double AudioClock::GetPlaybackRate()
+{
+  return mPlaybackRate;
+}
+
+void AudioClock::SetPreservesPitch(bool aPreservesPitch)
+{
+  mPreservesPitch = aPreservesPitch;
+}
+
+bool AudioClock::GetPreservesPitch()
+{
+  return mPreservesPitch;
+}
 } // namespace mozilla

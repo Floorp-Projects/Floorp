@@ -47,6 +47,9 @@ function makeMessageObject(aRpCaller) {
   // loggedInUser can be undefined, null, or a string
   options.loggedInUser = aRpCaller.loggedInUser;
 
+  // Special flag for internal calls
+  options._internal = aRpCaller._internal;
+
   Object.keys(aRpCaller).forEach(function(option) {
     // Duplicate the callerobject, scrubbing out functions and other
     // internal variables (like _mm, the message manager object)
@@ -63,7 +66,6 @@ function makeMessageObject(aRpCaller) {
     throw new Error(err);
   }
 
-  dump("message object is: " + JSON.stringify(options) + "\n");
   return options;
 }
 
@@ -128,7 +130,6 @@ IDService.prototype = {
    */
   watch: function watch(aRpCaller) {
     // store the caller structure and notify the UI observers
-    dump("RP - watch: " + JSON.stringify(aRpCaller) + "\n");
     this._rpFlows[aRpCaller.id] = aRpCaller;
 
     let options = makeMessageObject(aRpCaller);
@@ -177,14 +178,14 @@ IDService.prototype = {
    * following functions (doLogin, doLogout, or doReady)
    */
 
-  doLogin: function doLogin(aRpCallerId, aAssertion) {
+  doLogin: function doLogin(aRpCallerId, aAssertion, aInternalParams) {
     let rp = this._rpFlows[aRpCallerId];
     if (!rp) {
       dump("WARNING: doLogin found no rp to go with callerId " + aRpCallerId + "\n");
       return;
     }
 
-    rp.doLogin(aAssertion);
+    rp.doLogin(aAssertion, aInternalParams);
   },
 
   doLogout: function doLogout(aRpCallerId) {

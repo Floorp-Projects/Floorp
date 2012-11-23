@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=812744
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 812744</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=812744">Mozilla Bug 812744</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="f"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 812744 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  var f = $("f");
+  var el = f.contentDocument.documentElement;
+  f.onload = function() {
+    el.setAttribute("onmouseleave", "(void 0)");
+    is(el.onmouseleave.toString(), "function onmouseleave(event) {\n(void 0)\n}",
+       "Should have a function here");
+    SimpleTest.finish();
+  };
+  f.src = "http://www.example.com/"
+});
+</script>
+</pre>
+</body>
+</html>

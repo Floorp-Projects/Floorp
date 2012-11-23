@@ -37,6 +37,7 @@ struct xpc_qsHashEntry {
     uint16_t n_props;
     uint16_t func_index;
     uint16_t n_funcs;
+    const mozilla::dom::NativeProperties* newBindingProperties;
     // These last two fields index to other entries in the same table.
     // XPC_QS_NULL_ENTRY indicates there are no more entries in the chain.
     uint16_t parentInterface;

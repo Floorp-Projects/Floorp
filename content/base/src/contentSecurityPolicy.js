@@ -37,6 +37,8 @@ function ContentSecurityPolicy() {
   this._policy._allowEval = true;
 
   this._request = "";
+  this._requestOrigin = "";
+  this._requestPrincipal = "";
   this._referrer = "";
   this._docRequest = null;
   CSPdebug("CSP POLICY INITED TO 'default-src *'");
@@ -73,6 +75,8 @@ function ContentSecurityPolicy() {
   csp._MAPPINGS[cp.TYPE_XMLHTTPREQUEST]    = cspr_sd.XHR_SRC;
   csp._MAPPINGS[cp.TYPE_WEBSOCKET]         = cspr_sd.XHR_SRC;
 
+  /* CSP cannot block CSP reports */
+  csp._MAPPINGS[cp.TYPE_CSP_REPORT]        = null;
 
   /* These must go through the catch-all */
   csp._MAPPINGS[cp.TYPE_XBL]               = cspr_sd.DEFAULT_SRC;
@@ -169,6 +173,11 @@ ContentSecurityPolicy.prototype = {
     let uri = aChannel.URI.cloneIgnoringRef();
     uri.userPass = '';
     this._request = uri.asciiSpec;
+    this._requestOrigin = uri;
+
+    //store a reference to the principal, that can later be used in shouldLoad
+    this._requestPrincipal = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
+    getService(Components.interfaces.nsIScriptSecurityManager).getChannelPrincipal(aChannel);
 
     if (aChannel.referrer) {
       let referrer = aChannel.referrer.cloneIgnoringRef();
@@ -202,8 +211,8 @@ ContentSecurityPolicy.prototype = {
 
     // If there is a policy-uri, fetch the policy, then re-call this function.
     // (1) parse and create a CSPRep object
-    // Note that we pass the full URI since when it's parsed as 'self' to construct a 
-    // CSPSource only the scheme, host, and port are kept. 
+    // Note that we pass the full URI since when it's parsed as 'self' to construct a
+    // CSPSource only the scheme, host, and port are kept.
     var newpolicy = CSPRep.fromString(aPolicy,
 				      selfURI,
                                       this._docRequest,
@@ -211,7 +220,7 @@ ContentSecurityPolicy.prototype = {
 
     // (2) Intersect the currently installed CSPRep object with the new one
     var intersect = this._policy.intersectWith(newpolicy);
- 
+
     // (3) Save the result
     this._policy = intersect;
     this._isInitialized = true;
@@ -325,8 +334,9 @@ ContentSecurityPolicy.prototype = {
           try {
             var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"]
                                   .getService(Ci.nsIContentPolicy);
-            if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_OTHER,
-                                         chan.URI, null, null, null, null)
+            if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_CSP_REPORT,
+                                         chan.URI, this._requestOrigin,
+                                         null, null, null, this._requestPrincipal)
                 != Ci.nsIContentPolicy.ACCEPT) {
               continue; // skip unauthorized URIs
             }
@@ -378,7 +388,7 @@ ContentSecurityPolicy.prototype = {
         CSPdebug(" found frame ancestor " + ancestor.asciiSpec);
         ancestors.push(ancestor);
       }
-    } 
+    }
 
     // scan the discovered ancestors
     let cspContext = CSPRep.SRC_DIRECTIVES.FRAME_ANCESTORS;
@@ -406,11 +416,11 @@ ContentSecurityPolicy.prototype = {
    * decides whether or not the policy is satisfied.
    */
   shouldLoad:
-  function csp_shouldLoad(aContentType, 
-                          aContentLocation, 
-                          aRequestOrigin, 
-                          aContext, 
-                          aMimeTypeGuess, 
+  function csp_shouldLoad(aContentType,
+                          aContentLocation,
+                          aRequestOrigin,
+                          aContext,
+                          aMimeTypeGuess,
                           aOriginalUri) {
 
     // don't filter chrome stuff
@@ -430,15 +440,15 @@ ContentSecurityPolicy.prototype = {
     }
 
     // otherwise, honor the translation
-    // var source = aContentLocation.scheme + "://" + aContentLocation.hostPort; 
+    // var source = aContentLocation.scheme + "://" + aContentLocation.hostPort;
     var res = this._policy.permits(aContentLocation, cspContext)
-              ? Ci.nsIContentPolicy.ACCEPT 
+              ? Ci.nsIContentPolicy.ACCEPT
               : Ci.nsIContentPolicy.REJECT_SERVER;
 
     // frame-ancestors is taken care of early on (as this document is loaded)
 
     // If the result is *NOT* ACCEPT, then send report
-    if (res != Ci.nsIContentPolicy.ACCEPT) { 
+    if (res != Ci.nsIContentPolicy.ACCEPT) {
       CSPdebug("blocking request for " + aContentLocation.asciiSpec);
       try {
         let directive = this._policy._directives[cspContext];
@@ -453,7 +463,7 @@ ContentSecurityPolicy.prototype = {
 
     return (this._reportOnlyMode ? Ci.nsIContentPolicy.ACCEPT : res);
   },
-  
+
   shouldProcess:
   function csp_shouldProcess(aContentType,
                              aContentLocation,

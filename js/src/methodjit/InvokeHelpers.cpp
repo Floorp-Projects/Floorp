@@ -200,7 +200,7 @@ stubs::FixupArity(VMFrame &f, uint32_t nactual)
      */
     InitialFrameFlags initial = oldfp->initialFlags();
     RootedFunction fun(cx, oldfp->fun());
-    RootedScript script(cx, fun->script());
+    RootedScript script(cx, fun->nonLazyScript());
     void *ncode = oldfp->nativeReturnAddress();
 
     /* Pop the inline frame. */
@@ -284,7 +284,10 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     JSContext *cx = f.cx;
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     RootedFunction newfun(cx, args.callee().toFunction());
-    RootedScript newscript(cx, newfun->script());
+
+    RootedScript newscript(cx, newfun->getOrCreateScript(cx));
+    if (!newscript)
+        return false;
 
     bool construct = InitialFrameFlagsAreConstructing(initial);
 

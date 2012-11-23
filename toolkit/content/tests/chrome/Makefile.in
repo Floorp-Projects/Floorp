@@ -174,7 +174,7 @@ MOCHITEST_CHROME_FILES += test_autocomplete_mac_caret.xul
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-MOCHITEST_CHROME_FILES += 	$(warning test_cursorsnap.xul temporarily disabled) \
+MOCHITEST_CHROME_FILES += $(filter disabled-temporarily, test_cursorsnap.xul) \
 		window_cursorsnap_dialog.xul \
 		window_cursorsnap_wizard.xul
 endif

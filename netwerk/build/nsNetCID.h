@@ -1028,6 +1028,12 @@
 #define NS_CONTENT_SNIFFER_CATEGORY "net-content-sniffers"
 
 /**
+ * Services in this category can sniff content that is not necessarily loaded
+ * from the network, and they won't be told about each load.
+ */
+#define NS_DATA_SNIFFER_CATEGORY "content-sniffing-services"
+
+/**
  * Must implement nsINSSErrorsService.
  */
 #define NS_NSS_ERRORS_SERVICE_CONTRACTID "@mozilla.org/nss_errors_service;1"

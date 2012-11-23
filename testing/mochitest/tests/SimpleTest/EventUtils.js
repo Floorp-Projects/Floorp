@@ -48,7 +48,7 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
     aWindow = window;
   }
 
-  if (!(aTarget instanceof Element)) {
+  if (!(aTarget instanceof aWindow.Element)) {
     aTarget = aWindow.document.getElementById(aTarget);
   }
 

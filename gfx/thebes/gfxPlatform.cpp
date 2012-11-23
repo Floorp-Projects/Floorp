@@ -1247,6 +1247,38 @@ gfxPlatform::UseProgressiveTilePainting()
 }
 
 bool
+gfxPlatform::UseLowPrecisionBuffer()
+{
+    static bool sUseLowPrecisionBuffer;
+    static bool sUseLowPrecisionBufferPrefCached = false;
+
+    if (!sUseLowPrecisionBufferPrefCached) {
+        sUseLowPrecisionBufferPrefCached = true;
+        mozilla::Preferences::AddBoolVarCache(&sUseLowPrecisionBuffer,
+                                              "layers.low-precision-buffer",
+                                              false);
+    }
+
+    return sUseLowPrecisionBuffer;
+}
+
+bool
+gfxPlatform::UseReusableTileStore()
+{
+    static bool sUseReusableTileStore;
+    static bool sUseReusableTileStorePrefCached = false;
+
+    if (!sUseReusableTileStorePrefCached) {
+        sUseReusableTileStorePrefCached = true;
+        mozilla::Preferences::AddBoolVarCache(&sUseReusableTileStore,
+                                              "layers.reuse-invalid-tiles",
+                                              false);
+    }
+
+    return sUseReusableTileStore;
+}
+
+bool
 gfxPlatform::OffMainThreadCompositingEnabled()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default ?

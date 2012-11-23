@@ -7,6 +7,7 @@
 #include "Layers.h"
 #include "ImageLayers.h"
 #include "gfxUtils.h"
+#include "nsDataHashtable.h"
 
 namespace mozilla {
 namespace layers {
@@ -203,27 +204,61 @@ struct ContainerLayerProperties : public LayerPropertiesBase
     ContainerLayer* container = mLayer->AsContainerLayer();
     nsIntRegion result;
 
-    uint32_t i = 0;
+    // A low frame rate is especially visible to users when scrolling, so we
+    // particularly want to avoid unnecessary invalidation at that time. For us
+    // here, that means avoiding unnecessary invalidation of child items when
+    // other children are added to or removed from our container layer, since
+    // that may be caused by children being scrolled in or out of view. We are
+    // less concerned with children changing order.
+    // TODO: Consider how we could avoid unnecessary invalidation when children
+    // change order, and whether the overhead would be worth it.
+
+    nsDataHashtable<nsPtrHashKey<Layer>, uint32_t> oldIndexMap;
+    oldIndexMap.Init(mChildren.Length());
+    for (uint32_t i = 0; i < mChildren.Length(); ++i) {
+      oldIndexMap.Put(mChildren[i]->mLayer, i);
+    }
+
+    uint32_t i = 0; // cursor into the old child list mChildren
     for (Layer* child = container->GetFirstChild(); child; child = child->GetNextSibling()) {
-      if (i >= mChildren.Length() || child != mChildren[i]->mLayer) {
-        // Child change. Invalidate the full areas.
-        // TODO: We could be smarter here if non-overlapping children
-        // swap order.
-        AddTransformedRegion(result, child->GetVisibleRegion(), child->GetTransform());
-        if (i < mChildren.Length()) {
-          AddRegion(result, mChildren[i]->OldTransformedBounds());
+      bool invalidateChildsCurrentArea = false;
+      if (i < mChildren.Length()) {
+        uint32_t childsOldIndex;
+        if (oldIndexMap.Get(child, &childsOldIndex)) {
+          if (childsOldIndex >= i) {
+            // Invalidate the old areas of layers that used to be between the
+            // current |child| and the previous |child| that was also in the
+            // old list mChildren (if any of those children have been reordered
+            // rather than removed, we will invalidate their new area when we
+            // encounter them in the new list):
+            for (uint32_t j = i; j < childsOldIndex; ++j) {
+              AddRegion(result, mChildren[j]->OldTransformedBounds());
+            }
+            // Invalidate any regions of the child that have changed: 
+            AddRegion(result, mChildren[childsOldIndex]->ComputeChange(aCallback));
+            i = childsOldIndex + 1;
+          } else {
+            // We've already seen this child in mChildren (which means it must
+            // have been reordered) and invalidated its old area. We need to 
+            // invalidate its new area too:
+            invalidateChildsCurrentArea = true;
+          }
+        } else {
+          // |child| is new
+          invalidateChildsCurrentArea = true;
         }
+      } else {
+        // |child| is new, or was reordered to a higher index
+        invalidateChildsCurrentArea = true;
+      }
+      if (invalidateChildsCurrentArea) {
+        AddTransformedRegion(result, child->GetVisibleRegion(), child->GetTransform());
         if (aCallback) {
           NotifySubdocumentInvalidationRecursive(child, aCallback);
         } else {
           ClearInvalidations(child);
         }
-      } else {
-        // Same child, check for differences within the child
-        AddRegion(result, mChildren[i]->ComputeChange(aCallback));
       }
-
-      i++;
     }
 
     // Process remaining removed children.
@@ -239,6 +274,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
     return TransformRegion(result, mLayer->GetTransform());
   }
 
+  // The old list of children:
   nsAutoTArray<nsAutoPtr<LayerPropertiesBase>,1> mChildren;
 };
 

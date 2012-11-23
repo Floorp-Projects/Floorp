@@ -1383,8 +1383,11 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
     if (obj2)
         return (nsISupports*)xpc_GetJSPrivate(obj2);
 
+    JSObject* unsafeObj =
+        XPCWrapper::Unwrap(aJSContext, aJSObj, /* stopAtOuter = */ false);
+    JSObject* cur = unsafeObj ? unsafeObj : aJSObj;
     nsISupports* supports = nullptr;
-    mozilla::dom::UnwrapDOMObjectToISupports(aJSObj, supports);
+    mozilla::dom::UnwrapDOMObjectToISupports(cur, supports);
     nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
     return canonical;
 }
@@ -1462,13 +1465,15 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
     return NS_OK;
 }
 
-/* nsIXPConnectJSObjectHolder reparentWrappedNativeIfFound (in JSContextPtr aJSContext, in JSObjectPtr aScope, in JSObjectPtr aNewParent, in nsISupports aCOMObj); */
+/* void reparentWrappedNativeIfFound (in JSContextPtr aJSContext,
+ *                                    in JSObjectPtr aScope,
+ *                                    in JSObjectPtr aNewParent,
+ *                                    in nsISupports aCOMObj); */
 NS_IMETHODIMP
 nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
                                           JSObject * aScope,
                                           JSObject * aNewParent,
-                                          nsISupports *aCOMObj,
-                                          nsIXPConnectJSObjectHolder **_retval)
+                                          nsISupports *aCOMObj)
 {
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if (!ccx.IsValid())
@@ -1480,8 +1485,8 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     return XPCWrappedNative::
-        ReparentWrapperIfFound(ccx, scope, scope2, aNewParent, aCOMObj,
-                               (XPCWrappedNative**) _retval);
+        ReparentWrapperIfFound(ccx, scope, scope2, aNewParent,
+                               aCOMObj);
 }
 
 static JSDHashOperator
