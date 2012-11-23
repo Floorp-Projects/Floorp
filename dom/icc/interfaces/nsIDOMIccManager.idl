@@ -45,6 +45,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_CMD_GET_INPUT             = 0x23;
   const unsigned short STK_CMD_SELECT_ITEM           = 0x24;
   const unsigned short STK_CMD_SET_UP_MENU           = 0x25;
+  const unsigned short STK_CMD_PROVIDE_LOCAL_INFO    = 0x26;
   const unsigned short STK_CMD_SET_UP_IDLE_MODE_TEXT = 0x28;
 
   /**
@@ -193,6 +194,16 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_TIME_UNIT_MINUTE       = 0x00;
   const unsigned short STK_TIME_UNIT_SECOND       = 0x01;
   const unsigned short STK_TIME_UNIT_TENTH_SECOND = 0x02;
+
+  /**
+   * Local Information list
+   *
+   * @see TS 102.223, clause 8.6
+   */
+  const unsigned short STK_LOCAL_INFO_LOCATION_INFO  = 0x00;
+  const unsigned short STK_LOCAL_INFO_IMEI           = 0x01;
+  const unsigned short STK_LOCAL_INFO_DATE_TIME_ZONE = 0x03;
+  const unsigned short STK_LOCAL_INFO_LANGUAGE       = 0x04;
 
   /**
    * Send the response back to ICC after an attempt to execute STK Proactive
