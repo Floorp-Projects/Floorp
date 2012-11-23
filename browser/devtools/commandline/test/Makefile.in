@@ -24,7 +24,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_cmd_pagemod_export.js \
   browser_cmd_pref.js \
   browser_cmd_restart.js \
-  browser_cmd_screenshot.js \
   browser_cmd_settings.js \
   browser_gcli_canon.js \
   browser_gcli_cli.js \
@@ -49,8 +48,19 @@ MOCHITEST_BROWSER_FILES = \
   browser_gcli_util.js \
   head.js \
   helpers.js \
+  helpers_perwindowpb.js \
   mockCommands.js \
   $(NULL)
+
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+ browser_cmd_screenshot_perwindowpb.js \
+ $(NULL)
+else
+MOCHITEST_BROWSER_FILES += \
+ browser_cmd_screenshot.js \
+ $(NULL)
+endif
 
 MOCHITEST_BROWSER_FILES += \
   browser_dbg_cmd_break.html \
