@@ -30,7 +30,9 @@ gcli.addCommand({
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
-    Tilt.initializeForCurrentTab();
+    if (!Tilt.currentInstance) {
+      Tilt.toggle();
+    }
   }
 });
 
@@ -45,15 +47,8 @@ gcli.addCommand({
   hidden: true,
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
-
-    if (TiltManager._instances.has(chromeWindow)) {
-      let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
-      Tilt.destroy(Tilt.currentWindowId);
-    }
-    else {
-      let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
-      Tilt.initializeForCurrentTab();
-    }
+    let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
+    Tilt.toggle();
   }
 });
 
