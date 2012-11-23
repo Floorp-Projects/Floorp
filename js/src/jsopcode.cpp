@@ -337,10 +337,11 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 
 /*
  * If pc != NULL, include a prefix indicating whether the PC is at the current line.
- * If counts != NULL, include a counter of the number of times each op was executed.
+ * If showAll is true, include the source note type and the entry stack depth.
  */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode *pc, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines,
+                   jsbytecode *pc, bool showAll, Sprinter *sp)
 {
     AssertCanGC();
     RootedScript script(cx, scriptArg);
@@ -348,10 +349,22 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode 
     jsbytecode *next, *end;
     unsigned len;
 
+    if (showAll)
+        Sprint(sp, "%s:%u\n", script->filename, script->lineno);
+
+    if (pc != NULL)
+        sp->put("    ");
+    if (showAll)
+        sp->put("sn stack ");
     sp->put("loc   ");
     if (lines)
         sp->put("line");
     sp->put("  op\n");
+
+    if (pc != NULL)
+        sp->put("    ");
+    if (showAll)
+        sp->put("-- ----- ");
     sp->put("----- ");
     if (lines)
         sp->put("----");
@@ -368,6 +381,25 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode 
             else
                 sp->put("    ");
         }
+        if (showAll) {
+            jssrcnote *sn = js_GetSrcNote(cx, script, next);
+            if (sn) {
+                JS_ASSERT(!SN_IS_TERMINATOR(sn));
+                jssrcnote *next = SN_NEXT(sn);
+                while (!SN_IS_TERMINATOR(next) && SN_DELTA(next) == 0) {
+                    Sprint(sp, "%02u\n    ", SN_TYPE(sn));
+                    sn = next;
+                    next = SN_NEXT(sn);
+                }
+                Sprint(sp, "%02u ", SN_TYPE(sn));
+            }
+            else
+                sp->put("   ");
+            if (script->hasAnalysis() && script->analysis()->maybeCode(next))
+                Sprint(sp, "%05u ", script->analysis()->getCode(next).stackDepth);
+            else
+                sp->put("      ");
+        }
         len = js_Disassemble1(cx, script, next, next - script->code, lines, sp);
         if (!len)
             return JS_FALSE;
@@ -379,30 +411,47 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode 
 JSBool
 js_Disassemble(JSContext *cx, HandleScript script, JSBool lines, Sprinter *sp)
 {
-    return js_DisassembleAtPC(cx, script, lines, NULL, sp);
+    return js_DisassembleAtPC(cx, script, lines, NULL, false, sp);
 }
 
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    AssertCanGC();
+    js::gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
     RootedScript script(cx, cx->fp()->script());
-    JSBool ok = js_DisassembleAtPC(cx, script, true, cx->regs().pc, &sprinter);
+    JSBool ok = js_DisassembleAtPC(cx, script, true, cx->regs().pc, false, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
 
 JS_FRIEND_API(JSBool)
-js_DumpScript(JSContext *cx, JSScript *script_)
+js_DumpScript(JSContext *cx, JSScript *scriptArg)
 {
+    js::gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
-    RootedScript script(cx, script_);
+    RootedScript script(cx, scriptArg);
     JSBool ok = js_Disassemble(cx, script, true, &sprinter);
+    fprintf(stdout, "%s", sprinter.string());
+    return ok;
+}
+
+/*
+ * Useful to debug ReconstructPCStack.
+ */
+JS_FRIEND_API(JSBool)
+js_DumpScriptDepth(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
+{
+    js::gc::AutoSuppressGC suppressGC(cx);
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return JS_FALSE;
+    RootedScript script(cx, scriptArg);
+    JSBool ok = js_DisassembleAtPC(cx, script, true, pc, true, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
