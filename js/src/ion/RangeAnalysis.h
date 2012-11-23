@@ -11,12 +11,59 @@
 #include "wtf/Platform.h"
 #include "MIR.h"
 #include "CompileInfo.h"
+#include "IonAnalysis.h"
 
 namespace js {
 namespace ion {
 
 class MBasicBlock;
 class MIRGraph;
+
+// An upper bound computed on the number of backedges a loop will take.
+// This count only includes backedges taken while running Ion code: for OSR
+// loops, this will exclude iterations that executed in the interpreter or in
+// baseline compiled code.
+struct LoopIterationBound : public TempObject
+{
+    // Loop for which this bound applies.
+    MBasicBlock *header;
+
+    // Test from which this bound was derived. Code in the loop body which this
+    // test dominates (will include the backedge) will execute at most 'bound'
+    // times. Other code in the loop will execute at most '1 + Max(bound, 0)'
+    // times.
+    MTest *test;
+
+    // Symbolic bound computed for the number of backedge executions.
+    LinearSum sum;
+
+    LoopIterationBound(MBasicBlock *header, MTest *test, LinearSum sum)
+      : header(header), test(test), sum(sum)
+    {
+    }
+};
+
+// A symbolic upper or lower bound computed for a term.
+struct SymbolicBound : public TempObject
+{
+    // Any loop iteration bound from which this was derived.
+    //
+    // If non-NULL, then 'sum' is only valid within the loop body, at points
+    // dominated by the loop bound's test (see LoopIterationBound).
+    //
+    // If NULL, then 'sum' is always valid.
+    LoopIterationBound *loop;
+
+    // Computed symbolic bound, see above.
+    LinearSum sum;
+
+    SymbolicBound(LoopIterationBound *loop, LinearSum sum)
+      : loop(loop), sum(sum)
+    {
+    }
+
+    void print(Sprinter &sp) const;
+};
 
 class RangeAnalysis
 {
@@ -33,16 +80,20 @@ class RangeAnalysis
     bool addBetaNobes();
     bool analyze();
     bool removeBetaNobes();
+
+  private:
+    void analyzeLoop(MBasicBlock *header);
+    LoopIterationBound *analyzeLoopIterationCount(MBasicBlock *header,
+                                                  MTest *test, BranchDirection direction);
+    void analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound, MPhi *phi);
+    bool tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins);
+    void markBlocksInLoopBody(MBasicBlock *header, MBasicBlock *current);
 };
 
-struct RangeChangeCount;
-class Range {
+class Range : public TempObject {
   private:
-    // :TODO: we should do symbolic range evaluation, where we have
-    // information of the form v1 < v2 for arbitrary defs v1 and v2, not
-    // just constants of type int32.
-    // (Bug 766592)
-
+    // Absolute ranges.
+    //
     // We represent ranges where the endpoints can be in the set:
     // {-infty} U [INT_MIN, INT_MAX] U {infty}.  A bound of +/-
     // infty means that the value may have overflowed in that
@@ -69,33 +120,38 @@ class Range {
     int32 upper_;
     bool upper_infinite_;
 
+    // Any symbolic lower or upper bound computed for this term.
+    const SymbolicBound *symbolicLower_;
+    const SymbolicBound *symbolicUpper_;
+
   public:
     Range()
         : lower_(JSVAL_INT_MIN),
           lower_infinite_(true),
           upper_(JSVAL_INT_MAX),
-          upper_infinite_(true)
+          upper_infinite_(true),
+          symbolicLower_(NULL),
+          symbolicUpper_(NULL)
     {}
 
-    Range(int64_t l, int64_t h) {
+    Range(int64_t l, int64_t h)
+        : symbolicLower_(NULL),
+          symbolicUpper_(NULL)
+    {
         setLower(l);
         setUpper(h);
     }
 
     Range(const Range &other)
-    : lower_(other.lower_),
-      lower_infinite_(other.lower_infinite_),
-      upper_(other.upper_),
-      upper_infinite_(other.upper_infinite_)
+        : lower_(other.lower_),
+          lower_infinite_(other.lower_infinite_),
+          upper_(other.upper_),
+          upper_infinite_(other.upper_infinite_),
+          symbolicLower_(NULL),
+          symbolicUpper_(NULL)
     {}
-    static Range Truncate(int64_t l, int64_t h) {
-        Range ret(l,h);
-        if (!ret.isFinite()) {
-            ret.makeLowerInfinite();
-            ret.makeUpperInfinite();
-        }
-        return ret;
-    }
+
+    static Range *Truncate(int64_t l, int64_t h);
 
     static int64_t abs64(int64_t x) {
 #ifdef WTF_OS_WINDOWS
@@ -105,7 +161,7 @@ class Range {
 #endif
     }
 
-    void printRange(FILE *fp);
+    void print(Sprinter &sp) const;
     bool update(const Range *other);
     bool update(const Range &other) {
         return update(&other);
@@ -116,15 +172,15 @@ class Range {
     // copying when chaining together unions when handling Phi
     // nodes.
     void unionWith(const Range *other);
-    static Range intersect(const Range *lhs, const Range *rhs, bool *nullRange);
-    static Range addTruncate(const Range *lhs, const Range *rhs);
-    static Range subTruncate(const Range *lhs, const Range *rhs);
-    static Range add(const Range *lhs, const Range *rhs);
-    static Range sub(const Range *lhs, const Range *rhs);
-    static Range mul(const Range *lhs, const Range *rhs);
-    static Range and_(const Range *lhs, const Range *rhs);
-    static Range shl(const Range *lhs, int32 c);
-    static Range shr(const Range *lhs, int32 c);
+    static Range * intersect(const Range *lhs, const Range *rhs, bool *emptyRange);
+    static Range * addTruncate(const Range *lhs, const Range *rhs);
+    static Range * subTruncate(const Range *lhs, const Range *rhs);
+    static Range * add(const Range *lhs, const Range *rhs);
+    static Range * sub(const Range *lhs, const Range *rhs);
+    static Range * mul(const Range *lhs, const Range *rhs);
+    static Range * and_(const Range *lhs, const Range *rhs);
+    static Range * shl(const Range *lhs, int32 c);
+    static Range * shr(const Range *lhs, int32 c);
 
     static bool precisionLossMul(const Range *lhs, const Range *rhs);
 
@@ -184,35 +240,20 @@ class Range {
         setLower(l);
         setUpper(h);
     }
-};
 
-struct RangeChangeCount {
-    Range oldRange;
-    unsigned char lowerCount_ : 4;
-    unsigned char upperCount_ : 4;
-    RangeChangeCount() : oldRange(), lowerCount_(0), upperCount_(0) {};
-    void updateRange(Range *newRange) {
-        JS_ASSERT(newRange->lower() >= oldRange.lower());
-        if (newRange->lower() != oldRange.lower())
-            lowerCount_ = lowerCount_ < 15 ? lowerCount_ + 1 : lowerCount_;
-        JS_ASSERT(newRange->upper() <= oldRange.upper());
-        if (newRange->upper() != oldRange.upper())
-            upperCount_ = upperCount_ < 15 ? upperCount_ + 1 : upperCount_;
-        oldRange = *newRange;
+    const SymbolicBound *symbolicLower() const {
+        return symbolicLower_;
     }
-};
-class RangeUpdater {
-    Range r_;
-    bool lowerSet_;
-    bool upperSet_;
-  public:
-    RangeUpdater() : r_(), lowerSet_(false), upperSet_(false) {}
-    void unionWith(const Range *other);
-    void unionWith(RangeChangeCount *other);
-    void updateLower(const Range * other);
-    void updateUpper(const Range * other);
-    Range *getRange() { JS_ASSERT(lowerSet_ && upperSet_); return &r_; }
-    void printRange(FILE *fp) { r_.printRange(fp); }
+    const SymbolicBound *symbolicUpper() const {
+        return symbolicUpper_;
+    }
+
+    void setSymbolicLower(SymbolicBound *bound) {
+        symbolicLower_ = bound;
+    }
+    void setSymbolicUpper(SymbolicBound *bound) {
+        symbolicUpper_ = bound;
+    }
 };
 
 } // namespace ion
