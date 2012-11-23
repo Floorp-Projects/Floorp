@@ -2072,6 +2072,35 @@ FindTileStart(nscoord aDirtyCoord, nscoord aTilePos, nscoord aTileDim)
   return NSToCoordRound(multiples*aTileDim + aTilePos);
 }
 
+/**
+ * Return the transform matrix that maps aFrom to the rectangle defined by
+ * aToTopLeft/aToTopRight/aToBottomRight. The destination rectangle must be
+ * nonempty and must be axis-aligned.
+ */
+static gfxMatrix
+TransformRectToRect(const gfxRect& aFrom, const gfxPoint& aToTopLeft,
+                    const gfxPoint& aToTopRight, const gfxPoint& aToBottomRight)
+{
+  gfxMatrix m;
+  if (aToTopRight.y == aToTopLeft.y && aToTopRight.x == aToBottomRight.x) {
+    // Not a rotation, so xy and yx are zero
+    m.xy = m.yx = 0.0;
+    m.xx = (aToBottomRight.x - aToTopLeft.x)/aFrom.width;
+    m.yy = (aToBottomRight.y - aToTopLeft.y)/aFrom.height;
+    m.x0 = aToTopLeft.x - m.xx*aFrom.x;
+    m.y0 = aToTopLeft.y - m.yy*aFrom.y;
+  } else {
+    NS_ASSERTION(aToTopRight.y == aToBottomRight.y && aToTopRight.x == aToTopLeft.x,
+                 "Destination rectangle not axis-aligned");
+    m.xx = m.yy = 0.0;
+    m.xy = (aToBottomRight.x - aToTopLeft.x)/aFrom.height;
+    m.yx = (aToBottomRight.y - aToTopLeft.y)/aFrom.width;
+    m.x0 = aToTopLeft.x - m.xy*aFrom.y;
+    m.y0 = aToTopLeft.y - m.yx*aFrom.x;
+  }
+  return m;
+}
+
 void
 nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               nsRenderingContext& aRenderingContext,
@@ -2392,10 +2421,14 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       // Try snapping the fill rect. Snap its top-left and bottom-right
       // independently to preserve the orientation.
       gfxPoint snappedFillRectTopLeft = fillRect.TopLeft();
+      gfxPoint snappedFillRectTopRight = fillRect.TopRight();
       gfxPoint snappedFillRectBottomRight = fillRect.BottomRight();
+      // Snap three points instead of just two to ensure we choose the
+      // correct orientation if there's a reflection.
       if (isCTMPreservingAxisAlignedRectangles &&
           ctx->UserToDevicePixelSnapped(snappedFillRectTopLeft, true) &&
-          ctx->UserToDevicePixelSnapped(snappedFillRectBottomRight, true)) {
+          ctx->UserToDevicePixelSnapped(snappedFillRectBottomRight, true) &&
+          ctx->UserToDevicePixelSnapped(snappedFillRectTopRight, true)) {
         if (snappedFillRectTopLeft.x == snappedFillRectBottomRight.x ||
             snappedFillRectTopLeft.y == snappedFillRectBottomRight.y) {
           // Nothing to draw; avoid scaling by zero and other weirdness that
@@ -2405,11 +2438,10 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
         // Set the context's transform to the transform that maps fillRect to
         // snappedFillRect. The part of the gradient that was going to
         // exactly fill fillRect will fill snappedFillRect instead.
-        ctx->IdentityMatrix();
-        ctx->Translate(snappedFillRectTopLeft);
-        ctx->Scale((snappedFillRectBottomRight.x - snappedFillRectTopLeft.x)/fillRect.width,
-                   (snappedFillRectBottomRight.y - snappedFillRectTopLeft.y)/fillRect.height);
-        ctx->Translate(-fillRect.TopLeft());
+        gfxMatrix transform = TransformRectToRect(fillRect,
+            snappedFillRectTopLeft, snappedFillRectTopRight,
+            snappedFillRectBottomRight);
+        ctx->SetMatrix(transform);
       }
       ctx->Rectangle(fillRect);
       ctx->Translate(tileRect.TopLeft());
