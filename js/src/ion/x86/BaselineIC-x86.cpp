@@ -130,7 +130,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         break;
       default:
        JS_NOT_REACHED("Unhandled op for BinaryArith_Int32.  ");
-       return NULL;
+       return false;
     }
 
     // Return.
