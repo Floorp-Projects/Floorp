@@ -319,6 +319,22 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
   return constructor;
 }
 
+bool
+DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const NativeProperties* properties)
+{
+  if (properties->methods &&
+      !DefinePrefable(cx, proto, properties->methods)) {
+    return false;
+  }
+
+  if (properties->attributes &&
+      !DefinePrefable(cx, proto, properties->attributes)) {
+    return false;
+  }
+
+  return true;
+}
+
 static JSObject*
 CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
                                JSObject* parentProto, JSClass* protoClass,

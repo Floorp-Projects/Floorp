@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface Node;
-
 interface NodeList {
   getter Node? item(unsigned long index);
   readonly attribute unsigned long length;

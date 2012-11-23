@@ -1324,6 +1324,12 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 aCORSMode, aLoadingPrincipal))
     return false;
 
+  // Never validate data URIs.
+  nsAutoCString scheme;
+  aURI->GetScheme(scheme);
+  if (scheme.EqualsLiteral("data"))
+    return true;
+
   bool validateRequest = false;
 
   // If the request's loadId is the same as the aCX, then it is ok to use

@@ -295,7 +295,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
                 okay = false;
                 break;
             }
-            RootedScript script(cx, fun->script());
+            RootedScript script(cx, fun->nonLazyScript());
 
             /*
              * Don't inline calls to scripts which haven't been analyzed.
@@ -394,7 +394,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
                 continue;
 
             JSFunction *fun = obj->toFunction();
-            RootedScript script(cx, fun->script());
+            RootedScript script(cx, fun->nonLazyScript());
 
             CompileStatus status = addInlineFrame(script, nextDepth, index, pc);
             if (status != Compile_Okay)

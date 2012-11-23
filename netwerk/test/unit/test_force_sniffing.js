@@ -83,7 +83,7 @@ function run_test() {
   var catMan = Components.classes["@mozilla.org/categorymanager;1"]
                          .getService(Components.interfaces.nsICategoryManager);
   catMan.nsICategoryManager.addCategoryEntry(categoryName, snifferContract,
-                                             "unit test", false, true);
+                                             snifferContract, false, true);
 
   var chan = makeChan(url);
   chan.asyncOpen(listener, null);

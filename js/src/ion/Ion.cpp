@@ -1143,7 +1143,13 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     }
     builder->clearForBackEnd();
 
-    if (js_IonOptions.parallelCompilation && OffThreadCompilationAvailable(cx)) {
+    // Try to compile the script off thread, if possible. Compilation cannot be
+    // performed off thread during an incremental GC, as doing so may trip
+    // incremental read barriers.
+    if (js_IonOptions.parallelCompilation &&
+        OffThreadCompilationAvailable(cx) &&
+        !cx->compartment->needsBarrier())
+    {
         builder->script()->ion = ION_COMPILING_SCRIPT;
 
         if (!StartOffThreadIonCompile(cx, builder)) {
@@ -1581,7 +1587,7 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
 {
     JS_CHECK_RECURSION(cx, return IonExec_Error);
 
-    RootedScript script(cx, fun->script());
+    RootedScript script(cx, fun->nonLazyScript());
     IonScript *ion = script->ionScript();
     IonCode *code = ion->method();
     void *jitcode = code->raw();

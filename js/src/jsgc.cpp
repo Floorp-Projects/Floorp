@@ -4525,8 +4525,11 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
         JS_ASSERT_IF(rt->gcMode == JSGC_MODE_GLOBAL, c->isGCScheduled());
 #endif
 
-    /* Don't GC if we are reporting an OOM. */
-    if (rt->inOOMReport)
+    /*
+     * Don't GC if we are reporting an OOM or in an interactive debugging
+     * session.
+     */
+    if (rt->mainThread.suppressGC)
         return;
 
     AutoGCSession gcsession(rt);
@@ -5726,6 +5729,27 @@ FinishVerifier(JSRuntime *rt)
 }
 
 #endif /* JS_GC_ZEAL */
+
+#ifdef DEBUG
+
+/* Should only be called manually under gdb */
+void PreventGCDuringInteractiveDebug()
+{
+    TlsPerThreadData.get()->suppressGC++;
+}
+
+#endif
+
+gc::AutoSuppressGC::AutoSuppressGC(JSContext *cx)
+  : suppressGC_(cx->runtime->mainThread.suppressGC)
+{
+    suppressGC_++;
+}
+
+gc::AutoSuppressGC::~AutoSuppressGC()
+{
+    suppressGC_--;
+}
 
 void
 js::ReleaseAllJITCode(FreeOp *fop)

@@ -419,7 +419,7 @@ public:
     mSandboxFlags = sandboxFlags;
   }
 
-  inline mozilla::directionality::Directionality GetDocumentDirectionality() {
+  inline mozilla::Directionality GetDocumentDirectionality() {
     return mDirectionality;
   }
   
@@ -1916,7 +1916,7 @@ protected:
   uint32_t mSandboxFlags;
 
   // The root directionality of this document.
-  mozilla::directionality::Directionality mDirectionality;
+  mozilla::Directionality mDirectionality;
 
   nsCString mContentLanguage;
 private:
@@ -2060,10 +2060,10 @@ private:
 
 // XXX These belong somewhere else
 nsresult
-NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
+NS_NewHTMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData = false);
 
 nsresult
-NS_NewXMLDocument(nsIDocument** aInstancePtrResult);
+NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData = false);
 
 nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult);

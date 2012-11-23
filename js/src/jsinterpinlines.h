@@ -1019,9 +1019,9 @@ class FastInvokeGuard
     void initFunction(const Value &fval) {
         if (fval.isObject() && fval.toObject().isFunction()) {
             JSFunction *fun = fval.toObject().toFunction();
-            if (fun->isInterpreted()) {
+            if (fun->hasScript()) {
                 fun_ = fun;
-                script_ = fun->script();
+                script_ = fun->nonLazyScript();
             }
         }
     }
@@ -1033,7 +1033,7 @@ class FastInvokeGuard
     bool invoke(JSContext *cx) {
 #ifdef JS_ION
         if (useIon_ && fun_) {
-            JS_ASSERT(fun_->script() == script_);
+            JS_ASSERT(fun_->nonLazyScript() == script_);
 
             ion::MethodStatus status = ion::CanEnterUsingFastInvoke(cx, script_, args_.length());
             if (status == ion::Method_Error)

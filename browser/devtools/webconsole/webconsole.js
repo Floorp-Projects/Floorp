@@ -165,6 +165,8 @@ const FILTER_PREFS_PREFIX = "devtools.webconsole.filter.";
 // The minimum font size.
 const MIN_FONT_SIZE = 10;
 
+const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
+
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per tab*
  * that displays console log data as well as provides an interactive terminal to
@@ -191,6 +193,7 @@ function WebConsoleFrame(aWebConsoleOwner, aPosition)
   this._toggleFilter = this._toggleFilter.bind(this);
   this._onPositionConsoleCommand = this._onPositionConsoleCommand.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
+  this._connectionTimeout = this._connectionTimeout.bind(this);
 
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._outputTimerInitialized = false;
@@ -221,6 +224,13 @@ WebConsoleFrame.prototype = {
    * @type object
    */
   proxy: null,
+
+  /**
+   * Timer used for the connection.
+   * @private
+   * @type object
+   */
+  _connectTimer: null,
 
   /**
    * Getter for the xul:popupset that holds any popups we open.
@@ -368,10 +378,51 @@ WebConsoleFrame.prototype = {
       port: this.owner.remotePort,
     });
 
+    let timeout = Services.prefs.getIntPref(PREF_CONNECTION_TIMEOUT);
+    this._connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._connectTimer.initWithCallback(this._connectionTimeout,
+                                        timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+
     this.proxy.connect(function() {
-      this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
-      this._onInitComplete();
+      if (this._connectTimer) {
+        this._connectTimer.cancel();
+        this._connectTimer = null;
+        this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
+        this._onInitComplete();
+      }
     }.bind(this));
+  },
+
+  /**
+   * Connection timeout handler. This method simply prints a message informing
+   * the user that the connection timed-out.
+   * @private
+   */
+  _connectionTimeout: function WCF__connectionTimeout()
+  {
+    this._connectTimer = null;
+
+    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
+                                      l10n.getStr("connectionTimeout"));
+    this.outputMessage(CATEGORY_JS, node);
+
+    // Allow initialization to complete.
+    this._onInitComplete();
+  },
+
+  /**
+   * Reset the connection timeout timer.
+   * @private
+   */
+  _resetConnectionTimeout: function WCF__resetConnectionTimeout()
+  {
+    let timer = this._connectTimer;
+    if (timer) {
+      let timeout = timer.delay;
+      timer.cancel();
+      timer.initWithCallback(this._connectionTimeout, timeout,
+                             Ci.nsITimer.TYPE_ONE_SHOT);
+    }
   },
 
   /**
@@ -2732,6 +2783,11 @@ WebConsoleFrame.prototype = {
     }
     this._outputTimer = null;
 
+    if (this._connectTimer) {
+      this._connectTimer.cancel();
+    }
+    this._connectTimer = null;
+
     if (this.proxy) {
       this.proxy.disconnect(aOnDestroy);
       this.proxy = null;
@@ -4092,6 +4148,8 @@ WebConsoleConnectionProxy.prototype = {
     let selectedTab;
 
     if (this.remoteHost) {
+      this.owner._connectTimer.cancel();
+
       let tabs = [];
       for (let tab of aResponse.tabs) {
         tabs.push(tab.title);
@@ -4120,6 +4178,8 @@ WebConsoleConnectionProxy.prototype = {
     else {
       this._consoleActor = aResponse.consoleActor;
     }
+
+    this.owner._resetConnectionTimeout();
 
     let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
                      "FileActivity", "LocationChange"];
@@ -4318,13 +4378,38 @@ WebConsoleConnectionProxy.prototype = {
       return;
     }
 
+    let onDisconnect = function() {
+      if (timer) {
+        timer.cancel();
+        timer = null;
+      }
+      if (aOnDisconnect) {
+        aOnDisconnect();
+        aOnDisconnect = null;
+      }
+    };
+
+    let timer = null;
+    if (aOnDisconnect) {
+      timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      timer.initWithCallback(onDisconnect, 1500, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+
     this.client.removeListener("pageError", this._onPageError);
     this.client.removeListener("consoleAPICall", this._onConsoleAPICall);
     this.client.removeListener("networkEvent", this._onNetworkEvent);
     this.client.removeListener("networkEventUpdate", this._onNetworkEventUpdate);
     this.client.removeListener("fileActivity", this._onFileActivity);
     this.client.removeListener("locationChange", this._onLocationChange);
-    this.client.close(aOnDisconnect);
+
+    try {
+      this.client.close(onDisconnect);
+    }
+    catch (ex) {
+      Cu.reportError("Web Console disconnect exception: " + ex);
+      Cu.reportError(ex.stack);
+      onDisconnect();
+    }
 
     this.client = null;
     this.webConsoleClient = null;

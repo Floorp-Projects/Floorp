@@ -72,7 +72,7 @@ ScriptFromCalleeToken(CalleeToken token)
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
       case CalleeToken_Function:
-        return CalleeTokenToFunction(token)->script().get(nogc);
+        return CalleeTokenToFunction(token)->nonLazyScript().get(nogc);
     }
     JS_NOT_REACHED("invalid callee token tag");
     return NULL;

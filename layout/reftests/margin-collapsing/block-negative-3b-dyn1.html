@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+html, body {
+ margin: 0; padding: 5px;
+}
+div {
+ height: 20px;
+ background-color: green;
+}
+#negative {
+ margin-bottom: -80px;
+}
+#positive {
+ display: none;
+ margin-top: 100px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('positive').style.display = 'block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="negative"></div>
+<div id="positive"></div>
+</body>
+</html>

@@ -54,7 +54,7 @@ static inline bool CanIonCompile(JSContext *cx, HandleFunction fun, ExecutionMod
 {
     if (!fun->isInterpreted())
         return false;
-    RootedScript script(cx, fun->script());
+    RootedScript script(cx, fun->nonLazyScript());
     return CanIonCompile(script, cmode);
 }
 

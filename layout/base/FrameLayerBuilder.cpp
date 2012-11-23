@@ -1407,7 +1407,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
 #ifndef MOZ_ANDROID_OMTC
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
-  gfxPoint activeScrolledRootTopLeft = scaledOffset - matrix.GetTranslation();
+  gfxPoint activeScrolledRootTopLeft = scaledOffset - matrix.GetTranslation() + mParameters.mOffset;
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
@@ -2031,6 +2031,10 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     itemVisibleRect.IntersectRect(itemVisibleRect, itemDrawRect);
 
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
+    if (layerState == LAYER_INACTIVE &&
+        nsDisplayItem::ForceActiveLayers()) {
+      layerState = LAYER_ACTIVE;
+    }
 
     bool isFixed;
     bool forceInactive;
@@ -2824,6 +2828,10 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
 
   LayerState state = aContainerItem ? aContainerItem->GetLayerState(aBuilder, aManager, aParameters) : LAYER_ACTIVE;
+  if (state == LAYER_INACTIVE &&
+      nsDisplayItem::ForceActiveLayers()) {
+    state = LAYER_ACTIVE;
+  }
 
   if (aContainerItem && state == LAYER_ACTIVE_EMPTY) {
     // Empty layers only have metadata and should never have display items. We
@@ -2856,9 +2864,11 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   nsRect bounds;
   nsIntRect pixBounds;
   int32_t appUnitsPerDevPixel;
-  uint32_t stateFlags =
-    (aContainerFrame->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) ?
-      ContainerState::NO_COMPONENT_ALPHA : 0;
+  uint32_t stateFlags = 0;
+  if ((aContainerFrame->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) &&
+      mRetainingManager && !mRetainingManager->AreComponentAlphaLayersEnabled()) {
+    stateFlags = ContainerState::NO_COMPONENT_ALPHA;
+  }
   uint32_t flags;
   while (true) {
     ContainerState state(aBuilder, aManager, aManager->GetLayerBuilder(),

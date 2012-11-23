@@ -73,7 +73,7 @@ struct DrawOptions {
 
   Float mAlpha;
   CompositionOp mCompositionOp : 8;
-  AntialiasMode mAntialiasMode : 2;
+  AntialiasMode mAntialiasMode : 3;
   Snapping mSnapping : 1;
 };
 

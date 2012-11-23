@@ -954,6 +954,24 @@ nsFlexContainerFrame::GetFrameName(nsAString& aResult) const
 }
 #endif // DEBUG
 
+// Helper for BuildDisplayList, to implement this special-case for flex items
+// from the spec:
+//    Flex items paint exactly the same as block-level elements in the
+//    normal flow, except that 'z-index' values other than 'auto' create
+//    a stacking context even if 'position' is 'static'.
+// http://www.w3.org/TR/2012/CR-css3-flexbox-20120918/#painting
+uint32_t
+GetDisplayFlagsForFlexItem(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->IsFlexItem(), "Should only be called on flex items");
+
+  const nsStylePosition* pos = aFrame->GetStylePosition();
+  if (pos->mZIndex.GetUnit() == eStyleUnit_Integer) {
+    return nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT;
+  }
+  return 0;
+}
+
 NS_IMETHODIMP
 nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
@@ -963,7 +981,8 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    rv = BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, aLists);
+    rv = BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, aLists,
+                                  GetDisplayFlagsForFlexItem(e.get()));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
