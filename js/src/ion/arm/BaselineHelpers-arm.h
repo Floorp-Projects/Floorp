@@ -27,7 +27,6 @@ EmitRestoreTailCallReg(MacroAssembler &masm)
 inline void
 EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 {
-
     // Move ICEntry offset into BaselineStubReg
     CodeOffsetLabel offset = masm.movWithPatch(ImmWord(-1), BaselineStubReg);
     *patchOffset = offset;
@@ -42,6 +41,23 @@ EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 
     // Call the stubcode via a direct branch-and-link
     masm.ma_blx(r0);
+}
+
+inline void
+EmitEnterTypeMonitorIC(MacroAssembler &masm)
+{
+    // This is expected to be called from within an IC, when BaselineStubReg
+    // is properly initialized to point to the stub.
+    masm.loadPtr(Address(BaselineStubReg, ICMonitoredStub::offsetOfFirstMonitorStub()),
+                 BaselineStubReg);
+
+    // Load stubcode pointer from BaselineStubEntry.
+    // R2 won't be active when we call ICs, so we can use r0.
+    JS_ASSERT(R2 == ValueOperand(r1, r0));
+    masm.loadPtr(Address(BaselineStubReg, ICStub::offsetOfStubCode()), r0);
+
+    // Jump to the stubcode.
+    masm.branch(r0);
 }
 
 inline void

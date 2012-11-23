@@ -45,6 +45,22 @@ EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 }
 
 inline void
+EmitEnterTypeMonitorIC(MacroAssembler &masm)
+{
+    // This is expected to be called from within an IC, when BaselineStubReg
+    // is properly initialized to point to the stub.
+    masm.movq(Operand(BaselineStubReg, (int32_t) ICMonitoredStub::offsetOfFirstMonitorStub()),
+              BaselineStubReg);
+
+    // Load stubcode pointer from BaselineStubEntry into BaselineTailCallReg.
+    masm.movq(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
+              BaselineTailCallReg);
+
+    // Jump to the stubcode.
+    masm.jmp(Operand(BaselineTailCallReg));
+}
+
+inline void
 EmitReturnFromIC(MacroAssembler &masm)
 {
     masm.ret();
