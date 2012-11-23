@@ -30,11 +30,6 @@ typedef InlineForwardListIterator<MPhi> MPhiIterator;
 
 class LBlock;
 
-enum BranchDirection {
-    FALSE_BRANCH,
-    TRUE_BRANCH
-};
-
 class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 {
   public:
