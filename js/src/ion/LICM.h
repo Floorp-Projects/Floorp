@@ -33,12 +33,6 @@ class LICM
     bool analyze();
 };
 
-// Extract a linear inequality holding when a boolean test goes in the
-// specified direction, of the form 'lhs + lhsN <= rhs' (or >=).
-bool
-ExtractLinearInequality(MTest *test, BranchDirection direction,
-                        LinearSum *plhs, MDefinition **prhs, bool *plessEqual);
-
 class Loop
 {
     MIRGenerator *mir;
@@ -77,7 +71,7 @@ class Loop
     // Along the way it adds instructions to the worklist for invariance testing.
     LoopReturn iterateLoopBlocks(MBasicBlock *current);
 
-    bool hoistInstructions(InstructionQueue &toHoist, InstructionQueue &boundsChecks);
+    bool hoistInstructions(InstructionQueue &toHoist);
 
     // Utility methods for invariance testing and instruction hoisting.
     bool isInLoop(MDefinition *ins);
@@ -96,15 +90,6 @@ class Loop
     inline bool isHoistable(const MDefinition *ins) const {
         return ins->isMovable() && !ins->isEffectful();
     }
-
-    // State for hoisting bounds checks. Even if the terms involved in a bounds
-    // check are not loop invariant, we analyze the tests and increments done
-    // in the loop to try to find a stronger condition which can be hoisted.
-
-    void tryHoistBoundsCheck(MBoundsCheck *ins, MTest *test, BranchDirection direction,
-                             MInstruction **pupper, MInstruction **plower);
-
-    bool nonDecreasing(MDefinition *initial, MDefinition *start);
 };
 
 } // namespace ion
