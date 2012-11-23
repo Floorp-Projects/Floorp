@@ -30,6 +30,8 @@ namespace ion {
 # define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
 # define ION_COMPILING_SCRIPT ((js::ion::IonScript *)0x2)
 
+# define BASELINE_DISABLED_SCRIPT ((js::ion::BaselineScript *)0x1)
+
 struct Shape;
 
 class BindingIter;
@@ -583,7 +585,11 @@ struct JSScript : public js::gc::Cell
     js::ion::BaselineScript *baseline;
 
     bool hasBaselineScript() const {
-        return !!baseline;
+        return baseline && baseline != BASELINE_DISABLED_SCRIPT;
+    }
+    js::ion::BaselineScript *baselineScript() const {
+        JS_ASSERT(hasBaselineScript());
+        return baseline;
     }
 
     uint32_t padding0;
