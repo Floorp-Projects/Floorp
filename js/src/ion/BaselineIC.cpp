@@ -19,6 +19,28 @@
 namespace js {
 namespace ion {
 
+ICMonitoredStub::ICMonitoredStub(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub)
+  : ICStub(kind, false, true, stubCode),
+    firstMonitorStub_(firstMonitorStub)
+{
+    // If the first monitored stub is a ICTypeMonitor_Fallback stub, then
+    // double check that _its_ firstMonitorStub is the same as this one.
+    JS_ASSERT_IF(firstMonitorStub_->isTypeMonitor_Fallback(),
+                 firstMonitorStub_->toTypeMonitor_Fallback()->firstMonitorStub() ==
+                    firstMonitorStub_);
+}
+
+bool
+ICMonitoredFallbackStub::initMonitoringChain(JSContext *cx)
+{
+    ICTypeMonitor_Fallback::Compiler compiler(cx, this);
+    ICTypeMonitor_Fallback *stub = compiler.getStub();
+    if (!stub)
+        return false;
+    fallbackMonitorStub_ = stub;
+    return true;
+}
+
 IonCode *
 ICStubCompiler::getStubCode()
 {
@@ -57,6 +79,105 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 
     uint32_t argSize = fun.explicitStackSlots() * sizeof(void *);
     EmitTailCall(code, masm, argSize);
+    return true;
+}
+
+//
+// TypeMonitor_Fallback
+//
+
+bool
+ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleValue val)
+{
+    bool wasEmptyMonitorChain = (numOptimizedMonitorStubs_ == 0);
+    // This is just a no-op for now, as we add more optimized type monitor stubs,
+    // this will fill out, for example:
+    //
+    //  if (val.isInt32()) {
+    //      ICTypeMonitor_Int32::Compiler compiler(cx);
+    //      ICStub *stub = compiler.getStub();
+    //      if (!stub)
+    //          return false;
+    //      addOptimizedMonitorStub(stub);
+    //      return true;
+    //  }
+    bool firstMonitorStubAdded = wasEmptyMonitorChain && (numOptimizedMonitorStubs_ > 0);
+
+    if (firstMonitorStubAdded) {
+        // Was an empty monitor chain before, but a new stub was added.  This is the
+        // only time that any main stubs' firstMonitorStub fields need to be updated to
+        // refer to the newly added monitor stub.
+        ICEntry *ent = mainFallbackStub_->icEntry();
+        for (ICStub *mainStub = ent->firstStub();
+             mainStub != mainFallbackStub_;
+             mainStub = mainStub->next())
+        {
+            // Since we stop at the last stub, all stubs MUST have a valid next stub.
+            JS_ASSERT(mainStub->next() != NULL);
+
+            // Since we just added the first optimized monitoring stub, any
+            // existing main stub's |firstMonitorStub| MUST be pointing to the fallback
+            // monitor stub (i.e. this stub).
+            JS_ASSERT(mainStub->toMonitoredStub()->firstMonitorStub() == this);
+            mainStub->toMonitoredStub()->updateFirstMonitorStub(firstMonitorStub_);
+        }
+    }
+
+    return true;
+}
+
+static bool
+DoTypeMonitorFallback(JSContext *cx, ICTypeMonitor_Fallback *stub, HandleValue value,
+                      MutableHandleValue res)
+{
+    RootedScript script(cx, GetTopIonJSScript(cx));
+
+    // Monitor the pc.
+    jsbytecode *pc = stub->mainFallbackStub()->icEntry()->pc(script);
+    types::TypeScript::Monitor(cx, script, pc, value);
+
+    // Copy input value to res.
+    res.set(value);
+
+    return true;
+}
+
+typedef bool (*DoTypeMonitorFallbackFn)(JSContext *, ICTypeMonitor_Fallback *, HandleValue,
+                                        MutableHandleValue);
+static const VMFunction DoTypeMonitorFallbackInfo =
+    FunctionInfo<DoTypeMonitorFallbackFn>(DoTypeMonitorFallback);
+
+bool
+ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return callVM(DoTypeMonitorFallbackInfo, masm);
+}
+
+//
+// TypeUpdate_Fallback
+//
+
+bool
+ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // R0 contains the input value to be checked.
+    // R2.scratchReg() contains the return address back to the mainline code.
+    //
+    // It's ok to clobber BaselineTailCallReg here because even on ARM where it matters,
+    // we will never be returning to it.
+    masm.loadPtr(Address(BaselineStubReg, (int32_t) ICTypeUpdate_Fallback::offsetOfEntryPoint()),
+                 BaselineTailCallReg);
+    masm.jump(BaselineTailCallReg);
     return true;
 }
 
@@ -420,7 +541,7 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
         if (stub->hasStub(ICStub::GetElem_Dense))
             return true;
 
-        ICGetElem_Dense::Compiler compiler(cx);
+        ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub());
         ICStub *denseStub = compiler.getStub();
         if (!denseStub)
             return false;
@@ -485,7 +606,9 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     BaseIndex element(scratchReg, key, TimesEight);
     masm.branchTestMagic(Assembler::Equal, element, &failure);
     masm.loadValue(element, R0);
-    EmitReturnFromIC(masm);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
@@ -693,6 +816,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     return callVM(DoCallFallbackInfo, masm);
 }
+
 
 } // namespace ion
 } // namespace js
