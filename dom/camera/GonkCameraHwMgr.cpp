@@ -377,7 +377,7 @@ int
 GonkCameraHardware::StartPreview(uint32_t aHwHandle)
 {
   GonkCameraHardware* hw = GetHardware(aHwHandle);
-  DOM_CAMERA_LOGI("%s:%d : aHwHandle = %d, hw = %p\n", __func__, __LINE__, aHwHandle, hw);
+  DOM_CAMERA_LOGI("%s : aHwHandle = %d, hw = %p\n", __func__, aHwHandle, hw);
   if (!hw) {
     return DEAD_OBJECT;
   }
@@ -389,7 +389,12 @@ void
 GonkCameraHardware::StopPreview(uint32_t aHwHandle)
 {
   GonkCameraHardware* hw = GetHardware(aHwHandle);
+  DOM_CAMERA_LOGI("%s : aHwHandle = %d, hw = %p\n", __func__, aHwHandle, hw);
   if (hw) {
+    // Must disable messages first; else some drivers will silently discard
+    //  the stopPreview() request, which can lead to crashes and other
+    //  Very Bad Things that are Hard To Diagnose.
+    hw->mHardware->disableMsgType(CAMERA_MSG_ALL_MSGS);
     hw->mHardware->stopPreview();
   }
 }
