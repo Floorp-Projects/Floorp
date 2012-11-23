@@ -90,7 +90,7 @@ MarionetteComponent.prototype = {
         port = 2828;
       }
       try {
-        Cu.import('resource:///modules/devtools/dbg-server.jsm');
+        Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
         DebuggerServer.addActors('chrome://marionette/content/marionette-actors.js');
         // This pref is required for the remote debugger to open a socket,
         // so force it to true.  See bug 761252.
@@ -102,8 +102,9 @@ MarionetteComponent.prototype = {
         Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, true);
         // Always allow remote connections.
         DebuggerServer.initTransport(function () { return true; });
-        DebuggerServer.openListener(port, true);
+        DebuggerServer.openListener(port);
         Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, original);
+        this.logger.info("marionette listener opened");
       }
       catch(e) {
         this.logger.error('exception: ' + e.name + ', ' + e.message);
