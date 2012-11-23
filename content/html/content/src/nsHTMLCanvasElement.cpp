@@ -307,7 +307,7 @@ nsHTMLCanvasElement::IsPrintCallbackDone()
   return mPrintState->mIsDone;
 }
 
-nsIDOMHTMLCanvasElement*
+nsHTMLCanvasElement*
 nsHTMLCanvasElement::GetOriginalCanvas()
 {
   return mOriginalCanvas ? mOriginalCanvas.get() : this;
@@ -323,16 +323,16 @@ nsHTMLCanvasElement::CopyInnerTo(Element* aDest)
     nsHTMLCanvasElement* self = const_cast<nsHTMLCanvasElement*>(this);
     dest->mOriginalCanvas = self;
 
-    HTMLImageOrCanvasOrVideoElement element;
-    element.SetAsHTMLCanvasElement() = this;
     nsCOMPtr<nsISupports> cxt;
     dest->GetContext(NS_LITERAL_STRING("2d"), JSVAL_VOID, getter_AddRefs(cxt));
     nsRefPtr<CanvasRenderingContext2D> context2d =
       static_cast<CanvasRenderingContext2D*>(cxt.get());
     if (context2d && !self->mPrintCallback) {
+      HTMLImageOrCanvasOrVideoElement element;
+      element.SetAsHTMLCanvasElement() = this;
       ErrorResult err;
       context2d->DrawImage(element,
-                           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, err);
+                           0.0, 0.0, err);
       rv = err.ErrorCode();
     }
   }

@@ -49,7 +49,7 @@ os.path.relpath = _relpath
 class Test:
     def __init__(self, path):
         self.path = path       # path to test file
-        
+
         self.jitflags = []     # jit flags to enable
         self.slow = False      # True means the test is slow-running
         self.allow_oom = False # True means that OOM is not considered a failure
@@ -204,7 +204,7 @@ def run_cmd(cmdline, env, timeout):
 def run_cmd_avoid_stdio(cmdline, env, timeout):
     stdoutPath, stderrPath = tmppath('jsstdout'), tmppath('jsstderr')
     env['JS_STDOUT'] = stdoutPath
-    env['JS_STDERR'] = stderrPath       
+    env['JS_STDERR'] = stderrPath
     _, __, code = run_timeout_cmd(cmdline, { 'env': env }, timeout)
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
@@ -362,7 +362,7 @@ def run_tests(tests, test_dir, lib_dir, shell_args):
         return True
 
 def parse_jitflags():
-    jitflags = [ [ '-' + flag for flag in flags ] 
+    jitflags = [ [ '-' + flag for flag in flags ]
                  for flags in OPTIONS.jitflags.split(',') ]
     for flags in jitflags:
         for flag in flags:
@@ -402,7 +402,7 @@ def main(argv):
     op = OptionParser(usage='%prog [options] JS_SHELL [TESTS]')
     op.add_option('-s', '--show-cmd', dest='show_cmd', action='store_true',
                   help='show js shell command run')
-    op.add_option('-f', '--show-failed-cmd', dest='show_failed', 
+    op.add_option('-f', '--show-failed-cmd', dest='show_failed',
                   action='store_true', help='show command lines of failed tests')
     op.add_option('-o', '--show-output', dest='show_output', action='store_true',
                   help='show output from js shell')
@@ -430,8 +430,9 @@ def main(argv):
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='m,mn',
-                  help='Example: --jitflags=m,mn to run each test with -m, -m -n [default=%default]')
+    op.add_option('--jitflags', dest='jitflags', default='',
+                  help='Example: --jitflags=m,mn to run each test with "-m" and "-m -n" [default="%default"]. ' +
+                       'Long flags, such as "--no-jm", should be set using --args.')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',

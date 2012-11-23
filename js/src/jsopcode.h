@@ -363,6 +363,13 @@ DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
                         HandleString fallback, int skipStackHits = 0);
 
 /*
+ * Decompile the formal argument at formalIndex in the nearest non-builtin
+ * stack frame, falling back with converting v to source.
+ */
+char *
+DecompileArgument(JSContext *cx, int formalIndex, HandleValue v);
+
+/*
  * Sprintf, but with unlimited and automatically allocated buffering.
  */
 class Sprinter

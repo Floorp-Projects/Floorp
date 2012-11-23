@@ -311,7 +311,7 @@ CodeGenerator::visitLambda(LLambda *lir)
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-    masm.storePtr(ImmGCPtr(fun->script().unsafeGet()),
+    masm.storePtr(ImmGCPtr(fun->nonLazyScript().unsafeGet()),
                   Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
     masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
@@ -775,19 +775,19 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     return true;
 }
 
+typedef bool (*GetIntrinsicValueFn)(JSContext *cx, HandlePropertyName, MutableHandleValue);
+static const VMFunction GetIntrinsicValueInfo =
+    FunctionInfo<GetIntrinsicValueFn>(GetIntrinsicValue);
+
 bool
 CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir)
 {
-    typedef bool (*pf)(JSContext *cx, HandlePropertyName, MutableHandleValue);
-    static const VMFunction Info = FunctionInfo<pf>(GetIntrinsicValue);
-
     pushArg(ImmGCPtr(lir->mir()->name()));
-    return callVM(Info, lir);
+    return callVM(GetIntrinsicValueInfo, lir);
 }
 
 typedef bool (*InvokeFunctionFn)(JSContext *, JSFunction *, uint32, Value *, Value *);
-static const VMFunction InvokeFunctionInfo =
-    FunctionInfo<InvokeFunctionFn>(InvokeFunction);
+static const VMFunction InvokeFunctionInfo = FunctionInfo<InvokeFunctionFn>(InvokeFunction);
 
 bool
 CodeGenerator::emitCallInvokeFunction(LInstruction *call, Register calleereg,
@@ -846,8 +846,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
         return false;
 
-    // Guard that calleereg is a non-native function:
-    masm.branchIfFunctionIsNative(calleereg, &invoke);
+    // Guard that calleereg is an interpreted function with a JSScript:
+    masm.branchIfFunctionHasNoScript(calleereg, &invoke);
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
@@ -926,7 +926,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
     ExecutionMode executionMode = gen->info().executionMode();
-    RootedScript targetScript(cx, target->script());
+    RootedScript targetScript(cx, target->nonLazyScript());
     if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT) {
         if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))
             return false;
@@ -1149,9 +1149,9 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
     Label end, invoke;
 
-    // Guard that calleereg is a non-native function:
+    // Guard that calleereg is an interpreted function with a JSScript:
     if (!apply->hasSingleTarget()) {
-        masm.branchIfFunctionIsNative(calleereg, &invoke);
+        masm.branchIfFunctionHasNoScript(calleereg, &invoke);
     } else {
         // Native single targets are handled by LCallNative.
         JS_ASSERT(!apply->getSingleTarget()->isNative());
@@ -1457,6 +1457,7 @@ CodeGenerator::generateBody()
             printer.construct(GetIonContext()->cx);
             if (!printer.ref().init())
                 return false;
+            masm.setPrinter(printer.addr());
         }
 
         for (; iter != current->end(); iter++) {
@@ -1475,8 +1476,10 @@ CodeGenerator::generateBody()
         if (masm.oom())
             return false;
 
-        if (counts)
+        if (counts) {
             counts->block(i).setCode(printer.ref().string());
+            masm.setPrinter(NULL);
+        }
     }
 
     JS_ASSERT(pushedArgumentSlots_.empty());

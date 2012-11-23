@@ -74,9 +74,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "_winShellService",
                                    "@mozilla.org/browser/shell-service;1",
                                    "nsIWindowsShellService");
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 XPCOMUtils.defineLazyServiceGetter(this, "_privateBrowsingSvc",
                                    "@mozilla.org/privatebrowsing;1",
                                    "nsIPrivateBrowsingService");
+#endif
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -104,7 +106,7 @@ var tasksCfg = [
    * open        - Boolean indicates if the command should be visible after the browser opens.
    * close       - Boolean indicates if the command should be visible after the browser closes.
    */
-  // Open new window
+  // Open new tab
   {
     get title()       _getString("taskbar.tasks.newTab.label"),
     get description() _getString("taskbar.tasks.newTab.description"),
@@ -116,7 +118,7 @@ var tasksCfg = [
                             // Thus true for consistency.
   },
 
-  // Open new tab
+  // Open new window
   {
     get title()       _getString("taskbar.tasks.newWindow.label"),
     get description() _getString("taskbar.tasks.newWindow.description"),
@@ -124,9 +126,21 @@ var tasksCfg = [
     iconIndex:        2, // New tab icon
     open:             true,
     close:            true, // No point, but we don't always update the list on
-                            //  shutdown.  Thus true for consistency.
+                            // shutdown. Thus true for consistency.
   },
 
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+  // Open new private window
+  {
+    get title()       _getString("taskbar.tasks.newPrivateWindow.label"),
+    get description() _getString("taskbar.tasks.newPrivateWindow.description"),
+    args:             "-private-window",
+    iconIndex:        4, // Private browsing mode icon
+    open:             true,
+    close:            true, // No point, but we don't always update the list on
+                            // shutdown. Thus true for consistency.
+  },
+#else
   // Toggle the Private Browsing mode
   {
     get title() {
@@ -152,6 +166,7 @@ var tasksCfg = [
       return !PrivateBrowsingUtils.permanentPrivateBrowsing;
     },
   },
+#endif
 ];
 
 /////////////////////////////////////////////////////////////////////////////
@@ -514,7 +529,9 @@ this.WinTaskbarJumpList =
   },
 
   _initObs: function WTBJL__initObs() {
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     Services.obs.addObserver(this, "private-browsing", false);
+#endif
     // If the browser is closed while in private browsing mode, the "exit"
     // notification is fired on quit-application-granted.
     // History cleanup can happen at profile-change-teardown.
@@ -524,7 +541,9 @@ this.WinTaskbarJumpList =
   },
  
   _freeObs: function WTBJL__freeObs() {
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     Services.obs.removeObserver(this, "private-browsing");
+#endif
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
@@ -590,11 +609,11 @@ this.WinTaskbarJumpList =
       case "browser:purge-session-history":
         this.update();
       break;
-
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
       case "private-browsing":
         this.update();
       break;
-
+#endif
       case "idle":
         if (this._timer) {
           this._timer.cancel();

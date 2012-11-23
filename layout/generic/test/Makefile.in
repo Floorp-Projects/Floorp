@@ -43,7 +43,7 @@ MOCHITEST_FILES = \
   test_bug405178.html \
   test_bug416168.html \
   test_bug421436.html \
-  $(warning test_bug421839-1.html disabled because it calls finish twice which can cause timeouts) \
+  $(filter disabled-for-calling-finish-twice-which-can-cause-timeouts, test_bug421839-1.html) \
   test_bug421839-2.html \
   bug421839-2-page.html \
   test_bug424627.html \
@@ -52,10 +52,10 @@ MOCHITEST_FILES = \
   test_bug460532.html \
   test_bug468167.html \
   test_bug470212.html \
-  $(warning test_bug488417.html temporarily disabled - see bug 489560) \
+  $(filter disabled-temporarily--bug-489560, test_bug488417.html) \
   test_bug496275.html \
   test_bug503813.html \
-  $(warning test_bug507902.html temporarily disabled - see bug 510001) \
+  $(filter disabled-temporarily--bug-510001, test_bug507902.html) \
   test_bug514732.html \
   test_bug527306.html \
   test_bug579767.html \

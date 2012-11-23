@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#a {
+ display: none;
+ height: 20px;
+ background-color: green;
+ margin-bottom: -20px;
+}
+#b {
+ height: 20px;
+ background-color: blue;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('a').style.display = 'block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="a"></div>
+<div id="b"></div>
+</body>
+</html>

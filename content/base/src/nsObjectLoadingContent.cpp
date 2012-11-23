@@ -1763,6 +1763,9 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
       
       rv = mFrameLoader->CheckForRecursiveLoad(mURI);
       if (NS_FAILED(rv)) {
+        LOG(("OBJLC [%p]: Aborting recursive load", this));
+        mFrameLoader->Destroy();
+        mFrameLoader = nullptr;
         mType = eType_Null;
         break;
       }

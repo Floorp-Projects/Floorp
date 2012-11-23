@@ -1312,6 +1312,33 @@ void MediaDecoder::NotifyAudioAvailableListener()
   }
 }
 
+void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
+{
+  if (aPlaybackRate == 0) {
+    mPausedForPlaybackRateNull = true;
+    Pause();
+    return;
+  } else if (mPausedForPlaybackRateNull) {
+    // If the playbackRate is no longer null, restart the playback, iff the
+    // media was playing.
+    if (mOwner && !mOwner->GetPaused()) {
+      Play();
+    }
+    mPausedForPlaybackRateNull = false;
+  }
+
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->SetPlaybackRate(aPlaybackRate);
+  }
+}
+
+void MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
+{
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->SetPreservesPitch(aPreservesPitch);
+  }
+}
+
 bool MediaDecoder::OnDecodeThread() const {
   return mDecoderStateMachine->OnDecodeThread();
 }

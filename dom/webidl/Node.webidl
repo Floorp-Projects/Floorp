@@ -77,17 +77,19 @@ interface Node : EventTarget {
   // Mozilla-specific stuff
   // These have been moved to Element in the spec.
   readonly attribute NamedNodeMap? attributes;
+  // If we move namespaceURI, prefix and localName to Element they should return
+  // a non-nullable type.
   [Throws]
-  readonly attribute DOMString namespaceURI;
-  readonly attribute DOMString prefix;
-  readonly attribute DOMString localName;
+  readonly attribute DOMString? namespaceURI;
+  readonly attribute DOMString? prefix;
+  readonly attribute DOMString? localName;
 
   // This has been removed from the spec.
   boolean isSupported(DOMString feature, DOMString version);
 
   boolean hasAttributes();
   [Throws]
-  any setUserData(DOMString key, any data, UserDataHandler handler);
+  any setUserData(DOMString key, any data, UserDataHandler? handler);
   [Throws]
   any getUserData(DOMString key);
   [ChromeOnly]

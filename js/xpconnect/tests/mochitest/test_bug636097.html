@@ -30,7 +30,7 @@ function a() {
                 s = l.toString();
         }
         catch (e) {
-                if (/Permission denied/.test(e))
+                if (/denied|insecure/.test(e))
                         r = "PASS";
                 s = e;
         }

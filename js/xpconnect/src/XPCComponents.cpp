@@ -4324,6 +4324,21 @@ nsXPCComponents_Utils::RecomputeWrappers(const jsval &vobj, JSContext *cx)
     return NS_OK;
 }
 
+/* jsval setWantXrays(jsval vscope); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::SetWantXrays(const jsval &vscope, JSContext *cx)
+{
+    if (!vscope.isObject())
+        return NS_ERROR_INVALID_ARG;
+    JSObject *scopeObj = js::UnwrapObject(&vscope.toObject());
+    JSCompartment *compartment = js::GetObjectCompartment(scopeObj);
+    EnsureCompartmentPrivate(scopeObj)->wantXrays = true;
+    bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                                    js::AllCompartments());
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+    return NS_OK;
+}
+
 /* jsval getComponentsForScope(jsval vscope); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,

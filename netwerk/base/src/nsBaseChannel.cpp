@@ -13,7 +13,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIStreamConverterService.h"
-#include "nsIContentSniffer.h"
 #include "nsChannelClassifier.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 
@@ -673,17 +672,10 @@ CallTypeSniffers(void *aClosure, const uint8_t *aData, uint32_t aCount)
 {
   nsIChannel *chan = static_cast<nsIChannel*>(aClosure);
 
-  const nsCOMArray<nsIContentSniffer>& sniffers =
-    gIOService->GetContentSniffers();
-  uint32_t length = sniffers.Count();
-  for (uint32_t i = 0; i < length; ++i) {
-    nsAutoCString newType;
-    nsresult rv =
-      sniffers[i]->GetMIMETypeFromContent(chan, aData, aCount, newType);
-    if (NS_SUCCEEDED(rv) && !newType.IsEmpty()) {
-      chan->SetContentType(newType);
-      break;
-    }
+  nsAutoCString newType;
+  NS_SniffContent(NS_CONTENT_SNIFFER_CATEGORY, chan, aData, aCount, newType);
+  if (!newType.IsEmpty()) {
+    chan->SetContentType(newType);
   }
 }
 
@@ -719,8 +711,7 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   }
 
   // Now, the general type sniffers. Skip this if we have none.
-  if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
-      gIOService->GetContentSniffers().Count() != 0)
+  if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS)
     mPump->PeekStream(CallTypeSniffers, static_cast<nsIChannel*>(this));
 
   SUSPEND_PUMP_FOR_SCOPE();

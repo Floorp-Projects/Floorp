@@ -132,13 +132,10 @@ MOCHITEST_BROWSER_FILES = \
 	browser_739531.js \
 	browser_739531_sample.html \
 	browser_739805.js \
+	$(filter disabled-for-intermittent-failures--bug-766044, browser_459906_empty.html) \
+	$(filter disabled-for-intermittent-failures--bug-766044, browser_459906_sample.html) \
+	$(filter disabled-for-intermittent-failures--bug-765389, browser_461743_sample.html) \
 	$(NULL)
-
-$(warning browser_459906.js is disabled for intermittent failures. Bug 766044)
-#	browser_459906_empty.html \
-#	browser_459906_sample.html \
-$(warning browser_461743.js is disabled for intermittent failures. Bug 765389)
-#	browser_461743_sample.html \
 
 # Disabled on Windows for frequent intermittent failures
 ifneq ($(OS_ARCH), WINNT)
@@ -150,8 +147,8 @@ MOCHITEST_FILES += \
 	browser_464620_xd.html \
 	$(NULL)
 else
-$(warning browser_464620_a.js is disabled on Windows for intermittent failures. Bug 552424)
-$(warning browser_464620_b.js is disabled on Windows for intermittent failures. Bug 552424)
+$(filter disabled-for-intermittent-failures-on-windows--bug-552424, browser_464620_a.js)
+$(filter disabled-for-intermittent-failures-on-windows--bug-552424, browser_464620_b.js)
 endif
 
 ifneq ($(OS_ARCH),Darwin)

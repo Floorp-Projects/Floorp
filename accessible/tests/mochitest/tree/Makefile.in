@@ -13,7 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES =\
 		dockids.html \
-	$(warning test_applicationacc.xul temporarily disabled, see bug 561508) \
+		$(filter disabled-temporarily--bug-561508, test_applicationacc.xul) \
 		test_aria_globals.html \
 		test_aria_grid.html \
 		test_aria_imgmap.html \

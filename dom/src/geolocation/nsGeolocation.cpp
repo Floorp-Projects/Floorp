@@ -1337,7 +1337,7 @@ nsGeolocation::ClearWatch(int32_t aWatchId)
 
   for (uint32_t i = 0, length = mWatchingCallbacks.Length(); i < length; ++i) {
     if (mWatchingCallbacks[i]->WatchId() == aWatchId) {
-      mWatchingCallbacks[aWatchId]->MarkCleared();
+      mWatchingCallbacks[i]->MarkCleared();
       break;
     }
   }

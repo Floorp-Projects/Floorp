@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+html, body {
+ margin: 0; padding: 5px;
+}
+div {
+ height: 20px;
+ background-color: green;
+}
+#small {
+ margin-top: 40px;
+ margin-bottom: -40px;
+}
+#big {
+ margin-top: 0;
+ background-color: blue;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('big').style.marginTop = '-60px';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="small"></div>
+<div id="big"></div>
+</body>
+</html>

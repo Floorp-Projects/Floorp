@@ -1577,6 +1577,19 @@ struct GlyphBuffer {
 #undef GLYPH_BUFFER_SIZE
 };
 
+static AntialiasMode Get2DAAMode(gfxFont::AntialiasOption aAAOption) {
+  switch (aAAOption) {
+  case gfxFont::kAntialiasSubpixel:
+    return AA_SUBPIXEL;
+  case gfxFont::kAntialiasGrayscale:
+    return AA_GRAY;
+  case gfxFont::kAntialiasNone:
+    return AA_NONE;
+  default:
+    return AA_DEFAULT;
+  }
+}
+
 struct GlyphBufferAzure {
 #define GLYPH_BUFFER_SIZE (2048/sizeof(Glyph))
     Glyph mGlyphBuffer[GLYPH_BUFFER_SIZE];
@@ -1591,7 +1604,8 @@ struct GlyphBufferAzure {
 
     void Flush(DrawTarget *aDT, gfxTextObjectPaint *aObjectPaint, ScaledFont *aFont,
                gfxFont::DrawMode aDrawMode, bool aReverse, const GlyphRenderingOptions *aOptions,
-               gfxContext *aThebesContext, const Matrix *aInvFontMatrix, bool aFinish = false)
+               gfxContext *aThebesContext, const Matrix *aInvFontMatrix, const DrawOptions &aDrawOptions,
+               bool aFinish = false)
     {
         // Ensure there's enough room for a glyph to be added to the buffer
         if ((!aFinish && mNumGlyphs < GLYPH_BUFFER_SIZE) || !mNumGlyphs) {
@@ -1645,7 +1659,7 @@ struct GlyphBufferAzure {
                 }
 
                 aDT->FillGlyphs(aFont, buf, *pat,
-                                DrawOptions(), aOptions);
+                                aDrawOptions, aOptions);
 
                 if (mat) {
                     *mat = saved;
@@ -1654,10 +1668,10 @@ struct GlyphBufferAzure {
                 aDT->FillGlyphs(aFont, buf, SurfacePattern(state.sourceSurface,
                                                            EXTEND_CLAMP,
                                                            state.surfTransform),
-                                DrawOptions(), aOptions);
+                                aDrawOptions, aOptions);
             } else {
                 aDT->FillGlyphs(aFont, buf, ColorPattern(state.color),
-                                DrawOptions(), aOptions);
+                                aDrawOptions, aOptions);
             }
         }
         if (aDrawMode & gfxFont::GLYPH_PATH) {
@@ -1930,6 +1944,9 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
       RefPtr<GlyphRenderingOptions> renderingOptions =
         GetGlyphRenderingOptions();
 
+      DrawOptions drawOptions;
+      drawOptions.mAntialiasMode = Get2DAAMode(mAntialiasOption);
+
       if (mScaledFont) {
         cairo_matrix_t matrix;
         cairo_scaled_font_get_font_matrix(mScaledFont, &matrix);
@@ -1992,7 +2009,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
               glyph->mPosition = matInv * glyph->mPosition;
               glyphs.Flush(dt, aObjectPaint, scaledFont,
                            aDrawMode, isRTL, renderingOptions,
-                           aContext, passedInvMatrix);
+                           aContext, passedInvMatrix,
+                           drawOptions);
 
               // synthetic bolding by multi-striking with 1-pixel offsets
               // at least once, more if there's room (large font sizes)
@@ -2011,7 +2029,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                       strikeOffset += synBoldOnePixelOffset;
                       glyphs.Flush(dt, aObjectPaint, scaledFont,
                                    aDrawMode, isRTL, renderingOptions,
-                                   aContext, passedInvMatrix);
+                                   aContext, passedInvMatrix,
+                                   drawOptions);
                   } while (--strikeCount > 0);
               }
           } else {
@@ -2057,7 +2076,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                               glyph->mPosition.y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
                               glyph->mPosition = matInv * glyph->mPosition;
                               glyphs.Flush(dt, aObjectPaint, scaledFont, aDrawMode,
-                                           isRTL, renderingOptions, aContext, passedInvMatrix);
+                                           isRTL, renderingOptions, aContext, passedInvMatrix,
+                                           drawOptions);
 
                               if (IsSyntheticBold()) {
                                   double strikeOffset = synBoldOnePixelOffset;
@@ -2075,7 +2095,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                                       doubleglyph->mPosition = matInv * doubleglyph->mPosition;
                                       glyphs.Flush(dt, aObjectPaint, scaledFont,
                                                    aDrawMode, isRTL, renderingOptions,
-                                                   aContext, passedInvMatrix);
+                                                   aContext, passedInvMatrix, drawOptions);
                                   } while (--strikeCount > 0);
                               }
                           }
@@ -2095,7 +2115,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
       }
 
       glyphs.Flush(dt, aObjectPaint, scaledFont, aDrawMode, isRTL,
-                   renderingOptions, aContext, passedInvMatrix, true);
+                   renderingOptions, aContext, passedInvMatrix,
+                   drawOptions, true);
 
       dt->SetTransform(oldMat);
 

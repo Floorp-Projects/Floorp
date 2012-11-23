@@ -130,6 +130,25 @@ ConvertAudioSamplesWithScale(const int16_t* aFrom, int16_t* aTo, int aCount, flo
   }
 }
 
+// In place audio sample scaling.
+inline void
+ScaleAudioSamples(float* aBuffer, int aCount, float aScale)
+{
+  for (int32_t i = 0; i < aCount; ++i) {
+    aBuffer[i] *= aScale;
+  }
+}
+
+
+inline void
+ScaleAudioSamples(short* aBuffer, int aCount, float aScale)
+{
+  int32_t volume = int32_t(1 << 16) * aScale;
+  for (int32_t i = 0; i < aCount; ++i) {
+    aBuffer[i] = short((int32_t(aBuffer[i]) * volume) >> 16);
+  }
+}
+
 } // namespace mozilla
 
 #endif /* MOZILLA_AUDIOSAMPLEFORMAT_H_ */
