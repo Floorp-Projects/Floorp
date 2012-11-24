@@ -401,13 +401,13 @@ JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 JS_PUBLIC_API(JSBool)
 JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 {
-    return fun->script()->bindings.count() > 0;
+    return fun->nonLazyScript()->bindings.count() > 0;
 }
 
 extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
-    RootedScript script(cx, fun->script());
+    RootedScript script(cx, fun->nonLazyScript());
     BindingVector bindings(cx);
     if (!FillBindingVector(script, &bindings))
         return NULL;
@@ -449,7 +449,7 @@ JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
     AutoAssertNoGC nogc;
-    return fun->maybeScript().get(nogc);
+    return fun->maybeNonLazyScript().get(nogc);
 }
 
 JS_PUBLIC_API(JSNative)
@@ -1013,7 +1013,7 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     size_t nbytes = sizeof *fun;
     nbytes += JS_GetObjectTotalSize(cx, fun);
     if (fun->isInterpreted())
-        nbytes += JS_GetScriptTotalSize(cx, fun->script().get(nogc));
+        nbytes += JS_GetScriptTotalSize(cx, fun->nonLazyScript().get(nogc));
     if (fun->displayAtom())
         nbytes += GetAtomTotalSize(cx, fun->displayAtom());
     return nbytes;

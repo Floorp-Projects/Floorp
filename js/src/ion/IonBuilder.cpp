@@ -204,7 +204,7 @@ IonBuilder::canInlineTarget(JSFunction *target)
         return false;
     }
 
-    RootedScript inlineScript(cx, target->script());
+    RootedScript inlineScript(cx, target->nonLazyScript());
     ExecutionMode executionMode = info().executionMode();
     if (!CanIonCompile(inlineScript, executionMode)) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to disable Ion compilation");
@@ -2835,7 +2835,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
 
     // Compilation information is allocated for the duration of the current tempLifoAlloc
     // lifetime.
-    RootedScript calleeScript(cx, callee->script());
+    RootedScript calleeScript(cx, callee->nonLazyScript());
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(calleeScript.get(), callee,
                                                               (jsbytecode *)NULL, constructing,
                                                               SequentialExecution);
@@ -2930,7 +2930,7 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32 argc)
         if (!target->isInterpreted())
             return false;
 
-        script = target->script();
+        script = target->nonLazyScript();
         uint32_t calleeUses = script->getUseCount();
 
         if (target->nargs < argc) {
@@ -3549,7 +3549,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
     types::TypeObject *type = proto->getNewType(cx, target);
     if (!type)
         return NULL;
-    if (!types::TypeScript::ThisTypes(target->script().unsafeGet())->hasType(types::Type::ObjectType(type)))
+    if (!types::TypeScript::ThisTypes(target->nonLazyScript().unsafeGet())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
     RootedObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));

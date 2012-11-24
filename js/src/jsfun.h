@@ -39,6 +39,7 @@ struct JSFunction : public JSObject
                                        must be constructible but not decompilable. */
         HAS_REST         = 0x0400,  /* function has a rest (...) parameter */
         HAS_DEFAULTS     = 0x0800,  /* function has at least one default parameter */
+        INTERPRETED_LAZY = 0x1000,  /* function is interpreted but doesn't have a script yet */
 
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
@@ -72,11 +73,13 @@ struct JSFunction : public JSObject
     } u;
   private:
     js::HeapPtrAtom  atom_;       /* name for diagnostics and decompiling */
+
+    bool initializeLazyScript(JSContext *cx);
   public:
 
     /* A function can be classified as either native (C++) or interpreted (JS): */
-    bool isInterpreted()            const { return flags & INTERPRETED; }
-    bool isNative()                 const { return !(flags & INTERPRETED); }
+    bool isInterpreted()            const { return flags & (INTERPRETED | INTERPRETED_LAZY); }
+    bool isNative()                 const { return !isInterpreted(); }
 
     /* Possible attributes of a native function: */
     bool isNativeConstructor()      const { return flags & NATIVE_CTOR; }
@@ -84,6 +87,8 @@ struct JSFunction : public JSObject
     /* Possible attributes of an interpreted function: */
     bool isHeavyweight()            const { return flags & HEAVYWEIGHT; }
     bool isFunctionPrototype()      const { return flags & IS_FUN_PROTO; }
+    bool isInterpretedLazy()        const { return flags & INTERPRETED_LAZY; }
+    bool hasScript()                const { return isInterpreted() && u.i.script_; }
     bool isExprClosure()            const { return flags & EXPR_CLOSURE; }
     bool hasGuessedAtom()           const { return flags & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags & LAMBDA; }
@@ -146,6 +151,13 @@ struct JSFunction : public JSObject
         flags |= EXPR_CLOSURE;
     }
 
+    void markNotLazy() {
+        JS_ASSERT(isInterpretedLazy());
+        JS_ASSERT(hasScript());
+        flags |= INTERPRETED;
+        flags &= ~INTERPRETED_LAZY;
+    }
+
     JSAtom *atom() const { return hasGuessedAtom() ? NULL : atom_.get(); }
     inline void initAtom(JSAtom *atom);
     JSAtom *displayAtom() const { return atom_; }
@@ -166,9 +178,34 @@ struct JSFunction : public JSObject
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
-    js::Return<JSScript*> script() const {
+    js::Return<JSScript*> getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
+        if (isInterpretedLazy()) {
+            js::RootedFunction self(cx, this);
+            js::MaybeCheckStackRoots(cx);
+            if (!initializeLazyScript(cx))
+                return js::NullPtr();
+        }
+        JS_ASSERT(hasScript());
         return JS::HandleScript::fromMarkedLocation(&u.i.script_);
+    }
+
+    bool maybeGetOrCreateScript(JSContext *cx, js::MutableHandle<JSScript*> script) {
+        if (isNative()) {
+            script.set(NULL);
+            return true;
+        }
+        script.set(getOrCreateScript(cx).unsafeGet());
+        return hasScript();
+    }
+
+    js::Return<JSScript*> nonLazyScript() const {
+        JS_ASSERT(hasScript());
+        return JS::HandleScript::fromMarkedLocation(&u.i.script_);
+    }
+
+    js::Return<JSScript*> maybeNonLazyScript() const {
+        return isInterpreted() ? nonLazyScript() : JS::NullPtr();
     }
 
     js::HeapPtrScript &mutableScript() {
@@ -178,10 +215,6 @@ struct JSFunction : public JSObject
 
     inline void setScript(JSScript *script_);
     inline void initScript(JSScript *script_);
-
-    js::Return<JSScript*> maybeScript() const {
-        return isInterpreted() ? script() : JS::NullPtr();
-    }
 
     JSNative native() const {
         JS_ASSERT(isNative());
@@ -288,7 +321,7 @@ js_CloneFunctionObject(JSContext *cx, js::HandleFunction fun,
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, js::HandleObject obj, js::HandleId id, JSNative native,
-                  unsigned nargs, unsigned flags, js::Handle<js::PropertyName*> selfHostedName = JS::NullPtr(),
+                  unsigned nargs, unsigned flags,
                   js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 namespace js {

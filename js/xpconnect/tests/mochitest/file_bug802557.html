@@ -4,38 +4,68 @@
 <script>
 var gTS = window.location.toString;
 var gGHR = Object.__lookupGetter__.call(window.location, 'href');
-var gTests = {
-  getLocationImplicit: function () {
-    return window.location + "";
-  },
-  getLocationExplicit: function() {
-    return window.location.toString();
-  },
-  getLocationApply1: function() {
-    return gTS.call(window.location);
-  },
-  getLocationApply2: function() {
-    return gTS.apply(window.location, []);
-  },
-  getLocationApply3: function() {
-    return Function.call.apply(gTS, [window.location]);
-  },
-  getLocationViaPrototype: function() {
-    return Location.prototype.toString.call(window.location);
-  },
-  getHref: function() {
-    return window.location.href;
-  },
-  getHrefViaApply: function() {
-    return Function.call.apply(gGHR, [window.location]);
-  },
-  getHrefViaPrototype: function() {
-    return Object.getOwnPropertyDescriptor(Location.prototype, 'href').get.call(window.location);
+function getTests(fromOuter) {
+
+  function loc() fromOuter ? window.location : location;
+  return {
+    getLocationImplicit: function() {
+      return loc() + "";
+    },
+    getLocationExplicit: function() {
+      return loc().toString();
+    },
+    getLocationApply1: function() {
+      return gTS.call(loc());
+    },
+    getLocationApply2: function() {
+      return gTS.apply(loc(), []);
+    },
+    getLocationApply3: function() {
+      return Function.call.apply(gTS, [loc()]);
+    },
+    getLocationViaPrototype: function() {
+      return Location.prototype.toString.call(loc());
+    },
+    getHref: function() {
+      return loc().href;
+    },
+    getHrefViaApply: function() {
+      return Function.call.apply(gGHR, [loc()]);
+    },
+    getHrefViaPrototype: function() {
+      return Object.getOwnPropertyDescriptor(Location.prototype, 'href').get.call(loc());
+    }
   }
 };
 
-gTests.getLocationViaPrototype.skipMessageCheck = true;
-gTests.getHrefViaPrototype.skipMessageCheck = true;
+function mungeNames(obj, suffix) {
+  var rv = {};
+  Object.getOwnPropertyNames(obj)
+        .forEach(function (name) rv[name + suffix] = obj[name]);
+  return rv;
+}
+
+function mergeObjects(a, b) {
+  var rv = {};
+  Object.getOwnPropertyNames(a).forEach(function(name) rv[name] = a[name]);
+  Object.getOwnPropertyNames(b).forEach(function(name) rv[name] = b[name]);
+  return rv;
+}
+
+function getAllTests() {
+  var innerTests = getTests(false);
+  var outerTests = getTests(true);
+  outerTests.getLocationApply1.skipMessageCheck = true;
+  outerTests.getLocationApply2.skipMessageCheck = true;
+  outerTests.getLocationApply3.skipMessageCheck = true;
+  outerTests.getLocationViaPrototype.skipMessageCheck = true;
+  outerTests.getHrefViaApply.skipMessageCheck = true;
+  outerTests.getHrefViaPrototype.skipMessageCheck = true;
+  return mergeObjects(mungeNames(innerTests, '_inner'),
+                      mungeNames(outerTests, '_outer'));
+}
+
+
 
 </script>
 </head>

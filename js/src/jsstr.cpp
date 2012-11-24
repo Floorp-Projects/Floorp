@@ -2366,10 +2366,10 @@ LambdaIsGetElem(JSObject &lambda)
         return NULL;
 
     JSFunction *fun = lambda.toFunction();
-    if (!fun->isInterpreted())
+    if (!fun->hasScript())
         return NULL;
 
-    RawScript script = fun->script().get(nogc);
+    RawScript script = fun->nonLazyScript().get(nogc);
     jsbytecode *pc = script->code;
 
     /*

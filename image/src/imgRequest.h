@@ -8,7 +8,6 @@
 #define imgRequest_h__
 
 #include "nsIChannelEventSink.h"
-#include "nsIContentSniffer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequest.h"
 #include "nsIProperties.h"
@@ -18,7 +17,7 @@
 #include "nsITimedChannel.h"
 #include "nsIApplicationCache.h"
 
-#include "nsCategoryCache.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 #include "nsError.h"
@@ -63,8 +62,6 @@ public:
   void AddProxy(imgRequestProxy *proxy);
 
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus);
-
-  void SniffMimeType(const char *buf, uint32_t len, nsACString& newType);
 
   // Cancel, but also ensure that all work done in Init() is undone. Call this
   // only when the channel has failed to open, and so calling Cancel() on it
@@ -218,7 +215,6 @@ private:
   void *mLoadId;
 
   imgCacheValidator *mValidator;
-  nsCategoryCache<nsIContentSniffer> mImageSniffers;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
 

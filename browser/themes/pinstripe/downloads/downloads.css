@@ -26,13 +26,13 @@
   cursor: pointer;
 }
 
-#downloadsPanel:not([hasdownloads]) > #downloadsHistory {
+#downloadsPanel:not([hasdownloads]) #downloadsHistory {
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
 
 #downloadsSummary,
-#downloadsPanel[hasdownloads] > #downloadsHistory {
+#downloadsPanel[hasdownloads] #downloadsHistory {
   background: #e5e5e5;
   border-top: 1px solid hsla(0,0%,0%,.1);
   box-shadow: 0 -1px hsla(0,0%,100%,.5) inset, 0 1px 1px hsla(0,0%,0%,.03) inset;
@@ -49,7 +49,7 @@
   border-top-right-radius: 6px;
 }
 
-#downloadsPanel:not([hasdownloads]) > #downloadsHistory:-moz-focusring > .button-box {
+#downloadsPanel:not([hasdownloads]) #downloadsHistory:-moz-focusring > .button-box {
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
 }
@@ -66,6 +66,12 @@ richlistitem[type="download"] {
 #downloadsSummary {
   padding: 8px 38px 8px 12px;
   cursor: pointer;
+  -moz-user-focus: normal;
+}
+
+#downloadsSummary:-moz-focusring {
+  outline: 1px -moz-dialogtext dotted;
+  outline-offset: -5px;
 }
 
 #downloadsSummary > .downloadTypeIcon {

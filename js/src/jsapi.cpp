@@ -703,6 +703,12 @@ JS::InNoGCScope()
 }
 
 JS_FRIEND_API(bool)
+JS::isGCEnabled()
+{
+    return !TlsPerThreadData.get()->suppressGC;
+}
+
+JS_FRIEND_API(bool)
 JS::NeedRelaxedRootChecks()
 {
     return TlsPerThreadData.get()->gcRelaxRootChecks;
@@ -711,17 +717,19 @@ JS::NeedRelaxedRootChecks()
 JS_FRIEND_API(void) JS::EnterAssertNoGCScope() {}
 JS_FRIEND_API(void) JS::LeaveAssertNoGCScope() {}
 JS_FRIEND_API(bool) JS::InNoGCScope() { return false; }
+JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
 JS_FRIEND_API(bool) JS::NeedRelaxedRootChecks() { return false; }
 #endif
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
 PerThreadData::PerThreadData(JSRuntime *runtime)
-  : runtime_(runtime)
+  : runtime_(runtime),
 #ifdef DEBUG
-  , gcRelaxRootChecks(false)
-  , gcAssertNoGCDepth(0)
+    gcRelaxRootChecks(false),
+    gcAssertNoGCDepth(0),
 #endif
+    suppressGC(0)
 {}
 
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
@@ -865,15 +873,16 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
 #endif
-    inOOMReport(0),
     jitHardening(false),
     ionTop(NULL),
     ionJSContext(NULL),
     ionStackLimit(0),
     ionActivation(NULL),
     ionPcScriptCache(NULL),
+    threadPool(this),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
-    useHelperThreads_(useHelperThreads)
+    useHelperThreads_(useHelperThreads),
+    requestedHelperThreadCount(-1)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&debuggerList);
@@ -935,6 +944,9 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
     if (!scriptFilenameTable.init())
+        return false;
+
+    if (!threadPool.init())
         return false;
 
 #ifdef JS_THREADSAFE
@@ -4867,8 +4879,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg
      * script, we cannot clone it without breaking the compiler's assumptions.
      */
     RootedFunction fun(cx, funobj->toFunction());
-    if (fun->isInterpreted() && (fun->script()->enclosingStaticScope() ||
-        (fun->script()->compileAndGo && !parent->isGlobal())))
+    if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
+        (fun->nonLazyScript()->compileAndGo && !parent->isGlobal())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return NULL;
@@ -5001,8 +5013,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             JSFunction *fun = js_DefineFunction(cx, ctor, id, js_generic_native_method_dispatcher,
-                                    fs->nargs + 1, flags, NullPtr(),
-                                    JSFunction::ExtendedFinalizeKind);
+                                                fs->nargs + 1, flags,
+                                                JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -5023,19 +5035,36 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
         if (fs->selfHostedName && cx->runtime->isSelfHostedGlobal(cx->global()))
             return JS_TRUE;
 
-        Rooted<PropertyName*> selfHostedPropertyName(cx);
+        /*
+         * Delay cloning self-hosted functions until they are called. This is
+         * achieved by passing js_DefineFunction a NULL JSNative which
+         * produces an interpreted JSFunction where !hasScript. Interpreted
+         * call paths then call InitializeLazyFunctionScript if !hasScript.
+         */
         if (fs->selfHostedName) {
-            JSAtom *selfHostedAtom = Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName));
-            if (!selfHostedAtom)
+            RootedFunction fun(cx, js_DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
+                                                     JSFunction::ExtendedFinalizeKind));
+            if (!fun)
                 return JS_FALSE;
-            selfHostedPropertyName = selfHostedAtom->asPropertyName();
+            JSFunction::setSingletonType(cx, fun);
+            fun->setIsSelfHostedBuiltin();
+            fun->setExtendedSlot(0, PrivateValue(fs));
+            RootedAtom shAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
+            if (!shAtom)
+                return JS_FALSE;
+            RootedObject holder(cx, cx->global()->intrinsicsHolder());
+            if (!JS_DefinePropertyById(cx,holder, AtomToId(shAtom),
+                                       ObjectValue(*fun), NULL, NULL, 0))
+            {
+                return JS_FALSE;
+            }
+        } else {
+            JSFunction *fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
+            if (!fun)
+                return JS_FALSE;
+            if (fs->call.info)
+                fun->setJitInfo(fs->call.info);
         }
-        JSFunction *fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags,
-                                            selfHostedPropertyName);
-        if (!fun)
-            return JS_FALSE;
-        if (fs->call.info)
-            fun->setJitInfo(fs->call.info);
     }
     return JS_TRUE;
 }

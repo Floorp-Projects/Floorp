@@ -153,7 +153,6 @@ nsIOService::nsIOService()
     , mShutdown(false)
     , mNetworkLinkServiceInitialized(false)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
-    , mContentSniffers(NS_CONTENT_SNIFFER_CATEGORY)
     , mAutoDialEnabled(false)
 {
 }

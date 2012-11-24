@@ -30,7 +30,7 @@
 
 @media (-moz-windows-default-theme) {
   #downloadsSummary,
-  #downloadsPanel[hasdownloads] > #downloadsHistory {
+  #downloadsPanel[hasdownloads] #downloadsHistory {
     background-color: hsla(216,45%,88%,.98);
     box-shadow: 0px 1px 2px rgb(204,214,234) inset;
   }
@@ -48,6 +48,12 @@ richlistitem[type="download"] {
 #downloadsSummary {
   padding: 8px 38px 8px 12px;
   cursor: pointer;
+  -moz-user-focus: normal;
+}
+
+#downloadsSummary:-moz-focusring {
+  outline: 1px -moz-dialogtext dotted;
+  outline-offset: -5px;
 }
 
 #downloadsSummary > .downloadTypeIcon {

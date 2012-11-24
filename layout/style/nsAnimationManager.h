@@ -128,7 +128,9 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
   // from the main thread, we need the actual ElementAnimation* in order to 
   // get correct animation-fill behavior and to fire animation events.
   // This function returns -1 for the position if the animation should not be
-  // run (because it is not currently active and has no fill behavior.)
+  // run (because it is not currently active and has no fill behavior), but
+  // only does so if aAnimation is non-null; with a null aAnimation it is an
+  // error to give aCurrentTime < aStartTime, and fill-forwards is assumed.
   static double GetPositionInIteration(TimeStamp aStartTime,
                                        TimeStamp aCurrentTime,
                                        TimeDuration aDuration,

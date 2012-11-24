@@ -532,7 +532,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
     if (callee->isFunction()) {
         JSFunction *fun = callee->toFunction();
         if (fun->isInterpreted()) {
-            js::RootedScript script(cx, fun->script());
+            js::RootedScript script(cx, fun->nonLazyScript());
             if (!script->ensureRanAnalysis(cx))
                 return false;
             if (cx->typeInferenceEnabled())
@@ -703,7 +703,7 @@ UseNewTypeForClone(JSFunction *fun)
      * instance a singleton type and clone the underlying script.
      */
 
-    RawScript script = fun->script().get(nogc);
+    RawScript script = fun->nonLazyScript().get(nogc);
 
     if (script->length >= 50)
         return false;

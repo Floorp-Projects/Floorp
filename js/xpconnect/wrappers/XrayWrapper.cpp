@@ -1461,19 +1461,6 @@ bool
 XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                           js::PropertyDescriptor *desc)
 {
-    // If shadowing is forbidden, see if the id corresponds to an underlying
-    // native property.
-    if (WrapperFactory::IsShadowingForbidden(wrapper)) {
-        JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
-        js::PropertyDescriptor nativeProp;
-        if (!Traits::resolveNativeProperty(cx, wrapper, holder, id, false, &nativeProp))
-            return false;
-        if (nativeProp.obj) {
-            JS_ReportError(cx, "Permission denied to shadow native property");
-            return false;
-        }
-    }
-
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper)) {
         JSObject *obj = Traits::getTargetObject(wrapper);

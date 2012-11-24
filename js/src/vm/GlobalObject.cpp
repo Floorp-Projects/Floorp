@@ -405,7 +405,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * Notify any debuggers about the creation of the script for
      * |Function.prototype| -- after all initialization, for simplicity.
      */
-    RootedScript functionProtoScript(cx, functionProto->script());
+    RootedScript functionProtoScript(cx, functionProto->nonLazyScript());
     js_CallNewScriptHook(cx, functionProtoScript, functionProto);
     return functionProto;
 }

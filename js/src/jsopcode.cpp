@@ -337,10 +337,11 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 
 /*
  * If pc != NULL, include a prefix indicating whether the PC is at the current line.
- * If counts != NULL, include a counter of the number of times each op was executed.
+ * If showAll is true, include the source note type and the entry stack depth.
  */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode *pc, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines,
+                   jsbytecode *pc, bool showAll, Sprinter *sp)
 {
     AssertCanGC();
     RootedScript script(cx, scriptArg);
@@ -348,10 +349,22 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode 
     jsbytecode *next, *end;
     unsigned len;
 
+    if (showAll)
+        Sprint(sp, "%s:%u\n", script->filename, script->lineno);
+
+    if (pc != NULL)
+        sp->put("    ");
+    if (showAll)
+        sp->put("sn stack ");
     sp->put("loc   ");
     if (lines)
         sp->put("line");
     sp->put("  op\n");
+
+    if (pc != NULL)
+        sp->put("    ");
+    if (showAll)
+        sp->put("-- ----- ");
     sp->put("----- ");
     if (lines)
         sp->put("----");
@@ -368,6 +381,25 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode 
             else
                 sp->put("    ");
         }
+        if (showAll) {
+            jssrcnote *sn = js_GetSrcNote(cx, script, next);
+            if (sn) {
+                JS_ASSERT(!SN_IS_TERMINATOR(sn));
+                jssrcnote *next = SN_NEXT(sn);
+                while (!SN_IS_TERMINATOR(next) && SN_DELTA(next) == 0) {
+                    Sprint(sp, "%02u\n    ", SN_TYPE(sn));
+                    sn = next;
+                    next = SN_NEXT(sn);
+                }
+                Sprint(sp, "%02u ", SN_TYPE(sn));
+            }
+            else
+                sp->put("   ");
+            if (script->hasAnalysis() && script->analysis()->maybeCode(next))
+                Sprint(sp, "%05u ", script->analysis()->getCode(next).stackDepth);
+            else
+                sp->put("      ");
+        }
         len = js_Disassemble1(cx, script, next, next - script->code, lines, sp);
         if (!len)
             return JS_FALSE;
@@ -379,30 +411,47 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode 
 JSBool
 js_Disassemble(JSContext *cx, HandleScript script, JSBool lines, Sprinter *sp)
 {
-    return js_DisassembleAtPC(cx, script, lines, NULL, sp);
+    return js_DisassembleAtPC(cx, script, lines, NULL, false, sp);
 }
 
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    AssertCanGC();
+    js::gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
     RootedScript script(cx, cx->fp()->script());
-    JSBool ok = js_DisassembleAtPC(cx, script, true, cx->regs().pc, &sprinter);
+    JSBool ok = js_DisassembleAtPC(cx, script, true, cx->regs().pc, false, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
 
 JS_FRIEND_API(JSBool)
-js_DumpScript(JSContext *cx, JSScript *script_)
+js_DumpScript(JSContext *cx, JSScript *scriptArg)
 {
+    js::gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
-    RootedScript script(cx, script_);
+    RootedScript script(cx, scriptArg);
     JSBool ok = js_Disassemble(cx, script, true, &sprinter);
+    fprintf(stdout, "%s", sprinter.string());
+    return ok;
+}
+
+/*
+ * Useful to debug ReconstructPCStack.
+ */
+JS_FRIEND_API(JSBool)
+js_DumpScriptDepth(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
+{
+    js::gc::AutoSuppressGC suppressGC(cx);
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return JS_FALSE;
+    RootedScript script(cx, scriptArg);
+    JSBool ok = js_DisassembleAtPC(cx, script, true, pc, true, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
@@ -1128,8 +1177,8 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->fun = fun;
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
-    if (fun && fun->isInterpreted()) {
-        if (!SetPrinterLocalNames(cx, fun->script().unsafeGet(), jp)) {
+    if (fun && fun->hasScript()) {
+        if (!SetPrinterLocalNames(cx, fun->nonLazyScript().unsafeGet(), jp)) {
             js_DestroyPrinter(jp);
             return NULL;
         }
@@ -1785,7 +1834,7 @@ GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
     LOCAL_ASSERT_RV(slot < jp->script->bindings.count(), NULL);
-    LOCAL_ASSERT_RV(jp->script == jp->fun->script().unsafeGet(), NULL);
+    LOCAL_ASSERT_RV(jp->script == jp->fun->nonLazyScript().unsafeGet(), NULL);
     JSAtom *name = (*jp->localNames)[slot].name();
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -4744,10 +4793,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
                     outerLocalNames = jp->localNames;
-                    if (!SetPrinterLocalNames(cx, fun->script().unsafeGet(), jp))
+                    if (!SetPrinterLocalNames(cx, fun->nonLazyScript().unsafeGet(), jp))
                         return NULL;
 
-                    inner = fun->script().unsafeGet();
+                    inner = fun->nonLazyScript().unsafeGet();
                     if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
                         js_delete(jp->localNames);
                         jp->localNames = outerLocalNames;
@@ -5618,7 +5667,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
         return JS_TRUE;
     }
 
-    script = jp->fun->script().unsafeGet();
+    script = jp->fun->nonLazyScript().unsafeGet();
     return DecompileBody(jp, script, script->code);
 }
 
@@ -5655,7 +5704,7 @@ js_DecompileFunction(JSPrinter *jp)
         jp->indent -= 4;
         js_printf(jp, "\t}");
     } else {
-        RootedScript script(cx, fun->script());
+        RootedScript script(cx, fun->nonLazyScript());
 #if JS_HAS_DESTRUCTURING
         SprintStack ss(cx);
 #endif
@@ -6269,11 +6318,100 @@ js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
         if (!fallback)
             return NULL;
     }
-    size_t length = fallback->length();
-    const jschar *chars = fallback->getChars(cx);
-    if (!chars)
+
+    Rooted<JSStableString *> stable(cx, fallback->ensureStable(cx));
+    if (!stable)
         return NULL;
-    return DeflateString(cx, chars, length);
+    return DeflateString(cx, stable->chars().get(), stable->length());
+}
+
+static bool
+DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
+{
+    JS_ASSERT(formalIndex >= 0);
+
+    *res = NULL;
+
+#ifdef JS_MORE_DETERMINISTIC
+    /* See note in DecompileExpressionFromStack. */
+    return true;
+#endif
+
+    /*
+     * Settle on the nearest script frame, which should be the builtin that
+     * called the intrinsic.
+     */
+    StackIter frameIter(cx);
+    while (!frameIter.done() && !frameIter.isScript())
+        ++frameIter;
+    JS_ASSERT(!frameIter.done());
+
+    /*
+     * Get the second-to-top frame, the caller of the builtin that called the
+     * intrinsic.
+     */
+    ++frameIter;
+
+    /*
+     * If this frame isn't a script, we can't decompile. Even if it is a
+     * script but we popped a call frame during the last bump, assume that we
+     * just came from a frameless native and bail conservatively.
+     */
+    if (frameIter.done() || frameIter.poppedCallDuringSettle() || !frameIter.isScript())
+        return true;
+
+    RootedScript script(cx, frameIter.script());
+    jsbytecode *current = frameIter.pc();
+    RootedFunction fun(cx, frameIter.isFunctionFrame()
+                       ? frameIter.callee()
+                       : NULL);
+
+    JS_ASSERT(script->code <= current && current < script->code + script->length);
+
+    if (current < script->main())
+        return true;
+
+    PCStack pcStack;
+    if (!pcStack.init(cx, script, current))
+        return false;
+
+    uint32_t formalStackIndex = pcStack.depth() - GET_ARGC(current) + formalIndex;
+    if (formalStackIndex >= pcStack.depth())
+        return true;
+
+    ExpressionDecompiler ed(cx, script, fun);
+    if (!ed.init())
+        return false;
+    if (!ed.decompilePC(pcStack[formalStackIndex]))
+        return false;
+
+    return ed.getOutput(res);
+}
+
+char *
+js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
+{
+    AssertCanGC();
+    {
+        char *result;
+        if (!DecompileArgumentFromStack(cx, formalIndex, &result))
+            return NULL;
+        if (result) {
+            if (strcmp(result, "(intermediate value)"))
+                return result;
+            js_free(result);
+        }
+    }
+    if (v.isUndefined())
+        return JS_strdup(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
+    RootedString fallback(cx, js_ValueToSource(cx, v));
+    if (!fallback)
+        return NULL;
+
+    Rooted<JSStableString *> stable(cx, fallback->ensureStable(cx));
+    if (!stable)
+        return NULL;
+    return DeflateString(cx, stable->chars().get(), stable->length());
 }
 
 static char *
@@ -6460,12 +6598,55 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
      * Walk forward from script->code and compute the stack depth and stack of
      * operand-generating opcode PCs in pcstack.
      *
-     * FIXME: Code to compute oplen copied from js_Disassemble1 and reduced.
-     * FIXME: Optimize to use last empty-stack sequence point.
+     * Every instruction has a statically computable stack depth before and
+     * after. This function returns the stack depth before the target
+     * instruction.
+     *
+     * The stack depth can be computed from these three common-sense rules...
+     *
+     *   - The stack depth before the first instruction of the script is 0.
+     *
+     *   - The stack depth after an instruction is always simply the stack
+     *     depth before, plus whatever effect of the instruction has.
+     *     SimulateOp computes this.
+     *
+     *   - Except for three specific cases listed below, the stack depth before
+     *     an instruction is simply the stack depth after the preceding one.
+     *
+     *  ... and these three less obvious rules:
+     *
+     *   - Special case 1: break, continue, or return statements that exit
+     *     certain kinds of blocks.
+     *
+     *     Rule: The stack depth before the next instruction (following the
+     *     GOTO/RETRVAL) equals the stack depth before the first SRC_HIDDEN
+     *     instruction.
+     *
+     *   - Special case 2: The rethrow at the end of conditional catch blocks.
+     *
+     *     Rule: The stack depth before the next rethrow instruction of a
+     *     conditional catch block equals the stack depth at the end of the IFEQ
+     *     of the catch condition (which is jumping to this re-throw).
+     *
+     *   - Special case 3: Conditional expressions (A ? B : C).
+     *
+     *     Rule: The code for B and C are pushing a result on the stack, so the
+     *     stack depth before C equals the stack depth before B, which is one
+     *     less than the stack depth after the GOTO ending B.
      */
 
     LOCAL_ASSERT(script->code <= target && target < script->code + script->length);
+
+    /*
+     * Save depth of hidden instructions to recover the depth if a branch is not
+     * taken.
+     */
     unsigned hpcdepth = unsigned(-1);
+
+    /*
+     * Save depth of catch instructions to recover it in the rethrow path, at
+     * the end of a conditional catch.
+     */
     unsigned cpcdepth = unsigned(-1);
 
     jsbytecode *pc;
@@ -6477,33 +6658,143 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
         const JSCodeSpec *cs = &js_CodeSpec[op];
         jssrcnote *sn = js_GetSrcNote(cx, script, pc);
 
+        /*
+         * *** Special case 1.a ***
+         *
+         * Hidden instructions are used to pop scoped variables (leaveblock) in
+         * early-exit paths and are not supposed to affect the stack depth when
+         * they are not taken. However, when the target is in an early-exit
+         * path, hidden instructions need to be taken into account.
+         *
+         * As we are not following any branch, we need to restore the stack
+         * depth after any instruction which is breaking the flow of the
+         * program. Sequences of hidden instructions are *included* in the
+         * following grammar:
+         *
+         *   ExitSequence:
+         *     EarlyExit                      // return / break / continue
+         *   | ConditionalCatchExit           // conditional catch-block exit
+         *
+         *   EarlyExit:
+         *     setrval; ExitSegment* retrval; // return stmt
+         *   | ExitSegment* goto;             // break/continue stmt
+         *
+         *   ConditionalCatchExit:
+         *     ExitSegment* hidden goto; CatchRethrow
+         *
+         *   CatchRethrow:
+         *     hidden throw; end-brace nop;   // last catch-block
+         *   | hidden throw; finally;         // followed by a finally
+         *   | hidden throwing; hidden leaveblock; catch enterblock;
+         *                                    // followed by a catch-block
+         *
+         *   ExitSegment:
+         *     hidden leaveblock;             // leave let-block or
+         *                                    // leave catch-block
+         *   | hidden leavewith;              // leave with-block
+         *   | hidden gosub;                  // leave try or
+         *                                    // leave catch-block with finally
+         *   | hidden enditer;                // leave for-in/of block
+         *   | hidden leaveforletin; hidden enditer; hidden popn;
+         *                                    // leave for-let-in/of block
+         *
+         * The following code save the depth of the first hidden
+         * instruction. When we hit either the last instruction of the EarlyExit
+         * (retrval/goto) or the goto of a ConditionalCacthExit, we restore (see
+         * Special case 1.b) the depth after the execution of the instruction.
+         *
+         * In case of a ConditionalCacthExit, we keep the hidden depth after the
+         * hidden goto to again restore (see Special case 1.b) the depth after
+         * the throw/throwing instruction of the CatchRethrow.
+         *
+         * Note: The last instructions of the EarlyExit, such as break, continue
+         * and return are not hidden as they are part of the original sources,
+         * so we need to consider them as-if they were hidden instruction (do
+         * not reset the depth) and restore the depth after their execution.  It
+         * is important to restore them after their execution, and not at the
+         * next instruction, because they might be followed by another sequence
+         * of hidden instruction.
+         */
         bool exitPath =
             op == JSOP_GOTO ||
             op == JSOP_RETRVAL ||
             op == JSOP_THROW;
 
-        bool isHiddenGoto = false;
+        bool isConditionalCatchExit = false;
 
         if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
-            isHiddenGoto = op == JSOP_GOTO;
+            /* Only ConditionalCatchExit's goto are hidden.  */
+            isConditionalCatchExit = op == JSOP_GOTO;
             if (hpcdepth == unsigned(-1))
                 hpcdepth = pcdepth;
         } else if (!exitPath) {
             hpcdepth = unsigned(-1);
         }
 
+
+        /*
+         * *** Special case 2 ***
+         *
+         * The catch depth is used to restore the depth expected in case of
+         * rethrow or in case of guard failure.  The depth expected by throw and
+         * throwing instructions correspond to the result of enterblock and
+         * exception instructions.
+         *
+         *     enterblock depth d    <-- depth += d
+         *     exception             <-- depth += 1
+         *
+         * This is not a problem, except with conditional catch staements.
+         * Conditional catch statements are looking like:
+         *
+         *     ifeq +...             <-- jump to the rethrow path.
+         *     pop                   <-- pop the exception value.
+         *
+         * Unfortunately, we iterate linearly over the bytecode, so we cannot
+         * use a stack to save the depth for each catch statement that we
+         * encounter. The trick done here is to save the stack depth before we
+         * unwind the scoped variables with leaveblock, and restore the stack
+         * depth plus one to account for the missing exception value.
+         *
+         *     {Catch}  leaveblock d <-- save depth
+         *   (          gosub ... )?
+         *     {Hidden} goto ...
+         *   ( {Hidden} throw )?     <-- restore depth + 1
+         *
+         * If there is no rethrow, then we should expect an end-brace nop or a
+         * finally.
+         */
         if (op == JSOP_LEAVEBLOCK && sn && SN_TYPE(sn) == SRC_CATCH) {
             LOCAL_ASSERT(cpcdepth == unsigned(-1));
             cpcdepth = pcdepth;
         } else if (sn && SN_TYPE(sn) == SRC_HIDDEN &&
                    (op == JSOP_THROW || op == JSOP_THROWING))
         {
+            /*
+             * The current catch block is conditional, we compensate for the pop
+             * of the exception added after the ifeq by adding 1 to the restored
+             * depth.  This fake slot might not contain the right value, but
+             * it will be eliminated with the throw or throwing instruction.
+             */
             LOCAL_ASSERT(cpcdepth != unsigned(-1));
             pcdepth = cpcdepth + 1;
             cpcdepth = unsigned(-1);
         } else if (!(op == JSOP_GOTO && sn && SN_TYPE(sn) == SRC_HIDDEN) &&
                    !(op == JSOP_GOSUB && cpcdepth != unsigned(-1)))
         {
+            /*
+             * We need to ignore gosub and goto when we exit a catch block.
+             * Otherwise we might reset the catch depth before hitting the throw
+             * or throwing instruction.
+             *
+             *     {Catch}  leaveblock d
+             *   (          gosub ... )?
+             *     {Hidden} goto ...
+             *   ( {Hidden} throw )?
+             *              finally
+             *
+             * If there is no rethrow, the end-brace nop or the finally
+             * instruction will reset the saved depth.
+             */
             if (cpcdepth != unsigned(-1))
                 LOCAL_ASSERT((op == JSOP_NOP && sn && SN_TYPE(sn) == SRC_ENDBRACE) ||
                              op == JSOP_FINALLY);
@@ -6521,16 +6812,32 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
 
         /* At this point, pcdepth is the stack depth *after* the insn at pc. */
 
+        /*
+         * *** Special case 1.b ***
+         *
+         * Restore the stack depth after the execution of an EarlyExit or the
+         * goto of the ConditionalCatchExit.
+         */
         if (exitPath && hpcdepth != unsigned(-1)) {
             pcdepth = hpcdepth;
-            if (!isHiddenGoto)
+
+            /* Keep the depth if we are on the ConditionalCatchExit path. */
+            if (!isConditionalCatchExit)
                 hpcdepth = unsigned(-1);
         }
 
         /*
+         * *** Special case 3 ***
+         *
          * A (C ? T : E) expression requires skipping T if target is in E or
          * after the whole expression, because this expression is pushing a
          * result on the stack and the goto cannot be skipped.
+         *
+         * 09 001 pc   :  ifeq +11
+         *    000 pc+ 5:  null
+         *    001 pc+ 6:  goto +... <-- The stack after the goto
+         *    000 pc+11:  ...       <-- does not have the same depth.
+         *
          */
         if (sn && SN_TYPE(sn) == SRC_COND) {
             ptrdiff_t jmplen = GET_JUMP_OFFSET(pc);

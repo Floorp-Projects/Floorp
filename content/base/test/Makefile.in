@@ -595,6 +595,8 @@ MOCHITEST_FILES_B = \
 		test_bug809003.html \
 		test_textnode_split_in_selection.html \
 		test_textnode_normalize_in_selection.html \
+		test_xhr_send_readystate.html \
+		test_bug813919.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec

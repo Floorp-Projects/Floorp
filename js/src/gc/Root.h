@@ -83,7 +83,10 @@ template <typename T> class MutableHandle;
 
 JS_FRIEND_API(void) EnterAssertNoGCScope();
 JS_FRIEND_API(void) LeaveAssertNoGCScope();
+
+/* These are exposing internal state of the GC for inlining purposes. */
 JS_FRIEND_API(bool) InNoGCScope();
+JS_FRIEND_API(bool) isGCEnabled();
 
 /*
  * Handle provides an implicit constructor for NullPtr so that, given:
@@ -804,7 +807,7 @@ public:
 JS_ALWAYS_INLINE void
 AssertCanGC()
 {
-    JS_ASSERT(!InNoGCScope());
+    JS_ASSERT_IF(isGCEnabled(), !InNoGCScope());
 }
 
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)

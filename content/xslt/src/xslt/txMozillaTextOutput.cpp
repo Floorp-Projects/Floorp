@@ -113,7 +113,8 @@ txMozillaTextOutput::startDocument()
 }
 
 nsresult
-txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
+txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
+                                          bool aLoadedAsData)
 {
     /*
      * Create an XHTML document to hold the text.
@@ -132,7 +133,8 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
      */
 
     // Create the document
-    nsresult rv = NS_NewXMLDocument(getter_AddRefs(mDocument));
+    nsresult rv = NS_NewXMLDocument(getter_AddRefs(mDocument),
+                                    aLoadedAsData);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
     NS_ENSURE_STATE(source);

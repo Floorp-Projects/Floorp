@@ -41,7 +41,6 @@
 #include "nsMediaError.h"
 #include "MediaDecoder.h"
 #include "nsICategoryManager.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "MediaResource.h"
 
 #include "nsIDOMHTMLVideoElement.h"
@@ -122,6 +121,18 @@ using namespace mozilla::layers;
 
 // Number of milliseconds between timeupdate events as defined by spec
 #define TIMEUPDATE_MS 250
+
+// These constants are arbitrary
+// Minimum playbackRate for a media
+static const double MIN_PLAYBACKRATE = 0.25;
+// Maximum playbackRate for a media
+static const double MAX_PLAYBACKRATE = 5.0;
+// These are the limits beyonds which SoundTouch does not perform too well and when
+// speech is hard to understand anyway.
+// Threshold above which audio is muted
+static const double THRESHOLD_HIGH_PLAYBACKRATE_AUDIO = 4.0;
+// Threshold under which audio is muted
+static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.5;
 
 // Under certain conditions there may be no-one holding references to
 // a media element from script, DOM parent, etc, but the element may still
@@ -709,6 +720,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
   SetPlayedOrSeeked(false);
   mIsRunningLoadMethod = true;
   AbortExistingLoads();
+  SetPlaybackRate(mDefaultPlaybackRate);
   QueueSelectResourceTask();
   mIsRunningLoadMethod = false;
   return NS_OK;
@@ -1185,6 +1197,7 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
     return rv;
   }
 
+  SetPlaybackRate(mDefaultPlaybackRate);
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
@@ -1215,6 +1228,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
     return rv;
   }
 
+  SetPlaybackRate(mDefaultPlaybackRate);
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
@@ -1532,14 +1546,9 @@ NS_IMETHODIMP nsHTMLMediaElement::GetMuted(bool *aMuted)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
+void nsHTMLMediaElement::SetMutedInternal(bool aMuted)
 {
-  if (aMuted == mMuted)
-    return NS_OK;
-
-  mMuted = aMuted;
-
-  float effectiveVolume = mMuted ? 0.0f : float(mVolume);
+  float effectiveVolume = aMuted ? 0.0f : float(mVolume);
   if (mDecoder) {
     mDecoder->SetVolume(effectiveVolume);
   } else if (mAudioStream) {
@@ -1547,6 +1556,15 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
   } else if (mSrcStream) {
     GetSrcMediaStream()->SetAudioOutputVolume(this, effectiveVolume);
   }
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
+{
+  if (aMuted == mMuted)
+    return NS_OK;
+
+  mMuted = aMuted;
+  SetMutedInternal(aMuted);
 
   DispatchAsyncEvent(NS_LITERAL_STRING("volumechange"));
 
@@ -1713,6 +1731,9 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mLastCurrentTime(0.0),
     mFragmentStart(-1.0),
     mFragmentEnd(-1.0),
+    mDefaultPlaybackRate(1.0),
+    mPlaybackRate(1.0),
+    mPreservesPitch(true),
     mCurrentPlayRangeStart(-1.0),
     mAllowAudioData(false),
     mBegun(false),
@@ -1857,7 +1878,6 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
 
   // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
-  // TODO: The playback rate must be set to the default playback rate.
   if (mPaused) {
     if (mSrcStream) {
       GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
@@ -1878,6 +1898,8 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
       break;
     }
   }
+
+  SetPlaybackRate(mDefaultPlaybackRate);
 
   mPaused = false;
   mAutoplaying = false;
@@ -2026,340 +2048,8 @@ void nsHTMLMediaElement::UnbindFromTree(bool aDeep,
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-#ifdef MOZ_RAW
-static const char gRawTypes[2][16] = {
-  "video/x-raw",
-  "video/x-raw-yuv"
-};
-
-static const char* gRawCodecs[1] = {
-  nullptr
-};
-
-static bool IsRawType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsRawEnabled()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < ArrayLength(gRawTypes); ++i) {
-    if (aType.EqualsASCII(gRawTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif
-#ifdef MOZ_OGG
-// See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
-// of Ogg media types and codec types
-const char nsHTMLMediaElement::gOggTypes[3][16] = {
-  "video/ogg",
-  "audio/ogg",
-  "application/ogg"
-};
-
-char const *const nsHTMLMediaElement::gOggCodecs[3] = {
-  "vorbis",
-  "theora",
-  nullptr
-};
-
-char const *const nsHTMLMediaElement::gOggCodecsWithOpus[4] = {
-  "vorbis",
-  "opus",
-  "theora",
-  nullptr
-};
-
-bool
-nsHTMLMediaElement::IsOggType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsOggEnabled()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < ArrayLength(gOggTypes); ++i) {
-    if (aType.EqualsASCII(gOggTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif
-
-#ifdef MOZ_WAVE
-// See http://www.rfc-editor.org/rfc/rfc2361.txt for the definitions
-// of WAVE media types and codec types. However, the audio/vnd.wave
-// MIME type described there is not used.
-const char nsHTMLMediaElement::gWaveTypes[4][15] = {
-  "audio/x-wav",
-  "audio/wav",
-  "audio/wave",
-  "audio/x-pn-wav"
-};
-
-char const *const nsHTMLMediaElement::gWaveCodecs[2] = {
-  "1", // Microsoft PCM Format
-  nullptr
-};
-
-bool
-nsHTMLMediaElement::IsWaveType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsWaveEnabled()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < ArrayLength(gWaveTypes); ++i) {
-    if (aType.EqualsASCII(gWaveTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif
-
-#ifdef MOZ_WEBM
-const char nsHTMLMediaElement::gWebMTypes[2][11] = {
-  "video/webm",
-  "audio/webm"
-};
-
-char const *const nsHTMLMediaElement::gWebMCodecs[4] = {
-  "vp8",
-  "vp8.0",
-  "vorbis",
-  nullptr
-};
-
-bool
-nsHTMLMediaElement::IsWebMType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsWebMEnabled()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < ArrayLength(gWebMTypes); ++i) {
-    if (aType.EqualsASCII(gWebMTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif
-
-#if defined(MOZ_GSTREAMER) || defined(MOZ_WIDGET_GONK)
-char const *const nsHTMLMediaElement::gH264Codecs[9] = {
-  "avc1.42E01E",  // H.264 Constrained Baseline Profile Level 3.0
-  "avc1.42001E",  // H.264 Baseline Profile Level 3.0
-  "avc1.58A01E",  // H.264 Extended Profile Level 3.0
-  "avc1.4D401E",  // H.264 Main Profile Level 3.0
-  "avc1.64001E",  // H.264 High Profile Level 3.0
-  "avc1.64001F",  // H.264 High Profile Level 3.1
-  "mp4v.20.3",    // 3GPP
-  "mp4a.40.2",    // AAC-LC
-  nullptr
-};
-#endif
-
-#ifdef MOZ_GSTREAMER
-const char nsHTMLMediaElement::gH264Types[3][16] = {
-  "video/mp4",
-  "video/3gpp",
-  "video/quicktime",
-};
-
-bool
-nsHTMLMediaElement::IsH264Type(const nsACString& aType)
-{
-  for (uint32_t i = 0; i < ArrayLength(gH264Types); ++i) {
-    if (aType.EqualsASCII(gH264Types[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-const char nsHTMLMediaElement::gOmxTypes[5][16] = {
-  "audio/mpeg",
-  "audio/mp4",
-  "video/mp4",
-  "video/3gpp",
-  "video/quicktime",
-};
-
-bool
-nsHTMLMediaElement::IsOmxSupportedType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsOmxEnabled()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < ArrayLength(gOmxTypes); ++i) {
-    if (aType.EqualsASCII(gOmxTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif
-
-#ifdef MOZ_MEDIA_PLUGINS
-bool
-nsHTMLMediaElement::IsMediaPluginsType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsMediaPluginsEnabled()) {
-    return false;
-  }
-
-  static const char* supportedTypes[] = {
-    "audio/mpeg", "audio/mp4", "video/mp4"
-  };
-  for (uint32_t i = 0; i < ArrayLength(supportedTypes); ++i) {
-    if (aType.EqualsASCII(supportedTypes[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
-
-#ifdef MOZ_DASH
 /* static */
-const char nsHTMLMediaElement::gDASHMPDTypes[1][21] = {
-  "application/dash+xml"
-};
-
-/* static */
-bool
-nsHTMLMediaElement::IsDASHMPDType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsDASHEnabled()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < ArrayLength(gDASHMPDTypes); ++i) {
-    if (aType.EqualsASCII(gDASHMPDTypes[i])) {
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif
-
-/* static */
-nsHTMLMediaElement::CanPlayStatus
-nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
-                                       char const *const ** aCodecList)
-{
-#ifdef MOZ_RAW
-  if (IsRawType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gRawCodecs;
-    return CANPLAY_MAYBE;
-  }
-#endif
-#ifdef MOZ_OGG
-  if (IsOggType(nsDependentCString(aMIMEType))) {
-    *aCodecList = MediaDecoder::IsOpusEnabled() ? gOggCodecsWithOpus : gOggCodecs;
-    return CANPLAY_MAYBE;
-  }
-#endif
-#ifdef MOZ_WAVE
-  if (IsWaveType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gWaveCodecs;
-    return CANPLAY_MAYBE;
-  }
-#endif
-#ifdef MOZ_WEBM
-  if (IsWebMType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gWebMCodecs;
-    return CANPLAY_YES;
-  }
-#endif
-#ifdef MOZ_DASH
-  if (IsDASHMPDType(nsDependentCString(aMIMEType))) {
-    // DASH manifest uses WebM codecs only.
-    *aCodecList = gWebMCodecs;
-    return CANPLAY_YES;
-  }
-#endif
-
-#ifdef MOZ_GSTREAMER
-  if (IsH264Type(nsDependentCString(aMIMEType))) {
-    *aCodecList = gH264Codecs;
-    return CANPLAY_MAYBE;
-  }
-#endif
-#ifdef MOZ_WIDGET_GONK
-  if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
-    *aCodecList = gH264Codecs;
-    return CANPLAY_MAYBE;
-  }
-#endif
-#ifdef MOZ_MEDIA_PLUGINS
-  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), aCodecList))
-    return CANPLAY_MAYBE;
-#endif
-  return CANPLAY_NO;
-}
-
-/* static */
-bool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
-{
-#ifdef MOZ_RAW
-  if (IsRawType(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_OGG
-  if (IsOggType(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_WEBM
-  if (IsWebMType(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_GSTREAMER
-  if (IsH264Type(nsDependentCString(aMIMEType)))
-    return true;
-#endif
-#ifdef MOZ_WIDGET_GONK
-  if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
-    return true;
-  }
-#endif
-#ifdef MOZ_MEDIA_PLUGINS
-  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), NULL))
-    return true;
-#endif
-  // We should not return true for Wave types, since there are some
-  // Wave codecs actually in use in the wild that we don't support, and
-  // we should allow those to be handled by plugins or helper apps.
-  // Furthermore people can play Wave files on most platforms by other
-  // means.
-  return false;
-}
-
-static bool
-CodecListContains(char const *const * aCodecs, const nsAString& aCodec)
-{
-  for (int32_t i = 0; aCodecs[i]; ++i) {
-    if (aCodec.EqualsASCII(aCodecs[i]))
-      return true;
-  }
-  return false;
-}
-
-/* static */
-nsHTMLMediaElement::CanPlayStatus
+CanPlayStatus
 nsHTMLMediaElement::GetCanPlay(const nsAString& aType)
 {
   nsContentTypeParser parser(aType);
@@ -2368,39 +2058,13 @@ nsHTMLMediaElement::GetCanPlay(const nsAString& aType)
   if (NS_FAILED(rv))
     return CANPLAY_NO;
 
-  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
-  char const *const * supportedCodecs;
-  CanPlayStatus status = CanHandleMediaType(mimeTypeUTF8.get(),
-                                            &supportedCodecs);
-  if (status == CANPLAY_NO)
-    return CANPLAY_NO;
-
   nsAutoString codecs;
   rv = parser.GetParameter("codecs", codecs);
-  if (NS_FAILED(rv)) {
-    // Parameter not found or whatever
-    return status;
-  }
 
-  CanPlayStatus result = CANPLAY_YES;
-  // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
-  // of the 'codecs' parameter
-  nsCharSeparatedTokenizer tokenizer(codecs, ',');
-  bool expectMoreTokens = false;
-  while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& token = tokenizer.nextToken();
-
-    if (!CodecListContains(supportedCodecs, token)) {
-      // Totally unsupported codec
-      return CANPLAY_NO;
-    }
-    expectMoreTokens = tokenizer.lastTokenEndedWithSeparator();
-  }
-  if (expectMoreTokens) {
-    // Last codec name was empty
-    return CANPLAY_NO;
-  }
-  return result;
+  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
+  return DecoderTraits::CanHandleMediaType(mimeTypeUTF8.get(),
+                                           NS_SUCCEEDED(rv),
+                                           codecs);
 }
 
 NS_IMETHODIMP
@@ -2421,28 +2085,6 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
   return NS_OK;
 }
 
-#ifdef MOZ_GSTREAMER
-bool
-nsHTMLMediaElement::IsGStreamerSupportedType(const nsACString& aMimeType)
-{
-  if (!MediaDecoder::IsGStreamerEnabled())
-    return false;
-  if (IsH264Type(aMimeType))
-    return true;
-  if (!Preferences::GetBool("media.prefer-gstreamer", false))
-    return false;
-#ifdef MOZ_WEBM
-  if (IsWebMType(aMimeType))
-    return true;
-#endif
-#ifdef MOZ_OGG
-  if (IsOggType(aMimeType))
-    return true;
-#endif
-  return false;
-}
-#endif
-
 already_AddRefed<MediaDecoder>
 nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 {
@@ -2450,7 +2092,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #ifdef MOZ_GSTREAMER
   // When enabled, use GStreamer for H.264, but not for codecs handled by our
   // bundled decoders, unless the "media.prefer-gstreamer" pref is set.
-  if (IsGStreamerSupportedType(aType)) {
+  if (DecoderTraits::IsGStreamerSupportedType(aType)) {
     nsRefPtr<GStreamerDecoder> decoder = new GStreamerDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
@@ -2459,7 +2101,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 
 #ifdef MOZ_RAW
-  if (IsRawType(aType)) {
+  if (DecoderTraits::IsRawType(aType)) {
     nsRefPtr<RawDecoder> decoder = new RawDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
@@ -2467,7 +2109,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   }
 #endif
 #ifdef MOZ_OGG
-  if (IsOggType(aType)) {
+  if (DecoderTraits::IsOggType(aType)) {
     nsRefPtr<OggDecoder> decoder = new OggDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
@@ -2475,7 +2117,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   }
 #endif
 #ifdef MOZ_WAVE
-  if (IsWaveType(aType)) {
+  if (DecoderTraits::IsWaveType(aType)) {
     nsRefPtr<WaveDecoder> decoder = new WaveDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
@@ -2483,7 +2125,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   }
 #endif
 #ifdef MOZ_WIDGET_GONK
-  if (IsOmxSupportedType(aType)) {
+  if (DecoderTraits::IsOmxSupportedType(aType)) {
     nsRefPtr<MediaOmxDecoder> decoder = new MediaOmxDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
@@ -2499,7 +2141,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   }
 #endif
 #ifdef MOZ_WEBM
-  if (IsWebMType(aType)) {
+  if (DecoderTraits::IsWebMType(aType)) {
     nsRefPtr<WebMDecoder> decoder = new WebMDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
@@ -2508,7 +2150,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 
 #ifdef MOZ_DASH
-  if (IsDASHMPDType(aType)) {
+  if (DecoderTraits::IsDASHMPDType(aType)) {
     nsRefPtr<DASHDecoder> decoder = new DASHDecoder();
     if (decoder->Init(this)) {
       return decoder.forget();
@@ -3715,6 +3357,82 @@ void nsHTMLMediaElement::NotifyAudioAvailableListener()
   }
 }
 
+static double ClampPlaybackRate(double aPlaybackRate)
+{
+  if (aPlaybackRate == 0.0) {
+    return aPlaybackRate;
+  }
+  if (NS_ABS(aPlaybackRate) < MIN_PLAYBACKRATE) {
+    return aPlaybackRate < 0 ? -MIN_PLAYBACKRATE : MIN_PLAYBACKRATE;
+  }
+  if (NS_ABS(aPlaybackRate) > MAX_PLAYBACKRATE) {
+    return aPlaybackRate < 0 ? -MAX_PLAYBACKRATE : MAX_PLAYBACKRATE;
+  }
+  return aPlaybackRate;
+}
+
+/* attribute double defaultPlaybackRate; */
+NS_IMETHODIMP nsHTMLMediaElement::GetDefaultPlaybackRate(double* aDefaultPlaybackRate)
+{
+  *aDefaultPlaybackRate = mDefaultPlaybackRate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate)
+{
+  if (aDefaultPlaybackRate < 0) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  mDefaultPlaybackRate = ClampPlaybackRate(aDefaultPlaybackRate);
+  DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
+  return NS_OK;
+}
+
+/* attribute double playbackRate; */
+NS_IMETHODIMP nsHTMLMediaElement::GetPlaybackRate(double* aPlaybackRate)
+{
+  *aPlaybackRate = mPlaybackRate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetPlaybackRate(double aPlaybackRate)
+{
+  if (aPlaybackRate < 0) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  mPlaybackRate = ClampPlaybackRate(aPlaybackRate);
+
+  if (mPlaybackRate < 0 ||
+      mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
+      mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO) {
+    SetMutedInternal(true);
+  } else {
+    SetMutedInternal(false);
+  }
+
+  if (mDecoder) {
+    mDecoder->SetPlaybackRate(mPlaybackRate);
+  }
+  DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
+  return NS_OK;
+}
+
+/* attribute bool mozPreservesPitch; */
+NS_IMETHODIMP nsHTMLMediaElement::GetMozPreservesPitch(bool* aPreservesPitch)
+{
+  *aPreservesPitch = mPreservesPitch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch)
+{
+  mPreservesPitch = aPreservesPitch;
+  mDecoder->SetPreservesPitch(aPreservesPitch);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHTMLMediaElement::GetMozAudioChannelType(nsAString& aString)
 {
@@ -3745,26 +3463,29 @@ nsHTMLMediaElement::GetMozAudioChannelType(nsAString& aString)
 NS_IMETHODIMP
 nsHTMLMediaElement::SetMozAudioChannelType(const nsAString& aString)
 {
-  if (mDecoder) {
-    return NS_ERROR_FAILURE;
-  }
+  AudioChannelType tmpType;
 
   if (aString.EqualsASCII("normal")) {
-    mAudioChannelType = AUDIO_CHANNEL_NORMAL;
+    tmpType = AUDIO_CHANNEL_NORMAL;
   } else if (aString.EqualsASCII("content")) {
-    mAudioChannelType = AUDIO_CHANNEL_CONTENT;
+    tmpType = AUDIO_CHANNEL_CONTENT;
   } else if (aString.EqualsASCII("notification")) {
-    mAudioChannelType = AUDIO_CHANNEL_NOTIFICATION;
+    tmpType = AUDIO_CHANNEL_NOTIFICATION;
   } else if (aString.EqualsASCII("alarm")) {
-    mAudioChannelType = AUDIO_CHANNEL_ALARM;
+    tmpType = AUDIO_CHANNEL_ALARM;
   } else if (aString.EqualsASCII("telephony")) {
-    mAudioChannelType = AUDIO_CHANNEL_TELEPHONY;
+    tmpType = AUDIO_CHANNEL_TELEPHONY;
   } else if (aString.EqualsASCII("publicnotification")) {
-    mAudioChannelType = AUDIO_CHANNEL_PUBLICNOTIFICATION;
+    tmpType = AUDIO_CHANNEL_PUBLICNOTIFICATION;
   } else {
     return NS_ERROR_FAILURE;
   }
 
+  if (tmpType != mAudioChannelType && mDecoder) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mAudioChannelType = tmpType;
   return NS_OK;
 }
 

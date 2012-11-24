@@ -15,6 +15,9 @@ public:
   nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
+      SetHasDirAuto();
+    }
   }
 
   // nsISupports
