@@ -651,6 +651,11 @@ public class GeckoLayerClient
     }
 
     /** Implementation of PanZoomTarget */
+    public boolean isFullScreen() {
+        return mView.isFullScreen();
+    }
+
+    /** Implementation of PanZoomTarget */
     public void setAnimationTarget(ImmutableViewportMetrics metrics) {
         if (mGeckoIsReady) {
             // We know what the final viewport of the animation is going to be, so
