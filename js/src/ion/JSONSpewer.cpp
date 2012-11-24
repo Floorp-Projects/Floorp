@@ -13,6 +13,7 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "LinearScan.h"
+#include "RangeAnalysis.h"
 using namespace js;
 using namespace js::ion;
 
@@ -255,8 +256,14 @@ JSONSpewer::spewMDef(MDefinition *def)
         integerValue(use.def()->id());
     endList();
 
-    stringProperty("type", "%s : [%d, %d]", StringFromMIRType(def->type()),
-                   def->range()->lower(), def->range()->upper());
+    if (def->range()) {
+        Sprinter sp(GetIonContext()->cx);
+        sp.init();
+        def->range()->print(sp);
+        stringProperty("type", "%s : %s", sp.string());
+    } else {
+        stringProperty("type", "%s", StringFromMIRType(def->type()));
+    }
 
     if (def->isInstruction()) {
         if (MResumePoint *rp = def->toInstruction()->resumePoint())

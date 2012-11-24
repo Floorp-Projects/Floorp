@@ -10,6 +10,7 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "EdgeCaseAnalysis.h"
+#include "RangeAnalysis.h"
 #include "IonSpewer.h"
 #include "jsnum.h"
 #include "jsstr.h"
@@ -284,11 +285,6 @@ MConstant::MConstant(const js::Value &vp)
 {
     setResultType(MIRTypeFromValue(vp));
     setMovable();
-
-    if (type() == MIRType_Int32) {
-        range()->setLower(value().toInt32());
-        range()->setUpper(value().toInt32());
-    }
 }
 
 HashNumber
@@ -474,53 +470,6 @@ MPhi::addInput(MDefinition *ins)
 {
     ins->addUse(this, inputs_.length());
     return inputs_.append(ins);
-}
-
-bool
-MPhi::recomputeRange()
-{
-    if (type() != MIRType_Int32)
-        return false;
-
-    // Use RangeUpdater rather than Range because it needs to
-    // track if it has been updated yet.
-    RangeUpdater r;
-    JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
-    bool updated = false;
-    for (size_t i = 0; i < numOperands(); i++) {
-        if (getOperand(i)->block()->earlyAbort()) {
-            IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
-            continue;
-        }
-
-        if (!isOSRLikeValue(getOperand(i))) {
-            if (block()->isLoopHeader()) {
-                IonSpew(IonSpew_Range, "    Updating input #%d (inst %d)", i, getOperand(i)->id());
-                changeCounts_[i].updateRange(getOperand(i)->range());
-                r.unionWith(&changeCounts_[i]);
-            } else {
-                r.unionWith(getOperand(i)->range());
-            }
-
-#ifdef DEBUG
-            if (IonSpewEnabled(IonSpew_Range)) {
-                fprintf(IonSpewFile, "    %d:", getOperand(i)->id());
-                getOperand(i)->range()->printRange(IonSpewFile);
-                fprintf(IonSpewFile, " => ");
-                r.printRange(IonSpewFile);
-                fprintf(IonSpewFile, "\n");
-            }
-#endif
-
-
-        }
-     }
-     if (!updated) {
-         IonSpew(IonSpew_Range, "My block is unreachable %d", id());
-         block()->setEarlyAbort();
-         return false;
-     }
-     return range()->update(r.getRange());
 }
 
 uint32
@@ -894,6 +843,12 @@ MAdd::updateForReplacement(MDefinition *ins_)
     return true;
 }
 
+bool
+MAdd::fallible()
+{
+    return !isTruncated() && (!range() || !range()->isFinite());
+}
+
 void
 MSub::analyzeTruncateBackward()
 {
@@ -909,6 +864,12 @@ MSub::updateForReplacement(MDefinition *ins_)
     if (isTruncated())
         setTruncated(ins->isTruncated());
     return true;
+}
+
+bool
+MSub::fallible()
+{
+    return !isTruncated() && (!range() || !range()->isFinite());
 }
 
 MDefinition *
@@ -973,6 +934,24 @@ MMul::updateForReplacement(MDefinition *ins_)
     if (isPossibleTruncated())
         setPossibleTruncated(ins->isPossibleTruncated());
     return true;
+}
+
+bool
+MMul::canOverflow()
+{
+    if (implicitTruncate_)
+        return false;
+    return !range() || !range()->isFinite();
+}
+
+bool
+MMul::canBeNegativeZero()
+{
+    if (!range())
+        return canBeNegativeZero_;
+    if (range()->lower() > 0 || range()->upper() < 0)
+        return false;
+    return canBeNegativeZero_;
 }
 
 void
@@ -1530,6 +1509,12 @@ MNot::foldsTo(bool useValueNumbers)
     return this;
 }
 
+bool
+MBoundsCheckLower::fallible()
+{
+    return !range() || range()->lower() < minimum_;
+}
+
 void
 MBeta::printOpcode(FILE *fp)
 {
@@ -1537,17 +1522,23 @@ MBeta::printOpcode(FILE *fp)
     fprintf(fp, " ");
     getOperand(0)->printName(fp);
     fprintf(fp, " ");
-    comparison_.printRange(fp);
+
+    Sprinter sp(GetIonContext()->cx);
+    sp.init();
+    comparison_->print(sp);
+    fprintf(fp, "%s", sp.string());
 }
 
-bool
-MBeta::recomputeRange()
+void
+MBeta::computeRange()
 {
-    bool nullRange = false;
-    bool ret = range()->update(Range::intersect(val_->range(), &comparison_, &nullRange));
-    if (nullRange) {
-            IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
-            block()->setEarlyAbort();
+    bool emptyRange = false;
+
+    Range *range = Range::intersect(val_->range(), comparison_, &emptyRange);
+    if (emptyRange) {
+        IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
+        block()->setEarlyAbort();
+    } else {
+        setRange(range);
     }
-    return ret;
 }
