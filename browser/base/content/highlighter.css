@@ -2,64 +2,60 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
-#highlighter-container {
+.highlighter-container {
   pointer-events: none;
 }
 
-#highlighter-controls {
+.highlighter-controls {
   position: absolute;
   top: 0;
   left: 0;
 }
 
-#highlighter-outline-container {
+.highlighter-outline-container {
   overflow: hidden;
   position: relative;
 }
 
-#highlighter-outline {
+.highlighter-outline {
   position: absolute;
 }
 
-#highlighter-outline[hidden] {
+.highlighter-outline[hidden] {
   opacity: 0;
   pointer-events: none;
   display: -moz-box;
 }
 
-#highlighter-outline:not([disable-transitions]) {
+.highlighter-outline:not([disable-transitions]) {
   transition-property: opacity, top, left, width, height;
   transition-duration: 0.1s;
   transition-timing-function: linear;
-}
-
-.inspector-breadcrumbs-button {
-  direction: ltr;
 }
 
 /*
  * Node Infobar
  */
 
-#highlighter-nodeinfobar-container {
+.highlighter-nodeinfobar-container {
   position: absolute;
   max-width: 95%;
 }
 
-#highlighter-nodeinfobar-container[hidden] {
+.highlighter-nodeinfobar-container[hidden] {
   opacity: 0;
   pointer-events: none;
   display: -moz-box;
 }
 
-#highlighter-nodeinfobar-container:not([disable-transitions]),
-#highlighter-nodeinfobar-container[disable-transitions][force-transitions] {
+.highlighter-nodeinfobar-container:not([disable-transitions]),
+.highlighter-nodeinfobar-container[disable-transitions][force-transitions] {
   transition-property: transform, opacity, top, left;
   transition-duration: 0.1s;
   transition-timing-function: linear;
 }
 
-#highlighter-nodeinfobar-text {
+.highlighter-nodeinfobar-text {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -70,19 +66,19 @@
   display: none;
 }
 
-#highlighter-nodeinfobar-container:not([locked]):not(:hover) > #highlighter-nodeinfobar > .highlighter-nodeinfobar-button {
+.highlighter-nodeinfobar-container:not([locked]):not(:hover) > .highlighter-nodeinfobar > .highlighter-nodeinfobar-button {
   visibility: hidden;
 }
 
-#highlighter-nodeinfobar-container[locked] > #highlighter-nodeinfobar,
-#highlighter-nodeinfobar-container:not([locked]):hover > #highlighter-nodeinfobar {
+.highlighter-nodeinfobar-container[locked] > .highlighter-nodeinfobar,
+.highlighter-nodeinfobar-container:not([locked]):hover > .highlighter-nodeinfobar {
   pointer-events: auto;
 }
 
-html|*#highlighter-nodeinfobar-id,
-html|*#highlighter-nodeinfobar-classes,
-html|*#highlighter-nodeinfobar-pseudo-classes,
-html|*#highlighter-nodeinfobar-tagname {
+html|*.highlighter-nodeinfobar-id,
+html|*.highlighter-nodeinfobar-classes,
+html|*.highlighter-nodeinfobar-pseudo-classes,
+html|*.highlighter-nodeinfobar-tagname {
   -moz-user-select: text;
   cursor: text;
 }
@@ -91,41 +87,18 @@ html|*#highlighter-nodeinfobar-tagname {
   display: none;
 }
 
-#highlighter-nodeinfobar-container[position="top"]:not([hide-arrow]) > #highlighter-nodeinfobar-arrow-bottom {
+.highlighter-nodeinfobar-container[position="top"]:not([hide-arrow]) > .highlighter-nodeinfobar-arrow-bottom {
   display: block;
 }
 
-#highlighter-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > #highlighter-nodeinfobar-arrow-top {
+.highlighter-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .highlighter-nodeinfobar-arrow-top {
   display: block;
 }
 
-#highlighter-nodeinfobar-container[disabled] {
+.highlighter-nodeinfobar-container[disabled] {
   visibility: hidden;
 }
 
-html|*#highlighter-nodeinfobar-tagname {
+html|*.highlighter-nodeinfobar-tagname {
   text-transform: lowercase;
-}
-
-.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
-  display: none;
-}
-
-#inspector-option-toolbarbutton > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
-#inspector-layoutview-container > iframe {
-  /* header size */
-  height: 28px;
-}
-
-#inspector-layoutview-container:not([disable-transitions]) > iframe {
-  transition-property: height;
-  transition-duration: 0.2s;
-}
-
-#inspector-layoutview-container > iframe[open] {
-  /* header size + layout view size: 28px + 145px */
-  height: 173px;
 }
