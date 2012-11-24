@@ -260,6 +260,10 @@ function start() {
   };
 
   Reporter.prototype.startPage = function(url) {
+    if (testsToSkip.indexOf(url) != -1) {
+      info("[" + url + "] (WebGL mochitest) Skipping test page");
+      return false;
+    }
     info("[" + url + "] (WebGL mochitest) Starting test page");
 
     // Calling garbageCollect before each test page fixes intermittent failures with
@@ -436,6 +440,14 @@ function start() {
     testsExpectedToFail.push('conformance/textures/texture-mips.html');
 
   var testsToIgnore = [];
+
+  var testsToSkip = [];
+
+  if (kIsAndroid) {
+    var testsToSkip = loadTextFileSynchronous('skipped_tests_android.txt')
+                      .replace(/\r/g, '') // convert to unix line breaks
+                      .split('\n');
+  }
 
   runTestSuite();
 }

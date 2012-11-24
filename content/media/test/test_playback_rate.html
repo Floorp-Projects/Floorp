@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for the playbackRate property </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type='application/javascript;version=1.8'>
+
+let manager = new MediaTestManager;
+
+function rangeCheck(lhs, rhs, threshold) {
+  var diff = Math.abs(lhs - rhs);
+  if (diff < threshold) {
+    return true;
+  }
+  return false;
+}
+
+function checkPlaybackRate(wallclock, media, expected, threshold) {
+  if (rangeCheck(media / wallclock, expected, threshold)) {
+    return true;
+  }
+  return false;
+}
+
+// Those value are expected to match those at the top of nsHTMLMediaElement.cpp.
+let VERY_SLOW_RATE = 0.1,
+    SLOW_RATE = 0.25,
+    FAST_RATE = 5,
+    VERY_FAST_RATE = 20,
+    NULL_RATE = 0.0;
+
+function ontimeupdate(e) {
+  var t = e.target;
+  if (t.gotEnded) {
+    return;
+  }
+  t.testedForSlowdown = true;
+  if (t.currentTime > t.duration / 2) {
+    t.oldCurrentTime = t.currentTime;
+    t.timestamp = Date.now();
+    var delta = t.oldCurrentTime,
+        delta_wallclock = (t.timestamp - t.startTimestamp - t.bufferingTime) / 1000;
+
+    t.mozPreservesPitch = false;
+    is(t.mozPreservesPitch, false, "If we disable the pitch preservation, it should appear as such.");
+
+    t.bufferingTime = 0;
+
+    is(t.playbackRate, SLOW_RATE,
+        "The playback rate shoud be "+SLOW_RATE+"." + t.token);
+    ok(checkPlaybackRate(delta_wallclock, delta, SLOW_RATE, 0.25), "We are effectively slowing down playback. (" + delta_wallclock + ", " + delta + ") for " + t.token);
+    t.removeEventListener("timeupdate", ontimeupdate);
+    t.addEventListener("pause", onpaused);
+    t.playbackRate = NULL_RATE;
+    t.oldCurrentTime = t.currentTime;
+    setTimeout(function() {
+      afterNullPlaybackRate(e);
+    }, 100);
+  }
+}
+
+function onpaused(e) {
+  var t = e.target;
+  t.pausedReceived = true;
+}
+
+function afterNullPlaybackRate(e) {
+  var t = e.target;
+
+  t.testedForNull = true;
+
+  if (t.gotEnded) {
+    return;
+  }
+  // The currentTime won't be perfectly equal because of the latency
+  // compensation. We expect no more that 300ms difference.
+  let THRESHOLD = 0.3;
+  ok(rangeCheck(t.currentTime, t.oldCurrentTime, THRESHOLD), "Current time should not change when playbackRate is null (" + t.currentTime + " " + t.oldCurrentTime + ").");
+  ok(!t.paused, "The element should not be in paused state.");
+  t.removeEventListener("paused", onpaused);
+  is(t.pausedReceived, undefined, "Paused event should not have been received.");
+  t.timestamp = Date.now();
+  t.oldCurrentTime = t.currentTime;
+  t.playbackRate = VERY_FAST_RATE;
+  is(t.playbackRate, FAST_RATE, "Playback rate should be clamped to " + FAST_RATE + ".");
+}
+
+function onended(e) {
+  var t = e.target,
+      playtime = (Date.now() - t.timestamp - t.bufferingTime) / 1000,
+      mediaTime = t.duration - t.oldCurrentTime;
+
+  if (!(t.testedForSlowdown && t.testedForNull)) {
+    t.gotEnded = true;
+    t.skippedFastPart = true;
+  }
+
+  t.bufferingTime = 0;
+  // We got "ended" too early, skip these tests.
+  if (t.testedForSlowdown && t.testedForNull) {
+    is(t.playbackRate, FAST_RATE, "The playback rate should still be "+FAST_RATE+".");
+    ok(!t.muted, "The audio should be muted when playing at high speed, but should not appear as such.");
+    is(t.currentTime, t.duration, "Current time should be equal to the duration (not change by playback rate).");
+  }
+  test_defaultPlaybackRate(e);
+}
+
+function test_defaultPlaybackRate(e) {
+  var t = e.target;
+  t.currentTime = 0.0;
+  t.defaultPlaybackRate = SLOW_RATE;
+  t.addEventListener("timeupdate", ontimeupdate_defaultPlaybackRate);
+  t.startTimestamp = Date.now();
+  t.play();
+}
+
+function ontimeupdate_defaultPlaybackRate(e) {
+  var t = e.target;
+  if (t.currentTime > t.duration / 10) {
+    t.oldCurrentTime = t.currentTime;
+    t.timestamp = Date.now();
+    var delta = t.oldCurrentTime,
+        delta_wallclock = (t.timestamp - t.startTimestamp - t.bufferingTime) / 1000;
+
+    t.bufferingTime = 0;
+
+    is(t.playbackRate, SLOW_RATE,
+        "The playback rate shoud be "+SLOW_RATE+"." + t.token + '\n');
+    is(t.defaultPlaybackRate, SLOW_RATE,
+        "The default playback rate shoud be "+SLOW_RATE+"." + t.token);
+    ok(delta_wallclock > delta , "We are effectively slowing down playback. (" + delta_wallclock + ", " + delta + ")");
+    if (t.skippedFastPart) {
+      is(t.ratechangecount, 7, "We should have received 7 \"ratechange\" events.");
+    } else {
+      is(t.ratechangecount, 8, "We should have received 8 \"ratechange\" events.");
+    }
+    finish_test(t);
+  }
+}
+
+function onratechange(e) {
+  if (!e.target.ratechangecount) {
+    e.target.ratechangecount = 0;
+  }
+  e.target.ratechangecount++;
+}
+
+function finish_test(element) {
+  if (element.parentNode)
+    element.parentNode.removeChild(element);
+  element.src="";
+  manager.finished(element.token);
+}
+
+// These two functions handle the case when the playback pauses for buffering. It
+// adjusts the timestamps to be accurate. Despite the fact that the web servers
+// is supposed to be on the same machine, buffering pauses can occur (rarely,
+// but still).
+function onplaying(e) {
+  var t = e.target;
+  if (t.bufferingTimestamp != undefined) {
+    t.bufferingTime += (Date.now() - t.bufferingTimestamp);
+    t.bufferingTimestamp = undefined;
+  }
+}
+
+function onwaiting(e) {
+  var t = e.target;
+  t.bufferingTimestamp = Date.now();
+}
+
+function onvolumechange(e) {
+  ok(false, "We should not receive a volumechange event when changing the playback rate.");
+}
+
+function startTest(test, token) {
+  let elemType = /^audio/.test(test.type) ? "audio" : "video";
+  let element = document.createElement(elemType);
+  element.src = test.name;
+  element.token = token;
+  element.controls = true;
+  element.bufferingTime = 0;
+  document.body.appendChild(element);
+  element.addEventListener("ratechange", onratechange);
+  element.addEventListener("timeupdate", ontimeupdate);
+  element.addEventListener("ended", onended);
+  element.addEventListener("waiting", onwaiting);
+  element.addEventListener("playing", onplaying);
+  element.addEventListener("volumechange", onvolumechange);
+  manager.started(token);
+  element.startTimestamp = Date.now();
+  is(element.mozPreservesPitch, true, "Pitch preservation should be enabled by default.");
+  element.addEventListener("loadedmetadata", function() {
+    is(element.playbackRate, 1.0, "playbackRate should be initially 1.0");
+    is(element.defaultPlaybackRate, 1.0, "defaultPlaybackRate should be initially 1.0");
+    element.playbackRate = VERY_SLOW_RATE;
+    is(element.playbackRate, SLOW_RATE, "PlaybackRate should be clamped to " + SLOW_RATE + ".");
+    element.play();
+    is(element.playbackRate, 1.0, "playbackRate should be reset to 1.0 on play() call");
+    element.playbackRate = SLOW_RATE;
+  });
+}
+
+manager.runTests(gPlayedTests, startTest);
+
+</script>
+</pre>
+<div id="elements">
+</div>
+</body>
+</html>

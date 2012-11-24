@@ -112,7 +112,7 @@ WorkerAPI.prototype = {
                     nUri.scheme = pUri.scheme;
                   if (nUri.prePath == provider.origin) {
                     let xulWindow = Services.wm.getMostRecentWindow("navigator:browser");
-                    xulWindow.openUILink(nUri.spec);
+                    xulWindow.openUILinkIn(nUri.spec, "tab");
                   }
                 } catch(e) {
                   Cu.reportError("social.notification-create error: "+e);

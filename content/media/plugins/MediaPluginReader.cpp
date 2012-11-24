@@ -24,7 +24,7 @@ MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder) :
   mAudioSeekTimeUs(-1),
   mLastVideoFrame(NULL)
 {
-  reinterpret_cast<MediaPluginDecoder *>(aDecoder)->GetContentType(mType);
+  static_cast<MediaPluginDecoder *>(aDecoder)->GetContentType(mType);
 }
 
 MediaPluginReader::~MediaPluginReader()

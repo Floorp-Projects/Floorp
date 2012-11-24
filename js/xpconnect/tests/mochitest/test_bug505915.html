@@ -23,61 +23,11 @@ window.addEventListener("message", function () { gen.next() }, false);
 function go() {
     var ifr = $('ifr');
     try {
-        document.documentElement.appendChild(ifr.contentWindow);
-        ok(false, "weird behavior");
-    } catch (e) {
-        ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
-           "threw a security exception instead of an invalid child exception");
-    }
-
-    try {
         document.createTreeWalker(ifr.contentDocument, 0, null, false);
         ok(false, "should have thrown a security exception");
     } catch (e) {
         ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
            "threw a security exception instead of an invalid child exception");
-    }
-
-    // Location is always wrapped, so test it separately.
-
-    ifr.onload = null;
-    var path = "/tests/js/xpconnect/tests/mochitest/file_bug505915.html";
-
-    ifr.contentWindow.location = "http://mochi.test:8888/" + path;
-    yield;
-    try {
-        document.documentElement.appendChild(ifr.contentWindow.location);
-        ok(false, "weird behavior");
-    } catch (e) {
-        ok(!/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
-           "didn't throw a security exception");
-    }
-    oldLocation = ifr.contentWindow.location;
-    ifr.contentWindow.location = "http://example.org/" + path;
-    yield;
-    try {
-        document.documentElement.appendChild(oldLocation);
-        ok(false, "weird behavior");
-    } catch (e) {
-        ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
-           "threw a security exception instead of an invalid child exception");
-    }
-    try {
-        document.documentElement.appendChild(ifr.contentWindow.location);
-        ok(false, "weird behavior");
-    } catch (e) {
-        ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
-           "threw a security exception instead of an invalid child exception");
-    }
-    oldLocation = ifr.contentWindow.location;
-    ifr.contentWindow.location = "http://mochi.test:8888/" + path;
-    yield;
-    try {
-        document.documentElement.appendChild(oldLocation);
-        ok(false, "weird behavior");
-    } catch (e) {
-        ok(!/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
-           "didn't throw a security exception");
     }
 
     SimpleTest.finish();

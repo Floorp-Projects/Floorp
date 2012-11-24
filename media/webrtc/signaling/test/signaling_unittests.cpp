@@ -81,14 +81,20 @@ enum sdpTestFlags
   SHOULD_RECV_VIDEO     = (1<<5),
   SHOULD_INACTIVE_VIDEO = (1<<6),
   SHOULD_REJECT_VIDEO   = (1<<7),
+  DONT_CHECK_AUDIO      = (1<<8),
+  DONT_CHECK_VIDEO      = (1<<9),
 
   SHOULD_SENDRECV_AUDIO = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO,
   SHOULD_SENDRECV_VIDEO = SHOULD_SEND_VIDEO | SHOULD_RECV_VIDEO,
   SHOULD_SENDRECV_AV = SHOULD_SENDRECV_AUDIO | SHOULD_SENDRECV_VIDEO,
+
   AUDIO_FLAGS = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO
-                | SHOULD_INACTIVE_AUDIO | SHOULD_REJECT_AUDIO,
+                | SHOULD_INACTIVE_AUDIO | SHOULD_REJECT_AUDIO
+                | DONT_CHECK_AUDIO,
+
   VIDEO_FLAGS = SHOULD_SEND_VIDEO | SHOULD_RECV_VIDEO
                 | SHOULD_INACTIVE_VIDEO | SHOULD_REJECT_VIDEO
+                | DONT_CHECK_VIDEO
 };
 
 enum offerAnswerFlags
@@ -184,6 +190,7 @@ NS_IMETHODIMP
 TestObserver::OnCreateAnswerError(uint32_t code)
 {
   lastStatusCode = code;
+  cout << "onCreateAnswerError = " << code << endl;
   state = stateError;
   return NS_OK;
 }
@@ -193,6 +200,7 @@ TestObserver::OnSetLocalDescriptionSuccess(uint32_t code)
 {
   lastStatusCode = code;
   state = stateSuccess;
+  cout << "onSetLocalDescriptionSuccess = " << code << endl;
   return NS_OK;
 }
 
@@ -201,6 +209,7 @@ TestObserver::OnSetRemoteDescriptionSuccess(uint32_t code)
 {
   lastStatusCode = code;
   state = stateSuccess;
+  cout << "onSetRemoteDescriptionSuccess = " << code << endl;
   return NS_OK;
 }
 
@@ -209,6 +218,7 @@ TestObserver::OnSetLocalDescriptionError(uint32_t code)
 {
   lastStatusCode = code;
   state = stateError;
+  cout << "onSetLocalDescriptionError = " << code << endl;
   return NS_OK;
 }
 
@@ -217,24 +227,28 @@ TestObserver::OnSetRemoteDescriptionError(uint32_t code)
 {
   lastStatusCode = code;
   state = stateError;
+  cout << "onSetRemoteDescriptionError = " << code << endl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::NotifyConnection()
 {
+  cout << "NotifyConection" << endl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::NotifyClosedConnection()
 {
+  cout << "NotifyClosedConection" << endl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TestObserver::NotifyDataChannel(nsIDOMDataChannel *channel)
 {
+  cout << "NotifyDataChannel" << endl;
   return NS_OK;
 }
 
@@ -698,54 +712,58 @@ private:
             ASSERT_EQ(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
         break;
       case SHOULD_SEND_AUDIO:
-        ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
-            ASSERT_NE(sdp.find("a=fmtp:101 0-15\r\na=sendonly"), std::string::npos);
+            ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
+            ASSERT_NE(sdp.find(" 0-15\r\na=sendonly"), std::string::npos);
         break;
       case SHOULD_RECV_AUDIO:
-        ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
-            ASSERT_NE(sdp.find("a=fmtp:101 0-15\r\na=recvonly"), std::string::npos);
+            ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
+            ASSERT_NE(sdp.find(" 0-15\r\na=recvonly"), std::string::npos);
         break;
       case SHOULD_SENDRECV_AUDIO:
-        ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
-            ASSERT_NE(sdp.find("a=fmtp:101 0-15\r\na=sendrecv"), std::string::npos);
+            ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
+            ASSERT_NE(sdp.find(" 0-15\r\na=sendrecv"), std::string::npos);
         break;
       case SHOULD_INACTIVE_AUDIO:
-        ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
-            ASSERT_NE(sdp.find("a=fmtp:101 0-15\r\na=inactive"), std::string::npos);
+            ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
+            ASSERT_NE(sdp.find(" 0-15\r\na=inactive"), std::string::npos);
         break;
       case SHOULD_REJECT_AUDIO:
-        ASSERT_EQ(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
-        ASSERT_NE(sdp.find("m=audio 0 "), std::string::npos);
+            ASSERT_EQ(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
+            ASSERT_NE(sdp.find("m=audio 0 "), std::string::npos);
+        break;
+      case DONT_CHECK_AUDIO:
         break;
       default:
-        ASSERT_FALSE("Missing case in switch statement");
+            ASSERT_FALSE("Missing case in switch statement");
     }
 
     switch(flags & VIDEO_FLAGS) {
       case 0:
-        ASSERT_EQ(sdp.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+            ASSERT_EQ(sdp.find("a=rtpmap:120 VP8/90000"), std::string::npos);
         break;
       case SHOULD_SEND_VIDEO:
-        ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=sendonly"),
+            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=sendonly"),
                   std::string::npos);
         break;
       case SHOULD_RECV_VIDEO:
-        ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=recvonly"),
+            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=recvonly"),
                   std::string::npos);
         break;
       case SHOULD_SENDRECV_VIDEO:
-        ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=sendrecv"),
+            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=sendrecv"),
                   std::string::npos);
         break;
       case SHOULD_INACTIVE_VIDEO:
-        ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=inactive"),
-                  std::string::npos);
+            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=inactive"),
+                      std::string::npos);
         break;
       case SHOULD_REJECT_VIDEO:
-        ASSERT_NE(sdp.find("m=video 0 "), std::string::npos);
+            ASSERT_NE(sdp.find("m=video 0 "), std::string::npos);
+        break;
+      case DONT_CHECK_VIDEO:
         break;
       default:
-        ASSERT_FALSE("Missing case in switch statement");
+            ASSERT_FALSE("Missing case in switch statement");
     }
   }
 };
@@ -1197,6 +1215,109 @@ TEST_F(SignalingTest, FullCallTrickle)
 
   ASSERT_GE(a1_.GetPacketsSent(0), 40);
   ASSERT_GE(a2_.GetPacketsReceived(0), 40);
+}
+
+TEST_F(SignalingTest, Bug810220)
+{
+  sipcc::MediaConstraints constraints;
+  std::string offer =
+    "v=0\r\n"
+    "o=- 1 1 IN IP4 148.147.200.251\r\n"
+    "s=-\r\n"
+    "b=AS:64\r\n"
+    "t=0 0\r\n"
+    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+    "m=audio 9000 RTP/AVP 0 126\r\n"
+    "c=IN IP4 148.147.200.251\r\n"
+    "b=TIAS:64000\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:126 telephone-event/8000\r\n"
+    "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
+    "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
+    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+    "a=sendrecv\r\n";
+
+  std::cout << "Setting offer to:" << std::endl << offer << std::endl;
+  a2_.SetRemote(TestObserver::OFFER, offer);
+
+  std::cout << "Creating answer:" << std::endl;
+  a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO,
+                   DONT_CHECK_AUDIO | DONT_CHECK_VIDEO);
+
+  std::string answer = a2_.answer();
+  /* TODO -- make sure the answer looks right */
+}
+
+TEST_F(SignalingTest, Bug814038)
+{
+  sipcc::MediaConstraints constraints;
+  std::string offer =
+    "v=0\r\n"
+    "o=- 1713781661 2 IN IP4 127.0.0.1\r\n"
+    "s=-\r\n"
+    "t=0 0\r\n"
+    "a=group:BUNDLE audio video\r\n"
+
+    "m=audio 1 RTP/SAVPF 103 104 111 0 8 107 106 105 13 126\r\n"
+    "a=fingerprint:sha-1 4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:"
+      "5D:49:6B:19:E5:7C:AB\r\n"
+    "c=IN IP4 0.0.0.0\r\n"
+    "a=rtcp:1 IN IP4 0.0.0.0\r\n"
+    "a=ice-ufrag:lBrbdDfrVBH1cldN\r\n"
+    "a=ice-pwd:rzh23jet4QpCaEoj9Sl75pL3\r\n"
+    "a=ice-options:google-ice\r\n"
+    "a=sendrecv\r\n"
+    "a=mid:audio\r\n"
+    "a=rtcp-mux\r\n"
+    "a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:"
+      "RzrYlzpkTsvgYFD1hQqNCzQ7y4emNLKI1tODsjim\r\n"
+    "a=rtpmap:103 ISAC/16000\r\n"
+    "a=rtpmap:104 ISAC/32000\r\n"
+    "a=rtpmap:111 opus/48000\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
+    "a=rtpmap:107 CN/48000\r\n"
+    "a=rtpmap:106 CN/32000\r\n"
+    "a=rtpmap:105 CN/16000\r\n"
+    "a=rtpmap:13 CN/8000\r\n"
+    "a=rtpmap:126 telephone-event/8000\r\n"
+    "a=ssrc:661333377 cname:KIXaNxUlU5DP3fVS\r\n"
+    "a=ssrc:661333377 msid:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5 a0\r\n"
+    "a=ssrc:661333377 mslabel:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5\r\n"
+    "a=ssrc:661333377 label:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5a0\r\n"
+
+    "m=video 1 RTP/SAVPF 100 101 102\r\n"
+    "a=fingerprint:sha-1 4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:"
+      "6B:19:E5:7C:AB\r\n"
+    "c=IN IP4 0.0.0.0\r\n"
+    "a=rtcp:1 IN IP4 0.0.0.0\r\n"
+    "a=ice-ufrag:lBrbdDfrVBH1cldN\r\n"
+    "a=ice-pwd:rzh23jet4QpCaEoj9Sl75pL3\r\n"
+    "a=ice-options:google-ice\r\n"
+    "a=sendrecv\r\n"
+    "a=mid:video\r\n"
+    "a=rtcp-mux\r\n"
+    "a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:"
+      "RzrYlzpkTsvgYFD1hQqNCzQ7y4emNLKI1tODsjim\r\n"
+    "a=rtpmap:100 VP8/90000\r\n"
+    "a=rtpmap:101 red/90000\r\n"
+    "a=rtpmap:102 ulpfec/90000\r\n"
+    "a=ssrc:3012607008 cname:KIXaNxUlU5DP3fVS\r\n"
+    "a=ssrc:3012607008 msid:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5 v0\r\n"
+    "a=ssrc:3012607008 mslabel:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5\r\n"
+    "a=ssrc:3012607008 label:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5v0\r\n";
+
+
+  std::cout << "Setting offer to:" << std::endl << offer << std::endl;
+  a2_.SetRemote(TestObserver::OFFER, offer);
+
+  std::cout << "Creating answer:" << std::endl;
+  a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO,
+                   SHOULD_INACTIVE_AUDIO | SHOULD_INACTIVE_VIDEO);
+
+  std::string answer = a2_.answer();
 }
 
 

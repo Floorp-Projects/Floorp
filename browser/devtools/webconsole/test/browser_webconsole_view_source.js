@@ -20,7 +20,7 @@ function testViewSource(hud) {
   ok(button, "we have the button on the page");
 
   expectUncaughtException();
-  EventUtils.sendMouseEvent({ type: "click" }, button, content);
+  EventUtils.sendMouseEvent({ type: "click" }, button, XPCNativeWrapper.unwrap(content));
 
   waitForSuccess({
     name: "find the location node",

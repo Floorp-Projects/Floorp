@@ -17,7 +17,7 @@ include css21/reftest.list
 # include background3/reftest.list
 
 # Conditional Rules Level 3
-skip-if(!prefs.getBoolPref("layout.css.supports-rule.enabled")) include conditional3/reftest.list
+include conditional3/reftest.list
 
 # Fonts Level 3
 # include fonts3/reftest.list

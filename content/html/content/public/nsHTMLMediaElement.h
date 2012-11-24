@@ -24,6 +24,7 @@
 #include "nsTimeRanges.h"
 #include "nsIDOMWakeLock.h"
 #include "AudioChannelCommon.h"
+#include "DecoderTraits.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -57,12 +58,6 @@ public:
 #ifdef MOZ_DASH
   friend class DASHDecoder;
 #endif
-
-  enum CanPlayStatus {
-    CANPLAY_NO,
-    CANPLAY_MAYBE,
-    CANPLAY_YES
-  };
 
   mozilla::CORSMode GetCORSMode() {
     return mCORSMode;
@@ -254,66 +249,9 @@ public:
   // main thread when/if the size changes.
   void UpdateMediaSize(nsIntSize size);
 
-  // Returns the CanPlayStatus indicating if we can handle this
-  // MIME type. The MIME type should not include the codecs parameter.
-  // If it returns anything other than CANPLAY_NO then it also
-  // returns a null-terminated list of supported codecs
-  // in *aSupportedCodecs. This list should not be freed, it is static data.
-  static CanPlayStatus CanHandleMediaType(const char* aMIMEType,
-                                          char const *const ** aSupportedCodecs);
-
   // Returns the CanPlayStatus indicating if we can handle the
   // full MIME type including the optional codecs parameter.
-  static CanPlayStatus GetCanPlay(const nsAString& aType);
-
-  // Returns true if we should handle this MIME type when it appears
-  // as an <object> or as a toplevel page. If, in practice, our support
-  // for the type is more limited than appears in the wild, we should return
-  // false here even if CanHandleMediaType would return true.
-  static bool ShouldHandleMediaType(const char* aMIMEType);
-
-#ifdef MOZ_OGG
-  static bool IsOggType(const nsACString& aType);
-  static const char gOggTypes[3][16];
-  static char const *const gOggCodecs[3];
-  static char const *const gOggCodecsWithOpus[4];
-#endif
-
-#ifdef MOZ_WAVE
-  static bool IsWaveType(const nsACString& aType);
-  static const char gWaveTypes[4][15];
-  static char const *const gWaveCodecs[2];
-#endif
-
-#ifdef MOZ_WEBM
-  static bool IsWebMType(const nsACString& aType);
-  static const char gWebMTypes[2][11];
-  static char const *const gWebMCodecs[4];
-#endif
-
-#ifdef MOZ_GSTREAMER
-  static bool IsGStreamerSupportedType(const nsACString& aType);
-  static bool IsH264Type(const nsACString& aType);
-  static const char gH264Types[3][16];
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-  static bool IsOmxSupportedType(const nsACString& aType);
-  static const char gOmxTypes[5][16];
-#endif
-
-#if defined(MOZ_GSTREAMER) || defined(MOZ_WIDGET_GONK)
-  static char const *const gH264Codecs[9];
-#endif
-
-#ifdef MOZ_MEDIA_PLUGINS
-  static bool IsMediaPluginsType(const nsACString& aType);
-#endif
-
-#ifdef MOZ_DASH
-  static bool IsDASHMPDType(const nsACString& aType);
-  static const char gDASHMPDTypes[1][21];
-#endif
+  static mozilla::CanPlayStatus GetCanPlay(const nsAString& aType);
 
   /**
    * Get the mime type for this element.
@@ -646,6 +584,11 @@ protected:
    */
   void ProcessMediaFragmentURI();
 
+  /**
+   * Mute or unmute the audio, without changing the value that |muted| reports.
+   */
+  void SetMutedInternal(bool aMuted);
+
   // Get the nsHTMLMediaElement object if the decoder is being used from an
   // HTML media element, and null otherwise.
   virtual nsHTMLMediaElement* GetMediaElement() MOZ_FINAL MOZ_OVERRIDE
@@ -789,6 +732,20 @@ protected:
   // fragment time has been set. Read/Write from the main thread only.
   double mFragmentEnd;
 
+  // The defaultPlaybackRate attribute gives the desired speed at which the
+  // media resource is to play, as a multiple of its intrinsic speed.
+  double mDefaultPlaybackRate;
+
+  // The playbackRate attribute gives the speed at which the media resource
+  // plays, as a multiple of its intrinsic speed. If it is not equal to the
+  // defaultPlaybackRate, then the implication is that the user is using a
+  // feature such as fast forward or slow motion playback.
+  double mPlaybackRate;
+
+  // True if pitch correction is applied when playbackRate is set to a
+  // non-intrinsic value.
+  bool mPreservesPitch;
+
   nsRefPtr<gfxASurface> mPrintSurface;
 
   // Reference to the source element last returned by GetNextSource().
@@ -796,7 +753,7 @@ protected:
   nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
-  nsRefPtr<AudioStream> mAudioStream;
+  nsAutoPtr<AudioStream> mAudioStream;
 
   // Range of time played.
   nsTimeRanges mPlayed;
