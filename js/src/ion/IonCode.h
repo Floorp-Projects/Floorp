@@ -420,13 +420,8 @@ struct IonBlockCounts
     // Hit count for this block.
     uint64 hitCount_;
 
-    // Text information about the code generated for this block.
+    // Information about the code generated for this block.
     char *code_;
-
-    // Number of bytes of code generated in this block. Spill code is counted
-    // separately from other, instruction implementing code.
-    uint32 instructionBytes_;
-    uint32 spillBytes_;
 
   public:
 
@@ -489,22 +484,6 @@ struct IonBlockCounts
 
     const char *code() const {
         return code_;
-    }
-
-    void setInstructionBytes(uint32 bytes) {
-        instructionBytes_ = bytes;
-    }
-
-    uint32 instructionBytes() const {
-        return instructionBytes_;
-    }
-
-    void setSpillBytes(uint32 bytes) {
-        spillBytes_ = bytes;
-    }
-
-    uint32 spillBytes() const {
-        return spillBytes_;
     }
 };
 
