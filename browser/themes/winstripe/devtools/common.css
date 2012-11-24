@@ -209,6 +209,65 @@
   position: relative;
 }
 
+/* In-tools sidebar */
+
+.devtools-sidebar-tabs {
+  -moz-appearance: none;
+  margin: 0;
+}
+
+.devtools-sidebar-tabs > tabpanels {
+  -moz-appearance: none;
+  padding: 0;
+  border: 0;
+}
+
+.devtools-sidebar-tabs > tabs {
+  -moz-appearance: none;
+  position: static;
+  box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
+  background-image: linear-gradient(to bottom, hsl(210,11%,36%), hsl(210,11%,18%));
+  color: hsl(210,30%,85%);
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.devtools-sidebar-tabs > tabs > .tabs-right,
+.devtools-sidebar-tabs > tabs > .tabs-left {
+  display: none;
+}
+
+.devtools-sidebar-tabs > tabs > tab {
+  -moz-appearance: none;
+  padding: 0;
+  margin: 0;
+  min-width: 78px;
+  min-height: 22px;
+  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  text-align: center;
+  color: inherit;
+  -moz-box-flex: 1;
+  border-width: 0;
+  -moz-border-end-width: 1px;
+  border-color: hsla(210,8%,5%,.6);
+  border-style: solid;
+  background: transparent;
+  border-radius: 0;
+}
+
+.devtools-sidebar-tabs > tabs > tab:-moz-focusring {
+  position: static;
+}
+
+.devtools-sidebar-tabs > tabs > tab:last-of-type {
+  -moz-border-end-width: 0;
+}
+
+.devtools-sidebar-tabs > tabs > tab[selected=true] {
+  background-image: linear-gradient(to bottom, hsl(201,45%,34%), hsl(205,44%,22%));
+  color: white !important;
+}
+
 /* Theme */
 
 .devtools-theme-background {
