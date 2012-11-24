@@ -364,7 +364,7 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jDisplayportPosition = GetFieldID(jEnv, jDisplayportClass, "mPosition", "Landroid/graphics/RectF;");
     jDisplayportResolution = GetFieldID(jEnv, jDisplayportClass, "resolution", "F");
     jProgressiveUpdateCallbackMethod = getMethod("progressiveUpdateCallback",
-                                                 "(ZFFFFF)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
+                                                 "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
 
 #endif
 }
@@ -853,6 +853,7 @@ bool
 AndroidGeckoLayerClient::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
                                                    const gfx::Rect& aDisplayPort,
                                                    float aDisplayResolution,
+                                                   bool aDrawingCritical,
                                                    gfx::Rect& aViewport,
                                                    float& aScaleX,
                                                    float& aScaleY)
@@ -868,7 +869,8 @@ AndroidGeckoLayerClient::ProgressiveUpdateCallback(bool aHasPendingNewThebesCont
                                                                      (float)aDisplayPort.y,
                                                                      (float)aDisplayPort.width,
                                                                      (float)aDisplayPort.height,
-                                                                     aDisplayResolution));
+                                                                     aDisplayResolution,
+                                                                     !aDrawingCritical));
     if (env->ExceptionCheck()) {
         env->ExceptionDescribe();
         env->ExceptionClear();

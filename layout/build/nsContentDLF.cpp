@@ -23,13 +23,11 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsIViewSourceChannel.h"
-#ifdef MOZ_MEDIA
-#include "nsHTMLMediaElement.h"
-#endif
 #include "nsContentUtils.h"
 #include "imgLoader.h"
 #include "nsCharsetSource.h"
 #include "nsMimeTypes.h"
+#include "DecoderTraits.h"
 
 
 // plugins
@@ -249,7 +247,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
 #ifdef MOZ_MEDIA
-  if (nsHTMLMediaElement::ShouldHandleMediaType(aContentType)) {
+  if (mozilla::DecoderTraits::ShouldHandleMediaType(aContentType)) {
     return CreateDocument(aCommand, 
                           aChannel, aLoadGroup,
                           aContainer, kVideoDocumentCID,

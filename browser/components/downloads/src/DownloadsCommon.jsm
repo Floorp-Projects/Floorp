@@ -753,7 +753,21 @@ const DownloadsData = {
     dataItem.startTime = Math.round(aDownload.startTime / 1000);
     dataItem.currBytes = aDownload.amountTransferred;
     dataItem.maxBytes = aDownload.size;
-    dataItem.download = aDownload;
+
+    // When a download is retried, we create a different download object from
+    // the database with the same ID as before. This means that the nsIDownload
+    // that the dataItem holds might now need updating.
+    //
+    // It's possible, however, that dataItem.download is still a lazy getter
+    // if we never read the download property after initializing the dataItem
+    // from a data row in the downloads database. In that case, we can leave
+    // it alone - the next time the download property is accessed, the right
+    // download object will be retrieved.
+    let downloadIsGetter = Object.getOwnPropertyDescriptor(dataItem, "download")
+                                 .value === undefined;
+    if (!downloadIsGetter) {
+      dataItem.download = aDownload;
+    }
 
     this._views.forEach(
       function (view) view.getViewItem(dataItem).onStateChange()
@@ -825,7 +839,6 @@ const DownloadsData = {
       return;
     }
 
-    browserWin.focus();
     if (this.panelHasShownBefore) {
       // For new downloads after the first one, don't show the panel
       // automatically, but provide a visible notification in the topmost

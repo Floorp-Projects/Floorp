@@ -74,7 +74,7 @@ DocAccessible::
   DocAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
                   nsIPresShell* aPresShell) :
   HyperTextAccessibleWrap(aRootContent, this),
-  mDocument(aDocument), mScrollPositionChangedTicks(0),
+  mDocumentNode(aDocument), mScrollPositionChangedTicks(0),
   mLoadState(eTreeConstructionPending), mLoadEventType(0),
   mVirtualCursor(nullptr),
   mPresShell(aPresShell)
@@ -89,11 +89,11 @@ DocAccessible::
   mNodeToAccessibleMap.Init(kDefaultCacheSize);
 
   // If this is a XUL Document, it should not implement nsHyperText
-  if (mDocument && mDocument->IsXUL())
+  if (mDocumentNode && mDocumentNode->IsXUL())
     mFlags &= ~eHyperTextAccessible;
 
   // For GTK+ native window, we do nothing here.
-  if (!mDocument)
+  if (!mDocumentNode)
     return;
 
   // DocManager creates document accessible when scrollable frame is
@@ -101,8 +101,8 @@ DocAccessible::
   AddScrollListener();
 
   // We provide a virtual cursor if this is a root doc or if it's a tab doc.
-  mIsCursorable = (!(mDocument->GetParentDocument()) ||
-                   nsCoreUtils::IsTabDocument(mDocument));
+  mIsCursorable = (!(mDocumentNode->GetParentDocument()) ||
+                   nsCoreUtils::IsTabDocument(mDocumentNode));
 }
 
 DocAccessible::~DocAccessible()
@@ -117,7 +117,7 @@ DocAccessible::~DocAccessible()
 NS_IMPL_CYCLE_COLLECTION_CLASS(DocAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationController)
 
   if (tmp->mVirtualCursor) {
@@ -133,7 +133,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNotificationController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVirtualCursor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildDocuments)
@@ -206,7 +206,7 @@ role
 DocAccessible::NativeRole()
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsCoreUtils::GetDocShellTreeItemFor(mDocument);
+    nsCoreUtils::GetDocShellTreeItemFor(mDocumentNode);
   if (docShellTreeItem) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
@@ -219,7 +219,7 @@ DocAccessible::NativeRole()
 
       if (itemType == nsIDocShellTreeItem::typeContent) {
 #ifdef MOZ_XUL
-        nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
+        nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocumentNode));
         if (xulDoc)
           return roles::APPLICATION;
 #endif
@@ -343,7 +343,7 @@ DocAccessible::TakeFocus()
   NS_ENSURE_STATE(fm);
 
   nsCOMPtr<nsIDOMElement> newFocus;
-  return fm->MoveFocus(mDocument->GetWindow(), nullptr,
+  return fm->MoveFocus(mDocumentNode->GetWindow(), nullptr,
                        nsIFocusManager::MOVEFOCUS_ROOT, 0,
                        getter_AddRefs(newFocus));
 }
@@ -358,7 +358,7 @@ DocAccessible::GetURL(nsAString& aURL)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
   nsAutoCString theURL;
   if (webNav) {
@@ -374,7 +374,7 @@ DocAccessible::GetURL(nsAString& aURL)
 NS_IMETHODIMP
 DocAccessible::GetTitle(nsAString& aTitle)
 {
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocumentNode);
   if (!domDocument) {
     return NS_ERROR_FAILURE;
   }
@@ -384,7 +384,7 @@ DocAccessible::GetTitle(nsAString& aTitle)
 NS_IMETHODIMP
 DocAccessible::GetMimeType(nsAString& aMimeType)
 {
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocumentNode);
   if (!domDocument) {
     return NS_ERROR_FAILURE;
   }
@@ -394,11 +394,11 @@ DocAccessible::GetMimeType(nsAString& aMimeType)
 NS_IMETHODIMP
 DocAccessible::GetDocType(nsAString& aDocType)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocumentNode));
   nsCOMPtr<nsIDOMDocumentType> docType;
 
 #ifdef MOZ_XUL
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocumentNode));
   if (xulDoc) {
     aDocType.AssignLiteral("window"); // doctype not implemented for XUL at time of writing - causes assertion
     return NS_OK;
@@ -414,7 +414,7 @@ DocAccessible::GetDocType(nsAString& aDocType)
 NS_IMETHODIMP
 DocAccessible::GetNameSpaceURIForID(int16_t aNameSpaceID, nsAString& aNameSpaceURI)
 {
-  if (mDocument) {
+  if (mDocumentNode) {
     nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
         do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
     if (nameSpaceManager)
@@ -435,10 +435,10 @@ NS_IMETHODIMP
 DocAccessible::GetWindow(nsIDOMWindow** aDOMWin)
 {
   *aDOMWin = nullptr;
-  if (!mDocument) {
+  if (!mDocumentNode) {
     return NS_ERROR_FAILURE;  // Accessible is Shutdown()
   }
-  *aDOMWin = mDocument->GetWindow();
+  *aDOMWin = mDocumentNode->GetWindow();
 
   if (!*aDOMWin)
     return NS_ERROR_FAILURE;  // No DOM Window
@@ -454,8 +454,8 @@ DocAccessible::GetDOMDocument(nsIDOMDocument** aDOMDocument)
   NS_ENSURE_ARG_POINTER(aDOMDocument);
   *aDOMDocument = nullptr;
 
-  if (mDocument)
-    CallQueryInterface(mDocument, aDOMDocument);
+  if (mDocumentNode)
+    CallQueryInterface(mDocumentNode, aDOMDocument);
 
   return NS_OK;
 }
@@ -525,17 +525,17 @@ DocAccessible::GetEditor() const
 {
   // Check if document is editable (designMode="on" case). Otherwise check if
   // the html:body (for HTML document case) or document element is editable.
-  if (!mDocument->HasFlag(NODE_IS_EDITABLE) &&
+  if (!mDocumentNode->HasFlag(NODE_IS_EDITABLE) &&
       (!mContent || !mContent->HasFlag(NODE_IS_EDITABLE)))
     return nullptr;
 
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(container));
   if (!editingSession)
     return nullptr; // No editing session interface
 
   nsCOMPtr<nsIEditor> editor;
-  editingSession->GetEditorForWindow(mDocument->GetWindow(), getter_AddRefs(editor));
+  editingSession->GetEditorForWindow(mDocumentNode->GetWindow(), getter_AddRefs(editor));
   if (!editor)
     return nullptr;
 
@@ -583,7 +583,7 @@ DocAccessible::Init()
 {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate))
-    logging::DocCreate("document initialize", mDocument, this);
+    logging::DocCreate("document initialize", mDocumentNode, this);
 #endif
 
   // Initialize notification controller.
@@ -592,7 +592,7 @@ DocAccessible::Init()
   // Mark the document accessible as loaded if its DOM document was loaded at
   // this point (this can happen because a11y is started late or DOM document
   // having no container was loaded.
-  if (mDocument->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE)
+  if (mDocumentNode->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE)
     mLoadState |= eDOMLoaded;
 
   AddEventListeners();
@@ -606,7 +606,7 @@ DocAccessible::Shutdown()
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy))
-    logging::DocDestroy("document shutdown", mDocument, this);
+    logging::DocDestroy("document shutdown", mDocumentNode, this);
 #endif
 
   mPresShell->SetDocAccessible(nullptr);
@@ -622,8 +622,8 @@ DocAccessible::Shutdown()
   // removal from its container (valid for root documents on ATK and due to
   // some reason for MSAA, refer to bug 757392 for details).
   mFlags |= eIsDefunct;
-  nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocument;
-  mDocument = nullptr;
+  nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocumentNode;
+  mDocumentNode = nullptr;
 
   if (mParent) {
     DocAccessible* parentDocument = mParent->Document();
@@ -673,7 +673,7 @@ DocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 {
   *aRelativeFrame = GetFrame();
 
-  nsIDocument *document = mDocument;
+  nsIDocument *document = mDocumentNode;
   nsIDocument *parentDoc = nullptr;
 
   while (document) {
@@ -718,7 +718,7 @@ DocAccessible::AddEventListeners()
 
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
   NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
 
@@ -749,7 +749,7 @@ DocAccessible::AddEventListeners()
   }
 
   // add document observer
-  mDocument->AddObserver(this);
+  mDocumentNode->AddObserver(this);
   return NS_OK;
 }
 
@@ -761,12 +761,12 @@ DocAccessible::RemoveEventListeners()
   // Remove scroll position listener
   RemoveScrollListener();
 
-  NS_ASSERTION(mDocument, "No document during removal of listeners.");
+  NS_ASSERTION(mDocumentNode, "No document during removal of listeners.");
 
-  if (mDocument) {
-    mDocument->RemoveObserver(this);
+  if (mDocumentNode) {
+    mDocumentNode->RemoveObserver(this);
 
-    nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+    nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
     NS_ASSERTION(docShellTreeItem, "doc should support nsIDocShellTreeItem.");
 
@@ -1498,7 +1498,7 @@ DocAccessible::CacheChildren()
 {
   // Search for accessible children starting from the document element since
   // some web pages tend to insert elements under it rather than document body.
-  TreeWalker walker(this, mDocument->GetRootElement());
+  TreeWalker walker(this, mDocumentNode->GetRootElement());
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));
@@ -1541,7 +1541,7 @@ DocAccessible::DoInitialUpdate()
   // The content element may be changed before the initial update and then we
   // miss the notification (since content tree change notifications are ignored
   // prior to initial update). Make sure the content element is valid.
-  nsIContent* contentElm = nsCoreUtils::GetRoleContent(mDocument);
+  nsIContent* contentElm = nsCoreUtils::GetRoleContent(mDocumentNode);
   if (mContent != contentElm)
     mContent = contentElm;
 
@@ -1763,7 +1763,7 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
 
       if (aContainer == this) {
         // If new root content has been inserted then update it.
-        nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
+        nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocumentNode);
         if (rootContent != mContent)
           mContent = rootContent;
 
@@ -1812,6 +1812,23 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
   if (child) {
     updateFlags |= UpdateTreeInternal(child, aIsInsert, reorderEvent);
 
+    // XXX: since select change insertion point of option contained by optgroup
+    // then we need to have special processing for them (bug 690417).
+    if (!aIsInsert && aChildNode->IsHTML(nsGkAtoms::optgroup) &&
+        aContainer->GetContent()->IsHTML(nsGkAtoms::select)) {
+      for (nsIContent* optContent = aChildNode->GetFirstChild(); optContent;
+           optContent = optContent->GetNextSibling()) {
+        if (optContent->IsHTML(nsGkAtoms::option)) {
+          Accessible* option = GetAccessible(optContent);
+          if (option) {
+            NS_ASSERTION(option->Parent() == aContainer,
+                         "Not expected hierarchy on HTML select!");
+            if (option->Parent() == aContainer)
+              updateFlags |= UpdateTreeInternal(option, aIsInsert, reorderEvent);
+          }
+        }
+      }
+    }
   } else {
     TreeWalker walker(aContainer, aChildNode, true);
 
@@ -1989,7 +2006,7 @@ DocAccessible::ShutdownChildrenInSubtree(Accessible* aAccessible)
 bool
 DocAccessible::IsLoadEventTarget() const
 {
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
   NS_ASSERTION(treeItem, "No document shell for document!");
 

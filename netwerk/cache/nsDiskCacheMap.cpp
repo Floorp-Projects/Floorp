@@ -4,13 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCache.h"
 #include "nsDiskCacheMap.h"
 #include "nsDiskCacheBinding.h"
 #include "nsDiskCacheEntry.h"
 #include "nsDiskCacheDevice.h"
 #include "nsCacheService.h"
-
-#include "nsCache.h"
 
 #include <string.h>
 #include "nsPrintfCString.h"

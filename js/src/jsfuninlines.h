@@ -19,7 +19,7 @@
 inline bool
 JSFunction::inStrictMode() const
 {
-    return script()->strictModeCode;
+    return nonLazyScript()->strictModeCode;
 }
 
 inline void

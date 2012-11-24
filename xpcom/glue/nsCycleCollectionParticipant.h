@@ -394,9 +394,6 @@ T* DowncastCCParticipant(void *p)
     nsISupports *s = static_cast<nsISupports*>(p);                             \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::UnlinkImpl(s);
 
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(_class)                   \
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)
-
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK(_field)                                \
     ImplCycleCollectionUnlink(tmp->_field);
 
@@ -452,9 +449,6 @@ T* DowncastCCParticipant(void *p)
         == NS_SUCCESS_INTERRUPTED_TRAVERSE) {                                  \
       return NS_SUCCESS_INTERRUPTED_TRAVERSE;                                  \
     }
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(_class)                 \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_field)                              \
   ImplCycleCollectionTraverse(cb, tmp->_field, #_field, 0);

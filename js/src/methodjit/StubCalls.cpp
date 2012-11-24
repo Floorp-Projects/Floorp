@@ -1623,7 +1623,7 @@ stubs::CheckArgumentTypes(VMFrame &f)
 {
     StackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
-    RootedScript fscript(f.cx, fun->script());
+    RootedScript fscript(f.cx, fun->nonLazyScript());
     RecompilationMonitor monitor(f.cx);
 
     {
@@ -1651,7 +1651,7 @@ stubs::AssertArgumentTypes(VMFrame &f)
     AutoAssertNoGC nogc;
     StackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
-    RawScript script = fun->script().get(nogc);
+    RawScript script = fun->nonLazyScript().get(nogc);
 
     /*
      * Don't check the type of 'this' for constructor frames, the 'this' value

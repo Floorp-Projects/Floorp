@@ -7,25 +7,99 @@
 #define AudioStream_h_
 
 #include "nscore.h"
-#include "nsISupportsImpl.h"
-#include "nsIThread.h"
-#include "nsAutoPtr.h"
 #include "AudioSampleFormat.h"
 #include "AudioChannelCommon.h"
+#include "soundtouch/SoundTouch.h"
+#include "nsAutoRef.h"
+
+
+template <>
+class nsAutoRefTraits<soundtouch::SoundTouch> : public nsPointerRefTraits<soundtouch::SoundTouch>
+{
+public:
+  static void Release(soundtouch::SoundTouch* resamplerState) {
+    delete resamplerState;
+    resamplerState = nullptr;
+  }
+};
 
 namespace mozilla {
+
+class AudioStream;
+
+class AudioClock
+{
+  public:
+    AudioClock(mozilla::AudioStream* aStream);
+    // Initialize the clock with the current AudioStream. Need to be called
+    // before querying the clock. Called on the audio thread.
+    void Init();
+    // Update the number of samples that has been written in the audio backend.
+    // Called on the state machine thread.
+    void UpdateWritePosition(uint32_t aCount);
+    // Get the read position of the stream, in microseconds.
+    // Called on the state machine thead.
+    uint64_t GetPosition();
+    // Get the read position of the stream, in frames.
+    // Called on the state machine thead.
+    uint64_t GetPositionInFrames();
+    // Set the playback rate.
+    // Called on the audio thread.
+    void SetPlaybackRate(double aPlaybackRate);
+    // Get the current playback rate.
+    // Called on the audio thread.
+    double GetPlaybackRate();
+    // Set if we are preserving the pitch.
+    // Called on the audio thread.
+    void SetPreservesPitch(bool aPreservesPitch);
+    // Get the current pitch preservation state.
+    // Called on the audio thread.
+    bool GetPreservesPitch();
+  private:
+    // This AudioStream holds a strong reference to this AudioClock. This
+    // pointer is garanteed to always be valid.
+    AudioStream* mAudioStream;
+    // The old output rate, to compensate audio latency for the period inbetween
+    // the moment resampled buffers are pushed to the hardware and the moment the
+    // clock should take the new rate into account for A/V sync.
+    int mOldOutRate;
+    // Position at which the last playback rate change occured
+    int64_t mBasePosition;
+    // Offset, in frames, at which the last playback rate change occured
+    int64_t mBaseOffset;
+    // Old base offset (number of samples), used when changing rate to compute the
+    // position in the stream.
+    int64_t mOldBaseOffset;
+    // Old base position (number of microseconds), when changing rate. This is the
+    // time in the media, not wall clock position.
+    int64_t mOldBasePosition;
+    // Write position at which the playbackRate change occured.
+    int64_t mPlaybackRateChangeOffset;
+    // The previous position reached in the media, used when compensating
+    // latency, to have the position at which the playbackRate change occured.
+    int64_t mPreviousPosition;
+    // Number of samples effectivelly written in backend, i.e. write position.
+    int64_t mWritten;
+    // Output rate in Hz (characteristic of the playback rate)
+    int mOutRate;
+    // Input rate in Hz (characteristic of the media being played)
+    int mInRate;
+    // True if the we are timestretching, false if we are resampling.
+    bool mPreservesPitch;
+    // The current playback rate.
+    double mPlaybackRate;
+    // True if we are playing at the old playbackRate after it has been changed.
+    bool mCompensatingLatency;
+};
 
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels}
 // is thread-safe without external synchronization.
-class AudioStream : public nsISupports
+class AudioStream
 {
 public:
-  AudioStream()
-    : mRate(0),
-      mChannels(0)
-  {}
+  AudioStream();
 
   virtual ~AudioStream();
 
@@ -36,10 +110,6 @@ public:
   // Shutdown Audio Library. Some Audio backends require shutting down the
   // library after using it.
   static void ShutdownLibrary();
-
-  // Thread that is shared between audio streams.
-  // This may return null in the child process
-  nsIThread *GetThread();
 
   // AllocateStream will return either a local stream or a remoted stream
   // depending on where you call it from.  If you call this from a child process,
@@ -78,12 +148,17 @@ public:
   virtual void Resume() = 0;
 
   // Return the position in microseconds of the audio frame being played by
-  // the audio hardware.  Thread-safe.
+  // the audio hardware, compensated for playback rate change. Thread-safe.
   virtual int64_t GetPosition() = 0;
 
   // Return the position, measured in audio frames played since the stream
   // was opened, of the audio hardware.  Thread-safe.
   virtual int64_t GetPositionInFrames() = 0;
+
+  // Return the position, measured in audio framed played since the stream was
+  // opened, of the audio hardware, not adjusted for the changes of playback
+  // rate.
+  virtual int64_t GetPositionInFramesInternal() = 0;
 
   // Returns true when the audio stream is paused.
   virtual bool IsPaused() = 0;
@@ -92,13 +167,26 @@ public:
   // you can be sure that something will be played.
   virtual int32_t GetMinWriteSize() = 0;
 
-  int GetRate() { return mRate; }
+  int GetRate() { return mOutRate; }
   int GetChannels() { return mChannels; }
 
+  // This should be called before attempting to use the time stretcher. It
+  // return false in case of error.
+  bool EnsureTimeStretcherInitialized();
+  // Set playback rate as a multiple of the intrinsic playback rate. This is to
+  // be called only with aPlaybackRate > 0.0.
+  virtual nsresult SetPlaybackRate(double aPlaybackRate);
+  // Switch between resampling (if false) and time stretching (if true, default).
+  virtual nsresult SetPreservesPitch(bool aPreservesPitch);
+
 protected:
-  nsCOMPtr<nsIThread> mAudioPlaybackThread;
-  int mRate;
+  // Input rate in Hz (characteristic of the media being played)
+  int mInRate;
+  // Output rate in Hz (characteristic of the playback rate)
+  int mOutRate;
   int mChannels;
+  AudioClock mAudioClock;
+  nsAutoRef<soundtouch::SoundTouch> mTimeStretcher;
 };
 
 } // namespace mozilla

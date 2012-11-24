@@ -1320,7 +1320,9 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
         return;
     }
 
-    RootedScript calleeScript(cx, callee->script());
+    RootedScript calleeScript(cx, callee->getOrCreateScript(cx));
+    if (!calleeScript)
+        return;
     if (!calleeScript->ensureHasTypes(cx))
         return;
 
@@ -1397,10 +1399,10 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
         return;
     }
 
-    if (!callee->script()->ensureHasTypes(cx))
+    if (!(callee->getOrCreateScript(cx).unsafeGet() && callee->nonLazyScript()->ensureHasTypes(cx)))
         return;
 
-    TypeSet *thisTypes = TypeScript::ThisTypes(callee->script().unsafeGet());
+    TypeSet *thisTypes = TypeScript::ThisTypes(callee->nonLazyScript().unsafeGet());
     if (this->types)
         this->types->addSubset(cx, thisTypes);
     else
@@ -1468,6 +1470,15 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, Type type)
     }
 
     RootedScript script(cx, script_);
+
+    /*
+     * Builtin scripts do not adhere to normal assumptions about transforming
+     * 'this'.
+     */
+    if (script->function() && script->function()->isSelfHostedBuiltin()) {
+        target->addType(cx, type);
+        return;
+    }
 
     /*
      * Note: if |this| is null or undefined, the pushed value is the outer window. We
@@ -3375,7 +3386,7 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
     if (singleton) {
         /* Make sure flags are consistent with persistent object state. */
         JS_ASSERT_IF(flags & OBJECT_FLAG_UNINLINEABLE,
-                     interpretedFunction->script()->uninlineable);
+                     interpretedFunction->nonLazyScript()->uninlineable);
         JS_ASSERT_IF(flags & OBJECT_FLAG_ITERATED,
                      singleton->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON));
     }
@@ -4615,7 +4626,7 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun,
         return false;
     }
 
-    RootedScript script(cx, fun->script());
+    RootedScript script(cx, fun->nonLazyScript());
     if (!script->ensureRanAnalysis(cx) || !script->ensureRanInference(cx)) {
         pbaseobj.set(NULL);
         cx->compartment->types.setPendingNukeTypes(cx);
@@ -4753,7 +4764,7 @@ AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
                   TypeObject *type, JSFunction *fun, MutableHandleObject pbaseobj,
                   Vector<TypeNewScript::Initializer> *initializerList)
 {
-    RootedScript script(cx, fun->script());
+    RootedScript script(cx, fun->nonLazyScript());
     ScriptAnalysis *analysis = script->analysis();
 
     while (!pendingPoppedThis->empty()) {
@@ -5198,7 +5209,7 @@ types::TypeMonitorCallSlow(JSContext *cx, HandleObject callee, const CallArgs &a
                            bool constructing)
 {
     unsigned nargs = callee->toFunction()->nargs;
-    RootedScript script(cx, callee->toFunction()->script());
+    RootedScript script(cx, callee->toFunction()->nonLazyScript());
 
     if (!constructing)
         TypeScript::SetThis(cx, script, args.thisv());
@@ -5524,8 +5535,8 @@ JSScript::makeAnalysis(JSContext *cx)
 /* static */ bool
 JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton)
 {
-    JS_ASSERT(fun->script().unsafeGet());
-    JS_ASSERT(fun->script()->function() == fun);
+    JS_ASSERT(fun->nonLazyScript().unsafeGet());
+    JS_ASSERT(fun->nonLazyScript()->function() == fun);
 
     if (!cx->typeInferenceEnabled())
         return true;
@@ -5632,8 +5643,6 @@ JSObject::splicePrototype(JSContext *cx, Handle<TaggedProto> proto)
     Rooted<TypeObject*> protoType(cx, NULL);
     if (proto.isObject()) {
         protoType = proto.toObject()->getType(cx);
-        if (!proto.toObject()->getNewType(cx))
-            return false;
     }
 
     if (!cx->typeInferenceEnabled()) {
@@ -5673,6 +5682,11 @@ JSObject::makeLazyType(JSContext *cx)
     JS_ASSERT(cx->compartment == compartment());
 
     RootedObject self(cx, this);
+    /* De-lazification of functions can GC, so we need to do it up here. */
+    if (self->isFunction() && self->toFunction()->isInterpretedLazy()) {
+        if (!self->toFunction()->getOrCreateScript(cx).unsafeGet())
+            return NULL;
+    }
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
     Rooted<TaggedProto> proto(cx, getTaggedProto());
     TypeObject *type = cx->compartment->types.newTypeObject(cx, key, proto);
@@ -5697,7 +5711,7 @@ JSObject::makeLazyType(JSContext *cx)
 
     if (self->isFunction() && self->toFunction()->isInterpreted()) {
         type->interpretedFunction = self->toFunction();
-        if (type->interpretedFunction->script()->uninlineable)
+        if (type->interpretedFunction->nonLazyScript()->uninlineable)
             type->flags |= OBJECT_FLAG_UNINLINEABLE;
     }
 

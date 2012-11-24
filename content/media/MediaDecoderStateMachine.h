@@ -233,6 +233,9 @@ public:
 
   nsresult GetBuffered(nsTimeRanges* aBuffered);
 
+  void SetPlaybackRate(double aPlaybackRate);
+  void SetPreservesPitch(bool aPreservesPitch);
+
   int64_t VideoQueueMemoryInUse() {
     if (mReader) {
       return mReader->VideoQueueMemoryInUse();
@@ -400,6 +403,16 @@ private:
   // Called on the state machine thread.
   int64_t GetAudioClock();
 
+  // Get the video stream position, taking the |playbackRate| change into
+  // account. This is a position in the media, not the duration of the playback
+  // so far.
+  int64_t GetVideoStreamPosition();
+
+  // Return the current time, either the audio clock if available (if the media
+  // has audio, and the playback is possible), or a clock for the video.
+  // Called on the state machine thread.
+  int64_t GetClock();
+
   // Returns the presentation time of the first audio or video frame in the
   // media.  If the media has video, it returns the first video frame. The
   // decoder monitor must be held with exactly one lock count. Called on the
@@ -464,7 +477,7 @@ private:
   void AudioLoop();
 
   // Sets internal state which causes playback of media to pause.
-  // The decoder monitor must be held. Called on the main, state machine,
+  // The decoder monitor must be held. Called on the state machine,
   // and decode threads.
   void StopPlayback();
 
@@ -577,6 +590,11 @@ private:
   // Accessed only via the state machine thread.
   TimeStamp mPlayStartTime;
 
+  // When the playbackRate changes, and there is no audio clock, it is necessary
+  // to reset the mPlayStartTime. This is done next time the clock is queried,
+  // when this member is true. Access protected by decoder monitor.
+  bool mResetPlayStartTime;
+
   // The amount of time we've spent playing already the media. The current
   // playback position is therefore |Now() - mPlayStartTime +
   // mPlayDuration|, which must be adjusted by mStartTime if used with media
@@ -611,7 +629,7 @@ private:
   // This is created and destroyed on the audio thread, while holding the
   // decoder monitor, so if this is used off the audio thread, you must
   // first acquire the decoder monitor and check that it is non-null.
-  nsRefPtr<AudioStream> mAudioStream;
+  nsAutoPtr<AudioStream> mAudioStream;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the play state machine's constructor, and destroyed
@@ -650,6 +668,18 @@ private:
   // from the state machine and main threads. Synchronised via decoder
   // monitor.
   double mVolume;
+
+  // Playback rate. 1.0 : normal speed, 0.5 : two times slower. Synchronized via
+  // decoder monitor.
+  double mPlaybackRate;
+
+  // Pitch preservation for the playback rate. Synchronized via decoder monitor.
+  bool mPreservesPitch;
+
+  // Position at which the last playback rate change occured, used to compute
+  // the actual position in the stream when the playback rate changes and there
+  // is no audio to be sync-ed to. Synchronized via decoder monitor.
+  int64_t mBasePosition;
 
   // Time at which we started decoding. Synchronised via decoder monitor.
   TimeStamp mDecodeStartTime;

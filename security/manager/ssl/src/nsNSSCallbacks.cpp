@@ -5,6 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
+
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
+
 #include "nsNSSIOLayer.h"
 #include "nsIWebProgressListener.h"
 #include "nsProtectedAuthThread.h"
@@ -20,6 +24,7 @@
 #include "nsCRT.h"
 
 #include "ssl.h"
+#include "sslproto.h"
 #include "ocsp.h"
 #include "nssb64.h"
 
@@ -43,6 +48,7 @@ public:
   
   nsCOMPtr<nsHTTPListener> mListener;
   bool mResponsibleForDoneSignal;
+  TimeStamp mStartTime;
 };
 
 nsHTTPDownloadEvent::nsHTTPDownloadEvent()
@@ -124,8 +130,10 @@ nsHTTPDownloadEvent::Run()
   rv = NS_NewStreamLoader(getter_AddRefs(mListener->mLoader), 
                           mListener);
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
+    mStartTime = TimeStamp::Now();
     rv = hchan->AsyncOpen(mListener->mLoader, nullptr);
+  }
 
   if (NS_FAILED(rv)) {
     mListener->mResponsibleForDoneSignal = false;
@@ -363,6 +371,13 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
     bool running_on_main_thread = NS_IsMainThread();
     if (running_on_main_thread)
     {
+      // The result of running this on the main thread
+      // is a series of small timeouts mixed with spinning the
+      // event loop - this is always dangerous as there is so much main
+      // thread code that does not expect to be called re-entrantly. Your
+      // app really shouldn't do that.
+      NS_WARNING("Security network blocking I/O on Main Thread");
+
       // let's process events quickly
       wait_interval = PR_MicrosecondsToInterval(50);
     }
@@ -412,6 +427,31 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
         }
       }
     }
+  }
+
+  if (!event->mStartTime.IsNull()) {
+    if (request_canceled) {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 0);
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_CANCELED_TIME,
+        event->mStartTime, TimeStamp::Now());
+    }
+    else if (NS_SUCCEEDED(mListener->mResultCode) &&
+             mListener->mHttpResponseCode == 200) {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 1);
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME,
+        event->mStartTime, TimeStamp::Now());
+    }
+    else {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 2);
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME,
+        event->mStartTime, TimeStamp::Now());
+    }
+  }
+  else {
+    Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 3);
   }
 
   if (request_canceled)
@@ -917,19 +957,37 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     status->mSecretKeyLength = encryptBits;
     status->mCipherName.Assign(cipherName);
 
-    // Get the NPN value. Do this on the stack and copy it into
-    // a string rather than preallocating the string because right
-    // now we expect NPN to fail more often than it succeeds.
+    // Get the NPN value.
     SSLNextProtoState state;
     unsigned char npnbuf[256];
     unsigned int npnlen;
     
-    if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen, 256) == SECSuccess &&
-        state == SSL_NEXT_PROTO_NEGOTIATED)
-      infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
+    if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen, 256) == SECSuccess) {
+      if (state == SSL_NEXT_PROTO_NEGOTIATED)
+        infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
+      else
+        infoObject->SetNegotiatedNPN(nullptr, 0);
+      mozilla::Telemetry::Accumulate(Telemetry::SSL_NPN_TYPE, state);
+    }
     else
       infoObject->SetNegotiatedNPN(nullptr, 0);
 
+    SSLChannelInfo channelInfo;
+    if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
+      // Get the protocol version for telemetry
+      // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
+      unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
+      Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
+
+      SSLCipherSuiteInfo cipherInfo;
+      if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                                 sizeof (cipherInfo)) == SECSuccess) {
+        // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
+        Telemetry::Accumulate(Telemetry::SSL_KEY_EXCHANGE_ALGORITHM,
+                              cipherInfo.keaType);
+      }
+      
+    }
     infoObject->SetHandshakeCompleted();
   }
 

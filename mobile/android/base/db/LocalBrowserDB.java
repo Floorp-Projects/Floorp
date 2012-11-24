@@ -542,6 +542,19 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Bookmarks.PARENT, folderId);
         values.put(Bookmarks.DATE_MODIFIED, now);
 
+        // Get the page's favicon ID from the history table
+        Cursor c = cr.query(mHistoryUriWithProfile,
+                            new String[] { History.FAVICON_ID },
+                            History.URL + " = ?",
+                            new String[] { uri },
+                            null);
+        if (c.moveToFirst()) {
+            int columnIndex = c.getColumnIndexOrThrow(History.FAVICON_ID);
+            if (!c.isNull(columnIndex))
+                values.put(Bookmarks.FAVICON_ID, c.getLong(columnIndex));
+        }
+        c.close();
+
         // Restore deleted record if possible
         values.put(Bookmarks.IS_DELETED, 0);
 

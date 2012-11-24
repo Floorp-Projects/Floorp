@@ -91,7 +91,6 @@ imgRequest::imgRequest(imgLoader* aLoader)
  : mLoader(aLoader)
  , mStatusTracker(new imgStatusTracker(nullptr, this))
  , mValidator(nullptr)
- , mImageSniffers("image-sniffing-services")
  , mInnerWindowId(0)
  , mCORSMode(imgIRequest::CORS_NONE)
  , mDecodeRequested(false)
@@ -693,7 +692,6 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
 struct mimetype_closure
 {
-  imgRequest* request;
   nsACString* newType;
 };
 
@@ -722,7 +720,6 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
 
     mimetype_closure closure;
     nsAutoCString newType;
-    closure.request = this;
     closure.newType = &newType;
 
     /* look at the first few bytes and see if we can tell what the data is from that
@@ -948,34 +945,10 @@ static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
   NS_ASSERTION(closure, "closure is null!");
 
   if (count > 0)
-    closure->request->SniffMimeType(fromRawSegment, count, *closure->newType);
+    imgLoader::GetMimeTypeFromContent(fromRawSegment, count, *closure->newType);
 
   *writeCount = 0;
   return NS_ERROR_FAILURE;
-}
-
-void
-imgRequest::SniffMimeType(const char *buf, uint32_t len, nsACString& newType)
-{
-  imgLoader::GetMimeTypeFromContent(buf, len, newType);
-
-  // The vast majority of the time, imgLoader will find a gif/jpeg/png image
-  // and fill newType with the sniffed MIME type.
-  if (!newType.IsEmpty())
-    return;
-
-  // When our sniffing fails, we want to query registered image decoders
-  // to see if they can identify the image. If we always trusted the server
-  // to send the right MIME, images sent as text/plain would not be rendered.
-  const nsCOMArray<nsIContentSniffer>& sniffers = mImageSniffers.GetEntries();
-  uint32_t length = sniffers.Count();
-  for (uint32_t i = 0; i < length; ++i) {
-    nsresult rv =
-      sniffers[i]->GetMIMETypeFromContent(nullptr, (const uint8_t *) buf, len, newType);
-    if (NS_SUCCEEDED(rv) && !newType.IsEmpty()) {
-      return;
-    }
-  }
 }
 
 
