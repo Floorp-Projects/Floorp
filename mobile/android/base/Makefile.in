@@ -57,6 +57,7 @@ FENNEC_JAVA_FILES = \
   CameraImageResultHandler.java \
   CameraVideoResultHandler.java \
   CanvasDelegate.java \
+  CheckableLinearLayout.java \
   SyncPreference.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
@@ -364,6 +365,7 @@ RES_LAYOUT = \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
+  res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \

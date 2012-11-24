@@ -812,7 +812,7 @@ typedef HashMap<uint32,
 static HashNumber
 BoundsCheckHashIgnoreOffset(MBoundsCheck *check)
 {
-    LinearSum indexSum = ExtractLinearSum(check->index());
+    SimpleLinearSum indexSum = ExtractLinearSum(check->index());
     uintptr_t index = indexSum.term ? uintptr_t(indexSum.term) : 0;
     uintptr_t length = uintptr_t(check->length());
     return index ^ length;
@@ -840,43 +840,105 @@ FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t in
 }
 
 // Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
-LinearSum
+SimpleLinearSum
 ion::ExtractLinearSum(MDefinition *ins)
 {
+    if (ins->isBeta())
+        ins = ins->getOperand(0);
+
     if (ins->type() != MIRType_Int32)
-        return LinearSum(ins, 0);
+        return SimpleLinearSum(ins, 0);
 
     if (ins->isConstant()) {
         const Value &v = ins->toConstant()->value();
         JS_ASSERT(v.isInt32());
-        return LinearSum(NULL, v.toInt32());
+        return SimpleLinearSum(NULL, v.toInt32());
     } else if (ins->isAdd() || ins->isSub()) {
         MDefinition *lhs = ins->getOperand(0);
         MDefinition *rhs = ins->getOperand(1);
         if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
-            LinearSum lsum = ExtractLinearSum(lhs);
-            LinearSum rsum = ExtractLinearSum(rhs);
+            SimpleLinearSum lsum = ExtractLinearSum(lhs);
+            SimpleLinearSum rsum = ExtractLinearSum(rhs);
 
-            JS_ASSERT(lsum.term || rsum.term);
             if (lsum.term && rsum.term)
-                return LinearSum(ins, 0);
+                return SimpleLinearSum(ins, 0);
 
             // Check if this is of the form <SUM> + n, n + <SUM> or <SUM> - n.
             if (ins->isAdd()) {
                 int32 constant;
                 if (!SafeAdd(lsum.constant, rsum.constant, &constant))
-                    return LinearSum(ins, 0);
-                return LinearSum(lsum.term ? lsum.term : rsum.term, constant);
+                    return SimpleLinearSum(ins, 0);
+                return SimpleLinearSum(lsum.term ? lsum.term : rsum.term, constant);
             } else if (lsum.term) {
                 int32 constant;
                 if (!SafeSub(lsum.constant, rsum.constant, &constant))
-                    return LinearSum(ins, 0);
-                return LinearSum(lsum.term, constant);
+                    return SimpleLinearSum(ins, 0);
+                return SimpleLinearSum(lsum.term, constant);
             }
         }
     }
 
-    return LinearSum(ins, 0);
+    return SimpleLinearSum(ins, 0);
+}
+
+// Extract a linear inequality holding when a boolean test goes in the
+// specified direction, of the form 'lhs + lhsN <= rhs' (or >=).
+bool
+ion::ExtractLinearInequality(MTest *test, BranchDirection direction,
+                             SimpleLinearSum *plhs, MDefinition **prhs, bool *plessEqual)
+{
+    if (!test->getOperand(0)->isCompare())
+        return false;
+
+    MCompare *compare = test->getOperand(0)->toCompare();
+
+    MDefinition *lhs = compare->getOperand(0);
+    MDefinition *rhs = compare->getOperand(1);
+
+    if (compare->specialization() != MIRType_Int32)
+        return false;
+
+    JS_ASSERT(lhs->type() == MIRType_Int32);
+    JS_ASSERT(rhs->type() == MIRType_Int32);
+
+    JSOp jsop = compare->jsop();
+    if (direction == FALSE_BRANCH)
+        jsop = analyze::NegateCompareOp(jsop);
+
+    SimpleLinearSum lsum = ExtractLinearSum(lhs);
+    SimpleLinearSum rsum = ExtractLinearSum(rhs);
+
+    if (!SafeSub(lsum.constant, rsum.constant, &lsum.constant))
+        return false;
+
+    // Normalize operations to use <= or >=.
+    switch (jsop) {
+      case JSOP_LE:
+        *plessEqual = true;
+        break;
+      case JSOP_LT:
+        /* x < y ==> x + 1 <= y */
+        if (!SafeAdd(lsum.constant, 1, &lsum.constant))
+            return false;
+        *plessEqual = true;
+        break;
+      case JSOP_GE:
+        *plessEqual = false;
+        break;
+      case JSOP_GT:
+        /* x > y ==> x - 1 >= y */
+        if (!SafeSub(lsum.constant, 1, &lsum.constant))
+            return false;
+        *plessEqual = false;
+        break;
+      default:
+        return false;
+    }
+
+    *plhs = lsum;
+    *prhs = rsum.term;
+
+    return true;
 }
 
 static bool
@@ -889,8 +951,8 @@ TryEliminateBoundsCheck(MBoundsCheck *dominating, MBoundsCheck *dominated, bool 
     if (dominating->length() != dominated->length())
         return true;
 
-    LinearSum sumA = ExtractLinearSum(dominating->index());
-    LinearSum sumB = ExtractLinearSum(dominated->index());
+    SimpleLinearSum sumA = ExtractLinearSum(dominating->index());
+    SimpleLinearSum sumB = ExtractLinearSum(dominated->index());
 
     // Both terms should be NULL or the same definition.
     if (sumA.term != sumB.term)
@@ -1009,4 +1071,87 @@ ion::EliminateRedundantBoundsChecks(MIRGraph &graph)
 
     JS_ASSERT(index == graph.numBlocks());
     return true;
+}
+
+bool
+LinearSum::multiply(int32 scale)
+{
+    for (size_t i = 0; i < terms_.length(); i++) {
+        if (!SafeMul(scale, terms_[i].scale, &terms_[i].scale))
+            return false;
+    }
+    return SafeMul(scale, constant_, &constant_);
+}
+
+bool
+LinearSum::add(const LinearSum &other)
+{
+    for (size_t i = 0; i < other.terms_.length(); i++) {
+        if (!add(other.terms_[i].term, other.terms_[i].scale))
+            return false;
+    }
+    return add(other.constant_);
+}
+
+bool
+LinearSum::add(MDefinition *term, int32 scale)
+{
+    JS_ASSERT(term);
+
+    if (scale == 0)
+        return true;
+
+    if (term->isConstant()) {
+        int32 constant = term->toConstant()->value().toInt32();
+        if (!SafeMul(constant, scale, &constant))
+            return false;
+        return add(constant);
+    }
+
+    for (size_t i = 0; i < terms_.length(); i++) {
+        if (term == terms_[i].term) {
+            if (!SafeAdd(scale, terms_[i].scale, &terms_[i].scale))
+                return false;
+            if (terms_[i].scale == 0) {
+                terms_[i] = terms_.back();
+                terms_.popBack();
+            }
+            return true;
+        }
+    }
+
+    terms_.append(LinearTerm(term, scale));
+    return true;
+}
+
+bool
+LinearSum::add(int32 constant)
+{
+    return SafeAdd(constant, constant_, &constant_);
+}
+
+void
+LinearSum::print(Sprinter &sp) const
+{
+    for (size_t i = 0; i < terms_.length(); i++) {
+        int32 scale = terms_[i].scale;
+        int32 id = terms_[i].term->id();
+        JS_ASSERT(scale);
+        if (scale > 0) {
+            if (i)
+                sp.printf("+");
+            if (scale == 1)
+                sp.printf("#%d", id);
+            else
+                sp.printf("%d*#%d", scale, id);
+        } else if (scale == -1) {
+            sp.printf("-#%d", id);
+        } else {
+            sp.printf("%d*#%d", scale, id);
+        }
+    }
+    if (constant_ > 0)
+        sp.printf("+%d", constant_);
+    else if (constant_ < 0)
+        sp.printf("%d", constant_);
 }
