@@ -831,7 +831,7 @@ public class PanZoomController
 
     @Override
     public boolean onScale(SimpleScaleGestureDetector detector) {
-        if (GeckoApp.mAppContext == null || GeckoApp.mAppContext.mDOMFullScreen)
+        if (mTarget.isFullScreen())
             return false;
 
         if (mState != PanZoomState.PINCHING)
