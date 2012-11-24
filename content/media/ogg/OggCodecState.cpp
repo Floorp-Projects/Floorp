@@ -194,7 +194,7 @@ void OggCodecState::ReleasePacket(ogg_packet* aPacket) {
   delete aPacket;
 }
 
-void PacketQueue::Append(ogg_packet* aPacket) {
+void OggPacketQueue::Append(ogg_packet* aPacket) {
   nsDeque::Push(aPacket);
 }
 

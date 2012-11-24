@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<org.mozilla.gecko.CheckableLinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingLeft="16dip"
+    android:paddingRight="12dip"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:focusable="false">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:focusable="false">
+
+        <TextView
+            android:id="@+id/setting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="?android:attr/textColorAlertDialogListItem"
+            android:gravity="center_vertical|left"
+            android:singleLine="true"
+            android:ellipsize="marquee"/>
+
+        <TextView
+            android:id="@+id/value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="?android:attr/textColorAlertDialogListItem"
+            android:gravity="center_vertical|left"
+            android:singleLine="true"
+            android:ellipsize="marquee"/>
+
+    </LinearLayout>
+
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="35dip"
+        android:layout_height="wrap_content"
+        android:paddingRight="12dip"
+        android:gravity="center_vertical"
+        android:focusable="false"
+        android:clickable="false"/>
+
+</org.mozilla.gecko.CheckableLinearLayout>

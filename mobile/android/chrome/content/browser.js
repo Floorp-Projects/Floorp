@@ -6011,18 +6011,15 @@ var PermissionsHelper = {
                          "allowed" : "denied";
           let valueString = Strings.browser.GetStringFromName(typeStrings[valueKey]);
 
-          // If we implement a two-line UI, we will need to pass the label and
-          // value individually and let java handle the formatting
-          let setting = Strings.browser.formatStringFromName("siteSettings.labelToValue",
-                                                             [ label, valueString ], 2);
           permissions.push({
             type: type,
-            setting: setting
+            setting: label,
+            value: valueString
           });
         }
 
         // Keep track of permissions, so we know which ones to clear
-        this._currentPermissions = permissions; 
+        this._currentPermissions = permissions;
 
         let host;
         try {

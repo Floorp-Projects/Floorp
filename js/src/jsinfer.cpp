@@ -2008,7 +2008,7 @@ JITCodeHasCheck(HandleScript script, jsbytecode *pc, RecompileKind kind)
     }
 #endif
 
-    if (script->hasAnyIonScript())
+    if (script->hasAnyIonScript() || script->isIonCompilingOffThread())
         return false;
 
     return true;
