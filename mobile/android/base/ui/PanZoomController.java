@@ -315,7 +315,8 @@ public class PanZoomController
             return false;
 
         case TOUCHING:
-            if (panDistance(event) < PAN_THRESHOLD) {
+            // Don't allow panning if there is an element in full-screen mode. See bug 775511.
+            if (mTarget.isFullScreen() || panDistance(event) < PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();
