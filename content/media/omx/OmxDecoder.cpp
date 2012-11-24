@@ -571,6 +571,11 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
       return ReadAudio(aFrame, aSeekTimeUs);
     }
   }
+  else if (err == ERROR_END_OF_STREAM) {
+    if (aFrame->mSize == 0) {
+      return false;
+    }
+  }
 
   return true;
 }
