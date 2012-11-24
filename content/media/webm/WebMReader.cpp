@@ -526,11 +526,11 @@ nsReturnRef<NesteggPacketHolder> WebMReader::NextPacket(TrackType aTrackType)
 {
   // The packet queue that packets will be pushed on if they
   // are not the type we are interested in.
-  PacketQueue& otherPackets = 
+  WebMPacketQueue& otherPackets =
     aTrackType == VIDEO ? mAudioPackets : mVideoPackets;
 
   // The packet queue for the type that we are interested in.
-  PacketQueue &packets =
+  WebMPacketQueue &packets =
     aTrackType == VIDEO ? mVideoPackets : mAudioPackets;
 
   // Flag to indicate that we do need to playback these types of

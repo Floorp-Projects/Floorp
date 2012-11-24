@@ -7,6 +7,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <prlong.h>
+#include <prprf.h>
+#include <prtime.h>
 #include "nsProfileLock.h"
 
 #ifdef XP_WIN
@@ -121,6 +124,8 @@ private:
     }
 
     NS_HIDDEN_(nsresult) Init();
+
+    nsresult CreateTimesInternal(nsIFile *profileDir);
 
     nsresult CreateProfileInternal(nsIFile* aRootDir,
                                    nsIFile* aLocalDir,
@@ -813,6 +818,12 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    // We created a new profile dir. Let's store a creation timestamp.
+    // Note that this code path does not apply if the profile dir was
+    // created prior to launching.
+    rv = CreateTimesInternal(rootDir);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsToolkitProfile* last = aForExternalApp ? nullptr : mFirst;
     if (last) {
         while (last->mNext)
@@ -824,6 +835,40 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
     if (!profile) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aResult = profile);
+    return NS_OK;
+}
+
+nsresult
+nsToolkitProfileService::CreateTimesInternal(nsIFile* aProfileDir)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIFile> creationLog;
+    rv = aProfileDir->Clone(getter_AddRefs(creationLog));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = creationLog->AppendNative(NS_LITERAL_CSTRING("times.json"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool exists = false;
+    creationLog->Exists(&exists);
+    if (exists) {
+      return NS_OK;
+    }
+
+    rv = creationLog->Create(nsIFile::NORMAL_FILE_TYPE, 0700);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // We don't care about microsecond resolution.
+    PRInt64 msec;
+    LL_DIV(msec, PR_Now(), PR_USEC_PER_MSEC);
+
+    // Write it out.
+    PRFileDesc *writeFile;
+    rv = creationLog->OpenNSPRFileDesc(PR_WRONLY, 0700, &writeFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PR_fprintf(writeFile, "{\n\"created\": %lld\n}\n", msec);
+    PR_Close(writeFile);
     return NS_OK;
 }
 
