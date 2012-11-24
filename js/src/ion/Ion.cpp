@@ -868,6 +868,17 @@ CompileBackEnd(MIRGenerator *mir)
             return NULL;
     }
 
+    if (js_IonOptions.licm) {
+        LICM licm(mir, graph);
+        if (!licm.analyze())
+            return NULL;
+        IonSpewPass("LICM");
+        AssertGraphCoherency(graph);
+
+        if (mir->shouldCancel("LICM"))
+            return NULL;
+    }
+
     if (js_IonOptions.rangeAnalysis) {
         RangeAnalysis r(graph);
         if (!r.addBetaNobes())
@@ -902,17 +913,6 @@ CompileBackEnd(MIRGenerator *mir)
 
     if (mir->shouldCancel("DCE"))
         return NULL;
-
-    if (js_IonOptions.licm) {
-        LICM licm(mir, graph);
-        if (!licm.analyze())
-            return NULL;
-        IonSpewPass("LICM");
-        AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("LICM"))
-            return NULL;
-    }
 
     if (js_IonOptions.edgeCaseAnalysis) {
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
