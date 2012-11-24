@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
+this.EXPORTED_SYMBOLS = [ "DeveloperToolbar", "CommandUtils" ];
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -26,6 +26,92 @@ XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
 
 XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+          .getService(Components.interfaces.nsIPrefService);
+  return prefService.getBranch(null)
+          .QueryInterface(Components.interfaces.nsIPrefBranch2);
+});
+
+/**
+ * A collection of utilities to help working with commands
+ */
+this.CommandUtils = {
+  /**
+   * Read a toolbarSpec from preferences
+   * @param aPref The name of the preference to read
+   */
+  getCommandbarSpec: function CU_getCommandbarSpec(aPref) {
+    let value = prefBranch.getComplexValue(aPref,
+                               Components.interfaces.nsISupportsString).data;
+    return JSON.parse(value);
+  },
+
+  /**
+   * A toolbarSpec is an array of buttonSpecs. A buttonSpec is an array of
+   * strings each of which is a GCLI command (including args if needed).
+   */
+  createButtons: function CU_createButtons(toolbarSpec, document, requisition) {
+    var reply = [];
+
+    toolbarSpec.forEach(function(buttonSpec) {
+      var button = document.createElement("toolbarbutton");
+      reply.push(button);
+
+      if (typeof buttonSpec == "string") {
+        buttonSpec = { typed: buttonSpec };
+      }
+      // Ask GCLI to parse the typed string (doesn't execute it)
+      requisition.update(buttonSpec.typed);
+
+      // Ignore invalid commands
+      var command = requisition.commandAssignment.value;
+      if (command == null) {
+        // TODO: Have a broken icon
+        // button.icon = 'Broken';
+        button.setAttribute("label", "X");
+        button.setAttribute("tooltip", "Unknown command: " + buttonSpec.typed);
+        button.setAttribute("disabled", "true");
+      }
+      else {
+        if (command.buttonId != null) {
+          button.id = command.buttonId;
+        }
+        if (command.buttonClass != null) {
+          button.className = command.buttonClass;
+        }
+
+        button.addEventListener("click", function() {
+          requisition.update(buttonSpec.typed);
+          //if (requisition.getStatus() == Status.VALID) {
+            requisition.exec();
+          /*
+          }
+          else {
+            console.error('incomplete commands not yet supported');
+          }
+          */
+        }, false);
+
+        // Allow the command button to be toggleable
+        /*
+        if (command.checkedState) {
+          button.setAttribute("type", "checkbox");
+          button.setAttribute("checked", command.checkedState.get() ? "true" : "false");
+          command.checkedState.on("change", function() {
+            button.checked = command.checkedState.get();
+          });
+        }
+        */
+      }
+    });
+
+    requisition.update('');
+
+    return reply;
+  }
+};
 
 /**
  * Due to a number of panel bugs we need a way to check if we are running on
@@ -57,10 +143,10 @@ this.DeveloperToolbar = function DeveloperToolbar(aChromeWindow, aToolbarElement
   this._lastState = NOTIFICATIONS.HIDE;
   this._pendingShowCallback = undefined;
   this._pendingHide = false;
-  this._errorsCount = Object.create(null);
-  this._errorListeners = Object.create(null);
-  this._webConsoleButton = this._doc
-                           .getElementById("developer-toolbar-webconsole");
+  this._errorsCount = {};
+  this._errorListeners = {};
+  this._errorCounterButton = this._doc
+                             .getElementById("developer-toolbar-toolbox-button");
 
   try {
     CmdCommands.refreshAutoCommands(aChromeWindow);
@@ -497,9 +583,9 @@ function DT__updateErrorsCount(aChangedTabId)
   let errors = this._errorsCount[tabId];
 
   if (errors) {
-    this._webConsoleButton.setAttribute("error-count", errors);
+    this._errorCounterButton.setAttribute("error-count", errors);
   } else {
-    this._webConsoleButton.removeAttribute("error-count");
+    this._errorCounterButton.removeAttribute("error-count");
   }
 };
 

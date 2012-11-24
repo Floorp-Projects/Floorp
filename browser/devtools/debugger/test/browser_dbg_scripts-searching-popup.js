@@ -18,7 +18,7 @@ function test()
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.contentWindow;
+    gDebugger = gPane.panelWin;
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       runTest();
