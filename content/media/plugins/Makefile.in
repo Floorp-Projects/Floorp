@@ -17,6 +17,7 @@ EXPORTS		+= \
 		MPAPI.h \
 		MediaPluginHost.h \
 		MediaPluginDecoder.h \
+		MediaPluginReader.h \
 		$(NULL)
 
 CPPSRCS		= \
