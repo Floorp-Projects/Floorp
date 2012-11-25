@@ -43,7 +43,7 @@ EXPORTS		= \
 		nsCSSValue.h \
 		nsDOMCSSAttrDeclaration.h \
 		nsDOMCSSDeclaration.h \
-	 nsDOMCSSRGBColor.h \
+		nsDOMCSSRGBColor.h \
 		nsDOMMediaQueryList.h \
 		nsICSSDeclaration.h \
 		nsICSSLoaderObserver.h \
@@ -83,11 +83,13 @@ EXPORTS_mozilla/css = \
 		$(NULL)
 
 EXPORTS_mozilla/dom = \
-  CSSValue.h \
-  $(null)
+		CSS.h \
+		CSSValue.h \
+		$(NULL)
 
 CPPSRCS		= \
 		AnimationCommon.cpp \
+		CSS.cpp \
 		nsCSSAnonBoxes.cpp \
 		nsCSSDataBlock.cpp \
 		Declaration.cpp \
@@ -140,6 +142,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../base \
+		-I$(topsrcdir)/dom/base \
 		-I$(srcdir)/../generic \
 		-I$(srcdir)/../xul/base/src \
 		-I$(srcdir)/../../content/base/src \
