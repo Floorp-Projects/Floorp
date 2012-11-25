@@ -4214,6 +4214,122 @@ CodeGenerator::visitInArray(LInArray *lir)
 }
 
 bool
+CodeGenerator::visitInstanceOfTypedO(LInstanceOfTypedO *ins)
+{
+    return emitInstanceOfTyped(ins, ins->mir()->prototypeObject());
+}
+
+bool
+CodeGenerator::visitInstanceOfTypedV(LInstanceOfTypedV *ins)
+{
+    return emitInstanceOfTyped(ins, ins->mir()->prototypeObject());
+}
+
+// Wrap IsDelegate, which takes a Value for the lhs of an instanceof.
+static bool
+IsDelegateObject(JSContext *cx, HandleObject protoObj, HandleObject obj, JSBool *res)
+{
+    bool nres;
+    if (!IsDelegate(cx, protoObj, ObjectValue(*obj), &nres))
+        return false;
+    *res = nres;
+    return true;
+}
+
+typedef bool (*IsDelegateObjectFn)(JSContext *, HandleObject, HandleObject, JSBool *);
+static const VMFunction IsDelegateObjectInfo = FunctionInfo<IsDelegateObjectFn>(IsDelegateObject);
+
+bool
+CodeGenerator::emitInstanceOfTyped(LInstruction *ins, RawObject prototypeObject)
+{
+    // This path implements fun_hasInstance when the function's prototype is
+    // known to be prototypeObject.
+
+    Label done;
+    Register output = ToRegister(ins->getDef(0));
+
+    // If the lhs is a primitive, the result is false.
+    Register objReg;
+    if (ins->isInstanceOfTypedV()) {
+        Label isObject;
+        ValueOperand lhsValue = ToValue(ins, LInstanceOfTypedV::LHS);
+        masm.branchTestObject(Assembler::Equal, lhsValue, &isObject);
+        masm.mov(Imm32(0), output);
+        masm.jump(&done);
+        masm.bind(&isObject);
+        objReg = masm.extractObject(lhsValue, output);
+    } else {
+        objReg = ToRegister(ins->toInstanceOfTypedO()->lhs());
+    }
+
+    // Crawl the lhs's prototype chain in a loop to search for prototypeObject.
+    // This follows the main loop of js::IsDelegate, though additionally breaks
+    // out of the loop on Proxy::LazyProto.
+
+    // Load the lhs's prototype.
+    masm.loadPtr(Address(objReg, JSObject::offsetOfType()), output);
+    masm.loadPtr(Address(output, offsetof(types::TypeObject, proto)), output);
+
+    Label testLazy;
+    {
+        Label loopPrototypeChain;
+        masm.bind(&loopPrototypeChain);
+
+        // Test for the target prototype object.
+        Label notPrototypeObject;
+        masm.branchPtr(Assembler::NotEqual, output, ImmGCPtr(prototypeObject), &notPrototypeObject);
+        masm.mov(Imm32(1), output);
+        masm.jump(&done);
+        masm.bind(&notPrototypeObject);
+
+        JS_ASSERT(uintptr_t(Proxy::LazyProto) == 1);
+
+        // Test for NULL or Proxy::LazyProto
+        masm.branchPtr(Assembler::BelowOrEqual, output, ImmWord(1), &testLazy);
+
+        // Load the current object's prototype.
+        masm.loadPtr(Address(output, JSObject::offsetOfType()), output);
+        masm.loadPtr(Address(output, offsetof(types::TypeObject, proto)), output);
+
+        masm.jump(&loopPrototypeChain);
+    }
+
+    // Make a VM call if an object with a lazy proto was found on the prototype
+    // chain. This currently occurs only for cross compartment wrappers, which
+    // we do not expect to be compared with non-wrapper functions from this
+    // compartment. Otherwise, we stopped on a NULL prototype and the output
+    // register is already correct.
+
+    OutOfLineCode *ool = oolCallVM(IsDelegateObjectInfo, ins,
+                                   (ArgList(), ImmGCPtr(prototypeObject), objReg),
+                                   StoreRegisterTo(output));
+
+    // Regenerate the original lhs object for the VM call.
+    Label regenerate, *lazyEntry;
+    if (objReg != output) {
+        lazyEntry = ool->entry();
+    } else {
+        masm.bind(&regenerate);
+        lazyEntry = &regenerate;
+        if (ins->isInstanceOfTypedV()) {
+            ValueOperand lhsValue = ToValue(ins, LInstanceOfTypedV::LHS);
+            objReg = masm.extractObject(lhsValue, output);
+        } else {
+            objReg = ToRegister(ins->toInstanceOfTypedO()->lhs());
+        }
+        JS_ASSERT(objReg == output);
+        masm.jump(ool->entry());
+    }
+
+    masm.bind(&testLazy);
+    masm.branchPtr(Assembler::Equal, output, ImmWord(1), lazyEntry);
+
+    masm.bind(&done);
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
 CodeGenerator::visitInstanceOfO(LInstanceOfO *ins)
 {
     Register rhs = ToRegister(ins->getOperand(1));

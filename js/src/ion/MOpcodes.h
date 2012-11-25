@@ -133,6 +133,7 @@ namespace ion {
     _(Floor)                                                                \
     _(Round)                                                                \
     _(In)                                                                   \
+    _(InstanceOfTyped)                                                      \
     _(InstanceOf)                                                           \
     _(InterruptCheck)                                                       \
     _(FunctionBoundary)                                                     \
