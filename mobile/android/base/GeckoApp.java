@@ -161,7 +161,6 @@ abstract public class GeckoApp
     public View getView() { return mGeckoLayout; }
     public SurfaceView cameraView;
     public static GeckoApp mAppContext;
-    public boolean mDOMFullScreen = false;
     protected MenuPresenter mMenuPresenter;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
@@ -991,9 +990,17 @@ abstract public class GeckoApp
             } else if (event.equals("ToggleChrome:Focus")) {
                 focusChrome();
             } else if (event.equals("DOMFullScreen:Start")) {
-                mDOMFullScreen = true;
+                // Local ref to layerView for thread safety
+                LayerView layerView = mLayerView;
+                if (layerView != null) {
+                    layerView.setFullScreen(true);
+                }
             } else if (event.equals("DOMFullScreen:Stop")) {
-                mDOMFullScreen = false;
+                // Local ref to layerView for thread safety
+                LayerView layerView = mLayerView;
+                if (layerView != null) {
+                    layerView.setFullScreen(false);
+                }
             } else if (event.equals("Permissions:Data")) {
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
@@ -2504,7 +2511,7 @@ abstract public class GeckoApp
             return;
         }
 
-        if (mDOMFullScreen) {
+        if (mLayerView.isFullScreen()) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
             return;
         }
