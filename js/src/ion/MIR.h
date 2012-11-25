@@ -5245,7 +5245,33 @@ class MInArray
     }
 };
 
-// Implementation for instanceof operator.
+// Implementation for instanceof operator with specific rhs.
+class MInstanceOfTyped
+  : public MUnaryInstruction,
+    public InstanceOfPolicy
+{
+    CompilerRootObject protoObj_;
+
+  public:
+    MInstanceOfTyped(MDefinition *obj, RawObject proto)
+      : MUnaryInstruction(obj)
+    {
+        protoObj_ = proto;
+        setResultType(MIRType_Boolean);
+    }
+
+    INSTRUCTION_HEADER(InstanceOfTyped);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    RawObject prototypeObject() {
+        return protoObj_;
+    }
+};
+
+// Implementation for instanceof operator with unknown rhs.
 class MInstanceOf
   : public MBinaryInstruction,
     public InstanceOfPolicy
