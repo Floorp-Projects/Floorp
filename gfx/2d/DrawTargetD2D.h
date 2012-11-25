@@ -128,6 +128,7 @@ public:
   void PopCachedLayer(ID2D1RenderTarget *aRT);
 
   static ID2D1Factory *factory();
+  static void CleanupD2D();
   static TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
   static IDWriteFactory *GetDWriteFactory();
 
