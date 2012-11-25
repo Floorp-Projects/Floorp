@@ -17,6 +17,7 @@ LIBXUL_LIBRARY 	= 1
 
 EXPORTS		+= \
 		GStreamerDecoder.h \
+		GStreamerReader.h \
 		$(NULL)
 
 CPPSRCS		= \
