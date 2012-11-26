@@ -158,7 +158,6 @@ _BROWSER_FILES = \
                  browser_bug735471.js \
                  browser_bug743421.js \
                  browser_bug749738.js \
-                 browser_bug763468.js \
                  browser_bug767836.js \
                  browser_bug783614.js \
                  browser_bug797677.js \
@@ -303,11 +302,13 @@ endif
 
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 _BROWSER_FILES += \
+                browser_bug763468_perwindowpb.js \
                 browser_private_browsing_window.js \
                 $(filter disabled-until-bug-722850, browser_save_link-perwindowpb.js) \
                 $(NULL)
 else
 _BROWSER_FILES += \
+                browser_bug763468.js \
                 browser_save_link.js \
                 $(NULL)
 endif
