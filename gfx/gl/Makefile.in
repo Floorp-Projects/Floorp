@@ -24,6 +24,7 @@ EXPORTS	= \
 	GLContextProviderImpl.h \
 	GLLibraryLoader.h \
 	ForceDiscreteGPUHelperCGL.h \
+	GLTextureImage.h \
 	$(NULL)
 
 ifdef MOZ_X11
@@ -48,6 +49,7 @@ CPPSRCS	= \
 	GLContext.cpp \
 	GLContextUtils.cpp \
 	GLLibraryLoader.cpp \
+	GLTextureImage.cpp \
 	$(NULL)
 
 GL_PROVIDER = Null
