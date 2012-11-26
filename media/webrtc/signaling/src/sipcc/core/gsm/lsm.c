@@ -995,7 +995,8 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                 pc_track_id = 0;
                 dcb->cur_video_avail &= ~CC_ATTRIB_CAST;
                 if (media->local_dynamic_payload_type_value == RTP_NONE) {
-                    media->local_dynamic_payload_type_value = media->payload;
+                    media->local_dynamic_payload_type_value =
+                      media->num_payloads ? media->payloads[0] : RTP_NONE;
                 }
 
                 config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
@@ -1014,9 +1015,15 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                 } else if (!sdpmode) {
                     ret_val =  vcmRxStart(media->cap_index, group_id, media->refid,
                                           lsm_get_ms_ui_call_handle(dcb->line, call_id, CC_NO_CALL_ID),
-                                          vcmRtpToMediaPayload(media->payload,
-                                          media->local_dynamic_payload_type_value,
-                                          media->mode),
+                                          /* RTP_NONE is not technically a valid
+                                             value for vcm_media_payload_type_t.
+                                             However, we really should never
+                                             reach this part of the code with
+                                             num_payloads < 1, so the RTP_NONE
+                                             shouldn't ever be used. It's only
+                                             here are extra protection against
+                                             an invalid pointer deref.*/
+                                          media->num_payloads ? media->payloads[0] : RTP_NONE,
                                           media->is_multicast ? &media->dest_addr:&media->src_addr,
                                           port,
                                           FSM_NEGOTIATED_CRYPTO_ALGORITHM_ID(media),
@@ -1235,9 +1242,7 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
               if (vcmTxStart(media->cap_index, group_id,
                   media->refid,
                   lsm_get_ms_ui_call_handle(dcb->line, call_id, CC_NO_CALL_ID),
-                  vcmRtpToMediaPayload(media->payload,
-                    media->remote_dynamic_payload_type_value,
-                    media->mode),
+                  media->num_payloads ? media->payloads[0] : RTP_NONE,
                   (short)dscp,
                   &media->src_addr,
                   media->src_port,
@@ -1263,9 +1268,7 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                   dcb->media_cap_tbl->cap[media->cap_index].pc_track,
                   lsm_get_ms_ui_call_handle(dcb->line, call_id, CC_NO_CALL_ID),
                   dcb->peerconnection,
-                  vcmRtpToMediaPayload(media->payload,
-                    media->remote_dynamic_payload_type_value,
-                    media->mode),
+                  media->num_payloads ? media->payloads[0] : RTP_NONE,
                   (short)dscp,
                   FSM_NEGOTIATED_CRYPTO_DIGEST_ALGORITHM(media),
                   FSM_NEGOTIATED_CRYPTO_DIGEST(media),
@@ -1949,7 +1952,7 @@ lsm_get_free_lcb (callid_t call_id, line_t line, fsmdef_dcb_t *dcb)
             lcb->mru     = mru;
             lcb->dcb     = dcb;
             // start unmuted if txPref is true
-            lcb->vid_mute = cc_media_getVideoAutoTxPref()?FALSE:TRUE;
+            lcb->vid_mute = cc_media_getVideoAutoTxPref() ? FALSE : TRUE;
 
             lcb->ui_id = call_id;   /* default UI ID is the same as call_id */
             break;
@@ -3810,6 +3813,7 @@ lsm_update_media (lsm_lcb_t *lcb, const char *caller_fname)
     boolean        rx_refresh;
     boolean        tx_refresh;
     char           addr_str[MAX_IPADDR_STR_LEN];
+    int            i;
 
     dcb = lcb->dcb;
     if (dcb == NULL) {
@@ -3857,12 +3861,16 @@ lsm_update_media (lsm_lcb_t *lcb, const char *caller_fname)
         if (LSMDebug) {
             /* debug is enabled, format the dest addr into string */
             ipaddr2dotted(addr_str, &media->dest_addr);
+            for (i = 0; i < media->num_payloads; i++)
+            {
+                LSM_DEBUG(DEB_L_C_F_PREFIX"%d rx, tx refresh's are %d %d"
+                          ", dir=%d, payload=%d addr=%s, multicast=%d\n",
+                          DEB_L_C_F_PREFIX_ARGS(LSM, dcb->line,
+                          dcb->call_id, fname), media->refid, rx_refresh,
+                          tx_refresh, media->direction,
+                          media->payloads[i], addr_str, media->is_multicast );
+            }
         }
-        LSM_DEBUG(DEB_L_C_F_PREFIX"%d rx, tx refresh's are %d %d"
-                  ", dir=%d, payload=%d addr=%s, multicast=%d\n",
-                  DEB_L_C_F_PREFIX_ARGS(LSM, dcb->line, dcb->call_id, fname),
-                  media->refid, rx_refresh, tx_refresh, media->direction,
-                  media->payload, addr_str, media->is_multicast );
         if (rx_refresh ||
             (media->is_multicast &&
              media->direction_set &&
@@ -5289,9 +5297,9 @@ void lsm_add_remote_stream (line_t line, callid_t call_id, fsmdef_media_t *media
             return;
         }
 
-        vcmCreateRemoteStream(media->cap_index, dcb->peerconnection, pc_stream_id,
-                vcmRtpToMediaPayload(media->payload,
-                media->local_dynamic_payload_type_value,media->mode));
+        vcmCreateRemoteStream(media->cap_index, dcb->peerconnection,
+                pc_stream_id,
+                media->num_payloads ? media->payloads[0] : RTP_NONE);
 
     }
 }
