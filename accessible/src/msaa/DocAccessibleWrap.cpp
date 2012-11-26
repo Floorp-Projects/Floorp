@@ -222,7 +222,7 @@ DocAccessibleWrap::Shutdown()
   // Do window emulation specific shutdown if emulation was started.
   if (nsWinUtils::IsWindowEmulationStarted()) {
     // Destroy window created for root document.
-    if (nsCoreUtils::IsTabDocument(mDocument)) {
+    if (nsCoreUtils::IsTabDocument(mDocumentNode)) {
       sHWNDCache.Remove(mHWND);
       ::DestroyWindow(static_cast<HWND>(mHWND));
     }
@@ -252,9 +252,9 @@ DocAccessibleWrap::DoInitialUpdate()
 
   if (nsWinUtils::IsWindowEmulationStarted()) {
     // Create window for tab document.
-    if (nsCoreUtils::IsTabDocument(mDocument)) {
+    if (nsCoreUtils::IsTabDocument(mDocumentNode)) {
       mozilla::dom::TabChild* tabChild =
-        mozilla::dom::GetTabChildFrom(mDocument->GetShell());
+        mozilla::dom::GetTabChildFrom(mDocumentNode->GetShell());
 
       a11y::RootAccessible* rootDocument = RootAccessible();
 
@@ -274,7 +274,7 @@ DocAccessibleWrap::DoInitialUpdate()
         x = rootX - x;
         y -= rootY;
 
-        nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+        nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
         nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
         docShell->GetIsActive(&isActive);
       }

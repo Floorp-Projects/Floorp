@@ -8,17 +8,16 @@
 #ifndef jsthreadpool_h___
 #define jsthreadpool_h___
 
-#if defined(JS_THREADSAFE) && defined(JS_ION)
-# define JS_THREADSAFE_ION
-#endif
-
 #include <stddef.h>
 #include "mozilla/StandardInteger.h"
-#include "prtypes.h"
 #include "js/Vector.h"
 #include "jsalloc.h"
-#include "prlock.h"
-#include "prcvar.h"
+
+#ifdef JS_THREADSAFE
+#  include "prtypes.h"
+#  include "prlock.h"
+#  include "prcvar.h"
+#endif
 
 struct JSContext;
 struct JSRuntime;

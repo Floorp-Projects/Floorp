@@ -1077,6 +1077,18 @@ public:
                 *params = GetUserBoundReadFBO();
                 break;
 
+            case LOCAL_GL_MAX_TEXTURE_SIZE:
+                *params = mMaxTextureSize;
+                break;
+
+            case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
+                *params = mMaxCubeMapTextureSize;
+                break;
+
+            case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
+                *params = mMaxRenderbufferSize;
+                break;
+
             default:
                 raw_fGetIntegerv(pname, params);
                 break;

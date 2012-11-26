@@ -1728,7 +1728,13 @@ function WifiWorker() {
       // Prime this.networks.
       if (!ok)
         return;
+
       self.waitForScan(function firstScan() {});
+      // The select network command we used in associate() disables others networks.
+      // Enable them here to make sure wpa_supplicant helps to connect to known
+      // network automatically.
+      self._enableAllNetworks();
+      WifiManager.saveConfig(function() {})
     });
 
     // Check if we need to dequeue requests first.
@@ -1768,11 +1774,22 @@ function WifiWorker() {
   };
 
   WifiManager.ondisconnected = function() {
-    var currentNetwork = self.currentNetwork;
-    if (currentNetwork) {
-      WifiManager.disableNetwork(currentNetwork.netId, function() {});
-      self._fireEvent("onconnectingfailed", {network: currentNetwork});
+    // We may fail to establish the connection, re-enable the
+    // rest of our networks.
+    if (self._needToEnableNetworks) {
+      self._enableAllNetworks();
+      self._needToEnableNetworks = false;
     }
+
+    var currentNetwork = self.currentNetwork;
+    if (currentNetwork && !isNaN(currentNetwork.netId)) {
+      // Disable the network when password is incorrect.
+      WifiManager.disableNetwork(currentNetwork.netId, function() {});
+    } else {
+      // TODO: We can't get netId when connecting to wep network with
+      // incorrect password, see Bug 813880
+    }
+    self._fireEvent("onconnectingfailed", {network: currentNetwork});
   };
 
   WifiManager.onstatechange = function() {
