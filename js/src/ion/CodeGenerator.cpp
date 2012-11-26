@@ -1271,7 +1271,7 @@ CodeGenerator::generateArgumentsChecks()
     for (uint32 i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
-        types::TypeSet *types = param->typeSet();
+        const types::TypeSet *types = param->typeSet();
         if (!types || types->unknown())
             continue;
 

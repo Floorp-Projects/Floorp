@@ -632,12 +632,12 @@ class MConstant : public MNullaryInstruction
 class MParameter : public MNullaryInstruction
 {
     int32 index_;
-    types::StackTypeSet *typeSet_;
+    const types::TypeSet *typeSet_;
 
   public:
     static const int32 THIS_SLOT = -1;
 
-    MParameter(int32 index, types::StackTypeSet *types)
+    MParameter(int32 index, const types::TypeSet *types)
       : index_(index),
         typeSet_(types)
     {
@@ -646,12 +646,12 @@ class MParameter : public MNullaryInstruction
 
   public:
     INSTRUCTION_HEADER(Parameter);
-    static MParameter *New(int32 index, types::StackTypeSet *types);
+    static MParameter *New(int32 index, const types::TypeSet *types);
 
     int32 index() const {
         return index_;
     }
-    types::StackTypeSet *typeSet() const {
+    const types::TypeSet *typeSet() const {
         return typeSet_;
     }
     void printOpcode(FILE *fp);
@@ -5353,9 +5353,9 @@ class MGetArgument
 class MTypeBarrier : public MUnaryInstruction
 {
     BailoutKind bailoutKind_;
-    types::TypeSet *typeSet_;
+    const types::TypeSet *typeSet_;
 
-    MTypeBarrier(MDefinition *def, types::TypeSet *types)
+    MTypeBarrier(MDefinition *def, const types::TypeSet *types)
       : MUnaryInstruction(def),
         typeSet_(types)
     {
@@ -5370,7 +5370,7 @@ class MTypeBarrier : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(TypeBarrier);
 
-    static MTypeBarrier *New(MDefinition *def, types::TypeSet *types) {
+    static MTypeBarrier *New(MDefinition *def, const types::TypeSet *types) {
         return new MTypeBarrier(def, types);
     }
     bool congruentTo(MDefinition * const &def) const {
@@ -5382,7 +5382,7 @@ class MTypeBarrier : public MUnaryInstruction
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
-    types::TypeSet *typeSet() const {
+    const types::TypeSet *typeSet() const {
         return typeSet_;
     }
     AliasSet getAliasSet() const {
@@ -5395,9 +5395,9 @@ class MTypeBarrier : public MUnaryInstruction
 // TypeScript::Monitor inside these stubs.
 class MMonitorTypes : public MUnaryInstruction
 {
-    types::TypeSet *typeSet_;
+    const types::TypeSet *typeSet_;
 
-    MMonitorTypes(MDefinition *def, types::TypeSet *types)
+    MMonitorTypes(MDefinition *def, const types::TypeSet *types)
       : MUnaryInstruction(def),
         typeSet_(types)
     {
@@ -5409,13 +5409,13 @@ class MMonitorTypes : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(MonitorTypes);
 
-    static MMonitorTypes *New(MDefinition *def, types::TypeSet *types) {
+    static MMonitorTypes *New(MDefinition *def, const types::TypeSet *types) {
         return new MMonitorTypes(def, types);
     }
     MDefinition *input() const {
         return getOperand(0);
     }
-    types::TypeSet *typeSet() const {
+    const types::TypeSet *typeSet() const {
         return typeSet_;
     }
     AliasSet getAliasSet() const {
