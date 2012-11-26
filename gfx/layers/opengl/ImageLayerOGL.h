@@ -194,7 +194,7 @@ private:
 
   // For SharedTextureHandle
   gl::SharedTextureHandle mSharedHandle;
-  gl::TextureImage::TextureShareType mShareType;
+  gl::GLContext::SharedTextureShareType mShareType;
   bool mInverted;
   GLuint mTexture;
 
