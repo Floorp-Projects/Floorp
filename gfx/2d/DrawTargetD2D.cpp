@@ -2686,6 +2686,15 @@ DrawTargetD2D::factory()
   return mFactory;
 }
 
+void
+DrawTargetD2D::CleanupD2D()
+{
+  if (mFactory) {
+    mFactory->Release();
+    mFactory = nullptr;
+  }
+}
+
 IDWriteFactory*
 DrawTargetD2D::GetDWriteFactory()
 {

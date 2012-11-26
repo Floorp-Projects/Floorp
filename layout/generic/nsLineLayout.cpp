@@ -117,16 +117,6 @@ nsLineLayout::~nsLineLayout()
 
   NS_ASSERTION(nullptr == mRootSpan, "bad line-layout user");
 
-  // PL_FreeArenaPool takes our memory and puts in on a global free list so
-  // that the next time an arena makes an allocation it will not have to go
-  // all the way down to malloc.  This is desirable as this class is created
-  // and destroyed in a tight loop.
-  //
-  // I looked at the code.  It is not technically necessary to call
-  // PL_FinishArenaPool() after PL_FreeArenaPool(), but from an API
-  // standpoint, I think we are susposed to.  It will be very fast anyway,
-  // since PL_FreeArenaPool() has done all the work.
-  PL_FreeArenaPool(&mArena);
   PL_FinishArenaPool(&mArena);
 }
 
