@@ -726,10 +726,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
     }
 
-    public void setVisibility(int visibility) {
-        mLayout.setVisibility(visibility);
-    }
-
     public void requestFocusFromTouch() {
         mLayout.requestFocusFromTouch();
     }
