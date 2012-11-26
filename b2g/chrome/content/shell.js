@@ -81,6 +81,13 @@ var shell = {
     return this.CrashSubmit;
   },
 
+  onlineForCrashReport: function shell_onlineForCrashReport() {
+    let wifiManager = navigator.mozWifiManager;
+    let onWifi = (wifiManager &&
+                  (wifiManager.connection.status == 'connected'));
+    return !Services.io.offline && onWifi;
+  },
+
   reportCrash: function shell_reportCrash(isChrome, aCrashID) {
     let crashID = aCrashID;
     try {
@@ -113,16 +120,19 @@ var shell = {
 
   // This function submits a crash when we're online.
   submitCrash: function shell_submitCrash(aCrashID) {
-    if (!Services.io.offline) {
+    if (this.onlineForCrashReport()) {
       this.CrashSubmit.submit(aCrashID);
       return;
     }
+
     Services.obs.addObserver(function observer(subject, topic, state) {
-      if (state == 'online') {
+      let network = subject.QueryInterface(Ci.nsINetworkInterface);
+      if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED
+          && network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
         shell.CrashSubmit.submit(aCrashID);
         Services.obs.removeObserver(observer, topic);
       }
-    }, "network:offline-status-changed", false);
+    }, "network-interface-state-changed", false);
   },
 
   get contentBrowser() {
