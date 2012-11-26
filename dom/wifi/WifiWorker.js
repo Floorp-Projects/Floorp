@@ -1005,6 +1005,21 @@ var WifiManager = (function() {
   manager.authenticationFailuresCount = 0;
   manager.loopDetectionCount = 0;
 
+  const DRIVER_READY_WAIT = 2000;
+  var waitForDriverReadyTimer = null;
+  function cancelWaitForDriverReadyTimer() {
+    if (waitForDriverReadyTimer) {
+      waitForDriverReadyTimer.cancel();
+      waitForDriverReadyTimer = null;
+    }
+  };
+  function createWaitForDriverReadyTimer(onTimeout) {
+    waitForDriverReadyTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    waitForDriverReadyTimer.initWithCallback(onTimeout,
+                                             DRIVER_READY_WAIT,
+                                             Ci.nsITimer.TYPE_ONE_SHOT);
+  };
+
   // Public interface of the wifi service
   manager.setWifiEnabled = function(enable, callback) {
     if (enable === manager.enabled) {
@@ -1045,9 +1060,8 @@ var WifiManager = (function() {
               return;
             }
 
-            let timer;
             function doStartSupplicant() {
-              timer = null;
+              cancelWaitForDriverReadyTimer();
               startSupplicant(function (status) {
                 if (status < 0) {
                   unloadDriver(function() {
@@ -1066,9 +1080,8 @@ var WifiManager = (function() {
             // Driver startup on certain platforms takes longer than it takes for us
             // to return from loadDriver, so wait 2 seconds before starting
             // the supplicant to give it a chance to start.
-            timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-            timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
-          });
+            createWaitForDriverReadyTimer(doStartSupplicant);
+         });
         });
       });
     } else {
@@ -1104,15 +1117,23 @@ var WifiManager = (function() {
             callback(enabled);
             return;
           }
-          WifiNetworkInterface.name = manager.ifname;
-          manager.state = "WIFITETHERING";
-          // Turning on wifi tethering.
-          gNetworkManager.setWifiTethering(enabled, WifiNetworkInterface, function(result) {
-            // Pop out current request.
-            callback(enabled);
-            // Should we fire a dom event if we fail to set wifi tethering  ?
-            debug("Enable Wifi tethering result: " + (result ? result : "successfully"));
-          });
+
+          function doStartWifiTethering() {
+            cancelWaitForDriverReadyTimer();
+            WifiNetworkInterface.name = manager.ifname;
+            manager.state = "WIFITETHERING";
+            gNetworkManager.setWifiTethering(enabled, WifiNetworkInterface, function(result) {
+              // Pop out current request.
+              callback(enabled);
+              // Should we fire a dom event if we fail to set wifi tethering  ?
+              debug("Enable Wifi tethering result: " + (result ? result : "successfully"));
+            });
+          }
+
+          // Driver startup on certain platforms takes longer than it takes
+          // for us to return from loadDriver, so wait 2 seconds before
+          // turning on Wifi tethering.
+          createWaitForDriverReadyTimer(doStartWifiTethering);
         });
       });
     } else {
