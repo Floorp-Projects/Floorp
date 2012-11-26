@@ -6,7 +6,7 @@
 <ShortName>eBay</ShortName>
 <Description>eBay - Online auctions</Description>
 <InputEncoding>ISO-8859-1</InputEncoding>
-<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABFUlEQVQ4jdWTvUoDQRSFvxUfQMFSyBvYpLGSSWFpncY6lsLWFiupBBtLBRsfQcQ2a782PoCkSrONlUGy5LPYn6wbu4DghcOcYs65595hIpVNamsj9V8ajOeFzgsFLmo+LxTXcWJVX8WyppIgKSVPkQQ/F0u3gSFwBfTqdoPoBYDnxRFcDgA4Z4cbPtazqblZptBgxJ2BtGydv+vbkyahSUGC0zxT7VeZ0DguBXFsRs9AKtzq/amOKA2sTAylzMDKoIM6wfXhcWmcBKd51ukeWq8Qx6V0MmFAuppxdx/OIgB6e/32+SoTUGfdHTxy0CRodtF6jZpW2R2qs/alQNrgYTytR8Cf1Rh08VuNGkECJCtd5L//TN/BEWxoE8dlIQAAAABJRU5ErkJggg==</Image>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABaklEQVQ4jc2TO0hbYQBGz42pMVDrINQuGvrCpZOSoQ4WoZoOxVk7FISCQxy6BEUtSIeCIBTsYCl0cHEQV0GU0lcIIkrpUEGNVYdi6qOtiTH+ubn3c4iTOPSaxbOfM30fkuokzUoy+n/MqVOHpDkP4lk+WpIMUM7FcCxJuqAMgK8U+dzAp5Us9QOr3gJm6RvbLRG2WyI4v3dIH7vcf7VO8/BP9jI2ZqGD3HQN6R/9zCz3AuCqwIeVIfwAf2L9BB+1ocwhtS96cBtGiPfdYnLxgMejmySivRSCtbDxlp3qML/+LbGfXSOV/l4MYNsEwo1cuXObTGcXgfEjynwWNdf8OPkDTLyVQNM0ztZ7Hoae8Tk5TM7+y5PwVDFQFXtO+vUb5LqkooNY1lUaXiaRxMTTIL7dB5hEO2U3u7lReQ+Y5O71CBX+KvC6nPmNMb2LN8sUDiVJl2MH+RJ8xwd8KSHwFRXvPCdvd86fOqETu2NuOELmXqEAAAAASUVORK5CYII=</Image>
 <Url type="application/x-suggestions+json" method="GET" template="http://anywhere.ebay.com/services/suggest/">
   <Param name="s" value="0"/>
   <Param name="q" value="{searchTerms}"/>
