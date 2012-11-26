@@ -1173,7 +1173,10 @@ IonCacheSetProperty::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject 
     masm.pop(object());     // restore object reg
 
     /* Changing object shape.  Write the object's new shape. */
-    masm.storePtr(ImmGCPtr(newShape), Address(object(), JSObject::offsetOfShape()));
+    Address shapeAddr(object(), JSObject::offsetOfShape());
+    if (cx->compartment->needsBarrier())
+        masm.callPreBarrier(shapeAddr, MIRType_Shape);
+    masm.storePtr(ImmGCPtr(newShape), shapeAddr);
 
     /* Set the value on the object. */
     if (obj->isFixedSlot(propShape->slot())) {
