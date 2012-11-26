@@ -517,7 +517,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 }
 
 IonCode *
-IonRuntime::generatePreBarrier(JSContext *cx)
+IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
 {
     MacroAssembler masm;
 
@@ -531,7 +531,12 @@ IonRuntime::generatePreBarrier(JSContext *cx)
     masm.setupUnalignedABICall(2, rax);
     masm.passABIArg(rcx);
     masm.passABIArg(rdx);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkFromIon));
+    if (type == MIRType_Value) {
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkValueFromIon));
+    } else {
+        JS_ASSERT(type == MIRType_Shape);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkShapeFromIon));
+    }
 
     masm.PopRegsInMask(regs);
     masm.ret();

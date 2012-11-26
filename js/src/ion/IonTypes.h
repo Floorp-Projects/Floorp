@@ -59,6 +59,27 @@ enum BailoutKind
     Bailout_CachedShapeGuard
 };
 
+// The ordering of this enumeration is important: Anything < Value is a
+// specialized type. Furthermore, anything < String has trivial conversion to
+// a number.
+enum MIRType
+{
+    MIRType_Undefined,
+    MIRType_Null,
+    MIRType_Boolean,
+    MIRType_Int32,
+    MIRType_Double,
+    MIRType_String,
+    MIRType_Object,
+    MIRType_Magic,
+    MIRType_Value,
+    MIRType_None,       // Invalid, used as a placeholder.
+    MIRType_Slots,      // A slots vector
+    MIRType_Elements,   // An elements vector
+    MIRType_StackFrame, // StackFrame pointer for OSR.
+    MIRType_Shape       // A Shape pointer.
+};
+
 #ifdef DEBUG
 // Track the pipeline of opcodes which has produced a snapshot.
 #define TRACK_SNAPSHOTS 1

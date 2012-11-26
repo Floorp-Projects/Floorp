@@ -385,7 +385,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void callPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
+        JS_ASSERT(type == MIRType_Value ||
+                  type == MIRType_String ||
+                  type == MIRType_Object ||
+                  type == MIRType_Shape);
         Label done;
 
         if (type == MIRType_Value)
@@ -395,7 +398,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         computeEffectiveAddress(address, PreBarrierReg);
 
         JSCompartment *compartment = GetIonContext()->compartment;
-        IonCode *preBarrier = compartment->ionCompartment()->preBarrier();
+        IonCode *preBarrier = (type == MIRType_Shape)
+                              ? compartment->ionCompartment()->shapePreBarrier()
+                              : compartment->ionCompartment()->valuePreBarrier();
 
         call(preBarrier);
         Pop(PreBarrierReg);
