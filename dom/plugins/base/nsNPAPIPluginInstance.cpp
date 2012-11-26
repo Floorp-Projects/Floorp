@@ -129,7 +129,10 @@ public:
     if (mTextureInfo.mWidth == 0 || mTextureInfo.mHeight == 0)
       return 0;
 
-    SharedTextureHandle handle = sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, (void*)mTextureInfo.mTexture, GLContext::TextureID);
+    SharedTextureHandle handle =
+      sPluginContext->CreateSharedHandle(GLContext::SameProcess,
+                                         (void*)mTextureInfo.mTexture,
+                                         GLContext::TextureID);
 
     // We want forget about this now, so delete the texture. Assigning it to zero
     // ensures that we create a new one in Lock()
@@ -1000,7 +1003,9 @@ SharedTextureHandle nsNPAPIPluginInstance::CreateSharedHandle()
     return mContentTexture->CreateSharedHandle();
   } else if (mContentSurface) {
     EnsureGLContext();
-    return sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, mContentSurface, GLContext::SurfaceTexture);
+    return sPluginContext->CreateSharedHandle(GLContext::SameProcess,
+                                              mContentSurface,
+                                              GLContext::SurfaceTexture);
   } else return 0;
 }
 
