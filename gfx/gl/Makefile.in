@@ -18,6 +18,7 @@ FAIL_ON_WARNINGS = 1
 EXPORTS	= \
 	GLDefs.h \
 	GLContext.h \
+	GLContextTypes.h \
 	GLContextSymbols.h \
 	GLContextProvider.h \
 	GLContextProviderImpl.h \
