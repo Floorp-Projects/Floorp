@@ -2468,5 +2468,11 @@
   "COMPONENTS_INTERFACES_ACCESSED_BY_CONTENT": {
     "kind": "flag",
     "description": "Whether content ever accesed Components.interfaces in this session"
+  },
+  "CHECK_ADDONS_MODIFIED_MS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 15,
+    "description": "Time (ms) it takes to figure out extension last modified time"
   }
 }
