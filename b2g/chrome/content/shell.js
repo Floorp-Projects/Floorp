@@ -243,17 +243,6 @@ var shell = {
     window.addEventListener('sizemodechange', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
 
-    // Until the volume can be set from the content side, set it to a
-    // a specific value when the device starts. This way the front-end
-    // can display a notification when the volume change and show a volume
-    // level modified from this point.
-    // try catch block must be used since the emulator fails here. bug 746429
-    try {
-      Services.audioManager.masterVolume = 0.5;
-    } catch(e) {
-      dump('Error setting master volume: ' + e + '\n');
-    }
-
     CustomEventManager.init();
     WebappsHelper.init();
     AccessFu.attach(window);
