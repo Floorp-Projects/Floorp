@@ -1072,6 +1072,7 @@ bool GLContextEGL::AttachSharedHandle(SharedTextureShareType shareType,
     return true;
 }
 
+
 bool
 GLContextEGL::BindTex2DOffscreen(GLContext *aOffscreen)
 {

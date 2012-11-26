@@ -51,6 +51,7 @@
 #include "nsRegion.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
+#include "GLTextureImage.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1754,10 +1755,11 @@ nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
   }
 
   if (!mResizerImage) {
-    mResizerImage = manager->gl()->CreateTextureImage(nsIntSize(15, 15),
-                                                      gfxASurface::CONTENT_COLOR_ALPHA,
-                                                      LOCAL_GL_CLAMP_TO_EDGE,
-                                                      TextureImage::UseNearestFilter);
+    mResizerImage = TextureImage::Create(manager->gl(),
+                                         nsIntSize(15, 15),
+                                         gfxASurface::CONTENT_COLOR_ALPHA,
+                                         LOCAL_GL_CLAMP_TO_EDGE,
+                                         TextureImage::UseNearestFilter);
 
     // Creation of texture images can fail.
     if (!mResizerImage)
