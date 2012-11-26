@@ -113,6 +113,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     public void from(LinearLayout layout) {
+        if (mLayout != null) {
+            // make sure we retain the visibility property on rotation
+            layout.setVisibility(mLayout.getVisibility());
+        }
         mLayout = layout;
 
         mShowSiteSecurity = false;
