@@ -625,6 +625,16 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
     return NS_OK;
 }
 
+void
+mozJSComponentLoader::NoteSubScript(JSScript* aScript, JSObject* aThisObject)
+{
+  if (!mInitialized && NS_FAILED(ReallyInit())) {
+      MOZ_NOT_REACHED();
+  }
+
+  mThisObjects.Put(aScript, aThisObject);
+}
+
 // Some stack based classes for cleaning up on early return
 #ifdef HAVE_PR_MEMMAP
 class FileAutoCloser
