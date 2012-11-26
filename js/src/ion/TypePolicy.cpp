@@ -386,9 +386,12 @@ InstanceOfPolicy::adjustInputs(MInstruction *def)
        BoxPolicy<0>::staticAdjustInputs(def);
     }
 
-    // Unbox second operand forcefully to an object, 
-    // so it bailouts with other types
-    ObjectPolicy<1>::staticAdjustInputs(def);
+    if (def->numOperands() == 2) {
+        // Unbox second operand forcefully to an object,
+        // so it bailouts with other types
+        ObjectPolicy<1>::staticAdjustInputs(def);
+    }
+
     return true;
 }
 

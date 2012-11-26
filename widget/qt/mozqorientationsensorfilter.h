@@ -13,7 +13,8 @@
 #include <QTransform>
 
 
-class MozQOrientationSensorFilter : public QObject, public QOrientationFilter
+class MozQOrientationSensorFilter : public QObject
+                                  , public QtMobility::QOrientationFilter
 {
     Q_OBJECT
 
@@ -25,7 +26,7 @@ public:
 
     virtual ~MozQOrientationSensorFilter(){}
 
-    virtual bool filter(QOrientationReading* reading);
+    virtual bool filter(QtMobility::QOrientationReading* reading);
 
     static int GetWindowRotationAngle();
     static QTransform& GetRotationTransform();
@@ -34,7 +35,10 @@ signals:
     void orientationChanged();
 
 private:
-    bool filter(QSensorReading *reading) { return filter(static_cast<QOrientationReading*>(reading)); }
+    bool filter(QtMobility::QSensorReading *reading)
+    {
+        return filter(static_cast<QtMobility::QOrientationReading*>(reading));
+    }
 
     static int mWindowRotationAngle;
     static QTransform mWindowRotationTransform;

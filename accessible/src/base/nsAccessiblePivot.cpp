@@ -61,7 +61,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAccessiblePivot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPosition)
   uint32_t i, length = tmp->mObservers.Length();
   for (i = 0; i < length; ++i) {
-    cb.NoteXPCOMChild(tmp->mObservers[i]);
+    cb.NoteXPCOMChild(tmp->mObservers.ElementAt(i));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

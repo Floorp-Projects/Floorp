@@ -6498,9 +6498,37 @@ IonBuilder::jsop_in_dense()
 bool
 IonBuilder::jsop_instanceof()
 {
-    MDefinition *proto = current->pop();
+    MDefinition *rhs = current->pop();
     MDefinition *obj = current->pop();
-    MInstanceOf *ins = new MInstanceOf(obj, proto);
+
+    TypeOracle::BinaryTypes types = oracle->binaryTypes(script_, pc);
+
+    // If this is an 'x instanceof function' operation and we can determine the
+    // exact function and prototype object being tested for, use a typed path.
+    do {
+        RawObject rhsObject = types.rhsTypes ? types.rhsTypes->getSingleton() : NULL;
+        if (!rhsObject || !rhsObject->isFunction() || rhsObject->isBoundFunction())
+            break;
+
+        types::TypeObject *rhsType = rhsObject->getType(cx);
+        if (!rhsType || rhsType->unknownProperties())
+            break;
+
+        types::HeapTypeSet *protoTypes =
+            rhsType->getProperty(cx, NameToId(cx->names().classPrototype), false);
+        RawObject protoObject = protoTypes ? protoTypes->getSingleton(cx) : NULL;
+        if (!protoObject)
+            break;
+
+        MInstanceOfTyped *ins = new MInstanceOfTyped(obj, protoObject);
+
+        current->add(ins);
+        current->push(ins);
+
+        return resumeAfter(ins);
+    } while (false);
+
+    MInstanceOf *ins = new MInstanceOf(obj, rhs);
 
     current->add(ins);
     current->push(ins);
