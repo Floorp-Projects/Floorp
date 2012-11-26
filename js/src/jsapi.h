@@ -5963,6 +5963,9 @@ extern JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext *cx, uint32_t count);
 #endif
 
+extern JS_PUBLIC_API(void)
+JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled);
+
 /*
  * Convert a uint32_t index into a jsid.
  */
