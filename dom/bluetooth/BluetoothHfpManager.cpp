@@ -823,6 +823,7 @@ BluetoothHfpManager::SetupCIND(int aCallIndex, int aCallState, bool aInitial)
       if (!aInitial) {
         switch (currentCallState) {
           case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
+          case nsIRadioInterfaceLayer::CALL_STATE_BUSY:
             // Incoming call, no break
             sStopSendingRingFlag = true;
           case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
@@ -979,6 +980,7 @@ BluetoothHfpManager::OnDisconnect()
     NotifySettings();
   }
 
+  sStopSendingRingFlag = true;
   sCINDItems[CINDType::CALL].value = CallState::NO_CALL;
   sCINDItems[CINDType::CALLSETUP].value = CallSetupState::NO_CALLSETUP;
   sCINDItems[CINDType::CALLHELD].value = CallHeldState::NO_CALLHELD;
