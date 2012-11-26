@@ -5006,22 +5006,28 @@ class ClassConstructor(ClassItem):
     visibility determines the visibility of the constructor (public,
     protected, private), defaults to private.
 
+    explicit should be True if the constructor should be marked explicit.
+
     baseConstructors is a list of strings containing calls to base constructors,
     defaults to None.
 
     body contains a string with the code for the constructor, defaults to None.
     """
     def __init__(self, args, inline=False, bodyInHeader=False,
-                 visibility="private", baseConstructors=None, body=None):
+                 visibility="private", explicit=False, baseConstructors=None,
+                 body=None):
         self.args = args
         self.inline = inline or bodyInHeader
         self.bodyInHeader = bodyInHeader
+        self.explicit = explicit
         self.baseConstructors = baseConstructors
         self.body = body
         ClassItem.__init__(self, None, visibility)
 
     def getDecorators(self, declaring):
         decorators = []
+        if self.explicit:
+            decorators.append('explicit')
         if self.inline and declaring:
             decorators.append('inline')
         if decorators:
@@ -7417,6 +7423,7 @@ class CGCallbackFunction(CGClass):
             [Argument("CallbackFunction*", "aOther")],
             bodyInHeader=True,
             visibility="public",
+            explicit=True,
             baseConstructors=[
                 "CallbackFunction(aOther)"
                 ],
