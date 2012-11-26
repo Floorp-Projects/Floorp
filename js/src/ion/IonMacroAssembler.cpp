@@ -15,7 +15,7 @@ using namespace js;
 using namespace js::ion;
 
 template <typename T> void
-MacroAssembler::guardTypeSet(const T &address, types::TypeSet *types,
+MacroAssembler::guardTypeSet(const T &address, const types::TypeSet *types,
                              Register scratch, Label *mismatched)
 {
     JS_ASSERT(!types->unknown());
@@ -64,9 +64,9 @@ MacroAssembler::guardTypeSet(const T &address, types::TypeSet *types,
     bind(&matched);
 }
 
-template void MacroAssembler::guardTypeSet(const Address &address, types::TypeSet *types,
+template void MacroAssembler::guardTypeSet(const Address &address, const types::TypeSet *types,
                                            Register scratch, Label *mismatched);
-template void MacroAssembler::guardTypeSet(const ValueOperand &value, types::TypeSet *types,
+template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::TypeSet *types,
                                            Register scratch, Label *mismatched);
 
 void

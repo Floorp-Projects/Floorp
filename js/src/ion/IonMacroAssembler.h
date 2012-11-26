@@ -119,7 +119,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Emits a test of a value against all types in a TypeSet. A scratch
     // register is required.
     template <typename T>
-    void guardTypeSet(const T &address, types::TypeSet *types, Register scratch,
+    void guardTypeSet(const T &address, const types::TypeSet *types, Register scratch,
                       Label *mismatched);
 
     void loadObjShape(Register objReg, Register dest) {
