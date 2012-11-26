@@ -646,19 +646,19 @@ public:
         return sEGLLibrary.HasKHRLockSurface();
     }
 
-    virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType);
-    virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType,
-                                                   void* buffer,
-                                                   SharedTextureBufferType bufferType);
-    virtual void UpdateSharedHandle(SharedTextureShareType shareType,
-                                    SharedTextureHandle sharedHandle);
-    virtual void ReleaseSharedHandle(SharedTextureShareType shareType,
-                                     SharedTextureHandle sharedHandle);
-    virtual bool GetSharedHandleDetails(SharedTextureShareType shareType,
-                                        SharedTextureHandle sharedHandle,
-                                        SharedHandleDetails& details);
-    virtual bool AttachSharedHandle(SharedTextureShareType shareType,
-                                    SharedTextureHandle sharedHandle);
+    virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType);
+    virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType,
+                                                   void* aBuffer,
+                                                   SharedTextureBufferType aBufferType);
+    virtual void UpdateSharedHandle(TextureImage::TextureShareType aType,
+                                    SharedTextureHandle aSharedHandle);
+    virtual void ReleaseSharedHandle(TextureImage::TextureShareType aType,
+                                     SharedTextureHandle aSharedHandle);
+    virtual bool GetSharedHandleDetails(TextureImage::TextureShareType aType,
+                                        SharedTextureHandle aSharedHandle,
+                                        SharedHandleDetails& aDetails);
+    virtual bool AttachSharedHandle(TextureImage::TextureShareType aType,
+                                    SharedTextureHandle aSharedHandle);
 protected:
     friend class GLContextProviderEGL;
 
@@ -854,15 +854,15 @@ private:
 };
 
 void
-GLContextEGL::UpdateSharedHandle(SharedTextureShareType shareType,
-                                 SharedTextureHandle sharedHandle)
+GLContextEGL::UpdateSharedHandle(TextureImage::TextureShareType aType,
+                                 SharedTextureHandle aSharedHandle)
 {
-    if (shareType != SameProcess) {
+    if (aType != TextureImage::ThreadShared) {
         NS_ERROR("Implementation not available for this sharing type");
         return;
     }
 
-    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
+    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(aSharedHandle);
 
     NS_ASSERTION(wrapper->Type() == SharedHandleType::Image, "Expected EGLImage shared handle");
     NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
@@ -895,9 +895,9 @@ GLContextEGL::UpdateSharedHandle(SharedTextureShareType shareType,
 }
 
 SharedTextureHandle
-GLContextEGL::CreateSharedHandle(SharedTextureShareType shareType)
+GLContextEGL::CreateSharedHandle(TextureImage::TextureShareType aType)
 {
-    if (shareType != SameProcess)
+    if (aType != TextureImage::ThreadShared)
         return 0;
 
     if (!mShareWithEGLImage)
@@ -914,7 +914,7 @@ GLContextEGL::CreateSharedHandle(SharedTextureShareType shareType)
 
     if (!ok) {
         NS_ERROR("EGLImage creation for EGLTextureWrapper failed");
-        ReleaseSharedHandle(shareType, (SharedTextureHandle)tex);
+        ReleaseSharedHandle(aType, (SharedTextureHandle)tex);
         return 0;
     }
 
@@ -923,16 +923,16 @@ GLContextEGL::CreateSharedHandle(SharedTextureShareType shareType)
 }
 
 SharedTextureHandle
-GLContextEGL::CreateSharedHandle(SharedTextureShareType shareType,
-                                 void* buffer,
-                                 SharedTextureBufferType bufferType)
+GLContextEGL::CreateSharedHandle(TextureImage::TextureShareType aType,
+                                 void* aBuffer,
+                                 SharedTextureBufferType aBufferType)
 {
     // Both EGLImage and SurfaceTexture only support ThreadShared currently, but
     // it's possible to make SurfaceTexture work across processes. We should do that.
-    if (shareType != SameProcess)
+    if (aType != TextureImage::ThreadShared)
         return 0;
 
-    switch (bufferType) {
+    switch (aBufferType) {
 #ifdef MOZ_WIDGET_ANDROID
     case SharedTextureBufferType::SurfaceTexture:
         if (!IsExtensionSupported(GLContext::OES_EGL_image_external)) {
@@ -940,13 +940,13 @@ GLContextEGL::CreateSharedHandle(SharedTextureShareType shareType,
             return 0;
         }
 
-        return (SharedTextureHandle) new SurfaceTextureWrapper(reinterpret_cast<nsSurfaceTexture*>(buffer));
+        return (SharedTextureHandle) new SurfaceTextureWrapper(reinterpret_cast<nsSurfaceTexture*>(aBuffer));
 #endif
     case SharedTextureBufferType::TextureID: {
         if (!mShareWithEGLImage)
             return 0;
 
-        GLuint texture = (uintptr_t)buffer;
+        GLuint texture = (uintptr_t)aBuffer;
         EGLTextureWrapper* tex = new EGLTextureWrapper();
         if (!tex->CreateEGLImage(this, texture)) {
             NS_ERROR("EGLImage creation for EGLTextureWrapper failed");
@@ -962,15 +962,15 @@ GLContextEGL::CreateSharedHandle(SharedTextureShareType shareType,
     }
 }
 
-void GLContextEGL::ReleaseSharedHandle(SharedTextureShareType shareType,
-                                       SharedTextureHandle sharedHandle)
+void GLContextEGL::ReleaseSharedHandle(TextureImage::TextureShareType aType,
+                                       SharedTextureHandle aSharedHandle)
 {
-    if (shareType != SameProcess) {
+    if (aType != TextureImage::ThreadShared) {
         NS_ERROR("Implementation not available for this sharing type");
         return;
     }
 
-    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
+    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(aSharedHandle);
 
     switch (wrapper->Type()) {
 #ifdef MOZ_WIDGET_ANDROID
@@ -982,25 +982,24 @@ void GLContextEGL::ReleaseSharedHandle(SharedTextureShareType shareType,
     case SharedHandleType::Image: {
         NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
 
-        EGLTextureWrapper* wrap = (EGLTextureWrapper*)sharedHandle;
+        EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
         delete wrap;
         break;
     }
 
     default:
         NS_ERROR("Unknown shared handle type");
-        return;
     }
 }
 
-bool GLContextEGL::GetSharedHandleDetails(SharedTextureShareType shareType,
-                                          SharedTextureHandle sharedHandle,
-                                          SharedHandleDetails& details)
+bool GLContextEGL::GetSharedHandleDetails(TextureImage::TextureShareType aType,
+                                          SharedTextureHandle aSharedHandle,
+                                          SharedHandleDetails& aDetails)
 {
-    if (shareType != SameProcess)
+    if (aType != TextureImage::ThreadShared)
         return false;
 
-    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
+    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(aSharedHandle);
 
     switch (wrapper->Type()) {
 #ifdef MOZ_WIDGET_ANDROID
@@ -1015,8 +1014,8 @@ bool GLContextEGL::GetSharedHandleDetails(SharedTextureShareType shareType,
 #endif
 
     case SharedHandleType::Image:
-        details.mTarget = LOCAL_GL_TEXTURE_2D;
-        details.mProgramType = RGBALayerProgramType;
+        aDetails.mTarget = LOCAL_GL_TEXTURE_2D;
+        aDetails.mProgramType = RGBALayerProgramType;
         break;
 
     default:
@@ -1027,13 +1026,13 @@ bool GLContextEGL::GetSharedHandleDetails(SharedTextureShareType shareType,
     return true;
 }
 
-bool GLContextEGL::AttachSharedHandle(SharedTextureShareType shareType,
-                                      SharedTextureHandle sharedHandle)
+bool GLContextEGL::AttachSharedHandle(TextureImage::TextureShareType aType,
+                                      SharedTextureHandle aSharedHandle)
 {
-    if (shareType != SameProcess)
+    if (aType != TextureImage::ThreadShared)
         return false;
 
-    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
+    SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(aSharedHandle);
 
     switch (wrapper->Type()) {
 #ifdef MOZ_WIDGET_ANDROID
@@ -1058,7 +1057,7 @@ bool GLContextEGL::AttachSharedHandle(SharedTextureShareType shareType,
     case SharedHandleType::Image: {
         NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
 
-        EGLTextureWrapper* wrap = (EGLTextureWrapper*)sharedHandle;
+        EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
         wrap->WaitSync();
         fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, wrap->GetEGLImage());
         break;
@@ -1071,7 +1070,6 @@ bool GLContextEGL::AttachSharedHandle(SharedTextureShareType shareType,
 
     return true;
 }
-
 
 bool
 GLContextEGL::BindTex2DOffscreen(GLContext *aOffscreen)
