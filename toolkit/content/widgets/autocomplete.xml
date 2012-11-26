@@ -170,7 +170,7 @@
       </field>
 
       <property name="inPrivateContext" readonly="true"
-                onget="this.PrivateBrowsingUtils.isPrivateWindow(window)"/>
+                onget="return this.PrivateBrowsingUtils.isWindowPrivate(window);"/>
 
       <!-- This is the maximum number of drop-down rows we get when we
             hit the drop marker beside fields that have it (like the URLbar).-->
