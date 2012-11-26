@@ -420,7 +420,10 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
   } else if (IsValidSharedTexDescriptor(aNewFront)) {
     MakeTextureIfNeeded(gl(), mTexture);
     if (!IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
-      mFrontBufferDescriptor = SharedTextureDescriptor(TextureImage::ThreadShared, 0, nsIntSize(0, 0), false);
+      mFrontBufferDescriptor = SharedTextureDescriptor(GLContext::SameProcess,
+                                                       0,
+                                                       nsIntSize(0, 0),
+                                                       false);
     }
     *aNewBack = mFrontBufferDescriptor;
     mFrontBufferDescriptor = aNewFront;
