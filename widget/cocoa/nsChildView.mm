@@ -51,7 +51,6 @@
 #include "nsRegion.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
-#include "GLContext.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -66,6 +65,10 @@
 #include "sampler.h"
 
 #include "nsIDOMWheelEvent.h"
+
+#ifdef GLCONTEXT_H_
+#error GLContext.h should not have been included here.
+#endif
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -1692,8 +1695,7 @@ nsChildView::CreateCompositor()
     LayerManagerOGL *manager =
       static_cast<LayerManagerOGL*>(compositor::GetLayerManager(mCompositorParent));
 
-    NSOpenGLContext *glContext =
-      (NSOpenGLContext *) manager->gl()->GetNativeData(GLContext::NativeGLContext);
+    NSOpenGLContext *glContext = (NSOpenGLContext *)manager->GetNSOpenGLContext();
 
     [(ChildView *)mView setGLContext:glContext];
     [(ChildView *)mView setUsingOMTCompositor:true];
@@ -2457,7 +2459,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
     LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
     manager->SetClippingRegion(region);
-    glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+    glContext = (NSOpenGLContext *)manager->GetNSOpenGLContext();
 
     if (!mGLContext) {
       [self setGLContext:glContext];
