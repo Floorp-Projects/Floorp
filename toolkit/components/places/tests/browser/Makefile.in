@@ -30,6 +30,12 @@ MOCHITEST_BROWSER_FILES = \
 	colorAnalyzer/localeGeneric.png \
 	$(NULL)
 
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+	browser_bug248970.js \
+	$(NULL)
+endif
+
 # These are files that need to be loaded via the HTTP proxy server
 # Access them through http://example.com/
 MOCHITEST_FILES = \
