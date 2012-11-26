@@ -32,6 +32,7 @@
 #include "nsRegion.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "GLContextTypes.h"
 
 typedef char realGLboolean;
 
@@ -54,24 +55,6 @@ namespace gl {
 class GLContext;
 
 typedef uintptr_t SharedTextureHandle;
-
-enum ShaderProgramType {
-    RGBALayerProgramType,
-    RGBALayerExternalProgramType,
-    BGRALayerProgramType,
-    RGBXLayerProgramType,
-    BGRXLayerProgramType,
-    RGBARectLayerProgramType,
-    RGBAExternalLayerProgramType,
-    ColorLayerProgramType,
-    YCbCrLayerProgramType,
-    ComponentAlphaPass1ProgramType,
-    ComponentAlphaPass2ProgramType,
-    Copy2DProgramType,
-    Copy2DRectProgramType,
-    NumProgramTypes
-};
-
 
 /**
  * A TextureImage encapsulates a surface that can be drawn to by a
