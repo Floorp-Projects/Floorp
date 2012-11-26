@@ -575,7 +575,8 @@ class SignalingAgent {
   }
 
 void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
-                    uint32_t offerAnswerFlags, uint32_t sdpCheck) {
+                    uint32_t offerAnswerFlags,
+                    uint32_t sdpCheck = DONT_CHECK_AUDIO|DONT_CHECK_VIDEO) {
     // Create a media stream as if it came from GUM
     nsRefPtr<nsDOMMediaStream> domMediaStream = new nsDOMMediaStream();
 
@@ -1217,7 +1218,8 @@ TEST_F(SignalingTest, FullCallTrickle)
   ASSERT_GE(a2_.GetPacketsReceived(0), 40);
 }
 
-TEST_F(SignalingTest, Bug810220)
+// This test comes from Bug 810220
+TEST_F(SignalingTest, AudioOnlyG711Call)
 {
   sipcc::MediaConstraints constraints;
   std::string offer =
@@ -1228,10 +1230,11 @@ TEST_F(SignalingTest, Bug810220)
     "t=0 0\r\n"
     "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
       "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
-    "m=audio 9000 RTP/AVP 0 126\r\n"
+    "m=audio 9000 RTP/AVP 0 8 126\r\n"
     "c=IN IP4 148.147.200.251\r\n"
     "b=TIAS:64000\r\n"
     "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
     "a=rtpmap:126 telephone-event/8000\r\n"
     "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
     "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
@@ -1247,12 +1250,29 @@ TEST_F(SignalingTest, Bug810220)
                    DONT_CHECK_AUDIO | DONT_CHECK_VIDEO);
 
   std::string answer = a2_.answer();
-  /* TODO -- make sure the answer looks right */
+
+  // They didn't offer opus, so our answer shouldn't include it.
+  ASSERT_EQ(answer.find(" opus/"), std::string::npos);
+
+  // They also didn't offer video or application
+  ASSERT_EQ(answer.find("video"), std::string::npos);
+  ASSERT_EQ(answer.find("application"), std::string::npos);
+
+  // We should answer with PCMU and telephone-event
+  ASSERT_NE(answer.find(" PCMU/8000"), std::string::npos);
+  ASSERT_NE(answer.find(" telephone-event/8000"), std::string::npos);
+
+  // Double-check the directionality
+  ASSERT_NE(answer.find("\r\na=sendrecv"), std::string::npos);
+
 }
 
-TEST_F(SignalingTest, Bug814038)
+// This test comes from Bug814038
+TEST_F(SignalingTest, ChromeOfferAnswer)
 {
   sipcc::MediaConstraints constraints;
+
+  // This is captured SDP from an early interop attempt with Chrome.
   std::string offer =
     "v=0\r\n"
     "o=- 1713781661 2 IN IP4 127.0.0.1\r\n"
@@ -1275,7 +1295,12 @@ TEST_F(SignalingTest, Bug814038)
       "RzrYlzpkTsvgYFD1hQqNCzQ7y4emNLKI1tODsjim\r\n"
     "a=rtpmap:103 ISAC/16000\r\n"
     "a=rtpmap:104 ISAC/32000\r\n"
-    "a=rtpmap:111 opus/48000\r\n"
+    // NOTE: the actual SDP that Chrome sends at the moment
+    // doesn't indicate two channels. I've amended their SDP
+    // here, under the assumption that the constraints
+    // described in draft-spittka-payload-rtp-opus will
+    // eventually be implemented by Google.
+    "a=rtpmap:111 opus/48000/2\r\n"
     "a=rtpmap:0 PCMU/8000\r\n"
     "a=rtpmap:8 PCMA/8000\r\n"
     "a=rtpmap:107 CN/48000\r\n"
@@ -1314,11 +1339,11 @@ TEST_F(SignalingTest, Bug814038)
   a2_.SetRemote(TestObserver::OFFER, offer);
 
   std::cout << "Creating answer:" << std::endl;
-  a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO,
-                   SHOULD_INACTIVE_AUDIO | SHOULD_INACTIVE_VIDEO);
+  a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO);
 
   std::string answer = a2_.answer();
 }
+
 
 
 } // End namespace test.
