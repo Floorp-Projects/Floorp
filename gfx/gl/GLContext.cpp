@@ -295,7 +295,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "NVIDIA",
                 "ATI",
                 "Qualcomm",
-                "Imagination"
+                "Imagination",
+                "nouveau"
         };
         mVendor = VendorOther;
         for (int i = 0; i < VendorOther; ++i) {
@@ -514,11 +515,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 #ifdef XP_MACOSX
         if (mWorkAroundDriverBugs &&
             mVendor == VendorIntel) {
-            // see bug 737182 for 2D textures, bug 684822 for cube map textures.
+            // see bug 737182 for 2D textures, bug 684882 for cube map textures.
             mMaxTextureSize        = NS_MIN(mMaxTextureSize,        4096);
             mMaxCubeMapTextureSize = NS_MIN(mMaxCubeMapTextureSize, 512);
             // for good measure, we align renderbuffers on what we do for 2D textures
             mMaxRenderbufferSize   = NS_MIN(mMaxRenderbufferSize,   4096);
+            mNeedsTextureSizeChecks = true;
+        }
+#endif
+#ifdef MOZ_X11
+        if (mWorkAroundDriverBugs &&
+            mVendor == VendorNouveau) {
+            // see bug 814716. Clamp MaxCubeMapTextureSize at 2K for Nouveau.
+            mMaxCubeMapTextureSize = NS_MIN(mMaxCubeMapTextureSize, 2048);
+            mNeedsTextureSizeChecks = true;
         }
 #endif
 
