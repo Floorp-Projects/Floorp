@@ -250,7 +250,11 @@ nsresult
 XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
     MOZ_ASSERT(aTracer->Trace, "AddJSHolder needs a non-null Trace function");
+    bool wasEmpty = mJSHolders.Count() == 0;
     mJSHolders.Put(aHolder, aTracer);
+    if (wasEmpty && mJSHolders.Count() == 1) {
+      nsLayoutStatics::AddRef();
+    }
 
     return NS_OK;
 }
@@ -258,7 +262,11 @@ XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 nsresult
 XPCJSRuntime::RemoveJSHolder(void* aHolder)
 {
+    bool hadOne = mJSHolders.Count() == 1;
     mJSHolders.Remove(aHolder);
+    if (hadOne && mJSHolders.Count() == 0) {
+      nsLayoutStatics::Release();
+    }
 
     return NS_OK;
 }
