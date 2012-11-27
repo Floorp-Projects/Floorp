@@ -1411,7 +1411,7 @@ private void CancelNotification()
                     pProc = Runtime.getRuntime().exec(this.getSuArgs("ls -l " + sDir));
                     RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
                     outThrd.start();
-                    outThrd.join(5000);
+                    outThrd.joinAndStopRedirect(5000);
                     sRet = outThrd.strOutput;
                     if (!sRet.contains("No such file or directory") && sRet.startsWith("l"))
                         sRet = "FALSE";
@@ -2384,21 +2384,21 @@ private void CancelNotification()
             pProc = Runtime.getRuntime().exec(this.getSuArgs(sCmd));
             RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
             outThrd.start();
-            outThrd.join(5000);
+            outThrd.joinAndStopRedirect(5000);
             sTmp = outThrd.strOutput;
             Log.e("ADB", sTmp);
             if (outThrd.nExitCode == 0) {
                 pProc = Runtime.getRuntime().exec(this.getSuArgs("stop adbd"));
                 outThrd = new RedirOutputThread(pProc, null);
                 outThrd.start();
-                outThrd.join(5000);
+                outThrd.joinAndStopRedirect(5000);
                 sTmp = outThrd.strOutput;
                 Log.e("ADB", sTmp);
                 if (outThrd.nExitCode == 0) {
                     pProc = Runtime.getRuntime().exec(this.getSuArgs("start adbd"));
                     outThrd = new RedirOutputThread(pProc, null);
                     outThrd.start();
-                    outThrd.join(5000);
+                    outThrd.joinAndStopRedirect(5000);
                     sTmp = outThrd.strOutput;
                     Log.e("ADB", sTmp);
                     if (outThrd.nExitCode == 0) {
@@ -2451,7 +2451,7 @@ private void CancelNotification()
                     pProc = Runtime.getRuntime().exec(this.getSuArgs("kill " + lProcesses.get(lcv).pid));
                     RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
                     outThrd.start();
-                    outThrd.join(15000);
+                    outThrd.joinAndStopRedirect(15000);
                     String sTmp = outThrd.strOutput;
                     Log.e("KILLPROCESS", sTmp);
                     }
@@ -2502,7 +2502,7 @@ private void CancelNotification()
                 pProc = Runtime.getRuntime().exec("ps");
                 RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
                 outThrd.start();
-                outThrd.join(10000);
+                outThrd.joinAndStopRedirect(10000);
                 String sTmp = outThrd.strOutput;
                 StringTokenizer stokLines = new StringTokenizer(sTmp, "\n");
                 while(stokLines.hasMoreTokens())
@@ -2927,7 +2927,7 @@ private void CancelNotification()
                 pProc = Runtime.getRuntime().exec(this.getSuArgs("date -u " + sMillis));
                 RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
                 outThrd.start();
-                outThrd.join(10000);
+                outThrd.joinAndStopRedirect(10000);
                 sRet += GetSystemTime();
             } catch (IOException e) {
                 sRet = e.getMessage();
@@ -2992,7 +2992,7 @@ private void CancelNotification()
             pProc = Runtime.getRuntime().exec("kill "+sProcId);
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
-            outThrd.join(5000);
+            outThrd.joinAndStopRedirect(5000);
             }
         catch (IOException e)
             {
@@ -3022,7 +3022,7 @@ private void CancelNotification()
             pProc = Runtime.getRuntime().exec(theArgs);
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
-            outThrd.join(5000);
+            outThrd.joinAndStopRedirect(5000);
             if (out == null)
                 sRet = outThrd.strOutput;
             }
@@ -3189,7 +3189,7 @@ private void CancelNotification()
             pProc = Runtime.getRuntime().exec(this.getSuArgs("reboot"));
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
-            outThrd.join(10000);
+            outThrd.joinAndStopRedirect(10000);
         } catch (IOException e) {
             sRet = e.getMessage();
             e.printStackTrace();
@@ -3226,7 +3226,7 @@ private void CancelNotification()
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
             try {
-                outThrd.join(60000);
+                outThrd.joinAndStopRedirect(60000);
                 int nRet = pProc.exitValue();
                 sRet = "\nuninst complete [" + nRet + "]";
                 }
@@ -3273,7 +3273,7 @@ private void CancelNotification()
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
             try {
-                outThrd.join(90000);
+                outThrd.joinAndStopRedirect(90000);
                 int nRet = pProc.exitValue();
                 sRet = "\nmove complete [" + nRet + "]";
                 }
@@ -3296,7 +3296,7 @@ private void CancelNotification()
             RedirOutputThread outThrd2 = new RedirOutputThread(pProc, out);
             outThrd2.start();
             try {
-                outThrd2.join(10000);
+                outThrd2.joinAndStopRedirect(10000);
                 int nRet2 = pProc.exitValue();
                 sRet = "\npermission change complete [" + nRet2 + "]\n";
                 }
@@ -3319,7 +3319,7 @@ private void CancelNotification()
             RedirOutputThread outThrd3 = new RedirOutputThread(pProc, out);
             outThrd3.start();
             try {
-                outThrd3.join(60000);
+                outThrd3.joinAndStopRedirect(60000);
                 int nRet3 = pProc.exitValue();
                 sRet = "\ninstallation complete [" + nRet3 + "]";
                 }
@@ -3341,7 +3341,7 @@ private void CancelNotification()
             RedirOutputThread outThrd4 = new RedirOutputThread(pProc, out);
             outThrd4.start();
             try {
-                outThrd4.join(60000);
+                outThrd4.joinAndStopRedirect(60000);
                 int nRet4 = pProc.exitValue();
                 sRet = "\ntmp file removed [" + nRet4 + "]";
                 }
@@ -3607,6 +3607,7 @@ private void CancelNotification()
                     lcv++;
                     }
                 }
+            outThrd.stopRedirect();
             }
         catch (IOException e)
             {
@@ -3737,6 +3738,7 @@ private void CancelNotification()
                         lcv++;
                         }
                     }
+                outThrd.stopRedirect();
                 }
             else
                 {
@@ -3807,7 +3809,7 @@ private void CancelNotification()
                                 Process pProc = Runtime.getRuntime().exec("chmod 777 "+files[lcv]);
                                 RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
                                 outThrd.start();
-                                outThrd.join(5000);
+                                outThrd.joinAndStopRedirect(5000);
                                 sRet += "\n\tchmod " + files[lcv].getName() + " ok";
                             } catch (InterruptedException e) {
                                 sRet += "\n\ttimeout waiting for chmod " + files[lcv].getName();
@@ -3827,7 +3829,7 @@ private void CancelNotification()
             Process pProc = Runtime.getRuntime().exec("chmod 777 "+sTmpDir);
             RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
             outThrd.start();
-            outThrd.join(5000);
+            outThrd.joinAndStopRedirect(5000);
             sRet += "\n\tchmod " + sTmpDir + " ok";
         } catch (InterruptedException e) {
             sRet += "\n\ttimeout waiting for chmod " + sTmpDir;
