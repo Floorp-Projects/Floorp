@@ -36,8 +36,8 @@ typedef long long      GLsizeiptr;
 typedef octet          GLubyte;        /* 'octet' should be an unsigned 8 bit type. */
 typedef unsigned short GLushort;
 typedef unsigned long  GLuint;
-typedef float          GLfloat;
-typedef float          GLclampf;  
+typedef unrestricted float GLfloat;
+typedef unrestricted float GLclampf;  
 
 dictionary WebGLContextAttributes {
     boolean alpha = true;
@@ -705,25 +705,25 @@ interface WebGLRenderingContext {
 
     void uniform1f(WebGLUniformLocation? location, GLfloat x);
     void uniform1fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform1fv(WebGLUniformLocation? location, sequence<float> v);
+    void uniform1fv(WebGLUniformLocation? location, sequence<GLfloat> v);
     void uniform1i(WebGLUniformLocation? location, GLint x);
     void uniform1iv(WebGLUniformLocation? location, Int32Array v);
     void uniform1iv(WebGLUniformLocation? location, sequence<long> v);
     void uniform2f(WebGLUniformLocation? location, GLfloat x, GLfloat y);
     void uniform2fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform2fv(WebGLUniformLocation? location, sequence<float> v);
+    void uniform2fv(WebGLUniformLocation? location, sequence<GLfloat> v);
     void uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
     void uniform2iv(WebGLUniformLocation? location, Int32Array v);
     void uniform2iv(WebGLUniformLocation? location, sequence<long> v);
     void uniform3f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z);
     void uniform3fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform3fv(WebGLUniformLocation? location, sequence<float> v);
+    void uniform3fv(WebGLUniformLocation? location, sequence<GLfloat> v);
     void uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
     void uniform3iv(WebGLUniformLocation? location, Int32Array v);
     void uniform3iv(WebGLUniformLocation? location, sequence<long> v);
     void uniform4f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     void uniform4fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform4fv(WebGLUniformLocation? location, sequence<float> v);
+    void uniform4fv(WebGLUniformLocation? location, sequence<GLfloat> v);
     void uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
     void uniform4iv(WebGLUniformLocation? location, Int32Array v);
     void uniform4iv(WebGLUniformLocation? location, sequence<long> v);
@@ -731,31 +731,31 @@ interface WebGLRenderingContext {
     void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, 
                           Float32Array value);
     void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, 
-                          sequence<float> value);
+                          sequence<GLfloat> value);
     void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, 
                           Float32Array value);
     void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, 
-                          sequence<float> value);
+                          sequence<GLfloat> value);
     void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, 
                           Float32Array value);
     void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, 
-                          sequence<float> value);
+                          sequence<GLfloat> value);
 
     void useProgram(WebGLProgram? program);
     void validateProgram(WebGLProgram? program);
 
     void vertexAttrib1f(GLuint indx, GLfloat x);
     void vertexAttrib1fv(GLuint indx, Float32Array values);
-    void vertexAttrib1fv(GLuint indx, sequence<float> values);
+    void vertexAttrib1fv(GLuint indx, sequence<GLfloat> values);
     void vertexAttrib2f(GLuint indx, GLfloat x, GLfloat y);
     void vertexAttrib2fv(GLuint indx, Float32Array values);
-    void vertexAttrib2fv(GLuint indx, sequence<float> values);
+    void vertexAttrib2fv(GLuint indx, sequence<GLfloat> values);
     void vertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z);
     void vertexAttrib3fv(GLuint indx, Float32Array values);
-    void vertexAttrib3fv(GLuint indx, sequence<float> values);
+    void vertexAttrib3fv(GLuint indx, sequence<GLfloat> values);
     void vertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     void vertexAttrib4fv(GLuint indx, Float32Array values);
-    void vertexAttrib4fv(GLuint indx, sequence<float> values);
+    void vertexAttrib4fv(GLuint indx, sequence<GLfloat> values);
     void vertexAttribPointer(GLuint indx, GLint size, GLenum type, 
                              GLboolean normalized, GLsizei stride, GLintptr offset);
 
