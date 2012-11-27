@@ -9757,7 +9757,7 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(nsFrameConstructorState& aState,
           eTypeColGroup : eTypeRowGroup;
         break;
       default:
-        NS_NOTREACHED("Colgroups should be suppresing non-col child items");
+        MOZ_NOT_REACHED("Colgroups should be suppresing non-col child items");
         break;
     }
 
