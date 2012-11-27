@@ -1,0 +1,48 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=781534
+-->
+<head>
+  <meta charset="utf-8">
+  <title>mozGetUserMedia Basic Video & Audio Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<video id="testVideoAudio"></video>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">mozGetUserMedia Basic Video & Audio Test</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Run a test to verify that we can complete a start and stop media playback
+ * cycle for a video and audio LocalMediaStream on a video HTMLMediaElement.
+ */
+runTest(function () {
+  try {
+    navigator.mozGetUserMedia({video: true, audio: true, fake: true},
+      function(stream) {
+      var testVideoAudio = document.getElementById('testVideoAudio');
+      var videoAudioStreamPlayback = new MediaStreamPlayback(testVideoAudio,
+        stream);
+      videoAudioStreamPlayback.playMedia(5000, function() {
+				stream.stop();
+				SimpleTest.finish();
+			}, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish);
+  } catch (err) {
+    unexpectedCallbackAndFinish(err);
+  }
+}, true);
+
+</script>
+</pre>
+</body>
+</html>

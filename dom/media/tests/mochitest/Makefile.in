@@ -10,7 +10,12 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOCHITEST_FILES	= \
+# TODO: When bug 814718 and bug 814721 are fixed, add the following files:
+#          test_getUserMedia_basicVideo.html
+#          test_getUserMedia_basicAudio.thml
+#          test_getUserMedia_basicVideoAudio.html
+#          mediaStreamPlayback.js
+MOCHITEST_FILES = \
   test_getUserMedia_exceptions.html \
   head.js \
   $(NULL)
