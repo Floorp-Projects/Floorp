@@ -14,7 +14,7 @@
 #include "gfxUtils.h"
 #include "yuv_convert.h"
 #include "GLContextProvider.h"
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
 # include "GLXLibrary.h"
 # include "gfxXlibSurface.h"
 #endif
@@ -561,7 +561,7 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
 
   SetClamping(gl, tex);
 
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
   if (aImage->mSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
     gfxXlibSurface *xsurf =
       static_cast<gfxXlibSurface*>(aImage->mSurface.get());

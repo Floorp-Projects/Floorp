@@ -370,17 +370,17 @@ class nsTObserverArray : public nsAutoTObserverArray<T, 0> {
     }
 };
 
-template <typename T>
+template <typename T, uint32_t N>
 inline void
-ImplCycleCollectionUnlink(nsTObserverArray<T>& aField)
+ImplCycleCollectionUnlink(nsAutoTObserverArray<T, N>& aField)
 {
   aField.Clear();
 }
 
-template <typename T>
+template <typename T, uint32_t N>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsTObserverArray<T>& aField,
+                            nsAutoTObserverArray<T, N>& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {

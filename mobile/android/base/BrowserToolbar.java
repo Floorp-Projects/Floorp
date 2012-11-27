@@ -113,6 +113,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     public void from(LinearLayout layout) {
+        if (mLayout != null) {
+            // make sure we retain the visibility property on rotation
+            layout.setVisibility(mLayout.getVisibility());
+        }
         mLayout = layout;
 
         mShowSiteSecurity = false;
@@ -724,10 +728,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     public void setReaderMode(boolean showReader) {
         mShowReader = showReader;
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
-    }
-
-    public void setVisibility(int visibility) {
-        mLayout.setVisibility(visibility);
     }
 
     public void requestFocusFromTouch() {

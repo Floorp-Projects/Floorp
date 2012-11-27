@@ -360,9 +360,6 @@ LiveInterval::firstIncompatibleUse(LAllocation alloc)
     return CodePosition::MAX;
 }
 
-const CodePosition CodePosition::MAX(UINT_MAX);
-const CodePosition CodePosition::MIN(0);
-
 /*
  * This function pre-allocates and initializes as much global state as possible
  * to avoid littering the algorithms with memory management cruft.
@@ -370,6 +367,9 @@ const CodePosition CodePosition::MIN(0);
 bool
 LinearScanAllocator::createDataStructures()
 {
+    if (!RegisterAllocator::init())
+        return false;
+
     liveIn = lir->mir()->allocate<BitSet*>(graph.numBlockIds());
     if (!liveIn)
         return false;
@@ -387,9 +387,6 @@ LinearScanAllocator::createDataStructures()
     if (!vregs.init(lir->mir(), graph.numVirtualRegisters()))
         return false;
 
-    if (!insData.init(lir->mir(), graph.numInstructions()))
-        return false;
-
     // Build virtual register objects
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         if (mir->shouldCancel("LSRA create data structures (main loop)"))
@@ -405,7 +402,6 @@ LinearScanAllocator::createDataStructures()
                         return false;
                 }
             }
-            insData[*ins].init(*ins, block);
 
             for (size_t j = 0; j < ins->numTemps(); j++) {
                 LDefinition *def = ins->getTemp(j);
@@ -420,7 +416,6 @@ LinearScanAllocator::createDataStructures()
             LDefinition *def = phi->getDef(0);
             if (!vregs[def].init(phi->id(), block, phi, def, /* isTemp */ false))
                 return false;
-            insData[phi].init(phi, block);
         }
     }
 
@@ -1868,44 +1863,6 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
     if (aa->isRegister() && ba->isRegister() && aa->toRegister() == ba->toRegister())
         return a->intersect(b) == CodePosition::MIN;
     return true;
-}
-
-LMoveGroup *
-LinearScanAllocator::getInputMoveGroup(CodePosition pos)
-{
-    InstructionData *data = &insData[pos];
-    JS_ASSERT(!data->ins()->isPhi());
-    JS_ASSERT(!data->ins()->isLabel());;
-    JS_ASSERT(inputOf(data->ins()) == pos);
-
-    if (data->inputMoves())
-        return data->inputMoves();
-
-    LMoveGroup *moves = new LMoveGroup;
-    data->setInputMoves(moves);
-    data->block()->insertBefore(data->ins(), moves);
-
-    return moves;
-}
-
-LMoveGroup *
-LinearScanAllocator::getMoveGroupAfter(CodePosition pos)
-{
-    InstructionData *data = &insData[pos];
-    JS_ASSERT(!data->ins()->isPhi());
-    JS_ASSERT(outputOf(data->ins()) == pos);
-
-    if (data->movesAfter())
-        return data->movesAfter();
-
-    LMoveGroup *moves = new LMoveGroup;
-    data->setMovesAfter(moves);
-
-    if (data->ins()->isLabel())
-        data->block()->insertAfter(data->block()->getEntryMoveGroup(), moves);
-    else
-        data->block()->insertAfter(data->ins(), moves);
-    return moves;
 }
 
 bool

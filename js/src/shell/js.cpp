@@ -4850,7 +4850,9 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
-            ion::js_IonOptions.lsra = true;
+            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_LSRA;
+        else if (strcmp(str, "stupid") == 0)
+            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_Stupid;
         else
             return OptionFailure("ion-regalloc", str);
     }
@@ -5079,7 +5081,8 @@ main(int argc, char **argv, char **envp)
                                "Don't compile very large scripts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
-                               "  lsra: Linear Scan register allocation (default)")
+                               "  lsra: Linear Scan register allocation (default)\n"
+                               "  stupid: Simple greedy register allocation")
         || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods")
 #ifdef JS_THREADSAFE
         || !op.addStringOption('\0', "ion-parallel-compile", "on/off",

@@ -19,6 +19,12 @@ namespace ion {
 
 class TempAllocator;
 
+// Possible register allocators which may be used.
+enum IonRegisterAllocator {
+    RegisterAllocator_LSRA,
+    RegisterAllocator_Stupid
+};
+
 struct IonOptions
 {
     // Toggles whether global value numbering is used.
@@ -47,11 +53,10 @@ struct IonOptions
     // Default: true
     bool limitScriptSize;
 
-    // Toggles whether Linear Scan Register Allocation is used. If LSRA is not
-    // used, then Greedy Register Allocation is used instead.
+    // Describes which register allocator to use.
     //
-    // Default: true
-    bool lsra;
+    // Default: LSRA
+    IonRegisterAllocator registerAllocator;
 
     // Toggles whether inlining is performed.
     //
@@ -162,7 +167,7 @@ struct IonOptions
         licm(true),
         osr(true),
         limitScriptSize(true),
-        lsra(true),
+        registerAllocator(RegisterAllocator_LSRA),
         inlining(true),
         edgeCaseAnalysis(true),
         rangeAnalysis(true),

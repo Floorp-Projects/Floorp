@@ -38,6 +38,9 @@ function doTests()
   var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                            .getInterface(Components.interfaces.nsIDOMWindowUtils);
   var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
+
+  is(window.devicePixelRatio, devPxPerCSSPx, "window.devicePixelRatio");
+
   var windowBO = document.documentElement.boxObject;
   isRounded(window.mozInnerScreenX*devPxPerCSSPx, windowBO.screenX,
             "window screen X");
@@ -63,6 +66,8 @@ function doTests()
                               .getInterface(Components.interfaces.nsIDOMWindowUtils);
   is(frameDomWindowUtils.screenPixelsPerCSSPixel, 2*devPxPerCSSPx,
      "frame screen pixels per CSS pixel");
+
+  is(f.contentWindow.devicePixelRatio, 2*devPxPerCSSPx, "frame devicePixelRatio");
 
   isRounded(f.contentWindow.mozInnerScreenX*2,
             window.mozInnerScreenX + fBounds.left,
