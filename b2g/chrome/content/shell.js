@@ -152,9 +152,16 @@ var shell = {
 
   get manifestURL() {
     return Services.prefs.getCharPref('browser.manifestURL');
-   },
+  },
+
+  _started: false,
+  hasStarted: function shell_hasStarted() {
+    return this._started;
+  },
 
   start: function shell_start() {
+    this._started = true;
+
     // This forces the initialization of the cookie service before we hit the
     // network.
     // See bug 810209
