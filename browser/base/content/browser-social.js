@@ -17,6 +17,7 @@ let SocialUI = {
 
     Services.prefs.addObserver("social.sidebar.open", this, false);
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
+    Services.prefs.addObserver("social.active", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler, true, true);
 
@@ -26,6 +27,7 @@ let SocialUI = {
       SocialChatBar.update();
     });
 
+    this.updateActiveBroadcaster();
     Social.init(this._providerReady.bind(this));
   },
 
@@ -39,6 +41,7 @@ let SocialUI = {
 
     Services.prefs.removeObserver("social.sidebar.open", this);
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
+    Services.prefs.removeObserver("social.active", this);
   },
 
   showProfile: function SocialUI_showProfile() {
@@ -62,6 +65,7 @@ let SocialUI = {
           SocialSidebar.update();
           SocialChatBar.update();
           SocialFlyout.unload();
+          SocialMenu.populate();
         } catch (e) {
           Components.utils.reportError(e);
           throw e;
@@ -86,6 +90,8 @@ let SocialUI = {
         }
         break;
       case "nsPref:changed":
+        this.updateActiveBroadcaster();
+        this.updateToggleCommand();
         SocialSidebar.update();
         SocialToolbar.updateButton();
         SocialMenu.populate();
@@ -128,6 +134,11 @@ let SocialUI = {
     toggleCommand.setAttribute("label", label);
     toggleCommand.setAttribute("accesskey", accesskey);
     toggleCommand.setAttribute("hidden", Social.active ? "false" : "true");
+  },
+
+  updateActiveBroadcaster: function SocialUI_updateActiveBroadcaster() {
+    let broadcaster = document.getElementById("socialActiveBroadcaster");
+    broadcaster.hidden = !Social.active;
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -592,7 +603,6 @@ let SocialShareButton = {
 
 var SocialMenu = {
   populate: function SocialMenu_populate() {
-    // This menu is only accessible through keyboard navigation.
     let submenu = document.getElementById("menu_social-statusarea-popup");
     let ambientMenuItems = submenu.getElementsByClassName("ambient-menuitem");
     while (ambientMenuItems.length)
@@ -601,7 +611,7 @@ var SocialMenu = {
     let separator = document.getElementById("socialAmbientMenuSeparator");
     separator.hidden = true;
     let provider = Social.provider;
-    if (Social.active && provider) {
+    if (provider && provider.enabled) {
       let iconNames = Object.keys(provider.ambientNotificationIcons);
       for (let name of iconNames) {
         let icon = provider.ambientNotificationIcons[name];
@@ -645,7 +655,6 @@ var SocialToolbar = {
 
   updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
     let tbi = document.getElementById("social-toolbar-item");
-    tbi.hidden = !Social.active;
     let socialEnabled = Social.enabled;
     for (let className of ["social-statusarea-separator", "social-statusarea-user"]) {
       for (let element of document.getElementsByClassName(className))
