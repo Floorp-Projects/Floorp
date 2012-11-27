@@ -2311,7 +2311,11 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 JSObject*
 nsINode::WrapObject(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 {
-  MOZ_ASSERT(IsDOMBinding());
+  // Not all nodes have been converted
+  if (!IsDOMBinding()) {
+    *aTriedToWrap = false;
+    return nullptr;
+  }
 
   // Make sure one of these is true
   // (1) our owner document has a script handling object,
