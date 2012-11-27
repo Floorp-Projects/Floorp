@@ -6,7 +6,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
 #include "nsIDOMActivityOptions.h"
-#include "nsEventStateManager.h"
+#include "nsIDocShell.h"
 #include "nsIConsoleService.h"
 
 using namespace mozilla::dom;
@@ -53,9 +53,12 @@ Activity::Initialize(nsISupports* aOwner,
 
   Init(window);
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDocument());
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDoc());
 
-  if (!nsEventStateManager::IsHandlingUserInput() &&
+  bool isActive;
+  window->GetDocShell()->GetIsActive(&isActive);
+
+  if (!isActive &&
       !nsContentUtils::IsChromeDoc(document)) {
     nsCOMPtr<nsIDOMRequestService> rs =
       do_GetService("@mozilla.org/dom/dom-request-service;1");
