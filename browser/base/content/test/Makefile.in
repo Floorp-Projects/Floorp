@@ -272,6 +272,7 @@ _BROWSER_FILES = \
                  browser_bug812562.js \
                  blockPluginVulnerableUpdatable.xml \
                  blockPluginVulnerableNoUpdate.xml \
+                 browser_utilityOverlay.js \
                  browser_social.js \
                  browser_social_toolbar.js \
                  browser_social_shareButton.js \
