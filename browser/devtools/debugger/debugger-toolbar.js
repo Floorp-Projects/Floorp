@@ -34,10 +34,10 @@ ToolbarView.prototype = {
     this._chromeGlobals = document.getElementById("chrome-globals");
     this._scripts = document.getElementById("sources");
 
-    let resumeKey = LayoutHelpers.prettyKey(document.getElementById("resumeKey"));
-    let stepOverKey = LayoutHelpers.prettyKey(document.getElementById("stepOverKey"));
-    let stepInKey = LayoutHelpers.prettyKey(document.getElementById("stepInKey"));
-    let stepOutKey = LayoutHelpers.prettyKey(document.getElementById("stepOutKey"));
+    let resumeKey = LayoutHelpers.prettyKey(document.getElementById("resumeKey"), true);
+    let stepOverKey = LayoutHelpers.prettyKey(document.getElementById("stepOverKey"), true);
+    let stepInKey = LayoutHelpers.prettyKey(document.getElementById("stepInKey"), true);
+    let stepOutKey = LayoutHelpers.prettyKey(document.getElementById("stepOutKey"), true);
     this._resumeTooltip = L10N.getFormatStr("resumeButtonTooltip", [resumeKey]);
     this._pauseTooltip = L10N.getFormatStr("pauseButtonTooltip", [resumeKey]);
     this._stepOverTooltip = L10N.getFormatStr("stepOverTooltip", [stepOverKey]);
@@ -577,11 +577,11 @@ FilterView.prototype = {
     this._variableOperatorButton = document.getElementById("variable-operator-button");
     this._variableOperatorLabel = document.getElementById("variable-operator-label");
 
-    this._globalSearchKey = LayoutHelpers.prettyKey(document.getElementById("globalSearchKey"));
-    this._fileSearchKey = LayoutHelpers.prettyKey(document.getElementById("fileSearchKey"));
-    this._lineSearchKey = LayoutHelpers.prettyKey(document.getElementById("lineSearchKey"));
-    this._tokenSearchKey = LayoutHelpers.prettyKey(document.getElementById("tokenSearchKey"));
-    this._variableSearchKey = LayoutHelpers.prettyKey(document.getElementById("variableSearchKey"));
+    this._fileSearchKey = LayoutHelpers.prettyKey(document.getElementById("fileSearchKey"), true);
+    this._globalSearchKey = LayoutHelpers.prettyKey(document.getElementById("globalSearchKey"), true);
+    this._tokenSearchKey = LayoutHelpers.prettyKey(document.getElementById("tokenSearchKey"), true);
+    this._lineSearchKey = LayoutHelpers.prettyKey(document.getElementById("lineSearchKey"), true);
+    this._variableSearchKey = LayoutHelpers.prettyKey(document.getElementById("variableSearchKey"), true);
 
     this._searchbox.addEventListener("click", this._onClick, false);
     this._searchbox.addEventListener("select", this._onSearch, false);
@@ -879,7 +879,7 @@ FilterView.prototype = {
 
     // Perform a global search based on the specified operator.
     if (isGlobal) {
-      if (isReturnKey && isDifferentToken) {
+      if (isReturnKey && (isDifferentToken || DebuggerView.GlobalSearch.hidden)) {
         DebuggerView.GlobalSearch.performSearch(token);
       } else {
         DebuggerView.GlobalSearch[["focusNextMatch", "focusPrevMatch"][action]]();
@@ -934,10 +934,10 @@ FilterView.prototype = {
   },
 
   /**
-   * Called when the source line filter key sequence was pressed.
+   * Called when the global search filter key sequence was pressed.
    */
-  _doLineSearch: function DVF__doLineSearch() {
-    this._doSearch(SEARCH_LINE_FLAG);
+  _doGlobalSearch: function DVF__doGlobalSearch() {
+    this._doSearch(SEARCH_GLOBAL_FLAG);
     this._searchboxPanel.hidePopup();
   },
 
@@ -950,10 +950,10 @@ FilterView.prototype = {
   },
 
   /**
-   * Called when the global search filter key sequence was pressed.
+   * Called when the source line filter key sequence was pressed.
    */
-  _doGlobalSearch: function DVF__doGlobalSearch() {
-    this._doSearch(SEARCH_GLOBAL_FLAG);
+  _doLineSearch: function DVF__doLineSearch() {
+    this._doSearch(SEARCH_LINE_FLAG);
     this._searchboxPanel.hidePopup();
   },
 
@@ -974,10 +974,13 @@ FilterView.prototype = {
   _tokenOperatorLabel: null,
   _lineOperatorButton: null,
   _lineOperatorLabel: null,
-  _globalSearchKey: "",
+  _variableOperatorButton: null,
+  _variableOperatorLabel: null,
   _fileSearchKey: "",
-  _lineSearchKey: "",
+  _globalSearchKey: "",
   _tokenSearchKey: "",
+  _lineSearchKey: "",
+  _variableSearchKey: "",
   _target: null,
   _prevSearchedFile: "",
   _prevSearchedLine: -1,
