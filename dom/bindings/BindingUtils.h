@@ -187,7 +187,7 @@ IsDOMObject(JSObject* obj)
 // of thing it's looking at).
 // U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).
 template <prototypes::ID PrototypeID, class T, typename U>
-inline nsresult
+MOZ_ALWAYS_INLINE nsresult
 UnwrapObject(JSContext* cx, JSObject* obj, U& value)
 {
   /* First check to see whether we have a DOM object */
