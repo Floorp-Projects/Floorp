@@ -130,6 +130,7 @@ const PREF_INTEGER = 2;
 var gPrefsToRestore = [];
 
 const gProtocolRE = /^\w+:/;
+const gPrefItemRE = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
 
 var HTTP_SERVER_PORT = 4444;
 const HTTP_SERVER_PORTS_TO_TRY = 50;
@@ -654,6 +655,32 @@ function BuildConditionSandbox(aURL) {
     return sandbox;
 }
 
+function AddPrefSettings(aWhere, aPrefName, aPrefValExpression, aSandbox, aTestPrefSettings, aRefPrefSettings)
+{
+    var prefVal = Components.utils.evalInSandbox("(" + aPrefValExpression + ")", aSandbox);
+    var prefType;
+    var valType = typeof(prefVal);
+    if (valType == "boolean") {
+        prefType = PREF_BOOLEAN;
+    } else if (valType == "string") {
+        prefType = PREF_STRING;
+    } else if (valType == "number" && (parseInt(prefVal) == prefVal)) {
+        prefType = PREF_INTEGER;
+    } else {
+        return false;
+    }
+    var setting = { name: aPrefName,
+                    type: prefType,
+                    value: prefVal };
+    if (aWhere != "ref-") {
+        aTestPrefSettings.push(setting);
+    }
+    if (aWhere != "test-") {
+        aRefPrefSettings.push(setting);
+    }
+    return true;
+}
+
 function ReadTopManifest(aFileURL)
 {
     gURLs = new Array();
@@ -693,6 +720,7 @@ function ReadManifest(aURL, inherited_status)
     var sandbox = BuildConditionSandbox(aURL);
     var lineNo = 0;
     var urlprefix = "";
+    var defaultTestPrefSettings = [], defaultRefPrefSettings = [];
     for each (var str in lines) {
         ++lineNo;
         if (str.charAt(0) == "#")
@@ -713,13 +741,31 @@ function ReadManifest(aURL, inherited_status)
             continue;
         }
 
+        if (items[0] == "default-preferences") {
+            var m;
+            var item;
+            defaultTestPrefSettings = [];
+            defaultRefPrefSettings = [];
+            items.shift();
+            while ((item = items.shift())) {
+                if (!(m = item.match(gPrefItemRE))) {
+                    throw "Unexpected item in default-preferences list in manifest file " + aURL.spec + " line " + lineNo;
+                }
+                if (!AddPrefSettings(m[1], m[2], m[3], sandbox, defaultTestPrefSettings, defaultRefPrefSettings)) {
+                    throw "Error in pref value in manifest file " + aURL.spec + " line " + lineNo;
+                }
+            }
+            continue;
+        }
+
         var expected_status = EXPECTED_PASS;
         var allow_silent_fail = false;
         var minAsserts = 0;
         var maxAsserts = 0;
         var needs_focus = false;
         var slow = false;
-        var testPrefSettings = [], refPrefSettings = [];
+        var testPrefSettings = defaultTestPrefSettings.concat();
+        var refPrefSettings = defaultRefPrefSettings.concat();
         var fuzzy_max_delta = 2;
         var fuzzy_max_pixels = 1;
 
@@ -785,30 +831,10 @@ function ReadManifest(aURL, inherited_status)
             } else if (item == "silentfail") {
                 cond = false;
                 allow_silent_fail = true;
-            } else if ((m = item.match(/^(|test-|ref-)pref\((.+?),(.*)\)$/))) {
+            } else if ((m = item.match(gPrefItemRE))) {
                 cond = false;
-                var where = m[1];
-                var prefName = m[2];
-                var prefVal = Components.utils.evalInSandbox("(" + m[3] + ")", sandbox);
-                var prefType;
-                var valType = typeof(prefVal);
-                if (valType == "boolean") {
-                    prefType = PREF_BOOLEAN;
-                } else if (valType == "string") {
-                    prefType = PREF_STRING;
-                } else if (valType == "number" && (parseInt(prefVal) == prefVal)) {
-                    prefType = PREF_INTEGER;
-                } else {
+                if (!AddPrefSettings(m[1], m[2], m[3], sandbox, testPrefSettings, refPrefSettings)) {
                     throw "Error in pref value in manifest file " + aURL.spec + " line " + lineNo;
-                }
-                var setting = { name: prefName,
-                                type: prefType,
-                                value: prefVal };
-                if (where != "ref-") {
-                    testPrefSettings.push(setting);
-                }
-                if (where != "test-") {
-                    refPrefSettings.push(setting);
                 }
             } else if ((m = item.match(/^fuzzy\((\d+),(\d+)\)$/))) {
               cond = false;
