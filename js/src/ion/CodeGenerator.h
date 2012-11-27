@@ -79,7 +79,6 @@ class CodeGenerator : public CodeGeneratorSpecific
                                 uint32 argc, uint32 unusedStack);
     bool visitCallGeneric(LCallGeneric *call);
     bool visitCallKnown(LCallKnown *call);
-    bool visitCallConstructor(LCallConstructor *call);
     bool emitCallInvokeFunction(LApplyArgsGeneric *apply, Register extraStackSize);
     void emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSpace);
     void emitPopArguments(LApplyArgsGeneric *apply, Register extraStackSize);
