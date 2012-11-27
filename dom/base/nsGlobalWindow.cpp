@@ -732,7 +732,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   NS_ASSERTION(sWindowsById, "Windows hash table must be created!");
   NS_ASSERTION(!sWindowsById->Get(mWindowID),
                "This window shouldn't be in the hash table yet!");
-  sWindowsById->Put(mWindowID, this);
+  // We seem to see crashes in release builds because of null |sWindowsById|.
+  if (sWindowsById) {
+    sWindowsById->Put(mWindowID, this);
+  }
 
   mEventTargetObjects.Init();
 }
