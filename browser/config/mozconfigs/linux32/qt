@@ -12,9 +12,6 @@ export MOZILLA_OFFICIAL=1
 # PGO
 mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'
 
-# Enable parallel compiling
-mk_add_options MOZ_MAKE_FLAGS="-j4"
-
 #Use ccache
 ac_add_options --with-ccache=/usr/bin/ccache
 
