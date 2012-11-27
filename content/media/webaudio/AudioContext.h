@@ -49,8 +49,6 @@ public:
     return mWindow;
   }
 
-  void Shutdown() {}
-
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
                                bool* aTriedToWrap);
 
