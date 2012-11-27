@@ -294,8 +294,10 @@ CPPSRCS +=	MIR.cpp \
 		MIRGraph.cpp \
 		MoveResolver.cpp \
 		EdgeCaseAnalysis.cpp \
+		RegisterAllocator.cpp \
 		Snapshots.cpp \
 		Safepoints.cpp \
+		StupidAllocator.cpp \
 		TypeOracle.cpp \
 		TypePolicy.cpp \
 		ValueNumbering.cpp \
