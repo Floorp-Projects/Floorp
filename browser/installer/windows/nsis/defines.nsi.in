@@ -35,7 +35,7 @@
 !define BETA_UPDATE_CHANNEL
 !endif
 
-!define BaseURLStubPing "http://download-stats.mozilla.org/stub/v3/"
+!define BaseURLStubPing "http://download-stats.mozilla.org/stub/v4/"
 
 # NO_INSTDIR_FROM_REG is defined for pre-releases which have a PreReleaseSuffix
 # (e.g. Alpha X, Beta X, etc.) to prevent finding a non-default installation
