@@ -456,6 +456,30 @@ StackTypeSet::make(JSContext *cx, const char *name)
     return res;
 }
 
+const TypeSet *
+TypeSet::clone(LifoAlloc *alloc) const
+{
+    unsigned objectCount = baseObjectCount();
+    unsigned capacity = (objectCount >= 2) ? HashSetCapacity(objectCount) : 0;
+
+    TypeSet *res = alloc->new_<TypeSet>();
+    if (!res)
+        return NULL;
+
+    TypeObjectKey **newSet;
+    if (capacity) {
+        newSet = alloc->newArray<TypeObjectKey*>(capacity);
+        if (!newSet)
+            return NULL;
+        PodCopy(newSet, objectSet, capacity);
+    }
+
+    res->flags = this->flags;
+    res->objectSet = capacity ? newSet : this->objectSet;
+
+    return res;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeSet constraints
 /////////////////////////////////////////////////////////////////////

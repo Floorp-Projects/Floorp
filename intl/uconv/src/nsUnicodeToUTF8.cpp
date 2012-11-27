@@ -50,9 +50,9 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       return NS_OK_UENC_MOREOUTPUT;
     }
     if (*src < (PRUnichar)0xdc00 || *src > (PRUnichar)0xdfff) { //not a pair
-      *dest++ = (char)0xe0 | (mHighSurrogate >> 12);
-      *dest++ = (char)0x80 | ((mHighSurrogate >> 6) & 0x003f);
-      *dest++ = (char)0x80 | (mHighSurrogate & 0x003f);
+      *dest++ = (char)0xef; //replacement character
+      *dest++ = (char)0xbf;
+      *dest++ = (char)0xbd;
       destLen -= 3;
     } else { 
       n = ((mHighSurrogate - (PRUnichar)0xd800) << 10) + 
@@ -79,7 +79,17 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       *dest++ = (char)0xc0 | (*src >> 6);
       *dest++ = (char)0x80 | (*src & 0x003f);
       destLen -= 2;
-    } else if (*src >= (PRUnichar)0xD800 && *src < (PRUnichar)0xDC00) {
+    } else if (*src >= (PRUnichar)0xd800 && *src <= (PRUnichar)0xdfff) {
+      if (*src >= (PRUnichar)0xdc00) { //not a pair
+        if (destLen < 3)
+          goto error_more_output;
+        *dest++ = (char)0xef; //replacement character
+        *dest++ = (char)0xbf;
+        *dest++ = (char)0xbd;
+        destLen -= 3;
+        ++src;
+        continue;
+      }
       if ((src+1) >= srcEnd) {
         //we need another surrogate to complete this unicode char
         mHighSurrogate = *src;
@@ -90,9 +100,9 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       if (destLen < 4)
         goto error_more_output;
       if (*(src+1) < (PRUnichar)0xdc00 || *(src+1) > 0xdfff) { //not a pair
-        *dest++ = (char)0xe0 | (*src >> 12);
-        *dest++ = (char)0x80 | ((*src >> 6) & 0x003f);
-        *dest++ = (char)0x80 | (*src & 0x003f);
+        *dest++ = (char)0xef; //replacement character
+        *dest++ = (char)0xbf;
+        *dest++ = (char)0xbd;
         destLen -= 3;
       } else {
         n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (uint32_t)0x10000;
@@ -133,9 +143,9 @@ NS_IMETHODIMP nsUnicodeToUTF8::Finish(char * aDest, int32_t * aDestLength)
       *aDestLength = 0;
       return NS_OK_UENC_MOREOUTPUT;
     }
-    *dest++ = (char)0xe0 | (mHighSurrogate >> 12);
-    *dest++ = (char)0x80 | ((mHighSurrogate >> 6) & 0x003f);
-    *dest++ = (char)0x80 | (mHighSurrogate & 0x003f);
+    *dest++ = (char)0xef; //replacement character
+    *dest++ = (char)0xbf;
+    *dest++ = (char)0xbd;
     mHighSurrogate = 0;
     *aDestLength = 3;
     return NS_OK;

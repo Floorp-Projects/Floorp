@@ -269,6 +269,9 @@ _BROWSER_FILES = \
                  browser_tabDrop.js \
                  browser_lastAccessedTab.js \
                  browser_bug734076.js \
+                 browser_bug812562.js \
+                 blockPluginVulnerableUpdatable.xml \
+                 blockPluginVulnerableNoUpdate.xml \
                  browser_social.js \
                  browser_social_toolbar.js \
                  browser_social_shareButton.js \

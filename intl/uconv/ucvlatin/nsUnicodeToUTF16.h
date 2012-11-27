@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsUnicodeToUCS2BE_h___
-#define nsUnicodeToUCS2BE_h___
+#ifndef nsUnicodeToUTF16_h_
+#define nsUnicodeToUTF16_h_
 
 #include "nsUCSupport.h"
 
@@ -53,4 +53,4 @@ public:
   nsUnicodeToUTF16() { mBOM = 0xFEFF;}
 };
 
-#endif /* nsUnicodeToUCS2BE_h___ */
+#endif /* nsUnicodeToUTF16_h_ */

@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
 
 function debug(aMsg) {
-  //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
+  dump("-*-*- Webapps.jsm : " + aMsg + "\n");
 }
 
 const WEBAPP_RUNTIME = Services.appinfo.ID == "webapprt@mozilla.org";
@@ -782,6 +782,31 @@ this.DOMApplicationRegistry = {
     // We need to get the update manifest here, not the webapp manifest.
     let file = FileUtils.getFile(DIRECTORY_NAME,
                                  ["webapps", id, "update.webapp"], true);
+
+    if (!file.exists()) {
+      // This is a hosted app, let's check if it has an appcache
+      // and download it.
+      this._readManifests([{ id: id }], (function readManifest(aResults) {
+        let jsonManifest = aResults[0].manifest;
+        let manifest = new ManifestHelper(jsonManifest, app.origin);
+
+        if (manifest.appcache_path) {
+          debug("appcache found");
+          app.installState = "updating";
+          this.startOfflineCacheDownload(manifest, app);
+        } else {
+          // hosted app with no appcache, nothing to do, but we fire a
+          // downloaded event
+          DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
+                                                  { type: "downloaded",
+                                                    manifestURL: aManifestURL,
+                                                    app: app,
+                                                    manifest: jsonManifest });
+        }
+      }).bind(this));
+
+      return;
+    }
 
     this._loadJSONAsync(file, (function(aJSON) {
       if (!aJSON) {
@@ -1899,6 +1924,8 @@ this.DOMApplicationRegistry = {
  * Appcache download observer
  */
 let AppcacheObserver = function(aApp) {
+  debug("Creating AppcacheObserver for " + aApp.origin +
+        " - " + aApp.installState);
   this.app = aApp;
   this.startStatus = aApp.installState;
 };
@@ -1909,7 +1936,10 @@ AppcacheObserver.prototype = {
     let mustSave = false;
     let app = this.app;
 
+    debug("Offline cache state change for " + app.origin + " : " + aState);
+
     let setStatus = function appObs_setStatus(aStatus) {
+      debug("Offlinecache setStatus to " + aStatus + " for " + app.origin);
       mustSave = (app.installState != aStatus);
       app.installState = aStatus;
       app.downloading = false;
@@ -1919,6 +1949,7 @@ AppcacheObserver.prototype = {
     }
 
     let setError = function appObs_setError(aError) {
+      debug("Offlinecache setError to " + aError);
       DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
                                               { manifest: app.manifestURL,
                                                 error: aError });

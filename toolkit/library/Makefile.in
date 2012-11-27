@@ -421,14 +421,11 @@ endif
 endif
 
 
-ifdef MOZ_SYDNEYAUDIO
-ifeq ($(OS_ARCH),Linux)
+ifneq (,$(MOZ_CUBEB)$(MOZ_SYDNEYAUDIO))
+ifdef MOZ_ALSA
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
 endif
-endif
-
 ifdef MOZ_PULSEAUDIO
-ifdef MOZ_CUBEB
 EXTRA_DSO_LDOPTS += $(MOZ_PULSEAUDIO_LIBS)
 endif
 endif

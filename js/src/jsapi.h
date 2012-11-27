@@ -3357,7 +3357,7 @@ extern JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp);
 
 #undef JS_THIS
-static inline jsval
+static JS_ALWAYS_INLINE jsval
 JS_THIS(JSContext *cx, jsval *vp)
 {
     return JSVAL_IS_PRIMITIVE(vp[1]) ? JS_ComputeThis(cx, vp) : vp[1];
@@ -5962,6 +5962,9 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency);
 extern JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext *cx, uint32_t count);
 #endif
+
+extern JS_PUBLIC_API(void)
+JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled);
 
 /*
  * Convert a uint32_t index into a jsid.
