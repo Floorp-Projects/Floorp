@@ -22,7 +22,7 @@ function doPrivateTest(searchBar) {
   popup.addEventListener("popupshowing", function showing() {
     let entries = getMenuEntries(searchBar);
     for (var i = 0; i < entries.length; i++)
-      isnot(entries[0], "private test", "shouldn't see private autocomplete entries");
+      isnot(entries[i], "private test", "shouldn't see private autocomplete entries");
     popup.removeEventListener("popupshowing", showing, false);
 
     searchBar.textbox.toggleHistoryPopup();
