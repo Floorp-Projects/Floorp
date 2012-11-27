@@ -6,7 +6,7 @@
 Runs the reftest test harness.
 """
 
-import sys, shutil, os, os.path
+import re, sys, shutil, os, os.path
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.append(SCRIPT_DIRECTORY)
 
@@ -39,6 +39,9 @@ class RefTest(object):
           path = defaultManifestPath
     return path
 
+  def makeJSString(self, s):
+    return '"%s"' % re.sub(r'([\\"])', r'\\\1', s)
+
   def createReftestProfile(self, options, profileDir, manifest, server='localhost'):
     """
       Sets up a profile for reftest.
@@ -64,6 +67,8 @@ class RefTest(object):
       prefsFile.write('user_pref("reftest.logFile", "%s");\n' % options.logFile)
     if options.ignoreWindowSize != False:
       prefsFile.write('user_pref("reftest.ignoreWindowSize", true);\n')
+    if options.filter != None:
+      prefsFile.write('user_pref("reftest.filter", %s);\n' % self.makeJSString(options.filter))
 
     for v in options.extraPrefs:
       thispref = v.split("=")
@@ -231,9 +236,9 @@ class ReftestOptions(OptionParser):
 
     self.add_option("--install-extension",
                     action = "append", dest = "extensionsToInstall",
-                    help = "install the specified extension in the testing profile."
-                           "The extension file's name should be <id>.xpi where <id> is"
-                           "the extension's id as indicated in its install.rdf."
+                    help = "install the specified extension in the testing profile. "
+                           "The extension file's name should be <id>.xpi where <id> is "
+                           "the extension's id as indicated in its install.rdf. "
                            "An optional path can be specified too.")
     defaults["extensionsToInstall"] = []
 
@@ -243,6 +248,13 @@ class ReftestOptions(OptionParser):
                     help = "sets the given variable in the application's "
                            "environment")
     defaults["environment"] = []
+
+    self.add_option("--filter",
+                    action = "store", type="string", dest = "filter",
+                    help = "specifies a regular expression (as could be passed to the JS "
+                           "RegExp constructor) to test against URLs in the reftest manifest; "
+                           "only test items that have a matching test URL will be run.")
+    defaults["filter"] = None
 
     self.set_defaults(**defaults)
 
