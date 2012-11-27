@@ -598,6 +598,7 @@ MOCHITEST_FILES_B = \
 		test_xhr_send_readystate.html \
 		test_bug813919.html \
 		test_bug814576.html \
+		test_xhr_withCredentials.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec

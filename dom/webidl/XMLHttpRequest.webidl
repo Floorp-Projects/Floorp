@@ -81,7 +81,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [SetterThrows]
   attribute unsigned long timeout;
 
-  [SetterThrows=Workers]
+  [SetterThrows]
   attribute boolean withCredentials;
 
   [Throws=Workers]
