@@ -14,6 +14,8 @@ Browser context menu tests.
 </div>
 
 <pre id="test">
+<script> var perWindowPrivateBrowsing = false; </script>
+<script type="text/javascript" src="privateBrowsingMode.js"></script>
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: multiple login autocomplete. **/
@@ -292,13 +294,24 @@ function runTest(testNum) {
 
     case 3:
         // Context menu for text link
-        checkContextMenu(["context-openlinkintab", true,
-                          "context-openlink",      true,
-                          "---",                   null,
-                          "context-bookmarklink",  true,
-                          "context-savelink",      true,
-                          "context-copylink",      true
-                         ].concat(inspectItems));
+        if (perWindowPrivateBrowsing) {
+          checkContextMenu(["context-openlinkintab", true,
+                            "context-openlink",      true,
+                            "context-openlinkprivate", true,
+                            "---",                   null,
+                            "context-bookmarklink",  true,
+                            "context-savelink",      true,
+                            "context-copylink",      true
+                           ].concat(inspectItems));
+        } else {
+          checkContextMenu(["context-openlinkintab", true,
+                            "context-openlink",      true,
+                            "---",                   null,
+                            "context-bookmarklink",  true,
+                            "context-savelink",      true,
+                            "context-copylink",      true
+                           ].concat(inspectItems));
+        }
         closeContextMenu();
         openContextMenuFor(mailto); // Invoke context menu for next test.
         break;
@@ -750,18 +763,34 @@ function runTest(testNum) {
         // Context menu for selected text which matches valid URL pattern
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
-          checkContextMenu(["context-openlinkincurrent",           true,
-                            "context-openlinkintab",               true,
-                            "context-openlink",                    true,
-                            "---",                                 null,
-                            "context-bookmarklink",                true,
-                            "context-savelink",                    true,
-                            "context-copy",                        true,
-                            "context-selectall",                   true,
-                            "---",                                 null,
-                            "context-searchselect",                true,
-                            "context-viewpartialsource-selection", true
-                           ].concat(inspectItems));
+          if (perWindowPrivateBrowsing) {
+            checkContextMenu(["context-openlinkincurrent",           true,
+                              "context-openlinkintab",               true,
+                              "context-openlink",                    true,
+                              "context-openlinkprivate",             true,
+                              "---",                                 null,
+                              "context-bookmarklink",                true,
+                              "context-savelink",                    true,
+                              "context-copy",                        true,
+                              "context-selectall",                   true,
+                              "---",                                 null,
+                              "context-searchselect",                true,
+                              "context-viewpartialsource-selection", true
+                             ].concat(inspectItems));
+          } else {
+            checkContextMenu(["context-openlinkincurrent",           true,
+                              "context-openlinkintab",               true,
+                              "context-openlink",                    true,
+                              "---",                                 null,
+                              "context-bookmarklink",                true,
+                              "context-savelink",                    true,
+                              "context-copy",                        true,
+                              "context-selectall",                   true,
+                              "---",                                 null,
+                              "context-searchselect",                true,
+                              "context-viewpartialsource-selection", true
+                             ].concat(inspectItems));
+          }
         }
         closeContextMenu();
         // clear the selection because following tests don't expect any selection
@@ -772,22 +801,42 @@ function runTest(testNum) {
 
     case 26:
         // Context menu for image link
-        checkContextMenu(["context-openlinkintab", true,
-                          "context-openlink",      true,
-                          "---",                   null,
-                          "context-bookmarklink",  true,
-                          "context-savelink",      true,
-                          "context-copylink",      true,
-                          "---",                   null,
-                          "context-viewimage",            true,
-                          "context-copyimage-contents",   true,
-                          "context-copyimage",            true,
-                          "---",                          null,
-                          "context-saveimage",            true,
-                          "context-sendimage",            true,
-                          "context-setDesktopBackground", true,
-                          "context-viewimageinfo",        true
-                         ].concat(inspectItems));
+        if (perWindowPrivateBrowsing) {
+          checkContextMenu(["context-openlinkintab", true,
+                            "context-openlink",      true,
+                            "context-openlinkprivate", true,
+                            "---",                   null,
+                            "context-bookmarklink",  true,
+                            "context-savelink",      true,
+                            "context-copylink",      true,
+                            "---",                   null,
+                            "context-viewimage",            true,
+                            "context-copyimage-contents",   true,
+                            "context-copyimage",            true,
+                            "---",                          null,
+                            "context-saveimage",            true,
+                            "context-sendimage",            true,
+                            "context-setDesktopBackground", true,
+                            "context-viewimageinfo",        true
+                           ].concat(inspectItems));
+        } else {
+          checkContextMenu(["context-openlinkintab", true,
+                            "context-openlink",      true,
+                            "---",                   null,
+                            "context-bookmarklink",  true,
+                            "context-savelink",      true,
+                            "context-copylink",      true,
+                            "---",                   null,
+                            "context-viewimage",            true,
+                            "context-copyimage-contents",   true,
+                            "context-copyimage",            true,
+                            "---",                          null,
+                            "context-saveimage",            true,
+                            "context-sendimage",            true,
+                            "context-setDesktopBackground", true,
+                            "context-viewimageinfo",        true
+                           ].concat(inspectItems));
+        }
         closeContextMenu();
         selectInputText(select_inputtext); // Select text prior to opening context menu.
         openContextMenuFor(select_inputtext); // Invoke context menu for next test.
