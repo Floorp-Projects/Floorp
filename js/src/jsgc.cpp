@@ -10,8 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
-#include "jsutil.h"
-
 /*
  * This code implements a mark-and-sweep garbage collector. The mark phase is
  * incremental. Most sweeping is done on a background thread. A GC is divided
@@ -5248,65 +5246,64 @@ CheckStackRootThing(uintptr_t *w, void *address, ThingRootKind kind)
     return w >= (uintptr_t*)bp && w < (uintptr_t*)(bp + 1);
 }
 
-struct Rooter {
-    Rooted<void*> *rooter;
-    ThingRootKind kind;
-};
+JS_ALWAYS_INLINE void
+CheckStackRootThings(uintptr_t *w, Rooted<void*> *rooter, ThingRootKind kind, bool *matched)
+{
+    while (rooter) {
+        if (CheckStackRootThing(w, rooter->address(), kind))
+            *matched = true;
+        rooter = rooter->previous();
+    }
+}
 
 static void
-CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
+CheckStackRoot(JSTracer *trc, uintptr_t *w)
 {
     /* Mark memory as defined for valgrind, as in MarkWordConservatively. */
 #ifdef JS_VALGRIND
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-    void *thing;
-    ArenaHeader *aheader;
-    AllocKind thingKind;
-    ConservativeGCTest status =
-        IsAddressableGCThing(rt, *w, false, &thingKind, &aheader, &thing);
-    if (status != CGCT_VALID)
-        return;
-    /*
-     * Note that |thing| may be in a free list (InFreeList(aheader, thing)),
-     * but we can skip that check because poisoning the pointer can't hurt; the
-     * pointer still cannot be used for a non-gcthing.
-     */
+    ConservativeGCTest test = MarkIfGCThingWord(trc, *w);
 
-    for (Rooter *p = begin; p != end; p++) {
-        if (CheckStackRootThing(w, p->rooter->address(), p->kind))
-            return;
-    }
-
-    for (ContextIter cx(rt); !cx.done(); cx.next()) {
-        SkipRoot *skip = cx->skipGCRooters;
-        while (skip) {
-            if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
-                return;
-            skip = skip->previous();
+    if (test == CGCT_VALID) {
+        bool matched = false;
+        JSRuntime *rt = trc->runtime;
+        for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
+            CheckStackRootThings(w, rt->mainThread.thingGCRooters[i],
+                                 ThingRootKind(i), &matched);
+            for (ContextIter cx(rt); !cx.done(); cx.next()) {
+                CheckStackRootThings(w, cx->thingGCRooters[i], ThingRootKind(i), &matched);
+                SkipRoot *skip = cx->skipGCRooters;
+                while (skip) {
+                    if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
+                        matched = true;
+                    skip = skip->previous();
+                }
+            }
+        }
+        if (!matched) {
+            /*
+             * Only poison the last byte in the word. It is easy to get
+             * accidental collisions when a value that does not occupy a full
+             * word is used to overwrite a now-dead GC thing pointer. In this
+             * case we want to avoid damaging the smaller value.
+             */
+            PoisonPtr(w);
         }
     }
-
-    /*
-     * Only poison the last byte in the word. It is easy to get accidental
-     * collisions when a value that does not occupy a full word is used to
-     * overwrite a now-dead GC thing pointer. In this case we want to avoid
-     * damaging the smaller value.
-     */
-    PoisonPtr(w);
 }
 
 static void
-CheckStackRootsRange(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, Rooter *rbegin, Rooter *rend)
+CheckStackRootsRange(JSTracer *trc, uintptr_t *begin, uintptr_t *end)
 {
     JS_ASSERT(begin <= end);
     for (uintptr_t *i = begin; i != end; ++i)
-        CheckStackRoot(rt, i, rbegin, rend);
+        CheckStackRoot(trc, i);
 }
 
 static void
-CheckStackRootsRangeAndSkipIon(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, Rooter *rbegin, Rooter *rend)
+CheckStackRootsRangeAndSkipIon(JSRuntime *rt, JSTracer *trc, uintptr_t *begin, uintptr_t *end)
 {
     /*
      * Regions of the stack between Ion activiations are marked exactly through
@@ -5320,82 +5317,19 @@ CheckStackRootsRangeAndSkipIon(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, 
         uintptr_t *ionMin, *ionEnd;
         ion.ionStackRange(ionMin, ionEnd);
 
-        uintptr_t *upto = Min(ionMin, end);
-        if (upto > i)
-            CheckStackRootsRange(rt, i, upto, rbegin, rend);
-        else
-            break;
+        CheckStackRootsRange(trc, i, ionMin);
         i = ionEnd;
     }
 #endif
 
     /* The topmost Ion activiation may be beyond our prior top. */
-    if (i < end)
-        CheckStackRootsRange(rt, i, end, rbegin, rend);
+    if (i <= end)
+        CheckStackRootsRange(trc, i, end);
 }
 
-static int
-CompareRooters(const void *vpA, const void *vpB)
-{
-    const Rooter *a = static_cast<const Rooter *>(vpA);
-    const Rooter *b = static_cast<const Rooter *>(vpB);
-    // There should be no duplicates, and we wouldn't care about their order anyway.
-    return (a->rooter < b->rooter) ? -1 : 1;
-}
-
-/*
- * In the pathological cases that dominate much of the test case runtime,
- * rooting analysis spends tons of time scanning the stack during a tight-ish
- * loop. Since statically, everything is either rooted or it isn't, these scans
- * are almost certain to be worthless. Detect these cases by checking whether
- * the addresses of the top several rooters in the stack are recurring. Note
- * that there may be more than one CheckRoots call within the loop, so we may
- * alternate between a couple of stacks rather than just repeating the same one
- * over and over, so we need more than a depth-1 memory.
- */
-static bool
-SuppressCheckRoots(Vector<Rooter, 0, SystemAllocPolicy> &rooters)
-{
-    static const unsigned int NumStackMemories = 6;
-    static const size_t StackCheckDepth = 10;
-
-    static uint32_t stacks[NumStackMemories];
-    static unsigned int numMemories = 0;
-    static unsigned int oldestMemory = 0;
-
-    // Ugh. Sort the rooters. This should really be an O(n) rank selection
-    // followed by a sort. Interestingly, however, the overall scan goes a bit
-    // *faster* with this sort. Better branch prediction of the later
-    // partitioning pass, perhaps.
-    qsort(rooters.begin(), rooters.length(), sizeof(Rooter), CompareRooters);
-
-    // Forward-declare a variable so its address can be used to mark the
-    // current top of the stack
-    unsigned int pos;
-
-    // Compute the hash of the current stack
-    uint32_t hash = mozilla::HashGeneric(&pos);
-    for (unsigned int i = 0; i < Min(StackCheckDepth, rooters.length()); i++)
-        hash = mozilla::AddToHash(hash, rooters[rooters.length() - i - 1].rooter);
-
-    // Scan through the remembered stacks to find the current stack
-    for (pos = 0; pos < numMemories; pos++) {
-        if (stacks[pos] == hash) {
-            // Skip this check. Technically, it is incorrect to not update the
-            // LRU queue position, but it'll cost us at most one extra check
-            // for every time a hot stack falls out of the window.
-            return true;
-        }
-    }
-
-    // Replace the oldest remembered stack with our current stack
-    stacks[oldestMemory] = hash;
-    oldestMemory = (oldestMemory + 1) % NumStackMemories;
-    if (numMemories < NumStackMemories)
-        numMemories++;
-
-    return false;
-}
+static void
+EmptyMarkCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+{}
 
 void
 JS::CheckStackRoots(JSContext *cx)
@@ -5432,6 +5366,9 @@ JS::CheckStackRoots(JSContext *cx)
 
     AutoCopyFreeListToArenas copy(rt);
 
+    JSTracer checker;
+    JS_TracerInit(&checker, rt, EmptyMarkCallback);
+
     ConservativeGCData *cgcd = &rt->conservativeGC;
     cgcd->recordStackTop();
 
@@ -5443,72 +5380,45 @@ JS::CheckStackRoots(JSContext *cx)
 #else
     stackMin = cgcd->nativeStackTop + 1;
     stackEnd = reinterpret_cast<uintptr_t *>(rt->nativeStackBase);
-#endif
 
-    // Gather up all of the rooters
-    Vector< Rooter, 0, SystemAllocPolicy> rooters;
-    for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-        Rooted<void*> *rooter = rt->mainThread.thingGCRooters[i];
-        while (rooter) {
-            Rooter r = { rooter, ThingRootKind(i) };
-            JS_ALWAYS_TRUE(rooters.append(r));
-            rooter = rooter->previous();
+    uintptr_t *&oldStackMin = cgcd->oldStackMin, *&oldStackEnd = cgcd->oldStackEnd;
+    uintptr_t *&oldStackData = cgcd->oldStackData;
+    uintptr_t &oldStackCapacity = cgcd->oldStackCapacity;
+
+    /*
+     * Adjust the stack to remove regions which have not changed since the
+     * stack was last scanned, and update the last scanned state.
+     */
+    if (stackEnd != oldStackEnd) {
+        js_free(oldStackData);
+        oldStackCapacity = rt->nativeStackQuota / sizeof(uintptr_t);
+        oldStackData = (uintptr_t *) rt->malloc_(oldStackCapacity * sizeof(uintptr_t));
+        if (!oldStackData) {
+            oldStackCapacity = 0;
+        } else {
+            uintptr_t *existing = stackEnd - 1, *copy = oldStackData;
+            while (existing >= stackMin && size_t(copy - oldStackData) < oldStackCapacity)
+                *copy++ = *existing--;
+            oldStackEnd = stackEnd;
+            oldStackMin = existing + 1;
         }
-        for (ContextIter cx(rt); !cx.done(); cx.next()) {
-            rooter = cx->thingGCRooters[i];
-            while (rooter) {
-                Rooter r = { rooter, ThingRootKind(i) };
-                JS_ALWAYS_TRUE(rooters.append(r));
-                rooter = rooter->previous();
-            }
+    } else {
+        uintptr_t *existing = stackEnd - 1, *copy = oldStackData;
+        while (existing >= stackMin && existing >= oldStackMin && *existing == *copy) {
+            copy++;
+            existing--;
         }
+        stackEnd = existing + 1;
+        while (existing >= stackMin && size_t(copy - oldStackData) < oldStackCapacity)
+            *copy++ = *existing--;
+        oldStackMin = existing + 1;
     }
-
-    if (SuppressCheckRoots(rooters))
-        return;
-
-    // Truncate stackEnd to just after the address of the youngest
-    // already-scanned rooter on the stack, to avoid re-scanning the rest of
-    // the stack.
-    void *firstScanned = rooters.begin();
-    for (Rooter *p = rooters.begin(); p != rooters.end(); p++) {
-        if (p->rooter->scanned) {
-            uintptr_t *addr = reinterpret_cast<uintptr_t*>(p->rooter);
-#if JS_STACK_GROWTH_DIRECTION < 0
-            if (stackEnd > addr)
-#else
-            if (stackEnd < addr)
 #endif
-            {
-                stackEnd = addr;
-                firstScanned = p->rooter;
-            }
-        }
-    }
-
-    // Partition the stack by the already-scanned start address. Put everything
-    // that needs to be searched at the end of the vector.
-    Rooter *firstToScan = rooters.begin();
-    for (Rooter *p = rooters.begin(); p != rooters.end(); p++) {
-#if JS_STACK_GROWTH_DIRECTION < 0
-        if (p->rooter >= firstScanned)
-#else
-        if (p->rooter <= firstScanned)
-#endif
-        {
-            Swap(*firstToScan, *p);
-            ++firstToScan;
-        }
-    }
 
     JS_ASSERT(stackMin <= stackEnd);
-    CheckStackRootsRangeAndSkipIon(rt, stackMin, stackEnd, firstToScan, rooters.end());
-    CheckStackRootsRange(rt, cgcd->registerSnapshot.words,
-                         ArrayEnd(cgcd->registerSnapshot.words), firstToScan, rooters.end());
-
-    // Mark all rooters as scanned
-    for (Rooter *p = rooters.begin(); p != rooters.end(); p++)
-        p->rooter->scanned = true;
+    CheckStackRootsRangeAndSkipIon(rt, &checker, stackMin, stackEnd);
+    CheckStackRootsRange(&checker, cgcd->registerSnapshot.words,
+                         ArrayEnd(cgcd->registerSnapshot.words));
 }
 
 #endif /* DEBUG && JS_GC_ZEAL && JSGC_ROOT_ANALYSIS && !JS_THREADSAFE */
