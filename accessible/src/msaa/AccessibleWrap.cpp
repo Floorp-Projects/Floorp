@@ -17,6 +17,7 @@
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
+#include "sdnAccessible.h"
 #include "States.h"
 #include "uiaRawElmProvider.h"
 
@@ -93,6 +94,12 @@ __try {
     *ppv = static_cast<IServiceProvider*>(this);
   else if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off())
     *ppv = static_cast<IAccessible2*>(this);
+  else if (IID_ISimpleDOMNode == iid) {
+    if (IsDefunct() || !HasOwnContent() && !IsDoc())
+      return E_NOINTERFACE;
+
+    *ppv = new sdnAccessible(GetNode());
+  }
 
   if (NULL == *ppv) {
     HRESULT hr = ia2AccessibleComponent::QueryInterface(iid, ppv);
@@ -113,7 +120,7 @@ __try {
   }
 
   if (NULL == *ppv)
-    return nsAccessNodeWrap::QueryInterface(iid, ppv);
+    return E_NOINTERFACE;
 
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
