@@ -13,6 +13,10 @@ include $(DEPTH)/config/autoconf.mk
 
 TEST_DIRS += pdfjs/test
 
+ifdef MOZ_METRO
+GENERATED_DIRS = $(DIST)/bin/metro/chrome
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 exclude_files = \
@@ -33,3 +37,16 @@ libs:: $(FINAL_TARGET)/chrome/pdfjs.manifest
           $(FINAL_TARGET)/chrome
 	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
 	  $(FINAL_TARGET)/chrome.manifest "manifest chrome/pdfjs.manifest"
+
+ifdef MOZ_METRO
+$(DIST)/bin/metro/chrome/pdfjs.manifest: $(GLOBAL_DEPS)
+	printf "manifest pdfjs/chrome.manifest" > $@
+
+libs:: $(DIST)/bin/metro/chrome/pdfjs.manifest
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py \
+	  $(srcdir)/pdfjs \
+          $(foreach exclude,$(exclude_files), -X $(srcdir)/pdfjs/$(exclude)) \
+          $(DIST)/bin/metro/chrome
+	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
+	  $(DIST)/bin/metro/chrome.manifest "manifest chrome/pdfjs.manifest"
+endif
