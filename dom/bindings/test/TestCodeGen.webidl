@@ -265,6 +265,8 @@ interface TestInterface {
   void passOptionalNullableSequence(optional sequence<long>? arg);
   void passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
   void passOptionalObjectSequence(optional sequence<TestInterface> arg);
+  void passExternalInterfaceSequence(sequence<TestExternalInterface> arg);
+  void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
 
   sequence<DOMString> receiveStringSequence();
   void passStringSequence(sequence<DOMString> arg);

@@ -186,6 +186,8 @@ interface TestExampleInterface {
   void passOptionalNullableSequence(optional sequence<long>? arg);
   void passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
   void passOptionalObjectSequence(optional sequence<TestInterface> arg);
+  void passExternalInterfaceSequence(sequence<TestExternalInterface> arg);
+  void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
 
   sequence<DOMString> receiveStringSequence();
   void passStringSequence(sequence<DOMString> arg);
@@ -284,6 +286,7 @@ interface TestExampleInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
+  //UNSUPPORTED  Dict receiveDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   void passDictionaryOrLong(optional Dict x);
@@ -291,6 +294,7 @@ interface TestExampleInterface {
 
   void passDictContainingDict(optional DictContainingDict arg);
   void passDictContainingSequence(optional DictContainingSequence arg);
+  //UNSUPPORTED DictContainingSequence receiveDictContainingSequence();
 
   // EnforceRange/Clamp tests
   void dontEnforceRangeOrClamp(byte arg);
