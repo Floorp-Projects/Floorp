@@ -3357,7 +3357,7 @@ extern JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp);
 
 #undef JS_THIS
-static inline jsval
+static JS_ALWAYS_INLINE jsval
 JS_THIS(JSContext *cx, jsval *vp)
 {
     return JSVAL_IS_PRIMITIVE(vp[1]) ? JS_ComputeThis(cx, vp) : vp[1];
