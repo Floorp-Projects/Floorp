@@ -497,9 +497,23 @@ CheckWrapperCacheCast<T, true>
 };
 #endif
 
-// Create a JSObject wrapping "value", for cases when "value" is a
-// non-wrapper-cached object using WebIDL bindings.  "value" must implement a
-// WrapObject() method taking a JSContext and a scope.
+MOZ_ALWAYS_INLINE bool
+CouldBeDOMBinding(void*)
+{
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+CouldBeDOMBinding(nsWrapperCache* aCache)
+{
+  return aCache->IsDOMBinding();
+}
+
+// Create a JSObject wrapping "value", if there isn't one already, and store it
+// in *vp.  "value" must be a concrete class that implements a
+// GetWrapperPreserveColor() which can return its existing wrapper, if any, and
+// a WrapObject() which will try to create a wrapper. Typically, this is done by
+// having "value" inherit from nsWrapperCache.
 template <class T>
 MOZ_ALWAYS_INLINE bool
 WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
@@ -511,9 +525,12 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
       *vp = JS::ObjectValue(*obj);
       return true;
     }
-  }
+  } else {
+    // Inline this here while we have non-dom objects in wrapper caches.
+    if (!CouldBeDOMBinding(value)) {
+      return false;
+    }
 
-  if (!obj) {
     bool triedToWrap;
     obj = value->WrapObject(cx, scope, &triedToWrap);
     if (!obj) {
@@ -553,11 +570,9 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
   return JS_WrapValue(cx, vp);
 }
 
-// Create a JSObject wrapping "value", if there isn't one already, and store it
-// in *vp.  "value" must be a concrete class that implements a GetWrapper()
-// which can return its existing wrapper, if any, and a WrapObject() which will
-// try to create a wrapper.  Typically, this is done by having "value" inherit
-// from nsWrapperCache.
+// Create a JSObject wrapping "value", for cases when "value" is a
+// non-wrapper-cached object using WebIDL bindings.  "value" must implement a
+// WrapObject() method taking a JSContext and a scope.
 template <class T>
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx, JSObject* scope, T* value,
