@@ -291,6 +291,9 @@ abstract public class BrowserApp extends GeckoApp
                     mBrowserToolbar.show();
                 } else {
                     mBrowserToolbar.hide();
+                    if (hasTabsSideBar()) {
+                        hideTabs();
+                    }
                 }
             }
         });
