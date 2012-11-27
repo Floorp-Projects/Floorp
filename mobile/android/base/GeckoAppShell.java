@@ -852,9 +852,7 @@ public class GeckoAppShell
 
     // internal, for webapps
     static void createShortcut(String aTitle, String aURI, String aUniqueURI, String aIconData, String aType) {
-        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-        createShortcut(aTitle, aURI, aUniqueURI, bitmap, aType);
+        createShortcut(aTitle, aURI, aUniqueURI, BitmapUtils.getBitmapFromDataURI(aIconData), aType);
     }
 
     public static void createShortcut(final String aTitle, final String aURI, final String aUniqueURI,
