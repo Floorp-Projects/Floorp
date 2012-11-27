@@ -2202,20 +2202,26 @@ for (uint32_t i = 0; i < length; ++i) {
   if (!JS_GetElement(cx, seq, i, &temp)) {
 %s
   }
+  %s& slot = *arr.AppendElement();
 """ % (CGIndenter(CGGeneric(notSequence)).define(),
        exceptionCodeIndented.define(),
        elementDeclType.define(),
        elementDeclType.define(),
        arrayRef,
        exceptionCodeIndented.define(),
-       CGIndenter(exceptionCodeIndented).define()))
+       CGIndenter(exceptionCodeIndented).define(),
+       elementDeclType.define()))
 
         templateBody += CGIndenter(CGGeneric(
                 string.Template(elementTemplate).substitute(
                     {
                         "val" : "temp",
                         "valPtr": "&temp",
-                        "declName" : "(*arr.AppendElement())",
+                        "declName" : "slot",
+                        # We only need holderName here to handle isExternal()
+                        # interfaces, which use an internal holder for the
+                        # conversion even when forceOwningType ends up true.
+                        "holderName": "tempHolder",
                         # Use the same ${obj} as for the sequence itself
                         "obj": "${obj}"
                         }
@@ -2533,7 +2539,7 @@ for (uint32_t i = 0; i < length; ++i) {
             templateBody += ("}\n"
                 "MOZ_ASSERT(tmp);\n")
 
-            if not isDefinitelyObject:
+            if not isDefinitelyObject and not forceOwningType:
                 # Our tmpVal will go out of scope, so we can't rely on it
                 # for rooting
                 templateBody += (
