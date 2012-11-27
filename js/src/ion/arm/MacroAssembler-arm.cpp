@@ -2508,9 +2508,9 @@ MacroAssemblerARMCompat::pushValue(const Address &addr)
     Operand payload = ToPayload(srcOp);
     Operand type = ToType(srcOp);
 
-    ma_ldr(payload, ScratchRegister);
-    ma_push(ScratchRegister);
     ma_ldr(type, ScratchRegister);
+    ma_push(ScratchRegister);
+    ma_ldr(payload, ScratchRegister);
     ma_push(ScratchRegister);
 }
 
