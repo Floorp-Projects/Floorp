@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUCConstructors.h"
-#include "nsUCS2BEToUnicode.h"
+#include "nsUTF16ToUnicode.h"
 #include "nsUCvLatinDll.h"
 #include "nsCharTraits.h"
 #include <string.h>
