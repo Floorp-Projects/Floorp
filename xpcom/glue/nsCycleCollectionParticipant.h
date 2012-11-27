@@ -403,20 +403,8 @@ T* DowncastCCParticipant(void *p)
   }
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_0(_class)                              \
-  NS_METHOD                                                                    \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::UnlinkImpl(void *p)                   \
-  {                                                                            \
-    MOZ_ASSERT(CheckForRightISupports(static_cast<nsISupports*>(p)),           \
-               "not the nsISupports pointer we expect");                       \
-    return NS_OK;                                                              \
-  }
-
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(_class)                       \
-  NS_METHOD                                                                    \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::UnlinkImpl(void *p)                   \
-  {                                                                            \
-    return NS_OK;                                                              \
-  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                                \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -482,9 +470,6 @@ T* DowncastCCParticipant(void *p)
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::TraceImpl(s,                   \
                                                           aCallback,           \
                                                           aClosure);
-
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(_class)                    \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(_object, _name)             \
   if (_object)                                                                 \

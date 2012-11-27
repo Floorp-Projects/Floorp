@@ -296,7 +296,7 @@ abstract public class BrowserApp extends GeckoApp
     void focusChrome() {
         mMainHandler.post(new Runnable() {
             public void run() {
-                mBrowserToolbar.setVisibility(View.VISIBLE);
+                mBrowserToolbar.show();
                 mBrowserToolbar.requestFocusFromTouch();
             }
         });

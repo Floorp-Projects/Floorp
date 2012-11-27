@@ -105,10 +105,13 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(MoveGroup);
 
     void printOperands(FILE *fp);
-    bool add(LAllocation *from, LAllocation *to) {
-        JS_ASSERT(*from != *to);
-        return moves_.append(LMove(from, to));
-    }
+
+    // Add a move which takes place simultaneously with all others in the group.
+    bool add(LAllocation *from, LAllocation *to);
+
+    // Add a move which takes place after existing moves in the group.
+    bool addAfter(LAllocation *from, LAllocation *to);
+
     size_t numMoves() const {
         return moves_.length();
     }
