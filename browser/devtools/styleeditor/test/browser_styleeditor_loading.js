@@ -15,32 +15,31 @@ function test()
   // this checks that the Style Editor still launches correctly when it is opened
   // *while* the page is still loading
   launchStyleEditorChrome(function (aChrome) {
-    content.location = TESTCASE_URI;
-    executeSoon(function() {
-      isnot(gBrowser.selectedBrowser.contentWindow.document.readyState, "complete",
-            "content document is still loading");
+    isnot(gBrowser.selectedBrowser.contentWindow.document.readyState, "complete",
+          "content document is still loading");
 
-      let root = gChromeWindow.document.querySelector(".splitview-root");
-      ok(root.classList.contains("loading"),
-        "style editor root element has 'loading' class name");
+    let root = gChromeWindow.document.querySelector(".splitview-root");
+    ok(root.classList.contains("loading"),
+       "style editor root element has 'loading' class name");
 
-      let button = gChromeWindow.document.querySelector(".style-editor-newButton");
-      ok(button.hasAttribute("disabled"),
-        "new style sheet button is disabled");
+    let button = gChromeWindow.document.querySelector(".style-editor-newButton");
+    ok(button.hasAttribute("disabled"),
+       "new style sheet button is disabled");
 
-      button = gChromeWindow.document.querySelector(".style-editor-importButton");
-      ok(button.hasAttribute("disabled"),
-        "import button is disabled");
+    button = gChromeWindow.document.querySelector(".style-editor-importButton");
+    ok(button.hasAttribute("disabled"),
+       "import button is disabled");
 
-      if (!aChrome.isContentAttached) {
-        aChrome.addChromeListener({
-          onContentAttach: run
-        });
-      } else {
-        run(aChrome);
-      }
-    });
+    if (!aChrome.isContentAttached) {
+      aChrome.addChromeListener({
+        onContentAttach: run
+      });
+    } else {
+      run(aChrome);
+    }
   });
+
+  content.location = TESTCASE_URI;
 }
 
 function run(aChrome)

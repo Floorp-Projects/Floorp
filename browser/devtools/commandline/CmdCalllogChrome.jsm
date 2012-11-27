@@ -10,10 +10,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
-                                  "resource:///modules/devtools/Target.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "HUDService",
+                                  "resource:///modules/HUDService.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Debugger", function() {
   let JsDebugger = {};
@@ -110,9 +108,8 @@ gcli.addCommand({
                                 ": " + this.callDescription(frame));
     }.bind(this);
 
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.openToolboxForTab(target, "webconsole");
+    let tab = context.environment.chromeDocument.defaultView.gBrowser.selectedTab;
+    HUDService.activateHUDForContext(tab);
 
     return gcli.lookup("calllogChromeStartReply");
   },

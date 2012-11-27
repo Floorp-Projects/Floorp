@@ -15,7 +15,7 @@ function test() {
   debug_tab_pane(STACK_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gDebugger = gPane.contentWindow;
     gView = gDebugger.DebuggerView;
     gLH = gDebugger.LayoutHelpers;
     gL10N = gDebugger.L10N;

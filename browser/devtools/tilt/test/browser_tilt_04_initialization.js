@@ -21,6 +21,10 @@ function test() {
       "The unique window identifiers should match for the same window.");
 
     createTilt({
+      onInspectorOpen: function() {
+        is(Tilt.visualizers[id], null,
+          "A instance of the visualizer shouldn't be initialized yet.");
+      },
       onTiltOpen: function(instance)
       {
         is(document.activeElement, instance.presenter.canvas,

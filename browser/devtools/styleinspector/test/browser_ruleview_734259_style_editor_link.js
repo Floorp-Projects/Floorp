@@ -5,8 +5,6 @@
 let win;
 let doc;
 let contentWindow;
-let inspector;
-let toolbox;
 
 let tempScope = {};
 Cu.import("resource://gre/modules/Services.jsm", tempScope);
@@ -33,27 +31,41 @@ function createDocument()
     '</div>';
   doc.title = "Rule view style editor link test";
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  toolbox = gDevTools.openToolboxForTab(target, "inspector");
-  toolbox.once("inspector-selected", function SE_selected(id, aInspector) {
-    inspector = aInspector;
-    inspector.sidebar.select("ruleview");
-    highlightNode();
-  });
+  openInspector();
 }
 
-function highlightNode()
+function openInspector()
 {
+  ok(window.InspectorUI, "InspectorUI variable exists");
+  ok(!InspectorUI.inspecting, "Inspector is not highlighting");
+  ok(InspectorUI.store.isEmpty(), "Inspector.store is empty");
+
+  Services.obs.addObserver(inspectorUIOpen,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  InspectorUI.openInspectorUI();
+}
+
+function inspectorUIOpen()
+{
+  Services.obs.removeObserver(inspectorUIOpen,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+
+  // Make sure the inspector is open.
+  ok(InspectorUI.inspecting, "Inspector is highlighting");
+  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
+  ok(!InspectorUI.store.isEmpty(), "InspectorUI.store is not empty");
+  is(InspectorUI.store.length, 1, "Inspector.store.length = 1");
+
   // Highlight a node.
   let div = content.document.getElementsByTagName("div")[0];
+  InspectorUI.inspectNode(div);
+  InspectorUI.stopInspecting();
+  is(InspectorUI.selection, div, "selection matches the div element");
 
-  inspector.selection.once("new-node", function() {
-    is(inspector.selection.node, div, "selection matches the div element");
-    testInlineStyle();
-  });
-  executeSoon(function() {
-    inspector.selection.setNode(div);
-  });
+  InspectorUI.currentInspector.once("sidebaractivated-ruleview", testInlineStyle);
+
+  InspectorUI.sidebar.show();
+  InspectorUI.sidebar.activatePanel("ruleview");
 }
 
 function testInlineStyle()
@@ -76,10 +88,7 @@ function testInlineStyle()
         testInlineStyleSheet();
       });
     });
-
-    let link = getLinkByIndex(0);
-    link.scrollIntoView();
-    link.click();
+    EventUtils.synthesizeMouseAtCenter(getLinkByIndex(0), { }, contentWindow);
   });
 }
 
@@ -87,18 +96,41 @@ function testInlineStyleSheet()
 {
   info("clicking an inline stylesheet");
 
-  toolbox.once("styleeditor-ready", function(id, aToolbox) {
-    aToolbox.panelWindow.styleEditorChrome.addChromeListener({
-      onEditorAdded: validateStyleEditorSheet
+  Services.ww.registerNotification(function onWindow(aSubject, aTopic) {
+    if (aTopic != "domwindowopened") {
+      return;
+    }
+
+    win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function windowLoad() {
+      win.removeEventListener("load", windowLoad);
+
+      let windowType = win.document.documentElement.getAttribute("windowtype");
+      is(windowType, "Tools:StyleEditor", "style editor window is open");
+
+      win.styleEditorChrome.addChromeListener({
+        onEditorAdded: function checkEditor(aChrome, aEditor) {
+          if (!aEditor.sourceEditor) {
+            aEditor.addActionListener({
+              onAttach: function (aEditor) {
+                aEditor.removeActionListener(this);
+                validateStyleEditorSheet(aEditor);
+              }
+            });
+          } else {
+            validateStyleEditorSheet(aEditor);
+          }
+        }
+      });
+
+      Services.ww.unregisterNotification(onWindow);
     });
   });
 
-  let link = getLinkByIndex(1);
-  link.scrollIntoView();
-  link.click();
+  EventUtils.synthesizeMouse(getLinkByIndex(1), 5, 5, { }, contentWindow);
 }
 
-function validateStyleEditorSheet(aChrome, aEditor)
+function validateStyleEditorSheet(aEditor)
 {
   info("validating style editor stylesheet");
 
@@ -120,8 +152,10 @@ function getLinkByIndex(aIndex)
 
 function finishup()
 {
+  InspectorUI.sidebar.hide();
+  InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();
-  contentWindow = doc = inspector = toolbox = win = null;
+  doc = contentWindow = win = null;
   finish();
 }
 

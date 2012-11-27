@@ -65,7 +65,7 @@ function whenNodeRemoved() {
 
   executeSoon(function() {
     Services.obs.addObserver(cleanup, DESTROYED, false);
-    Tilt.destroy(Tilt.currentWindowId);
+    InspectorUI.closeInspectorUI();
   });
 }
 

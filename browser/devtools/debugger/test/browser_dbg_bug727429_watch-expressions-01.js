@@ -19,7 +19,7 @@ function test()
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gDebugger = gPane.contentWindow;
     gWatch = gDebugger.DebuggerView.WatchExpressions;
 
     gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });

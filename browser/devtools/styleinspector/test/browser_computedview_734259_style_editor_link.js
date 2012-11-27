@@ -3,8 +3,8 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let doc;
-let inspector;
-let computedView;
+let win;
+let stylePanel;
 
 function createDocument()
 {
@@ -27,26 +27,12 @@ function createDocument()
     '</div>';
   doc.title = "Rule view style editor link test";
 
-  openInspector(selectNode);
-}
-
-
-function selectNode(aInspector)
-{
-  inspector = aInspector;
-
   let span = doc.querySelector("span");
   ok(span, "captain, we have the span");
 
-  aInspector.selection.setNode(span);
-
-  aInspector.sidebar.once("computedview-ready", function() {
-    aInspector.sidebar.select("computedview");
-
-    computedView = getComputedView(aInspector);
-
-    Services.obs.addObserver(testInlineStyle, "StyleInspector-populated", false);
-  });
+  Services.obs.addObserver(testInlineStyle, "StyleInspector-populated", false);
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(span);
 }
 
 function testInlineStyle()
@@ -60,7 +46,7 @@ function testInlineStyle()
         return;
       }
       info("window opened");
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       win.addEventListener("load", function windowLoad() {
         win.removeEventListener("load", windowLoad);
         info("window load completed");
@@ -81,28 +67,35 @@ function testInlineStyleSheet()
 {
   info("clicking an inline stylesheet");
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.openToolboxForTab(target, "styleeditor");
+  Services.ww.registerNotification(function onWindow(aSubject, aTopic) {
+    if (aTopic != "domwindowopened") {
+      return;
+    }
+    info("window opened");
+    win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function windowLoad() {
+      win.removeEventListener("load", windowLoad);
+      info("window load completed");
+      let windowType = win.document.documentElement.getAttribute("windowtype");
+      is(windowType, "Tools:StyleEditor", "style editor window is open");
 
-  toolbox.once("styleeditor-ready", function(event, panel) {
-    let win = panel._panelWin;
-
-    win.styleEditorChrome.addChromeListener({
-      onEditorAdded: function checkEditor(aChrome, aEditor) {
-        if (!aEditor.sourceEditor) {
-          aEditor.addActionListener({
-            onAttach: function (aEditor) {
-              aEditor.removeActionListener(this);
-              validateStyleEditorSheet(aEditor);
-            }
-          });
-        } else {
-          validateStyleEditorSheet(aEditor);
+      win.styleEditorChrome.addChromeListener({
+        onEditorAdded: function checkEditor(aChrome, aEditor) {
+          if (!aEditor.sourceEditor) {
+            aEditor.addActionListener({
+              onAttach: function (aEditor) {
+                aEditor.removeActionListener(this);
+                validateStyleEditorSheet(aEditor);
+              }
+            });
+          } else {
+            validateStyleEditorSheet(aEditor);
+          }
         }
-      }
+      });
+      Services.ww.unregisterNotification(onWindow);
     });
   });
-
   let link = getLinkByIndex(1);
   link.click();
 }
@@ -113,13 +106,18 @@ function validateStyleEditorSheet(aEditor)
 
   let sheet = doc.styleSheets[0];
   is(aEditor.styleSheet, sheet, "loaded stylesheet matches document stylesheet");
+  info("closing window");
+  win.close();
 
+  stylePanel.destroy();
   finishUp();
 }
 
 function expandProperty(aIndex, aCallback)
 {
-  let contentDoc = computedView.styleDocument;
+  let iframe = stylePanel.iframe;
+  let contentDoc = iframe.contentDocument;
+  let contentWindow = iframe.contentWindow;
   let expando = contentDoc.querySelectorAll(".expandable")[aIndex];
   expando.click();
 
@@ -129,14 +127,14 @@ function expandProperty(aIndex, aCallback)
 
 function getLinkByIndex(aIndex)
 {
-  let contentDoc = computedView.styleDocument;
+  let contentDoc = stylePanel.iframe.contentDocument;
   let links = contentDoc.querySelectorAll(".rule-link .link");
   return links[aIndex];
 }
 
 function finishUp()
 {
-  doc = inspector = computedView = null;
+  doc = win = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();
 }

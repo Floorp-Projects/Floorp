@@ -11,44 +11,83 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/CssRuleView.jsm");
-Cu.import("resource:///modules/devtools/StyleEditorDefinition.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/inspector.jsm");
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.
-this.EXPORTED_SYMBOLS = ["RuleViewTool", "ComputedViewTool"];
+this.EXPORTED_SYMBOLS = [];
 
-this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
+/**
+ * Lookup l10n string from a string bundle.
+ * @param {string} aName The key to lookup.
+ * @returns A localized version of the given key.
+ */
+function l10n(aName)
+{
+  try {
+    return _strings.GetStringFromName(aName);
+  } catch (ex) {
+    Services.console.logStringMessage("Error reading '" + aName + "'");
+    throw new Error("l10n error with " + aName);
+  }
+}
+
+function RegisterStyleTools()
+{
+  // Register the rules view
+  if (Services.prefs.getBoolPref("devtools.ruleview.enabled")) {
+    InspectorUI.registerSidebar({
+      id: "ruleview",
+      label: l10n("ruleView.label"),
+      tooltiptext: l10n("ruleView.tooltiptext"),
+      accesskey: l10n("ruleView.accesskey"),
+      contentURL: "chrome://browser/content/devtools/cssruleview.xul",
+      load: function(aInspector, aFrame) new RuleViewTool(aInspector, aFrame),
+      destroy: function(aContext) aContext.destroy()
+    });
+  }
+
+  // Register the computed styles view
+  if (Services.prefs.getBoolPref("devtools.styleinspector.enabled")) {
+    InspectorUI.registerSidebar({
+      id: "computedview",
+      label: this.l10n("style.highlighter.button.label2"),
+      tooltiptext: this.l10n("style.highlighter.button.tooltip2"),
+      accesskey: this.l10n("style.highlighter.accesskey2"),
+      contentURL: "chrome://browser/content/devtools/csshtmltree.xul",
+      load: function(aInspector, aFrame) new ComputedViewTool(aInspector, aFrame),
+      destroy: function(aContext) aContext.destroy()
+    });
+  }
+}
+
+function RuleViewTool(aInspector, aFrame)
 {
   this.inspector = aInspector;
-  this.doc = aWindow.document;
-  this.outerIFrame = aIFrame;
+  this.chromeWindow = this.inspector.chromeWindow;
+  this.doc = aFrame.contentDocument;
 
-  this.view = new CssRuleView(this.doc);
+  if (!this.inspector._ruleViewStore) {
+   this.inspector._ruleViewStore = {};
+  }
+  this.view = new CssRuleView(this.doc, this.inspector._ruleViewStore);
   this.doc.documentElement.appendChild(this.view.element);
 
   this._changeHandler = function() {
     this.inspector.markDirty();
+    this.inspector.change("ruleview");
   }.bind(this);
 
   this.view.element.addEventListener("CssRuleViewChanged", this._changeHandler)
 
   this._cssLinkHandler = function(aEvent) {
-    let contentDoc = this.inspector.selection.document;
     let rule = aEvent.detail.rule;
-    let line = rule.ruleLine || 0;
     let styleSheet = rule.sheet;
-    let styleSheets = contentDoc.styleSheets;
+    let doc = this.chromeWindow.content.document;
+    let styleSheets = doc.styleSheets;
     let contentSheet = false;
+    let line = rule.ruleLine || 0;
 
-    // The style editor can only display stylesheets coming from content because
-    // chrome stylesheets are not listed in the editor's stylesheet selector.
-    //
-    // If the stylesheet is a content stylesheet we send it to the style
-    // editor else we display it in the view source window.
-    //
     // Array.prototype.indexOf always returns -1 here so we loop through
     // the styleSheets object instead.
     for each (let sheet in styleSheets) {
@@ -59,23 +98,14 @@ this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
     }
 
     if (contentSheet)  {
-      let target = this.inspector.target;
-
-      if (StyleEditorDefinition.isTargetSupported(target)) {
-        let toolbox = gDevTools.getToolboxForTarget(target);
-
-        toolbox.once("styleeditor-selected", function SE_selected(id, styleEditor) {
-          styleEditor.selectStyleSheet(styleSheet, line);
-        });
-        toolbox.selectTool("styleeditor");
-      }
+      this.chromeWindow.StyleEditor.openChrome(styleSheet, line);
     } else {
       let href = styleSheet ? styleSheet.href : "";
       if (rule.elementStyle.element) {
         href = rule.elementStyle.element.ownerDocument.location.href;
       }
-      let viewSourceUtils = this.inspector.viewSourceUtils;
-      viewSourceUtils.viewSource(href, null, contentDoc, line);
+      let viewSourceUtils = this.chromeWindow.gViewSourceUtils;
+      viewSourceUtils.viewSource(href, null, doc, line);
     }
   }.bind(this);
 
@@ -83,93 +113,75 @@ this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
                                      this._cssLinkHandler);
 
   this._onSelect = this.onSelect.bind(this);
-  this.inspector.selection.on("new-node", this._onSelect);
-  this.refresh = this.refresh.bind(this);
-  this.inspector.on("layout-change", this.refresh);
-  this.inspector.sidebar.on("ruleview-selected", this.refresh);
-  this.inspector.selection.on("pseudoclass", this.refresh);
-  if (this.inspector.highlighter) {
-    this.inspector.highlighter.on("locked", this._onSelect);
-  }
+  this.inspector.on("select", this._onSelect);
+
+  this._onChange = this.onChange.bind(this);
+  this.inspector.on("change", this._onChange);
+  this.inspector.on("sidebaractivated-ruleview", this._onChange);
 
   this.onSelect();
 }
 
 RuleViewTool.prototype = {
-  onSelect: function RVT_onSelect(aEvent) {
-    if (!this.inspector.selection.isConnected() ||
-        !this.inspector.selection.isElementNode()) {
+  onSelect: function RVT_onSelect(aEvent, aFrom) {
+    let node = this.inspector.selection;
+    if (!node) {
       this.view.highlight(null);
       return;
     }
 
-    if (!aEvent || aEvent == "new-node") {
-      if (this.inspector.selection.reason == "highlighter") {
-        this.view.highlight(null);
-      } else {
-        this.view.highlight(this.inspector.selection.node);
-      }
-    }
-
-    if (aEvent == "locked") {
-      this.view.highlight(this.inspector.selection.node);
+    if (this.inspector.locked) {
+      this.view.highlight(node);
     }
   },
 
-  isActive: function RVT_isActive() {
-    return this.inspector.sidebar.getCurrentTabID() == "ruleview";
-  },
+  onChange: function RVT_onChange(aEvent, aFrom) {
+    if (aFrom == "ruleview" || aFrom == "createpanel") {
+      return;
+    }
 
-  refresh: function RVT_refresh() {
-    if (this.isActive()) {
+    if (this.inspector.locked && this.inspector.isPanelVisible("ruleview")) {
       this.view.nodeChanged();
     }
   },
 
   destroy: function RVT_destroy() {
-    this.inspector.off("layout-change", this.refresh);
-    this.inspector.sidebar.off("ruleview-selected", this.refresh);
-    this.inspector.selection.off("pseudoclass", this.refresh);
-    this.inspector.selection.off("new-node", this._onSelect);
-    if (this.inspector.highlighter) {
-      this.inspector.highlighter.off("locked", this._onSelect);
-    }
-
-    this.view.element.removeEventListener("CssRuleViewCSSLinkClicked",
-      this._cssLinkHandler);
-
+    this.inspector.off("select", this._onSelect);
+    this.inspector.off("change", this._onChange);
+    this.inspector.off("sidebaractivated-ruleview", this._onChange);
     this.view.element.removeEventListener("CssRuleViewChanged",
-      this._changeHandler);
-
+                                          this._changeHandler);
+    this.view.element.removeEventListener("CssRuleViewCSSLinkClicked",
+                                          this._cssLinkHandler);
     this.doc.documentElement.removeChild(this.view.element);
 
     this.view.destroy();
 
-    delete this.outerIFrame;
+    delete this._changeHandler;
     delete this.view;
     delete this.doc;
     delete this.inspector;
   }
 }
 
-this.ComputedViewTool = function CVT_ComputedViewTool(aInspector, aWindow, aIFrame)
+function ComputedViewTool(aInspector, aFrame)
 {
   this.inspector = aInspector;
-  this.window = aWindow;
-  this.document = aWindow.document;
-  this.outerIFrame = aIFrame;
+  this.iframe = aFrame;
+  this.window = aInspector.chromeWindow;
+  this.document = this.window.document;
   this.cssLogic = new CssLogic();
   this.view = new CssHtmlTree(this);
 
   this._onSelect = this.onSelect.bind(this);
-  this.inspector.selection.on("new-node", this._onSelect);
-  if (this.inspector.highlighter) {
-    this.inspector.highlighter.on("locked", this._onSelect);
-  }
-  this.refresh = this.refresh.bind(this);
-  this.inspector.on("layout-change", this.refresh);
-  this.inspector.sidebar.on("computedview-selected", this.refresh);
-  this.inspector.selection.on("pseudoclass", this.refresh);
+  this.inspector.on("select", this._onSelect);
+  this._onChange = this.onChange.bind(this);
+  this.inspector.on("change", this._onChange);
+
+  // Since refreshes of the computed view are non-destructive,
+  // refresh when the tab is changed so we can notice script-driven
+  // changes.
+  this.inspector.on("sidebaractivated-computedview", this._onChange);
 
   this.cssLogic.highlight(null);
   this.view.highlight(null);
@@ -180,57 +192,39 @@ this.ComputedViewTool = function CVT_ComputedViewTool(aInspector, aWindow, aIFra
 ComputedViewTool.prototype = {
   onSelect: function CVT_onSelect(aEvent)
   {
-    if (!this.inspector.selection.isConnected() ||
-        !this.inspector.selection.isElementNode()) {
-      // FIXME: We should hide view's content
+    if (this.inspector.locked) {
+      this.cssLogic.highlight(this.inspector.selection);
+      this.view.highlight(this.inspector.selection);
+    }
+  },
+
+  onChange: function CVT_change(aEvent, aFrom)
+  {
+    if (aFrom == "computedview" ||
+        aFrom == "createpanel" ||
+        this.inspector.selection != this.cssLogic.viewedElement) {
       return;
     }
 
-    if (!aEvent || aEvent == "new-node") {
-      if (this.inspector.selection.reason == "highlighter") {
-        // FIXME: We should hide view's content
-      } else {
-        this.cssLogic.highlight(this.inspector.selection.node);
-        this.view.highlight(this.inspector.selection.node);
-      }
-    }
-
-    if (aEvent == "locked") {
-      this.cssLogic.highlight(this.inspector.selection.node);
-      this.view.highlight(this.inspector.selection.node);
-    }
-  },
-
-  isActive: function CVT_isActive() {
-    return this.inspector.sidebar.getCurrentTabID() == "computedview";
-  },
-
-  refresh: function CVT_refresh() {
-    if (this.isActive()) {
-      this.cssLogic.highlight(this.inspector.selection.node);
+    if (this.inspector.locked && this.inspector.isPanelVisible("computedview")) {
+      this.cssLogic.highlight(this.inspector.selection);
       this.view.refreshPanel();
     }
   },
 
   destroy: function CVT_destroy(aContext)
   {
-    this.inspector.off("layout-change", this.refresh);
-    this.inspector.sidebar.off("computedview-selected", this.refresh);
-    this.inspector.selection.off("pseudoclass", this.refresh);
-    this.inspector.selection.off("new-node", this._onSelect);
-    if (this.inspector.highlighter) {
-      this.inspector.highlighter.off("locked", this._onSelect);
-    }
-
+    this.inspector.off("select", this._onSelect);
+    this.inspector.off("change", this._onChange);
+    this.inspector.off("sidebaractivated-computedview", this._onChange);
     this.view.destroy();
     delete this.view;
 
-    delete this.outerIFrame;
     delete this.cssLogic;
     delete this.cssHtmlTree;
+    delete this.iframe;
     delete this.window;
     delete this.document;
-    delete this.inspector;
   }
 }
 
@@ -248,3 +242,5 @@ XPCOMUtils.defineLazyGetter(this, "CssHtmlTree", function() {
   Cu.import("resource:///modules/devtools/CssHtmlTree.jsm", tmp);
   return tmp.CssHtmlTree;
 });
+
+RegisterStyleTools();

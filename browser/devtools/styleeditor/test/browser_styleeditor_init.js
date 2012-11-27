@@ -32,11 +32,19 @@ function run(aChrome)
   let SEC = gChromeWindow.styleEditorChrome;
   is(SEC, aChrome, "StyleEditorChrome object exists as new window property");
 
+  ok(gChromeWindow.document.title.indexOf("simple testcase") >= 0,
+     "the Style Editor window title contains the document's title");
+
   // check editors are instantiated
   is(SEC.editors.length, 2,
      "there is two StyleEditor instances managed");
   ok(SEC.editors[0].styleSheetIndex < SEC.editors[1].styleSheetIndex,
      "editors are ordered by styleSheetIndex");
+
+  // check StyleEditorChrome is a singleton wrt to the same DOMWindow
+  let chromeWindow = StyleEditor.openChrome();
+  is(chromeWindow, gChromeWindow,
+     "attempt to edit the same document returns the same Style Editor window");
 }
 
 let gEditorAddedCount = 0;

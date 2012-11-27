@@ -5,9 +5,7 @@
 // Tests that the key bindings work properly.
 
 let doc;
-let inspector;
-let computedView;
-let iframe;
+let stylePanel;
 
 function createDocument()
 {
@@ -16,38 +14,38 @@ function createDocument()
     '<span class="matches">Some styled text</span>' +
     '</div>';
   doc.title = "Style Inspector key binding test";
-
-  openInspector(openComputedView);
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(doc.body, runStyleInspectorTests);
 }
 
-function openComputedView(aInspector)
+function runStyleInspectorTests()
 {
-  inspector = aInspector;
-  iframe = inspector._toolbox.frame;
-
-  Services.obs.addObserver(runTests, "StyleInspector-populated", false);
-
-  inspector.sidebar.select("computedview");
+  Services.obs.addObserver(SI_test, "StyleInspector-populated", false);
+  SI_inspectNode();
 }
 
-function runTests()
+function SI_inspectNode()
 {
-  Services.obs.removeObserver(runTests, "StyleInspector-populated");
-  computedView = getComputedView(inspector);
-
   var span = doc.querySelector(".matches");
   ok(span, "captain, we have the matches span");
 
-  inspector.selection.setNode(span);
+  let htmlTree = stylePanel.cssHtmlTree;
+  stylePanel.selectNode(span);
 
-  is(span, computedView.viewedElement,
+  is(span, htmlTree.viewedElement,
     "style inspector node matches the selected node");
-  is(computedView.viewedElement, computedView.cssLogic.viewedElement,
+  is(htmlTree.viewedElement, stylePanel.cssLogic.viewedElement,
      "cssLogic node matches the cssHtmlTree node");
+}
+
+function SI_test()
+{
+  Services.obs.removeObserver(SI_test, "StyleInspector-populated", false);
 
   info("checking keybindings");
 
-  let searchbar = computedView.searchField;
+  let iframe = stylePanel.iframe;
+  let searchbar = stylePanel.cssHtmlTree.searchField;
   let propView = getFirstVisiblePropertyView();
   let rulesTable = propView.matchedSelectorsContainer;
   let matchedExpander = propView.matchedExpander;
@@ -61,7 +59,7 @@ function runTests()
     testKey(iframe.contentWindow, "VK_RETURN", rulesTable);
 
     checkHelpLinkKeybinding();
-    computedView.destroy();
+    stylePanel.destroy();
     finishUp();
   });
 
@@ -78,13 +76,13 @@ function runTests()
     info("window is focused");
     info("focusing search filter");
     searchbar.focus();
-  }, iframe.contentWindow);
+  }, stylePanel.iframe.contentWindow);
 }
 
 function getFirstVisiblePropertyView()
 {
   let propView = null;
-  computedView.propertyViews.some(function(aPropView) {
+  stylePanel.cssHtmlTree.propertyViews.some(function(aPropView) {
     if (aPropView.visible) {
       propView = aPropView;
       return true;
@@ -109,6 +107,7 @@ function testKey(aContext, aVirtKey, aRulesTable)
 function checkHelpLinkKeybinding()
 {
   info("checking help link keybinding");
+  let iframe = stylePanel.iframe;
   let propView = getFirstVisiblePropertyView();
 
   info("check that MDN link is opened on \"F1\"");
@@ -122,7 +121,7 @@ function checkHelpLinkKeybinding()
 
 function finishUp()
 {
-  doc = inspector = iframe = computedView = null;
+  doc = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();
 }

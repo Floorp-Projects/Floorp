@@ -29,7 +29,7 @@ function test()
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gDebugger = gPane.contentWindow;
     gScripts = gDebugger.DebuggerView.Sources._container;
     resumed = true;
 

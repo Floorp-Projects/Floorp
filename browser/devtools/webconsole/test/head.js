@@ -8,11 +8,6 @@ Cu.import("resource:///modules/HUDService.jsm", tempScope);
 let HUDService = tempScope.HUDService;
 Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tempScope);
 let WebConsoleUtils = tempScope.WebConsoleUtils;
-Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
-let gDevTools = tempScope.gDevTools;
-Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
-let TargetFactory = tempScope.TargetFactory;
-
 const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let WCU_l10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
@@ -37,7 +32,8 @@ let tab, browser, hudId, hud, hudBox, filterBox, outputNode, cs;
 
 function addTab(aURL)
 {
-  gBrowser.selectedTab = gBrowser.addTab(aURL);
+  gBrowser.selectedTab = gBrowser.addTab();
+  content.location.assign(aURL);
   tab = gBrowser.selectedTab;
   browser = gBrowser.getBrowserForTab(tab);
 }
@@ -137,24 +133,23 @@ function findLogEntry(aString)
  *        Optional function to invoke after the Web Console completes
  *        initialization (web-console-created).
  */
-function openConsole(aTab, aCallback = function() { })
+function openConsole(aTab, aCallback)
 {
-  function onWebConsoleOpen(aEvent, aPanel)
+  function onWebConsoleOpen(aSubject, aTopic)
   {
-    executeSoon(aCallback.bind(null, aPanel.hud));
+    if (aTopic == "web-console-created") {
+      Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
+      aSubject.QueryInterface(Ci.nsISupportsString);
+      let hud = HUDService.getHudReferenceById(aSubject.data);
+      executeSoon(aCallback.bind(null, hud));
+    }
   }
 
-  let target = TargetFactory.forTab(aTab || tab);
-  let toolbox = gDevTools.getToolboxForTarget(target);
-  if (toolbox) {
-    toolbox.once("webconsole-selected", onWebConsoleOpen);
-    toolbox.selectTool("webconsole");
+  if (aCallback) {
+    Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
   }
-  else {
-    let target = TargetFactory.forTab(aTab || tab);
-    toolbox = gDevTools.openToolboxForTab(target, "webconsole");
-    toolbox.once("webconsole-selected", onWebConsoleOpen);
-  }
+
+  HUDService.activateHUDForContext(aTab || tab);
 }
 
 /**
@@ -167,27 +162,23 @@ function openConsole(aTab, aCallback = function() { })
  *        Optional function to invoke after the Web Console completes
  *        closing (web-console-destroyed).
  */
-function closeConsole(aTab, aCallback = function() { })
+function closeConsole(aTab, aCallback)
 {
-  let target = TargetFactory.forTab(aTab || tab);
-  let toolbox = gDevTools.getToolboxForTarget(target);
-  if (toolbox) {
-    let panel = gDevTools.getPanelForTarget("webconsole", target);
-    if (panel) {
-      let hudId = panel.hud.hudId;
-      panel.once("destroyed", function() {
-        executeSoon(aCallback.bind(null, hudId));
-      });
+  function onWebConsoleClose(aSubject, aTopic)
+  {
+    if (aTopic == "web-console-destroyed") {
+      Services.obs.removeObserver(onWebConsoleClose, "web-console-destroyed");
+      aSubject.QueryInterface(Ci.nsISupportsString);
+      let hudId = aSubject.data;
+      executeSoon(aCallback.bind(null, hudId));
     }
-    else {
-      toolbox.once("destroyed", aCallback.bind(null, null));
-    }
+  }
 
-    toolbox.destroy();
+  if (aCallback) {
+    Services.obs.addObserver(onWebConsoleClose, "web-console-destroyed", false);
   }
-  else {
-    aCallback();
-  }
+
+  HUDService.deactivateHUDForContext(aTab || tab);
 }
 
 /**
@@ -259,8 +250,7 @@ function finishTest()
 
 function tearDown()
 {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.closeToolbox(target);
+  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
@@ -316,18 +306,4 @@ function waitForSuccess(aOptions)
   }
 
   wait(aOptions.validatorFn, aOptions.successFn, aOptions.failureFn);
-}
-
-function openInspector(aCallback, aTab = gBrowser.selectedTab)
-{
-  let target = TargetFactory.forTab(aTab);
-  let inspector = gDevTools.getPanelForTarget("inspector", target);
-  if (inspector && inspector.isReady) {
-    aCallback(inspector);
-  } else {
-    let toolbox = gDevTools.openToolboxForTab(target, "inspector");
-    toolbox.once("inspector-ready", function _onSelect(aEvent, aPanel) {
-      aCallback(aPanel);
-    });
-  }
 }

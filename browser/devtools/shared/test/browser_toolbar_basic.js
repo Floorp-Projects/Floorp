@@ -31,33 +31,101 @@ function isChecked(b) {
 
 function checkOpen() {
   ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in checkOpen");
+
   let close = document.getElementById("developer-toolbar-closebutton");
+  let webconsole = document.getElementById("developer-toolbar-webconsole");
+  let inspector = document.getElementById("developer-toolbar-inspector");
+  let styleeditor = document.getElementById("developer-toolbar-styleeditor");
+  let debuggr = document.getElementById("developer-toolbar-debugger");
+
   ok(close, "Close button exists");
 
-  let toggleToolbox =
-    document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
-  ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
+  ok(!isChecked(webconsole), "web console button state 1");
+  ok(!isChecked(inspector), "inspector button state 1");
+  ok(!isChecked(debuggr), "debugger button state 1");
+  ok(!isChecked(styleeditor), "styleeditor button state 1");
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.openToolboxForTab(target, "webconsole");
-  toolbox.once("webconsole-selected", function BTBT_selected(id, aInspector) {
-    ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
+  document.getElementById("Tools:WebConsole").doCommand();
 
-    addTab("about:blank", function(browser, tab) {
-      info("Opened a new tab");
+  ok(isChecked(webconsole), "web console button state 2");
+  ok(!isChecked(inspector), "inspector button state 2");
+  ok(!isChecked(debuggr), "debugger button state 2");
+  ok(!isChecked(styleeditor), "styleeditor button state 2");
 
-      ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
+  document.getElementById("Tools:Inspect").doCommand();
 
-      gBrowser.removeCurrentTab();
+  ok(isChecked(webconsole), "web console button state 3");
+  ok(isChecked(inspector), "inspector button state 3");
+  ok(!isChecked(debuggr), "debugger button state 3");
+  ok(!isChecked(styleeditor), "styleeditor button state 3");
 
-      oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE, catchFail(checkClosed));
-      document.getElementById("Tools:DevToolbar").doCommand();
-    });
+  // Christmas tree!
+
+  // The web console opens synchronously, but closes asynchronously.
+  let hud = imported.HUDService.getHudByWindow(content);
+  imported.HUDService.disableAnimation(hud.hudId);
+
+  document.getElementById("Tools:WebConsole").doCommand();
+
+  ok(!isChecked(webconsole), "web console button state 6");
+  ok(isChecked(inspector), "inspector button state 6");
+  ok(!isChecked(debuggr), "debugger button state 6");
+  ok(!isChecked(styleeditor), "styleeditor button state 6");
+
+  document.getElementById("Tools:Inspect").doCommand();
+
+  ok(!isChecked(webconsole), "web console button state 7");
+  ok(!isChecked(inspector), "inspector button state 7");
+  ok(!isChecked(debuggr), "debugger button state 7");
+  ok(!isChecked(styleeditor), "styleeditor button state 7");
+
+  // All closed
+
+  // Check we can open and close and retain button state
+  document.getElementById("Tools:Inspect").doCommand();
+
+  ok(!isChecked(webconsole), "web console button state 8");
+  ok(isChecked(inspector), "inspector button state 8");
+  ok(!isChecked(debuggr), "debugger button state 8");
+  ok(!isChecked(styleeditor), "styleeditor button state 8");
+
+
+  // Test Style Editor
+  document.getElementById("Tools:StyleEditor").doCommand();
+
+  ok(!isChecked(webconsole), "web console button state 9");
+  ok(isChecked(inspector), "inspector button state 9");
+  ok(!isChecked(debuggr), "debugger button state 9");
+  ok(isChecked(styleeditor), "styleeditor button state 9");
+
+  // Test Debugger
+  document.getElementById("Tools:Debugger").doCommand();
+
+  ok(!isChecked(webconsole), "web console button state 9");
+  ok(isChecked(inspector), "inspector button state 9");
+  ok(isChecked(debuggr), "debugger button state 9");
+  ok(isChecked(styleeditor), "styleeditor button state 9");
+
+  addTab("about:blank", function(browser, tab) {
+    info("Opening a new tab");
+
+    ok(!isChecked(webconsole), "web console button state 10");
+    ok(!isChecked(inspector), "inspector button state 10");
+    ok(!isChecked(debuggr), "debugger button state 10");
+    ok(!isChecked(styleeditor), "styleeditor button state 10");
+
+    gBrowser.removeCurrentTab();
+
+    oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE, catchFail(checkClosed));
+    document.getElementById("Tools:DevToolbar").doCommand();
   });
 }
 
 function checkClosed() {
   ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in checkClosed");
+
+  // Check we grok state even when closed
+  document.getElementById("Tools:WebConsole").doCommand();
 
   oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW, catchFail(checkReOpen));
   document.getElementById("Tools:DevToolbar").doCommand();
@@ -66,9 +134,18 @@ function checkClosed() {
 function checkReOpen() {
   ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in checkReOpen");
 
-  let toggleToolbox =
-    document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
-  ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
+  let webconsole = document.getElementById("developer-toolbar-webconsole");
+  let inspector = document.getElementById("developer-toolbar-inspector");
+  let debuggr = document.getElementById("developer-toolbar-debugger");
+  let styleeditor = document.getElementById("developer-toolbar-styleeditor");
+
+  ok(isChecked(webconsole), "web console button state 99");
+  ok(isChecked(inspector), "inspector button state 99");
+  ok(isChecked(debuggr), "debugger button state 99");
+  ok(isChecked(styleeditor), "styleeditor button state 99");
+
+  // We close the style editor (not automatically closed)
+  document.getElementById("Tools:StyleEditor").doCommand();
 
   oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE, catchFail(checkReClosed));
   document.getElementById("developer-toolbar-closebutton").doCommand();
