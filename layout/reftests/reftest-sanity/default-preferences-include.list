@@ -1,0 +1,6 @@
+# test default-preferences on include commands
+
+# In default-preferences-tests.list, the default-preferences line in effect
+# before the include statement sets different font sizes for the test and
+# reference files. Those default preferences should not inherit into this file.
+== font-default.html font-default.html
