@@ -1925,37 +1925,34 @@ LIRGenerator::visitIn(MIn *ins)
 }
 
 bool
-LIRGenerator::visitInstanceOfTyped(MInstanceOfTyped *ins)
+LIRGenerator::visitInstanceOf(MInstanceOf *ins)
 {
     MDefinition *lhs = ins->getOperand(0);
 
     JS_ASSERT(lhs->type() == MIRType_Value || lhs->type() == MIRType_Object);
 
     if (lhs->type() == MIRType_Object) {
-        LInstanceOfTypedO *lir = new LInstanceOfTypedO(useRegister(lhs));
+        LInstanceOfO *lir = new LInstanceOfO(useRegister(lhs));
         return define(lir, ins) && assignSafepoint(lir, ins);
     }
 
-    LInstanceOfTypedV *lir = new LInstanceOfTypedV();
-    return useBox(lir, LInstanceOfTypedV::LHS, lhs) && define(lir, ins) && assignSafepoint(lir, ins);
+    LInstanceOfV *lir = new LInstanceOfV();
+    return useBox(lir, LInstanceOfV::LHS, lhs) && define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
-LIRGenerator::visitInstanceOf(MInstanceOf *ins)
+LIRGenerator::visitCallInstanceOf(MCallInstanceOf *ins)
 {
     MDefinition *lhs = ins->lhs();
     MDefinition *rhs = ins->rhs();
 
-    JS_ASSERT(lhs->type() == MIRType_Value || lhs->type() == MIRType_Object);
+    JS_ASSERT(lhs->type() == MIRType_Value);
     JS_ASSERT(rhs->type() == MIRType_Object);
 
-    if (lhs->type() == MIRType_Object) {
-        LInstanceOfO *lir = new LInstanceOfO(useRegister(lhs), useRegister(rhs), temp(), temp());
-        return define(lir, ins) && assignSafepoint(lir, ins);
-    }
-
-    LInstanceOfV *lir = new LInstanceOfV(useRegister(rhs), temp(), temp());
-    return useBox(lir, LInstanceOfV::LHS, lhs) && define(lir, ins) && assignSafepoint(lir, ins);
+    LCallInstanceOf *lir = new LCallInstanceOf(useRegisterAtStart(rhs));
+    if (!useBoxAtStart(lir, LCallInstanceOf::LHS, lhs))
+        return false;
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
