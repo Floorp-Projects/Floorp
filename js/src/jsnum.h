@@ -15,7 +15,6 @@
 
 #include "vm/NumericConversions.h"
 
-extern double js_NaN;
 extern double js_PositiveInfinity;
 extern double js_NegativeInfinity;
 
