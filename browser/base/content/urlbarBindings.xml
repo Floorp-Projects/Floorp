@@ -329,7 +329,9 @@
               loadCurrent();
             } else {
               this.handleRevert();
-              let params = { allowThirdPartyFixup: true, postData: postData };
+              let params = { allowThirdPartyFixup: true,
+                             postData: postData,
+                             initiatingDoc: document };
               if (!this.valueIsTyped)
                 params.isUTF8 = true;
               openUILinkIn(url, where, params);
