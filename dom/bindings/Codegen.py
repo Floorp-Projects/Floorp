@@ -1337,10 +1337,6 @@ class PropertyArrays():
         return [ "staticMethods", "staticAttrs", "methods", "attrs",
                  "unforgeableAttrs", "consts" ]
 
-    @staticmethod
-    def xrayRelevantArrayNames():
-        return [ "methods", "attrs", "unforgeableAttrs", "consts" ]
-
     def hasChromeOnly(self):
         return any(getattr(self, a).hasChromeOnly() for a in self.arrayNames())
     def hasNonChromeOnly(self):
@@ -1417,7 +1413,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         # There is no need to init any IDs in workers, because worker bindings
         # don't have Xrays.
         if not self.descriptor.workers:
-            for var in self.properties.xrayRelevantArrayNames():
+            for var in self.properties.arrayNames():
                 props = getattr(self.properties, var)
                 # We only have non-chrome ids to init if we have no chrome ids.
                 if props.hasChromeOnly():
@@ -6946,7 +6942,7 @@ class CGNativeMember(ClassMethod):
             if nullable:
                 type = type.inner
             elementType = type.inner
-            decl = CGWrapper(self.getArgType(elementType, False, True)[0],
+            decl = CGWrapper(self.getArgType(elementType, False, False, True)[0],
                              pre="Sequence< ", post=" >")
             return decl.define(), True, True
 
@@ -7032,17 +7028,23 @@ class CGNativeMember(ClassMethod):
 
         return builtinNames[type.tag()], False, True
 
-    def getArgType(self, type, optional, isMember):
+    def getArgType(self, type, optional, variadic, isMember):
         """
         Get the type of an argument declaration.  Returns the type CGThing, and
         whether this should be a const ref.
         """
-        (decl, ref, handleNullable) = self.doGetArgType(type, optional, isMember)
+        (decl, ref, handleNullable) = self.doGetArgType(type, optional,
+                                                        isMember or variadic)
         decl = CGGeneric(decl)
         if handleNullable and type.nullable():
             decl = CGWrapper(decl, pre="Nullable< ", post=" >")
             ref = True
-        if optional:
+        if variadic:
+            decl = CGWrapper(decl, pre="nsTArray< ", post=" >")
+            ref = True
+        elif optional:
+            # Note: All variadic args claim to be optional, but we can just use
+            # empty arrays to represent them not being present.
             decl = CGWrapper(decl, pre="Optional< ", post=" >")
             ref = True
         return (decl, ref)
@@ -7053,6 +7055,7 @@ class CGNativeMember(ClassMethod):
         """
         (decl, ref) = self.getArgType(arg.type,
                                       arg.optional and not arg.defaultValue,
+                                      arg.variadic,
                                       False)
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")
@@ -7414,6 +7417,15 @@ class CallCallback(CGNativeMember):
         self.callback = callback
         args = sig[1]
         self.argCount = len(args)
+        if self.argCount > 0:
+            # Check for variadic arguments
+            lastArg = args[self.argCount-1]
+            if lastArg.variadic:
+                self.argCountStr = (
+                    "(%d - 1) + %s.Length()" % (self.argCount,
+                                                lastArg.identifier.name))
+            else:
+                self.argCountStr = "%d" % self.argCount
         CGNativeMember.__init__(self, descriptorProvider, FakeMember(),
                                 "Call", (self.retvalType, args),
                                 extendedAttrs={},
@@ -7429,25 +7441,32 @@ class CallCallback(CGNativeMember):
     def getImpl(self):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
-            "argCount": self.argCount,
             "returnResult": self.getResultConversion(),
-            "convertArgs": self.getArgConversions()
+            "convertArgs": self.getArgConversions(),
             }
         if self.argCount > 0:
+            replacements["argCount"] = self.argCountStr
             replacements["argvDecl"] = string.Template(
-                "JS::Value argv[${argCount}];\n").substitute(replacements)
-            replacements["argv"] = "argv"
+                "JS::AutoValueVector argv(cx);\n"
+                "if (!argv.resize(${argCount})) {\n"
+                "  aRv.Throw(NS_ERROR_OUT_OF_MEMORY);\n"
+                "  return${errorReturn};\n"
+                "}\n"
+                ).substitute(replacements)
+            replacements["argv"] = "argv.begin()"
+            replacements["argc"] = "argc"
         else:
             # Avoid weird 0-sized arrays
             replacements["argvDecl"] = ""
             replacements["argv"] = "nullptr"
+            replacements["argc"] = "0"
 
         return string.Template(
             "JS::Value rval = JSVAL_VOID;\n"
             "${argvDecl}" # Newlines and semicolons are in the value
             "${convertArgs}"
             "if (!JS_CallFunctionValue(cx, aThisObj, JS::ObjectValue(*mCallable),\n"
-            "                          argc, ${argv}, &rval)) {\n"
+            "                          ${argc}, ${argv}, &rval)) {\n"
             "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
             "  return${errorReturn};\n"
             "}\n"
@@ -7490,15 +7509,22 @@ class CallCallback(CGNativeMember):
                                     pre="do {\n",
                                     post="\n} while (0);")
                           for c in argConversions]
-        argConversions.insert(0,
-                              CGGeneric("unsigned argc = %d;" % self.argCount));
+        if self.argCount > 0:
+            argConversions.insert(0,
+                                  CGGeneric("unsigned argc = %s;" % self.argCountStr));
         # And slap them together.
         return CGList(argConversions, "\n\n").define() + "\n\n"
 
     def getArgConversion(self, i, arg):
         argval = arg.identifier.name
-        if arg.optional:
-            argval += ".Value()"
+
+        if arg.variadic:
+            argval = argval + "[idx]"
+            jsvalIndex = "%d + idx" % i
+        else:
+            jsvalIndex = "%d" % i
+            if arg.optional:
+                argval += ".Value()"
         if arg.type.isString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
             # let's give it a string it can mutate
@@ -7513,16 +7539,22 @@ class CallCallback(CGNativeMember):
             arg.type, self.descriptor,
             {
                 'result' : result,
-                'successCode' : "break;",
-                'jsvalRef' : "argv[%d]" % i,
-                'jsvalPtr' : "&argv[%d]" % i,
+                'successCode' : "continue;" if arg.variadic else "break;",
+                'jsvalRef' : "argv[%s]" % jsvalIndex,
+                'jsvalPtr' : "&argv[%s]" % jsvalIndex,
                 # XXXbz we don't have anything better to use for 'obj',
                 # really...
                 'obj' : 'mCallable',
                 'isCreator': False,
                 'exceptionCode' : self.exceptionCode
                 })
-        if arg.optional:
+        if arg.variadic:
+            conversion = string.Template(
+                "for (uint32_t idx = 0; idx < ${arg}.Length(); ++idx) {\n" +
+                CGIndenter(CGGeneric(conversion)).define() + "\n"
+                "}\n"
+                "break;").substitute({ "arg": arg.identifier.name })
+        elif arg.optional:
             conversion = (
                 CGIfWrapper(CGGeneric(conversion),
                             "%s.WasPassed()" % arg.identifier.name).define() +

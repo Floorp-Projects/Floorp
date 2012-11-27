@@ -662,7 +662,8 @@
                    class="chromeclass-toolbar-additional"
                    removable="false"
                    title="&socialToolbar.title;"
-                   hidden="true">
+                   hidden="true"
+                   observes="socialActiveBroadcaster">
         <toolbarbutton id="social-provider-button"
                        class="toolbarbutton-1"
                        type="menu">
