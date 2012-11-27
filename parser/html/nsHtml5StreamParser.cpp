@@ -83,7 +83,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
   tmp->DropTimer();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequest)
-  tmp->mOwner = nullptr;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   tmp->mExecutorFlusher = nullptr;
   tmp->mLoadFlusher = nullptr;
   tmp->mExecutor = nullptr;
@@ -93,10 +93,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRequest)
-  if (tmp->mOwner) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOwner");
-    cb.NoteXPCOMChild(static_cast<nsIParser*> (tmp->mOwner));
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   // hack: count the strongly owned edge wrapped in the runnable
   if (tmp->mExecutorFlusher) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExecutorFlusher->mExecutor");
@@ -109,8 +106,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
   }
   // hack: count self if held by mChardet
   if (tmp->mChardet) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, 
-      "mChardet->mObserver");
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChardet->mObserver");
     cb.NoteXPCOMChild(static_cast<nsIStreamListener*>(tmp));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

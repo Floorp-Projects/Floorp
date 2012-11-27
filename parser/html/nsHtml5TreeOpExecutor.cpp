@@ -35,7 +35,8 @@
 
 using namespace mozilla;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsHtml5TreeOpExecutor)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsHtml5TreeOpExecutor, nsContentSink,
+                                     mOwnedElements)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHtml5TreeOpExecutor)
   NS_INTERFACE_TABLE_INHERITED1(nsHtml5TreeOpExecutor, 
@@ -45,14 +46,6 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(nsContentSink)
 NS_IMPL_ADDREF_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 
 NS_IMPL_RELEASE_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwnedElements)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwnedElements)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 class nsHtml5ExecutorReflusher : public nsRunnable
 {
