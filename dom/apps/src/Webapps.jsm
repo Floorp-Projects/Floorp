@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
 
 function debug(aMsg) {
-  dump("-*-*- Webapps.jsm : " + aMsg + "\n");
+  //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
 }
 
 const WEBAPP_RUNTIME = Services.appinfo.ID == "webapprt@mozilla.org";
@@ -840,6 +840,10 @@ this.DOMApplicationRegistry = {
                                                       manifestURL: aManifestURL,
                                                       app: app,
                                                       manifest: aManifest });
+            if (app.installState == "pending") {
+              // We restarted a failed download, apply it automatically.
+              DOMApplicationRegistry.applyDownload(aManifestURL);
+            }
           });
         });
     }).bind(this));
