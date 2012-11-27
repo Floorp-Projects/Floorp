@@ -211,6 +211,43 @@ public:
   void PassOptionalUnsignedLongLong(const Optional<uint64_t>&);
   void PassOptionalUnsignedLongLongWithDefault(uint64_t);
 
+  float WritableFloat() const;
+  void SetWritableFloat(float);
+  float WritableUnrestrictedFloat() const;
+  void SetWritableUnrestrictedFloat(float);
+  Nullable<float> GetWritableNullableFloat() const;
+  void SetWritableNullableFloat(Nullable<float>);
+  Nullable<float> GetWritableNullableUnrestrictedFloat() const;
+  void SetWritableNullableUnrestrictedFloat(Nullable<float>);
+  double WritableDouble() const;
+  void SetWritableDouble(double);
+  double WritableUnrestrictedDouble() const;
+  void SetWritableUnrestrictedDouble(double);
+  Nullable<double> GetWritableNullableDouble() const;
+  void SetWritableNullableDouble(Nullable<double>);
+  Nullable<double> GetWritableNullableUnrestrictedDouble() const;
+  void SetWritableNullableUnrestrictedDouble(Nullable<double>);
+  void PassFloat(float, float, Nullable<float>, Nullable<float>,
+                 double, double, Nullable<double>, Nullable<double>,
+                 const Sequence<float>&, const Sequence<float>&,
+                 const Sequence<Nullable<float> >&,
+                 const Sequence<Nullable<float> >&,
+                 const Sequence<double>&, const Sequence<double>&,
+                 const Sequence<Nullable<double> >&,
+                 const Sequence<Nullable<double> >&);
+  void PassLenientFloat(float, float, Nullable<float>, Nullable<float>,
+                        double, double, Nullable<double>, Nullable<double>,
+                        const Sequence<float>&, const Sequence<float>&,
+                        const Sequence<Nullable<float> >&,
+                        const Sequence<Nullable<float> >&,
+                        const Sequence<double>&, const Sequence<double>&,
+                        const Sequence<Nullable<double> >&,
+                        const Sequence<Nullable<double> >&);
+  float LenientFloatAttr() const;
+  void SetLenientFloatAttr(float);
+  double LenientDoubleAttr() const;
+  void SetLenientDoubleAttr(double);
+
   // Interface types
   already_AddRefed<TestInterface> ReceiveSelf();
   already_AddRefed<TestInterface> ReceiveNullableSelf();

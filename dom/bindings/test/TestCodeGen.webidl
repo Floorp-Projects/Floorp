@@ -150,6 +150,40 @@ interface TestInterface {
   void passOptionalUnsignedLongLong(optional unsigned long long arg);
   void passOptionalUnsignedLongLongWithDefault(optional unsigned long long arg = 17);
 
+  attribute float writableFloat;
+  attribute unrestricted float writableUnrestrictedFloat;
+  attribute float? writableNullableFloat;
+  attribute unrestricted float? writableNullableUnrestrictedFloat;
+  attribute double writableDouble;
+  attribute unrestricted double writableUnrestrictedDouble;
+  attribute double? writableNullableDouble;
+  attribute unrestricted double? writableNullableUnrestrictedDouble;
+  void passFloat(float arg1, unrestricted float arg2,
+                 float? arg3, unrestricted float? arg4,
+                 double arg5, unrestricted double arg6,
+                 double? arg7, unrestricted double? arg8,
+                 sequence<float> arg9, sequence<unrestricted float> arg10,
+                 sequence<float?> arg11, sequence<unrestricted float?> arg12,
+                 sequence<double> arg13, sequence<unrestricted double> arg14,
+                 sequence<double?> arg15, sequence<unrestricted double?> arg16);
+  [LenientFloat]
+  void passLenientFloat(float arg1, unrestricted float arg2,
+                        float? arg3, unrestricted float? arg4,
+                        double arg5, unrestricted double arg6,
+                        double? arg7, unrestricted double? arg8,
+                        sequence<float> arg9,
+                        sequence<unrestricted float> arg10,
+                        sequence<float?> arg11,
+                        sequence<unrestricted float?> arg12,
+                        sequence<double> arg13,
+                        sequence<unrestricted double> arg14,
+                        sequence<double?> arg15,
+                        sequence<unrestricted double?> arg16);
+  [LenientFloat]
+  attribute float lenientFloatAttr;
+  [LenientFloat]
+  attribute double lenientDoubleAttr;
+
   // Castable interface types
   // XXXbz add tests for throwing versions of all the castable interface stuff
   TestInterface receiveSelf();
