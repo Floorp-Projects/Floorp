@@ -578,13 +578,21 @@ ThreadActor.prototype = {
             inner.setBreakpoint(lines[line][i], bpActor);
             codeFound = true;
           }
+          bpActor.addScript(inner, this);
           actualLocation = {
             url: aLocation.url,
             line: line,
             column: aLocation.column
           };
+          // If there wasn't already a breakpoint at that line, update the cache
+          // as well.
+          if (scriptBreakpoints[line] && scriptBreakpoints[line].actor) {
+            let existing = scriptBreakpoints[line].actor;
+            bpActor.onDelete();
+            delete scriptBreakpoints[oldLine];
+            return { actor: existing.actorID, actualLocation: actualLocation };
+          }
           bpActor.location = actualLocation;
-          // Update the cache as well.
           scriptBreakpoints[line] = scriptBreakpoints[oldLine];
           scriptBreakpoints[line].line = line;
           delete scriptBreakpoints[oldLine];
