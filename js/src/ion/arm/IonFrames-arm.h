@@ -446,8 +446,11 @@ class InvalidationBailoutStack
 //        stack values
 class BaselineFrame
 {
+    // We need to split the Value into 2 fields of 32 bits, otherwise the C++
+    // compiler may add some padding between the fields.
+    uint32_t loScratchValue;
+    uint32_t hiScratchValue;
     size_t frameSize;
-    js::Value scratchValue;
 
   public:
     // Distance between the frame pointer and the frame header (return address).
@@ -468,11 +471,14 @@ class BaselineFrame
         return -(sizeof(BaselineFrame) - offsetof(BaselineFrame, frameSize));
     }
     static inline size_t reverseOffsetOfScratchValue() {
-        return -(sizeof(BaselineFrame) - offsetof(BaselineFrame, scratchValue));
+        return -(sizeof(BaselineFrame) - offsetof(BaselineFrame, loScratchValue));
     }
     static inline size_t reverseOffsetOfLocal(size_t index) {
         return -(sizeof(BaselineFrame) + index * sizeof(js::Value)) - sizeof(js::Value);
     }
 };
+
+// Ensure the frame is 8-byte aligned on ARM.
+JS_STATIC_ASSERT(((sizeof(BaselineFrame) + BaselineFrame::FramePointerOffset) % 8) == 0);
 
 #endif // jsion_ionframes_arm_h
