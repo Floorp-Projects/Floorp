@@ -299,7 +299,7 @@ function isVisible(elem) {
 
 function toggleNonTests (e) {
   e.preventDefault();
-  var elems = document.getElementsClassName("non-test");
+  var elems = document.getElementsByClassName("non-test");
   for (var i="0"; i<elems.length; i++) {
     toggleVisible(elems[i]);
   }
