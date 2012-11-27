@@ -405,6 +405,7 @@ this.ICC_COMMAND_UPDATE_RECORD = 0xdc;
 this.ICC_EF_ICCID  = 0x2fe2;
 this.ICC_EF_IMG    = 0x4f20;
 this.ICC_EF_PBR    = 0x4f30;
+this.ICC_EF_PLMNsel = 0x6f30; // PLMN for SIM
 this.ICC_EF_SST    = 0x6f38;
 this.ICC_EF_UST    = 0x6f38; // For USIM
 this.ICC_EF_ADN    = 0x6f3a;
@@ -562,6 +563,10 @@ this.COMPREHENSIONTLV_TAG_ICON_ID = 0x1e;
 this.COMPREHENSIONTLV_TAG_ICON_ID_LIST = 0x1f;
 this.COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE = 0x2b;
 this.COMPREHENSIONTLV_TAG_URL = 0x31;
+
+// Tags for Service Provider Display Information TLV
+this.SPDI_TAG_SPDI = 0xa3;
+this.SPDI_TAG_PLMN_LIST = 0x80;
 
 // Device identifiers, see TS 11.14, clause 12.7
 this.STK_DEVICE_ID_KEYPAD = 0x01;
@@ -906,6 +911,8 @@ this.GECKO_ICC_SERVICES = {
   sim: {
     ADN: 2,
     FDN: 3,
+    PLMNSEL: 7,
+    SPN: 17,
     SDN: 18,
     DATA_DOWNLOAD_SMS_PP: 26,
     BDN: 31
@@ -914,7 +921,9 @@ this.GECKO_ICC_SERVICES = {
     FDN: 2,
     SDN: 4,
     BDN: 6,
-    DATA_DOWNLOAD_SMS_PP: 28
+    SPN: 19,
+    DATA_DOWNLOAD_SMS_PP: 28,
+    SPDI: 51
   }
 };
 
