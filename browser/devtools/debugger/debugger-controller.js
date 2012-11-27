@@ -509,7 +509,7 @@ StackFrames.prototype = {
       // If an error was thrown during the evaluation of the watch expressions,
       // then at least one expression evaluation could not be performed.
       if (this.currentEvaluation.throw) {
-        DebuggerView.WatchExpressions.removeExpression(0);
+        DebuggerView.WatchExpressions.removeExpressionAt(0);
         DebuggerController.StackFrames.syncWatchExpressions();
         return;
       }
@@ -600,11 +600,15 @@ StackFrames.prototype = {
 
     // If watch expressions evaluation results are available, create a scope
     // to contain all the values.
-    if (watchExpressionsEvaluation) {
+    if (this.syncedWatchExpressions && watchExpressionsEvaluation) {
       let label = L10N.getStr("watchExpressionsScopeLabel");
       let arrow = L10N.getStr("watchExpressionsSeparatorLabel");
       let scope = DebuggerView.Variables.addScope(label);
       scope.separator = arrow;
+      scope.allowNameInput = true;
+      scope.allowDeletion = true;
+      scope.switch = DebuggerView.WatchExpressions.switchExpression;
+      scope.delete = DebuggerView.WatchExpressions.deleteExpression;
 
       // The evaluation hasn't thrown, so display the returned results and
       // always expand the watch expressions scope by default.
@@ -939,6 +943,7 @@ StackFrames.prototype = {
       this.syncedWatchExpressions =
         this.currentWatchExpressions = null;
     }
+    this.currentFrame = null;
     this._onFrames();
   },
 
