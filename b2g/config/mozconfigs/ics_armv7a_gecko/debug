@@ -1,7 +1,5 @@
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-b2g
 
-mk_add_options MOZ_MAKE_FLAGS="-j8"
-
 ac_add_options --enable-application=b2g
 ac_add_options --enable-b2g-camera
 
