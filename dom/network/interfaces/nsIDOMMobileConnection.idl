@@ -415,7 +415,7 @@ interface nsIDOMMozMobileCellInfo: nsISupports
   readonly attribute unsigned long gsmCellId;
 };
 
-[scriptable, uuid(352e7f1a-c09f-44ed-8fde-a138b09a0ea9)]
+[scriptable, uuid(a71c66ed-dfb0-4c33-9942-049e6f03dbed)]
 interface nsIDOMMozMobileICCInfo : nsISupports
 {
    /**
@@ -437,16 +437,6 @@ interface nsIDOMMozMobileICCInfo : nsISupports
    * Service Provider Name (SPN) of the subscriber's home network.
    */
   readonly attribute DOMString spn;
-
-  /**
-   * Network name must be a part of displayed carrier name.
-   */
-  readonly attribute boolean isDisplayNetworkNameRequired;
-
-  /**
-   * Service provider name must be a part of displayed carrier name.
-   */
-  readonly attribute boolean isDisplaySpnRequired;
 
   /**
    * Mobile Station ISDN Number (MSISDN) of the subscriber's, aka
