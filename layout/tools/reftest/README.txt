@@ -290,6 +290,28 @@ must be one of the following:
    a manifest, it is legal to use it anywhere in a manifest. Subsequent uses
    of url-prefix overwrite any existing values.
 
+4. Specification of default preferences
+
+   default-preferences <preference>*
+
+   where <preference> is defined above.
+
+   The <preference> settings will be used for all following test items in the
+   manifest.
+
+   If a test item includes its own preference settings, then they will override
+   any settings for preferences of the same names that are set using
+   default-preferences, just as later items within a line override earlier ones.
+
+   A default-preferences line with no <preference> settings following it will
+   reset the set of default preferences to be empty.
+
+   As with url-prefix, default-preferences will often be used at the start of a
+   manifest file so that it applies to all test items, but it is legal for
+   default-preferences to appear anywhere in the manifest. A subsequent
+   default-preferences will reset any previous default preference values and
+   overwrite them with the specified <preference> values.
+
 This test manifest format could be used by other harnesses, such as ones
 that do not depend on XUL, or even ones testing other layout engines.
 
