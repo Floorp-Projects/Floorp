@@ -10,9 +10,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
-    <title>&title;</title>
+    <title>Layout View</title>
 
-    <script type="application/javascript;version=1.8" src="view.js"></script>
     <script type="application/javascript;version=1.8">
     <![CDATA[
       let elts;
@@ -21,8 +20,7 @@
       const Ci = Components.interfaces;
       const Cc = Components.classes;
 
-      window.setPanel = function(panel) {
-        this.layoutview = new LayoutView(panel, window);
+      window.onload = function() {
 
         // Tooltip mechanism
         elts = document.querySelectorAll("*[tooltip]");
@@ -43,7 +41,6 @@
       }
 
       window.onunload = function() {
-        this.layoutview.destroy();
         if (elts) {
           for (let i = 0; i < elts.length; i++) {
             let elt = elts[i];
@@ -60,6 +57,10 @@
       function onmouseout(e) {
         tooltip.textContent = "";
       }
+
+      function toggleView() {
+        window.parent.postMessage("layoutview-toggle-view", "*");
+      }
     ]]>
     </script>
 
@@ -69,10 +70,13 @@
   </head>
   <body>
 
-    <p id="header">
+    <!-- Header: always visible, even when the view is closed. -->
+    <a onclick="toggleView()" href="#" id="header">
         <span id="element-size"></span>
-    </p>
+        <span id="togglebutton"></span>
+    </a>
 
+    <!-- Boxes: hidden when the view is closed. -->
     <div id="main">
 
       <div id="margins" tooltip="&margins.tooltip;">

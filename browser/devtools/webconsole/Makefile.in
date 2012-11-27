@@ -15,7 +15,6 @@ EXTRA_JS_MODULES = \
 		PropertyPanel.jsm \
 		NetworkPanel.jsm \
 		AutocompletePopup.jsm \
-		WebConsolePanel.jsm \
 		$(NULL)
 
 TEST_DIRS = test

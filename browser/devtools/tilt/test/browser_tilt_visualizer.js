@@ -19,8 +19,7 @@ function test() {
     chromeWindow: window,
     contentWindow: gBrowser.selectedBrowser.contentWindow,
     parentNode: gBrowser.selectedBrowser.parentNode,
-    notifications: Tilt.NOTIFICATIONS,
-    tab: gBrowser.selectedTab,
+    inspectorUI: window.InspectorUI,
 
     onError: function onWebGLError()
     {

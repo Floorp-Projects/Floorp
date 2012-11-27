@@ -46,6 +46,7 @@ function startTest()
   let win2 = tabs[runCount*2 + 1].linkedBrowser.contentWindow;
   let hudId2 = HUDService.getHudIdByWindow(win2);
   huds[1] = HUDService.hudReferences[hudId2];
+  HUDService.disableAnimation(hudId2);
 
   if (runCount == 0) {
     menuitems[1] = huds[1].ui.rootElement.querySelector("#saveBodies");
@@ -114,6 +115,7 @@ function onpopupshown2b(aEvent)
       let win1 = tabs[runCount*2].linkedBrowser.contentWindow;
       let hudId1 = HUDService.getHudIdByWindow(win1);
       huds[0] = HUDService.hudReferences[hudId1];
+      HUDService.disableAnimation(hudId1);
 
       info("iframe1 height " + huds[0].iframe.clientHeight);
       info("iframe1 root height " + huds[0].ui.rootElement.clientHeight);

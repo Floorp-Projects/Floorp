@@ -100,6 +100,10 @@
        key="&errorConsoleCmd.commandkey;"
        command="sp-cmd-errorConsole"
        modifiers="accel,shift"/>
+  <key id="sp-key-webConsole"
+       key="&webConsoleCmd.commandkey;"
+       command="sp-cmd-webConsole"
+       modifiers="accel,shift"/>
   <key id="key_openHelp"
        keycode="VK_F1"
        command="sp-cmd-documentationLink"/>

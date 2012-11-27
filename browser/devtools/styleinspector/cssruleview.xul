@@ -9,16 +9,4 @@
   <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
   %inspectorDTD;
 ]>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="&ruleViewTitle;">
-  <script type="application/javascript;version=1.8">
-    window.setPanel = function(panel, iframe) {
-      Components.utils.import("resource:///modules/devtools/StyleInspector.jsm");
-      this.ruleview = new RuleViewTool(panel, window, iframe);
-    }
-    window.onunload = function() {
-      if (this.ruleview) {
-        this.ruleview.destroy();
-      }
-    }
-  </script>
-</window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>

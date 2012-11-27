@@ -5,9 +5,7 @@
 // Tests that the style inspector works properly
 
 let doc;
-let inspector;
-let div;
-let computedView;
+let stylePanel;
 
 const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/test/browser_bug683672.html";
 
@@ -27,24 +25,9 @@ function tabLoaded()
 {
   browser.removeEventListener("load", tabLoaded, true);
   doc = content.document;
-  openInspector(selectNode);
-}
-
-function selectNode(aInspector)
-{
-  inspector = aInspector;
-
-  div = content.document.getElementById("test");
-  ok(div, "captain, we have the div");
-
-  inspector.selection.setNode(div);
-
-  inspector.sidebar.once("computedview-ready", function() {
-    computedView = getComputedView(inspector);
-
-    inspector.sidebar.select("computedview");
-    runTests();
-  });
+  // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(doc.body, runTests);
 }
 
 function runTests()
@@ -53,17 +36,25 @@ function runTests()
   //testUnmatchedSelectors();
 
   info("finishing up");
+  stylePanel.destroy();
   finishUp();
 }
 
 function testMatchedSelectors()
 {
   info("checking selector counts, matched rules and titles");
+  let div = content.document.getElementById("test");
+  ok(div, "captain, we have the div");
 
-  is(div, computedView.viewedElement,
+  info("selecting the div");
+  stylePanel.selectNode(div);
+
+  let htmlTree = stylePanel.cssHtmlTree;
+
+  is(div, htmlTree.viewedElement,
       "style inspector node matches the selected node");
 
-  let propertyView = new PropertyView(computedView, "color");
+  let propertyView = new PropertyView(htmlTree, "color");
   let numMatchedSelectors = propertyView.propertyInfo.matchedSelectors.length;
 
   is(numMatchedSelectors, 6,
@@ -80,12 +71,14 @@ function testUnmatchedSelectors()
   ok(body, "captain, we have a body");
 
   info("selecting content.document.body");
-  inspector.selection.setNode(body);
+  stylePanel.selectNode(body);
 
-  is(body, computedView.viewedElement,
+  let htmlTree = stylePanel.cssHtmlTree;
+
+  is(body, htmlTree.viewedElement,
       "style inspector node matches the selected node");
 
-  let propertyView = new PropertyView(computedView, "color");
+  let propertyView = new PropertyView(htmlTree, "color");
   let numUnmatchedSelectors = propertyView.propertyInfo.unmatchedSelectors.length;
 
   is(numUnmatchedSelectors, 13,
@@ -97,7 +90,7 @@ function testUnmatchedSelectors()
 
 function finishUp()
 {
-  doc = inspector = div = computedView = null;
+  doc = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();
 }

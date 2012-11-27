@@ -11,10 +11,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "HUDService",
                                   "resource:///modules/HUDService.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
-                                  "resource:///modules/devtools/Target.jsm");
 
 /**
  * 'console' command
@@ -48,9 +44,8 @@ gcli.addCommand({
   name: "console close",
   description: gcli.lookup("consolecloseDesc"),
   exec: function Command_consoleClose(args, context) {
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.closeToolbox(target);
+    let tab = context.environment.chromeDocument.defaultView.gBrowser.selectedTab
+    HUDService.deactivateHUDForContext(tab);
   }
 });
 
@@ -61,8 +56,7 @@ gcli.addCommand({
   name: "console open",
   description: gcli.lookup("consoleopenDesc"),
   exec: function Command_consoleOpen(args, context) {
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.openToolboxForTab(target, "webconsole");
+    let tab = context.environment.chromeDocument.defaultView.gBrowser.selectedTab
+    HUDService.activateHUDForContext(tab);
   }
 });

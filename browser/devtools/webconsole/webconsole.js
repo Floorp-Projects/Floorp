@@ -177,8 +177,10 @@ const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
  *
  * @param object aWebConsoleOwner
  *        The WebConsole owner object.
+ * @param string aPosition
+ *        Tells the UI location for the Web Console.
  */
-function WebConsoleFrame(aWebConsoleOwner)
+function WebConsoleFrame(aWebConsoleOwner, aPosition)
 {
   this.owner = aWebConsoleOwner;
   this.hudId = this.owner.hudId;
@@ -189,6 +191,7 @@ function WebConsoleFrame(aWebConsoleOwner)
   this._networkRequests = {};
 
   this._toggleFilter = this._toggleFilter.bind(this);
+  this._onPositionConsoleCommand = this._onPositionConsoleCommand.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
   this._connectionTimeout = this._connectionTimeout.bind(this);
 
@@ -197,7 +200,7 @@ function WebConsoleFrame(aWebConsoleOwner)
 
   this._initDefaultFilterPrefs();
   this._commandController = new CommandController(this);
-  this.positionConsole(window);
+  this.positionConsole(aPosition, window);
 
   this.jsterm = new JSTerm(this);
   this.jsterm.inputNode.focus();
@@ -370,7 +373,10 @@ WebConsoleFrame.prototype = {
    */
   _initConnection: function WCF__initConnection()
   {
-    this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
+    this.proxy = new WebConsoleConnectionProxy(this, {
+      host: this.owner.remoteHost,
+      port: this.owner.remotePort,
+    });
 
     let timeout = Services.prefs.getIntPref(PREF_CONNECTION_TIMEOUT);
     this._connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -433,6 +439,7 @@ WebConsoleFrame.prototype = {
     this.inputNode = doc.querySelector(".jsterm-input-node");
 
     this._setFilterTextBoxEvents();
+    this._initPositionUI();
     this._initFilterButtons();
 
     let fontSize = Services.prefs.getIntPref("devtools.webconsole.fontSize");
@@ -475,6 +482,10 @@ WebConsoleFrame.prototype = {
       saveBodiesContextMenu.disabled = !this.getFilterState("networkinfo") &&
                                        !this.getFilterState("network");
     }.bind(this));
+
+    this.closeButton = doc.getElementById("webconsole-close-button");
+    this.closeButton.addEventListener("command",
+                                      this.owner.onCloseButton.bind(this.owner));
 
     let clearButton = doc.getElementsByClassName("webconsole-clear-console-button")[0];
     clearButton.addEventListener("command", function WCF__onClearButton() {
@@ -534,6 +545,31 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Initialize the UI for re-positioning the console
+   * @private
+   */
+  _initPositionUI: function WCF__initPositionUI()
+  {
+    let doc = this.document;
+
+    let itemAbove = doc.querySelector("menuitem[consolePosition='above']");
+    itemAbove.addEventListener("command", this._onPositionConsoleCommand, false);
+
+    let itemBelow = doc.querySelector("menuitem[consolePosition='below']");
+    itemBelow.addEventListener("command", this._onPositionConsoleCommand, false);
+
+    let itemWindow = doc.querySelector("menuitem[consolePosition='window']");
+    itemWindow.addEventListener("command", this._onPositionConsoleCommand, false);
+
+    this.positionMenuitems = {
+      last: null,
+      above: itemAbove,
+      below: itemBelow,
+      window: itemWindow,
+    };
+  },
+
+  /**
    * Creates one of the filter buttons on the toolbar.
    *
    * @private
@@ -580,18 +616,34 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Handle the "command" event for the buttons that allow the user to
+   * reposition the Web Console UI.
+   *
+   * @private
+   * @param nsIDOMEvent aEvent
+   */
+  _onPositionConsoleCommand: function WCF__onPositionConsoleCommand(aEvent)
+  {
+    let position = aEvent.target.getAttribute("consolePosition");
+    this.owner.positionConsole(position);
+  },
+
+  /**
    * Position the console in a different location.
    *
    * Note: you do not usually call this method. This is called by the WebConsole
    * instance that owns this iframe. You need to call this if you write
    * a different owner or you manually reposition the iframe.
    *
+   * @param string aPosition
+   *        The new Web Console iframe location: "above" (the page), "below" or
+   *        "window".
    * @param object aNewWindow
    *        Repositioning causes the iframe to reload - bug 254144. You need to
    *        provide the new window object so we can reinitialize the UI as
    *        needed.
    */
-  positionConsole: function WCF_positionConsole(aNewWindow)
+  positionConsole: function WCF_positionConsole(aPosition, aNewWindow)
   {
     this.window = aNewWindow;
     this.document = this.window.document;
@@ -604,6 +656,14 @@ WebConsoleFrame.prototype = {
 
     this._initUI();
     this.jsterm && this.jsterm._initUI();
+
+    this.closeButton.hidden = aPosition == "window";
+
+    this.positionMenuitems[aPosition].setAttribute("checked", true);
+    if (this.positionMenuitems.last) {
+      this.positionMenuitems.last.setAttribute("checked", false);
+    }
+    this.positionMenuitems.last = this.positionMenuitems[aPosition];
 
     if (oldOutputNode && oldOutputNode.childNodes.length) {
       let parentNode = this.outputNode.parentNode;
@@ -1731,9 +1791,7 @@ WebConsoleFrame.prototype = {
   onLocationChange: function WCF_onLocationChange(aURI, aTitle)
   {
     this.contentLocation = aURI;
-    if (this.owner.onLocationChange) {
-      this.owner.onLocationChange(aURI, aTitle);
-    }
+    this.owner.onLocationChange(aURI, aTitle);
   },
 
   /**
@@ -3970,13 +4028,14 @@ CommandController.prototype = {
  * @constructor
  * @param object aWebConsole
  *        The Web Console instance that owns this connection proxy.
- * @param RemoteTarget aTarget
- *        The target that the console will connect to.
+ * @param object aOptions
+ *        Connection options: host and port.
  */
-function WebConsoleConnectionProxy(aWebConsole, aTarget)
+function WebConsoleConnectionProxy(aWebConsole, aOptions = {})
 {
   this.owner = aWebConsole;
-  this.target = aTarget;
+  this.remoteHost = aOptions.host;
+  this.remotePort = aOptions.port;
 
   this._onPageError = this._onPageError.bind(this);
   this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
@@ -4052,17 +4111,16 @@ WebConsoleConnectionProxy.prototype = {
    */
   connect: function WCCP_connect(aCallback)
   {
-    // TODO: convert the non-remote path to use the target API as well.
-    let transport, client;
-    if (this.target.isRemote) {
-      client = this.client = this.target.client;
+    let transport;
+    if (this.remoteHost) {
+      transport = debuggerSocketConnect(this.remoteHost, this.remotePort);
     }
     else {
       this.initServer();
       transport = DebuggerServer.connectPipe();
-
-      client = this.client = new DebuggerClient(transport);
     }
+
+    let client = this.client = new DebuggerClient(transport);
 
     client.addListener("pageError", this._onPageError);
     client.addListener("consoleAPICall", this._onConsoleAPICall);
@@ -4071,18 +4129,6 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("fileActivity", this._onFileActivity);
     client.addListener("locationChange", this._onLocationChange);
 
-    if (this.target.isRemote) {
-      this._consoleActor = this.target.form.consoleActor;
-      if (!this.target.chrome) {
-        this.owner.onLocationChange(this.target.url, this.target.name);
-      }
-
-      let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
-                       "FileActivity", "LocationChange"];
-      this.client.attachConsole(this._consoleActor, listeners,
-                                this._onAttachConsole.bind(this, aCallback));
-      return;
-    }
     client.connect(function(aType, aTraits) {
       client.listTabs(this._onListTabs.bind(this, aCallback));
     }.bind(this));
@@ -4099,7 +4145,32 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onListTabs: function WCCP__onListTabs(aCallback, aResponse)
   {
-    let selectedTab = aResponse.tabs[aResponse.selected];
+    let selectedTab;
+
+    if (this.remoteHost) {
+      this.owner._connectTimer.cancel();
+
+      let tabs = [];
+      for (let tab of aResponse.tabs) {
+        tabs.push(tab.title);
+      }
+
+      tabs.push(l10n.getStr("listTabs.globalConsoleActor"));
+
+      let selected = {};
+      let result = Services.prompt.select(null,
+        l10n.getStr("remoteWebConsoleSelectTabTitle"),
+        l10n.getStr("remoteWebConsoleSelectTabMessage"),
+        tabs.length, tabs, selected);
+
+      if (result && selected.value < aResponse.tabs.length) {
+        selectedTab = aResponse.tabs[selected.value];
+      }
+    }
+    else {
+      selectedTab = aResponse.tabs[aResponse.selected];
+    }
+
     if (selectedTab) {
       this._consoleActor = selectedTab.consoleActor;
       this.owner.onLocationChange(selectedTab.url, selectedTab.title);
@@ -4332,9 +4403,7 @@ WebConsoleConnectionProxy.prototype = {
     this.client.removeListener("locationChange", this._onLocationChange);
 
     try {
-      if (!this.target.isRemote) {
-        this.client.close(onDisconnect);
-      }
+      this.client.close(onDisconnect);
     }
     catch (ex) {
       Cu.reportError("Web Console disconnect exception: " + ex);

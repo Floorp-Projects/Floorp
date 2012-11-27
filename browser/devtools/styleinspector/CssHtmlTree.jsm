@@ -17,10 +17,6 @@ Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/CssLogic.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
-Cu.import("resource:///modules/devtools/StyleEditorDefinition.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
 
 this.EXPORTED_SYMBOLS = ["CssHtmlTree", "PropertyView"];
 
@@ -122,15 +118,13 @@ UpdateProcess.prototype = {
  */
 this.CssHtmlTree = function CssHtmlTree(aStyleInspector)
 {
-  this.styleWindow = aStyleInspector.window;
-  this.styleDocument = aStyleInspector.window.document;
+  this.styleWin = aStyleInspector.iframe;
   this.styleInspector = aStyleInspector;
   this.cssLogic = aStyleInspector.cssLogic;
+  this.doc = aStyleInspector.document;
+  this.win = aStyleInspector.window;
+  this.getRTLAttr = this.win.getComputedStyle(this.win.gBrowser).direction;
   this.propertyViews = [];
-
-  let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-    getService(Ci.nsIXULChromeRegistry);
-  this.getRTLAttr = chromeReg.isLocaleRTL("global") ? "rtl" : "ltr";
 
   // Create bound methods.
   this.siBoundMenuUpdate = this.computedViewMenuUpdate.bind(this);
@@ -138,6 +132,9 @@ this.CssHtmlTree = function CssHtmlTree(aStyleInspector)
   this.siBoundCopyDeclaration = this.computedViewCopyDeclaration.bind(this);
   this.siBoundCopyProperty = this.computedViewCopyProperty.bind(this);
   this.siBoundCopyPropertyValue = this.computedViewCopyPropertyValue.bind(this);
+
+  // The document in which we display the results (csshtmltree.xul).
+  this.styleDocument = this.styleWin.contentWindow.document;
 
   this.styleDocument.addEventListener("copy", this.siBoundCopy);
 
@@ -269,8 +266,8 @@ CssHtmlTree.prototype = {
       // processed.
       this.refreshSourceFilter();
       this.numVisibleProperties = 0;
-      let fragment = this.styleDocument.createDocumentFragment();
-      this._refreshProcess = new UpdateProcess(this.styleWindow, CssHtmlTree.propertyNames, {
+      let fragment = this.doc.createDocumentFragment();
+      this._refreshProcess = new UpdateProcess(this.win, CssHtmlTree.propertyNames, {
         onItem: function(aPropertyName) {
           // Per-item callback.
           let propView = new PropertyView(this, aPropertyName);
@@ -330,7 +327,7 @@ CssHtmlTree.prototype = {
     this._darkStripe = true;
 
     let display = this.propertyContainer.style.display;
-    this._refreshProcess = new UpdateProcess(this.styleWindow, this.propertyViews, {
+    this._refreshProcess = new UpdateProcess(this.win, this.propertyViews, {
       onItem: function(aPropView) {
         aPropView.refresh();
       }.bind(this),
@@ -350,7 +347,7 @@ CssHtmlTree.prototype = {
    */
   filterChanged: function CssHtmlTree_filterChanged(aEvent)
   {
-    let win = this.styleWindow;
+    let win = this.styleWin.contentWindow;
 
     if (this._filterChangedTimeout) {
       win.clearTimeout(this._filterChangedTimeout);
@@ -400,7 +397,7 @@ CssHtmlTree.prototype = {
 
     // Here we build and cache a list of css properties supported by the browser
     // We could use any element but let's use the main document's root element
-    let styles = this.styleWindow.getComputedStyle(this.styleDocument.documentElement);
+    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.documentElement);
     let mozProps = [];
     for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
       let prop = styles.item(i);
@@ -471,12 +468,9 @@ CssHtmlTree.prototype = {
    */
   createContextMenu: function SI_createContextMenu()
   {
-    let iframe = this.styleInspector.outerIFrame;
-    let outerDoc = iframe.ownerDocument;
+    let popupSet = this.doc.getElementById("mainPopupSet");
 
-    let popupSet = outerDoc.getElementById("inspectorPopupSet");
-
-    let menu = outerDoc.createElement("menupopup");
+    let menu = this.doc.createElement("menupopup");
     menu.addEventListener("popupshowing", this.siBoundMenuUpdate);
     menu.id = "computed-view-context-menu";
     popupSet.appendChild(menu);
@@ -484,7 +478,7 @@ CssHtmlTree.prototype = {
     // Copy selection
     let label = CssHtmlTree.l10n("style.contextmenu.copyselection");
     let accessKey = CssHtmlTree.l10n("style.contextmenu.copyselection.accesskey");
-    let item = outerDoc.createElement("menuitem");
+    let item = this.doc.createElement("menuitem");
     item.id = "computed-view-copy";
     item.setAttribute("label", label);
     item.setAttribute("accesskey", accessKey);
@@ -494,7 +488,7 @@ CssHtmlTree.prototype = {
     // Copy declaration
     label = CssHtmlTree.l10n("style.contextmenu.copydeclaration");
     accessKey = CssHtmlTree.l10n("style.contextmenu.copydeclaration.accesskey");
-    item = outerDoc.createElement("menuitem");
+    item = this.doc.createElement("menuitem");
     item.id = "computed-view-copy-declaration";
     item.setAttribute("label", label);
     item.setAttribute("accesskey", accessKey);
@@ -504,7 +498,7 @@ CssHtmlTree.prototype = {
     // Copy property name
     label = CssHtmlTree.l10n("style.contextmenu.copyproperty");
     accessKey = CssHtmlTree.l10n("style.contextmenu.copyproperty.accesskey");
-    item = outerDoc.createElement("menuitem");
+    item = this.doc.createElement("menuitem");
     item.id = "computed-view-copy-property";
     item.setAttribute("label", label);
     item.setAttribute("accesskey", accessKey);
@@ -514,14 +508,14 @@ CssHtmlTree.prototype = {
     // Copy property value
     label = CssHtmlTree.l10n("style.contextmenu.copypropertyvalue");
     accessKey = CssHtmlTree.l10n("style.contextmenu.copypropertyvalue.accesskey");
-    item = outerDoc.createElement("menuitem");
+    item = this.doc.createElement("menuitem");
     item.id = "computed-view-copy-property-value";
     item.setAttribute("label", label);
     item.setAttribute("accesskey", accessKey);
     item.addEventListener("command", this.siBoundCopyPropertyValue);
     menu.appendChild(item);
 
-    iframe.setAttribute("context", menu.id);
+    this.styleWin.setAttribute("context", menu.id);
   },
 
   /**
@@ -530,13 +524,12 @@ CssHtmlTree.prototype = {
    */
   computedViewMenuUpdate: function si_computedViewMenuUpdate()
   {
-    let disable = this.styleWindow.getSelection().isCollapsed;
-
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let menuitem = outerDoc.querySelector("#computed-view-copy");
+    let win = this.styleDocument.defaultView;
+    let disable = win.getSelection().isCollapsed;
+    let menuitem = this.doc.querySelector("#computed-view-copy");
     menuitem.disabled = disable;
 
-    let node = outerDoc.popupNode;
+    let node = this.doc.popupNode;
     if (!node) {
       return;
     }
@@ -549,11 +542,11 @@ CssHtmlTree.prototype = {
       }
     }
     let disablePropertyItems = !node;
-    menuitem = outerDoc.querySelector("#computed-view-copy-declaration");
+    menuitem = this.doc.querySelector("#computed-view-copy-declaration");
     menuitem.disabled = disablePropertyItems;
-    menuitem = outerDoc.querySelector("#computed-view-copy-property");
+    menuitem = this.doc.querySelector("#computed-view-copy-property");
     menuitem.disabled = disablePropertyItems;
-    menuitem = outerDoc.querySelector("#computed-view-copy-property-value");
+    menuitem = this.doc.querySelector("#computed-view-copy-property-value");
     menuitem.disabled = disablePropertyItems;
   },
 
@@ -573,8 +566,7 @@ CssHtmlTree.prototype = {
 
     // Remove any MDN link titles
     text = text.replace(CssHtmlTree.HELP_LINK_TITLE, "");
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    clipboardHelper.copyString(text, outerDoc);
+    clipboardHelper.copyString(text, this.doc);
 
     if (aEvent) {
       aEvent.preventDefault();
@@ -588,8 +580,7 @@ CssHtmlTree.prototype = {
    */
   computedViewCopyDeclaration: function si_computedViewCopyDeclaration(aEvent)
   {
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let node = outerDoc.popupNode;
+    let node = this.doc.popupNode;
     if (!node) {
       return;
     }
@@ -605,7 +596,7 @@ CssHtmlTree.prototype = {
       let name = node.querySelector(".property-name").textContent;
       let value = node.querySelector(".property-value").textContent;
 
-      clipboardHelper.copyString(name + ": " + value + ";", outerDoc);
+      clipboardHelper.copyString(name + ": " + value + ";", this.doc);
     }
   },
 
@@ -616,8 +607,7 @@ CssHtmlTree.prototype = {
    */
   computedViewCopyProperty: function si_computedViewCopyProperty(aEvent)
   {
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let node = outerDoc.popupNode;
+    let node = this.doc.popupNode;
     if (!node) {
       return;
     }
@@ -631,7 +621,7 @@ CssHtmlTree.prototype = {
     }
     if (node) {
       node = node.querySelector(".property-name");
-      clipboardHelper.copyString(node.textContent, outerDoc);
+      clipboardHelper.copyString(node.textContent, this.doc);
     }
   },
 
@@ -642,8 +632,7 @@ CssHtmlTree.prototype = {
    */
   computedViewCopyPropertyValue: function si_computedViewCopyPropertyValue(aEvent)
   {
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let node = outerDoc.popupNode;
+    let node = this.doc.popupNode;
     if (!node) {
       return;
     }
@@ -657,7 +646,7 @@ CssHtmlTree.prototype = {
     }
     if (node) {
       node = node.querySelector(".property-value");
-      clipboardHelper.copyString(node.textContent, outerDoc);
+      clipboardHelper.copyString(node.textContent, this.doc);
     }
   },
 
@@ -679,23 +668,22 @@ CssHtmlTree.prototype = {
     }
 
     // Remove context menu
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let menu = outerDoc.querySelector("#computed-view-context-menu");
+    let menu = this.doc.querySelector("#computed-view-context-menu");
     if (menu) {
       // Copy selected
-      let menuitem = outerDoc.querySelector("#computed-view-copy");
+      let menuitem = this.doc.querySelector("#computed-view-copy");
       menuitem.removeEventListener("command", this.siBoundCopy);
 
       // Copy property
-      menuitem = outerDoc.querySelector("#computed-view-copy-declaration");
+      menuitem = this.doc.querySelector("#computed-view-copy-declaration");
       menuitem.removeEventListener("command", this.siBoundCopyDeclaration);
 
       // Copy property name
-      menuitem = outerDoc.querySelector("#computed-view-copy-property");
+      menuitem = this.doc.querySelector("#computed-view-copy-property");
       menuitem.removeEventListener("command", this.siBoundCopyProperty);
 
       // Copy property value
-      menuitem = outerDoc.querySelector("#computed-view-copy-property-value");
+      menuitem = this.doc.querySelector("#computed-view-copy-property-value");
       menuitem.removeEventListener("command", this.siBoundCopyPropertyValue);
 
       menu.removeEventListener("popupshowing", this.siBoundMenuUpdate);
@@ -715,9 +703,10 @@ CssHtmlTree.prototype = {
 
     // The element that we're inspecting, and the document that it comes from.
     delete this.propertyViews;
-    delete this.styleWindow;
-    delete this.styleDocument;
+    delete this.styleWin;
     delete this.cssLogic;
+    delete this.doc;
+    delete this.win;
     delete this.styleInspector;
   },
 };
@@ -873,7 +862,7 @@ PropertyView.prototype = {
 
   buildMain: function PropertyView_buildMain()
   {
-    let doc = this.tree.styleDocument;
+    let doc = this.tree.doc;
     this.element = doc.createElementNS(HTML_NS, "tr");
     this.element.setAttribute("class", this.propertyHeaderClassName);
 
@@ -928,7 +917,7 @@ PropertyView.prototype = {
 
   buildSelectorContainer: function PropertyView_buildSelectorContainer()
   {
-    let doc = this.tree.styleDocument;
+    let doc = this.tree.doc;
     let element = doc.createElementNS(HTML_NS, "tr");
     element.setAttribute("class", this.propertyContentClassName);
     this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "td");
@@ -1097,12 +1086,7 @@ PropertyView.prototype = {
    */
   mdnLinkClick: function PropertyView_mdnLinkClick(aEvent)
   {
-    let inspector = this.tree.styleInspector.inspector;
-
-    if (inspector.target.tab) {
-      let browserWin = inspector.target.tab.ownerDocument.defaultView;
-      browserWin.openUILinkIn(this.link, "tab");
-    }
+    this.tree.win.openUILinkIn(this.link, "tab");
     aEvent.preventDefault();
   },
 };
@@ -1213,35 +1197,27 @@ SelectorView.prototype = {
 
   /**
    * When a css link is clicked this method is called in order to either:
-   *   1. Open the link in view source (for chrome stylesheets).
+   *   1. Open the link in view source (for element style attributes).
    *   2. Open the link in the style editor.
    *
-   *   We can only view stylesheets contained in document.styleSheets inside the
-   *   style editor.
+   *   Like the style editor, we only view stylesheets contained in
+   *   document.styleSheets inside the style editor.
    *
    * @param aEvent The click event
    */
   openStyleEditor: function(aEvent)
   {
-    let inspector = this.tree.styleInspector.inspector;
-    let contentDoc = inspector.selection.document;
-    let cssSheet = this.selectorInfo.selector._cssRule._cssSheet;
+    let rule = this.selectorInfo.selector._cssRule;
+    let doc = this.tree.win.content.document;
     let line = this.selectorInfo.ruleLine || 0;
+    let cssSheet = rule._cssSheet;
     let contentSheet = false;
     let styleSheet;
     let styleSheets;
 
-    // The style editor can only display stylesheets coming from content because
-    // chrome stylesheets are not listed in the editor's stylesheet selector.
-    //
-    // If the stylesheet is a content stylesheet we send it to the style
-    // editor else we display it in the view source window.
-    //
-    // We check if cssSheet exists in case of inline styles (which contain no
-    // sheet)
     if (cssSheet) {
       styleSheet = cssSheet.domSheet;
-      styleSheets = contentDoc.styleSheets;
+      styleSheets = doc.styleSheets;
 
       // Array.prototype.indexOf always returns -1 here so we loop through
       // the styleSheets array instead.
@@ -1254,24 +1230,15 @@ SelectorView.prototype = {
     }
 
     if (contentSheet) {
-      let target = inspector.target;
-
-      if (StyleEditorDefinition.isTargetSupported(target)) {
-        let toolbox = gDevTools.getToolboxForTarget(target);
-
-        toolbox.once("styleeditor-selected", function SE_selected(id, styleEditor) {
-          styleEditor.selectStyleSheet(styleSheet, line);
-        });
-        toolbox.selectTool("styleeditor");
-      }
+      this.tree.win.StyleEditor.openChrome(styleSheet, line);
     } else {
       let href = styleSheet ? styleSheet.href : "";
-      let viewSourceUtils = inspector.viewSourceUtils;
+      let viewSourceUtils = this.tree.win.gViewSourceUtils;
 
       if (this.selectorInfo.sourceElement) {
         href = this.selectorInfo.sourceElement.ownerDocument.location.href;
       }
-      viewSourceUtils.viewSource(href, null, contentDoc, line);
+      viewSourceUtils.viewSource(href, null, doc, line);
     }
   },
 };

@@ -21,11 +21,10 @@ function consoleOpened(HUD)
 
   let jsterm = HUD.jsterm;
   let popup = jsterm.autocompletePopup;
-  let onShown = function() {
+  popup._panel.addEventListener("popupshown", function() {
+    popup._panel.removeEventListener("popupshown", arguments.callee, false);
     ok(false, "popup shown");
-  };
-
-  popup._panel.addEventListener("popupshown", onShown, false);
+  }, false);
 
   ok(!popup.isOpen, "popup is not open");
 
@@ -42,7 +41,6 @@ function consoleOpened(HUD)
 
   executeSoon(function() {
     ok(!popup.isOpen, "popup is not open");
-    popup._panel.removeEventListener("popupshown", onShown, false);
     executeSoon(finishTest);
   });
 }

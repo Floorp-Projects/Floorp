@@ -44,17 +44,18 @@ function setupHighlighterTests()
 {
   let h1 = content.document.querySelector("h1");
   ok(h1, "we have the header node");
-
-  openInspector(runSelectionTests);
+  Services.obs.addObserver(runSelectionTests,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  InspectorUI.toggleInspectorUI();
 }
 
-function runSelectionTests(aInspector)
+function runSelectionTests()
 {
-  aInspector.highlighter.unlock();
-  aInspector.highlighter.outline.setAttribute("disable-transitions", "true");
+  Services.obs.removeObserver(runSelectionTests,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   executeSoon(function() {
-    aInspector.selection.once("new-node", performTestComparisons);
+    InspectorUI.highlighter.addListener("nodeselected", performTestComparisons);
     let h1 = content.document.querySelector("h1");
     EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
   });
@@ -62,24 +63,19 @@ function runSelectionTests(aInspector)
 
 function performTestComparisons()
 {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let inspector = gDevTools.getPanelForTarget("inspector", target);
-  inspector.highlighter.lock();
+  InspectorUI.highlighter.removeListener("nodeselected", performTestComparisons);
 
-  let isHighlighting =
-    !(inspector.highlighter.outline.getAttribute("hidden") == "true");
-
-  ok(isHighlighting, "inspector is highlighting");
+  InspectorUI.stopInspecting();
 
   let h1 = content.document.querySelector("h1");
-  is(inspector.selection.node, h1, "selection matches node");
+  is(InspectorUI.highlighter.node, h1, "node selected");
+  is(InspectorUI.selection, h1, "selection matches node");
 
   openConsole(gBrowser.selectedTab, performWebConsoleTests);
 }
 
 function performWebConsoleTests(hud)
 {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
   let jsterm = hud.jsterm;
   outputNode = hud.outputNode;
 
@@ -116,8 +112,7 @@ function performWebConsoleTests(hud)
       let node = outputNode.querySelector(".webconsole-msg-output");
       isnot(node.textContent.indexOf("bug653531"), -1,
             "correct output for $0.textContent");
-      let inspector = gDevTools.getPanelForTarget("inspector", target);
-      is(inspector.selection.node.textContent, "bug653531",
+      is(InspectorUI.selection.textContent, "bug653531",
          "node successfully updated");
 
       executeSoon(finishUp);
@@ -127,6 +122,7 @@ function performWebConsoleTests(hud)
 }
 
 function finishUp() {
+  InspectorUI.closeInspectorUI();
   finishTest();
 }
 
@@ -134,8 +130,8 @@ function test()
 {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+  gBrowser.selectedBrowser.addEventListener("load", function() {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
     waitForFocus(createDocument, content);
   }, true);
 

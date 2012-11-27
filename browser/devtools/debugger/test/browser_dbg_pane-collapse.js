@@ -16,7 +16,7 @@ function test() {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gDebugger = gPane.contentWindow;
     gView = gDebugger.DebuggerView;
 
     testPanesState();
