@@ -44,6 +44,7 @@ var gIgnoreWindowSize = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
 var gContainingWindow = null;
+var gFilter = null;
 
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
@@ -338,6 +339,10 @@ function InitAndStartRefTests()
         gTotalChunks = 0;
         gThisChunk = 0;
     }
+
+    try {
+        gFilter = new RegExp(prefs.getCharPref("reftest.filter"));
+    } catch(e) {}
 
     gWindowUtils = gContainingWindow.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
     if (!gWindowUtils || !gWindowUtils.compareCanvases)
@@ -658,6 +663,13 @@ function ReadTopManifest(aFileURL)
     ReadManifest(url, EXPECTED_PASS);
 }
 
+function AddTestItem(aTest)
+{
+    if (gFilter && !gFilter.test(aTest.url1.spec))
+        return;
+    gURLs.push(aTest);
+}
+
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in print-manifest-dirs.py in sync.
 function ReadManifest(aURL, inherited_status)
@@ -882,7 +894,7 @@ function ReadManifest(aURL, inherited_status)
                            : testURI.spec;
             secMan.checkLoadURIWithPrincipal(principal, testURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            gURLs.push( { type: TYPE_LOAD,
+            AddTestItem({ type: TYPE_LOAD,
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
@@ -895,7 +907,7 @@ function ReadManifest(aURL, inherited_status)
                           fuzzyMaxDelta: fuzzy_max_delta,
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
-                          url2: null } );
+                          url2: null });
         } else if (items[0] == TYPE_SCRIPT) {
             if (items.length != 2)
                 throw "Error 4 in manifest file " + aURL.spec + " line " + lineNo;
@@ -908,7 +920,7 @@ function ReadManifest(aURL, inherited_status)
                            : testURI.spec;
             secMan.checkLoadURIWithPrincipal(principal, testURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            gURLs.push( { type: TYPE_SCRIPT,
+            AddTestItem({ type: TYPE_SCRIPT,
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
@@ -921,7 +933,7 @@ function ReadManifest(aURL, inherited_status)
                           fuzzyMaxDelta: fuzzy_max_delta,
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
-                          url2: null } );
+                          url2: null });
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL) {
             if (items.length != 3)
                 throw "Error 5 in manifest file " + aURL.spec + " line " + lineNo;
@@ -937,7 +949,7 @@ function ReadManifest(aURL, inherited_status)
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             secMan.checkLoadURIWithPrincipal(principal, refURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            gURLs.push( { type: items[0],
+            AddTestItem({ type: items[0],
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
@@ -950,7 +962,7 @@ function ReadManifest(aURL, inherited_status)
                           fuzzyMaxDelta: fuzzy_max_delta,
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
-                          url2: refURI } );
+                          url2: refURI });
         } else {
             throw "Error 6 in manifest file " + aURL.spec + " line " + lineNo;
         }
