@@ -9,6 +9,7 @@ import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoEventListener;
 
@@ -27,7 +28,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
@@ -553,7 +553,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 JSONObject engineJSON = engines.getJSONObject(i);
                 String name = engineJSON.getString("name");
                 String iconURI = engineJSON.getString("iconURI");
-                Bitmap icon = getBitmapFromDataURI(iconURI);
+                Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconURI);
                 if (name.equals(suggestEngine) && suggestTemplate != null) {
                     // suggest engine should be at the front of the list
                     mSearchEngines.add(0, new SearchEngine(name, icon));
@@ -573,16 +573,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         mCursorAdapter.notifyDataSetChanged();
         filterSuggestions(mSearchTerm);
-    }
-
-    private Bitmap getBitmapFromDataURI(String dataURI) {
-        try {
-            byte[] raw = Base64.decode(dataURI.substring(22), Base64.DEFAULT);
-            return BitmapFactory.decodeByteArray(raw, 0, raw.length);
-        } catch(Exception ex) {
-            Log.i(LOGTAG, "exception while decoding bitmap: " + dataURI, ex);
-        }
-        return null;
     }
 
     private void showSuggestionsOptIn() {
