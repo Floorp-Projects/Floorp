@@ -187,8 +187,12 @@ IonRuntime::initialize(JSContext *cx)
     if (!enterJIT_)
         return false;
 
-    preBarrier_ = generatePreBarrier(cx);
-    if (!preBarrier_)
+    valuePreBarrier_ = generatePreBarrier(cx, MIRType_Value);
+    if (!valuePreBarrier_)
+        return false;
+
+    shapePreBarrier_ = generatePreBarrier(cx, MIRType_Shape);
+    if (!shapePreBarrier_)
         return false;
 
     for (VMFunction *fun = VMFunction::functions; fun; fun = fun->next) {
@@ -1916,9 +1920,15 @@ ion::FinishInvalidation(FreeOp *fop, JSScript *script)
 }
 
 void
-ion::MarkFromIon(JSRuntime *rt, Value *vp)
+ion::MarkValueFromIon(JSRuntime *rt, Value *vp)
 {
     gc::MarkValueUnbarriered(&rt->gcMarker, vp, "write barrier");
+}
+
+void
+ion::MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
+{
+    gc::MarkShapeUnbarriered(&rt->gcMarker, shapep, "write barrier");
 }
 
 void

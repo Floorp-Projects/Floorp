@@ -3,17 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMCSSRule.idl"
+#include "nsIDOMCSSConditionRule.idl"
 
-[scriptable, uuid(a6cf90bc-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMCSSMediaRule : nsIDOMCSSRule
+/**
+ * Interface for @media rules in the CSS OM.
+ */
+[scriptable, uuid(1f491b05-932b-4aa1-a1f1-466505d70898)]
+interface nsIDOMCSSMediaRule : nsIDOMCSSConditionRule
 {
   readonly attribute nsIDOMMediaList   media;
-  readonly attribute nsIDOMCSSRuleList cssRules;
-
-  unsigned long      insertRule(in DOMString rule, 
-                                in unsigned long index)
-                                        raises(DOMException);
-  void               deleteRule(in unsigned long index)
-                                        raises(DOMException);
 };

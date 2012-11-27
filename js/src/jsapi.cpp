@@ -7045,6 +7045,14 @@ JS_ScheduleGC(JSContext *cx, uint32_t count)
 }
 #endif
 
+JS_PUBLIC_API(void)
+JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled)
+{
+#ifdef JS_ION
+    ion::js_IonOptions.parallelCompilation = enabled;
+#endif
+}
+
 /************************************************************************/
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && defined(XP_WIN)

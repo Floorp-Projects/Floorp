@@ -10,11 +10,16 @@
 
 #include "prenv.h"
 
+#include "nsAutoPtr.h"
 #include "nsString.h"
-#include "GLContext.h"
+#include "GLContextTypes.h"
 #include "gfx3DMatrix.h"
+#include "gfxColor.h"
 
 namespace mozilla {
+namespace gl {
+class GLContext;
+}
 namespace layers {
 
 class Layer;
@@ -140,45 +145,16 @@ class ShaderProgramOGL
 public:
   typedef mozilla::gl::GLContext GLContext;
 
-  ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile) :
-    mIsProjectionMatrixStale(false), mGL(aGL), mProgram(0),
-    mProfile(aProfile), mProgramState(STATE_NEW) { }
+  ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile);
 
-  ~ShaderProgramOGL() {
-    if (mProgram <= 0) {
-      return;
-    }
-
-    nsRefPtr<GLContext> ctx = mGL->GetSharedContext();
-    if (!ctx) {
-      ctx = mGL;
-    }
-    ctx->MakeCurrent();
-    ctx->fDeleteProgram(mProgram);
-  }
+  ~ShaderProgramOGL();
 
   bool HasInitialized() {
     NS_ASSERTION(mProgramState != STATE_OK || mProgram > 0, "Inconsistent program state");
     return mProgramState == STATE_OK;
   }
 
-  void Activate() {
-    if (mProgramState == STATE_NEW) {
-      if (!Initialize()) {
-        NS_WARNING("Shader could not be initialised");
-        return;
-      }
-    }
-    NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
-    mGL->fUseProgram(mProgram);
-#if CHECK_CURRENT_PROGRAM
-    mGL->SetUserData(&sCurrentProgramKey, this);
-#endif
-    // check and set the projection matrix
-    if (mIsProjectionMatrixStale) {
-      SetProjectionMatrix(mProjectionMatrix);
-    }
-  }
+  void Activate();
 
   bool Initialize();
 
@@ -329,54 +305,12 @@ protected:
   static int sCurrentProgramKey;
 #endif
 
-  void SetUniform(GLint aLocation, float aFloatValue) {
-    ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aLocation >= 0, "Invalid location");
-
-    mGL->fUniform1f(aLocation, aFloatValue);
-  }
-
-  void SetUniform(GLint aLocation, const gfxRGBA& aColor) {
-    ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aLocation >= 0, "Invalid location");
-
-    mGL->fUniform4f(aLocation, float(aColor.r), float(aColor.g), float(aColor.b), float(aColor.a));
-  }
-
-  void SetUniform(GLint aLocation, int aLength, float *aFloatValues) {
-    ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aLocation >= 0, "Invalid location");
-
-    if (aLength == 1) {
-      mGL->fUniform1fv(aLocation, 1, aFloatValues);
-    } else if (aLength == 2) {
-      mGL->fUniform2fv(aLocation, 1, aFloatValues);
-    } else if (aLength == 3) {
-      mGL->fUniform3fv(aLocation, 1, aFloatValues);
-    } else if (aLength == 4) {
-      mGL->fUniform4fv(aLocation, 1, aFloatValues);
-    } else {
-      NS_NOTREACHED("Bogus aLength param");
-    }
-  }
-
-  void SetUniform(GLint aLocation, GLint aIntValue) {
-    ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aLocation >= 0, "Invalid location");
-
-    mGL->fUniform1i(aLocation, aIntValue);
-  }
-
-  void SetMatrixUniform(GLint aLocation, const gfx3DMatrix& aMatrix) {
-    SetMatrixUniform(aLocation, &aMatrix._11);
-  }
-
-  void SetMatrixUniform(GLint aLocation, const float *aFloatValues) {
-    ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aLocation >= 0, "Invalid location");
-
-    mGL->fUniformMatrix4fv(aLocation, 1, false, aFloatValues);
-  }
+  void SetUniform(GLint aLocation, float aFloatValue);
+  void SetUniform(GLint aLocation, const gfxRGBA& aColor);
+  void SetUniform(GLint aLocation, int aLength, float *aFloatValues);
+  void SetUniform(GLint aLocation, GLint aIntValue);
+  void SetMatrixUniform(GLint aLocation, const gfx3DMatrix& aMatrix);
+  void SetMatrixUniform(GLint aLocation, const float *aFloatValues);
 };
 
 

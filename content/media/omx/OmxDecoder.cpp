@@ -458,10 +458,9 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
 
   status_t err;
 
-  if (aDoSeek || aKeyframeSkip) {
+  if (aDoSeek) {
     MediaSource::ReadOptions options;
-    options.setSeekTo(aTimeUs, aDoSeek ? MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC :
-                                         MediaSource::ReadOptions::SEEK_NEXT_SYNC);
+    options.setSeekTo(aTimeUs, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
     err = mVideoSource->read(&mVideoBuffer, &options);
   } else {
     err = mVideoSource->read(&mVideoBuffer);
@@ -512,6 +511,10 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       }
 
       aFrame->mEndTimeUs = timeUs + durationUs;
+    }
+
+    if (aKeyframeSkip && timeUs < aTimeUs) {
+      aFrame->mShouldSkip = true;
     }
 
   }

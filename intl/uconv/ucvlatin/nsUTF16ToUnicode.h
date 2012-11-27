@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsUCS2BEToUnicode_h___
-#define nsUCS2BEToUnicode_h___
+#ifndef nsUTF16ToUnicode_h_
+#define nsUTF16ToUnicode_h_
 
 #include "nsISupports.h"
 #include "nsUCSupport.h"
@@ -15,6 +15,10 @@ class nsUTF16ToUnicodeBase : public nsBasicDecoderSupport
 protected:
   // ctor accessible only by child classes
   nsUTF16ToUnicodeBase() { Reset();}
+
+  nsresult UTF16ConvertToUnicode(const char * aSrc,
+                                 int32_t * aSrcLength, PRUnichar * aDest,
+                                 int32_t * aDestLength, bool aSwapBytes);
 
 public: 
   //--------------------------------------------------------------------
@@ -70,4 +74,4 @@ private:
   bool    mFoundBOM;
 };
 
-#endif /* nsUCS2BEToUnicode_h___ */
+#endif /* nsUTF16ToUnicode_h_ */

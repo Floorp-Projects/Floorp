@@ -27,8 +27,6 @@ public class Telemetry {
             GeckoEvent event =
                 GeckoEvent.createBroadcastEvent("Telemetry:Add", jsonData.toString());
             GeckoAppShell.sendEventToGecko(event);
-
-            Log.v(LOGTAG, "Sending telemetry: " + jsonData.toString());
         } catch (JSONException e) {
             Log.e(LOGTAG, "JSON exception: ", e);
         }
@@ -43,6 +41,10 @@ public class Telemetry {
             mName = name;
             mStartTime = SystemClock.uptimeMillis();
             mHasFinished = false;
+        }
+
+        public void cancel() {
+            mHasFinished = true;
         }
 
         public void stop() {

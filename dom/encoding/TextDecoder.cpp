@@ -28,9 +28,6 @@ TextDecoder::Init(const nsAString& aEncoding,
     return;
   }
 
-  mIsUTF16Family = mEncoding.EqualsLiteral("UTF-16LE") ||
-                   mEncoding.EqualsLiteral("UTF-16BE");
-
   // If the constructor is called with an options argument,
   // and the fatal property of the dictionary is set,
   // set the internal fatal flag of the decoder object.
@@ -56,13 +53,6 @@ TextDecoder::Init(const nsAString& aEncoding,
 }
 
 void
-TextDecoder::ResetDecoder()
-{
-  mDecoder->Reset();
-  mOffset = 0;
-}
-
-void
 TextDecoder::Decode(const ArrayBufferView* aView,
                     const TextDecodeOptions& aOptions,
                     nsAString& aOutDecodedString,
@@ -80,12 +70,6 @@ TextDecoder::Decode(const ArrayBufferView* aView,
   }
 
   aOutDecodedString.Truncate();
-  if (mIsUTF16Family && mOffset < 2) {
-    HandleBOM(data, length, aOptions, aOutDecodedString, aRv);
-    if (aRv.Failed() || mOffset < 2) {
-      return;
-    }
-  }
 
   // Run or resume the decoder algorithm of the decoder object's encoder.
   int32_t outLen;
@@ -117,7 +101,7 @@ TextDecoder::Decode(const ArrayBufferView* aView,
     // Emit a decode error manually because some decoders
     // do not support kOnError_Recover (bug 638379)
     if (srcLen == -1) {
-      ResetDecoder();
+      mDecoder->Reset();
     } else {
       data += srcLen + 1;
       length -= srcLen + 1;
@@ -128,7 +112,7 @@ TextDecoder::Decode(const ArrayBufferView* aView,
   // If the internal streaming flag of the decoder object is not set,
   // then reset the encoding algorithm state to the default values
   if (!aOptions.stream) {
-    ResetDecoder();
+    mDecoder->Reset();
     if (rv == NS_OK_UDEC_MOREINPUT) {
       if (mFatal) {
         aRv.Throw(NS_ERROR_DOM_ENCODING_DECODE_ERR);
@@ -142,54 +126,6 @@ TextDecoder::Decode(const ArrayBufferView* aView,
 
   if (NS_FAILED(rv)) {
     aRv.Throw(NS_ERROR_DOM_ENCODING_DECODE_ERR);
-  }
-}
-
-void
-TextDecoder::HandleBOM(const char*& aData, uint32_t& aLength,
-                       const TextDecodeOptions& aOptions,
-                       nsAString& aOutString, ErrorResult& aRv)
-{
-  if (aLength < 2u - mOffset) {
-    if (aOptions.stream) {
-      memcpy(mInitialBytes + mOffset, aData, aLength);
-      mOffset += aLength;
-    } else if (mFatal) {
-      aRv.Throw(NS_ERROR_DOM_ENCODING_DECODE_ERR);
-    } else {
-      aOutString.Append(kReplacementChar);
-    }
-    return;
-  }
-
-  memcpy(mInitialBytes + mOffset, aData, 2 - mOffset);
-  // copied data will be fed later.
-  aData += 2 - mOffset;
-  aLength -= 2 - mOffset;
-  mOffset = 2;
-
-  nsAutoCString encoding;
-  if (!EncodingUtils::IdentifyDataOffset(mInitialBytes, 2, encoding) ||
-      !encoding.Equals(mEncoding)) {
-    // If the stream doesn't start with BOM or the BOM doesn't match the
-    // encoding, feed a BOM to workaround decoder's bug (bug 634541).
-    FeedBytes(mEncoding.EqualsLiteral("UTF-16LE") ? "\xFF\xFE" : "\xFE\xFF");
-  }
-  FeedBytes(mInitialBytes, &aOutString);
-}
-
-void
-TextDecoder::FeedBytes(const char* aBytes, nsAString* aOutString)
-{
-  PRUnichar buf[3];
-  int32_t srcLen = mOffset;
-  int32_t dstLen = mozilla::ArrayLength(buf);
-  DebugOnly<nsresult> rv =
-    mDecoder->Convert(aBytes, &srcLen, buf, &dstLen);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_ASSERT(srcLen == mOffset);
-  if (aOutString) {
-    aOutString->Assign(buf, dstLen);
   }
 }
 
