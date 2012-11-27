@@ -505,7 +505,8 @@
                         accesskey="&addons.accesskey;"
                         key="key_openAddons"
                         command="Tools:Addons"/>
-              <menu id="menu_socialAmbientMenu">
+              <menu id="menu_socialAmbientMenu"
+                    observes="socialActiveBroadcaster">
                 <menupopup id="menu_social-statusarea-popup">
                   <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
                             observes="socialBroadcaster_userDetails"
