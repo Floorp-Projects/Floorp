@@ -1337,10 +1337,6 @@ class PropertyArrays():
         return [ "staticMethods", "staticAttrs", "methods", "attrs",
                  "unforgeableAttrs", "consts" ]
 
-    @staticmethod
-    def xrayRelevantArrayNames():
-        return [ "methods", "attrs", "unforgeableAttrs", "consts" ]
-
     def hasChromeOnly(self):
         return any(getattr(self, a).hasChromeOnly() for a in self.arrayNames())
     def hasNonChromeOnly(self):
@@ -1417,7 +1413,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         # There is no need to init any IDs in workers, because worker bindings
         # don't have Xrays.
         if not self.descriptor.workers:
-            for var in self.properties.xrayRelevantArrayNames():
+            for var in self.properties.arrayNames():
                 props = getattr(self.properties, var)
                 # We only have non-chrome ids to init if we have no chrome ids.
                 if props.hasChromeOnly():
