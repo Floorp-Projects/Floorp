@@ -1271,7 +1271,7 @@ CodeGenerator::generateArgumentsChecks()
     for (uint32 i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
-        types::TypeSet *types = param->typeSet();
+        const types::TypeSet *types = param->typeSet();
         if (!types || types->unknown())
             continue;
 
@@ -3418,8 +3418,6 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
 
     bool accept(CodeGenerator *codegen) {
         switch (ins->op()) {
-          case LInstruction::LOp_InstanceOfO:
-          case LInstruction::LOp_InstanceOfV:
           case LInstruction::LOp_GetPropertyCacheT:
           case LInstruction::LOp_GetPropertyCacheV:
             return codegen->visitOutOfLineCacheGetProperty(this);
@@ -3531,12 +3529,6 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     PropertyName *name = NULL;
     bool allowGetters = false;
     switch (ins->op()) {
-      case LInstruction::LOp_InstanceOfO:
-      case LInstruction::LOp_InstanceOfV:
-        name = gen->compartment->rt->atomState.classPrototype;
-        objReg = ToRegister(ins->getTemp(1));
-        output = TypedOrValueRegister(MIRType_Object, ToAnyRegister(ins->getDef(0)));
-        break;
       case LInstruction::LOp_GetPropertyCacheT:
         name = ((LGetPropertyCacheT *) ins)->mir()->name();
         objReg = ToRegister(ins->getOperand(0));
@@ -4214,15 +4206,15 @@ CodeGenerator::visitInArray(LInArray *lir)
 }
 
 bool
-CodeGenerator::visitInstanceOfTypedO(LInstanceOfTypedO *ins)
+CodeGenerator::visitInstanceOfO(LInstanceOfO *ins)
 {
-    return emitInstanceOfTyped(ins, ins->mir()->prototypeObject());
+    return emitInstanceOf(ins, ins->mir()->prototypeObject());
 }
 
 bool
-CodeGenerator::visitInstanceOfTypedV(LInstanceOfTypedV *ins)
+CodeGenerator::visitInstanceOfV(LInstanceOfV *ins)
 {
-    return emitInstanceOfTyped(ins, ins->mir()->prototypeObject());
+    return emitInstanceOf(ins, ins->mir()->prototypeObject());
 }
 
 // Wrap IsDelegate, which takes a Value for the lhs of an instanceof.
@@ -4240,7 +4232,7 @@ typedef bool (*IsDelegateObjectFn)(JSContext *, HandleObject, HandleObject, JSBo
 static const VMFunction IsDelegateObjectInfo = FunctionInfo<IsDelegateObjectFn>(IsDelegateObject);
 
 bool
-CodeGenerator::emitInstanceOfTyped(LInstruction *ins, RawObject prototypeObject)
+CodeGenerator::emitInstanceOf(LInstruction *ins, RawObject prototypeObject)
 {
     // This path implements fun_hasInstance when the function's prototype is
     // known to be prototypeObject.
@@ -4250,16 +4242,16 @@ CodeGenerator::emitInstanceOfTyped(LInstruction *ins, RawObject prototypeObject)
 
     // If the lhs is a primitive, the result is false.
     Register objReg;
-    if (ins->isInstanceOfTypedV()) {
+    if (ins->isInstanceOfV()) {
         Label isObject;
-        ValueOperand lhsValue = ToValue(ins, LInstanceOfTypedV::LHS);
+        ValueOperand lhsValue = ToValue(ins, LInstanceOfV::LHS);
         masm.branchTestObject(Assembler::Equal, lhsValue, &isObject);
         masm.mov(Imm32(0), output);
         masm.jump(&done);
         masm.bind(&isObject);
         objReg = masm.extractObject(lhsValue, output);
     } else {
-        objReg = ToRegister(ins->toInstanceOfTypedO()->lhs());
+        objReg = ToRegister(ins->toInstanceOfO()->lhs());
     }
 
     // Crawl the lhs's prototype chain in a loop to search for prototypeObject.
@@ -4311,11 +4303,11 @@ CodeGenerator::emitInstanceOfTyped(LInstruction *ins, RawObject prototypeObject)
     } else {
         masm.bind(&regenerate);
         lazyEntry = &regenerate;
-        if (ins->isInstanceOfTypedV()) {
-            ValueOperand lhsValue = ToValue(ins, LInstanceOfTypedV::LHS);
+        if (ins->isInstanceOfV()) {
+            ValueOperand lhsValue = ToValue(ins, LInstanceOfV::LHS);
             objReg = masm.extractObject(lhsValue, output);
         } else {
-            objReg = ToRegister(ins->toInstanceOfTypedO()->lhs());
+            objReg = ToRegister(ins->toInstanceOfO()->lhs());
         }
         JS_ASSERT(objReg == output);
         masm.jump(ool->entry());
@@ -4329,182 +4321,19 @@ CodeGenerator::emitInstanceOfTyped(LInstruction *ins, RawObject prototypeObject)
     return true;
 }
 
-bool
-CodeGenerator::visitInstanceOfO(LInstanceOfO *ins)
-{
-    Register rhs = ToRegister(ins->getOperand(1));
-    return emitInstanceOf(ins, rhs);
-}
-
-bool
-CodeGenerator::visitInstanceOfV(LInstanceOfV *ins)
-{
-    Register rhs = ToRegister(ins->getOperand(LInstanceOfV::RHS));
-    return emitInstanceOf(ins, rhs);
-}
-
 typedef bool (*HasInstanceFn)(JSContext *, HandleObject, HandleValue, JSBool *);
 static const VMFunction HasInstanceInfo = FunctionInfo<HasInstanceFn>(js::HasInstance);
 
 bool
-CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
+CodeGenerator::visitCallInstanceOf(LCallInstanceOf *ins)
 {
-    Register rhsTmp = ToRegister(ins->getTemp(1));
-    Register output = ToRegister(ins->getDef(0));
+    ValueOperand lhs = ToValue(ins, LCallInstanceOf::LHS);
+    Register rhs = ToRegister(ins->rhs());
+    JS_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
-    // This temporary is used in other parts of the code.
-    // Different names are used so the purpose is clear.
-    Register rhsFlags = ToRegister(ins->getTemp(0));
-    Register lhsTmp = ToRegister(ins->getTemp(0));
-
-    Label boundFunctionCheck;
-    Label boundFunctionDone;
-    Label done;
-    Label loopPrototypeChain;
-
-    JS_ASSERT(ins->isInstanceOfO() || ins->isInstanceOfV());
-    bool lhsIsValue = ins->isInstanceOfV();
-
-    // If the lhs is an object, then the ValueOperand that gets sent to
-    // HasInstance must be boxed first.  If the lhs is a value, it can
-    // be sent directly.  Hence the choice between ToValue and ToTempValue
-    // below.  Note that the same check is done below in the generated code
-    // and explicit boxing instructions emitted before calling the OOL code
-    // if we're handling a LInstanceOfO.
-
-    OutOfLineCode *call = oolCallVM(HasInstanceInfo, ins,
-        (ArgList(), rhs, lhsIsValue ? ToValue(ins, 0) : ToTempValue(ins, 0)),
-        StoreRegisterTo(output));
-    if (!call)
-        return false;
-
-    // 1. CODE FOR HASINSTANCE_BOUND_FUNCTION
-
-    // ASM-equivalent of following code
-    //  boundFunctionCheck:
-    //      if (!rhs->isFunction())
-    //          goto callHasInstance
-    //      if (!rhs->isBoundFunction())
-    //          goto HasInstanceCunction
-    //      rhs = rhs->getBoundFunction();
-    //      goto boundFunctionCheck
-
-    masm.mov(rhs, rhsTmp);
-
-    // Check Function
-    masm.bind(&boundFunctionCheck);
-
-    masm.loadBaseShape(rhsTmp, output);
-    masm.cmpPtr(Address(output, BaseShape::offsetOfClass()), ImmWord(&js::FunctionClass));
-    if (lhsIsValue) {
-        // If the input LHS is a value, no boxing necessary.
-        masm.j(Assembler::NotEqual, call->entry());
-    } else {
-        // If the input LHS is raw object pointer, it must be boxed before
-        // calling into js::HasInstance.
-        Label dontCallHasInstance;
-        masm.j(Assembler::Equal, &dontCallHasInstance);
-        masm.boxNonDouble(JSVAL_TYPE_OBJECT, ToRegister(ins->getOperand(0)), ToTempValue(ins, 0));
-        masm.jump(call->entry());
-        masm.bind(&dontCallHasInstance);
-    }
-
-    // Check Bound Function
-    masm.loadPtr(Address(output, BaseShape::offsetOfFlags()), rhsFlags);
-    masm.and32(Imm32(BaseShape::BOUND_FUNCTION), rhsFlags);
-    masm.j(Assembler::Zero, &boundFunctionDone);
-
-    // Get Bound Function
-    masm.loadPtr(Address(output, BaseShape::offsetOfParent()), rhsTmp);
-    masm.jump(&boundFunctionCheck);
-
-    // 2. CODE FOR HASINSTANCE_FUNCTION
-    masm.bind(&boundFunctionDone);
-
-    // ASM-equivalent of following code
-    //  if (!lhs->isObject()) {
-    //    output = false;
-    //    goto done;
-    //  }
-    //  rhs = rhs->getPrototypeClass();
-    //  output = false;
-    //  while (1) {
-    //    lhs = lhs->getType().proto;
-    //    if (lhs == NULL)
-    //      goto done;
-    //    if (lhs != rhs) {
-    //      output = true;
-    //      goto done;
-    //    }
-    //  }
-
-    // When lhs is a value: The HasInstance for function objects always
-    // return false when lhs isn't an object. So check if
-    // lhs is an object and otherwise return false
-    if (lhsIsValue) {
-        Label isObject;
-        ValueOperand lhsValue = ToValue(ins, LInstanceOfV::LHS);
-        masm.branchTestObject(Assembler::Equal, lhsValue, &isObject);
-        masm.mov(Imm32(0), output);
-        masm.jump(&done);
-
-        masm.bind(&isObject);
-        Register tmp = masm.extractObject(lhsValue, lhsTmp);
-        masm.mov(tmp, lhsTmp);
-    } else {
-        masm.mov(ToRegister(ins->getOperand(0)), lhsTmp);
-    }
-
-    // Get prototype-class by using a OutOfLine GetProperty Cache
-    // It will use register 'rhsTmp' as input and register 'output' as output, see r1889
-    OutOfLineCache *ool = new OutOfLineCache(ins);
-    if (!addOutOfLineCode(ool))
-        return false;
-
-    // If the IC code wants to patch, make sure there is enough space to that
-    // the patching does not overwrite an invalidation marker.
-    ensureOsiSpace();
-
-    CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
-    CodeOffsetLabel label = masm.labelForPatch();
-    masm.bind(ool->rejoin());
-    ool->setInlineJump(jump, label);
-
-    // Move the OutOfLineCache return value and set the output on false
-    masm.mov(output, rhsTmp);
-    masm.mov(Imm32(0), output);
-
-    // Walk the prototype chain
-    masm.bind(&loopPrototypeChain);
-    masm.loadPtr(Address(lhsTmp, JSObject::offsetOfType()), lhsTmp);
-    masm.loadPtr(Address(lhsTmp, offsetof(types::TypeObject, proto)), lhsTmp);
-
-    // Bail out if we hit a lazy proto
-    if (lhsIsValue) {
-        masm.branch32(Assembler::Equal, lhsTmp, Imm32(1), call->entry());
-    } else {
-        // If the input LHS is raw object pointer, it must be boxed before
-        // calling into js::HasInstance.
-        Label dontCallHasInstance;
-        masm.branch32(Assembler::NotEqual, lhsTmp, Imm32(1), &dontCallHasInstance);
-        masm.boxNonDouble(JSVAL_TYPE_OBJECT, ToRegister(ins->getOperand(0)), ToTempValue(ins, 0));
-        masm.jump(call->entry());
-        masm.bind(&dontCallHasInstance);
-    }
-
-    masm.testPtr(lhsTmp, lhsTmp);
-    masm.j(Assembler::Zero, &done);
-
-    // Check lhs is equal to rhsShape
-    masm.cmpPtr(lhsTmp, rhsTmp);
-    masm.j(Assembler::NotEqual, &loopPrototypeChain);
-
-    // return true
-    masm.mov(Imm32(1), output);
-
-    masm.bind(call->rejoin());
-    masm.bind(&done);
-    return true;
+    pushArg(lhs);
+    pushArg(rhs);
+    return callVM(HasInstanceInfo, ins);
 }
 
 bool

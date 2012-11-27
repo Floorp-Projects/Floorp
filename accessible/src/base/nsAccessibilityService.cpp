@@ -901,26 +901,9 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       newAcc = CreateHTMLAccessibleByMarkup(frame, content, aDoc,
                                             legalPartOfHTMLTable);
 
-      if (!newAcc && (!partOfHTMLTable || legalPartOfHTMLTable)) {
-        // Do not create accessible object subtrees for non-rendered table
-        // captions. This could not be done in
-        // nsTableCaptionFrame::GetAccessible() because the descendants of
-        // the table caption would still be created. By setting
-        // *aIsSubtreeHidden = true we ensure that no descendant accessibles
-        // are created.
-        if (frame->GetType() == nsGkAtoms::tableCaptionFrame &&
-            frame->GetRect().IsEmpty()) {
-          // XXX This is not the ideal place for this code, but right now there
-          // is no better place:
-          if (aIsSubtreeHidden)
-            *aIsSubtreeHidden = true;
-
-          return nullptr;
-        }
-
-        // Try using frame to do it.
+      // Try using frame to do it.
+      if (!newAcc && (!partOfHTMLTable || legalPartOfHTMLTable))
         newAcc = CreateAccessibleByFrameType(frame, content, aDoc);
-      }
     }
   }
 

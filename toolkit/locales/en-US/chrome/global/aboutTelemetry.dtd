@@ -4,11 +4,6 @@
 
 <!ENTITY aboutTelemetry.pageTitle "Telemetry Data">
 
-<!ENTITY aboutTelemetry.pageSubtitle "
-  This page shows the performance and feature-use data collected by Telemetry.
-  This information is submitted anonymously to Mozilla to help improve &brandShortName;.
-">
-
 <!ENTITY aboutTelemetry.telemetryEnabled "
   Telemetry is <span>enabled</span>.
 ">
