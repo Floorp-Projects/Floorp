@@ -1152,7 +1152,12 @@ nsObjectFrame::DidSetWidgetGeometry()
   if (!mWidget && mInstanceOwner) {
     // UpdateWindowVisibility will notify the plugin of position changes
     // by updating the NPWindow and calling NPP_SetWindow/AsyncSetWindow.
-    mInstanceOwner->UpdateWindowVisibility(!mNextConfigurationBounds.IsEmpty());
+    // We treat windowless plugins inside popups as always visible, since
+    // plugins inside popups don't get valid mNextConfigurationBounds
+    // set up.
+    mInstanceOwner->UpdateWindowVisibility(
+      nsLayoutUtils::IsPopup(nsLayoutUtils::GetDisplayRootFrame(this)) ||
+      !mNextConfigurationBounds.IsEmpty());
   }
 #endif
 }
