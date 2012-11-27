@@ -28,6 +28,7 @@ UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
   const char* srcEnd = aSrc + *aSrcLength;
   PRUnichar* dest = aDest;
   PRUnichar* destEnd = aDest + *aDestLength;
+  PRUnichar oddHighSurrogate;
 
   switch(aState) {
     case STATE_FOUND_BOM:
@@ -54,7 +55,7 @@ UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
 
     case STATE_ODD_SURROGATE_PAIR:
       if (*aDestLength < 2)
-        *dest++ = UCS2_REPLACEMENT_CHAR;
+        goto error;
       else {
         *dest++ = aOddHighSurrogate;
         *dest++ = aOddLowSurrogate;
@@ -69,17 +70,21 @@ UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
       break;
   }
 
+  oddHighSurrogate = aOddHighSurrogate;
+
   if (src == srcEnd) {
     *aDestLength = dest - aDest;
-    return NS_OK;
+    return (aState != STATE_NORMAL || oddHighSurrogate) ?
+           NS_OK_UDEC_MOREINPUT : NS_OK;
   }
-
-  PRUnichar oddHighSurrogate = aOddHighSurrogate;
 
   const char* srcEvenEnd;
 
   PRUnichar u;
   if (aState == STATE_HALF_CODE_POINT) {
+    if (dest == destEnd)
+      goto error;
+
     // the 1st byte of a 16-bit code unit was stored in |aOddByte| in the
     // previous run while the 2nd byte has to come from |*src|.
     aState = STATE_NORMAL;
@@ -151,7 +156,8 @@ have_codepoint:
 
   *aDestLength = dest - aDest;
   *aSrcLength =  src  - aSrc; 
-  return NS_OK;
+  return (aState != STATE_NORMAL || oddHighSurrogate) ?
+         NS_OK_UDEC_MOREINPUT : NS_OK;
 
 error:
   *aDestLength = dest - aDest;
