@@ -258,11 +258,14 @@ let SocialChatBar = {
       this.chatbar.openChat(aProvider, aURL, aCallback, aMode);
   },
   update: function() {
-    if (!this.isAvailable)
+    let command = document.getElementById("Social:FocusChat");
+    if (!this.isAvailable) {
       this.chatbar.removeAll();
-    else {
-      this.chatbar.hidden = document.mozFullScreen;
+      command.hidden = true;
+    } else {
+      this.chatbar.hidden = command.hidden = document.mozFullScreen;
     }
+    command.setAttribute("disabled", command.hidden ? "true" : "false");
   },
   focus: function SocialChatBar_focus() {
     this.chatbar.focus();
