@@ -15,4 +15,11 @@ MOCHITEST_BROWSER_FILES = \
   browser_nsIDownloadManagerUI.js \
   $(NULL)
 
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+  browser_privatebrowsing.js \
+  head.js \
+  $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
