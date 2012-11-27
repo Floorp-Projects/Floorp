@@ -122,6 +122,8 @@ BaselineCompiler::emitPrologue()
 
     masm.subPtr(Imm32(BaselineFrame::Size()), BaselineStackReg);
 
+    masm.checkStackAlignment();
+
     // Initialize locals to |undefined|. Use R0 to minimize code size.
     masm.moveValue(UndefinedValue(), R0);
     for (size_t i = 0; i < frame.nlocals(); i++)
