@@ -106,6 +106,9 @@ private:
   std::vector<Stack> mStacks;
 };
 
+static JSObject *
+CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks);
+
 size_t
 CombinedStacks::GetModuleCount() const {
   return mModules.size();
@@ -177,11 +180,8 @@ class HangReports {
 public:
   size_t SizeOfExcludingThis() const;
   void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration);
-  size_t GetStackCount() const;
-  const CombinedStacks::Stack& GetStack(unsigned aIndex) const;
   uint32_t GetDuration(unsigned aIndex) const;
-  size_t GetModuleCount() const;
-  const Telemetry::ProcessedStack::Module& GetModule(unsigned aIndex) const;
+  const CombinedStacks& GetStacks() const;
 private:
   CombinedStacks mStacks;
   std::vector<uint32_t> mDurations;
@@ -203,30 +203,14 @@ HangReports::SizeOfExcludingThis() const {
   return n;
 }
 
-size_t
-HangReports::GetModuleCount() const {
-  return mStacks.GetModuleCount();
-}
-
-const Telemetry::ProcessedStack::Module&
-HangReports::GetModule(unsigned aIndex) const {
-  return mStacks.GetModule(aIndex);
+const CombinedStacks&
+HangReports::GetStacks() const {
+  return mStacks;
 }
 
 uint32_t
 HangReports::GetDuration(unsigned aIndex) const {
   return mDurations[aIndex];
-}
-
-const CombinedStacks::Stack&
-HangReports::GetStack(unsigned aIndex) const {
-  return mStacks.GetStack(aIndex);
-}
-
-size_t
-HangReports::GetStackCount() const {
-  MOZ_ASSERT(mDurations.size() == mStacks.GetStackCount());
-  return mStacks.GetStackCount();
 }
 
 class TelemetryImpl MOZ_FINAL : public nsITelemetry
@@ -1222,37 +1206,67 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 {
   MutexAutoLock hangReportMutex(mHangReportsMutex);
 
-  JSObject *fullReportObj = JS_NewObject(cx, nullptr, nullptr, nullptr);
+  const CombinedStacks& stacks = mHangReports.GetStacks();
+  JSObject *fullReportObj = CreateJSStackObject(cx, stacks);
   if (!fullReportObj) {
     return NS_ERROR_FAILURE;
   }
 
   *ret = OBJECT_TO_JSVAL(fullReportObj);
 
-  JSObject *moduleArray = JS_NewArrayObject(cx, 0, nullptr);
-  if (!moduleArray) {
+  JSObject *durationArray = JS_NewArrayObject(cx, 0, nullptr);
+  if (!durationArray) {
     return NS_ERROR_FAILURE;
   }
-  JSBool ok = JS_DefineProperty(cx, fullReportObj, "memoryMap",
-                                OBJECT_TO_JSVAL(moduleArray),
+  JSBool ok = JS_DefineProperty(cx, fullReportObj, "durations",
+                                OBJECT_TO_JSVAL(durationArray),
                                 NULL, NULL, JSPROP_ENUMERATE);
   if (!ok) {
     return NS_ERROR_FAILURE;
   }
 
-  const uint32_t moduleCount = mHangReports.GetModuleCount();
+  const size_t length = stacks.GetStackCount();
+  for (size_t i = 0; i < length; ++i) {
+    jsval duration = INT_TO_JSVAL(mHangReports.GetDuration(i));
+    if (!JS_SetElement(cx, durationArray, i, &duration)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+static JSObject *
+CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
+  JSObject *ret = JS_NewObject(cx, nullptr, nullptr, nullptr);
+  if (!ret) {
+    return nullptr;
+  }
+
+  JSObject *moduleArray = JS_NewArrayObject(cx, 0, nullptr);
+  if (!moduleArray) {
+    return nullptr;
+  }
+  JSBool ok = JS_DefineProperty(cx, ret, "memoryMap",
+                                OBJECT_TO_JSVAL(moduleArray),
+                                NULL, NULL, JSPROP_ENUMERATE);
+  if (!ok) {
+    return nullptr;
+  }
+
+  const size_t moduleCount = stacks.GetModuleCount();
   for (size_t moduleIndex = 0; moduleIndex < moduleCount; ++moduleIndex) {
     // Current module
     const Telemetry::ProcessedStack::Module& module =
-      mHangReports.GetModule(moduleIndex);
+      stacks.GetModule(moduleIndex);
 
     JSObject *moduleInfoArray = JS_NewArrayObject(cx, 0, nullptr);
     if (!moduleInfoArray) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
     jsval val = OBJECT_TO_JSVAL(moduleInfoArray);
     if (!JS_SetElement(cx, moduleArray, moduleIndex, &val)) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
 
     unsigned index = 0;
@@ -1260,102 +1274,90 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
     // Module name
     JSString *str = JS_NewStringCopyZ(cx, module.mName.c_str());
     if (!str) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
     val = STRING_TO_JSVAL(str);
     if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
 
     // "PDB Age" identifier
     val = INT_TO_JSVAL(module.mPdbAge);
     if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
 
     // "PDB Signature" GUID
     str = JS_NewStringCopyZ(cx, module.mPdbSignature.c_str());
     if (!str) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
     val = STRING_TO_JSVAL(str);
     if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
 
     // Name of associated PDB file
     str = JS_NewStringCopyZ(cx, module.mPdbName.c_str());
     if (!str) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
     val = STRING_TO_JSVAL(str);
     if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
   }
 
   JSObject *reportArray = JS_NewArrayObject(cx, 0, nullptr);
   if (!reportArray) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
-  ok = JS_DefineProperty(cx, fullReportObj, "stacks",
+  ok = JS_DefineProperty(cx, ret, "stacks",
                          OBJECT_TO_JSVAL(reportArray),
                          NULL, NULL, JSPROP_ENUMERATE);
   if (!ok) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
-  JSObject *durationArray = JS_NewArrayObject(cx, 0, nullptr);
-  ok = JS_DefineProperty(cx, fullReportObj, "durations",
-                         OBJECT_TO_JSVAL(durationArray),
-                         NULL, NULL, JSPROP_ENUMERATE);
-  if (!ok) {
-    return NS_ERROR_FAILURE;
-  }
-
-  for (size_t i = 0, n = mHangReports.GetStackCount(); i < n; ++i) {
-    jsval duration = INT_TO_JSVAL(mHangReports.GetDuration(i));
-    if (!JS_SetElement(cx, durationArray, i, &duration)) {
-      return NS_ERROR_FAILURE;
-    }
-
+  const size_t length = stacks.GetStackCount();
+  for (size_t i = 0; i < length; ++i) {
     // Represent call stack PCs as (module index, offset) pairs.
     JSObject *pcArray = JS_NewArrayObject(cx, 0, nullptr);
     if (!pcArray) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
 
     jsval pcArrayVal = OBJECT_TO_JSVAL(pcArray);
     if (!JS_SetElement(cx, reportArray, i, &pcArrayVal)) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
 
-    const CombinedStacks::Stack& stack = mHangReports.GetStack(i);
+    const CombinedStacks::Stack& stack = stacks.GetStack(i);
     const uint32_t pcCount = stack.size();
     for (size_t pcIndex = 0; pcIndex < pcCount; ++pcIndex) {
       const Telemetry::ProcessedStack::Frame& frame = stack[pcIndex];
       JSObject *framePair = JS_NewArrayObject(cx, 0, nullptr);
       if (!framePair) {
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
       int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex) ?
         -1 : frame.mModIndex;
       jsval modIndexVal = INT_TO_JSVAL(modIndex);
       if (!JS_SetElement(cx, framePair, 0, &modIndexVal)) {
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
       jsval mOffsetVal = INT_TO_JSVAL(frame.mOffset);
       if (!JS_SetElement(cx, framePair, 1, &mOffsetVal)) {
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
       jsval framePairVal = OBJECT_TO_JSVAL(framePair);
       if (!JS_SetElement(cx, pcArray, pcIndex, &framePairVal)) {
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
     }
   }
 
-  return NS_OK;
+  return ret;
 }
 
 NS_IMETHODIMP
