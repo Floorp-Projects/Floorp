@@ -4,12 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re, sys, os
+import sys, os
 import subprocess
 import runxpcshelltests as xpcshell
 import tempfile
 from automationutils import *
-from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
+from mozdevice import devicemanagerADB, devicemanagerSUT
+
+here = os.path.dirname(os.path.abspath(__file__))
 
 # A specialization of XPCShellTests that runs tests on an Android device
 # via devicemanager.
@@ -17,6 +19,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def __init__(self, devmgr, options, args):
         xpcshell.XPCShellTests.__init__(self)
+        self.localLib = None
+        self.localBin = None
         self.options = options
         self.device = devmgr
         self.pathMapping = []
@@ -35,6 +39,15 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteDebugger = options.debugger
         self.remoteDebuggerArgs = options.debuggerArgs
         self.testingModulesDir = options.testingModulesDir
+
+        if self.options.objdir:
+          self.xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
+        elif os.path.isdir(os.path.join(here, 'tests')):
+          self.xpcDir = os.path.join(here, 'tests')
+        else:
+          print >> sys.stderr, "Couldn't find local xpcshell test directory"
+          sys.exit(1)
+
         if options.setup:
           self.setupUtilities()
           self.setupModules()
@@ -85,55 +98,58 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         remoteFile = self.remoteJoin(self.remoteScriptsDir, "head.js")
         self.device.pushFile(local, remoteFile)
 
-        localBin = os.path.join(self.options.objdir, "dist/bin")
-        if not os.path.exists(localBin):
-          localBin = os.path.join(self.options.objdir, "bin")
-          if not os.path.exists(localBin):
-            print >>sys.stderr, "Error: could not find bin in objdir"
-            sys.exit(1)
+        if not self.localBin:
+          self.localBin = os.path.join(self.options.objdir, "dist/bin")
+          if not os.path.exists(self.localBin):
+            self.localBin = os.path.join(self.options.objdir, "bin")
+            if not os.path.exists(self.localBin):
+              print >>sys.stderr, "Error: could not find bin in objdir"
+              sys.exit(1)
 
-        local = os.path.join(localBin, "xpcshell")
+        local = os.path.join(self.localBin, "xpcshell")
         remoteFile = self.remoteJoin(self.remoteBinDir, "xpcshell")
         self.device.pushFile(local, remoteFile)
 
-        local = os.path.join(localBin, "components/httpd.js")
+        local = os.path.join(self.localBin, "components/httpd.js")
         remoteFile = self.remoteJoin(self.remoteComponentsDir, "httpd.js")
         self.device.pushFile(local, remoteFile)
 
-        local = os.path.join(localBin, "components/httpd.manifest")
+        local = os.path.join(self.localBin, "components/httpd.manifest")
         remoteFile = self.remoteJoin(self.remoteComponentsDir, "httpd.manifest")
         self.device.pushFile(local, remoteFile)
 
-        local = os.path.join(localBin, "components/test_necko.xpt")
+        local = os.path.join(self.localBin, "components/test_necko.xpt")
         remoteFile = self.remoteJoin(self.remoteComponentsDir, "test_necko.xpt")
         self.device.pushFile(local, remoteFile)
 
-        remoteFile = self.remoteJoin(self.remoteBinDir, os.path.basename(self.options.localAPK))
-        self.device.pushFile(self.options.localAPK, remoteFile)
+        if self.options.localAPK:
+          remoteFile = self.remoteJoin(self.remoteBinDir, os.path.basename(self.options.localAPK))
+          self.device.pushFile(self.options.localAPK, remoteFile)
 
         self.pushLibs()
 
     def pushLibs(self):
-        if self.options.localAPK:
-          localLib = os.path.join(self.options.objdir, "dist/fennec")
-          if not os.path.exists(localLib):
-            localLib = os.path.join(self.options.objdir, "fennec/lib")
-            if not os.path.exists(localLib):
-              print >>sys.stderr, "Error: could not find libs in objdir"
-              sys.exit(1)
-        else:
-          localLib = os.path.join(self.options.objdir, 'dist/bin')
+        if not self.localLib:
+          if self.options.localAPK:
+            self.localLib = os.path.join(self.options.objdir, "dist/fennec")
+            if not os.path.exists(self.localLib):
+              self.localLib = os.path.join(self.options.objdir, "fennec/lib")
+              if not os.path.exists(self.localLib):
+                print >>sys.stderr, "Error: could not find libs in objdir"
+                sys.exit(1)
+          else:
+            self.localLib = os.path.join(self.options.objdir, 'dist/bin')
 
-        for file in os.listdir(localLib):
+        for file in os.listdir(self.localLib):
           if (file.endswith(".so")):
             print >> sys.stderr, "Pushing %s.." % file
             if 'libxul' in file:
               print >> sys.stderr, "This is a big file, it could take a while."
             remoteFile = self.remoteJoin(self.remoteBinDir, file)
-            self.device.pushFile(os.path.join(localLib, file), remoteFile)
+            self.device.pushFile(os.path.join(self.localLib, file), remoteFile)
 
         # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
-        localArmLib = os.path.join(localLib, "lib")
+        localArmLib = os.path.join(self.localLib, "lib")
         if os.path.exists(localArmLib):
           for root, dirs, files in os.walk(localArmLib):
             for file in files:
@@ -146,8 +162,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.device.pushDir(self.testingModulesDir, self.remoteModulesDir)
 
     def setupTestDir(self):
-        xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
-        self.device.pushDir(xpcDir, self.remoteScriptsDir)
+        self.device.pushDir(self.xpcDir, self.remoteScriptsDir)
 
     def buildTestList(self):
         xpcshell.XPCShellTests.buildTestList(self)
@@ -155,8 +170,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         for test in self.alltests:
           uniqueTestPaths.add(test['here'])
         for testdir in uniqueTestPaths:
-          xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
-          abbrevTestDir = os.path.relpath(testdir, xpcDir)
+          abbrevTestDir = os.path.relpath(testdir, self.xpcDir)
           remoteScriptDir = self.remoteJoin(self.remoteScriptsDir, abbrevTestDir)
           self.pathMapping.append(PathMapping(testdir, remoteScriptDir))
 
