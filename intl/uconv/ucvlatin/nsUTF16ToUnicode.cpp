@@ -18,13 +18,12 @@ enum {
   STATE_ODD_SURROGATE_PAIR = 4
 };
 
-static nsresult
-UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
-                      PRUnichar& aOddHighSurrogate, PRUnichar& aOddLowSurrogate,
-                      const char * aSrc,
-                      int32_t * aSrcLength, PRUnichar * aDest,
-                      int32_t * aDestLength,
-                      bool aSwapBytes)
+nsresult
+nsUTF16ToUnicodeBase::UTF16ConvertToUnicode(const char * aSrc,
+                                            int32_t * aSrcLength,
+                                            PRUnichar * aDest,
+                                            int32_t * aDestLength,
+                                            bool aSwapBytes)
 {
   const char* src = aSrc;
   const char* srcEnd = aSrc + *aSrcLength;
@@ -32,27 +31,27 @@ UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
   PRUnichar* destEnd = aDest + *aDestLength;
   PRUnichar oddHighSurrogate;
 
-  switch(aState) {
+  switch(mState) {
     case STATE_FIRST_CALL:
       NS_ASSERTION(*aSrcLength > 1, "buffer too short");
       src+=2;
-      aState = STATE_NORMAL;
+      mState = STATE_NORMAL;
       break;
 
     case STATE_SECOND_BYTE:
       NS_ASSERTION(*aSrcLength > 0, "buffer too short");
       src++;
-      aState = STATE_NORMAL;
+      mState = STATE_NORMAL;
       break;
 
     case STATE_ODD_SURROGATE_PAIR:
       if (*aDestLength < 2)
         goto error;
       else {
-        *dest++ = aOddHighSurrogate;
-        *dest++ = aOddLowSurrogate;
-        aOddHighSurrogate = aOddLowSurrogate = 0;
-        aState = STATE_NORMAL;
+        *dest++ = mOddHighSurrogate;
+        *dest++ = mOddLowSurrogate;
+        mOddHighSurrogate = mOddLowSurrogate = 0;
+        mState = STATE_NORMAL;
       }
       break;
 
@@ -62,28 +61,28 @@ UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
       break;
   }
 
-  oddHighSurrogate = aOddHighSurrogate;
+  oddHighSurrogate = mOddHighSurrogate;
 
   if (src == srcEnd) {
     *aDestLength = dest - aDest;
-    return (aState != STATE_NORMAL || oddHighSurrogate) ?
+    return (mState != STATE_NORMAL || oddHighSurrogate) ?
            NS_OK_UDEC_MOREINPUT : NS_OK;
   }
 
   const char* srcEvenEnd;
 
   PRUnichar u;
-  if (aState == STATE_HALF_CODE_POINT) {
+  if (mState == STATE_HALF_CODE_POINT) {
     if (dest == destEnd)
       goto error;
 
-    // the 1st byte of a 16-bit code unit was stored in |aOddByte| in the
+    // the 1st byte of a 16-bit code unit was stored in |mOddByte| in the
     // previous run while the 2nd byte has to come from |*src|.
-    aState = STATE_NORMAL;
+    mState = STATE_NORMAL;
 #ifdef IS_BIG_ENDIAN
-    u = (aOddByte << 8) | *src++; // safe, we know we have at least one byte.
+    u = (mOddByte << 8) | *src++; // safe, we know we have at least one byte.
 #else
-    u = (*src++ << 8) | aOddByte; // safe, we know we have at least one byte.
+    u = (*src++ << 8) | mOddByte; // safe, we know we have at least one byte.
 #endif
     srcEvenEnd = src + ((srcEnd - src) & ~1); // handle even number of bytes in main loop
     goto have_codepoint;
@@ -108,6 +107,9 @@ have_codepoint:
 
     if (!IS_SURROGATE(u)) {
       if (oddHighSurrogate) {
+        if (mErrBehavior == kOnError_Signal) {
+          goto error2;
+        }
         *dest++ = UCS2_REPLACEMENT_CHAR;
         if (dest == destEnd)
           goto error;
@@ -116,6 +118,9 @@ have_codepoint:
       *dest++ = u;
     } else if (NS_IS_HIGH_SURROGATE(u)) {
       if (oddHighSurrogate) {
+        if (mErrBehavior == kOnError_Signal) {
+          goto error2;
+        }
         *dest++ = UCS2_REPLACEMENT_CHAR;
         if (dest == destEnd)
           goto error;
@@ -125,14 +130,17 @@ have_codepoint:
     else /* if (NS_IS_LOW_SURROGATE(u)) */ {
       if (oddHighSurrogate && *aDestLength > 1) {
         if (dest + 1 >= destEnd) {
-          aOddLowSurrogate = u;
-          aOddHighSurrogate = oddHighSurrogate;
-          aState = STATE_ODD_SURROGATE_PAIR;
+          mOddLowSurrogate = u;
+          mOddHighSurrogate = oddHighSurrogate;
+          mState = STATE_ODD_SURROGATE_PAIR;
           goto error;
         }
         *dest++ = oddHighSurrogate;
         *dest++ = u;
       } else {
+        if (mErrBehavior == kOnError_Signal) {
+          goto error2;
+        }
         *dest++ = UCS2_REPLACEMENT_CHAR;
       }
       oddHighSurrogate = 0;
@@ -140,21 +148,26 @@ have_codepoint:
   }
   if (src != srcEnd) {
     // store the lead byte of a 16-bit unit for the next run.
-    aOddByte = *src++;
-    aState = STATE_HALF_CODE_POINT;
+    mOddByte = *src++;
+    mState = STATE_HALF_CODE_POINT;
   }
 
-  aOddHighSurrogate = oddHighSurrogate;
+  mOddHighSurrogate = oddHighSurrogate;
 
   *aDestLength = dest - aDest;
   *aSrcLength =  src  - aSrc; 
-  return (aState != STATE_NORMAL || oddHighSurrogate) ?
+  return (mState != STATE_NORMAL || oddHighSurrogate) ?
          NS_OK_UDEC_MOREINPUT : NS_OK;
 
 error:
   *aDestLength = dest - aDest;
   *aSrcLength =  src  - aSrc; 
   return  NS_OK_UDEC_MOREOUTPUT;
+
+error2:
+  *aDestLength = dest - aDest;
+  *aSrcLength = --src - aSrc; 
+  return  NS_ERROR_ILLEGAL_INPUT;
 }
 
 NS_IMETHODIMP
@@ -224,9 +237,7 @@ nsUTF16BEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
       break;
   }
 
-  nsresult rv = UTF16ConvertToUnicode(mState, mOddByte, mOddHighSurrogate,
-                                      mOddLowSurrogate,
-                                      aSrc, aSrcLength, aDest, aDestLength,
+  nsresult rv = UTF16ConvertToUnicode(aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_LITTLE_ENDIAN
                                       true
 #else
@@ -279,9 +290,7 @@ nsUTF16LEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
       break;
   }
 
-  nsresult rv = UTF16ConvertToUnicode(mState, mOddByte, mOddHighSurrogate,
-                                      mOddLowSurrogate,
-                                      aSrc, aSrcLength, aDest, aDestLength,
+  nsresult rv = UTF16ConvertToUnicode(aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_BIG_ENDIAN
                                       true
 #else
@@ -342,9 +351,7 @@ nsUTF16ToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
       }
     }
     
-    nsresult rv = UTF16ConvertToUnicode(mState, mOddByte, mOddHighSurrogate,
-                                        mOddLowSurrogate,
-                                        aSrc, aSrcLength, aDest, aDestLength,
+    nsresult rv = UTF16ConvertToUnicode(aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_BIG_ENDIAN
                                         (mEndian == kLittleEndian)
 #elif defined(IS_LITTLE_ENDIAN)
