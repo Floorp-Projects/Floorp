@@ -13,12 +13,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
   browser_nsIDownloadManagerUI.js \
+  head.js \
   $(NULL)
 
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
   browser_privatebrowsing.js \
-  head.js \
+  browser_privatebrowsing_cancel.js \
   $(NULL)
 endif
 
