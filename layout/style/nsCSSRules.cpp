@@ -665,7 +665,7 @@ GroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
 /*
  * The next two methods (DeleteStyleRuleAt and InsertStyleRulesAt)
  * should never be called unless you have first called WillDirty() on
- * the parents tylesheet.  After they are called, DidDirty() needs to
+ * the parents stylesheet.  After they are called, DidDirty() needs to
  * be called on the sheet
  */
 nsresult
@@ -940,7 +940,17 @@ MediaRule::GetConditionText(nsAString& aConditionText)
 NS_IMETHODIMP
 MediaRule::SetConditionText(const nsAString& aConditionText)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mMedia) {
+    nsRefPtr<nsMediaList> media = new nsMediaList();
+    media->SetStyleSheet(GetStyleSheet());
+    nsresult rv = media->SetMediaText(aConditionText);
+    if (NS_SUCCEEDED(rv)) {
+      mMedia = media;
+    }
+    return rv;
+  }
+
+  return mMedia->SetMediaText(aConditionText);
 }
 
 // nsIDOMCSSMediaRule methods
