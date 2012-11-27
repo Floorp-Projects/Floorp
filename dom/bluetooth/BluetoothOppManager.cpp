@@ -9,8 +9,8 @@
 
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
-#include "BluetoothServiceUuid.h"
 #include "BluetoothUtils.h"
+#include "BluetoothUuid.h"
 #include "ObexBase.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
@@ -207,13 +207,13 @@ BluetoothOppManager::Connect(const nsAString& aDeviceObjectPath,
     return false;
   }
 
-  nsString serviceUuidStr =
-    NS_ConvertUTF8toUTF16(BluetoothServiceUuidStr::ObjectPush);
+  nsString uuid;
+  BluetoothUuidHelper::GetString(BluetoothServiceClass::OBJECT_PUSH, uuid);
 
   mRunnable = aRunnable;
 
   nsresult rv = bs->GetSocketViaService(aDeviceObjectPath,
-                                        serviceUuidStr,
+                                        uuid,
                                         BluetoothSocketType::RFCOMM,
                                         true,
                                         true,
@@ -257,11 +257,12 @@ BluetoothOppManager::Listen()
     return false;
   }
 
-  nsresult rv = bs->ListenSocketViaService(BluetoothReservedChannels::OPUSH,
-                                           BluetoothSocketType::RFCOMM,
-                                           true,
-                                           true,
-                                           this);
+  nsresult rv =
+    bs->ListenSocketViaService(BluetoothReservedChannels::CHANNEL_OPUSH,
+                               BluetoothSocketType::RFCOMM,
+                               true,
+                               true,
+                               this);
   mSocketStatus = GetConnectionStatus();
 
   return NS_FAILED(rv) ? false : true;
