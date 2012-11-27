@@ -375,8 +375,11 @@ pref("browser.link.open_newwindow.restriction", 0);
 // work), but make in-process browser frames the default.
 pref("dom.mozBrowserFramesEnabled", true);
 
-pref("dom.ipc.tabs.disabled", false);
+// Enable a (virtually) unlimited number of mozbrowser processes.
+// We'll run out of PIDs on UNIX-y systems before we hit this limit.
+pref("dom.ipc.processCount", 100000);
 
+pref("dom.ipc.tabs.disabled", false);
 pref("dom.ipc.browser_frames.oop_by_default", false);
 
 // Temporary permission hack for WebSMS
