@@ -193,6 +193,7 @@
 #endif
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="socialSidebarBroadcaster" hidden="true"/>
+    <broadcaster id="socialActiveBroadcaster" hidden="true"/>
 
     <!-- DevTools broadcasters -->
     <broadcaster id="devtoolsMenuBroadcaster_DevToolbar"
