@@ -453,16 +453,17 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
   }
 }
 
-static bool
-NativeInterface2JSObjectAndThrowIfFailed(XPCLazyCallContext& aLccx,
-                                         JSContext* aCx,
+bool
+NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
+                                         JSObject* aScope,
                                          JS::Value* aRetval,
                                          xpcObjectHelper& aHelper,
                                          const nsIID* aIID,
                                          bool aAllowNativeWrapper)
 {
   nsresult rv;
-  if (!XPCConvert::NativeInterface2JSObject(aLccx, aRetval, NULL, aHelper, aIID,
+  XPCLazyCallContext lccx(JS_CALLER, aCx, aScope);
+  if (!XPCConvert::NativeInterface2JSObject(lccx, aRetval, NULL, aHelper, aIID,
                                             NULL, aAllowNativeWrapper, &rv)) {
     // I can't tell if NativeInterface2JSObject throws JS exceptions
     // or not.  This is a sloppy stab at the right semantics; the
@@ -473,25 +474,6 @@ NativeInterface2JSObjectAndThrowIfFailed(XPCLazyCallContext& aLccx,
     return false;
   }
   return true;
-}
-
-bool
-DoHandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
-                                  nsISupports* value, JS::Value* vp)
-{
-  if (JS_IsExceptionPending(cx)) {
-    return false;
-  }
-
-  XPCLazyCallContext lccx(JS_CALLER, cx, scope);
-
-  if (value) {
-    xpcObjectHelper helper(value);
-    return NativeInterface2JSObjectAndThrowIfFailed(lccx, cx, vp, helper, NULL,
-                                                    true);
-  }
-
-  return Throw<true>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
 }
 
 // Can only be called with the immediate prototype of the instance object. Can
@@ -511,9 +493,7 @@ bool
 XPCOMObjectToJsval(JSContext* cx, JSObject* scope, xpcObjectHelper &helper,
                    const nsIID* iid, bool allowNativeWrapper, JS::Value* rval)
 {
-  XPCLazyCallContext lccx(JS_CALLER, cx, scope);
-
-  if (!NativeInterface2JSObjectAndThrowIfFailed(lccx, cx, rval, helper, iid,
+  if (!NativeInterface2JSObjectAndThrowIfFailed(cx, scope, rval, helper, iid,
                                                 allowNativeWrapper)) {
     return false;
   }
