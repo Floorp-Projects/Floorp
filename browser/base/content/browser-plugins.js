@@ -238,7 +238,16 @@ var gPluginHandler = {
   },
 
   canActivatePlugin: function PH_canActivatePlugin(objLoadingContent) {
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let pluginPermission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
+    if (objLoadingContent.actualType) {
+      let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
+      let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
+      pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
+    }
+
     return !objLoadingContent.activated &&
+           pluginPermission != Ci.nsIPermissionManager.DENY_ACTION &&
            objLoadingContent.pluginFallbackType !== Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW;
   },
 
@@ -351,16 +360,23 @@ var gPluginHandler = {
   _handleClickToPlayEvent: function PH_handleClickToPlayEvent(aPlugin) {
     let doc = aPlugin.ownerDocument;
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
-    let pluginsPermission = Services.perms.testPermission(browser.currentURI, "plugins");
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let pluginPermission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
+    let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    if (objLoadingContent.actualType) {
+      let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
+      pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
+    }
     let overlay = doc.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
 
-    if (browser._clickToPlayPluginsActivated) {
-      let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      objLoadingContent.playPlugin();
-      return;
-    } else if (pluginsPermission == Ci.nsIPermissionManager.DENY_ACTION) {
+    if (pluginPermission == Ci.nsIPermissionManager.DENY_ACTION) {
       if (overlay)
         overlay.style.visibility = "hidden";
+      return;
+    }
+
+    if (browser._clickToPlayPluginsActivated) {
+      objLoadingContent.playPlugin();
       return;
     }
 
@@ -417,10 +433,6 @@ var gPluginHandler = {
 
   reshowClickToPlayNotification: function PH_reshowClickToPlayNotification() {
     let browser = gBrowser.selectedBrowser;
-    let pluginsPermission = Services.perms.testPermission(browser.currentURI, "plugins");
-    if (pluginsPermission == Ci.nsIPermissionManager.DENY_ACTION)
-      return;
-
     if (gPluginHandler._pluginNeedsActivationExceptThese([]))
       gPluginHandler._showClickToPlayNotification(browser);
   },
@@ -513,7 +525,19 @@ var gPluginHandler = {
     }
 
     return centerActions;
-   },
+  },
+
+  _setPermissionForPlugins: function PH_setPermissionForPlugins(aBrowser, aPermission, aPluginList) {
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    for (let plugin of aPluginList) {
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      if (gPluginHandler.canActivatePlugin(objLoadingContent) &&
+          objLoadingContent.actualType) {
+        let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
+        Services.perms.add(aBrowser.currentURI, permissionString, aPermission);
+      }
+    }
+  },
 
   _showClickToPlayNotification: function PH_showClickToPlayNotification(aBrowser) {
     aBrowser._clickToPlayDoorhangerShown = true;
@@ -541,14 +565,14 @@ var gPluginHandler = {
       label: gNavigatorBundle.getString("activatePluginsMessage.always"),
       accessKey: gNavigatorBundle.getString("activatePluginsMessage.always.accesskey"),
       callback: function () {
-        Services.perms.add(aBrowser.currentURI, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
+        gPluginHandler._setPermissionForPlugins(aBrowser, Ci.nsIPermissionManager.ALLOW_ACTION, cwu.plugins);
         gPluginHandler.activatePlugins(contentWindow);
       }
     },{
       label: gNavigatorBundle.getString("activatePluginsMessage.never"),
       accessKey: gNavigatorBundle.getString("activatePluginsMessage.never.accesskey"),
       callback: function () {
-        Services.perms.add(aBrowser.currentURI, "plugins", Ci.nsIPermissionManager.DENY_ACTION);
+        gPluginHandler._setPermissionForPlugins(aBrowser, Ci.nsIPermissionManager.DENY_ACTION, cwu.plugins);
         let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
         if (notification)
           notification.remove();
@@ -567,7 +591,9 @@ var gPluginHandler = {
                             .getInterface(Ci.nsIDOMWindowUtils);
     for (let plugin of cwu.plugins) {
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-      overlay.style.visibility = "hidden";
+      // for already activated plugins, there will be no overlay
+      if (overlay)
+        overlay.style.visibility = "hidden";
     }
   },
 

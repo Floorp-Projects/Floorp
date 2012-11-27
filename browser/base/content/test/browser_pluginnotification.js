@@ -402,9 +402,26 @@ function test12c() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 12c, Plugin should be activated");
 
+  prepareTest(test12d, gHttpTestRoot + "plugin_two_types.html");
+}
+
+// Test that the "Always" permission, when set for just the Test plugin,
+// does not also allow the Second Test plugin.
+function test12d() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(popupNotification, "Test 12d, Should have a click-to-play notification");
+  var test = gTestBrowser.contentDocument.getElementById("test");
+  var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
+  var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
+  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 12d, Test plugin should be activated");
+  var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 12d, Second Test plugin (A) should not be activated");
+  var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 12d, Second Test plugin (B) should not be activated");
+
   Services.perms.removeAll();
-  gNextTest = test13a;
-  gTestBrowser.reload();
+  prepareTest(test13a, gHttpTestRoot + "plugin_clickToPlayDeny.html");
 }
 
 // Tests that the "Deny Always" permission works for click-to-play plugins (part 1/3)
@@ -443,6 +460,55 @@ function test13c() {
   ok(!objLoadingContent.activated, "Test 13c, Plugin should not be activated");
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(overlay.style.visibility == "hidden", "Test 13c, Plugin should not have visible overlay");
+
+  prepareTest(test13d, gHttpTestRoot + "plugin_two_types.html");
+}
+
+// Test that the "Deny Always" permission, when set for just the Test plugin,
+// does not also block the Second Test plugin (i.e. it gets an overlay and
+// there's a notification and everything).
+function test13d() {
+  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(popupNotification, "Test 13d, Should have a click-to-play notification");
+
+  var test = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
+  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(test, "class", "mainBox");
+  ok(overlay.style.visibility == "hidden", "Test 13d, Test plugin should not have visible overlay");
+  ok(!objLoadingContent.activated, "Test 13d, Test plugin should not be activated");
+
+  var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
+  var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
+  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtestA, "class", "mainBox");
+  ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
+  ok(!objLoadingContent.activated, "Test 13d, Second Test plugin (A) should not be activated");
+
+  var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
+  var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
+  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtestB, "class", "mainBox");
+  ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
+  ok(!objLoadingContent.activated, "Test 13d, Second Test plugin (B) should not be activated");
+
+  var condition = function() objLoadingContent.activated;
+  // "click" "Activate All Plugins"
+  popupNotification.mainAction.callback();
+  waitForCondition(condition, test13e, "Test 13d, Waited too long for plugin to activate");
+}
+
+// Test that clicking "Activate All Plugins" won't activate plugins that
+// have previously been "Deny Always"-ed.
+function test13e() {
+  var test = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 13e, Test plugin should not be activated");
+
+  var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
+  var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 13e, Second Test plugin (A) should be activated");
+
+  var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
+  var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 13e, Second Test plugin (B) should be activated");
 
   Services.perms.removeAll();
   Services.prefs.setBoolPref("plugins.click_to_play", false);
@@ -931,6 +997,124 @@ function test23() {
   is(objLoadingContent.displayedType, Ci.nsIObjectLoadingContent.TYPE_NULL, "Test 23, Plugin should not have activated");
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 23, Plugin should be click-to-play");
   ok(!pluginNode.activated, "Test 23, plugin node should not be activated");
+
+  prepareTest(test24a, gHttpTestRoot + "plugin_test.html");
+}
+
+// Test that "always allow"-ing a plugin will not allow it when it becomes
+// blocklisted.
+function test24a() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 24a, Should have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  ok(plugin, "Test 24a, Found plugin in page");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 24a, Plugin should be click-to-play");
+  ok(!objLoadingContent.activated, "Test 24a, plugin should not be activated");
+
+  // simulate "always allow"
+  notification.secondaryActions[0].callback();
+  prepareTest(test24b, gHttpTestRoot + "plugin_test.html");
+}
+
+// did the "always allow" work as intended?
+function test24b() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!notification, "Test 24b, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  ok(plugin, "Test 24b, Found plugin in page");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 24b, plugin should be activated");
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
+  function() {
+    prepareTest(test24c, gHttpTestRoot + "plugin_test.html");
+  });
+}
+
+// the plugin is now blocklisted, so it should not automatically load
+function test24c() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 24c, Should have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  ok(plugin, "Test 24c, Found plugin in page");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "Test 24c, Plugin should be vulnerable/updatable");
+  ok(!objLoadingContent.activated, "Test 24c, plugin should not be activated");
+
+  // simulate "always allow"
+  notification.secondaryActions[0].callback();
+  prepareTest(test24d, gHttpTestRoot + "plugin_test.html");
+}
+
+// We should still be able to always allow a plugin after we've seen that it's
+// blocklisted.
+function test24d() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!notification, "Test 24d, Should not have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  ok(plugin, "Test 24d, Found plugin in page");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 24d, plugin should be activated");
+
+  Services.perms.removeAll();
+  resetBlocklist(function () {
+    prepareTest(test25a, gHttpTestRoot + "plugin_test.html");
+  });
+}
+
+// Test that clicking "always allow" or "always deny" doesn't affect plugins
+// that already have permission given to them
+function test25a() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 25a, Should have a click-to-play notification");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  ok(plugin, "Test 25a, Found plugin in page");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 25a, plugin should not be activated");
+
+  // simulate "always allow"
+  notification.secondaryActions[0].callback();
+  prepareTest(test25b, gHttpTestRoot + "plugin_two_types.html");
+}
+
+function test25b() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 25b, Should have a click-to-play notification");
+
+  var test = gTestBrowser.contentDocument.getElementById("test");
+  ok(test, "Test 25b, Found test plugin in page");
+  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 25b, test plugin should be activated");
+
+  var secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
+  ok(secondtest, "Test 25b, Found second test plugin in page");
+  var objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 25b, second test plugin should not be activated");
+
+  // simulate "always deny"
+  notification.secondaryActions[1].callback();
+  prepareTest(test25c, gHttpTestRoot + "plugin_two_types.html");
+}
+
+// we should have one plugin allowed to activate and the other plugin(s) denied
+// (so it should have an invisible overlay)
+function test25c() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!notification, "Test 25c, Should not have a click-to-play notification");
+
+  var test = gTestBrowser.contentDocument.getElementById("test");
+  ok(test, "Test 25c, Found test plugin in page");
+  var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 25c, test plugin should be activated");
+
+  var secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
+  ok(secondtest, "Test 25c, Found second test plugin in page");
+  var objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 25c, second test plugin should not be activated");
+  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtest, "class", "mainBox");
+  ok(overlay.style.visibility == "hidden", "Test 25c, second test plugin should not have visible overlay");
+
+  Services.perms.removeAll();
 
   finishTest();
 }
