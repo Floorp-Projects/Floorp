@@ -304,7 +304,7 @@ ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 _BROWSER_FILES += \
                 browser_bug763468_perwindowpb.js \
                 browser_private_browsing_window.js \
-                $(filter disabled-until-bug-722850, browser_save_link-perwindowpb.js) \
+                browser_save_link-perwindowpb.js \
                 $(NULL)
 else
 _BROWSER_FILES += \
