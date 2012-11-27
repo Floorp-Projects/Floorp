@@ -177,6 +177,12 @@ public:
     // callable from socket thread only
     uint32_t Get32BitsOfPseudoRandom();
 
+    // Called by the channel synchronously during asyncOpen
+    void OnOpeningRequest(nsIHttpChannel *chan)
+    {
+        NotifyObservers(chan, NS_HTTP_ON_OPENING_REQUEST_TOPIC);
+    }
+
     // Called by the channel before writing a request
     void OnModifyRequest(nsIHttpChannel *chan)
     {
