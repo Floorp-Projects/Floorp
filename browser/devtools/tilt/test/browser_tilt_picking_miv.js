@@ -65,7 +65,7 @@ function whenBringingIntoView() {
   executeSoon(function() {
     Services.obs.removeObserver(whenHighlighting, HIGHLIGHTING);
     Services.obs.addObserver(cleanup, DESTROYED, false);
-    Tilt.destroy(Tilt.currentWindowId);
+    InspectorUI.closeInspectorUI();
   });
 }
 

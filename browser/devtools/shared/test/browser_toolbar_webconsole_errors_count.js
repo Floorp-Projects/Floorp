@@ -4,20 +4,13 @@
 // Tests that the developer toolbar errors count works properly.
 
 function test() {
-  const TEST_URI = "http://example.com/browser/browser/devtools/shared/test/" +
-                   "browser_toolbar_webconsole_errors_count.html";
+  const TEST_URI = "http://example.com/browser/browser/devtools/shared/test/browser_toolbar_webconsole_errors_count.html";
 
   let imported = {};
   Components.utils.import("resource:///modules/HUDService.jsm", imported);
   let HUDService = imported.HUDService;
 
-  Components.utils.import("resource:///modules/devtools/gDevTools.jsm", imported);
-  let gDevTools = imported.gDevTools;
-
-  Components.utils.import("resource:///modules/devtools/Target.jsm", imported);
-  let TargetFactory = imported.TargetFactory;
-
-  let webconsole = document.getElementById("developer-toolbar-toolbox-button");
+  let webconsole = document.getElementById("developer-toolbar-webconsole");
   let toolbar = document.getElementById("Tools:DevToolbar");
   let tab1, tab2;
 
@@ -111,8 +104,7 @@ function test() {
 
     oneTimeObserve("web-console-created", _onWebConsoleOpen);
 
-    let target = TargetFactory.forTab(tab);
-    gDevTools.openToolboxForTab(target, "webconsole");
+    HUDService.activateHUDForContext(tab);
   }
 
   function onWebConsoleOpen(hud) {
@@ -214,8 +206,7 @@ function test() {
 
   function testEnd() {
     document.getElementById("developer-toolbar-closebutton").doCommand();
-    let target1 = TargetFactory.forTab(tab1);
-    gDevTools.closeToolbox(target1);
+    HUDService.deactivateHUDForContext(tab1);
     gBrowser.removeTab(tab1);
     gBrowser.removeTab(tab2);
     finish();

@@ -7,7 +7,6 @@ this.EXPORTED_SYMBOLS = [ ];
 
 Components.utils.import("resource:///modules/devtools/gcli.jsm");
 Components.utils.import("resource:///modules/HUDService.jsm");
-Components.utils.import("resource:///modules/devtools/Tilt.jsm");
 
 
 /**
@@ -27,32 +26,31 @@ gcli.addCommand({
   name: 'tilt open',
   description: gcli.lookup("tiltOpenDesc"),
   manual: gcli.lookup("tiltOpenManual"),
-  exec: function(args, context) {
-    let chromeWindow = context.environment.chromeDocument.defaultView;
-    let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
-    Tilt.initializeForCurrentTab();
-  }
-});
-
-
-/**
- * 'tilt toggle' command
- */
-gcli.addCommand({
-  name: "tilt toggle",
-  buttonId: "command-button-tilt",
-  buttonClass: "command-button",
-  hidden: true,
-  exec: function(args, context) {
-    let chromeWindow = context.environment.chromeDocument.defaultView;
-
-    if (TiltManager._instances.has(chromeWindow)) {
-      let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
-      Tilt.destroy(Tilt.currentWindowId);
+  params: [
+    {
+      name: "node",
+      type: "node",
+      defaultValue: null,
+      description: gcli.lookup("inspectNodeDesc"),
+      manual: gcli.lookup("inspectNodeManual")
     }
-    else {
-      let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
-      Tilt.initializeForCurrentTab();
+  ],
+  exec: function(args, context) {
+    let chromeWindow = context.environment.chromeDocument.defaultView;
+    let InspectorUI = chromeWindow.InspectorUI;
+    let Tilt = chromeWindow.Tilt;
+
+    if (Tilt.currentInstance) {
+      Tilt.update(args.node);
+    } else {
+      let hudId = chromeWindow.HUDConsoleUI.getOpenHUD();
+      let hud = HUDService.getHudReferenceById(hudId);
+
+      if (hud && !hud.consolePanel) {
+        HUDService.deactivateHUDForContext(chromeWindow.gBrowser.selectedTab);
+      }
+      InspectorUI.openInspectorUI(args.node);
+      Tilt.initialize();
     }
   }
 });
@@ -83,7 +81,8 @@ gcli.addCommand({
   ],
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
-    let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
+    let Tilt = chromeWindow.Tilt;
+
     if (Tilt.currentInstance) {
       Tilt.currentInstance.controller.arcball.translate([args.x, args.y]);
     }
@@ -123,7 +122,8 @@ gcli.addCommand({
   ],
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
-    let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
+    let Tilt = chromeWindow.Tilt;
+
     if (Tilt.currentInstance) {
       Tilt.currentInstance.controller.arcball.rotate([args.x, args.y, args.z]);
     }
@@ -148,7 +148,7 @@ gcli.addCommand({
   ],
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
-    let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
+    let Tilt = chromeWindow.Tilt;
 
     if (Tilt.currentInstance) {
       Tilt.currentInstance.controller.arcball.zoom(-args.zoom);
@@ -166,7 +166,7 @@ gcli.addCommand({
   manual: gcli.lookup("tiltResetManual"),
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
-    let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
+    let Tilt = chromeWindow.Tilt;
 
     if (Tilt.currentInstance) {
       Tilt.currentInstance.controller.arcball.reset();
@@ -184,7 +184,7 @@ gcli.addCommand({
   manual: gcli.lookup("tiltCloseManual"),
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
-    let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
+    let Tilt = chromeWindow.Tilt;
 
     Tilt.destroy(Tilt.currentWindowId);
   }

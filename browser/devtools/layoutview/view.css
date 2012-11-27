@@ -38,6 +38,10 @@ body {
   -moz-box-pack: end;
 }
 
+#header:focus {
+  outline: none;
+}
+
 #main {
   margin: 0 10px 10px 10px;
   -moz-box-sizing: border-box;

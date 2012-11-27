@@ -6,12 +6,15 @@ let doc;
 let tempScope = {};
 Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
 let inplaceEditor = tempScope._getInplaceEditorForSpan;
-let inspector;
-let win;
 
 XPCOMUtils.defineLazyGetter(this, "osString", function() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
+
+function ruleViewFrame()
+{
+  return InspectorUI.sidebar._tools["ruleview"].frame;
+}
 
 function createDocument()
 {
@@ -34,28 +37,40 @@ function createDocument()
     '</div>';
   doc.title = "Rule view context menu test";
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.openToolboxForTab(target, "inspector");
-  toolbox.once("inspector-selected", function SE_selected(id, aInspector) {
-    inspector = aInspector;
-    inspector.sidebar.select("ruleview");
-    win = inspector.sidebar.getWindowForTab("ruleview");
-    highlightNode();
-  });
+  openInspector();
 }
 
-function highlightNode()
+function openInspector()
 {
+  ok(window.InspectorUI, "InspectorUI variable exists");
+  ok(!InspectorUI.inspecting, "Inspector is not highlighting");
+  ok(InspectorUI.store.isEmpty(), "Inspector.store is empty");
+
+  Services.obs.addObserver(inspectorUIOpen,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  InspectorUI.openInspectorUI();
+}
+
+function inspectorUIOpen()
+{
+  Services.obs.removeObserver(inspectorUIOpen,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+
+  // Make sure the inspector is open.
+  ok(InspectorUI.inspecting, "Inspector is highlighting");
+  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
+  ok(!InspectorUI.store.isEmpty(), "InspectorUI.store is not empty");
+  is(InspectorUI.store.length, 1, "Inspector.store.length = 1");
+
   // Highlight a node.
   let div = content.document.getElementsByTagName("div")[0];
+  InspectorUI.inspectNode(div);
+  InspectorUI.stopInspecting();
+  is(InspectorUI.selection, div, "selection matches the div element");
 
-  inspector.selection.once("new-node", function() {
-    is(inspector.selection.node, div, "selection matches the div element");
-    testClip();
-  });
-  executeSoon(function() {
-    inspector.selection.setNode(div);
-  });
+  InspectorUI.currentInspector.once("sidebaractivated-ruleview", testClip)
+  InspectorUI.sidebar.show();
+  InspectorUI.sidebar.activatePanel("ruleview");
 }
 
 function testClip()
@@ -80,7 +95,7 @@ function testClip()
 }
 
 function checkCopyRule() {
-  let contentDoc = win.document;
+  let contentDoc = ruleViewFrame().contentDocument;
   let props = contentDoc.querySelectorAll(".ruleview-property");
 
   is(props.length, 5, "checking property length");
@@ -94,7 +109,8 @@ function checkCopyRule() {
 
   // We need the context menu to open in the correct place in order for
   // popupNode to be propertly set.
-  contextMenuClick(prop);
+  EventUtils.synthesizeMouse(prop, 1, 1, { type: "contextmenu", button: 2 },
+    ruleViewFrame().contentWindow);
 
   ruleView()._boundCopyRule();
   let menu = contentDoc.querySelector("#rule-view-context-menu");
@@ -104,7 +120,7 @@ function checkCopyRule() {
 
 function checkCopyProperty()
 {
-  let contentDoc = win.document;
+  let contentDoc = ruleViewFrame().contentDocument;
   let props = contentDoc.querySelectorAll(".ruleview-property");
   let prop = props[2];
 
@@ -114,7 +130,8 @@ function checkCopyProperty()
 
   // We need the context menu to open in the correct place in order for
   // popupNode to be propertly set.
-  contextMenuClick(prop);
+  EventUtils.synthesizeMouse(prop, 1, 1, { type: "contextmenu", button: 2 },
+    ruleViewFrame().contentWindow);
 
   SimpleTest.waitForClipboard(function IUI_boundCopyPropCheck() {
     return checkClipboardData(expectedPattern);
@@ -157,7 +174,7 @@ function checkCopyPropertyValue()
 
 function checkCopySelection()
 {
-  let contentDoc = win.document;
+  let contentDoc = ruleViewFrame().contentDocument;
   let props = contentDoc.querySelectorAll(".ruleview-property");
   let values = contentDoc.querySelectorAll(".ruleview-propertycontainer");
 
@@ -165,7 +182,7 @@ function checkCopySelection()
   range.setStart(props[0], 0);
   range.setEnd(values[4], 2);
 
-  let selection = win.getSelection();
+  let selection = ruleViewFrame().contentWindow.getSelection();
   selection.addRange(range);
 
   info("Checking that _boundCopy() returns the correct " +
@@ -206,7 +223,7 @@ function testSimpleCopy()
 }
 
 function checkSimpleCopy() {
-  let contentDoc = win.document;
+  let contentDoc = ruleViewFrame().contentDocument;
   let props = contentDoc.querySelectorAll(".ruleview-code");
 
   is(props.length, 2, "checking property length");
@@ -217,7 +234,8 @@ function checkSimpleCopy() {
 
   // We need the context menu to open in the correct place in order for
   // popupNode to be propertly set.
-  contextMenuClick(prop);
+  EventUtils.synthesizeMouse(prop, 1, 1, { type: "contextmenu", button: 2 },
+    ruleViewFrame().contentWindow);
 
   ruleView()._boundCopy();
   let menu = contentDoc.querySelector("#rule-view-context-menu");
@@ -265,8 +283,10 @@ function failedClipboard(aExpectedPattern, aCallback)
 
 function finishup()
 {
+  InspectorUI.sidebar.hide();
+  InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();
-  doc = inspector = null;
+  doc = null;
   finish();
 }
 

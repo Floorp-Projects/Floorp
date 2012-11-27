@@ -6,10 +6,6 @@ const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/styleeditor/
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleeditor/test/";
 const TEST_HOST = 'mochi.test:8888';
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
-let TargetFactory = tempScope.TargetFactory;
-
 let gChromeWindow;               //StyleEditorChrome window
 let cache = Cc["@mozilla.org/network/cache-service;1"]
               .getService(Ci.nsICacheService);
@@ -21,7 +17,10 @@ Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
 
 function cleanup()
 {
-  gChromeWindow = null;
+  if (gChromeWindow) {
+    gChromeWindow.close();
+    gChromeWindow = null;
+  }
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
@@ -29,26 +28,16 @@ function cleanup()
 
 function launchStyleEditorChrome(aCallback, aSheet, aLine, aCol)
 {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  let panel = gDevTools.getPanelForTarget("styleeditor", target);
-  if (panel && panel.isReady) {
-    gChromeWindow = panel._panelWin;
-    gChromeWindow.styleEditorChrome._alwaysDisableAnimations = true;
-    if (aSheet) {
-      panel.selectStyleSheet(aSheet, aLine, aCol);
-    }
-    aCallback(gChromeWindow.styleEditorChrome);
-  } else {
-    let toolbox = gDevTools.openToolboxForTab(target, "styleeditor");
-    toolbox.once("styleeditor-ready", function(event, panel) {
-      gChromeWindow = panel._panelWin;
+  gChromeWindow = StyleEditor.openChrome(aSheet, aLine, aCol);
+  if (gChromeWindow.document.readyState != "complete") {
+    gChromeWindow.addEventListener("load", function onChromeLoad() {
+      gChromeWindow.removeEventListener("load", onChromeLoad, true);
       gChromeWindow.styleEditorChrome._alwaysDisableAnimations = true;
-      if (aSheet) {
-        panel.selectStyleSheet(aSheet, aLine, aCol);
-      }
       aCallback(gChromeWindow.styleEditorChrome);
-    });
+    }, true);
+  } else {
+    gChromeWindow.styleEditorChrome._alwaysDisableAnimations = true;
+    aCallback(gChromeWindow.styleEditorChrome);
   }
 }
 

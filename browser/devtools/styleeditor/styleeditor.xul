@@ -16,95 +16,117 @@
 <?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
 <xul:window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns="http://www.w3.org/1999/xhtml"
-        id="style-editor-chrome-window">
+        id="style-editor-chrome-window"
+        title="&window.title;"
+        windowtype="Tools:StyleEditor"
+        width="800" height="280"
+        persist="screenX screenY width height sizemode">
+<xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
-  <xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+<xul:popupset id="style-editor-popups">
+  <xul:menupopup id="sourceEditorContextMenu"
+                 onpopupshowing="goUpdateSourceEditorMenuItems()">
+    <xul:menuitem id="se-cMenu-undo"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-cut"/>
+    <xul:menuitem id="se-cMenu-copy"/>
+    <xul:menuitem id="se-cMenu-paste"/>
+    <xul:menuitem id="se-cMenu-delete"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-selectAll"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-find"/>
+    <xul:menuitem id="se-cMenu-findAgain"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-gotoLine"/>
+  </xul:menupopup>
+</xul:popupset>
 
-  <xul:popupset id="style-editor-popups">
-    <xul:menupopup id="sourceEditorContextMenu"
-                  onpopupshowing="goUpdateSourceEditorMenuItems()">
-      <xul:menuitem id="se-cMenu-undo"/>
-      <xul:menuseparator/>
-      <xul:menuitem id="se-cMenu-cut"/>
-      <xul:menuitem id="se-cMenu-copy"/>
-      <xul:menuitem id="se-cMenu-paste"/>
-      <xul:menuitem id="se-cMenu-delete"/>
-      <xul:menuseparator/>
-      <xul:menuitem id="se-cMenu-selectAll"/>
-      <xul:menuseparator/>
-      <xul:menuitem id="se-cMenu-find"/>
-      <xul:menuitem id="se-cMenu-findAgain"/>
-      <xul:menuseparator/>
-      <xul:menuitem id="se-cMenu-gotoLine"/>
-    </xul:menupopup>
-  </xul:popupset>
+<xul:commandset id="editMenuCommands"/>
+<xul:commandset id="sourceEditorCommands"/>
+<xul:commandset id="style-editor-commandset">
+  <xul:command id="style-editor-cmd-close" oncommand="window.close();"/>
+</xul:commandset>
 
-  <xul:commandset id="editMenuCommands"/>
-  <xul:commandset id="sourceEditorCommands"/>
+<xul:keyset id="sourceEditorKeys"/>
+<xul:keyset id="style-editor-keyset">
+  <xul:key id="style-editor-key-close"
+           key="&closeCmd.key;"
+           command="style-editor-cmd-close"
+           modifiers="accel"/>
+</xul:keyset>
 
-  <xul:keyset id="sourceEditorKeys"/>
+<xul:box id="style-editor-chrome" class="splitview-root loading">
+  <xul:box class="splitview-controller">
+    <xul:box class="splitview-main">
+      <xul:toolbar class="devtools-toolbar">
+        <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
+                    accesskey="&newButton.accesskey;"
+                    tooltiptext="&newButton.tooltip;"
+                    label="&newButton.label;"
+                    disabled="true"/>
+        <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
+                    accesskey="&importButton.accesskey;"
+                    tooltiptext="&importButton.tooltip;"
+                    label="&importButton.label;"
+                    disabled="true"/>
+      </xul:toolbar>
+    </xul:box>
+    <xul:box id="splitview-resizer-target" class="splitview-nav-container"
+             persist="width height">
+      <ol class="splitview-nav" tabindex="0"></ol>
+      <div class="splitview-nav placeholder empty">
+        <p><strong>&noStyleSheet.label;</strong></p>
+        <p>&noStyleSheet-tip-start.label;
+          <a href="#"
+             class="style-editor-newButton">&noStyleSheet-tip-action.label;</a>
+          &noStyleSheet-tip-end.label;</p>
+      </div>
+    </xul:box> <!-- .splitview-nav-container -->
+  </xul:box>   <!-- .splitview-controller -->
+  <xul:box class="splitview-side-details"/>
 
-  <xul:box id="style-editor-chrome" class="splitview-root loading">
-    <xul:box class="splitview-controller">
-      <xul:box class="splitview-main">
-        <xul:toolbar class="devtools-toolbar">
-          <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
-                      accesskey="&newButton.accesskey;"
-                      tooltiptext="&newButton.tooltip;"
-                      label="&newButton.label;"
-                      disabled="true"/>
-          <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
-                      accesskey="&importButton.accesskey;"
-                      tooltiptext="&importButton.tooltip;"
-                      label="&importButton.label;"
-                      disabled="true"/>
-        </xul:toolbar>
-      </xul:box>
-      <xul:box id="splitview-resizer-target" class="splitview-nav-container"
-              persist="width height">
-        <ol class="splitview-nav" tabindex="0"></ol>
-        <div class="splitview-nav placeholder empty">
-          <p><strong>&noStyleSheet.label;</strong></p>
-          <p>&noStyleSheet-tip-start.label;
-            <a href="#"
-              class="style-editor-newButton">&noStyleSheet-tip-action.label;</a>
-            &noStyleSheet-tip-end.label;</p>
+  <div id="splitview-templates" hidden="true">
+    <li id="splitview-tpl-summary-stylesheet" tabindex="0">
+      <a class="stylesheet-enabled" tabindex="0" href="#"
+         title="&visibilityToggle.tooltip;"
+         accesskey="&saveButton.accesskey;"></a>
+      <hgroup class="stylesheet-info">
+        <h1><a class="stylesheet-name" href="#"><xul:label crop="start"/></a></h1>
+        <div class="stylesheet-more">
+          <h3 class="stylesheet-title"></h3>
+          <h3 class="stylesheet-rule-count"></h3>
+          <h3 class="stylesheet-error-message"></h3>
+          <xul:spacer/>
+          <h3><a class="stylesheet-saveButton" href="#"
+                 title="&saveButton.tooltip;"
+                 accesskey="&saveButton.accesskey;">&saveButton.label;</a></h3>
         </div>
-      </xul:box> <!-- .splitview-nav-container -->
-    </xul:box>   <!-- .splitview-controller -->
-    <xul:box class="splitview-side-details"/>
+      </hgroup>
+    </li>
 
-    <div id="splitview-templates" hidden="true">
-      <li id="splitview-tpl-summary-stylesheet" tabindex="0">
-        <a class="stylesheet-enabled" tabindex="0" href="#"
-          title="&visibilityToggle.tooltip;"
-          accesskey="&saveButton.accesskey;"></a>
-        <hgroup class="stylesheet-info">
-          <h1><a class="stylesheet-name" href="#"><xul:label crop="start"/></a></h1>
-          <div class="stylesheet-more">
-            <h3 class="stylesheet-title"></h3>
-            <h3 class="stylesheet-rule-count"></h3>
-            <h3 class="stylesheet-error-message"></h3>
-            <xul:spacer/>
-            <h3><a class="stylesheet-saveButton" href="#"
-                  title="&saveButton.tooltip;"
-                  accesskey="&saveButton.accesskey;">&saveButton.label;</a></h3>
-          </div>
-        </hgroup>
-      </li>
+    <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
+      <xul:resizer class="splitview-portrait-resizer"
+                   dir="bottom"
+                   element="splitview-resizer-target"/>
+      <xul:toolbar id="splitview-details-toolbar" class="devtools-toolbar">
+        <xul:resizer class="splitview-landscape-resizer"
+                     dir="bottomend"
+                     element="splitview-resizer-target"/>
+      </xul:toolbar>
+      <xul:box class="stylesheet-editor-input textbox"
+               data-placeholder="&editorTextbox.placeholder;"/>
+    </xul:box>
+  </div> <!-- #splitview-templates -->
+</xul:box>   <!-- .splitview-root -->
 
-      <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
-        <xul:resizer class="splitview-portrait-resizer"
-                    dir="bottom"
-                    element="splitview-resizer-target"/>
-        <xul:toolbar id="splitview-details-toolbar" class="devtools-toolbar">
-          <xul:resizer class="splitview-landscape-resizer"
-                      dir="bottomend"
-                      element="splitview-resizer-target"/>
-        </xul:toolbar>
-        <xul:box class="stylesheet-editor-input textbox"
-                data-placeholder="&editorTextbox.placeholder;"/>
-      </xul:box>
-    </div> <!-- #splitview-templates -->
-  </xul:box>   <!-- .splitview-root -->
+<xul:script type="application/javascript"><![CDATA[
+Components.utils.import("resource:///modules/devtools/StyleEditorChrome.jsm");
+let chromeRoot = document.getElementById("style-editor-chrome");
+let args = window.arguments[0].wrappedJSObject;
+let contentWindow = args.contentWindow;
+let chrome = new StyleEditorChrome(chromeRoot, contentWindow);
+chrome.selectStyleSheet(args.selectedStyleSheet, args.line, args.col);
+window.styleEditorChrome = chrome;
+]]></xul:script>
 </xul:window>

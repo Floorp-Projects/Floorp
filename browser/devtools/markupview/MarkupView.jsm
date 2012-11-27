@@ -39,7 +39,7 @@ Cu.import("resource://gre/modules/Services.jsm");
  * @param iframe aFrame
  *        An iframe in which the caller has kindly loaded markup-view.xhtml.
  */
-this.MarkupView = function MarkupView(aInspector, aFrame, aControllerWindow)
+this.MarkupView = function MarkupView(aInspector, aFrame)
 {
   this._inspector = aInspector;
   this._frame = aFrame;
@@ -47,15 +47,15 @@ this.MarkupView = function MarkupView(aInspector, aFrame, aControllerWindow)
   this._elt = this.doc.querySelector("#root");
 
   this.undo = new UndoStack();
-  this.undo.installController(aControllerWindow);
+  this.undo.installController(this._frame.ownerDocument.defaultView);
 
   this._containers = new WeakMap();
 
   this._observer = new this.doc.defaultView.MutationObserver(this._mutationObserver.bind(this));
 
-  this._boundOnNewSelection = this._onNewSelection.bind(this);
-  this._inspector.selection.on("new-node", this._boundOnNewSelection);
-  this._onNewSelection();
+  this._boundSelect = this._onSelect.bind(this);
+  this._inspector.on("select", this._boundSelect);
+  this._onSelect();
 
   this._boundKeyDown = this._onKeyDown.bind(this);
   this._frame.addEventListener("keydown", this._boundKeyDown, false);
@@ -68,6 +68,13 @@ this.MarkupView = function MarkupView(aInspector, aFrame, aControllerWindow)
 
 MarkupView.prototype = {
   _selectedContainer: null,
+
+  /**
+   * Return the selected node.
+   */
+  get selected() {
+    return this._selectedContainer ? this._selectedContainer.node : null;
+  },
 
   template: function MT_template(aName, aDest, aOptions)
   {
@@ -87,16 +94,14 @@ MarkupView.prototype = {
   },
 
   /**
-   * Highlight the inspector selected node.
+   * Highlight the given element in the markup panel.
    */
-  _onNewSelection: function MT__onNewSelection()
+  _onSelect: function MT__onSelect()
   {
-    if (this._inspector.selection.isNode()) {
-      this.showNode(this._inspector.selection.node, true);
-      this.markNodeAsSelected(this._inspector.selection.node);
-    } else {
-      this.unmarkSelectedNode();
+    if (this._inspector.selection) {
+      this.showNode(this._inspector.selection, true);
     }
+    this.selectNode(this._inspector.selection);
   },
 
   /**
@@ -250,11 +255,12 @@ MarkupView.prototype = {
 
     let node = aContainer.node;
     this.showNode(node, false);
+    this.selectNode(node);
 
-    this._inspector.selection.setNode(node, "treepanel");
-    // This event won't be fired if the node is the same. But the highlighter
-    // need to lock the node if it wasn't.
-    this._inspector.selection.emit("new-node");
+    if (this._inspector._IUI.highlighter.isNodeHighlightable(node)) {
+      this._inspector._IUI.select(node, true, false, "treepanel");
+      this._inspector._IUI.highlighter.highlight(node);
+    }
 
     if (!aIgnoreFocus) {
       aContainer.focus();
@@ -407,7 +413,7 @@ MarkupView.prototype = {
   /**
    * Mark the given node selected.
    */
-  markNodeAsSelected: function MT_markNodeAsSelected(aNode)
+  selectNode: function MT_selectNode(aNode)
   {
     let container = this._containers.get(aNode);
     if (this._selectedContainer === container) {
@@ -421,18 +427,9 @@ MarkupView.prototype = {
       this._selectedContainer.selected = true;
     }
 
-    return true;
-  },
+    this._selectedContainer.focus();
 
-  /**
-   * Unmark selected node (no node selected).
-   */
-  unmarkSelectedNode: function MT_unmarkSelectedNode()
-  {
-    if (this._selectedContainer) {
-      this._selectedContainer.selected = false;
-      this._selectedContainer = null;
-    }
+    return true;
   },
 
   /**
@@ -493,8 +490,8 @@ MarkupView.prototype = {
     this._frame.removeEventListener("keydown", this._boundKeyDown, true);
     delete this._boundKeyDown;
 
-    this._inspector.selection.off("new-node", this._boundOnNewSelection);
-    delete this._boundOnNewSelection;
+    this._inspector.off("select", this._boundSelect);
+    delete this._boundSelect;
 
     delete this._elt;
 
@@ -950,9 +947,9 @@ ElementEditor.prototype = {
         start: function EE_editAttribute_start(aEditor, aEvent) {
           // If the editing was started inside the name or value areas,
           // select accordingly.
-          if (aEvent && aEvent.target === name) {
+          if (aEvent.target === name) {
             aEditor.input.setSelectionRange(0, name.textContent.length);
-          } else if (aEvent && aEvent.target === val) {
+          } else if (aEvent.target === val) {
             let length = val.textContent.length;
             let editorLength = aEditor.input.value.length;
             let start = editorLength - (length + 1);

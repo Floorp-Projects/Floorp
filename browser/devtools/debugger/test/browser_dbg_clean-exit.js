@@ -15,7 +15,7 @@ function test() {
   debug_tab_pane(DEBUGGER_TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gDebugger = gPane.contentWindow;
 
     testCleanExit();
   });

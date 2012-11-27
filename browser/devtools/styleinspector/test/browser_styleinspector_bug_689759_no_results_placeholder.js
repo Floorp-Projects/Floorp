@@ -5,8 +5,7 @@
 // Tests that the no results placeholder works properly.
 
 let doc;
-let inspector;
-let computedView;
+let stylePanel;
 
 function createDocument()
 {
@@ -14,22 +13,9 @@ function createDocument()
     '.matches {color: #F00;}</style>' +
     '<span id="matches" class="matches">Some styled text</span>';
   doc.title = "Tests that the no results placeholder works properly";
-
-  openInspector(openComputedView);
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(doc.body, runStyleInspectorTests);
 }
-
-function openComputedView(aInspector)
-{
-  inspector = aInspector;
-
-  inspector.sidebar.once("computedview-ready", function() {
-    inspector.sidebar.select("computedview");
-    computedView = getComputedView(inspector);
-
-    runStyleInspectorTests();
-  });
-}
-
 
 function runStyleInspectorTests()
 {
@@ -38,11 +24,12 @@ function runStyleInspectorTests()
   let span = doc.querySelector("#matches");
   ok(span, "captain, we have the matches span");
 
-  inspector.selection.setNode(span);
+  let htmlTree = stylePanel.cssHtmlTree;
+  stylePanel.selectNode(span);
 
-  is(span, computedView.viewedElement,
+  is(span, htmlTree.viewedElement,
     "style inspector node matches the selected node");
-  is(computedView.viewedElement, computedView.cssLogic.viewedElement,
+  is(htmlTree.viewedElement, stylePanel.cssLogic.viewedElement,
      "cssLogic node matches the cssHtmlTree node");
 }
 
@@ -50,14 +37,15 @@ function SI_AddFilterText()
 {
   Services.obs.removeObserver(SI_AddFilterText, "StyleInspector-populated", false);
 
-  let searchbar = computedView.searchField;
+  let iframe = stylePanel.iframe;
+  let searchbar = stylePanel.cssHtmlTree.searchField;
   let searchTerm = "xxxxx";
 
   Services.obs.addObserver(SI_checkPlaceholderVisible, "StyleInspector-populated", false);
   info("setting filter text to \"" + searchTerm + "\"");
   searchbar.focus();
   for each (let c in searchTerm) {
-    EventUtils.synthesizeKey(c, {}, computedView.styleWindow);
+    EventUtils.synthesizeKey(c, {}, iframe.contentWindow);
   }
 }
 
@@ -65,9 +53,9 @@ function SI_checkPlaceholderVisible()
 {
   Services.obs.removeObserver(SI_checkPlaceholderVisible, "StyleInspector-populated", false);
   info("SI_checkPlaceholderVisible called");
-  let placeholder = computedView.noResults;
-  let win = computedView.styleWindow;
-  let display = win.getComputedStyle(placeholder).display;
+  let placeholder = stylePanel.cssHtmlTree.noResults;
+  let iframe = stylePanel.iframe;
+  let display = iframe.contentWindow.getComputedStyle(placeholder).display;
 
   is(display, "block", "placeholder is visible");
 
@@ -76,30 +64,32 @@ function SI_checkPlaceholderVisible()
 
 function SI_ClearFilterText()
 {
-  let searchbar = computedView.searchField;
+  let iframe = stylePanel.iframe;
+  let searchbar = stylePanel.cssHtmlTree.searchField;
 
   Services.obs.addObserver(SI_checkPlaceholderHidden, "StyleInspector-populated", false);
   info("clearing filter text");
   searchbar.focus();
   searchbar.value = "";
-  EventUtils.synthesizeKey("c", {}, computedView.styleWindow);
+  EventUtils.synthesizeKey("c", {}, iframe.contentWindow);
 }
 
 function SI_checkPlaceholderHidden()
 {
   Services.obs.removeObserver(SI_checkPlaceholderHidden, "StyleInspector-populated", false);
-  let placeholder = computedView.noResults;
-  let win = computedView.styleWindow;
-  let display = win.getComputedStyle(placeholder).display;
+  let placeholder = stylePanel.cssHtmlTree.noResults;
+  let iframe = stylePanel.iframe;
+  let display = iframe.contentWindow.getComputedStyle(placeholder).display;
 
   is(display, "none", "placeholder is hidden");
 
+  stylePanel.destroy();
   finishUp();
 }
 
 function finishUp()
 {
-  doc = inspector = computedView = null;
+  doc = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();
 }

@@ -12,9 +12,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_leaktest.js \
-	$(warning browser_dbg_createChrome.js disabled until issue 156 is fixed) \
-	$(browser_dbg_debugger-tab-switch.js disabled until issues 106, 40 are fixed) \
-	$(browser_dbg_debugger-tab-switch-window.js disabled until issues 106, 40 are fixed) \
+	browser_dbg_createChrome.js \
+	browser_dbg_debugger-tab-switch.js \
+	browser_dbg_debugger-tab-switch-window.js \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
 	browser_dbg_tabactor-01.js \
@@ -45,6 +45,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-reexpand.js \
 	browser_dbg_reload-same-script.js \
 	browser_dbg_pane-collapse.js \
+	browser_dbg_panesize.js \
 	browser_dbg_panesize-inner.js \
 	browser_dbg_stack-01.js \
 	browser_dbg_stack-02.js \
@@ -81,6 +82,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_iframes.js \
 	browser_dbg_pause-exceptions.js \
 	browser_dbg_multiple-windows.js \
+	browser_dbg_menustatus.js \
 	browser_dbg_bfcache.js \
 	browser_dbg_breakpoint-new-script.js \
 	browser_dbg_bug737803_editor_actual_location.js \

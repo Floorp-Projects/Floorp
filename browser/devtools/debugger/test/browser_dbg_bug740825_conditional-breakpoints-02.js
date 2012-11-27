@@ -33,7 +33,7 @@ function test()
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gDebugger = gPane.contentWindow;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     gBreakpointsPane = gDebugger.DebuggerView.Breakpoints;
 
@@ -83,7 +83,7 @@ function test()
     is(gScripts.selectedValue, gScripts.values[0],
           "The correct script is selected");
 
-    gBreakpoints = gPane.getAllBreakpoints();
+    gBreakpoints = gPane.breakpoints;
     is(Object.keys(gBreakpoints), 0, "no breakpoints");
     ok(!gPane.getBreakpoint("foo", 3), "getBreakpoint('foo', 3) returns falsey");
 

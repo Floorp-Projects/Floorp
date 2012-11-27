@@ -6,7 +6,7 @@
 // property view.
 
 let doc;
-let computedView;
+let stylePanel;
 
 const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/" +
   "test/browser_bug722196_identify_media_queries.html";
@@ -22,27 +22,18 @@ function docLoaded()
 {
   browser.removeEventListener("load", docLoaded, true);
   doc = content.document;
-
-  openInspector(selectNode);
-}
-
-function selectNode(aInspector)
-{
-  var div = doc.querySelector("div");
-  ok(div, "captain, we have the div");
-
-  aInspector.selection.setNode(div);
-
-  aInspector.sidebar.once("computedview-ready", function() {
-    aInspector.sidebar.select("computedview");
-    computedView = getComputedView(aInspector);
-    checkSheets();
-  });
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(doc.body, checkSheets);
 }
 
 function checkSheets()
 {
-  let cssLogic = computedView.cssLogic;
+  var div = doc.querySelector("div");
+  ok(div, "captain, we have the div");
+
+  stylePanel.selectNode(div);
+
+  let cssLogic = stylePanel.cssLogic;
   cssLogic.processMatchedSelectors();
 
   let _strings = Services.strings
@@ -57,12 +48,13 @@ function checkSheets()
   is(cssLogic._matchedRules[1][0].source, source2,
     "rule.source gives correct output for rule 2");
 
+  stylePanel.destroy();
   finishUp();
 }
 
 function finishUp()
 {
-  doc = computedView = null;
+  doc = null;
   gBrowser.removeCurrentTab();
   finish();
 }

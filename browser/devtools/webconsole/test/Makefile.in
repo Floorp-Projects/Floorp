@@ -46,6 +46,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_property_provider.js \
 	browser_webconsole_bug_587617_output_copy.js \
 	browser_webconsole_bug_585237_line_limit.js \
+	browser_webconsole_bug_581231_close_button.js \
 	browser_webconsole_bug_582201_duplicate_errors.js \
 	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
@@ -60,6 +61,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_601352_scroll.js \
 	browser_webconsole_bug_592442_closing_brackets.js \
 	browser_webconsole_bug_593003_iframe_wrong_hud.js \
+	browser_webconsole_bug_601909_remember_height.js \
 	browser_webconsole_bug_613013_console_api_iframe.js \
 	browser_webconsole_bug_597756_reopen_closed_tab.js \
 	browser_webconsole_bug_600183_charset.js \
@@ -90,9 +92,11 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_632275_getters_document_width.js \
 	browser_webconsole_bug_644419_log_limits.js \
 	browser_webconsole_bug_646025_console_file_location.js \
+	browser_webconsole_position_ui.js \
 	browser_webconsole_bug_642615_autocomplete.js \
 	browser_webconsole_bug_585991_autocomplete_popup.js \
 	browser_webconsole_bug_585991_autocomplete_keys.js \
+	browser_webconsole_bug_663443_panel_title.js \
 	browser_webconsole_bug_660806_history_nav.js \
 	browser_webconsole_bug_651501_document_body_autocomplete.js \
 	browser_webconsole_bug_653531_highlighter_console_helper.js \
@@ -102,11 +106,13 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_658368_time_methods.js \
 	browser_webconsole_bug_764572_output_open_url.js \
 	browser_webconsole_bug_622303_persistent_filters.js \
-	browser_webconsole_bug_770099_bad_policyuri.js \
-	browser_webconsole_bug_770099_violation.js \
+        browser_webconsole_bug_770099_bad_policyuri.js \
+        browser_webconsole_bug_770099_violation.js \
 	browser_webconsole_bug_782653_CSS_links_in_Style_Editor.js \
+	browser_webconsole_window_zombie.js \
 	browser_cached_messages.js \
 	browser_bug664688_sandbox_update_after_navigation.js \
+	browser_webconsole_menustatus.js \
 	browser_result_format_as_string.js \
 	browser_webconsole_bug_737873_mixedcontent.js \
 	browser_output_breaks_after_console_dir_uninspectable.js \
@@ -196,10 +202,10 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-658368-time-methods.html \
 	test-webconsole-error-observer.html \
 	test-for-of.html \
-	test_bug_770099_violation.html \
-	test_bug_770099_violation.html^headers^ \
-	test_bug_770099_bad_policy_uri.html \
-	test_bug_770099_bad_policy_uri.html^headers^ \
+        test_bug_770099_violation.html \
+        test_bug_770099_violation.html^headers^ \
+        test_bug_770099_bad_policy_uri.html \
+        test_bug_770099_bad_policy_uri.html^headers^ \
 	test-result-format-as-string.html \
 	test-bug-737873-mixedcontent.html \
 	$(NULL)
