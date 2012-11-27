@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=814576
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 814576</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=814576">Mozilla Bug 814576</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 814576 **/
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "");
+xhr.send();
+var called = false;
+// Add an event listener that only listens for trusted events
+xhr.addEventListener("abort", function() { called = true; }, false, false);
+
+// Check that synthetic events don't trigger the listener
+var ev = document.createEvent("Events");
+ev.initEvent("abort", false, false);
+xhr.dispatchEvent(ev);
+is(called, false, "Should not call listener for untrusted events");
+
+// And now make sure we get our abort
+xhr.abort();
+is(called, true, "Should call listener when we abort");
+</script>
+</pre>
+</body>
+</html>
