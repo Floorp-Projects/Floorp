@@ -594,26 +594,47 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx, JSObject* scope,
   return WrapNewBindingNonWrapperCachedObject(cx, scope, value.get(), vp);
 }
 
+// Only set allowNativeWrapper to false if you really know you need it, if in
+// doubt use true. Setting it to false disables security wrappers.
+bool
+NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
+                                         JSObject* aScope,
+                                         JS::Value* aRetval,
+                                         xpcObjectHelper& aHelper,
+                                         const nsIID* aIID,
+                                         bool aAllowNativeWrapper);
+
+inline nsWrapperCache*
+GetWrapperCache(nsWrapperCache* cache)
+{
+  return cache;
+}
+
+inline nsWrapperCache*
+GetWrapperCache(nsGlobalWindow* not_allowed);
+
+inline nsWrapperCache*
+GetWrapperCache(void* p)
+{
+  return NULL;
+}
+
 /**
  * A method to handle new-binding wrap failure, by possibly falling back to
  * wrapping as a non-new-binding object.
  */
-bool
-DoHandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
-                                  nsISupports* value, JS::Value* vp);
-
-/**
- * An easy way to call the above when you have a value which
- * multiply-inherits from nsISupports.
- */
 template <class T>
-bool
+MOZ_ALWAYS_INLINE bool
 HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope, T* value,
                                 JS::Value* vp)
 {
-  nsCOMPtr<nsISupports> val;
-  CallQueryInterface(value, getter_AddRefs(val));
-  return DoHandleNewBindingWrappingFailure(cx, scope, val, vp);
+  if (JS_IsExceptionPending(cx)) {
+    return false;
+  }
+
+  qsObjectHelper helper(value, GetWrapperCache(value));
+  return NativeInterface2JSObjectAndThrowIfFailed(cx, scope, vp, helper,
+                                                  nullptr, true);
 }
 
 // Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
@@ -699,21 +720,6 @@ FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values,
 
   *ok = EnumValueNotFound<InvalidValueFatal>(cx, chars, length, type);
   return -1;
-}
-
-inline nsWrapperCache*
-GetWrapperCache(nsWrapperCache* cache)
-{
-  return cache;
-}
-
-inline nsWrapperCache*
-GetWrapperCache(nsGlobalWindow* not_allowed);
-
-inline nsWrapperCache*
-GetWrapperCache(void* p)
-{
-  return NULL;
 }
 
 struct ParentObject {
