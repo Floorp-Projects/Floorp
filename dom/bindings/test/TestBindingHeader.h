@@ -310,6 +310,8 @@ public:
   void PassOptionalNullableSequence(const Optional<Nullable<Sequence<int32_t> > >&);
   void PassOptionalNullableSequenceWithDefaultValue(const Nullable< Sequence<int32_t> >&);
   void PassOptionalObjectSequence(const Optional<Sequence<OwningNonNull<TestInterface> > >&);
+  void PassExternalInterfaceSequence(const Sequence<nsRefPtr<TestExternalInterface> >&);
+  void PassNullableExternalInterfaceSequence(const Sequence<nsRefPtr<TestExternalInterface> >&);
 
   void ReceiveStringSequence(nsTArray<nsString>&);
   void PassStringSequence(const Sequence<nsString>&);
