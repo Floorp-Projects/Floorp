@@ -1964,7 +1964,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isEnforceRange=False,
                                     isClamp=False,
                                     isNullOrUndefined=False,
-                                    exceptionCode=None):
+                                    exceptionCode=None,
+                                    lenientFloatCode=None):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -2001,6 +2002,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
     If isClamp is true, we're converting an integer and clamping if the
     value is out of range.
+
+    If lenientFloatCode is not None, it should be used in cases when
+    we're a non-finite float that's not unrestricted.
 
     The return value from this function is a tuple consisting of four things:
 
@@ -2168,7 +2172,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         (elementTemplate, elementDeclType,
          elementHolderType, dealWithOptional) = getJSToNativeConversionTemplate(
             elementType, descriptorProvider, isMember=True,
-            exceptionCode=exceptionCode)
+            exceptionCode=exceptionCode, lenientFloatCode=lenientFloatCode)
         if dealWithOptional:
             raise TypeError("Shouldn't have optional things in sequences")
         if elementHolderType is not None:
@@ -2855,8 +2859,10 @@ for (uint32_t i = 0; i < length; ++i) {
 
     conversionBehavior = "eDefault"
     if isEnforceRange:
+        assert type.isInteger()
         conversionBehavior = "eEnforceRange"
     elif isClamp:
+        assert type.isInteger()
         conversionBehavior = "eClamp"
 
     if type.nullable():
@@ -2864,7 +2870,8 @@ for (uint32_t i = 0; i < length; ++i) {
         mutableType = declType.define() + "&"
         if not isOptional and not isMember:
             declType = CGWrapper(declType, pre="const ")
-        dataLoc = ("const_cast< %s >(${declName}).SetValue()" % mutableType)
+        writeLoc = ("const_cast< %s >(${declName}).SetValue()" % mutableType)
+        readLoc = "${declName}.Value()"
         nullCondition = "${val}.isNullOrUndefined()"
         if defaultValue is not None and isinstance(defaultValue, IDLNullValue):
             nullCondition = "!(${haveValue}) || " + nullCondition
@@ -2873,18 +2880,32 @@ for (uint32_t i = 0; i < length; ++i) {
             "  const_cast< %s >(${declName}).SetNull();\n"
             "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "%s\n"
-            "}" % (nullCondition, mutableType, typeName, conversionBehavior, dataLoc,
-                   exceptionCodeIndented.define()))
+            "}" % (nullCondition, mutableType, typeName, conversionBehavior,
+                   writeLoc, exceptionCodeIndented.define()))
     else:
         assert(defaultValue is None or
                not isinstance(defaultValue, IDLNullValue))
-        dataLoc = "${declName}"
+        writeLoc = "${declName}"
+        readLoc = writeLoc
         template = (
             "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "%s\n"
-            "}" % (typeName, conversionBehavior, dataLoc,
+            "}" % (typeName, conversionBehavior, writeLoc,
                    exceptionCodeIndented.define()))
         declType = CGGeneric(typeName)
+
+    if type.isFloat() and not type.isUnrestricted():
+        if lenientFloatCode is not None:
+            nonFiniteCode = CGIndenter(CGGeneric(lenientFloatCode)).define()
+        else:
+            nonFiniteCode = ("  ThrowErrorMessage(cx, MSG_NOT_FINITE);\n"
+                             "%s" % exceptionCodeIndented.define())
+        template += (" else if (!MOZ_DOUBLE_IS_FINITE(%s)) {\n"
+                     "  // Note: MOZ_DOUBLE_IS_FINITE will do the right thing\n"
+                     "  //       when passed a non-finite float too.\n"
+                     "%s\n"
+                     "}" % (readLoc, nonFiniteCode))
+
     if (defaultValue is not None and
         # We already handled IDLNullValue, so just deal with the other ones
         not isinstance(defaultValue, IDLNullValue)):
@@ -2899,7 +2920,7 @@ for (uint32_t i = 0; i < length; ++i) {
                              post=("\n"
                                    "} else {\n"
                                    "  %s = %s;\n"
-                                   "}" % (dataLoc, defaultStr))).define()
+                                   "}" % (writeLoc, defaultStr))).define()
 
     return (template, declType, None, isOptional)
 
@@ -3011,7 +3032,7 @@ class CGArgumentConverter(CGThing):
     unwrap the argument to the right native type.
     """
     def __init__(self, argument, index, argv, argc, descriptorProvider,
-                 invalidEnumValueFatal=True):
+                 invalidEnumValueFatal=True, lenientFloatCode=None):
         CGThing.__init__(self)
         self.argument = argument
         if argument.variadic:
@@ -3043,6 +3064,7 @@ class CGArgumentConverter(CGThing):
         else:
             self.argcAndIndex = None
         self.invalidEnumValueFatal = invalidEnumValueFatal
+        self.lenientFloatCode = lenientFloatCode
 
     def define(self):
         return instantiateJSToNativeConversionTemplate(
@@ -3054,7 +3076,8 @@ class CGArgumentConverter(CGThing):
                                             treatNullAs=self.argument.treatNullAs,
                                             treatUndefinedAs=self.argument.treatUndefinedAs,
                                             isEnforceRange=self.argument.enforceRange,
-                                            isClamp=self.argument.clamp),
+                                            isClamp=self.argument.clamp,
+                                            lenientFloatCode=self.lenientFloatCode),
             self.replacementVariables,
             self.argcAndIndex).define()
 
@@ -3545,6 +3568,9 @@ class CGPerSignatureCall(CGThing):
     def __init__(self, returnType, argsPre, arguments, nativeMethodName, static,
                  descriptor, idlNode, argConversionStartsAt=0,
                  getter=False, setter=False):
+        assert idlNode.isMethod() == (not getter and not setter)
+        assert idlNode.isAttr() == (getter or setter)
+
         CGThing.__init__(self)
         self.returnType = returnType
         self.descriptor = descriptor
@@ -3560,9 +3586,17 @@ class CGPerSignatureCall(CGThing):
             cgThings = [CGGeneric(self.getArgvDecl())]
         else:
             cgThings = []
+        lenientFloatCode = None
+        if idlNode.getExtendedAttribute('LenientFloat') is not None:
+            if setter:
+                lenientFloatCode = "return true;"
+            elif idlNode.isMethod():
+                lenientFloatCode = ("*vp = JSVAL_VOID;\n"
+                                    "return true;")
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
                                              self.getArgc(), self.descriptor,
-                                             invalidEnumValueFatal=not setter) for
+                                             invalidEnumValueFatal=not setter,
+                                             lenientFloatCode=lenientFloatCode) for
                          i in range(argConversionStartsAt, self.argCount)])
 
         cgThings.append(CGCallGenerator(
