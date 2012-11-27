@@ -10316,10 +10316,13 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI * aURI)
         }
     }
 
-    rv = aURI->GetSpec(buf);
-    NS_ENSURE_SUCCESS(rv, true);
-
     rv = Preferences::GetDefaultCString("browser.newtab.url", &pref);
+
+    if (NS_FAILED(rv)) {
+        return true;
+    }
+
+    rv = aURI->GetSpec(buf);
     NS_ENSURE_SUCCESS(rv, true);
 
     return !buf.Equals(pref);
