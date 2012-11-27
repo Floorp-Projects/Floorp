@@ -436,6 +436,37 @@ add_test(function test_stk_proactive_command_poll_interval() {
   run_next_test();
 });
 
+/**
+ * Verify Proactive Command: Display Text
+ */
+add_test(function test_read_septets_to_string() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let display_text_1 = [
+    0xd0,
+    0x28,
+    0x81, 0x03, 0x01, 0x21, 0x80,
+    0x82, 0x02, 0x81, 0x02,
+    0x0d, 0x1d, 0x00, 0xd3, 0x30, 0x9b, 0xfc, 0x06, 0xc9, 0x5c, 0x30, 0x1a,
+    0xa8, 0xe8, 0x02, 0x59, 0xc3, 0xec, 0x34, 0xb9, 0xac, 0x07, 0xc9, 0x60,
+    0x2f, 0x58, 0xed, 0x15, 0x9b, 0xb9, 0x40,
+  ];
+
+  for (let i = 0; i < display_text_1.length; i++) {
+    pduHelper.writeHexOctet(display_text_1[i]);
+  }
+
+  let berTlv = berHelper.decode(display_text_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
+  do_check_eq(tlv.value.textString, "Saldo 2.04 E. Validez 20/05/13. ");
+
+  run_next_test();
+});
+
 add_test(function test_stk_proactive_command_event_list() {
   let worker = newUint8Worker();
   let pduHelper = worker.GsmPDUHelper;
