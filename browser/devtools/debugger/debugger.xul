@@ -35,12 +35,12 @@
              oncommand="DebuggerView.Toolbar._onStepOutPressed()"/>
     <command id="fileSearchCommand"
              oncommand="DebuggerView.Filtering._doFileSearch()"/>
-    <command id="lineSearchCommand"
-             oncommand="DebuggerView.Filtering._doLineSearch()"/>
-    <command id="tokenSearchCommand"
-             oncommand="DebuggerView.Filtering._doTokenSearch()"/>
     <command id="globalSearchCommand"
              oncommand="DebuggerView.Filtering._doGlobalSearch()"/>
+    <command id="tokenSearchCommand"
+             oncommand="DebuggerView.Filtering._doTokenSearch()"/>
+    <command id="lineSearchCommand"
+             oncommand="DebuggerView.Filtering._doLineSearch()"/>
     <command id="variableSearchCommand"
              oncommand="DebuggerView.Filtering._doVariableSearch()"/>
     <command id="addBreakpointCommand"
@@ -73,10 +73,33 @@
       <menuseparator/>
       <menuitem id="se-cMenu-selectAll"/>
       <menuseparator/>
-      <menuitem id="se-cMenu-find"/>
-      <menuitem id="se-cMenu-findAgain"/>
+      <menuitem id="se-dbg-cMenu-findFile"
+                label="&debuggerUI.searchFile;"
+                accesskey="&debuggerUI.searchFile.key;"
+                key="fileSearchKey"
+                command="fileSearchCommand"/>
+      <menuitem id="se-dbg-cMenu-findGlobal"
+                label="&debuggerUI.searchGlobal;"
+                accesskey="&debuggerUI.searchGlobal.key;"
+                key="globalSearchKey"
+                command="globalSearchCommand"/>
       <menuseparator/>
-      <menuitem id="se-cMenu-gotoLine"/>
+      <menuitem id="se-dbg-cMenu-findToken"
+                label="&debuggerUI.searchToken;"
+                accesskey="&debuggerUI.searchToken.key;"
+                key="tokenSearchKey"
+                command="tokenSearchCommand"/>
+      <menuitem id="se-dbg-cMenu-findLine"
+                label="&debuggerUI.searchLine;"
+                accesskey="&debuggerUI.searchLine.key;"
+                key="lineSearchKey"
+                command="lineSearchCommand"/>
+      <menuseparator/>
+      <menuitem id="se-dbg-cMenu-findVariable"
+                label="&debuggerUI.searchVariable;"
+                accesskey="&debuggerUI.searchVariable.key;"
+                key="variableSearchKey"
+                command="variableSearchCommand"/>
     </menupopup>
     <menupopup id="debuggerPrefsContextMenu"
                position="before_end"
@@ -105,48 +128,46 @@
     </menupopup>
   </popupset>
 
-  <keyset id="sourceEditorKeys"/>
-
   <keyset id="debuggerKeys">
     <key id="resumeKey"
-         keycode="VK_F6"
+         keycode="&debuggerUI.stepping.resume;"
          command="resumeCommand"/>
     <key id="stepOverKey"
-         keycode="VK_F7"
+         keycode="&debuggerUI.stepping.stepOver;"
          command="stepOverCommand"/>
     <key id="stepInKey"
-         keycode="VK_F8"
+         keycode="&debuggerUI.stepping.stepIn;"
          command="stepInCommand"/>
     <key id="stepOutKey"
-         keycode="VK_F8"
+         keycode="&debuggerUI.stepping.stepOut;"
          modifiers="shift"
          command="stepOutCommand"/>
     <key id="fileSearchKey"
-         key="P"
-         modifiers="control shift"
+         key="&debuggerUI.searchFile.key;"
+         modifiers="accel"
          command="fileSearchCommand"/>
-    <key id="lineSearchKey"
-         key="G"
-         modifiers="control shift"
-         command="lineSearchCommand"/>
-    <key id="tokenSearchKey"
-         key="T"
-         modifiers="control shift"
-         command="tokenSearchCommand"/>
     <key id="globalSearchKey"
-         key="F"
-         modifiers="control shift"
+         key="&debuggerUI.searchGlobal.key;"
+         modifiers="accel alt"
          command="globalSearchCommand"/>
+    <key id="tokenSearchKey"
+         key="&debuggerUI.searchToken.key;"
+         modifiers="accel"
+         command="tokenSearchCommand"/>
+    <key id="lineSearchKey"
+         key="&debuggerUI.searchLine.key;"
+         modifiers="accel"
+         command="lineSearchCommand"/>
     <key id="variableSearchKey"
-         key="V"
-         modifiers="control shift"
+         key="&debuggerUI.searchVariable.key;"
+         modifiers="accel alt"
          command="variableSearchCommand"/>
     <key id="addBreakpointKey"
-         key="B"
+         key="&debuggerUI.seMenuBreak.key;"
          modifiers="accel"
          command="addBreakpointCommand"/>
     <key id="addConditionalBreakpointKey"
-         key="B"
+         key="&debuggerUI.seMenuCondBreak.key;"
          modifiers="accel shift"
          command="addConditionalBreakpointCommand"/>
   </keyset>
@@ -181,6 +202,7 @@
       <spacer flex="1"/>
       <toolbarbutton id="toggle-panes"
                      class="devtools-toolbarbutton"
+                     tooltiptext="&debuggerUI.panesButton.tooltip;"
                      tabindex="0"/>
       <toolbarbutton id="debugger-options"
                      class="devtools-option-toolbarbutton"

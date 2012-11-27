@@ -136,6 +136,7 @@ XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
 XPCOMUtils.defineLazyModuleGetter(this, "Social",
   "resource:///modules/Social.jsm");
 
+
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource:///modules/PageThumbs.jsm");
 
