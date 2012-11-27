@@ -2561,9 +2561,12 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   // the system principal, i.e. in chrome pages. That way the click-to-play
   // code here wouldn't matter at all. Bug 775301 is tracking this.
   if (!nsContentUtils::IsSystemPrincipal(topDoc->NodePrincipal())) {
+    nsAutoCString permissionString;
+    rv = pluginHost->GetPermissionStringForType(mContentType, permissionString);
+    NS_ENSURE_SUCCESS(rv, false);
     uint32_t permission;
     rv = permissionManager->TestPermissionFromPrincipal(topDoc->NodePrincipal(),
-                                                        "plugins",
+                                                        permissionString.Data(),
                                                         &permission);
     NS_ENSURE_SUCCESS(rv, false);
     allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
