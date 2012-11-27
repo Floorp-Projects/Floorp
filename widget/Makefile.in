@@ -142,7 +142,9 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl \
 endif
 
 ifdef MOZ_METRO
-XPIDLSRCS += nsIWinMetroUtils.idl
+XPIDLSRCS += nsIWinMetroUtils.idl \
+		MetroUIUtils.idl \
+		$(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
