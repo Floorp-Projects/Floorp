@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMCSSConditionRule.idl"
+#include "nsIDOMCSSGroupingRule.idl"
 
 /**
- * Interface for @supports rules in the CSS OM.
+ * Interface in the CSS OM for at-rules that conditionally apply their
+ * child rules.
  */
-[scriptable, uuid(5f409a4d-92f9-4a62-8e8a-cc1c02c32918)]
-interface nsIDOMCSSSupportsRule : nsIDOMCSSConditionRule
+[scriptable, uuid(942754f2-2c0e-461b-9c10-c0e929504fe1)]
+interface nsIDOMCSSConditionRule : nsIDOMCSSGroupingRule
 {
+  attribute DOMString conditionText;
 };
