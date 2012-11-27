@@ -108,6 +108,14 @@ endef
 # before evaluation.
 $(eval $(subst ||,$(CR),$(shell _PYMAKE=$(.PYMAKE) $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) 2> $(TOPSRCDIR)/.mozconfig.out | sed 's/$$/||/')))
 
+
+# Automatically add -jN to make flags if not defined. N defaults to number of cores.
+ifeq (,$(findstring -j,$(MOZ_MAKE_FLAGS)))
+  cores=$(shell $(PYTHON) -c 'import multiprocessing; print(multiprocessing.cpu_count())')
+  MOZ_MAKE_FLAGS += -j$(cores)
+endif
+
+
 ifndef MOZ_OBJDIR
   MOZ_OBJDIR = obj-$(CONFIG_GUESS)
 else
