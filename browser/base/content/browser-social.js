@@ -513,6 +513,10 @@ let SocialShareButton = {
       shareButton.hidden = !Social.uiVisible || Social.provider.recommendInfo == null ||
                            !SocialUI.haveLoggedInUser() ||
                            !this.canSharePage(gBrowser.currentURI);
+    // also update the relevent command's disabled state so the keyboard
+    // shortcut only works when available.
+    let cmd = document.getElementById("Social:SharePage");
+    cmd.setAttribute("disabled", shareButton.hidden ? "true" : "false");
   },
 
   onClick: function SSB_onClick(aEvent) {
