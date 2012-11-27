@@ -411,7 +411,6 @@ class AutoDetectInvalidation
 };
 
 bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32_t argc, Value *argv, Value *rval);
-bool InvokeConstructor(JSContext *cx, JSObject *obj, uint32_t argc, Value *argv, Value *rval);
 JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 
 bool CheckOverRecursed(JSContext *cx);
