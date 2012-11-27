@@ -22,9 +22,9 @@
 #include "BluetoothOppManager.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothScoManager.h"
-#include "BluetoothServiceUuid.h"
 #include "BluetoothUnixSocketConnector.h"
 #include "BluetoothUtils.h"
+#include "BluetoothUuid.h"
 
 #include <cstdio>
 #include <dbus/dbus.h>
@@ -766,9 +766,9 @@ public:
 
     nsTArray<uint32_t> uuids;
 
-    uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HandsfreeAG >> 32));
-    uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HeadsetAG >> 32));
-    uuids.AppendElement((uint32_t)(BluetoothServiceUuid::ObjectPush >> 32));
+    uuids.AppendElement(BluetoothServiceClass::HANDSFREE_AG);
+    uuids.AppendElement(BluetoothServiceClass::HEADSET_AG);
+    uuids.AppendElement(BluetoothServiceClass::OBJECT_PUSH);
 
     // TODO/qdot: This needs to be held for the life of the bluetooth connection
     // so we could clean it up. For right now though, we can throw it away.
@@ -2313,21 +2313,21 @@ BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
 
   BluetoothValue v;
   nsString errorStr;
-  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
+  if (aProfileId == BluetoothServiceClass::HANDSFREE) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     if (!hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
                       true, aRunnable)) {
       errorStr.AssignLiteral("BluetoothHfpManager has connected/is connecting to a headset!");
       DispatchBluetoothReply(aRunnable, v, errorStr);
     }
-  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::Headset >> 32)) {
+  } else if (aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     if (!hfp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
                       false, aRunnable)) {
       errorStr.AssignLiteral("BluetoothHfpManager has connected/is connecting to a headset!");
       DispatchBluetoothReply(aRunnable, v, errorStr);
     }
-  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
+  } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (!opp->Connect(GetObjectPathFromAddress(aAdapterPath, aDeviceAddress),
                       aRunnable)) {
@@ -2345,11 +2345,11 @@ void
 BluetoothDBusService::Disconnect(const uint16_t aProfileId,
                                  BluetoothReplyRunnable* aRunnable)
 {
-  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32) ||
-      aProfileId == (uint16_t)(BluetoothServiceUuid::Headset >> 32)) {
+  if (aProfileId == BluetoothServiceClass::HANDSFREE ||
+      aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     hfp->Disconnect();
-  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
+  } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     opp->Disconnect();
   } else {
@@ -2370,11 +2370,11 @@ BluetoothDBusService::IsConnected(const uint16_t aProfileId)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
 
-  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)
-      || aProfileId == (uint16_t)(BluetoothServiceUuid::Headset >> 32)) {
+  if (aProfileId == BluetoothServiceClass::HANDSFREE ||
+      aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     return hfp->GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED;
-  } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
+  } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     return opp->GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED;
   }

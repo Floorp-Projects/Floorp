@@ -3146,16 +3146,16 @@ class LIn : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
     static const size_t RHS = BOX_PIECES;
 };
 
-class LInstanceOfTypedO : public LInstructionHelper<1, 1, 0>
+class LInstanceOfO : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(InstanceOfTypedO);
-    LInstanceOfTypedO(const LAllocation &lhs) {
+    LIR_HEADER(InstanceOfO);
+    LInstanceOfO(const LAllocation &lhs) {
         setOperand(0, lhs);
     }
 
-    MInstanceOfTyped *mir() const {
-        return mir_->toInstanceOfTyped();
+    MInstanceOf *mir() const {
+        return mir_->toInstanceOf();
     }
 
     const LAllocation *lhs() {
@@ -3163,15 +3163,15 @@ class LInstanceOfTypedO : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LInstanceOfTypedV : public LInstructionHelper<1, BOX_PIECES, 0>
+class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES, 0>
 {
   public:
-    LIR_HEADER(InstanceOfTypedV);
-    LInstanceOfTypedV() {
+    LIR_HEADER(InstanceOfV);
+    LInstanceOfV() {
     }
 
-    MInstanceOfTyped *mir() const {
-        return mir_->toInstanceOfTyped();
+    MInstanceOf *mir() const {
+        return mir_->toInstanceOf();
     }
 
     const LAllocation *lhs() {
@@ -3181,37 +3181,17 @@ class LInstanceOfTypedV : public LInstructionHelper<1, BOX_PIECES, 0>
     static const size_t LHS = 0;
 };
 
-class LInstanceOfO : public LInstructionHelper<1, 2, 2>
+class LCallInstanceOf : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
 {
   public:
-    LIR_HEADER(InstanceOfO);
-    LInstanceOfO(const LAllocation &lhs, const LAllocation &rhs,
-                 const LDefinition &temp, const LDefinition &temp2)
-    {
-        setOperand(0, lhs);
-        setOperand(1, rhs);
-        setTemp(0, temp);
-        setTemp(1, temp2);
-    }
-
-    const LAllocation *lhs() {
-        return getOperand(0);
-    }
-    const LAllocation *rhs() {
-        return getOperand(1);
-    }
-};
-
-class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES+1, 2>
-{
-  public:
-    LIR_HEADER(InstanceOfV);
-    LInstanceOfV(const LAllocation &rhs, const LDefinition &temp, const LDefinition &temp2) {
+    LIR_HEADER(CallInstanceOf);
+    LCallInstanceOf(const LAllocation &rhs) {
         setOperand(RHS, rhs);
-        setTemp(0, temp);
-        setTemp(1, temp2);
     }
 
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
     const LAllocation *lhs() {
         return getOperand(LHS);
     }

@@ -11,8 +11,8 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothScoManager.h"
 #include "BluetoothService.h"
-#include "BluetoothServiceUuid.h"
 #include "BluetoothUtils.h"
+#include "BluetoothUuid.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Services.h"
@@ -27,8 +27,6 @@
 
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
 #define AUDIO_VOLUME_BT_SCO "audio.volume.bt_sco"
-#define HANDSFREE_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree
-#define HEADSET_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Headset
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -623,17 +621,17 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE(bs, false);
 
-  nsString serviceUuidStr;
+  nsString uuid;
   if (aIsHandsfree) {
-    serviceUuidStr = NS_ConvertUTF8toUTF16(HANDSFREE_UUID);
+    BluetoothUuidHelper::GetString(BluetoothServiceClass::HANDSFREE, uuid);
   } else {
-    serviceUuidStr = NS_ConvertUTF8toUTF16(HEADSET_UUID);
+    BluetoothUuidHelper::GetString(BluetoothServiceClass::HEADSET, uuid);
   }
 
   mRunnable = aRunnable;
 
   nsresult rv = bs->GetSocketViaService(aDevicePath,
-                                        serviceUuidStr,
+                                        uuid,
                                         BluetoothSocketType::RFCOMM,
                                         true,
                                         true,
@@ -658,11 +656,12 @@ BluetoothHfpManager::Listen()
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE(bs, false);
 
-  nsresult rv = bs->ListenSocketViaService(BluetoothReservedChannels::HANDSFREE_AG,
-                                           BluetoothSocketType::RFCOMM,
-                                           true,
-                                           true,
-                                           this);
+  nsresult rv =
+    bs->ListenSocketViaService(BluetoothReservedChannels::CHANNEL_HANDSFREE_AG,
+                               BluetoothSocketType::RFCOMM,
+                               true,
+                               true,
+                               this);
 
   mSocketStatus = GetConnectionStatus();
 

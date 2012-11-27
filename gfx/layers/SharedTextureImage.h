@@ -20,7 +20,7 @@ class THEBES_API SharedTextureImage : public Image {
 public:
   struct Data {
     gl::SharedTextureHandle mHandle;
-    gl::TextureImage::TextureShareType mShareType;
+    gl::GLContext::SharedTextureShareType mShareType;
     gfxIntSize mSize;
     bool mInverted;
   };

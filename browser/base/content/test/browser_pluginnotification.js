@@ -527,53 +527,10 @@ function test17() {
   var missingNotification = PopupNotifications.getNotification("missing-plugins", gTestBrowser);
   ok(!missingNotification, "Test 17, Should not have a missing plugin notification");
 
-  registerFakeBlocklistService(Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-  prepareTest(test18a, gHttpTestRoot + "plugin_test.html");
-}
-
-const Cr = Components.results;
-const Cm = Components.manager;
-const Cc = Components.classes;
-const gReg = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-const gRealBlocklistServiceCID = Cc["@mozilla.org/extensions/blocklist;1"];
-const gFakeBlocklistServiceCID = Components.ID("{614b68a0-3c53-4ec0-8146-28cc1e25f8a1}");
-var gFactory = null;
-
-function registerFakeBlocklistService(blockState) {
-
-  var BlocklistService = {
-    getPluginBlocklistState: function(plugin, appVersion, toolkitVersion) {
-      return blockState;
-    },
-
-    classID: gFakeBlocklistServiceCID,
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistService])
-  };
-
-  gFactory = {
-    createInstance: function(outer, iid) {
-      if (outer != null)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      return BlocklistService.QueryInterface(iid);
-    }
-  };
-
-  gReg.registerFactory(gFakeBlocklistServiceCID,
-                       "Fake Blocklist Service",
-                       "@mozilla.org/extensions/blocklist;1",
-                       gFactory);
-}
-
-function unregisterFakeBlocklistService() {
-  if (gFactory != null ) {
-    gReg.unregisterFactory(gFakeBlocklistServiceCID, gFactory);
-    gFactory = null;
-    // This should restore the original blocklist service:
-    gReg.registerFactory(gRealBlocklistServiceCID,
-                         "Blocklist Service",
-                         "@mozilla.org/extensions/blocklist;1",
-                         null);
-  }
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
+  function() {
+    prepareTest(test18a, gHttpTestRoot + "plugin_test.html");
+  });
 }
 
 // Tests a vulnerable, updatable plugin
@@ -613,9 +570,10 @@ function test18b() {
   var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(overlay.style.visibility != "hidden", "Test 18b, Plugin overlay should exist, not be hidden");
 
-  unregisterFakeBlocklistService();
-  registerFakeBlocklistService(Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
-  prepareTest(test18c, gHttpTestRoot + "plugin_test.html");
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableNoUpdate.xml",
+  function() {
+    prepareTest(test18c, gHttpTestRoot + "plugin_test.html");
+  });
 }
 
 // Tests a vulnerable plugin with no update
@@ -658,10 +616,10 @@ function test18e() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 18e, Plugin should be activated");
 
-  unregisterFakeBlocklistService();
   Services.perms.removeAll();
-
-  prepareTest(test19a, gTestRoot + "plugin_test.html");
+  resetBlocklist(function () {
+    prepareTest(test19a, gTestRoot + "plugin_test.html");
+  });
 }
 
 // Tests that clicking the icon of the overlay activates the plugin
