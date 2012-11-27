@@ -7071,6 +7071,8 @@
 ################################################################################
 # Helpers for the new user interface
 
+!define MAXDWORD 0xffffffff
+
 !define DT_WORDBREAK 0x0010
 !define DT_SINGLELINE 0x0020
 !define DT_NOCLIP 0x0100
@@ -7468,6 +7470,47 @@
     !define _MOZFUNC_UN
     !verbose pop
   !endif
+!macroend
+
+/**
+ * Gets the elapsed time in seconds between two values in milliseconds stored as
+ * an int64. The caller will typically get the millisecond values using
+ * GetTickCount with a long return value as follows.
+ * System::Call "kernel32::GetTickCount()l .s"
+ * Pop $varname
+ *
+ * _START_TICK_COUNT    
+ * _FINISH_TICK_COUNT   
+ * _RES_ELAPSED_SECONDS return value - elapsed time between _START_TICK_COUNT
+ *                      and _FINISH_TICK_COUNT in seconds.
+ */
+!macro GetSecondsElapsedCall _START_TICK_COUNT _FINISH_TICK_COUNT _RES_ELAPSED_SECONDS
+  Push "${_START_TICK_COUNT}"
+  Push "${_FINISH_TICK_COUNT}"
+  ${CallArtificialFunction} GetSecondsElapsed_
+  Pop ${_RES_ELAPSED_SECONDS}
+!macroend
+
+!define GetSecondsElapsed "!insertmacro GetSecondsElapsedCall"
+!define un.GetSecondsElapsed "!insertmacro GetSecondsElapsedCall"
+
+!macro GetSecondsElapsed_
+  Exch $0 ; finish tick count
+  Exch 1
+  Exch $1 ; start tick count
+
+  System::Int64Op $0 - $1
+  Pop $0
+  ; Discard the top bits of the int64 by bitmasking with MAXDWORD
+  System::Int64Op $0 & ${MAXDWORD}
+  Pop $0
+
+  ; Convert from milliseconds to seconds
+  System::Int64Op $0 / 1000
+  Pop $0
+
+  Pop $1
+  Exch $0 ; return elapsed seconds
 !macroend
 
 !ifdef MOZ_METRO
