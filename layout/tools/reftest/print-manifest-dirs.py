@@ -41,6 +41,8 @@ def parseManifest(manifest, dirs):
     if items[0] == "url-prefix":
       urlprefix = items[1]
       continue
+    elif items[0] == "default-preferences":
+      continue
     elif items[0] == "include":
       parseManifest(os.path.join(manifestdir, items[1]), dirs)
       continue
