@@ -33,7 +33,6 @@
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "nsDataHashtable.h"
-#include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsMimeTypes.h"
 #include "mozilla/CondVar.h"
