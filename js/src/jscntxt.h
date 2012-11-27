@@ -31,8 +31,9 @@
 #include "gc/Statistics.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
-#include "vm/Stack.h"
+#include "vm/DateTime.h"
 #include "vm/SPSProfiler.h"
+#include "vm/Stack.h"
 #include "vm/ThreadPool.h"
 
 #include "ion/PcScriptCache.h"
@@ -976,6 +977,8 @@ struct JSRuntime : js::RuntimeFriendFields
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
 
+    js::DateTimeInfo    dateTimeInfo;
+
     js::ConservativeGCData conservativeGC;
 
   private:
@@ -1606,8 +1609,6 @@ struct JSContext : js::ContextFriendFields,
             functionCallback(fun, scr, this, entering);
     }
 #endif
-
-    DSTOffsetCache dstOffsetCache;
 
     /* List of currently active non-escaping enumerators (for-in). */
     js::PropertyIteratorObject *enumerators;
