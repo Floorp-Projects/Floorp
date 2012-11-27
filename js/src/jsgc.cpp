@@ -3889,22 +3889,22 @@ RemoveFromGrayList(RawObject wrapper)
     wrapper->setReservedSlot(slot, UndefinedValue());
 
     JSCompartment *c = CrossCompartmentPointerReferent(wrapper)->compartment();
-    RawObject obj = c->gcIncomingGrayPointers;
-    if (obj == wrapper) {
+    RawObject o = c->gcIncomingGrayPointers;
+    if (o == wrapper) {
         c->gcIncomingGrayPointers = tail;
         return true;
     }
 
-    while (obj) {
-        unsigned slot = GrayLinkSlot(obj);
-        RawObject next = obj->getReservedSlot(slot).toObjectOrNull();
+    while (o) {
+        unsigned slot = GrayLinkSlot(o);
+        RawObject next = o->getReservedSlot(slot).toObjectOrNull();
         if (next == wrapper) {
-            obj->setCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
+            o->setCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
             return true;
         }
-        obj = next;
+        o = next;
     }
-    JS_NOT_REACHED("object not found in gray link list");
+    JS_NOT_REACHED();
 }
 
 void
