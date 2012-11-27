@@ -5334,6 +5334,69 @@ CheckStackRootsRangeAndSkipIon(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, 
         CheckStackRootsRange(rt, i, end, rbegin, rend);
 }
 
+static int
+CompareRooters(const void *vpA, const void *vpB)
+{
+    const Rooter *a = static_cast<const Rooter *>(vpA);
+    const Rooter *b = static_cast<const Rooter *>(vpB);
+    // There should be no duplicates, and we wouldn't care about their order anyway.
+    return (a->rooter < b->rooter) ? -1 : 1;
+}
+
+/*
+ * In the pathological cases that dominate much of the test case runtime,
+ * rooting analysis spends tons of time scanning the stack during a tight-ish
+ * loop. Since statically, everything is either rooted or it isn't, these scans
+ * are almost certain to be worthless. Detect these cases by checking whether
+ * the addresses of the top several rooters in the stack are recurring. Note
+ * that there may be more than one CheckRoots call within the loop, so we may
+ * alternate between a couple of stacks rather than just repeating the same one
+ * over and over, so we need more than a depth-1 memory.
+ */
+static bool
+SuppressCheckRoots(Vector<Rooter, 0, SystemAllocPolicy> &rooters)
+{
+    static const unsigned int NumStackMemories = 6;
+    static const size_t StackCheckDepth = 10;
+
+    static uint32_t stacks[NumStackMemories];
+    static unsigned int numMemories = 0;
+    static unsigned int oldestMemory = 0;
+
+    // Ugh. Sort the rooters. This should really be an O(n) rank selection
+    // followed by a sort. Interestingly, however, the overall scan goes a bit
+    // *faster* with this sort. Better branch prediction of the later
+    // partitioning pass, perhaps.
+    qsort(rooters.begin(), rooters.length(), sizeof(Rooter), CompareRooters);
+
+    // Forward-declare a variable so its address can be used to mark the
+    // current top of the stack
+    unsigned int pos;
+
+    // Compute the hash of the current stack
+    uint32_t hash = mozilla::HashGeneric(&pos);
+    for (unsigned int i = 0; i < Min(StackCheckDepth, rooters.length()); i++)
+        hash = mozilla::AddToHash(hash, rooters[rooters.length() - i - 1].rooter);
+
+    // Scan through the remembered stacks to find the current stack
+    for (pos = 0; pos < numMemories; pos++) {
+        if (stacks[pos] == hash) {
+            // Skip this check. Technically, it is incorrect to not update the
+            // LRU queue position, but it'll cost us at most one extra check
+            // for every time a hot stack falls out of the window.
+            return true;
+        }
+    }
+
+    // Replace the oldest remembered stack with our current stack
+    stacks[oldestMemory] = hash;
+    oldestMemory = (oldestMemory + 1) % NumStackMemories;
+    if (numMemories < NumStackMemories)
+        numMemories++;
+
+    return false;
+}
+
 void
 JS::CheckStackRoots(JSContext *cx)
 {
@@ -5400,6 +5463,9 @@ JS::CheckStackRoots(JSContext *cx)
             }
         }
     }
+
+    if (SuppressCheckRoots(rooters))
+        return;
 
     // Truncate stackEnd to just after the address of the youngest
     // already-scanned rooter on the stack, to avoid re-scanning the rest of
