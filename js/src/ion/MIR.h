@@ -5246,21 +5246,21 @@ class MInArray
 };
 
 // Implementation for instanceof operator with specific rhs.
-class MInstanceOfTyped
+class MInstanceOf
   : public MUnaryInstruction,
     public InstanceOfPolicy
 {
     CompilerRootObject protoObj_;
 
   public:
-    MInstanceOfTyped(MDefinition *obj, RawObject proto)
+    MInstanceOf(MDefinition *obj, RawObject proto)
       : MUnaryInstruction(obj)
     {
         protoObj_ = proto;
         setResultType(MIRType_Boolean);
     }
 
-    INSTRUCTION_HEADER(InstanceOfTyped);
+    INSTRUCTION_HEADER(InstanceOf);
 
     TypePolicy *typePolicy() {
         return this;
@@ -5272,18 +5272,18 @@ class MInstanceOfTyped
 };
 
 // Implementation for instanceof operator with unknown rhs.
-class MInstanceOf
+class MCallInstanceOf
   : public MBinaryInstruction,
-    public InstanceOfPolicy
+    public MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >
 {
   public:
-    MInstanceOf(MDefinition *obj, MDefinition *proto)
+    MCallInstanceOf(MDefinition *obj, MDefinition *proto)
       : MBinaryInstruction(obj, proto)
     {
         setResultType(MIRType_Boolean);
     }
 
-    INSTRUCTION_HEADER(InstanceOf);
+    INSTRUCTION_HEADER(CallInstanceOf);
 
     TypePolicy *typePolicy() {
         return this;

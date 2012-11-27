@@ -480,11 +480,8 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, JSBool
 {
     RootedObject obj(cx, objArg);
 
-    while (obj->isFunction()) {
-        if (!obj->isBoundFunction())
-            break;
+    while (obj->isFunction() && obj->isBoundFunction())
         obj = obj->toFunction()->getBoundFunctionTarget();
-    }
 
     RootedValue pval(cx);
     if (!JSObject::getProperty(cx, obj, obj, cx->names().classPrototype, &pval))

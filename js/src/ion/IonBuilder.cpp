@@ -6527,7 +6527,7 @@ IonBuilder::jsop_instanceof()
         if (!protoObject)
             break;
 
-        MInstanceOfTyped *ins = new MInstanceOfTyped(obj, protoObject);
+        MInstanceOf *ins = new MInstanceOf(obj, protoObject);
 
         current->add(ins);
         current->push(ins);
@@ -6535,7 +6535,7 @@ IonBuilder::jsop_instanceof()
         return resumeAfter(ins);
     } while (false);
 
-    MInstanceOf *ins = new MInstanceOf(obj, rhs);
+    MCallInstanceOf *ins = new MCallInstanceOf(obj, rhs);
 
     current->add(ins);
     current->push(ins);
