@@ -649,6 +649,19 @@ gfxASurface::RecordMemoryFreed()
     }
 }
 
+size_t
+gfxASurface::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+    // We don't measure mSurface because cairo doesn't allow it.
+    return 0;
+}
+
+size_t
+gfxASurface::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
 #ifdef MOZ_DUMP_IMAGES
 void
 gfxASurface::WriteAsPNG(const char* aFile)
