@@ -81,11 +81,6 @@ public:
       return ConvertibleToBool(mDestination && mInput != InvalidIndex);
     }
 
-    // Needed for the CC traversal
-    AudioNode* get() const {
-      return mDestination;
-    }
-
     nsRefPtr<AudioNode> mDestination;
     // This is an index into mDestination->mInputs which specifies the Input
     // object corresponding to this Output node.
@@ -109,11 +104,6 @@ public:
       return ConvertibleToBool(mSource && mOutput != InvalidIndex);
     }
 
-    // Needed for the CC traversal
-    AudioNode* get() const {
-      return mSource;
-    }
-
     nsRefPtr<AudioNode> mSource;
     // This is an index into mSource->mOutputs which specifies the Output
     // object corresponding to this Input node.
@@ -130,4 +120,3 @@ private:
 }
 
 #endif
-
