@@ -1813,7 +1813,9 @@ builtinNames = {
     IDLType.Tags.uint16: 'uint16_t',
     IDLType.Tags.uint32: 'uint32_t',
     IDLType.Tags.uint64: 'uint64_t',
+    IDLType.Tags.unrestricted_float: 'float',
     IDLType.Tags.float: 'float',
+    IDLType.Tags.unrestricted_double: 'double',
     IDLType.Tags.double: 'double'
 }
 
@@ -3291,8 +3293,9 @@ if (!%(resultStr)s) {
                IDLType.Tags.uint16, IDLType.Tags.int32]:
         return (setValue("INT_TO_JSVAL(int32_t(%s))" % result), True)
 
-    elif tag in [IDLType.Tags.int64, IDLType.Tags.uint64, IDLType.Tags.float,
-                 IDLType.Tags.double]:
+    elif tag in [IDLType.Tags.int64, IDLType.Tags.uint64,
+                 IDLType.Tags.unrestricted_float, IDLType.Tags.float,
+                 IDLType.Tags.unrestricted_double, IDLType.Tags.double]:
         # XXXbz will cast to double do the "even significand" thing that webidl
         # calls for for 64-bit ints?  Do we care?
         return (setValue("JS_NumberValue(double(%s))" % result), True)
