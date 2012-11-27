@@ -3896,8 +3896,8 @@ RemoveFromGrayList(RawObject wrapper)
     }
 
     while (obj) {
-        unsigned slot = GrayLinkSlot(o);
-        RawObject next = o->getReservedSlot(slot).toObjectOrNull();
+        unsigned slot = GrayLinkSlot(obj);
+        RawObject next = obj->getReservedSlot(slot).toObjectOrNull();
         if (next == wrapper) {
             obj->setCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
             return true;
