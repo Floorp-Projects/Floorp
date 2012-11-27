@@ -941,6 +941,8 @@ JSRuntime::init(uint32_t maxbytes)
     if (!dtoaState)
         return false;
 
+    dateTimeInfo.updateTimeZoneAdjustment();
+
     if (!stackSpace.init())
         return false;
 
@@ -6671,7 +6673,7 @@ JS_ClearDateCaches(JSContext *cx)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    js_ClearDateCaches();
+    cx->runtime->dateTimeInfo.updateTimeZoneAdjustment();
 }
 
 /************************************************************************/
