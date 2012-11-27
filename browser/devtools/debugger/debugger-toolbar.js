@@ -371,6 +371,20 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Sets the preferred source url to be displayed in this container.
+   * @param string aValue
+   */
+  set preferredSource(aValue) {
+    this._preferredValue = aValue;
+
+    // Selects the element with the specified value in this container,
+    // if already inserted.
+    if (this.containsValue(aValue)) {
+      this.selectedValue = aValue;
+    }
+  },
+
+  /**
    * The select listener for the sources container.
    */
   _onSelect: function DVS__onSelect() {
