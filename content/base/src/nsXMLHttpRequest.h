@@ -262,7 +262,7 @@ public:
   }
   void SetTimeout(uint32_t aTimeout, ErrorResult& aRv);
   bool WithCredentials();
-  void SetWithCredentials(bool aWithCredentials, nsresult& aRv);
+  void SetWithCredentials(bool aWithCredentials, ErrorResult& aRv);
   nsXMLHttpRequestUpload* Upload();
 
 private:
