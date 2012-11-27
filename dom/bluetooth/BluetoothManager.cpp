@@ -195,7 +195,7 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
 
   uint32_t permission;
   nsresult rv =
-    permMgr->TestPermissionFromWindow(aWindow, "mozBluetooth",
+    permMgr->TestPermissionFromWindow(aWindow, "bluetooth",
                                       &permission);
   NS_ENSURE_SUCCESS(rv, rv);
 
