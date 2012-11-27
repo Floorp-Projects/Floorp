@@ -435,42 +435,48 @@ castNativeFromWrapper(JSContext *cx,
             return nullptr;
     }
 
+    *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
+
     nsISupports *native;
     if (wrapper) {
         native = wrapper->GetIdentityObject();
         cur = wrapper->GetFlatJSObject();
         if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
-            native = nullptr;
-        } else if (lccx) {
-            lccx->SetWrapper(wrapper, tearoff);
+            return nullptr;
         }
-    } else if (cur && IS_SLIM_WRAPPER(cur)) {
-        native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
-        if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
-            native = nullptr;
-        } else if (lccx) {
-            lccx->SetWrapper(cur);
-        }
-    } else if (cur && protoDepth >= 0) {
-        const mozilla::dom::DOMClass* domClass;
-        mozilla::dom::DOMObjectSlot slot =
-            mozilla::dom::GetDOMClass(cur, domClass);
-        native = mozilla::dom::UnwrapDOMObject<nsISupports>(cur, slot);
-        if (native &&
-            (uint32_t)domClass->mInterfaceChain[protoDepth] != protoID) {
-            native = nullptr;
+    } else if (cur) {
+        if (IS_SLIM_WRAPPER(cur)) {
+            native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
+            if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
+                return nullptr;
+            }
+        } else if (protoDepth >= 0) {
+            const mozilla::dom::DOMClass* domClass;
+            mozilla::dom::DOMObjectSlot slot =
+                mozilla::dom::GetDOMClass(cur, domClass);
+            native = mozilla::dom::UnwrapDOMObject<nsISupports>(cur, slot);
+            if (!native ||
+                (uint32_t)domClass->mInterfaceChain[protoDepth] != protoID) {
+                return nullptr;
+            }
+        } else {
+            return nullptr;
         }
     } else {
-        native = nullptr;
+        return nullptr;
     }
 
-    if (native) {
-        *pRef = nullptr;
-        *pVal = OBJECT_TO_JSVAL(cur);
-        *rv = NS_OK;
-    } else {
-        *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
+    *pRef = nullptr;
+    *pVal = OBJECT_TO_JSVAL(cur);
+
+    if (lccx) {
+        if (wrapper)
+            lccx->SetWrapper(wrapper, tearoff);
+        else if (IS_SLIM_WRAPPER(cur))
+            lccx->SetWrapper(cur);
     }
+
+    *rv = NS_OK;
 
     return native;
 }
@@ -500,23 +506,8 @@ xpc_qsUnwrapThisFromCcx(XPCCallContext &ccx,
                                        pThisVal);
 }
 
-MOZ_ALWAYS_INLINE JSObject*
-xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
-{
-    *rv = NS_OK;
-    if (v.isObject()) {
-        return &v.toObject();
-    }
-
-    if (!v.isNullOrUndefined()) {
-        *rv = ((v.isInt32() && v.toInt32() == 0)
-               ? NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL
-               : NS_ERROR_XPC_BAD_CONVERT_JS);
-    }
-
-    *ppArgRef = nullptr;
-    return nullptr;
-}
+JSObject*
+xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv);
 
 nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx, jsval v, const nsIID &iid, void **ppArg,

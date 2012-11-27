@@ -58,7 +58,7 @@ public:
   HTMLPropertiesCollection(nsGenericHTMLElement* aRoot);
   virtual ~HTMLPropertiesCollection();
 
-  using nsWrapperCache::GetWrapperPreserveColor;
+  using nsWrapperCache::GetWrapper;
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
 

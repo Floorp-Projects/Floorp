@@ -48,9 +48,9 @@ function reflectString(aParameters)
    * specifications, don't add it to the loop below and keep it here.
    */
   element.setAttribute(contentAttr, null);
-  is(element.getAttribute(contentAttr), "null",
+  todo_is(element.getAttribute(contentAttr), "null",
      "null should have been stringified to 'null'");
-  is(element[idlAttr], "null",
+  todo_is(element[idlAttr], "null",
      "null should have been stringified to 'null'");
   element.removeAttribute(contentAttr);
 
@@ -423,8 +423,14 @@ function reflectBoolean(aParameters)
     element.setAttribute(contentAttr, v.value);
     is(element[idlAttr], true,
        "IDL attribute should return always return 'true' if the content attribute has been set");
-    is(element.getAttribute(contentAttr), v.stringified,
-       "Content attribute should return the stringified value it has been set to.");
+    if (v.value === null) {
+      // bug 667856
+      todo(element.getAttribute(contentAttr), v.stringified,
+           "Content attribute should return the stringified value it has been set to.");
+    } else {
+      is(element.getAttribute(contentAttr), v.stringified,
+         "Content attribute should return the stringified value it has been set to.");
+    }
     element.removeAttribute(contentAttr);
 
     element[idlAttr] = v.value;
@@ -459,7 +465,7 @@ function reflectInt(aParameters)
 {
   // Expected value returned by .getAttribute() when |value| has been previously passed to .setAttribute().
   function expectedGetAttributeResult(value) {
-    return String(value);
+    return (value !== null) ? String(value) : "";
   }
 
   function stringToInteger(value, nonNegative, defaultValue) {
