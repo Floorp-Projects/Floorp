@@ -116,6 +116,7 @@
     <command id="Social:UnsharePage" oncommand="SocialShareButton.unsharePage();"/>
     <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
     <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();"/>
+    <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
     <command id="Social:Remove" oncommand="SocialUI.disableWithConfirmation();"/>
   </commandset>
@@ -415,7 +416,7 @@
 #endif
     
     <key id="sharePage" key="&sharePageCmd.commandkey;" command="Social:SharePage" modifiers="accel,shift"/>
-    <key id="focusChatBar" key="&social.chatBar.commandkey;" oncommand="SocialChatBar.focus();" modifiers="accel,shift"/>
+    <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Social:FocusChat" modifiers="accel,shift"/>
 
 # don't use |command="Browser:Stop"|, ESC is being used to freeze animated gifs,
 # even if the stop button and menuitem are disabled (see Bug 284140)
