@@ -24,6 +24,7 @@ struct VideoFrame {
   int64_t mTimeUs;
   int64_t mEndTimeUs;
   bool mKeyFrame;
+  bool mShouldSkip;
   void *mData;
   size_t mSize;
   int32_t mStride;
