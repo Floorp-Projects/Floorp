@@ -1326,11 +1326,10 @@ Breakpoints.prototype = {
     this.activeThread.setBreakpoint(aLocation, function(aResponse, aBreakpointClient) {
       let { url, line } = aResponse.actualLocation || aLocation;
 
-      // Prevent this new breakpoint from being repositioned on top of an
-      // already existing one.
+      // If the response contains a breakpoint that exists in the cache, prevent
+      // it from being shown in the source editor at an incorrect position.
       if (this.getBreakpoint(url, line)) {
         this._hideBreakpoint(aBreakpointClient);
-        aBreakpointClient.remove();
         return;
       }
 
