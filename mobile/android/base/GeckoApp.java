@@ -226,7 +226,7 @@ abstract public class GeckoApp
         }
     }
 
-    void toggleChrome(final Boolean aShow) { }
+    void toggleChrome(final boolean aShow) { }
 
     void focusChrome() { }
 

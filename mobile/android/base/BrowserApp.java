@@ -283,6 +283,7 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
+    @Override
     void toggleChrome(final boolean aShow) {
         mMainHandler.post(new Runnable() {
             public void run() {
