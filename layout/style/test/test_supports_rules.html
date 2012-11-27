@@ -8,11 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=649740
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style id="style">
-    @supports(color: green){ }
-    @supports (color: green) { }
-    @supports ((color: green)) { }
-    @supports (color: green) and (color: blue) { }
-    @supports ( Font:  20px serif ! Important)  { }
   </style>
 </head>
 <body>
@@ -30,17 +25,30 @@ function condition(s) {
   return s.replace(/^@supports\s*/, '').replace(/ \s*{\s*}\s*$/, '');
 }
 
-if (!SpecialPowers.getBoolPref("layout.css.supports-rule.enabled")) {
-  todo(false, "skipping test because pref is disabled");
-} else {
-  var sheet = document.getElementById("style").sheet;
+var styleSheetText =
+  "@supports(color: green){ }\n" +
+  "@supports (color: green) { }\n" +
+  "@supports ((color: green)) { }\n" +
+  "@supports (color: green) and (color: blue) { }\n" +
+  "@supports ( Font:  20px serif ! Important)  { }";
+
+function runTest() {
+  var style = document.getElementById("style");
+  style.textContent = styleSheetText;
+
+  var sheet = style.sheet;
 
   is(condition(sheet.cssRules[0].cssText), "(color: green)");
   is(condition(sheet.cssRules[1].cssText), "(color: green)");
   is(condition(sheet.cssRules[2].cssText), "((color: green))");
   is(condition(sheet.cssRules[3].cssText), "(color: green) and (color: blue)");
   is(condition(sheet.cssRules[4].cssText), "( Font:  20px serif ! Important)");
+
+  SimpleTest.finish();
 }
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.supports-rule.enabled", true]] }, runTest);
 </script>
 </pre>
 </body>

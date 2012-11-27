@@ -51,7 +51,7 @@
 #include "nsRegion.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
-#include "GLContext.h"
+#include "GLTextureImage.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1692,8 +1692,7 @@ nsChildView::CreateCompositor()
     LayerManagerOGL *manager =
       static_cast<LayerManagerOGL*>(compositor::GetLayerManager(mCompositorParent));
 
-    NSOpenGLContext *glContext =
-      (NSOpenGLContext *) manager->gl()->GetNativeData(GLContext::NativeGLContext);
+    NSOpenGLContext *glContext = (NSOpenGLContext *)manager->GetNSOpenGLContext();
 
     [(ChildView *)mView setGLContext:glContext];
     [(ChildView *)mView setUsingOMTCompositor:true];
@@ -1756,10 +1755,11 @@ nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
   }
 
   if (!mResizerImage) {
-    mResizerImage = manager->gl()->CreateTextureImage(nsIntSize(15, 15),
-                                                      gfxASurface::CONTENT_COLOR_ALPHA,
-                                                      LOCAL_GL_CLAMP_TO_EDGE,
-                                                      TextureImage::UseNearestFilter);
+    mResizerImage = TextureImage::Create(manager->gl(),
+                                         nsIntSize(15, 15),
+                                         gfxASurface::CONTENT_COLOR_ALPHA,
+                                         LOCAL_GL_CLAMP_TO_EDGE,
+                                         TextureImage::UseNearestFilter);
 
     // Creation of texture images can fail.
     if (!mResizerImage)
@@ -2457,7 +2457,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
     LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
     manager->SetClippingRegion(region);
-    glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+    glContext = (NSOpenGLContext *)manager->GetNSOpenGLContext();
 
     if (!mGLContext) {
       [self setGLContext:glContext];

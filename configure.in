@@ -5618,10 +5618,24 @@ dnl ========================================================
 
 dnl If using sydneyaudio with Linux, ensure that the alsa library is available
 if test -n "$MOZ_SYDNEYAUDIO" -a "$OS_TARGET" = "Linux"; then
+    MOZ_ALSA=1
+fi
+
+MOZ_ARG_ENABLE_BOOL(alsa,
+[  --enable-alsa          Enable Alsa support (default on Linux)],
+MOZ_ALSA=1,
+MOZ_ALSA=)
+
+if test -n "$MOZ_ALSA"; then
+    AC_DEFINE(MOZ_CUBEB)
     PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
           AC_MSG_ERROR([Need alsa for Ogg, Wave or WebM decoding on Linux.  Disable with --disable-ogg --disable-wave --disable-webm.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
 fi
+
+AC_SUBST(MOZ_ALSA)
+AC_SUBST(MOZ_ALSA_CFLAGS)
+AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
 dnl = Enable PulseAudio
@@ -8634,8 +8648,6 @@ AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VP8_ENCODER)
 AC_SUBST(MOZ_VP8)
 AC_SUBST(MOZ_OGG)
-AC_SUBST(MOZ_ALSA_LIBS)
-AC_SUBST(MOZ_ALSA_CFLAGS)
 AC_SUBST(VPX_AS)
 AC_SUBST(VPX_ASFLAGS)
 AC_SUBST(VPX_DASH_C_FLAG)

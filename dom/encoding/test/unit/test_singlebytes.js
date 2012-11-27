@@ -181,11 +181,10 @@ test(
       { encoding: 'utf-8', input: [0xE0, 0x80, 0xC0] }, // invalid trail
       { encoding: 'utf-8', input: [0xFC, 0x80, 0x80, 0x80, 0x80, 0x80] }, // > 0x10FFFF
       { encoding: 'utf-16', input: [0x00] }, // truncated code unit
-      //TODO: Gecko doesn't throw for unpaired surrogates
-      //{ encoding: 'utf-16', input: [0x00, 0xd8] }, // surrogate half
-      //{ encoding: 'utf-16', input: [0x00, 0xd8, 0x00, 0x00] }, // surrogate half
-      //{ encoding: 'utf-16', input: [0x00, 0xdc, 0x00, 0x00] }, // trail surrogate
-      //{ encoding: 'utf-16', input: [0x00, 0xdc, 0x00, 0xd8] }  // swapped surrogates
+      { encoding: 'utf-16', input: [0x00, 0xd8] }, // surrogate half
+      { encoding: 'utf-16', input: [0x00, 0xd8, 0x00, 0x00] }, // surrogate half
+      { encoding: 'utf-16', input: [0x00, 0xdc, 0x00, 0x00] }, // trail surrogate
+      { encoding: 'utf-16', input: [0x00, 0xdc, 0x00, 0xd8] }  // swapped surrogates
       // TODO: Single byte encoding cases
     ];
 

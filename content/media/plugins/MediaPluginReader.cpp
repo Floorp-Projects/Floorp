@@ -15,8 +15,10 @@
 
 namespace mozilla {
 
-MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder) :
+MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder,
+                                     const nsACString& aContentType) :
   MediaDecoderReader(aDecoder),
+  mType(aContentType),
   mPlugin(NULL),
   mHasAudio(false),
   mHasVideo(false),
@@ -24,7 +26,6 @@ MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder) :
   mAudioSeekTimeUs(-1),
   mLastVideoFrame(NULL)
 {
-  static_cast<MediaPluginDecoder *>(aDecoder)->GetContentType(mType);
 }
 
 MediaPluginReader::~MediaPluginReader()

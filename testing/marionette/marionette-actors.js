@@ -1685,8 +1685,11 @@ MarionetteDriverActor.prototype = {
           // we'll acknowledge the switchToFrame message here.
           // XXX: Should have a better way of determining that this message
           // is from a remote frame.
-          this.sendOk();
           this.currentRemoteFrame.targetFrameId = this.generateFrameId(message.json.value);
+          this.sendAsync(
+              "setState",
+              {scriptTimeout: this.scriptTimeout,
+               searchTimeout: this.curBrowser.elementManager.searchTimeout});
         }
 
         let browserType;
