@@ -37,6 +37,8 @@ import android.util.Log;
 
 import android.widget.RemoteViews;
 
+import java.net.Proxy;
+import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -53,6 +55,7 @@ import java.security.MessageDigest;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
@@ -276,12 +279,25 @@ public class UpdateService extends IntentService {
         }
     }
 
+    private URLConnection openConnectionWithProxy(URL url) throws java.net.URISyntaxException, java.io.IOException {
+        ProxySelector ps = ProxySelector.getDefault();
+        Proxy proxy = Proxy.NO_PROXY;
+        if (ps != null) {
+            List<Proxy> proxies = ps.select(url.toURI());
+            if (proxies != null && !proxies.isEmpty()) {
+                proxy = proxies.get(0);
+            }
+        }
+
+        return url.openConnection(proxy);
+    }
+
     private UpdateInfo findUpdate(boolean force) {
         try {
             URL url = UpdateServiceHelper.getUpdateUrl(this, force);
 
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document dom = builder.parse(url.openConnection().getInputStream());
+            Document dom = builder.parse(openConnectionWithProxy(url).getInputStream());
 
             NodeList nodes = dom.getElementsByTagName("update");
             if (nodes == null || nodes.getLength() == 0)
@@ -415,7 +431,7 @@ public class UpdateService extends IntentService {
         showDownloadNotification(downloadFile);
 
         try {
-            URLConnection conn = info.url.openConnection();
+            URLConnection conn = openConnectionWithProxy(info.url);
             int length = conn.getContentLength();
 
             output = new BufferedOutputStream(new FileOutputStream(downloadFile));
