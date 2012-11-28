@@ -175,7 +175,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
-    Services.obs.addObserver(this, "Session:Restore", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
@@ -282,11 +281,6 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (ss.shouldRestore()) {
-      this.restoreSession(false, null);
-    }
-
     if (updated)
       this.onAppUpdated();
 
@@ -309,34 +303,6 @@ var BrowserApp = {
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
     setTimeout(function() { SafeBrowsing.init(); }, 5000);
 #endif
-  },
-
-  restoreSession: function (restoringOOM, sessionString) {
-    // Be ready to handle any restore failures by making sure we have a valid tab opened
-    let restoreCleanup = {
-      observe: function (aSubject, aTopic, aData) {
-        Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-
-        if (this.tabs.length == 0) {
-          this.addTab("about:home", {
-            showProgress: false,
-            selected: true
-          });
-        }
-
-        // Let Java know we're done restoring tabs so tabs added after this can be animated
-        sendMessageToJava({
-          gecko: {
-            type: "Session:RestoreEnd"
-          }
-        });
-      }.bind(this)
-    };
-    Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
-
-    // Start the restore
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    ss.restoreLastSession(restoringOOM, sessionString);
   },
 
   isAppUpdated: function() {
@@ -1147,9 +1113,6 @@ var BrowserApp = {
       }
     } else if (aTopic == "gather-telemetry") {
       sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
-    } else if (aTopic == "Session:Restore") {
-      let data = JSON.parse(aData);
-      this.restoreSession(data.restoringOOM, data.sessionString);
     }
   },
 
