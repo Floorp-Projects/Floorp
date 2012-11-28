@@ -38,6 +38,25 @@ class B2GXPCShellRemote(XPCShellRemote):
         print >>sys.stderr, "\nCleaning files from previous run.."
         self.device.removeDir(DEVICE_TEST_ROOT)
 
+    # Overriden
+    def setupTestDir(self):
+        if self.device._useZip:
+            return XPCShellRemote.setupTestDir(self)
+
+        push_attempts = 10
+        for root, dirs, files in os.walk(self.xpcDir):
+            for filename in files:
+                rel_path = os.path.relpath(os.path.join(root, filename), self.xpcDir)
+                test_file = os.path.join(self.remoteScriptsDir, rel_path)
+                for retry in range(1, push_attempts+1):
+                    print 'pushing', test_file, '(attempt %s of %s)' % (retry, push_attempts)
+                    try:
+                        self.device.pushFile(os.path.join(root, filename), test_file)
+                        break
+                    except DMError:
+                        if retry == push_attempts:
+                            raise
+
     # Overridden
     def pushLibs(self):
         if not self.options.use_device_libs:
@@ -117,6 +136,10 @@ class B2GOptions(RemoteXPCShellOptions):
                         type="string", dest="logcat_dir",
                         help="directory to store logcat dump files")
         defaults["logcat_dir"] = None
+        self.add_option('--busybox', action='store',
+                        type='string', dest='busybox',
+                        help="Path to busybox binary to install on device")
+        defaults['busybox'] = None
 
         defaults['dm_trans'] = 'adb'
         defaults['debugger'] = None
@@ -151,6 +174,8 @@ def main():
             kwargs['gecko_path'] = options.geckoPath
         if options.logcat_dir:
             kwargs['logcat_dir'] = options.logcat_dir
+        if options.busybox:
+            kwargs['busybox'] = options.busybox
     if options.b2g_path:
         kwargs['homedir'] = options.emu_path or options.b2g_path
     if options.address:
@@ -171,7 +196,6 @@ def main():
     dm = devicemanagerADB.DeviceManagerADB(**kwargs)
 
     options.remoteTestRoot = dm.getDeviceRoot()
-
     xpcsh = B2GXPCShellRemote(dm, options, args)
 
     try:
