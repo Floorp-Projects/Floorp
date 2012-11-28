@@ -104,6 +104,12 @@ if (!params.quiet) {
   TestRunner.logger.addListener("dumpListener", consoleLevel + "", dumpListener);
 }
 
+// A temporary hack for android 4.0 where Fennec utilizes the pandaboard so much it reboots
+if (params.runSlower) {
+  TestRunner.runSlower = true;
+}
+
+
 var gTestList = [];
 var RunSet = {}
 RunSet.runall = function(e) {
