@@ -246,6 +246,11 @@ class MochitestOptions(optparse.OptionParser):
                     help = "Filename of the output file where we can store a .json list of failures to be run in the future with --run-only-tests.")
     defaults["failureFile"] = None
 
+    self.add_option("--run-slower",
+                    action = "store_true", dest = "runSlower",
+                    help = "Delay execution between test files.")
+    defaults["runSlower"] = False
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -639,6 +644,8 @@ class Mochitest(object):
           self.urlOpts.append("runOnly=false")
       if options.failureFile:
         self.urlOpts.append("failureFile=%s" % self.getFullPath(options.failureFile))
+      if options.runSlower:
+        self.urlOpts.append("runSlower=true")
 
   def cleanup(self, manifest, options):
     """ remove temporary files and profile """
