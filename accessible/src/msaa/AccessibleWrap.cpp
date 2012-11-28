@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccessibleWrap.h"
+#include "Accessible-inl.h"
 
 #include "Compatibility.h"
 #include "DocAccessible-inl.h"
@@ -41,7 +42,7 @@
 #include "Accessible2_i.c"
 #include "AccessibleRole.h"
 #include "AccessibleStates.h"
-#include "OLEACC.H"
+#include "oleacc.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -1376,7 +1377,7 @@ AccessibleWrap::get_uniqueID(long *uniqueID)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *uniqueID = - reinterpret_cast<long>(UniqueID());
+  *uniqueID = - reinterpret_cast<intptr_t>(UniqueID());
   return S_OK;
 
   A11Y_TRYBLOCK_END

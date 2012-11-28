@@ -9,7 +9,7 @@
 
 #include "objbase.h"
 #include "AccessibleWrap.h"
-#include "UIAutomation.h"
+#include "uiautomation.h"
 
 namespace mozilla {
 namespace a11y {
