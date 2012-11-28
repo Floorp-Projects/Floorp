@@ -115,9 +115,18 @@ public:
   /**
    * Used to adjust the area of a frame that needs to be invalidated to take
    * account of SVG effects.
+   *
+   * @param aFrame The effects frame.
+   * @param aToReferenceFrame The offset (in app units) from aFrame to its
+   * reference display item.
+   * @param aInvalidRect The pre-effects invalid rect in pixels relative to
+   * the reference display item.
+   * @return The post-effects invalid rect in pixels relative to the reference
+   * display item.
    */
   static nsIntRect
-  AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsIntRect& aInvalidRect);
+  AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
+                                 const nsIntRect& aInvalidRect);
 
   /**
    * Figure out which area of the source is needed given an area to

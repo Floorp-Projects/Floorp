@@ -282,6 +282,7 @@ nsRect
 
 nsIntRect
 nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
+                                                      const nsPoint& aToReferenceFrame,
                                                       const nsIntRect& aInvalidRect)
 {
   // Don't bother calling GetEffectProperties; the filter property should
@@ -304,19 +305,25 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
   if (!filterFrame) {
     // The frame is either not there or not currently available,
     // perhaps because we're in the middle of tearing stuff down.
-    // Be conservative.
-    nsRect overflow = aFrame->GetVisualOverflowRect();
+    // Be conservative, return our visual overflow rect relative
+    // to the reference frame.
+    nsRect overflow = aFrame->GetVisualOverflowRect() + aToReferenceFrame;
     return overflow.ToOutsidePixels(appUnitsPerDevPixel);
   }
 
   // Convert aInvalidRect into "user space" in app units:
   nsPoint toUserSpace =
     aFrame->GetOffsetTo(firstFrame) + GetOffsetToUserSpace(firstFrame);
+  // The initial rect was relative to the reference frame, so we need to
+  // remove that offset to get a rect relative to the current frame.
+  toUserSpace -= aToReferenceFrame;
   nsRect preEffectsRect = aInvalidRect.ToAppUnits(appUnitsPerDevPixel) + toUserSpace;
 
-  // Return ther result, relative to aFrame, not in user space:
+  // Adjust the dirty area for effects, and shift it back to being relative to
+  // the reference frame.
   nsRect result = filterFrame->GetPostFilterDirtyArea(firstFrame, preEffectsRect) -
            toUserSpace;
+  // Return the result, in pixels relative to the reference frame.
   return result.ToOutsidePixels(appUnitsPerDevPixel);
 }
 
