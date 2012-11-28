@@ -3264,9 +3264,9 @@ if (!%(resultStr)s) {
 
         wrapCode = (("if (%(result)s) {\n" +
                      CGIndenter(CGGeneric(setValue(
-                            "JS::ObjectValue(*%(result)s->Callable())", True))).define() +
+                            "JS::ObjectValue(*%(result)s->Callable())", True))).define() + "\n"
                      "} else {\n" +
-                     setValue("JS::NullValue()") +
+                     CGIndenter(CGGeneric(setValue("JS::NullValue()"))).define() + "\n"
                      "}") % { "result": result })
         return wrapCode, False
 
