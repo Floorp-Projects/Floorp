@@ -54,7 +54,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMRequest,
                                                 nsDOMEventTargetHelper)
   if (tmp->mRooted) {
-    tmp->mResult = JSVAL_VOID;
     tmp->UnrootResultVal();
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
@@ -187,6 +186,7 @@ void
 DOMRequest::UnrootResultVal()
 {
   NS_ASSERTION(mRooted, "Don't call me if not rooted!");
+  mResult = JSVAL_VOID;
   NS_DROP_JS_OBJECTS(this, DOMRequest);
   mRooted = false;
 }

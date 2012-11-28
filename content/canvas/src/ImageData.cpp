@@ -46,8 +46,8 @@ void
 ImageData::DropData()
 {
   if (mData) {
-    NS_DROP_JS_OBJECTS(this, ImageData);
     mData = NULL;
+    NS_DROP_JS_OBJECTS(this, ImageData);
   }
 }
 

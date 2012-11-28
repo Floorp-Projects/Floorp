@@ -54,6 +54,7 @@ AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aLength,
 
 AudioBuffer::~AudioBuffer()
 {
+  mChannels.Clear();
   NS_DROP_JS_OBJECTS(this, AudioBuffer);
 }
 
