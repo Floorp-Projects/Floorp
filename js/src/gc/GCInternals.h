@@ -16,6 +16,47 @@ namespace gc {
 void
 MarkRuntime(JSTracer *trc, bool useSavedRoots = false);
 
+class AutoCopyFreeListToArenas {
+    JSRuntime *runtime;
+
+  public:
+    AutoCopyFreeListToArenas(JSRuntime *rt);
+    ~AutoCopyFreeListToArenas();
+};
+
+struct AutoFinishGC
+{
+    AutoFinishGC(JSRuntime *rt);
+};
+
+/*
+ * This class should be used by any code that needs to exclusive access to the
+ * heap in order to trace through it...
+ */
+class AutoTraceSession {
+  public:
+    AutoTraceSession(JSRuntime *rt, HeapState state = Tracing);
+    ~AutoTraceSession();
+
+  protected:
+    JSRuntime *runtime;
+
+  private:
+    AutoTraceSession(const AutoTraceSession&) MOZ_DELETE;
+    void operator=(const AutoTraceSession&) MOZ_DELETE;
+
+    js::HeapState prevState;
+};
+
+struct AutoPrepareForTracing
+{
+    AutoFinishGC finish;
+    AutoTraceSession session;
+    AutoCopyFreeListToArenas copy;
+
+    AutoPrepareForTracing(JSRuntime *rt);
+};
+
 } /* namespace gc */
 } /* namespace js */
 
