@@ -531,12 +531,17 @@ pref("browser.gesture.tap", "cmd_fullZoomReset");
 // scrolling to shift+wheel.
 pref("mousewheel.with_alt.action", 2);
 pref("mousewheel.with_shift.action", 1);
+// On MacOS X, control+wheel is typically handled by system and we don't
+// receive the event.  So, command key which is the main modifier key for
+// acceleration is the best modifier for zoom-in/out.  However, we should keep
+// the control key setting for backward compatibility.
+pref("mousewheel.with_meta.action", 3); // command key on Mac
 #else
 pref("mousewheel.with_alt.action", 1);
 pref("mousewheel.with_shift.action", 2);
+pref("mousewheel.with_meta.action", 1); // win key on Win, Super/Hyper on Linux
 #endif
 pref("mousewheel.with_control.action",3);
-pref("mousewheel.with_meta.action", 1);  // command key on Mac
 pref("mousewheel.with_win.action", 1);
 
 pref("browser.xul.error_pages.enabled", true);
