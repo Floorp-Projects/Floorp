@@ -99,18 +99,20 @@ SessionStore.prototype = {
         observerService.addObserver(this, "quit-application-requested", true);
         observerService.addObserver(this, "quit-application-granted", true);
         observerService.addObserver(this, "quit-application", true);
+        observerService.addObserver(this, "Session:Restore", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
         this.init();
         break;
-      case "domwindowopened":
+      case "domwindowopened": {
         let window = aSubject;
         window.addEventListener("load", function() {
           self.onWindowOpen(window);
           window.removeEventListener("load", arguments.callee, false);
         }, false);
         break;
+      }
       case "domwindowclosed": // catch closed windows
         this.onWindowClose(aSubject);
         break;
@@ -164,6 +166,7 @@ SessionStore.prototype = {
         observerService.removeObserver(this, "quit-application-requested");
         observerService.removeObserver(this, "quit-application-granted");
         observerService.removeObserver(this, "quit-application");
+        observerService.removeObserver(this, "Session:Restore");
 
         // If a save has been queued, kill the timer and save state now
         if (this._saveTimer) {
@@ -197,6 +200,44 @@ SessionStore.prototype = {
         this._saveTimer = null;
         this.saveState();
         break;
+      case "Session:Restore": {
+        if (aData) {
+          // Be ready to handle any restore failures by making sure we have a valid tab opened
+          let window = Services.wm.getMostRecentWindow("navigator:browser");
+          let restoreCleanup = {
+            observe: function (aSubject, aTopic, aData) {
+              Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+
+              if (window.BrowserApp.tabs.length == 0) {
+                window.BrowserApp.addTab("about:home", {
+                  showProgress: false,
+                  selected: true
+                });
+              }
+
+              // Let Java know we're done restoring tabs so tabs added after this can be animated
+              this._sendMessageToJava({
+                type: "Session:RestoreEnd"
+              });
+            }.bind(this)
+          };
+          Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+
+          // Do a restore, triggered by Java
+          let data = JSON.parse(aData);
+          this.restoreLastSession(data.restoringOOM, data.sessionString);
+        } else if (this._shouldRestore) {
+          // Do a restore triggered by Gecko (e.g., if
+          // browser.sessionstore.resume_session_once is true). In these cases,
+          // our Java front-end doesn't know we're doing a restore, so it has
+          // already opened an about:home tab.
+          this.restoreLastSession(false, null);
+        } else {
+          // Not doing a restore; just send restore message
+          Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
+        }
+        break;
+      }
     }
   },
 
