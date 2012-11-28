@@ -5351,7 +5351,8 @@ IonBuilder::jsop_not()
 
 inline bool
 IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, HandleId id,
-                               JSFunction **funcp, bool isGetter, bool *isDOM)
+                               JSFunction **funcp, bool isGetter, bool *isDOM,
+                               MDefinition **guardOut)
 {
     JSObject *found = NULL;
     JSObject *foundProto = NULL;
@@ -5494,6 +5495,12 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
     MInstruction *wrapper = MConstant::New(ObjectValue(*foundProto));
     current->add(wrapper);
     wrapper = addShapeGuard(wrapper, foundProto->lastProperty(), Bailout_ShapeGuard);
+
+    // Pass the guard back so it can be an operand.
+    if (isGetter) {
+        JS_ASSERT(wrapper->isGuardShape());
+        *guardOut = wrapper;
+    }
 
     // Now we have to freeze all the property typesets to ensure there isn't a
     // lower shadowing getter or setter installed in the future.
@@ -5957,9 +5964,13 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id, types::StackTypeS
     JS_ASSERT(*emitted == false);
     JSFunction *commonGetter;
     bool isDOM;
+    MDefinition *guard;
 
-    if (!TestCommonPropFunc(cx, unaryTypes.inTypes, id, &commonGetter, true, &isDOM))
+    if (!TestCommonPropFunc(cx, unaryTypes.inTypes, id, &commonGetter, true,
+                            &isDOM, &guard))
+    {
         return false;
+    }
     if (!commonGetter)
         return true;
 
@@ -5968,11 +5979,11 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id, types::StackTypeS
 
     if (isDOM && TestShouldDOMCall(cx, unaryTypes.inTypes, getter)) {
         const JSJitInfo *jitinfo = getter->jitInfo();
-        MGetDOMProperty *get = MGetDOMProperty::New(jitinfo->op, obj, jitinfo->isInfallible);
+        MGetDOMProperty *get = MGetDOMProperty::New(jitinfo, obj, guard);
         current->add(get);
         current->push(get);
 
-        if (!resumeAfter(get))
+        if (get->isEffectful() && !resumeAfter(get))
             return false;
         if (!pushTypeBarrier(get, types, barrier))
             return false;
@@ -6117,7 +6128,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
 
     JSFunction *commonSetter;
     bool isDOM;
-    if (!TestCommonPropFunc(cx, types, id, &commonSetter, false, &isDOM))
+    if (!TestCommonPropFunc(cx, types, id, &commonSetter, false, &isDOM, NULL))
         return false;
     if (!monitored && commonSetter) {
         RootedFunction setter(cx, commonSetter);
