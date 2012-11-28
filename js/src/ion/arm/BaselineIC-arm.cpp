@@ -100,6 +100,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
       case JSOP_RSH:
         masm.ma_and(Imm32(0x1F), R1.payloadReg(), R1.payloadReg());
         masm.ma_asr(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
+        break;
       case JSOP_URSH:
         masm.ma_and(Imm32(0x1F), R1.payloadReg(), scratchReg);
         masm.ma_lsr(scratchReg, R0.payloadReg(), scratchReg);
@@ -107,6 +108,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.j(Assembler::LessThan, &failure);
         // Move result for return.
         masm.movePtr(scratchReg, R0.payloadReg());
+        break
       default:
         JS_NOT_REACHED("Unhandled op for BinaryArith_Int32.");
         return false;
