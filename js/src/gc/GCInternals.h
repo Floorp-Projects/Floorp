@@ -57,6 +57,49 @@ struct AutoPrepareForTracing
     AutoPrepareForTracing(JSRuntime *rt);
 };
 
+class IncrementalSafety
+{
+    const char *reason_;
+
+    IncrementalSafety(const char *reason) : reason_(reason) {}
+
+  public:
+    static IncrementalSafety Safe() { return IncrementalSafety(NULL); }
+    static IncrementalSafety Unsafe(const char *reason) { return IncrementalSafety(reason); }
+
+    typedef void (IncrementalSafety::* ConvertibleToBool)();
+    void nonNull() {}
+
+    operator ConvertibleToBool() const {
+        return reason_ == NULL ? &IncrementalSafety::nonNull : 0;
+    }
+
+    const char *reason() {
+        JS_ASSERT(reason_);
+        return reason_;
+    }
+};
+
+IncrementalSafety
+IsIncrementalGCSafe(JSRuntime *rt);
+
+#ifdef JS_GC_ZEAL
+void
+StartVerifyPreBarriers(JSRuntime *rt);
+
+void
+EndVerifyPreBarriers(JSRuntime *rt);
+
+void
+StartVerifyPostBarriers(JSRuntime *rt);
+
+void
+EndVerifyPostBarriers(JSRuntime *rt);
+
+void
+FinishVerifier(JSRuntime *rt);
+#endif /* JS_GC_ZEAL */
+
 } /* namespace gc */
 } /* namespace js */
 
