@@ -111,6 +111,7 @@ typedef FrameMetrics::ViewID ViewID;
 /* static */ int32_t  nsLayoutUtils::sFontSizeInflationMappingIntercept;
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationMaxRatio;
 /* static */ bool nsLayoutUtils::sFontSizeInflationForceEnabled;
+/* static */ bool nsLayoutUtils::sFontSizeInflationDisabledInMasterProcess;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -4773,6 +4774,8 @@ nsLayoutUtils::Initialize()
                               "font.size.inflation.mappingIntercept");
   Preferences::AddBoolVarCache(&sFontSizeInflationForceEnabled,
                                "font.size.inflation.forceEnabled");
+  Preferences::AddBoolVarCache(&sFontSizeInflationDisabledInMasterProcess,
+                               "font.size.inflation.disabledInMasterProcess");
 
 #ifdef MOZ_FLEXBOX
   Preferences::RegisterCallback(FlexboxEnabledPrefChangeCallback,
@@ -5157,10 +5160,20 @@ nsLayoutUtils::FontSizeInflationEnabled(nsPresContext *aPresContext)
        aPresContext->IsChrome()) {
     return false;
   }
-  if (TabChild* tab = GetTabChildFrom(presShell)) {
-    if (!presShell->FontSizeInflationForceEnabled() &&
-        !tab->IsAsyncPanZoomEnabled()) {
-      return false;
+  // Force-enabling font inflation always trumps the heuristics here.
+  if (!presShell->FontSizeInflationForceEnabled()) {
+    if (TabChild* tab = GetTabChildFrom(presShell)) {
+      // We're in a child process.  Cancel inflation if we're not
+      // async-pan zoomed.
+      if (!tab->IsAsyncPanZoomEnabled()) {
+        return false;
+      }
+    } else if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      // We're in the master process.  Cancel inflation if it's been
+      // explicitly disabled.
+      if (presShell->FontSizeInflationDisabledInMasterProcess()) {
+        return false;
+      }
     }
   }
 
