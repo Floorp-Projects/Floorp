@@ -4,7 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait">
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=463939 -->
-  <title>Test that the area that's covered by a filtered elemnt is invalidated when it moves</title>
+  <title>Test that the area that's covered by a filtered element is invalidated when it moves</title>
   <filter id="filter">
     <feGaussianBlur stdDeviation="0.1"/>
   </filter>
