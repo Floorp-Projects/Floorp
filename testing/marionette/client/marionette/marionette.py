@@ -100,7 +100,7 @@ class Marionette(object):
                  emulator=None, sdcard=None, emulatorBinary=None,
                  emulatorImg=None, emulator_res='480x800', gecko_path=None,
                  connectToRunningEmulator=False, homedir=None, baseurl=None,
-                 noWindow=False, logcat_dir=None, busybox=None):
+                 noWindow=False, logcat_dir=None, busybox=None, load_early=False):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -145,9 +145,8 @@ class Marionette(object):
         self.client = MarionetteClient(self.host, self.port)
 
         if emulator:
-            self.emulator.wait_for_system_message(self)
-            if gecko_path:
-                self.emulator.install_gecko(gecko_path, self)
+            self.emulator.setup(self, gecko_path=self.gecko_path,
+                                load_early=load_early)
             if busybox:
                 self.emulator.install_busybox(busybox)
 
