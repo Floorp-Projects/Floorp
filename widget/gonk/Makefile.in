@@ -63,6 +63,7 @@ CPPSRCS	= \
 	Timers.cpp \
 	Tokenizer.cpp \
 	String8.cpp \
+	String16.cpp \
 	Static.cpp \
 	$(NULL)
 
