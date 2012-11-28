@@ -4955,33 +4955,49 @@ class MSetDOMProperty
 };
 
 class MGetDOMProperty
-  : public MAryInstruction<1>,
+  : public MAryInstruction<2>,
     public ObjectPolicy<0>
 {
-    const JSJitPropertyOp func_;
-    bool isInfallible_;
+    const JSJitInfo *info_;
 
-    MGetDOMProperty(const JSJitPropertyOp func, MDefinition *obj, bool isInfallible)
-      : func_(func), isInfallible_(isInfallible)
+    MGetDOMProperty(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
+      : info_(jitinfo)
     {
+        JS_ASSERT(jitinfo);
+
         initOperand(0, obj);
 
+        // Pin the guard as an operand if we want to hoist later
+        initOperand(1, guard);
+
+        // We are movable iff the jitinfo says we can be.
+        if (jitinfo->isConstant)
+            setMovable();
+
         setResultType(MIRType_Value);
+    }
+
+  protected:
+    const JSJitInfo *info() const {
+        return info_;
     }
 
   public:
     INSTRUCTION_HEADER(GetDOMProperty);
 
-    static MGetDOMProperty *New(const JSJitPropertyOp func, MDefinition *obj, bool isInfallible)
+    static MGetDOMProperty *New(const JSJitInfo *info, MDefinition *obj, MDefinition *guard)
     {
-        return new MGetDOMProperty(func, obj, isInfallible);
+        return new MGetDOMProperty(info, obj, guard);
     }
 
     const JSJitPropertyOp fun() {
-        return func_;
+        return info_->op;
     }
-    bool isInfallible() {
-        return isInfallible_;
+    bool isInfallible() const {
+        return info_->isInfallible;
+    }
+    bool isDomConstant() const {
+        return info_->isConstant;
     }
     MDefinition *object() {
         return getOperand(0);
@@ -4990,6 +5006,29 @@ class MGetDOMProperty
     TypePolicy *typePolicy() {
         return this;
     }
+
+    bool congruentTo(MDefinition *const &ins) const {
+        if (!isDomConstant())
+            return false;
+
+        if (!ins->isGetDOMProperty())
+            return false;
+
+        // Checking the jitinfo is the same as checking the constant function
+        if (!(info() == ins->toGetDOMProperty()->info()))
+            return false;
+
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        // The whole point of constancy is that it's non-effectful and doesn't
+        // conflict with anything
+        if (isDomConstant())
+            return AliasSet::None();
+        return AliasSet::Store(AliasSet::Any);
+    }
+
 };
 
 class MStringLength
