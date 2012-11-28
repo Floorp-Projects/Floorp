@@ -4394,18 +4394,19 @@ class CGMemberJITInfo(CGThing):
     def declare(self):
         return ""
 
-    def defineJitInfo(self, infoName, opName, infallible):
+    def defineJitInfo(self, infoName, opName, infallible, constant):
         protoID = "prototypes::id::%s" % self.descriptor.name
         depth = "PrototypeTraits<%s>::Depth" % protoID
-        failstr = "true" if infallible else "false"
+        failstr = toStringBool(infallible)
+        conststr = toStringBool(constant)
         return ("\n"
                 "const JSJitInfo %s = {\n"
                 "  %s,\n"
                 "  %s,\n"
                 "  %s,\n"
                 "  %s,  /* isInfallible. False in setters. */\n"
-                "  false  /* isConstant. Only relevant for getters. */\n"
-                "};\n" % (infoName, opName, protoID, depth, failstr))
+                "  %s  /* isConstant. Only relevant for getters. */\n"
+                "};\n" % (infoName, opName, protoID, depth, failstr, conststr))
 
     def define(self):
         if self.member.isAttr():
@@ -4413,12 +4414,13 @@ class CGMemberJITInfo(CGThing):
             getter = ("(JSJitPropertyOp)get_%s" % self.member.identifier.name)
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
-            result = self.defineJitInfo(getterinfo, getter, getterinfal)
+            getterconst = self.member.getExtendedAttribute("Constant")
+            result = self.defineJitInfo(getterinfo, getter, getterinfal, getterconst)
             if not self.member.readonly or self.member.getExtendedAttribute("PutForwards") is not None:
                 setterinfo = ("%s_setterinfo" % self.member.identifier.name)
                 setter = ("(JSJitPropertyOp)set_%s" % self.member.identifier.name)
                 # Setters are always fallible, since they have to do a typed unwrap.
-                result += self.defineJitInfo(setterinfo, setter, False)
+                result += self.defineJitInfo(setterinfo, setter, False, False)
             return result
         if self.member.isMethod():
             methodinfo = ("%s_methodinfo" % self.member.identifier.name)
@@ -4439,7 +4441,7 @@ class CGMemberJITInfo(CGThing):
                     # No arguments and infallible return boxing
                     methodInfal = True
 
-            result = self.defineJitInfo(methodinfo, method, methodInfal)
+            result = self.defineJitInfo(methodinfo, method, methodInfal, False)
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
 
