@@ -29,6 +29,12 @@ else:
     unicode_type = str
 
 
+# This should probably be consolidated with similar classes in other test
+# runners.
+class InvalidTestPathError(Exception):
+    """Exception raised when the test path is not valid."""
+
+
 class XPCShellRunner(MozbuildObject):
     """Run xpcshell tests."""
     def run_suite(self, **kwargs):
@@ -57,6 +63,14 @@ class XPCShellRunner(MozbuildObject):
 
         test_dir = os.path.join(self.topobjdir, '_tests', 'xpcshell',
                 os.path.dirname(relative_dir))
+
+        xpcshell_ini_file = os.path.join(test_dir, 'xpcshell.ini')
+        if not os.path.exists(xpcshell_ini_file):
+            raise InvalidTestPathError('An xpcshell.ini could not be found '
+                'for the passed test path. Please select a path whose '
+                'directory contains an xpcshell.ini file. It is possible you '
+                'received this error because the tree is not built or tests '
+                'are not enabled.')
 
         args = {
             'debug': debug,
@@ -153,5 +167,10 @@ class MachCommands(MachCommandBase):
         self._ensure_state_subdir_exists('.')
 
         xpcshell = self._spawn(XPCShellRunner)
-        xpcshell.run_test(**params)
+
+        try:
+            return xpcshell.run_test(**params)
+        except InvalidTestPathError as e:
+            print(e.message)
+            return 1
 
