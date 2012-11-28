@@ -189,6 +189,15 @@ ifdef MOZ_WEBSMS_BACKEND
 FENNEC_JAVA_FILES += GeckoSmsManager.java
 endif
 
+FENNEC_PP_JAVA_VIEW_FILES = \
+  GeckoButton.java \
+  GeckoImageButton.java \
+  GeckoImageView.java \
+  GeckoFrameLayout.java \
+  GeckoLinearLayout.java \
+  GeckoTextView.java \
+  $(NULL)
+
 FENNEC_PP_JAVA_FILES = \
   App.java \
   MarketplaceApp.java \
@@ -286,6 +295,7 @@ GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
   $(FENNEC_PP_JAVA_FILES) \
+  $(FENNEC_PP_JAVA_VIEW_FILES) \
   $(SYNC_PP_JAVA_FILES) \
   gecko.ap_  \
   res/values/strings.xml \
@@ -1061,10 +1071,10 @@ classes.dex: jars/gecko-browser.jar
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
-jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	@echo "JAR gecko-browser.jar"
 	$(NSINSTALL) -D classes/gecko-browser
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(JAR) cMf jars/gecko-browser.jar -C classes/gecko-browser .
 
 jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) jars
@@ -1136,6 +1146,11 @@ WebAppsFragments.java: WebAppsFragment.java.frag
 	@for n in `$(PYTHON) -c "for x in range($(NUM_WEB_APPS)): print x"`; do \
 		cat $< | sed s,@APPNUM@,$$n,g >> $@ ; \
 	done
+
+# Replace @VIEWTYPE@ with different View names.
+$(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
+	@rm -f $@
+	cat $< | sed s,@VIEWTYPE@,$(patsubst Gecko%.java,%,$@),g >> $@ ; \
 
 res/drawable/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable
