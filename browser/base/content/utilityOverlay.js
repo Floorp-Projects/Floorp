@@ -225,10 +225,8 @@ function openLinkIn(url, where, params) {
 
   if (where == "save") {
     if (!aInitiatingDoc) {
-      Components.utils.reportError(
-        "OpenLinkIn has been invoked without an initiating document.\n" +
-        "This may be caused by an add-on miscalling into it, or overriding " +
-        "some utilityOverlay.js methods.  See bug 814264 for details.");
+      Components.utils.reportError("openUILink/openLinkIn was called with " +
+        "where == 'save' but without initiatingDoc.  See bug 814264.");
       return;
     }
     saveURL(url, null, null, true, null, aReferrerURI, aInitiatingDoc);
