@@ -765,17 +765,11 @@ struct JSRuntime : js::RuntimeFriendFields
 
     bool                gcPoke;
 
-    enum HeapState {
-        Idle,       // doing nothing with the GC heap
-        Tracing,    // tracing the GC heap without collecting, e.g. IterateCompartments()
-        Collecting  // doing a GC of the heap
-    };
+    js::HeapState       heapState;
 
-    HeapState           heapState;
+    bool isHeapBusy() { return heapState != js::Idle; }
 
-    bool isHeapBusy() { return heapState != Idle; }
-
-    bool isHeapCollecting() { return heapState == Collecting; }
+    bool isHeapCollecting() { return heapState == js::Collecting; }
 
     /*
      * These options control the zealousness of the GC. The fundamental values
