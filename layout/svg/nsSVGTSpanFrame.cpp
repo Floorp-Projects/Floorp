@@ -80,7 +80,8 @@ nsSVGTSpanFrame::AttributeChanged(int32_t         aNameSpaceID,
        aAttribute == nsGkAtoms::dx ||
        aAttribute == nsGkAtoms::dy ||
        aAttribute == nsGkAtoms::rotate)) {
-    nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
+    nsSVGUtils::InvalidateBounds(this, false);
+    nsSVGUtils::ScheduleReflowSVG(this);
     NotifyGlyphMetricsChange();
   }
 
