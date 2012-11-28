@@ -2713,6 +2713,22 @@ nsXPConnect::ReadFunction(nsIObjectInputStream *stream, JSContext *cx, JSObject 
     return ReadScriptOrFunction(stream, cx, nullptr, functionObjp);
 }
 
+#ifdef DEBUG
+void
+nsXPConnect::SetObjectToUnlink(void* aObject)
+{
+    if (mRuntime)
+        mRuntime->SetObjectToUnlink(aObject);
+}
+
+void
+nsXPConnect::AssertNoObjectsToTrace(void* aPossibleJSHolder)
+{
+    if (mRuntime)
+        mRuntime->AssertNoObjectsToTrace(aPossibleJSHolder);
+}
+#endif
+
 /* These are here to be callable from a debugger */
 JS_BEGIN_EXTERN_C
 JS_EXPORT_API(void) DumpJSStack()
