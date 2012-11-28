@@ -411,15 +411,6 @@ nsSVGForeignObjectFrame::ReflowSVG()
     nsSVGEffects::UpdateEffects(this);
   }
 
-  // We only invalidate if we are dirty, if our outer-<svg> has already had its
-  // initial reflow (since if it hasn't, its entire area will be invalidated
-  // when it gets that initial reflow), and if our parent is not dirty (since
-  // if it is, then it will invalidate its entire new area, which will include
-  // our new area).
-  bool invalidate = (mState & NS_FRAME_IS_DIRTY) &&
-    !(GetParent()->GetStateBits() &
-       (NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY));
-
   // TODO: once we support |overflow:visible| on foreignObject, then we will
   // need to take account of our descendants here.
   nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
@@ -429,11 +420,6 @@ nsSVGForeignObjectFrame::ReflowSVG()
   // Now unset the various reflow bits:
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
-
-  if (invalidate) {
-    // XXXSDL Let FinishAndStoreOverflow do this.
-    nsSVGUtils::InvalidateBounds(this, true);
-  }
 }
 
 void
