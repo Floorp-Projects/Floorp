@@ -1797,6 +1797,16 @@ pref("font.size.inflation.minTwips", 0);
  */
 pref("font.size.inflation.forceEnabled", false);
 /*
+ * In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
+ * this pref disables font inflation in master-process contexts where
+ * existing heuristics can't be used determine enabled-ness.
+ *
+ * This pref has no effect if font inflation is not enabled through
+ * either of the prefs above.  The "forceEnabled" pref above overrides
+ * this pref.
+ */
+pref("font.size.inflation.disabledInMasterProcess", false);
+/*
  * Since the goal of font size inflation is to avoid having to
  * repeatedly scroll side to side to read a block of text, and there are
  * a number of page layouts where a relatively small chunk of text is
