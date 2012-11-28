@@ -131,7 +131,6 @@
   <string name="stop">&stop;</string>
   <string name="site_security">&site_security;</string>
   <string name="close_tab">&close_tab;</string>
-  <string name="new_tab">&new_tab;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="one_tab">&one_tab;</string>
   <string name="num_tabs">&num_tabs2;</string>
@@ -139,7 +138,10 @@
   <string name="downloads">&downloads;</string>
   <string name="apps">&apps;</string>
   <string name="char_encoding">&char_encoding;</string>
-  <string name="new_pb_tab">&new_pb_tab;</string>
+  <string name="new_tab">&new_tab;</string>
+  <string name="new_private_tab">&new_private_tab;</string>
+  <string name="synced_tabs">&synced_tabs;</string>
+  <string name="close_all_tabs">&close_all_tabs;</string>
   <!-- This string only appears in developer builds, which
        is why it is not localizable. -->
   <string name="toggle_profiling">Toggle Profiling</string>
