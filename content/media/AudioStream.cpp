@@ -223,11 +223,10 @@ bool AudioStream::EnsureTimeStretcherInitialized()
 {
   if (mTimeStretcher)
     return true;
-  soundtouch::SoundTouch* state = new soundtouch::SoundTouch();
-  if (!state) {
+  mTimeStretcher = new soundtouch::SoundTouch();
+  if (!mTimeStretcher) {
     return false;
   }
-  mTimeStretcher.own(state);
   mTimeStretcher->setSampleRate(mInRate);
   mTimeStretcher->setChannels(mChannels);
   mTimeStretcher->setPitch(1.0);
