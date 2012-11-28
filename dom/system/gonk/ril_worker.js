@@ -4612,25 +4612,28 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   if (!length) {
     if (options.onerror) {
-      options.onerror.call(this, options);
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+      options.onerror(options);
     }
     return;
   }
 
   // Don't need to read rilRequestError since we can know error status from
   // sw1 and sw2.
-  let sw1 = Buf.readUint32();
-  let sw2 = Buf.readUint32();
-  if (sw1 != ICC_STATUS_NORMAL_ENDING) {
+  options.sw1 = Buf.readUint32();
+  options.sw2 = Buf.readUint32();
+  if (options.sw1 != ICC_STATUS_NORMAL_ENDING) {
     // See GSM11.11, TS 51.011 clause 9.4, and ISO 7816-4 for the error
     // description.
+    let msg = "ICC I/O Error EF id = " + options.fileId.toString(16) +
+              " command = " + options.command.toString(16) +
+              "(" + options.sw1.toString(16) + "/" + options.sw2.toString(16) + ")"
     if (DEBUG) {
-      debug("ICC I/O Error EF id = " + options.fileId.toString(16) +
-            " command = " + options.command.toString(16) +
-            "(" + sw1.toString(16) + "/" + sw2.toString(16) + ")");
+      debug(msg);
     }
     if (options.onerror) {
-      options.onerror.call(this, options);
+      options.errorMsg = msg;
+      options.onerror(options);
     }
     return;
   }
@@ -8430,7 +8433,7 @@ let ICCIOHelper = {
     options.command = ICC_COMMAND_GET_RESPONSE;
     options.pathId = ICCFileHelper.getEFPath(options.fileId);
     if (!options.pathId) {
-      //TODO error
+      throw new Error("Unknown pathId for " + options.fileId.toString(16));
     }
     options.p1 = 0; // For GET_RESPONSE, p1 = 0
     options.p2 = 0; // For GET_RESPONSE, p2 = 0
@@ -8465,19 +8468,14 @@ let ICCIOHelper = {
     let fileId = (GsmPDUHelper.readHexOctet() << 8) |
                   GsmPDUHelper.readHexOctet();
     if (fileId != options.fileId) {
-      if (DEBUG) {
-        debug("Expected file ID " + options.fileId + " but read " + fileId);
-      }
-      return;
+      throw new Error("Expected file ID " + options.fileId.toString(16) +
+                      " but read " + fileId.toString(16));
     }
 
     // Type of file, data[6]
     let fileType = GsmPDUHelper.readHexOctet();
     if (fileType != TYPE_EF) {
-      if (DEBUG) {
-        debug("Unexpected file type " + fileType);
-      }
-      return;
+      throw new Error("Unexpected file type " + fileType);
     }
 
     // Skip 1 byte RFU, data[7],
@@ -8490,10 +8488,7 @@ let ICCIOHelper = {
     // Read Structure of EF, data[13]
     let efType = GsmPDUHelper.readHexOctet();
     if (efType != options.type) {
-      if (DEBUG) {
-        debug("Expected EF type " + options.type + " but read " + efType);
-      }
-      return;
+      throw new Error("Expected EF type " + options.type + " but read " + efType);
     }
 
     // Length of a record, data[14]
