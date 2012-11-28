@@ -267,7 +267,7 @@ function moveVCCoordInvoker(aDocAcc, aX, aY, aIgnoreNoMatch,
  * @param aQueue    [in] event queue in which to push invoker sequence.
  * @param aDocAcc   [in] the managing document of the virtual cursor we are testing
  * @param aRule     [in] the traversal rule to use in the invokers
- * @param aSequence [in] a sequence of accessible names or elemnt ids to expect with
+ * @param aSequence [in] a sequence of accessible names or element ids to expect with
  *                  the given rule in the given document
  */
 function queueTraversalSequence(aQueue, aDocAcc, aRule, aSequence)
