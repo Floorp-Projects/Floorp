@@ -84,6 +84,16 @@ this.AlarmService = {
   receiveMessage: function receiveMessage(aMessage) {
     debug("receiveMessage(): " + aMessage.name);
 
+    // To prevent hacked child processes from sending commands to parent
+    // to schedule alarms, we need to check their installed permissions.
+    if (["AlarmsManager:GetAll", "AlarmsManager:Add", "AlarmsManager:Remove"]
+          .indexOf(aMessage.name) != -1) {
+      if (!aMessage.target.assertPermission("alarms")) {
+        debug("Got message from a child process with no 'alarms' permission.");
+        return null;
+      }
+    }
+
     let mm = aMessage.target.QueryInterface(Ci.nsIMessageSender);
     let json = aMessage.json;
     switch (aMessage.name) {
