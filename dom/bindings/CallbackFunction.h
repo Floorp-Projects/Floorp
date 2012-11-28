@@ -91,8 +91,8 @@ protected:
   void DropCallback()
   {
     if (mCallable) {
-      NS_DROP_JS_OBJECTS(this, CallbackFunction);
       mCallable = nullptr;
+      NS_DROP_JS_OBJECTS(this, CallbackFunction);
       nsLayoutStatics::Release();
     }
   }

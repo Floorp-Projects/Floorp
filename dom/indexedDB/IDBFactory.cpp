@@ -77,6 +77,7 @@ IDBFactory::~IDBFactory()
     NS_ASSERTION(!mActorChild, "Should have cleared in Send__delete__!");
   }
   if (mRootedOwningObject) {
+    mOwningObject = nullptr;
     NS_DROP_JS_OBJECTS(this, IDBFactory);
   }
 }

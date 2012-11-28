@@ -43,7 +43,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsRequest,
                                                 nsDOMEventTargetHelper)
   if (tmp->mResultRooted) {
-    tmp->mResult = JSVAL_VOID;
     tmp->UnrootResult();
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCursor)
@@ -137,6 +136,7 @@ void
 SmsRequest::UnrootResult()
 {
   NS_ASSERTION(mResultRooted, "Don't call UnrotResult() if not rooted!");
+  mResult = JSVAL_VOID;
   NS_DROP_JS_OBJECTS(this, SmsRequest);
   mResultRooted = false;
 }
@@ -206,7 +206,6 @@ SmsRequest::SetSuccessInternal(nsISupports* aObject)
 
   if (NS_FAILED(nsContentUtils::WrapNative(cx, global, aObject, &mResult))) {
     UnrootResult();
-    mResult = JSVAL_VOID;
     SetError(nsISmsRequest::INTERNAL_ERROR);
     return false;
   }

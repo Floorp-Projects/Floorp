@@ -244,8 +244,6 @@ IDBDatabase::~IDBDatabase()
       mgr->UnregisterDatabase(this);
     }
   }
-
-  nsContentUtils::ReleaseWrapper(static_cast<nsIDOMEventTarget*>(this), this);
 }
 
 void
