@@ -43,6 +43,13 @@
 #define PNG_READ_TRANSFORMS_SUPPORTED
 #endif
 
+/* necessary for boot animation code */
+#ifdef MOZ_WIDGET_GONK
+#define PNG_SEQUENTIAL_READ_SUPPORTED
+#define PNG_EASY_ACCESS_SUPPORTED
+#define PNG_READ_EXPAND_SUPPORTED
+#endif
+
 #ifdef MOZ_PNG_WRITE
 #define PNG_WRITE_SUPPORTED
 #define PNG_WRITE_APNG_SUPPORTED
