@@ -393,7 +393,9 @@ waitFor(
             self.add_prefs_to_profile()
             self.restart_b2g()
 
-        if load_early:
+        #if load_early:
+        # Temporarily enable this always until part 2 of bug 815807 lands
+        if True:
             # If we're loading early, we have to wait for the
             # system-message-listener-ready event again after restarting B2G.
             # If we're not loading early, we skip this because Marionette
