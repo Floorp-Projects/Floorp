@@ -443,6 +443,10 @@ PrivateBrowsingService.prototype = {
         let sdr = Cc["@mozilla.org/security/sdr;1"].
                   getService(Ci.nsISecretDecoderRing);
         sdr.logoutAndTeardown();
+    
+        try {
+          this._prefs.deleteBranch("geo.wifi.access_token.");
+        } catch (ex) {}
 
         if (!this._inPrivateBrowsing) {
           // Clear the error console
