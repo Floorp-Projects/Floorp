@@ -108,7 +108,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.j(Assembler::LessThan, &failure);
         // Move result for return.
         masm.movePtr(scratchReg, R0.payloadReg());
-        break
+        break;
       default:
         JS_NOT_REACHED("Unhandled op for BinaryArith_Int32.");
         return false;
