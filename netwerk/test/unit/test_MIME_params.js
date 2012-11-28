@@ -408,6 +408,14 @@ var tests = [
   ["attachment filename=foo", 
    "attachment", Cr.NS_ERROR_INVALID_ARG], 
 
+  // Bug 777687: handling of broken %escapes
+
+  ["attachment; filename*=UTF-8''f%oo; filename=bar", 
+   "attachment", "bar"], 
+
+  ["attachment; filename*=UTF-8''foo%; filename=bar", 
+   "attachment", "bar"], 
+
   // Bug 783502 - xpcshell test netwerk/test/unit/test_MIME_params.js fails on AddressSanitizer
   ['attachment; filename="\\b\\a\\', 
    "attachment", "ba\\"], 
