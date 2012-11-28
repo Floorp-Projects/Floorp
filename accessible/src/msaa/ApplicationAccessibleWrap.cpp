@@ -64,7 +64,8 @@ ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ApplicationAccessibleWrap::get_appName(BSTR* aName)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aName = NULL;
 
   if (IsDefunct())
@@ -81,14 +82,14 @@ __try {
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;
 
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ApplicationAccessibleWrap::get_appVersion(BSTR* aVersion)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aVersion = NULL;
 
   if (IsDefunct())
@@ -105,14 +106,14 @@ __try {
   *aVersion = ::SysAllocStringLen(version.get(), version.Length());
   return *aVersion ? S_OK : E_OUTOFMEMORY;
 
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ApplicationAccessibleWrap::get_toolkitName(BSTR* aName)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -127,14 +128,14 @@ __try {
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;
 
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aVersion = NULL;
 
   if (IsDefunct())
@@ -151,8 +152,7 @@ __try {
   *aVersion = ::SysAllocStringLen(version.get(), version.Length());
   return *aVersion ? S_OK : E_OUTOFMEMORY;
 
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 ////////////////////////////////////////////////////////////////////////////////
