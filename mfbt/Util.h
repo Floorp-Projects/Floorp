@@ -222,35 +222,35 @@ class Maybe
 
     void construct() {
       MOZ_ASSERT(!constructed);
-      new (storage.addr()) T();
+      ::new (storage.addr()) T();
       constructed = true;
     }
 
     template<class T1>
     void construct(const T1& t1) {
       MOZ_ASSERT(!constructed);
-      new (storage.addr()) T(t1);
+      ::new (storage.addr()) T(t1);
       constructed = true;
     }
 
     template<class T1, class T2>
     void construct(const T1& t1, const T2& t2) {
       MOZ_ASSERT(!constructed);
-      new (storage.addr()) T(t1, t2);
+      ::new (storage.addr()) T(t1, t2);
       constructed = true;
     }
 
     template<class T1, class T2, class T3>
     void construct(const T1& t1, const T2& t2, const T3& t3) {
       MOZ_ASSERT(!constructed);
-      new (storage.addr()) T(t1, t2, t3);
+      ::new (storage.addr()) T(t1, t2, t3);
       constructed = true;
     }
 
     template<class T1, class T2, class T3, class T4>
     void construct(const T1& t1, const T2& t2, const T3& t3, const T4& t4) {
       MOZ_ASSERT(!constructed);
-      new (storage.addr()) T(t1, t2, t3, t4);
+      ::new (storage.addr()) T(t1, t2, t3, t4);
       constructed = true;
     }
 
