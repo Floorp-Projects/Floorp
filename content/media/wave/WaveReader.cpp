@@ -120,7 +120,7 @@ nsresult WaveReader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-nsresult WaveReader::ReadMetadata(nsVideoInfo* aInfo,
+nsresult WaveReader::ReadMetadata(VideoInfo* aInfo,
                                     MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");

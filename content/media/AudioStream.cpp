@@ -46,11 +46,11 @@ static const uint32_t FAKE_BUFFER_SIZE = 176400;
 // Number of milliseconds per second.
 static const int64_t MS_PER_S = 1000;
 
-class nsNativeAudioStream : public AudioStream
+class NativeAudioStream : public AudioStream
 {
  public:
-  ~nsNativeAudioStream();
-  nsNativeAudioStream();
+  ~NativeAudioStream();
+  NativeAudioStream();
 
   nsresult Init(int32_t aNumChannels, int32_t aRate,
                 const dom::AudioChannelType aAudioChannelType);
@@ -278,7 +278,7 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch)
   return NS_OK;
 }
 
-nsNativeAudioStream::nsNativeAudioStream() :
+NativeAudioStream::NativeAudioStream() :
   mVolume(1.0),
   mAudioHandle(0),
   mPaused(false),
@@ -286,12 +286,12 @@ nsNativeAudioStream::nsNativeAudioStream() :
 {
 }
 
-nsNativeAudioStream::~nsNativeAudioStream()
+NativeAudioStream::~NativeAudioStream()
 {
   Shutdown();
 }
 
-nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
+nsresult NativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
                                    const dom::AudioChannelType aAudioChannelType)
 {
   mInRate = mOutRate = aRate;
@@ -305,7 +305,7 @@ nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
                            aNumChannels) != SA_SUCCESS) {
     mAudioHandle = nullptr;
     mInError = true;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_create_pcm error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_create_pcm error"));
     return NS_ERROR_FAILURE;
   }
 
@@ -314,7 +314,7 @@ nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   if (saError != SA_SUCCESS && saError != SA_ERROR_NOT_SUPPORTED) {
     mAudioHandle = nullptr;
     mInError = true;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_set_stream_type error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_set_stream_type error"));
     return NS_ERROR_FAILURE;
   }
 
@@ -322,7 +322,7 @@ nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
     sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
     mAudioHandle = nullptr;
     mInError = true;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_open error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_open error"));
     return NS_ERROR_FAILURE;
   }
   mInError = false;
@@ -332,7 +332,7 @@ nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   return NS_OK;
 }
 
-void nsNativeAudioStream::Shutdown()
+void NativeAudioStream::Shutdown()
 {
   if (!mAudioHandle)
     return;
@@ -342,7 +342,7 @@ void nsNativeAudioStream::Shutdown()
   mInError = true;
 }
 
-int32_t nsNativeAudioStream::WriteToBackend(const AudioDataValue* aBuffer, uint32_t aSamples)
+int32_t NativeAudioStream::WriteToBackend(const AudioDataValue* aBuffer, uint32_t aSamples)
 {
   double scaledVolume = GetVolumeScale() * mVolume;
 
@@ -358,7 +358,7 @@ int32_t nsNativeAudioStream::WriteToBackend(const AudioDataValue* aBuffer, uint3
   return aSamples;
 }
 
-nsresult nsNativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
+nsresult NativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 {
   NS_ASSERTION(!mPaused, "Don't write audio when paused, you'll block");
 
@@ -391,14 +391,14 @@ nsresult nsNativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames
   }
 
   if (written == -1) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_write error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_write error"));
     mInError = true;
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-uint32_t nsNativeAudioStream::Available()
+uint32_t NativeAudioStream::Available()
 {
   // If the audio backend failed to open, lie and say we'll accept some
   // data.
@@ -412,12 +412,12 @@ uint32_t nsNativeAudioStream::Available()
   return s / mChannels / sizeof(short);
 }
 
-void nsNativeAudioStream::SetVolume(double aVolume)
+void NativeAudioStream::SetVolume(double aVolume)
 {
   NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 #if defined(SA_PER_STREAM_VOLUME)
   if (sa_stream_set_volume_abs(static_cast<sa_stream_t*>(mAudioHandle), aVolume) != SA_SUCCESS) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_set_volume_abs error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_set_volume_abs error"));
     mInError = true;
   }
 #else
@@ -425,7 +425,7 @@ void nsNativeAudioStream::SetVolume(double aVolume)
 #endif
 }
 
-void nsNativeAudioStream::Drain()
+void NativeAudioStream::Drain()
 {
   NS_ASSERTION(!mPaused, "Don't drain audio when paused, it won't finish!");
 
@@ -441,7 +441,7 @@ void nsNativeAudioStream::Drain()
     }
 
     if (written == -1) {
-      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_write error"));
+      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_write error"));
       mInError = true;
     }
 
@@ -454,12 +454,12 @@ void nsNativeAudioStream::Drain()
 
   int r = sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle));
   if (r != SA_SUCCESS && r != SA_ERROR_INVALID) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_drain error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_drain error"));
     mInError = true;
   }
 }
 
-void nsNativeAudioStream::Pause()
+void NativeAudioStream::Pause()
 {
   if (mInError)
     return;
@@ -467,7 +467,7 @@ void nsNativeAudioStream::Pause()
   sa_stream_pause(static_cast<sa_stream_t*>(mAudioHandle));
 }
 
-void nsNativeAudioStream::Resume()
+void NativeAudioStream::Resume()
 {
   if (mInError)
     return;
@@ -475,17 +475,17 @@ void nsNativeAudioStream::Resume()
   sa_stream_resume(static_cast<sa_stream_t*>(mAudioHandle));
 }
 
-int64_t nsNativeAudioStream::GetPosition()
+int64_t NativeAudioStream::GetPosition()
 {
   return mAudioClock.GetPosition();
 }
 
-int64_t nsNativeAudioStream::GetPositionInFrames()
+int64_t NativeAudioStream::GetPositionInFrames()
 {
   return mAudioClock.GetPositionInFrames();
 }
 
-int64_t nsNativeAudioStream::GetPositionInFramesInternal()
+int64_t NativeAudioStream::GetPositionInFramesInternal()
 {
   if (mInError) {
     return -1;
@@ -504,12 +504,12 @@ int64_t nsNativeAudioStream::GetPositionInFramesInternal()
   return -1;
 }
 
-bool nsNativeAudioStream::IsPaused()
+bool NativeAudioStream::IsPaused()
 {
   return mPaused;
 }
 
-int32_t nsNativeAudioStream::GetMinWriteSize()
+int32_t NativeAudioStream::GetMinWriteSize()
 {
   size_t size;
   int r = sa_stream_get_min_write(static_cast<sa_stream_t*>(mAudioHandle),
@@ -588,11 +588,11 @@ private:
   uint32_t mCount;
 };
 
-class nsBufferedAudioStream : public AudioStream
+class BufferedAudioStream : public AudioStream
 {
  public:
-  nsBufferedAudioStream();
-  ~nsBufferedAudioStream();
+  BufferedAudioStream();
+  ~BufferedAudioStream();
 
   nsresult Init(int32_t aNumChannels, int32_t aRate,
                 const dom::AudioChannelType aAudioChannelType);
@@ -612,12 +612,12 @@ class nsBufferedAudioStream : public AudioStream
 private:
   static long DataCallback_S(cubeb_stream*, void* aThis, void* aBuffer, long aFrames)
   {
-    return static_cast<nsBufferedAudioStream*>(aThis)->DataCallback(aBuffer, aFrames);
+    return static_cast<BufferedAudioStream*>(aThis)->DataCallback(aBuffer, aFrames);
   }
 
   static void StateCallback_S(cubeb_stream*, void* aThis, cubeb_state aState)
   {
-    static_cast<nsBufferedAudioStream*>(aThis)->StateCallback(aState);
+    static_cast<BufferedAudioStream*>(aThis)->StateCallback(aState);
   }
 
   long DataCallback(void* aBuffer, long aFrames);
@@ -688,26 +688,26 @@ AudioStream* AudioStream::AllocateStream()
 {
 #if defined(MOZ_CUBEB)
   if (GetUseCubeb()) {
-    return new nsBufferedAudioStream();
+    return new BufferedAudioStream();
   }
 #endif
-  return new nsNativeAudioStream();
+  return new NativeAudioStream();
 }
 
 #if defined(MOZ_CUBEB)
-nsBufferedAudioStream::nsBufferedAudioStream()
-  : mMonitor("nsBufferedAudioStream"), mLostFrames(0), mVolume(1.0),
+BufferedAudioStream::BufferedAudioStream()
+  : mMonitor("BufferedAudioStream"), mLostFrames(0), mVolume(1.0),
     mBytesPerFrame(0), mState(INITIALIZED)
 {
 }
 
-nsBufferedAudioStream::~nsBufferedAudioStream()
+BufferedAudioStream::~BufferedAudioStream()
 {
   Shutdown();
 }
 
 nsresult
-nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
+BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
                             const dom::AudioChannelType aAudioChannelType)
 {
   cubeb* cubebContext = GetCubebContext();
@@ -733,7 +733,7 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
 
   {
     cubeb_stream* stream;
-    if (cubeb_stream_init(cubebContext, &stream, "nsBufferedAudioStream", params,
+    if (cubeb_stream_init(cubebContext, &stream, "BufferedAudioStream", params,
                           GetCubebLatency(), DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
       mCubebStream.own(stream);
     }
@@ -754,7 +754,7 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
 }
 
 void
-nsBufferedAudioStream::Shutdown()
+BufferedAudioStream::Shutdown()
 {
   if (mState == STARTED) {
     Pause();
@@ -765,7 +765,7 @@ nsBufferedAudioStream::Shutdown()
 }
 
 nsresult
-nsBufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
+BufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 {
   MonitorAutoLock mon(mMonitor);
   if (!mCubebStream || mState == ERRORED) {
@@ -808,7 +808,7 @@ nsBufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 }
 
 uint32_t
-nsBufferedAudioStream::Available()
+BufferedAudioStream::Available()
 {
   MonitorAutoLock mon(mMonitor);
   NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Buffer invariant violated.");
@@ -816,13 +816,13 @@ nsBufferedAudioStream::Available()
 }
 
 int32_t
-nsBufferedAudioStream::GetMinWriteSize()
+BufferedAudioStream::GetMinWriteSize()
 {
   return 1;
 }
 
 void
-nsBufferedAudioStream::SetVolume(double aVolume)
+BufferedAudioStream::SetVolume(double aVolume)
 {
   MonitorAutoLock mon(mMonitor);
   NS_ABORT_IF_FALSE(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
@@ -830,7 +830,7 @@ nsBufferedAudioStream::SetVolume(double aVolume)
 }
 
 void
-nsBufferedAudioStream::Drain()
+BufferedAudioStream::Drain()
 {
   MonitorAutoLock mon(mMonitor);
   if (mState != STARTED) {
@@ -843,7 +843,7 @@ nsBufferedAudioStream::Drain()
 }
 
 void
-nsBufferedAudioStream::Pause()
+BufferedAudioStream::Pause()
 {
   MonitorAutoLock mon(mMonitor);
   if (!mCubebStream || mState != STARTED) {
@@ -861,7 +861,7 @@ nsBufferedAudioStream::Pause()
 }
 
 void
-nsBufferedAudioStream::Resume()
+BufferedAudioStream::Resume()
 {
   MonitorAutoLock mon(mMonitor);
   if (!mCubebStream || mState != STOPPED) {
@@ -879,7 +879,7 @@ nsBufferedAudioStream::Resume()
 }
 
 int64_t
-nsBufferedAudioStream::GetPosition()
+BufferedAudioStream::GetPosition()
 {
   return mAudioClock.GetPosition();
 }
@@ -889,7 +889,7 @@ nsBufferedAudioStream::GetPosition()
 #pragma optimize("", off)
 #endif
 int64_t
-nsBufferedAudioStream::GetPositionInFrames()
+BufferedAudioStream::GetPositionInFrames()
 {
   return mAudioClock.GetPositionInFrames();
 }
@@ -898,14 +898,14 @@ nsBufferedAudioStream::GetPositionInFrames()
 #endif
 
 int64_t
-nsBufferedAudioStream::GetPositionInFramesInternal()
+BufferedAudioStream::GetPositionInFramesInternal()
 {
   MonitorAutoLock mon(mMonitor);
   return GetPositionInFramesUnlocked();
 }
 
 int64_t
-nsBufferedAudioStream::GetPositionInFramesUnlocked()
+BufferedAudioStream::GetPositionInFramesUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
 
@@ -931,14 +931,14 @@ nsBufferedAudioStream::GetPositionInFramesUnlocked()
 }
 
 bool
-nsBufferedAudioStream::IsPaused()
+BufferedAudioStream::IsPaused()
 {
   MonitorAutoLock mon(mMonitor);
   return mState == STOPPED;
 }
 
 long
-nsBufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames)
+BufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames)
 {
   uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
 
@@ -962,7 +962,7 @@ nsBufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames)
 }
 
 long
-nsBufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
+BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
 {
   long processedFrames = 0;
   if (!EnsureTimeStretcherInitialized()) {
@@ -997,7 +997,7 @@ nsBufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
 }
 
 long
-nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
+BufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
 {
   MonitorAutoLock mon(mMonitor);
   uint32_t available = NS_MIN(static_cast<uint32_t>(FramesToBytes(aFrames)), mBuffer.Length());
@@ -1036,7 +1036,7 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
 }
 
 void
-nsBufferedAudioStream::StateCallback(cubeb_state aState)
+BufferedAudioStream::StateCallback(cubeb_state aState)
 {
   MonitorAutoLock mon(mMonitor);
   if (aState == CUBEB_STATE_DRAINED) {
