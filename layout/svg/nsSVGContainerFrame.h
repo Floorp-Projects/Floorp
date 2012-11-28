@@ -33,6 +33,11 @@ typedef nsContainerFrame nsSVGContainerFrameBase;
  * <pattern>) just inherit this class. Frame sub-classes that do or can
  * display their contents directly (such as the frames for inner-<svg> or
  * <g>) inherit our nsDisplayContainerFrame sub-class.
+ *
+ *                               *** WARNING ***
+ *
+ * Do *not* blindly cast to SVG element types in this class's methods (see the
+ * warning comment for nsSVGDisplayContainerFrame below). 
  */
 class nsSVGContainerFrame : public nsSVGContainerFrameBase
 {
@@ -93,6 +98,13 @@ public:
 /**
  * Frame class or base-class for SVG containers that can or do display their
  * contents directly.
+ *
+ *                               *** WARNING ***
+ *
+ * This class's methods can *not* assume that mContent points to an instance of
+ * an SVG element class since this class is inherited by
+ * nsSVGGenericContainerFrame which is used for unrecognized elements in the
+ * SVG namespace. Do *not* blindly cast to SVG element types.
  */
 class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsISVGChildFrame

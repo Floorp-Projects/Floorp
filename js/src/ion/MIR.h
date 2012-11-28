@@ -5254,9 +5254,9 @@ class MInstanceOf
 
   public:
     MInstanceOf(MDefinition *obj, RawObject proto)
-      : MUnaryInstruction(obj)
+      : MUnaryInstruction(obj),
+        protoObj_(proto)
     {
-        protoObj_ = proto;
         setResultType(MIRType_Boolean);
     }
 

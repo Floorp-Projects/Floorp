@@ -592,14 +592,18 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
-    // We separate requestExit() and join() here so we can wake the EventHub's
-    // input loop, and stop it from polling for input events
-    mReaderThread->requestExit();
-    mEventHub->wake();
+    // mReaderThread and mEventHub will both be null if InitInputDevices
+    // is not called.
+    if (mReaderThread.get()) {
+        // We separate requestExit() and join() here so we can wake the EventHub's
+        // input loop, and stop it from polling for input events
+        mReaderThread->requestExit();
+        mEventHub->wake();
 
-    status_t result = mReaderThread->requestExitAndWait();
-    if (result)
-        LOG("Could not stop reader thread - %d", result);
+        status_t result = mReaderThread->requestExitAndWait();
+        if (result)
+            LOG("Could not stop reader thread - %d", result);
+    }
     gAppShell = NULL;
 }
 

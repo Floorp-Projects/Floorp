@@ -60,6 +60,7 @@ function ContentPermissionPrompt() {}
 ContentPermissionPrompt.prototype = {
 
   handleExistingPermission: function handleExistingPermission(request) {
+    let promptForUnknown = ['geolocation'];
     let access = (request.access && request.access !== "unused") ? request.type + "-" + request.access :
                                                                    request.type;
     let result = Services.perms.testExactPermissionFromPrincipal(request.principal, access);
@@ -67,7 +68,8 @@ ContentPermissionPrompt.prototype = {
       request.allow();
       return true;
     }
-    if (result == Ci.nsIPermissionManager.DENY_ACTION) {
+    if (result == Ci.nsIPermissionManager.DENY_ACTION ||
+        result == Ci.nsIPermissionManager.UNKNOWN_ACTION && promptForUnknown.indexOf(access) < 0) {
       request.cancel();
       return true;
     }

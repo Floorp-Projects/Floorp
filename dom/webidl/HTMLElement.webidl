@@ -15,6 +15,7 @@
 interface DOMStringMap;
 interface HTMLMenuElement;
 
+[PrefControlled]
 interface HTMLElement : Element {
   // metadata attributes
            attribute DOMString title;
@@ -207,17 +208,17 @@ interface HTMLElement : Element {
   [SetterThrows]
            attribute EventHandler onwheel;
 
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchstart;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchend;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchmove;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchenter;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchleave;
-  [SetterThrows,Pref="dom.w3c_touch_events.enabled"]
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchcancel;
 
   [SetterThrows]

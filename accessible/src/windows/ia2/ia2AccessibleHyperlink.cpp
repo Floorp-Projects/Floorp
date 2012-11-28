@@ -38,7 +38,8 @@ ia2AccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   VariantInit(aAnchor);
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
@@ -66,14 +67,14 @@ __try {
   aAnchor->vt = VT_UNKNOWN;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT* aAnchorTarget)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   VariantInit(aAnchorTarget);
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
@@ -109,14 +110,14 @@ __try {
                                                stringURI.Length());
   return aAnchorTarget->bstrVal ? S_OK : E_OUTOFMEMORY;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHyperlink::get_startIndex(long* aIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aIndex = 0;
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
@@ -129,14 +130,14 @@ __try {
   *aIndex = thisObj->StartOffset();
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHyperlink::get_endIndex(long* aIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aIndex = 0;
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
@@ -149,14 +150,14 @@ __try {
   *aIndex = thisObj->EndOffset();
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHyperlink::get_valid(boolean* aValid)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aValid = false;
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
@@ -169,7 +170,6 @@ __try {
   *aValid = thisObj->IsLinkValid();
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 

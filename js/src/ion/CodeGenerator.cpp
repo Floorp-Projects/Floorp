@@ -831,8 +831,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Known-target case is handled by LCallKnown.
     JS_ASSERT(!call->hasSingleTarget());
-    // Unknown constructor case is handled by LCallConstructor.
-    JS_ASSERT(!call->mir()->isConstructing());
 
     // Generate an ArgumentsRectifier.
     IonCompartment *ion = gen->ionCompartment();
@@ -903,6 +901,16 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         return false;
 
     masm.bind(&end);
+
+    // If the return value of the constructing function is Primitive,
+    // replace the return value with the Object from CreateThis.
+    if (call->mir()->isConstructing()) {
+        Label notPrimitive;
+        masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand, &notPrimitive);
+        masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
+        masm.bind(&notPrimitive);
+    }
+
     dropArguments(call->numStackArgs() + 1);
     return true;
 }
@@ -988,39 +996,6 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
         masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
         masm.bind(&notPrimitive);
     }
-
-    dropArguments(call->numStackArgs() + 1);
-    return true;
-}
-
-typedef bool (*InvokeConstructorFn)(JSContext *, JSObject *, uint32, Value *, Value *);
-static const VMFunction InvokeConstructorInfo =
-    FunctionInfo<InvokeConstructorFn>(ion::InvokeConstructor);
-
-bool
-CodeGenerator::visitCallConstructor(LCallConstructor *call)
-{
-    JS_ASSERT(call->mir()->isConstructing());
-
-    // Holds the function object.
-    const LAllocation *callee = call->getFunction();
-    Register calleereg = ToRegister(callee);
-
-    uint32 callargslot = call->argslot();
-    uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
-
-    // Nestle %esp up to the argument vector.
-    masm.freeStack(unusedStack);
-
-    pushArg(StackPointer);                  // argv.
-    pushArg(Imm32(call->numActualArgs()));  // argc.
-    pushArg(calleereg);                     // JSFunction *.
-
-    if (!callVM(InvokeConstructorInfo, call))
-        return false;
-
-    // Un-nestle %esp from the argument vector. No prefix was pushed.
-    masm.reserveStack(unusedStack);
 
     dropArguments(call->numStackArgs() + 1);
     return true;

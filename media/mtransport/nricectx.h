@@ -92,6 +92,9 @@ class NrIceCtx {
   nr_ice_ctx *ctx() { return ctx_; }
   nr_ice_peer_ctx *peer() { return peer_; }
 
+  // Testing only.
+  void destroy_peer_ctx();
+
   // Create a media stream
   RefPtr<NrIceMediaStream> CreateStream(const std::string& name,
                                                  int components);

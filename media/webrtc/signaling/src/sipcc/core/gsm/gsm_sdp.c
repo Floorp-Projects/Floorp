@@ -46,7 +46,7 @@
 #define GSMSDP_MAX_MLINES_PER_CALL  (8)
 
 /*
- * Permanent number of free media structure elments for media structure
+ * Permanent number of free media structure elements for media structure
  * that represents media line in the SDP. The maximum number of elements
  * is set to equal number of call or LSM_MAX_CALLS. This should be enough
  * to minimumly allow typical a single audio media stream per call scenario
@@ -258,7 +258,7 @@ gsmsdp_create_free_media_list (void)
 
     /*
      * Populate the free list:
-     * Break the entire chunk into multiple free elments and link them
+     * Break the entire chunk into multiple free elements and link them
      * onto to the free media list.
      */
     media = &gsmsdp_free_media_chunk[0];    /* first element */

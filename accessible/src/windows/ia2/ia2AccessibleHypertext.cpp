@@ -18,7 +18,8 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aHyperlinkCount = 0;
 
   HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
@@ -28,15 +29,15 @@ __try {
   *aHyperlinkCount = hyperText->GetLinkCount();
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
                                       IAccessibleHyperlink** aHyperlink)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aHyperlink = NULL;
 
   HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
@@ -57,14 +58,14 @@ __try {
   *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aHyperlinkIndex = 0;
 
   HyperTextAccessibleWrap* hyperAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -74,7 +75,6 @@ __try {
   *aHyperlinkIndex = hyperAcc->GetLinkIndexAtOffset(aCharIndex);
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
