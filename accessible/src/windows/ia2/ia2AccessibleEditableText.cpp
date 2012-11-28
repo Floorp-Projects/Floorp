@@ -20,7 +20,8 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleEditableText::copyText(long aStartOffset, long aEndOffset)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -28,14 +29,14 @@ __try {
   nsresult rv = textAcc->CopyText(aStartOffset, aEndOffset);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::deleteText(long aStartOffset, long aEndOffset)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -43,14 +44,14 @@ __try {
   nsresult rv = textAcc->DeleteText(aStartOffset, aEndOffset);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::insertText(long aOffset, BSTR *aText)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -61,14 +62,14 @@ __try {
   nsresult rv = textAcc->InsertText(text, aOffset);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::cutText(long aStartOffset, long aEndOffset)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -76,14 +77,14 @@ __try {
   nsresult rv = textAcc->CutText(aStartOffset, aEndOffset);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::pasteText(long aOffset)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -91,15 +92,15 @@ __try {
   nsresult rv = textAcc->PasteText(aOffset);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::replaceText(long aStartOffset, long aEndOffset,
                                        BSTR *aText)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -114,16 +115,12 @@ __try {
   rv = textAcc->InsertText(text, aStartOffset);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::setAttributes(long aStartOffset, long aEndOffset,
                                          BSTR *aAttributes)
 {
-__try {
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_NOTIMPL;
 }
