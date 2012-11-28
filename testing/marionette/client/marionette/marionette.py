@@ -145,7 +145,7 @@ class Marionette(object):
         self.client = MarionetteClient(self.host, self.port)
 
         if emulator:
-            self.emulator.setup(self, gecko_path=self.gecko_path,
+            self.emulator.setup(self, gecko_path=gecko_path,
                                 load_early=load_early)
             if busybox:
                 self.emulator.install_busybox(busybox)
