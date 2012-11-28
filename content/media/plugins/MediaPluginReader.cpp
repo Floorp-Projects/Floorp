@@ -38,7 +38,7 @@ nsresult MediaPluginReader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-nsresult MediaPluginReader::ReadMetadata(nsVideoInfo* aInfo,
+nsresult MediaPluginReader::ReadMetadata(VideoInfo* aInfo,
                                            MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -67,7 +67,7 @@ nsresult MediaPluginReader::ReadMetadata(nsVideoInfo* aInfo,
     // that our video frame creation code doesn't overflow.
     nsIntSize displaySize(width, height);
     nsIntSize frameSize(width, height);
-    if (!nsVideoInfo::ValidateVideoRegion(frameSize, pictureRect, displaySize)) {
+    if (!VideoInfo::ValidateVideoRegion(frameSize, pictureRect, displaySize)) {
       return NS_ERROR_FAILURE;
     }
 

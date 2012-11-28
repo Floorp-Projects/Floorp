@@ -182,7 +182,7 @@ void WebMReader::Cleanup()
   }
 }
 
-nsresult WebMReader::ReadMetadata(nsVideoInfo* aInfo,
+nsresult WebMReader::ReadMetadata(VideoInfo* aInfo,
                                     MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -257,7 +257,7 @@ nsresult WebMReader::ReadMetadata(nsVideoInfo* aInfo,
       // that our video frame creation code doesn't overflow.
       nsIntSize displaySize(params.display_width, params.display_height);
       nsIntSize frameSize(params.width, params.height);
-      if (!nsVideoInfo::ValidateVideoRegion(frameSize, pictureRect, displaySize)) {
+      if (!VideoInfo::ValidateVideoRegion(frameSize, pictureRect, displaySize)) {
         // Video track's frame sizes will overflow. Ignore the video track.
         continue;
       }

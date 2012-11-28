@@ -1737,7 +1737,7 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
 
   LOG(PR_LOG_DEBUG, ("%p Decoding Media Headers", mDecoder.get()));
   nsresult res;
-  nsVideoInfo info;
+  VideoInfo info;
   MetadataTags* tags;
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
