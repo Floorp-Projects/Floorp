@@ -57,5 +57,9 @@
         </attr>
     </declare-styleable>
 
+    <declare-styleable name="PrivateBrowsing">
+        <attr name="state_private" format="boolean"/>
+    </declare-styleable>
+
 </resources>
 
