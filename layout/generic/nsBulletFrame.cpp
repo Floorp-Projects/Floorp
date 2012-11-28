@@ -119,7 +119,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         } else {
           nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
                                                 &mRequestRegistered);
-          mImageRequest->Cancel(NS_ERROR_FAILURE);
+          mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
           mImageRequest = nullptr;
         }
       }
@@ -139,7 +139,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
                                             &mRequestRegistered);
 
-      mImageRequest->Cancel(NS_ERROR_FAILURE);
+      mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
       mImageRequest = nullptr;
     }
   }
