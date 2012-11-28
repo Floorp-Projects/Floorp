@@ -263,11 +263,15 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
                                            mPixelFormat,
                                            mUsage,
                                            &buffer);
-        sp<GraphicBuffer> graphicBuffer =
-          GrallocBufferActor::GetFrom(buffer.get_SurfaceDescriptorGralloc());
-        if (!graphicBuffer.get()) {
+        // We can only use a gralloc buffer here.  If we didn't get
+        // one back, something went wrong.
+        if (SurfaceDescriptor::TSurfaceDescriptorGralloc != buffer.type()) {
+            MOZ_ASSERT(SurfaceDescriptor::T__None == buffer.type());
+            CNW_LOGE("dequeueBuffer: failed to alloc gralloc buffer");
             return -ENOMEM;
         }
+        sp<GraphicBuffer> graphicBuffer =
+          GrallocBufferActor::GetFrom(buffer.get_SurfaceDescriptorGralloc());
         error = graphicBuffer->initCheck();
         if (error != NO_ERROR) {
             CNW_LOGE("dequeueBuffer: createGraphicBuffer failed with error %d",error);
