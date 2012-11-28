@@ -142,6 +142,7 @@ CPPSRCS		= \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		RootMarking.cpp \
 		Marking.cpp \
 		Memory.cpp \
 		Statistics.cpp \
