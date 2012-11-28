@@ -72,7 +72,7 @@ uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds)
   if (!aRuntimeIds)
     return E_INVALIDARG;
 
-  int ids[] = { UiaAppendRuntimeId, reinterpret_cast<int>(mAcc->UniqueID()) };
+  int ids[] = { UiaAppendRuntimeId, static_cast<int>(reinterpret_cast<intptr_t>(mAcc->UniqueID())) };
   *aRuntimeIds = SafeArrayCreateVector(VT_I4, 0, 2);
   if (!*aRuntimeIds)
     return E_OUTOFMEMORY;
