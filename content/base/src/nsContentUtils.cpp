@@ -208,7 +208,6 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 bool nsContentUtils::sTriedToGetContentPolicy = false;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
-uint32_t nsContentUtils::sJSGCThingRootCount;
 #ifdef IBMBIDI
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nullptr;
 #endif
@@ -4526,6 +4525,10 @@ nsContentUtils::HoldJSObjects(void* aScriptObjectHolder,
 nsresult
 nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 {
+  if (!sXPConnect) {
+    return NS_OK;
+  }
+
   return sXPConnect->RemoveJSHolder(aScriptObjectHolder);
 }
 
@@ -6863,9 +6866,8 @@ nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
     if (aCache->IsDOMBinding() && obj) {
       xpc::GetObjectScope(obj)->RemoveDOMExpandoObject(obj);
     }
-    DropJSObjects(aScriptObjectHolder);
-
     aCache->SetPreservingWrapper(false);
+    DropJSObjects(aScriptObjectHolder);
   }
 }
 
