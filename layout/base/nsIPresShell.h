@@ -106,7 +106,7 @@ class LayerManager;
 #define CAPTURE_RETARGETTOELEMENT 2
 // true if the current capture wants drags to be prevented
 #define CAPTURE_PREVENTDRAG 4
-// true when the mouse is pointer locked, and events are sent to locked elemnt
+// true when the mouse is pointer locked, and events are sent to locked element
 #define CAPTURE_POINTERLOCK 8
 
 typedef struct CapturingContentInfo {
