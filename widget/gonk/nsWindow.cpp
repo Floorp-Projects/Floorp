@@ -15,6 +15,7 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+
 #include <fcntl.h>
 
 #include "android/log.h"
@@ -24,6 +25,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/FileUtils.h"
+#include "BootAnimation.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -64,7 +66,6 @@ static nsRefPtr<GLContext> sGLContext;
 static nsTArray<nsWindow *> sTopWindows;
 static nsWindow *gWindowToRedraw = nullptr;
 static nsWindow *gFocusedWindow = nullptr;
-static android::FramebufferNativeWindow *gNativeWindow = nullptr;
 static bool sFramebufferOpen;
 static bool sUsingOMTC;
 static bool sUsingHwc;
@@ -73,37 +74,6 @@ static nsRefPtr<gfxASurface> sOMTCSurface;
 static pthread_t sFramebufferWatchThread;
 
 namespace {
-
-static int
-CancelBufferNoop(ANativeWindow* aWindow, android_native_buffer_t* aBuffer)
-{
-    return 0;
-}
-
-android::FramebufferNativeWindow*
-NativeWindow()
-{
-    if (!gNativeWindow) {
-        // Some gralloc HALs need this in order to open the
-        // framebuffer device after we restart with the screen off.
-        //
-        // NB: this *must* run BEFORE allocating the
-        // FramebufferNativeWindow.  Do not separate these two C++
-        // statements.
-        hal::SetScreenEnabled(true);
-
-        // We (apparently) don't have a way to tell if allocating the
-        // fbs succeeded or failed.
-        gNativeWindow = new android::FramebufferNativeWindow();
-
-        // Bug 776742: FrambufferNativeWindow doesn't set the cancelBuffer
-        // function pointer, causing EGL to segfault when the window surface
-        // is destroyed (i.e. on process exit). This workaround stops us
-        // from hard crashing in that situation.
-        gNativeWindow->cancelBuffer = CancelBufferNoop;
-    }
-    return gNativeWindow;
-}
 
 static uint32_t
 EffectiveScreenRotation()
@@ -242,6 +212,8 @@ nsWindow::DoDraw(void)
         LOG("  no window to draw, bailing");
         return;
     }
+
+    StopBootAnimation();
 
     nsIntRegion region = gWindowToRedraw->mDirtyRegion;
     gWindowToRedraw->mDirtyRegion.SetEmpty();

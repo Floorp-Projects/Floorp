@@ -28,6 +28,11 @@
 #define snprintf _snprintf
 #define strcasecmp _stricmp
 #endif
+
+#ifdef MOZ_WIDGET_GONK
+#include "BootAnimation.h"
+#endif
+
 #include "BinaryPath.h"
 
 #include "nsXPCOMPrivate.h" // for MAXPATHLEN and XPCOM_DLL
@@ -138,6 +143,11 @@ static int do_main(int argc, char* argv[])
     argv += 2;
     argc -= 2;
   }
+
+#ifdef MOZ_WIDGET_GONK
+  /* Called to start the boot animation */
+  (void) NativeWindow();
+#endif
 
   if (appini) {
     nsXREAppData *appData;

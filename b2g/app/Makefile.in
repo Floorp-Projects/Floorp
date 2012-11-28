@@ -24,6 +24,21 @@ endif
 
 CPPSRCS = nsBrowserApp.cpp
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += BootAnimation.cpp
+LIBS += \
+  -lGLESv2 \
+  -lEGL \
+  -lui \
+  -lhardware_legacy \
+  -lhardware \
+  -lcutils \
+  $(DEPTH)/media/libpng/$(LIB_PREFIX)mozpng.$(LIB_SUFFIX) \
+  $(MOZ_ZLIB_LIBS) \
+  $(NULL)
+OS_LDFLAGS += -Wl,--export-dynamic
+endif
+
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
