@@ -985,7 +985,10 @@ abstract public class BrowserApp extends GeckoApp
                 }
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
                 return true;
-            case R.id.private_browsing:
+            case R.id.new_tab:
+                addTab();
+                return true;
+            case R.id.new_private_tab:
                 Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
                 return true;
             default:
