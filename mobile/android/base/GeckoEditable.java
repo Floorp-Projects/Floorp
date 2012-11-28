@@ -127,7 +127,9 @@ final class GeckoEditable
         }
 
         static Action newSetSelection(int start, int end) {
-            if (start < 0 || start > end) {
+            // start == -1 when the start offset should remain the same
+            // end == -1 when the end offset should remain the same
+            if (start < -1 || end < -1) {
                 throw new IllegalArgumentException("invalid selection offsets");
             }
             final Action action = new Action(TYPE_SET_SELECTION);
@@ -433,8 +435,12 @@ final class GeckoEditable
         switch (action.mType) {
         case Action.TYPE_SET_SELECTION:
             final int len = mText.length();
-            final int selStart = Math.min(action.mStart, len);
-            final int selEnd = Math.min(action.mEnd, len);
+            final int curStart = Selection.getSelectionStart(mText);
+            final int curEnd = Selection.getSelectionEnd(mText);
+            // start == -1 when the start offset should remain the same
+            // end == -1 when the end offset should remain the same
+            final int selStart = Math.min(action.mStart < 0 ? curStart : action.mStart, len);
+            final int selEnd = Math.min(action.mEnd < 0 ? curEnd : action.mEnd, len);
 
             if (selStart < action.mStart || selEnd < action.mEnd) {
                 Log.w(LOGTAG, "IME sync error: selection out of bounds");
@@ -520,7 +526,7 @@ final class GeckoEditable
             // GeckoEditableListener methods should all be called from the Gecko thread
             GeckoApp.assertOnGeckoThread();
         }
-        if (start < 0 || start > end || end > mText.length()) {
+        if (start < 0 || start > mText.length() || end < 0 || end > mText.length()) {
             throw new IllegalArgumentException("invalid selection notification range");
         }
         final int seqnoWhenPosted = ++mGeckoUpdateSeqno;

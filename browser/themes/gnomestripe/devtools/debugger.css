@@ -161,6 +161,10 @@
   font-weight: 600;
 }
 
+.dbg-stackframe-details {
+  -moz-padding-start: 4px;
+}
+
 /**
  * Breakpoints view
  */
@@ -209,10 +213,6 @@
   -moz-padding-start: 8px;
 }
 
-.dbg-expression:last-child {
-  margin-bottom: 4px;
-}
-
 .dbg-expression-arrow {
   width: 10px;
   height: auto;
@@ -234,6 +234,11 @@
 #variables {
   background-color: white;
   min-height: 10px;
+}
+
+.dbg-variables-delete:not(:hover) {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+  opacity: 0.5;
 }
 
 /**
@@ -278,6 +283,7 @@
 
 .variable > .title > .value {
   -moz-padding-start: 6px;
+  -moz-padding-end: 4px;
 }
 
 .variable:not([non-header]) > .details {
@@ -304,6 +310,7 @@
 
 .property > .title > .value {
   -moz-padding-start: 6px;
+  -moz-padding-end: 4px;
 }
 
 .property:not([non-header]) > .details {
@@ -373,8 +380,14 @@
  * Variables and properties editing
  */
 
-#variables .element-input {
+#variables .element-value-input {
   -moz-margin-start: 5px !important;
+}
+
+#variables .element-name-input {
+  -moz-margin-start: -1px !important;
+  color: #048;
+  font-weight: 600;
 }
 
 /**

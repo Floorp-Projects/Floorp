@@ -3,19 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMCSSRule.idl"
+#include "nsIDOMCSSConditionRule.idl"
 
 /**
  * Interface for @supports rules in the CSS OM.
  */
 [scriptable, uuid(5f409a4d-92f9-4a62-8e8a-cc1c02c32918)]
-interface nsIDOMCSSSupportsRule : nsIDOMCSSRule
+interface nsIDOMCSSSupportsRule : nsIDOMCSSConditionRule
 {
-  readonly attribute nsIDOMCSSRuleList cssRules;
-
-  unsigned long      insertRule(in DOMString rule,
-                                in unsigned long index)
-                                        raises(DOMException);
-  void               deleteRule(in unsigned long index)
-                                        raises(DOMException);
 };

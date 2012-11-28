@@ -22,7 +22,7 @@ using mozilla::layers::SurfaceDescriptorX11;
 using mozilla::null_t;
 using mozilla::WindowsHandle;
 using mozilla::gl::SharedTextureHandle;
-using mozilla::gl::TextureImage::TextureShareType;
+using mozilla::gl::GLContext::SharedTextureShareType;
 
 namespace mozilla {
 namespace layers {
@@ -37,7 +37,7 @@ struct SurfaceDescriptorD3D10 {
 };
 
 struct SharedTextureDescriptor {
-  TextureShareType shareType;
+  SharedTextureShareType shareType;
   SharedTextureHandle handle;
   nsIntSize size;
   bool inverted;

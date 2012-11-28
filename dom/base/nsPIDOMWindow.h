@@ -16,6 +16,8 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
+#include "nsTArray.h"
 #include "nsIURI.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
@@ -47,9 +49,15 @@ class nsXBLPrototypeHandler;
 class nsIArray;
 class nsPIWindowRoot;
 
+namespace mozilla {
+namespace dom {
+class AudioContext;
+}
+}
+
 #define NS_PIDOMWINDOW_IID \
-{ 0x7b18e421, 0x2179, 0x4e24, \
-  { 0x96, 0x58, 0x26, 0x75, 0xa4, 0x37, 0xf3, 0x8f } }
+{ 0xf5af1c3c, 0xebad, 0x4d00, \
+  { 0xa2, 0xa4, 0x12, 0x2e, 0x27, 0x16, 0x59, 0x01 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -628,6 +636,8 @@ public:
   OpenNoNavigate(const nsAString& aUrl, const nsAString& aName,
                  const nsAString& aOptions, nsIDOMWindow **_retval) = 0;
 
+  void AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -692,6 +702,9 @@ protected:
   // the element within the document that is currently focused when this
   // window is active
   nsCOMPtr<nsIContent> mFocusedNode;
+
+  // The AudioContexts created for the current document, if any.
+  nsTArray<nsRefPtr<mozilla::dom::AudioContext> > mAudioContexts;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
   // this window.

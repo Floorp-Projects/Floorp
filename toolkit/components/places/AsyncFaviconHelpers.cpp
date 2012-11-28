@@ -548,11 +548,6 @@ AsyncFetchAndSetIconFromNetwork::AsyncFetchAndSetIconFromNetwork(
 
 AsyncFetchAndSetIconFromNetwork::~AsyncFetchAndSetIconFromNetwork()
 {
-  nsCOMPtr<nsIThread> thread;
-  (void)NS_GetMainThread(getter_AddRefs(thread));
-  if (mChannel) {
-    (void)NS_ProxyRelease(thread, mChannel, true);
-  }
 }
 
 NS_IMETHODIMP
@@ -570,22 +565,20 @@ AsyncFetchAndSetIconFromNetwork::Run()
   nsCOMPtr<nsIURI> iconURI;
   nsresult rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewChannel(getter_AddRefs(mChannel), iconURI);
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), iconURI);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIInterfaceRequestor> listenerRequestor =
     do_QueryInterface(reinterpret_cast<nsISupports*>(this));
   NS_ENSURE_STATE(listenerRequestor);
-  rv = mChannel->SetNotificationCallbacks(listenerRequestor);
+  rv = channel->SetNotificationCallbacks(listenerRequestor);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(mChannel);
+  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
   if (pbChannel) {
     rv = pbChannel->SetPrivate(mFaviconLoadPrivate);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = mChannel->AsyncOpen(this, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return channel->AsyncOpen(this, nullptr);
 }
 
 NS_IMETHODIMP
@@ -629,7 +622,6 @@ AsyncFetchAndSetIconFromNetwork::AsyncOnChannelRedirect(
 , nsIAsyncVerifyRedirectCallback *cb
 )
 {
-  mChannel = newChannel;
   (void)cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
@@ -670,7 +662,11 @@ AsyncFetchAndSetIconFromNetwork::OnStopRequest(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  mIcon.expiration = GetExpirationTimeFromChannel(mChannel);
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  // aRequest should always QI to nsIChannel.
+  // See AsyncFetchAndSetIconFromNetwork::Run()
+  MOZ_ASSERT(channel);
+  mIcon.expiration = GetExpirationTimeFromChannel(channel);
 
   rv = OptimizeIconSize(mIcon, favicons);
   NS_ENSURE_SUCCESS(rv, rv);

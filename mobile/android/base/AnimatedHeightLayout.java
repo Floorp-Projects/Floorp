@@ -40,13 +40,25 @@ public class AnimatedHeightLayout extends RelativeLayout {
                 public void onAnimationEnd(Animation animation) {
                     post(new Runnable() {
                         public void run() {
-                            getLayoutParams().height = LayoutParams.WRAP_CONTENT;
-                            mAnimating = false;
+                            finishAnimation();
                         }
                     });
                 }
             });
             startAnimation(anim);
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        finishAnimation();
+    }
+
+    private void finishAnimation() {
+        if (mAnimating) {
+            getLayoutParams().height = LayoutParams.WRAP_CONTENT;
+            mAnimating = false;
         }
     }
 }

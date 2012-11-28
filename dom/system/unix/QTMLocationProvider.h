@@ -24,7 +24,7 @@ public:
 
 public Q_SLOTS:
     // QGeoPositionInfoSource
-    void positionUpdated(const QGeoPositionInfo&);
+    void positionUpdated(const QtMobility::QGeoPositionInfo&);
 
 private:
     ~QTMLocationProvider();

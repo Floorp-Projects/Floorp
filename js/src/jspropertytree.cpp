@@ -202,11 +202,28 @@ Shape::finalize(FreeOp *fop)
 {
     if (!inDictionary()) {
         /*
-         * Note that due to incremental sweeping, if !parent->isMarked() then
-         * the parent may point to a new shape allocated in the same cell that
-         * use to hold our parent.
+         * We detach the child from the parent if the parent is reachable.
+         *
+         * Note that due to incremental sweeping, the parent pointer may point
+         * to the original reachable parent, or it may point to a new live
+         * object allocated in the same cell that used to hold the parent.
+         *
+         * There are three cases:
+         *
+         * Case 1: parent is not marked - parent is unreachable, may have been
+         *         finalized, and the cell may subsequently have been
+         *         reallocated to a compartment that is not being marked (cells
+         *         are marked when allocated in a compartment that is currenly
+         *         being marked by the collector).
+         *
+         * Case 2: parent is marked and is in a different compartment - parent
+         *         has been freed and reallocated to compartment that was being
+         *         marked.
+         *
+         * Case 3: parent is marked and is in the same compartment - parent is
+         *         stil reachable and we need to detach from it.
          */
-        if (parent && parent->isMarked())
+        if (parent && parent->isMarked() && parent->compartment() == compartment())
             parent->removeChild(this);
 
         if (kids.isHash())

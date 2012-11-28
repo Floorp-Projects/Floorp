@@ -22,7 +22,7 @@ function test() {
 
   let windowsToClose = [];
   let windowCount = 0;
-  let placeItemsCount = getPlacesItemsCount(window);
+  let placeItemsCount = 0;
 
   registerCleanupFunction(function() {
     windowsToClose.forEach(function(win) {
@@ -62,6 +62,8 @@ function test() {
   }
 
   clearHistory(function() {
+    // Updates the place items count
+    placeItemsCount = getPlacesItemsCount(window);
     // History database should be empty
     is(PlacesUtils.history.hasHistoryEntries, false,
        "History database should be empty");
@@ -72,7 +74,8 @@ function test() {
     is(PlacesUtils.history.hasHistoryEntries, true,
        "History database should have entries");
     // We added 7 new items to history.
-    is(getPlacesItemsCount(window), placeItemsCount, "Check the total items count");
+    is(getPlacesItemsCount(window), placeItemsCount,
+       "Check the total items count");
     // Test on windows.
     testOnWindow(false, function() {
       testOnWindow(true, function() {

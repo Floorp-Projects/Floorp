@@ -81,6 +81,13 @@ var shell = {
     return this.CrashSubmit;
   },
 
+  onlineForCrashReport: function shell_onlineForCrashReport() {
+    let wifiManager = navigator.mozWifiManager;
+    let onWifi = (wifiManager &&
+                  (wifiManager.connection.status == 'connected'));
+    return !Services.io.offline && onWifi;
+  },
+
   reportCrash: function shell_reportCrash(isChrome, aCrashID) {
     let crashID = aCrashID;
     try {
@@ -113,16 +120,19 @@ var shell = {
 
   // This function submits a crash when we're online.
   submitCrash: function shell_submitCrash(aCrashID) {
-    if (!Services.io.offline) {
+    if (this.onlineForCrashReport()) {
       this.CrashSubmit.submit(aCrashID);
       return;
     }
+
     Services.obs.addObserver(function observer(subject, topic, state) {
-      if (state == 'online') {
+      let network = subject.QueryInterface(Ci.nsINetworkInterface);
+      if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED
+          && network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
         shell.CrashSubmit.submit(aCrashID);
         Services.obs.removeObserver(observer, topic);
       }
-    }, "network:offline-status-changed", false);
+    }, "network-interface-state-changed", false);
   },
 
   get contentBrowser() {
@@ -142,9 +152,16 @@ var shell = {
 
   get manifestURL() {
     return Services.prefs.getCharPref('browser.manifestURL');
-   },
+  },
+
+  _started: false,
+  hasStarted: function shell_hasStarted() {
+    return this._started;
+  },
 
   start: function shell_start() {
+    this._started = true;
+
     // This forces the initialization of the cookie service before we hit the
     // network.
     // See bug 810209
@@ -550,57 +567,6 @@ Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) 
     value: data
   });
 }, 'bluetooth-volume-change', false);
-
-(function Repl() {
-  if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
-    return;
-  }
-  const prompt = 'JS> ';
-  let output;
-  let reader = {
-    onInputStreamReady : function repl_readInput(input) {
-      let sin = Cc['@mozilla.org/scriptableinputstream;1']
-                  .createInstance(Ci.nsIScriptableInputStream);
-      sin.init(input);
-      try {
-        let val = eval(sin.read(sin.available()));
-        let ret = (typeof val === 'undefined') ? 'undefined\n' : val + '\n';
-        output.write(ret, ret.length);
-        // TODO: check if socket has been closed
-      } catch (e) {
-        if (e.result === Cr.NS_BASE_STREAM_CLOSED ||
-            (typeof e === 'object' && e.result === Cr.NS_BASE_STREAM_CLOSED)) {
-          return;
-        }
-        let message = (typeof e === 'object') ? e.message + '\n' : e + '\n';
-        output.write(message, message.length);
-      }
-      output.write(prompt, prompt.length);
-      input.asyncWait(reader, 0, 0, Services.tm.mainThread);
-    }
-  }
-  let listener = {
-    onSocketAccepted: function repl_acceptConnection(serverSocket, clientSocket) {
-      dump('Accepted connection on ' + clientSocket.host + '\n');
-      let input = clientSocket.openInputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0)
-                              .QueryInterface(Ci.nsIAsyncInputStream);
-      output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-      output.write(prompt, prompt.length);
-      input.asyncWait(reader, 0, 0, Services.tm.mainThread);
-    },
-    onStopListening: function repl_onStopListening() {
-      if (output) {
-        output.close();
-      }
-    }
-  }
-  let serverPort = Services.prefs.getIntPref('b2g.remote-js.port');
-  let serverSocket = Cc['@mozilla.org/network/server-socket;1']
-                       .createInstance(Ci.nsIServerSocket);
-  serverSocket.init(serverPort, true, -1);
-  dump('Opened socket on ' + serverSocket.port + '\n');
-  serverSocket.asyncListen(listener);
-})();
 
 var CustomEventManager = {
   init: function custevt_init() {

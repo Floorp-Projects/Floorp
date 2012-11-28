@@ -324,6 +324,12 @@ nsINode::ChildNodes()
   return slots->mChildNodes;
 }
 
+void
+nsINode::GetTextContentInternal(nsAString& aTextContent)
+{
+  SetDOMStringToNull(aTextContent);
+}
+
 #ifdef DEBUG
 void
 nsINode::CheckNotNativeAnonymous() const
@@ -421,6 +427,12 @@ nsINode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   nsIDocument *ownerDoc = GetOwnerDocument();
 
   return ownerDoc ? CallQueryInterface(ownerDoc, aOwnerDocument) : NS_OK;
+}
+
+void
+nsINode::GetNodeValueInternal(nsAString& aNodeValue)
+{
+  SetDOMStringToNull(aNodeValue);
 }
 
 nsINode*

@@ -8,7 +8,12 @@
 #includesubst @BRANDPATH@
 #includesubst @STRINGSPATH@
 #includesubst @SYNCSTRINGSPATH@
+
+<!-- C-style format strings. -->
+<!ENTITY formatS "&#037;s">
+<!ENTITY formatD "&#037;d">
 ]>
+
 #includesubst @BOOKMARKSPATH@
 <resources>
   <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
@@ -129,7 +134,7 @@
   <string name="new_tab">&new_tab;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="one_tab">&one_tab;</string>
-  <string name="num_tabs">&num_tabs;</string>
+  <string name="num_tabs">&num_tabs2;</string>
   <string name="addons">&addons;</string>
   <string name="downloads">&downloads;</string>
   <string name="apps">&apps;</string>
@@ -243,6 +248,6 @@
   <string name="updater_apply_select">&updater_apply_select2;</string>
 
   <!-- Search suggestions opt-in -->
-  <string name="suggestions_prompt">&suggestions_prompt;</string>
+  <string name="suggestions_prompt">&suggestions_prompt2;</string>
 
 </resources>

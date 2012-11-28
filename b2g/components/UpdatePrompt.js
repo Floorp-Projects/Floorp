@@ -152,7 +152,10 @@ UpdatePrompt.prototype = {
   },
 
   showUpdateHistory: function UP_showUpdateHistory(aParent) { },
-  showUpdateInstalled: function UP_showUpdateInstalled() { },
+  showUpdateInstalled: function UP_showUpdateInstalled() {
+    let lock = Services.settings.createLock();
+    lock.set("deviceinfo.last_updated", Date.now(), null, null);
+  },
 
   // Custom functions
 

@@ -296,14 +296,6 @@ StackDefs(JSScript *script, jsbytecode *pc);
 /*
  * Decompilers, for script, function, and expression pretty-printing.
  */
-extern JSBool
-js_DecompileScript(JSPrinter *jp, JSScript *script);
-
-extern JSBool
-js_DecompileFunctionBody(JSPrinter *jp);
-
-extern JSBool
-js_DecompileFunction(JSPrinter *jp);
 
 /*
  * Some C++ compilers treat the language linkage (extern "C" vs.

@@ -44,5 +44,19 @@
         </targetApplication>
       </versionRange>
     </emItem>
+    <emItem id="/^RegExp/">
+      <versionRange severity="1">
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="2" maxVersion="2.*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="/^RegExp/i">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="2" maxVersion="2.*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
   </emItems>
 </blocklist>

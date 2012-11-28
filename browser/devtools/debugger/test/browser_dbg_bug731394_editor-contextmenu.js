@@ -97,8 +97,6 @@ function test()
        "#editMenuKeys not found");
     ok(document.getElementById("sourceEditorCommands"),
        "#sourceEditorCommands found");
-    ok(document.getElementById("sourceEditorKeys"),
-       "#sourceEditorKeys found");
 
     // Map command ids to their expected disabled state.
     let commands = {"se-cmd-undo": true, "se-cmd-redo": true,
