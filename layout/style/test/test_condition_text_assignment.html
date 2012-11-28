@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=815021
+-->
+<head>
+  <title>Test for Bug 815021</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style">
+    #a { text-transform: none }
+    @media all {
+      #a { text-transform: lowercase }
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=815021">Mozilla Bug 815021</a>
+<p id="display"><span id=a></span></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 815021 **/
+
+var sheet = document.getElementById("style").sheet;
+var rule = sheet.cssRules[1];
+var a = document.getElementById("a");
+
+function stylesApplied() {
+  return window.getComputedStyle(a, "").textTransform == "lowercase";
+}
+
+is(rule.type, CSSRule.MEDIA_RULE, "initial @media rule type");
+is(rule.conditionText, "all", "initial @media rule conditionText");
+ok(stylesApplied(), "initial @media rule applied");
+
+// [value to set, value to check, whether styles should be applied]
+var media = [
+  ["not all", "not all", false],
+  ["ALL ", "all", true],
+  ["unknown", "unknown", false],
+  ["(min-width:1px)", "(min-width: 1px)", true],
+  ["(bad syntax", "not all", false],
+  ["(max-width: 1px), (color)", "(max-width: 1px), (color)", true]
+];
+
+for (var i = 0; i < media.length; i++) {
+  rule.conditionText = media[i][0];
+  is(rule.conditionText, media[i][1], "value of conditionText #" + i);
+  ok(rule.cssText.startsWith("@media " + media[i][1]), "value of cssText #" + i);
+  ok(stylesApplied() == media[i][2], "styles applied #" + i);
+}
+</script>
+</pre>
+</body>
+</html>

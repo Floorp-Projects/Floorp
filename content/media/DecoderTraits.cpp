@@ -10,6 +10,9 @@
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
 #endif
+#ifdef MOZ_GSTREAMER
+#include "mozilla/Preferences.h"
+#endif
 
 namespace mozilla
 {

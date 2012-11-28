@@ -1077,18 +1077,6 @@ nsXMLHttpRequest::SetResponseType(nsXMLHttpRequest::ResponseTypeEnum aResponseTy
   // Set the responseType attribute's value to the given value.
   mResponseType = aResponseType;
 
-  // If the state is OPENED, SetCacheAsFile would have no effect here
-  // because the channel hasn't initialized the cache entry yet.
-  // SetCacheAsFile will be called from OnStartRequest.
-  // If the state is HEADERS_RECEIVED, however, we need to call
-  // it immediately because OnStartRequest is already dispatched.
-  if (mState & XML_HTTP_REQUEST_HEADERS_RECEIVED) {
-    nsCOMPtr<nsICachingChannel> cc(do_QueryInterface(mChannel));
-    if (cc) {
-      cc->SetCacheAsFile(mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
-                         mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB);
-    }
-  }
 }
 
 /* readonly attribute jsval response; */
@@ -1965,37 +1953,22 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
 bool nsXMLHttpRequest::CreateDOMFile(nsIRequest *request)
 {
   nsCOMPtr<nsIFile> file;
-  nsCOMPtr<nsICachingChannel> cc(do_QueryInterface(request));
-  if (cc) {
-    cc->GetCacheFile(getter_AddRefs(file));
-  } else {
-    nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(request);
-    if (fc) {
-      fc->GetFile(getter_AddRefs(file));
-    }
+  nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(request);
+  if (fc) {
+    fc->GetFile(getter_AddRefs(file));
   }
-  bool fromFile = false;
-  if (file) {
-    nsAutoCString contentType;
-    mChannel->GetContentType(contentType);
-    nsCOMPtr<nsISupports> cacheToken;
-    if (cc) {
-      cc->GetCacheToken(getter_AddRefs(cacheToken));
-      // We need to call IsFromCache to determine whether the response is
-      // fully cached (i.e. whether we can skip reading the response).
-      cc->IsFromCache(&fromFile);
-    } else {
-      // If the response is coming from the local resource, we can skip
-      // reading the response unconditionally.
-      fromFile = true;
-    }
 
-    mDOMFile =
-      new nsDOMFileFile(file, NS_ConvertASCIItoUTF16(contentType), cacheToken);
-    mBlobSet = nullptr;
-    NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
-  }
-  return fromFile;
+  if (!file)
+    return false;
+
+  nsAutoCString contentType;
+  mChannel->GetContentType(contentType);
+
+  mDOMFile =
+    new nsDOMFileFile(file, EmptyString(), NS_ConvertASCIItoUTF16(contentType));
+  mBlobSet = nullptr;
+  NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
+  return true;
 }
 
 NS_IMETHODIMP
@@ -2126,14 +2099,6 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mState |= XML_HTTP_REQUEST_PARSEBODY;
   mState &= ~XML_HTTP_REQUEST_MPART_HEADERS;
   ChangeState(XML_HTTP_REQUEST_HEADERS_RECEIVED);
-
-  if (mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
-      mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) {
-    nsCOMPtr<nsICachingChannel> cc(do_QueryInterface(mChannel));
-    if (cc) {
-      cc->SetCacheAsFile(true);
-    }
-  }
 
   ResetResponse();
 

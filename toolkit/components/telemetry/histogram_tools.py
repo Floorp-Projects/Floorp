@@ -2,10 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import with_statement
-
 import math
-import simplejson as json
+
+# For compatibility with Python 2.6
+try:
+    from collections import OrderedDict
+except ImportError:
+    from simplejson import OrderedDict
+    import simplejson as json
+else:
+    import json
 
 def table_dispatch(kind, table, body):
     """Call body with table[kind] if it exists.  Raise an error otherwise."""
@@ -198,6 +204,6 @@ def from_file(filename):
 the histograms defined in filename.
     """
     with open(filename, 'r') as f:
-        histograms = json.load(f, object_pairs_hook=json.OrderedDict)
+        histograms = json.load(f, object_pairs_hook=OrderedDict)
         for (name, definition) in histograms.iteritems():
             yield Histogram(name, definition)

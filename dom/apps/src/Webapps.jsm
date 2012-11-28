@@ -783,6 +783,31 @@ this.DOMApplicationRegistry = {
     let file = FileUtils.getFile(DIRECTORY_NAME,
                                  ["webapps", id, "update.webapp"], true);
 
+    if (!file.exists()) {
+      // This is a hosted app, let's check if it has an appcache
+      // and download it.
+      this._readManifests([{ id: id }], (function readManifest(aResults) {
+        let jsonManifest = aResults[0].manifest;
+        let manifest = new ManifestHelper(jsonManifest, app.origin);
+
+        if (manifest.appcache_path) {
+          debug("appcache found");
+          app.installState = "updating";
+          this.startOfflineCacheDownload(manifest, app);
+        } else {
+          // hosted app with no appcache, nothing to do, but we fire a
+          // downloaded event
+          DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
+                                                  { type: "downloaded",
+                                                    manifestURL: aManifestURL,
+                                                    app: app,
+                                                    manifest: jsonManifest });
+        }
+      }).bind(this));
+
+      return;
+    }
+
     this._loadJSONAsync(file, (function(aJSON) {
       if (!aJSON) {
         debug("startDownload: No update manifest found at " + file.path + " " + aManifestURL);
@@ -815,6 +840,10 @@ this.DOMApplicationRegistry = {
                                                       manifestURL: aManifestURL,
                                                       app: app,
                                                       manifest: aManifest });
+            if (app.installState == "pending") {
+              // We restarted a failed download, apply it automatically.
+              DOMApplicationRegistry.applyDownload(aManifestURL);
+            }
           });
         });
     }).bind(this));
@@ -1899,6 +1928,8 @@ this.DOMApplicationRegistry = {
  * Appcache download observer
  */
 let AppcacheObserver = function(aApp) {
+  debug("Creating AppcacheObserver for " + aApp.origin +
+        " - " + aApp.installState);
   this.app = aApp;
   this.startStatus = aApp.installState;
 };
@@ -1909,7 +1940,10 @@ AppcacheObserver.prototype = {
     let mustSave = false;
     let app = this.app;
 
+    debug("Offline cache state change for " + app.origin + " : " + aState);
+
     let setStatus = function appObs_setStatus(aStatus) {
+      debug("Offlinecache setStatus to " + aStatus + " for " + app.origin);
       mustSave = (app.installState != aStatus);
       app.installState = aStatus;
       app.downloading = false;
@@ -1919,6 +1953,7 @@ AppcacheObserver.prototype = {
     }
 
     let setError = function appObs_setError(aError) {
+      debug("Offlinecache setError to " + aError);
       DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
                                               { manifest: app.manifestURL,
                                                 error: aError });

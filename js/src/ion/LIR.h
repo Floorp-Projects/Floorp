@@ -194,6 +194,10 @@ class LAllocation : public TempObject
         return bits_ != other.bits_;
     }
 
+    HashNumber hash() const {
+        return bits_;
+    }
+
     static void PrintAllocation(FILE *fp, const LAllocation *a);
 };
 
@@ -740,6 +744,9 @@ class LBlock : public TempObject
     LInstructionReverseIterator rbegin() {
         return instructions_.rbegin();
     }
+    LInstructionReverseIterator rbegin(LInstruction *at) {
+        return instructions_.rbegin(at);
+    }
     LInstructionReverseIterator rend() {
         return instructions_.rend();
     }
@@ -935,6 +942,9 @@ class LSafepoint : public TempObject
 #ifdef JS_NUNBOX32
     // List of registers which contain pieces of values.
     NunboxList nunboxParts_;
+
+    // Number of nunboxParts which are not completely filled in.
+    uint32 partialNunboxes_;
 #elif JS_PUNBOX64
     // List of registers which contain values.
     GeneralRegisterSet valueRegs_;
@@ -942,17 +952,20 @@ class LSafepoint : public TempObject
 
   public:
     LSafepoint()
-      : safepointOffset_(INVALID_SAFEPOINT_OFFSET),
-        osiCallPointOffset_(0)
+      : safepointOffset_(INVALID_SAFEPOINT_OFFSET)
+      , osiCallPointOffset_(0)
+#ifdef JS_NUNBOX32
+      , partialNunboxes_(0)
+#endif
     { }
     void addLiveRegister(AnyRegister reg) {
-        liveRegs_.add(reg);
+        liveRegs_.addUnchecked(reg);
     }
     const RegisterSet &liveRegs() const {
         return liveRegs_;
     }
     void addGcRegister(Register reg) {
-        gcRegs_.add(reg);
+        gcRegs_.addUnchecked(reg);
     }
     GeneralRegisterSet gcRegs() const {
         return gcRegs_;
@@ -964,6 +977,27 @@ class LSafepoint : public TempObject
         return gcSlots_;
     }
 
+    void addGcPointer(LAllocation alloc) {
+        if (alloc.isRegister())
+            addGcRegister(alloc.toRegister().gpr());
+        else if (alloc.isStackSlot())
+            addGcSlot(alloc.toStackSlot()->slot());
+    }
+
+    bool hasGcPointer(LAllocation alloc) {
+        if (alloc.isRegister())
+            return gcRegs().has(alloc.toRegister().gpr());
+        if (alloc.isStackSlot()) {
+            for (size_t i = 0; i < gcSlots_.length(); i++) {
+                if (gcSlots_[i] == alloc.toStackSlot()->slot())
+                    return true;
+            }
+            return false;
+        }
+        JS_ASSERT(alloc.isArgument());
+        return true;
+    }
+
     bool addValueSlot(uint32 slot) {
         return valueSlots_.append(slot);
     }
@@ -971,21 +1005,125 @@ class LSafepoint : public TempObject
         return valueSlots_;
     }
 
+    bool hasValueSlot(uint32 slot) {
+        for (size_t i = 0; i < valueSlots_.length(); i++) {
+            if (valueSlots_[i] == slot)
+                return true;
+        }
+        return false;
+    }
+
 #ifdef JS_NUNBOX32
+
     bool addNunboxParts(LAllocation type, LAllocation payload) {
         return nunboxParts_.append(NunboxEntry(type, payload));
     }
+
+    bool addNunboxType(uint32 typeVreg, LAllocation type) {
+        for (size_t i = 0; i < nunboxParts_.length(); i++) {
+            if (nunboxParts_[i].type == type)
+                return true;
+            if (nunboxParts_[i].type == LUse(LUse::ANY, typeVreg)) {
+                nunboxParts_[i].type = type;
+                partialNunboxes_--;
+                return true;
+            }
+        }
+        partialNunboxes_++;
+
+        // vregs for nunbox pairs are adjacent, with the type coming first.
+        uint32 payloadVreg = typeVreg + 1;
+        return nunboxParts_.append(NunboxEntry(type, LUse(payloadVreg, LUse::ANY)));
+    }
+
+    bool hasNunboxType(LAllocation type) {
+        if (type.isArgument())
+            return true;
+        if (type.isStackSlot() && hasValueSlot(type.toStackSlot()->slot() + 1))
+            return true;
+        for (size_t i = 0; i < nunboxParts_.length(); i++) {
+            if (nunboxParts_[i].type == type)
+                return true;
+        }
+        return false;
+    }
+
+    bool addNunboxPayload(uint32 payloadVreg, LAllocation payload) {
+        for (size_t i = 0; i < nunboxParts_.length(); i++) {
+            if (nunboxParts_[i].payload == payload)
+                return true;
+            if (nunboxParts_[i].payload == LUse(LUse::ANY, payloadVreg)) {
+                partialNunboxes_--;
+                nunboxParts_[i].payload = payload;
+                return true;
+            }
+        }
+        partialNunboxes_++;
+
+        // vregs for nunbox pairs are adjacent, with the type coming first.
+        uint32 typeVreg = payloadVreg - 1;
+        return nunboxParts_.append(NunboxEntry(LUse(typeVreg, LUse::ANY), payload));
+    }
+
+    bool hasNunboxPayload(LAllocation payload) {
+        if (payload.isArgument())
+            return true;
+        if (payload.isStackSlot() && hasValueSlot(payload.toStackSlot()->slot()))
+            return true;
+        for (size_t i = 0; i < nunboxParts_.length(); i++) {
+            if (nunboxParts_[i].payload == payload)
+                return true;
+        }
+        return false;
+    }
+
     NunboxList &nunboxParts() {
         return nunboxParts_;
     }
+
+    uint32 partialNunboxes() {
+        return partialNunboxes_;
+    }
+
 #elif JS_PUNBOX64
+
     void addValueRegister(Register reg) {
         valueRegs_.add(reg);
     }
     GeneralRegisterSet valueRegs() {
         return valueRegs_;
     }
-#endif
+
+    bool addBoxedValue(LAllocation alloc) {
+        if (alloc.isRegister()) {
+            Register reg = alloc.toRegister().gpr();
+            if (!valueRegs().has(reg))
+                addValueRegister(reg);
+            return true;
+        }
+        if (alloc.isStackSlot()) {
+            uint32 slot = alloc.toStackSlot()->slot();
+            for (size_t i = 0; i < valueSlots().length(); i++) {
+                if (valueSlots()[i] == slot)
+                    return true;
+            }
+            return addValueSlot(slot);
+        }
+        JS_ASSERT(alloc.isArgument());
+        return true;
+    }
+
+    bool hasBoxedValue(LAllocation alloc) {
+        if (alloc.isRegister())
+            return valueRegs().has(alloc.toRegister().gpr());
+        if (alloc.isStackSlot())
+            return hasValueSlot(alloc.toStackSlot()->slot());
+        JS_ASSERT(alloc.isArgument());
+        return true;
+    }
+
+#endif // JS_PUNBOX64
+
     bool encoded() const {
         return safepointOffset_ != INVALID_SAFEPOINT_OFFSET;
     }

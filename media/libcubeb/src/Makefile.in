@@ -29,10 +29,6 @@ CSRCS         = \
               $(NULL)
 endif
 # No Android implementation of libcubeb yet.
-else ifeq ($(OS_TARGET),Linux)
-CSRCS         = \
-              cubeb_alsa.c \
-              $(NULL)
 endif
 
 ifeq ($(OS_TARGET),Darwin)
@@ -45,6 +41,12 @@ ifeq ($(OS_ARCH),OpenBSD)
 CSRCS           = \
                 cubeb_sndio.c \
                 $(NULL)
+endif
+
+ifdef MOZ_ALSA
+CSRCS         = \
+              cubeb_alsa.c \
+              $(NULL)
 endif
 
 ifdef MOZ_PULSEAUDIO

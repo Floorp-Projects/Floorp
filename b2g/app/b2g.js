@@ -414,10 +414,6 @@ pref("dom.mozTCPSocket.enabled", true);
 // by bug 710563.
 pref("layout.frame_rate.precise", true);
 
-// Temporary remote js console hack
-pref("b2g.remote-js.enabled", true);
-pref("b2g.remote-js.port", 9999);
-
 // Handle hardware buttons in the b2g chrome package
 pref("b2g.keys.menu.enabled", true);
 

@@ -35,6 +35,7 @@ EXPORTS_NAMESPACES := mozilla/dom
 EXPORTS_mozilla/dom := \
   AudioBuffer.h \
   AudioBufferSourceNode.h \
+  AudioContext.h \
   AudioDestinationNode.h \
   AudioListener.h \
   AudioNode.h \

@@ -456,6 +456,30 @@ StackTypeSet::make(JSContext *cx, const char *name)
     return res;
 }
 
+const TypeSet *
+TypeSet::clone(LifoAlloc *alloc) const
+{
+    unsigned objectCount = baseObjectCount();
+    unsigned capacity = (objectCount >= 2) ? HashSetCapacity(objectCount) : 0;
+
+    TypeSet *res = alloc->new_<TypeSet>();
+    if (!res)
+        return NULL;
+
+    TypeObjectKey **newSet;
+    if (capacity) {
+        newSet = alloc->newArray<TypeObjectKey*>(capacity);
+        if (!newSet)
+            return NULL;
+        PodCopy(newSet, objectSet, capacity);
+    }
+
+    res->flags = this->flags;
+    res->objectSet = capacity ? newSet : this->objectSet;
+
+    return res;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeSet constraints
 /////////////////////////////////////////////////////////////////////
@@ -2008,7 +2032,7 @@ JITCodeHasCheck(HandleScript script, jsbytecode *pc, RecompileKind kind)
     }
 #endif
 
-    if (script->hasAnyIonScript())
+    if (script->hasAnyIonScript() || script->isIonCompilingOffThread())
         return false;
 
     return true;
@@ -5233,9 +5257,9 @@ IsAboutToBeFinalized(TypeObjectKey *key)
 {
     /* Mask out the low bit indicating whether this is a type or JS object. */
     gc::Cell *tmp = reinterpret_cast<gc::Cell *>(uintptr_t(key) & ~1);
-    bool isMarked = IsCellMarked(&tmp);
+    bool isAboutToBeFinalized = IsCellAboutToBeFinalized(&tmp);
     JS_ASSERT(tmp == reinterpret_cast<gc::Cell *>(uintptr_t(key) & ~1));
-    return !isMarked;
+    return isAboutToBeFinalized;
 }
 
 void
@@ -5931,6 +5955,7 @@ void
 TypeSet::sweep(JSCompartment *compartment)
 {
     JS_ASSERT(!purged());
+    JS_ASSERT(compartment->isGCSweeping());
 
     /*
      * Purge references to type objects that are no longer live. Type sets hold
@@ -6009,13 +6034,14 @@ TypeObject::sweep(FreeOp *fop)
         return;
     }
 
+    JSCompartment *compartment = this->compartment();
+    JS_ASSERT(compartment->isGCSweeping());
+
     if (!isMarked()) {
         if (newScript)
             fop->free_(newScript);
         return;
     }
-
-    JSCompartment *compartment = this->compartment();
 
     /*
      * Properties were allocated from the old arena, and need to be copied over
@@ -6093,6 +6119,7 @@ struct SweepTypeObjectOp
 void
 SweepTypeObjects(FreeOp *fop, JSCompartment *compartment)
 {
+    JS_ASSERT(compartment->isGCSweeping());
     SweepTypeObjectOp op(fop);
     gc::ForEachArenaAndCell(compartment, gc::FINALIZE_TYPE_OBJECT, gc::EmptyArenaOp, op);
 }
@@ -6101,6 +6128,7 @@ void
 TypeCompartment::sweep(FreeOp *fop)
 {
     JSCompartment *compartment = this->compartment();
+    JS_ASSERT(compartment->isGCSweeping());
 
     SweepTypeObjects(fop, compartment);
 
@@ -6117,13 +6145,23 @@ TypeCompartment::sweep(FreeOp *fop)
             JS_ASSERT(!key.type.isSingleObject());
 
             bool remove = false;
-            if (key.type.isTypeObject() && !key.type.typeObject()->isMarked())
-                remove = true;
-            if (!obj->isMarked())
+            TypeObject *typeObject = NULL;
+            if (key.type.isTypeObject()) {
+                typeObject = key.type.typeObject();
+                if (IsTypeObjectAboutToBeFinalized(&typeObject))
+                    remove = true;
+            }
+            if (IsTypeObjectAboutToBeFinalized(e.front().value.unsafeGet()))
                 remove = true;
 
-            if (remove)
+            if (remove) {
                 e.removeFront();
+            } else if (typeObject && typeObject != key.type.typeObject()) {
+                ArrayTableKey newKey;
+                newKey.type = Type::ObjectType(typeObject);
+                newKey.proto = key.proto;
+                e.rekeyFront(newKey);
+            }
         }
     }
 
@@ -6134,18 +6172,24 @@ TypeCompartment::sweep(FreeOp *fop)
             JS_ASSERT(uintptr_t(entry.object->proto.get()) == key.proto.toWord());
 
             bool remove = false;
-            if (!IsTypeObjectMarked(entry.object.unsafeGet()))
+            if (IsTypeObjectAboutToBeFinalized(entry.object.unsafeGet()))
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nslots; i++) {
                 if (JSID_IS_STRING(key.ids[i])) {
                     JSString *str = JSID_TO_STRING(key.ids[i]);
-                    if (!IsStringMarked(&str))
+                    if (IsStringAboutToBeFinalized(&str))
                         remove = true;
                     JS_ASSERT(AtomToId((JSAtom *)str) == key.ids[i]);
                 }
                 JS_ASSERT(!entry.types[i].isSingleObject());
-                if (entry.types[i].isTypeObject() && !entry.types[i].typeObject()->isMarked())
-                    remove = true;
+                TypeObject *typeObject = NULL;
+                if (entry.types[i].isTypeObject()) {
+                    typeObject = entry.types[i].typeObject();
+                    if (IsTypeObjectAboutToBeFinalized(&typeObject))
+                        remove = true;
+                    else if (typeObject != entry.types[i].typeObject())
+                        entry.types[i] = Type::ObjectType(typeObject);
+                }
             }
 
             if (remove) {
@@ -6159,9 +6203,9 @@ TypeCompartment::sweep(FreeOp *fop)
     if (allocationSiteTable) {
         for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
             AllocationSiteKey key = e.front().key;
-            bool keyMarked = IsScriptMarked(&key.script);
-            bool valMarked = IsTypeObjectMarked(e.front().value.unsafeGet());
-            if (!keyMarked || !valMarked)
+            bool keyDying = IsScriptAboutToBeFinalized(&key.script);
+            bool valDying = IsTypeObjectAboutToBeFinalized(e.front().value.unsafeGet());
+            if (keyDying || valDying)
                 e.removeFront();
             else if (key.script != e.front().key.script)
                 e.rekeyFront(key);
@@ -6220,11 +6264,16 @@ TypeCompartment::sweepCompilerOutputs(FreeOp *fop, bool discardConstraints)
 void
 JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
 {
+    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
+
+    JS_ASSERT(isGCSweeping());
     if (table.initialized()) {
         for (TypeObjectSet::Enum e(table); !e.empty(); e.popFront()) {
             TypeObject *type = e.front();
-            if (!type->isMarked())
+            if (IsTypeObjectAboutToBeFinalized(&type))
                 e.removeFront();
+            else if (type != e.front())
+                e.rekeyFront(TaggedProto(type->proto), type);
         }
     }
 }
@@ -6248,6 +6297,7 @@ TypeCompartment::~TypeCompartment()
 TypeScript::Sweep(FreeOp *fop, RawScript script)
 {
     JSCompartment *compartment = script->compartment();
+    JS_ASSERT(compartment->isGCSweeping());
     JS_ASSERT(compartment->types.inferenceEnabled);
 
     unsigned num = NumTypeSets(script);

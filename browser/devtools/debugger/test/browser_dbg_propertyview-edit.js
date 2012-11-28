@@ -4,6 +4,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * Make sure that the editing variables or properties values works properly.
+ */
+
 const TAB_URL = EXAMPLE_URL + "browser_dbg_frame-parameters.html";
 
 var gPane = null;
@@ -70,7 +74,7 @@ function testModification(aVar, aCallback, aNewValue, aNewResult) {
     gDebugger);
 
   executeSoon(function() {
-    ok(aVar.querySelector(".element-input"),
+    ok(aVar.querySelector(".element-value-input"),
       "There should be an input element created.");
 
     let count = 0;

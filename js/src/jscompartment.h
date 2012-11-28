@@ -18,6 +18,7 @@
 #include "jsscope.h"
 
 #include "gc/StoreBuffer.h"
+#include "gc/FindSCCs.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 
@@ -114,9 +115,10 @@ struct TypeInferenceSizes;
 
 namespace js {
 class AutoDebugModeGC;
+struct DebugScopes;
 }
 
-struct JSCompartment
+struct JSCompartment : public js::gc::GraphNodeBase
 {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
@@ -192,7 +194,9 @@ struct JSCompartment
     enum CompartmentGCState {
         NoGC,
         Mark,
-        Sweep
+        MarkGray,
+        Sweep,
+        Finished
     };
 
   private:
@@ -202,11 +206,10 @@ struct JSCompartment
 
   public:
     bool isCollecting() const {
-        if (rt->isHeapCollecting()) {
+        if (rt->isHeapCollecting())
             return gcState != NoGC;
-        } else {
+        else
             return needsBarrier();
-        }
     }
 
     bool isPreservingCode() const {
@@ -248,18 +251,33 @@ struct JSCompartment
     }
 
     bool isGCMarking() {
+        if (rt->isHeapCollecting())
+            return gcState == Mark || gcState == MarkGray;
+        else
+            return needsBarrier();
+    }
+
+    bool isGCMarkingBlack() {
         return gcState == Mark;
+    }
+
+    bool isGCMarkingGray() {
+        return gcState == MarkGray;
     }
 
     bool isGCSweeping() {
         return gcState == Sweep;
     }
 
+    bool isGCFinished() {
+        return gcState == Finished;
+    }
+
+
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
     double                       gcHeapGrowthFactor;
-    JSCompartment                *gcNextCompartment;
 
     bool                         hold;
     bool                         isSystemCompartment;
@@ -335,7 +353,22 @@ struct JSCompartment
     size_t                       gcTriggerMallocAndFreeBytes;
 
     /* During GC, stores the index of this compartment in rt->compartments. */
-    unsigned                     index;
+    unsigned                     gcIndex;
+
+    /*
+     * During GC, stores the head of a list of incoming pointers from gray cells.
+     *
+     * The objects in the list are either cross-compartment wrappers, or
+     * debugger wrapper objects.  The list link is either in the second extra
+     * slot for the former, or a special slot for the latter.
+     */
+    js::RawObject                gcIncomingGrayPointers;
+
+    /* Linked list of live array buffers with >1 view. */
+    JSObject                     *gcLiveArrayBuffers;
+
+    /* Linked list of live weakmaps in this compartment. */
+    js::WeakMapBase              *gcWeakMapList;
 
   private:
     /*
@@ -375,6 +408,8 @@ struct JSCompartment
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();
     void purge();
+
+    virtual void findOutgoingEdges(js::gc::ComponentFinder& finder);
 
     void setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
@@ -452,7 +487,10 @@ struct JSCompartment
     js::ScriptCountsMap *scriptCountsMap;
 
     js::DebugScriptMap *debugScriptMap;
-	
+
+    /* Bookkeeping information for debug scope objects. */
+    js::DebugScopes *debugScopes;
+
 #ifdef JS_ION
   private:
     js::ion::IonCompartment *ionCompartment_;

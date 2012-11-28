@@ -112,10 +112,11 @@
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
     <command id="Browser:ToggleAddonBar" oncommand="toggleAddonBar();"/>
-    <command id="Social:SharePage" oncommand="SocialShareButton.sharePage();"/>
+    <command id="Social:SharePage" oncommand="SocialShareButton.sharePage();" disabled="true"/>
     <command id="Social:UnsharePage" oncommand="SocialShareButton.unsharePage();"/>
     <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
     <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();"/>
+    <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
     <command id="Social:Remove" oncommand="SocialUI.disableWithConfirmation();"/>
   </commandset>
@@ -193,6 +194,7 @@
 #endif
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="socialSidebarBroadcaster" hidden="true"/>
+    <broadcaster id="socialActiveBroadcaster" hidden="true"/>
 
     <!-- DevTools broadcasters -->
     <broadcaster id="devtoolsMenuBroadcaster_DevToolbar"
@@ -414,7 +416,7 @@
 #endif
     
     <key id="sharePage" key="&sharePageCmd.commandkey;" command="Social:SharePage" modifiers="accel,shift"/>
-    <key id="focusChatBar" key="&social.chatBar.commandkey;" oncommand="SocialChatBar.focus();" modifiers="accel,shift"/>
+    <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Social:FocusChat" modifiers="accel,shift"/>
 
 # don't use |command="Browser:Stop"|, ESC is being used to freeze animated gifs,
 # even if the stop button and menuitem are disabled (see Bug 284140)

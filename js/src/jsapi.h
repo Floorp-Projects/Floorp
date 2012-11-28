@@ -1862,8 +1862,25 @@ typedef void
 (* JSGCCallback)(JSRuntime *rt, JSGCStatus status);
 
 typedef enum JSFinalizeStatus {
-    JSFINALIZE_START,
-    JSFINALIZE_END
+    /*
+     * Called when preparing to sweep a group of compartments, before anything
+     * has been swept.  The collector will not yield to the mutator before
+     * calling the callback with JSFINALIZE_GROUP_END status.
+     */
+    JSFINALIZE_GROUP_START,
+
+    /*
+     * Called when preparing to sweep a group of compartments. Weak references
+     * to unmarked things have been removed and things that are not swept
+     * incrementally have been finalized at this point.  The collector may yield
+     * to the mutator after this point.
+     */
+    JSFINALIZE_GROUP_END,
+
+    /*
+     * Called at the end of collection when everything has been swept.
+     */
+    JSFINALIZE_COLLECTION_END
 } JSFinalizeStatus;
 
 typedef void
@@ -3357,7 +3374,7 @@ extern JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp);
 
 #undef JS_THIS
-static inline jsval
+static JS_ALWAYS_INLINE jsval
 JS_THIS(JSContext *cx, jsval *vp)
 {
     return JSVAL_IS_PRIMITIVE(vp[1]) ? JS_ComputeThis(cx, vp) : vp[1];
@@ -5962,6 +5979,9 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency);
 extern JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext *cx, uint32_t count);
 #endif
+
+extern JS_PUBLIC_API(void)
+JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled);
 
 /*
  * Convert a uint32_t index into a jsid.

@@ -21,12 +21,24 @@
 
 using namespace js;
 
+WeakMapBase::WeakMapBase(JSObject *memOf, JSCompartment *c)
+  : memberOf(memOf),
+    compartment(c),
+    next(WeakMapNotInList)
+{
+    JS_ASSERT_IF(memberOf, memberOf->compartment() == c);
+}
+
+WeakMapBase::~WeakMapBase()
+{
+    JS_ASSERT(next == WeakMapNotInList);
+}
+
 bool
-WeakMapBase::markAllIteratively(JSTracer *tracer)
+WeakMapBase::markCompartmentIteratively(JSCompartment *c, JSTracer *tracer)
 {
     bool markedAny = false;
-    JSRuntime *rt = tracer->runtime;
-    for (WeakMapBase *m = rt->gcWeakMapList; m; m = m->next) {
+    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next) {
         if (m->markIteratively(tracer))
             markedAny = true;
     }
@@ -34,28 +46,29 @@ WeakMapBase::markAllIteratively(JSTracer *tracer)
 }
 
 void
-WeakMapBase::sweepAll(JSTracer *tracer)
+WeakMapBase::sweepCompartment(JSCompartment *c)
 {
-    JSRuntime *rt = tracer->runtime;
-    for (WeakMapBase *m = rt->gcWeakMapList; m; m = m->next)
-        m->sweep(tracer);
+    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
+        m->sweep();
 }
 
 void
 WeakMapBase::traceAllMappings(WeakMapTracer *tracer)
 {
     JSRuntime *rt = tracer->runtime;
-    for (WeakMapBase *m = rt->gcWeakMapList; m; m = m->next)
-        m->traceMappings(tracer);
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
+            m->traceMappings(tracer);
+    }
 }
 
 void
-WeakMapBase::resetWeakMapList(JSRuntime *rt)
+WeakMapBase::resetCompartmentWeakMapList(JSCompartment *c)
 {
     JS_ASSERT(WeakMapNotInList != NULL);
 
-    WeakMapBase *m = rt->gcWeakMapList;
-    rt->gcWeakMapList = NULL;
+    WeakMapBase *m = c->gcWeakMapList;
+    c->gcWeakMapList = NULL;
     while (m) {
         WeakMapBase *n = m->next;
         m->next = WeakMapNotInList;
@@ -64,9 +77,9 @@ WeakMapBase::resetWeakMapList(JSRuntime *rt)
 }
 
 bool
-WeakMapBase::saveWeakMapList(JSRuntime *rt, WeakMapVector &vector)
+WeakMapBase::saveCompartmentWeakMapList(JSCompartment *c, WeakMapVector &vector)
 {
-    WeakMapBase *m = rt->gcWeakMapList;
+    WeakMapBase *m = c->gcWeakMapList;
     while (m) {
         if (!vector.append(m))
             return false;
@@ -76,14 +89,27 @@ WeakMapBase::saveWeakMapList(JSRuntime *rt, WeakMapVector &vector)
 }
 
 void
-WeakMapBase::restoreWeakMapList(JSRuntime *rt, WeakMapVector &vector)
+WeakMapBase::restoreCompartmentWeakMapLists(WeakMapVector &vector)
 {
-    JS_ASSERT(!rt->gcWeakMapList);
     for (WeakMapBase **p = vector.begin(); p != vector.end(); p++) {
         WeakMapBase *m = *p;
         JS_ASSERT(m->next == WeakMapNotInList);
-        m->next = rt->gcWeakMapList;
-        rt->gcWeakMapList = m;
+        JSCompartment *c = m->compartment;
+        m->next = c->gcWeakMapList;
+        c->gcWeakMapList = m;
+    }
+}
+
+void
+WeakMapBase::removeWeakMapFromList(WeakMapBase *weakmap)
+{
+    JSCompartment *c = weakmap->compartment;
+    for (WeakMapBase **p = &c->gcWeakMapList; *p; p = &(*p)->next) {
+        if (*p == weakmap) {
+            *p = (*p)->next;
+            weakmap->next = WeakMapNotInList;
+            break;
+        }
     }
 }
 
@@ -247,6 +273,8 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         }
     }
 
+    JS_ASSERT(key->compartment() == thisObj->compartment());
+    JS_ASSERT_IF(value.isObject(), value.toObject().compartment() == thisObj->compartment());
     if (!map->put(key, value)) {
         JS_ReportOutOfMemory(cx);
         return false;

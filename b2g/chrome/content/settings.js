@@ -121,7 +121,9 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
     Services.prefs.setCharPref(prefName, value + ', ' + intl);
   }
 
-  shell.start();
+  if (shell.hasStarted() == false) {
+    shell.start();
+  }
 });
 
 // =================== RIL ====================

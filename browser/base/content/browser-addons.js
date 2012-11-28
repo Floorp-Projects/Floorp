@@ -91,7 +91,7 @@ const gXPInstallObserver = {
                               action, null, options);
       break;
     case "addon-install-started":
-      function needsDownload(aInstall) {
+      var needsDownload = function needsDownload(aInstall) {
         return aInstall.state != AddonManager.STATE_DOWNLOADED;
       }
       // If all installs have already been downloaded then there is no need to

@@ -98,7 +98,6 @@ class IonActivation;
 
 class WeakMapBase;
 class InterpreterFrames;
-class DebugScopes;
 class WorkerThreadState;
 
 /*
@@ -560,7 +559,7 @@ struct JSRuntime : js::RuntimeFriendFields
     bool cloneSelfHostedFunctionScript(JSContext *cx, js::Handle<js::PropertyName*> name,
                                        js::Handle<JSFunction*> targetFun);
     bool cloneSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
-                              js::HandleObject holder, js::MutableHandleValue vp);
+                              js::MutableHandleValue vp);
 
     /* Base address of the native stack for the current thread. */
     uintptr_t           nativeStackBase;
@@ -657,7 +656,6 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     volatile uintptr_t  gcIsNeeded;
 
-    js::WeakMapBase     *gcWeakMapList;
     js::gcstats::Statistics gcStats;
 
     /* Incremented on every GC slice. */
@@ -701,14 +699,22 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Whether any sweeping will take place in the separate GC helper thread. */
     bool                gcSweepOnBackgroundThread;
 
-    /* List head of compartments being swept. */
+    /* Whether any black->gray edges were found during marking. */
+    bool                gcFoundBlackGrayEdges;
+
+    /* List head of compartments to be swept in the background. */
     JSCompartment       *gcSweepingCompartments;
+
+    /* Index of current compartment group (for stats). */
+    unsigned            gcCompartmentGroupIndex;
 
     /*
      * Incremental sweep state.
      */
+    JSCompartment       *gcRemainingCompartmentGroups;
+    JSCompartment       *gcCompartmentGroup;
     int                 gcSweepPhase;
-    ptrdiff_t           gcSweepCompartmentIndex;
+    JSCompartment       *gcSweepCompartment;
     int                 gcSweepKindIndex;
 
     /*
@@ -903,12 +909,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * onNewGlobalObject handler methods established.
      */
     JSCList             onNewGlobalObjectWatchers;
-
-    /* Bookkeeping information for debug scope objects. */
-    js::DebugScopes     *debugScopes;
-
-    /* Linked list of live array buffers with >1 view */
-    JSObject            *liveArrayBuffers;
 
     /* Client opaque pointers */
     void                *data;
