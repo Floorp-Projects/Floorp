@@ -322,6 +322,9 @@ public:
   // shutting down. The decoder monitor must be held while calling this.
   bool IsShutdown();
 
+protected:
+  virtual uint32_t GetAmpleVideoFrames() { return mAmpleVideoFrames; }
+
 private:
   class WakeDecoderRunnable : public nsRunnable {
   public:
