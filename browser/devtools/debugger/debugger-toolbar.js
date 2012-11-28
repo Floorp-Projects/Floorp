@@ -665,7 +665,7 @@ FilterView.prototype = {
         : rawLength;
 
       file = rawValue.slice(0, fileEnd);
-      line = ~~(rawValue.slice(fileEnd + 1, lineEnd)) || -1;
+      line = ~~(rawValue.slice(fileEnd + 1, lineEnd)) || 0;
       token = rawValue.slice(lineEnd + 1);
       isGlobal = false;
       isVariable = false;
@@ -673,7 +673,7 @@ FilterView.prototype = {
     // Global searches dissalow the use of file or line flags.
     else if (globalFlagIndex == 0) {
       file = "";
-      line = -1;
+      line = 0;
       token = rawValue.slice(1);
       isGlobal = true;
       isVariable = false;
@@ -681,7 +681,7 @@ FilterView.prototype = {
     // Variable searches dissalow the use of file or line flags.
     else if (variableFlagIndex == 0) {
       file = "";
-      line = -1;
+      line = 0;
       token = rawValue.slice(1);
       isGlobal = false;
       isVariable = true;
@@ -778,7 +778,7 @@ FilterView.prototype = {
    */
   _performLineSearch: function DVF__performLineSearch(aLine) {
     // Don't search for lines if the input hasn't changed.
-    if (this._prevSearchedLine != aLine && aLine > -1) {
+    if (this._prevSearchedLine != aLine && aLine > 0) {
       DebuggerView.editor.setCaretPosition(aLine - 1);
     }
     this._prevSearchedLine = aLine;
@@ -841,13 +841,27 @@ FilterView.prototype = {
    * The key press listener for the search container.
    */
   _onKeyPress: function DVF__onScriptsKeyPress(e) {
+    // This attribute is not implemented in Gecko at this time, see bug 680830.
+    e.char = String.fromCharCode(e.charCode);
+
     let [file, line, token, isGlobal, isVariable] = this.searchboxInfo;
-    let isDifferentToken, isReturnKey, action;
+    let isDifferentToken, isReturnKey, action = -1;
 
     if (this._prevSearchedToken != token) {
       isDifferentToken = true;
     }
-    switch (e.keyCode) {
+
+    // Meta+G and Ctrl+N focus next matches.
+    if ((e.char == "g" && e.metaKey) || e.char == "n" && e.ctrlKey) {
+      action = 0;
+    }
+    // Meta+Shift+G and Ctrl+P focus previous matches.
+    else if ((e.char == "G" && e.metaKey) || e.char == "p" && e.ctrlKey) {
+      action = 1;
+    }
+    // Return, enter down and up keys focus next or previous matches, while
+    // the escape key switches focus from the search container.
+    else switch (e.keyCode) {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
         isReturnKey = true;
@@ -861,15 +875,13 @@ FilterView.prototype = {
       case e.DOM_VK_ESCAPE:
         action = 2;
         break;
-      default:
-        action = -1;
     }
 
     if (action == 2) {
       DebuggerView.editor.focus();
       return;
     }
-    if (action == -1 || !token) {
+    if (action == -1 || (token.length == 0 && line == 0)) {
       return;
     }
 
@@ -894,6 +906,18 @@ FilterView.prototype = {
         DebuggerView.Variables.expandFirstSearchResults();
       }
       this._prevSearchedToken = token;
+      return;
+    }
+
+    // Increment or decrement the specified line.
+    if (!isReturnKey && token.length == 0 && line > 0) {
+      line += action == 0 ? 1 : -1;
+      let lineCount = DebuggerView.editor.getLineCount();
+      let lineTarget = line < 1 ? 1 : line > lineCount ? lineCount : line;
+
+      DebuggerView.editor.setCaretPosition(lineTarget - 1);
+      this._searchbox.value = file + SEARCH_LINE_FLAG + lineTarget;
+      this._prevSearchedLine = lineTarget;
       return;
     }
 
@@ -982,7 +1006,7 @@ FilterView.prototype = {
   _variableSearchKey: "",
   _target: null,
   _prevSearchedFile: "",
-  _prevSearchedLine: -1,
+  _prevSearchedLine: 0,
   _prevSearchedToken: ""
 };
 
