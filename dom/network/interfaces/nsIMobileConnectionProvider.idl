@@ -51,6 +51,8 @@ interface nsIMobileConnectionProvider : nsISupports
   void sendStkMenuSelection(in nsIDOMWindow   window,
                             in unsigned short itemIdentifier,
                             in boolean        helpRequested);
+  void sendStkTimerExpiration(in nsIDOMWindow window,
+                              in jsval        timer);
   void sendStkEventDownload(in nsIDOMWindow window,
                             in jsval        event);
 
