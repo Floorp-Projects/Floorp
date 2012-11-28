@@ -121,4 +121,24 @@
       </RDF:Seq>
     </em:updates>
   </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:regexpblock@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>4</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+                <em:updateLink>http://localhost:4444/addons/blocklist_regexp1_1.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
 </RDF:RDF>

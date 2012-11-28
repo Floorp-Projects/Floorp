@@ -10,7 +10,6 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
-#include "BluetoothServiceUuid.h"
 
 #include "nsIDOMDOMRequest.h"
 #include "nsDOMClassInfo.h"

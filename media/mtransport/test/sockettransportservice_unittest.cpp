@@ -135,7 +135,7 @@ class SocketHandler : public nsASocketHandler {
   SocketTransportServiceTest *test_;
 };
 
-NS_IMPL_ISUPPORTS0(SocketHandler);
+NS_IMPL_ISUPPORTS0(SocketHandler)
 
 void SocketTransportServiceTest::SetUp() {
   // Get the transport service as a dispatch target

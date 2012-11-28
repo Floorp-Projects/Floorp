@@ -186,6 +186,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         for (var i in url) {
           url[i];
         }
+        isnot(url.createObjectURL, undefined, "Should have a createObjectURL");
         ok(true, "We didn't crash!");
       } catch (e) {
         ok(false, "URL interface object manipulation via an Xray shouldn't throw" + e);

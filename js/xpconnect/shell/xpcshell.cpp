@@ -2111,7 +2111,7 @@ XPCShellDirProvider::GetFiles(const char *prop, nsISimpleEnumerator* *result)
 
         dirs.AppendObject(file);
         return NS_NewArrayEnumerator(result, dirs);
-    } else if (!strcmp(prop, NS_APP_PLUGINS_DIR_LIST)) {
+    } else if (mGREDir && !strcmp(prop, NS_APP_PLUGINS_DIR_LIST)) {
         nsCOMPtr<nsIFile> file;
         mGREDir->Clone(getter_AddRefs(file));
         file->AppendNative(NS_LITERAL_CSTRING("plugins"));

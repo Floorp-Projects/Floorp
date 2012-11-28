@@ -48,7 +48,6 @@ enum State {
     MARK_ROOTS,
     MARK,
     SWEEP,
-    SWEEP_END,
     INVALID
 };
 
@@ -545,6 +544,20 @@ GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
 extern void
 PrepareForDebugGC(JSRuntime *rt);
 
+/* Functions for managing cross compartment gray pointers. */
+
+extern void
+DelayCrossCompartmentGrayMarking(RawObject src);
+
+extern void
+NotifyGCNukeWrapper(RawObject o);
+
+extern unsigned
+NotifyGCPreSwap(RawObject a, RawObject b);
+
+extern void
+NotifyGCPostSwap(RawObject a, RawObject b, unsigned preResult);
+
 void
 InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
 
@@ -942,10 +955,9 @@ struct GCMarker : public JSTracer {
     }
 
     /*
-     * The only valid color transition during a GC is from black to gray. It is
-     * wrong to switch the mark color from gray to black. The reason is that the
-     * cycle collector depends on the invariant that there are no black to gray
-     * edges in the GC heap. This invariant lets the CC not trace through black
+     * Care must be taken changing the mark color from gray to black. The cycle
+     * collector depends on the invariant that there are no black to gray edges
+     * in the GC heap. This invariant lets the CC not trace through black
      * objects. If this invariant is violated, the cycle collector may free
      * objects that are still reachable.
      */
@@ -953,6 +965,12 @@ struct GCMarker : public JSTracer {
         JS_ASSERT(isDrained());
         JS_ASSERT(color == gc::BLACK);
         color = gc::GRAY;
+    }
+
+    void setMarkColorBlack() {
+        JS_ASSERT(isDrained());
+        JS_ASSERT(color == gc::GRAY);
+        color = gc::BLACK;
     }
 
     inline void delayMarkingArena(gc::ArenaHeader *aheader);

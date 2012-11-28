@@ -3582,6 +3582,23 @@ GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
     return true;
 }
 
+static JSBool
+GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc != 1 || !args[0].isString()) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
+                             "getSelfHostedValue");
+        return false;
+    }
+    RootedAtom srcAtom(cx, ToAtom(cx, args[0]));
+    if (!srcAtom)
+        return false;
+    RootedPropertyName srcName(cx, srcAtom->asPropertyName());
+    return cx->runtime->cloneSelfHostedValue(cx, srcName, args.rval());
+}
+
 static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
@@ -3893,6 +3910,11 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  Tone down the frequency with which the dynamic rooting analysis checks for\n"
 "  rooting hazards. This is helpful to reduce the time taken when interpreting\n"
 "  heavily numeric code."),
+
+    JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
+"getSelfHostedValue()",
+"  Get a self-hosted value by its name. Note that these values don't get \n"
+"  cached, so repeatedly getting the same value creates multiple distinct clones."),
 
     JS_FS_HELP_END
 };
@@ -4828,7 +4850,9 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
-            ion::js_IonOptions.lsra = true;
+            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_LSRA;
+        else if (strcmp(str, "stupid") == 0)
+            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_Stupid;
         else
             return OptionFailure("ion-regalloc", str);
     }
@@ -5057,7 +5081,8 @@ main(int argc, char **argv, char **envp)
                                "Don't compile very large scripts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
-                               "  lsra: Linear Scan register allocation (default)")
+                               "  lsra: Linear Scan register allocation (default)\n"
+                               "  stupid: Simple greedy register allocation")
         || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods")
 #ifdef JS_THREADSAFE
         || !op.addStringOption('\0', "ion-parallel-compile", "on/off",

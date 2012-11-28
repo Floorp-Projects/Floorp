@@ -12,6 +12,8 @@
 #endif
 #include "nsXULAppAPI.h"
 
+using namespace QtMobility;
+
 int MozQOrientationSensorFilter::mWindowRotationAngle = 0;
 QTransform MozQOrientationSensorFilter::mWindowRotationTransform;
 

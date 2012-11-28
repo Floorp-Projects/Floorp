@@ -328,7 +328,8 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
             Sprint(sp, "BB #%lu [%05u]", block.id(), block.offset());
             for (size_t j = 0; j < block.numSuccessors(); j++)
                 Sprint(sp, " -> #%lu", block.successor(j));
-            Sprint(sp, " :: %llu hits\n", block.hitCount());
+            Sprint(sp, " :: %llu hits %u instruction bytes %u spill bytes\n",
+                   block.hitCount(), block.instructionBytes(), block.spillBytes());
             Sprint(sp, "%s\n", block.code());
         }
         ionCounts = ionCounts->previous();
@@ -1415,6 +1416,8 @@ static int
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc, jsbytecode **pcstack);
 
 #define FAILED_EXPRESSION_DECOMPILER ((char *) 1)
+
+static JSBool DecompileFunction(JSPrinter *jp);
 
 /*
  * Decompile a part of expression up to the given pc. The function returns
@@ -2979,7 +2982,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                                         jp->strict);
                     if (!jp2)
                         return NULL;
-                    ok = js_DecompileFunction(jp2);
+                    ok = DecompileFunction(jp2);
                     if (ok && !jp2->sprinter.empty())
                         js_puts(jp, jp2->sprinter.string());
                     js_DestroyPrinter(jp2);
@@ -4936,7 +4939,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     bool strict = jp->script->strictModeCode;
                     str = js_DecompileToString(cx, "lambda", fun, 0,
                                                false, grouped, strict,
-                                               js_DecompileFunction);
+                                               DecompileFunction);
                     if (!str)
                         return NULL;
                 }
@@ -5628,8 +5631,8 @@ DecompileBody(JSPrinter *jp, JSScript *script, jsbytecode *pc)
     return DecompileCode(jp, script, pc, end - pc, 0);
 }
 
-JSBool
-js_DecompileScript(JSPrinter *jp, JSScript *script)
+static JSBool
+DecompileScript(JSPrinter *jp, JSScript *script)
 {
     return DecompileBody(jp, script, script->code);
 }
@@ -5655,24 +5658,8 @@ js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
 
 static const char native_code_str[] = "\t[native code]\n";
 
-JSBool
-js_DecompileFunctionBody(JSPrinter *jp)
-{
-    JSScript *script;
-
-    JS_ASSERT(jp->fun);
-    JS_ASSERT(!jp->script);
-    if (jp->fun->isNative() || jp->fun->isSelfHostedBuiltin()) {
-        js_printf(jp, native_code_str);
-        return JS_TRUE;
-    }
-
-    script = jp->fun->nonLazyScript().unsafeGet();
-    return DecompileBody(jp, script, script->code);
-}
-
-JSBool
-js_DecompileFunction(JSPrinter *jp)
+static JSBool
+DecompileFunction(JSPrinter *jp)
 {
     JSContext *cx = jp->sprinter.context;
 
@@ -7074,10 +7061,10 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
     jp->decompiledOpcodes = &decompiledOpcodes;
 
     if (fun) {
-        if (!js_DecompileFunction(jp))
+        if (!DecompileFunction(jp))
             return false;
     } else {
-        if (!js_DecompileScript(jp, script))
+        if (!DecompileScript(jp, script))
             return false;
     }
     JSString *str = js_GetPrinterOutput(jp);
@@ -7208,6 +7195,12 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
                 if (!str || !(str = JS_ValueToSource(cx, StringValue(str))))
                     return false;
                 buf.append(str);
+
+                AppendJSONProperty(buf, "instructionBytes");
+                NumberValueToStringBuffer(cx, Int32Value(block.instructionBytes()), buf);
+
+                AppendJSONProperty(buf, "spillBytes");
+                NumberValueToStringBuffer(cx, Int32Value(block.spillBytes()), buf);
 
                 buf.append('}');
             }

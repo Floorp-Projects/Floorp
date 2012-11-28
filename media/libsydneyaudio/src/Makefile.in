@@ -30,10 +30,6 @@ else ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 CSRCS		= \
 		sydney_audio_android.c \
 		$(NULL)
-else ifeq ($(OS_ARCH),Linux)
-CSRCS		= \
-		sydney_audio_alsa.c \
-		$(NULL)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -65,6 +61,12 @@ endif
 ifeq ($(OS_ARCH),AIX)
 CSRCS		= \
 		sydney_audio_aix.c \
+		$(NULL)
+endif
+
+ifdef MOZ_ALSA
+CSRCS		= \
+		sydney_audio_alsa.c \
 		$(NULL)
 endif
 

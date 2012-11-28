@@ -304,6 +304,11 @@ TEST_F(IceTest, TestSendReceive) {
 
 int main(int argc, char **argv)
 {
+#ifdef LINUX
+  // This test can cause intermittent oranges on the builders on Linux
+  CHECK_ENVIRONMENT_FLAG("MOZ_WEBRTC_TESTS")
+#endif
+
   test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();
