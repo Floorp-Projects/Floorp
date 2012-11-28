@@ -54,6 +54,7 @@ class Emulator(object):
         self._tmp_sdcard = None
         self._tmp_userdata = None
         self._adb_started = False
+        self.remote_user_js = '/data/local/user.js'
         self.logcat_dir = logcat_dir
         self.logcat_proc = None
         self.arch = arch
@@ -311,7 +312,6 @@ waitFor(
         marionette.set_context(marionette.CONTEXT_CONTENT)
         marionette.delete_session()
 
-
     def connect(self):
         self._check_for_adb()
         self.start_adb()
@@ -327,6 +327,15 @@ waitFor(
 
         self.dm = devicemanagerADB.DeviceManagerADB(adbPath=self.adb,
                                                     deviceSerial='emulator-%d' % self.port)
+
+    def add_prefs_to_profile(self, prefs=None):
+        if not prefs:
+            prefs = ["user_pref('marionette.loadearly', true);"]
+        local_user_js = tempfile.mktemp(prefix='localuserjs')
+        self.dm.getFile(self.remote_user_js, local_user_js)
+        with open(local_user_js, 'a') as f:
+            f.write('/n'.join(prefs))
+        self.dm.pushFile(local_user_js, self.remote_user_js)
 
     def start(self):
         self._check_for_b2g()
@@ -369,6 +378,37 @@ waitFor(
         # setup DNS fix for networking
         self._run_adb(['shell', 'setprop', 'net.dns1', '10.0.2.3'])
 
+    def setup(self, marionette, gecko_path=None, load_early=False):
+        # Wait for the system-message-listener-ready event, otherwise
+        # Bad Things happen.
+        self.wait_for_system_message(marionette)
+
+        if gecko_path:
+            if load_early:
+                # Inject prefs into the profile now, since we have to restart
+                # B2G after installing a new gecko anyway.
+                self.add_prefs_to_profile()
+            self.install_gecko(gecko_path, marionette)
+        elif load_early:
+            self.add_prefs_to_profile()
+            self.restart_b2g()
+
+        if load_early:
+            # If we're loading early, we have to wait for the
+            # system-message-listener-ready event again after restarting B2G.
+            # If we're not loading early, we skip this because Marionette
+            # doesn't load until after this event has fired.
+            self.wait_for_system_message(marionette)
+
+    def restart_b2g(self):
+        print 'restarting B2G'
+        self.dm.shellCheckOutput(['stop', 'b2g'])
+        time.sleep(10)
+        self.dm.shellCheckOutput(['start', 'b2g'])
+
+        if not self.wait_for_port():
+            raise TimeoutException("Timeout waiting for marionette on port '%s'" % self.marionette_port)
+
     def install_gecko(self, gecko_path, marionette):
         """
         Install gecko into the emulator using adb push.  Restart b2g after the
@@ -382,6 +422,7 @@ waitFor(
 
         print 'installing gecko binaries...'
 
+        # see bug 809437 for the path that lead to this madness
         try:
             # need to remount so we can write to /system/b2g
             self._run_adb(['remount'])
@@ -389,7 +430,7 @@ waitFor(
                 for filename in files:
                     rel_path = os.path.relpath(os.path.join(root, filename), gecko_path)
                     system_b2g_file = os.path.join('/system/b2g', rel_path)
-                    for retry in range(1, push_attempts+1):
+                    for retry in range(1, push_attempts + 1):
                         print 'pushing', system_b2g_file, '(attempt %s of %s)' % (retry, push_attempts)
                         try:
                             self.dm.pushFile(os.path.join(root, filename), system_b2g_file)
@@ -398,15 +439,7 @@ waitFor(
                             if retry == push_attempts:
                                 raise
 
-            print 'restarting B2G'
-            # see bug 809437 for the path that lead to this madness
-            self.dm.shellCheckOutput(['stop', 'b2g'])
-            time.sleep(10)
-            self.dm.shellCheckOutput(['start', 'b2g'])
-
-            if not self.wait_for_port():
-                raise TimeoutException("Timeout waiting for marionette on port '%s'" % self.marionette_port)
-            self.wait_for_system_message(marionette)
+            self.restart_b2g()
 
         except (DMError, MarionetteException):
             # Bug 812395 - raise a single exception type for these so we can
