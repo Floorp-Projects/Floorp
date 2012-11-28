@@ -212,9 +212,9 @@ nsICODecoder::SetHotSpotIfCursor() {
   }
 
   nsCOMPtr<nsISupportsPRUint32> intwrapx = 
-    do_CreateInstance("@mozilla.org/supports-uint32_t;1");
+    do_CreateInstance("@mozilla.org/supports-PRUint32;1");
   nsCOMPtr<nsISupportsPRUint32> intwrapy = 
-    do_CreateInstance("@mozilla.org/supports-uint32_t;1");
+    do_CreateInstance("@mozilla.org/supports-PRUint32;1");
 
   if (intwrapx && intwrapy) {
     intwrapx->SetData(mDirEntry.mXHotspot);
