@@ -10,18 +10,7 @@
 #include "AudioSampleFormat.h"
 #include "AudioChannelCommon.h"
 #include "soundtouch/SoundTouch.h"
-#include "nsAutoRef.h"
-
-
-template <>
-class nsAutoRefTraits<soundtouch::SoundTouch> : public nsPointerRefTraits<soundtouch::SoundTouch>
-{
-public:
-  static void Release(soundtouch::SoundTouch* resamplerState) {
-    delete resamplerState;
-    resamplerState = nullptr;
-  }
-};
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 
@@ -186,7 +175,7 @@ protected:
   int mOutRate;
   int mChannels;
   AudioClock mAudioClock;
-  nsAutoRef<soundtouch::SoundTouch> mTimeStretcher;
+  nsAutoPtr<soundtouch::SoundTouch> mTimeStretcher;
 };
 
 } // namespace mozilla
