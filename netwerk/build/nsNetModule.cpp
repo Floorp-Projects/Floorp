@@ -36,6 +36,7 @@
 #include "nsXULAppAPI.h"
 #include "nsCategoryCache.h"
 #include "nsIContentSniffer.h"
+#include "nsNetUtil.h"
 
 #include "nsNetCID.h"
 
