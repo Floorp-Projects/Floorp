@@ -421,7 +421,7 @@ class Marionette(object):
 
         return unwrapped
 
-    def execute_js_script(self, script, script_args=None, timeout=True, new_sandbox=True, special_powers=False):
+    def execute_js_script(self, script, script_args=None, async=True, new_sandbox=True, special_powers=False):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
@@ -429,7 +429,7 @@ class Marionette(object):
                                       'value',
                                       value=script,
                                       args=args,
-                                      timeout=timeout,
+                                      async=async,
                                       newSandbox=new_sandbox,
                                       specialPowers=special_powers)
         return self.unwrapValue(response)

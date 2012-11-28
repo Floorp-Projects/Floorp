@@ -33,7 +33,6 @@ let marionettePerf = new MarionettePerfData();
 
 let isB2G = false;
 
-let marionetteTimeout = null;
 let marionetteTestName;
 let winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils);
@@ -90,7 +89,6 @@ function removeMessageListenerId(messageName, handler) {
 function startListeners() {
   addMessageListenerId("Marionette:newSession", newSession);
   addMessageListenerId("Marionette:executeScript", executeScript);
-  addMessageListenerId("Marionette:setScriptTimeout", setScriptTimeout);
   addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   addMessageListenerId("Marionette:executeJSScript", executeJSScript);
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
@@ -172,7 +170,6 @@ function restart() {
 function deleteSession(msg) {
   removeMessageListenerId("Marionette:newSession", newSession);
   removeMessageListenerId("Marionette:executeScript", executeScript);
-  removeMessageListenerId("Marionette:setScriptTimeout", setScriptTimeout);
   removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
@@ -262,7 +259,6 @@ function sendError(message, status, trace, command_id) {
  */
 function resetValues() {
   sandbox = null;
-  marionetteTimeout = null;
   curWindow = content;
 }
 
@@ -280,7 +276,7 @@ function errUnload() {
 /**
  * Returns a content sandbox that can be used by the execute_foo functions.
  */
-function createExecuteContentSandbox(aWindow) {
+function createExecuteContentSandbox(aWindow, timeout) {
   let sandbox = new Cu.Sandbox(aWindow);
   sandbox.global = sandbox;
   sandbox.window = aWindow;
@@ -291,7 +287,7 @@ function createExecuteContentSandbox(aWindow) {
 
   let marionette = new Marionette(this, aWindow, "content",
                                   marionetteLogObj, marionettePerf,
-                                  marionetteTimeout, marionetteTestName);
+                                  timeout, marionetteTestName);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     try {
@@ -357,7 +353,7 @@ function executeScript(msg, directInject) {
   let script = msg.json.value;
 
   if (msg.json.newSandbox || !sandbox) {
-    sandbox = createExecuteContentSandbox(curWindow);
+    sandbox = createExecuteContentSandbox(curWindow, msg.json.timeout);
     if (!sandbox) {
       sendError("Could not create sandbox!");
       return;
@@ -427,14 +423,6 @@ function setTestName(msg) {
 }
 
 /**
- * Function to set the timeout of asynchronous scripts
- */
-function setScriptTimeout(msg) {
-  marionetteTimeout = msg.json.value;
-  sendOk();
-}
-
-/**
  * Execute async script
  */
 function executeAsyncScript(msg) {
@@ -445,8 +433,8 @@ function executeAsyncScript(msg) {
  * Execute pure JS test. Handles both async and sync cases.
  */
 function executeJSScript(msg) {
-  if (msg.json.timeout) {
-    executeWithCallback(msg, msg.json.timeout);
+  if (msg.json.async) {
+    executeWithCallback(msg, msg.json.async);
   }
   else {
     executeScript(msg, true);
@@ -461,13 +449,13 @@ function executeJSScript(msg) {
  * For executeAsync, it will return a response when marionetteScriptFinished/arguments[arguments.length-1] 
  * method is called, or if it times out.
  */
-function executeWithCallback(msg, timeout) {
+function executeWithCallback(msg, async) {
   curWindow.addEventListener("unload", errUnload, false);
   let script = msg.json.value;
   asyncTestCommandId = msg.json.id;
 
   if (msg.json.newSandbox || !sandbox) {
-    sandbox = createExecuteContentSandbox(curWindow);
+    sandbox = createExecuteContentSandbox(curWindow, msg.json.timeout);
     if (!sandbox) {
       sendError("Could not create sandbox!");
       return;
@@ -481,7 +469,7 @@ function executeWithCallback(msg, timeout) {
   // We'll stay compatible with the Selenium code.
   asyncTestTimeoutId = curWindow.setTimeout(function() {
     sandbox.asyncComplete('timed out', 28);
-  }, marionetteTimeout);
+  }, msg.json.timeout);
 
   curWindow.addEventListener('error', function win__onerror(evt) {
     curWindow.removeEventListener('error', win__onerror, true);
@@ -490,8 +478,8 @@ function executeWithCallback(msg, timeout) {
   }, true);
 
   let scriptSrc;
-  if (timeout) {
-    if (marionetteTimeout == null || marionetteTimeout == 0) {
+  if (async) {
+    if (msg.json.timeout == null || msg.json.timeout == 0) {
       sendError("Please set a timeout", 21, null);
     }
     scriptSrc = script;
