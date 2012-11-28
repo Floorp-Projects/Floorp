@@ -338,16 +338,8 @@ uint32_t nsGIFDecoder2::OutputRow()
     uint8_t *from = rowp + mGIFStruct.width;
     uint32_t *to = ((uint32_t*)rowp) + mGIFStruct.width;
     uint32_t *cmap = mColormap;
-    if (mColorMask == 0xFF) {
-      for (uint32_t c = mGIFStruct.width; c > 0; c--) {
-        *--to = cmap[*--from];
-      }
-    } else {
-      // Make sure that pixels within range of colormap.
-      uint8_t mask = mColorMask;
-      for (uint32_t c = mGIFStruct.width; c > 0; c--) {
-        *--to = cmap[(*--from) & mask];
-      }
+    for (uint32_t c = mGIFStruct.width; c > 0; c--) {
+      *--to = cmap[*--from];
     }
   
     // check for alpha (only for first frame)
@@ -467,7 +459,7 @@ nsGIFDecoder2::DoLzw(const uint8_t *q)
       if (oldcode == -1) {
         if (code >= MAX_BITS)
           return false;
-        *rowp++ = suffix[code];
+        *rowp++ = suffix[code] & mColorMask; // ensure index is within colormap
         if (rowp == rowend)
           OUTPUT_ROW();
 
@@ -517,7 +509,7 @@ nsGIFDecoder2::DoLzw(const uint8_t *q)
 
       /* Copy the decoded data out to the scanline buffer. */
       do {
-        *rowp++ = *--stackp;
+        *rowp++ = *--stackp & mColorMask; // ensure index is within colormap
         if (rowp == rowend)
           OUTPUT_ROW();
       } while (stackp > stack);
