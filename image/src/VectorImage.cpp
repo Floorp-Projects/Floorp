@@ -25,6 +25,7 @@
 namespace mozilla {
 
 using namespace dom;
+using namespace layers;
 
 namespace image {
 
@@ -383,7 +384,8 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
 //******************************************************************************
 /* [noscript] ImageContainer getImageContainer(); */
 NS_IMETHODIMP
-VectorImage::GetImageContainer(mozilla::layers::ImageContainer** _retval)
+VectorImage::GetImageContainer(LayerManager* aManager,
+                               mozilla::layers::ImageContainer** _retval)
 {
   *_retval = nullptr;
   return NS_OK;
