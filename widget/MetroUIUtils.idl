@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(aef0cd6f-27cc-40a4-90dc-764c0aabeb75)]
+
+interface nsIMetroUIUtils : nsISupports {
+  /**
+   * Loads the specified panel in the browser.
+   * @ param aPanelId The identifier of the pane to load
+  */
+  void showPanel(in AString aPanelId);
+
+  /**
+   * Obtains the current page information
+   * @param aURI The current page URI
+   * @param aTitle The current page title
+  */
+  void getCurrentPageInfo(out AString aURI, out AString aTitle);
+};
+

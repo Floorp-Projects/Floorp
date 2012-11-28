@@ -33,20 +33,20 @@ interface CanvasRenderingContext2D {
 
   // transformations (default transform is the identity matrix)
 // NOT IMPLEMENTED           attribute SVGMatrix currentTransform;
-  [Throws]
+  [Throws, LenientFloat]
   void scale(double x, double y);
-  [Throws]
+  [Throws, LenientFloat]
   void rotate(double angle);
-  [Throws]
+  [Throws, LenientFloat]
   void translate(double x, double y);
-  [Throws]
+  [Throws, LenientFloat]
   void transform(double a, double b, double c, double d, double e, double f);
-  [Throws]
+  [Throws, LenientFloat]
   void setTransform(double a, double b, double c, double d, double e, double f);
 // NOT IMPLEMENTED  void resetTransform();
 
   // compositing
-           attribute double globalAlpha; // (default 1.0)
+           attribute unrestricted double globalAlpha; // (default 1.0)
            [Throws]
            attribute DOMString globalCompositeOperation; // (default source-over)
 
@@ -63,14 +63,20 @@ interface CanvasRenderingContext2D {
   CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, [TreatNullAs=EmptyString] DOMString repetition);
 
   // shadows
+           [LenientFloat]
            attribute double shadowOffsetX; // (default 0)
+           [LenientFloat]
            attribute double shadowOffsetY; // (default 0)
+           [LenientFloat]
            attribute double shadowBlur; // (default 0)
            attribute DOMString shadowColor; // (default transparent black)
 
   // rects
+  [LenientFloat]
   void clearRect(double x, double y, double w, double h);
+  [LenientFloat]
   void fillRect(double x, double y, double w, double h);
+  [LenientFloat]
   void strokeRect(double x, double y, double w, double h);
 
   // path API (see also CanvasPathMethods)
@@ -88,24 +94,24 @@ interface CanvasRenderingContext2D {
   void clip();
 // NOT IMPLEMENTED  void clip(Path path);
 // NOT IMPLEMENTED  void resetClip();
-  boolean isPointInPath(double x, double y);
-// NOT IMPLEMENTED  boolean isPointInPath(Path path, double x, double y);
+  boolean isPointInPath(unrestricted double x, unrestricted double y);
+// NOT IMPLEMENTED  boolean isPointInPath(Path path, unrestricted double x, unrestricted double y);
 
   // text (see also the CanvasDrawingStyles interface)
-  [Throws]
+  [Throws, LenientFloat]
   void fillText(DOMString text, double x, double y, optional double maxWidth);
-  [Throws]
+  [Throws, LenientFloat]
   void strokeText(DOMString text, double x, double y, optional double maxWidth);
   [Throws]
   TextMetrics measureText(DOMString text);
 
   // drawing images
 // NOT IMPLEMENTED           attribute boolean imageSmoothingEnabled; // (default true)
-  [Throws]
+  [Throws, LenientFloat]
   void drawImage((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, double dx, double dy);
-  [Throws]
+  [Throws, LenientFloat]
   void drawImage((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, double dx, double dy, double dw, double dh);
-  [Throws]
+  [Throws, LenientFloat]
   void drawImage((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
 
   // hit regions
@@ -135,6 +141,7 @@ interface CanvasRenderingContext2D {
   [Throws]
   attribute any mozDash; /* default |null| */
 
+  [LenientFloat]
   attribute double mozDashOffset; /* default 0.0 */
 
   [SetterThrows]
@@ -144,7 +151,7 @@ interface CanvasRenderingContext2D {
   // if scaled.
   attribute boolean mozImageSmoothingEnabled;
 
-  boolean mozIsPointInStroke(double x, double y);
+  boolean mozIsPointInStroke(unrestricted double x, unrestricted double y);
 
   // Show the caret if appropriate when drawing
   [ChromeOnly]
@@ -215,16 +222,18 @@ CanvasRenderingContext2D implements CanvasPathMethods;
 [NoInterfaceObject]
 interface CanvasDrawingStyles {
   // line caps/joins
+           [LenientFloat]
            attribute double lineWidth; // (default 1)
            attribute DOMString lineCap; // "butt", "round", "square" (default "butt")
            [GetterThrows]
            attribute DOMString lineJoin; // "round", "bevel", "miter" (default "miter")
+           [LenientFloat]
            attribute double miterLimit; // (default 10)
 
   // dashed lines
-// NOT IMPLEMENTED    void setLineDash(sequence<double> segments); // default empty
+// NOT IMPLEMENTED    [LenientFloat] void setLineDash(sequence<double> segments); // default empty
 // NOT IMPLEMENTED    sequence<double> getLineDash();
-// NOT IMPLEMENTED             attribute double lineDashOffset;
+// NOT IMPLEMENTED             [LenientFloat] attribute double lineDashOffset;
 
   // text
            [SetterThrows]
@@ -237,19 +246,24 @@ interface CanvasDrawingStyles {
 interface CanvasPathMethods {
   // shared path API methods
   void closePath();
+  [LenientFloat]
   void moveTo(double x, double y);
+  [LenientFloat]
   void lineTo(double x, double y);
+  [LenientFloat]
   void quadraticCurveTo(double cpx, double cpy, double x, double y);
 
+  [LenientFloat]
   void bezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
 
-  [Throws]
+  [Throws, LenientFloat]
   void arcTo(double x1, double y1, double x2, double y2, double radius); 
-// NOT IMPLEMENTED  void arcTo(double x1, double y1, double x2, double y2, double radiusX, double radiusY, double rotation);
+// NOT IMPLEMENTED  [LenientFloat] void arcTo(double x1, double y1, double x2, double y2, double radiusX, double radiusY, double rotation);
 
+  [LenientFloat]
   void rect(double x, double y, double w, double h);
 
-  [Throws]
+  [Throws, LenientFloat]
   void arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean anticlockwise = false); 
-// NOT IMPLEMENTED  void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, boolean anticlockwise);
+// NOT IMPLEMENTED  [LenientFloat] void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, boolean anticlockwise);
 };

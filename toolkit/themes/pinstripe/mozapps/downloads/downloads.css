@@ -103,8 +103,8 @@ richlistitem[type="download"] button {
 
 /* prevent flickering when changing states */
 .downloadTypeIcon {
-  min-height: 32px;
-  min-width: 32px;
+  height: 32px;
+  width: 32px;
   -moz-padding-end: 2px;
 }
 

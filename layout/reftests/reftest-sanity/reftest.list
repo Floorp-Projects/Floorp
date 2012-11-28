@@ -65,6 +65,9 @@ include scripttests.list
 # test url-prefix
 include urlprefixtests.list
 
+# test default-preferences
+include default-preferences-tests.list
+
 # test that all corners are visible
 != corners-1.html corners-1-ref.html
 != corners-2.html corners-2-ref.html

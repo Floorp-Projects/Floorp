@@ -290,13 +290,6 @@ LIRGenerator::visitCall(MCall *call)
         return (defineReturn(lir, call) && assignSafepoint(lir, call));
     }
 
-    // Call unknown constructors.
-    if (call->isConstructing()) {
-        LCallConstructor *lir = new LCallConstructor(useFixed(call->getFunction(),
-                                                     CallTempReg0), argslot);
-        return (defineVMReturn(lir, call) && assignSafepoint(lir, call));
-    }
-
     // Call anything, using the most generic code.
     LCallGeneric *lir = new LCallGeneric(useFixed(call->getFunction(), CallTempReg0),
         argslot, tempFixed(ArgumentsRectifierReg), tempFixed(CallTempReg2));

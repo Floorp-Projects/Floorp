@@ -218,12 +218,12 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
   }
 
   NSImage* iconImage = nil;
-  
+
   // first try to get the icon from the file if it exists
   if (fileExists) {
     nsCOMPtr<nsILocalFileMac> localFileMac(do_QueryInterface(fileloc, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     CFURLRef macURL;
     if (NS_SUCCEEDED(localFileMac->GetCFURL(&macURL))) {
       iconImage = [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
@@ -243,39 +243,48 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
 
   if (!iconImage)
     return NS_ERROR_FAILURE;
-  
+
   // we have an icon now, size it
   NSRect desiredSizeRect = NSMakeRect(0, 0, desiredImageSize, desiredImageSize);
   [iconImage setSize:desiredSizeRect.size];
-  
+
   [iconImage lockFocus];
   NSBitmapImageRep* bitmapRep = [[[NSBitmapImageRep alloc] initWithFocusedViewRect:desiredSizeRect] autorelease];
   [iconImage unlockFocus];
-  
+
   // we expect the following things to be true about our bitmapRep
   NS_ENSURE_TRUE(![bitmapRep isPlanar] &&
-                 (unsigned int)[bitmapRep bytesPerPlane] == desiredImageSize * desiredImageSize * 4 &&
+                 // Not necessarily: on a HiDPI-capable system, we'll get a 2x bitmap
+                 // (unsigned int)[bitmapRep bytesPerPlane] == desiredImageSize * desiredImageSize * 4 &&
                  [bitmapRep bitsPerPixel] == 32 &&
                  [bitmapRep samplesPerPixel] == 4 &&
                  [bitmapRep hasAlpha] == YES,
                  NS_ERROR_UNEXPECTED);
-  
+
+  // check what size we actually got, and ensure it isn't too big to return
+  uint32_t actualImageSize = [bitmapRep bytesPerRow] / 4;
+  NS_ENSURE_TRUE(actualImageSize < 256, NS_ERROR_UNEXPECTED);
+
+  // now we can validate the amount of data
+  NS_ENSURE_TRUE((unsigned int)[bitmapRep bytesPerPlane] == actualImageSize * actualImageSize * 4,
+                 NS_ERROR_UNEXPECTED);
+
   // rgba, pre-multiplied data
   uint8_t* bitmapRepData = (uint8_t*)[bitmapRep bitmapData];
-  
+
   // create our buffer
-  int32_t bufferCapacity = 2 + desiredImageSize * desiredImageSize * 4;
+  int32_t bufferCapacity = 2 + [bitmapRep bytesPerPlane];
   nsAutoTArray<uint8_t, 3 + 16 * 16 * 5> iconBuffer; // initial size is for 16x16
   if (!iconBuffer.SetLength(bufferCapacity))
     return NS_ERROR_OUT_OF_MEMORY;
-  
-  uint8_t* iconBufferPtr = iconBuffer.Elements();
-  
-  // write header data into buffer
-  *iconBufferPtr++ = desiredImageSize;
-  *iconBufferPtr++ = desiredImageSize;
 
-  uint32_t dataCount = (desiredImageSize * desiredImageSize) * 4;
+  uint8_t* iconBufferPtr = iconBuffer.Elements();
+
+  // write header data into buffer
+  *iconBufferPtr++ = actualImageSize;
+  *iconBufferPtr++ = actualImageSize;
+
+  uint32_t dataCount = [bitmapRep bytesPerPlane];
   uint32_t index = 0;
   while (index < dataCount) {
     // get data from the bitmap
@@ -302,11 +311,12 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
 
   NS_ASSERTION(iconBufferPtr == iconBuffer.Elements() + bufferCapacity,
                "buffer size miscalculation");
-  
+
   // Now, create a pipe and stuff our data into it
   nsCOMPtr<nsIInputStream> inStream;
   nsCOMPtr<nsIOutputStream> outStream;
-  rv = NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream), bufferCapacity, bufferCapacity, nonBlocking);  
+  rv = NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream),
+                  bufferCapacity, bufferCapacity, nonBlocking);
 
   if (NS_SUCCEEDED(rv)) {
     uint32_t written;

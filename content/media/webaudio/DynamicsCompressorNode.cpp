@@ -10,23 +10,13 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(DynamicsCompressorNode)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DynamicsCompressorNode, AudioNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mThreshold)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mKnee)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRatio)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReduction)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAttack)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelease)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DynamicsCompressorNode, AudioNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mThreshold)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mKnee)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRatio)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReduction)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAttack)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelease)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_6(DynamicsCompressorNode, AudioNode,
+                                     mThreshold,
+                                     mKnee,
+                                     mRatio,
+                                     mReduction,
+                                     mAttack,
+                                     mRelease)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DynamicsCompressorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
