@@ -369,10 +369,26 @@ IDBCursor::~IDBCursor()
     NS_ASSERTION(!mActorChild, "Should have cleared in Send__delete__!");
   }
 
-  if (mRooted) {
-    NS_DROP_JS_OBJECTS(this, IDBCursor);
-  }
+  DropJSObjects();
   IDBObjectStore::ClearCloneReadInfo(mCloneReadInfo);
+}
+
+void
+IDBCursor::DropJSObjects()
+{
+  if (!mRooted) {
+    return;
+  }
+  mScriptOwner = nullptr;
+  mCachedKey = JSVAL_VOID;
+  mCachedPrimaryKey = JSVAL_VOID;
+  mCachedValue = JSVAL_VOID;
+  mHaveCachedKey = false;
+  mHaveCachedPrimaryKey = false;
+  mHaveCachedValue = false;
+  mRooted = false;
+  mHaveValue = false;
+  NS_DROP_JS_OBJECTS(this, IDBCursor);
 }
 
 nsresult
@@ -455,18 +471,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
   // Don't unlink mObjectStore, mIndex, or mTransaction!
-  if (tmp->mRooted) {
-    NS_DROP_JS_OBJECTS(tmp, IDBCursor);
-    tmp->mScriptOwner = nullptr;
-    tmp->mCachedKey = JSVAL_VOID;
-    tmp->mCachedPrimaryKey = JSVAL_VOID;
-    tmp->mCachedValue = JSVAL_VOID;
-    tmp->mHaveCachedKey = false;
-    tmp->mHaveCachedPrimaryKey = false;
-    tmp->mHaveCachedValue = false;
-    tmp->mRooted = false;
-    tmp->mHaveValue = false;
-  }
+  tmp->DropJSObjects();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequest)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

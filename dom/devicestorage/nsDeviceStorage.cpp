@@ -1141,8 +1141,8 @@ nsDOMDeviceStorageCursor::Continue()
   if (mRooted) {
     // We call onsuccess multiple times. clear the last
     // rooted result.
-    NS_DROP_JS_OBJECTS(this, nsDOMDeviceStorageCursor);
     mResult = JSVAL_VOID;
+    NS_DROP_JS_OBJECTS(this, nsDOMDeviceStorageCursor);
     mDone = false;
     mRooted = false;
   }
