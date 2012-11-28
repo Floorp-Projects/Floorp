@@ -240,7 +240,7 @@ protected:
    * Return if an element should have a specific validity UI
    * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
    *
-   * @return Whether the elemnet should have a validity UI.
+   * @return Whether the element should have a validity UI.
    */
   bool ShouldShowValidityUI() const {
     /**
