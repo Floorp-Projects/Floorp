@@ -395,6 +395,26 @@ var BrowserApp = {
         });
       });
 
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.playMedia"),
+      NativeWindow.contextmenus.mediaContext("media-paused"),
+      function(aTarget) {
+        aTarget.play();
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.pauseMedia"),
+      NativeWindow.contextmenus.mediaContext("media-playing"),
+      function(aTarget) {
+        aTarget.pause();
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareMedia"),
+      NativeWindow.contextmenus.SelectorContext("video"),
+      function(aTarget) {
+        let url = (aTarget.currentSrc || aTarget.src);
+        let title = aTarget.textContent || aTarget.title;
+        NativeWindow.contextmenus._shareStringWithDefault(url, title);
+      });
+
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
       NativeWindow.contextmenus.SelectorContext("video:not(:-moz-full-screen)"),
       function(aTarget) {
@@ -1395,6 +1415,25 @@ var NativeWindow = {
           return (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE));
         }
         return false;
+      }
+    },
+
+    mediaContext: function(aMode) {
+      return {
+        matches: function(aElt) {
+          if (aElt instanceof Ci.nsIDOMHTMLMediaElement) {
+            let hasError = aElt.error != null || aElt.networkState == aElt.NETWORK_NO_SOURCE;
+            if (hasError)
+              return false;
+
+            let paused = aElt.paused || aElt.ended;
+            if (paused && aMode == "media-paused")
+              return true;
+            if (!paused && aMode == "media-playing")
+              return true;
+          }
+          return false;
+        }
       }
     },
 
