@@ -730,11 +730,17 @@ function startDebugger() {
   }
 }
 
-window.addEventListener('ContentStart', function(evt) {
-  if (Services.prefs.getBoolPref('devtools.debugger.remote-enabled')) {
-    startDebugger();
+function stopDebugger() {
+  if (!DebuggerServer.initialized) {
+    return;
   }
-});
+
+  try {
+    DebuggerServer.closeListener();
+  } catch (e) {
+    dump('Unable to stop debugger server: ' + e + '\n');
+  }
+}
 
 // This is the backend for Gaia's screenshot feature.  Gaia requests a
 // screenshot by sending a mozContentEvent with detail.type set to
