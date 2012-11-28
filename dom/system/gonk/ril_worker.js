@@ -63,6 +63,8 @@ const TLV_LOCATION_INFO_UMTS_SIZE = 11;
 const TLV_IMEI_SIZE = 10;
 const TLV_DATE_TIME_ZONE_SIZE = 9;
 const TLV_LANGUAGE_SIZE = 4;
+const TLV_TIMER_IDENTIFIER = 3;
+const TLV_TIMER_VALUE = 5;
 
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
@@ -3364,6 +3366,7 @@ let RIL = {
    * @param [optional] isYesNo
    * @param [optional] hasConfirmed
    * @param [optional] localInfo
+   * @param [optional] timer
    */
   sendStkTerminalResponse: function sendStkTerminalResponse(response) {
     if (response.hasConfirmed !== undefined) {
@@ -3406,6 +3409,12 @@ let RIL = {
              (localInfo.imei ? TLV_IMEI_SIZE : 0) +
              (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
              (localInfo.language ? TLV_LANGUAGE_SIZE : 0)) * 2);
+    }
+    if (response.timer) {
+      let timer = response.timer;
+      size = size +
+             ((timer.timerId ? TLV_TIMER_IDENTIFIER : 0) +
+              (timer.timerValue ? TLV_TIMER_VALUE : 0)) * 2;
     }
     Buf.writeUint32(size);
 
@@ -3525,6 +3534,21 @@ let RIL = {
       }
     }
 
+    // Timer
+    if (response.timer) {
+      let timer = response.timer;
+
+      if (timer.timerId) {
+        GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER);
+        GsmPDUHelper.writeHexOctet(1);
+        GsmPDUHelper.writeHexOctet(timer.timerId);
+      }
+
+      if (timer.timerValue) {
+        ComprehensionTlvHelper.writeTimerValueTlv(timer.timerValue, false);
+      }
+    }
+
     Buf.writeUint32(0);
     Buf.sendParcel();
   },
@@ -3541,6 +3565,22 @@ let RIL = {
       sourceId :STK_DEVICE_ID_KEYPAD,
       destinationId: STK_DEVICE_ID_SIM
     };
+    this.sendICCEnvelopeCommand(command);
+  },
+
+  /**
+   * Send STK Envelope(Timer Expiration) command.
+   *
+   * @param timer
+   */
+  sendStkTimerExpiration: function sendStkTimerExpiration(command) {
+    command.tag = BER_TIMER_EXPIRATION_TAG;
+    command.deviceId = {
+      sourceId: STK_DEVICE_ID_ME,
+      destinationId: STK_DEVICE_ID_SIM
+    };
+    command.timerId = command.timer.timerId;
+    command.timerValue = command.timer.timerValue;
     this.sendICCEnvelopeCommand(command);
   },
 
@@ -3598,6 +3638,8 @@ let RIL = {
    * @param [optional] address
    * @param [optional] transactionId
    * @param [optional] cause
+   * @param [optional] timerId
+   * @param [optional] timerValue
    */
   sendICCEnvelopeCommand: function sendICCEnvelopeCommand(options) {
     if (DEBUG) {
@@ -3621,7 +3663,9 @@ let RIL = {
                     Math.ceil(options.address.length/2) + 1) + // Length of length field.
                   Math.ceil(options.address.length/2) + 1 // address BCD + TON.
                   : 0) +
-                 (options.cause ? 4 : 0);
+                 (options.cause ? 4 : 0) +
+                 (options.timerId ? TLV_TIMER_IDENTIFIER : 0) +
+                 (options.timerValue ? TLV_TIMER_VALUE : 0);
     let size = (2 + berLen) * 2;
 
     Buf.writeUint32(size);
@@ -3696,6 +3740,19 @@ let RIL = {
     // Cause of disconnection.
     if (options.cause) {
       ComprehensionTlvHelper.writeCauseTlv(options.cause);
+    }
+
+    // Timer Identifier
+    if (options.timerId) {
+        GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER |
+                                   COMPREHENSIONTLV_FLAG_CR);
+        GsmPDUHelper.writeHexOctet(1);
+        GsmPDUHelper.writeHexOctet(options.timerId);
+    }
+
+    // Timer Value
+    if (options.timerValue) {
+        ComprehensionTlvHelper.writeTimerValueTlv(options.timerValue, true);
     }
 
     Buf.writeUint32(0);
@@ -8199,6 +8256,9 @@ let StkCommandParamsFactory = {
       case STK_CMD_PLAY_TONE:
         param = this.processPlayTone(cmdDetails, ctlvs);
         break;
+      case STK_CMD_TIMER_MANAGEMENT:
+        param = this.processTimerManagement(cmdDetails, ctlvs);
+        break;
       default:
         debug("unknown proactive command");
         break;
@@ -8572,6 +8632,26 @@ let StkCommandParamsFactory = {
       localInfoType: cmdDetails.commandQualifier
     };
     return provideLocalInfo;
+  },
+
+  processTimerManagement: function processTimerManagement(cmdDetails, ctlvs) {
+    let timer = {
+      timerAction: cmdDetails.commandQualifier
+    };
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER, ctlvs);
+    if (ctlv) {
+      timer.timerId = ctlv.value.timerId;
+    }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_TIMER_VALUE, ctlvs);
+    if (ctlv) {
+      timer.timerValue = ctlv.value.timerValue;
+    }
+
+    return timer;
   }
 };
 
@@ -8604,6 +8684,10 @@ let StkProactiveCmdHelper = {
         return this.retrieveDefaultText(length);
       case COMPREHENSIONTLV_TAG_EVENT_LIST:
         return this.retrieveEventList(length);
+      case COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER:
+        return this.retrieveTimerId(length);
+      case COMPREHENSIONTLV_TAG_TIMER_VALUE:
+        return this.retrieveTimerValue(length);
       case COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE:
         return this.retrieveImmediaResponse(length);
       case COMPREHENSIONTLV_TAG_URL:
@@ -8861,6 +8945,40 @@ let StkProactiveCmdHelper = {
   },
 
   /**
+   * Timer Identifier.
+   *
+   * | Byte  | Description          | Length |
+   * |  1    | Timer Identifier Tag |   1    |
+   * |  2    | Length = 01          |   1    |
+   * |  3    | Timer Identifier     |   1    |
+   */
+  retrieveTimerId: function retrieveTimerId(length) {
+    let id = {
+      timerId: GsmPDUHelper.readHexOctet()
+    };
+    return id;
+  },
+
+  /**
+   * Timer Value.
+   *
+   * | Byte  | Description          | Length |
+   * |  1    | Timer Value Tag      |   1    |
+   * |  2    | Length = 03          |   1    |
+   * |  3    | Hour                 |   1    |
+   * |  4    | Minute               |   1    |
+   * |  5    | Second               |   1    |
+   */
+  retrieveTimerValue: function retrieveTimerValue(length) {
+    let value = {
+      timerValue: (GsmPDUHelper.readSwappedNibbleBcdNum(1) * 60 * 60) +
+                  (GsmPDUHelper.readSwappedNibbleBcdNum(1) * 60) +
+                  (GsmPDUHelper.readSwappedNibbleBcdNum(1))
+    };
+    return value;
+  },
+
+  /**
    * Immediate Response.
    *
    * | Byte  | Description            | Length |
@@ -9114,6 +9232,26 @@ let ComprehensionTlvHelper = {
       PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT].indexOf(language[0]));
     GsmPDUHelper.writeHexOctet(
       PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT].indexOf(language[1]));
+  },
+
+  /**
+   * Write Timer Value Comprehension TLV.
+   *
+   * @param seconds length of time during of the timer.
+   * @param cr Comprehension Required or not
+   */
+  writeTimerValueTlv: function writeTimerValueTlv(seconds, cr) {
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TIMER_VALUE |
+                               (cr ? COMPREHENSIONTLV_FLAG_CR : 0));
+    GsmPDUHelper.writeHexOctet(3);
+
+    // TS 102.223, clause 8.38
+    // +----------------+------------------+-------------------+
+    // | hours (1 byte) | minutes (1 btye) | secounds (1 byte) |
+    // +----------------+------------------+-------------------+
+    GsmPDUHelper.writeSwappedNibbleBCDNum(Math.floor(seconds / 60 / 60));
+    GsmPDUHelper.writeSwappedNibbleBCDNum(Math.floor(seconds / 60) % 60);
+    GsmPDUHelper.writeSwappedNibbleBCDNum(seconds % 60);
   },
 
   getSizeOfLengthOctets: function getSizeOfLengthOctets(length) {
