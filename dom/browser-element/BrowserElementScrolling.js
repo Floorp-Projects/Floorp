@@ -26,7 +26,7 @@ const ContentPanning = {
       case 'click':
         evt.stopPropagation();
         evt.preventDefault();
-        
+
         let target = evt.target;
         let view = target.ownerDocument ? target.ownerDocument.defaultView
                                         : target;
@@ -241,6 +241,9 @@ const ContentPanning = {
     this._viewport = new Rect(metrics.x, metrics.y,
                               metrics.viewport.width,
                               metrics.viewport.height);
+    this._cssCompositedRect = new Rect(metrics.x, metrics.y,
+                                       metrics.cssCompositedRect.width,
+                                       metrics.cssCompositedRect.height);
     this._cssPageRect = new Rect(metrics.cssPageRect.x,
                                  metrics.cssPageRect.y,
                                  metrics.cssPageRect.width,
@@ -283,7 +286,7 @@ const ContentPanning = {
 
       // if the rect is already taking up most of the visible area and is stretching the
       // width of the page, then we want to zoom out instead.
-      if (this._isRectZoomedIn(bRect, viewport)) {
+      if (this._isRectZoomedIn(bRect, this._cssCompositedRect)) {
         this._zoomOut();
         return;
       }
@@ -291,7 +294,7 @@ const ContentPanning = {
       rect.x = Math.round(bRect.x);
       rect.y = Math.round(bRect.y);
       rect.w = Math.round(bRect.width);
-      rect.h = Math.round(Math.min(bRect.width * viewport.height / viewport.height, bRect.height));
+      rect.h = Math.round(bRect.height);
 
       // if the block we're zooming to is really tall, and the user double-tapped
       // more than a screenful of height from the top of it, then adjust the y-coordinate
@@ -328,25 +331,17 @@ const ContentPanning = {
 
   _isRectZoomedIn: function(aRect, aViewport) {
     // This function checks to see if the area of the rect visible in the
-    // viewport (i.e. the "overlapArea" variable below) is approximately
-    // the max area of the rect we can show. It also checks that the rect
-    // is actually on-screen by testing the left and right edges of the rect.
-    // In effect, this tells us whether or not zooming in to this rect
-    // will significantly change what the user is seeing.
-    const minDifference = -20;
-    const maxDifference = 20;
-
+    // viewport (i.e. the "overlapArea" variable below) is approximately 
+    // the max area of the rect we can show.
     let vRect = new Rect(aViewport.x, aViewport.y, aViewport.width, aViewport.height);
     let overlap = vRect.intersect(aRect);
     let overlapArea = overlap.width * overlap.height;
     let availHeight = Math.min(aRect.width * vRect.height / vRect.width, aRect.height);
     let showing = overlapArea / (aRect.width * availHeight);
-    let dw = (aRect.width - vRect.width);
-    let dx = (aRect.x - vRect.x);
+    let ratioW = (aRect.width / vRect.width);
+    let ratioH = (aRect.height / vRect.height);
 
-    return (showing > 0.9 &&
-            dx > minDifference && dx < maxDifference &&
-            dw > minDifference && dw < maxDifference);
+    return (showing > 0.9 && (ratioW > 0.9 || ratioH > 0.9)); 
   }
 };
 
