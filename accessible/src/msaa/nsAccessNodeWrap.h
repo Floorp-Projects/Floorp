@@ -34,12 +34,12 @@
 #include "nsRefPtrHashtable.h"
 
 #define A11Y_TRYBLOCK_BEGIN                                                    \
-  __try {
+  MOZ_SEH_TRY {
 
-#define A11Y_TRYBLOCK_END                                                      \
-  } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),      \
-                                                    GetExceptionInformation()))\
-  { }                                                                          \
+#define A11Y_TRYBLOCK_END                                                             \
+  } MOZ_SEH_EXCEPT(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),       \
+                                                          GetExceptionInformation())) \
+  { }                                                                                 \
   return E_FAIL;
 
 namespace mozilla {
