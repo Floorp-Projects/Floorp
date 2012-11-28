@@ -127,6 +127,9 @@ public class UpdateService extends IntentService {
             registerForUpdates(false);
         } else if (UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE.equals(intent.getAction())) {
             startUpdate(intent.getIntExtra(UpdateServiceHelper.EXTRA_UPDATE_FLAGS_NAME, 0));
+        } else if (UpdateServiceHelper.ACTION_DOWNLOAD_UPDATE.equals(intent.getAction())) {
+            // We always want to do the download here
+            startUpdate(UpdateServiceHelper.FLAG_FORCE_DOWNLOAD);
         } else if (UpdateServiceHelper.ACTION_APPLY_UPDATE.equals(intent.getAction())) {
             applyUpdate(intent.getStringExtra(UpdateServiceHelper.EXTRA_PACKAGE_PATH_NAME));
         }
@@ -229,9 +232,8 @@ public class UpdateService extends IntentService {
             // We aren't autodownloading here, so prompt to start the update
             Notification notification = new Notification(R.drawable.ic_status_logo, null, System.currentTimeMillis());
 
-            Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE);
+            Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_DOWNLOAD_UPDATE);
             notificationIntent.setClass(this, UpdateService.class);
-            notificationIntent.putExtra(UpdateServiceHelper.EXTRA_UPDATE_FLAGS_NAME, UpdateServiceHelper.FLAG_FORCE_DOWNLOAD);
 
             PendingIntent contentIntent = PendingIntent.getService(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             notification.flags = Notification.FLAG_AUTO_CANCEL;
