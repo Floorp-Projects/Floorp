@@ -21,10 +21,6 @@ template <typename T>
 class CompilerRoot : public CompilerRootNode
 {
   public:
-    CompilerRoot()
-      : CompilerRootNode(NULL)
-    { }
-
     CompilerRoot(T ptr)
       : CompilerRootNode(NULL)
     {
@@ -46,6 +42,11 @@ class CompilerRoot : public CompilerRootNode
   public:
     operator T () const { return static_cast<T>(ptr); }
     T operator ->() const { return static_cast<T>(ptr); }
+
+  private:
+    CompilerRoot() MOZ_DELETE;
+    CompilerRoot(const CompilerRoot<T> &) MOZ_DELETE;
+    CompilerRoot<T> &operator =(const CompilerRoot<T> &) MOZ_DELETE;
 };
 
 typedef CompilerRoot<JSObject*>   CompilerRootObject;

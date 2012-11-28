@@ -56,7 +56,8 @@ STDMETHODIMP
 ia2AccessibleTable::get_accessibleAt(long aRow, long aColumn,
                                    IUnknown **aAccessible)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aAccessible = NULL;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -81,14 +82,14 @@ __try {
   *aAccessible = static_cast<IUnknown*>(instancePtr);
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_caption(IUnknown** aAccessible)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aAccessible = NULL;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -116,15 +117,15 @@ __try {
   *aAccessible = static_cast<IUnknown*>(instancePtr);
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_childIndex(long aRowIndex, long aColumnIndex,
                                    long* aChildIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aChildIndex = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -140,15 +141,14 @@ __try {
   *aChildIndex = childIndex;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_columnDescription(long aColumn, BSTR* aDescription)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aDescription = NULL;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -167,15 +167,15 @@ __try {
   *aDescription = ::SysAllocStringLen(descr.get(), descr.Length());
   return *aDescription ? S_OK : E_OUTOFMEMORY;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_columnExtentAt(long aRow, long aColumn,
                                       long* nColumnsSpanned)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *nColumnsSpanned = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -191,27 +191,27 @@ __try {
   *nColumnsSpanned = columnsSpanned;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_columnHeader(IAccessibleTable** aAccessibleTable,
                                     long* aStartingRowIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aAccessibleTable = NULL;
   *aStartingRowIndex = -1;
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
   return E_NOTIMPL;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_columnIndex(long aChildIndex, long* aColumnIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aColumnIndex = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -227,15 +227,14 @@ __try {
   *aColumnIndex = columnIndex;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_nColumns(long* aColumnCount)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aColumnCount = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -251,15 +250,14 @@ __try {
   *aColumnCount = columnCount;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_nRows(long* aRowCount)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aRowCount = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -275,15 +273,14 @@ __try {
   *aRowCount = rowCount;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_nSelectedChildren(long* aChildCount)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aChildCount = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -299,14 +296,14 @@ __try {
   *aChildCount = count;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_nSelectedColumns(long* aColumnCount)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aColumnCount = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -322,14 +319,14 @@ __try {
   *aColumnCount = count;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_nSelectedRows(long* aRowCount)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aRowCount = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -345,14 +342,14 @@ __try {
   *aRowCount = count;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_rowDescription(long aRow, BSTR* aDescription)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aDescription = NULL;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -371,15 +368,15 @@ __try {
   *aDescription = ::SysAllocStringLen(descr.get(), descr.Length());
   return *aDescription ? S_OK : E_OUTOFMEMORY;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_rowExtentAt(long aRow, long aColumn,
                                     long* aNRowsSpanned)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aNRowsSpanned = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -395,27 +392,27 @@ __try {
   *aNRowsSpanned = rowsSpanned;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_rowHeader(IAccessibleTable** aAccessibleTable,
                                   long* aStartingColumnIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aAccessibleTable = NULL;
   *aStartingColumnIndex = -1;
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
   return E_NOTIMPL;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_rowIndex(long aChildIndex, long* aRowIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aRowIndex = 0;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -431,65 +428,62 @@ __try {
   *aRowIndex = rowIndex;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_selectedChildren(long aMaxChildren, long** aChildren,
                                          long* aNChildren)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   return GetSelectedItems(aChildren, aNChildren, ITEMSTYPE_CELLS);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_selectedColumns(long aMaxColumns, long** aColumns,
                                         long* aNColumns)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   return GetSelectedItems(aColumns, aNColumns, ITEMSTYPE_COLUMNS);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_selectedRows(long aMaxRows, long** aRows, long* aNRows)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   return GetSelectedItems(aRows, aNRows, ITEMSTYPE_ROWS);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_summary(IUnknown** aAccessible)
 {
-__try {
-  *aAccessible = NULL;
+  A11Y_TRYBLOCK_BEGIN
 
   // Neither html:table nor xul:tree nor ARIA grid/tree have an ability to
   // link an accessible object to specify a summary. There is closes method
   // in nsIAccessibleTable::summary to get a summary as a string which is not
   // mapped directly to IAccessible2.
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  *aAccessible = NULL;
   return S_FALSE;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_isColumnSelected(long aColumn, boolean* aIsSelected)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aIsSelected = false;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -505,15 +499,13 @@ __try {
   *aIsSelected = isSelected;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_isRowSelected(long aRow, boolean* aIsSelected)
 {
-__try {
-  *aIsSelected = false;
+  A11Y_TRYBLOCK_BEGIN
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
@@ -528,15 +520,15 @@ __try {
   *aIsSelected = isSelected;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_isSelected(long aRow, long aColumn,
                                    boolean* aIsSelected)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aIsSelected = false;
 
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
@@ -552,14 +544,14 @@ __try {
   *aIsSelected = isSelected;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::selectRow(long aRow)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -568,14 +560,14 @@ __try {
   nsresult rv = tableAcc->SelectRow(aRow);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::selectColumn(long aColumn)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -584,14 +576,14 @@ __try {
   nsresult rv = tableAcc->SelectColumn(aColumn);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::unselectRow(long aRow)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -600,14 +592,14 @@ __try {
   nsresult rv = tableAcc->UnselectRow(aRow);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::unselectColumn(long aColumn)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -616,8 +608,7 @@ __try {
   nsresult rv = tableAcc->UnselectColumn(aColumn);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -627,7 +618,8 @@ ia2AccessibleTable::get_rowColumnExtentsAtIndex(long aIndex, long* aRow,
                                                 long* aColumnExtents,
                                                 boolean* aIsSelected)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aRow = 0;
   *aColumn = 0;
   *aRowExtents = 0;
@@ -666,16 +658,12 @@ __try {
   *aIsSelected = isSelected;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_modelChange(IA2TableModelChange* aModelChange)
 {
-__try {
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_NOTIMPL;
 }
 
@@ -697,7 +685,8 @@ ia2AccessibleTable::get_nSelectedCells(long* aCellCount)
 STDMETHODIMP
 ia2AccessibleTable::get_selectedCells(IUnknown*** aCells, long* aNSelectedCells)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryObject(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -710,32 +699,27 @@ __try {
 
   return nsWinUtils::ConvertToIA2Array(geckoCells, aCells, aNSelectedCells);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_selectedColumns(long** aColumns, long* aNColumns)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   return GetSelectedItems(aColumns, aNColumns, ITEMSTYPE_COLUMNS);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTable::get_selectedRows(long** aRows, long* aNRows)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   return GetSelectedItems(aRows, aNRows, ITEMSTYPE_ROWS);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) {}
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 ////////////////////////////////////////////////////////////////////////////////

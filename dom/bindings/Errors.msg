@@ -34,3 +34,4 @@ MSG_DEF(MSG_INVALID_ARG, 2, "argument {0} is not valid for any of the {1}-argume
 MSG_DEF(MSG_GLOBAL_NOT_NATIVE, 0, "global is not a native object")
 MSG_DEF(MSG_ENCODING_NOT_SUPPORTED, 1, "The given encoding '{0}' is not supported.")
 MSG_DEF(MSG_DOM_ENCODING_NOT_UTF, 0, "The encoding must be utf-8, utf-16, or utf-16be.")
+MSG_DEF(MSG_NOT_FINITE, 0, "Floating-point value is not finite.")

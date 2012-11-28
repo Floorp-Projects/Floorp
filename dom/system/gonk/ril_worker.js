@@ -5169,18 +5169,19 @@ RIL[UNSOLICITED_STK_CALL_SETUP] = null;
 RIL[UNSOLICITED_SIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_SIM_REFRESH] = null;
 RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
-  let info;
+  let info = {rilMessageType: "callRing"};
   let isCDMA = false; //XXX TODO hard-code this for now
   if (isCDMA) {
-    info = {
-      isPresent:  Buf.readUint32(),
-      signalType: Buf.readUint32(),
-      alertPitch: Buf.readUint32(),
-      signal:     Buf.readUint32()
-    };
+    info.isPresent = Buf.readUint32();
+    info.signalType = Buf.readUint32();
+    info.alertPitch = Buf.readUint32();
+    info.signal = Buf.readUint32();
   }
-  // For now we don't need to do anything here because we'll also get a
-  // call state changed notification.
+  // At this point we don't know much other than the fact there's an incoming
+  // call, but that's enough to bring up the Phone app already. We'll know
+  // details once we get a call state changed notification and can then
+  // dispatch DOM events etc.
+  this.sendDOMMessage(info);
 };
 RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = function UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED() {
   this.getICCStatus();
@@ -6617,6 +6618,9 @@ let StkCommandParamsFactory = {
       case STK_CMD_REFRESH:
         param = this.processRefresh(cmdDetails, ctlvs);
         break;
+      case STK_CMD_MORE_TIME:
+        param = this.processMoreTime(cmdDetails, ctlvs);
+        break;
       case STK_CMD_POLL_INTERVAL:
         param = this.processPollInterval(cmdDetails, ctlvs);
         break;
@@ -6689,6 +6693,21 @@ let StkCommandParamsFactory = {
         break;
     }
     return {};
+  },
+
+  /**
+   * Construct a param for MORE TIME.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processMoreTime: function processMoreTime(cmdDetails, ctlvs) {
+    RIL.sendStkTerminalResponse({
+      command: cmdDetails,
+      resultCode: STK_RESULT_OK});
+    return null;
   },
 
   /**

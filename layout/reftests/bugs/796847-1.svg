@@ -1,0 +1,25 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait">
+  <title>Test that the area that's covered by a filtered element is invalidated when content inside it changes</title>
+  <filter id="f" x="0" y="0" width="100%" height="100">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="0.1"/>
+  </filter>
+  <script type="text/javascript">//<![CDATA[
+
+function doTest()
+{
+  var e = document.getElementsByTagName("rect")[0];
+  e.style.fill = "lime";
+  document.documentElement.removeAttribute('class');
+}
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+  //]]></script>
+  <g filter="url(#f)">
+    <rect x="0" y="0" width="100" height="100" style="fill: red;"/>
+  </g>
+</svg>
