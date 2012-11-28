@@ -4680,18 +4680,14 @@ NextNode(VerifyNode *node)
 static void
 StartVerifyPreBarriers(JSRuntime *rt)
 {
-    if (rt->gcVerifyPreData || rt->gcIncrementalState != NO_INCREMENTAL)
+    if (rt->gcVerifyPreData ||
+        rt->gcIncrementalState != NO_INCREMENTAL ||
+        !IsIncrementalGCSafe(rt))
+    {
         return;
+    }
 
-    AutoTraceSession session(rt);
-
-    if (!IsIncrementalGCSafe(rt))
-        return;
-
-    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-
-    AutoCopyFreeListToArenas copy(rt);
-    RecordNativeStackTopForGC(rt);
+    AutoPrepareForTracing prep(rt);
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
@@ -4810,12 +4806,7 @@ AssertMarkedOrAllocated(const EdgeValue &edge)
 static void
 EndVerifyPreBarriers(JSRuntime *rt)
 {
-    AutoTraceSession session(rt);
-
-    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-
-    AutoCopyFreeListToArenas copy(rt);
-    RecordNativeStackTopForGC(rt);
+    AutoPrepareForTracing prep(rt);
 
     VerifyPreTracer *trc = (VerifyPreTracer *)rt->gcVerifyPreData;
 
@@ -4967,12 +4958,7 @@ static void
 EndVerifyPostBarriers(JSRuntime *rt)
 {
 #ifdef JSGC_GENERATIONAL
-    AutoTraceSession session(rt);
-
-    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-
-    AutoCopyFreeListToArenas copy(rt);
-    RecordNativeStackTopForGC(rt);
+    AutoPrepareForTracing prep(rt);
 
     VerifyPostTracer *trc = (VerifyPostTracer *)rt->gcVerifyPostData;
     JS_TracerInit(trc, rt, PostVerifierVisitEdge);

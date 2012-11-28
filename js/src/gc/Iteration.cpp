@@ -24,7 +24,6 @@ js::TraceRuntime(JSTracer *trc)
     JS_ASSERT(!IS_GC_MARKING_TRACER(trc));
 
     AutoPrepareForTracing prep(trc->runtime);
-    RecordNativeStackTopForGC(trc->runtime);
     MarkRuntime(trc);
 }
 
