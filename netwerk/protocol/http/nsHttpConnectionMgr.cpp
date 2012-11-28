@@ -938,7 +938,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
             ent->mPendingQ.RemoveElementAt(i);
             NS_RELEASE(trans);
 
-            // reset index and array length after RemoveElelmentAt()
+            // reset index and array length after RemoveElementAt()
             dispatchedSuccessfully = true;
             count = ent->mPendingQ.Length();
             --i;

@@ -559,7 +559,7 @@ lsm_internal_update_call_info (lsm_lcb_t *lcb, fsmdef_dcb_t *dcb)
  *
  * @param[in] lcb       - pointer to the lsm_lcb_t.
  * @param[in/out] data  - pointer to the cc_action_data_open_rcv_t.
- *                        Upon a successful return, the port elelment
+ *                        Upon a successful return, the port element
  *                        of this structure will be filled with the actual
  *                        receive port.
  * @param[in]     media - pointer to the fsmdef_media_t if a specific
