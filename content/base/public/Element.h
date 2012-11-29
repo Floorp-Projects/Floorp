@@ -530,7 +530,7 @@ public:
     SetAttr(kNameSpaceID_None, nsGkAtoms::id, aId, true);
   }
 
-  nsDOMTokenList* GetClassList();
+  nsDOMTokenList* ClassList();
   nsDOMAttributeMap* GetAttributes()
   {
     nsDOMSlots *slots = DOMSlots();
