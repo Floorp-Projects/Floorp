@@ -54,6 +54,10 @@ ICStubCompiler::getStubCode()
 
     // Compile new stubcode.
     MacroAssembler masm;
+#ifdef JS_CPU_ARM
+    masm.setSecondScratchReg(BaselineSecondScratchReg);
+#endif
+
     AutoFlushCache afc("ICStubCompiler::getStubCode", ion);
     if (!generateStubCode(masm))
         return NULL;
