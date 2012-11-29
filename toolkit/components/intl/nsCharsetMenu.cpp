@@ -816,9 +816,7 @@ nsresult nsCharsetMenu::InitBrowserMenu()
     res = NewRDFContainer(mInner, kNC_BrowserCharsetMenuRoot, getter_AddRefs(container));
     if (NS_FAILED(res)) return res;
 
-
-    // how to clone mDecoderList??
-    nsTArray<nsCString> browserDecoderList = mDecoderList;
+    nsTArray<nsCString> browserDecoderList(mDecoderList);
 
     res = InitStaticMenu(browserDecoderList, kNC_BrowserCharsetMenuRoot, 
                          kBrowserStaticPrefKey, &mBrowserMenu);
@@ -894,7 +892,7 @@ nsresult nsCharsetMenu::InitMailviewMenu()
     res = NewRDFContainer(mInner, kNC_MailviewCharsetMenuRoot, getter_AddRefs(container));
     if (NS_FAILED(res)) return res;
 
-    nsTArray<nsCString> mailviewDecoderList = mDecoderList;
+    nsTArray<nsCString> mailviewDecoderList(mDecoderList);
 
     res = InitStaticMenu(mailviewDecoderList, kNC_MailviewCharsetMenuRoot, 
                          kMailviewStaticPrefKey, &mMailviewMenu);
@@ -930,7 +928,7 @@ nsresult nsCharsetMenu::InitComposerMenu()
     res = NewRDFContainer(mInner, kNC_ComposerCharsetMenuRoot, getter_AddRefs(container));
     if (NS_FAILED(res)) return res;
 
-    nsTArray<nsCString> composerDecoderList = mDecoderList;
+    nsTArray<nsCString> composerDecoderList(mDecoderList);
 
     // even if we fail, the show must go on
     res = InitStaticMenu(composerDecoderList, kNC_ComposerCharsetMenuRoot, 
@@ -963,7 +961,7 @@ nsresult nsCharsetMenu::InitOthers()
   nsresult res = NS_OK;
 
   if (!mOthersInitialized) {
-    nsTArray<nsCString> othersDecoderList = mDecoderList;
+    nsTArray<nsCString> othersDecoderList(mDecoderList);
 
     res = InitMoreMenu(othersDecoderList, kNC_DecodersRoot, ".notForBrowser");                 
     if (NS_FAILED(res))  return res;
@@ -971,7 +969,7 @@ nsresult nsCharsetMenu::InitOthers()
     // Using mDecoderList instead of GetEncoderList(), we can avoid having to
     // tag a whole bunch of 'font encoders' with '.notForOutgoing' in 
     // charsetData.properties file. 
-    nsTArray<nsCString> othersEncoderList = mDecoderList;
+    nsTArray<nsCString> othersEncoderList(mDecoderList);
 
     res = InitMoreMenu(othersEncoderList, kNC_EncodersRoot, ".notForOutgoing");                 
     if (NS_FAILED(res)) return res;
@@ -992,7 +990,7 @@ nsresult nsCharsetMenu::InitSecondaryTiers()
   nsresult res = NS_OK;
 
   if (!mSecondaryTiersInitialized)  {
-    nsTArray<nsCString> secondaryTiersDecoderList = mDecoderList;
+    nsTArray<nsCString> secondaryTiersDecoderList(mDecoderList);
 
     res = InitMoreSubmenus(secondaryTiersDecoderList);
     NS_ASSERTION(NS_SUCCEEDED(res), "err init browser charset more submenus");
