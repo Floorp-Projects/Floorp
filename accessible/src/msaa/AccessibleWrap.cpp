@@ -187,13 +187,8 @@ AccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
   }
 
   Accessible* xpParentAcc = Parent();
-  if (!xpParentAcc) {
-    if (IsApplication())
-      return S_OK;
-
-    NS_ERROR("No parent accessible. Should we really assert here?");
-    return E_UNEXPECTED;
-  }
+  if (!xpParentAcc)
+    return S_FALSE;
 
   *ppdispParent = NativeAccessible(xpParentAcc);
   return S_OK;
