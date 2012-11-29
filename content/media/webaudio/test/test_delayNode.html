@@ -59,7 +59,7 @@ addLoadEvent(function() {
   expectException(function() {
     context.createDelay(3);
   }, DOMException.NOT_SUPPORTED_ERR);
-  expectException(function() {
+  expectTypeError(function() {
     context.createDelay(NaN);
   }, DOMException.NOT_SUPPORTED_ERR);
   expectException(function() {

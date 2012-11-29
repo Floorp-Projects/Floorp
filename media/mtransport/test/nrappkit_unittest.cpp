@@ -62,6 +62,23 @@ class TimerTest : public ::testing::Test {
     return NR_async_timer_cancel(handle_);
   }
 
+  int Schedule() {
+    int ret;
+
+    test_utils->sts_target()->Dispatch(
+        WrapRunnableRet(this, &TimerTest::Schedule_w, &ret),
+        NS_DISPATCH_SYNC);
+
+    return ret;
+  }
+
+  int Schedule_w() {
+    NR_ASYNC_SCHEDULE(cb, this);
+    
+    return 0;
+  }
+
+
   static void cb(NR_SOCKET r, int how, void *arg) {
     std::cerr << "Timer fired " << std::endl;
 
@@ -86,6 +103,11 @@ TEST_F(TimerTest, CancelTimer) {
   CancelTimer();
   PR_Sleep(2000);
   ASSERT_FALSE(fired_);
+}
+
+TEST_F(TimerTest, ScheduleTest) {
+  Schedule();
+  ASSERT_TRUE_WAIT(fired_, 1000);
 }
 
 int main(int argc, char **argv) {

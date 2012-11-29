@@ -787,7 +787,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcDynamicMarkSlice(false),
     gcShouldCleanUpEverything(false),
     gcIsNeeded(0),
-    gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
     gcNumber(0),
     gcStartNumber(0),
@@ -798,9 +797,13 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcLastMarkSlice(false),
     gcSweepOnBackgroundThread(false),
+    gcFoundBlackGrayEdges(false),
     gcSweepingCompartments(NULL),
+    gcCompartmentGroupIndex(0),
+    gcRemainingCompartmentGroups(NULL),
+    gcCompartmentGroup(NULL),
     gcSweepPhase(0),
-    gcSweepCompartmentIndex(0),
+    gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
     gcArenasAllocatedDuringSweep(NULL),
     gcInterFrameGC(0),
@@ -841,8 +844,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     profilingScripts(false),
     alwaysPreserveCode(false),
     hadOutOfMemory(false),
-    debugScopes(NULL),
-    liveArrayBuffers(NULL),
     data(NULL),
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
@@ -957,12 +958,6 @@ JSRuntime::init(uint32_t maxbytes)
     if (!evalCache.init())
         return false;
 
-    debugScopes = this->new_<DebugScopes>(this);
-    if (!debugScopes || !debugScopes->init()) {
-        js_delete(debugScopes);
-        return false;
-    }
-
     nativeStackBase = GetNativeStackBase();
     return true;
 }
@@ -972,8 +967,6 @@ JSRuntime::~JSRuntime()
 #ifdef JS_THREADSAFE
     clearOwnerThread();
 #endif
-
-    js_delete(debugScopes);
 
     /*
      * Even though all objects in the compartment are dead, we may have keep
@@ -2949,9 +2942,9 @@ JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(void *thing)
 {
     gc::Cell *t = static_cast<gc::Cell *>(thing);
-    bool isMarked = IsCellMarked(&t);
+    bool isDying = IsCellAboutToBeFinalized(&t);
     JS_ASSERT(t == thing);
-    return !isMarked;
+    return isDying;
 }
 
 JS_PUBLIC_API(void)
@@ -7044,6 +7037,14 @@ JS_ScheduleGC(JSContext *cx, uint32_t count)
     cx->runtime->gcNextScheduled = count;
 }
 #endif
+
+JS_PUBLIC_API(void)
+JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled)
+{
+#ifdef JS_ION
+    ion::js_IonOptions.parallelCompilation = enabled;
+#endif
+}
 
 /************************************************************************/
 

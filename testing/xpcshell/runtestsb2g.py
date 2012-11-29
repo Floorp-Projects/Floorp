@@ -6,6 +6,8 @@
 
 import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
+
 import traceback
 from remotexpcshelltests import XPCShellRemote, RemoteXPCShellOptions
 from automationutils import *
@@ -13,7 +15,6 @@ from mozdevice import devicemanagerADB
 
 DEVICE_TEST_ROOT = '/data/local/tests'
 
-sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
 
 from marionette import Marionette
 
@@ -22,6 +23,10 @@ class B2GXPCShellRemote(XPCShellRemote):
 
     # Overridden
     def setupUtilities(self):
+        if self.options.xrePath:
+            self.localLib = self.options.xrePath
+            self.localBin = self.options.xrePath
+
         if self.options.clean:
             # Ensure a fresh directory structure for our tests
             self.clean()
@@ -115,12 +120,11 @@ def main():
     parser = B2GOptions()
     options, args = parser.parse_args()
 
-    if options.objdir is None:
-        try:
-            options.objdir = os.path.join(options.b2g_path, 'objdir-gecko')
-        except:
-            print >> sys.stderr, "Need to specify a --b2gpath"
-            sys.exit(1)
+    if options.b2g_path is None:
+        parser.error("Need to specify a --b2gpath")
+
+    if options.xrePath is None:
+        parser.error("Need to specify a --xre-path")
 
     # Create the Marionette instance
     kwargs = {}
@@ -162,8 +166,8 @@ def main():
 
 
 # You usually run this like :
-# python runtestsb2g.py --emulator arm --b2gpath $B2GPATH --manifest $MANIFEST [--objdir $OBJDIR
-#                                                                               --adbpath $ADBPATH
+# python runtestsb2g.py --emulator arm --b2gpath $B2GPATH --manifest $MANIFEST [--xre-path $MOZ_HOST_BIN
+#                                                                               --adbpath $ADB_PATH
 #                                                                               ...]
 #
 # For xUnit output you should also pass in --tests-root-dir ..objdir-gecko/_tests

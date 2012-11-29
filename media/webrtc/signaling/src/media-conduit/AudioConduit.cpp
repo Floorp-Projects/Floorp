@@ -265,7 +265,7 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
     {
       if( mPtrVoEBase->LastError() == VE_CANNOT_STOP_PLAYOUT)
       {
-        CSFLogDebug(logTag, "%s Stop-Playout Failed %d", mPtrVoEBase->LastError());
+        CSFLogDebug(logTag, "%s Stop-Playout Failed %d", __FUNCTION__, mPtrVoEBase->LastError());
         return kMediaConduitPlayoutError;
       }
     }
@@ -327,7 +327,7 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   if(mPtrVoEBase->StartReceive(mChannel) == -1)
   {
     error = mPtrVoEBase->LastError();
-    CSFLogError(logTag ,  "StartReceive Failed %d ",error);
+    CSFLogError(logTag ,  "%s StartReceive Failed %d ",__FUNCTION__, error);
     if(error == VE_RECV_SOCKET_ERROR)
     {
       return kMediaConduitSocketError;
@@ -338,7 +338,7 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 
   if(mPtrVoEBase->StartPlayout(mChannel) == -1)
   {
-    CSFLogError(logTag, "Starting playout Failed");
+    CSFLogError(logTag, "%s Starting playout Failed", __FUNCTION__);
     return kMediaConduitPlayoutError;
   }
 
@@ -397,7 +397,7 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
                                                 capture_delay) == -1)
   {
     int error = mPtrVoEBase->LastError();
-    CSFLogError(logTag,  "Inserting audio data Failed %d", error);
+    CSFLogError(logTag,  "%s Inserting audio data Failed %d", __FUNCTION__, error);
     if(error == VE_RUNTIME_REC_ERROR)
     {
       return kMediaConduitRecordingError;
@@ -459,7 +459,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
                                             lengthSamples) == -1)
   {
     int error = mPtrVoEBase->LastError();
-    CSFLogError(logTag,  "Getting audio data Failed %d", error);
+    CSFLogError(logTag,  "%s Getting audio data Failed %d", __FUNCTION__, error);
     if(error == VE_RUNTIME_PLAY_ERROR)
     {
       return kMediaConduitPlayoutError;
@@ -483,7 +483,7 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
     if(mPtrVoENetwork->ReceivedRTPPacket(mChannel,data,len) == -1)
     {
       int error = mPtrVoEBase->LastError();
-      CSFLogError(logTag, "%s RTP Processing Error %d ", error);
+      CSFLogError(logTag, "%s RTP Processing Error %d", __FUNCTION__, error);
       if(error == VE_RTP_RTCP_MODULE_ERROR)
       {
         return kMediaConduitRTPRTCPModuleError;
@@ -492,7 +492,7 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
     }
   } else {
     //engine not receiving
-    CSFLogError(logTag, "ReceivedRTPPacket: Engine Error");
+    CSFLogError(logTag, "%s ReceivedRTPPacket: Engine Error", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
   //good here
@@ -502,14 +502,14 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
 MediaConduitErrorCode
 WebrtcAudioConduit::ReceivedRTCPPacket(const void *data, int len)
 {
-  CSFLogDebug(logTag,  "%s : channel %d ",__FUNCTION__, mChannel);
+  CSFLogDebug(logTag,  "%s : channel %d",__FUNCTION__, mChannel);
 
   if(mEngineReceiving)
   {
     if(mPtrVoENetwork->ReceivedRTCPPacket(mChannel, data, len) == -1)
     {
       int error = mPtrVoEBase->LastError();
-      CSFLogError(logTag, "%s RTCP Processing Error %d ", error);
+      CSFLogError(logTag, "%s RTCP Processing Error %d", __FUNCTION__, error);
       if(error == VE_RTP_RTCP_MODULE_ERROR)
       {
         return kMediaConduitRTPRTCPModuleError;
@@ -518,7 +518,7 @@ WebrtcAudioConduit::ReceivedRTCPPacket(const void *data, int len)
     }
   } else {
     //engine not running
-    CSFLogError(logTag, "ReceivedRTPPacket: Engine Error");
+    CSFLogError(logTag, "%s ReceivedRTPPacket: Engine Error", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
   //good here

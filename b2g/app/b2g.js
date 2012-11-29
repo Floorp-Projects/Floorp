@@ -375,8 +375,11 @@ pref("browser.link.open_newwindow.restriction", 0);
 // work), but make in-process browser frames the default.
 pref("dom.mozBrowserFramesEnabled", true);
 
-pref("dom.ipc.tabs.disabled", false);
+// Enable a (virtually) unlimited number of mozbrowser processes.
+// We'll run out of PIDs on UNIX-y systems before we hit this limit.
+pref("dom.ipc.processCount", 100000);
 
+pref("dom.ipc.tabs.disabled", false);
 pref("dom.ipc.browser_frames.oop_by_default", false);
 
 // Temporary permission hack for WebSMS
@@ -413,10 +416,6 @@ pref("dom.mozTCPSocket.enabled", true);
 // secondary bug isn't really worth investigating since it's obseleted
 // by bug 710563.
 pref("layout.frame_rate.precise", true);
-
-// Temporary remote js console hack
-pref("b2g.remote-js.enabled", true);
-pref("b2g.remote-js.port", 9999);
 
 // Handle hardware buttons in the b2g chrome package
 pref("b2g.keys.menu.enabled", true);

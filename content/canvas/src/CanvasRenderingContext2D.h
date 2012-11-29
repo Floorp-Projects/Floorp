@@ -164,8 +164,7 @@ public:
 
   void SetGlobalAlpha(double globalAlpha)
   {
-    if (mozilla::CanvasUtils::FloatValidate(globalAlpha) &&
-        globalAlpha >= 0.0 && globalAlpha <= 1.0) {
+    if (globalAlpha >= 0.0 && globalAlpha <= 1.0) {
       CurrentState().globalAlpha = globalAlpha;
     }
   }
@@ -204,9 +203,7 @@ public:
 
   void SetShadowOffsetX(double shadowOffsetX)
   {
-    if (mozilla::CanvasUtils::FloatValidate(shadowOffsetX)) {
-      CurrentState().shadowOffset.x = shadowOffsetX;
-    }
+    CurrentState().shadowOffset.x = shadowOffsetX;
   }
 
   double ShadowOffsetY()
@@ -216,9 +213,7 @@ public:
 
   void SetShadowOffsetY(double shadowOffsetY)
   {
-    if (mozilla::CanvasUtils::FloatValidate(shadowOffsetY)) {
-      CurrentState().shadowOffset.y = shadowOffsetY;
-    }
+    CurrentState().shadowOffset.y = shadowOffsetY;
   }
 
   double ShadowBlur()
@@ -228,7 +223,7 @@ public:
 
   void SetShadowBlur(double shadowBlur)
   {
-    if (mozilla::CanvasUtils::FloatValidate(shadowBlur) && shadowBlur >= 0.0) {
+    if (shadowBlur >= 0.0) {
       CurrentState().shadowBlur = shadowBlur;
     }
   }
@@ -260,9 +255,6 @@ public:
   void DrawImage(const HTMLImageOrCanvasOrVideoElement& image,
                  double dx, double dy, mozilla::ErrorResult& error)
   {
-    if (!mozilla::CanvasUtils::FloatValidate(dx, dy)) {
-      return;
-    }
     DrawImage(image, 0.0, 0.0, 0.0, 0.0, dx, dy, 0.0, 0.0, 0, error);
   }
 
@@ -270,9 +262,6 @@ public:
                  double dx, double dy, double dw, double dh,
                  mozilla::ErrorResult& error)
   {
-    if (!mozilla::CanvasUtils::FloatValidate(dx, dy, dw, dh)) {
-      return;
-    }
     DrawImage(image, 0.0, 0.0, 0.0, 0.0, dx, dy, dw, dh, 2, error);
   }
 
@@ -280,10 +269,6 @@ public:
                  double sx, double sy, double sw, double sh, double dx,
                  double dy, double dw, double dh, mozilla::ErrorResult& error)
   {
-    if (!mozilla::CanvasUtils::FloatValidate(sx, sy, sw, sh) ||
-        !mozilla::CanvasUtils::FloatValidate(dx, dy, dw, dh)) {
-      return;
-    }
     DrawImage(image, sx, sy, sw, sh, dx, dy, dw, dh, 6, error);
   }
 
@@ -310,7 +295,7 @@ public:
 
   void SetLineWidth(double width)
   {
-    if (mozilla::CanvasUtils::FloatValidate(width) && width > 0.0) {
+    if (width > 0.0) {
       CurrentState().lineWidth = width;
     }
   }
@@ -326,7 +311,7 @@ public:
 
   void SetMiterLimit(double miter)
   {
-    if (mozilla::CanvasUtils::FloatValidate(miter) && miter > 0.0) {
+    if (miter > 0.0) {
       CurrentState().miterLimit = miter;
     }
   }
@@ -355,54 +340,46 @@ public:
 
   void MoveTo(double x, double y)
   {
-    if (mozilla::CanvasUtils::FloatValidate(x, y)) {
-      EnsureWritablePath();
+    EnsureWritablePath();
 
-      if (mPathBuilder) {
-        mPathBuilder->MoveTo(mozilla::gfx::Point(x, y));
-      } else {
-        mDSPathBuilder->MoveTo(mTarget->GetTransform() *
-                                 mozilla::gfx::Point(x, y));
-      }
+    if (mPathBuilder) {
+      mPathBuilder->MoveTo(mozilla::gfx::Point(x, y));
+    } else {
+      mDSPathBuilder->MoveTo(mTarget->GetTransform() *
+                             mozilla::gfx::Point(x, y));
     }
   }
 
   void LineTo(double x, double y)
   {
-    if (mozilla::CanvasUtils::FloatValidate(x, y)) {
-      EnsureWritablePath();
+    EnsureWritablePath();
     
-      LineTo(mozilla::gfx::Point(x, y));
-    }
+    LineTo(mozilla::gfx::Point(x, y));
   }
 
   void QuadraticCurveTo(double cpx, double cpy, double x, double y)
   {
-    if (mozilla::CanvasUtils::FloatValidate(cpx, cpy, x, y)) {
-      EnsureWritablePath();
+    EnsureWritablePath();
 
-      if (mPathBuilder) {
-        mPathBuilder->QuadraticBezierTo(mozilla::gfx::Point(cpx, cpy),
+    if (mPathBuilder) {
+      mPathBuilder->QuadraticBezierTo(mozilla::gfx::Point(cpx, cpy),
+                                      mozilla::gfx::Point(x, y));
+    } else {
+      mozilla::gfx::Matrix transform = mTarget->GetTransform();
+      mDSPathBuilder->QuadraticBezierTo(transform *
+                                        mozilla::gfx::Point(cpx, cpy),
+                                        transform *
                                         mozilla::gfx::Point(x, y));
-      } else {
-        mozilla::gfx::Matrix transform = mTarget->GetTransform();
-        mDSPathBuilder->QuadraticBezierTo(transform *
-                                            mozilla::gfx::Point(cpx, cpy),
-                                          transform *
-                                            mozilla::gfx::Point(x, y));
-      }
     }
   }
 
   void BezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y)
   {
-    if (mozilla::CanvasUtils::FloatValidate(cp1x, cp1y, cp2x, cp2y, x, y)) {
-      EnsureWritablePath();
+    EnsureWritablePath();
 
-      BezierTo(mozilla::gfx::Point(cp1x, cp1y),
-               mozilla::gfx::Point(cp2x, cp2y),
-               mozilla::gfx::Point(x, y));
-    }
+    BezierTo(mozilla::gfx::Point(cp1x, cp1y),
+             mozilla::gfx::Point(cp2x, cp2y),
+             mozilla::gfx::Point(x, y));
   }
 
   void ArcTo(double x1, double y1, double x2, double y2, double radius,

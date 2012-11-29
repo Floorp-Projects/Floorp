@@ -43,7 +43,7 @@ virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);              \
 STDMETHODIMP                                                                   \
 Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
 {                                                                              \
-__try {                                                                        \
+  A11Y_TRYBLOCK_BEGIN                                                          \
   if (!aInstancePtr)                                                           \
     return E_INVALIDARG;                                                       \
   *aInstancePtr = NULL;                                                        \
@@ -52,9 +52,7 @@ __try {                                                                        \
 
 #define IMPL_IUNKNOWN_QUERY_TAIL                                               \
   return hr;                                                                   \
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),        \
-                                                  GetExceptionInformation())) { } \
-  return E_NOINTERFACE;                                                        \
+  A11Y_TRYBLOCK_END                                                            \
 }
 
 #define IMPL_IUNKNOWN_QUERY_IFACE(Iface)                                       \

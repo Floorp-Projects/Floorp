@@ -12,7 +12,7 @@
   "@mozilla.org/plugin/host;1"
 %}
 
-[scriptable, uuid(d70af999-cb1f-4429-b85e-f18cdbabc43c)]
+[scriptable, uuid(3ac8fe33-c38c-4123-b2f0-0e8a2824b9c5)]
 interface nsIPluginHost : nsISupports
 {
   /**
@@ -81,6 +81,8 @@ interface nsIPluginHost : nsISupports
   void registerPlayPreviewMimeType(in AUTF8String mimeType);
 
   void unregisterPlayPreviewMimeType(in AUTF8String mimeType);
+
+  ACString getPermissionStringForType(in AUTF8String mimeType);
 
   bool isPluginClickToPlayForType(in AUTF8String mimeType);
 };

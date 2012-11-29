@@ -1337,10 +1337,6 @@ class PropertyArrays():
         return [ "staticMethods", "staticAttrs", "methods", "attrs",
                  "unforgeableAttrs", "consts" ]
 
-    @staticmethod
-    def xrayRelevantArrayNames():
-        return [ "methods", "attrs", "unforgeableAttrs", "consts" ]
-
     def hasChromeOnly(self):
         return any(getattr(self, a).hasChromeOnly() for a in self.arrayNames())
     def hasNonChromeOnly(self):
@@ -1417,7 +1413,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         # There is no need to init any IDs in workers, because worker bindings
         # don't have Xrays.
         if not self.descriptor.workers:
-            for var in self.properties.xrayRelevantArrayNames():
+            for var in self.properties.arrayNames():
                 props = getattr(self.properties, var)
                 # We only have non-chrome ids to init if we have no chrome ids.
                 if props.hasChromeOnly():
@@ -1817,7 +1813,9 @@ builtinNames = {
     IDLType.Tags.uint16: 'uint16_t',
     IDLType.Tags.uint32: 'uint32_t',
     IDLType.Tags.uint64: 'uint64_t',
+    IDLType.Tags.unrestricted_float: 'float',
     IDLType.Tags.float: 'float',
+    IDLType.Tags.unrestricted_double: 'double',
     IDLType.Tags.double: 'double'
 }
 
@@ -1966,7 +1964,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isEnforceRange=False,
                                     isClamp=False,
                                     isNullOrUndefined=False,
-                                    exceptionCode=None):
+                                    exceptionCode=None,
+                                    lenientFloatCode=None):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -2003,6 +2002,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
     If isClamp is true, we're converting an integer and clamping if the
     value is out of range.
+
+    If lenientFloatCode is not None, it should be used in cases when
+    we're a non-finite float that's not unrestricted.
 
     The return value from this function is a tuple consisting of four things:
 
@@ -2170,7 +2172,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         (elementTemplate, elementDeclType,
          elementHolderType, dealWithOptional) = getJSToNativeConversionTemplate(
             elementType, descriptorProvider, isMember=True,
-            exceptionCode=exceptionCode)
+            exceptionCode=exceptionCode, lenientFloatCode=lenientFloatCode)
         if dealWithOptional:
             raise TypeError("Shouldn't have optional things in sequences")
         if elementHolderType is not None:
@@ -2206,20 +2208,26 @@ for (uint32_t i = 0; i < length; ++i) {
   if (!JS_GetElement(cx, seq, i, &temp)) {
 %s
   }
+  %s& slot = *arr.AppendElement();
 """ % (CGIndenter(CGGeneric(notSequence)).define(),
        exceptionCodeIndented.define(),
        elementDeclType.define(),
        elementDeclType.define(),
        arrayRef,
        exceptionCodeIndented.define(),
-       CGIndenter(exceptionCodeIndented).define()))
+       CGIndenter(exceptionCodeIndented).define(),
+       elementDeclType.define()))
 
         templateBody += CGIndenter(CGGeneric(
                 string.Template(elementTemplate).substitute(
                     {
                         "val" : "temp",
                         "valPtr": "&temp",
-                        "declName" : "(*arr.AppendElement())",
+                        "declName" : "slot",
+                        # We only need holderName here to handle isExternal()
+                        # interfaces, which use an internal holder for the
+                        # conversion even when forceOwningType ends up true.
+                        "holderName": "tempHolder",
                         # Use the same ${obj} as for the sequence itself
                         "obj": "${obj}"
                         }
@@ -2537,7 +2545,7 @@ for (uint32_t i = 0; i < length; ++i) {
             templateBody += ("}\n"
                 "MOZ_ASSERT(tmp);\n")
 
-            if not isDefinitelyObject:
+            if not isDefinitelyObject and not forceOwningType:
                 # Our tmpVal will go out of scope, so we can't rely on it
                 # for rooting
                 templateBody += (
@@ -2851,8 +2859,10 @@ for (uint32_t i = 0; i < length; ++i) {
 
     conversionBehavior = "eDefault"
     if isEnforceRange:
+        assert type.isInteger()
         conversionBehavior = "eEnforceRange"
     elif isClamp:
+        assert type.isInteger()
         conversionBehavior = "eClamp"
 
     if type.nullable():
@@ -2860,7 +2870,8 @@ for (uint32_t i = 0; i < length; ++i) {
         mutableType = declType.define() + "&"
         if not isOptional and not isMember:
             declType = CGWrapper(declType, pre="const ")
-        dataLoc = ("const_cast< %s >(${declName}).SetValue()" % mutableType)
+        writeLoc = ("const_cast< %s >(${declName}).SetValue()" % mutableType)
+        readLoc = "${declName}.Value()"
         nullCondition = "${val}.isNullOrUndefined()"
         if defaultValue is not None and isinstance(defaultValue, IDLNullValue):
             nullCondition = "!(${haveValue}) || " + nullCondition
@@ -2869,18 +2880,32 @@ for (uint32_t i = 0; i < length; ++i) {
             "  const_cast< %s >(${declName}).SetNull();\n"
             "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "%s\n"
-            "}" % (nullCondition, mutableType, typeName, conversionBehavior, dataLoc,
-                   exceptionCodeIndented.define()))
+            "}" % (nullCondition, mutableType, typeName, conversionBehavior,
+                   writeLoc, exceptionCodeIndented.define()))
     else:
         assert(defaultValue is None or
                not isinstance(defaultValue, IDLNullValue))
-        dataLoc = "${declName}"
+        writeLoc = "${declName}"
+        readLoc = writeLoc
         template = (
             "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "%s\n"
-            "}" % (typeName, conversionBehavior, dataLoc,
+            "}" % (typeName, conversionBehavior, writeLoc,
                    exceptionCodeIndented.define()))
         declType = CGGeneric(typeName)
+
+    if type.isFloat() and not type.isUnrestricted():
+        if lenientFloatCode is not None:
+            nonFiniteCode = CGIndenter(CGGeneric(lenientFloatCode)).define()
+        else:
+            nonFiniteCode = ("  ThrowErrorMessage(cx, MSG_NOT_FINITE);\n"
+                             "%s" % exceptionCodeIndented.define())
+        template += (" else if (!MOZ_DOUBLE_IS_FINITE(%s)) {\n"
+                     "  // Note: MOZ_DOUBLE_IS_FINITE will do the right thing\n"
+                     "  //       when passed a non-finite float too.\n"
+                     "%s\n"
+                     "}" % (readLoc, nonFiniteCode))
+
     if (defaultValue is not None and
         # We already handled IDLNullValue, so just deal with the other ones
         not isinstance(defaultValue, IDLNullValue)):
@@ -2895,7 +2920,7 @@ for (uint32_t i = 0; i < length; ++i) {
                              post=("\n"
                                    "} else {\n"
                                    "  %s = %s;\n"
-                                   "}" % (dataLoc, defaultStr))).define()
+                                   "}" % (writeLoc, defaultStr))).define()
 
     return (template, declType, None, isOptional)
 
@@ -3007,7 +3032,7 @@ class CGArgumentConverter(CGThing):
     unwrap the argument to the right native type.
     """
     def __init__(self, argument, index, argv, argc, descriptorProvider,
-                 invalidEnumValueFatal=True):
+                 invalidEnumValueFatal=True, lenientFloatCode=None):
         CGThing.__init__(self)
         self.argument = argument
         if argument.variadic:
@@ -3039,6 +3064,7 @@ class CGArgumentConverter(CGThing):
         else:
             self.argcAndIndex = None
         self.invalidEnumValueFatal = invalidEnumValueFatal
+        self.lenientFloatCode = lenientFloatCode
 
     def define(self):
         return instantiateJSToNativeConversionTemplate(
@@ -3050,7 +3076,8 @@ class CGArgumentConverter(CGThing):
                                             treatNullAs=self.argument.treatNullAs,
                                             treatUndefinedAs=self.argument.treatUndefinedAs,
                                             isEnforceRange=self.argument.enforceRange,
-                                            isClamp=self.argument.clamp),
+                                            isClamp=self.argument.clamp,
+                                            lenientFloatCode=self.lenientFloatCode),
             self.replacementVariables,
             self.argcAndIndex).define()
 
@@ -3237,9 +3264,9 @@ if (!%(resultStr)s) {
 
         wrapCode = (("if (%(result)s) {\n" +
                      CGIndenter(CGGeneric(setValue(
-                            "JS::ObjectValue(*%(result)s->Callable())", True))).define() +
+                            "JS::ObjectValue(*%(result)s->Callable())", True))).define() + "\n"
                      "} else {\n" +
-                     setValue("JS::NullValue()") +
+                     CGIndenter(CGGeneric(setValue("JS::NullValue()"))).define() + "\n"
                      "}") % { "result": result })
         return wrapCode, False
 
@@ -3289,8 +3316,9 @@ if (!%(resultStr)s) {
                IDLType.Tags.uint16, IDLType.Tags.int32]:
         return (setValue("INT_TO_JSVAL(int32_t(%s))" % result), True)
 
-    elif tag in [IDLType.Tags.int64, IDLType.Tags.uint64, IDLType.Tags.float,
-                 IDLType.Tags.double]:
+    elif tag in [IDLType.Tags.int64, IDLType.Tags.uint64,
+                 IDLType.Tags.unrestricted_float, IDLType.Tags.float,
+                 IDLType.Tags.unrestricted_double, IDLType.Tags.double]:
         # XXXbz will cast to double do the "even significand" thing that webidl
         # calls for for 64-bit ints?  Do we care?
         return (setValue("JS_NumberValue(double(%s))" % result), True)
@@ -3540,6 +3568,9 @@ class CGPerSignatureCall(CGThing):
     def __init__(self, returnType, argsPre, arguments, nativeMethodName, static,
                  descriptor, idlNode, argConversionStartsAt=0,
                  getter=False, setter=False):
+        assert idlNode.isMethod() == (not getter and not setter)
+        assert idlNode.isAttr() == (getter or setter)
+
         CGThing.__init__(self)
         self.returnType = returnType
         self.descriptor = descriptor
@@ -3555,9 +3586,17 @@ class CGPerSignatureCall(CGThing):
             cgThings = [CGGeneric(self.getArgvDecl())]
         else:
             cgThings = []
+        lenientFloatCode = None
+        if idlNode.getExtendedAttribute('LenientFloat') is not None:
+            if setter:
+                lenientFloatCode = "return true;"
+            elif idlNode.isMethod():
+                lenientFloatCode = ("*vp = JSVAL_VOID;\n"
+                                    "return true;")
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
                                              self.getArgc(), self.descriptor,
-                                             invalidEnumValueFatal=not setter) for
+                                             invalidEnumValueFatal=not setter,
+                                             lenientFloatCode=lenientFloatCode) for
                          i in range(argConversionStartsAt, self.argCount)])
 
         cgThings.append(CGCallGenerator(
@@ -6946,7 +6985,7 @@ class CGNativeMember(ClassMethod):
             if nullable:
                 type = type.inner
             elementType = type.inner
-            decl = CGWrapper(self.getArgType(elementType, False, True)[0],
+            decl = CGWrapper(self.getArgType(elementType, False, False, True)[0],
                              pre="Sequence< ", post=" >")
             return decl.define(), True, True
 
@@ -7032,17 +7071,23 @@ class CGNativeMember(ClassMethod):
 
         return builtinNames[type.tag()], False, True
 
-    def getArgType(self, type, optional, isMember):
+    def getArgType(self, type, optional, variadic, isMember):
         """
         Get the type of an argument declaration.  Returns the type CGThing, and
         whether this should be a const ref.
         """
-        (decl, ref, handleNullable) = self.doGetArgType(type, optional, isMember)
+        (decl, ref, handleNullable) = self.doGetArgType(type, optional,
+                                                        isMember or variadic)
         decl = CGGeneric(decl)
         if handleNullable and type.nullable():
             decl = CGWrapper(decl, pre="Nullable< ", post=" >")
             ref = True
-        if optional:
+        if variadic:
+            decl = CGWrapper(decl, pre="nsTArray< ", post=" >")
+            ref = True
+        elif optional:
+            # Note: All variadic args claim to be optional, but we can just use
+            # empty arrays to represent them not being present.
             decl = CGWrapper(decl, pre="Optional< ", post=" >")
             ref = True
         return (decl, ref)
@@ -7053,6 +7098,7 @@ class CGNativeMember(ClassMethod):
         """
         (decl, ref) = self.getArgType(arg.type,
                                       arg.optional and not arg.defaultValue,
+                                      arg.variadic,
                                       False)
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")
@@ -7414,6 +7460,15 @@ class CallCallback(CGNativeMember):
         self.callback = callback
         args = sig[1]
         self.argCount = len(args)
+        if self.argCount > 0:
+            # Check for variadic arguments
+            lastArg = args[self.argCount-1]
+            if lastArg.variadic:
+                self.argCountStr = (
+                    "(%d - 1) + %s.Length()" % (self.argCount,
+                                                lastArg.identifier.name))
+            else:
+                self.argCountStr = "%d" % self.argCount
         CGNativeMember.__init__(self, descriptorProvider, FakeMember(),
                                 "Call", (self.retvalType, args),
                                 extendedAttrs={},
@@ -7429,25 +7484,32 @@ class CallCallback(CGNativeMember):
     def getImpl(self):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
-            "argCount": self.argCount,
             "returnResult": self.getResultConversion(),
-            "convertArgs": self.getArgConversions()
+            "convertArgs": self.getArgConversions(),
             }
         if self.argCount > 0:
+            replacements["argCount"] = self.argCountStr
             replacements["argvDecl"] = string.Template(
-                "JS::Value argv[${argCount}];\n").substitute(replacements)
-            replacements["argv"] = "argv"
+                "JS::AutoValueVector argv(cx);\n"
+                "if (!argv.resize(${argCount})) {\n"
+                "  aRv.Throw(NS_ERROR_OUT_OF_MEMORY);\n"
+                "  return${errorReturn};\n"
+                "}\n"
+                ).substitute(replacements)
+            replacements["argv"] = "argv.begin()"
+            replacements["argc"] = "argc"
         else:
             # Avoid weird 0-sized arrays
             replacements["argvDecl"] = ""
             replacements["argv"] = "nullptr"
+            replacements["argc"] = "0"
 
         return string.Template(
             "JS::Value rval = JSVAL_VOID;\n"
             "${argvDecl}" # Newlines and semicolons are in the value
             "${convertArgs}"
             "if (!JS_CallFunctionValue(cx, aThisObj, JS::ObjectValue(*mCallable),\n"
-            "                          argc, ${argv}, &rval)) {\n"
+            "                          ${argc}, ${argv}, &rval)) {\n"
             "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
             "  return${errorReturn};\n"
             "}\n"
@@ -7490,15 +7552,22 @@ class CallCallback(CGNativeMember):
                                     pre="do {\n",
                                     post="\n} while (0);")
                           for c in argConversions]
-        argConversions.insert(0,
-                              CGGeneric("unsigned argc = %d;" % self.argCount));
+        if self.argCount > 0:
+            argConversions.insert(0,
+                                  CGGeneric("unsigned argc = %s;" % self.argCountStr));
         # And slap them together.
         return CGList(argConversions, "\n\n").define() + "\n\n"
 
     def getArgConversion(self, i, arg):
         argval = arg.identifier.name
-        if arg.optional:
-            argval += ".Value()"
+
+        if arg.variadic:
+            argval = argval + "[idx]"
+            jsvalIndex = "%d + idx" % i
+        else:
+            jsvalIndex = "%d" % i
+            if arg.optional:
+                argval += ".Value()"
         if arg.type.isString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
             # let's give it a string it can mutate
@@ -7513,16 +7582,22 @@ class CallCallback(CGNativeMember):
             arg.type, self.descriptor,
             {
                 'result' : result,
-                'successCode' : "break;",
-                'jsvalRef' : "argv[%d]" % i,
-                'jsvalPtr' : "&argv[%d]" % i,
+                'successCode' : "continue;" if arg.variadic else "break;",
+                'jsvalRef' : "argv[%s]" % jsvalIndex,
+                'jsvalPtr' : "&argv[%s]" % jsvalIndex,
                 # XXXbz we don't have anything better to use for 'obj',
                 # really...
                 'obj' : 'mCallable',
                 'isCreator': False,
                 'exceptionCode' : self.exceptionCode
                 })
-        if arg.optional:
+        if arg.variadic:
+            conversion = string.Template(
+                "for (uint32_t idx = 0; idx < ${arg}.Length(); ++idx) {\n" +
+                CGIndenter(CGGeneric(conversion)).define() + "\n"
+                "}\n"
+                "break;").substitute({ "arg": arg.identifier.name })
+        elif arg.optional:
             conversion = (
                 CGIfWrapper(CGGeneric(conversion),
                             "%s.WasPassed()" % arg.identifier.name).define() +

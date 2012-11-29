@@ -262,7 +262,7 @@ public:
   }
   void SetTimeout(uint32_t aTimeout, ErrorResult& aRv);
   bool WithCredentials();
-  void SetWithCredentials(bool aWithCredentials, nsresult& aRv);
+  void SetWithCredentials(bool aWithCredentials, ErrorResult& aRv);
   nsXMLHttpRequestUpload* Upload();
 
 private:
@@ -596,8 +596,7 @@ protected:
   // but is also explicitly set in OnStopRequest.
   nsCOMPtr<nsIDOMBlob> mResponseBlob;
   // Non-null only when we are able to get a os-file representation of the
-  // response, i.e. when loading from a file, or when the http-stream
-  // caches into a file or is reading from a cached file.
+  // response, i.e. when loading from a file.
   nsRefPtr<nsDOMFile> mDOMFile;
   // We stream data to mBlobSet when response type is "blob" or "moz-blob"
   // and mDOMFile is null.

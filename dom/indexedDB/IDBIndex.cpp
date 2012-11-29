@@ -414,6 +414,7 @@ IDBIndex::~IDBIndex()
   NS_ASSERTION(!mActorParent, "Actor parent owns us, how can we be dying?!");
 
   if (mRooted) {
+    mCachedKeyPath = JSVAL_VOID;
     NS_DROP_JS_OBJECTS(this, IDBIndex);
   }
 

@@ -18,5 +18,9 @@
       <versionRange severity="1"/>
     </emItem>
     <emItem id="hardblock@tests.mozilla.org"/>
+    <emItem id="/^RegExp/">
+      <versionRange severity="1"/>
+    </emItem>
+    <emItem id="/^RegExp/i"/>
   </emItems>
 </blocklist>

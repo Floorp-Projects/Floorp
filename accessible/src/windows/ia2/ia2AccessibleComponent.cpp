@@ -37,7 +37,8 @@ ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aX = 0;
   *aY = 0;
 
@@ -77,14 +78,14 @@ __try {
   *aY = y - parenty;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleComponent::get_foreground(IA2Color* aForeground)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -95,15 +96,14 @@ __try {
 
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleComponent::get_background(IA2Color* aBackground)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -114,8 +114,6 @@ __try {
 
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 

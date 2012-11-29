@@ -1,0 +1,46 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=781534
+-->
+<head>
+  <meta charset="utf-8">
+  <title>mozGetUserMedia Basic Audio Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<audio id="testAudio"></audio>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">mozGetUserMedia Basic Audio Test</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Run a test to verify that we can complete a start and stop media playback
+ * cycle for an audio LocalMediaStream on an audio HTMLMediaElement.
+ */
+runTest(function () {
+  try {
+    navigator.mozGetUserMedia({audio: true, fake: true}, function(stream) {
+      var testAudio = document.getElementById('testAudio');
+      var audioStreamPlayback = new MediaStreamPlayback(testAudio, stream);
+      audioStreamPlayback.playMedia(5000, function() {
+				stream.stop();
+				SimpleTest.finish();
+			}, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish);
+  } catch (err) {
+    unexpectedCallbackAndFinish(err);
+  }
+}, true);
+
+</script>
+</pre>
+</body>
+</html>

@@ -10,7 +10,6 @@
 #include "BluetoothPropertyEvent.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
-#include "BluetoothServiceUuid.h"
 #include "BluetoothUtils.h"
 #include "GeneratedEvents.h"
 
@@ -164,6 +163,8 @@ BluetoothAdapter::Unroot()
   if (!mIsRooted) {
     return;
   }
+  mJsUuids = nullptr;
+  mJsDeviceAddresses = nullptr;
   NS_DROP_JS_OBJECTS(this, BluetoothAdapter);
   mIsRooted = false;
 }

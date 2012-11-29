@@ -17,6 +17,8 @@ public class RedirOutputThread extends Thread
     Process pProc;
     String    strOutput;
     int    nExitCode = -1;
+    private volatile boolean stopRedirRequested = false;
+    private volatile boolean redirStopped = false;
 
     public RedirOutputThread(Process pProc, OutputStream out)
         {
@@ -106,7 +108,8 @@ public class RedirOutputThread extends Thread
                         }
                     }
 
-                bStillRunning = (IsProcRunning(pProc) || (sutOut.available() > 0) || (sutErr.available() > 0));
+                bStillRunning = (stopRedirRequested == false) &&
+                    (IsProcRunning(pProc) || (sutOut.available() > 0) || (sutErr.available() > 0));
                 }
             catch (IOException e)
                 {
@@ -123,6 +126,25 @@ public class RedirOutputThread extends Thread
                 }
             }
 
+        // notify stopRedirect that redirection has stopped
+        redirStopped = true;
+        if (stopRedirRequested)
+            {
+            synchronized(this) 
+                {
+                notifyAll();
+                }
+            }
+
+        // wait for process to end, if it has not already, then destroy it
+        try
+            {
+            pProc.waitFor();
+            }
+        catch (InterruptedException e) 
+            {
+            e.printStackTrace();
+            }
         pProc.destroy();
         buffer = null;
         System.gc();
@@ -144,4 +166,32 @@ public class RedirOutputThread extends Thread
 
         return(bRet);
         }
+
+    public synchronized void stopRedirect()
+        {
+        stopRedirRequested = true;
+        // wait for notification that redirection has stopped
+        if (!redirStopped)
+            {
+            try 
+                {
+                // max wait time is somewhat arbitrary and provided "just in case";
+                // we expect to be notified as soon as run() completes its current
+                // sleep and checks the stopRedirRequested flag
+                wait(500);
+                }
+            catch (InterruptedException e) 
+                {
+                e.printStackTrace();
+                }
+            }
+        }
+
+    public void joinAndStopRedirect(long millis) throws InterruptedException
+        {
+        super.join(millis);
+        if (out != null)
+            stopRedirect();
+        }
+
     }

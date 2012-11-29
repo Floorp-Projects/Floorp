@@ -45,8 +45,11 @@ var types = [
   [ 'button',         false ],
 ];
 
-var input = document.createElement("input");
-document.getElementById('content').appendChild(input);
+function getFreshElement(type) {
+  var elmt = document.createElement('input');
+  elmt.type = type;
+  return elmt;
+}
 
 function checkValidity(aElement, aValidity, aApply, aData)
 {
@@ -74,7 +77,7 @@ function checkValidity(aElement, aValidity, aApply, aData)
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 for each (var data in types) {
-  input.type = data[0];
+  var input = getFreshElement(data[0]);
   var apply = data[1];
 
   if (data[2]) {
@@ -227,10 +230,35 @@ for each (var data in types) {
     input.max = '10';
     input.value = '-9';
     checkValidity(input, false, apply, {low: -10, high: -8});
+
+    // If there is a value defined but no min, the step base is the value.
+    input = getFreshElement(data[0]);
+    input.setAttribute('value', '1');
+    input.step = 2;
+    checkValidity(input, true, apply);
+
+    input.value = 3;
+    checkValidity(input, true, apply);
+
+    input.value = 2;
+    checkValidity(input, false, apply, {low: 1, high: 3});
+
+    // Should also work with defaultValue.
+    input = getFreshElement(data[0]);
+    input.defaultValue = 1;
+    input.step = 2;
+    checkValidity(input, true, apply);
+
+    input.value = 3;
+    checkValidity(input, true, apply);
+
+    input.value = 2;
+    checkValidity(input, false, apply, {low: 1, high: 3});
   }
 
   if (input.type == 'number') {
     // Check that when the higher value is higher than max, we don't show it.
+    input = getFreshElement(data[0]);
     input.step = '2';
     input.min = '1';
     input.max = '10.9';
@@ -240,12 +268,6 @@ for each (var data in types) {
                                 "The nearest valid value is 9.",
        "The validation message should not include the higher value.");
   }
-
-  // Cleaning up,
-  input.removeAttribute('step');
-  input.removeAttribute('max');
-  input.removeAttribute('min');
-  input.value = '';
 }
 
 SimpleTest.finish();

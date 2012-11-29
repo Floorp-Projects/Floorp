@@ -22,24 +22,9 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AudioContext)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDestination)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER_NATIVE
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDestination)
-  // Cannot use NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR since AudioListener
-  // does not inherit from nsISupports.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(AudioContext)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(AudioContext,
+                                        mWindow, mDestination, mListener)
+
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioContext, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioContext, Release)
 
@@ -64,7 +49,7 @@ AudioContext::WrapObject(JSContext* aCx, JSObject* aScope,
 /* static */ already_AddRefed<AudioContext>
 AudioContext::Constructor(nsISupports* aGlobal, ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -72,6 +57,7 @@ AudioContext::Constructor(nsISupports* aGlobal, ErrorResult& aRv)
 
   AudioContext* object = new AudioContext(window);
   NS_ADDREF(object);
+  window->AddAudioContext(object);
   return object;
 }
 

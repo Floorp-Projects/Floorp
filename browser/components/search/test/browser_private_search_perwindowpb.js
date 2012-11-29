@@ -56,11 +56,10 @@ function test() {
 
   function testOnWindow(aIsPrivate, aCallback) {
     let win = OpenBrowserWindow({ private: aIsPrivate });
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+    waitForFocus(function() {
       windowsToClose.push(win);
       executeSoon(function() aCallback(win));
-    }, false);
+    }, win);
   }
 
   addEngine(function() {
@@ -89,7 +88,7 @@ function checkSearchPopup(aWin, aCallback) {
 
     let entries = getMenuEntries(searchBar);
     for (let i = 0; i < entries.length; i++) {
-      isnot(entries[0], "private test",
+      isnot(entries[i], "private test",
             "shouldn't see private autocomplete entries");
     }
 

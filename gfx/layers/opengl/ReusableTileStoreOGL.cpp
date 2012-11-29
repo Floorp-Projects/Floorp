@@ -4,6 +4,8 @@
 
 #include "ReusableTileStoreOGL.h"
 
+#include "GLContext.h"
+
 namespace mozilla {
 namespace layers {
 

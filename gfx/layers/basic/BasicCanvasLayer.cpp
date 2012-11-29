@@ -387,24 +387,25 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
   if (mGLContext &&
       !mForceReadback &&
-      BasicManager()->GetParentBackendType() == mozilla::layers::LAYERS_OPENGL) {
-    TextureImage::TextureShareType flags;
+      BasicManager()->GetParentBackendType() == mozilla::layers::LAYERS_OPENGL)
+  {
+    GLContext::SharedTextureShareType shareType;
     // if process type is default, then it is single-process (non-e10s)
     if (XRE_GetProcessType() == GeckoProcessType_Default)
-      flags = TextureImage::ThreadShared;
+      shareType = GLContext::SameProcess;
     else
-      flags = TextureImage::ProcessShared;
+      shareType = GLContext::CrossProcess;
 
     SharedTextureHandle handle = GetSharedBackBufferHandle();
     if (!handle) {
-      handle = mGLContext->CreateSharedHandle(flags);
+      handle = mGLContext->CreateSharedHandle(shareType);
       if (handle) {
-        mBackBuffer = SharedTextureDescriptor(flags, handle, mBounds.Size(), false);
+        mBackBuffer = SharedTextureDescriptor(shareType, handle, mBounds.Size(), false);
       }
     }
     if (handle) {
       mGLContext->MakeCurrent();
-      mGLContext->UpdateSharedHandle(flags, handle);
+      mGLContext->UpdateSharedHandle(shareType, handle);
       // call Painted() to reset our dirty 'bit'
       Painted();
       FireDidTransactionCallback();

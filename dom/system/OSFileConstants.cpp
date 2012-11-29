@@ -36,6 +36,7 @@
 #include "nsAutoPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "mozJSComponentLoader.h"
 
 #include "OSFileConstants.h"
 #include "nsIOSFileConstantsService.h"
@@ -699,11 +700,13 @@ OSFileConstantsService::Init(JSContext *aCx)
     return rv;
   }
 
-  JSObject *global = JS_GetGlobalForScopeChain(aCx);
-  if (!global) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  if (!mozilla::DefineOSFileConstants(aCx, global)) {
+  JSObject *targetObj = nullptr;
+
+  mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+  rv = loader->FindTargetObject(aCx, &targetObj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mozilla::DefineOSFileConstants(aCx, targetObj)) {
     return NS_ERROR_FAILURE;
   }
 

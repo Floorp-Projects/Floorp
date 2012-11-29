@@ -54,17 +54,6 @@ static bool sInitialized = false;
 static bool sIsShuttingDown = false;
 
 static PLDHashOperator
-RemoveChildFromList(const nsAString& aKey, ProcessLockTable* aTable, void* aUserArg)
-{
-  MOZ_ASSERT(aUserArg);
-
-  uint64_t childID = *static_cast<uint64_t*>(aUserArg);
-  aTable->Remove(childID);
-
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
 CountWakeLocks(const uint64_t& aKey, LockCount aCount, void* aUserArg)
 {
   MOZ_ASSERT(aUserArg);
@@ -72,6 +61,31 @@ CountWakeLocks(const uint64_t& aKey, LockCount aCount, void* aUserArg)
   LockCount* totalCount = static_cast<LockCount*>(aUserArg);
   totalCount->numLocks += aCount.numLocks;
   totalCount->numHidden += aCount.numHidden;
+
+  return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+RemoveChildFromList(const nsAString& aKey, ProcessLockTable* aTable, void* aUserArg)
+{
+  MOZ_ASSERT(aUserArg);
+
+  uint64_t childID = *static_cast<uint64_t*>(aUserArg);
+  if (aTable->Get(childID, NULL)) {
+    aTable->Remove(childID);
+    if (sActiveListeners) {
+      LockCount totalCount;
+      WakeLockInformation info;
+      aTable->EnumerateRead(CountWakeLocks, &totalCount);
+      if (!totalCount.numLocks) {
+        sLockTable->Remove(aKey);
+      }
+      info.numLocks() = totalCount.numLocks;
+      info.numHidden() = totalCount.numHidden;
+      info.topic() = aKey;
+      NotifyWakeLockChange(info);
+    }
+  }
 
   return PL_DHASH_NEXT;
 }
@@ -162,6 +176,8 @@ ModifyWakeLockInternal(const nsAString& aTopic,
                        hal::WakeLockControl aHiddenAdjust,
                        uint64_t aProcessID)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (sIsShuttingDown) {
     return;
   }
