@@ -483,7 +483,8 @@ nsWindow::Create(nsIWidget *aParent,
       parent = NULL;
     }
 
-    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
+        WinUtils::GetWindowsVersion() <= WinUtils::WIN7_VERSION) {
       extendedStyle |= WS_EX_COMPOSITED;
     }
 
