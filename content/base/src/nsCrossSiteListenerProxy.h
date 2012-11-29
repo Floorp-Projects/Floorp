@@ -66,7 +66,11 @@ private:
   nsresult CheckRequestApproved(nsIRequest* aRequest);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
+  // The principal that originally kicked off the request
   nsCOMPtr<nsIPrincipal> mRequestingPrincipal;
+  // The principal to use for our Origin header ("source origin" in spec terms).
+  // This can get changed during redirects, unlike mRequestingPrincipal.
+  nsCOMPtr<nsIPrincipal> mOriginHeaderPrincipal;
   nsCOMPtr<nsIInterfaceRequestor> mOuterNotificationCallbacks;
   bool mWithCredentials;
   bool mRequestApproved;
