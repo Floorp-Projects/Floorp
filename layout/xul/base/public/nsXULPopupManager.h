@@ -490,7 +490,7 @@ public:
    * Return an array of all the open and visible popup frames for
    * menus, in order from top to bottom.
    */
-  nsTArray<nsIFrame *> GetVisiblePopups();
+  void GetVisiblePopups(nsTArray<nsIFrame *>& aPopups);
 
   /**
    * Get the node that last triggered a popup or tooltip in the document
