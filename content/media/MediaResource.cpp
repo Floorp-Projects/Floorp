@@ -726,7 +726,7 @@ void ChannelMediaResource::CloseChannel()
     }
     // The status we use here won't be passed to the decoder, since
     // we've already revoked the listener. It can however be passed
-    // to DocumentViewerImpl::LoadComplete if our channel is the one
+    // to nsDocumentViewer::LoadComplete if our channel is the one
     // that kicked off creation of a video document. We don't want that
     // document load to think there was an error.
     // NS_ERROR_PARSED_DATA_CACHED is the best thing we have for that
