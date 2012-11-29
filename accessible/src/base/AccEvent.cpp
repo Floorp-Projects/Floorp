@@ -52,16 +52,7 @@ AccEvent::CreateXPCOMObject()
 ////////////////////////////////////////////////////////////////////////////////
 // AccEvent cycle collection
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(AccEvent)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AccEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessible)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AccEvent)
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mAccessible");
-  cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mAccessible));
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_NATIVE_1(AccEvent, mAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AccEvent, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AccEvent, Release)

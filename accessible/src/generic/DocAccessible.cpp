@@ -119,17 +119,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DocAccessible)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationController)
-
-  if (tmp->mVirtualCursor) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVirtualCursor)
-  }
-
-  uint32_t i, length = tmp->mChildDocuments.Length();
-  for (i = 0; i < length; ++i) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildDocuments[i])
-  }
-
-  CycleCollectorTraverseCache(tmp->mAccessibleCache, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVirtualCursor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildDocuments)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
@@ -139,7 +131,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildDocuments)
   tmp->mDependentIDsHash.Clear();
   tmp->mNodeToAccessibleMap.Clear();
-  ClearCache(tmp->mAccessibleCache);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessibleCache)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocAccessible)
