@@ -753,13 +753,13 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32
     bind(&head);
 
     // Extract the bottom bits into lr.
-    ma_and(Imm32(mask), ScratchRegister, lr);
+    ma_and(Imm32(mask), ScratchRegister, secondScratchReg_);
     // Add those bits to the accumulator.
-    ma_add(lr, dest, dest);
+    ma_add(secondScratchReg_, dest, dest);
     // Do a trial subtraction, this is the same operation as cmp, but we store the dest
-    ma_sub(dest, Imm32(mask), lr, SetCond);
+    ma_sub(dest, Imm32(mask), secondScratchReg_, SetCond);
     // If (sum - C) > 0, store sum - C back into sum, thus performing a modulus.
-    ma_mov(lr, dest, NoSetCond, Unsigned);
+    ma_mov(secondScratchReg_, dest, NoSetCond, Unsigned);
     // Get rid of the bits that we extracted before, and set the condition codes
     as_mov(ScratchRegister, lsr(ScratchRegister, shift), SetCond);
     // If the shift produced zero, finish, otherwise, continue in the loop.
@@ -1707,8 +1707,8 @@ MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegi
 void
 MacroAssemblerARMCompat::store8(const Imm32 &imm, const Address &address)
 {
-    ma_mov(imm, lr);
-    store8(lr, address);
+    ma_mov(imm, secondScratchReg_);
+    store8(secondScratchReg_, address);
 }
 
 void
@@ -1720,8 +1720,8 @@ MacroAssemblerARMCompat::store8(const Register &src, const Address &address)
 void
 MacroAssemblerARMCompat::store8(const Imm32 &imm, const BaseIndex &dest)
 {
-    ma_mov(imm, lr);
-    store8(lr, dest);
+    ma_mov(imm, secondScratchReg_);
+    store8(secondScratchReg_, dest);
 }
 
 void
@@ -1740,8 +1740,8 @@ MacroAssemblerARMCompat::store8(const Register &src, const BaseIndex &dest)
 void
 MacroAssemblerARMCompat::store16(const Imm32 &imm, const Address &address)
 {
-    ma_mov(imm, lr);
-    store16(lr, address);
+    ma_mov(imm, secondScratchReg_);
+    store16(secondScratchReg_, address);
 }
 
 void
@@ -1753,8 +1753,8 @@ MacroAssemblerARMCompat::store16(const Register &src, const Address &address)
 void
 MacroAssemblerARMCompat::store16(const Imm32 &imm, const BaseIndex &dest)
 {
-    ma_mov(imm, lr);
-    store16(lr, dest);
+    ma_mov(imm, secondScratchReg_);
+    store16(secondScratchReg_, dest);
 }
 void
 MacroAssemblerARMCompat::store16(const Register &src, const BaseIndex &address)
@@ -1795,8 +1795,8 @@ MacroAssemblerARMCompat::store32(const Imm32 &src, const Address &address)
 void
 MacroAssemblerARMCompat::store32(const Imm32 &imm, const BaseIndex &dest)
 {
-    ma_mov(imm, lr);
-    store32(lr, dest);
+    ma_mov(imm, secondScratchReg_);
+    store32(secondScratchReg_, dest);
 }
 
 void
@@ -1894,8 +1894,8 @@ MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const Register &rhs)
 void
 MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const ImmWord &rhs)
 {
-    loadPtr(lhs, lr);
-    ma_cmp(lr, Imm32(rhs.value));
+    loadPtr(lhs, secondScratchReg_);
+    ma_cmp(secondScratchReg_, Imm32(rhs.value));
 }
 
 void
@@ -2499,10 +2499,10 @@ MacroAssemblerARMCompat::storePayload(const Value &val, Operand dest)
 {
     jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable())
-        ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), lr);
+        ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), secondScratchReg_);
     else
-        ma_mov(Imm32(jv.s.payload.i32), lr);
-    ma_str(lr, ToPayload(dest));
+        ma_mov(Imm32(jv.s.payload.i32), secondScratchReg_);
+    ma_str(secondScratchReg_, ToPayload(dest));
 }
 void
 MacroAssemblerARMCompat::storePayload(Register src, Operand dest)
@@ -2543,8 +2543,8 @@ MacroAssemblerARMCompat::storePayload(Register src, Register base, Register inde
 void
 MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
     if (dest.getTag() == Operand::MEM) {
-        ma_mov(tag, lr);
-        ma_str(lr, ToType(dest));
+        ma_mov(tag, secondScratchReg_);
+        ma_str(secondScratchReg_, ToType(dest));
         return;
     }
 
