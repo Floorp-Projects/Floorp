@@ -103,7 +103,7 @@ public class TabsTray extends LinearLayout
         mTabsAdapter.clear();
     }
 
-    void autoHidePanel() {
+    private void autoHidePanel() {
         mTabsPanel.autoHidePanel();
     }
 
@@ -289,6 +289,9 @@ public class TabsTray extends LinearLayout
                 mPendingClosedTabs.clear();
             }
         });
+
+        if (mTabsAdapter.getCount() == 1)
+            autoHidePanel();
 
         animator.start();
     }
