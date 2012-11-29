@@ -35,7 +35,7 @@ AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 }
 
 static bool
-IsEvalCacheCandidate(JSScript *script)
+IsEvalCacheCandidate(UnrootedScript script)
 {
     // Make sure there are no inner objects which might use the wrong parent
     // and/or call scope by reusing the previous eval's script. Skip the
@@ -57,7 +57,7 @@ EvalCacheHashPolicy::hash(const EvalCacheLookup &l)
 }
 
 /* static */ bool
-EvalCacheHashPolicy::match(JSScript *script, const EvalCacheLookup &l)
+EvalCacheHashPolicy::match(UnrootedScript script, const EvalCacheLookup &l)
 {
     JS_ASSERT(IsEvalCacheCandidate(script));
 
@@ -121,13 +121,13 @@ class EvalScriptGuard
         if (p_) {
             script_ = *p_;
             cx_->runtime->evalCache.remove(p_);
-            js_CallNewScriptHook(cx_, script_, NULL);
+            CallNewScriptHook(cx_, script_, NullPtr());
             script_->isCachedEval = false;
             script_->isActiveEval = true;
         }
     }
 
-    void setNewScript(JSScript *script) {
+    void setNewScript(UnrootedScript script) {
         // JSScript::initFromEmitter has already called js_CallNewScriptHook.
         JS_ASSERT(!script_ && script);
         script_ = script;
@@ -274,8 +274,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
                .setNoScriptRval(false)
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
-        JSScript *compiled = frontend::CompileScript(cx, scopeobj, caller, options,
-                                                     chars, length, stableStr, staticLevel);
+        UnrootedScript compiled = frontend::CompileScript(cx, scopeobj, caller, options,
+                                                          chars, length, stableStr, staticLevel);
         if (!compiled)
             return false;
 

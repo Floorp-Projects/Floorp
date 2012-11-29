@@ -204,10 +204,10 @@ struct EvalCacheHashPolicy
     typedef EvalCacheLookup Lookup;
 
     static HashNumber hash(const Lookup &l);
-    static bool match(JSScript *script, const EvalCacheLookup &l);
+    static bool match(UnrootedScript script, const EvalCacheLookup &l);
 };
 
-typedef HashSet<JSScript *, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
+typedef HashSet<RawScript, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
 
 class NativeIterCache
 {

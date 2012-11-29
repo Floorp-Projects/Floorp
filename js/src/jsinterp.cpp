@@ -527,7 +527,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, cons
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!script->ensureRanAnalysis(cx))
+    if (!JSScript::ensureRanAnalysis(cx, script))
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
@@ -1174,6 +1174,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     RootedPropertyName rootName0(cx);
     RootedId rootId0(cx);
     RootedShape rootShape0(cx);
+    RootedScript rootScript0(cx);
     DebugOnly<uint32_t> blockDepth;
 
     if (!entryFrame)
@@ -2360,7 +2361,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RawScript funScript = fun->getOrCreateScript(cx);
+    RootedScript funScript(cx, fun->getOrCreateScript(cx));
     if (!funScript)
         goto error;
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))

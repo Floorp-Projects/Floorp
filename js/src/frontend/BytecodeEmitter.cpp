@@ -1688,7 +1688,8 @@ BytecodeEmitter::needsImplicitThis()
 void
 BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext *cx)
 {
-    js_CallNewScriptHook(cx, script, script->function());
+    RootedFunction function(cx, script->function());
+    CallNewScriptHook(cx, script, function);
     if (!parent) {
         GlobalObject *compileAndGoGlobal = NULL;
         if (script->compileAndGo)

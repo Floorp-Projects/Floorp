@@ -155,7 +155,7 @@ IonFrameIterator::isEntryJSFrame() const
     return true;
 }
 
-JSScript *
+UnrootedScript
 IonFrameIterator::script() const
 {
     AutoAssertNoGC nogc;
@@ -401,7 +401,7 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
       }
       case CalleeToken_Script:
       {
-        JSScript *script = CalleeTokenToScript(token);
+        UnrootedScript script = CalleeTokenToScript(token);
         MarkScriptRoot(trc, &script, "ion-entry");
         JS_ASSERT(script == CalleeTokenToScript(token));
         break;

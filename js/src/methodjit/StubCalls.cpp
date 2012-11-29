@@ -834,7 +834,8 @@ stubs::TriggerIonCompile(VMFrame &f)
         if (*osrPC != JSOP_LOOPENTRY)
             osrPC = NULL;
 
-        if (!ion::TestIonCompile(f.cx, script, script->function(), osrPC, f.fp()->isConstructing())) {
+        RootedFunction scriptFunction(f.cx, script->function());
+        if (!ion::TestIonCompile(f.cx, script, scriptFunction, osrPC, f.fp()->isConstructing())) {
             if (f.cx->isExceptionPending())
                 THROW();
         }

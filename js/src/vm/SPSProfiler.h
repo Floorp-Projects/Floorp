@@ -238,7 +238,7 @@ class SPSProfiler
     JMChunkInfo *registerScript(mjit::JSActiveFrame *frame,
                                 mjit::PCLengthEntry *lenths,
                                 mjit::JITChunk *chunk);
-    void unregisterScript(JSScript *script, mjit::JITChunk *chunk);
+    void unregisterScript(UnrootedScript script, mjit::JITChunk *chunk);
   public:
 #else
     jsbytecode *ipToPC(JSScript *script, size_t ip) { return NULL; }

@@ -13,13 +13,14 @@
 
 #include "jsalloc.h"
 #include "jsfriendapi.h"
-#include "jsprvtd.h"
 
 #include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
+
+ForwardDeclareJS(Script);
 
 namespace JS {
 struct TypeInferenceSizes;
@@ -1105,7 +1106,7 @@ struct TypeCallsite
     /* Type set receiving the return value of this call. */
     StackTypeSet *returnTypes;
 
-    inline TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
+    inline TypeCallsite(JSContext *cx, UnrootedScript script, jsbytecode *pc,
                         bool isNew, unsigned argumentCount);
 };
 
@@ -1131,7 +1132,7 @@ class TypeScript
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
-    static inline unsigned NumTypeSets(RawScript script);
+    static inline unsigned NumTypeSets(UnrootedScript script);
 
     static inline HeapTypeSet  *ReturnTypes(RawScript script);
     static inline StackTypeSet *ThisTypes(RawScript script);
