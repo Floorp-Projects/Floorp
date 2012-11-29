@@ -106,7 +106,7 @@ function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup
       allowThirdPartyFixup: aAllowThirdPartyFixup,
       postData: aPostData,
       referrerURI: aReferrerURI,
-      initiatingDoc: event.target.ownerDocument
+      initiatingDoc: event ? event.target.ownerDocument : null
     };
   }
 
@@ -224,6 +224,11 @@ function openLinkIn(url, where, params) {
   var aInitiatingDoc        = params.initiatingDoc;
 
   if (where == "save") {
+    if (!aInitiatingDoc) {
+      Components.utils.reportError("openUILink/openLinkIn was called with " +
+        "where == 'save' but without initiatingDoc.  See bug 814264.");
+      return;
+    }
     saveURL(url, null, null, true, null, aReferrerURI, aInitiatingDoc);
     return;
   }

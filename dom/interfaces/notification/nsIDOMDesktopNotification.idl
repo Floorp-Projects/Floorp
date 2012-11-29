@@ -6,7 +6,7 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMDesktopNotification;
-
+interface nsIObserver;
 
 [scriptable, uuid(CCEA6185-0A3D-45AB-9058-1004DD4B8C50)]
 interface nsIDOMDesktopNotificationCenter : nsISupports
@@ -24,4 +24,16 @@ interface nsIDOMDesktopNotification : nsISupports
 
   [implicit_jscontext] attribute jsval onclick;
   [implicit_jscontext] attribute jsval onclose;
+};
+
+// Notification service that also provides the manifest URL
+[scriptable, uuid(7fb4f0f9-ff5b-4620-8e1b-d82d723605af)]
+interface nsIAppNotificationService : nsISupports
+{
+    void showAppNotification(in AString  imageUrl,
+                              in AString  title,
+                              in AString  text,
+                              [optional] in boolean textClickable,
+                              [optional] in AString manifestURL,
+                              [optional] in nsIObserver alertListener);
 };

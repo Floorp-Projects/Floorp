@@ -34,6 +34,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -62,15 +63,11 @@ abstract public class BrowserApp extends GeckoApp
 
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
-        int id;
-        String label;
-        String icon;
-
-        public MenuItemInfo(int id, String label, String icon) {
-            this.id = id;
-            this.label = label;
-            this.icon = icon;
-        }
+        public int id;
+        public String label;
+        public String icon;
+        public boolean checkable;
+        public int parent;
     }
 
     private Vector<MenuItemInfo> mAddonMenuItemsCache;
@@ -358,16 +355,25 @@ abstract public class BrowserApp extends GeckoApp
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("Menu:Add")) {
-                final String label = message.getString("name");
-                final int id = message.getInt("id") + ADDON_MENU_OFFSET;
+                MenuItemInfo info = new MenuItemInfo();
+                info.label = message.getString("name");
+                info.id = message.getInt("id") + ADDON_MENU_OFFSET;
                 String iconRes = null;
                 try { // icon is optional
                     iconRes = message.getString("icon");
                 } catch (Exception ex) { }
-                final String icon = iconRes;
+                info.icon = iconRes;
+                info.checkable = false;
+                try {
+                    info.checkable = message.getBoolean("checkable");
+                } catch (Exception ex) { }
+                try { // parent is optional
+                    info.parent = message.getInt("parent") + ADDON_MENU_OFFSET;
+                } catch (Exception ex) { }
+                final MenuItemInfo menuItemInfo = info;
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        addAddonMenuItem(id, label, icon);
+                        addAddonMenuItem(menuItemInfo);
                     }
                 });
             } else if (event.equals("Menu:Remove")) {
@@ -739,36 +745,53 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private void addAddonMenuItem(final int id, final String label, final String icon) {
+    private void addAddonMenuItem(final MenuItemInfo info) {
         if (mMenu == null) {
             if (mAddonMenuItemsCache == null)
                 mAddonMenuItemsCache = new Vector<MenuItemInfo>();
 
-            mAddonMenuItemsCache.add(new MenuItemInfo(id, label, icon));
+            mAddonMenuItemsCache.add(info);
             return;
         }
 
-        final MenuItem item = mMenu.add(Menu.NONE, id, Menu.NONE, label);
+        Menu menu;
+        if (info.parent == 0) {
+            menu = mMenu;
+        } else {
+            MenuItem parent = mMenu.findItem(info.parent);
+            if (parent == null)
+                return;
 
+            if (!parent.hasSubMenu()) {
+                mMenu.removeItem(parent.getItemId());
+                menu = mMenu.addSubMenu(Menu.NONE, parent.getItemId(), Menu.NONE, parent.getTitle());
+                if (parent.getIcon() != null)
+                    ((SubMenu) menu).getItem().setIcon(parent.getIcon());
+            } else {
+                menu = parent.getSubMenu();
+            }
+        }
+
+        final MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 Log.i(LOGTAG, "menu item clicked");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id - ADDON_MENU_OFFSET)));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(info.id - ADDON_MENU_OFFSET)));
                 return true;
             }
         });
 
-        if (icon != null) {
-            if (icon.startsWith("data")) {
-                BitmapDrawable drawable = new BitmapDrawable(BitmapUtils.getBitmapFromDataURI(icon));
+        if (info.icon != null) {
+            if (info.icon.startsWith("data")) {
+                BitmapDrawable drawable = new BitmapDrawable(BitmapUtils.getBitmapFromDataURI(info.icon));
                 item.setIcon(drawable);
             }
-            else if (icon.startsWith("jar:") || icon.startsWith("file://")) {
+            else if (info.icon.startsWith("jar:") || info.icon.startsWith("file://")) {
                 GeckoAppShell.getHandler().post(new Runnable() {
                     public void run() {
                         try {
-                            URL url = new URL(icon);
+                            URL url = new URL(info.icon);
                             InputStream is = (InputStream) url.getContent();
                             try {
                                 Drawable drawable = Drawable.createFromStream(is, "src");
@@ -783,6 +806,8 @@ abstract public class BrowserApp extends GeckoApp
                 });
             }
         }
+
+        item.setCheckable(info.checkable);
     }
 
     private void removeAddonMenuItem(int id) {
@@ -818,7 +843,7 @@ abstract public class BrowserApp extends GeckoApp
         // Add add-on menu items if any.
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
-                 addAddonMenuItem(item.id, item.label, item.icon);
+                 addAddonMenuItem(item);
             }
 
             mAddonMenuItemsCache.clear();

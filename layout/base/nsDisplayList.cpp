@@ -1721,7 +1721,8 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
 }
 
 bool
-nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder)
+nsDisplayBackgroundImage::TryOptimizeToImageLayer(LayerManager* aManager,
+                                                  nsDisplayListBuilder* aBuilder)
 {
   if (mIsThemed || !mBackgroundStyle)
     return false;
@@ -1745,7 +1746,7 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
   if (!imageRenderer->IsRasterImage())
     return false;
 
-  nsRefPtr<ImageContainer> imageContainer = imageRenderer->GetContainer();
+  nsRefPtr<ImageContainer> imageContainer = imageRenderer->GetContainer(aManager);
   // Image is not ready to be made into a layer yet
   if (!imageContainer)
     return false;
@@ -1769,9 +1770,10 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder
 }
 
 already_AddRefed<ImageContainer>
-nsDisplayBackgroundImage::GetContainer(nsDisplayListBuilder *aBuilder)
+nsDisplayBackgroundImage::GetContainer(LayerManager* aManager,
+                                       nsDisplayListBuilder *aBuilder)
 {
-  if (!TryOptimizeToImageLayer(aBuilder)) {
+  if (!TryOptimizeToImageLayer(aManager, aBuilder)) {
     return nullptr;
   }
 
@@ -1787,7 +1789,7 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 {
   if (!aManager->IsCompositingCheap() ||
       !nsLayoutUtils::GPUImageScalingEnabled() ||
-      !TryOptimizeToImageLayer(aBuilder)) {
+      !TryOptimizeToImageLayer(aManager, aBuilder)) {
     return LAYER_NONE;
   }
 
@@ -1804,12 +1806,12 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 
   // If we are not scaling at all, no point in separating this into a layer.
   if (scale.width == 1.0f && scale.height == 1.0f) {
-    return LAYER_INACTIVE;
+    return LAYER_NONE;
   }
 
   // If the target size is pretty small, no point in using a layer.
   if (destRect.width * destRect.height < 64 * 64) {
-    return LAYER_INACTIVE;
+    return LAYER_NONE;
   }
 
   return LAYER_ACTIVE;

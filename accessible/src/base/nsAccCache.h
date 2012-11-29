@@ -57,15 +57,25 @@ CycleCollectorTraverseCacheEntry(const void *aKey, T *aAccessible,
 }
 
 /**
+ * Unlink the accessible cache for the cycle collector.
+ */
+inline void
+ImplCycleCollectionUnlink(mozilla::a11y::AccessibleHashtable& aCache)
+{
+  ClearCache(aCache);
+}
+
+/**
  * Traverse the accessible cache for cycle collector.
  */
-
-static void
-CycleCollectorTraverseCache(mozilla::a11y::AccessibleHashtable& aCache,
-                            nsCycleCollectionTraversalCallback *aCallback)
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            mozilla::a11y::AccessibleHashtable& aCache,
+                            const char* aName,
+                            uint32_t aFlags = 0)
 {
   aCache.EnumerateRead(CycleCollectorTraverseCacheEntry<mozilla::a11y::Accessible>,
-                       aCallback);
+                       &aCallback);
 }
 
 #endif

@@ -585,7 +585,13 @@ pref("jsloader.reuseGlobal", true);
 
 // Enable font inflation for browser tab content.
 pref("font.size.inflation.minTwips", 120);
+// And disable it for lingering master-process UI.
+pref("font.size.inflation.disabledInMasterProcess", true);
 
 // Enable freeing dirty pages when minimizing memory; this reduces memory
 // consumption when applications are sent to the background.
 pref("memory.free_dirty_pages", true);
+
+// UAProfile settings
+pref("wap.UAProf.url", "");
+pref("wap.UAProf.tagname", "x-wap-profile");

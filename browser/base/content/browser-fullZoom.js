@@ -274,11 +274,11 @@ var FullZoom = {
    * checking ourselves if it differs costs more.
    * 
    * And perhaps we should always set the zoom even if it was more expensive,
-   * since DocumentViewerImpl::SetTextZoom claims that child documents can have
+   * since nsDocumentViewer::SetTextZoom claims that child documents can have
    * a different text zoom (although it would be unusual), and it implies that
    * those child text zooms should get updated when the parent zoom gets set,
    * and perhaps the same is true for full zoom
-   * (although DocumentViewerImpl::SetFullZoom doesn't mention it).
+   * (although nsDocumentViewer::SetFullZoom doesn't mention it).
    *
    * So when we apply new zoom values to the browser, we simply set the zoom.
    * We don't check first to see if the new value is the same as the current

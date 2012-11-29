@@ -2066,7 +2066,7 @@ nsCSSKeyframeRule::GetType() const
 NS_IMETHODIMP
 nsCSSKeyframeRule::GetType(uint16_t* aType)
 {
-  *aType = nsIDOMCSSRule::MOZ_KEYFRAME_RULE;
+  *aType = nsIDOMCSSRule::KEYFRAME_RULE;
   return NS_OK;
 }
 
@@ -2241,7 +2241,7 @@ nsCSSKeyframesRule::GetType() const
 NS_IMETHODIMP
 nsCSSKeyframesRule::GetType(uint16_t* aType)
 {
-  *aType = nsIDOMCSSRule::MOZ_KEYFRAMES_RULE;
+  *aType = nsIDOMCSSRule::KEYFRAMES_RULE;
   return NS_OK;
 }
 

@@ -1508,6 +1508,8 @@ RadioInterfaceLayer.prototype = {
                          oldIcc.mcc != message.mcc || 
                          oldIcc.mnc != message.mnc ||
                          oldIcc.spn != message.spn ||
+                         oldIcc.isDisplayNetworkNameRequired != message.isDisplayNetworkNameRequired ||
+                         oldIcc.isDisplaySpnRequired != message.isDisplaySpnRequired ||
                          oldIcc.msisdn != message.msisdn;
     if (!iccInfoChanged) {
       return;

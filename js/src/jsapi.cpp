@@ -233,7 +233,7 @@ JS_GetEmptyString(JSRuntime *rt)
 static void
 AssertHeapIsIdle(JSRuntime *rt)
 {
-    JS_ASSERT(rt->heapState == JSRuntime::Idle);
+    JS_ASSERT(rt->heapState == js::Idle);
 }
 
 static void
@@ -245,7 +245,7 @@ AssertHeapIsIdle(JSContext *cx)
 static void
 AssertHeapIsIdleOrIterating(JSRuntime *rt)
 {
-    JS_ASSERT(rt->heapState != JSRuntime::Collecting);
+    JS_ASSERT(rt->heapState != js::Collecting);
 }
 
 static void
