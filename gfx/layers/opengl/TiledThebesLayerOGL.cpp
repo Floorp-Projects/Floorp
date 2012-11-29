@@ -171,14 +171,15 @@ TiledThebesLayerOGL::ProcessLowPrecisionUploadQueue()
 
   mLowPrecisionRegionToUpload.And(mLowPrecisionRegionToUpload,
                                   mLowPrecisionMainMemoryTiledBuffer.GetValidRegion());
-  // XXX The aResolution parameter of Upload is unused here - this is normally
-  //     set so that ReusableTileStoreOGL knows the frame resolution of tiles
-  //     it's harvesting.
   mLowPrecisionVideoMemoryTiledBuffer.SetResolution(
     mLowPrecisionMainMemoryTiledBuffer.GetResolution());
+  // XXX It's assumed that the video memory tiled buffer has an up-to-date
+  //     frame resolution. As it's always updated first when zooming, this
+  //     should always be true.
   mLowPrecisionVideoMemoryTiledBuffer.Upload(&mLowPrecisionMainMemoryTiledBuffer,
                                  mLowPrecisionMainMemoryTiledBuffer.GetValidRegion(),
-                                 mLowPrecisionRegionToUpload, gfxSize(1, 1));
+                                 mLowPrecisionRegionToUpload,
+                                 mVideoMemoryTiledBuffer.GetFrameResolution());
   nsIntRegion validRegion = mLowPrecisionVideoMemoryTiledBuffer.GetValidRegion();
 
   mLowPrecisionMainMemoryTiledBuffer.ReadUnlock();
@@ -206,19 +207,19 @@ TiledThebesLayerOGL::ProcessUploadQueue()
     mReusableTileStore = new ReusableTileStoreOGL(gl(), 1);
   }
 
+  // Work out render resolution by multiplying the resolution of our ancestors.
+  // Only container layers can have frame metrics, so we start off with a
+  // resolution of 1, 1.
+  // XXX For large layer trees, it would be faster to do this once from the
+  //     root node upwards and store the value on each layer.
   gfxSize resolution(1, 1);
-  if (mReusableTileStore) {
-    // Work out render resolution by multiplying the resolution of our ancestors.
-    // Only container layers can have frame metrics, so we start off with a
-    // resolution of 1, 1.
-    // XXX For large layer trees, it would be faster to do this once from the
-    //     root node upwards and store the value on each layer.
-    for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-      const FrameMetrics& metrics = parent->GetFrameMetrics();
-      resolution.width *= metrics.mResolution.width;
-      resolution.height *= metrics.mResolution.height;
-    }
+  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
+    const FrameMetrics& metrics = parent->GetFrameMetrics();
+    resolution.width *= metrics.mResolution.width;
+    resolution.height *= metrics.mResolution.height;
+  }
 
+  if (mReusableTileStore) {
     mReusableTileStore->HarvestTiles(this,
                                      &mVideoMemoryTiledBuffer,
                                      mVideoMemoryTiledBuffer.GetValidRegion(),
@@ -290,10 +291,22 @@ TiledThebesLayerOGL::RenderLayerBuffer(TiledLayerBufferOGL& aLayerBuffer,
 {
   Layer* maskLayer = GetMaskLayer();
   const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
-  const nsIntRect visibleRect = visibleRegion.GetBounds();
-  float resolution = aLayerBuffer.GetResolution();
+  nsIntRect visibleRect = visibleRegion.GetBounds();
   gfx3DMatrix transform = GetEffectiveTransform();
-  transform.Scale(1/resolution, 1/resolution, 1);
+
+  float resolution = aLayerBuffer.GetResolution();
+  gfxSize layerScale(1, 1);
+  // We assume that the current frame resolution is the one used in our primary
+  // layer buffer. Compensate for a changing frame resolution.
+  if (aLayerBuffer.GetFrameResolution() != mVideoMemoryTiledBuffer.GetFrameResolution()) {
+    const gfxSize& layerResolution = aLayerBuffer.GetFrameResolution();
+    const gfxSize& localResolution = mVideoMemoryTiledBuffer.GetFrameResolution();
+    layerScale.width = layerResolution.width / localResolution.width;
+    layerScale.height = layerResolution.height / localResolution.height;
+    visibleRect.ScaleRoundOut(layerScale.width, layerScale.height);
+  }
+  transform.Scale(1/(resolution * layerScale.width),
+                  1/(resolution * layerScale.height), 1);
 
   uint32_t rowCount = 0;
   uint32_t tileX = 0;
@@ -314,12 +327,17 @@ TiledThebesLayerOGL::RenderLayerBuffer(TiledLayerBufferOGL& aLayerBuffer,
         GetTile(nsIntPoint(aLayerBuffer.RoundDownToTileEdge(x),
                            aLayerBuffer.RoundDownToTileEdge(y)));
       if (tileTexture != aLayerBuffer.GetPlaceholderTile()) {
-        nsIntRegion tileDrawRegion = nsIntRegion(nsIntRect(x, y, w, h));
-        tileDrawRegion.And(tileDrawRegion, aValidRegion);
+        nsIntRegion tileDrawRegion;
+        tileDrawRegion.And(aValidRegion,
+                           nsIntRect(x * layerScale.width,
+                                     y * layerScale.height,
+                                     w * layerScale.width,
+                                     h * layerScale.height));
         tileDrawRegion.Sub(tileDrawRegion, aMaskRegion);
 
         if (!tileDrawRegion.IsEmpty()) {
-          tileDrawRegion.ScaleRoundOut(resolution, resolution);
+          tileDrawRegion.ScaleRoundOut(resolution / layerScale.width,
+                                       resolution / layerScale.height);
 
           nsIntPoint tileOffset((x - tileStartX) * resolution,
                                 (y - tileStartY) * resolution);

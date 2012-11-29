@@ -540,9 +540,6 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (mTiledBuffer.HasFormatChanged(this)) {
     mValidRegion = nsIntRegion();
   }
-  if (mLowPrecisionTiledBuffer.HasFormatChanged(this)) {
-    mLowPrecisionValidRegion = nsIntRegion();
-  }
 
   nsIntRegion invalidRegion = mVisibleRegion;
   invalidRegion.Sub(invalidRegion, mValidRegion);
@@ -679,14 +676,16 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     nsIntRegion oldValidRegion = mLowPrecisionTiledBuffer.GetValidRegion();
     oldValidRegion.And(oldValidRegion, mVisibleRegion);
 
-    // If the frame resolution has changed, invalidate the buffer
-    if (mLowPrecisionTiledBuffer.GetFrameResolution() != mPaintData.mResolution) {
+    // If the frame resolution or format have changed, invalidate the buffer
+    if (mLowPrecisionTiledBuffer.GetFrameResolution() != mPaintData.mResolution ||
+        mLowPrecisionTiledBuffer.HasFormatChanged(this)) {
       if (!mLowPrecisionValidRegion.IsEmpty()) {
         updatedLowPrecision = true;
       }
       oldValidRegion.SetEmpty();
       mLowPrecisionValidRegion.SetEmpty();
       mLowPrecisionTiledBuffer.SetFrameResolution(mPaintData.mResolution);
+      lowPrecisionInvalidRegion = mVisibleRegion;
     }
 
     // Invalidate previously valid content that is no longer visible
