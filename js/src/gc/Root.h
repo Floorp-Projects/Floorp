@@ -279,14 +279,16 @@ class MutableHandle : public js::MutableHandleBase<T>
     }
 
     template <typename S>
-    inline
-    MutableHandle(js::Rooted<S> *root,
-                  typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
+    inline MutableHandle(js::Rooted<S> *root,
+                         typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
     void set(T v) {
         JS_ASSERT(!js::RootMethods<T>::poisoned(v));
         *ptr = v;
     }
+
+    template <typename S>
+    inline void set(const js::Unrooted<S> &v);
 
     /*
      * This may be called only if the location of the T is guaranteed
@@ -476,6 +478,13 @@ class Unrooted
         if (ptr_ == UninitializedTag())
             EnterAssertNoGCScope();
         ptr_ = other;
+        return *this;
+    }
+    Unrooted &operator=(Unrooted other) {
+        JS_ASSERT(other.ptr_ != UninitializedTag());
+        if (ptr_ == UninitializedTag())
+            EnterAssertNoGCScope();
+        ptr_ = other.ptr_;
         return *this;
     }
 
@@ -857,6 +866,13 @@ MutableHandle<T>::MutableHandle(js::Rooted<S> *root,
                                 typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
 {
     ptr = root->address();
+}
+
+template <typename T> template <typename S>
+inline void MutableHandle<T>::set(const js::Unrooted<S> &v)
+{
+    JS_ASSERT(!js::RootMethods<T>::poisoned(v));
+    *ptr = static_cast<S>(v);
 }
 
 /*

@@ -71,7 +71,7 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, JSScript *thing);
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, Shape *thing);
+PushMarkStack(GCMarker *gcmarker, UnrootedShape thing);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *thing);
@@ -84,7 +84,7 @@ namespace gc {
 
 static void MarkChildren(JSTracer *trc, JSString *str);
 static void MarkChildren(JSTracer *trc, JSScript *script);
-static void MarkChildren(JSTracer *trc, Shape *shape);
+static void MarkChildren(JSTracer *trc, UnrootedShape shape);
 static void MarkChildren(JSTracer *trc, UnrootedBaseShape base);
 static void MarkChildren(JSTracer *trc, types::TypeObject *type);
 static void MarkChildren(JSTracer *trc, ion::IonCode *code);
@@ -292,12 +292,14 @@ Is##base##Marked(EncapsulatedPtr<type> *thingp)                                 
     return IsMarked<type>(thingp->unsafeGet());                                                   \
 }                                                                                                 \
                                                                                                   \
-bool Is##base##AboutToBeFinalized(type **thingp)                                                  \
+bool                                                                                              \
+Is##base##AboutToBeFinalized(type **thingp)                                                       \
 {                                                                                                 \
     return IsAboutToBeFinalized<type>(thingp);                                                    \
 }                                                                                                 \
                                                                                                   \
-bool Is##base##AboutToBeFinalized(EncapsulatedPtr<type> *thingp)                                  \
+bool                                                                                              \
+Is##base##AboutToBeFinalized(EncapsulatedPtr<type> *thingp)                                       \
 {                                                                                                 \
     return IsAboutToBeFinalized<type>(thingp->unsafeGet());                                       \
 }
@@ -731,10 +733,10 @@ PushMarkStack(GCMarker *gcmarker, JSScript *thing)
 }
 
 static void
-ScanShape(GCMarker *gcmarker, Shape *shape);
+ScanShape(GCMarker *gcmarker, UnrootedShape shape);
 
 static void
-PushMarkStack(GCMarker *gcmarker, Shape *thing)
+PushMarkStack(GCMarker *gcmarker, UnrootedShape thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
 
@@ -766,7 +768,7 @@ PushMarkStack(GCMarker *gcmarker, UnrootedBaseShape thing)
 }
 
 static void
-ScanShape(GCMarker *gcmarker, Shape *shape)
+ScanShape(GCMarker *gcmarker, UnrootedShape shape)
 {
   restart:
     PushMarkStack(gcmarker, shape->base());
@@ -930,7 +932,7 @@ gc::MarkChildren(JSTracer *trc, JSScript *script)
 }
 
 static void
-gc::MarkChildren(JSTracer *trc, Shape *shape)
+gc::MarkChildren(JSTracer *trc, UnrootedShape shape)
 {
     shape->markChildren(trc);
 }
@@ -990,7 +992,7 @@ MarkCycleCollectorChildren(JSTracer *trc, UnrootedBaseShape base, JSObject **pre
  * parent pointer will only be marked once.
  */
 void
-gc::MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
+gc::MarkCycleCollectorChildren(JSTracer *trc, UnrootedShape shape)
 {
     JSObject *prevParent = NULL;
     do {
@@ -1021,7 +1023,7 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
 
     if (type->newScript) {
         PushMarkStack(gcmarker, type->newScript->fun);
-        PushMarkStack(gcmarker, type->newScript->shape);
+        PushMarkStack(gcmarker, type->newScript->shape.get());
     }
 
     if (type->interpretedFunction)
@@ -1356,7 +1358,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         types::TypeObject *type = obj->typeFromGC();
         PushMarkStack(this, type);
 
-        Shape *shape = obj->lastProperty();
+        UnrootedShape shape = obj->lastProperty();
         PushMarkStack(this, shape);
 
         /* Call the trace hook if necessary. */

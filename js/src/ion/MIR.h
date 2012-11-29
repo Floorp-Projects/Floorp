@@ -4455,8 +4455,8 @@ class MBindNameCache
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
-    PropertyName *name_;
-    JSScript *script_;
+    CompilerRootPropertyName name_;
+    CompilerRootScript script_;
     jsbytecode *pc_;
 
     MBindNameCache(MDefinition *scopeChain, PropertyName *name, JSScript *script, jsbytecode *pc)
@@ -4495,10 +4495,10 @@ class MGuardShape
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
-    const Shape *shape_;
+    CompilerRootShape shape_;
     BailoutKind bailoutKind_;
 
-    MGuardShape(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind)
+    MGuardShape(MDefinition *obj, UnrootedShape shape, BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         shape_(shape),
         bailoutKind_(bailoutKind)
@@ -4511,7 +4511,7 @@ class MGuardShape
   public:
     INSTRUCTION_HEADER(GuardShape)
 
-    static MGuardShape *New(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind) {
+    static MGuardShape *New(MDefinition *obj, UnrootedShape shape, BailoutKind bailoutKind) {
         return new MGuardShape(obj, shape, bailoutKind);
     }
 
@@ -4521,7 +4521,7 @@ class MGuardShape
     MDefinition *obj() const {
         return getOperand(0);
     }
-    const Shape *shape() const {
+    const UnrootedShape shape() const {
         return shape_;
     }
     BailoutKind bailoutKind() const {

@@ -4854,6 +4854,8 @@ bool
 IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
                             types::StackTypeSet *observed)
 {
+    AutoAssertNoGC nogc;
+
     // If the instruction has no side effects, we'll resume the entire operation.
     // The actual type barrier will occur in the interpreter. If the
     // instruction is effectful, even if it has a singleton type, there
@@ -4971,7 +4973,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
 
     // For the fastest path, the property must be found, and it must be found
     // as a normal data property on exactly the global object.
-    const js::Shape *shape = globalObj->nativeLookup(cx, id);
+    RootedShape shape(cx, globalObj->nativeLookup(cx, id));
     if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
         return jsop_getname(name);
 
@@ -5048,7 +5050,7 @@ IonBuilder::jsop_setgname(HandlePropertyName name)
 
     // For the fastest path, the property must be found, and it must be found
     // as a normal data property on exactly the global object.
-    const js::Shape *shape = globalObj->nativeLookup(cx, id);
+    RootedShape shape(cx, globalObj->nativeLookup(cx, id));
     if (!shape || !shape->hasDefaultSetter() || !shape->writable() || !shape->hasSlot())
         return jsop_setprop(name);
 
@@ -6145,7 +6147,7 @@ IonBuilder::invalidatedIdempotentCache()
 }
 
 bool
-IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType)
+IonBuilder::loadSlot(MDefinition *obj, HandleShape shape, MIRType rvalType)
 {
     JS_ASSERT(shape->hasDefaultGetter());
     JS_ASSERT(shape->hasSlot());
@@ -6175,7 +6177,7 @@ IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType)
 }
 
 bool
-IonBuilder::storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier)
+IonBuilder::storeSlot(MDefinition *obj, UnrootedShape shape, MDefinition *value, bool needsBarrier)
 {
     JS_ASSERT(shape->hasDefaultSetter());
     JS_ASSERT(shape->writable());
@@ -6400,13 +6402,14 @@ bool
 IonBuilder::getPropTryMonomorphic(bool *emitted, HandleId id, types::StackTypeSet *barrier,
                                   TypeOracle::Unary unary, TypeOracle::UnaryTypes unaryTypes)
 {
+    AssertCanGC();
     JS_ASSERT(*emitted == false);
     bool accessGetter = oracle->propertyReadAccessGetter(script(), pc);
 
     if (unary.ival != MIRType_Object)
         return true;
 
-    Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing());
+    RootedShape objShape(cx, mjit::GetPICSingleShape(cx, script(), pc, info().constructing()));
     if (!objShape || objShape->inDictionary()) {
         spew("GETPROP not monomorphic");
         return true;
@@ -6421,7 +6424,7 @@ IonBuilder::getPropTryMonomorphic(bool *emitted, HandleId id, types::StackTypeSe
     obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
 
     spew("Inlining monomorphic GETPROP");
-    Shape *shape = objShape->search(cx, id);
+    RootedShape shape(cx, objShape->search(cx, id));
     JS_ASSERT(shape);
 
     MIRType rvalType = unary.rval;
@@ -6561,7 +6564,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     if (monitored) {
         ins = MCallSetProperty::New(obj, value, name, script()->strict);
     } else {
-        Shape *objShape;
+        UnrootedShape objShape;
         if ((objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) &&
             !objShape->inDictionary())
         {
@@ -6571,7 +6574,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             // on dictionary mode shapes that aren't lastProperty is invalid.
             obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
 
-            Shape *shape = objShape->search(cx, NameToId(name));
+            UnrootedShape shape = DropUnrooted(objShape)->search(cx, NameToId(name));
             JS_ASSERT(shape);
 
             spew("Inlining monomorphic SETPROP");
@@ -6579,7 +6582,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             jsid typeId = types::MakeTypeId(cx, id);
             bool needsBarrier = oracle->propertyWriteNeedsBarrier(script(), pc, typeId);
 
-            return storeSlot(obj, shape, value, needsBarrier);
+            return storeSlot(obj, DropUnrooted(shape), value, needsBarrier);
         }
 
         spew("SETPROP not monomorphic");
@@ -6962,7 +6965,7 @@ IonBuilder::addBoundsCheck(MDefinition *index, MDefinition *length)
 }
 
 MInstruction *
-IonBuilder::addShapeGuard(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind)
+IonBuilder::addShapeGuard(MDefinition *obj, const UnrootedShape shape, BailoutKind bailoutKind)
 {
     MGuardShape *guard = MGuardShape::New(obj, shape, bailoutKind);
     current->add(guard);

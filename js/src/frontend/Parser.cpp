@@ -2075,7 +2075,7 @@ BindLet(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
      */
     bool redeclared;
     RootedId id(cx, NameToId(name));
-    Shape *shape = StaticBlockObject::addVar(cx, blockObj, id, blockCount, &redeclared);
+    RootedShape shape(cx, StaticBlockObject::addVar(cx, blockObj, id, blockCount, &redeclared));
     if (!shape) {
         if (redeclared)
             ReportRedeclaration(cx, parser, pn, false, name);

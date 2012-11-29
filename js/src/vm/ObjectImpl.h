@@ -24,6 +24,7 @@ namespace js {
 
 class Debugger;
 class ObjectImpl;
+ForwardDeclare(Shape);
 
 class AutoPropDescArrayRooter;
 
@@ -358,7 +359,7 @@ class ElementsHeader
         } dense;
         class {
             friend class SparseElementsHeader;
-            Shape * shape;
+            RawShape shape;
         } sparse;
         class {
             friend class ArrayBufferElementsHeader;
@@ -449,7 +450,7 @@ class DenseElementsHeader : public ElementsHeader
 class SparseElementsHeader : public ElementsHeader
 {
   public:
-    Shape * shape() {
+    UnrootedShape shape() {
         MOZ_ASSERT(ElementsHeader::isSparseElements());
         return sparse.shape;
     }
@@ -1155,13 +1156,13 @@ class ObjectImpl : public gc::Cell
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
 
-    Shape * nativeLookup(JSContext *cx, jsid id);
-    inline Shape * nativeLookup(JSContext *cx, PropertyId pid);
-    inline Shape * nativeLookup(JSContext *cx, PropertyName *name);
+    UnrootedShape nativeLookup(JSContext *cx, jsid id);
+    inline UnrootedShape nativeLookup(JSContext *cx, PropertyId pid);
+    inline UnrootedShape nativeLookup(JSContext *cx, PropertyName *name);
 
-    Shape * nativeLookupNoAllocation(jsid id);
-    inline Shape * nativeLookupNoAllocation(PropertyId pid);
-    inline Shape * nativeLookupNoAllocation(PropertyName *name);
+    UnrootedShape nativeLookupNoAllocation(jsid id);
+    inline UnrootedShape nativeLookupNoAllocation(PropertyId pid);
+    inline UnrootedShape nativeLookupNoAllocation(PropertyName *name);
 
     inline bool nativeContains(JSContext *cx, Handle<jsid> id);
     inline bool nativeContains(JSContext *cx, Handle<PropertyName*> name);

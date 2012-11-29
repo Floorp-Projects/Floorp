@@ -798,7 +798,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 /* This all should be reworked to avoid requiring JSScopeProperty types. */
 
 static JSBool
-GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
+GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc *pd)
 {
     assertSameCompartment(cx, obj_);
     pd->id = IdToJsval(shape->propid());
@@ -901,7 +901,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
             goto bad;
         if (!js_AddRoot(cx, &pd[i].value, NULL))
             goto bad;
-        Shape *shape = const_cast<Shape *>(&r.front());
+        RootedShape shape(cx, const_cast<Shape *>(&r.front()));
         if (!GetPropertyDesc(cx, obj, shape, &pd[i]))
             goto bad;
         if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))

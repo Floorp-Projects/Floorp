@@ -256,7 +256,7 @@ JS_WrapAutoIdVector(JSContext *cx, js::AutoIdVector &props)
 JS_FRIEND_API(void)
 JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 {
-    MarkCycleCollectorChildren(trc, (Shape *)shape);
+    MarkCycleCollectorChildren(trc, static_cast<RawShape>(shape));
 }
 
 static bool
@@ -905,7 +905,7 @@ js::IncrementalReferenceBarrier(void *ptr)
     else if (kind == JSTRACE_SCRIPT)
         JSScript::writeBarrierPre(reinterpret_cast<RawScript>(ptr));
     else if (kind == JSTRACE_SHAPE)
-        Shape::writeBarrierPre((Shape *) ptr);
+        Shape::writeBarrierPre(reinterpret_cast<RawShape>(ptr));
     else if (kind == JSTRACE_BASE_SHAPE)
         BaseShape::writeBarrierPre(reinterpret_cast<RawBaseShape>(ptr));
     else if (kind == JSTRACE_TYPE_OBJECT)
