@@ -62,18 +62,8 @@ XULTreeAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeAccessible: nsISupports and cycle collection implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XULTreeAccessible)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULTreeAccessible,
-                                                  Accessible)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTree)
-  CycleCollectorTraverseCache(tmp->mAccessibleCache, &cb);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULTreeAccessible, Accessible)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTree)
-  ClearCache(tmp->mAccessibleCache);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(XULTreeAccessible, Accessible,
+                                     mTree, mAccessibleCache)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeAccessible)
 NS_INTERFACE_MAP_END_INHERITING(Accessible)
@@ -701,17 +691,8 @@ XULTreeItemAccessibleBase::
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessibleBase: nsISupports implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XULTreeItemAccessibleBase)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULTreeItemAccessibleBase,
-                                                  Accessible)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTree)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULTreeItemAccessibleBase,
-                                                Accessible)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTree)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(XULTreeItemAccessibleBase, Accessible,
+                                     mTree)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessibleBase)
   NS_INTERFACE_TABLE_INHERITED1(XULTreeItemAccessibleBase,
@@ -1106,17 +1087,9 @@ XULTreeItemAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessible: nsISupports implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XULTreeItemAccessible)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULTreeItemAccessible,
-                                                  XULTreeItemAccessibleBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mColumn)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULTreeItemAccessible,
-                                                XULTreeItemAccessibleBase)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mColumn)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(XULTreeItemAccessible,
+                                     XULTreeItemAccessibleBase,
+                                     mColumn)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessible)
 NS_INTERFACE_MAP_END_INHERITING(XULTreeItemAccessibleBase)
