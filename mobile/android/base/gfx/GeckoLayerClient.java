@@ -412,6 +412,11 @@ public class GeckoLayerClient
             return mProgressiveUpdateData;
         }
 
+        // Abort drawing stale low-precision content if there's a more recent
+        // display-port in the pipeline.
+        if (lowPrecision && !aHasPendingNewThebesContent) {
+          mProgressiveUpdateData.abort = true;
+        }
         return mProgressiveUpdateData;
     }
 
