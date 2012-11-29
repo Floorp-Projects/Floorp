@@ -1251,7 +1251,8 @@ function Update(update) {
   this.showPrompt = false;
   this.showSurvey = false;
   this.showNeverForVersion = false;
-  this.channel = "default"
+  this.channel = "default";
+  this.promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
 
   // Null <update>, assume this is a message container and do no
   // further initialization
@@ -1314,6 +1315,11 @@ function Update(update) {
       this.showNeverForVersion = attr.value == "true";
     else if (attr.name == "showPrompt")
       this.showPrompt = attr.value == "true";
+    else if (attr.name == "promptWaitTime")
+    {
+      if(!isNaN(attr.value))
+        this.promptWaitTime = parseInt(attr.value);
+    }
     else if (attr.name == "showSurvey")
       this.showSurvey = attr.value == "true";
     else if (attr.name == "version") {
@@ -1453,6 +1459,7 @@ Update.prototype = {
     update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("showNeverForVersion", this.showNeverForVersion);
     update.setAttribute("showPrompt", this.showPrompt);
+    update.setAttribute("promptWaitTime", this.promptWaitTime);
     update.setAttribute("showSurvey", this.showSurvey);
     update.setAttribute("type", this.type);
     // for backwards compatibility in case the user downgrades
@@ -3932,11 +3939,11 @@ UpdatePrompt.prototype = {
       return;
     }
 
-    // Give the user x seconds to react before showing the big UI
-    var promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
+    // Give the user x seconds to react before prompting as defined by
+    // promptWaitTime
     observer.timer = Cc["@mozilla.org/timer;1"].
                      createInstance(Ci.nsITimer);
-    observer.timer.initWithCallback(observer, promptWaitTime * 1000,
+    observer.timer.initWithCallback(observer, update.promptWaitTime * 1000,
                                     observer.timer.TYPE_ONE_SHOT);
   },
 
