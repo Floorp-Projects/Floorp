@@ -926,6 +926,7 @@ public:
 
   static uint64_t GetD2DVRAMUsageDrawTarget();
   static uint64_t GetD2DVRAMUsageSourceSurface();
+  static void D2DCleanup();
 
 private:
   static ID3D10Device1 *mD3D10Device;

@@ -6,9 +6,14 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.util.Base64;
+import android.util.Log;
 
 public final class BitmapUtils {
+    private static final String LOGTAG = "GeckoBitmapUtils";
+
     public static int getDominantColor(Bitmap source) {
         return getDominantColor(source, true);
     }
@@ -57,6 +62,23 @@ public final class BitmapUtils {
       hsv[1] = (float)maxS/10.0f;
       hsv[2] = (float)maxV/10.0f;
       return Color.HSVToColor(hsv);
+    }
+
+    /**
+     * Decodes a bitmap from a Base64 data URI.
+     *
+     * @param dataURI a Base64-encoded data URI string
+     * @return        the decoded bitmap, or null if the data URI is invalid
+     */
+    public static Bitmap getBitmapFromDataURI(String dataURI) {
+        String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
+        try {
+            byte[] raw = Base64.decode(base64, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(raw, 0, raw.length);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "exception decoding bitmap from data URI: " + dataURI, e);
+        }
+        return null;
     }
 }
 

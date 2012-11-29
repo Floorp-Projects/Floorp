@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/PBrowser.h"
+#include "mozilla/layout/RenderFrameUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozIApplication.h"
 
@@ -30,6 +31,9 @@ namespace dom {
  */
 class TabContext
 {
+protected:
+  typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
+
 public:
   /**
    * This constructor sets is-browser to false, and sets all relevant apps to
@@ -118,6 +122,11 @@ public:
   already_AddRefed<mozIApplication> GetOwnOrContainingApp() const;
   bool HasOwnOrContainingApp() const;
 
+  /**
+   * Return the requested scrolling behavior for this frame.
+   */
+  ScrollingBehavior GetScrollingBehavior() const { return mScrollingBehavior; }
+
 protected:
   /**
    * These protected mutator methods let you modify a TabContext once.  Further
@@ -138,13 +147,15 @@ protected:
    * given app.  Either or both apps may be null.
    */
   bool SetTabContextForAppFrame(mozIApplication* aOwnApp,
-                                mozIApplication* aAppFrameOwnerApp);
+                                mozIApplication* aAppFrameOwnerApp,
+                                ScrollingBehavior aRequestedBehavior);
 
   /**
    * Set this TabContext to be a browser frame inside the given app (which may
    * be null).
    */
-  bool SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp);
+  bool SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp,
+                                    ScrollingBehavior aRequestedBehavior);
 
 private:
   /**
@@ -172,6 +183,11 @@ private:
   uint32_t mContainingAppId;
 
   /**
+   * The requested scrolling behavior for this frame.
+   */
+  ScrollingBehavior mScrollingBehavior;
+
+  /**
    * Does this TabContext correspond to a browser element?
    *
    * If this is true, mOwnAppId must be NO_APP_ID.
@@ -192,14 +208,18 @@ public:
     return TabContext::SetTabContext(aContext);
   }
 
-  bool SetTabContextForAppFrame(mozIApplication* aOwnApp, mozIApplication* aAppFrameOwnerApp)
+  bool SetTabContextForAppFrame(mozIApplication* aOwnApp, mozIApplication* aAppFrameOwnerApp,
+                                ScrollingBehavior aRequestedBehavior)
   {
-    return TabContext::SetTabContextForAppFrame(aOwnApp, aAppFrameOwnerApp);
+    return TabContext::SetTabContextForAppFrame(aOwnApp, aAppFrameOwnerApp,
+                                                aRequestedBehavior);
   }
 
-  bool SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp)
+  bool SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp,
+                                    ScrollingBehavior aRequestedBehavior)
   {
-    return TabContext::SetTabContextForBrowserFrame(aBrowserFrameOwnerApp);
+    return TabContext::SetTabContextForBrowserFrame(aBrowserFrameOwnerApp,
+                                                    aRequestedBehavior);
   }
 };
 

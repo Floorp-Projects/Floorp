@@ -10,7 +10,6 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
-#include "BluetoothServiceUuid.h"
 
 #include "nsIDOMDOMRequest.h"
 #include "nsDOMClassInfo.h"
@@ -88,6 +87,8 @@ void
 BluetoothDevice::Unroot()
 {
   if (mIsRooted) {
+    mJsUuids = nullptr;
+    mJsServices = nullptr;
     NS_DROP_JS_OBJECTS(this, BluetoothDevice);
     mIsRooted = false;
   }

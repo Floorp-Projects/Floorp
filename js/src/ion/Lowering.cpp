@@ -290,13 +290,6 @@ LIRGenerator::visitCall(MCall *call)
         return (defineReturn(lir, call) && assignSafepoint(lir, call));
     }
 
-    // Call unknown constructors.
-    if (call->isConstructing()) {
-        LCallConstructor *lir = new LCallConstructor(useFixed(call->getFunction(),
-                                                     CallTempReg0), argslot);
-        return (defineVMReturn(lir, call) && assignSafepoint(lir, call));
-    }
-
     // Call anything, using the most generic code.
     LCallGeneric *lir = new LCallGeneric(useFixed(call->getFunction(), CallTempReg0),
         argslot, tempFixed(ArgumentsRectifierReg), tempFixed(CallTempReg2));
@@ -1927,20 +1920,32 @@ LIRGenerator::visitIn(MIn *ins)
 bool
 LIRGenerator::visitInstanceOf(MInstanceOf *ins)
 {
-    MDefinition *lhs = ins->lhs();
-    MDefinition *rhs = ins->rhs();
+    MDefinition *lhs = ins->getOperand(0);
 
     JS_ASSERT(lhs->type() == MIRType_Value || lhs->type() == MIRType_Object);
-    JS_ASSERT(rhs->type() == MIRType_Object);
 
-    // InstanceOf with non-object will always return false
     if (lhs->type() == MIRType_Object) {
-        LInstanceOfO *lir = new LInstanceOfO(useRegister(lhs), useRegister(rhs), temp(), temp());
+        LInstanceOfO *lir = new LInstanceOfO(useRegister(lhs));
         return define(lir, ins) && assignSafepoint(lir, ins);
     }
 
-    LInstanceOfV *lir = new LInstanceOfV(useRegister(rhs), temp(), temp());
+    LInstanceOfV *lir = new LInstanceOfV();
     return useBox(lir, LInstanceOfV::LHS, lhs) && define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitCallInstanceOf(MCallInstanceOf *ins)
+{
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    JS_ASSERT(lhs->type() == MIRType_Value);
+    JS_ASSERT(rhs->type() == MIRType_Object);
+
+    LCallInstanceOf *lir = new LCallInstanceOf(useRegisterAtStart(rhs));
+    if (!useBoxAtStart(lir, LCallInstanceOf::LHS, lhs))
+        return false;
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

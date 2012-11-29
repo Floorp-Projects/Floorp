@@ -105,7 +105,7 @@ buildASN1ObjectFromDER(unsigned char *data,
   unsigned char code, tagnum;
 
   // A DER item has the form of |tag|len|data
-  // tag is one byte and describes the type of elment
+  // tag is one byte and describes the type of element
   //     we are dealing with.
   // len is a DER encoded int telling us how long the data is
   // data is a buffer that is len bytes long and has to be

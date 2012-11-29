@@ -19,6 +19,12 @@ namespace ion {
 
 class TempAllocator;
 
+// Possible register allocators which may be used.
+enum IonRegisterAllocator {
+    RegisterAllocator_LSRA,
+    RegisterAllocator_Stupid
+};
+
 struct IonOptions
 {
     // Toggles whether global value numbering is used.
@@ -47,11 +53,10 @@ struct IonOptions
     // Default: true
     bool limitScriptSize;
 
-    // Toggles whether Linear Scan Register Allocation is used. If LSRA is not
-    // used, then Greedy Register Allocation is used instead.
+    // Describes which register allocator to use.
     //
-    // Default: true
-    bool lsra;
+    // Default: LSRA
+    IonRegisterAllocator registerAllocator;
 
     // Toggles whether inlining is performed.
     //
@@ -162,7 +167,7 @@ struct IonOptions
         licm(true),
         osr(true),
         limitScriptSize(true),
-        lsra(true),
+        registerAllocator(RegisterAllocator_LSRA),
         inlining(true),
         edgeCaseAnalysis(true),
         rangeAnalysis(true),
@@ -264,7 +269,8 @@ void Invalidate(types::TypeCompartment &types, FreeOp *fop,
 void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
 bool Invalidate(JSContext *cx, JSScript *script, bool resetUses = true);
 
-void MarkFromIon(JSRuntime *rt, Value *vp);
+void MarkValueFromIon(JSRuntime *rt, Value *vp);
+void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
 
 void ToggleBarriers(JSCompartment *comp, bool needs);
 

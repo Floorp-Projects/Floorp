@@ -9,7 +9,7 @@
 
 #include "LayerManagerOGL.h"
 #include "gfxASurface.h"
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
 #include "GLXLibrary.h"
 #include "mozilla/X11Util.h"
 #endif
@@ -31,7 +31,7 @@ public:
       mTexture(0),
       mTextureTarget(LOCAL_GL_TEXTURE_2D),
       mDelayedUpdates(false)
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
       ,mPixmap(0)
 #endif
   { 
@@ -65,7 +65,7 @@ protected:
   bool mGLBufferIsPremultiplied;
   bool mNeedsYFlip;
   bool mForceReadback;
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
   GLXPixmap mPixmap;
 #endif
 

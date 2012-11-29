@@ -444,8 +444,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
 }
 
 bool
-JSRuntime::cloneSelfHostedValue(JSContext *cx, Handle<PropertyName*> name, HandleObject holder,
-                                MutableHandleValue vp)
+JSRuntime::cloneSelfHostedValue(JSContext *cx, Handle<PropertyName*> name, MutableHandleValue vp)
 {
     RootedValue funVal(cx);
     if (!getUnclonedSelfHostedValue(cx, name, &funVal))
@@ -458,15 +457,15 @@ JSRuntime::cloneSelfHostedValue(JSContext *cx, Handle<PropertyName*> name, Handl
      */
     if (cx->global() == selfHostedGlobal_) {
         vp.set(funVal);
-    } else if (funVal.toObject().isFunction()){
+    } else if (funVal.isObject() && funVal.toObject().isFunction()) {
         RootedFunction fun(cx, funVal.toObject().toFunction());
         RootedObject clone(cx, CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind()));
         if (!clone)
             return false;
         vp.set(ObjectValue(*clone));
+    } else {
+        vp.set(UndefinedValue());
     }
-    DebugOnly<bool> ok = JS_DefinePropertyById(cx, holder, NameToId(name), vp, NULL, NULL, 0);
-    JS_ASSERT(ok);
     return true;
 }
 

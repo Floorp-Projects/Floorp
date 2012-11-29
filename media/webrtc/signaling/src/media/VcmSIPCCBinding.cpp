@@ -1787,7 +1787,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
     mozilla::RefPtr<mozilla::AudioSessionConduit> conduit =
       mozilla::AudioSessionConduit::Create();
 
-    if (conduit->ConfigureSendMediaCodec(config))
+    if (!conduit || conduit->ConfigureSendMediaCodec(config))
       return VCM_ERROR;
 
     mozilla::RefPtr<mozilla::MediaPipelineTransmit> pipeline =
@@ -1818,7 +1818,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
       mozilla::VideoSessionConduit::Create();
 
     // Find the appropriate media conduit config
-    if (conduit->ConfigureSendMediaCodec(config))
+    if (!conduit || conduit->ConfigureSendMediaCodec(config))
       return VCM_ERROR;
 
     // Create the pipeline

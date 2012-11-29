@@ -1058,10 +1058,6 @@ CanvasRenderingContext2D::Restore()
 void
 CanvasRenderingContext2D::Scale(double x, double y, ErrorResult& error)
 {
-  if (!FloatValidate(x,y)) {
-    return;
-  }
-
   TransformWillUpdate();
   if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
@@ -1075,16 +1071,11 @@ CanvasRenderingContext2D::Scale(double x, double y, ErrorResult& error)
 void
 CanvasRenderingContext2D::Rotate(double angle, ErrorResult& error)
 {
-  if (!FloatValidate(angle)) {
-    return;
-  }
-
   TransformWillUpdate();
   if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
     return;
   }
-
 
   Matrix rotation = Matrix::Rotation(angle);
   mTarget->SetTransform(rotation * mTarget->GetTransform());
@@ -1093,10 +1084,6 @@ CanvasRenderingContext2D::Rotate(double angle, ErrorResult& error)
 void
 CanvasRenderingContext2D::Translate(double x, double y, ErrorResult& error)
 {
-  if (!FloatValidate(x,y)) {
-    return;
-  }
-
   TransformWillUpdate();
   if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
@@ -1112,10 +1099,6 @@ CanvasRenderingContext2D::Transform(double m11, double m12, double m21,
                                     double m22, double dx, double dy,
                                     ErrorResult& error)
 {
-  if (!FloatValidate(m11,m12,m21,m22,dx,dy)) {
-    return;
-  }
-
   TransformWillUpdate();
   if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
@@ -1132,10 +1115,6 @@ CanvasRenderingContext2D::SetTransform(double m11, double m12,
                                        double dx, double dy,
                                        ErrorResult& error)
 {
-  if (!FloatValidate(m11,m12,m21,m22,dx,dy)) {
-    return;
-  }
-
   TransformWillUpdate();
   if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
@@ -1380,11 +1359,6 @@ already_AddRefed<nsIDOMCanvasGradient>
 CanvasRenderingContext2D::CreateLinearGradient(double x0, double y0, double x1, double y1,
                                                ErrorResult& aError)
 {
-  if (!FloatValidate(x0,y0,x1,y1)) {
-    aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
   nsRefPtr<nsIDOMCanvasGradient> grad =
     new CanvasLinearGradient(Point(x0, y0), Point(x1, y1));
 
@@ -1396,11 +1370,6 @@ CanvasRenderingContext2D::CreateRadialGradient(double x0, double y0, double r0,
                                                double x1, double y1, double r1,
                                                ErrorResult& aError)
 {
-  if (!FloatValidate(x0,y0,r0,x1,y1,r1)) {
-    aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
   if (r0 < 0.0 || r1 < 0.0) {
     aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
@@ -1510,7 +1479,7 @@ void
 CanvasRenderingContext2D::ClearRect(double x, double y, double w,
                                     double h)
 {
-  if (!FloatValidate(x,y,w,h) || !mTarget) {
+  if (!mTarget) {
     return;
   }
 
@@ -1523,10 +1492,6 @@ void
 CanvasRenderingContext2D::FillRect(double x, double y, double w,
                                    double h)
 {
-  if (!FloatValidate(x,y,w,h)) {
-    return;
-  }
-
   const ContextState &state = CurrentState();
 
   if (state.patternStyles[STYLE_FILL]) {
@@ -1595,10 +1560,6 @@ void
 CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
                                      double h)
 {
-  if (!FloatValidate(x,y,w,h)) {
-    return;
-  }
-
   const ContextState &state = CurrentState();
 
   mgfx::Rect bounds;
@@ -1747,10 +1708,6 @@ CanvasRenderingContext2D::ArcTo(double x1, double y1, double x2,
                                 double y2, double radius,
                                 ErrorResult& error)
 {
-  if (!FloatValidate(x1, y1, x2, y2, radius)) {
-    return;
-  }
-
   if (radius < 0) {
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
@@ -1829,10 +1786,6 @@ CanvasRenderingContext2D::Arc(double x, double y, double r,
                               double startAngle, double endAngle,
                               bool anticlockwise, ErrorResult& error)
 {
-  if (!FloatValidate(x, y, r, startAngle, endAngle)) {
-    return;
-  }
-
   if (r < 0.0) {
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
@@ -1846,10 +1799,6 @@ CanvasRenderingContext2D::Arc(double x, double y, double r,
 void
 CanvasRenderingContext2D::Rect(double x, double y, double w, double h)
 {
-  if (!FloatValidate(x, y, w, h)) {
-    return;
-  }
-
   EnsureWritablePath();
 
   if (mPathBuilder) {
@@ -2550,10 +2499,6 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 {
   nsresult rv;
 
-  if (!FloatValidate(aX, aY) ||
-      (aMaxWidth.WasPassed() && !FloatValidate(aMaxWidth.Value())))
-      return NS_ERROR_DOM_SYNTAX_ERR;
-
   // spec isn't clear on what should happen if aMaxWidth <= 0, so
   // treat it as an invalid argument
   // technically, 0 should be an invalid value as well, but 0 is the default
@@ -2889,10 +2834,6 @@ CanvasRenderingContext2D::GetMozDash(JSContext* cx, ErrorResult& error)
 void
 CanvasRenderingContext2D::SetMozDashOffset(double mozDashOffset)
 {
-  if (!FloatValidate(mozDashOffset)) {
-    return;
-  }
-
   ContextState& state = CurrentState();
   if (!state.dash.IsEmpty()) {
     state.dashOffset = mozDashOffset;
@@ -3595,11 +3536,6 @@ void
 CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
                                        double dy, ErrorResult& error)
 {
-  if (!FloatValidate(dx, dy)) {
-    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
   dom::Uint8ClampedArray arr(imageData.GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
@@ -3614,11 +3550,6 @@ CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
                                        double dirtyHeight,
                                        ErrorResult& error)
 {
-  if (!FloatValidate(dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight)) {
-    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
   dom::Uint8ClampedArray arr(imageData.GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
@@ -3801,11 +3732,6 @@ already_AddRefed<ImageData>
 CanvasRenderingContext2D::CreateImageData(JSContext* cx, double sw,
                                           double sh, ErrorResult& error)
 {
-  if (!FloatValidate(sw, sh)) {
-    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return NULL;
-  }
-
   if (!sw || !sh) {
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return NULL;

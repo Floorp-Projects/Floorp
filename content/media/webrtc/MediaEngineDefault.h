@@ -63,6 +63,8 @@ protected:
   SourceMediaStream* mSource;
   layers::PlanarYCbCrImage* mImage;
   static const MediaEngineVideoOptions mOpts;
+  int mCb;
+  int mCr;
 };
 
 class MediaEngineDefaultAudioSource : public nsITimerCallback,

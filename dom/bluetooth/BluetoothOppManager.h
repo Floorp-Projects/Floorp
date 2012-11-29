@@ -64,25 +64,10 @@ public:
   nsresult HandleShutdown();
 private:
   BluetoothOppManager();
-  void StartFileTransfer(const nsString& aDeviceAddress,
-                         bool aReceived,
-                         const nsString& aFileName,
-                         uint32_t aFileLength,
-                         const nsString& aContentType);
-  void FileTransferComplete(const nsString& aDeviceAddress,
-                            bool aSuccess,
-                            bool aReceived,
-                            const nsString& aFileName,
-                            uint32_t aFileLength,
-                            const nsString& aContentType);
-  void UpdateProgress(const nsString& aDeviceAddress,
-                      bool aReceived,
-                      uint32_t aProcessedLength,
-                      uint32_t aFileLength);
-  void ReceivingFileConfirmation(const nsString& aAddress,
-                                 const nsString& aFileName,
-                                 uint32_t aFileLength,
-                                 const nsString& aContentType);
+  void StartFileTransfer();
+  void FileTransferComplete();
+  void UpdateProgress();
+  void ReceivingFileConfirmation();
   bool CreateFile();
   bool WriteToFile(const uint8_t* aData, int aDataLength);
   void DeleteReceivedFile();
@@ -109,6 +94,8 @@ private:
   bool mPutFinal;
   bool mWaitingForConfirmationFlag;
   int mUpdateProgressCounter;
+  bool mSuccessFlag;
+  bool mTransferMode;  // send:0, receive:1
   enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
 
   nsAutoPtr<uint8_t> mBodySegment;

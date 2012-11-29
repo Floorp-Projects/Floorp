@@ -713,42 +713,26 @@ DocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 nsresult
 DocAccessible::AddEventListeners()
 {
-  // 1) Set up scroll position listener
-  // 2) Check for editor and listen for changes to editor
-
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
-  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
 
-  // Make sure we're a content docshell
-  // We don't want to listen to chrome progress
+  // We want to add a command observer only if the document is content and has
+  // an editor.
   int32_t itemType;
   docShellTreeItem->GetItemType(&itemType);
-
-  bool isContent = (itemType == nsIDocShellTreeItem::typeContent);
-
-  if (isContent) {
-    // We're not an editor yet, but we might become one
+  if (itemType == nsIDocShellTreeItem::typeContent) {
     nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
-    if (commandManager) {
+    if (commandManager)
       commandManager->AddCommandObserver(this, "obs_documentCreated");
-    }
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
-  if (rootTreeItem) {
-    a11y::RootAccessible* rootAccessible = RootAccessible();
-    NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
-    nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
-    if (caretAccessible) {
-      caretAccessible->AddDocSelectionListener(mPresShell);
-    }
-  }
+  a11y::RootAccessible* rootAccessible = RootAccessible();
+  NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
+  nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
+  if (caretAccessible)
+    caretAccessible->AddDocSelectionListener(mPresShell);
 
-  // add document observer
+  // Add document observer.
   mDocumentNode->AddObserver(this);
   return NS_OK;
 }
@@ -1374,9 +1358,6 @@ DocAccessible::BindToDocument(Accessible* aAccessible,
 
   // Put into unique ID cache.
   mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible);
-
-  // Initialize the accessible.
-  aAccessible->Init();
 
   aAccessible->SetRoleMapEntry(aRoleMapEntry);
   if (aAccessible->IsElement())

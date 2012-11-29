@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 
 public class App extends BrowserApp {
@@ -25,7 +26,8 @@ public class App extends BrowserApp {
     }
 
     protected String getDefaultProfileName() {
-      return "default";
+        String profile = GeckoProfile.findDefaultProfile(this);
+        return (profile != null ? profile : "default");
     }
 
     public String getDefaultUAString() {

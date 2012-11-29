@@ -42,9 +42,9 @@ class WeakCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
             // Checking IsMarked() may update the location of the Key (or Value).
             // Pass in a stack local, then manually update the backing heap store.
             Key k(e.front().key);
-            bool isKeyMarked = gc::IsMarked(&k);
+            bool isKeyDying = gc::IsAboutToBeFinalized(&k);
 
-            if (!isKeyMarked || !gc::IsMarked(e.front().value)) {
+            if (isKeyDying || gc::IsAboutToBeFinalized(e.front().value)) {
                 e.removeFront();
             } else {
                 // Potentially update the location of the Key.
@@ -60,8 +60,8 @@ class WeakCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
             Key k(r.front().key);
 
-            JS_ASSERT(gc::IsMarked(&k));
-            JS_ASSERT(gc::IsMarked(r.front().value));
+            JS_ASSERT(!gc::IsAboutToBeFinalized(&k));
+            JS_ASSERT(!gc::IsAboutToBeFinalized(r.front().value));
 
             // Assert that IsMarked() did not perform relocation.
             JS_ASSERT(k == r.front().key);
@@ -90,7 +90,7 @@ class WeakValueCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
     void sweep(FreeOp *fop) {
         // Remove all entries whose values remain unmarked.
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            if (!gc::IsMarked(e.front().value))
+            if (gc::IsAboutToBeFinalized(e.front().value))
                 e.removeFront();
         }
 
@@ -98,7 +98,7 @@ class WeakValueCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
         // Once we've swept, all remaining edges should stay within the
         // known-live part of the graph.
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            JS_ASSERT(gc::IsMarked(r.front().value));
+            JS_ASSERT(!gc::IsAboutToBeFinalized(r.front().value));
 #endif
     }
 };

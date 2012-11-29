@@ -250,15 +250,49 @@ nsresult
 XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
     MOZ_ASSERT(aTracer->Trace, "AddJSHolder needs a non-null Trace function");
+    bool wasEmpty = mJSHolders.Count() == 0;
     mJSHolders.Put(aHolder, aTracer);
+    if (wasEmpty && mJSHolders.Count() == 1) {
+      nsLayoutStatics::AddRef();
+    }
 
     return NS_OK;
 }
 
+#ifdef DEBUG
+static void
+AssertNoGcThing(void* aGCThing, const char* aName, void* aClosure)
+{
+    MOZ_ASSERT(!aGCThing);
+}
+
+void
+XPCJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
+{
+    nsScriptObjectTracer* tracer = mJSHolders.Get(aPossibleJSHolder);
+    if (tracer && tracer->Trace) {
+        tracer->Trace(aPossibleJSHolder, AssertNoGcThing, nullptr);
+    }
+}
+#endif
+
 nsresult
 XPCJSRuntime::RemoveJSHolder(void* aHolder)
 {
+#ifdef DEBUG
+    // Assert that the holder doesn't try to keep any GC things alive.
+    // In case of unlinking cycle collector calls AssertNoObjectsToTrace
+    // manually because we don't want to check the holder before we are
+    // finished unlinking it
+    if (aHolder != mObjectToUnlink) {
+        AssertNoObjectsToTrace(aHolder);
+    }
+#endif
+    bool hadOne = mJSHolders.Count() == 1;
     mJSHolders.Remove(aHolder);
+    if (hadOne && mJSHolders.Count() == 0) {
+      nsLayoutStatics::Release();
+    }
 
     return NS_OK;
 }
@@ -732,7 +766,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
         return;
 
     switch (status) {
-        case JSFINALIZE_START:
+        case JSFINALIZE_GROUP_START:
         {
             NS_ASSERTION(!self->mDoingFinalization, "bad state");
 
@@ -760,7 +794,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
             self->mDoingFinalization = true;
             break;
         }
-        case JSFINALIZE_END:
+        case JSFINALIZE_GROUP_END:
         {
             NS_ASSERTION(self->mDoingFinalization, "bad state");
             self->mDoingFinalization = false;
@@ -768,6 +802,29 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
             // Release all the members whose JSObjects are now known
             // to be dead.
             DoDeferredRelease(self->mWrappedJSToReleaseArray);
+
+            // Sweep scopes needing cleanup
+            XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC();
+
+            // mThreadRunningGC indicates that GC is running.
+            // Clear it and notify waiters.
+            { // scoped lock
+                XPCAutoLock lock(self->GetMapLock());
+                NS_ASSERTION(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
+                self->mThreadRunningGC = nullptr;
+                xpc_NotifyAll(self->GetMapLock());
+            }
+
+            break;
+        }
+        case JSFINALIZE_COLLECTION_END:
+        {
+            // mThreadRunningGC indicates that GC is running
+            { // scoped lock
+                XPCAutoLock lock(self->GetMapLock());
+                NS_ASSERTION(!self->mThreadRunningGC, "bad state");
+                self->mThreadRunningGC = PR_GetCurrentThread();
+            }
 
 #ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
             printf("--------------------------------------------------------------\n");
@@ -869,9 +926,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
             printf("--------------------------------------------------------------\n");
 #endif
 
-            // Sweep scopes needing cleanup
-            XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC();
-
             // Now we are going to recycle any unused WrappedNativeTearoffs.
             // We do this by iterating all the live callcontexts
             // and marking the tearoffs in use. And then we
@@ -924,7 +978,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
 
             self->mDyingWrappedNativeProtoMap->
                 Enumerate(DyingProtoKiller, nullptr);
-
 
             // mThreadRunningGC indicates that GC is running.
             // Clear it and notify waiters.
@@ -2384,6 +2437,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWatchdogHibernating(false),
    mLastActiveTime(-1),
    mExceptionManagerNotAvailable(false)
+#ifdef DEBUG
+   , mObjectToUnlink(nullptr)
+#endif
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
