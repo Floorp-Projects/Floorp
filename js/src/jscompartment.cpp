@@ -50,7 +50,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 #ifdef JSGC_GENERATIONAL
     gcStoreBuffer(&gcNursery),
 #endif
-    needsBarrier_(false),
     ionUsingBarriers_(false),
     gcScheduled(false),
     gcState(NoGC),
