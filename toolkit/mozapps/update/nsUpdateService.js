@@ -1025,15 +1025,28 @@ function readStringFromFile(file) {
 
 function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
+  if (update.errorCode == FOTA_GENERAL_ERROR ||
+      update.errorCode == FOTA_UNKNOWN_ERROR) {
+    // In the case of FOTA update errors, don't reset the state to pending. This
+    // causes the FOTA update path to try again, which is not necessarily what
+    // we want.
+    update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+
+    Cc["@mozilla.org/updates/update-prompt;1"].
+      createInstance(Ci.nsIUpdatePrompt).
+      showUpdateError(update);
+    writeStatusFile(getUpdatesDir(), STATE_FAILED + ": " + errorCode);
+    cleanupActiveUpdate();
+    return true;
+  }
+
   if (update.errorCode == WRITE_ERROR || 
       update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
       update.errorCode == WRITE_ERROR_SHARING_VIOLATION_SIGNALED ||
       update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID ||
       update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPID ||
       update.errorCode == WRITE_ERROR_CALLBACK_APP ||
-      update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
-      update.errorCode == FOTA_GENERAL_ERROR ||
-      update.errorCode == FOTA_UNKNOWN_ERROR) {
+      update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR) {
     Cc["@mozilla.org/updates/update-prompt;1"].
       createInstance(Ci.nsIUpdatePrompt).
       showUpdateError(update);
