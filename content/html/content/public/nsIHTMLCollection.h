@@ -70,11 +70,11 @@ public:
 
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) = 0;
 
-  JSObject* GetWrapperPreserveColor()
+  JSObject* GetWrapper()
   {
     nsWrapperCache* cache;
     CallQueryInterface(this, &cache);
-    return cache->GetWrapperPreserveColor();
+    return cache->GetWrapper();
   }
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap) = 0;
