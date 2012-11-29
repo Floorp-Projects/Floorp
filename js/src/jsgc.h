@@ -919,7 +919,7 @@ struct GCMarker : public JSTracer {
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(StackTagMask >= uintptr_t(LastTag));
-        JS_STATIC_ASSERT(StackTagMask <= gc::Cell::CellMask);
+        JS_STATIC_ASSERT(StackTagMask <= gc::CellMask);
     }
 
   public:
