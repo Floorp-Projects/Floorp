@@ -3,7 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-        android:src="@drawable/address_bar_texture_port_pb"
-        android:tileMode="repeat"
-        android:dither="false"/>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:maxLevel="1" android:drawable="@drawable/menu"/>
+
+    <item android:maxLevel="2" android:drawable="@android:color/transparent"/>
+
+</level-list>

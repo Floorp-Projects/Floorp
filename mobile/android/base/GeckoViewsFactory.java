@@ -19,9 +19,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
     private static final String GECKO_VIEW_IDENTIFIER = "org.mozilla.gecko.";
     private static final int GECKO_VIEW_IDENTIFIER_LENGTH = GECKO_VIEW_IDENTIFIER.length();
 
-    private static final String GECKO_IDENTIFIER = "Gecko.";
-    private static final int GECKO_IDENTIFIER_LENGTH = GECKO_IDENTIFIER.length();
-
     private GeckoViewsFactory() { }
 
     // Making this a singleton class.
@@ -33,15 +30,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
 
     @Override
     public View onCreateView(String name, Context context, AttributeSet attrs) {
-        if (!TextUtils.isEmpty(name)) {
-            String viewName = null;
-
-            if (name.startsWith(GECKO_VIEW_IDENTIFIER))
-                viewName = name.substring(GECKO_VIEW_IDENTIFIER_LENGTH);
-            else if (name.startsWith(GECKO_IDENTIFIER))
-                viewName = name.substring(GECKO_IDENTIFIER_LENGTH);
-            else
-                return null;
+        if (!TextUtils.isEmpty(name) && name.startsWith(GECKO_VIEW_IDENTIFIER)) {
+            String viewName = name.substring(GECKO_VIEW_IDENTIFIER_LENGTH);
 
             if (TextUtils.isEmpty(viewName))
                 return null;
@@ -84,24 +74,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new TextSelectionHandle(context, attrs);
             else if (TextUtils.equals(viewName, "gfx.LayerView"))
                 return new LayerView(context, attrs);
-            else if (TextUtils.equals(viewName, "Button"))
-                return new GeckoButton(context, attrs);
-            else if (TextUtils.equals(viewName, "EditText"))
-                return new GeckoEditText(context, attrs);
-            else if (TextUtils.equals(viewName, "FrameLayout"))
-                return new GeckoFrameLayout(context, attrs);
-            else if (TextUtils.equals(viewName, "ImageButton"))
-                return new GeckoImageButton(context, attrs);
-            else if (TextUtils.equals(viewName, "ImageView"))
-                return new GeckoImageView(context, attrs);
-            else if (TextUtils.equals(viewName, "LinearLayout"))
-                return new GeckoLinearLayout(context, attrs);
-            else if (TextUtils.equals(viewName, "RelativeLayout"))
-                return new GeckoRelativeLayout(context, attrs);
-            else if (TextUtils.equals(viewName, "TextSwitcher"))
-                return new GeckoTextSwitcher(context, attrs);
-            else if (TextUtils.equals(viewName, "TextView"))
-                return new GeckoTextView(context, attrs);
             else
                 Log.d(LOGTAG, "Warning: unknown custom view: " + viewName);
         }

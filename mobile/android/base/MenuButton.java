@@ -66,7 +66,6 @@ public class MenuButton extends ShapedButton {
         LayerDrawable layers = new LayerDrawable(new Drawable[] { new ColorDrawable(Color.BLACK), drawable }); 
 
         StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(Color.BLACK));
         stateList.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
         stateList.addState(new int[] {}, layers);
 
