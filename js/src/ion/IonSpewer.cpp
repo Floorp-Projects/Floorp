@@ -41,7 +41,7 @@ ion::EnableIonDebugLogging()
 }
 
 void
-ion::IonSpewNewFunction(MIRGraph *graph, JSScript *function)
+ion::IonSpewNewFunction(MIRGraph *graph, HandleScript function)
 {
     if (!js_IonOptions.parallelCompilation)
         ionspewer.beginFunction(graph, function);
@@ -94,7 +94,7 @@ IonSpewer::init()
 }
 
 void
-IonSpewer::beginFunction(MIRGraph *graph, JSScript *function)
+IonSpewer::beginFunction(MIRGraph *graph, HandleScript function)
 {
     if (!inited_)
         return;

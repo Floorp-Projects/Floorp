@@ -468,7 +468,7 @@ class MIRGraph
     MStart *osrStart_;
 
     // List of compiled/inlined scripts.
-    Vector<JSScript *, 4, IonAllocPolicy> scripts_;
+    Vector<RawScript, 4, IonAllocPolicy> scripts_;
 
     size_t numBlocks_;
 
@@ -587,7 +587,7 @@ class MIRGraph
     MStart *osrStart() {
         return osrStart_;
     }
-    bool addScript(JSScript *script) {
+    bool addScript(UnrootedScript script) {
         // The same script may be inlined multiple times, add it only once.
         for (size_t i = 0; i < scripts_.length(); i++) {
             if (scripts_[i] == script)

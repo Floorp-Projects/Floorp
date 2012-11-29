@@ -846,7 +846,7 @@ JSScript::initScriptCounts(JSContext *cx)
     return true;
 }
 
-static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript *script)
+static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(UnrootedScript script)
 {
     JS_ASSERT(script->hasScriptCounts);
     ScriptCountsMap *map = script->compartment()->scriptCountsMap;
@@ -1571,14 +1571,14 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t nbindings, uint32_t
     return size;
 }
 
-JSScript *
+UnrootedScript
 JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun,
                  const CompileOptions &options, unsigned staticLevel,
                  ScriptSource *ss, uint32_t bufStart, uint32_t bufEnd)
 {
     RootedScript script(cx, js_NewGCScript(cx));
     if (!script)
-        return NULL;
+        return UnrootedScript(NULL);
 
     PodZero(script.get());
     new (&script->bindings) Bindings;
@@ -1610,7 +1610,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     // never trigger.  Oh well.
     if (staticLevel > UINT16_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
-        return NULL;
+        return UnrootedScript(NULL);
     }
     script->staticLevel = uint16_t(staticLevel);
 
@@ -1885,9 +1885,10 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
     return true;
 }
 
-JS_FRIEND_API(void)
-js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
+void
+js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
 {
+    AssertCanGC();
     JS_ASSERT(!script->isActiveEval);
     if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
@@ -1899,6 +1900,7 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 void
 js::CallDestroyScriptHook(FreeOp *fop, RawScript script)
 {
+    // The hook will only call into JS if a GC is not running.
     if (JSDestroyScriptHook hook = fop->runtime()->debugHooks.destroyScriptHook)
         hook(fop, script, fop->runtime()->debugHooks.destroyScriptHookData);
     script->clearTraps(fop);
@@ -2167,7 +2169,7 @@ Rebase(RawScript dst, RawScript src, T *srcp)
     return reinterpret_cast<T *>(dst->data + off);
 }
 
-JSScript *
+UnrootedScript
 js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src)
 {
     AssertCanGC();
@@ -2186,7 +2188,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
 
     uint8_t *data = AllocScriptData(cx, size);
     if (!data)
-        return NULL;
+        return UnrootedScript(NULL);
 
     /* Bindings */
 
@@ -2194,7 +2196,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     InternalHandle<Bindings*> bindingsHandle =
         InternalHandle<Bindings*>::fromMarkedLocation(bindings.address());
     if (!Bindings::clone(cx, bindingsHandle, data, src))
-        return NULL;
+        return UnrootedScript(NULL);
 
     /* Objects */
 
@@ -2235,7 +2237,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                 clone = CloneObjectLiteral(cx, cx->global(), obj);
             }
             if (!clone || !objects.append(clone))
-                return NULL;
+                return UnrootedScript(NULL);
         }
     }
 
@@ -2247,7 +2249,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         for (unsigned i = 0; i < nregexps; i++) {
             RawObject clone = CloneScriptRegExpObject(cx, vector[i]->asRegExp());
             if (!clone || !regexps.append(clone))
-                return NULL;
+                return UnrootedScript(NULL);
         }
     }
 
@@ -2265,7 +2267,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                                           src->scriptSource(), src->sourceStart, src->sourceEnd));
     if (!dst) {
         js_free(data);
-        return NULL;
+        return UnrootedScript(NULL);
     }
     AutoAssertNoGC nogc;
 

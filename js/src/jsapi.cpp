@@ -7141,7 +7141,7 @@ JS::AssertArgumentsAreSane(JSContext *cx, const JS::Value &value)
 #endif /* DEBUG */
 
 JS_PUBLIC_API(void *)
-JS_EncodeScript(JSContext *cx, JSRawScript scriptArg, uint32_t *lengthp)
+JS_EncodeScript(JSContext *cx, RawScript scriptArg, uint32_t *lengthp)
 {
     XDREncoder encoder(cx);
     RootedScript script(cx, scriptArg);

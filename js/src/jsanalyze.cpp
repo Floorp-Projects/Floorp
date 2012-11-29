@@ -22,10 +22,9 @@ using namespace js::analyze;
 
 #ifdef DEBUG
 void
-analyze::PrintBytecode(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
+analyze::PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc)
 {
-    RootedScript script(cx, scriptArg);
-
+    AssertCanGC();
     printf("#%u:", script->id());
     Sprinter sprinter(cx);
     if (!sprinter.init())
@@ -1965,7 +1964,7 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
     const Frame &frame = getFrame(cv.frame);
     const SSAValue &v = cv.v;
 
-    JSScript *parentScript = NULL;
+    UnrootedScript parentScript = NULL;
     ScriptAnalysis *parentAnalysis = NULL;
     if (frame.parent != INVALID_FRAME) {
         parentScript = getFrame(frame.parent).script;
@@ -1998,7 +1997,7 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
              * If there is a single inline callee with a single return site,
              * propagate back to that.
              */
-            JSScript *callee = NULL;
+            UnrootedScript callee = NULL;
             uint32_t calleeFrame = INVALID_FRAME;
             for (unsigned i = 0; i < numFrames(); i++) {
                 if (iterFrame(i).parent == cv.frame && iterFrame(i).parentpc == pc) {
@@ -2050,6 +2049,7 @@ ScriptAnalysis::printSSA(JSContext *cx)
 
     printf("\n");
 
+    RootedScript script(cx, script_);
     for (unsigned offset = 0; offset < script_->length; offset++) {
         Bytecode *code = maybeCode(offset);
         if (!code)
@@ -2057,7 +2057,7 @@ ScriptAnalysis::printSSA(JSContext *cx)
 
         jsbytecode *pc = script_->code + offset;
 
-        PrintBytecode(cx, script_, pc);
+        PrintBytecode(cx, script, pc);
 
         SlotValue *newv = code->newValues;
         if (newv) {
