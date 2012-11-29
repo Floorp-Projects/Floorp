@@ -602,6 +602,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 float checkerboard =  1.0f - GeckoAppShell.computeRenderIntegrity();
 
                 PanningPerfAPI.recordCheckerboard(checkerboard);
+                if (checkerboard < 0.0f || checkerboard > 1.0f) {
+                    Log.e(LOGTAG, "Checkerboard value out of bounds: " + checkerboard);
+                }
 
                 mCompleteFramesRendered += 1.0f - checkerboard;
                 mFramesRendered ++;
