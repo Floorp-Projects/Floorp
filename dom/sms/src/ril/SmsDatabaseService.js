@@ -14,7 +14,7 @@ const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORE_NAME = "sms";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
@@ -185,6 +185,10 @@ SmsDatabaseService.prototype = {
             if (DEBUG) debug("Upgrade to version 4. Add quick threads view.")
             self.upgradeSchema3(db, event.target.transaction);
             break;
+          case 4:
+            if (DEBUG) debug("Upgrade to version 5. Populate quick threads view.")
+            self.upgradeSchema4(event.target.transaction);
+            break;
           default:
             event.target.transaction.abort();
             callback("Old database version: " + event.oldVersion, null);
@@ -272,7 +276,7 @@ SmsDatabaseService.prototype = {
    * Upgrade to the corresponding database schema version.
    */
   upgradeSchema: function upgradeSchema(objectStore) {
-    objectStore.createIndex("read", "read", { unique: false });  
+    objectStore.createIndex("read", "read", { unique: false });
   },
 
   upgradeSchema2: function upgradeSchema2(objectStore) {
@@ -311,6 +315,46 @@ SmsDatabaseService.prototype = {
     objectStore = db.createObjectStore(MOST_RECENT_STORE_NAME,
                                        { keyPath: "senderOrReceiver" });
     objectStore.createIndex("timestamp", "timestamp");
+  },
+
+  upgradeSchema4: function upgradeSchema4(transaction) {
+    let threads = {};
+    let smsStore = transaction.objectStore(STORE_NAME);
+    let mostRecentStore = transaction.objectStore(MOST_RECENT_STORE_NAME);
+
+    smsStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        for (let thread in threads) {
+          mostRecentStore.put(threads[thread]);
+        }
+        return;
+      }
+
+      let message = cursor.value;
+      let contact = message.sender || message.receiver;
+
+      if (contact in threads) {
+        let thread = threads[contact];
+        if (!message.read) {
+          thread.unreadCount++;
+        }
+        if (message.timestamp > thread.timestamp) {
+          thread.id = message.id;
+          thread.body = message.body;
+          thread.timestamp = message.timestamp;
+        }
+      } else {
+        threads[contact] = {
+          senderOrReceiver: contact,
+          id: message.id,
+          timestamp: message.timestamp,
+          body: message.body,
+          unreadCount: message.read ? 0 : 1
+        }
+      }
+      cursor.continue();
+    }
   },
 
   /**
@@ -435,6 +479,7 @@ SmsDatabaseService.prototype = {
           event.target.source.add({ senderOrReceiver: number,
                                     timestamp: message.timestamp,
                                     body: message.body,
+                                    id: message.id,
                                     unreadCount: message.read ? 0 : 1 });
         }
       }
