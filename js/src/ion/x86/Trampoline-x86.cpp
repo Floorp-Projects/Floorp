@@ -7,6 +7,7 @@
 
 #include "jscompartment.h"
 #include "assembler/assembler/MacroAssembler.h"
+#include "ion/BaselineJIT.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
@@ -282,8 +283,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
     // Call the target function.
     // Note that this assumes the function is JITted.
     masm.movl(Operand(eax, offsetof(JSFunction, u.i.script_)), eax);
-    masm.movl(Operand(eax, offsetof(JSScript, ion)), eax);
-    masm.movl(Operand(eax, IonScript::offsetOfMethod()), eax);
+    masm.loadBaselineOrIonCode(eax);
     masm.movl(Operand(eax, IonCode::offsetOfCode()), eax);
     masm.call(eax);
 

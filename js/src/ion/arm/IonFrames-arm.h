@@ -158,6 +158,14 @@ class IonOsrFrameLayout : public IonJSFrameLayout
     }
 };
 
+class IonBaselineStubFrameLayout : public IonCommonFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(IonBaselineStubFrameLayout);
+    }
+};
+
 class IonNativeExitFrameLayout;
 class IonOOLNativeGetterExitFrameLayout;
 class IonOOLPropertyOpExitFrameLayout;

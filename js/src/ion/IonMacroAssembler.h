@@ -658,6 +658,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         movePtr(ImmWord(p->sizePointer()), temp);
         add32(Imm32(-1), Address(temp, 0));
     }
+
+    void loadBaselineOrIonCode(Register script);
 };
 
 } // namespace ion
