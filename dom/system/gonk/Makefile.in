@@ -42,6 +42,7 @@ XPIDLSRCS = \
   nsIVolumeService.idl \
   nsIVolumeStat.idl \
   nsIWorkerHolder.idl \
+  nsIAudioChannelManager.idl \
   $(NULL)
 
 LOCAL_INCLUDES = \
