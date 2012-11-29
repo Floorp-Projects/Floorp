@@ -59,13 +59,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=577974
 var sheet = document.getElementById("style").sheet;
 
 var bounce = sheet.cssRules[0];
-is(bounce.type, CSSRule.MOZ_KEYFRAMES_RULE, "bounce.type");
+is(bounce.type, CSSRule.KEYFRAMES_RULE, "bounce.type");
 is(bounce.type, 7, "bounce.type");
 is(bounce.name, "bounce", "bounce.name");
 bounce.name = "bouncier";
 is(bounce.name, "bouncier", "setting bounce.name");
 
-is(bounce.cssRules[0].type, CSSRule.MOZ_KEYFRAME_RULE, "keyframe rule type");
+is(bounce.cssRules[0].type, CSSRule.KEYFRAME_RULE, "keyframe rule type");
 is(bounce.cssRules[0].type, 8, "keyframe rule type");
 is(bounce.cssRules[0].keyText, "0%", "keyframe rule keyText");
 is(bounce.cssRules[1].keyText, "25%", "keyframe rule keyText");
