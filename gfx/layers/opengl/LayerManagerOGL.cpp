@@ -1618,12 +1618,35 @@ LayerManagerOGL::CreateDrawTarget(const IntSize &aSize,
   return LayerManager::CreateDrawTarget(aSize, aFormat);
 }
 
+static void
+SubtractTransformedRegion(nsIntRegion& aRegion,
+                          const nsIntRegion& aRegionToSubtract,
+                          const gfx3DMatrix& aTransform)
+{
+  if (aRegionToSubtract.IsEmpty()) {
+    return;
+  }
+
+  // For each rect in the region, find out its bounds in screen space and
+  // subtract it from the screen region.
+  nsIntRegionRectIterator it(aRegionToSubtract);
+  while (const nsIntRect* rect = it.Next()) {
+    gfxRect incompleteRect = aTransform.TransformBounds(gfxRect(*rect));
+    aRegion.Sub(aRegion, nsIntRect(incompleteRect.x,
+                                   incompleteRect.y,
+                                   incompleteRect.width,
+                                   incompleteRect.height));
+  }
+}
+
 /* static */ void
 LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
                                                 nsIntRegion& aScreenRegion,
+                                                nsIntRegion& aLowPrecisionScreenRegion,
                                                 const gfx3DMatrix& aTransform)
 {
-  if (aScreenRegion.IsEmpty() || aLayer->GetOpacity() <= 0.f) {
+  if (aLayer->GetOpacity() <= 0.f ||
+      (aScreenRegion.IsEmpty() && aLowPrecisionScreenRegion.IsEmpty())) {
     return;
   }
 
@@ -1638,7 +1661,7 @@ LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
     }
     for (Layer* child = aLayer->GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      ComputeRenderIntegrityInternal(child, aScreenRegion, transform);
+      ComputeRenderIntegrityInternal(child, aScreenRegion, aLowPrecisionScreenRegion, transform);
     }
     return;
   }
@@ -1658,17 +1681,25 @@ LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
     gfx3DMatrix transformToScreen = aLayer->GetEffectiveTransform();
     transformToScreen.PreMultiply(aTransform);
 
-    // For each rect in the region, find out its bounds in screen space and
-    // subtract it from the screen region.
-    nsIntRegionRectIterator it(incompleteRegion);
-    while (const nsIntRect* rect = it.Next()) {
-      gfxRect incompleteRect = transformToScreen.TransformBounds(gfxRect(*rect));
-      aScreenRegion.Sub(aScreenRegion, nsIntRect(incompleteRect.x,
-                                                 incompleteRect.y,
-                                                 incompleteRect.width,
-                                                 incompleteRect.height));
+    SubtractTransformedRegion(aScreenRegion, incompleteRegion, transformToScreen);
+
+    // See if there's any incomplete low-precision rendering
+    incompleteRegion.Sub(incompleteRegion, thebesLayer->GetValidLowPrecisionRegion());
+    if (!incompleteRegion.IsEmpty()) {
+      SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
     }
   }
+}
+
+static int
+GetRegionArea(const nsIntRegion& aRegion)
+{
+  int area = 0;
+  nsIntRegionRectIterator it(aRegion);
+  while (const nsIntRect* rect = it.Next()) {
+    area += rect->width * rect->height;
+  }
+  return area;
 }
 
 float
@@ -1683,18 +1714,21 @@ LayerManagerOGL::ComputeRenderIntegrity()
   gfx3DMatrix transform;
   nsIntRect screenRect(0, 0, mWidgetSize.width, mWidgetSize.height);
   nsIntRegion screenRegion(screenRect);
-  ComputeRenderIntegrityInternal(GetRoot(), screenRegion, transform);
+  nsIntRegion lowPrecisionScreenRegion(screenRect);
+  ComputeRenderIntegrityInternal(GetRoot(), screenRegion,
+                                 lowPrecisionScreenRegion, transform);
 
   if (!screenRegion.IsEqual(screenRect)) {
     // Calculate the area of the region. All rects in an nsRegion are
     // non-overlapping.
-    int area = 0;
-    nsIntRegionRectIterator it(screenRegion);
-    while (const nsIntRect* rect = it.Next()) {
-      area += rect->width * rect->height;
+    float screenArea = screenRect.width * screenRect.height;
+    float highPrecisionIntegrity = GetRegionArea(screenRegion) / screenArea;
+    float lowPrecisionIntegrity = 1.f;
+    if (!lowPrecisionScreenRegion.IsEqual(screenRect)) {
+      lowPrecisionIntegrity = GetRegionArea(lowPrecisionScreenRegion) / screenArea;
     }
 
-    return area / (float)(screenRect.width * screenRect.height);
+    return (highPrecisionIntegrity + lowPrecisionIntegrity) / 2.f;
   }
 
   return 1.f;
