@@ -1741,7 +1741,7 @@ nsPluginHost::NormalizeHostname(nsCString& host)
 // first match.
 nsresult
 nsPluginHost::EnumerateSiteData(const nsACString& domain,
-                                const nsTArray<nsCString>& sites,
+                                const InfallibleTArray<nsCString>& sites,
                                 InfallibleTArray<nsCString>& result,
                                 bool firstMatchOnly)
 {
