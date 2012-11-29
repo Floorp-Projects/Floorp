@@ -7,6 +7,7 @@
 
 
 #include "tests.h"
+
 #include <string.h>
 #include <stdarg.h>
 
@@ -165,7 +166,7 @@ bool group(int vertex, ...)
     va_start(ap, vertex);
     while (vertex != -1) {
         CHECK(v != NULL);
-        CHECK(v->index == vertex);
+        CHECK(v->index == unsigned(vertex));
         v = (TestNode *)v->gcNextGraphNode;
         vertex = va_arg(ap, int);
     }
@@ -183,7 +184,7 @@ bool remaining(int vertex, ...)
     va_start(ap, vertex);
     while (vertex != -1) {
         CHECK(v != NULL);
-        CHECK(v->index == vertex);
+        CHECK(v->index == unsigned(vertex));
         v = (TestNode *)v->gcNextGraphNode;
         vertex = va_arg(ap, int);
     }

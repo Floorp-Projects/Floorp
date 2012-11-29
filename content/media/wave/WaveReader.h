@@ -33,7 +33,7 @@ public:
     return false;
   }
 
-  virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
+  virtual nsresult ReadMetadata(VideoInfo* aInfo,
                                 MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
@@ -46,9 +46,11 @@ public:
 private:
   bool ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead = nullptr);
   bool LoadRIFFChunk();
-  bool ScanForwardUntil(uint32_t aWantedChunk, uint32_t* aChunkSize);
-  bool LoadFormatChunk();
-  bool FindDataOffset();
+  bool GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize);
+  bool LoadFormatChunk(uint32_t aChunkSize);
+  bool FindDataOffset(uint32_t aChunkSize);
+  bool LoadListChunk(uint32_t aChunkSize, nsAutoPtr<nsHTMLMediaElement::MetadataTags> &aTags);
+  bool LoadAllChunks(nsAutoPtr<nsHTMLMediaElement::MetadataTags> &aTags);
 
   // Returns the number of seconds that aBytes represents based on the
   // current audio parameters.  e.g.  176400 bytes is 1 second at 16-bit

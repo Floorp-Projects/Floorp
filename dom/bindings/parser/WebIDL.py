@@ -2143,6 +2143,9 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[Unforgeable] is only allowed on readonly "
                                   "attributes", [attr.location, self.location])
             self._unforgeable = True
+        elif identifier == "Constant" and not self.readonly:
+            raise WebIDLError("[Constant] only allowed on readonly attributes",
+                              [attr.location, self.location])
         elif identifier == "PutForwards":
             if not self.readonly:
                 raise WebIDLError("[PutForwards] is only allowed on readonly "
@@ -2276,6 +2279,7 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
                 argument.resolve(self)
 
         self._treatNonCallableAsNull = False
+        self._workerOnly = False
 
     def isCallback(self):
         return True
@@ -2316,11 +2320,16 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isNonCallbackInterface() or other.isDate())
 
+    def isWorkerOnly(self):
+        return self._workerOnly
+
     def addExtendedAttributes(self, attrs):
         unhandledAttrs = []
         for attr in attrs:
             if attr.identifier() == "TreatNonCallableAsNull":
                 self._treatNonCallableAsNull = True
+            elif attr.identifier() == "WorkerOnly":
+                self._workerOnly = True
             else:
                 unhandledAttrs.append(attr)
         if len(unhandledAttrs) != 0:
@@ -2641,6 +2650,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             raise WebIDLError("Methods must not be flagged as "
                               "[Unforgeable]",
                               [attr.location, self.location])
+        elif identifier == "Constant":
+            raise WebIDLError("Methods must not be flagged as "
+                              "[Constant]",
+                              [attr.location, self.location]);
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])

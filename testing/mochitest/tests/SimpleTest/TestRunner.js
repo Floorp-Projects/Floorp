@@ -78,6 +78,7 @@ TestRunner._urls = [];
 
 TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
+TestRunner.runSlower = false;
 
 TestRunner._expectingProcessCrash = false;
 
@@ -440,7 +441,11 @@ TestRunner.testFinished = function(tests) {
 
         TestRunner.updateUI(tests);
         TestRunner._currentTest++;
-        TestRunner.runNextTest();
+        if (TestRunner.runSlower) {
+            setTimeout(TestRunner.runNextTest, 1000);
+        } else {
+            TestRunner.runNextTest();
+        }
     }
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {

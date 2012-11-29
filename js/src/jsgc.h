@@ -37,6 +37,12 @@ class GCHelperThread;
 struct Shape;
 struct SliceBudget;
 
+enum HeapState {
+    Idle,       // doing nothing with the GC heap
+    Tracing,    // tracing the GC heap without collecting, e.g. IterateCompartments()
+    Collecting  // doing a GC of the heap
+};
+
 namespace ion {
     class IonCode;
 }

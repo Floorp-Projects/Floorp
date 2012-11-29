@@ -126,7 +126,7 @@ static const int32_t MAX_VIDEO_WIDTH = 4000;
 static const int32_t MAX_VIDEO_HEIGHT = 3000;
 
 // Scales the display rect aDisplay by aspect ratio aAspectRatio.
-// Note that aDisplay must be validated by nsVideoInfo::ValidateVideoRegion()
+// Note that aDisplay must be validated by VideoInfo::ValidateVideoRegion()
 // before being used!
 void ScaleDisplayByAspectRatio(nsIntSize& aDisplay, float aAspectRatio);
 

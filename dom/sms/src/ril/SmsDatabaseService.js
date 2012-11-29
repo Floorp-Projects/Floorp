@@ -451,6 +451,12 @@ SmsDatabaseService.prototype = {
   saveReceivedMessage: function saveReceivedMessage(sender, body, messageClass, date) {
     let receiver = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
 
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (receiver === undefined || receiver === "undefined") {
+      receiver = null;
+    }
+
     let message = {delivery:       DELIVERY_RECEIVED,
                    deliveryStatus: DELIVERY_STATUS_SUCCESS,
                    sender:         sender,
@@ -464,6 +470,12 @@ SmsDatabaseService.prototype = {
 
   saveSentMessage: function saveSentMessage(receiver, body, date) {
     let sender = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (sender === undefined || sender === "undefined") {
+      sender = null;
+    }
 
     let message = {delivery:       DELIVERY_SENT,
                    deliveryStatus: DELIVERY_STATUS_PENDING,

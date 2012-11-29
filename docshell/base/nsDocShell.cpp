@@ -114,7 +114,6 @@
 #include "nsIObserver.h"
 #include "nsINestedURI.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsISSLSocketControl.h"
 #include "nsINSSErrorsService.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
@@ -4175,11 +4174,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                 nsCOMPtr<nsIStrictTransportSecurityService> stss =
                           do_GetService(NS_STSSERVICE_CONTRACTID, &rv);
                 NS_ENSURE_SUCCESS(rv, rv);
-                uint32_t flags = 0;
-                nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(tsi);
-                if (socketControl) {
-                    socketControl->GetProviderFlags(&flags);
-                }
+                uint32_t flags =
+                  mInPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
                 
                 bool isStsHost = false;
                 rv = stss->IsStsURI(aURI, flags, &isStsHost);

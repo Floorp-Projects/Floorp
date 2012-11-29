@@ -46,8 +46,8 @@ public:
     nsresult Init(nsIURI *uri);
 
 private:
-    nsresult CreateJarInput(nsIZipReaderCache *);
-    nsresult EnsureJarInput(bool blocking);
+    nsresult CreateJarInput(nsIZipReaderCache *, nsJARInputThunk **);
+    nsresult LookupFile();
 
 #if defined(PR_LOGGING)
     nsCString                       mSpec;
@@ -77,7 +77,6 @@ private:
     bool                            mIsPending;
     bool                            mIsUnsafe;
 
-    nsJARInputThunk                *mJarInput;
     nsCOMPtr<nsIStreamListener>     mDownloader;
     nsCOMPtr<nsIInputStreamPump>    mPump;
     nsCOMPtr<nsIFile>               mJarFile;

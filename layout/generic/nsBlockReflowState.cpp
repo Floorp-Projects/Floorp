@@ -776,7 +776,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // We can't use aFloat->ShouldAvoidBreakInside(mReflowState) here since
   // its mIsTopOfPage may be true even though the float isn't at the
   // top when floatY > 0.
-  if (!mustPlaceFloat && (!mReflowState.mFlags.mIsTopOfPage || floatY > 0) &&
+  if (mContentArea.height != NS_UNCONSTRAINEDSIZE &&
+      !mustPlaceFloat && (!mReflowState.mFlags.mIsTopOfPage || floatY > 0) &&
       NS_STYLE_PAGE_BREAK_AVOID == aFloat->GetStyleDisplay()->mBreakInside &&
       (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus) ||
        aFloat->GetSize().height + floatMargin.TopBottom() >

@@ -1173,6 +1173,8 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
         return true;
     }
 
+    gfx::Rect cssCompositedRect =
+      AsyncPanZoomController::CalculateCompositedRectInCssPixels(aFrameMetrics);
     // The BrowserElementScrolling helper must know about these updated metrics
     // for other functions it performs, such as double tap handling.
     nsCString data;
@@ -1200,6 +1202,10 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
         data += nsPrintfCString(", \"width\" : %f", aFrameMetrics.mScrollableRect.width);
         data += nsPrintfCString(", \"height\" : %f", aFrameMetrics.mScrollableRect.height);
         data += nsPrintfCString(" }");
+    data += nsPrintfCString(", \"cssCompositedRect\" : ");
+            data += nsPrintfCString("{ \"width\" : %f", cssCompositedRect.width);
+            data += nsPrintfCString(", \"height\" : %f", cssCompositedRect.height);
+            data += nsPrintfCString(" }");
     data += nsPrintfCString(" }");
 
     DispatchMessageManagerMessage(NS_LITERAL_STRING("Viewport:Change"), data);
@@ -1207,8 +1213,6 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
     nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
     nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mWebNav);
 
-    gfx::Rect cssCompositedRect =
-      AsyncPanZoomController::CalculateCompositedRectInCssPixels(aFrameMetrics);
     utils->SetScrollPositionClampingScrollPortSize(
       cssCompositedRect.width, cssCompositedRect.height);
     ScrollWindowTo(window, aFrameMetrics.mScrollOffset);
