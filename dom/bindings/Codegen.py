@@ -6625,15 +6625,21 @@ class CGBindingRoot(CGThing):
 
         descriptorsForForwardDeclaration = list(descriptors)
         ifaces = []
+        workerIfaces = []
         for dictionary in dictionaries:
-            ifaces.extend(type.unroll().inner
-                          for type in getTypesFromDictionary(dictionary)
-                          if type.unroll().isGeckoInterface())
+            dictionaryIfaces = [ type.unroll().inner
+                                 for type in getTypesFromDictionary(dictionary)
+                                 if type.unroll().isGeckoInterface() ]
+            ifaces.extend(dictionaryIfaces)
+            workerIfaces.extend(dictionaryIfaces)
 
         for callback in callbacks:
-            ifaces.extend(t.unroll().inner
-                          for t in getTypesFromCallback(callback)
-                          if t.unroll().isGeckoInterface())
+            callbackIfaces = [ t.unroll().inner
+                               for t in getTypesFromCallback(callback)
+                               if t.unroll().isGeckoInterface() ]
+            workerIfaces.extend(callbackIfaces)
+            if not callback.isWorkerOnly():
+                ifaces.extend(callbackIfaces)
 
         # Put in all the non-worker descriptors
         descriptorsForForwardDeclaration.extend(
@@ -6641,7 +6647,7 @@ class CGBindingRoot(CGThing):
             iface in ifaces)
         # And now the worker ones.  But these may not exist, so we
         # have to be more careful.
-        for iface in ifaces:
+        for iface in workerIfaces:
             try:
                 descriptorsForForwardDeclaration.append(
                     config.getDescriptor(iface.identifier.name, True))
@@ -7348,6 +7354,9 @@ class CGExampleRoot(CGThing):
 
 class CGCallbackFunction(CGClass):
     def __init__(self, callback, descriptorProvider):
+        if callback.isWorkerOnly() and not descriptorProvider.workers:
+            self.generatable = False
+            return
         name = callback.identifier.name
         if descriptorProvider.workers:
             name += "Workers"
