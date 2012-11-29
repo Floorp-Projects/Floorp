@@ -573,9 +573,13 @@ WebappsApplication.prototype = {
           switch(msg.type) {
             case "error":
               this._downloadError = msg.error;
+              this.downloading = msg.app.downloading;
+              this.installState = msg.app.installState;
               this._fireEvent("downloaderror", this._ondownloaderror);
               break;
             case "progress":
+              this.downloading = msg.app.downloading;
+              this.installState = msg.app.installState;
               this.progress = msg.progress;
               this._fireEvent("downloadprogress", this._onprogress);
               break;
