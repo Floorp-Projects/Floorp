@@ -136,13 +136,13 @@ public:
    * @param aData the new data
    * @return always true, unless memory allocation failed
    */
-  void Put(KeyType aKey, UserDataType aData)
+  void Put(KeyType aKey, const UserDataType& aData)
   {
     if (!Put(aKey, aData, fallible_t()))
       NS_RUNTIMEABORT("OOM");
   }
 
-  bool Put(KeyType aKey, UserDataType aData, const fallible_t&) NS_WARN_UNUSED_RESULT
+  bool Put(KeyType aKey, const UserDataType& aData, const fallible_t&) NS_WARN_UNUSED_RESULT
   {
     EntryType* ent = this->PutEntry(aKey);
 
