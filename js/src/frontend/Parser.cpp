@@ -712,6 +712,8 @@ Parser::standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals
     if (!funbox)
         return NULL;
 
+    fn->pn_funbox = *funbox;
+
     ParseContext funpc(this, *funbox, 0, /* staticLevel = */ 0);
     if (!funpc.init())
         return NULL;
