@@ -10,10 +10,10 @@ import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
+import android.widget.LinearLayout;
 
-public class BrowserToolbarBackground extends GeckoLinearLayout
+public class BrowserToolbarBackground extends LinearLayout
                                       implements CanvasDelegate.DrawManager,
                                                  LightweightTheme.OnChangeListener { 
     private GeckoActivity mActivity;
@@ -98,16 +98,12 @@ public class BrowserToolbarBackground extends GeckoLinearLayout
         if (drawable == null)
             return;
 
-        StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.address_bar_bg_private));
-        stateList.addState(new int[] {}, drawable);
-
         int[] padding =  new int[] { getPaddingLeft(),
                                      getPaddingTop(),
                                      getPaddingRight(),
                                      getPaddingBottom()
                                    };
-        setBackgroundDrawable(stateList);
+        setBackgroundDrawable(drawable);
         setPadding(padding[0], padding[1], padding[2], padding[3]);
     }
 
