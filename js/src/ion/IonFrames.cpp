@@ -772,6 +772,8 @@ ion::GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRe
         scriptRes.set(ifi.script());
         pc = ifi.pc();
     } else {
+        if (it.isBaselineStub())
+            ++it;
         JS_ASSERT(it.isBaselineJS());
         it.baselineScriptAndPc(scriptRes, &pc);
     }
@@ -1167,6 +1169,10 @@ IonFrameIterator::dump() const
         break;
       case IonFrame_BaselineJS:
         dumpBaseline();
+        break;
+      case IonFrame_BaselineStub:
+        fprintf(stderr, " Baseline stub frame\n");
+        fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
       case IonFrame_OptimizedJS:
       {

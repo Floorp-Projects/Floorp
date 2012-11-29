@@ -727,12 +727,8 @@ BaselineCompiler::emitCall()
     if (!addICLoadLabel(patchOffset))
         return false;
 
-    // The stub duplicates the values on the stack, in reverse order.
-    // Pop all values.
-    masm.addPtr(Imm32((argc + 2) * sizeof(Value) * 2), BaselineStackReg);
-
     // Update FrameInfo.
-    frame.popn(argc + 2, DontAdjustStack);
+    frame.popn(argc + 2);
     frame.push(R0);
     return true;
 }

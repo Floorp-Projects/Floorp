@@ -24,7 +24,12 @@ enum FrameType
     // functon activation. OptimizedJS frames are used by the optimizing compiler.
     IonFrame_OptimizedJS,
 
+    // JS frame used by the baseline JIT.
     IonFrame_BaselineJS,
+
+    // Frame pushed for baseline JIT stubs that make non-tail calls, so that the
+    // return address -> ICEntry mapping works.
+    IonFrame_BaselineStub,
 
     // The entry frame is the initial prologue block transitioning from the VM
     // into the Ion world.
@@ -121,6 +126,9 @@ class IonFrameIterator
     }
     bool isOptimizedJS() const {
         return type_ == IonFrame_OptimizedJS;
+    }
+    bool isBaselineStub() const {
+        return type_ == IonFrame_BaselineStub;
     }
     bool isNative() const;
     bool isOOLNativeGetter() const;

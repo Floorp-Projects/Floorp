@@ -1597,6 +1597,9 @@ StackIter::isFunctionFrame() const
         return interpFrame()->isFunctionFrame();
       case ION:
 #ifdef  JS_ION
+        JS_ASSERT(ionFrames_.isScripted());
+        if (ionFrames_.isBaselineJS())
+            return ionFrames_.isFunctionFrame();
         return ionInlineFrames_.isFunctionFrame();
 #else
         break;
@@ -1672,7 +1675,9 @@ StackIter::callee() const
         return &interpFrame()->callee();
       case ION:
 #ifdef JS_ION
-        if (ionFrames_.isScripted())
+        if (ionFrames_.isBaselineJS())
+            return ionFrames_.callee();
+        if (ionFrames_.isOptimizedJS())
             return ionInlineFrames_.callee();
         JS_ASSERT(ionFrames_.isNative());
         return ionFrames_.callee();

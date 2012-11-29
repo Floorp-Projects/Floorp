@@ -241,6 +241,40 @@ BaselineScript::New(JSContext *cx, size_t icEntries)
     return script;
 }
 
+static void
+TraceStub(JSTracer *trc, ICStub *stub)
+{
+    IonCode *stubIonCode = stub->ionCode();
+    MarkIonCodeUnbarriered(trc, &stubIonCode, "baseline-stub-ioncode");
+
+    // If the stub is a monitored fallback stub, then mark the monitor ICs hanging
+    // off of that stub.  We don't need to worry about the regular monitored stubs,
+    // because the regular monitored stubs will always have a monitored fallback stub
+    // that references the same stub chain.
+    if (stub->isMonitoredFallback()) {
+        ICTypeMonitor_Fallback *lastMonStub =
+            stub->toMonitoredFallbackStub()->fallbackMonitorStub();
+        for (ICStub *monStub = lastMonStub->firstMonitorStub();
+             monStub != NULL;
+             monStub = monStub->next())
+        {
+            JS_ASSERT_IF(monStub->next() == NULL, monStub == lastMonStub);
+            IonCode *monStubIonCode = monStub->ionCode();
+            MarkIonCodeUnbarriered(trc, &monStubIonCode, "baseline-monitor-stub-ioncode");
+        }
+    }
+
+    switch (stub->kind()) {
+      case ICStub::Call_Scripted: {
+        ICCall_Scripted *callStub = stub->toCall_Scripted();
+        MarkObject(trc, &callStub->callee(), "baseline-callstub-callee");
+        break;
+      }
+      default:
+        break;
+    }
+}
+
 void
 BaselineScript::trace(JSTracer *trc)
 {
@@ -249,27 +283,8 @@ BaselineScript::trace(JSTracer *trc)
     // Mark all IC stub codes hanging off the IC stub entries.
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry &ent = icEntry(i);
-        for (ICStub *stub = ent.firstStub(); stub; stub = stub->next()) {
-            IonCode *stubIonCode = stub->ionCode();
-            MarkIonCodeUnbarriered(trc, &stubIonCode, "baseline-stub-ioncode");
-
-            // If the stub is a monitored fallback stub, then mark the monitor ICs hanging
-            // off of that stub.  We don't need to worry about the regular monitored stubs,
-            // because the regular monitored stubs will always have a monitored fallback stub
-            // that references the same stub chain.
-            if (stub->isMonitoredFallback()) {
-                ICTypeMonitor_Fallback *lastMonStub =
-                    stub->toMonitoredFallbackStub()->fallbackMonitorStub();
-                for (ICStub *monStub = lastMonStub->firstMonitorStub();
-                     monStub != NULL;
-                     monStub = monStub->next())
-                {
-                    JS_ASSERT_IF(monStub->next() == NULL, monStub == lastMonStub);
-                    IonCode *monStubIonCode = monStub->ionCode();
-                    MarkIonCodeUnbarriered(trc, &monStubIonCode, "baseline-monitor-stub-ioncode");
-                }
-            }
-        }
+        for (ICStub *stub = ent.firstStub(); stub; stub = stub->next())
+            TraceStub(trc, stub);
     }
 }
 

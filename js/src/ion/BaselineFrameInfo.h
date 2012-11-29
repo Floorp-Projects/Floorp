@@ -190,8 +190,14 @@ class FrameInfo
         popped->reset();
     }
     inline void popn(uint32_t n, StackAdjustment adjust = AdjustStack) {
-        for (uint32_t i = 0; i < n; i++)
-            pop(adjust);
+        uint32_t poppedStack = 0;
+        for (uint32_t i = 0; i < n; i++) {
+            if (peek(-1)->kind() == StackValue::Stack)
+                poppedStack++;
+            pop(DontAdjustStack);
+        }
+        if (adjust == AdjustStack && poppedStack > 0)
+            masm.addPtr(Imm32(sizeof(Value) * poppedStack), BaselineStackReg);
     }
     inline void push(const Value &val) {
         StackValue *sv = rawPush();
