@@ -1,5 +1,7 @@
-pref(media.peerconnection.enabled,true) load 780790.html
-pref(media.peerconnection.enabled,true) load 791270.html
-pref(media.peerconnection.enabled,true) load 791278.html
-pref(media.peerconnection.enabled,true) load 791330.html
-pref(media.peerconnection.enabled,true) load 801227.html
+default-preferences pref(media.peerconnection.enabled,true)
+
+load 780790.html
+load 791270.html
+load 791278.html
+load 791330.html
+load 801227.html
