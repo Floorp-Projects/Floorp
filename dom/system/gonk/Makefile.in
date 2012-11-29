@@ -43,6 +43,7 @@ XPIDLSRCS = \
   nsIVolumeStat.idl \
   nsIWorkerHolder.idl \
   nsIAudioChannelManager.idl \
+  nsINavigatorAudioChannelManager.idl \
   $(NULL)
 
 LOCAL_INCLUDES = \
@@ -60,6 +61,7 @@ CPPSRCS += \
   AutoMounter.cpp \
   AutoMounterSetting.cpp \
   GonkGPSGeolocationProvider.cpp \
+  AudioChannelManager.cpp \
   nsVolume.cpp \
   nsVolumeService.cpp \
   nsVolumeStat.cpp \
