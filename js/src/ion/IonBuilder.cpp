@@ -3579,27 +3579,24 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
 MDefinition *
 IonBuilder::createThis(HandleFunction target, MDefinition *callee)
 {
-    // Create this for unknown target
-    if (!target)
-        return createThisScripted(callee);
-
-    // Create this for native function
     if (target->isNative()) {
         if (!target->isNativeConstructor())
             return NULL;
         return createThisNative();
     }
 
-    // Create this with known prototype.
+    MDefinition *createThis = NULL;
     RootedObject proto(cx, getSingletonPrototype(target));
-    if (proto) {
-        MDefinition *createThis = createThisScriptedSingleton(target, proto, callee);
-        if (createThis)
-            return createThis;
-    }
+
+    // Try baking in the prototype.
+    if (proto)
+        createThis = createThisScriptedSingleton(target, proto, callee);
 
     // If the prototype could not be hardcoded, emit a GETPROP.
-    return createThisScripted(callee);
+    if (!createThis)
+        createThis = createThisScripted(callee);
+
+    return createThis;
 }
 
 bool
@@ -3800,8 +3797,8 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing
 
     MPassArg *thisArg = current->pop()->toPassArg();
 
-    // Inline the constructor on the caller-side.
-    if (constructing) {
+    // If the target is known, inline the constructor on the caller-side.
+    if (constructing && target) {
         MDefinition *callee = current->peek(-1);
         MDefinition *create = createThis(target, callee);
         if (!create) {
