@@ -1139,7 +1139,7 @@ PresShell::SetPreferenceStyleRules(bool aForceReflow)
   // If the document doesn't have a window there's no need to notify
   // its presshell about changes to preferences since the document is
   // in a state where it doesn't matter any more (see
-  // DocumentViewerImpl::Close()).
+  // nsDocumentViewer::Close()).
 
   if (!window) {
     return NS_ERROR_NULL_POINTER;
@@ -1475,7 +1475,7 @@ nsresult PresShell::SetPrefFocusRules(void)
 void
 PresShell::AddUserSheet(nsISupports* aSheet)
 {
-  // Make sure this does what DocumentViewerImpl::CreateStyleSet does wrt
+  // Make sure this does what nsDocumentViewer::CreateStyleSet does wrt
   // ordering. We want this new sheet to come after all the existing stylesheet
   // service sheets, but before other user sheets; see nsIStyleSheetService.idl
   // for the ordering.  Just remove and readd all the nsStyleSheetService
@@ -1508,7 +1508,7 @@ PresShell::AddUserSheet(nsISupports* aSheet)
 void
 PresShell::AddAgentSheet(nsISupports* aSheet)
 {
-  // Make sure this does what DocumentViewerImpl::CreateStyleSet does
+  // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
   nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
   if (!sheet) {
@@ -7494,7 +7494,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   if (rootFrame == target) {
     // When the root frame is being reflowed with unconstrained height
     // (which happens when we're called from
-    // DocumentViewerImpl::SizeToContent), we're effectively doing a
+    // nsDocumentViewer::SizeToContent), we're effectively doing a
     // vertical resize, since it changes the meaning of percentage
     // heights even if no heights actually changed.  The same applies
     // when we reflow again after that computation.  This is an unusual
