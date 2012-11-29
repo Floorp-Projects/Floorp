@@ -4724,10 +4724,9 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         objp.set(NULL);
         propp.set(NULL);
     } else {
-        Shape *shape =
-            js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
-                                 SHAPE_INVALID_SLOT, JSPROP_ENUMERATE,
-                                 0, 0);
+        RootedShape shape(cx, js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
+                                                   SHAPE_INVALID_SLOT, JSPROP_ENUMERATE,
+                                                   0, 0));
         if (!shape)
             return JS_FALSE;
 
@@ -4756,13 +4755,12 @@ xml_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandle
         return true;
     }
 
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    RootedId id(cx);
+    if (!IndexToId(cx, index, id.address()))
         return false;
 
-    Shape *shape =
-        js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty, SHAPE_INVALID_SLOT,
-                             JSPROP_ENUMERATE, 0, 0);
+    RootedShape shape(cx, js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
+                                               SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, 0, 0));
     if (!shape)
         return false;
 

@@ -6079,7 +6079,7 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
     for (unsigned i = 0; i < sc.hops; i++)
         masm.loadPayload(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
 
-    Shape *shape = ScopeCoordinateToStaticScope(script_, PC).scopeShape();
+    UnrootedShape shape = ScopeCoordinateToStaticScope(script_, PC).scopeShape();
     Address addr;
     if (shape->numFixedSlots() <= sc.slot) {
         masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
@@ -6227,7 +6227,7 @@ mjit::Compiler::iter(unsigned flags)
     masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
     masm.loadShape(T1, T1);
     masm.loadPtr(Address(nireg, offsetof(NativeIterator, shapes_array)), T2);
-    masm.loadPtr(Address(T2, sizeof(Shape *)), T2);
+    masm.loadPtr(Address(T2, sizeof(RawShape)), T2);
     Jump mismatchedProto = masm.branchPtr(Assembler::NotEqual, T1, T2);
     stubcc.linkExit(mismatchedProto, Uses(1));
 
@@ -6462,6 +6462,8 @@ mjit::Compiler::jsop_bindgname()
 bool
 mjit::Compiler::jsop_getgname(uint32_t index)
 {
+    AssertCanGC();
+
     /* Optimize undefined, NaN and Infinity. */
     PropertyName *name = script_->getName(index);
     if (name == cx->names().undefined) {
@@ -6500,9 +6502,9 @@ mjit::Compiler::jsop_getgname(uint32_t index)
          * then bake its address into the jitcode and guard against future
          * reallocation of the global object's slots.
          */
-        js::Shape *shape = globalObj->nativeLookup(cx, NameToId(name));
+        UnrootedShape shape = globalObj->nativeLookup(cx, NameToId(name));
         if (shape && shape->hasDefaultGetter() && shape->hasSlot()) {
-            HeapSlot *value = &globalObj->getSlotRef(shape->slot());
+            HeapSlot *value = &globalObj->getSlotRef(DropUnrooted(shape)->slot());
             if (!value->isUndefined() &&
                 !propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
                 watchGlobalReallocation();
@@ -6626,7 +6628,7 @@ mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
         types::HeapTypeSet *types = globalObj->getType(cx)->getProperty(cx, id, false);
         if (!types)
             return false;
-        js::Shape *shape = globalObj->nativeLookup(cx, NameToId(name));
+        UnrootedShape shape = globalObj->nativeLookup(cx, NameToId(name));
         if (shape && shape->hasDefaultSetter() &&
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
@@ -7911,6 +7913,8 @@ mjit::Compiler::BarrierState
 mjit::Compiler::pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
                                         bool testUndefined)
 {
+    AssertCanGC();
+
     if (!hasTypeBarriers(PC) && !testUndefined) {
         frame.push(address, type, reuseBase);
         return BarrierState();

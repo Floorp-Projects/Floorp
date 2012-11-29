@@ -1400,12 +1400,12 @@ GetPIC(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing)
     return NULL;
 }
 
-Shape *
+UnrootedShape
 mjit::GetPICSingleShape(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing)
 {
     ic::PICInfo *pic = GetPIC(cx, script, pc, constructing);
     if (!pic)
-        return NULL;
+        return UnrootedShape(NULL);
     return pic->getSingleShape();
 }
 

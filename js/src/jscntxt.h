@@ -317,7 +317,7 @@ class NewObjectCache
     inline void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj);
 
     /* Invalidate any entries which might produce an object with shape/proto. */
-    void invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto);
+    void invalidateEntriesForShape(JSContext *cx, HandleShape shape, HandleObject proto);
 
   private:
     inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);

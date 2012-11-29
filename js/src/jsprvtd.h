@@ -142,15 +142,7 @@ class InlineMap;
 
 class LifoAlloc;
 
-class BaseShape;
-class UnownedBaseShape;
 struct Shape;
-struct EmptyShape;
-class ShapeKindArray;
-class Bindings;
-
-struct StackBaseShape;
-struct StackShape;
 
 class Breakpoint;
 class BreakpointSite;
@@ -207,7 +199,6 @@ struct TypeCompartment;
 } /* namespace types */
 
 typedef JS::Handle<Shape*>             HandleShape;
-typedef JS::Handle<BaseShape*>         HandleBaseShape;
 typedef JS::Handle<types::TypeObject*> HandleTypeObject;
 typedef JS::Handle<JSAtom*>            HandleAtom;
 typedef JS::Handle<PropertyName*>      HandlePropertyName;
@@ -218,7 +209,6 @@ typedef JS::MutableHandle<JSAtom*>     MutableHandleAtom;
 typedef JSAtom *                       RawAtom;
 
 typedef js::Rooted<Shape*>             RootedShape;
-typedef js::Rooted<BaseShape*>         RootedBaseShape;
 typedef js::Rooted<types::TypeObject*> RootedTypeObject;
 typedef js::Rooted<JSAtom*>            RootedAtom;
 typedef js::Rooted<PropertyName*>      RootedPropertyName;

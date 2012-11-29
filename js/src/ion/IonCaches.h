@@ -273,9 +273,9 @@ class IonCacheGetProperty : public IonCache
     bool allowGetters() const { return u.getprop.allowGetters; }
 
     bool attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                        const Shape *shape);
+                        HandleShape shape);
     bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                          const Shape *shape,
+                          HandleShape shape,
                           const SafepointIndex *safepointIndex, void *returnAddr);
 };
 
@@ -305,8 +305,8 @@ class IonCacheSetProperty : public IonCache
     bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj, HandleShape shape);
     bool attachSetterCall(JSContext *cx, IonScript *ion, HandleObject obj,
                           HandleObject holder, HandleShape shape, void *returnAddr);
-    bool attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj, const Shape *oldshape,
-                            const Shape *newshape, const Shape *propshape);
+    bool attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldshape,
+                            HandleShape newshape, HandleShape propshape);
 };
 
 class IonCacheGetElement : public IonCache
@@ -412,7 +412,7 @@ class IonCacheName : public IonCache
     }
 
     bool attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject obj,
-                Shape *shape);
+                HandleShape shape);
 };
 
 bool

@@ -7,21 +7,22 @@
 #ifndef jspropertytree_h___
 #define jspropertytree_h___
 
-#include "jsprvtd.h"
-
 #include "js/HashTable.h"
 
 namespace js {
 
+ForwardDeclare(Shape);
+struct StackShape;
+
 struct ShapeHasher {
-    typedef js::Shape *Key;
-    typedef js::StackShape Lookup;
+    typedef RawShape Key;
+    typedef StackShape Lookup;
 
     static inline HashNumber hash(const Lookup &l);
     static inline bool match(Key k, const Lookup &l);
 };
 
-typedef HashSet<js::Shape *, ShapeHasher, SystemAllocPolicy> KidsHash;
+typedef HashSet<RawShape, ShapeHasher, SystemAllocPolicy> KidsHash;
 
 class KidsPointer {
   private:
@@ -38,14 +39,14 @@ class KidsPointer {
     void setNull() { w = 0; }
 
     bool isShape() const { return (w & TAG) == SHAPE && !isNull(); }
-    js::Shape *toShape() const {
+    UnrootedShape toShape() const {
         JS_ASSERT(isShape());
-        return reinterpret_cast<js::Shape *>(w & ~uintptr_t(TAG));
+        return reinterpret_cast<RawShape>(w & ~uintptr_t(TAG));
     }
-    void setShape(js::Shape *shape) {
+    void setShape(UnrootedShape shape) {
         JS_ASSERT(shape);
-        JS_ASSERT((reinterpret_cast<uintptr_t>(shape) & TAG) == 0);
-        w = reinterpret_cast<uintptr_t>(shape) | SHAPE;
+        JS_ASSERT((reinterpret_cast<uintptr_t>(static_cast<RawShape>(shape)) & TAG) == 0);
+        w = reinterpret_cast<uintptr_t>(static_cast<RawShape>(shape)) | SHAPE;
     }
 
     bool isHash() const { return (w & TAG) == HASH; }
@@ -60,7 +61,7 @@ class KidsPointer {
     }
 
 #ifdef DEBUG
-    void checkConsistency(js::Shape *aKid) const;
+    void checkConsistency(UnrootedShape aKid) const;
 #endif
 };
 
@@ -70,7 +71,7 @@ class PropertyTree
 
     JSCompartment *compartment;
 
-    bool insertChild(JSContext *cx, js::Shape *parent, js::Shape *child);
+    bool insertChild(JSContext *cx, UnrootedShape parent, UnrootedShape child);
 
     PropertyTree();
 
@@ -82,12 +83,11 @@ class PropertyTree
     {
     }
 
-    js::Shape *newShape(JSContext *cx);
-    js::Shape *getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
+    UnrootedShape newShape(JSContext *cx);
+    UnrootedShape getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
 
 #ifdef DEBUG
     static void dumpShapes(JSRuntime *rt);
-    static void meter(JSBasicStats *bs, js::Shape *node);
 #endif
 };
 

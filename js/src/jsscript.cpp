@@ -132,9 +132,11 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
         StackShape child(nbase, id, slot++, 0, attrs, Shape::HAS_SHORTID, frameIndex);
         DropUnrooted(nbase);
 
-        self->callObjShape_ = self->callObjShape_->getChildBinding(cx, child);
-        if (!self->callObjShape_)
+        UnrootedShape shape = self->callObjShape_->getChildBinding(cx, child);
+        if (!shape)
             return false;
+
+        self->callObjShape_ = shape;
     }
     JS_ASSERT(!bi);
 

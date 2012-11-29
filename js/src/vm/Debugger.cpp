@@ -849,7 +849,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     /* Check that rv is {return: val} or {throw: val}. */
     JSContext *cx = ac.ref().context();
     Rooted<JSObject*> obj(cx);
-    Shape *shape;
+    RootedShape shape(cx);
     jsid returnId = NameToId(cx->names().return_);
     jsid throwId = NameToId(cx->names().throw_);
     bool okResumption = rv.isObject();
@@ -869,8 +869,10 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
         return handleUncaughtException(ac, vp, callHook);
     }
 
-    if (!js_NativeGet(cx, obj, obj, shape, 0, vp) || !unwrapDebuggeeValue(cx, vp))
-        return handleUncaughtException(ac, vp, callHook);
+    RootedValue v(cx, *vp);
+    if (!js_NativeGet(cx, obj, obj, shape, 0, &v) || !unwrapDebuggeeValue(cx, v.address()))
+        return handleUncaughtException(ac, v.address(), callHook);
+    *vp = v;
 
     ac.destroy();
     if (!cx->compartment->wrap(cx, vp)) {

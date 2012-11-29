@@ -123,7 +123,7 @@ frontend::LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename Cont
             continue;
 
         StaticBlockObject &blockObj = *stmt->blockObj;
-        Shape *shape = blockObj.nativeLookup(ct->sc->context, AtomToId(atom));
+        UnrootedShape shape = blockObj.nativeLookup(ct->sc->context, AtomToId(atom));
         if (shape) {
             JS_ASSERT(shape->hasShortID());
 

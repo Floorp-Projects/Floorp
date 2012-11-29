@@ -322,7 +322,7 @@ RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
     return true;
 }
 
-Shape *
+UnrootedShape
 RegExpObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(isRegExp());
@@ -338,27 +338,20 @@ RegExpObject::assignInitialShape(JSContext *cx)
     RootedObject self(cx, this);
 
     /* The lastIndex property alone is writable but non-configurable. */
-    if (!addDataProperty(cx, NameToId(cx->names().lastIndex),
-                         LAST_INDEX_SLOT, JSPROP_PERMANENT))
-    {
-        return NULL;
-    }
+    if (!addDataProperty(cx, NameToId(cx->names().lastIndex), LAST_INDEX_SLOT, JSPROP_PERMANENT))
+        return UnrootedShape(NULL);
 
     /* Remaining instance properties are non-writable and non-configurable. */
-    if (!self->addDataProperty(cx, NameToId(cx->names().source),
-                               SOURCE_SLOT, JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !self->addDataProperty(cx, NameToId(cx->names().global),
-                               GLOBAL_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !self->addDataProperty(cx, NameToId(cx->names().ignoreCase),
-                               IGNORE_CASE_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !self->addDataProperty(cx, NameToId(cx->names().multiline),
-                               MULTILINE_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY))
-    {
-        return NULL;
-    }
-
-    return self->addDataProperty(cx, NameToId(cx->names().sticky),
-                                 STICKY_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY);
+    unsigned attrs = JSPROP_PERMANENT | JSPROP_READONLY;
+    if (!self->addDataProperty(cx, NameToId(cx->names().source), SOURCE_SLOT, attrs))
+        return UnrootedShape(NULL);
+    if (!self->addDataProperty(cx, NameToId(cx->names().global), GLOBAL_FLAG_SLOT, attrs))
+        return UnrootedShape(NULL);
+    if (!self->addDataProperty(cx, NameToId(cx->names().ignoreCase), IGNORE_CASE_FLAG_SLOT, attrs))
+        return UnrootedShape(NULL);
+    if (!self->addDataProperty(cx, NameToId(cx->names().multiline), MULTILINE_FLAG_SLOT, attrs))
+        return UnrootedShape(NULL);
+    return self->addDataProperty(cx, NameToId(cx->names().sticky), STICKY_FLAG_SLOT, attrs);
 }
 
 inline bool
@@ -371,10 +364,11 @@ RegExpObject::init(JSContext *cx, HandleAtom source, RegExpFlag flags)
             if (!assignInitialShape(cx))
                 return false;
         } else {
-            Shape *shape = assignInitialShape(cx);
+            RootedShape shape(cx, assignInitialShape(cx));
             if (!shape)
                 return false;
-            EmptyShape::insertInitialShape(cx, shape, self->getProto());
+            RootedObject proto(cx, self->getProto());
+            EmptyShape::insertInitialShape(cx, shape, proto);
         }
         JS_ASSERT(!self->nativeEmpty());
     }
