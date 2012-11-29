@@ -37,6 +37,7 @@ fails-if(winWidget) == mfenced-10.html mfenced-10-ref.html
 == quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml 
 == table-width-1.xhtml table-width-1-ref.xhtml
+== table-width-2.html table-width-2-ref.html
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
 == mtable-align-negative-rownumber.html mtable-align-negative-rownumber-ref.html

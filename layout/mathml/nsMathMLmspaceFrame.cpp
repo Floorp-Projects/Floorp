@@ -125,3 +125,15 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
+
+/* virtual */ nsresult
+nsMathMLmspaceFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
+                                     nsHTMLReflowMetrics& aDesiredSize)
+{
+  ProcessAttributes(PresContext());
+  mBoundingMetrics = nsBoundingMetrics();
+  mBoundingMetrics.width = NS_MAX(0, mWidth);
+  aDesiredSize.width = mBoundingMetrics.width;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+  return NS_OK;
+}
