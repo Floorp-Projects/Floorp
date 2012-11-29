@@ -10,6 +10,7 @@
 #include "AccessibleValue_i.c"
 
 #include "AccessibleWrap.h"
+#include "Accessible-inl.h"
 
 using namespace mozilla::a11y;
 
@@ -39,7 +40,8 @@ ia2AccessibleValue::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   VariantInit(aCurrentValue);
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
@@ -55,14 +57,14 @@ __try {
   aCurrentValue->dblVal = currentValue;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleValue::setCurrentValue(VARIANT aValue)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
   if (valueAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -73,14 +75,14 @@ __try {
   nsresult rv = valueAcc->SetCurrentValue(aValue.dblVal);
   return GetHRESULT(rv);
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   VariantInit(aMaximumValue);
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
@@ -96,14 +98,14 @@ __try {
   aMaximumValue->dblVal = maximumValue;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   VariantInit(aMinimumValue);
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
@@ -119,7 +121,6 @@ __try {
   aMinimumValue->dblVal = minimumValue;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 

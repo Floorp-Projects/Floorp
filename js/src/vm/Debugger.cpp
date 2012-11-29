@@ -55,6 +55,7 @@ extern Class DebuggerEnv_class;
 
 enum {
     JSSLOT_DEBUGENV_OWNER,
+    JSSLOT_DEBUGENV_GC_GRAY_LINK,
     JSSLOT_DEBUGENV_COUNT
 };
 
@@ -62,6 +63,7 @@ extern Class DebuggerObject_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
+    JSSLOT_DEBUGOBJECT_GC_GRAY_LINK,
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
@@ -69,6 +71,7 @@ extern Class DebuggerScript_class;
 
 enum {
     JSSLOT_DEBUGSCRIPT_OWNER,
+    JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK,
     JSSLOT_DEBUGSCRIPT_COUNT
 };
 
@@ -1333,6 +1336,26 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
 
 /*** Debugger JSObjects **************************************************************************/
 
+JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
+                 unsigned(JSSLOT_DEBUGOBJECT_GC_GRAY_LINK));
+JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
+                 unsigned(JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK));
+
+/* static */ unsigned
+Debugger::gcGrayLinkSlot()
+{
+    return JSSLOT_DEBUGOBJECT_GC_GRAY_LINK;
+}
+
+/* static */ bool
+Debugger::isDebugWrapper(RawObject o)
+{
+    Class *c = o->getClass();
+    return c == &DebuggerObject_class ||
+           c == &DebuggerEnv_class ||
+           c == &DebuggerScript_class;
+}
+
 void
 Debugger::markKeysInCompartment(JSTracer *tracer)
 {
@@ -1341,29 +1364,9 @@ Debugger::markKeysInCompartment(JSTracer *tracer)
      * enumerating WeakMap keys. However in this case we need access, so we
      * make a base-class reference. Range is public in HashMap.
      */
-    ObjectWeakMap::Base &objStorage = objects;
-    for (ObjectWeakMap::Base::Range r = objStorage.all(); !r.empty(); r.popFront()) {
-        const EncapsulatedPtrObject key = r.front().key;
-        HeapPtrObject tmp(key);
-        gc::MarkObject(tracer, &tmp, "cross-compartment WeakMap key");
-        JS_ASSERT(tmp == key);
-    }
-
-    ObjectWeakMap::Base &envStorage = environments;
-    for (ObjectWeakMap::Base::Range r = envStorage.all(); !r.empty(); r.popFront()) {
-        const EncapsulatedPtrObject &key = r.front().key;
-        HeapPtrObject tmp(key);
-        js::gc::MarkObject(tracer, &tmp, "cross-compartment WeakMap key");
-        JS_ASSERT(tmp == key);
-    }
-
-    const ScriptWeakMap::Base &scriptStorage = scripts;
-    for (ScriptWeakMap::Base::Range r = scriptStorage.all(); !r.empty(); r.popFront()) {
-        const EncapsulatedPtrScript &key = r.front().key;
-        HeapPtrScript tmp(key);
-        gc::MarkScript(tracer, &tmp, "cross-compartment WeakMap key");
-        JS_ASSERT(tmp == key);
-    }
+    objects.markKeys(tracer);
+    environments.markKeys(tracer);
+    scripts.markKeys(tracer);
 }
 
 /*
@@ -1443,12 +1446,12 @@ Debugger::markAllIteratively(GCMarker *trc)
 
                 /*
                  * dbg is a Debugger with at least one debuggee. Check three things:
-                 *   - dbg is actually in a compartment being GC'd
+                 *   - dbg is actually in a compartment that is being marked
                  *   - it isn't already marked
                  *   - it actually has hooks that might be called
                  */
                 HeapPtrObject &dbgobj = dbg->toJSObjectRef();
-                if (!dbgobj->compartment()->isCollecting())
+                if (!dbgobj->compartment()->isGCMarking())
                     continue;
 
                 bool dbgMarked = IsObjectMarked(&dbgobj);
@@ -1528,7 +1531,7 @@ Debugger::sweepAll(FreeOp *fop)
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debugger *dbg = Debugger::fromLinks(p);
 
-        if (!IsObjectMarked(&dbg->object)) {
+        if (IsObjectAboutToBeFinalized(&dbg->object)) {
             /*
              * dbg is being GC'd. Detach it from its debuggees. The debuggee
              * might be GC'd too. Since detaching requires access to both
@@ -1544,7 +1547,7 @@ Debugger::sweepAll(FreeOp *fop)
         GlobalObjectSet &debuggees = (*c)->getDebuggees();
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
-            if (!IsObjectMarked(&global))
+            if (IsObjectAboutToBeFinalized(&global))
                 detachAllDebuggersFromGlobal(fop, global, &e);
             else if (global != e.front())
                 e.rekeyFront(global);
@@ -1560,6 +1563,29 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
     JS_ASSERT(!debuggers->empty());
     while (!debuggers->empty())
         debuggers->back()->removeDebuggeeGlobal(fop, global, compartmentEnum, NULL);
+}
+
+/* static */ void
+Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder &finder)
+{
+    /*
+     * For debugger cross compartment wrappers, add edges in the opposite
+     * direction to those already added by JSCompartment::findOutgoingEdges.
+     * This ensure that debuggers and their debuggees are finalized in the same
+     * group.
+     */
+    JSRuntime *rt = comp->rt;
+    for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
+        Debugger *dbg = Debugger::fromLinks(p);
+        JSCompartment *w = dbg->object->compartment();
+        if (w == comp || !w->isGCMarking())
+            continue;
+        if (dbg->scripts.hasKeyInCompartment(comp) ||
+            dbg->objects.hasKeyInCompartment(comp) ||
+            dbg->environments.hasKeyInCompartment(comp)) {
+            finder.addEdgeTo(w);
+        }
+    }
 }
 
 void
@@ -2542,7 +2568,7 @@ DebuggerScript_trace(JSTracer *trc, RawObject obj)
 {
     /* This comes from a private pointer, so no barrier needed. */
     if (JSScript *script = GetScriptReferent(obj)) {
-        MarkCrossCompartmentScriptUnbarriered(trc, &script, "Debugger.Script referent");
+        MarkCrossCompartmentScriptUnbarriered(trc, obj, &script, "Debugger.Script referent");
         obj->setPrivateUnbarriered(script);
     }
 }
@@ -3752,7 +3778,7 @@ DebuggerObject_trace(JSTracer *trc, RawObject obj)
      * is okay.
      */
     if (JSObject *referent = (JSObject *) obj->getPrivate()) {
-        MarkCrossCompartmentObjectUnbarriered(trc, &referent, "Debugger.Object referent");
+        MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Object referent");
         obj->setPrivateUnbarriered(referent);
     }
 }
@@ -4524,7 +4550,7 @@ DebuggerEnv_trace(JSTracer *trc, RawObject obj)
      * is okay.
      */
     if (Env *referent = (JSObject *) obj->getPrivate()) {
-        MarkCrossCompartmentObjectUnbarriered(trc, &referent, "Debugger.Environment referent");
+        MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Environment referent");
         obj->setPrivateUnbarriered(referent);
     }
 }

@@ -195,16 +195,16 @@ void TestEventReplacement()
 
   ErrorResultMock rv;
 
-  is(timeline.GetEventCount(), 0, "No events yet");
+  is(timeline.GetEventCount(), 0u, "No events yet");
   timeline.SetValueAtTime(10.0f, 0.1, rv);
-  is(timeline.GetEventCount(), 1, "One event scheduled now");
+  is(timeline.GetEventCount(), 1u, "One event scheduled now");
   timeline.SetValueAtTime(20.0f, 0.1, rv);
   is(rv, NS_OK, "Event scheduling should be successful");
-  is(timeline.GetEventCount(), 1, "Event should be replaced");
+  is(timeline.GetEventCount(), 1u, "Event should be replaced");
   is(timeline.GetValueAtTime(0.1f), 20.0f, "The first event should be overwritten");
   timeline.LinearRampToValueAtTime(30.0f, 0.1, rv);
   is(rv, NS_OK, "Event scheduling should be successful");
-  is(timeline.GetEventCount(), 2, "Different event type should be appended");
+  is(timeline.GetEventCount(), 2u, "Different event type should be appended");
   is(timeline.GetValueAtTime(0.1f), 30.0f, "The first event should be overwritten");
 }
 
@@ -218,13 +218,13 @@ void TestEventRemoval()
   timeline.SetValueAtTime(15.0f, 0.15, rv);
   timeline.SetValueAtTime(20.0f, 0.2, rv);
   timeline.LinearRampToValueAtTime(30.0f, 0.3, rv);
-  is(timeline.GetEventCount(), 4, "Should have three events initially");
+  is(timeline.GetEventCount(), 4u, "Should have three events initially");
   timeline.CancelScheduledValues(0.4);
-  is(timeline.GetEventCount(), 4, "Trying to delete past the end of the array should have no effect");
+  is(timeline.GetEventCount(), 4u, "Trying to delete past the end of the array should have no effect");
   timeline.CancelScheduledValues(0.3);
-  is(timeline.GetEventCount(), 3, "Should successfully delete one event");
+  is(timeline.GetEventCount(), 3u, "Should successfully delete one event");
   timeline.CancelScheduledValues(0.12);
-  is(timeline.GetEventCount(), 1, "Should successfully delete two events");
+  is(timeline.GetEventCount(), 1u, "Should successfully delete two events");
 }
 
 void TestBeforeFirstEvent()

@@ -20,5 +20,12 @@
     <emItem id="hardblock@tests.mozilla.org">
       <versionRange minVersion="2" maxVersion="3"/>
     </emItem>
+    <!-- Two RegExp matches, so test flags work - first shouldn't match. -->
+    <emItem id="/^RegExp/">
+      <versionRange severity="1" minVersion="2" maxVersion="3"/>
+    </emItem>
+    <emItem id="/^RegExp/i">
+      <versionRange severity="2" minVersion="2" maxVersion="3"/>
+    </emItem>
   </emItems>
 </blocklist>

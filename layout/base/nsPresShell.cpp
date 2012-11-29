@@ -6533,6 +6533,34 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
             }
           }
           if (eventTarget) {
+#ifdef MOZ_B2G
+            // Horrible hack for B2G to propagate events even from
+            // disabled form elements to chrome. See bug 804811.
+            // See also nsGenericHTMLFormElement::IsElementDisabledForEvents.
+            if (aEvent->message != NS_MOUSE_MOVE) {
+              nsINode* possibleFormElement = eventTarget->ChromeOnlyAccess() ?
+                static_cast<nsIContent*>(eventTarget.get())->
+                  FindFirstNonChromeOnlyAccessContent() :
+                eventTarget;
+              if (possibleFormElement &&
+                  possibleFormElement->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+                nsEvent event(true, NS_EVENT_TYPE_NULL);
+                nsCOMArray<nsIDOMEventTarget> targets;
+                nsEventDispatcher::Dispatch(eventTarget, nullptr, &event, nullptr,
+                                            nullptr, nullptr, &targets);
+                nsCOMPtr<nsIContent> last;
+                if (targets.Count()) {
+                  last = do_QueryInterface(targets[targets.Count() - 1]);
+                }
+                if (!targets.Count() ||
+                    (last &&
+                     nsContentUtils::ContentIsDescendantOf(last,
+                                                           possibleFormElement))) {
+                  aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+                }
+              }
+            }
+#endif
             if (aEvent->eventStructType == NS_COMPOSITION_EVENT ||
                 aEvent->eventStructType == NS_TEXT_EVENT) {
               nsIMEStateManager::DispatchCompositionEvent(eventTarget,

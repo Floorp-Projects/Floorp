@@ -2036,11 +2036,18 @@ nsFrameLoader::TryRemoteBrowser()
   MutableTabContext context;
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
+  ScrollingBehavior scrollingBehavior = DEFAULT_SCROLLING;
+  if (mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                 nsGkAtoms::mozasyncpanzoom,
+                                 nsGkAtoms::_true,
+                                 eCaseMatters)) {
+    scrollingBehavior = ASYNC_PAN_ZOOM;
+  }
   if (ownApp) {
-    context.SetTabContextForAppFrame(ownApp, containingApp);
+    context.SetTabContextForAppFrame(ownApp, containingApp, scrollingBehavior);
   } else if (OwnerIsBrowserFrame()) {
     // The |else| above is unnecessary; OwnerIsBrowserFrame() implies !ownApp.
-    context.SetTabContextForBrowserFrame(containingApp);
+    context.SetTabContextForBrowserFrame(containingApp, scrollingBehavior);
   }
 
   mRemoteBrowser = ContentParent::CreateBrowserOrApp(context);

@@ -121,7 +121,9 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
     Services.prefs.setCharPref(prefName, value + ', ' + intl);
   }
 
-  shell.start();
+  if (shell.hasStarted() == false) {
+    shell.start();
+  }
 });
 
 // =================== RIL ====================
@@ -200,18 +202,7 @@ SettingsListener.observe('devtools.debugger.remote-enabled', false, function(val
   Services.prefs.setBoolPref('devtools.debugger.remote-enabled', value);
   // This preference is consulted during startup
   Services.prefs.savePrefFile(null);
-});
-
-SettingsListener.observe('devtools.debugger.log', false, function(value) {
-  Services.prefs.setBoolPref('devtools.debugger.log', value);
-});
-
-SettingsListener.observe('devtools.debugger.remote-port', 6000, function(value) {
-  Services.prefs.setIntPref('devtools.debugger.remote-port', value);
-});
-
-SettingsListener.observe('devtools.debugger.force-local', true, function(value) {
-  Services.prefs.setBoolPref('devtools.debugger.force-local', value);
+  value ? startDebugger() : stopDebugger();
 });
 
 SettingsListener.observe('debug.log-animations.enabled', false, function(value) {

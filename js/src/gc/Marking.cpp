@@ -110,6 +110,10 @@ CheckMarkedThing(JSTracer *trc, T *thing)
 
     DebugOnly<JSRuntime *> rt = trc->runtime;
 
+#ifdef DEBUG
+    rt->assertValidThread();
+#endif
+
     JS_ASSERT_IF(thing->compartment()->requireGCTracer(), IS_GC_MARKING_TRACER(trc));
 
     JS_ASSERT(thing->isAligned());
@@ -117,6 +121,17 @@ CheckMarkedThing(JSTracer *trc, T *thing)
     JS_ASSERT_IF(rt->gcStrictCompartmentChecking,
                  thing->compartment()->isCollecting() ||
                  thing->compartment() == rt->atomsCompartment);
+
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && ((GCMarker *)trc)->getMarkColor() == GRAY,
+                 thing->compartment()->isGCMarkingGray() ||
+                 thing->compartment() == rt->atomsCompartment);
+}
+
+static GCMarker *
+AsGCMarker(JSTracer *trc)
+{
+    JS_ASSERT(IS_GC_MARKING_TRACER(trc));
+    return static_cast<GCMarker *>(trc);
 }
 
 template<typename T>
@@ -133,8 +148,8 @@ MarkInternal(JSTracer *trc, T **thingp)
      * GC.
      */
     if (!trc->callback) {
-        if (thing->compartment()->isCollecting()) {
-            PushMarkStack(static_cast<GCMarker *>(trc), thing);
+        if (thing->compartment()->isGCMarking()) {
+            PushMarkStack(AsGCMarker(trc), thing);
             thing->compartment()->maybeAlive = true;
         }
     } else {
@@ -216,9 +231,21 @@ IsMarked(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
-    if (!(*thingp)->compartment()->isCollecting())
+    JSCompartment *c = (*thingp)->compartment();
+    if (!c->isCollecting() || c->isGCFinished())
         return true;
     return (*thingp)->isMarked();
+}
+
+template <typename T>
+static bool
+IsAboutToBeFinalized(T **thingp)
+{
+    JS_ASSERT(thingp);
+    JS_ASSERT(*thingp);
+    if (!(*thingp)->compartment()->isGCSweeping())
+        return false;
+    return !(*thingp)->isMarked();
 }
 
 #define DeclMarkerImpl(base, type)                                                                \
@@ -262,6 +289,16 @@ bool                                                                            
 Is##base##Marked(EncapsulatedPtr<type> *thingp)                                                   \
 {                                                                                                 \
     return IsMarked<type>(thingp->unsafeGet());                                                   \
+}                                                                                                 \
+                                                                                                  \
+bool Is##base##AboutToBeFinalized(type **thingp)                                                  \
+{                                                                                                 \
+    return IsAboutToBeFinalized<type>(thingp);                                                    \
+}                                                                                                 \
+                                                                                                  \
+bool Is##base##AboutToBeFinalized(EncapsulatedPtr<type> *thingp)                                  \
+{                                                                                                 \
+    return IsAboutToBeFinalized<type>(thingp->unsafeGet());                                       \
 }
 
 DeclMarkerImpl(BaseShape, BaseShape)
@@ -498,6 +535,23 @@ gc::IsValueMarked(Value *v)
     return rv;
 }
 
+bool
+gc::IsValueAboutToBeFinalized(Value *v)
+{
+    JS_ASSERT(v->isMarkable());
+    bool rv;
+    if (v->isString()) {
+        JSString *str = (JSString *)v->toGCThing();
+        rv = IsAboutToBeFinalized<JSString>(&str);
+        v->setString(str);
+    } else {
+        JSObject *obj = (JSObject *)v->toGCThing();
+        rv = IsAboutToBeFinalized<JSObject>(&obj);
+        v->setObject(*obj);
+    }
+    return rv;
+}
+
 /*** Slot Marking ***/
 
 void
@@ -526,34 +580,53 @@ gc::MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslot
     }
 }
 
-void
-gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject **obj, const char *name)
+static bool
+ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
 {
-    if (IS_GC_MARKING_TRACER(trc) && !(*obj)->compartment()->isCollecting())
-        return;
+    if (!IS_GC_MARKING_TRACER(trc))
+        return true;
 
-    MarkObjectUnbarriered(trc, obj, name);
-}
+    JSCompartment *c = cell->compartment();
+    uint32_t color = AsGCMarker(trc)->getMarkColor();
 
-void
-gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSScript **script, const char *name)
-{
-    if (IS_GC_MARKING_TRACER(trc) && !(*script)->compartment()->isCollecting())
-        return;
-
-    MarkScriptUnbarriered(trc, script, name);
-}
-
-void
-gc::MarkCrossCompartmentSlot(JSTracer *trc, HeapSlot *s, const char *name)
-{
-    if (s->isMarkable()) {
-        Cell *cell = (Cell *)s->toGCThing();
-        if (IS_GC_MARKING_TRACER(trc) && !cell->compartment()->isCollecting())
-            return;
-
-        MarkSlot(trc, s, name);
+    JS_ASSERT(color == BLACK || color == GRAY);
+    if (color == BLACK) {
+        return c->isGCMarking();
+    } else {
+        if (c->isGCMarkingBlack()) {
+            /*
+             * The destination compartment is being not being marked gray now,
+             * but it will be later, so record the cell so it can be marked gray
+             * at the appropriate time.
+             */
+            if (!cell->isMarked())
+                DelayCrossCompartmentGrayMarking(src);
+            return false;
+        }
+        return c->isGCMarkingGray();
     }
+}
+
+void
+gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, RawObject src, JSObject **dst, const char *name)
+{
+    if (ShouldMarkCrossCompartment(trc, src, *dst))
+        MarkObjectUnbarriered(trc, dst, name);
+}
+
+void
+gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, RawObject src, JSScript **dst,
+                                      const char *name)
+{
+    if (ShouldMarkCrossCompartment(trc, src, *dst))
+        MarkScriptUnbarriered(trc, dst, name);
+}
+
+void
+gc::MarkCrossCompartmentSlot(JSTracer *trc, RawObject src, HeapSlot *dst, const char *name)
+{
+    if (dst->isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell *)dst->toGCThing()))
+        MarkSlot(trc, dst, name);
 }
 
 /*** Special Marking ***/
@@ -578,13 +651,19 @@ gc::IsCellMarked(Cell **thingp)
     return IsMarked<Cell>(thingp);
 }
 
+bool
+gc::IsCellAboutToBeFinalized(Cell **thingp)
+{
+    return IsAboutToBeFinalized<Cell>(thingp);
+}
+
 /*** Push Mark Stack ***/
 
 #define JS_COMPARTMENT_ASSERT(rt, thing)                                \
-    JS_ASSERT((thing)->compartment()->isCollecting())
+    JS_ASSERT((thing)->compartment()->isGCMarking())
 
 #define JS_COMPARTMENT_ASSERT_STR(rt, thing)                            \
-    JS_ASSERT((thing)->compartment()->isCollecting() ||                 \
+    JS_ASSERT((thing)->compartment()->isGCMarking() ||                  \
               (thing)->compartment() == (rt)->atomsCompartment);
 
 #if JS_HAS_XML_SUPPORT

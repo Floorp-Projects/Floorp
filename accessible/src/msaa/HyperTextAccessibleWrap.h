@@ -10,7 +10,7 @@
 
 #include "HyperTextAccessible.h"
 #include "ia2AccessibleEditableText.h"
-#include "ia2AccessibleHyperText.h"
+#include "ia2AccessibleHypertext.h"
 
 namespace mozilla {
 namespace a11y {

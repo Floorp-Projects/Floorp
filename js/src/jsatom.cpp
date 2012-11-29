@@ -205,12 +205,12 @@ js::SweepAtoms(JSRuntime *rt)
     for (AtomSet::Enum e(rt->atoms); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
         JSAtom *atom = entry.asPtr();
-        bool isMarked = IsStringMarked(&atom);
+        bool isDying = IsStringAboutToBeFinalized(&atom);
 
         /* Pinned or interned key cannot be finalized. */
-        JS_ASSERT_IF(entry.isTagged(), isMarked);
+        JS_ASSERT_IF(entry.isTagged(), !isDying);
 
-        if (!isMarked)
+        if (isDying)
             e.removeFront();
     }
 }

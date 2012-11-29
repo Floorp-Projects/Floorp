@@ -15,18 +15,19 @@
 // uses SEH and 'xpAccessible' has destructor
 // At this point we're catching a crash which is of much greater
 // importance than the missing dereference for the nsCOMPtr<>
+#ifdef _MSC_VER
 #pragma warning( disable : 4509 )
+#endif
 
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIWinAccessNode.h"
-#include "ISimpleDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsAccessNode.h"
-#include "OLEIDL.H"
-#include "OLEACC.H"
+#include "oleidl.h"
+#include "oleacc.h"
 #include <winuser.h>
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
@@ -35,12 +36,12 @@
 #include "nsRefPtrHashtable.h"
 
 #define A11Y_TRYBLOCK_BEGIN                                                    \
-  __try {
+  MOZ_SEH_TRY {
 
-#define A11Y_TRYBLOCK_END                                                      \
-  } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),      \
-                                                    GetExceptionInformation()))\
-  { }                                                                          \
+#define A11Y_TRYBLOCK_END                                                             \
+  } MOZ_SEH_EXCEPT(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),       \
+                                                          GetExceptionInformation())) \
+  { }                                                                                 \
   return E_FAIL;
 
 namespace mozilla {
@@ -48,9 +49,15 @@ namespace a11y {
 
 class AccTextChangeEvent;
 
+#ifdef __GNUC__
+// Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings
+// about virtual functions being hidden by each other. This is done by
+// design, so silence the warning.
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
+
 class nsAccessNodeWrap : public nsAccessNode,
                          public nsIWinAccessNode,
-                         public ISimpleDOMNode,
                          public IServiceProvider
 {
   public:
@@ -70,59 +77,6 @@ public: // construction, destruction
                                                  REFIID aIID,
                                                  void** aInstancePtr);
 
-  // ISimpleDOMNode
-    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_nodeInfo( 
-        /* [out] */ BSTR __RPC_FAR *tagName,
-        /* [out] */ short __RPC_FAR *nameSpaceID,
-        /* [out] */ BSTR __RPC_FAR *nodeValue,
-        /* [out] */ unsigned int __RPC_FAR *numChildren,
-        /* [out] */ unsigned int __RPC_FAR *aUniqueID,
-        /* [out][retval] */ unsigned short __RPC_FAR *nodeType);
-  
-    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_attributes( 
-        /* [in] */ unsigned short maxAttribs,
-        /* [length_is][size_is][out] */ BSTR __RPC_FAR *attribNames,
-        /* [length_is][size_is][out] */ short __RPC_FAR *nameSpaceID,
-        /* [length_is][size_is][out] */ BSTR __RPC_FAR *attribValues,
-        /* [out][retval] */ unsigned short __RPC_FAR *numAttribs);
-  
-    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_attributesForNames( 
-        /* [in] */ unsigned short maxAttribs,
-        /* [length_is][size_is][in] */ BSTR __RPC_FAR *attribNames,
-        /* [length_is][size_is][in] */ short __RPC_FAR *nameSpaceID,
-        /* [length_is][size_is][retval] */ BSTR __RPC_FAR *attribValues);
-  
-    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_computedStyle( 
-        /* [in] */ unsigned short maxStyleProperties,
-        /* [in] */ boolean useAlternateView,
-        /* [length_is][size_is][out] */ BSTR __RPC_FAR *styleProperties,
-        /* [length_is][size_is][out] */ BSTR __RPC_FAR *styleValues,
-        /* [out][retval] */ unsigned short __RPC_FAR *numStyleProperties);
-  
-    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_computedStyleForProperties( 
-        /* [in] */ unsigned short numStyleProperties,
-        /* [in] */ boolean useAlternateView,
-        /* [length_is][size_is][in] */ BSTR __RPC_FAR *styleProperties,
-        /* [length_is][size_is][out][retval] */ BSTR __RPC_FAR *styleValues);
-        
-    virtual HRESULT STDMETHODCALLTYPE scrollTo(/* [in] */ boolean scrollTopLeft);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_childAt(unsigned childIndex,
-                                                                  ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_innerHTML(
-        /* [out][retval] */ BSTR __RPC_FAR *innerHTML);
-
-    virtual /* [local][propget] */ HRESULT STDMETHODCALLTYPE get_localInterface( 
-        /* [retval][out] */ void __RPC_FAR *__RPC_FAR *localInterface);
-        
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_language(
-        /* [out][retval] */ BSTR __RPC_FAR *language);
 
     static void InitAccessibility();
     static void ShutdownAccessibility();
@@ -135,14 +89,6 @@ public: // construction, destruction
   static nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible> sHWNDCache;
 
 protected:
-
-  /**
-   * Return ISimpleDOMNode instance for existing accessible object or
-   * creates new nsAccessNode instance if the accessible doesn't exist.
-   *
-   * @note ISimpleDOMNode is returned addrefed
-   */
-  ISimpleDOMNode *MakeAccessNode(nsINode *aNode);
 
     /**
      * It is used in HyperTextAccessibleWrap for IA2::newText/oldText

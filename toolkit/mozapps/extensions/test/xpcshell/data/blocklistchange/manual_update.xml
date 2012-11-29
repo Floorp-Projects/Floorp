@@ -20,5 +20,8 @@
     <emItem id="hardblock@tests.mozilla.org">
       <versionRange minVersion="1" maxVersion="2"/>
     </emItem>
+    <emItem id="/^RegExp/i">
+      <versionRange minVersion="1" maxVersion="2"/>
+    </emItem>
   </emItems>
 </blocklist>

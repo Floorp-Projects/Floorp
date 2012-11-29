@@ -4,62 +4,54 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUCConstructors.h"
-#include "nsUCS2BEToUnicode.h"
+#include "nsUTF16ToUnicode.h"
 #include "nsUCvLatinDll.h"
 #include "nsCharTraits.h"
 #include <string.h>
 #include "prtypes.h"
 
-#define STATE_NORMAL             0
-#define STATE_HALF_CODE_POINT    1
-#define STATE_FIRST_CALL         2
-#define STATE_FOUND_BOM          3
-#define STATE_ODD_SURROGATE_PAIR 4
+enum {
+  STATE_NORMAL = 0,
+  STATE_HALF_CODE_POINT = 1,
+  STATE_FIRST_CALL = 2,
+  STATE_SECOND_BYTE = STATE_FIRST_CALL | STATE_HALF_CODE_POINT,
+  STATE_ODD_SURROGATE_PAIR = 4
+};
 
-static nsresult
-UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
-                      PRUnichar& aOddHighSurrogate, PRUnichar& aOddLowSurrogate,
-                      const char * aSrc,
-                      int32_t * aSrcLength, PRUnichar * aDest,
-                      int32_t * aDestLength,
-                      bool aSwapBytes)
+nsresult
+nsUTF16ToUnicodeBase::UTF16ConvertToUnicode(const char * aSrc,
+                                            int32_t * aSrcLength,
+                                            PRUnichar * aDest,
+                                            int32_t * aDestLength,
+                                            bool aSwapBytes)
 {
   const char* src = aSrc;
   const char* srcEnd = aSrc + *aSrcLength;
   PRUnichar* dest = aDest;
   PRUnichar* destEnd = aDest + *aDestLength;
+  PRUnichar oddHighSurrogate;
 
-  switch(aState) {
-    case STATE_FOUND_BOM:
+  switch(mState) {
+    case STATE_FIRST_CALL:
       NS_ASSERTION(*aSrcLength > 1, "buffer too short");
       src+=2;
-      aState = STATE_NORMAL;
+      mState = STATE_NORMAL;
       break;
 
-    case STATE_FIRST_CALL: // first time called
-      NS_ASSERTION(*aSrcLength > 1, "buffer too short");
-      // Eliminate BOM (0xFEFF). Note that different endian case is taken care
-      // of in |Convert| of LE and BE converters. Here, we only have to
-      // deal with the same endian case. That is, 0xFFFE (byte-swapped BOM) is
-      // illegal.
-      if(0xFEFF == *((PRUnichar*)src)) {
-        src+=2;
-      } else if(0xFFFE == *((PRUnichar*)src)) {
-        *aSrcLength=0;
-        *aDestLength=0;
-        return NS_ERROR_ILLEGAL_INPUT;
-      }  
-      aState = STATE_NORMAL;
+    case STATE_SECOND_BYTE:
+      NS_ASSERTION(*aSrcLength > 0, "buffer too short");
+      src++;
+      mState = STATE_NORMAL;
       break;
 
     case STATE_ODD_SURROGATE_PAIR:
       if (*aDestLength < 2)
-        *dest++ = UCS2_REPLACEMENT_CHAR;
+        goto error;
       else {
-        *dest++ = aOddHighSurrogate;
-        *dest++ = aOddLowSurrogate;
-        aOddHighSurrogate = aOddLowSurrogate = 0;
-        aState = STATE_NORMAL;
+        *dest++ = mOddHighSurrogate;
+        *dest++ = mOddLowSurrogate;
+        mOddHighSurrogate = mOddLowSurrogate = 0;
+        mState = STATE_NORMAL;
       }
       break;
 
@@ -69,24 +61,28 @@ UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
       break;
   }
 
+  oddHighSurrogate = mOddHighSurrogate;
+
   if (src == srcEnd) {
     *aDestLength = dest - aDest;
-    return NS_OK;
+    return (mState != STATE_NORMAL || oddHighSurrogate) ?
+           NS_OK_UDEC_MOREINPUT : NS_OK;
   }
-
-  PRUnichar oddHighSurrogate = aOddHighSurrogate;
 
   const char* srcEvenEnd;
 
   PRUnichar u;
-  if (aState == STATE_HALF_CODE_POINT) {
-    // the 1st byte of a 16-bit code unit was stored in |aOddByte| in the
+  if (mState == STATE_HALF_CODE_POINT) {
+    if (dest == destEnd)
+      goto error;
+
+    // the 1st byte of a 16-bit code unit was stored in |mOddByte| in the
     // previous run while the 2nd byte has to come from |*src|.
-    aState = STATE_NORMAL;
+    mState = STATE_NORMAL;
 #ifdef IS_BIG_ENDIAN
-    u = (aOddByte << 8) | *src++; // safe, we know we have at least one byte.
+    u = (mOddByte << 8) | *src++; // safe, we know we have at least one byte.
 #else
-    u = (*src++ << 8) | aOddByte; // safe, we know we have at least one byte.
+    u = (*src++ << 8) | mOddByte; // safe, we know we have at least one byte.
 #endif
     srcEvenEnd = src + ((srcEnd - src) & ~1); // handle even number of bytes in main loop
     goto have_codepoint;
@@ -111,6 +107,9 @@ have_codepoint:
 
     if (!IS_SURROGATE(u)) {
       if (oddHighSurrogate) {
+        if (mErrBehavior == kOnError_Signal) {
+          goto error2;
+        }
         *dest++ = UCS2_REPLACEMENT_CHAR;
         if (dest == destEnd)
           goto error;
@@ -119,6 +118,9 @@ have_codepoint:
       *dest++ = u;
     } else if (NS_IS_HIGH_SURROGATE(u)) {
       if (oddHighSurrogate) {
+        if (mErrBehavior == kOnError_Signal) {
+          goto error2;
+        }
         *dest++ = UCS2_REPLACEMENT_CHAR;
         if (dest == destEnd)
           goto error;
@@ -128,14 +130,17 @@ have_codepoint:
     else /* if (NS_IS_LOW_SURROGATE(u)) */ {
       if (oddHighSurrogate && *aDestLength > 1) {
         if (dest + 1 >= destEnd) {
-          aOddLowSurrogate = u;
-          aOddHighSurrogate = oddHighSurrogate;
-          aState = STATE_ODD_SURROGATE_PAIR;
+          mOddLowSurrogate = u;
+          mOddHighSurrogate = oddHighSurrogate;
+          mState = STATE_ODD_SURROGATE_PAIR;
           goto error;
         }
         *dest++ = oddHighSurrogate;
         *dest++ = u;
       } else {
+        if (mErrBehavior == kOnError_Signal) {
+          goto error2;
+        }
         *dest++ = UCS2_REPLACEMENT_CHAR;
       }
       oddHighSurrogate = 0;
@@ -143,20 +148,26 @@ have_codepoint:
   }
   if (src != srcEnd) {
     // store the lead byte of a 16-bit unit for the next run.
-    aOddByte = *src++;
-    aState = STATE_HALF_CODE_POINT;
+    mOddByte = *src++;
+    mState = STATE_HALF_CODE_POINT;
   }
 
-  aOddHighSurrogate = oddHighSurrogate;
+  mOddHighSurrogate = oddHighSurrogate;
 
   *aDestLength = dest - aDest;
   *aSrcLength =  src  - aSrc; 
-  return NS_OK;
+  return (mState != STATE_NORMAL || oddHighSurrogate) ?
+         NS_OK_UDEC_MOREINPUT : NS_OK;
 
 error:
   *aDestLength = dest - aDest;
   *aSrcLength =  src  - aSrc; 
   return  NS_OK_UDEC_MOREOUTPUT;
+
+error2:
+  *aDestLength = dest - aDest;
+  *aSrcLength = --src - aSrc; 
+  return  NS_ERROR_ILLEGAL_INPUT;
 }
 
 NS_IMETHODIMP
@@ -174,7 +185,7 @@ nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, int32_t aSrcLength,
                                    int32_t * aDestLength)
 {
   // the left-over data of the previous run have to be taken into account.
-  *aDestLength = (aSrcLength + ((STATE_HALF_CODE_POINT == mState) ? 1 : 0)) / 2;
+  *aDestLength = (aSrcLength + ((STATE_HALF_CODE_POINT & mState) ? 1 : 0)) / 2;
   if (mOddHighSurrogate)
     (*aDestLength)++;
   if (mOddLowSurrogate)
@@ -187,33 +198,46 @@ NS_IMETHODIMP
 nsUTF16BEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
                             PRUnichar * aDest, int32_t * aDestLength)
 {
-    if(STATE_FIRST_CALL == mState && *aSrcLength < 2)
-    {
-      nsresult res = (*aSrcLength == 0) ? NS_OK : NS_ERROR_ILLEGAL_INPUT;
-      *aSrcLength=0;
-      *aDestLength=0;
-      return res;
-    }
-#ifdef IS_LITTLE_ENDIAN
-    // Remove the BOM if we're little-endian. The 'same endian' case with the
-    // leading BOM will be taken care of by |UTF16ConvertToUnicode|.
-    if(STATE_FIRST_CALL == mState) // Called for the first time.
-    {
-      mState = STATE_NORMAL;
-      if(0xFFFE == *((PRUnichar*)aSrc)) {
-        // eliminate BOM (on LE machines, BE BOM is 0xFFFE)
-        mState = STATE_FOUND_BOM;
-      } else if(0xFEFF == *((PRUnichar*)aSrc)) {
-        *aSrcLength=0;
-        *aDestLength=0;
-        return NS_ERROR_ILLEGAL_INPUT;
+  switch (mState) {
+    case STATE_FIRST_CALL:
+      if (*aSrcLength < 2) {
+        if (*aSrcLength < 1) {
+          *aDestLength = 0;
+          return NS_OK;
+        }
+        if (uint8_t(*aSrc) != 0xFE) {
+          mState = STATE_NORMAL;
+          break;
+        }
+        *aDestLength = 0;
+        mState = STATE_SECOND_BYTE;
+        return NS_OK_UDEC_MOREINPUT;
       }
-    }
+#ifdef IS_LITTLE_ENDIAN
+      // on LE machines, BE BOM is 0xFFFE
+      if (0xFFFE != *((PRUnichar*)aSrc)) {
+        mState = STATE_NORMAL;
+      }
+#else
+      if (0xFEFF != *((PRUnichar*)aSrc)) {
+        mState = STATE_NORMAL;
+      }
 #endif
+      break;
 
-  nsresult rv = UTF16ConvertToUnicode(mState, mOddByte, mOddHighSurrogate,
-                                      mOddLowSurrogate,
-                                      aSrc, aSrcLength, aDest, aDestLength,
+    case STATE_SECOND_BYTE:
+      if (*aSrcLength < 1) {
+        *aDestLength = 0;
+        return NS_OK_UDEC_MOREINPUT;
+      }
+      if (uint8_t(*aSrc) != 0xFF) {
+        mOddByte = 0xFE;
+        mState = STATE_HALF_CODE_POINT;
+      }
+      break;
+  }
+
+  nsresult rv = UTF16ConvertToUnicode(aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_LITTLE_ENDIAN
                                       true
 #else
@@ -227,33 +251,46 @@ NS_IMETHODIMP
 nsUTF16LEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
                             PRUnichar * aDest, int32_t * aDestLength)
 {
-    if(STATE_FIRST_CALL == mState && *aSrcLength < 2)
-    {
-      nsresult res = (*aSrcLength == 0) ? NS_OK : NS_ERROR_ILLEGAL_INPUT;
-      *aSrcLength=0;
-      *aDestLength=0;
-      return res;
-    }
-#ifdef IS_BIG_ENDIAN
-    // Remove the BOM if we're big-endian. The 'same endian' case with the
-    // leading BOM will be taken care of by |UTF16ConvertToUnicode|.
-    if(STATE_FIRST_CALL == mState) // first time called
-    {
-      mState = STATE_NORMAL;
-      if(0xFFFE == *((PRUnichar*)aSrc)) {
-        // eliminate BOM (on BE machines, LE BOM is 0xFFFE)
-        mState = STATE_FOUND_BOM;
-      } else if(0xFEFF == *((PRUnichar*)aSrc)) {
-        *aSrcLength=0;
-        *aDestLength=0;
-        return NS_ERROR_ILLEGAL_INPUT;
+  switch (mState) {
+    case STATE_FIRST_CALL:
+      if (*aSrcLength < 2) {
+        if (*aSrcLength < 1) {
+          *aDestLength = 0;
+          return NS_OK;
+        }
+        if (uint8_t(*aSrc) != 0xFF) {
+          mState = STATE_NORMAL;
+          break;
+        }
+        *aDestLength = 0;
+        mState = STATE_SECOND_BYTE;
+        return NS_OK_UDEC_MOREINPUT;
       }
-    }
+#ifdef IS_BIG_ENDIAN
+      // on BE machines, LE BOM is 0xFFFE
+      if (0xFFFE != *((PRUnichar*)aSrc)) {
+        mState = STATE_NORMAL;
+      }
+#else
+      if (0xFEFF != *((PRUnichar*)aSrc)) {
+        mState = STATE_NORMAL;
+      }
 #endif
-    
-  nsresult rv = UTF16ConvertToUnicode(mState, mOddByte, mOddHighSurrogate,
-                                      mOddLowSurrogate,
-                                      aSrc, aSrcLength, aDest, aDestLength,
+      break;
+
+    case STATE_SECOND_BYTE:
+      if (*aSrcLength < 1) {
+        *aDestLength = 0;
+        return NS_OK_UDEC_MOREINPUT;
+      }
+      if (uint8_t(*aSrc) != 0xFE) {
+        mOddByte = 0xFF;
+        mState = STATE_HALF_CODE_POINT;
+      }
+      break;
+  }
+
+  nsresult rv = UTF16ConvertToUnicode(aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_BIG_ENDIAN
                                       true
 #else
@@ -284,16 +321,13 @@ nsUTF16ToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
     }
     if(STATE_FIRST_CALL == mState) // first time called
     {
-      mState = STATE_NORMAL;
       // check if BOM (0xFEFF) is at the beginning, remove it if found, and
       // set mEndian accordingly.
       if(0xFF == uint8_t(aSrc[0]) && 0xFE == uint8_t(aSrc[1])) {
-        mState = STATE_FOUND_BOM;
         mEndian = kLittleEndian;
         mFoundBOM = true;
       }
       else if(0xFE == uint8_t(aSrc[0]) && 0xFF == uint8_t(aSrc[1])) {
-        mState = STATE_FOUND_BOM;
         mEndian = kBigEndian;
         mFoundBOM = true;
       }
@@ -301,22 +335,23 @@ nsUTF16ToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
       // the endianness. Assume the first character is [U+0001, U+00FF].
       // Not always valid, but it's very likely to hold for html/xml/css. 
       else if(!aSrc[0] && aSrc[1]) {  // 0x00 0xhh (hh != 00)
+        mState = STATE_NORMAL;
         mEndian = kBigEndian;
       }
       else if(aSrc[0] && !aSrc[1]) {  // 0xhh 0x00 (hh != 00)
+        mState = STATE_NORMAL;
         mEndian = kLittleEndian;
       }
       else { // Neither BOM nor 'plausible' byte patterns at the beginning.
              // Just assume it's BE (following Unicode standard)
              // and let the garbage show up in the browser. (security concern?)
              // (bug 246194)
+        mState = STATE_NORMAL;
         mEndian = kBigEndian;
       }
     }
     
-    nsresult rv = UTF16ConvertToUnicode(mState, mOddByte, mOddHighSurrogate,
-                                        mOddLowSurrogate,
-                                        aSrc, aSrcLength, aDest, aDestLength,
+    nsresult rv = UTF16ConvertToUnicode(aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_BIG_ENDIAN
                                         (mEndian == kLittleEndian)
 #elif defined(IS_LITTLE_ENDIAN)

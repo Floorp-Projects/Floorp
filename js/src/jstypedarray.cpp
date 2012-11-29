@@ -535,31 +535,41 @@ ArrayBufferObject::obj_trace(JSTracer *trc, RawObject obj)
     } else {
         // Multiple views: do not mark, but append buffer to list.
 
-        // obj_trace may be called multiple times before sweepAll(), so avoid
-        // adding this buffer to the list multiple times.
-        if (BufferLink(firstView) == UNSET_BUFFER_LINK)  {
-            JSObject **bufList = &trc->runtime->liveArrayBuffers;
-            SetBufferLink(firstView, *bufList);
-            *bufList = obj;
+        if (IS_GC_MARKING_TRACER(trc)) {
+            // obj_trace may be called multiple times before sweep(), so avoid
+            // adding this buffer to the list multiple times.
+            if (BufferLink(firstView) == UNSET_BUFFER_LINK) {
+                JS_ASSERT(obj->compartment() == firstView->compartment());
+                JSObject **bufList = &obj->compartment()->gcLiveArrayBuffers;
+                SetBufferLink(firstView, *bufList);
+                *bufList = obj;
+            }
         }
     }
 }
 
 void
-ArrayBufferObject::sweepAll(JSRuntime *rt)
+ArrayBufferObject::sweep(JSCompartment *compartment)
 {
-    JSObject *buffer = rt->liveArrayBuffers;
+    JSObject *buffer = compartment->gcLiveArrayBuffers;
+    JS_ASSERT(buffer != UNSET_BUFFER_LINK);
+    compartment->gcLiveArrayBuffers = NULL;
+
     while (buffer) {
         JSObject **views = GetViewList(&buffer->asArrayBuffer());
         JS_ASSERT(*views);
-        JSObject *nextBuffer = BufferLink(*views);
 
-        // Rebuild the list of views of the ArrayBuffer, discarding dead views
+        JSObject *nextBuffer = BufferLink(*views);
+        JS_ASSERT(nextBuffer != UNSET_BUFFER_LINK);
+        SetBufferLink(*views, UNSET_BUFFER_LINK);
+
+        // Rebuild the list of views of the ArrayBuffer, discarding dead views.
+        // If there is only one view, it will have already been marked.
         JSObject *prevLiveView = NULL;
         JSObject *view = *views;
         while (view) {
-            JSObject *nextView =
-                static_cast<JSObject*>(view->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toPrivate());
+            JS_ASSERT(buffer->compartment() == view->compartment());
+            JSObject *nextView = NextView(view);
             if (!JS_IsAboutToBeFinalized(view)) {
                 view->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(prevLiveView));
                 prevLiveView = view;
@@ -567,13 +577,28 @@ ArrayBufferObject::sweepAll(JSRuntime *rt)
             view = nextView;
         }
         *views = prevLiveView;
-        if (*views)
-            SetBufferLink(*views, UNSET_BUFFER_LINK);
 
         buffer = nextBuffer;
     }
+}
 
-    rt->liveArrayBuffers = NULL;
+void
+ArrayBufferObject::resetArrayBufferList(JSCompartment *compartment)
+{
+    JSObject *buffer = compartment->gcLiveArrayBuffers;
+    JS_ASSERT(buffer != UNSET_BUFFER_LINK);
+    compartment->gcLiveArrayBuffers = NULL;
+
+    while (buffer) {
+        JSObject *view = *GetViewList(&buffer->asArrayBuffer());
+        JS_ASSERT(view);
+
+        JSObject *nextBuffer = BufferLink(view);
+        JS_ASSERT(nextBuffer != UNSET_BUFFER_LINK);
+
+        SetBufferLink(view, UNSET_BUFFER_LINK);
+        buffer = nextBuffer;
+    }
 }
 
 JSBool

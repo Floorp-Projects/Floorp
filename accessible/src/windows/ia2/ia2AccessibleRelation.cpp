@@ -65,7 +65,8 @@ ia2AccessibleRelation::Release()
 STDMETHODIMP
 ia2AccessibleRelation::get_relationType(BSTR *aRelationType)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aRelationType)
     return E_INVALIDARG;
 
@@ -123,55 +124,57 @@ __try {
 
   return *aRelationType ? S_OK : E_OUTOFMEMORY;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_localizedRelationType(BSTR *aLocalizedRelationType)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aLocalizedRelationType)
     return E_INVALIDARG;
 
   *aLocalizedRelationType = NULL;
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_NOTIMPL;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_nTargets(long *aNTargets)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
  if (!aNTargets)
    return E_INVALIDARG;
 
  *aNTargets = mTargets.Length();
   return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown **aTarget)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (aTargetIndex < 0 || aTargetIndex >= mTargets.Length() || !aTarget)
     return E_INVALIDARG;
 
   mTargets[aTargetIndex]->QueryNativeInterface(IID_IUnknown, (void**) aTarget);
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_targets(long aMaxTargets, IUnknown **aTargets,
                                    long *aNTargets)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNTargets || !aTargets)
     return E_INVALIDARG;
 
@@ -186,7 +189,6 @@ __try {
   *aNTargets = maxTargets;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 

@@ -324,6 +324,12 @@ nsINode::ChildNodes()
   return slots->mChildNodes;
 }
 
+void
+nsINode::GetTextContentInternal(nsAString& aTextContent)
+{
+  SetDOMStringToNull(aTextContent);
+}
+
 #ifdef DEBUG
 void
 nsINode::CheckNotNativeAnonymous() const
@@ -421,6 +427,12 @@ nsINode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   nsIDocument *ownerDoc = GetOwnerDocument();
 
   return ownerDoc ? CallQueryInterface(ownerDoc, aOwnerDocument) : NS_OK;
+}
+
+void
+nsINode::GetNodeValueInternal(nsAString& aNodeValue)
+{
+  SetDOMStringToNull(aNodeValue);
 }
 
 nsINode*
@@ -2299,11 +2311,7 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 JSObject*
 nsINode::WrapObject(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 {
-  // Not all nodes have been converted
-  if (!IsDOMBinding()) {
-    *aTriedToWrap = false;
-    return nullptr;
-  }
+  MOZ_ASSERT(IsDOMBinding());
 
   // Make sure one of these is true
   // (1) our owner document has a script handling object,

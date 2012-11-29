@@ -194,6 +194,8 @@ function RadioInterfaceLayer() {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     icc:            null,
+    voicemail:      {number: null,
+                     displayName: null},
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,
     // although the actual implementation lives in the content process. So are
@@ -471,6 +473,9 @@ RadioInterfaceLayer.prototype = {
     let message = event.data;
     debug("Received message from worker: " + JSON.stringify(message));
     switch (message.rilMessageType) {
+      case "callRing":
+        this.handleCallRing();
+        break;
       case "callStateChange":
         // This one will handle its own notifications.
         this.handleCallStateChange(message.call);
@@ -568,7 +573,7 @@ RadioInterfaceLayer.prototype = {
         }
         break;
       case "iccmbdn":
-        this._sendTargetMessage("voicemail", "RIL:VoicemailNumberChanged", message);
+        this.handleICCMbdn(message);
         break;
       case "USSDReceived":
         debug("USSDReceived " + JSON.stringify(message));
@@ -1136,6 +1141,16 @@ RadioInterfaceLayer.prototype = {
   },
 
   /**
+   * Handle an incoming call.
+   *
+   * Not much is known about this call at this point, but it's enough
+   * to start bringing up the Phone app already.
+   */
+  handleCallRing: function handleCallRing() {
+    gSystemMessenger.broadcastMessage("telephony-new-call", {});
+  },
+
+  /**
    * Handle call state changes by updating our current state and the audio
    * system.
    */
@@ -1143,10 +1158,8 @@ RadioInterfaceLayer.prototype = {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
 
-    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_INCOMING ||
-        call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
-      gSystemMessenger.broadcastMessage("telephony-new-call", {number: call.number,
-                                                               state: call.state});
+    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
+      gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
 
     if (call.isActive) {
@@ -1475,6 +1488,15 @@ RadioInterfaceLayer.prototype = {
     if (this._nitzAutomaticUpdateEnabled) {
       this.setNitzTime(message);
     }
+  },
+
+  handleICCMbdn: function handleICCMbdn(message) {
+    let voicemail = this.rilContext.voicemail;
+
+    voicemail.number = message.number;
+    voicemail.displayName = message.alphaId;
+
+    this._sendTargetMessage("voicemail", "RIL:VoicemailInfoChanged", voicemail);
   },
 
   handleICCInfoChange: function handleICCInfoChange(message) {

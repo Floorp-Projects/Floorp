@@ -34,7 +34,6 @@
     _(CallKnown)                    \
     _(CallGeneric)                  \
     _(CallNative)                   \
-    _(CallConstructor)              \
     _(ApplyArgsGeneric)             \
     _(StackArgT)                    \
     _(StackArgV)                    \
@@ -171,6 +170,7 @@
     _(InArray)                      \
     _(InstanceOfO)                  \
     _(InstanceOfV)                  \
+    _(CallInstanceOf)               \
     _(InterruptCheck)               \
     _(FunctionBoundary)             \
     _(GetDOMProperty)               \

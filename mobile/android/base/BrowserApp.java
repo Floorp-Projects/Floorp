@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 
@@ -21,7 +22,6 @@ import android.content.SharedPreferences;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.Rect;
@@ -58,6 +58,7 @@ abstract public class BrowserApp extends GeckoApp
     public static BrowserToolbar mBrowserToolbar;
     private AboutHomeContent mAboutHomeContent;
     private Boolean mAboutHomeShowing = null;
+    protected Telemetry.Timer mAboutHomeStartupTimer = null;
 
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
@@ -202,6 +203,8 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
+
         super.onCreate(savedInstanceState);
 
         LinearLayout actionBar = (LinearLayout) getActionBarLayout();
@@ -271,13 +274,16 @@ abstract public class BrowserApp extends GeckoApp
                 Tab tab = Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
             } else {
                 hideAboutHome();
+                mAboutHomeStartupTimer.cancel();
             }
         } else {
             int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED;
             Tabs.getInstance().loadUrl(uri, flags);
+            mAboutHomeStartupTimer.cancel();
         }
     }
 
+    @Override
     void toggleChrome(final boolean aShow) {
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -285,6 +291,9 @@ abstract public class BrowserApp extends GeckoApp
                     mBrowserToolbar.show();
                 } else {
                     mBrowserToolbar.hide();
+                    if (hasTabsSideBar()) {
+                        hideTabs();
+                    }
                 }
             }
         });
@@ -296,7 +305,7 @@ abstract public class BrowserApp extends GeckoApp
     void focusChrome() {
         mMainHandler.post(new Runnable() {
             public void run() {
-                mBrowserToolbar.setVisibility(View.VISIBLE);
+                mBrowserToolbar.show();
                 mBrowserToolbar.requestFocusFromTouch();
             }
         });
@@ -670,9 +679,9 @@ abstract public class BrowserApp extends GeckoApp
                         }
                     });
                     mAboutHomeContent.setLoadCompleteCallback(new AboutHomeContent.VoidCallback() {
-                         public void callback() {
-                             mAboutHomeStartupTimer.stop();
-                         }
+                        public void callback() {
+                            mAboutHomeStartupTimer.stop();
+                        }
                     });
                 } else {
                     mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
@@ -752,9 +761,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (icon != null) {
             if (icon.startsWith("data")) {
-                byte[] raw = GeckoAppShell.decodeBase64(icon.substring(22), GeckoAppShell.BASE64_DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-                BitmapDrawable drawable = new BitmapDrawable(bitmap);
+                BitmapDrawable drawable = new BitmapDrawable(BitmapUtils.getBitmapFromDataURI(icon));
                 item.setIcon(drawable);
             }
             else if (icon.startsWith("jar:") || icon.startsWith("file://")) {

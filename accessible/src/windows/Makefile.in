@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS += \
   ia2 \
+  sdn \
   uia \
   $(null)
 

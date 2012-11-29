@@ -778,7 +778,8 @@ jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
     return JSVAL_NULL;
   }
 
-  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(aFile->mFile, aFile->mPath);
+  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(aFile->mFile, aFile->mPath,
+                                                EmptyString());
   return InterfaceToJsval(aWindow, blob, &NS_GET_IID(nsIDOMBlob));
  }
 
@@ -1140,8 +1141,8 @@ nsDOMDeviceStorageCursor::Continue()
   if (mRooted) {
     // We call onsuccess multiple times. clear the last
     // rooted result.
-    NS_DROP_JS_OBJECTS(this, nsDOMDeviceStorageCursor);
     mResult = JSVAL_VOID;
+    NS_DROP_JS_OBJECTS(this, nsDOMDeviceStorageCursor);
     mDone = false;
     mRooted = false;
   }

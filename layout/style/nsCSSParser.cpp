@@ -1144,7 +1144,8 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
                               bool aHTMLMode)
 {
   // XXX Are there cases where the caller wants to keep what it already
-  // has in case of parser error?
+  // has in case of parser error?  If GatherMedia ever changes to return
+  // a value other than true, we probably should avoid modifying aMediaList.
   aMediaList->Clear();
 
   // fake base URI since media lists don't have URIs in them
@@ -1166,7 +1167,9 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   // to a media query.  (The main substative difference is the relative
   // precedence of commas and paretheses.)
 
-  GatherMedia(aMediaList, false);
+  DebugOnly<bool> parsedOK = GatherMedia(aMediaList, false);
+  NS_ASSERTION(parsedOK, "GatherMedia returned false; we probably want to avoid "
+                         "trashing aMediaList");
 
   CLEAR_ERROR();
   ReleaseScanner();

@@ -84,7 +84,7 @@ abstract class Axis {
         });
     }
 
-    static final float MS_PER_FRAME = 4.0f;
+    static final float MS_PER_FRAME = 1000.0f / 60.0f;
     private static final float FRAMERATE_MULTIPLIER = (1000f/60f) / MS_PER_FRAME;
 
     //  The values we use for friction are based on a 16.6ms frame, adjust them to MS_PER_FRAME:

@@ -60,8 +60,6 @@ namespace JS {
 class Value;
 }
 
-inline void SetDOMStringToNull(nsAString& aString);
-
 #define NODE_FLAG_BIT(n_) (1U << (n_))
 
 enum {
@@ -1494,10 +1492,7 @@ public:
   {
     SetNodeValueInternal(aNodeValue, aError);
   }
-  virtual void GetNodeValueInternal(nsAString& aNodeValue)
-  {
-    SetDOMStringToNull(aNodeValue);
-  }
+  virtual void GetNodeValueInternal(nsAString& aNodeValue);
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
                                     mozilla::ErrorResult& aError)
   {
@@ -1592,10 +1587,7 @@ protected:
     return IsEditableInternal();
   }
 
-  virtual void GetTextContentInternal(nsAString& aTextContent)
-  {
-    SetDOMStringToNull(aTextContent);
-  }
+  virtual void GetTextContentInternal(nsAString& aTextContent);
   virtual void SetTextContentInternal(const nsAString& aTextContent,
                                       mozilla::ErrorResult& aError)
   {

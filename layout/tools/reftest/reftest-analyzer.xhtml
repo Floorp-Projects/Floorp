@@ -548,14 +548,14 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
           <feComposite result="c" in="c1" in2="c2" operator="arithmetic" k2="255" k3="255" />
           <!-- a will be opaque for every pixel with differences and transparent for all others -->
           <feColorMatrix result="a" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 0" />
-          
-          <!-- a, dilated by 4 pixels -->
-          <feMorphology result="dila4" in="a" operator="dilate" radius="4" />
+
           <!-- a, dilated by 1 pixel -->
           <feMorphology result="dila1" in="a" operator="dilate" radius="1" />
-          
-          <!-- all the pixels in the 3-pixel dilation of a but not in the 1-pixel dilation of a, to highlight the diffs -->
-          <feComposite result="highlight" in="dila4" in2="dila1" operator="out" />
+          <!-- a, dilated by 2 pixels -->
+          <feMorphology result="dila2" in="dila1" operator="dilate" radius="1" />
+
+          <!-- all the pixels in the 2-pixel dilation of a but not in the 1-pixel dilation, to highlight the diffs -->
+          <feComposite result="highlight" in="dila2" in2="dila1" operator="out" />
 
           <feFlood result="red" flood-color="red" />
           <feComposite result="redhighlight" in="red" in2="highlight" operator="in" />
