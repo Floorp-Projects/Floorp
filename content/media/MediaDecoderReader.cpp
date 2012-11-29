@@ -80,7 +80,7 @@ IsYV12Format(const VideoData::YCbCrBuffer::Plane& aYPlane,
 }
 
 bool
-nsVideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
+VideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
                                  const nsIntRect& aPicture,
                                  const nsIntSize& aDisplay)
 {
@@ -139,7 +139,7 @@ VideoData::~VideoData()
 }
 
 
-VideoData* VideoData::Create(nsVideoInfo& aInfo,
+VideoData* VideoData::Create(VideoInfo& aInfo,
                              ImageContainer* aContainer,
                              int64_t aOffset,
                              int64_t aTime,
@@ -241,7 +241,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
 }
 
 #ifdef MOZ_WIDGET_GONK
-VideoData* VideoData::Create(nsVideoInfo& aInfo,
+VideoData* VideoData::Create(VideoInfo& aInfo,
                              ImageContainer* aContainer,
                              int64_t aOffset,
                              int64_t aTime,

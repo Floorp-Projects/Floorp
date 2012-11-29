@@ -195,7 +195,7 @@ void GStreamerReader::PlayBinSourceSetup(GstAppSrc *aSource)
   }
 }
 
-nsresult GStreamerReader::ReadMetadata(nsVideoInfo* aInfo,
+nsresult GStreamerReader::ReadMetadata(VideoInfo* aInfo,
                                          MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");

@@ -1560,7 +1560,8 @@ public:
     : nsDisplayItem(aBuilder, aFrame)
   {}
 
-  virtual already_AddRefed<ImageContainer> GetContainer(nsDisplayListBuilder* aBuilder) = 0;
+  virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
+                                                        nsDisplayListBuilder* aBuilder) = 0;
   virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) = 0;
 
   virtual bool SupportsOptimizingToImage() { return true; }
@@ -1886,7 +1887,8 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) MOZ_OVERRIDE;
   
-  virtual already_AddRefed<ImageContainer> GetContainer(nsDisplayListBuilder *aBuilder) MOZ_OVERRIDE;
+  virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
+                                                        nsDisplayListBuilder *aBuilder) MOZ_OVERRIDE;
   virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) MOZ_OVERRIDE;
 
   static nsRegion GetInsideClipRegion(nsDisplayItem* aItem, nsPresContext* aPresContext, uint8_t aClip,
@@ -1895,7 +1897,7 @@ protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
   typedef class mozilla::layers::ImageLayer ImageLayer;
 
-  bool TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder);
+  bool TryOptimizeToImageLayer(LayerManager* aManager, nsDisplayListBuilder* aBuilder);
   bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aClipRect,
                                   gfxRect* aDestRect);

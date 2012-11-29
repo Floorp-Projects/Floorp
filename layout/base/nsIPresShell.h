@@ -1298,6 +1298,10 @@ public:
     return mFontSizeInflationForceEnabled;
   }
 
+  bool FontSizeInflationDisabledInMasterProcess() const {
+    return mFontSizeInflationDisabledInMasterProcess;
+  }
+
   virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) = 0;
 
   void InvalidatePresShellIfHidden();
@@ -1450,6 +1454,7 @@ protected:
   uint32_t mFontSizeInflationMinTwips;
   uint32_t mFontSizeInflationLineThreshold;
   bool mFontSizeInflationForceEnabled;
+  bool mFontSizeInflationDisabledInMasterProcess;
 
   // The maximum width of a line box. Text on a single line that exceeds this
   // width will be wrapped. A value of 0 indicates that no limit is enforced.

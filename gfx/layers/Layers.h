@@ -482,7 +482,7 @@ public:
   void LogSelf(const char* aPrefix="");
 
   void StartFrameTimeRecording();
-  nsTArray<float> StopFrameTimeRecording();
+  void StopFrameTimeRecording(nsTArray<float>& aTimes);
 
   void PostPresent();
 
@@ -1146,6 +1146,7 @@ public:
    * Can be used anytime
    */
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
+  virtual const nsIntRegion& GetValidLowPrecisionRegion() const { return mValidRegion; }
 
   virtual ThebesLayer* AsThebesLayer() { return this; }
 

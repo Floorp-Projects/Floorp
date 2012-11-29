@@ -196,7 +196,7 @@ static void DumpLayerList(nsTArray<Layer*>& aLayers)
 
 static void DumpEdgeList(DirectedGraph<Layer*>& aGraph)
 {
-  nsTArray<DirectedGraph<Layer*>::Edge> edges = aGraph.GetEdgeList();
+  const nsTArray<DirectedGraph<Layer*>::Edge>& edges = aGraph.GetEdgeList();
   
   for (uint32_t i = 0; i < edges.Length(); i++) {
     fprintf(stderr, "From: ");

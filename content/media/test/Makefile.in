@@ -237,6 +237,12 @@ MOCHITEST_FILES += \
 		r16000_u8_c1_list.wav \
 		wavedata_u8.wav \
 		wavedata_s16.wav \
+		wave_metadata_bad_len.wav \
+		wave_metadata_bad_no_null.wav \
+		wave_metadata_bad_utf8.wav \
+		wave_metadata_unknown_tag.wav \
+		wave_metadata_utf8.wav \
+		wave_metadata.wav \
 		audio.wav \
 		$(NULL)
 

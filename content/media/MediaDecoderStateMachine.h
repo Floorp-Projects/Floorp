@@ -784,7 +784,7 @@ private:
 
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.
-  nsVideoInfo mInfo;
+  VideoInfo mInfo;
 };
 
 } // namespace mozilla;

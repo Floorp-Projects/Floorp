@@ -746,7 +746,7 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsPluginStreamListenerPeer* streamPee
     return NS_ERROR_FAILURE;
 
   NPReason reason = NS_FAILED(status) ? NPRES_NETWORK_ERR : NPRES_DONE;
-  if (mRedirectDenied) {
+  if (mRedirectDenied || status == NS_BINDING_ABORTED) {
     reason = NPRES_USER_BREAK;
   }
 

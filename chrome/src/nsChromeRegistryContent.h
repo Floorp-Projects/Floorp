@@ -20,9 +20,9 @@ class nsChromeRegistryContent : public nsChromeRegistry
  public:
   nsChromeRegistryContent();
   
-  void RegisterRemoteChrome(const nsTArray<ChromePackage>& aPackages,
-                            const nsTArray<ResourceMapping>& aResources,
-                            const nsTArray<OverrideMapping>& aOverrides,
+  void RegisterRemoteChrome(const InfallibleTArray<ChromePackage>& aPackages,
+                            const InfallibleTArray<ResourceMapping>& aResources,
+                            const InfallibleTArray<OverrideMapping>& aOverrides,
                             const nsACString& aLocale);
 
   NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,

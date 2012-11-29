@@ -1534,7 +1534,7 @@ ContainerState::ThebesLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBu
     return nullptr;
   }
 
-  return mImage->GetContainer(aBuilder);
+  return mImage->GetContainer(mLayer->Manager(), aBuilder);
 }
 
 void

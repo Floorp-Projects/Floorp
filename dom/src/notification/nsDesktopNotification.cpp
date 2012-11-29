@@ -10,6 +10,9 @@
 #include "mozilla/dom/PBrowserChild.h"
 #include "TabChild.h"
 #include "mozilla/Preferences.h"
+#include "nsGlobalWindow.h"
+#include "nsIAppsService.h"
+#include "nsIDOMDesktopNotification.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -27,12 +30,31 @@ NS_IMPL_ISUPPORTS1(AlertServiceObserver, nsIObserver)
 nsresult
 nsDOMDesktopNotification::PostDesktopNotification()
 {
+  if (!mObserver)
+    mObserver = new AlertServiceObserver(this);
+
+#ifdef MOZ_B2G
+  nsCOMPtr<nsIAppNotificationService> appNotifier =
+    do_GetService("@mozilla.org/system-alerts-service;1");
+  if (appNotifier) {
+    nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+    uint32_t appId = (window.get())->GetDoc()->NodePrincipal()->GetAppId();
+
+    if (appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+      nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
+      nsString manifestUrl = EmptyString();
+      appsService->GetManifestURLByLocalId(appId, manifestUrl);
+      return appNotifier->ShowAppNotification(mIconURL, mTitle, mDescription,
+                                              true,
+                                              manifestUrl,
+                                              mObserver);
+    }
+  }
+#endif
+
   nsCOMPtr<nsIAlertsService> alerts = do_GetService("@mozilla.org/alerts-service;1");
   if (!alerts)
     return NS_ERROR_NOT_IMPLEMENTED;
-
-  if (!mObserver)
-    mObserver = new AlertServiceObserver(this);
 
   return alerts->ShowAlertNotification(mIconURL, mTitle, mDescription,
                                        true,
