@@ -452,7 +452,7 @@ nsHTMLFormElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 static void
-MarkOrphans(const nsTArray<nsGenericHTMLFormElement*> aArray)
+MarkOrphans(const nsTArray<nsGenericHTMLFormElement*>& aArray)
 {
   uint32_t length = aArray.Length();
   for (uint32_t i = 0; i < length; ++i) {
@@ -461,7 +461,8 @@ MarkOrphans(const nsTArray<nsGenericHTMLFormElement*> aArray)
 }
 
 static void
-CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsGenericHTMLFormElement*> aArray
+CollectOrphans(nsINode* aRemovalRoot,
+               const nsTArray<nsGenericHTMLFormElement*>& aArray
 #ifdef DEBUG
                , nsIDOMHTMLFormElement* aThisForm
 #endif
