@@ -76,7 +76,7 @@ extern JSObject *
 NewSlowEmptyArray(JSContext *cx);
 
 /* Get the common shape used by all dense arrays with a prototype at globalObj. */
-extern Shape *
+extern UnrootedShape
 GetDenseArrayShape(JSContext *cx, HandleObject globalObj);
 
 extern JSBool

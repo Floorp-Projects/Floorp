@@ -206,14 +206,14 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
     return false;
 }
 
-Shape *
+UnrootedShape
 js::GetDenseArrayShape(JSContext *cx, HandleObject globalObj)
 {
     JS_ASSERT(globalObj);
 
     JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
     if (!proto)
-        return NULL;
+        return UnrootedShape(NULL);
 
     return EmptyShape::getInitialShape(cx, &ArrayClass, proto, proto->getParent(),
                                        gc::FINALIZE_OBJECT0);
@@ -265,7 +265,7 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
     if (!IndexToId(cx, i, &id))
         return false;
 
-    Shape *shape = nativeLookup(cx, id);
+    UnrootedShape shape = nativeLookup(cx, id);
     if (!shape || !shape->isDataDescriptor())
         vp->setMagic(JS_ARRAY_HOLE);
     else
@@ -1254,8 +1254,8 @@ AddLengthProperty(JSContext *cx, HandleObject obj)
     if (!obj->allocateSlowArrayElements(cx))
         return false;
 
-    return obj->addProperty(cx, lengthId, array_length_getter, array_length_setter,
-                            SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0);
+    return JSObject::addProperty(cx, obj, lengthId, array_length_getter, array_length_setter,
+                                 SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0);
 }
 
 /*
@@ -1294,27 +1294,29 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
      * on error. This is gross, but a better way is not obvious. Note: the
      * exact contents of the array are not preserved on error.
      */
-    js::Shape *oldShape = obj->lastProperty();
+    RootedShape oldShape(cx, obj->lastProperty());
 
     /* Create a native scope. */
-    gc::AllocKind kind = obj->getAllocKind();
-    Shape *shape = EmptyShape::getInitialShape(cx, &SlowArrayClass, obj->getProto(),
-                                               oldShape->getObjectParent(), kind);
-    if (!shape)
-        return false;
+    {
+        gc::AllocKind kind = obj->getAllocKind();
+        UnrootedShape shape = EmptyShape::getInitialShape(cx, &SlowArrayClass, obj->getProto(),
+                                                          oldShape->getObjectParent(), kind);
+        if (!shape)
+            return false;
 
-    /*
-     * In case an incremental GC is already running, we need to write barrier
-     * the elements before (temporarily) destroying them.
-     *
-     * Note: this has to happen after getInitialShape (which can trigger
-     * incremental GC) and *before* we overwrite shape, making us no longer a
-     * dense array.
-     */
-    if (obj->compartment()->needsBarrier())
-        obj->prepareElementRangeForOverwrite(0, arrayInitialized);
+        /*
+         * In case an incremental GC is already running, we need to write barrier
+         * the elements before (temporarily) destroying them.
+         *
+         * Note: this has to happen after getInitialShape (which can trigger
+         * incremental GC) and *before* we overwrite shape, making us no longer a
+         * dense array.
+         */
+        if (obj->compartment()->needsBarrier())
+            obj->prepareElementRangeForOverwrite(0, arrayInitialized);
 
-    obj->shape_ = shape;
+        obj->shape_ = shape;
+    }
 
     /* Reset to an empty dense array. */
     obj->elements = emptyObjectElements;
