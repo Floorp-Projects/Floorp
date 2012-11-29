@@ -2173,7 +2173,8 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t *frameCount, float **frames)
   if (!mgr)
     return NS_ERROR_FAILURE;
 
-  nsTArray<float> frameTimes = mgr->StopFrameTimeRecording();
+  nsTArray<float> frameTimes;
+  mgr->StopFrameTimeRecording(frameTimes);
 
   *frames = nullptr;
   *frameCount = frameTimes.Length();
