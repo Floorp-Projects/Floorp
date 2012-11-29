@@ -56,11 +56,10 @@ function test() {
 
   function testOnWindow(aIsPrivate, aCallback) {
     let win = OpenBrowserWindow({ private: aIsPrivate });
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+    waitForFocus(function() {
       windowsToClose.push(win);
       executeSoon(function() aCallback(win));
-    }, false);
+    }, win);
   }
 
   addEngine(function() {
