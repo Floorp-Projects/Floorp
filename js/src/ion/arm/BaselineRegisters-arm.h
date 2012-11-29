@@ -38,7 +38,10 @@ static const Register BaselineStubReg     = r9;
 static const Register ExtractTemp0        = InvalidReg;
 static const Register ExtractTemp1        = InvalidReg;
 
-// R6 - R9 are generally available for use within stubcode.
+// Register used internally by MacroAssemblerARM.
+static const Register BaselineSecondScratchReg = r6;
+
+// R7 - R9 are generally available for use within stubcode.
 
 // Note that BaselineTailCallReg is actually just the link
 // register.  In ARM code emission, we do not clobber BaselineTailCallReg
