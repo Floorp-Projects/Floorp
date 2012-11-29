@@ -123,6 +123,7 @@ function handleRequest(aRequest, aResponse) {
     licenseURL = URL_HOST + URL_PATH + "missing.html";
   var showPrompt = params.showPrompt ? "true" : null;
   var showNever = params.showNever ? "true" : null;
+  var promptWaitTime = params.promptWaitTime ? params.promptWaitTime : null;
   var showSurvey = params.showSurvey ? "true" : null;
 
   // For testing the deprecated update xml format
@@ -145,8 +146,8 @@ function handleRequest(aRequest, aResponse) {
                                       displayVersion, appVersion,
                                       platformVersion, buildID, detailsURL,
                                       billboardURL, licenseURL, showPrompt,
-                                      showNever, showSurvey, version,
-                                      extensionVersion);
+                                      showNever, promptWaitTime, showSurvey,
+                                      version, extensionVersion);
 
   aResponse.write(getRemoteUpdatesXMLString(updates));
 }

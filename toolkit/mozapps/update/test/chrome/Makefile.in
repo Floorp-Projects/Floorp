@@ -59,6 +59,9 @@ MOCHITEST_CHROME_FILES += \
   test_0092_finishedBackground.xul \
   test_0093_stagedBackground.xul \
   test_0094_stagedServiceBackground.xul \
+  test_0095_restartNotification.xul \
+  test_0096_restartNotification_remote.xul \
+  test_0097_restartNotification_remoteInvalidNumber.xul \
   test_0111_neverButton_basic.xul \
   test_0112_neverButton_billboard.xul \
   test_0113_showNeverForVersionRemovedWithPref.xul \
