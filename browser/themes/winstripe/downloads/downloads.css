@@ -29,8 +29,7 @@
 }
 
 @media (-moz-windows-default-theme) {
-  #downloadsSummary,
-  #downloadsPanel[hasdownloads] #downloadsHistory {
+  #downloadsPanel[hasdownloads] #downloadsFooter {
     background-color: hsla(216,45%,88%,.98);
     box-shadow: 0px 1px 2px rgb(204,214,234) inset;
   }
