@@ -597,9 +597,7 @@ protected:
   void EnsureWritablePath();
 
   // Ensures a path in UserSpace is available.
-  // If aCommitTransform is true, then any transform on the context will be
-  // used for the path.
-  void EnsureUserSpacePath(bool aCommitTransform = true);
+  void EnsureUserSpacePath();
 
   /**
    * Needs to be called before updating the transform. This makes a call to
