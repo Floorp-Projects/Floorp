@@ -304,7 +304,7 @@ inline bool
 Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
 {
     /* Enforce requirements on size of T. */
-    JS_ASSERT(thingSize % CellSize == 0);
+    JS_ASSERT(thingSize % Cell::CellSize == 0);
     JS_ASSERT(thingSize <= 255);
 
     JS_ASSERT(aheader.allocated());
@@ -4517,24 +4517,3 @@ js_NewGCXML(JSContext *cx)
     return NewGCThing<JSXML>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
 }
 #endif
-
-#if defined(XP_WIN) && JS_BITS_PER_WORD == 64
-namespace JS {
-
-bool
-GCThingIsMarkedGray(void *thing)
-{
-    uintptr_t *word, mask;
-    js::gc::GetGCThingMarkWordAndMask(thing, js::gc::GRAY, &word, &mask);
-    return *word & mask;
-}
-
-bool
-IsIncrementalBarrierNeededOnGCThing(void *thing)
-{
-    JSCompartment *comp = GetGCThingCompartment(thing);
-    return reinterpret_cast<shadow::Compartment *>(comp)->needsBarrier_;
-}
-
-} /* namespace JS */
-#endif /* #ifdef win64 */

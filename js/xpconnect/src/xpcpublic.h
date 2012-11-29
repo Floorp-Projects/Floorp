@@ -128,7 +128,7 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
 inline JSBool
 xpc_IsGrayGCThing(void *thing)
 {
-    return JS::GCThingIsMarkedGray(thing);
+    return js::GCThingIsMarkedGray(thing);
 }
 
 // The cycle collector only cares about some kinds of GCthings that are
@@ -146,7 +146,7 @@ xpc_UnmarkNonNullGrayObject(JSObject *obj)
 {
     if (xpc_IsGrayGCThing(obj))
         xpc_UnmarkGrayGCThingRecursive(obj, JSTRACE_OBJECT);
-    else if (JS::IsIncrementalBarrierNeededOnGCThing(obj))
+    else if (js::IsIncrementalBarrierNeededOnObject(obj))
         js::IncrementalReferenceBarrier(obj);
 }
 
@@ -166,7 +166,7 @@ xpc_UnmarkGrayScript(JSScript *script)
     if (script) {
         if (xpc_IsGrayGCThing(script))
             xpc_UnmarkGrayGCThingRecursive(script, JSTRACE_SCRIPT);
-        else if (JS::IsIncrementalBarrierNeededOnGCThing(script))
+        else if (js::IsIncrementalBarrierNeededOnScript(script))
             js::IncrementalReferenceBarrier(script);
     }
     return script;
