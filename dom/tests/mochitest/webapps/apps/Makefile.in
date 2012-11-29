@@ -23,7 +23,9 @@ MOCHITEST_CHROME_FILES	= \
     utf8.webapp \
     utf8.webapp^headers^ \
     installs_allowed_from_chrome_mochitests.webapp \
+    installs_allowed_from_chrome_mochitests.webapp^headers^ \
     installs_allowed_from_example.com.webapp \
+    installs_allowed_from_example.com.webapp^headers^ \
     invalid_launch_path.webapp \
     invalid_launch_path.webapp^headers^ \
     invalid_launch_path2.webapp \
