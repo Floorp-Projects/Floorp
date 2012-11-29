@@ -914,7 +914,7 @@ enum CompileRequest
 };
 
 CompileStatus
-CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
+CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
              bool construct, CompileRequest request, StackFrame *sp);
 
 inline void

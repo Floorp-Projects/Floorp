@@ -225,7 +225,7 @@ class IonActivation
 
 // Called from JSCompartment::discardJitCode().
 void InvalidateAll(FreeOp *fop, JSCompartment *comp);
-void FinishInvalidation(FreeOp *fop, JSScript *script);
+void FinishInvalidation(FreeOp *fop, UnrootedScript script);
 
 } // namespace ion
 } // namespace js

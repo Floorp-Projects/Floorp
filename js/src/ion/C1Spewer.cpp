@@ -27,7 +27,7 @@ C1Spewer::init(const char *path)
 }
 
 void
-C1Spewer::beginFunction(MIRGraph *graph, JSScript *script)
+C1Spewer::beginFunction(MIRGraph *graph, HandleScript script)
 {
     if (!spewout_)
         return;
@@ -78,7 +78,6 @@ C1Spewer::spewIntervals(const char *pass, LinearScanAllocator *regalloc)
 void
 C1Spewer::endFunction()
 {
-    return;
 }
 
 void

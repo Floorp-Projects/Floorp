@@ -3264,7 +3264,7 @@ class LFunctionBoundary : public LInstructionHelper<0, 0, 1>
         return getTemp(0);
     }
 
-    JSScript *script() {
+    UnrootedScript script() {
         return mir_->toFunctionBoundary()->script();
     }
 

@@ -613,7 +613,7 @@ js_InternalThrow(VMFrame &f)
      */
     cx->jaegerRuntime().setLastUnfinished(Jaeger_Unfinished);
 
-    if (!script->ensureRanAnalysis(cx)) {
+    if (!JSScript::ensureRanAnalysis(cx, script)) {
         js_ReportOutOfMemory(cx);
         return NULL;
     }
@@ -708,11 +708,11 @@ stubs::CrossChunkShim(VMFrame &f, void *edge_)
 
     mjit::ExpandInlineFrames(f.cx->compartment);
 
-    UnrootedScript script = f.script();
+    RootedScript script(f.cx, f.script());
     JS_ASSERT(edge->target < script->length);
     JS_ASSERT(script->code + edge->target == f.pc());
 
-    CompileStatus status = CanMethodJIT(f.cx, DropUnrooted(script), f.pc(),
+    CompileStatus status = CanMethodJIT(f.cx, script, f.pc(),
                                         f.fp()->isConstructing(),
                                         CompileRequest_Interpreter, f.fp());
     if (status == Compile_Error)
@@ -758,7 +758,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     JSOp op = JSOp(*pc);
 
-    if (!script->ensureRanAnalysis(cx)) {
+    if (!JSScript::ensureRanAnalysis(cx, script)) {
         js_ReportOutOfMemory(cx);
         return js_InternalThrow(f);
     }

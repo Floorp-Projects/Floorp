@@ -328,7 +328,7 @@ struct IonScript
     size_t safepointsSize() const {
         return safepointsSize_;
     }
-    JSScript *getScript(size_t i) const {
+    UnrootedScript getScript(size_t i) const {
         JS_ASSERT(i < scriptEntries_);
         return scriptList()[i];
     }
