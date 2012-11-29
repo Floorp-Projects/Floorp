@@ -20,14 +20,6 @@
           android:title="@string/bookmark"
           android:showAsAction="always"/>
 
-    <item android:id="@+id/new_tab"
-          android:icon="@drawable/ic_menu_new_tab"
-          android:title="@string/new_tab"/>
-
-    <item android:id="@+id/new_private_tab"
-          android:icon="@drawable/ic_menu_new_private_tab"
-          android:title="@string/new_private_tab"/>
-
     <item android:id="@+id/share"
           android:icon="@drawable/ic_menu_share"
           android:title="@string/share" /> 
@@ -40,6 +32,10 @@
           android:icon="@drawable/ic_menu_desktop_mode_off"
           android:title="@string/desktop_mode"
           android:checkable="true" />
+
+    <item android:id="@+id/private_browsing"
+          android:visible="false"
+          android:title="@string/new_pb_tab"/>
 
     <item android:title="@string/tools"
           android:icon="@drawable/ic_menu_tools">

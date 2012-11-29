@@ -10,8 +10,9 @@ import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.widget.ImageButton;
 
-public abstract class ShapedButton extends GeckoImageButton
+public abstract class ShapedButton extends ImageButton
                                    implements CanvasDelegate.DrawManager,
                                               LightweightTheme.OnChangeListener { 
     protected GeckoActivity mActivity;

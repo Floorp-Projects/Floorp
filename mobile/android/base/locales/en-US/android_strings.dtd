@@ -54,6 +54,7 @@
 <!ENTITY site_security "Site Security">
 
 <!ENTITY close_tab "Close Tab">
+<!ENTITY new_tab "New Tab">
 <!ENTITY one_tab "1 tab">
 <!-- Localization note (num_tabs2) : Number of tabs is always more than one.
      We can't use android plural forms, sadly. See bug #753859. -->
@@ -135,10 +136,7 @@ size. -->
 <!ENTITY find_in_page "Find in Page">
 <!ENTITY desktop_mode "Request Desktop Site">
 <!ENTITY tools "Tools">
-<!ENTITY new_tab "New Tab">
-<!ENTITY new_private_tab "New Private Tab">
-<!ENTITY synced_tabs "Synced Tabs">
-<!ENTITY close_all_tabs "Close All Tabs">
+<!ENTITY new_pb_tab "New Private Browsing Tab">
 
 <!-- Localization note (find_text, find_prev, find_next, find_close) : These strings are used
      as alternate text for accessibility. They are not visible in the UI. -->

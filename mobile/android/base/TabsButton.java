@@ -172,8 +172,6 @@ public class TabsButton extends ShapedButton {
         LayerDrawable layers = new LayerDrawable(new Drawable[] { resources.getDrawable(R.drawable.tabs_tray_bg_repeat), drawable }); 
 
         StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { R.attr.state_private, android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
-        stateList.addState(new int[] { R.attr.state_private }, resources.getDrawable(R.drawable.tabs_tray_bg_pb_repeat));
         stateList.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
         stateList.addState(new int[] {}, layers);
 

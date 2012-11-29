@@ -189,18 +189,6 @@ ifdef MOZ_WEBSMS_BACKEND
 FENNEC_JAVA_FILES += GeckoSmsManager.java
 endif
 
-FENNEC_PP_JAVA_VIEW_FILES = \
-  GeckoButton.java \
-  GeckoImageButton.java \
-  GeckoImageView.java \
-  GeckoEditText.java \
-  GeckoFrameLayout.java \
-  GeckoLinearLayout.java \
-  GeckoRelativeLayout.java \
-  GeckoTextSwitcher.java \
-  GeckoTextView.java \
-  $(NULL)
-
 FENNEC_PP_JAVA_FILES = \
   App.java \
   MarketplaceApp.java \
@@ -222,17 +210,6 @@ FENNEC_PP_JAVA_FILES = \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
-  res/color/awesome_bar_title.xml \
-  res/color/awesome_bar_title_hint.xml \
-  res/color/tabs_counter_color.xml \
-  res/drawable/address_bar_bg.xml \
-  res/drawable/address_bar_url.xml \
-  res/drawable/awesomebar_tabs_bg.xml \
-  res/drawable/menu_level.xml \
-  res/drawable/tabs_button.xml \
-  res/drawable/tabs_level.xml \
-  res/drawable-xlarge-mdpi-v11/tabs_button.xml \
-  res/drawable-xlarge-mdpi-v11/tabs_level.xml \
   res/layout/abouthome_content.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_suggestion_row.xml \
@@ -309,7 +286,6 @@ GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
   $(FENNEC_PP_JAVA_FILES) \
-  $(FENNEC_PP_JAVA_VIEW_FILES) \
   $(SYNC_PP_JAVA_FILES) \
   gecko.ap_  \
   res/values/strings.xml \
@@ -486,9 +462,7 @@ RES_ANIM = \
 
 RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
-  res/drawable-nodpi/abouthome_bg_pb.png \
   res/drawable-nodpi/tabs_tray_bg.png \
-  res/drawable-nodpi/tabs_tray_bg_pb.png \
   res/drawable-nodpi/tabs_tray_selected_bg.png \
   $(NULL)
 
@@ -523,9 +497,9 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_desktop_mode_off.xml \
   res/drawable/ic_menu_desktop_mode_on.xml \
   res/drawable/ic_menu_forward.png \
-  res/drawable/ic_menu_new_private_tab.png \
-  res/drawable/ic_menu_new_tab.png \
   res/drawable/ic_menu_reload.png \
+  res/drawable/ic_menu_save_as_pdf.png \
+  res/drawable/ic_menu_share.png \
   res/drawable/ic_menu_quit.xml \
   res/drawable/ic_status_logo.png \
   res/drawable/remote_tabs_off.png \
@@ -535,17 +509,14 @@ RES_DRAWABLE_BASE = \
   res/drawable/tab_thumbnail_default.png \
   res/drawable/tab_thumbnail_shadow.png \
   res/drawable/tabs_carat.png \
-  res/drawable/tabs_carat_pb.png \
   res/drawable/address_bar_back_button.xml \
   res/drawable/address_bar_back_button_bg.xml \
   res/drawable/address_bar_back_button_pressed_bg.xml \
   res/drawable/address_bar_forward_button.xml \
   res/drawable/address_bar_texture_port.png \
-  res/drawable/address_bar_texture_port_pb.png \
+  res/drawable/address_bar_url.xml \
   res/drawable/address_bar_url_default.9.png \
-  res/drawable/address_bar_url_default_pb.9.png \
   res/drawable/address_bar_url_pressed.9.png \
-  res/drawable/address_bar_url_pressed_pb.9.png \
   res/drawable/doorhanger_arrow.png \
   res/drawable/doorhanger_bg.9.png \
   res/drawable/doorhanger_shadow_bg.9.png \
@@ -605,9 +576,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-hdpi/ic_menu_forward.png \
-  res/drawable-hdpi/ic_menu_new_private_tab.png \
-  res/drawable-hdpi/ic_menu_new_tab.png \
   res/drawable-hdpi/ic_menu_reload.png \
+  res/drawable-hdpi/ic_menu_save_as_pdf.png \
+  res/drawable-hdpi/ic_menu_share.png \
   res/drawable-hdpi/ic_status_logo.png \
   res/drawable-hdpi/remote_tabs_off.png \
   res/drawable-hdpi/remote_tabs_on.png \
@@ -616,13 +587,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_default.png \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_carat.png \
-  res/drawable-hdpi/tabs_carat_pb.png \
   res/drawable-hdpi/address_bar_texture_port.png \
-  res/drawable-hdpi/address_bar_texture_port_pb.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
-  res/drawable-hdpi/address_bar_url_default_pb.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
-  res/drawable-hdpi/address_bar_url_pressed_pb.9.png \
   res/drawable-hdpi/doorhanger_arrow.png \
   res/drawable-hdpi/doorhanger_bg.9.png \
   res/drawable-hdpi/doorhanger_shadow_bg.9.png \
@@ -659,11 +626,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_thumbnail_bg.png \
   res/drawable-xhdpi/address_bar_bg_shadow.png \
   res/drawable-xhdpi/address_bar_texture_port.png \
-  res/drawable-xhdpi/address_bar_texture_port_pb.png \
   res/drawable-xhdpi/address_bar_url_default.9.png \
-  res/drawable-xhdpi/address_bar_url_default_pb.9.png \
   res/drawable-xhdpi/address_bar_url_pressed.9.png \
-  res/drawable-xhdpi/address_bar_url_pressed_pb.9.png \
   res/drawable-xhdpi/alert_addon.png \
   res/drawable-xhdpi/alert_app.png \
   res/drawable-xhdpi/alert_download.png \
@@ -679,16 +643,15 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xhdpi/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi/ic_menu_forward.png \
-  res/drawable-xhdpi/ic_menu_new_private_tab.png \
-  res/drawable-xhdpi/ic_menu_new_tab.png \
   res/drawable-xhdpi/ic_menu_reload.png \
+  res/drawable-xhdpi/ic_menu_save_as_pdf.png \
+  res/drawable-xhdpi/ic_menu_share.png \
   res/drawable-xhdpi/ic_status_logo.png \
   res/drawable-xhdpi/tab_new.png \
   res/drawable-xhdpi/tab_close.png \
   res/drawable-xhdpi/tab_thumbnail_default.png \
   res/drawable-xhdpi/tab_thumbnail_shadow.png \
   res/drawable-xhdpi/tabs_carat.png \
-  res/drawable-xhdpi/tabs_carat_pb.png \
   res/drawable-xhdpi/doorhanger_arrow.png \
   res/drawable-xhdpi/doorhanger_bg.9.png \
   res/drawable-xhdpi/doorhanger_shadow_bg.9.png \
@@ -722,24 +685,19 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_back.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-mdpi-v11/ic_menu_close_all_tabs.png \
   res/drawable-mdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-mdpi-v11/ic_menu_desktop_mode_on.png \
   res/drawable-mdpi-v11/ic_menu_downloads.png \
   res/drawable-mdpi-v11/ic_menu_find_in_page.png \
   res/drawable-mdpi-v11/ic_menu_forward.png \
-  res/drawable-mdpi-v11/ic_menu_new_private_tab.png \
-  res/drawable-mdpi-v11/ic_menu_new_tab.png \
   res/drawable-mdpi-v11/ic_menu_reload.png \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_settings.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
-  res/drawable-mdpi-v11/ic_menu_synced_tabs.png \
   res/drawable-mdpi-v11/ic_menu_tools.png \
   res/drawable-mdpi-v11/ic_menu_quit.png \
   res/drawable-mdpi-v11/ic_status_logo.png \
   res/drawable-mdpi-v11/menu.png \
-  res/drawable-mdpi-v11/menu_pb.png \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_arrow.png \
@@ -757,24 +715,19 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_back.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-hdpi-v11/ic_menu_close_all_tabs.png \
   res/drawable-hdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-hdpi-v11/ic_menu_desktop_mode_on.png \
   res/drawable-hdpi-v11/ic_menu_downloads.png \
   res/drawable-hdpi-v11/ic_menu_find_in_page.png \
   res/drawable-hdpi-v11/ic_menu_forward.png \
-  res/drawable-hdpi-v11/ic_menu_new_private_tab.png \
-  res/drawable-hdpi-v11/ic_menu_new_tab.png \
   res/drawable-hdpi-v11/ic_menu_reload.png \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_settings.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
-  res/drawable-hdpi-v11/ic_menu_synced_tabs.png \
   res/drawable-hdpi-v11/ic_menu_tools.png \
   res/drawable-hdpi-v11/ic_menu_quit.png \
   res/drawable-hdpi-v11/ic_status_logo.png \
   res/drawable-hdpi-v11/menu.png \
-  res/drawable-hdpi-v11/menu_pb.png \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_arrow.png \
@@ -792,24 +745,19 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_back.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-xhdpi-v11/ic_menu_close_all_tabs.png \
   res/drawable-xhdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-xhdpi-v11/ic_menu_desktop_mode_on.png \
   res/drawable-xhdpi-v11/ic_menu_downloads.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
   res/drawable-xhdpi-v11/ic_menu_forward.png \
-  res/drawable-xhdpi-v11/ic_menu_new_private_tab.png \
-  res/drawable-xhdpi-v11/ic_menu_new_tab.png \
   res/drawable-xhdpi-v11/ic_menu_reload.png \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi-v11/ic_menu_settings.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
-  res/drawable-xhdpi-v11/ic_menu_synced_tabs.png \
   res/drawable-xhdpi-v11/ic_menu_tools.png \
   res/drawable-xhdpi-v11/ic_menu_quit.png \
   res/drawable-xhdpi-v11/ic_status_logo.png \
   res/drawable-xhdpi-v11/menu.png \
-  res/drawable-xhdpi-v11/menu_pb.png \
   res/drawable-xhdpi-v11/menu_panel_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_arrow.png \
@@ -819,27 +767,21 @@ RES_DRAWABLE_XHDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \
-  res/drawable-land-v14/address_bar_bg_normal.xml \
-  res/drawable-land-v14/address_bar_bg_private.xml \
+  res/drawable-land-v14/address_bar_bg.xml \
   $(NULL)
 
 RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-mdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-mdpi-v14/address_bar_texture_land.png \
-  res/drawable-land-mdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-mdpi-v14/address_bar_url_default.9.png \
-  res/drawable-land-mdpi-v14/address_bar_url_default_pb.9.png \
   res/drawable-land-mdpi-v14/address_bar_url_pressed.9.png \
-  res/drawable-land-mdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-mdpi-v14/remote_tabs_off.png \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tab_new.png \
   res/drawable-land-mdpi-v14/tabs_carat.png \
-  res/drawable-land-mdpi-v14/tabs_carat_pb.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
   res/drawable-land-mdpi-v14/menu.png \
-  res/drawable-land-mdpi-v14/menu_pb.png \
   res/drawable-land-mdpi-v14/reader.png \
   res/drawable-land-mdpi-v14/site_security_identified.png \
   res/drawable-land-mdpi-v14/site_security_verified.png \
@@ -849,19 +791,14 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-hdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-hdpi-v14/address_bar_texture_land.png \
-  res/drawable-land-hdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-hdpi-v14/address_bar_url_default.9.png \
-  res/drawable-land-hdpi-v14/address_bar_url_default_pb.9.png \
   res/drawable-land-hdpi-v14/address_bar_url_pressed.9.png \
-  res/drawable-land-hdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-hdpi-v14/remote_tabs_off.png \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tab_new.png \
   res/drawable-land-hdpi-v14/tabs_carat.png \
-  res/drawable-land-hdpi-v14/tabs_carat_pb.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
   res/drawable-land-hdpi-v14/menu.png \
-  res/drawable-land-hdpi-v14/menu_pb.png \
   res/drawable-land-hdpi-v14/reader.png \
   res/drawable-land-hdpi-v14/site_security_identified.png \
   res/drawable-land-hdpi-v14/site_security_verified.png \
@@ -871,35 +808,26 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-xhdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-xhdpi-v14/address_bar_texture_land.png \
-  res/drawable-land-xhdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-xhdpi-v14/address_bar_url_default.9.png \
-  res/drawable-land-xhdpi-v14/address_bar_url_default_pb.9.png \
   res/drawable-land-xhdpi-v14/address_bar_url_pressed.9.png \
-  res/drawable-land-xhdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-xhdpi-v14/remote_tabs_off.png \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tab_new.png \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
-  res/drawable-land-xhdpi-v14/tabs_carat_pb.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/menu.png \
-  res/drawable-land-xhdpi-v14/menu_pb.png \
   res/drawable-land-xhdpi-v14/reader.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
-  res/drawable-large-mdpi-v11/address_bar_bg_normal.xml \
-  res/drawable-large-mdpi-v11/address_bar_bg_private.xml \
+  res/drawable-large-mdpi-v11/address_bar_bg.xml \
   res/drawable-large-mdpi-v11/address_bar_texture_tablet.png \
-  res/drawable-large-mdpi-v11/address_bar_texture_tablet_pb.png \
   res/drawable-large-mdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-mdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-mdpi-v11/address_bar_url_default.9.png \
-  res/drawable-large-mdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-mdpi-v11/address_bar_url_pressed.9.png \
-  res/drawable-large-mdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-mdpi-v11/ic_awesomebar_go.png \
   res/drawable-large-mdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-mdpi-v11/ic_menu_bookmark_add.png \
@@ -914,20 +842,15 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/site_security_identified.png \
   res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/menu.png \
-  res/drawable-large-mdpi-v11/menu_pb.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
-  res/drawable-large-mdpi-v11/tabs_carat_pb.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/address_bar_texture_tablet.png \
-  res/drawable-large-hdpi-v11/address_bar_texture_tablet_pb.png \
   res/drawable-large-hdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-hdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-hdpi-v11/address_bar_url_default.9.png \
-  res/drawable-large-hdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-hdpi-v11/address_bar_url_pressed.9.png \
-  res/drawable-large-hdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-hdpi-v11/ic_awesomebar_go.png \
   res/drawable-large-hdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-hdpi-v11/ic_menu_bookmark_add.png \
@@ -942,20 +865,15 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/site_security_identified.png \
   res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/menu.png \
-  res/drawable-large-hdpi-v11/menu_pb.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
-  res/drawable-large-hdpi-v11/tabs_carat_pb.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/address_bar_texture_tablet.png \
-  res/drawable-large-xhdpi-v11/address_bar_texture_tablet_pb.png \
   res/drawable-large-xhdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_url_default.9.png \
-  res/drawable-large-xhdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-xhdpi-v11/address_bar_url_pressed.9.png \
-  res/drawable-large-xhdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-large-xhdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-xhdpi-v11/ic_menu_bookmark_add.png \
@@ -970,9 +888,7 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
   res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/menu.png \
-  res/drawable-large-xhdpi-v11/menu_pb.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
-  res/drawable-large-xhdpi-v11/tabs_carat_pb.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -980,11 +896,10 @@ RES_DRAWABLE_XLARGE_MDPI_V11 = \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-mdpi-v11/menu.png \
-  res/drawable-xlarge-mdpi-v11/menu_pb.png \
+  res/drawable-xlarge-mdpi-v11/tabs_button.xml \
   res/drawable-xlarge-mdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-mdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-mdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-mdpi-v11/tabs_carat_expanded_pb.png \
+  res/drawable-xlarge-mdpi-v11/tabs_level.xml \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_HDPI_V11 = \
@@ -992,11 +907,8 @@ RES_DRAWABLE_XLARGE_HDPI_V11 = \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-hdpi-v11/menu.png \
-  res/drawable-xlarge-hdpi-v11/menu_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-hdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-hdpi-v11/tabs_carat_expanded_pb.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_XHDPI_V11 = \
@@ -1004,11 +916,8 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-xhdpi-v11/menu.png \
-  res/drawable-xlarge-xhdpi-v11/menu_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded_pb.png \
   $(NULL)
 
 RES_COLOR = \
@@ -1033,13 +942,12 @@ endif
 MOZ_ANDROID_DRAWABLES += \
   $(SYNC_RES_DRAWABLE)                                                          \
   mobile/android/base/resources/drawable/abouthome_bg_repeat.xml                \
-  mobile/android/base/resources/drawable/abouthome_bg_pb_repeat.xml             \
   mobile/android/base/resources/drawable/abouthome_divider.xml                  \
   mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
-  mobile/android/base/resources/drawable/address_bar_bg_normal.xml              \
-  mobile/android/base/resources/drawable/address_bar_bg_private.xml             \
+  mobile/android/base/resources/drawable/address_bar_bg.xml                     \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
+  mobile/android/base/resources/drawable/address_bar_url_level.xml              \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
@@ -1050,6 +958,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/handle_start_level.xml                 \
   mobile/android/base/resources/drawable/menu_button.xml                        \
   mobile/android/base/resources/drawable/menu_item_checkmark.xml                \
+  mobile/android/base/resources/drawable/menu_level.xml                         \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/progress_spinner_1.png                 \
   mobile/android/base/resources/drawable/progress_spinner_2.png                 \
@@ -1068,8 +977,9 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_button.xml                     \
+  mobile/android/base/resources/drawable/tabs_button.xml                        \
+  mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
-  mobile/android/base/resources/drawable/tabs_tray_bg_pb_repeat.xml             \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
   mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
   mobile/android/base/resources/drawable/tabs_tray_default_selector.xml         \
@@ -1139,10 +1049,10 @@ classes.dex: jars/gecko-browser.jar
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
-jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	@echo "JAR gecko-browser.jar"
 	$(NSINSTALL) -D classes/gecko-browser
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(JAR) cMf jars/gecko-browser.jar -C classes/gecko-browser .
 
 jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) jars
@@ -1175,7 +1085,7 @@ PP_RES_XML= \
 # This is kinda awful; if any of the source files change, we remake them all.
 $(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res/,$(srcdir)/resources/,$@).in > $@
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res,$(srcdir)/resources,$@).in > $@
 
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
 SERVICES_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/services/manifests/*.in)
@@ -1214,11 +1124,6 @@ WebAppsFragments.java: WebAppsFragment.java.frag
 	@for n in `$(PYTHON) -c "for x in range($(NUM_WEB_APPS)): print x"`; do \
 		cat $< | sed s,@APPNUM@,$$n,g >> $@ ; \
 	done
-
-# Replace @VIEWTYPE@ with different View names.
-$(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
-	@rm -f $@
-	cat $< | sed s,@VIEWTYPE@,$(patsubst Gecko%.java,%,$@),g >> $@ ; \
 
 res/drawable/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable
