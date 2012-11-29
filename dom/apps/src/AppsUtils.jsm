@@ -184,14 +184,6 @@ this.AppsUtils = {
     return true;
   },
 
-  checkManifestContentType(installOrigin, webappOrigin, contentType) {
-    if (installOrigin != webappOrigin && contentType != "application/x-web-app-manifest+json") {
-      return false;
-    }
-
-    return true;
-  },
-
   /**
    * Determines whether the manifest allows installs for the given origin.
    * @param object aManifest
