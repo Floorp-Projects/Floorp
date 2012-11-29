@@ -108,6 +108,12 @@ class LIRGeneratorShared : public MInstructionVisitor
     inline bool defineFixed(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir,
                             const LAllocation &output);
 
+  private:
+    template <size_t Ops, size_t Temps>
+    inline bool defineBoxCommon(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
+                                LDefinition::Policy policy);
+
+  protected:
     template <size_t Ops, size_t Temps>
     inline bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
                           LDefinition::Policy policy = LDefinition::DEFAULT);
