@@ -354,7 +354,7 @@ class nsCSSKeyframeRule MOZ_FINAL : public mozilla::css::Rule,
 {
 public:
   // WARNING: Steals the contents of aKeys *and* aDeclaration
-  nsCSSKeyframeRule(nsTArray<float> aKeys,
+  nsCSSKeyframeRule(InfallibleTArray<float>& aKeys,
                     nsAutoPtr<mozilla::css::Declaration> aDeclaration)
     : mDeclaration(aDeclaration)
   {
@@ -392,7 +392,7 @@ public:
   void DoGetKeyText(nsAString &aKeyText) const;
 
 private:
-  nsAutoTArray<float, 1>                     mKeys;
+  nsTArray<float>                            mKeys;
   nsAutoPtr<mozilla::css::Declaration>       mDeclaration;
   // lazily created when needed:
   nsRefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
