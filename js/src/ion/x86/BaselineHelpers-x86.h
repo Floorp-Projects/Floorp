@@ -67,7 +67,7 @@ EmitReturnFromIC(MacroAssembler &masm)
 }
 
 inline void
-EmitTailCall(IonCode *target, MacroAssembler &masm, uint32_t argSize)
+EmitTailCallVM(IonCode *target, MacroAssembler &masm, uint32_t argSize)
 {
     // We assume during this that R0 and R1 have been pushed.
 
@@ -86,6 +86,70 @@ EmitTailCall(IonCode *target, MacroAssembler &masm, uint32_t argSize)
     masm.push(eax);
     masm.push(BaselineTailCallReg);
     masm.jmp(target);
+}
+
+inline void
+EmitCreateStubFrameDescriptor(MacroAssembler &masm, Register reg)
+{
+    // Compute stub frame size. We have to add two pointers: the stub reg and previous
+    // frame pointer pushed by EmitEnterStubFrame.
+    masm.movl(BaselineFrameReg, reg);
+    masm.addl(Imm32(sizeof(void *) * 2), reg);
+    masm.subl(BaselineStackReg, reg);
+
+    masm.makeFrameDescriptor(reg, IonFrame_BaselineStub);
+}
+
+inline void
+EmitCallVM(IonCode *target, MacroAssembler &masm)
+{
+    EmitCreateStubFrameDescriptor(masm, eax);
+    masm.push(eax);
+    masm.call(target);
+}
+
+inline void
+EmitEnterStubFrame(MacroAssembler &masm, Register scratch)
+{
+    JS_ASSERT(scratch != BaselineTailCallReg);
+
+    EmitRestoreTailCallReg(masm);
+
+    // Compute frame size.
+    masm.movl(BaselineFrameReg, scratch);
+    masm.addl(Imm32(BaselineFrame::FramePointerOffset), scratch);
+    masm.subl(BaselineStackReg, scratch);
+
+    masm.store32(scratch, Operand(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+
+    // Push frame descriptor and return address.
+    masm.makeFrameDescriptor(scratch, IonFrame_BaselineJS);
+    masm.push(scratch);
+    masm.push(BaselineTailCallReg);
+
+    // Save old frame pointer, stack pointer and stub reg.
+    masm.push(BaselineStubReg);
+    masm.push(BaselineFrameReg);
+    masm.mov(BaselineStackReg, BaselineFrameReg);
+}
+
+inline void
+EmitLeaveStubFrame(MacroAssembler &masm)
+{
+    // Restore frame pointer, stack pointer and stub reg.
+    masm.mov(BaselineFrameReg, BaselineStackReg);
+    masm.pop(BaselineFrameReg);
+    masm.pop(BaselineStubReg);
+
+    // Load the return address.
+    masm.pop(BaselineTailCallReg);
+
+    // Discard the frame descriptor.
+    masm.pop(eax);
+
+    // Push return address so that the stack matches the state before
+    // entering the stub frame.
+    masm.push(BaselineTailCallReg);
 }
 
 inline void

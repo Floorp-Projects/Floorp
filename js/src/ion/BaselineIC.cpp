@@ -74,7 +74,7 @@ ICStubCompiler::getStubCode()
 }
 
 bool
-ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
+ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 {
     IonCompartment *ion = cx->compartment->ionCompartment();
     IonCode *code = ion->getVMWrapper(fun);
@@ -82,7 +82,19 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
         return false;
 
     uint32_t argSize = fun.explicitStackSlots() * sizeof(void *);
-    EmitTailCall(code, masm, argSize);
+    EmitTailCallVM(code, masm, argSize);
+    return true;
+}
+
+bool
+ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
+{
+    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCode *code = ion->getVMWrapper(fun);
+    if (!code)
+        return false;
+
+    EmitCallVM(code, masm);
     return true;
 }
 
@@ -162,7 +174,7 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    return callVM(DoTypeMonitorFallbackInfo, masm);
+    return tailCallVM(DoTypeMonitorFallbackInfo, masm);
 }
 
 //
@@ -259,7 +271,7 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    return callVM(DoCompareFallbackInfo, masm);
+    return tailCallVM(DoCompareFallbackInfo, masm);
 }
 
 //
@@ -320,10 +332,7 @@ ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     // Call.
-    if (!callVM(fun, masm))
-        return false;
-
-    return true;
+    return tailCallVM(fun, masm);
 }
 
 //
@@ -397,7 +406,7 @@ ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    return callVM(DoToNumberFallbackInfo, masm);
+    return tailCallVM(DoToNumberFallbackInfo, masm);
 }
 
 //
@@ -516,7 +525,7 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    return callVM(DoBinaryArithFallbackInfo, masm);
+    return tailCallVM(DoBinaryArithFallbackInfo, masm);
 }
 
 //
@@ -572,7 +581,7 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
-    return callVM(DoGetElemFallbackInfo, masm);
+    return tailCallVM(DoGetElemFallbackInfo, masm);
 }
 
 //
@@ -681,7 +690,7 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.push(BaselineStubReg);
 
-    return callVM(DoSetElemFallbackInfo, masm);
+    return tailCallVM(DoSetElemFallbackInfo, masm);
 }
 
 //
@@ -743,35 +752,54 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
     Value *args = vp + 2;
 
     RootedScript script(cx, GetTopIonJSScript(cx));
-    bool ok = false;
-
     JSOp op = JSOp(*stub->icEntry()->pc(script));
-    switch (op) {
-      case JSOP_CALL:
-      case JSOP_FUNCALL:
-      case JSOP_FUNAPPLY:
-        // Run the function in the interpreter.
-        ok = Invoke(cx, thisv, callee, argc, args, res.address());
-        break;
-      case JSOP_NEW:
-        ok = InvokeConstructor(cx, callee, argc, args, res.address());
-        break;
-      default:
-        JS_NOT_REACHED("Invalid call op");
+
+    if (op == JSOP_NEW) {
+        if (!InvokeConstructor(cx, callee, argc, args, res.address()))
+            return false;
+    } else {
+        JS_ASSERT(op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
+        if (!Invoke(cx, thisv, callee, argc, args, res.address()))
+            return false;
     }
 
-    if (ok)
-        types::TypeScript::Monitor(cx, res);
+    types::TypeScript::Monitor(cx, res);
 
-    return ok;
+    // Attach new stub.
+    if (stub->numOptimizedStubs() >= ICCall_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with generic call stub.
+        return true;
+    }
+
+    if (op == JSOP_NEW || !callee.isObject())
+        return true;
+
+    RootedObject obj(cx, &callee.toObject());
+    if (!obj->isFunction())
+        return true;
+
+    RootedFunction fun(cx, obj->toFunction());
+    if (obj->toFunction()->hasScript()) {
+        RootedScript script(cx, fun->nonLazyScript());
+        if (!script->hasBaselineScript() && !script->hasIonScript())
+            return true;
+
+        ICCall_Scripted::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(), fun);
+        ICStub *newStub = compiler.getStub();
+        if (!newStub)
+            return false;
+
+        stub->addNewStub(newStub);
+        return true;
+    }
+
+    return true;
 }
 
 void
-ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, Register argcReg)
+ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg)
 {
-    GeneralRegisterSet regs(availableGeneralRegs(0));
-    regs.take(BaselineTailCallReg);
-    regs.take(argcReg);
+    JS_ASSERT(!regs.has(argcReg));
 
     // Push the callee and |this| too.
     Register count = regs.takeAny();
@@ -781,6 +809,10 @@ ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, Register argcReg)
     // argPtr initially points to the last argument.
     Register argPtr = regs.takeAny();
     masm.mov(BaselineStackReg, argPtr);
+
+    // Skip 4 pointers pushed on top of the arguments: the frame descriptor,
+    // return address, old frame pointer and stub reg.
+    masm.addPtr(Imm32(sizeof(void *) * 4), argPtr);
 
     // Push all values, starting at the last one.
     Label loop, done;
@@ -804,23 +836,124 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
     JS_ASSERT(R0 == JSReturnOperand);
 
-    // Restore the tail call register.
-    EmitRestoreTailCallReg(masm);
+    // Push a stub frame so that we can perform a non-tail call.
+    EmitEnterStubFrame(masm, R1.scratchReg());
 
     // Values are on the stack left-to-right. Calling convention wants them
     // right-to-left so duplicate them on the stack in reverse order.
     // |this| and callee are pushed last.
 
-    // R0.scratchReg() holds argc.
-    pushCallArguments(masm, R0.scratchReg());
+    GeneralRegisterSet regs(availableGeneralRegs(0));
+    regs.take(R0.scratchReg()); // argc.
+
+    pushCallArguments(masm, regs, R0.scratchReg());
 
     masm.push(BaselineStackReg);
     masm.push(R0.scratchReg());
     masm.push(BaselineStubReg);
 
-    return callVM(DoCallFallbackInfo, masm);
+    if (!callVM(DoCallFallbackInfo, masm))
+        return false;
+
+    EmitLeaveStubFrame(masm);
+
+    EmitReturnFromIC(masm);
+    return true;
 }
 
+bool
+ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    GeneralRegisterSet regs(availableGeneralRegs(0));
+    bool canUseTailCallReg = regs.has(BaselineTailCallReg);
+
+    Register argcReg = R0.scratchReg();
+    JS_ASSERT(argcReg != ArgumentsRectifierReg);
+
+    regs.take(argcReg);
+    regs.take(ArgumentsRectifierReg);
+    if (regs.has(BaselineTailCallReg))
+        regs.take(BaselineTailCallReg);
+
+    // Load the callee in R1.
+    BaseIndex calleeSlot(BaselineStackReg, argcReg, TimesEight, ICStackValueOffset + sizeof(Value));
+    masm.loadValue(calleeSlot, R1);
+    regs.take(R1);
+
+    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
+
+    // Ensure callee matches this stub's callee.
+    Register callee = masm.extractObject(R1, ExtractTemp0);
+    Address expectedCallee(BaselineStubReg, ICCall_Scripted::offsetOfCallee());
+    masm.branchPtr(Assembler::NotEqual, expectedCallee, callee, &failure);
+
+    // If the previous check succeeded, the function must be non-native and
+    // have a valid, non-lazy script.
+    masm.loadPtr(Address(callee, offsetof(JSFunction, u.i.script_)), callee);
+
+    // Call IonScript or BaselineScript.
+    masm.loadBaselineOrIonCode(callee);
+
+    // Load the start of the target IonCode.
+    Register code = regs.takeAny();
+    masm.loadPtr(Address(callee, IonCode::offsetOfCode()), code);
+
+    // We no longer need R1.
+    regs.add(R1);
+
+    // Push a stub frame so that we can perform a non-tail call.
+    Register scratch = regs.takeAny();
+    EmitEnterStubFrame(masm, scratch);
+    if (canUseTailCallReg)
+        regs.add(BaselineTailCallReg);
+
+    // Values are on the stack left-to-right. Calling convention wants them
+    // right-to-left so duplicate them on the stack in reverse order.
+    // |this| and callee are pushed last.
+    pushCallArguments(masm, regs, argcReg);
+
+    // The callee is on top of the stack. Pop and unbox it.
+    ValueOperand val = regs.takeAnyValue();
+    masm.popValue(val);
+    callee = masm.extractObject(val, ExtractTemp0);
+
+    EmitCreateStubFrameDescriptor(masm, scratch);
+
+    // Note that we use Push, not push, so that callIon will align the stack
+    // properly on ARM.
+    masm.Push(argcReg);
+    masm.Push(callee);
+    masm.Push(scratch);
+
+    // Handle arguments underflow.
+    Label noUnderflow;
+    masm.load16ZeroExtend(Address(callee, offsetof(JSFunction, nargs)), callee);
+    masm.branch32(Assembler::AboveOrEqual, argcReg, callee, &noUnderflow);
+    {
+        // Call the arguments rectifier.
+        JS_ASSERT(ArgumentsRectifierReg != code);
+        JS_ASSERT(ArgumentsRectifierReg != argcReg);
+
+        IonCode *argumentsRectifier = cx->compartment->ionCompartment()->getArgumentsRectifier();
+
+        masm.movePtr(ImmGCPtr(argumentsRectifier), code);
+        masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
+        masm.mov(argcReg, ArgumentsRectifierReg);
+    }
+
+    masm.bind(&noUnderflow);
+    masm.callIon(code);
+
+    EmitLeaveStubFrame(masm);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
 
 } // namespace ion
 } // namespace js

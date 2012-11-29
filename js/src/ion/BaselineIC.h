@@ -275,6 +275,7 @@ class ICEntry
     _(BinaryArith_Int32)        \
                                 \
     _(Call_Fallback)            \
+    _(Call_Scripted)            \
                                 \
     _(GetElem_Fallback)         \
     _(GetElem_Dense)            \
@@ -580,7 +581,10 @@ class ICStubCompiler
     ICStubCompiler(JSContext *cx, ICStub::Kind kind)
       : cx(cx), kind(kind) {}
 
-    // Helper to generate an stubcall IonCode from a VMFunction wrapper.
+    // Emits a tail call to a VMFunction wrapper.
+    bool tailCallVM(const VMFunction &fun, MacroAssembler &masm);
+
+    // Emits a normal (non-tail) call to a VMFunction wrapper.
     bool callVM(const VMFunction &fun, MacroAssembler &masm);
 
     inline GeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
@@ -1129,16 +1133,18 @@ class ICCallStubCompiler : public ICStubCompiler
       : ICStubCompiler(cx, kind)
     { }
 
-    void pushCallArguments(MacroAssembler &masm, Register argcReg);
+    void pushCallArguments(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg);
 };
 
-class ICCall_Fallback : public ICFallbackStub
+class ICCall_Fallback : public ICMonitoredFallbackStub
 {
     ICCall_Fallback(IonCode *stubCode)
-      : ICFallbackStub(ICStub::Call_Fallback, stubCode)
+      : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode)
     { }
 
   public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
     static inline ICCall_Fallback *New(IonCode *code) {
         return new ICCall_Fallback(code);
     }
@@ -1154,11 +1160,58 @@ class ICCall_Fallback : public ICFallbackStub
         { }
 
         ICStub *getStub() {
-            return ICCall_Fallback::New(getStubCode());
+            ICCall_Fallback *stub = ICCall_Fallback::New(getStubCode());
+            if (!stub)
+                return NULL;
+            if (!stub->initMonitoringChain(cx)) {
+                delete stub;
+                return NULL;
+            }
+            return stub;
         }
     };
 };
 
+class ICCall_Scripted : public ICMonitoredStub
+{
+    HeapPtrFunction callee_;
+
+    ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee)
+      : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
+        callee_(callee)
+    { }
+
+  public:
+    static inline ICCall_Scripted *New(IonCode *code, ICStub *firstMonitorStub, HandleFunction callee) {
+        return new ICCall_Scripted(code, firstMonitorStub, callee);
+    }
+
+    static size_t offsetOfCallee() {
+        return offsetof(ICCall_Scripted, callee_);
+    }
+    HeapPtrFunction &callee() {
+        return callee_;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICCallStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        RootedFunction callee_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee)
+          : ICCallStubCompiler(cx, ICStub::Call_Scripted),
+            firstMonitorStub_(firstMonitorStub),
+            callee_(cx, callee)
+        { }
+
+        ICStub *getStub() {
+            return ICCall_Scripted::New(getStubCode(), firstMonitorStub_, callee_);
+        }
+    };
+};
 
 } // namespace ion
 } // namespace js

@@ -29,9 +29,12 @@ SizeOfFramePrefix(FrameType type)
     switch (type) {
       case IonFrame_Entry:
         return IonEntryFrameLayout::Size();
+      case IonFrame_BaselineJS:
       case IonFrame_OptimizedJS:
       case IonFrame_Bailed_JS:
         return IonJSFrameLayout::Size();
+      case IonFrame_BaselineStub:
+        return IonBaselineStubFrameLayout::Size();
       case IonFrame_Rectifier:
         return IonRectifierFrameLayout::Size();
       case IonFrame_Bailed_Rectifier:
@@ -96,6 +99,11 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
     JS_ASSERT(iter.returnAddressToFp() != NULL);
     if (returnAddrOut)
         *returnAddrOut = (void *) iter.returnAddressToFp();
+
+    if (iter.isBaselineStub()) {
+        ++iter;
+        JS_ASSERT(iter.isBaselineJS());
+    }
 
     JS_ASSERT(iter.isScripted());
     IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());

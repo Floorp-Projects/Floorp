@@ -1704,6 +1704,9 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
                     it.maybeCallee(), it.script(), it.returnAddressToFp());
             break;
           }
+          case IonFrame_BaselineStub:
+            IonSpew(IonSpew_Invalidate, "#%d baseline stub frame @ %p", frameno, it.fp());
+            break;
           case IonFrame_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d rectifier frame @ %p", frameno, it.fp());
             break;

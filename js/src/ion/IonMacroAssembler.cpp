@@ -7,6 +7,7 @@
 
 #include "jsinfer.h"
 #include "jsinferinlines.h"
+#include "BaselineJIT.h"
 #include "IonMacroAssembler.h"
 #include "gc/Root.h"
 #include "Bailouts.h"
@@ -627,3 +628,26 @@ MacroAssembler::generateBailoutTail(Register scratch)
     }
 }
 
+void
+MacroAssembler::loadBaselineOrIonCode(Register script)
+{
+    Label noIonScript, done;
+    Address scriptIon(script, offsetof(JSScript, ion));
+    branchPtr(Assembler::BelowOrEqual, scriptIon, ImmWord(ION_COMPILING_SCRIPT),
+              &noIonScript);
+    {
+        // Load IonScript method.
+        loadPtr(scriptIon, script);
+        loadPtr(Address(script, IonScript::offsetOfMethod()), script);
+        jump(&done);
+    }
+    bind(&noIonScript);
+    {
+        // If the script does not have a valid IonScript, it must have a
+        // BaselineScript.
+        loadPtr(Address(script, offsetof(JSScript, baseline)), script);
+        loadPtr(Address(script, BaselineScript::offsetOfMethod()), script);
+    }
+
+    bind(&done);
+}

@@ -336,6 +336,16 @@ class TypedRegisterSet
         JS_ASSERT(!has(reg));
         addUnchecked(reg);
     }
+    void add(ValueOperand value) {
+#if defined(JS_NUNBOX32)
+        add(value.payloadReg());
+        add(value.typeReg());
+#elif defined(JS_PUNBOX64)
+        add(value.valueReg());
+#else
+#error "Bad architecture"
+#endif
+    }
     // Determemine if some register are still allocated.  This function should
     // be used with the set of allocatable registers used for the initialization
     // of the current set.
@@ -370,6 +380,18 @@ class TypedRegisterSet
         T reg = getAny();
         take(reg);
         return reg;
+    }
+    ValueOperand takeAnyValue() {
+#if defined(JS_NUNBOX32)
+        T type = takeAny();
+        T payload = takeAny();
+        return ValueOperand(type, payload);
+#elif defined(JS_PUNBOX64)
+        T reg = takeAny();
+        return ValueOperand(reg);
+#else
+#error "Bad architecture"
+#endif
     }
     void clear() {
         bits_ = 0;
