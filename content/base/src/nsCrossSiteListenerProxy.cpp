@@ -350,6 +350,7 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          bool aWithCredentials)
   : mOuterListener(aOuter),
     mRequestingPrincipal(aRequestingPrincipal),
+    mOriginHeaderPrincipal(aRequestingPrincipal),
     mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
     mRequestApproved(false),
     mHasBeenCrossSite(false),
@@ -364,6 +365,7 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          const nsTArray<nsCString>& aPreflightHeaders)
   : mOuterListener(aOuter),
     mRequestingPrincipal(aRequestingPrincipal),
+    mOriginHeaderPrincipal(aRequestingPrincipal),
     mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
     mRequestApproved(false),
     mHasBeenCrossSite(false),
@@ -387,6 +389,7 @@ nsCORSListenerProxy::Init(nsIChannel* aChannel, bool aAllowDataURI)
   if (NS_FAILED(rv)) {
     mOuterListener = nullptr;
     mRequestingPrincipal = nullptr;
+    mOriginHeaderPrincipal = nullptr;
     mOuterNotificationCallbacks = nullptr;
   }
   return rv;
@@ -404,6 +407,8 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
         nsCOMPtr<nsIURI> uri;
         NS_GetFinalChannelURI(channel, getter_AddRefs(uri));
         if (uri) {
+          // OK to use mRequestingPrincipal since preflights never get
+          // redirected.
           sPreflightCache->RemoveEntries(uri, mRequestingPrincipal);
         }
       }
@@ -488,7 +493,7 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
 
   if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
     nsAutoCString origin;
-    rv = nsContentUtils::GetASCIIOrigin(mRequestingPrincipal, origin);
+    rv = nsContentUtils::GetASCIIOrigin(mOriginHeaderPrincipal, origin);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!allowedOriginHeader.Equals(origin)) {
@@ -623,11 +628,46 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
         nsCOMPtr<nsIURI> oldURI;
         NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldURI));
         if (oldURI) {
+          // OK to use mRequestingPrincipal since preflights never get
+          // redirected.
           sPreflightCache->RemoveEntries(oldURI, mRequestingPrincipal);
         }
       }
       aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
       return NS_ERROR_DOM_BAD_URI;
+    }
+
+    if (mHasBeenCrossSite) {
+      // Once we've been cross-site, cross-origin redirects reset our source
+      // origin.
+      nsCOMPtr<nsIPrincipal> oldChannelPrincipal;
+      nsContentUtils::GetSecurityManager()->
+        GetChannelPrincipal(aOldChannel, getter_AddRefs(oldChannelPrincipal));
+      nsCOMPtr<nsIPrincipal> newChannelPrincipal;
+      nsContentUtils::GetSecurityManager()->
+        GetChannelPrincipal(aNewChannel, getter_AddRefs(newChannelPrincipal));
+      if (!oldChannelPrincipal || !newChannelPrincipal) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      if (NS_SUCCEEDED(rv)) {
+        bool equal;
+        rv = oldChannelPrincipal->Equals(newChannelPrincipal, &equal);
+        if (NS_SUCCEEDED(rv)) {
+          if (!equal) {
+            // Spec says to set our source origin to a unique origin.
+            mOriginHeaderPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+            if (!mOriginHeaderPrincipal) {
+              rv = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+      }
+
+      if (NS_FAILED(rv)) {
+        aOldChannel->Cancel(rv);
+        return rv;
+      }
     }
   }
 
@@ -729,7 +769,7 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
 
   // Add the Origin header
   nsAutoCString origin;
-  rv = nsContentUtils::GetASCIIOrigin(mRequestingPrincipal, origin);
+  rv = nsContentUtils::GetASCIIOrigin(mOriginHeaderPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);

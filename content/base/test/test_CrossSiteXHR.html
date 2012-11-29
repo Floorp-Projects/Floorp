@@ -859,13 +859,23 @@ function runTest() {
                     },
                     ],
            },
-           { pass: 1,
+           { pass: 0,
              method: "GET",
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
                     { server: "http://example.org",
                       allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://example.org",
+                      allowOrigin: "*"
                     },
                     ],
            },
@@ -902,7 +912,7 @@ function runTest() {
                     },
                     ],
            },
-           { pass: 1,
+           { pass: 0,
              method: "GET",
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
@@ -915,6 +925,38 @@ function runTest() {
                     },
                     { server: "http://sub1.test1.example.org",
                       allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.example.org:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.example.org",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.example.org",
+                      allowOrigin: "*"
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.example.org:8000",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub2.xn--lt-uia.example.org",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.example.org",
+                      allowOrigin: "*"
                     },
                     ],
            },
@@ -934,7 +976,7 @@ function runTest() {
                     },
                     ],
            },
-           { pass: 1,
+           { pass: 0,
              method: "GET",
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
