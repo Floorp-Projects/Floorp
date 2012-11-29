@@ -392,3 +392,11 @@ bool
 nsLookAndFeel::GetEchoPasswordImpl() {
     return true;
 }
+
+/*virtual*/
+uint32_t
+nsLookAndFeel::GetPasswordMaskDelayImpl()
+{
+    // Same value on Android framework
+    return 1500;
+}
