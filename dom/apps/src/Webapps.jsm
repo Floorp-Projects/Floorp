@@ -1508,7 +1508,7 @@ this.DOMApplicationRegistry = {
         continue;
       }
 
-      if (!this.webapps[id].removable)
+      if (!app.removable)
         return;
 
       // Clean up the deprecated manifest cache if needed.
@@ -1539,7 +1539,11 @@ this.DOMApplicationRegistry = {
       delete this.webapps[id];
 
       this._saveApps((function() {
-        this.broadcastMessage("Webapps:Uninstall:Return:OK", aData);
+        let detail = {
+          manifestURL: app.manifestURL,
+          origin: aData.origin
+        };
+        this.broadcastMessage("Webapps:Uninstall:Return:OK", detail);
         Services.obs.notifyObservers(this, "webapps-sync-uninstall", appNote);
         this.broadcastMessage("Webapps:RemoveApp", { id: id });
       }).bind(this));
@@ -1737,13 +1741,15 @@ this.DOMApplicationRegistry = {
         }
 
         let origin = this.webapps[record.id].origin;
+        let manifestURL = this.webapps[record.id].manifestURL;
         delete this.webapps[record.id];
         let dir = this._getAppDir(record.id);
         try {
           dir.remove(true);
         } catch (e) {
         }
-        this.broadcastMessage("Webapps:Uninstall:Return:OK", { origin: origin });
+        this.broadcastMessage("Webapps:Uninstall:Return:OK", { origin: origin,
+                                                               manifestURL: manifestURL });
       } else {
         if (this.webapps[record.id]) {
           this.webapps[record.id] = record.value;
