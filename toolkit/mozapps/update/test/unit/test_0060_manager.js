@@ -26,7 +26,7 @@ function run_test() {
                                  "http://billboard1/", "http://license1/",
                                  "http://service1/", "1238441300314",
                                  "test status text", "false", "test_channel",
-                                 "true", "true", "true", "true",
+                                 "true", "true", "true", "345600", "true",
                                  "test version", "3.0", "3.0",
                                  "custom1_attr=\"custom1 value\"",
                                  "custom2_attr=\"custom2 value\"");
@@ -40,8 +40,8 @@ function run_test() {
                                  "3.0", null, "http://details2/", null, null,
                                  "http://service2/", null,
                                  getString("patchApplyFailure"), "true",
-                                 "test_channel", "false", null, null, null,
-                                 "version 3", "3.0", null,
+                                 "test_channel", "false", null, null, "691200",
+                                 null, "version 3", "3.0", null,
                                  "custom3_attr=\"custom3 value\"",
                                  "custom4_attr=\"custom4 value\"");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
@@ -70,6 +70,7 @@ function run_test() {
   do_check_eq(update.channel, "test_channel");
   do_check_true(update.showPrompt);
   do_check_true(update.showNeverForVersion);
+  do_check_eq(update.promptWaitTime, "345600");
   do_check_true(update.showSurvey);
   do_check_eq(update.previousAppVersion, "3.0");
   // Custom attributes
@@ -103,6 +104,7 @@ function run_test() {
   do_check_eq(update.channel, "test_channel");
   do_check_true(update.showPrompt);
   do_check_true(update.showNeverForVersion);
+  do_check_eq(update.promptWaitTime, "691200");
   do_check_false(update.showSurvey);
   do_check_eq(update.previousAppVersion, null);
   // Custom attributes
@@ -129,8 +131,8 @@ function run_test() {
                                  null, "http://details/", "http://billboard/",
                                  "http://license/", "http://service/",
                                  "1238441400314", "test status text", null,
-                                 "test_channel", "true", "true", "true", "true",
-                                 "version 4.0", "4.0", "3.0");
+                                 "test_channel", "true", "true", "true", "100",
+                                 "true", "version 4.0", "4.0", "3.0");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
@@ -141,8 +143,8 @@ function run_test() {
                                  "3.0", "3.0", null, "http://details/", null,
                                  null, "http://service/", null,
                                  getString("patchApplyFailure"), null,
-                                 "test_channel", "false", null, null, null,
-                                 "version 3", null, null);
+                                 "test_channel", "false", null, null, "200",
+                                 null, "version 3", null, null);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
 
   reloadUpdateManagerData();
@@ -169,6 +171,7 @@ function run_test() {
   do_check_eq(update.channel, "test_channel");
   do_check_true(update.showPrompt);
   do_check_true(update.showNeverForVersion);
+  do_check_eq(update.promptWaitTime, "100");
   do_check_true(update.showSurvey);
   do_check_eq(update.previousAppVersion, "3.0");
 
@@ -199,6 +202,7 @@ function run_test() {
   do_check_eq(update.channel, "test_channel");
   do_check_false(update.showPrompt);
   do_check_false(update.showNeverForVersion);
+  do_check_eq(update.promptWaitTime, "200");
   do_check_false(update.showSurvey);
   do_check_eq(update.previousAppVersion, null);
 
