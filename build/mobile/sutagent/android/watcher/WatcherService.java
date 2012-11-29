@@ -402,6 +402,7 @@ public class WatcherService extends Service
 
     public void doToast(String sMsg)
         {
+        Log.i("Watcher", sMsg);
         Toast toast = Toast.makeText(this, sMsg, Toast.LENGTH_LONG);
         toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 100);
         toast.show();
@@ -716,15 +717,9 @@ public class WatcherService extends Service
     public String UnInstallApp(String sApp, OutputStream out)
         {
         String sRet = "";
-        String [] theArgs = new String [3];
-
-        theArgs[0] = "su";
-        theArgs[1] = "-c";
-        theArgs[2] = "pm uninstall " + sApp + ";exit";
-
         try
             {
-            pProc = Runtime.getRuntime().exec(theArgs);
+            pProc = Runtime.getRuntime().exec(this.getSuArgs("pm uninstall " + sApp + ";exit"));
 
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
@@ -745,19 +740,24 @@ public class WatcherService extends Service
         return (sRet);
         }
 
+    private String [] getSuArgs(String cmdString)
+        {
+        String [] theArgs = new String [3];
+        theArgs[0] = "su";
+        theArgs[1] = "-c";
+        // as a security measure, ICS and later resets LD_LIBRARY_PATH. reset
+        // it here when executing the command
+        theArgs[2] = "LD_LIBRARY_PATH=/vendor/lib:/system/lib " + cmdString;
+        return theArgs;
+        }
+
     public String InstallApp(String sApp, OutputStream out)
         {
         String sRet = "";
         String sHold = "";
-        String [] theArgs = new String [3];
-
-        theArgs[0] = "su";
-        theArgs[1] = "-c";
-        theArgs[2] = "pm install -r " + sApp + ";exit";
-
         try
             {
-            pProc = Runtime.getRuntime().exec(theArgs);
+            pProc = Runtime.getRuntime().exec(this.getSuArgs("pm install -r " + sApp + " Cleanup;exit"));
 
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
@@ -976,7 +976,8 @@ public class WatcherService extends Service
                 }
             }
 
-            if (bStartSUTAgent && !GetProcessInfo(sProgramName))
+            boolean isProc = GetProcessInfo(sProgramName);
+            if (bStartSUTAgent && !isProc)
                 {
                 Log.i("SUTAgentWatcher", "Starting SUTAgent from watcher code");
                 Intent agentIntent = new Intent();
@@ -1014,26 +1015,7 @@ public class WatcherService extends Service
         }
 
     private void SendNotification(String tickerText, String expandedText) {
-        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        int icon = R.drawable.ateamlogo;
-        long when = System.currentTimeMillis();
-
-        Notification notification = new Notification(icon, tickerText, when);
-
-        notification.flags |= Notification.FLAG_AUTO_CANCEL;
-        notification.defaults |= Notification.DEFAULT_SOUND;
-//        notification.defaults |= Notification.DEFAULT_VIBRATE;
-        notification.defaults |= Notification.DEFAULT_LIGHTS;
-
-        Context context = getApplicationContext();
-
-        // Intent to launch an activity when the extended text is clicked
-        Intent intent = new Intent(this, WatcherService.class);
-        PendingIntent launchIntent = PendingIntent.getActivity(context, 0, intent, 0);
-
-        notification.setLatestEventInfo(context, tickerText, expandedText, launchIntent);
-
-        notificationManager.notify(NOTIFICATION_ID, notification);
+        Log.i("Watcher", expandedText);
     }
 
     private void CancelNotification() {
