@@ -34,6 +34,7 @@
     _(CallKnown)                    \
     _(CallGeneric)                  \
     _(CallNative)                   \
+    _(CallConstructor)              \
     _(ApplyArgsGeneric)             \
     _(StackArgT)                    \
     _(StackArgV)                    \
