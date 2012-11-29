@@ -68,7 +68,7 @@ function viewPartialSourceForSelection(selection)
     ancestorContainer = ancestorContainer.parentNode;
 
   // for selectAll, let's use the entire document, including <html>...</html>
-  // @see DocumentViewerImpl::SelectAll() for how selectAll is implemented
+  // @see nsDocumentViewer::SelectAll() for how selectAll is implemented
   try {
     if (ancestorContainer == doc.body)
       ancestorContainer = doc.documentElement;
