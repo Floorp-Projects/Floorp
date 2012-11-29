@@ -219,18 +219,14 @@ AudioStream::~AudioStream()
 {
 }
 
-bool AudioStream::EnsureTimeStretcherInitialized()
+void AudioStream::EnsureTimeStretcherInitialized()
 {
-  if (mTimeStretcher)
-    return true;
-  mTimeStretcher = new soundtouch::SoundTouch();
   if (!mTimeStretcher) {
-    return false;
+    mTimeStretcher = new soundtouch::SoundTouch();
+    mTimeStretcher->setSampleRate(mInRate);
+    mTimeStretcher->setChannels(mChannels);
+    mTimeStretcher->setPitch(1.0);
   }
-  mTimeStretcher->setSampleRate(mInRate);
-  mTimeStretcher->setChannels(mChannels);
-  mTimeStretcher->setPitch(1.0);
-  return true;
 }
 
 nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
@@ -243,9 +239,9 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
   }
   mAudioClock.SetPlaybackRate(aPlaybackRate);
   mOutRate = mInRate / aPlaybackRate;
-  if (!EnsureTimeStretcherInitialized()) {
-    return NS_ERROR_FAILURE;
-  }
+
+  EnsureTimeStretcherInitialized();
+
   if (mAudioClock.GetPreservesPitch()) {
     mTimeStretcher->setTempo(aPlaybackRate);
     mTimeStretcher->setRate(1.0f);
@@ -262,9 +258,9 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch)
   if (aPreservesPitch == mAudioClock.GetPreservesPitch()) {
     return NS_OK;
   }
-  if (!EnsureTimeStretcherInitialized()) {
-    return NS_ERROR_FAILURE;
-  }
+
+  EnsureTimeStretcherInitialized();
+
   if (aPreservesPitch == true) {
     mTimeStretcher->setTempo(mAudioClock.GetPlaybackRate());
     mTimeStretcher->setRate(1.0f);
@@ -369,9 +365,7 @@ nsresult NativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
   int32_t written = -1;
 
   if (mInRate != mOutRate) {
-    if (!EnsureTimeStretcherInitialized()) {
-      return NS_ERROR_FAILURE;
-    }
+    EnsureTimeStretcherInitialized();
     mTimeStretcher->putSamples(aBuf, aFrames);
     uint32_t numFrames = mTimeStretcher->numSamples();
     uint32_t arraySize = numFrames * mChannels * sizeof(AudioDataValue);
@@ -965,9 +959,9 @@ long
 BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
 {
   long processedFrames = 0;
-  if (!EnsureTimeStretcherInitialized()) {
-    return -1;
-  }
+
+  EnsureTimeStretcherInitialized();
+
   uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
   double playbackRate = static_cast<double>(mInRate) / mOutRate;
   uint32_t toPopBytes = FramesToBytes(ceil(aFrames / playbackRate));
