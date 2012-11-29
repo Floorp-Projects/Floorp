@@ -923,6 +923,11 @@ nsPluginHost::InstantiateEmbeddedPluginInstance(const char *aMimeType, nsIURI* a
   PR_LogFlush();
 #endif
 
+  if (!aMimeType) {
+    NS_NOTREACHED("Attempting to spawn a plugin with no mime type");
+    return NS_ERROR_FAILURE;
+  }
+
   nsRefPtr<nsPluginInstanceOwner> instanceOwner = new nsPluginInstanceOwner();
   if (!instanceOwner) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -952,68 +957,10 @@ nsPluginHost::InstantiateEmbeddedPluginInstance(const char *aMimeType, nsIURI* a
     return NS_ERROR_FAILURE;
   }
 
-  // Security checks. Can't do security checks without a URI - hopefully the plugin
-  // will take care of that.
-  if (aURL) {
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-                    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return rv; // Better fail if we can't do security checks
-
-    nsCOMPtr<nsIDocument> doc;
-    instanceOwner->GetDocument(getter_AddRefs(doc));
-    if (!doc)
-      return NS_ERROR_NULL_POINTER;
-
-    rv = secMan->CheckLoadURIWithPrincipal(doc->NodePrincipal(), aURL, 0);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIDOMElement> elem;
-    pti->GetDOMElement(getter_AddRefs(elem));
-
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT; // default permit
-    nsresult rv =
-      NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
-                                aURL,
-                                doc->NodePrincipal(),
-                                elem,
-                                nsDependentCString(aMimeType ? aMimeType : ""),
-                                nullptr, //extra
-                                &shouldLoad);
-    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad))
-      return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
-  }
-
   bool isJava = false;
   nsPluginTag* pluginTag = FindPluginForType(aMimeType, true);
   if (pluginTag) {
     isJava = pluginTag->mIsJavaPlugin;
-  }
-
-  // Determine if the scheme of this URL is one we can handle internally because we should
-  // only open the initial stream if it's one that we can handle internally. Otherwise
-  // |NS_OpenURI| in |InstantiateEmbeddedPlugin| may open up a OS protocal registered helper app
-  // Also set bCanHandleInternally to true if aAllowOpeningStreams is
-  // false; we don't want to do any network traffic in that case.
-  bool bCanHandleInternally = false;
-  nsAutoCString scheme;
-  if (aURL && NS_SUCCEEDED(aURL->GetScheme(scheme))) {
-      nsAutoCString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
-      contractID += scheme;
-      ToLowerCase(contractID);
-      nsCOMPtr<nsIProtocolHandler> handler = do_GetService(contractID.get());
-      if (handler)
-        bCanHandleInternally = true;
-  }
-
-  // if we don't have a MIME type at this point, we still have one more chance by
-  // opening the stream and seeing if the server hands one back
-  if (!aMimeType) {
-    if (bCanHandleInternally && !aContent->SrcStreamLoading()) {
-      NewEmbeddedPluginStream(aURL, aContent, nullptr);
-    }
-    return NS_ERROR_FAILURE;
   }
 
   rv = SetUpPluginInstance(aMimeType, aURL, instanceOwner);
@@ -1032,15 +979,6 @@ nsPluginHost::InstantiateEmbeddedPluginInstance(const char *aMimeType, nsIURI* a
 
     // If we've got a native window, the let the plugin know about it.
     instanceOwner->CallSetWindow();
-
-    // create an initial stream with data
-    // don't make the stream if it's a java applet or we don't have SRC or DATA attribute
-    // no need to check for "data" as it would have been converted to "src"
-    const char *value;
-    bool havedata = NS_SUCCEEDED(pti->GetAttribute("SRC", &value));
-    if (havedata && !isJava && bCanHandleInternally && !aContent->SrcStreamLoading()) {
-      NewEmbeddedPluginStream(aURL, aContent, instance.get());
-    }
   }
 
   // At this point we consider instantiation to be successful. Do not return an error.
@@ -1197,35 +1135,12 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
   PR_LogFlush();
 #endif
-  
-  const char* mimetype = nullptr;
 
-  // if don't have a mimetype or no plugin can handle this mimetype
-  // check by file extension
   nsPluginTag* pluginTag = FindPluginForType(aMimeType, true);
-  if (!pluginTag) {
-    nsCOMPtr<nsIURL> url = do_QueryInterface(aURL);
-    if (!url) return NS_ERROR_FAILURE;
-
-    nsAutoCString fileExtension;
-    url->GetFileExtension(fileExtension);
-
-    // if we don't have an extension or no plugin for this extension,
-    // return failure as there is nothing more we can do
-    if (fileExtension.IsEmpty() ||
-        !(pluginTag = FindPluginEnabledForExtension(fileExtension.get(),
-                                                    mimetype))) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-  else {
-    mimetype = aMimeType;
-  }
-
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
 
   nsRefPtr<nsNPAPIPlugin> plugin;
-  GetPlugin(mimetype, getter_AddRefs(plugin));
+  GetPlugin(aMimeType, getter_AddRefs(plugin));
   if (!plugin) {
     return NS_ERROR_FAILURE;
   }
@@ -1244,7 +1159,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   // this should not addref the instance or owner
   // except in some cases not Java, see bug 140931
   // our COM pointer will free the peer
-  nsresult rv = instance->Initialize(plugin.get(), aOwner, mimetype);
+  nsresult rv = instance->Initialize(plugin.get(), aOwner, aMimeType);
   if (NS_FAILED(rv)) {
     mInstances.RemoveElement(instance.get());
     aOwner->SetInstance(nullptr);
@@ -3362,41 +3277,6 @@ nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURI,
   listener.forget(aStreamListener);
 
   return NS_OK;
-}
-
-nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
-                                               nsObjectLoadingContent *aContent,
-                                               nsNPAPIPluginInstance* aInstance)
-{
-  nsCOMPtr<nsIStreamListener> listener;
-  nsresult rv = NewEmbeddedPluginStreamListener(aURL, aContent, aInstance,
-                                                getter_AddRefs(listener));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    if (aContent) {
-      nsCOMPtr<nsIContent> aIContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(aContent));
-      doc = aIContent->GetDocument();
-      if (doc) {
-        loadGroup = doc->GetDocumentLoadGroup();
-      }
-    }
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), aURL, nullptr, loadGroup, nullptr);
-    if (NS_SUCCEEDED(rv)) {
-      // if this is http channel, set referrer, some servers are configured
-      // to reject requests without referrer set, see bug 157796
-      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-      if (httpChannel && doc)
-        httpChannel->SetReferrer(doc->GetDocumentURI());
-
-      rv = channel->AsyncOpen(listener, nullptr);
-      if (NS_SUCCEEDED(rv))
-        return NS_OK;
-    }
-  }
-
-  return rv;
 }
 
 nsresult nsPluginHost::NewFullPagePluginStreamListener(nsIURI* aURI,
