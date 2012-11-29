@@ -165,13 +165,13 @@ richlistitem[type="download"][state="1"]:hover {
 .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
-richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow {
+richlistitem[type="download"][state="1"]:hover .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
-richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:hover {
+richlistitem[type="download"][state="1"]:hover .downloadButton.downloadShow:hover {
   -moz-image-region: rect(16px, 48px, 32px, 32px);
 }
-richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:active {
+richlistitem[type="download"][state="1"]:hover .downloadButton.downloadShow:active {
   -moz-image-region: rect(16px, 64px, 32px, 48px);
 }
 

@@ -44,12 +44,6 @@ richlistitem[type="download"]:not([selected]) button {
 .download-state:not(          [state="4"]  /* Paused             */)
                                            .downloadResumeMenuItem,
 
-.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
-                              [state="5"], /* Starting (queued)  */
-                              [state="0"], /* Downloading        */
-                              [state="4"]) /* Paused             */)
-                                           .downloadCancel,
-
 .download-state:not(:-moz-any([state="2"], /* Failed             */
                               [state="4"]) /* Paused             */)
                                            .downloadCancelMenuItem,
@@ -61,13 +55,6 @@ richlistitem[type="download"]:not([selected]) button {
                               [state="8"], /* Blocked (dirty)    */
                               [state="9"]) /* Blocked (policy)   */)
                                            .downloadRemoveFromListMenuItem,
-
-.download-state:not(:-moz-any([state="2"], /* Failed             */
-                              [state="3"]) /* Canceled           */)
-                                           .downloadRetry,
-
-.download-state:not(          [state="1"]  /* Finished           */)
-                                           .downloadShow,
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="5"], /* Starting (queued)  */
@@ -81,7 +68,20 @@ richlistitem[type="download"]:not([selected]) button {
   display: none;
 }
 
-/*** Visibility of controls inside the downloads indicator ***/
+/*** Visibility of download buttons and indicator controls. ***/
+
+.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
+                              [state="5"], /* Starting (queued)  */
+                              [state="0"], /* Downloading        */
+                              [state="4"]) /* Paused             */)
+                                           .downloadCancel,
+
+.download-state:not(:-moz-any([state="2"], /* Failed             */
+                              [state="3"]) /* Canceled           */)
+                                           .downloadRetry,
+
+.download-state:not(          [state="1"]  /* Finished           */)
+                                           .downloadShow,
 
 #downloads-indicator:-moz-any([progress],
                               [counter],
