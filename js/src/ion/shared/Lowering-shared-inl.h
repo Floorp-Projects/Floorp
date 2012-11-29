@@ -39,6 +39,9 @@ LIRGeneratorShared::use(MDefinition *mir, LUse policy)
 template <size_t X, size_t Y> bool
 LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LDefinition &def)
 {
+    // Call instructions should use defineVMReturn.
+    JS_ASSERT(!lir->isCall());
+
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
@@ -87,8 +90,8 @@ LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDe
 }
 
 template <size_t Ops, size_t Temps> bool
-LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
-                              LDefinition::Policy policy)
+LIRGeneratorShared::defineBoxCommon(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
+                                    LDefinition::Policy policy)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
@@ -109,9 +112,21 @@ LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, M
 }
 
 template <size_t Ops, size_t Temps> bool
+LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
+                              LDefinition::Policy policy)
+{
+    // Call instructions should use defineVMReturn.
+    JS_ASSERT(!lir->isCall());
+
+    return defineBoxCommon(lir, mir, policy);
+}
+
+template <size_t Ops, size_t Temps> bool
 LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir)
 {
-    if (!defineBox(lir, mir, LDefinition::PRESET))
+    JS_ASSERT(lir->isCall());
+
+    if (!defineBoxCommon(lir, mir, LDefinition::PRESET))
         return false;
 
 #if defined(JS_NUNBOX32)
@@ -149,8 +164,12 @@ LIRGeneratorShared::defineVMReturn(LInstructionHelper<Defs, Ops, Temps> *lir, MD
         lir->setDef(0, LDefinition(vreg, LDefinition::BOX, LGeneralReg(JSReturnReg)));
 #endif
         break;
+      case MIRType_Double:
+        lir->setDef(0, LDefinition(vreg, LDefinition::DOUBLE, LFloatReg(ReturnFloatReg)));
+        break;
       default:
         LDefinition::Type type = LDefinition::TypeFrom(mir->type());
+        JS_ASSERT(type != LDefinition::DOUBLE);
         lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
         break;
     }
