@@ -187,6 +187,9 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                       presContext->AppUnitsToGfxUnits(area.height));
   r = CorrectForAspectRatio(r, videoSize);
   r.Round();
+  if (r.IsEmpty()) {
+    return nullptr;
+  }
   gfxIntSize scaleHint(static_cast<int32_t>(r.Width()),
                        static_cast<int32_t>(r.Height()));
   container->SetScaleHint(scaleHint);
