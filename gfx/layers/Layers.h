@@ -482,7 +482,7 @@ public:
   void LogSelf(const char* aPrefix="");
 
   void StartFrameTimeRecording();
-  nsTArray<float> StopFrameTimeRecording();
+  void StopFrameTimeRecording(nsTArray<float>& aTimes);
 
   void PostPresent();
 
