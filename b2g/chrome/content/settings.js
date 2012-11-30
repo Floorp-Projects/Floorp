@@ -128,14 +128,14 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
 
 // =================== RIL ====================
 (function RILSettingsToPrefs() {
-  let strPrefs = ['ril.data.mmsc', 'ril.data.mmsproxy'];
+  let strPrefs = ['ril.mms.mmsc', 'ril.mms.mmsproxy'];
   strPrefs.forEach(function(key) {
     SettingsListener.observe(key, "", function(value) {
       Services.prefs.setCharPref(key, value);
     });
   });
 
-  ['ril.data.mmsport'].forEach(function(key) {
+  ['ril.mms.mmsport'].forEach(function(key) {
     SettingsListener.observe(key, null, function(value) {
       if (value != null) {
         Services.prefs.setIntPref(key, value);
