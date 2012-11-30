@@ -881,6 +881,12 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 {
   PaintContext paintContext(aTarget, aLayer, aCallback, aCallbackData, aReadback);
 
+  // Don't attempt to paint layers with a singular transform, cairo will
+  // just throw an error.
+  if (aLayer->GetEffectiveTransform().IsSingular()) {
+    return;
+  }
+
   RenderTraceScope trace("BasicLayerManager::PaintLayer", "707070");
 
   const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();

@@ -59,6 +59,10 @@
 #include "nsIDOMCameraManager.h"
 #include "DOMCameraManager.h"
 
+#ifdef MOZ_AUDIO_CHANNEL_MANAGER
+#include "AudioChannelManager.h"
+#endif
+
 #include "nsIDOMGlobalPropertyInitializer.h"
 
 using namespace mozilla::dom::power;
@@ -131,6 +135,9 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
 #ifdef MOZ_TIME_MANAGER
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorTime)
+#endif
+#ifdef MOZ_AUDIO_CHANNEL_MANAGER
+  NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorAudioChannelManager)
 #endif
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
@@ -207,6 +214,12 @@ Navigator::Invalidate()
 #ifdef MOZ_SYS_MSG
   if (mMessagesManager) {
     mMessagesManager = nullptr;
+  }
+#endif
+
+#ifdef MOZ_AUDIO_CHANNEL_MANAGER
+  if (mAudioChannelManager) {
+    mAudioChannelManager = nullptr;
   }
 #endif
 
@@ -1433,6 +1446,27 @@ Navigator::CheckPermission(const char* type)
   permMgr->TestPermissionFromWindow(window, type, &permission);
   return permission == nsIPermissionManager::ALLOW_ACTION;
 }
+
+//*****************************************************************************
+//    Navigator::nsINavigatorAudioChannelManager
+//*****************************************************************************
+#ifdef MOZ_AUDIO_CHANNEL_MANAGER
+NS_IMETHODIMP
+Navigator::GetMozAudioChannelManager(nsIAudioChannelManager** aAudioChannelManager)
+{
+  *aAudioChannelManager = nullptr;
+
+  if (!mAudioChannelManager) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window, NS_OK);
+    mAudioChannelManager = new system::AudioChannelManager();
+    mAudioChannelManager->Init(window);
+  }
+
+  NS_ADDREF(*aAudioChannelManager = mAudioChannelManager);
+  return NS_OK;
+}
+#endif
 
 } // namespace dom
 } // namespace mozilla

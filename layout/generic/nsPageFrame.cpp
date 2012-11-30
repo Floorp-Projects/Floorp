@@ -542,6 +542,13 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       break;
     y += page->GetSize().height;
   }
+  
+  // Add the canvas background color to the bottom of the list. This
+  // happens after we've built the list so that AddCanvasBackgroundColorItem
+  // can monkey with the contents if necessary.
+  nsRect backgroundRect = nsRect(nsPoint(0, 0), child->GetSize());
+  rv = PresContext()->GetPresShell()->AddCanvasBackgroundColorItem(
+         *aBuilder, content, child, backgroundRect, NS_RGBA(0,0,0,0));
 
   float scale = PresContext()->GetPageScale();
   nsRect clipRect(nsPoint(0, 0), child->GetSize());
