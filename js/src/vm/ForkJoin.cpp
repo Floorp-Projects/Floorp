@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "forkjoin.h"
-#include "monitor.h"
+#include "ForkJoin.h"
+#include "Monitor.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "forkjoininlines.h"
+#include "ForkJoin-inl.h"
 
 #ifdef JS_THREADSAFE
 #  include "prthread.h"
