@@ -19,6 +19,7 @@ import android.util.AttributeSet;
 public class BackButton extends ShapedButton { 
     private Path mBorderPath;
     private Paint mBorderPaint;
+    private Paint mBorderPrivatePaint;
 
     public BackButton(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -28,6 +29,8 @@ public class BackButton extends ShapedButton {
         mBorderPaint.setAntiAlias(true);
         mBorderPaint.setColor(0xFF000000);
         mBorderPaint.setStyle(Paint.Style.STROKE);
+
+        mBorderPrivatePaint = new Paint(mBorderPaint);
 
         // Path is masked.
         mPath = new Path();
@@ -44,6 +47,7 @@ public class BackButton extends ShapedButton {
 
         float borderWidth = getContext().getResources().getDimension(R.dimen.nav_button_border_width);
         mBorderPaint.setStrokeWidth(borderWidth);
+        mBorderPrivatePaint.setStrokeWidth(borderWidth);
 
         mBorderPath.reset();
         mBorderPath.addCircle(width/2, height/2, (width/2) - borderWidth, Path.Direction.CW);
@@ -52,6 +56,11 @@ public class BackButton extends ShapedButton {
                                                   0, height, 
                                                   0xFF898D8F, 0xFFFEFEFE,
                                                   Shader.TileMode.CLAMP));
+
+        mBorderPrivatePaint.setShader(new LinearGradient(0, 0, 
+                                                         0, height, 
+                                                         0xCC06090D, 0xFF616569,
+                                                         Shader.TileMode.CLAMP));
     }
 
     @Override
@@ -59,7 +68,7 @@ public class BackButton extends ShapedButton {
         mCanvasDelegate.draw(canvas, mPath, getWidth(), getHeight());
 
         // Draw the border on top.
-        canvas.drawPath(mBorderPath, mBorderPaint);
+        canvas.drawPath(mBorderPath, isPrivateMode() ? mBorderPrivatePaint : mBorderPaint);
     }
 
     // The drawable is constructed as per @drawable/address_bar_nav_button.
@@ -73,6 +82,7 @@ public class BackButton extends ShapedButton {
         StateListDrawable stateList = new StateListDrawable();
 
         stateList.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
+        stateList.addState(new int[] { R.attr.state_private }, resources.getDrawable(R.drawable.address_bar_bg_private));
         stateList.addState(new int[] {}, drawable);
 
         setBackgroundDrawable(stateList);
