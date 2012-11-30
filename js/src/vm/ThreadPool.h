@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsthreadpool_h___
-#define jsthreadpool_h___
+#ifndef ThreadPool_h__
+#define ThreadPool_h__
 
 #include <stddef.h>
 #include "mozilla/StandardInteger.h"
@@ -32,43 +32,41 @@ typedef void (*TaskFun)(void *userdata, size_t workerId, uintptr_t stackLimit);
 
 class TaskExecutor
 {
-public:
+  public:
     virtual void executeFromWorker(size_t workerId, uintptr_t stackLimit) = 0;
 };
 
-/*
- * ThreadPool used for parallel JavaScript execution as well as
- * parallel compilation.  Unless you are building a new kind of
- * parallel service, it is very likely that you do not wish to
- * interact with the threadpool directly.  In particular, if you wish
- * to execute JavaScript in parallel, you probably want to look at
- * |js::ForkJoin| in |forkjoin.cpp|.
- *
- * The ThreadPool always maintains a fixed pool of worker threads.
- * You can query the number of worker threads via the method
- * |numWorkers()|.  Note that this number may be zero (generally if
- * threads are disabled, or when manually specified for benchmarking
- * purposes).
- *
- * You can either submit jobs in one of two ways.  The first is
- * |submitOne()|, which submits a job to be executed by one worker
- * thread (this will fail if there are no worker threads).  The job
- * will be enqueued and executed by some worker (the current scheduler
- * uses round-robin load balancing; something more sophisticated,
- * e.g. a central queue or work stealing, might be better).
- *
- * The second way to submit a job is using |submitAll()|---in this
- * case, the job will be executed by all worker threads.  This does
- * not fail if there are no worker threads, it simply does nothing.
- * Of course, each thread may have any number of previously submitted
- * things that they are already working on, and so they will finish
- * those before they get to this job.  Therefore it is possible to
- * have some worker threads pick up (and even finish) their piece of
- * the job before others have even started.
- */
+// ThreadPool used for parallel JavaScript execution as well as
+// parallel compilation.  Unless you are building a new kind of
+// parallel service, it is very likely that you do not wish to
+// interact with the threadpool directly.  In particular, if you wish
+// to execute JavaScript in parallel, you probably want to look at
+// |js::ForkJoin| in |forkjoin.cpp|.
+
+// The ThreadPool always maintains a fixed pool of worker threads.
+// You can query the number of worker threads via the method
+// |numWorkers()|.  Note that this number may be zero (generally if
+// threads are disabled, or when manually specified for benchmarking
+// purposes).
+
+// You can either submit jobs in one of two ways.  The first is
+// |submitOne()|, which submits a job to be executed by one worker
+// thread (this will fail if there are no worker threads).  The job
+// will be enqueued and executed by some worker (the current scheduler
+// uses round-robin load balancing; something more sophisticated,
+// e.g. a central queue or work stealing, might be better).
+
+// The second way to submit a job is using |submitAll()|---in this
+// case, the job will be executed by all worker threads.  This does
+// not fail if there are no worker threads, it simply does nothing.
+// Of course, each thread may have any number of previously submitted
+// things that they are already working on, and so they will finish
+// those before they get to this job.  Therefore it is possible to
+// have some worker threads pick up (and even finish) their piece of
+// the job before others have even started.
 class ThreadPool
 {
-private:
+  private:
     friend class ThreadPoolWorker;
 
     // Initialized at startup only:
@@ -80,7 +78,7 @@ private:
 
     void terminateWorkers();
 
-public:
+  public:
     ThreadPool(JSRuntime *rt);
     ~ThreadPool();
 
@@ -99,8 +97,6 @@ public:
     bool terminate();
 };
 
-}
+} // namespace js
 
-
-
-#endif
+#endif // ThreadPool_h__
