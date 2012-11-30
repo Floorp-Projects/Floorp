@@ -722,6 +722,7 @@ var WebappsHelper = {
       return;
 
     let installer = this._installers[detail.id];
+    delete this._installers[detail.id];
     switch (detail.type) {
       case "webapps-install-granted":
         DOMApplicationRegistry.confirmInstall(installer);
