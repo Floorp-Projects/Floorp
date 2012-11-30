@@ -226,7 +226,8 @@ TelemetryPing.prototype = {
    * When reflecting a histogram into JS, Telemetry hands us an object
    * with the following properties:
    * 
-   * - min, max, histogram_type, sum: simple integers;
+   * - min, max, histogram_type, sum, sum_squares_{lo,hi}: simple integers;
+   * - log_sum, log_sum_squares: doubles;
    * - counts: array of counts for histogram buckets;
    * - ranges: array of calculated bucket sizes.
    * 
@@ -236,7 +237,10 @@ TelemetryPing.prototype = {
    *
    * Returns an object:
    * { range: [min, max], bucket_count: <number of buckets>,
-   *   histogram_type: <histogram_type>, sum: <sum>
+   *   histogram_type: <histogram_type>, sum: <sum>,
+   *   sum_squares_lo: <sum_squares_lo>,
+   *   sum_squares_hi: <sum_squares_hi>,
+   *   log_sum: <log_sum>, log_sum_squares: <log_sum_squares>,
    *   values: { bucket1: count1, bucket2: count2, ... } }
    */
   packHistogram: function packHistogram(hgram) {
@@ -247,7 +251,11 @@ TelemetryPing.prototype = {
       bucket_count: r.length,
       histogram_type: hgram.histogram_type,
       values: {},
-      sum: hgram.sum
+      sum: hgram.sum,
+      sum_squares_lo: hgram.sum_squares_lo,
+      sum_squares_hi: hgram.sum_squares_hi,
+      log_sum: hgram.log_sum,
+      log_sum_squares: hgram.log_sum_squares
     };
     let first = true;
     let last = 0;
