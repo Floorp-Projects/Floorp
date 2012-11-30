@@ -7053,6 +7053,11 @@ let gPrivateBrowsingUI = {
       docElement.setAttribute("privatebrowsingmode", "temporary");
       gBrowser.updateTitlebar();
     }
+
+    if (gURLBar) {
+      // Disable switch to tab autocompletion for private windows
+      gURLBar.setAttribute("autocompletesearchparam", "");
+    }
   }
 };
 
@@ -7310,6 +7315,15 @@ let gPrivateBrowsingUI = {
 function switchToTabHavingURI(aURI, aOpenNew) {
   // This will switch to the tab in aWindow having aURI, if present.
   function switchIfURIInWindow(aWindow) {
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    // Only switch to the tab if neither the source and desination window are
+    // private.
+    if (PrivateBrowsingUtils.isWindowPrivate(window) ||
+        PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
+      return false;
+    }
+#endif
+
     let browsers = aWindow.gBrowser.browsers;
     for (let i = 0; i < browsers.length; i++) {
       let browser = browsers[i];
