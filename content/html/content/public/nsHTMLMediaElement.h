@@ -25,6 +25,7 @@
 #include "nsIDOMWakeLock.h"
 #include "AudioChannelCommon.h"
 #include "DecoderTraits.h"
+#include "MediaMetadataManager.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -119,8 +120,8 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  virtual void MetadataLoaded(uint32_t aChannels,
-                              uint32_t aRate,
+  virtual void MetadataLoaded(int aChannels,
+                              int aRate,
                               bool aHasAudio,
                               const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
