@@ -52,7 +52,7 @@ EmitEnterTypeMonitorIC(MacroAssembler &masm)
     masm.movl(Operand(BaselineStubReg, (int32_t) ICMonitoredStub::offsetOfFirstMonitorStub()),
               BaselineStubReg);
 
-    // Load stubcode pointer from BaselineStubEntry into BaselineTailCallReg.
+    // Load stubcode pointer from BaselineStubReg into BaselineTailCallReg.
     masm.movl(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
               BaselineTailCallReg);
 
@@ -150,6 +150,90 @@ EmitLeaveStubFrame(MacroAssembler &masm)
     // Push return address so that the stack matches the state before
     // entering the stub frame.
     masm.push(BaselineTailCallReg);
+}
+
+inline void
+EmitStowICValues(MacroAssembler &masm, int values)
+{
+    JS_ASSERT(values >= 0 && values <= 2);
+    switch(values) {
+      case 1:
+        // Stow R0
+        masm.pop(BaselineTailCallReg);
+        masm.pushValue(R0);
+        masm.push(BaselineTailCallReg);
+        break;
+      case 2:
+        // Stow R0 and R1
+        masm.pop(BaselineTailCallReg);
+        masm.pushValue(R0);
+        masm.pushValue(R1);
+        masm.push(BaselineTailCallReg);
+        break;
+    }
+}
+
+inline void
+EmitUnstowICValues(MacroAssembler &masm, int values)
+{
+    JS_ASSERT(values >= 0 && values <= 2);
+    switch(values) {
+      case 1:
+        // Unstow R0
+        masm.pop(BaselineTailCallReg);
+        masm.popValue(R0);
+        masm.push(BaselineTailCallReg);
+        break;
+      case 2:
+        // Untow R0 and R1
+        masm.pop(BaselineTailCallReg);
+        masm.popValue(R1);
+        masm.popValue(R0);
+        masm.push(BaselineTailCallReg);
+        break;
+    }
+}
+
+inline void
+EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code)
+{
+    // R0 contains the value that needs to be typechecked.
+
+    // Save the current BaselineStubReg to stack
+    masm.push(BaselineStubReg);
+
+    // This is expected to be called from within an IC, when BaselineStubReg
+    // is properly initialized to point to the stub.
+    masm.movl(Operand(BaselineStubReg, (int32_t) ICUpdatedStub::offsetOfFirstUpdateStub()),
+              BaselineStubReg);
+
+    // Load stubcode pointer from BaselineStubReg into BaselineTailCallReg.
+    masm.movl(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
+              BaselineTailCallReg);
+
+    // Call the stubcode.
+    masm.call(BaselineTailCallReg);
+
+    // Restore the old stub reg.
+    masm.pop(BaselineStubReg);
+
+    // The update IC will store 0 or 1 in R1.scratchReg() reflecting if the
+    // value in R0 type-checked properly or not.
+    Label success;
+    masm.cmp32(R1.scratchReg(), Imm32(1));
+    masm.j(Assembler::Equal, &success);
+
+    // If the IC failed, then call the update fallback function.
+    EmitEnterStubFrame(masm, R1.scratchReg());
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    EmitCallVM(code, masm);
+    EmitLeaveStubFrame(masm);
+
+    // Success at end.
+    masm.bind(&success);
 }
 
 inline void

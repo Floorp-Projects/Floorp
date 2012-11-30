@@ -270,6 +270,11 @@ TraceStub(JSTracer *trc, ICStub *stub)
         MarkObject(trc, &callStub->callee(), "baseline-callstub-callee");
         break;
       }
+      case ICStub::SetElem_Dense: {
+        ICSetElem_Dense *setElemStub = stub->toSetElem_Dense();
+        MarkTypeObject(trc, &setElemStub->type(), "baseline-setelem-dense-stub-type");
+        break;
+      }
       default:
         break;
     }
