@@ -598,48 +598,13 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             Layer rootLayer = mView.getLayerClient().getRoot();
             if ((rootLayer != null) &&
                 (mProfileRender || PanningPerfAPI.isRecordingCheckerboard())) {
-                // Find out how much of the viewport area is valid
-                Rect viewport = RectUtils.round(mPageContext.viewport);
-                Region validRegion = rootLayer.getValidRegion(mPageContext);
-
-                /* restrict the viewport to page bounds so we don't
-                 * count overscroll as checkerboard */
-                if (!viewport.intersect(mAbsolutePageRect)) {
-                    /* if the rectangles don't intersect
-                       intersect() doesn't change viewport
-                       so we set it to empty by hand */
-                    viewport.setEmpty();
-                }
-                validRegion.op(viewport, Region.Op.INTERSECT);
-
-                // Check if we have total checkerboarding (there's visible
-                // page area and the valid region doesn't intersect with the
-                // viewport).
-                int screenArea = viewport.width() * viewport.height();
-                float checkerboard = (screenArea > 0 &&
-                  validRegion.quickReject(viewport)) ? 1.0f : 0.0f;
-
-                if (screenArea > 0 && checkerboard < 1.0f) {
-                    validRegion.op(viewport, Region.Op.REVERSE_DIFFERENCE);
-
-                    // XXX The assumption here is that a Region never has overlapping
-                    //     rects. This is true, as evidenced by reading the SkRegion
-                    //     source, but is not mentioned in the Android documentation,
-                    //     and so is liable to change.
-                    //     If it does change, this code will need to be reevaluated.
-                    Rect r = new Rect();
-                    int checkerboardArea = 0;
-                    for (RegionIterator i = new RegionIterator(validRegion); i.next(r);) {
-                        checkerboardArea += r.width() * r.height();
-                    }
-
-                    checkerboard = checkerboardArea / (float)screenArea;
-
-                    // Add any incomplete rendering in the screen area
-                    checkerboard += (1.0 - checkerboard) * (1.0 - GeckoAppShell.computeRenderIntegrity());
-                }
+                // Calculate the incompletely rendered area of the page
+                float checkerboard =  1.0f - GeckoAppShell.computeRenderIntegrity();
 
                 PanningPerfAPI.recordCheckerboard(checkerboard);
+                if (checkerboard < 0.0f || checkerboard > 1.0f) {
+                    Log.e(LOGTAG, "Checkerboard value out of bounds: " + checkerboard);
+                }
 
                 mCompleteFramesRendered += 1.0f - checkerboard;
                 mFramesRendered ++;

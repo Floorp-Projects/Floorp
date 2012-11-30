@@ -928,7 +928,10 @@ class IDLType(IDLObject):
         'uint64',
         # Additional primitive types
         'bool',
+        'unrestricted_float',
         'float',
+        'unrestricted_double',
+        # "double" last primitive type to match IDLBuiltinType
         'double',
         # Other types
         'any',
@@ -1027,6 +1030,16 @@ class IDLType(IDLObject):
     def isComplete(self):
         return True
 
+    def includesRestrictedFloat(self):
+        return False
+
+    def isFloat(self):
+        return False
+
+    def isUnrestricted(self):
+        # Should only call this on float types
+        assert self.isFloat()
+
     def tag(self):
         assert False # Override me!
 
@@ -1110,6 +1123,12 @@ class IDLNullableType(IDLType):
 
     def isFloat(self):
         return self.inner.isFloat()
+
+    def isUnrestricted(self):
+        return self.inner.isUnrestricted()
+
+    def includesRestrictedFloat(self):
+        return self.inner.includesRestrictedFloat()
 
     def isInteger(self):
         return self.inner.isInteger()
@@ -1237,6 +1256,9 @@ class IDLSequenceType(IDLType):
     def isEnum(self):
         return False
 
+    def includesRestrictedFloat(self):
+        return self.inner.includesRestrictedFloat()
+
     def tag(self):
         # XXXkhuey this is probably wrong.
         return self.inner.tag()
@@ -1280,6 +1302,9 @@ class IDLUnionType(IDLType):
 
     def isUnion(self):
         return True
+
+    def includesRestrictedFloat(self):
+        return any(t.includesRestrictedFloat() for t in self.memberTypes)
 
     def tag(self):
         return IDLType.Tags.union
@@ -1632,7 +1657,10 @@ class IDLBuiltinType(IDLType):
         'unsigned_long_long',
         # Additional primitive types
         'boolean',
+        'unrestricted_float',
         'float',
+        'unrestricted_double',
+        # IMPORTANT: "double" must be the last primitive type listed
         'double',
         # Other types
         'any',
@@ -1664,7 +1692,9 @@ class IDLBuiltinType(IDLType):
             Types.long_long: IDLType.Tags.int64,
             Types.unsigned_long_long: IDLType.Tags.uint64,
             Types.boolean: IDLType.Tags.bool,
+            Types.unrestricted_float: IDLType.Tags.unrestricted_float,
             Types.float: IDLType.Tags.float,
+            Types.unrestricted_double: IDLType.Tags.unrestricted_double,
             Types.double: IDLType.Tags.double,
             Types.any: IDLType.Tags.any,
             Types.domstring: IDLType.Tags.domstring,
@@ -1722,7 +1752,17 @@ class IDLBuiltinType(IDLType):
 
     def isFloat(self):
         return self._typeTag == IDLBuiltinType.Types.float or \
-               self._typeTag == IDLBuiltinType.Types.double
+               self._typeTag == IDLBuiltinType.Types.double or \
+               self._typeTag == IDLBuiltinType.Types.unrestricted_float or \
+               self._typeTag == IDLBuiltinType.Types.unrestricted_double
+
+    def isUnrestricted(self):
+        assert self.isFloat()
+        return self._typeTag == IDLBuiltinType.Types.unrestricted_float or \
+               self._typeTag == IDLBuiltinType.Types.unrestricted_double
+
+    def includesRestrictedFloat(self):
+        return self.isFloat() and not self.isUnrestricted()
 
     def tag(self):
         return IDLBuiltinType.TagLookup[self._typeTag]
@@ -1799,9 +1839,15 @@ BuiltinTypes = {
       IDLBuiltinType.Types.float:
           IDLBuiltinType(BuiltinLocation("<builtin type>"), "Float",
                          IDLBuiltinType.Types.float),
+      IDLBuiltinType.Types.unrestricted_float:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "UnrestrictedFloat",
+                         IDLBuiltinType.Types.unrestricted_float),
       IDLBuiltinType.Types.double:
           IDLBuiltinType(BuiltinLocation("<builtin type>"), "Double",
                          IDLBuiltinType.Types.double),
+      IDLBuiltinType.Types.unrestricted_double:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "UnrestrictedDouble",
+                         IDLBuiltinType.Types.unrestricted_double),
       IDLBuiltinType.Types.any:
           IDLBuiltinType(BuiltinLocation("<builtin type>"), "Any",
                          IDLBuiltinType.Types.any),
@@ -2097,6 +2143,9 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[Unforgeable] is only allowed on readonly "
                                   "attributes", [attr.location, self.location])
             self._unforgeable = True
+        elif identifier == "Constant" and not self.readonly:
+            raise WebIDLError("[Constant] only allowed on readonly attributes",
+                              [attr.location, self.location])
         elif identifier == "PutForwards":
             if not self.readonly:
                 raise WebIDLError("[PutForwards] is only allowed on readonly "
@@ -2115,6 +2164,14 @@ class IDLAttribute(IDLInterfaceMember):
             if self.getExtendedAttribute("PutForwards") is not None:
                 raise WebIDLError("[PutForwards] and [Replaceable] can't both "
                                   "appear on the same attribute",
+                                  [attr.location, self.location])
+        elif identifier == "LenientFloat":
+            if self.readonly:
+                raise WebIDLError("[LenientFloat] used on a readonly attribute",
+                                  [attr.location, self.location])
+            if not self.type.includesRestrictedFloat():
+                raise WebIDLError("[LenientFloat] used on an attribute with a "
+                                  "non-restricted-float type",
                                   [attr.location, self.location])
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
 
@@ -2222,6 +2279,7 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
                 argument.resolve(self)
 
         self._treatNonCallableAsNull = False
+        self._workerOnly = False
 
     def isCallback(self):
         return True
@@ -2262,11 +2320,16 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isNonCallbackInterface() or other.isDate())
 
+    def isWorkerOnly(self):
+        return self._workerOnly
+
     def addExtendedAttributes(self, attrs):
         unhandledAttrs = []
         for attr in attrs:
             if attr.identifier() == "TreatNonCallableAsNull":
                 self._treatNonCallableAsNull = True
+            elif attr.identifier() == "WorkerOnly":
+                self._workerOnly = True
             else:
                 unhandledAttrs.append(attr)
         if len(unhandledAttrs) != 0:
@@ -2587,9 +2650,24 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             raise WebIDLError("Methods must not be flagged as "
                               "[Unforgeable]",
                               [attr.location, self.location])
+        elif identifier == "Constant":
+            raise WebIDLError("Methods must not be flagged as "
+                              "[Constant]",
+                              [attr.location, self.location]);
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])
+        elif identifier == "LenientFloat":
+            # This is called before we've done overload resolution
+            assert len(self.signatures()) == 1
+            sig = self.signatures()[0]
+            if not sig[0].isVoid():
+                raise WebIDLError("[LenientFloat] used on a non-void method",
+                                  [attr.location, self.location])
+            if not any(arg.type.includesRestrictedFloat() for arg in sig[1]):
+                raise WebIDLError("[LenientFloat] used on an operation with no "
+                                  "restricted float type arguments",
+                                  [attr.location, self.location])
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
 
 class IDLImplementsStatement(IDLObject):
@@ -3783,11 +3861,23 @@ class Parser(Tokenizer):
         """
         p[0] = IDLBuiltinType.Types.float
 
+    def p_PrimitiveOrStringTypeUnrestictedFloat(self, p):
+        """
+            PrimitiveOrStringType : UNRESTRICTED FLOAT
+        """
+        p[0] = IDLBuiltinType.Types.unrestricted_float
+
     def p_PrimitiveOrStringTypeDouble(self, p):
         """
             PrimitiveOrStringType : DOUBLE
         """
         p[0] = IDLBuiltinType.Types.double
+
+    def p_PrimitiveOrStringTypeUnrestictedDouble(self, p):
+        """
+            PrimitiveOrStringType : UNRESTRICTED DOUBLE
+        """
+        p[0] = IDLBuiltinType.Types.unrestricted_double
 
     def p_PrimitiveOrStringTypeDOMString(self, p):
         """

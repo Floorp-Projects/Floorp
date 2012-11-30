@@ -34,7 +34,7 @@ nsresult RawReader::ResetDecode()
   return MediaDecoderReader::ResetDecode();
 }
 
-nsresult RawReader::ReadMetadata(nsVideoInfo* aInfo,
+nsresult RawReader::ReadMetadata(VideoInfo* aInfo,
                                    MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(),
@@ -69,7 +69,7 @@ nsresult RawReader::ReadMetadata(nsVideoInfo* aInfo,
   ScaleDisplayByAspectRatio(display, pixelAspectRatio);
   mPicture = nsIntRect(0, 0, mMetadata.frameWidth, mMetadata.frameHeight);
   nsIntSize frameSize(mMetadata.frameWidth, mMetadata.frameHeight);
-  if (!nsVideoInfo::ValidateVideoRegion(frameSize, mPicture, display)) {
+  if (!VideoInfo::ValidateVideoRegion(frameSize, mPicture, display)) {
     // Video track's frame sizes will overflow. Fail.
     return NS_ERROR_FAILURE;
   }

@@ -115,7 +115,7 @@ DASHReader::DecodeAudioData()
 }
 
 nsresult
-DASHReader::ReadMetadata(nsVideoInfo* aInfo,
+DASHReader::ReadMetadata(VideoInfo* aInfo,
                            MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -131,7 +131,7 @@ DASHReader::ReadMetadata(nsVideoInfo* aInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get metadata from child readers.
-  nsVideoInfo audioInfo, videoInfo;
+  VideoInfo audioInfo, videoInfo;
 
   if (mVideoReader) {
     rv = mVideoReader->ReadMetadata(&videoInfo, aTags);

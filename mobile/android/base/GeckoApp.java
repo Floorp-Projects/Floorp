@@ -226,7 +226,7 @@ abstract public class GeckoApp
         }
     }
 
-    void toggleChrome(final Boolean aShow) { }
+    void toggleChrome(final boolean aShow) { }
 
     void focusChrome() { }
 
@@ -1653,6 +1653,7 @@ abstract public class GeckoApp
         Tabs.registerOnTabsChangedListener(this);
 
         // If we are doing a restore, read the session data and send it to Gecko
+        String restoreMessage = null;
         if (mRestoreMode != RESTORE_NONE) {
             try {
                 String sessionString = getProfile().readSessionFile(false);
@@ -1702,13 +1703,15 @@ abstract public class GeckoApp
                 JSONObject restoreData = new JSONObject();
                 restoreData.put("restoringOOM", mRestoreMode == RESTORE_OOM);
                 restoreData.put("sessionString", sessionString);
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreData.toString()));
+                restoreMessage = restoreData.toString();
             } catch (Exception e) {
                 // If restore failed, do a normal startup
                 Log.e(LOGTAG, "An error occurred during restore", e);
                 mRestoreMode = RESTORE_NONE;
             }
         }
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreMessage));
 
         if (mRestoreMode == RESTORE_OOM) {
             // If we successfully did an OOM restore, we now have tab stubs

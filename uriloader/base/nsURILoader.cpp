@@ -193,7 +193,11 @@ nsresult nsDocumentOpenInfo::Prepare()
 NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
   LOG(("[0x%p] nsDocumentOpenInfo::OnStartRequest", this));
-  
+  MOZ_ASSERT(request);
+  if (!request) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsresult rv = NS_OK;
 
   //

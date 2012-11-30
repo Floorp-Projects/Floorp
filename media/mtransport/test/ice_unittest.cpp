@@ -97,7 +97,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   size_t sent() { return sent_; }
 
   // Start connecting to another peer
-  void Connect(IceTestPeer *remote, TrickleMode trickle_mode) {
+  void Connect(IceTestPeer *remote, TrickleMode trickle_mode, bool start = true) {
     nsresult res;
 
     test_utils->sts_target()->Dispatch(
@@ -128,11 +128,13 @@ class IceTestPeer : public sigslot::has_slots<> {
       }
     }
 
-    // Now start checks
-    test_utils->sts_target()->Dispatch(
+    if (start) {
+      // Now start checks
+      test_utils->sts_target()->Dispatch(
         WrapRunnableRet(ice_ctx_, &NrIceCtx::StartChecks, &res),
         NS_DISPATCH_SYNC);
-    ASSERT_TRUE(NS_SUCCEEDED(res));
+      ASSERT_TRUE(NS_SUCCEEDED(res));
+    }
 
     if (trickle_mode == TRICKLE_DEFERRED) {
       // If we are in trickle deferred mode, now trickle in the candidates
@@ -151,6 +153,20 @@ class IceTestPeer : public sigslot::has_slots<> {
         }
       }
     }
+  }
+
+  void Close() {
+    ice_ctx_->destroy_peer_ctx();
+  }
+
+  void StartChecks() {
+    nsresult res;
+
+    // Now start checks
+    test_utils->sts_target()->Dispatch(
+        WrapRunnableRet(ice_ctx_, &NrIceCtx::StartChecks, &res),
+        NS_DISPATCH_SYNC);
+    ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
   // Handle events
@@ -246,6 +262,22 @@ class IceTest : public ::testing::Test {
     ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(), 5000);
   }
 
+  void CloseP1() {
+    p1_->Close();
+  }
+
+  void ConnectThenDelete() {
+    p1_->Connect(p2_, TRICKLE_NONE, true);
+    p2_->Connect(p1_, TRICKLE_NONE, false);
+    test_utils->sts_target()->Dispatch(WrapRunnable(this, 
+                                                    &IceTest::CloseP1),
+                                       NS_DISPATCH_SYNC);
+    p2_->StartChecks();
+
+    // Wait to see if we crash
+    PR_Sleep(PR_MillisecondsToInterval(5000));
+  }
+
   void SendReceive() {
     //    p1_->Send(2);
     p1_->SendPacket(0, 1, reinterpret_cast<const unsigned char *>("TEST"), 4);
@@ -299,6 +331,12 @@ TEST_F(IceTest, TestSendReceive) {
   ASSERT_TRUE(Gather(true));
   Connect();
   SendReceive();
+}
+
+TEST_F(IceTest, TestConnectShutdownOneSide) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(true));
+  ConnectThenDelete();
 }
 
 

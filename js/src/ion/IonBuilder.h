@@ -423,7 +423,8 @@ class IonBuilder : public MIRGenerator
 
     inline bool TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types,
                                    HandleId id, JSFunction **funcp,
-                                   bool isGetter, bool *isDOM);
+                                   bool isGetter, bool *isDOM,
+                                   MDefinition **guardOut);
 
     bool annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
                                   types::StackTypeSet *objTypes, types::StackTypeSet *pushedTypes);

@@ -715,6 +715,8 @@ public:
 
   virtual bool IsLabelable() const;
 
+  static bool PrefEnabled();
+
 protected:
   /**
    * Add/remove this element to the documents name cache

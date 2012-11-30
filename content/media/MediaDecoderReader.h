@@ -21,9 +21,9 @@ namespace mozilla {
 class AbstractMediaDecoder;
 
 // Stores info relevant to presenting media frames.
-class nsVideoInfo {
+class VideoInfo {
 public:
-  nsVideoInfo()
+  VideoInfo()
     : mAudioRate(44100),
       mAudioChannels(2),
       mDisplay(0,0),
@@ -138,7 +138,7 @@ public:
   // indicate that memory couldn't be allocated to create the VideoData
   // object, or it may indicate some problem with the input data (e.g.
   // negative stride).
-  static VideoData* Create(nsVideoInfo& aInfo,
+  static VideoData* Create(VideoInfo& aInfo,
                            ImageContainer* aContainer,
                            int64_t aOffset,
                            int64_t aTime,
@@ -148,7 +148,7 @@ public:
                            int64_t aTimecode,
                            nsIntRect aPicture);
 
-  static VideoData* Create(nsVideoInfo& aInfo,
+  static VideoData* Create(VideoInfo& aInfo,
                            ImageContainer* aContainer,
                            int64_t aOffset,
                            int64_t aTime,
@@ -386,7 +386,7 @@ public:
   // the data required to present the media, and optionally fills *aTags
   // with tag metadata from the file.
   // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
+  virtual nsresult ReadMetadata(VideoInfo* aInfo,
                                 MetadataTags** aTags) = 0;
 
   // Stores the presentation time of the first frame we'd be able to play if
@@ -491,7 +491,7 @@ protected:
   AbstractMediaDecoder* mDecoder;
 
   // Stores presentation info required for playback.
-  nsVideoInfo mInfo;
+  VideoInfo mInfo;
 };
 
 } // namespace mozilla

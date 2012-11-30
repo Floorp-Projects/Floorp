@@ -4696,7 +4696,7 @@ nsImageRenderer::IsRasterImage()
 }
 
 already_AddRefed<mozilla::layers::ImageContainer>
-nsImageRenderer::GetContainer()
+nsImageRenderer::GetContainer(LayerManager* aManager)
 {
   if (mType != eStyleImageType_Image)
     return nullptr;
@@ -4704,8 +4704,9 @@ nsImageRenderer::GetContainer()
   nsresult rv = mImage->GetImageData()->GetImage(getter_AddRefs(img));
   if (NS_FAILED(rv))
     return nullptr;
+
   nsRefPtr<ImageContainer> container;
-  rv = img->GetImageContainer(getter_AddRefs(container));
+  rv = img->GetImageContainer(aManager, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, nullptr);
   return container.forget();
 }

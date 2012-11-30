@@ -388,13 +388,13 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 }
 
 already_AddRefed<ImageContainer>
-nsDisplayXULImage::GetContainer(nsDisplayListBuilder* aBuilder)
+nsDisplayXULImage::GetContainer(LayerManager* aManager, nsDisplayListBuilder* aBuilder)
 {
-  return static_cast<nsImageBoxFrame*>(mFrame)->GetContainer();
+  return static_cast<nsImageBoxFrame*>(mFrame)->GetContainer(aManager);
 }
 
 already_AddRefed<ImageContainer>
-nsImageBoxFrame::GetContainer()
+nsImageBoxFrame::GetContainer(LayerManager* aManager)
 {
   bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
   if (hasSubRect || !mImageRequest) {
@@ -408,7 +408,7 @@ nsImageBoxFrame::GetContainer()
   }
   
   nsRefPtr<ImageContainer> container;
-  nsresult rv = imgCon->GetImageContainer(getter_AddRefs(container));
+  nsresult rv = imgCon->GetImageContainer(aManager, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, nullptr);
   return container.forget();
 }

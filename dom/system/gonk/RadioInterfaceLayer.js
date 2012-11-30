@@ -473,6 +473,9 @@ RadioInterfaceLayer.prototype = {
     let message = event.data;
     debug("Received message from worker: " + JSON.stringify(message));
     switch (message.rilMessageType) {
+      case "callRing":
+        this.handleCallRing();
+        break;
       case "callStateChange":
         // This one will handle its own notifications.
         this.handleCallStateChange(message.call);
@@ -1138,6 +1141,16 @@ RadioInterfaceLayer.prototype = {
   },
 
   /**
+   * Handle an incoming call.
+   *
+   * Not much is known about this call at this point, but it's enough
+   * to start bringing up the Phone app already.
+   */
+  handleCallRing: function handleCallRing() {
+    gSystemMessenger.broadcastMessage("telephony-new-call", {});
+  },
+
+  /**
    * Handle call state changes by updating our current state and the audio
    * system.
    */
@@ -1145,10 +1158,8 @@ RadioInterfaceLayer.prototype = {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
 
-    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_INCOMING ||
-        call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
-      gSystemMessenger.broadcastMessage("telephony-new-call", {number: call.number,
-                                                               state: call.state});
+    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
+      gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
 
     if (call.isActive) {
@@ -1497,6 +1508,8 @@ RadioInterfaceLayer.prototype = {
                          oldIcc.mcc != message.mcc || 
                          oldIcc.mnc != message.mnc ||
                          oldIcc.spn != message.spn ||
+                         oldIcc.isDisplayNetworkNameRequired != message.isDisplayNetworkNameRequired ||
+                         oldIcc.isDisplaySpnRequired != message.isDisplaySpnRequired ||
                          oldIcc.msisdn != message.msisdn;
     if (!iccInfoChanged) {
       return;

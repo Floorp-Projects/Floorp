@@ -273,15 +273,6 @@ nsIFrame::MarkAsNotAbsoluteContainingBlock()
   Properties().Delete(AbsoluteContainingBlockProperty());
 }
 
-void
-nsIFrame::ClearDisplayItemCache()
-{
-  if (GetStateBits() & NS_FRAME_HAS_CACHED_BACKGROUND) {
-    Properties().Delete(CachedBackgroundImage());
-    RemoveStateBits(NS_FRAME_HAS_CACHED_BACKGROUND);
-  }
-}
-
 bool
 nsIFrame::CheckAndClearPaintedState()
 {
@@ -4875,6 +4866,10 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
     aFrame->Properties().Delete(nsIFrame::InvalidationRect());
     aFrame->RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
+  }
+  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_CACHED_BACKGROUND)) {
+    aFrame->Properties().Delete(nsIFrame::CachedBackgroundImage());
+    aFrame->RemoveStateBits(NS_FRAME_HAS_CACHED_BACKGROUND);
   }
 }
 

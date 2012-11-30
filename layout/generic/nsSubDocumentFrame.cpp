@@ -143,7 +143,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   }
   EnsureInnerView();
 
-  // Set the primary frame now so that DocumentViewerImpl::FindContainerView
+  // Set the primary frame now so that nsDocumentViewer::FindContainerView
   // called from within EndSwapDocShellsForViews below can find it if needed.
   aContent->SetPrimaryFrame(this);
 

@@ -23,7 +23,8 @@ STDMETHODIMP
 ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
                           ULONG FAR* aCountFetched)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aItems || !aCountFetched)
     return E_INVALIDARG;
 
@@ -46,16 +47,14 @@ __try {
 
   return countFetched < aCount ? S_FALSE : S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) { }
-
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ChildrenEnumVariant::Skip(ULONG aCount)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (mAnchorAcc->IsDefunct() || mAnchorAcc->GetChildAt(mCurIndex) != mCurAcc)
     return CO_E_OBJNOTCONNECTED;
 
@@ -64,16 +63,14 @@ __try {
 
   return mCurAcc ? S_OK : S_FALSE;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) { }
-
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ChildrenEnumVariant::Reset()
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (mAnchorAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -82,15 +79,14 @@ __try {
 
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ChildrenEnumVariant::Clone(IEnumVARIANT** aEnumVariant)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aEnumVariant)
     return E_INVALIDARG;
 
@@ -99,8 +95,5 @@ __try {
 
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) { }
-
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }

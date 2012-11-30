@@ -757,7 +757,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 win->mChildren[i]->mBounds.height = 0;
             }
         case AndroidGeckoEvent::SIZE_CHANGED: {
-            nsTArray<nsIntPoint> points = ae->Points();
+            const nsTArray<nsIntPoint>& points = ae->Points();
             NS_ASSERTION(points.Length() == 2, "Size changed does not have enough coordinates");
 
             int nw = points[0].x;
@@ -827,7 +827,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             win->UserActivity();
             if (!gTopLevelWindows.IsEmpty()) {
                 nsIntPoint pt(0,0);
-                nsTArray<nsIntPoint> points = ae->Points();
+                const nsTArray<nsIntPoint>& points = ae->Points();
                 if (points.Length() > 0) {
                     pt = points[0];
                 }
@@ -852,7 +852,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::NATIVE_GESTURE_EVENT: {
             nsIntPoint pt(0,0);
-            nsTArray<nsIntPoint> points = ae->Points();
+            const nsTArray<nsIntPoint>& points = ae->Points();
             if (points.Length() > 0) {
                 pt = points[0];
             }

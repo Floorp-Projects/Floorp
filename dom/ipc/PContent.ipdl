@@ -23,8 +23,9 @@ include DOMTypes;
 include URIParams;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
-include "mozilla/net/NeckoMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/layout/RenderFrameUtils.h";
+include "mozilla/net/NeckoMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
 
@@ -38,6 +39,7 @@ using IPC::Permission;
 using mozilla::null_t;
 using mozilla::void_t;
 using mozilla::dom::NativeThreadId;
+using mozilla::layout::ScrollingBehavior;
 using gfxIntSize;
 
 namespace mozilla {
@@ -182,12 +184,17 @@ struct VanillaFrameIPCTabContext
 // We need IPCTabContext (specifically, PopupIPCTabContext) to prevent a
 // privilege escalation attack by a compromised child process.  See the comment
 // on AllocPBrowser for details.
-union IPCTabContext
+union IPCTabAppBrowserContext
 {
   PopupIPCTabContext;
   AppFrameIPCTabContext;
   BrowserFrameIPCTabContext;
   VanillaFrameIPCTabContext;
+};
+
+struct IPCTabContext {
+  IPCTabAppBrowserContext appBrowserContext;
+  ScrollingBehavior scrollingBehavior;
 };
 
 union PrefValue {

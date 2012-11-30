@@ -54,6 +54,7 @@ class TabParent : public PBrowserParent
                 , public TabContext
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+    typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
 
 public:
     TabParent(const TabContext& aContext);

@@ -399,11 +399,13 @@ private:
 
   /**
    * Recursive helper method for use by ComputeRenderIntegrity. Subtracts
-   * any incomplete rendering on aLayer from aScreenRegion. aTransform is the
+   * any incomplete rendering on aLayer from aScreenRegion. Any low-precision
+   * rendering is included in aLowPrecisionScreenRegion. aTransform is the
    * accumulated transform of intermediate surfaces beneath aLayer.
    */
   static void ComputeRenderIntegrityInternal(Layer* aLayer,
                                              nsIntRegion& aScreenRegion,
+                                             nsIntRegion& aLowPrecisionScreenRegion,
                                              const gfx3DMatrix& aTransform);
 
   /* Thebes layer callbacks; valid at the end of a transaciton,

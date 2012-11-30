@@ -174,6 +174,22 @@ gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
     return stride;
 }
 
+size_t
+gfxImageSurface::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+    size_t n = gfxASurface::SizeOfExcludingThis(aMallocSizeOf);
+    if (mOwnsData) {
+        n += aMallocSizeOf(mData);
+    }
+    return n;
+}
+
+size_t
+gfxImageSurface::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
 // helper function for the CopyFrom methods
 static void
 CopyForStride(unsigned char* aDest, unsigned char* aSrc, const gfxIntSize& aSize, long aDestStride, long aSrcStride)

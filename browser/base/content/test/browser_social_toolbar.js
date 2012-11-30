@@ -59,7 +59,7 @@ var tests = {
       iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
       contentPanel: "about:blank",
       counter: 42,
-      label: "Test Ambient 1",
+      label: "Test Ambient 1 \u2046",
       menuURL: "https://example.com/testAmbient1"
     };
     let ambience2 = {
@@ -79,6 +79,10 @@ var tests = {
       menuURL: "https://example.com/testAmbient3"
     };
     Social.provider.setAmbientNotification(ambience);
+
+    // for Bug 813834.  Check preference whether stored data is correct.
+    is(JSON.parse(Services.prefs.getComplexValue("social.cached.ambientNotificationIcons", Ci.nsISupportsString).data).data.testIcon.label, "Test Ambient 1 \u2046", "label is stored into preference correctly");
+
     Social.provider.setAmbientNotification(ambience2);
     Social.provider.setAmbientNotification(ambience3);
 
@@ -107,7 +111,7 @@ var tests = {
         is(socialToggleMore.querySelectorAll("menuitem").length, 9, "The number of menuitems is minimum plus three ambient notification menuitems.");
         is(socialToggleMore.hidden, false, "Menu is visible when ambient notifications have label & menuURL");
         let menuitem = socialToggleMore.querySelector(".ambient-menuitem");
-        is(menuitem.getAttribute("label"), "Test Ambient 1", "Keyboard accessible ambient menuitem should have specified label");
+        is(menuitem.getAttribute("label"), "Test Ambient 1 \u2046", "Keyboard accessible ambient menuitem should have specified label");
         toolsPopup.hidePopup();
         next();
       }, false);
