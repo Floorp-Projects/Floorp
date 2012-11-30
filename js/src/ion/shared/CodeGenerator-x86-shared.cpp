@@ -508,6 +508,23 @@ CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
     return true;
 }
 
+class OutOfLineUndoALUOperation : public OutOfLineCodeBase<CodeGeneratorX86Shared>
+{
+    LInstruction *ins_;
+
+  public:
+    OutOfLineUndoALUOperation(LInstruction *ins)
+        : ins_(ins)
+    { }
+
+    virtual bool accept(CodeGeneratorX86Shared *codegen) {
+        return codegen->visitOutOfLineUndoALUOperation(this);
+    }
+    LInstruction *ins() const {
+        return ins_;
+    }
+};
+
 bool
 CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 {
@@ -516,8 +533,17 @@ CodeGeneratorX86Shared::visitAddI(LAddI *ins)
     else
         masm.addl(ToOperand(ins->rhs()), ToRegister(ins->lhs()));
 
-    if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
-        return false;
+    if (ins->snapshot()) {
+        if (ins->recoversInput()) {
+            OutOfLineUndoALUOperation *ool = new OutOfLineUndoALUOperation(ins);
+            if (!addOutOfLineCode(ool))
+                return false;
+            masm.j(Assembler::Overflow, ool->entry());
+        } else {
+            if (!bailoutIf(Assembler::Overflow, ins->snapshot()))
+                return false;
+        }
+    }
     return true;
 }
 
@@ -529,9 +555,52 @@ CodeGeneratorX86Shared::visitSubI(LSubI *ins)
     else
         masm.subl(ToOperand(ins->rhs()), ToRegister(ins->lhs()));
 
-    if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
-        return false;
+    if (ins->snapshot()) {
+        if (ins->recoversInput()) {
+            OutOfLineUndoALUOperation *ool = new OutOfLineUndoALUOperation(ins);
+            if (!addOutOfLineCode(ool))
+                return false;
+            masm.j(Assembler::Overflow, ool->entry());
+        } else {
+            if (!bailoutIf(Assembler::Overflow, ins->snapshot()))
+                return false;
+        }
+    }
     return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation *ool)
+{
+    LInstruction *ins = ool->ins();
+    Register reg = ToRegister(ins->getDef(0));
+
+    LAllocation *lhs = ins->getOperand(0);
+    LAllocation *rhs = ins->getOperand(1);
+
+    JS_ASSERT(reg == ToRegister(lhs));
+    JS_ASSERT_IF(rhs->isGeneralReg(), reg != ToRegister(rhs));
+
+    // Undo the effect of the ALU operation, which was performed on the output
+    // register and overflowed. Writing to the output register clobbered an
+    // input reg, and the original value of the input needs to be recovered
+    // to satisfy the constraint imposed by any RECOVERED_INPUT operands to
+    // the bailout snapshot.
+
+    if (rhs->isConstant()) {
+        Imm32 constant(ToInt32(rhs));
+        if (ins->isAddI())
+            masm.subl(constant, reg);
+        else
+            masm.addl(constant, reg);
+    } else {
+        if (ins->isAddI())
+            masm.subl(ToOperand(rhs), reg);
+        else
+            masm.addl(ToOperand(rhs), reg);
+    }
+
+    return bailout(ool->ins()->snapshot());
 }
 
 class MulNegativeZeroCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>

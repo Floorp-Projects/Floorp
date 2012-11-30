@@ -792,6 +792,38 @@ LIRGenerator::visitMathFunction(MMathFunction *ins)
     return defineReturn(lir, ins);
 }
 
+// Try to mark an add or sub instruction as able to recover its input when
+// bailing out.
+template <typename S, typename T>
+static void
+MaybeSetRecoversInput(S *mir, T *lir)
+{
+    JS_ASSERT(lir->mirRaw() == mir);
+    if (!mir->fallible())
+        return;
+
+    if (lir->output()->policy() != LDefinition::MUST_REUSE_INPUT)
+        return;
+
+    // The original operands to an add or sub can't be recovered if they both
+    // use the same register.
+    if (lir->lhs()->isUse() && lir->rhs()->isUse() &&
+        lir->lhs()->toUse()->virtualRegister() == lir->rhs()->toUse()->virtualRegister())
+    {
+        return;
+    }
+
+    // Add instructions that are on two different values can recover
+    // the input they clobbered via MUST_REUSE_INPUT. Thus, a copy
+    // of that input does not need to be kept alive in the snapshot
+    // for the instruction.
+
+    lir->setRecoversInput();
+
+    const LUse *input = lir->getOperand(lir->output()->getReusedInput())->toUse();
+    lir->snapshot()->rewriteRecoveredInput(*input);
+}
+
 bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
@@ -804,10 +836,15 @@ LIRGenerator::visitAdd(MAdd *ins)
         JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
         LAddI *lir = new LAddI;
+
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
 
-        return lowerForALU(lir, ins, lhs, rhs);
+        if (!lowerForALU(lir, ins, lhs, rhs))
+            return false;
+
+        MaybeSetRecoversInput(ins, lir);
+        return true;
     }
 
     if (ins->specialization() == MIRType_Double) {
@@ -828,11 +865,16 @@ LIRGenerator::visitSub(MSub *ins)
 
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
+
         LSubI *lir = new LSubI;
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
 
-        return lowerForALU(lir, ins, lhs, rhs);
+        if (!lowerForALU(lir, ins, lhs, rhs))
+            return false;
+
+        MaybeSetRecoversInput(ins, lir);
+        return true;
     }
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
