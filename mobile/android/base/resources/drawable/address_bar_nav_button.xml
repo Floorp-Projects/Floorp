@@ -5,7 +5,10 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- pressed state -->
     <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
-    <item android:drawable="@drawable/address_bar_bg"/>
+
+    <!-- normal mode -->
+    <item android:drawable="@drawable/address_bar_bg_normal"/>
 
 </selector>
