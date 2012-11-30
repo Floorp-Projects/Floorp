@@ -754,8 +754,8 @@ MarionetteDriverActor.prototype = {
       aRequest.newSandbox = true;
     }
     if (this.context == "chrome") {
-      if (aRequest.timeout) {
-        this.executeWithCallback(aRequest, aRequest.timeout);
+      if (aRequest.async) {
+        this.executeWithCallback(aRequest, aRequest.async);
       }
       else {
         this.execute(aRequest, true);
