@@ -4011,8 +4011,11 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
 static bool
 IsDeterministicGCReason(gcreason::Reason reason)
 {
-    if (reason > gcreason::DEBUG_GC && reason != gcreason::CC_FORCED)
+    if (reason > gcreason::DEBUG_GC &&
+        reason != gcreason::CC_FORCED && reason != gcreason::SHUTDOWN_CC)
+    {
         return false;
+    }
 
     if (reason == gcreason::MAYBEGC)
         return false;

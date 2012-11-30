@@ -134,6 +134,29 @@ void RemoveQuotedStringEscapes(char *src)
   *dst = 0;
 }
 
+// true is character is a hex digit
+bool IsHexDigit(char aChar)
+{
+  char c = aChar;
+
+  return (c >= 'a' && c <= 'f') ||
+         (c >= 'A' && c <= 'F') ||
+         (c >= '0' && c <= '9');
+}
+
+// validate that a C String containing %-escapes is syntactically valid
+bool IsValidPercentEscaped(const char *aValue, PRInt32 len)
+{
+  for (PRInt32 i = 0; i < len; i++) {
+    if (aValue[i] == '%') {
+      if (!IsHexDigit(aValue[i + 1]) || !IsHexDigit(aValue[i + 2])) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 // Support for continuations (RFC 2231, Section 3)
 
 // only a sane number supported
@@ -577,6 +600,10 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
         // non-empty value part
         if (rawValLength > 0) {
           if (!caseBResult && caseB) {
+            if (!IsValidPercentEscaped(rawValStart, rawValLength)) {
+              goto increment_str;
+            }
+
             // allocate buffer for the raw value
             char *tmpResult = (char *) nsMemory::Clone(rawValStart, rawValLength + 1);
             if (!tmpResult) {
@@ -742,16 +769,6 @@ bool IsRFC5987AttrChar(char aChar)
          (c == '!' || c == '#' || c == '$' || c == '&' ||
           c == '+' || c == '-' || c == '.' || c == '^' ||
           c == '_' || c == '`' || c == '|' || c == '~');
-}
-
-// true is character is a hex digit
-bool IsHexDigit(char aChar)
-{
-  char c = aChar;
-
-  return (c >= 'a' && c <= 'f') ||
-         (c >= 'A' && c <= 'F') ||
-         (c >= '0' && c <= '9');
 }
 
 // percent-decode a value

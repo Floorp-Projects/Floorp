@@ -4263,6 +4263,7 @@ ACCESSIBILITY=1
 MOZ_SYS_MSG=
 MOZ_TIME_MANAGER=
 MOZ_PAY=
+MOZ_AUDIO_CHANNEL_MANAGER=
 
 case "$target_os" in
     mingw*)
@@ -7450,6 +7451,14 @@ if test -n "$MOZ_PAY"; then
     AC_DEFINE(MOZ_PAY)
 fi
 AC_SUBST(MOZ_PAY)
+
+dnl ========================================================
+dnl = Enable Support for AudioChannelManager API
+dnl ========================================================
+if test -n "$MOZ_AUDIO_CHANNEL_MANAGER"; then
+    AC_DEFINE(MOZ_AUDIO_CHANNEL_MANAGER)
+fi
+AC_SUBST(MOZ_AUDIO_CHANNEL_MANAGER)
 
 dnl ========================================================
 dnl = Support for demangling undefined symbols

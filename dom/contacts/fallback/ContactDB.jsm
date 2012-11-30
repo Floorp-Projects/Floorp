@@ -15,9 +15,10 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
+Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORE_NAME = "contacts";
 
 this.ContactDB = function ContactDB(aGlobal) {
@@ -109,12 +110,14 @@ ContactDB.prototype = {
         // Upgrade existing email field in the DB.
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
-          if (cursor && cursor.value.properties.email) {
-            if (DEBUG) debug("upgrade email1: " + JSON.stringify(cursor.value));
-            cursor.value.properties.email =
-              cursor.value.properties.email.map(function(address) { return { address: address }; });
-            cursor.update(cursor.value);
-            if (DEBUG) debug("upgrade email2: " + JSON.stringify(cursor.value));
+          if (cursor) {
+            if (cursor.value.properties.email) {
+              if (DEBUG) debug("upgrade email1: " + JSON.stringify(cursor.value));
+              cursor.value.properties.email =
+                cursor.value.properties.email.map(function(address) { return { address: address }; });
+              cursor.update(cursor.value);
+              if (DEBUG) debug("upgrade email2: " + JSON.stringify(cursor.value));
+            }
             cursor.continue();
           }
         };
@@ -131,24 +134,61 @@ ContactDB.prototype = {
         // Upgrade existing impp field in the DB.
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
-          if (cursor && cursor.value.properties.impp) {
-            if (DEBUG) debug("upgrade impp1: " + JSON.stringify(cursor.value));
-            cursor.value.properties.impp =
-              cursor.value.properties.impp.map(function(value) { return { value: value }; });
-            cursor.update(cursor.value);
-            if (DEBUG) debug("upgrade impp2: " + JSON.stringify(cursor.value));
+          if (cursor) {
+            if (cursor.value.properties.impp) {
+              if (DEBUG) debug("upgrade impp1: " + JSON.stringify(cursor.value));
+              cursor.value.properties.impp =
+                cursor.value.properties.impp.map(function(value) { return { value: value }; });
+              cursor.update(cursor.value);
+              if (DEBUG) debug("upgrade impp2: " + JSON.stringify(cursor.value));
+            }
             cursor.continue();
           }
         };
         // Upgrade existing url field in the DB.
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
-          if (cursor && cursor.value.properties.url) {
-            if (DEBUG) debug("upgrade url1: " + JSON.stringify(cursor.value));
-            cursor.value.properties.url =
-              cursor.value.properties.url.map(function(value) { return { value: value }; });
-            cursor.update(cursor.value);
-            if (DEBUG) debug("upgrade impp2: " + JSON.stringify(cursor.value));
+          if (cursor) {
+            if (cursor.value.properties.url) {
+              if (DEBUG) debug("upgrade url1: " + JSON.stringify(cursor.value));
+              cursor.value.properties.url =
+                cursor.value.properties.url.map(function(value) { return { value: value }; });
+              cursor.update(cursor.value);
+              if (DEBUG) debug("upgrade impp2: " + JSON.stringify(cursor.value));
+            }
+            cursor.continue();
+          }
+        };
+      } else if (currVersion == 4) {
+        if (DEBUG) debug("Add international phone numbers upgrade");
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.properties.tel) {
+              if (DEBUG) debug("upgrade : " + JSON.stringify(cursor.value));
+              cursor.value.properties.tel.forEach(
+                function(duple) {
+                  let parsedNumber = PhoneNumberUtils.parse(duple.value.toString());
+                  if (parsedNumber) {
+                    debug("InternationalFormat: " + parsedNumber.internationalFormat);
+                    debug("InternationalNumber: " + parsedNumber.internationalNumber);
+                    debug("NationalNumber: " + parsedNumber.nationalNumber);
+                    debug("NationalFormat: " + parsedNumber.nationalFormat);
+                    if (duple.value.toString() !== parsedNumber.internationalNumber) {
+                      cursor.value.search.tel.push(parsedNumber.internationalNumber);
+                    }
+                  } else {
+                    dump("Warning: No international number found for " + duple.value + "\n");
+                  }
+                }
+              )
+              cursor.update(cursor.value);
+            }
+            if (DEBUG) debug("upgrade2 : " + JSON.stringify(cursor.value));
             cursor.continue();
           }
         };
@@ -213,17 +253,29 @@ ContactDB.prototype = {
               let number = aContact.properties[field][i].value;
               if (number) {
                 for (let i = 0; i < number.length; i++) {
-                  contact.search[field].push(number.substring(i, number.length));
+                  contact.search[field].push(number.substring(0, number.length - i));
                 }
                 // Store +1-234-567 as ["1234567", "234567"...]
                 let digits = number.match(/\d/g);
                 if (digits && number.length != digits.length) {
                   digits = digits.join('');
                   for(let i = 0; i < digits.length; i++) {
-                    contact.search[field].push(digits.substring(i, digits.length));
+                    contact.search[field].push(digits.substring(0, digits.length - i));
                   }
                 }
-              if (DEBUG) debug("lookup: " + JSON.stringify(contact.search[field]));
+                if (DEBUG) debug("lookup: " + JSON.stringify(contact.search[field]));
+                let parsedNumber = PhoneNumberUtils.parse(number.toString());
+                if (parsedNumber) {
+                  debug("InternationalFormat: " + parsedNumber.internationalFormat);
+                  debug("InternationalNumber: " + parsedNumber.internationalNumber);
+                  debug("NationalNumber: " + parsedNumber.nationalNumber);
+                  debug("NationalFormat: " + parsedNumber.nationalFormat);
+                  if (number.toString() !== parsedNumber.internationalNumber) {
+                    contact.search[field].push(parsedNumber.internationalNumber);
+                  }
+                } else {
+                  dump("Warning: No international number found for " + number + "\n");
+                }
               }
             } else if (field == "email") {
               let address = aContact.properties[field][i].value;
