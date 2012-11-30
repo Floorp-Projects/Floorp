@@ -347,9 +347,9 @@ INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Robocop for you'
 endif
 
 ifdef MOZ_OMX_PLUGIN
-OMX_PLUGIN_NAME = libomxplugin.so
+OMX_PLUGIN_NAMES = libomxplugin.so libomxplugingb.so libomxplugingb235.so
 else
-OMX_PLUGIN_NAME =
+OMX_PLUGIN_NAMES =
 endif
 
 PKG_SUFFIX      = .apk
@@ -359,7 +359,7 @@ INNER_MAKE_PACKAGE	= \
   cp $(GECKO_APP_AP_PATH)/gecko.ap_ $(_ABS_DIST) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     mkdir -p lib/$(ABI_DIR) && \
-    mv libmozglue.so $(MOZ_CHILD_PROCESS_NAME) $(OMX_PLUGIN_NAME) lib/$(ABI_DIR) && \
+    mv libmozglue.so $(MOZ_CHILD_PROCESS_NAME) $(OMX_PLUGIN_NAMES) lib/$(ABI_DIR) && \
     rm -f lib.id && \
     for SOMELIB in *.so ; \
     do \
@@ -383,10 +383,13 @@ INNER_UNMAKE_PACKAGE	= \
   $(UNZIP) $(UNPACKAGE) && \
   mv lib/$(ABI_DIR)/libmozglue.so . && \
   mv lib/$(ABI_DIR)/libomxplugin.so . && \
+  mv lib/$(ABI_DIR)/libomxplugingb.so . && \
+  mv lib/$(ABI_DIR)/libomxplugingb235.so . && \
   mv lib/$(ABI_DIR)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
   rm -rf lib/$(ABI_DIR) && \
   popd
 endif
+
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 PKG_SUFFIX	= .dmg
 PKG_DMG_FLAGS	=
