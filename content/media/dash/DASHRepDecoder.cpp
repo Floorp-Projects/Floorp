@@ -283,10 +283,10 @@ DASHRepDecoder::SetInfinite(bool aInfinite)
 }
 
 void
-DASHRepDecoder::SetSeekable(bool aSeekable)
+DASHRepDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  if (mMainDecoder) { mMainDecoder->SetSeekable(aSeekable); }
+  if (mMainDecoder) { mMainDecoder->SetMediaSeekable(aMediaSeekable); }
 }
 
 void

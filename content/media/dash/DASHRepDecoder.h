@@ -96,7 +96,7 @@ public:
   void SetInfinite(bool aInfinite);
 
   // Sets media stream as seekable. Called on main thread only.
-  void SetSeekable(bool aSeekable);
+  void SetMediaSeekable(bool aSeekable);
 
   // Fire progress events if needed according to the time and byte
   // constraints outlined in the specification. aTimer is true

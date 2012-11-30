@@ -196,7 +196,7 @@ public:
       mHasHadUpdate(false),
       mClosed(false),
       mDidNotifyDataEnded(false), mResourceID(0),
-      mIsSeekable(false), mCacheSuspended(false),
+      mIsTransportSeekable(false), mCacheSuspended(false),
       mChannelEnded(false),
       mChannelOffset(0), mStreamLength(-1),  
       mStreamOffset(0), mPlaybackBytesPerSecond(10000),
@@ -222,7 +222,7 @@ public:
   // change during the lifetime of the MediaCacheStream --- every time
   // we do an HTTP load the seekability may be different (and sometimes
   // is, in practice, due to the effects of caching proxies).
-  void SetSeekable(bool aIsSeekable);
+  void SetTransportSeekable(bool aIsTransportSeekable);
   // This must be called (and return) before the ChannelMediaResource
   // used to create this MediaCacheStream is deleted.
   void Close();
@@ -323,8 +323,8 @@ public:
   // because it doesn't know when the decoder was paused, buffering, etc.
   // Do not pass zero.
   void SetPlaybackRate(uint32_t aBytesPerSecond);
-  // Returns the last set value of SetSeekable.
-  bool IsSeekable();
+  // Returns the last set value of SetTransportSeekable.
+  bool IsTransportSeekable();
 
   // Returns true when all streams for this resource are suspended or their
   // channel has ended.
@@ -447,7 +447,7 @@ private:
   // underlying resource and should share data.
   int64_t mResourceID;
   // The last reported seekability state for the underlying channel
-  bool mIsSeekable;
+  bool mIsTransportSeekable;
   // True if the cache has suspended our channel because the cache is
   // full and the priority of the data that would be received is lower
   // than the priority of the data already in the cache
