@@ -68,8 +68,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private boolean mAnimateSiteSecurity;
     private GeckoImageButton mTabs;
     private int mTabsPaneWidth;
-    private ImageView mBack;
-    private ImageView mForward;
+    private ImageButton mBack;
+    private ImageButton mForward;
     public ImageButton mFavicon;
     public ImageButton mStop;
     public ImageButton mSiteSecurity;
