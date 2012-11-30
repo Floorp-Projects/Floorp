@@ -386,8 +386,7 @@ nsDiskCacheBlockFile::Write(int32_t offset, const void *buf, int32_t amount)
             mFileSize = clamped(mFileSize, minPreallocate, maxPreallocate);
         }
         mFileSize = NS_MIN(mFileSize, maxFileSize);
-        //  Appears to cause bug 617123?  Disabled for now.
-        //mozilla::fallocate(mFD, mFileSize);
+        mozilla::fallocate(mFD, mFileSize);
     }
     if (PR_Seek(mFD, offset, PR_SEEK_SET) != offset)
         return false;
