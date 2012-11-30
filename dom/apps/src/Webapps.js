@@ -570,54 +570,36 @@ WebappsApplication.prototype = {
         case "Webapps:PackageEvent":
           if (msg.manifestURL != this.manifestURL)
             return;
+
+          // Set app values according to parent process results.
+          let app = msg.app;
+          this.downloading = app.downloading;
+          this.downloadAvailable = app.downloadAvailable;
+          this.downloadSize = app.downloadSize || 0;
+          this.installState = app.installState;
+          this.progress = app.progress || msg.progress || 0;
+          this.readyToApplyDownload = app.readyToApplyDownload;
+          this.updateTime = app.updateTime;
+
           switch(msg.type) {
             case "error":
+            case "canceled":
               this._downloadError = msg.error;
-              this.downloading = msg.app.downloading;
-              this.installState = msg.app.installState;
               this._fireEvent("downloaderror", this._ondownloaderror);
               break;
             case "progress":
-              this.downloading = msg.app.downloading;
-              this.installState = msg.app.installState;
-              this.progress = msg.progress;
               this._fireEvent("downloadprogress", this._onprogress);
               break;
             case "installed":
-              let app = msg.app;
-              this.progress = app.progress || 0;
-              this.downloadAvailable = app.downloadAvailable;
-              this.downloading = app.downloading;
-              this.readyToApplyDownload = app.readyToApplyDownload;
-              this.downloadSize = app.downloadSize || 0;
-              this.installState = app.installState;
               this._manifest = msg.manifest;
               this._fireEvent("downloadsuccess", this._ondownloadsuccess);
               this._fireEvent("downloadapplied", this._ondownloadapplied);
               break;
-            case "canceled":
-              app = msg.app;
-              this.progress = app.progress || 0;
-              this.downloadAvailable = app.downloadAvailable;
-              this.downloading = app.downloading;
-              this.readyToApplyDownload = app.readyToApplyDownload;
-              this.downloadSize = app.downloadSize || 0;
-              this.installState = app.installState;
-              this._downloadError = msg.error;
-              this._fireEvent("downloaderror", this._ondownloaderror);
-              break;
             case "downloaded":
-              app = msg.app;
-              this.downloading = app.downloading;
-              this.downloadAvailable = app.downloadAvailable;
-              this.readyToApplyDownload = app.readyToApplyDownload;
-              this.updateTime = app.updateTime;
               this._manifest = msg.manifest;
               this._fireEvent("downloadsuccess", this._ondownloadsuccess);
               break;
             case "applied":
-              app = msg.app;
-              this.readyToApplyDownload = app.readyToApplyDownload;
               this._fireEvent("downloadapplied", this._ondownloadapplied);
               break;
           }
