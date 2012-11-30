@@ -27,6 +27,7 @@ _TEST_FILES = \
   test_SpecialPowersExtension.html \
   test_SpecialPowersExtension2.html \
   file_SpecialPowersFrame1.html \
+  test_bug816847.html \
   $(NULL)
 
 ifneq ($(OS_TARGET),Android)
