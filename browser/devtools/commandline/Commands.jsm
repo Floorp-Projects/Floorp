@@ -24,3 +24,4 @@ Cu.import("resource:///modules/devtools/CmdResize.jsm");
 Cu.import("resource:///modules/devtools/CmdRestart.jsm");
 Cu.import("resource:///modules/devtools/CmdScreenshot.jsm");
 Cu.import("resource:///modules/devtools/CmdTilt.jsm");
+Cu.import("resource:///modules/devtools/CmdScratchpad.jsm");

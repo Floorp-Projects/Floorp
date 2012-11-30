@@ -3,12 +3,16 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 
 function test() {
+  let inspector;
 
   waitForExplicitFinish();
 
   let doc;
 
   let keySequences = [
+    ["right", "html"],
+    ["down", "head"],
+    ["down", "body"],
     ["right", "body"],
     ["down", "node0"],
     ["right", "node0"],
@@ -68,34 +72,28 @@ function test() {
 
   content.location = "http://mochi.test:8888/browser/browser/devtools/markupview/test/browser_inspector_markup_navigation.html";
 
-  let markup = null;
-
   function setupTest() {
-    Services.obs.addObserver(runTests, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-    InspectorUI.toggleInspectorUI();
-  }
-
-  function runTests() {
-    Services.obs.removeObserver(runTests, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
-    InspectorUI.currentInspector.once("markuploaded", startNavigation);
-    InspectorUI.select(doc.body, true, true, true);
-    InspectorUI.toggleHTMLPanel();
+    var target = TargetFactory.forTab(gBrowser.selectedTab);
+    let toolbox = gDevTools.openToolboxForTab(target, "inspector");
+    toolbox.once("inspector-selected", function BIMNT_selected(id, aInspector) {
+      inspector = aInspector;
+      startNavigation();
+    });
   }
 
   function startNavigation() {
-    markup = InspectorUI.currentInspector.markup;
     nextStep(0);
   }
 
   function nextStep(cursor) {
     if (cursor >= keySequences.length) {
-      Services.obs.addObserver(finishUp, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
-      InspectorUI.closeInspectorUI();
+      finishUp();
       return;
     }
 
     let key = keySequences[cursor][0];
     let className = keySequences[cursor][1];
+    inspector.markup._frame.focus();
 
     switch(key) {
       case "right":
@@ -121,8 +119,9 @@ function test() {
         break;
     }
 
-    executeSoon(function() {
-      let node = markup.selected;
+    executeSoon(function BIMNT_newNode() {
+      let node = inspector.selection.node;
+
       if (className == "*comment*") {
         is(node.nodeType, Node.COMMENT_NODE, "[" + cursor + "] should be a comment after moving " + key);
       } else if (className == "*text*") {
@@ -132,13 +131,13 @@ function test() {
       } else {
         is(node.className, className, "[" + cursor + "] right node selected: " + className + " after moving " + key);
       }
+
       nextStep(cursor + 1);
     });
   }
 
   function finishUp() {
-    Services.obs.removeObserver(finishUp, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED);
-    doc = null;
+    doc = inspector = null;
     gBrowser.removeCurrentTab();
     finish();
   }

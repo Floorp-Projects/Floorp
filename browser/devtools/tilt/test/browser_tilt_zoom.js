@@ -19,16 +19,14 @@ function test() {
   waitForExplicitFinish();
 
   createTab(function() {
+    TiltUtils.setDocumentZoom(window, ZOOM);
+
     createTilt({
-      onInspectorOpen: function()
-      {
-        TiltUtils.setDocumentZoom(window, ZOOM);
-      },
       onTiltOpen: function(instance)
       {
         tiltOpened = true;
 
-        ok(isApprox(InspectorUI.highlighter.zoom, ZOOM),
+        ok(isApprox(instance.presenter._getPageZoom(), ZOOM),
           "The Highlighter zoom doesn't have the expected results.");
 
         ok(isApprox(instance.presenter.transforms.zoom, ZOOM),
@@ -75,7 +73,7 @@ function test() {
 
 
           Services.obs.addObserver(cleanup, DESTROYED, false);
-          InspectorUI.closeInspectorUI();
+          Tilt.destroy(Tilt.currentWindowId);
         });
       }
     }, false, function suddenDeath()
