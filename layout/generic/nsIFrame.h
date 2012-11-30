@@ -2676,8 +2676,6 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    */
   virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false);
 
-  void ClearDisplayItemCache();
-
   // BOX LAYOUT METHODS
   // These methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.

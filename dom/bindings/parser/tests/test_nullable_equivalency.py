@@ -39,28 +39,27 @@ def WebIDLTest(parser, harness):
           attribute DOMString? b;
         };
 
-        /* Not implemented. */
-        /*interface TestNullableEquivalency8 {
+        interface TestNullableEquivalency8 {
           attribute float  a;
           attribute float? b;
-        };*/
+        };
 
-        interface TestNullableEquivalency8 {
+        interface TestNullableEquivalency9 {
           attribute double  a;
           attribute double? b;
         };
 
-        interface TestNullableEquivalency9 {
+        interface TestNullableEquivalency10 {
           attribute object  a;
           attribute object? b;
         };
 
-        interface TestNullableEquivalency10 {
+        interface TestNullableEquivalency11 {
           attribute double[]  a;
           attribute double[]? b;
         };
 
-        interface TestNullableEquivalency11 {
+        interface TestNullableEquivalency12 {
           attribute TestNullableEquivalency9[]  a;
           attribute TestNullableEquivalency9[]? b;
         };

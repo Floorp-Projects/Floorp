@@ -241,12 +241,23 @@ class VirtualenvManager(object):
         program.extend(arguments)
 
         # We probably could call the contents of this file inside the context
-        # of # this interpreter using execfile() or similar. However, if global
+        # of this interpreter using execfile() or similar. However, if global
         # variables like sys.path are adjusted, this could cause all kinds of
         # havoc. While this may work, invoking a new process is safer.
-        result = subprocess.call(program, cwd=directory)
 
-        if result != 0:
+        # TODO Use check_output when we require Python 2.7.
+        fn = getattr(subprocess, 'check_output',
+                VirtualenvManager._check_output)
+
+        try:
+            output = fn(program, cwd=directory, stderr=subprocess.STDOUT)
+            print(output)
+        except subprocess.CalledProcessError as e:
+            if 'Python.h: No such file or directory' in e.output:
+                print('WARNING: Python.h not found. Install Python development headers.')
+            else:
+                print(e.output)
+
             raise Exception('Error installing package: %s' % directory)
 
     def build(self):
@@ -282,6 +293,21 @@ class VirtualenvManager(object):
         """
 
         execfile(self.activate_path, dict(__file__=self.activate_path))
+
+    # TODO Eliminate when we require Python 2.7.
+    @staticmethod
+    def _check_output(*args, **kwargs):
+        """Python 2.6 compatible implementation of subprocess.check_output."""
+        proc = subprocess.Popen(stdout=subprocess.PIPE, *args, **kwargs)
+        output, unused_err = proc.communicate()
+        retcode = proc.poll()
+        if retcode:
+            cmd = kwargs.get('args', args[0])
+            e = subprocess.CalledProcessError(retcode, cmd)
+            e.output = output
+            raise e
+
+        return output
 
 
 def verify_python_version(log_handle):

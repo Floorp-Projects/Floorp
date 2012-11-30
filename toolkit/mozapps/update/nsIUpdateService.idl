@@ -87,7 +87,7 @@ interface nsIUpdatePatch : nsISupports
  * that the front end and other application services can use to learn more
  * about what is going on.
  */
-[scriptable, uuid(b10bbf29-5a54-4e1e-aa64-c4e4e5819a52)]
+[scriptable, uuid(8f7185a7-056a-45a8-985c-1cb39cf7b7a8)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -182,6 +182,13 @@ interface nsIUpdate : nsISupports
    * present in the app.update.surveyURL preference.
    */
   attribute boolean showSurvey;
+  
+  /**
+   * Allows overriding the default amount of time in seconds before prompting the
+   * user to apply an update. If not specified, the value of
+   * app.update.promptWaitTime will be used.
+   */
+  attribute long long promptWaitTime;
 
   /**
    * Whether or not the update being downloaded is a complete replacement of

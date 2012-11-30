@@ -795,10 +795,10 @@ ifndef STAGE_SDK
 	@$(NSINSTALL) -D $(DIST)/xpt
 	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components && printf "interfaces $(MOZ_PKG_APPNAME).xpt\n" >$(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/interfaces.manifest) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/.  Continuing...
 else
-	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
+	@cd $(DIST)/bin && $(TAR) $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
 endif
 else
-	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
+	@cd $(DIST)/bin && $(TAR) $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
 	@echo "Linking XPT files..."
 	@rm -rf $(DIST)/xpt
 	@$(NSINSTALL) -D $(DIST)/xpt
@@ -898,17 +898,17 @@ ifeq (bundle,$(MOZ_FS_LAYOUT))
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 	$(NSINSTALL) -D $(DESTDIR)$(installdir)
-	(cd $(DIST)/$(MOZ_PKG_DIR) && tar --exclude=precomplete $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/$(MOZ_PKG_DIR) && $(TAR) --exclude=precomplete $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DESTDIR)$(installdir) && tar -xf -)
 	$(NSINSTALL) -D $(DESTDIR)$(bindir)
 	$(RM) -f $(DESTDIR)$(bindir)/$(MOZ_APP_NAME)
 	ln -s $(installdir)/$(MOZ_APP_NAME) $(DESTDIR)$(bindir)
 ifdef INSTALL_SDK # Here comes the hard part
 	$(NSINSTALL) -D $(DESTDIR)$(includedir)
-	(cd $(DIST)/include && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/include && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DESTDIR)$(includedir) && tar -xf -)
 	$(NSINSTALL) -D $(DESTDIR)$(idldir)
-	(cd $(DIST)/idl && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/idl && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DESTDIR)$(idldir) && tar -xf -)
 # SDK directory is the libs + a bunch of symlinks
 	$(NSINSTALL) -D $(DESTDIR)$(sdkdir)/sdk/lib
@@ -917,8 +917,8 @@ ifdef INSTALL_SDK # Here comes the hard part
 	  $(SYSINSTALL) $(IFLAGS1) $(DIST)/include/xpcom-config.h $(DESTDIR)$(sdkdir); \
 	fi
 	find $(DIST)/sdk -name "*.pyc" | xargs rm -f
-	(cd $(DIST)/sdk/lib && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DESTDIR)$(sdkdir)/sdk/lib && tar -xf -)
-	(cd $(DIST)/sdk/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DESTDIR)$(sdkdir)/sdk/bin && tar -xf -)
+	(cd $(DIST)/sdk/lib && $(TAR) $(TAR_CREATE_FLAGS) - .) | (cd $(DESTDIR)$(sdkdir)/sdk/lib && tar -xf -)
+	(cd $(DIST)/sdk/bin && $(TAR) $(TAR_CREATE_FLAGS) - .) | (cd $(DESTDIR)$(sdkdir)/sdk/bin && tar -xf -)
 	$(RM) -f $(DESTDIR)$(sdkdir)/lib $(DESTDIR)$(sdkdir)/bin $(DESTDIR)$(sdkdir)/include $(DESTDIR)$(sdkdir)/include $(DESTDIR)$(sdkdir)/sdk/idl $(DESTDIR)$(sdkdir)/idl
 	ln -s $(sdkdir)/sdk/lib $(DESTDIR)$(sdkdir)/lib
 	ln -s $(installdir) $(DESTDIR)$(sdkdir)/bin
@@ -931,24 +931,24 @@ make-sdk:
 	@echo "Packaging SDK..."
 	$(RM) -rf $(DIST)/$(MOZ_APP_NAME)-sdk
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/bin
-	(cd $(DIST)/sdk-stage && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/sdk-stage && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/bin && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/host/bin
-	(cd $(DIST)/host/bin && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/host/bin && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/host/bin && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/sdk
 	find $(DIST)/sdk -name "*.pyc" | xargs rm -f
-	(cd $(DIST)/sdk && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/sdk && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/sdk && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/include
-	(cd $(DIST)/include && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/include && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/include && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/idl
-	(cd $(DIST)/idl && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/idl && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/idl && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/lib
 # sdk/lib is the same as sdk/sdk/lib
-	(cd $(DIST)/sdk/lib && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/sdk/lib && $(TAR) $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/lib && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(SDK_PATH)
 	cd $(DIST) && $(MAKE_SDK)

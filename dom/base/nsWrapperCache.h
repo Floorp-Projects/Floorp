@@ -224,10 +224,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   nsContentUtils::TraceWrapper(tmp, aCallback, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
-  nsContentUtils::ReleaseWrapper(static_cast<nsISupports*>(p), tmp);
-
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER_NATIVE \
-  nsContentUtils::ReleaseWrapper(tmp, tmp);
+  nsContentUtils::ReleaseWrapper(p, tmp);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class) \
   NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)              \

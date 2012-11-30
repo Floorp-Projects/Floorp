@@ -61,6 +61,10 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/Preferences.h"
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#include "nsIPrivateBrowsingService.h"
+#endif
+
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
 #endif
@@ -904,6 +908,17 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     bool isPrivateBrowsingWindow =
       Preferences::GetBool("browser.privatebrowsing.autostart") ||
       !!(chromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW);
+
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    nsCOMPtr<nsIPrivateBrowsingService> pbs =
+      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    if (pbs) {
+      bool inPrivateBrowsing = false;
+      pbs->GetPrivateBrowsingEnabled(&inPrivateBrowsing);
+      isPrivateBrowsingWindow |= inPrivateBrowsing;
+    }
+#endif
+
     // Otherwise, propagate the privacy status of the parent window, if
     // available, to the child.
     if (!isPrivateBrowsingWindow) {

@@ -26,9 +26,22 @@ JS_STATIC_ASSERT(1 << defaultShift == sizeof(jsval));
 // MacroAssemblerARM is inheriting form Assembler defined in Assembler-arm.{h,cpp}
 class MacroAssemblerARM : public Assembler
 {
+  protected:
+    // On ARM, some instructions require a second scratch register. This register
+    // defaults to lr, since it's non-allocatable (as it can be clobbered by some
+    // instructions). Allow the baseline compiler to override this though, since
+    // baseline IC stubs rely on lr holding the return address.
+    Register secondScratchReg_;
+
   public:
     MacroAssemblerARM()
+      : secondScratchReg_(lr)
     { }
+
+    void setSecondScratchReg(Register reg) {
+        JS_ASSERT(reg != ScratchRegister);
+        secondScratchReg_ = reg;
+    }
 
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
@@ -460,9 +473,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void pushWithPadding(const Imm32 &imm, const Imm32 extraSpace) {
         Imm32 totSpace = Imm32(extraSpace.value + 4);
-        // need to use lr, since ma_dtr may need the scratch register to adjust the stack.
-        ma_mov(imm, lr);
-        ma_dtr(IsStore, sp, totSpace, lr, PreIndex);
+        // ma_dtr may need the scratch register to adjust the stack, so use the
+        // second scratch register.
+        ma_mov(imm, secondScratchReg_);
+        ma_dtr(IsStore, sp, totSpace, secondScratchReg_, PreIndex);
     }
 
     void pop(const Register &reg) {
@@ -708,34 +722,23 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     template <typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel *label) {
-        // if (compare(*addr, ptr) == cond) goto label
-        // with only one temp reg, this is downright PAINFUL.
-        // HAXHAXHAXHAXHAX I've reserved lr for private use until I figure out how
-        // to teach the register allocator that it is more volatile than most.
-        // In the end, this will require us to take an extra temp register and pass it in
-        // (or spend 4 instructions making the comparison :()
-        // since I wish to get this tested, I'm using a register that should not be used.
-        // when everything breaks, this is probably the cause
-        // See also branchPtr.
-        ma_ldr(addr, lr);
-        ma_cmp(lr, ptr);
+        ma_ldr(addr, secondScratchReg_);
+        ma_cmp(secondScratchReg_, ptr);
         return jumpWithPatch(label, cond);
     }
     void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
-        // See the comment in branchPtrWithPatch.
-        ma_ldr(addr, lr);
-        ma_cmp(lr, ptr);
+        ma_ldr(addr, secondScratchReg_);
+        ma_cmp(secondScratchReg_, ptr);
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, Address addr, ImmWord ptr, Label *label) {
-        // See the comment in branchPtrWithPatch.
-        ma_ldr(addr, lr);
-        ma_cmp(lr, ptr);
+        ma_ldr(addr, secondScratchReg_);
+        ma_cmp(secondScratchReg_, ptr);
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, const AbsoluteAddress &addr, const Register &ptr, Label *label) {
-        loadPtr(addr, lr); // ma_cmp will use the scratch register.
-        ma_cmp(lr, ptr);
+        loadPtr(addr, secondScratchReg_); // ma_cmp will use the scratch register.
+        ma_cmp(secondScratchReg_, ptr);
         ma_b(label, cond);
     }
 
@@ -761,8 +764,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         storeValue(val, Operand(dest));
     }
     void storeValue(JSValueType type, Register reg, Address dest) {
-        ma_mov(ImmTag(JSVAL_TYPE_TO_TAG(type)), lr);
-        ma_str(lr, Address(dest.base, dest.offset + 4));
+        ma_mov(ImmTag(JSVAL_TYPE_TO_TAG(type)), secondScratchReg_);
+        ma_str(secondScratchReg_, Address(dest.base, dest.offset + 4));
         ma_str(reg, dest);
     }
     void storeValue(JSValueType type, Register reg, BaseIndex dest) {
@@ -778,13 +781,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void storeValue(const Value &val, Address dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
-        ma_mov(Imm32(jv.s.tag), lr);
-        ma_str(lr, Address(dest.base, dest.offset + 4));
+        ma_mov(Imm32(jv.s.tag), secondScratchReg_);
+        ma_str(secondScratchReg_, Address(dest.base, dest.offset + 4));
         if (val.isMarkable())
-            ma_mov(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())), lr);
+            ma_mov(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())), secondScratchReg_);
         else
-            ma_mov(Imm32(jv.s.payload.i32), lr);
-        ma_str(lr, dest);
+            ma_mov(Imm32(jv.s.payload.i32), secondScratchReg_);
+        ma_str(secondScratchReg_, dest);
     }
     void storeValue(const Value &val, BaseIndex dest) {
         // Harder cases not handled yet.

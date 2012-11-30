@@ -179,6 +179,13 @@ protected:
   uint64_t mTapStartTime;
 
   /**
+   * Stores the time the last tap ends (finger leaves the screen). This is used
+   * when mDoubleTapTimeoutTask cannot be scheduled in time and consecutive
+   * taps are falsely regarded as double taps.
+   */
+  uint64_t mLastTapEndTime;
+
+  /**
    * Cached copy of the last touch input, only valid when in the
    * "GESTURE_WAITING_DOUBLE_TAP" state. This is used to forward along to
    * AsyncPanZoomController if a single tap needs to be sent (since it is sent

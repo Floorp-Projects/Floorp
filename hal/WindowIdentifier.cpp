@@ -24,7 +24,7 @@ WindowIdentifier::WindowIdentifier(nsIDOMWindow *window)
   mID.AppendElement(GetWindowID());
 }
 
-WindowIdentifier::WindowIdentifier(const nsTArray<uint64_t> &id, nsIDOMWindow *window)
+WindowIdentifier::WindowIdentifier(const InfallibleTArray<uint64_t> &id, nsIDOMWindow *window)
   : mID(id)
   , mWindow(window)
   , mIsEmpty(false)

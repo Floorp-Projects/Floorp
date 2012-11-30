@@ -289,7 +289,7 @@ bool TheoraState::Init() {
   // maximum, or zero sized.
   nsIntSize frame(mInfo.frame_width, mInfo.frame_height);
   nsIntRect picture(mInfo.pic_x, mInfo.pic_y, mInfo.pic_width, mInfo.pic_height);
-  if (!nsVideoInfo::ValidateVideoRegion(frame, picture, frame)) {
+  if (!VideoInfo::ValidateVideoRegion(frame, picture, frame)) {
     return mActive = false;
   }
 

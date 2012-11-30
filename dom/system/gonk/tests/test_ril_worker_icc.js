@@ -468,3 +468,86 @@ add_test(function test_stk_proactive_command_event_list() {
 
   run_next_test();
 });
+
+add_test(function test_spn_display_condition() {
+  let RIL = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+      // Do nothing
+    },
+    postMessage: function fakePostMessage(message) {
+      // Do nothing
+    }
+  }).RIL;
+
+  // Test updateDisplayCondition runs before any of SIM file is ready.
+  do_check_eq(RIL.updateDisplayCondition(), true);
+  do_check_eq(RIL.iccInfo.isDisplayNetworkNameRequired, true);
+  do_check_eq(RIL.iccInfo.isDisplaySpnRequired, false);
+
+  // Test with value.
+  function testDisplayCondition(iccDisplayCondition,
+                                iccMcc, iccMnc, plmnMcc, plmnMnc,
+                                expectedIsDisplayNetworkNameRequired,
+                                expectedIsDisplaySPNRequired,
+                                callback) {
+    RIL.iccInfoPrivate.SPN = {
+      spnDisplayCondition: iccDisplayCondition
+    };
+    RIL.iccInfo = {
+      mcc: iccMcc,
+      mnc: iccMnc
+    };
+    RIL.operator = {
+      mcc: plmnMcc,
+      mnc: plmnMnc
+    };
+
+    do_check_eq(RIL.updateDisplayCondition(), true);
+    do_check_eq(RIL.iccInfo.isDisplayNetworkNameRequired, expectedIsDisplayNetworkNameRequired);
+    do_check_eq(RIL.iccInfo.isDisplaySpnRequired, expectedIsDisplaySPNRequired);
+    do_timeout(0, callback);
+  };
+
+  function testDisplayConditions(func, caseArray, oncomplete) {
+    (function do_call(index) {
+      let next = index < (caseArray.length - 1) ? do_call.bind(null, index + 1) : oncomplete;
+      caseArray[index].push(next);
+      func.apply(null, caseArray[index]);
+    })(0);
+  }
+
+  testDisplayConditions(testDisplayCondition, [
+    [1, 123, 456, 123, 456, true, false],
+    [0, 123, 456, 123, 456, false, false],
+    [2, 123, 456, 123, 457, false, false],
+    [0, 123, 456, 123, 457, false, true],
+  ], run_next_test);
+});
+/**
+ * Verify Proactive Command : More Time
+ */
+add_test(function test_stk_proactive_command_more_time() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let more_time_1 = [
+    0xD0,
+    0x09,
+    0x81, 0x03, 0x01, 0x02, 0x00,
+    0x82, 0x02, 0x81, 0x82];
+
+  for(let i = 0 ; i < more_time_1.length; i++) {
+    pduHelper.writeHexOctet(more_time_1[i]);
+  }
+
+  let berTlv = berHelper.decode(more_time_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_MORE_TIME);
+  do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  run_next_test();
+});

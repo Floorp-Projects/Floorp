@@ -285,17 +285,9 @@ XULTreeGridRowAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridRowAccessible: nsISupports and cycle collection implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XULTreeGridRowAccessible)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULTreeGridRowAccessible,
-                                                  XULTreeItemAccessibleBase)
-CycleCollectorTraverseCache(tmp->mAccessibleCache, &cb);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULTreeGridRowAccessible,
-                                                XULTreeItemAccessibleBase)
-ClearCache(tmp->mAccessibleCache);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(XULTreeGridRowAccessible,
+                                     XULTreeItemAccessibleBase,
+                                     mAccessibleCache)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeGridRowAccessible)
 NS_INTERFACE_MAP_END_INHERITING(XULTreeItemAccessibleBase)
@@ -469,24 +461,22 @@ XULTreeGridCellAccessible::
 {
   mParent = aRowAcc;
   mFlags |= eSharedNode;
+
+  NS_ASSERTION(mTreeView, "mTreeView is null");
+
+  int16_t type = -1;
+  mColumn->GetType(&type);
+  if (type == nsITreeColumn::TYPE_CHECKBOX)
+    mTreeView->GetCellValue(mRow, mColumn, mCachedTextEquiv);
+  else
+    mTreeView->GetCellText(mRow, mColumn, mCachedTextEquiv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridCellAccessible: nsISupports implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XULTreeGridCellAccessible)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULTreeGridCellAccessible,
-                                                  LeafAccessible)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTree)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mColumn)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULTreeGridCellAccessible,
-                                                LeafAccessible)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTree)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mColumn)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(XULTreeGridCellAccessible, LeafAccessible,
+                                     mTree, mColumn)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible)
   NS_INTERFACE_TABLE_INHERITED2(XULTreeGridCellAccessible,
@@ -703,24 +693,6 @@ XULTreeGridCellAccessible::Selected()
   bool selected = false;
   selection->IsSelected(mRow, &selected);
   return selected;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridCellAccessible: nsAccessNode implementation
-
-void
-XULTreeGridCellAccessible::Init()
-{
-  LeafAccessible::Init();
-
-  NS_ASSERTION(mTreeView, "mTreeView is null");
-
-  int16_t type;
-  mColumn->GetType(&type);
-  if (type == nsITreeColumn::TYPE_CHECKBOX)
-    mTreeView->GetCellValue(mRow, mColumn, mCachedTextEquiv);
-  else
-    mTreeView->GetCellText(mRow, mColumn, mCachedTextEquiv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

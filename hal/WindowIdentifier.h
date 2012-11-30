@@ -66,7 +66,7 @@ public:
    * This automatically grabs the window's ID and appends it to the
    * array.
    */
-  WindowIdentifier(const nsTArray<uint64_t>& id, nsIDOMWindow* window);
+  WindowIdentifier(const InfallibleTArray<uint64_t>& id, nsIDOMWindow* window);
 
   /**
    * Get the list of window and process IDs we contain.

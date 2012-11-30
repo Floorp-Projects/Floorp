@@ -10,6 +10,7 @@
 #include "nsIAppsService.h"
 
 using namespace mozilla::dom::ipc;
+using namespace mozilla::layout;
 
 namespace mozilla {
 namespace dom {
@@ -18,6 +19,7 @@ TabContext::TabContext()
   : mInitialized(false)
   , mOwnAppId(nsIScriptSecurityManager::NO_APP_ID)
   , mContainingAppId(nsIScriptSecurityManager::NO_APP_ID)
+  , mScrollingBehavior(DEFAULT_SCROLLING)
   , mIsBrowser(false)
 {
 }
@@ -25,9 +27,10 @@ TabContext::TabContext()
 TabContext::TabContext(const IPCTabContext& aParams)
   : mInitialized(true)
 {
-  switch(aParams.type()) {
-    case IPCTabContext::TPopupIPCTabContext: {
-      const PopupIPCTabContext &ipcContext = aParams.get_PopupIPCTabContext();
+  const IPCTabAppBrowserContext& appBrowser = aParams.appBrowserContext();
+  switch(appBrowser.type()) {
+    case IPCTabAppBrowserContext::TPopupIPCTabContext: {
+      const PopupIPCTabContext &ipcContext = appBrowser.get_PopupIPCTabContext();
 
       TabContext *context;
       if (ipcContext.openerParent()) {
@@ -64,25 +67,25 @@ TabContext::TabContext(const IPCTabContext& aParams)
       }
       break;
     }
-    case IPCTabContext::TAppFrameIPCTabContext: {
+    case IPCTabAppBrowserContext::TAppFrameIPCTabContext: {
       const AppFrameIPCTabContext &ipcContext =
-        aParams.get_AppFrameIPCTabContext();
+        appBrowser.get_AppFrameIPCTabContext();
 
       mIsBrowser = false;
       mOwnAppId = ipcContext.ownAppId();
       mContainingAppId = ipcContext.appFrameOwnerAppId();
       break;
     }
-    case IPCTabContext::TBrowserFrameIPCTabContext: {
+    case IPCTabAppBrowserContext::TBrowserFrameIPCTabContext: {
       const BrowserFrameIPCTabContext &ipcContext =
-        aParams.get_BrowserFrameIPCTabContext();
+        appBrowser.get_BrowserFrameIPCTabContext();
 
       mIsBrowser = true;
       mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
       mContainingAppId = ipcContext.browserFrameOwnerAppId();
       break;
     }
-    case IPCTabContext::TVanillaFrameIPCTabContext: {
+    case IPCTabAppBrowserContext::TVanillaFrameIPCTabContext: {
       mIsBrowser = false;
       mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
       mContainingAppId = nsIScriptSecurityManager::NO_APP_ID;
@@ -92,6 +95,8 @@ TabContext::TabContext(const IPCTabContext& aParams)
       MOZ_CRASH();
     }
   }
+
+  mScrollingBehavior = aParams.scrollingBehavior();
 }
 
 bool
@@ -214,11 +219,13 @@ TabContext::SetTabContext(const TabContext& aContext)
   mIsBrowser = aContext.mIsBrowser;
   mOwnAppId = aContext.mOwnAppId;
   mContainingAppId = aContext.mContainingAppId;
+  mScrollingBehavior = aContext.mScrollingBehavior;
   return true;
 }
 
 bool
-TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp, mozIApplication* aAppFrameOwnerApp)
+TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp, mozIApplication* aAppFrameOwnerApp,
+                                     ScrollingBehavior aRequestedBehavior)
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
@@ -240,11 +247,13 @@ TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp, mozIApplication* 
   mIsBrowser = false;
   mOwnAppId = ownAppId;
   mContainingAppId = containingAppId;
+  mScrollingBehavior = aRequestedBehavior;
   return true;
 }
 
 bool
-TabContext::SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp)
+TabContext::SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp,
+                                         ScrollingBehavior aRequestedBehavior)
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
@@ -258,6 +267,7 @@ TabContext::SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp)
   mIsBrowser = true;
   mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
   mContainingAppId = containingAppId;
+  mScrollingBehavior = aRequestedBehavior;
   return true;
 }
 
@@ -265,10 +275,12 @@ IPCTabContext
 TabContext::AsIPCTabContext() const
 {
   if (mIsBrowser) {
-    return BrowserFrameIPCTabContext(mContainingAppId);
+    return IPCTabContext(BrowserFrameIPCTabContext(mContainingAppId),
+                         mScrollingBehavior);
   }
 
-  return AppFrameIPCTabContext(mOwnAppId, mContainingAppId);
+  return IPCTabContext(AppFrameIPCTabContext(mOwnAppId, mContainingAppId),
+                       mScrollingBehavior);
 }
 
 already_AddRefed<mozIApplication>

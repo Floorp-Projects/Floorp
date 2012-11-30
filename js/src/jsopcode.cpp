@@ -6362,7 +6362,8 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
     if (!pcStack.init(cx, script, current))
         return false;
 
-    uint32_t formalStackIndex = pcStack.depth() - GET_ARGC(current) + formalIndex;
+    int formalStackIndex = pcStack.depth() - GET_ARGC(current) + formalIndex;
+    JS_ASSERT(formalStackIndex >= 0);
     if (formalStackIndex >= pcStack.depth())
         return true;
 

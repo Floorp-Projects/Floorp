@@ -26,7 +26,7 @@ const ContentPanning = {
       case 'click':
         evt.stopPropagation();
         evt.preventDefault();
-        
+
         let target = evt.target;
         let view = target.ownerDocument ? target.ownerDocument.defaultView
                                         : target;
@@ -125,8 +125,18 @@ const ContentPanning = {
   },
 
   getPannable: function cp_getPannable(node) {
-    if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML')
-      return [null, null];
+    let pannableNode = this._findPannable(node);
+    if (pannableNode) {
+      return [pannableNode, this._generateCallback(pannableNode)];
+    }
+
+    return [null, null];
+  },
+
+  _findPannable: function cp_findPannable(node) {
+    if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML') {
+      return null;
+    }
 
     let nodeContent = node.ownerDocument.defaultView;
     while (!(node instanceof Ci.nsIDOMHTMLBodyElement)) {
@@ -148,39 +158,63 @@ const ContentPanning = {
            node.scrollWidth > node.clientWidth ||
            ('scrollLeftMax' in node && node.scrollLeftMax > 0) ||
            ('scrollTopMax' in node && node.scrollTopMax > 0)));
-      if (isScroll || isAuto || isScrollableTextarea)
-        return [node, this._generateCallback(node)];
+      if (isScroll || isAuto || isScrollableTextarea) {
+        return node;
+      }
 
       node = node.parentNode;
     }
 
     if (ContentPanning._asyncPanZoomForViewportFrame &&
-        nodeContent === content)
-      // The parent context is asynchronously panning and zooming our
-      // root scrollable frame, so don't use our synchronous fallback.
-      return [null, null];
-
-    if (nodeContent.scrollMaxX || nodeContent.scrollMaxY) {
-      return [nodeContent, this._generateCallback(nodeContent)];
+        nodeContent === content) {
+        // The parent context is asynchronously panning and zooming our
+        // root scrollable frame, so don't use our synchronous fallback.
+        return null;
     }
 
-    return [null, null];
+    if (nodeContent.scrollMaxX || nodeContent.scrollMaxY) {
+      return nodeContent;
+    }
+
+    return null;
   },
 
   _generateCallback: function cp_generateCallback(content) {
-    function scroll(delta) {
-      if (content instanceof Ci.nsIDOMHTMLElement) {
-        let oldX = content.scrollLeft, oldY = content.scrollTop;
-        content.scrollLeft += delta.x;
-        content.scrollTop += delta.y;
-        let newX = content.scrollLeft, newY = content.scrollTop;
-        return (newX != oldX) || (newY != oldY);
+    let firstScroll = true;
+    let target;
+    let isScrolling = false;
+    let oldX, oldY, newX, newY;
+
+    function doScroll(node, delta) {
+      if (node instanceof Ci.nsIDOMHTMLElement) {
+        oldX = node.scrollLeft, oldY = node.scrollTop;
+        node.scrollLeft += delta.x;
+        node.scrollTop += delta.y;
+        newX = node.scrollLeft, newY = node.scrollTop;
+        return (newX != oldX || newY != oldY);
       } else {
-        let oldX = content.scrollX, oldY = content.scrollY;
-        content.scrollBy(delta.x, delta.y);
-        let newX = content.scrollX, newY = content.scrollY;
-        return (newX != oldX) || (newY != oldY);
+        oldX = node.scrollX, oldY = node.scrollY;
+        node.scrollBy(delta.x, delta.y);
+        newX = node.scrollX, newY = node.scrollY;
+        return (newX != oldX || newY != oldY);
       }
+    };
+
+    function scroll(delta) {
+      for (target = content; target;
+          target = ContentPanning._findPannable(target.parentNode)) {
+        isScrolling = doScroll(target, delta);
+        if (isScrolling || !firstScroll) {
+          break;
+        }
+      }
+      if (isScrolling) {
+        if (firstScroll) {
+          content = target; // set scrolling target to the first scrolling region
+        }
+        firstScroll = false; // lockdown the scrolling target after a success scrolling
+      }
+      return isScrolling;
     }
     return scroll;
   },
@@ -207,6 +241,9 @@ const ContentPanning = {
     this._viewport = new Rect(metrics.x, metrics.y,
                               metrics.viewport.width,
                               metrics.viewport.height);
+    this._cssCompositedRect = new Rect(metrics.x, metrics.y,
+                                       metrics.cssCompositedRect.width,
+                                       metrics.cssCompositedRect.height);
     this._cssPageRect = new Rect(metrics.cssPageRect.x,
                                  metrics.cssPageRect.y,
                                  metrics.cssPageRect.width,
@@ -249,7 +286,7 @@ const ContentPanning = {
 
       // if the rect is already taking up most of the visible area and is stretching the
       // width of the page, then we want to zoom out instead.
-      if (this._isRectZoomedIn(bRect, viewport)) {
+      if (this._isRectZoomedIn(bRect, this._cssCompositedRect)) {
         this._zoomOut();
         return;
       }
@@ -257,7 +294,7 @@ const ContentPanning = {
       rect.x = Math.round(bRect.x);
       rect.y = Math.round(bRect.y);
       rect.w = Math.round(bRect.width);
-      rect.h = Math.round(Math.min(bRect.width * viewport.height / viewport.height, bRect.height));
+      rect.h = Math.round(bRect.height);
 
       // if the block we're zooming to is really tall, and the user double-tapped
       // more than a screenful of height from the top of it, then adjust the y-coordinate
@@ -294,25 +331,17 @@ const ContentPanning = {
 
   _isRectZoomedIn: function(aRect, aViewport) {
     // This function checks to see if the area of the rect visible in the
-    // viewport (i.e. the "overlapArea" variable below) is approximately
-    // the max area of the rect we can show. It also checks that the rect
-    // is actually on-screen by testing the left and right edges of the rect.
-    // In effect, this tells us whether or not zooming in to this rect
-    // will significantly change what the user is seeing.
-    const minDifference = -20;
-    const maxDifference = 20;
-
+    // viewport (i.e. the "overlapArea" variable below) is approximately 
+    // the max area of the rect we can show.
     let vRect = new Rect(aViewport.x, aViewport.y, aViewport.width, aViewport.height);
     let overlap = vRect.intersect(aRect);
     let overlapArea = overlap.width * overlap.height;
     let availHeight = Math.min(aRect.width * vRect.height / vRect.width, aRect.height);
     let showing = overlapArea / (aRect.width * availHeight);
-    let dw = (aRect.width - vRect.width);
-    let dx = (aRect.x - vRect.x);
+    let ratioW = (aRect.width / vRect.width);
+    let ratioH = (aRect.height / vRect.height);
 
-    return (showing > 0.9 &&
-            dx > minDifference && dx < maxDifference &&
-            dw > minDifference && dw < maxDifference);
+    return (showing > 0.9 && (ratioW > 0.9 || ratioH > 0.9)); 
   }
 };
 

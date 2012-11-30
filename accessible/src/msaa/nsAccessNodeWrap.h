@@ -15,7 +15,9 @@
 // uses SEH and 'xpAccessible' has destructor
 // At this point we're catching a crash which is of much greater
 // importance than the missing dereference for the nsCOMPtr<>
+#ifdef _MSC_VER
 #pragma warning( disable : 4509 )
+#endif
 
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
@@ -24,8 +26,8 @@
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsAccessNode.h"
-#include "OLEIDL.H"
-#include "OLEACC.H"
+#include "oleidl.h"
+#include "oleacc.h"
 #include <winuser.h>
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
@@ -34,18 +36,25 @@
 #include "nsRefPtrHashtable.h"
 
 #define A11Y_TRYBLOCK_BEGIN                                                    \
-  __try {
+  MOZ_SEH_TRY {
 
-#define A11Y_TRYBLOCK_END                                                      \
-  } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),      \
-                                                    GetExceptionInformation()))\
-  { }                                                                          \
+#define A11Y_TRYBLOCK_END                                                             \
+  } MOZ_SEH_EXCEPT(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),       \
+                                                          GetExceptionInformation())) \
+  { }                                                                                 \
   return E_FAIL;
 
 namespace mozilla {
 namespace a11y {
 
 class AccTextChangeEvent;
+
+#ifdef __GNUC__
+// Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings
+// about virtual functions being hidden by each other. This is done by
+// design, so silence the warning.
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
 
 class nsAccessNodeWrap : public nsAccessNode,
                          public nsIWinAccessNode,

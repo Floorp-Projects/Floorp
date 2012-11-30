@@ -147,6 +147,18 @@
 #define	MOZ_MEMORY_NARENAS_DEFAULT_ONE
 
 /*
+ * Pass this set of options to jemalloc as its default. It does not override
+ * the options passed via the MALLOC_OPTIONS environment variable but is
+ * applied in addition to them.
+ */
+#ifdef MOZ_B2G
+    /* Reduce the amount of unused dirty pages to 1MiB on B2G */
+#   define MOZ_MALLOC_OPTIONS "ff"
+#else
+#   define MOZ_MALLOC_OPTIONS ""
+#endif
+
+/*
  * MALLOC_STATS enables statistics calculation, and is required for
  * jemalloc_stats().
  */
@@ -1277,7 +1289,7 @@ static chunk_stats_t	stats_chunks;
 /*
  * Runtime configuration options.
  */
-const char	*_malloc_options;
+const char	*_malloc_options = MOZ_MALLOC_OPTIONS;
 
 #ifndef MALLOC_PRODUCTION
 static bool	opt_abort = true;

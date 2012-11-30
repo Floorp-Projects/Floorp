@@ -6077,27 +6077,26 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
       !lineMayHaveTextOverflow)
     return NS_OK;
 
-  nsDisplayListCollection collection;
-  nsresult rv;
-
   // Block-level child backgrounds go on the blockBorderBackgrounds list ...
   // Inline-level child backgrounds go on the regular child content list.
-  nsDisplayListSet childLists(collection,
-    lineInline ? collection.Content() : collection.BlockBorderBackgrounds());
+  nsDisplayListSet childLists(aLists,
+    lineInline ? aLists.Content() : aLists.BlockBorderBackgrounds());
+
+  uint32_t flags = lineInline ? nsIFrame::DISPLAY_CHILD_INLINE : 0;
+
   nsIFrame* kid = aLine->mFirstChild;
   int32_t n = aLine->GetChildCount();
   while (--n >= 0) {
-    rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, childLists,
-                                          lineInline ? nsIFrame::DISPLAY_CHILD_INLINE : 0);
+    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect,
+                                                   childLists, flags);
     NS_ENSURE_SUCCESS(rv, rv);
     kid = kid->GetNextSibling();
   }
   
   if (lineMayHaveTextOverflow) {
-    aTextOverflow->ProcessLine(collection, aLine.get());
+    aTextOverflow->ProcessLine(aLists, aLine.get());
   }
 
-  collection.MoveTo(aLists);
   return NS_OK;
 }
 

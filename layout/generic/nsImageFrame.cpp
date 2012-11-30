@@ -1229,10 +1229,11 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 already_AddRefed<ImageContainer>
-nsDisplayImage::GetContainer(nsDisplayListBuilder* aBuilder)
+nsDisplayImage::GetContainer(LayerManager* aManager,
+                             nsDisplayListBuilder* aBuilder)
 {
   nsRefPtr<ImageContainer> container;
-  nsresult rv = mImage->GetImageContainer(getter_AddRefs(container));
+  nsresult rv = mImage->GetImageContainer(aManager, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, nullptr);
   return container.forget();
 }
@@ -1278,12 +1279,18 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 
   // If we are not scaling at all, no point in separating this into a layer.
   if (scale.width == 1.0f && scale.height == 1.0f) {
-    return LAYER_INACTIVE;
+    return LAYER_NONE;
   }
 
   // If the target size is pretty small, no point in using a layer.
   if (destRect.width * destRect.height < 64 * 64) {
-    return LAYER_INACTIVE;
+    return LAYER_NONE;
+  }
+
+  nsRefPtr<ImageContainer> container;
+  mImage->GetImageContainer(aManager, getter_AddRefs(container));
+  if (!container) {
+    return LAYER_NONE;
   }
 
   return LAYER_ACTIVE;
@@ -1295,7 +1302,7 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                            const ContainerParameters& aParameters)
 {
   nsRefPtr<ImageContainer> container;
-  nsresult rv = mImage->GetImageContainer(getter_AddRefs(container));
+  nsresult rv = mImage->GetImageContainer(aManager, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();

@@ -25,7 +25,7 @@ public:
   }
 
   // Create as a blob
-  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> > aBlobs,
+  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlobs,
                      const nsAString& aContentType)
     : nsDOMFile(aContentType, UINT64_MAX),
       mBlobs(aBlobs)

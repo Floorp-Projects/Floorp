@@ -368,7 +368,6 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     }
   }
 
-  bool repeatImmediately = false;
   if (!aRegionToPaint.Contains(aInvalidRegion)) {
     // The region needed to paint is larger then our progressive chunk size
     // therefore update what we want to paint and ask for a new paint transaction.
@@ -379,13 +378,18 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     // If this is unnecessary, the remaining work will be done tile-by-tile in
     // subsequent transactions.
     if (!drawingLowPrecision && paintInSingleTransaction) {
-      repeatImmediately = true;
-    } else {
-      BasicManager()->SetRepeatTransaction();
+      return true;
     }
+
+    BasicManager()->SetRepeatTransaction();
+    return false;
   }
 
-  return repeatImmediately;
+  // We're not repeating painting and we've not requested a repeat transaction,
+  // so the paint is finished. If there's still a separate low precision
+  // paint to do, it will get marked as unfinished later.
+  mPaintData.mPaintFinished = true;
+  return false;
 }
 
 bool
@@ -443,6 +447,80 @@ BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
 }
 
 void
+BasicTiledThebesLayer::BeginPaint()
+{
+  if (BasicManager()->IsRepeatTransaction()) {
+    return;
+  }
+
+  mPaintData.mLowPrecisionPaintCount = 0;
+  mPaintData.mPaintFinished = false;
+
+  // Calculate the transform required to convert screen space into layer space
+  mPaintData.mTransformScreenToLayer = GetEffectiveTransform();
+  // XXX Not sure if this code for intermediate surfaces is correct.
+  //     It rarely gets hit though, and shouldn't have terrible consequences
+  //     even if it is wrong.
+  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
+    if (parent->UseIntermediateSurface()) {
+      mPaintData.mTransformScreenToLayer.PreMultiply(parent->GetEffectiveTransform());
+    }
+  }
+  mPaintData.mTransformScreenToLayer.Invert();
+
+  // Compute the critical display port in layer space.
+  mPaintData.mLayerCriticalDisplayPort.SetEmpty();
+  const gfx::Rect& criticalDisplayPort = GetParent()->GetFrameMetrics().mCriticalDisplayPort;
+  if (!criticalDisplayPort.IsEmpty()) {
+    gfxRect transformedCriticalDisplayPort =
+      mPaintData.mTransformScreenToLayer.TransformBounds(
+        gfxRect(criticalDisplayPort.x, criticalDisplayPort.y,
+                criticalDisplayPort.width, criticalDisplayPort.height));
+    transformedCriticalDisplayPort.RoundOut();
+    mPaintData.mLayerCriticalDisplayPort = nsIntRect(transformedCriticalDisplayPort.x,
+                                             transformedCriticalDisplayPort.y,
+                                             transformedCriticalDisplayPort.width,
+                                             transformedCriticalDisplayPort.height);
+  }
+
+  // Calculate the frame resolution.
+  mPaintData.mResolution.SizeTo(1, 1);
+  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
+    const FrameMetrics& metrics = parent->GetFrameMetrics();
+    mPaintData.mResolution.width *= metrics.mResolution.width;
+    mPaintData.mResolution.height *= metrics.mResolution.height;
+  }
+
+  // Calculate the scroll offset since the last transaction, and the
+  // composition bounds.
+  mPaintData.mCompositionBounds.SetEmpty();
+  mPaintData.mScrollOffset.MoveTo(0, 0);
+  Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
+  if (primaryScrollable) {
+    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
+    mPaintData.mScrollOffset = metrics.mScrollOffset;
+    gfxRect transformedViewport = mPaintData.mTransformScreenToLayer.TransformBounds(
+      gfxRect(metrics.mCompositionBounds.x, metrics.mCompositionBounds.y,
+              metrics.mCompositionBounds.width, metrics.mCompositionBounds.height));
+    transformedViewport.RoundOut();
+    mPaintData.mCompositionBounds =
+      nsIntRect(transformedViewport.x, transformedViewport.y,
+                transformedViewport.width, transformedViewport.height);
+  }
+}
+
+void
+BasicTiledThebesLayer::EndPaint(bool aFinish)
+{
+  if (!aFinish && !mPaintData.mPaintFinished) {
+    return;
+  }
+
+  mLastScrollOffset = mPaintData.mScrollOffset;
+  mPaintData.mPaintFinished = true;
+}
+
+void
 BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
                                    Layer* aMaskLayer,
                                    LayerManager::DrawThebesLayerCallback aCallback,
@@ -462,113 +540,105 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (mTiledBuffer.HasFormatChanged(this)) {
     mValidRegion = nsIntRegion();
   }
-  if (mLowPrecisionTiledBuffer.HasFormatChanged(this)) {
-    mLowPrecisionValidRegion = nsIntRegion();
-  }
 
   nsIntRegion invalidRegion = mVisibleRegion;
   invalidRegion.Sub(invalidRegion, mValidRegion);
-  if (invalidRegion.IsEmpty())
+  if (invalidRegion.IsEmpty()) {
+    EndPaint(true);
     return;
-
-  // Calculate the transform required to convert screen space into layer space
-  gfx3DMatrix transform = GetEffectiveTransform();
-  // XXX Not sure if this code for intermediate surfaces is correct.
-  //     It rarely gets hit though, and shouldn't have terrible consequences
-  //     even if it is wrong.
-  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-    if (parent->UseIntermediateSurface()) {
-      transform.PreMultiply(parent->GetEffectiveTransform());
-    }
   }
-  transform.Invert();
 
-  nsIntRect layerDisplayPort;
+  // Fast path for no progressive updates, no low-precision updates and no
+  // critical display-port set.
+  if (!gfxPlatform::UseProgressiveTilePainting() &&
+      !gfxPlatform::UseLowPrecisionBuffer() &&
+      GetParent()->GetFrameMetrics().mCriticalDisplayPort.IsEmpty()) {
+    mValidRegion = mVisibleRegion;
+    mTiledBuffer.PaintThebes(this, mValidRegion, invalidRegion, aCallback, aCallbackData);
+    mTiledBuffer.ReadLock();
+
+    static_cast<BasicImplData*>(aMaskLayer->ImplData())->Paint(aContext, nullptr);
+
+    // Create a heap copy owned and released by the compositor. This is needed
+    // since we're sending this over an async message and content needs to be
+    // be able to modify the tiled buffer in the next transaction.
+    // TODO: Remove me once Bug 747811 lands.
+    BasicTiledLayerBuffer *heapCopy = new BasicTiledLayerBuffer(mTiledBuffer);
+    BasicManager()->PaintedTiledLayerBuffer(BasicManager()->Hold(this), heapCopy);
+    mTiledBuffer.ClearPaintedRegion();
+
+    return;
+  }
+
+  // Calculate everything we need to perform the paint.
+  BeginPaint();
+  if (mPaintData.mPaintFinished) {
+    return;
+  }
+
+  // Make sure that tiles that fall outside of the visible region are
+  // discarded on the first update.
+  if (!BasicManager()->IsRepeatTransaction()) {
+    mValidRegion.And(mValidRegion, mVisibleRegion);
+  }
+
   nsIntRegion lowPrecisionInvalidRegion;
-  const gfx::Rect& criticalDisplayPort = GetParent()->GetFrameMetrics().mCriticalDisplayPort;
-  if (!criticalDisplayPort.IsEmpty()) {
-    // Calculate the invalid region for the low precision buffer
-    lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
+  if (!mPaintData.mLayerCriticalDisplayPort.IsEmpty()) {
+    // Make sure that tiles that fall outside of the critical displayport are
+    // discarded on the first update.
+    if (!BasicManager()->IsRepeatTransaction()) {
+      mValidRegion.And(mValidRegion, mPaintData.mLayerCriticalDisplayPort);
+    }
 
-    // Find the critical display port in layer space.
-    gfxRect transformedCriticalDisplayPort = transform.TransformBounds(
-      gfxRect(criticalDisplayPort.x, criticalDisplayPort.y,
-              criticalDisplayPort.width, criticalDisplayPort.height));
-    transformedCriticalDisplayPort.RoundOut();
-    layerDisplayPort = nsIntRect(transformedCriticalDisplayPort.x,
-                                 transformedCriticalDisplayPort.y,
-                                 transformedCriticalDisplayPort.width,
-                                 transformedCriticalDisplayPort.height);
+    if (gfxPlatform::UseLowPrecisionBuffer()) {
+      // Calculate the invalid region for the low precision buffer
+      lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
+
+      // Remove the valid region from the low precision valid region (we don't
+      // validate this part of the low precision buffer).
+      lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, mValidRegion);
+    }
 
     // Clip the invalid region to the critical display-port
-    invalidRegion.And(invalidRegion, layerDisplayPort);
+    invalidRegion.And(invalidRegion, mPaintData.mLayerCriticalDisplayPort);
     if (invalidRegion.IsEmpty() && lowPrecisionInvalidRegion.IsEmpty()) {
+      EndPaint(true);
       return;
     }
   }
 
-  gfxSize resolution(1, 1);
-  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-    const FrameMetrics& metrics = parent->GetFrameMetrics();
-    resolution.width *= metrics.mResolution.width;
-    resolution.height *= metrics.mResolution.height;
-  }
-
-  // Calculate the scroll offset since the last transaction, and the
-  // composition bounds.
-  nsIntRect compositionBounds;
-  gfx::Point scrollOffset(0, 0);
-  Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
-  if (primaryScrollable) {
-    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-    scrollOffset = metrics.mScrollOffset;
-    gfxRect transformedViewport = transform.TransformBounds(
-      gfxRect(metrics.mCompositionBounds.x, metrics.mCompositionBounds.y,
-              metrics.mCompositionBounds.width, metrics.mCompositionBounds.height));
-    transformedViewport.RoundOut();
-    compositionBounds = nsIntRect(transformedViewport.x, transformedViewport.y,
-                                  transformedViewport.width, transformedViewport.height);
-  }
-
-  if (!invalidRegion.IsEmpty()) {
+  if (!invalidRegion.IsEmpty() && mPaintData.mLowPrecisionPaintCount == 0) {
     bool updatedBuffer = false;
     // Only draw progressively when the resolution is unchanged.
     if (gfxPlatform::UseProgressiveTilePainting() &&
         !BasicManager()->HasShadowTarget() &&
-        mTiledBuffer.GetFrameResolution() == resolution) {
+        mTiledBuffer.GetFrameResolution() == mPaintData.mResolution) {
       // Store the old valid region, then clear it before painting.
       // We clip the old valid region to the visible region, as it only gets
       // used to decide stale content (currently valid and previously visible)
       nsIntRegion oldValidRegion = mTiledBuffer.GetValidRegion();
       oldValidRegion.And(oldValidRegion, mVisibleRegion);
-      if (!layerDisplayPort.IsEmpty()) {
-        oldValidRegion.And(oldValidRegion, layerDisplayPort);
-      }
-
-      // Make sure that tiles that fall outside of the visible region are
-      // discarded on the first update.
-      if (!BasicManager()->IsRepeatTransaction()) {
-        mValidRegion.And(mValidRegion, mVisibleRegion);
-        if (!layerDisplayPort.IsEmpty()) {
-          mValidRegion.And(mValidRegion, layerDisplayPort);
-        }
+      if (!mPaintData.mLayerCriticalDisplayPort.IsEmpty()) {
+        oldValidRegion.And(oldValidRegion, mPaintData.mLayerCriticalDisplayPort);
       }
 
       updatedBuffer =
         ProgressiveUpdate(mTiledBuffer, mValidRegion, invalidRegion,
-                          oldValidRegion, transform, compositionBounds,
-                          scrollOffset, resolution, aCallback, aCallbackData);
+                          oldValidRegion, mPaintData.mTransformScreenToLayer,
+                          mPaintData.mCompositionBounds, mPaintData.mScrollOffset,
+                          mPaintData.mResolution, aCallback, aCallbackData);
     } else {
       updatedBuffer = true;
-      mTiledBuffer.SetFrameResolution(resolution);
+      mTiledBuffer.SetFrameResolution(mPaintData.mResolution);
       mValidRegion = mVisibleRegion;
-      if (!layerDisplayPort.IsEmpty()) {
-        mValidRegion.And(mValidRegion, layerDisplayPort);
+      if (!mPaintData.mLayerCriticalDisplayPort.IsEmpty()) {
+        mValidRegion.And(mValidRegion, mPaintData.mLayerCriticalDisplayPort);
       }
       mTiledBuffer.PaintThebes(this, mValidRegion, invalidRegion, aCallback, aCallbackData);
     }
 
     if (updatedBuffer) {
+      mFirstPaint = false;
       mTiledBuffer.ReadLock();
 
       // Only paint the mask layer on the first transaction.
@@ -577,58 +647,65 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
           ->Paint(aContext, nullptr);
       }
 
-      // Create a heap copy owned and released by the compositor. This is needed
-      // since we're sending this over an async message and content needs to be
-      // be able to modify the tiled buffer in the next transaction.
       // TODO: Remove me once Bug 747811 lands.
       BasicTiledLayerBuffer *heapCopy = new BasicTiledLayerBuffer(mTiledBuffer);
 
       BasicManager()->PaintedTiledLayerBuffer(BasicManager()->Hold(this), heapCopy);
       mTiledBuffer.ClearPaintedRegion();
+
+      // If there are low precision updates, mark the paint as unfinished and
+      // request a repeat transaction.
+      if (!lowPrecisionInvalidRegion.IsEmpty() && mPaintData.mPaintFinished) {
+        BasicManager()->SetRepeatTransaction();
+        mPaintData.mLowPrecisionPaintCount = 1;
+        mPaintData.mPaintFinished = false;
+      }
+
+      // Return so that low precision updates aren't performed in the same
+      // transaction as high-precision updates.
+      EndPaint(false);
+      return;
     }
   }
 
-  // If we have a critical display-port defined, render the full display-port
-  // progressively in the low-precision tiled buffer.
+  // Render the low precision buffer, if there's area to invalidate and the
+  // visible region is larger than the critical display port.
   bool updatedLowPrecision = false;
-  if (gfxPlatform::UseLowPrecisionBuffer() &&
-      !criticalDisplayPort.IsEmpty() &&
-      !nsIntRegion(layerDisplayPort).Contains(mVisibleRegion)) {
+  if (!lowPrecisionInvalidRegion.IsEmpty() &&
+      !nsIntRegion(mPaintData.mLayerCriticalDisplayPort).Contains(mVisibleRegion)) {
     nsIntRegion oldValidRegion = mLowPrecisionTiledBuffer.GetValidRegion();
     oldValidRegion.And(oldValidRegion, mVisibleRegion);
 
-    // If the frame resolution has changed, invalidate the buffer
-    if (mLowPrecisionTiledBuffer.GetFrameResolution() != resolution) {
+    // If the frame resolution or format have changed, invalidate the buffer
+    if (mLowPrecisionTiledBuffer.GetFrameResolution() != mPaintData.mResolution ||
+        mLowPrecisionTiledBuffer.HasFormatChanged(this)) {
       if (!mLowPrecisionValidRegion.IsEmpty()) {
         updatedLowPrecision = true;
       }
       oldValidRegion.SetEmpty();
       mLowPrecisionValidRegion.SetEmpty();
-      mLowPrecisionTiledBuffer.SetFrameResolution(resolution);
+      mLowPrecisionTiledBuffer.SetFrameResolution(mPaintData.mResolution);
+      lowPrecisionInvalidRegion = mVisibleRegion;
     }
 
     // Invalidate previously valid content that is no longer visible
-    if (!BasicManager()->IsRepeatTransaction()) {
+    if (mPaintData.mLowPrecisionPaintCount == 1) {
       mLowPrecisionValidRegion.And(mLowPrecisionValidRegion, mVisibleRegion);
     }
+    mPaintData.mLowPrecisionPaintCount++;
 
     // Remove the valid high-precision region from the invalid low-precision
     // region. We don't want to spend time drawing things twice.
-    nsIntRegion invalidHighPrecisionIntersect;
-    invalidHighPrecisionIntersect.And(lowPrecisionInvalidRegion, mValidRegion);
-    lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, invalidHighPrecisionIntersect);
+    lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, mValidRegion);
 
     if (!lowPrecisionInvalidRegion.IsEmpty()) {
       updatedLowPrecision =
         ProgressiveUpdate(mLowPrecisionTiledBuffer, mLowPrecisionValidRegion,
-                          lowPrecisionInvalidRegion, oldValidRegion, transform,
-                          compositionBounds, scrollOffset, resolution, aCallback,
-                          aCallbackData);
+                          lowPrecisionInvalidRegion, oldValidRegion,
+                          mPaintData.mTransformScreenToLayer,
+                          mPaintData.mCompositionBounds, mPaintData.mScrollOffset,
+                          mPaintData.mResolution, aCallback, aCallbackData);
     }
-
-    // Re-add the high-precision valid region intersection so that we can
-    // maintain coherency when the valid region changes.
-    lowPrecisionInvalidRegion.Or(lowPrecisionInvalidRegion, invalidHighPrecisionIntersect);
   } else if (!mLowPrecisionValidRegion.IsEmpty()) {
     // Clear the low precision tiled buffer
     updatedLowPrecision = true;
@@ -643,6 +720,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   // and the associated resources can be freed.
   if (updatedLowPrecision) {
     mLowPrecisionTiledBuffer.ReadLock();
+    // TODO: Remove me once Bug 747811 lands.
     BasicTiledLayerBuffer *heapCopy = new BasicTiledLayerBuffer(mLowPrecisionTiledBuffer);
 
     // The GL layer manager uses the buffer resolution to distinguish calls
@@ -651,11 +729,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     mLowPrecisionTiledBuffer.ClearPaintedRegion();
   }
 
-  // The transaction is completed, store the last scroll offset.
-  if (!BasicManager()->GetRepeatTransaction()) {
-    mLastScrollOffset = scrollOffset;
-  }
-  mFirstPaint = false;
+  EndPaint(false);
 }
 
 } // mozilla

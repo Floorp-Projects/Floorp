@@ -405,6 +405,7 @@ this.ICC_COMMAND_UPDATE_RECORD = 0xdc;
 this.ICC_EF_ICCID  = 0x2fe2;
 this.ICC_EF_IMG    = 0x4f20;
 this.ICC_EF_PBR    = 0x4f30;
+this.ICC_EF_PLMNsel = 0x6f30; // PLMN for SIM
 this.ICC_EF_SST    = 0x6f38;
 this.ICC_EF_UST    = 0x6f38; // For USIM
 this.ICC_EF_ADN    = 0x6f3a;
@@ -563,6 +564,10 @@ this.COMPREHENSIONTLV_TAG_ICON_ID_LIST = 0x1f;
 this.COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE = 0x2b;
 this.COMPREHENSIONTLV_TAG_URL = 0x31;
 
+// Tags for Service Provider Display Information TLV
+this.SPDI_TAG_SPDI = 0xa3;
+this.SPDI_TAG_PLMN_LIST = 0x80;
+
 // Device identifiers, see TS 11.14, clause 12.7
 this.STK_DEVICE_ID_KEYPAD = 0x01;
 this.STK_DEVICE_ID_DISPLAY = 0x02;
@@ -573,6 +578,7 @@ this.STK_DEVICE_ID_NETWORK = 0x83;
 
 // STK Proactive commands.
 this.STK_CMD_REFRESH = 0x01;
+this.STK_CMD_MORE_TIME = 0x02;
 this.STK_CMD_POLL_INTERVAL = 0x03;
 this.STK_CMD_POLL_OFF = 0x04;
 this.STK_CMD_SET_UP_EVENT_LIST = 0x05;
@@ -800,7 +806,7 @@ this.STK_TERMINAL_SUPPORT_EXTENSION_TEXT               = 1;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_DISPLAY_TEXT       = 1;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_GET_INKEY          = 1;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_GET_INPUT          = 1;
-this.STK_TERMINAL_SUPPORT_PROACTIVE_MORE_TIME          = 0;
+this.STK_TERMINAL_SUPPORT_PROACTIVE_MORE_TIME          = 1;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_PLAY_TONE          = 1;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_POLL_INTERVAL      = 1;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_POLL_OFF           = 1;
@@ -906,6 +912,8 @@ this.GECKO_ICC_SERVICES = {
   sim: {
     ADN: 2,
     FDN: 3,
+    PLMNSEL: 7,
+    SPN: 17,
     SDN: 18,
     DATA_DOWNLOAD_SMS_PP: 26,
     BDN: 31
@@ -914,7 +922,9 @@ this.GECKO_ICC_SERVICES = {
     FDN: 2,
     SDN: 4,
     BDN: 6,
-    DATA_DOWNLOAD_SMS_PP: 28
+    SPN: 19,
+    DATA_DOWNLOAD_SMS_PP: 28,
+    SPDI: 51
   }
 };
 

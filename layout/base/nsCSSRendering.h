@@ -29,6 +29,7 @@ class nsRenderingContext;
  */
 class nsImageRenderer {
 public:
+  typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ImageContainer ImageContainer;
 
   enum {
@@ -60,9 +61,9 @@ public:
             const nsPoint&       aAnchor,
             const nsRect&        aDirty);
 
-
   bool IsRasterImage();
-  already_AddRefed<ImageContainer> GetContainer();
+  already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);
+
 private:
   /*
    * Compute the "unscaled" dimensions of the image in aUnscaled{Width,Height}

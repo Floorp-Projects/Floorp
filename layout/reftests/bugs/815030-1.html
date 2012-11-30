@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs%2B9AAAAAXNSR0IArs4c6QAAADdJREFUGNNjZGD4%2F5%2BBCMDCwMDAwNDQiF9VQz0DEwORgPoKGRkY%2Fv9fe%2BM5XkXBGpID7kZiFAIAEbULDl5w%2F68AAAAASUVORK5CYII%3D); background-attachment:fixed">
+<script>
+function doTest() {
+  var img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyAQMAAACQ%2B%2Bz9AAAAA1BMVEUA%2FwA0XsCoAAAAD0lEQVQoFWNgGAWjYGgCAAK8AAEb3eOQAAAAAElFTkSuQmCC";
+  document.body.style.backgroundImage = "url(" + img + ")";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

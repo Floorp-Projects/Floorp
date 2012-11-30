@@ -374,7 +374,7 @@ let SocialFlyout = {
 
     iframe.removeAttribute("src");
     iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
-    sizeSocialPanelToContent(iframe);
+    sizeSocialPanelToContent(this.panel, iframe);
   },
 
   unload: function() {
@@ -715,7 +715,7 @@ var SocialToolbar = {
     let command = document.getElementById("Social:ToggleNotifications");
     command.setAttribute("checked", Services.prefs.getBoolPref("social.toast-notifications.enabled"));
 
-    const CACHE_PREF_NAME = "social.cached.notificationIcons";
+    const CACHE_PREF_NAME = "social.cached.ambientNotificationIcons";
     // provider.profile == undefined means no response yet from the provider
     // to tell us whether the user is logged in or not.
     if (!Social.provider || !Social.provider.enabled ||
@@ -732,7 +732,8 @@ var SocialToolbar = {
       // a cached version for this provider.
       let cached;
       try {
-        cached = JSON.parse(Services.prefs.getCharPref(CACHE_PREF_NAME));
+        cached = JSON.parse(Services.prefs.getComplexValue(CACHE_PREF_NAME,
+                                                           Ci.nsISupportsString).data);
       } catch (ex) {}
       if (cached && cached.provider == Social.provider.origin && cached.data) {
         icons = cached.data;
@@ -745,9 +746,11 @@ var SocialToolbar = {
     } else {
       // We have a logged in user - save the current set of icons back to the
       // "cache" so we can use them next startup.
-      Services.prefs.setCharPref(CACHE_PREF_NAME,
-                                 JSON.stringify({provider: Social.provider.origin,
-                                                 data: icons}));
+      let str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+      str.data = JSON.stringify({provider: Social.provider.origin, data: icons});
+      Services.prefs.setComplexValue(CACHE_PREF_NAME,
+                                     Ci.nsISupportsString,
+                                     str);
     }
 
     let notificationFrames = document.createDocumentFragment();
@@ -905,7 +908,8 @@ var SocialToolbar = {
     aNotificationFrame.removeAttribute("src");
     aNotificationFrame.webNavigation.loadURI("about:socialerror?mode=tryAgainOnly&url=" +
                                              encodeURIComponent(src), null, null, null, null);
-    sizeSocialPanelToContent(aNotificationFrame);
+    let panel = aNotificationFrame.parentNode;
+    sizeSocialPanelToContent(panel, aNotificationFrame);
   }
 }
 
@@ -1088,7 +1092,9 @@ SocialErrorListener.prototype = {
         break;
 
       case "sidebar":
-        SocialSidebar.setSidebarErrorMessage("sidebar-error");
+        // a frameworker error "trumps" a sidebar error.
+        let reason = Social.errorState ? Social.errorState : "sidebar-error";
+        SocialSidebar.setSidebarErrorMessage(reason);
         break;
 
       case "notification-panel":

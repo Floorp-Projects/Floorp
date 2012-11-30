@@ -1139,7 +1139,7 @@ PresShell::SetPreferenceStyleRules(bool aForceReflow)
   // If the document doesn't have a window there's no need to notify
   // its presshell about changes to preferences since the document is
   // in a state where it doesn't matter any more (see
-  // DocumentViewerImpl::Close()).
+  // nsDocumentViewer::Close()).
 
   if (!window) {
     return NS_ERROR_NULL_POINTER;
@@ -1475,7 +1475,7 @@ nsresult PresShell::SetPrefFocusRules(void)
 void
 PresShell::AddUserSheet(nsISupports* aSheet)
 {
-  // Make sure this does what DocumentViewerImpl::CreateStyleSet does wrt
+  // Make sure this does what nsDocumentViewer::CreateStyleSet does wrt
   // ordering. We want this new sheet to come after all the existing stylesheet
   // service sheets, but before other user sheets; see nsIStyleSheetService.idl
   // for the ordering.  Just remove and readd all the nsStyleSheetService
@@ -1508,7 +1508,7 @@ PresShell::AddUserSheet(nsISupports* aSheet)
 void
 PresShell::AddAgentSheet(nsISupports* aSheet)
 {
-  // Make sure this does what DocumentViewerImpl::CreateStyleSet does
+  // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
   nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
   if (!sheet) {
@@ -6533,6 +6533,34 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
             }
           }
           if (eventTarget) {
+#ifdef MOZ_B2G
+            // Horrible hack for B2G to propagate events even from
+            // disabled form elements to chrome. See bug 804811.
+            // See also nsGenericHTMLFormElement::IsElementDisabledForEvents.
+            if (aEvent->message != NS_MOUSE_MOVE) {
+              nsINode* possibleFormElement = eventTarget->ChromeOnlyAccess() ?
+                static_cast<nsIContent*>(eventTarget.get())->
+                  FindFirstNonChromeOnlyAccessContent() :
+                eventTarget;
+              if (possibleFormElement &&
+                  possibleFormElement->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+                nsEvent event(true, NS_EVENT_TYPE_NULL);
+                nsCOMArray<nsIDOMEventTarget> targets;
+                nsEventDispatcher::Dispatch(eventTarget, nullptr, &event, nullptr,
+                                            nullptr, nullptr, &targets);
+                nsCOMPtr<nsIContent> last;
+                if (targets.Count()) {
+                  last = do_QueryInterface(targets[targets.Count() - 1]);
+                }
+                if (!targets.Count() ||
+                    (last &&
+                     nsContentUtils::ContentIsDescendantOf(last,
+                                                           possibleFormElement))) {
+                  aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+                }
+              }
+            }
+#endif
             if (aEvent->eventStructType == NS_COMPOSITION_EVENT ||
                 aEvent->eventStructType == NS_TEXT_EVENT) {
               nsIMEStateManager::DispatchCompositionEvent(eventTarget,
@@ -7466,7 +7494,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   if (rootFrame == target) {
     // When the root frame is being reflowed with unconstrained height
     // (which happens when we're called from
-    // DocumentViewerImpl::SizeToContent), we're effectively doing a
+    // nsDocumentViewer::SizeToContent), we're effectively doing a
     // vertical resize, since it changes the meaning of percentage
     // heights even if no heights actually changed.  The same applies
     // when we reflow again after that computation.  This is an unusual
@@ -9168,6 +9196,7 @@ PresShell::SetupFontInflation()
   mFontSizeInflationMinTwips = nsLayoutUtils::FontSizeInflationMinTwips();
   mFontSizeInflationLineThreshold = nsLayoutUtils::FontSizeInflationLineThreshold();
   mFontSizeInflationForceEnabled = nsLayoutUtils::FontSizeInflationForceEnabled();
+  mFontSizeInflationDisabledInMasterProcess = nsLayoutUtils::FontSizeInflationDisabledInMasterProcess();
 }
 
 void

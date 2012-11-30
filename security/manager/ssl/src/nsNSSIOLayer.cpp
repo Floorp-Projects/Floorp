@@ -2345,7 +2345,7 @@ nsSSLIOLayerImportFD(PRFileDesc *fd,
   // Disable this hook if we connect anonymously. See bug 466080.
   uint32_t flags = 0;
   infoObject->GetProviderFlags(&flags);
-  if (flags & nsISocketTransport::ANONYMOUS_CONNECT) {
+  if (flags & nsISocketProvider::ANONYMOUS_CONNECT) {
       SSL_GetClientAuthDataHook(sslSock, nullptr, infoObject);
   } else {
       SSL_GetClientAuthDataHook(sslSock, 
