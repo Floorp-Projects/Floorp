@@ -191,6 +191,12 @@ public:
   virtual void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* aTiledBuffer) = 0;
 
   virtual void MemoryPressure() = 0;
+
+  /**
+   * If some part of the buffer is being rendered at a lower precision, this
+   * returns that region. If it is not, an empty region will be returned.
+   */
+  virtual const nsIntRegion& GetValidLowPrecisionRegion() const = 0;
 };
 
 // Normal integer division truncates towards zero,
