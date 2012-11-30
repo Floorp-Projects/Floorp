@@ -1759,6 +1759,9 @@ fuzzy-if(Android,8,608) == 811301-1.html 811301-1-ref.html
 fuzzy-if(Android,4,400) == 815593-1.html 815593-1-ref.html
 == 816359-1.html 816359-1-ref.html
 == 816458-1.html 816458-1-ref.html
+== 816876-1.xhtml  816876-1-ref.xhtml
+== 816876-2a.xhtml 816876-2-ref.xhtml
+== 816876-2b.xhtml 816876-2-ref.xhtml
 fuzzy-if(skiaContent,1,5) == 816948-1.html 816948-1-ref.html
 == 817019-1.html about:blank
 fuzzy-if(skiaContent,1,5) == 818276-1.html 818276-1-ref.html
