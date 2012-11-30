@@ -10337,7 +10337,8 @@ FirstLetterCount(const nsTextFragment* aFragment)
   int32_t i, n = aFragment->GetLength();
   for (i = 0; i < n; i++) {
     PRUnichar ch = aFragment->CharAt(i);
-    if (XP_IS_SPACE(ch)) {
+    // FIXME: take content language into account when deciding whitespace.
+    if (dom::IsSpaceCharacter(ch)) {
       if (firstLetterLength) {
         break;
       }

@@ -638,7 +638,7 @@ int32_t nsTextFrame::GetInFlowContentLength() {
   return endFlow - mContentOffset;
 }
 
-// Smarter versions of XP_IS_SPACE.
+// Smarter versions of dom::IsSpaceCharacter.
 // Unicode is really annoying; sometimes a space character isn't whitespace ---
 // when it combines with another character
 // So we have several versions of IsSpace for use in different contexts.
