@@ -24,7 +24,7 @@ function test() {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.contentWindow;
+    gDebugger = gPane.panelWin;
     gWatch = gDebugger.DebuggerView.WatchExpressions;
     gVars = gDebugger.DebuggerView.Variables;
 

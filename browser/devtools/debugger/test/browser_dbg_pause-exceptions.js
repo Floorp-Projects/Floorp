@@ -20,7 +20,7 @@ function test()
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    gDebugger = gPane.contentWindow;
+    gDebugger = gPane.panelWin;
 
     gDebugger.DebuggerController.StackFrames.autoScopeExpand = true;
     gDebugger.DebuggerView.Variables.nonEnumVisible = false;
@@ -30,7 +30,7 @@ function test()
 
 function testWithFrame()
 {
-  gPane.contentWindow.gClient.addOneTimeListener("paused", function() {
+  gPane.panelWin.gClient.addOneTimeListener("paused", function() {
     gDebugger.addEventListener("Debugger:FetchedVariables", function testA() {
       // We expect 2 Debugger:FetchedVariables events, one from the global object
       // scope and the regular one.
@@ -48,7 +48,7 @@ function testWithFrame()
       gDebugger.DebuggerView.Options._togglePauseOnExceptions();
 
       gCount = 0;
-      gPane.contentWindow.gClient.addOneTimeListener("resumed", function() {
+      gPane.panelWin.gClient.addOneTimeListener("resumed", function() {
         gDebugger.addEventListener("Debugger:FetchedVariables", function testB() {
           // We expect 2 Debugger:FetchedVariables events, one from the global object
           // scope and the regular one.
@@ -96,7 +96,7 @@ function testWithFrame()
 }
 
 function resumeAndFinish() {
-  gPane.contentWindow.gClient.addOneTimeListener("resumed", function() {
+  gPane.panelWin.gClient.addOneTimeListener("resumed", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       closeDebuggerAndFinish(false);

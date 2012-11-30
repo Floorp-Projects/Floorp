@@ -5,6 +5,7 @@ function test() {
   let instance;
 
   let computedView;
+  let inspector;
 
   waitForExplicitFinish();
 
@@ -52,29 +53,27 @@ function test() {
 
     instance.setSize(500, 500);
 
-    Services.obs.addObserver(onInspectorUIOpen,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-    InspectorUI.openInspectorUI();
+    openInspector(onInspectorUIOpen);
   }
 
-  function onInspectorUIOpen() {
-    Services.obs.removeObserver(onInspectorUIOpen,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
+  function onInspectorUIOpen(aInspector) {
+    inspector = aInspector;
+    ok(inspector, "Got inspector instance");
+    inspector.sidebar.select("computedview");
 
     let div = content.document.getElementsByTagName("div")[0];
-    InspectorUI.inspectNode(div);
-    InspectorUI.stopInspecting();
 
-    Services.obs.addObserver(testShrink, "StyleInspector-populated", false);
-
-    InspectorUI.sidebar.show();
-    InspectorUI.sidebar.activatePanel("computedview");
+    inspector.sidebar.once("computedview-ready", function() {
+      Services.obs.addObserver(testShrink, "StyleInspector-populated", false);
+      inspector.selection.setNode(div);
+    });
   }
 
   function testShrink() {
     Services.obs.removeObserver(testShrink, "StyleInspector-populated", false);
 
-    computedView = InspectorUI.sidebar._toolContext("computedview").view;
+    computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
+    ok(computedView, "We have access to the Computed View object");
 
     is(computedWidth(), "500px", "Should show 500px initially.");
 
@@ -102,8 +101,6 @@ function test() {
 
     // Menus are correctly updated?
     is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"), "false", "menu unchecked");
-
-    InspectorUI.closeInspectorUI();
 
     gBrowser.removeCurrentTab();
     finish();

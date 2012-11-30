@@ -9,39 +9,31 @@ let tempScope = {};
 Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
 let inplaceEditor = tempScope._getInplaceEditorForSpan;
 let doc;
+let inspector;
 let stylePanel;
-
-function waitForRuleView(aCallback)
-{
-  InspectorUI.currentInspector.once("sidebaractivated-ruleview", aCallback);
-}
 
 function openRuleView()
 {
-  Services.obs.addObserver(function onOpened() {
-    Services.obs.removeObserver(onOpened,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  var target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = gDevTools.openToolboxForTab(target, "inspector");
+  toolbox.once("inspector-selected", function SE_selected(id, aInspector) {
+    inspector = aInspector;
+    inspector.sidebar.select("ruleview");
 
     // Highlight a node.
     let node = content.document.getElementsByTagName("h1")[0];
-    InspectorUI.inspectNode(node);
-    InspectorUI.stopInspecting();
-
-    // Open the rule view sidebar.
-    waitForRuleView(testFocus);
-
-    InspectorUI.sidebar.show();
-    InspectorUI.sidebar.activatePanel("ruleview");
-
-    testFocus();
-  }, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  InspectorUI.openInspectorUI();
+    inspector.selection.once("new-node", testFocus);
+    executeSoon(function() {
+      inspector.selection.setNode(doc.body);
+    });
+  });
 }
 
 function testFocus()
 {
-  let ruleViewFrame = InspectorUI.sidebar._tools["ruleview"].frame;
-  let brace = ruleViewFrame.contentDocument.querySelectorAll(".ruleview-ruleclose")[0];
+  let win = inspector.sidebar.getWindowForTab("ruleview");
+  let brace = win.document.querySelectorAll(".ruleview-ruleclose")[0];
+
   waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
     aEditor.input.value = "color";
     waitForEditorFocus(brace.parentNode, function onEditingValue(aEditor) {
@@ -65,9 +57,7 @@ function testFocus()
 
 function finishUp()
 {
-  InspectorUI.sidebar.hide();
-  InspectorUI.closeInspectorUI();
-  doc = stylePanel = null;
+  doc = inspector = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();
 }
