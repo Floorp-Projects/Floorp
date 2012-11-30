@@ -222,7 +222,7 @@ function openLinkIn(url, where, params) {
   // Currently, this parameter works only for where=="tab" or "current"
   var aIsUTF8               = params.isUTF8;
   var aInitiatingDoc        = params.initiatingDoc;
-  var isPrivate             = params.private;
+  var aIsPrivate            = params.private;
 
   if (where == "save") {
     if (!aInitiatingDoc) {
@@ -270,7 +270,7 @@ function openLinkIn(url, where, params) {
 
     let features = "chrome,dialog=no,all";
 #ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    if (isPrivate) {
+    if (aIsPrivate) {
       features += ",private";
     }
 #endif
