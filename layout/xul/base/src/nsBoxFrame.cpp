@@ -1988,25 +1988,32 @@ MergeSort(nsIFrame *aSource)
 void 
 nsBoxFrame::CheckBoxOrder()
 {
-  nsIFrame *child = mFrames.FirstChild();
-  if (!child)
-    return;
-
   if (!SupportsOrdinalsInChildren())
     return;
 
-  // Run through our list of children and check whether we
-  // need to sort them.
-  uint32_t maxOrdinal = child->GetOrdinal();
-  child = child->GetNextSibling();
-  for ( ; child; child = child->GetNextSibling()) {
-    uint32_t ordinal = child->GetOrdinal();
-    if (ordinal < maxOrdinal)
-      break;
-    maxOrdinal = ordinal;
+  if (mFrames.IsEmpty()) {
+    // empty lists are trivially sorted.
+    return;
   }
 
-  if (!child)
+  // We'll walk through the list with two iterators, one trailing behind the
+  // other. The list is sorted IFF trailingIter <= iter, across the whole list.
+  nsFrameList::Enumerator trailingIter(mFrames);
+  nsFrameList::Enumerator iter(mFrames);
+  iter.Next(); // Skip |iter| past first frame. (List is nonempty, so we can.)
+
+  // Now, advance the iterators in parallel, comparing each adjacent pair.
+  while (!iter.AtEnd()) {
+    MOZ_ASSERT(!trailingIter.AtEnd(), "trailing iter shouldn't finish first");
+    if (trailingIter.get()->GetOrdinal() > iter.get()->GetOrdinal()) {
+      break;
+    }
+    trailingIter.Next();
+    iter.Next();
+  }
+
+  // If we hit the end without breaking, then the list is sorted.
+  if (iter.AtEnd())
     return;
 
   nsIFrame* head = MergeSort(mFrames.FirstChild());
