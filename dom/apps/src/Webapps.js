@@ -134,9 +134,9 @@ WebappsRegistry.prototype = {
                                                             etag: etag,
                                                             receipts: receipts,
                                                             categories: categories },
-                                                            from: installURL,
-                                                            oid: this._id,
-                                                            requestID: requestID });
+                                                     from: installURL,
+                                                     oid: this._id,
+                                                     requestID: requestID });
         }
       } else {
         Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
