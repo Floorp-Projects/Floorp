@@ -5,6 +5,7 @@
 
 #include <string>
 #include <stdio.h>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include "sps_sampler.h"
@@ -17,7 +18,6 @@
 
 // JSON
 #include "JSObjectBuilder.h"
-#include "JSCustomObjectBuilder.h"
 #include "nsIJSRuntimeService.h"
 
 // Meta
@@ -307,31 +307,17 @@ public:
     }
   }
 
-  void ToStreamAsJSON(std::ostream& stream)
-  {
-    JSCustomObjectBuilder b;
-    JSCustomObject *profile = b.CreateObject();
-    BuildJSObject(b, profile);
-    b.Serialize(profile, stream);
-    b.DeleteObject(profile);
-  }
-
-  JSCustomObject *ToJSObject(JSContext *aCx)
+  JSObject *ToJSObject(JSContext *aCx)
   {
     JSObjectBuilder b(aCx);
-    JSCustomObject *profile = b.CreateObject();
-    BuildJSObject(b, profile);
 
-    return profile;
-  }
-
-  void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile) {
-    JSCustomArray *samples = b.CreateArray();
+    JSObject *profile = b.CreateObject();
+    JSObject *samples = b.CreateArray();
     b.DefineProperty(profile, "samples", samples);
 
-    JSCustomObject *sample = nullptr;
-    JSCustomArray *frames = nullptr;
-    JSCustomArray *marker = nullptr;
+    JSObject *sample = NULL;
+    JSObject *frames = NULL;
+    JSObject *marker = NULL;
 
     int readPos = mReadPos;
     while (readPos != mLastFlushPos) {
@@ -396,7 +382,7 @@ public:
         case 'l':
           {
             if (sample) {
-              JSCustomObject *frame = b.CreateObject();
+              JSObject *frame = b.CreateObject();
               if (entry.mTagName == 'l') {
                 // Bug 753041
                 // We need a double cast here to tell GCC that we don't want to sign
@@ -420,6 +406,8 @@ public:
       }
       readPos = (readPos + incBy) % mEntrySize;
     }
+
+    return profile;
   }
 
   ProfileStack* GetStack()
@@ -485,9 +473,8 @@ class TableTicker: public Sampler {
     return &mPrimaryThreadProfile;
   }
 
-  void ToStreamAsJSON(std::ostream& stream);
   JSObject *ToJSObject(JSContext *aCx);
-  JSCustomObject *GetMetaJSCustomObject(JSAObjectBuilder& b);
+  JSObject *GetMetaJSObject(JSObjectBuilder& b);
 
   const bool ProfileJS() { return mProfileJS; }
 
@@ -495,7 +482,6 @@ private:
   // Not implemented on platforms which do not support backtracing
   void doBacktrace(ThreadProfile &aProfile, TickSample* aSample);
 
-  void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile);
 private:
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile mPrimaryThreadProfile;
@@ -527,6 +513,7 @@ public:
 
   NS_IMETHOD Run() {
     TableTicker *t = tlsTicker.get();
+
     // Pause the profiler during saving.
     // This will prevent us from recording sampling
     // regarding profile saving. This will also
@@ -556,7 +543,7 @@ public:
       return rv;
 #endif
 
-    // Create a JSContext to run a JSCustomObjectBuilder :(
+    // Create a JSContext to run a JSObjectBuilder :(
     // Based on XPCShellEnvironment
     JSRuntime *rt;
     JSContext *cx;
@@ -588,6 +575,7 @@ public:
       // regarding profile saving. This will also
       // prevent bugs caused by the circular buffer not
       // being thread safe. Bug 750989.
+      t->SetPaused(true);
       if (stream.is_open()) {
         JSAutoCompartment autoComp(cx, obj);
         JSObject* profileObj = mozilla_sampler_get_profile_data(cx);
@@ -601,6 +589,8 @@ public:
     }
     JS_EndRequest(cx);
     JS_DestroyContext(cx);
+
+    t->SetPaused(false);
 
     return NS_OK;
   }
@@ -618,9 +608,9 @@ void TableTicker::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
-JSCustomObject* TableTicker::GetMetaJSCustomObject(JSAObjectBuilder& b)
+JSObject* TableTicker::GetMetaJSObject(JSObjectBuilder& b)
 {
-  JSCustomObject *meta = b.CreateObject();
+  JSObject *meta = b.CreateObject();
 
   b.DefineProperty(meta, "version", 2);
   b.DefineProperty(meta, "interval", interval());
@@ -671,44 +661,30 @@ JSCustomObject* TableTicker::GetMetaJSCustomObject(JSAObjectBuilder& b)
   return meta;
 }
 
-void TableTicker::ToStreamAsJSON(std::ostream& stream)
-{
-  JSCustomObjectBuilder b;
-  JSCustomObject* profile = b.CreateObject();
-  BuildJSObject(b, profile);
-  b.Serialize(profile, stream);
-  b.DeleteObject(profile);
-}
-
 JSObject* TableTicker::ToJSObject(JSContext *aCx)
 {
   JSObjectBuilder b(aCx);
-  JSCustomObject* profile = b.CreateObject();
-  BuildJSObject(b, profile);
-  JSObject* jsProfile = b.GetJSObject(profile);
 
-  return jsProfile;
-}
+  JSObject *profile = b.CreateObject();
 
-void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
-{
   // Put shared library info
   b.DefineProperty(profile, "libs", GetSharedLibraryInfoString().c_str());
 
   // Put meta data
-  JSCustomObject *meta = GetMetaJSCustomObject(b);
+  JSObject *meta = GetMetaJSObject(b);
   b.DefineProperty(profile, "meta", meta);
 
   // Lists the samples for each ThreadProfile
-  JSCustomArray *threads = b.CreateArray();
+  JSObject *threads = b.CreateArray();
   b.DefineProperty(profile, "threads", threads);
 
   // For now we only have one thread
   SetPaused(true);
-  JSCustomObject* threadSamples = b.CreateObject();
-  GetPrimaryThreadProfile()->BuildJSObject(b, threadSamples);
+  JSObject* threadSamples = GetPrimaryThreadProfile()->ToJSObject(aCx);
   b.ArrayPush(threads, threadSamples);
   SetPaused(false);
+
+  return profile;
 }
 
 static
@@ -1086,21 +1062,8 @@ void mozilla_sampler_init()
                         features, sizeof(features)/sizeof(const char*));
 }
 
-void mozilla_sampler_shutdown()
+void mozilla_sampler_deinit()
 {
-  TableTicker *t = tlsTicker.get();
-  if (t) {
-    const char *val = PR_GetEnv("MOZ_PROFILER_SHUTDOWN");
-    if (val) {
-      std::ofstream stream;
-      stream.open(val);
-      if (stream.is_open()) {
-        t->ToStreamAsJSON(stream);
-        stream.close();
-      }
-    }
-  }
-
   mozilla_sampler_stop();
   // We can't delete the Stack because we can be between a
   // sampler call_enter/call_exit point.

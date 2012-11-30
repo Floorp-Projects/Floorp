@@ -26,7 +26,6 @@
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
 #include "mozilla/Preferences.h"
-#include "sampler.h"
 
 #include "prprf.h"
 #include "nsCRT.h"
@@ -388,7 +387,6 @@ nsAppStartup::Quit(uint32_t aMode)
   if (mShuttingDown)
     return NS_OK;
 
-  SAMPLE_MARKER("Shutdown start");
   RecordShutdownStartTimeStamp();
 
   // If we're considering quitting, we will only do so if:
