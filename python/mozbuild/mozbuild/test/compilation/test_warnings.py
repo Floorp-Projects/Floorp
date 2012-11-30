@@ -76,6 +76,47 @@ class TestCompilerWarning(unittest.TestCase):
 
         self.assertEqual(w1, w2)
 
+    def test_comparison(self):
+        w1 = CompilerWarning()
+        w2 = CompilerWarning()
+
+        w1['filename'] = '/aaa.c'
+        w1['line'] = 5
+        w1['column'] = 5
+
+        w2['filename'] = '/bbb.c'
+        w2['line'] = 5
+        w2['column'] = 5
+
+        self.assertLess(w1, w2)
+        self.assertGreater(w2, w1)
+        self.assertGreaterEqual(w2, w1)
+
+        w2['filename'] = '/aaa.c'
+        w2['line'] = 4
+        w2['column'] = 6
+
+        self.assertLess(w2, w1)
+        self.assertGreater(w1, w2)
+        self.assertGreaterEqual(w1, w2)
+
+        w2['filename'] = '/aaa.c'
+        w2['line'] = 5
+        w2['column'] = 10
+
+        self.assertLess(w1, w2)
+        self.assertGreater(w2, w1)
+        self.assertGreaterEqual(w2, w1)
+
+        w2['filename'] = '/aaa.c'
+        w2['line'] = 5
+        w2['column'] = 5
+
+        self.assertLessEqual(w1, w2)
+        self.assertLessEqual(w2, w1)
+        self.assertGreaterEqual(w2, w1)
+        self.assertGreaterEqual(w1, w2)
+
 class TestWarningsParsing(unittest.TestCase):
     def test_clang_parsing(self):
         for source, filename, line, column, message, flag in CLANG_TESTS:

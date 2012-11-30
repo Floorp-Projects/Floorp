@@ -56,32 +56,40 @@ class CompilerWarning(dict):
         self['message'] = None
         self['flag'] = None
 
-    def __eq__(self, other):
-        if not isinstance(other, CompilerWarning):
-            return False
+    # Since we inherit from dict, functools.total_ordering gets confused.
+    # Thus, we define a key function, a generic comparison, and then
+    # implement all the rich operators with those; approach is from:
+    # http://regebro.wordpress.com/2010/12/13/python-implementing-rich-comparison-the-correct-way/
+    def _cmpkey(self):
+        return (self['filename'], self['line'], self['column'])
 
-        return self['filename'] == other['filename'] \
-            and self['line'] == other['line'] \
-            and self['column'] == other['column']
+    def _compare(self, other, func):
+        if not isinstance(other, CompilerWarning):
+            return NotImplemented
+
+        return func(self._cmpkey(), other._cmpkey())
+
+    def __eq__(self, other):
+        return self._compare(other, lambda s,o: s == o)
 
     def __neq__(self, other):
-        return not self.__eq__(other)
+        return self._compare(other, lambda s,o: s != o)
+
+    def __lt__(self, other):
+        return self._compare(other, lambda s,o: s < o)
+
+    def __le__(self, other):
+        return self._compare(other, lambda s,o: s <= o)
+
+    def __gt__(self, other):
+        return self._compare(other, lambda s,o: s > o)
+
+    def __ge__(self, other):
+        return self._compare(other, lambda s,o: s >= o)
 
     def __hash__(self):
         """Define so this can exist inside a set, etc."""
         return hash(tuple(sorted(self.items())))
-
-    def __cmp__(self, other):
-        if not isinstance(other, CompilerWarning):
-            return -1
-
-        for key in ('filename', 'line', 'column'):
-            x = cmp(self[key], other[key])
-
-            if x != 0:
-                return x
-
-        return 0
 
 
 class WarningsDatabase(object):
