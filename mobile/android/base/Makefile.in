@@ -228,6 +228,7 @@ FENNEC_PP_XML_FILES = \
   res/color/awesome_bar_title_hint.xml \
   res/color/tabs_counter_color.xml \
   res/drawable/address_bar_bg.xml \
+  res/drawable/address_bar_nav_button.xml \
   res/drawable/address_bar_url.xml \
   res/drawable/awesomebar_tabs_bg.xml \
   res/drawable/menu_level.xml \
@@ -1034,7 +1035,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/address_bar_bg_normal.xml              \
   mobile/android/base/resources/drawable/address_bar_bg_private.xml             \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
-  mobile/android/base/resources/drawable/address_bar_nav_button.xml             \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
