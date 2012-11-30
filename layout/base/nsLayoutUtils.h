@@ -1901,6 +1901,8 @@ nsLayoutUtils::SortFrameList(nsFrameList& aFrameList)
 {
   nsIFrame* head = MergeSort<IsLessThanOrEqual>(aFrameList.FirstChild());
   aFrameList = nsFrameList(head, GetLastSibling(head));
+  MOZ_ASSERT(IsFrameListSorted<IsLessThanOrEqual>(aFrameList),
+             "After we sort a frame list, it should be in sorted order...");
 }
 
 template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
