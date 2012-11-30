@@ -89,3 +89,13 @@ function startServer() {
   httpServer.start(4444);
   return httpServer;
 }
+
+function waitForDownloadState(aDownload, aState, aCallback) {
+  executeSoon(function() {
+    if (aDownload.state == aState) {
+      aCallback();
+    } else {
+      waitForDownloadState(aDownload, aState, aCallback);
+    }
+  });
+}
