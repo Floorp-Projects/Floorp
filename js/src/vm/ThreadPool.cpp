@@ -7,74 +7,74 @@
 #include "jscntxt.h"
 #include "jslock.h"
 
-#include "Monitor.h"
-#include "ThreadPool.h"
+#include "vm/Monitor.h"
+#include "vm/ThreadPool.h"
 
 #ifdef JS_THREADSAFE
 #  include "prthread.h"
 #endif
 
-namespace js {
+using namespace js;
 
-/****************************************************************************
- * ThreadPoolWorker
- *
- * Each |ThreadPoolWorker| just hangs around waiting for items to be added
- * to its |worklist_|.  Whenever something is added, it gets executed.
- * Once the worker's state is set to |TERMINATING|, the worker will
- * exit as soon as its queue is empty.
- */
+/////////////////////////////////////////////////////////////////////////////
+// ThreadPoolWorker
+//
+// Each |ThreadPoolWorker| just hangs around waiting for items to be added
+// to its |worklist_|.  Whenever something is added, it gets executed.
+// Once the worker's state is set to |TERMINATING|, the worker will
+// exit as soon as its queue is empty.
 
-#define WORKER_THREAD_STACK_SIZE (1*1024*1024)
+const size_t WORKER_THREAD_STACK_SIZE = 1*1024*1024;
 
-enum WorkerState {
-    CREATED, ACTIVE, TERMINATING, TERMINATED
-};
-
-class ThreadPoolWorker : public Monitor
+class js::ThreadPoolWorker : public Monitor
 {
     const size_t workerId_;
     ThreadPool *const threadPool_;
 
-    /* Currrent point in the worker's lifecycle.
-     *
-     * Modified only while holding the ThreadPoolWorker's lock */
-    WorkerState state_;
+    // Current point in the worker's lifecycle.
+    //
+    // Modified only while holding the ThreadPoolWorker's lock.
+    enum WorkerState {
+        CREATED, ACTIVE, TERMINATING, TERMINATED
+    } state_;
 
-    /* Worklist for this thread.
-     *
-     * Modified only while holding the ThreadPoolWorker's lock */
+    // Worklist for this thread.
+    //
+    // Modified only while holding the ThreadPoolWorker's lock.
     js::Vector<TaskExecutor*, 4, SystemAllocPolicy> worklist_;
 
-    /* The thread's main function */
+    // The thread's main function
     static void ThreadMain(void *arg);
     void run();
 
-public:
+  public:
     ThreadPoolWorker(size_t workerId, ThreadPool *tp);
     ~ThreadPoolWorker();
 
     bool init();
 
-    /* Invoked from main thread; signals worker to start */
+    // Invoked from main thread; signals worker to start.
     bool start();
 
-    /* Submit work to be executed. If this returns true, you are
-       guaranteed that the task will execute before the thread-pool
-       terminates (barring an infinite loop in some prior task) */
+    // Submit work to be executed. If this returns true, you are guaranteed
+    // that the task will execute before the thread-pool terminates (barring
+    // an infinite loop in some prior task).
     bool submit(TaskExecutor *task);
 
-    /* Invoked from main thread; signals worker to terminate
-     * and blocks until termination completes */
+    // Invoked from main thread; signals worker to terminate and blocks until
+    // termination completes.
     void terminate();
 };
 
 ThreadPoolWorker::ThreadPoolWorker(size_t workerId, ThreadPool *tp)
-    : workerId_(workerId), threadPool_(tp), state_(CREATED), worklist_()
-{}
+  : workerId_(workerId),
+    threadPool_(tp),
+    state_(CREATED),
+    worklist_()
+{ }
 
 ThreadPoolWorker::~ThreadPoolWorker()
-{}
+{ }
 
 bool
 ThreadPoolWorker::init()
@@ -173,28 +173,26 @@ ThreadPoolWorker::terminate()
     } else if (state_ == ACTIVE) {
         state_ = TERMINATING;
         lock.notify();
-        while (state_ != TERMINATED) {
+        while (state_ != TERMINATED)
             lock.wait();
-        }
     } else {
         JS_ASSERT(state_ == TERMINATED);
     }
 }
 
-/****************************************************************************
- * ThreadPool
- *
- * The |ThreadPool| starts up workers, submits work to them, and shuts
- * them down when requested.
- */
+/////////////////////////////////////////////////////////////////////////////
+// ThreadPool
+//
+// The |ThreadPool| starts up workers, submits work to them, and shuts
+// them down when requested.
 
 ThreadPool::ThreadPool(JSRuntime *rt)
-    : runtime_(rt),
-      nextId_(0)
-{
-}
+  : runtime_(rt),
+    nextId_(0)
+{ }
 
-ThreadPool::~ThreadPool() {
+ThreadPool::~ThreadPool()
+{
     terminateWorkers();
     while (workers_.length() > 0) {
         ThreadPoolWorker *worker = workers_.popCopy();
@@ -209,11 +207,10 @@ ThreadPool::init()
     // Compute desired number of workers based on env var or # of CPUs.
     size_t numWorkers = 0;
     char *pathreads = getenv("PATHREADS");
-    if (pathreads != NULL) {
+    if (pathreads != NULL)
         numWorkers = strtol(pathreads, NULL, 10);
-    } else {
+    else
         numWorkers = GetCPUCount() - 1;
-    }
 
     // Allocate workers array and then start the worker threads.
     // Ensure that the field numWorkers_ always tracks the number of
@@ -228,9 +225,8 @@ ThreadPool::init()
             js_delete(worker);
             return false;
         }
-        if (!worker->start()) {
+        if (!worker->start())
             return false;
-        }
     }
 #endif
 
@@ -240,13 +236,13 @@ ThreadPool::init()
 void
 ThreadPool::terminateWorkers()
 {
-    for (size_t i = 0; i < workers_.length(); i++) {
+    for (size_t i = 0; i < workers_.length(); i++)
         workers_[i]->terminate();
-    }
 }
 
 bool
-ThreadPool::submitOne(TaskExecutor *executor) {
+ThreadPool::submitOne(TaskExecutor *executor)
+{
     runtime_->assertValidThread();
 
     if (numWorkers() == 0)
@@ -258,7 +254,8 @@ ThreadPool::submitOne(TaskExecutor *executor) {
 }
 
 bool
-ThreadPool::submitAll(TaskExecutor *executor) {
+ThreadPool::submitAll(TaskExecutor *executor)
+{
     for (size_t id = 0; id < workers_.length(); id++) {
         if (!workers_[id]->submit(executor))
             return false;
@@ -267,9 +264,8 @@ ThreadPool::submitAll(TaskExecutor *executor) {
 }
 
 bool
-ThreadPool::terminate() {
+ThreadPool::terminate()
+{
     terminateWorkers();
     return true;
-}
-
 }
