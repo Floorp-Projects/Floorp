@@ -67,6 +67,11 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
                 ForbidCompilation(cx, script);
             }
         }
+
+        // When caller runs in IM, but callee not, we take a slow path to the interpreter.
+        // This has a significant overhead. In order to decrease the number of times this happens,
+        // the useCount gets incremented faster to compile this function in IM and use the fastpath.
+        fun->nonLazyScript()->incUseCount(js_IonOptions.slowCallIncUseCount);
     }
 
     // TI will return false for monitorReturnTypes, meaning there is no
