@@ -512,14 +512,18 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
   URLLoadInfo* info = (URLLoadInfo*)context;
 
   if (info) {
+#ifdef PR_LOGGING
     double connectTime;
+#endif
     double readTime;
     uint32_t httpStatus;
     bool bHTTPURL = false;
 
     info->mTotalTime = PR_Now() - info->mTotalTime;
 
+#ifdef PR_LOGGING
     connectTime = (info->mConnectTime/1000.0)/1000.0;
+#endif
     readTime    = ((info->mTotalTime-info->mConnectTime)/1000.0)/1000.0;
 
     nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
