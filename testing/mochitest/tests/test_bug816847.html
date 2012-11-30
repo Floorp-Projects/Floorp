@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=816847
+-->
+<head>
+  <title>Test for Bug 816847</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=816847">Mozilla Bug 816847</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 816847 **/
+SimpleTest.waitForExplicitFinish();
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const Cu = SpecialPowers.Cu;
+
+const Services = Cu.import("resource://gre/modules/Services.jsm").Services;
+const appsSvc = Cc["@mozilla.org/AppsService;1"]
+                  .getService(Ci.nsIAppsService)
+
+const manifest = "https://example.com/manifest.webapp";
+const allow = Ci.nsIPermissionManager.ALLOW_ACTION;
+const unknown = Ci.nsIPermissionManager.UNKNOWN_ACTION;
+const perms = ['network-events', 'geolocation', 'camera', 'alarms']
+
+function createPrincipal(aURI, aIsApp, aIsInBrowserElement) {
+  if(aIsApp) {
+    var app = appsSvc.getAppByManifestURL(aURI);
+    var localId = appsSvc.getAppLocalIdByManifestURL(aURI);
+    var uri = Services.io.newURI(app.origin, null, null);
+    return Services.scriptSecurityManager
+                   .getAppCodebasePrincipal(uri,
+                                            localId,
+                                            aIsInBrowserElement);
+  }
+
+  var uri = Services.io.newURI(aURI, null, null);
+  return Services.scriptSecurityManager
+                 .getNoAppCodebasePrincipal(uri);
+}
+
+// test addPermission and removePermission
+function starttest(){
+  var app = appsSvc.getAppByManifestURL(manifest);
+  ok(app != null, "Got an app "); 
+
+  var origin = app.origin 
+  var nodePrincipal = SpecialPowers.getNodePrincipal(document);
+  var appPrincipal = createPrincipal(manifest, true);
+  var noappPrincipal = createPrincipal(origin, false);
+
+  SpecialPowers.addPermission(perms[0], true, origin);
+  SpecialPowers.addPermission(perms[1], true, {manifestURL: manifest});
+  SpecialPowers.addPermission(perms[2], true, document);
+  SpecialPowers.addPermission(perms[3], true, {url: origin,
+                                               appId: Ci.nsIScriptSecurityManager.NO_APP_ID});
+
+  is(Services.perms.testPermissionFromPrincipal(noappPrincipal, perms[0]),
+     allow, "Set permission by string");
+  is(Services.perms.testPermissionFromPrincipal(appPrincipal, perms[1]),
+     allow, "Set permission by manifestURL");
+  is(Services.perms.testPermissionFromPrincipal(nodePrincipal, perms[2]),
+     allow, "Set permission by principal");
+  is(Services.perms.testPermissionFromPrincipal(noappPrincipal, perms[3]),
+     allow, "Set permission by other");
+  is(Services.perms.testPermissionFromPrincipal(noappPrincipal, perms[1]),
+     unknown, "Check that app permission doesn't leak to normal page");
+
+  SpecialPowers.removePermission(perms[0], origin);
+  SpecialPowers.removePermission(perms[1], {manifestURL: manifest});
+  SpecialPowers.removePermission(perms[2], document);
+  SpecialPowers.removePermission(perms[3], {url: origin,
+                                            appId: Ci.nsIScriptSecurityManager.NO_APP_ID});
+
+  is(Services.perms.testPermissionFromPrincipal(noappPrincipal, perms[0]),
+     unknown, "Removed permission by string");
+  is(Services.perms.testPermissionFromPrincipal(appPrincipal, perms[1]),
+     unknown, "Removed permission by manifestURL");
+  is(Services.perms.testPermissionFromPrincipal(nodePrincipal, perms[2]),
+     unknown, "Removed permission by principal");
+  is(Services.perms.testPermissionFromPrincipal(noappPrincipal, perms[3]),
+     unknown, "Removed permission by other");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

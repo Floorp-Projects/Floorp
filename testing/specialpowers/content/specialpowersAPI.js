@@ -1240,15 +1240,15 @@ SpecialPowersAPI.prototype = {
               .spec;
     } else if (arg.manifestURL) {
       // It's a thing representing an app.
-      let tmp = {};
-      Cu.import("resource://gre/modules/Webapps.jsm", tmp);
+      let appsSvc = Cc["@mozilla.org/AppsService;1"]
+                      .getService(Ci.nsIAppsService)
+      let app = appsSvc.getAppByManifestURL(arg.manifestURL); 
 
-      let app = tmp.DOMApplicationRegistry.getAppByManifestURL(arg.manifestURL);
       if (!app) {
         throw "No app for this manifest!";
       }
 
-      appId = app.localId;
+      appId = appsSvc.getAppLocalIdByManifestURL(arg.manifestURL);
       url = app.origin;
       isInBrowserElement = arg.isInBrowserElement || false;
     } else if (arg.nodePrincipal) {
