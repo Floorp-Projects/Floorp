@@ -3023,7 +3023,7 @@ BEGIN_CASE(JSOP_ENDINIT)
 {
     /* FIXME remove JSOP_ENDINIT bug 588522 */
     JS_ASSERT(regs.stackDepth() >= 1);
-    JS_ASSERT(regs.sp[-1].isObject());
+    JS_ASSERT(regs.sp[-1].isObject() || regs.sp[-1].isUndefined());
 }
 END_CASE(JSOP_ENDINIT)
 
