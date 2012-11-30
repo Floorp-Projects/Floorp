@@ -6,8 +6,9 @@
 
 #include "jscntxt.h"
 #include "jslock.h"
-#include "vm/threadpool.h"
-#include "monitor.h"
+
+#include "Monitor.h"
+#include "ThreadPool.h"
 
 #ifdef JS_THREADSAFE
 #  include "prthread.h"

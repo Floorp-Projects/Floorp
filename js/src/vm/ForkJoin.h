@@ -8,7 +8,7 @@
 #ifndef jstaskset_h___
 #define jstaskset_h___
 
-#include "threadpool.h"
+#include "ThreadPool.h"
 
 /*
  * ForkJoin
