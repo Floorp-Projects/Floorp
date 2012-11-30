@@ -87,6 +87,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_SOUNDTOUCH
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libsoundtouch/src/$(LIB_PREFIX)soundtouch.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef MOZ_CUBEB
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libcubeb/src/$(LIB_PREFIX)cubeb.$(LIB_SUFFIX) \
