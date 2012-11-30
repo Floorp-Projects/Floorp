@@ -745,6 +745,18 @@ EOF
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
+        AC_CHECK_PROGS(MIDL, $target-widl widl)
+        if test -n "$MIDL"; then
+            case "$target" in
+            i*86-*)
+                MIDL_FLAGS="$MIDL_FLAGS --win32 -m32"
+                ;;
+            x86_64-*)
+                MIDL_FLAGS="$MIDL_FLAGS --win64 -m64"
+                ;;
+            esac
+        fi
+
         MOZ_WINSDK_MAXVER=0x06020000
     fi # !GNU_CC
 
@@ -5182,6 +5194,13 @@ MOZ_ARG_DISABLE_BOOL(accessibility,
     ACCESSIBILITY=,
     ACCESSIBILITY=1 )
 if test "$ACCESSIBILITY"; then
+    if test -z "$MIDL"; then
+        if test "$GCC" != "yes"; then
+            AC_MSG_ERROR([MIDL could not be found. Building accessibility without MIDL is not supported.])
+        else
+            AC_MSG_ERROR([You have accessibility enabled, but widl could not be found. Add --dissable-accessibility to your mozconfig or install widl. See https://developer.mozilla.org/en-US/docs/Cross_Compile_Mozilla_for_Mingw32 for details.])
+        fi
+    fi
     AC_DEFINE(ACCESSIBILITY)
 fi
 
