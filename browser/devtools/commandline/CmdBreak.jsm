@@ -12,6 +12,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "HUDService",
                                   "resource:///modules/HUDService.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
+                                  "resource:///modules/devtools/Target.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
+                                  "resource:///modules/devtools/gDevTools.jsm");
+
 /**
  * 'break' command
  */
@@ -30,12 +36,15 @@ gcli.addCommand({
   description: gcli.lookup("breaklistDesc"),
   returnType: "html",
   exec: function(args, context) {
-    let win = HUDService.currentContext();
-    let dbg = win.DebuggerUI.getDebugger();
+    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+
     if (!dbg) {
       return gcli.lookup("breakaddDebuggerStopped");
     }
-    let breakpoints = dbg.breakpoints;
+
+    let breakpoints = dbg.getAllBreakpoints();
 
     if (Object.keys(breakpoints).length === 0) {
       return gcli.lookup("breaklistNone");
@@ -76,11 +85,13 @@ gcli.addCommand({
       type: {
         name: "selection",
         data: function() {
-          let win = HUDService.currentContext();
-          let dbg = win.DebuggerUI.getDebugger();
+          let gBrowser = HUDService.currentContext().gBrowser;
+          let target = TargetFactory.forTab(gBrowser.selectedTab);
+          let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+
           let files = [];
           if (dbg) {
-            let sourcesView = dbg.contentWindow.DebuggerView.Sources;
+            let sourcesView = dbg.panelWin.DebuggerView.Sources;
             for (let item in sourcesView) {
               files.push(item.value);
             }
@@ -99,8 +110,11 @@ gcli.addCommand({
   returnType: "html",
   exec: function(args, context) {
     args.type = "line";
-    let win = HUDService.currentContext();
-    let dbg = win.DebuggerUI.getDebugger();
+
+    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+
     if (!dbg) {
       return gcli.lookup("breakaddDebuggerStopped");
     }
@@ -131,12 +145,14 @@ gcli.addCommand({
         name: "number",
         min: 0,
         max: function() {
-          let win = HUDService.currentContext();
-          let dbg = win.DebuggerUI.getDebugger();
+          let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
+          let target = TargetFactory.forTab(gBrowser.selectedTab);
+          let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+
           if (!dbg) {
             return gcli.lookup("breakaddDebuggerStopped");
           }
-          return Object.keys(dbg.breakpoints).length - 1;
+          return Object.keys(dbg.getAllBreakpoints()).length - 1;
         },
       },
       description: gcli.lookup("breakdelBreakidDesc")
@@ -144,14 +160,16 @@ gcli.addCommand({
   ],
   returnType: "html",
   exec: function(args, context) {
-    let win = HUDService.currentContext();
-    let dbg = win.DebuggerUI.getDebugger();
+    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+
     if (!dbg) {
       return gcli.lookup("breakaddDebuggerStopped");
     }
 
-    let breakpoints = dbg.breakpoints;
-    let id = Object.keys(dbg.breakpoints)[args.breakid];
+    let breakpoints = dbg.getAllBreakpoints();
+    let id = Object.keys(breakpoints)[args.breakid];
     if (!id || !(id in breakpoints)) {
       return gcli.lookup("breakNotFound");
     }
