@@ -18,6 +18,9 @@
 
 #define OMX_CODEC_H_
 
+#if defined(MOZ_ANDROID_HC)
+#include <android/native_window.h>
+#endif
 #include <media/IOMX.h>
 #include <media/stagefright/MediaBuffer.h>
 #include <media/stagefright/MediaSource.h>
@@ -44,7 +47,12 @@ struct OMXCodec : public MediaSource,
             const sp<MetaData> &meta, bool createEncoder,
             const sp<MediaSource> &source,
             const char *matchComponentName = NULL,
-            uint32_t flags = 0);
+            uint32_t flags = 0
+#if defined(MOZ_ANDROID_HC)
+            ,const sp<ANativeWindow> &nativeWindow = NULL
+#endif
+	    );
+
 
     static void setComponentRole(
             const sp<IOMX> &omx, IOMX::node_id node, bool isEncoder,

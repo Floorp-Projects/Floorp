@@ -25,6 +25,9 @@
 #include <utils/List.h>
 #include <utils/RefBase.h>
 #include <utils/threads.h>
+#if defined(MOZ_ANDROID_HC)
+#include <utils/String8.h>
+#endif
 
 #if !defined(STAGEFRIGHT_EXPORT)
 #define STAGEFRIGHT_EXPORT
@@ -58,7 +61,7 @@ public:
     virtual ssize_t readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size_t size) = 0;
 
     // Convenience methods:
-    bool getUInt16(off_t offset, uint16_t *x);
+    bool getUInt16(MOZ_STAGEFRIGHT_OFF_T offset, uint16_t *x);
 
     // May return ERROR_UNSUPPORTED.
     virtual status_t getSize(MOZ_STAGEFRIGHT_OFF_T *size);
@@ -80,6 +83,17 @@ public:
 
     static void RegisterSniffer(SnifferFunc func);
     static void RegisterDefaultSniffers();
+
+#if defined(MOZ_ANDROID_HC)
+    virtual void* DrmInitialization() {
+        return NULL;
+    }
+    virtual void getDrmInfo(void **handle, void **client) {};
+
+    virtual String8 getUri() {
+        return String8();
+    }
+#endif
 
 protected:
     virtual ~DataSource() {}
