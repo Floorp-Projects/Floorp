@@ -18,7 +18,7 @@ function test() {
   debug_tab_pane(TEST_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    let gDebugger = gPane.contentWindow;
+    let gDebugger = gPane.panelWin;
 
     is(gDebugger.DebuggerController._isInitialized, true,
       "Controller should be initialized after debug_tab_pane.");

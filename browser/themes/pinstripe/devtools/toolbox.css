@@ -1,0 +1,94 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#toolbox-tabs {
+  margin: 0;
+}
+
+#toolbox-dock-bottom {
+  list-style-image: url("chrome://browser/skin/devtools/dock-bottom.png");
+}
+
+#toolbox-dock-side {
+  list-style-image: url("chrome://browser/skin/devtools/dock-side.png");
+}
+
+#toolbox-dock-window {
+  list-style-image: url("chrome://browser/skin/devtools/dock-window.png");
+}
+
+#command-button-responsive {
+  list-style-image: url(chrome://browser/skin/devtools/command-responsivemode.png);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#command-button-responsive:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+#command-button-responsive:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+#command-button-responsive[checked=true] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#command-button-tilt {
+  list-style-image: url(chrome://browser/skin/devtools/command-tilt.png);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#command-button-tilt:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#command-button-tilt:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+#command-button-tilt[checked=true] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#command-button-scratchpad {
+  list-style-image: url(chrome://browser/skin/devtools/command-scratchpad.png);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#command-button-scratchpad:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#command-button-scratchpad:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+
+/* Tabs */
+
+.devtools-tabbar {
+  -moz-appearance: none;
+  background-image: url(background-noise-toolbar.png), linear-gradient(to bottom, hsl(210,11%,36%), hsl(210,11%,18%));
+  color: hsl(210,30%,85%);
+  padding: 4px 3px 3px;
+  box-shadow: 0 -3px 0 0 rgb(20,20,20) inset, 0 -4px 0 0 rgba(0,0,0,0.8) inset;
+}
+
+.devtools-tab {
+  -moz-appearance: none;
+  min-width: 78px;
+  min-height: 22px;
+  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  border-radius: @toolbarbuttonCornerRadius@ @toolbarbuttonCornerRadius@ 0 0;
+  color: inherit;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px 1px 0;
+  margin: 0 5px;
+  padding: 0 10px 1px;
+}
+
+.devtools-tab[selected=true] {
+  border-color: hsla(210,8%,5%,.6);
+  background-color: rgb(20,20,20);
+  text-shadow: none;
+  color: white;
+}

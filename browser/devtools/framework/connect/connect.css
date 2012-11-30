@@ -1,0 +1,87 @@
+html {
+  background: url("chrome://browser/skin/newtab/noise.png");
+}
+
+body {
+  font-family: Arial;
+  padding: 20px;
+  border-radius: 3px;
+  max-width: 600px;
+  min-height: 400px;
+  margin: 10px auto 0;
+}
+
+label {
+  display: block;
+  margin: 10px;
+  font-size: 0;
+}
+
+label > span {
+  display: inline-block;
+  min-width: 150px;
+  font-size: 0.8rem;
+  text-align: right;
+  margin-right: 10px;
+}
+
+#submit {
+  margin-left: 160px;
+}
+
+
+#actors, #connection-form {
+  margin: 20px;
+}
+
+input {
+  border: 1px solid grey;
+}
+
+#connection-form,
+#connecting,
+#actors-list {
+  display: none;
+}
+
+body:not(.actors-mode):not(.connecting) > #connection-form {
+  display: block;
+}
+
+body.actors-mode > #actors-list {
+  display: block;
+}
+
+body.connecting > #connecting {
+  display: block;
+}
+
+#connecting {
+  text-align: center;
+}
+
+#throbber {
+  height: 7px; width: 7px;
+  border-radius: 50%;
+  background: black;
+  display: inline-block;
+  animation-duration: 0.6s;
+  animation-name: anim;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+@keyframes anim {to {
+    transform: scale(0.5) rotate(0.1deg);
+}}
+
+#actors {
+  padding-left: 0;
+  font-size: 0.9rem;
+}
+
+#actors > a {
+  display: block;
+  margin: 5px;
+  padding: 5px;
+}
