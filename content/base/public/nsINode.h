@@ -49,6 +49,18 @@ class nsXPCClassInfo;
 
 namespace mozilla {
 namespace dom {
+/**
+ * @return true if aChar is what the DOM spec defines as 'space character'.
+ * http://dom.spec.whatwg.org/#space-character
+ */
+inline bool IsSpaceCharacter(PRUnichar aChar) {
+  return aChar == ' ' || aChar == '\t' || aChar == '\n' || aChar == '\r' ||
+         aChar == '\f';
+}
+inline bool IsSpaceCharacter(char aChar) {
+  return aChar == ' ' || aChar == '\t' || aChar == '\n' || aChar == '\r' ||
+         aChar == '\f';
+}
 class Element;
 class EventHandlerNonNull;
 class OnErrorEventHandlerNonNull;

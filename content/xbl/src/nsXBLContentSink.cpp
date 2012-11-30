@@ -150,7 +150,7 @@ nsXBLContentSink::FlushText(bool aReleaseTextNode)
         const PRUnichar* end = mText + mTextLength;
         while (cp < end) {
           PRUnichar ch = *cp++;
-          if (!XP_IS_SPACE(ch)) {
+          if (!dom::IsSpaceCharacter(ch)) {
             isWS = false;
             break;
           }
