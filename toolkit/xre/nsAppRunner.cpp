@@ -3937,6 +3937,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     MOZ_gdk_display_close(mGdkDisplay);
 #endif
 
+    SAMPLER_SHUTDOWN();
     rv = LaunchChild(mNativeApp, true);
 
 #ifdef MOZ_CRASHREPORTER
@@ -3958,6 +3959,8 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
   XRE_DeinitCommandLine();
+
+  SAMPLER_SHUTDOWN();
 
   return NS_FAILED(rv) ? 1 : 0;
 }
@@ -4070,6 +4073,7 @@ XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
   // thread that called XRE_metroStartup.
   NS_ASSERTION(!xreMainPtr->mScopedXPCom,
                "XPCOM Shutdown hasn't occured, and we are exiting.");
+  SAMPLER_SHUTDOWN();
   return 0;
 }
 
