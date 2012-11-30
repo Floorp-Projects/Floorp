@@ -8,10 +8,10 @@
 #include <stdarg.h>
 #include "mozilla/ThreadLocal.h"
 #include "nscore.h"
-#include "jsapi.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Util.h"
 #include "nsAlgorithm.h"
+
 
 /* QT has a #define for the word "slots" and jsfriendapi.h has a struct with
  * this variable name, causing compilation problems. Alleviate this for now by
@@ -26,6 +26,7 @@ using mozilla::TimeDuration;
 
 struct ProfileStack;
 class TableTicker;
+class JSCustomObject;
 
 extern mozilla::ThreadLocal<ProfileStack *> tlsStack;
 extern mozilla::ThreadLocal<TableTicker *> tlsTicker;
@@ -42,7 +43,7 @@ extern bool stack_key_initialized;
 #endif
 
 #define SAMPLER_INIT() mozilla_sampler_init()
-#define SAMPLER_DEINIT() mozilla_sampler_deinit()
+#define SAMPLER_SHUTDOWN() mozilla_sampler_shutdown()
 #define SAMPLER_START(entries, interval, features, featureCount) mozilla_sampler_start(entries, interval, features, featureCount)
 #define SAMPLER_STOP() mozilla_sampler_stop()
 #define SAMPLER_IS_ACTIVE() mozilla_sampler_is_active()
@@ -172,6 +173,7 @@ char* mozilla_sampler_get_profile();
 JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
 const char** mozilla_sampler_get_features();
 void mozilla_sampler_init();
+void mozilla_sampler_shutdown();
 
 void mozilla_sampler_print_location();
 
