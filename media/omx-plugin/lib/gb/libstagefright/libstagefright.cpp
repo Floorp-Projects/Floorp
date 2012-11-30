@@ -18,6 +18,10 @@
 #include "stagefright/OMXCodec.h"
 #include "stagefright/OMXClient.h"
 
+#if defined(MOZ_ANDROID_HC)
+#include <android/native_window.h>
+#endif
+
 namespace android {
 MOZ_EXPORT void MediaBuffer::release()
 {
@@ -83,7 +87,7 @@ MOZ_EXPORT sp<DataSource> DataSource::CreateFromURI(
 }
 
 
-MOZ_EXPORT bool DataSource::getUInt16(off_t offset, uint16_t *x)
+MOZ_EXPORT bool DataSource::getUInt16(MOZ_STAGEFRIGHT_OFF_T offset, uint16_t *x)
 {
   return false;
 }
@@ -107,7 +111,12 @@ MOZ_EXPORT sp<MediaSource> OMXCodec::Create(
             const sp<MetaData> &meta, bool createEncoder,
             const sp<MediaSource> &source,
             const char *matchComponentName,
-            uint32_t flags)
+            uint32_t flags
+#if defined(MOZ_ANDROID_HC)
+	    ,const sp<ANativeWindow> &nativeWindow
+#endif
+	    )
+
 {
   return 0;
 }
