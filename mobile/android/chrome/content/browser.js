@@ -7838,11 +7838,13 @@ var Tabs = {
     }
     // if the tab was last touched more than browser.tabs.expireTime seconds ago,
     // zombify it
-    let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
-    if (lruTab && tabAgeMs > expireTimeMs) {
-      MemoryObserver.zombify(lruTab);
-      Telemetry.addData("FENNEC_TAB_EXPIRED", tabAgeMs / 1000);
-      return true;
+    if (lruTab) {
+      let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
+      if (tabAgeMs > expireTimeMs) {
+        MemoryObserver.zombify(lruTab);
+        Telemetry.addData("FENNEC_TAB_EXPIRED", tabAgeMs / 1000);
+        return true;
+      }
     }
     return false;
   },
