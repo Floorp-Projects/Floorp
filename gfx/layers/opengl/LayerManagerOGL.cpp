@@ -1618,12 +1618,35 @@ LayerManagerOGL::CreateDrawTarget(const IntSize &aSize,
   return LayerManager::CreateDrawTarget(aSize, aFormat);
 }
 
+static void
+SubtractTransformedRegion(nsIntRegion& aRegion,
+                          const nsIntRegion& aRegionToSubtract,
+                          const gfx3DMatrix& aTransform)
+{
+  if (aRegionToSubtract.IsEmpty()) {
+    return;
+  }
+
+  // For each rect in the region, find out its bounds in screen space and
+  // subtract it from the screen region.
+  nsIntRegionRectIterator it(aRegionToSubtract);
+  while (const nsIntRect* rect = it.Next()) {
+    gfxRect incompleteRect = aTransform.TransformBounds(gfxRect(*rect));
+    aRegion.Sub(aRegion, nsIntRect(incompleteRect.x,
+                                   incompleteRect.y,
+                                   incompleteRect.width,
+                                   incompleteRect.height));
+  }
+}
+
 /* static */ void
 LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
                                                 nsIntRegion& aScreenRegion,
+                                                nsIntRegion& aLowPrecisionScreenRegion,
                                                 const gfx3DMatrix& aTransform)
 {
-  if (aScreenRegion.IsEmpty() || aLayer->GetOpacity() <= 0.f) {
+  if (aLayer->GetOpacity() <= 0.f ||
+      (aScreenRegion.IsEmpty() && aLowPrecisionScreenRegion.IsEmpty())) {
     return;
   }
 
@@ -1638,7 +1661,7 @@ LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
     }
     for (Layer* child = aLayer->GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      ComputeRenderIntegrityInternal(child, aScreenRegion, transform);
+      ComputeRenderIntegrityInternal(child, aScreenRegion, aLowPrecisionScreenRegion, transform);
     }
     return;
   }
@@ -1658,43 +1681,122 @@ LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
     gfx3DMatrix transformToScreen = aLayer->GetEffectiveTransform();
     transformToScreen.PreMultiply(aTransform);
 
-    // For each rect in the region, find out its bounds in screen space and
-    // subtract it from the screen region.
-    nsIntRegionRectIterator it(incompleteRegion);
-    while (const nsIntRect* rect = it.Next()) {
-      gfxRect incompleteRect = transformToScreen.TransformBounds(gfxRect(*rect));
-      aScreenRegion.Sub(aScreenRegion, nsIntRect(incompleteRect.x,
-                                                 incompleteRect.y,
-                                                 incompleteRect.width,
-                                                 incompleteRect.height));
+    SubtractTransformedRegion(aScreenRegion, incompleteRegion, transformToScreen);
+
+    // See if there's any incomplete low-precision rendering
+    incompleteRegion.Sub(incompleteRegion, thebesLayer->GetValidLowPrecisionRegion());
+    if (!incompleteRegion.IsEmpty()) {
+      SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
     }
   }
+}
+
+static int
+GetRegionArea(const nsIntRegion& aRegion)
+{
+  int area = 0;
+  nsIntRegionRectIterator it(aRegion);
+  while (const nsIntRect* rect = it.Next()) {
+    area += rect->width * rect->height;
+  }
+  return area;
+}
+
+static float
+GetDisplayportCoverage(const gfx::Rect& aDisplayPort,
+                       const gfx3DMatrix& aTransformToScreen,
+                       const nsIntRect& aScreenRect)
+{
+  gfxRect transformedDisplayport =
+    aTransformToScreen.TransformBounds(gfxRect(aDisplayPort.x,
+                                               aDisplayPort.y,
+                                               aDisplayPort.width,
+                                               aDisplayPort.height));
+  transformedDisplayport.RoundOut();
+  nsIntRect displayport = nsIntRect(transformedDisplayport.x,
+                                    transformedDisplayport.y,
+                                    transformedDisplayport.width,
+                                    transformedDisplayport.height);
+  if (!displayport.Contains(aScreenRect)) {
+    nsIntRegion coveredRegion;
+    coveredRegion.And(aScreenRect, displayport);
+    return GetRegionArea(coveredRegion) / (float)(aScreenRect.width * aScreenRect.height);
+  }
+
+  return 1.0f;
 }
 
 float
 LayerManagerOGL::ComputeRenderIntegrity()
 {
   // We only ever have incomplete rendering when progressive tiles are enabled.
-  if (!gfxPlatform::UseProgressiveTilePainting() || !GetRoot()) {
+  Layer* root = GetRoot();
+  if (!gfxPlatform::UseProgressiveTilePainting() || !root) {
     return 1.f;
   }
 
-  // XXX We assume that mWidgetSize represents the 'screen' area.
-  gfx3DMatrix transform;
-  nsIntRect screenRect(0, 0, mWidgetSize.width, mWidgetSize.height);
+  const FrameMetrics& rootMetrics = root->AsContainerLayer()->GetFrameMetrics();
+  nsIntRect screenRect(rootMetrics.mCompositionBounds.x,
+                       rootMetrics.mCompositionBounds.y,
+                       rootMetrics.mCompositionBounds.width,
+                       rootMetrics.mCompositionBounds.height);
+
+  float lowPrecisionMultiplier = 1.0f;
+  float highPrecisionMultiplier = 1.0f;
+#ifdef MOZ_ANDROID_OMTC
+  // Use the transform on the primary scrollable layer and its FrameMetrics
+  // to find out how much of the viewport the current displayport covers
+  bool hasLowPrecision = true;
+  Layer* primaryScrollable = GetPrimaryScrollableLayer();
+  if (primaryScrollable) {
+    // This is derived from the code in
+    // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
+    const gfx3DMatrix& rootTransform = root->GetTransform();
+    float devPixelRatioX = 1 / rootTransform.GetXScale();
+    float devPixelRatioY = 1 / rootTransform.GetYScale();
+
+    gfx3DMatrix transform = primaryScrollable->GetEffectiveTransform();
+    transform.ScalePost(devPixelRatioX, devPixelRatioY, 1);
+    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
+
+    // Work out how much of the critical display-port covers the screen
+    if (!metrics.mCriticalDisplayPort.IsEmpty()) {
+      hasLowPrecision = true;
+      highPrecisionMultiplier =
+        GetDisplayportCoverage(metrics.mCriticalDisplayPort, transform, screenRect);
+    }
+
+    // Work out how much of the display-port covers the screen
+    if (!metrics.mDisplayPort.IsEmpty()) {
+      if (hasLowPrecision) {
+        lowPrecisionMultiplier =
+          GetDisplayportCoverage(metrics.mDisplayPort, transform, screenRect);
+      } else {
+        highPrecisionMultiplier =
+          GetDisplayportCoverage(metrics.mDisplayPort, transform, screenRect);
+      }
+    }
+  }
+#endif
+
   nsIntRegion screenRegion(screenRect);
-  ComputeRenderIntegrityInternal(GetRoot(), screenRegion, transform);
+  nsIntRegion lowPrecisionScreenRegion(screenRect);
+  gfx3DMatrix transform;
+  ComputeRenderIntegrityInternal(root, screenRegion,
+                                 lowPrecisionScreenRegion, transform);
 
   if (!screenRegion.IsEqual(screenRect)) {
     // Calculate the area of the region. All rects in an nsRegion are
     // non-overlapping.
-    int area = 0;
-    nsIntRegionRectIterator it(screenRegion);
-    while (const nsIntRect* rect = it.Next()) {
-      area += rect->width * rect->height;
+    float screenArea = screenRect.width * screenRect.height;
+    float highPrecisionIntegrity = GetRegionArea(screenRegion) / screenArea;
+    float lowPrecisionIntegrity = 1.f;
+    if (!lowPrecisionScreenRegion.IsEqual(screenRect)) {
+      lowPrecisionIntegrity = GetRegionArea(lowPrecisionScreenRegion) / screenArea;
     }
 
-    return area / (float)(screenRect.width * screenRect.height);
+    return ((highPrecisionIntegrity * highPrecisionMultiplier) +
+            (lowPrecisionIntegrity * lowPrecisionMultiplier)) / 2.f;
   }
 
   return 1.f;

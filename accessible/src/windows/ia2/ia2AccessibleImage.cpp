@@ -42,7 +42,8 @@ ia2AccessibleImage::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleImage::get_description(BSTR* aDescription)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aDescription = NULL;
 
   ImageAccessibleWrap* acc = static_cast<ImageAccessibleWrap*>(this);
@@ -60,8 +61,7 @@ __try {
   *aDescription = ::SysAllocStringLen(description.get(), description.Length());
   return *aDescription ? S_OK : E_OUTOFMEMORY;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -69,7 +69,8 @@ ia2AccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
                                       long* aX,
                                       long* aY)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aX = 0;
   *aY = 0;
 
@@ -90,15 +91,14 @@ __try {
   *aY = y;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleImage::get_imageSize(long* aHeight, long* aWidth)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aHeight = 0;
   *aWidth = 0;
 
@@ -115,7 +115,6 @@ __try {
   *aWidth = height;
   return S_OK;
 
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  A11Y_TRYBLOCK_END
 }
 

@@ -4,7 +4,6 @@
 ac_add_options --with-l10n-base=../../l10n-central
 
 # Global options
-mk_add_options MOZ_MAKE_FLAGS="-j4"
 ac_add_options --disable-tests
 
 # Mozilla-Central nightlies only since this has a cost in performance

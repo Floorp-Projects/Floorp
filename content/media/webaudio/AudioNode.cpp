@@ -12,36 +12,26 @@
 namespace mozilla {
 namespace dom {
 
-template <typename T>
-static void
-TraverseElements(nsCycleCollectionTraversalCallback& cb,
-                 const nsTArray<T>& array,
-                 const char* name)
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            mozilla::dom::AudioNode::Output& aField,
+                            const char* aName,
+                            unsigned aFlags)
 {
-  for (uint32_t i = 0, length = array.Length(); i < length; ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, name);
-    AudioNode* node = array[i].get();
-    cb.NoteXPCOMChild(node);
-  }
+  CycleCollectionNoteChild(aCallback, aField.mDestination.get(), aName, aFlags);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AudioNode)
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            mozilla::dom::AudioNode::Input& aField,
+                            const char* aName,
+                            unsigned aFlags)
+{
+  CycleCollectionNoteChild(aCallback, aField.mSource.get(), aName, aFlags);
+}
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInputs)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputs)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
-  TraverseElements(cb, tmp->mInputs, "mInputs[i]");
-  TraverseElements(cb, tmp->mOutputs, "mOutputs[i]");
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AudioNode)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(AudioNode,
+                                        mContext, mInputs, mOutputs)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AudioNode)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AudioNode)

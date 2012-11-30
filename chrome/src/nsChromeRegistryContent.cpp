@@ -17,9 +17,9 @@ nsChromeRegistryContent::nsChromeRegistryContent()
 
 void
 nsChromeRegistryContent::RegisterRemoteChrome(
-    const nsTArray<ChromePackage>& aPackages,
-    const nsTArray<ResourceMapping>& aResources,
-    const nsTArray<OverrideMapping>& aOverrides,
+    const InfallibleTArray<ChromePackage>& aPackages,
+    const InfallibleTArray<ResourceMapping>& aResources,
+    const InfallibleTArray<OverrideMapping>& aOverrides,
     const nsACString& aLocale)
 {
   NS_ABORT_IF_FALSE(mLocale == nsDependentCString(""),

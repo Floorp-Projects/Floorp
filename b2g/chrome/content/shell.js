@@ -243,17 +243,6 @@ var shell = {
     window.addEventListener('sizemodechange', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
 
-    // Until the volume can be set from the content side, set it to a
-    // a specific value when the device starts. This way the front-end
-    // can display a notification when the volume change and show a volume
-    // level modified from this point.
-    // try catch block must be used since the emulator fails here. bug 746429
-    try {
-      Services.audioManager.masterVolume = 0.5;
-    } catch(e) {
-      dump('Error setting master volume: ' + e + '\n');
-    }
-
     CustomEventManager.init();
     WebappsHelper.init();
     AccessFu.attach(window);
@@ -274,6 +263,7 @@ var shell = {
     ppmm.addMessageListener("dial-handler", this);
     ppmm.addMessageListener("sms-handler", this);
     ppmm.addMessageListener("mail-handler", this);
+    ppmm.addMessageListener("app-notification-send", AlertsHelper);
   },
 
   stop: function shell_stop() {
@@ -620,8 +610,19 @@ var AlertsHelper = {
       return;
 
     let listener = this._listeners[detail.id];
-    let topic = detail.type == "desktop-notification-click" ? "alertclickcallback" : "alertfinished";
-    listener.observer.observe(null, topic, listener.cookie);
+    if (!listener)
+     return;
+
+    let topic = detail.type == "desktop-notification-click" ? "alertclickcallback"
+                                                            : "alertfinished";
+
+    if (detail.id.startsWith("alert")) {
+      listener.observer.observe(null, topic, listener.cookie);
+    } else {
+      listener.mm.sendAsyncMessage("app-notification-return",
+                                   { id: detail.id,
+                                     type: detail.type });
+    }
 
     // we're done with this notification
     if (topic === "alertfinished")
@@ -634,23 +635,71 @@ var AlertsHelper = {
     return id;
   },
 
+  registerAppListener: function alertRegisterAppListener(id, mm, title, text,
+                                                         manifestURL, imageURL) {
+    this._listeners[id] = {
+      mm: mm,
+      title: title,
+      text: text,
+      manifestURL: manifestURL,
+      imageURL: imageURL
+    };
+  },
+
+  showNotification: function alert_showNotification(imageUrl,
+                                                    title,
+                                                    text,
+                                                    textClickable,
+                                                    cookie,
+                                                    id,
+                                                    name,
+                                                    manifestUrl) {
+    function send(appName, appIcon) {
+      shell.sendChromeEvent({
+        type: "desktop-notification",
+        id: id,
+        icon: imageUrl,
+        title: title,
+        text: text,
+        appName: appName,
+        appIcon: appIcon
+      });
+    }
+
+    // If we have a manifest URL, get the icon and title from the manifest
+    // to prevent spoofing.
+    if (manifestUrl && manifestUrl.length) {
+      let app = DOMApplicationRegistry.getAppByManifestURL(manifestUrl);
+      DOMApplicationRegistry.getManifestFor(app.origin, function(aManifest) {
+        let helper = new ManifestHelper(aManifest, app.origin);
+        send(helper.name, helper.iconURLForSize(128));
+      });
+    } else {
+      send(null, null);
+    }
+  },
+
   showAlertNotification: function alert_showAlertNotification(imageUrl,
                                                               title,
                                                               text,
                                                               textClickable,
                                                               cookie,
                                                               alertListener,
-                                                              name)
-  {
-    let id = this.registerListener(cookie, alertListener);
-    shell.sendChromeEvent({
-      type: "desktop-notification",
-      id: id,
-      icon: imageUrl,
-      title: title,
-      text: text
-    });
-  }
+                                                              name) {
+    let id = this.registerListener(null, alertListener);
+    this.showNotification(imageUrl, title, text, textClickable, cookie,
+                          id, name, null);
+  },
+
+  receiveMessage: function alert_receiveMessage(message) {
+    let data = message.data;
+
+    this.registerAppListener(data.id, message.target, data.title, data.text,
+                             data.manifestURL, data.imageURL);
+    this.showNotification(data.imageURL, data.title, data.text,
+                          data.textClickable, null,
+                          data.id, null, data.manifestURL);
+  },
 }
 
 var WebappsHelper = {
@@ -730,11 +779,17 @@ function startDebugger() {
   }
 }
 
-window.addEventListener('ContentStart', function(evt) {
-  if (Services.prefs.getBoolPref('devtools.debugger.remote-enabled')) {
-    startDebugger();
+function stopDebugger() {
+  if (!DebuggerServer.initialized) {
+    return;
   }
-});
+
+  try {
+    DebuggerServer.closeListener();
+  } catch (e) {
+    dump('Unable to stop debugger server: ' + e + '\n');
+  }
+}
 
 // This is the backend for Gaia's screenshot feature.  Gaia requests a
 // screenshot by sending a mozContentEvent with detail.type set to

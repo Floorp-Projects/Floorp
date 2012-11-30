@@ -161,7 +161,7 @@ void OggReader::BuildSerialList(nsTArray<uint32_t>& aTracks)
   }
 }
 
-nsresult OggReader::ReadMetadata(nsVideoInfo* aInfo,
+nsresult OggReader::ReadMetadata(VideoInfo* aInfo,
                                    MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -270,7 +270,7 @@ nsresult OggReader::ReadMetadata(nsVideoInfo* aInfo,
 
     nsIntSize frameSize(mTheoraState->mInfo.frame_width,
                         mTheoraState->mInfo.frame_height);
-    if (nsVideoInfo::ValidateVideoRegion(frameSize, picture, displaySize)) {
+    if (VideoInfo::ValidateVideoRegion(frameSize, picture, displaySize)) {
       // Video track's frame sizes will not overflow. Activate the video track.
       mInfo.mHasVideo = true;
       mInfo.mDisplay = displaySize;

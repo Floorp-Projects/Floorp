@@ -319,7 +319,8 @@ var Addons = {
         let item = list.firstElementChild;
         while (item) {
           if (item.addon && (item.addon.type == "theme") && (item.addon.isActive)) {
-            this.setEnabled(false, item);
+            item.addon.userDisabled = true;
+            item.setAttribute("isDisabled", true);
             break;
           }
           item = item.nextSibling;

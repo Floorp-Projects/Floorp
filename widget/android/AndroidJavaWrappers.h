@@ -655,11 +655,11 @@ public:
     int Action() { return mAction; }
     int Type() { return mType; }
     int64_t Time() { return mTime; }
-    nsTArray<nsIntPoint> Points() { return mPoints; }
-    nsTArray<int> PointIndicies() { return mPointIndicies; }
-    nsTArray<float> Pressures() { return mPressures; }
-    nsTArray<float> Orientations() { return mOrientations; }
-    nsTArray<nsIntPoint> PointRadii() { return mPointRadii; }
+    const nsTArray<nsIntPoint>& Points() { return mPoints; }
+    const nsTArray<int>& PointIndicies() { return mPointIndicies; }
+    const nsTArray<float>& Pressures() { return mPressures; }
+    const nsTArray<float>& Orientations() { return mOrientations; }
+    const nsTArray<nsIntPoint>& PointRadii() { return mPointRadii; }
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }

@@ -34,6 +34,7 @@ GestureEventListener::GestureEventListener(AsyncPanZoomController* aAsyncPanZoom
   : mAsyncPanZoomController(aAsyncPanZoomController),
     mState(GESTURE_NONE),
     mSpanChange(0.0f),
+    mLastTapEndTime(0),
     mLastTouchInput(MultiTouchInput::MULTITOUCH_START, 0)
 {
 }
@@ -137,6 +138,17 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
     NS_WARN_IF_FALSE(foundAlreadyExistingTouch, "Touch ended, but not in list");
 
     if (event.mTime - mTapStartTime <= MAX_TAP_TIME) {
+      if (mState == GESTURE_WAITING_DOUBLE_TAP &&
+          event.mTime - mLastTapEndTime > MAX_TAP_TIME) {
+        // mDoubleTapTimeoutTask wasn't scheduled in time. We need to run the
+        // task synchronously to confirm the last tap.
+        mDoubleTapTimeoutTask->Cancel();
+        TimeoutDoubleTap();
+
+        // Change the state so we can proceed to process the current tap.
+        mState = GESTURE_WAITING_SINGLE_TAP;
+      }
+
       if (mState == GESTURE_WAITING_DOUBLE_TAP) {
         mDoubleTapTimeoutTask->Cancel();
 
@@ -161,6 +173,8 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
           mDoubleTapTimeoutTask,
           MAX_TAP_TIME);
       }
+
+      mLastTapEndTime = event.mTime;
     }
 
     if (mState == GESTURE_WAITING_SINGLE_TAP) {

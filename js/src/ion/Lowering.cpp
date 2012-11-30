@@ -765,19 +765,19 @@ LIRGenerator::visitPow(MPow *ins)
         // it will never get the same register.
         LPowI *lir = new LPowI(useRegisterAtStart(input), useFixed(power, CallTempReg1),
                                tempFixed(CallTempReg0));
-        return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+        return defineVMReturn(lir, ins);
     }
 
     LPowD *lir = new LPowD(useRegisterAtStart(input), useRegisterAtStart(power),
                            tempFixed(CallTempReg0));
-    return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+    return defineVMReturn(lir, ins);
 }
 
 bool
 LIRGenerator::visitRandom(MRandom *ins)
 {
     LRandom *lir = new LRandom(tempFixed(CallTempReg0), tempFixed(CallTempReg1));
-    return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+    return defineVMReturn(lir, ins);
 }
 
 bool
@@ -789,7 +789,7 @@ LIRGenerator::visitMathFunction(MMathFunction *ins)
     // Note: useRegisterAtStart is safe here, the temp is not a FP register.
     LMathFunctionD *lir = new LMathFunctionD(useRegisterAtStart(ins->input()),
                                              tempFixed(CallTempReg0));
-    return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+    return defineVMReturn(lir, ins);
 }
 
 bool
@@ -909,7 +909,7 @@ LIRGenerator::visitMod(MMod *ins)
         // Note: useRegisterAtStart is safe here, the temp is not a FP register.
         LModD *lir = new LModD(useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()),
                                tempFixed(CallTempReg0));
-        return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+        return defineVMReturn(lir, ins);
     }
 
     return lowerBinaryV(JSOP_MOD, ins);

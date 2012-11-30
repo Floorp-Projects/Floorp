@@ -175,7 +175,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
-    Services.obs.addObserver(this, "Session:Restore", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
@@ -282,13 +281,11 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (ss.shouldRestore()) {
-      this.restoreSession(false, null);
-    }
-
     if (updated)
       this.onAppUpdated();
+
+    // Store the low-precision buffer pref
+    this.gUseLowPrecision = Services.prefs.getBoolPref("layers.low-precision-buffer");
 
     // notify java that gecko has loaded
     sendMessageToJava({
@@ -309,34 +306,6 @@ var BrowserApp = {
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
     setTimeout(function() { SafeBrowsing.init(); }, 5000);
 #endif
-  },
-
-  restoreSession: function (restoringOOM, sessionString) {
-    // Be ready to handle any restore failures by making sure we have a valid tab opened
-    let restoreCleanup = {
-      observe: function (aSubject, aTopic, aData) {
-        Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-
-        if (this.tabs.length == 0) {
-          this.addTab("about:home", {
-            showProgress: false,
-            selected: true
-          });
-        }
-
-        // Let Java know we're done restoring tabs so tabs added after this can be animated
-        sendMessageToJava({
-          gecko: {
-            type: "Session:RestoreEnd"
-          }
-        });
-      }.bind(this)
-    };
-    Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
-
-    // Start the restore
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    ss.restoreLastSession(restoringOOM, sessionString);
   },
 
   isAppUpdated: function() {
@@ -427,6 +396,26 @@ var BrowserApp = {
             title: title
           }
         });
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.playMedia"),
+      NativeWindow.contextmenus.mediaContext("media-paused"),
+      function(aTarget) {
+        aTarget.play();
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.pauseMedia"),
+      NativeWindow.contextmenus.mediaContext("media-playing"),
+      function(aTarget) {
+        aTarget.pause();
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareMedia"),
+      NativeWindow.contextmenus.SelectorContext("video"),
+      function(aTarget) {
+        let url = (aTarget.currentSrc || aTarget.src);
+        let title = aTarget.textContent || aTarget.title;
+        NativeWindow.contextmenus._shareStringWithDefault(url, title);
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
@@ -1147,9 +1136,6 @@ var BrowserApp = {
       }
     } else if (aTopic == "gather-telemetry") {
       sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
-    } else if (aTopic == "Session:Restore") {
-      let data = JSON.parse(aData);
-      this.restoreSession(data.restoringOOM, data.sessionString);
     }
   },
 
@@ -1203,16 +1189,25 @@ var NativeWindow = {
   menu: {
     _callbacks: [],
     _menuId: 0,
-    add: function(aName, aIcon, aCallback) {
-      sendMessageToJava({
-        gecko: {
-          type: "Menu:Add",
-          name: aName,
-          icon: aIcon,
-          id: this._menuId
-        }
-      });
-      this._callbacks[this._menuId] = aCallback;
+    add: function() {
+      let options;
+      if (arguments.length == 1) {
+        options = arguments[0];
+      } else if (arguments.length == 3) {
+          options = {
+            name: arguments[0],
+            icon: arguments[1],
+            callback: arguments[2]
+          };
+      } else {
+         return;
+      }
+
+      options.type = "Menu:Add";
+      options.id = this._menuId;
+
+      sendMessageToJava({ gecko: options });
+      this._callbacks[this._menuId] = options.callback;
       this._menuId++;
       return this._menuId - 1;
     },
@@ -1432,6 +1427,25 @@ var NativeWindow = {
           return (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE));
         }
         return false;
+      }
+    },
+
+    mediaContext: function(aMode) {
+      return {
+        matches: function(aElt) {
+          if (aElt instanceof Ci.nsIDOMHTMLMediaElement) {
+            let hasError = aElt.error != null || aElt.networkState == aElt.NETWORK_NO_SOURCE;
+            if (hasError)
+              return false;
+
+            let paused = aElt.paused || aElt.ended;
+            if (paused && aMode == "media-paused")
+              return true;
+            if (!paused && aMode == "media-playing")
+              return true;
+          }
+          return false;
+        }
       }
     },
 
@@ -2749,26 +2763,32 @@ Tab.prototype = {
         Math.abs(displayPort.y - this._oldDisplayPort.y) > epsilon ||
         Math.abs(displayPort.width - this._oldDisplayPort.width) > epsilon ||
         Math.abs(displayPort.height - this._oldDisplayPort.height) > epsilon) {
-      // Set the display-port to be 4x the size of the critical display-port,
-      // on each dimension, giving us a 0.25x lower precision buffer around the
-      // critical display-port. Spare area is *not* redistributed to the other
-      // axis, as display-list building and invalidation cost scales with the
-      // size of the display-port.
-      let pageRect = cwu.getRootBounds();
-      let pageXMost = pageRect.right - geckoScrollX;
-      let pageYMost = pageRect.bottom - geckoScrollY;
+      if (BrowserApp.gUseLowPrecision) {
+        // Set the display-port to be 4x the size of the critical display-port,
+        // on each dimension, giving us a 0.25x lower precision buffer around the
+        // critical display-port. Spare area is *not* redistributed to the other
+        // axis, as display-list building and invalidation cost scales with the
+        // size of the display-port.
+        let pageRect = cwu.getRootBounds();
+        let pageXMost = pageRect.right - geckoScrollX;
+        let pageYMost = pageRect.bottom - geckoScrollY;
 
-      let dpW = Math.min(pageRect.right - pageRect.left, displayPort.width * 4);
-      let dpH = Math.min(pageRect.bottom - pageRect.top, displayPort.height * 4);
+        let dpW = Math.min(pageRect.right - pageRect.left, displayPort.width * 4);
+        let dpH = Math.min(pageRect.bottom - pageRect.top, displayPort.height * 4);
 
-      let dpX = Math.min(Math.max(displayPort.x - displayPort.width * 1.5,
-                                  pageRect.left - geckoScrollX), pageXMost - dpW);
-      let dpY = Math.min(Math.max(displayPort.y - displayPort.height * 1.5,
-                                  pageRect.top - geckoScrollY), pageYMost - dpH);
-      cwu.setDisplayPortForElement(dpX, dpY, dpW, dpH, element);
-      cwu.setCriticalDisplayPortForElement(displayPort.x, displayPort.y,
-                                           displayPort.width, displayPort.height,
-                                           element);
+        let dpX = Math.min(Math.max(displayPort.x - displayPort.width * 1.5,
+                                    pageRect.left - geckoScrollX), pageXMost - dpW);
+        let dpY = Math.min(Math.max(displayPort.y - displayPort.height * 1.5,
+                                    pageRect.top - geckoScrollY), pageYMost - dpH);
+        cwu.setDisplayPortForElement(dpX, dpY, dpW, dpH, element);
+        cwu.setCriticalDisplayPortForElement(displayPort.x, displayPort.y,
+                                             displayPort.width, displayPort.height,
+                                             element);
+      } else {
+        cwu.setDisplayPortForElement(displayPort.x, displayPort.y,
+                                     displayPort.width, displayPort.height,
+                                     element);
+      }
     }
 
     this._oldDisplayPort = displayPort;

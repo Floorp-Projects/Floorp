@@ -62,7 +62,8 @@ STDMETHODIMP
 TextLeafAccessibleWrap::get_domText( 
     /* [retval][out] */ BSTR __RPC_FAR *aDomText)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aDomText = NULL;
 
   if (IsDefunct())
@@ -78,10 +79,9 @@ __try {
   *aDomText = ::SysAllocStringLen(nodeValue.get(), nodeValue.Length());
   if (!*aDomText)
     return E_OUTOFMEMORY;
-
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -93,7 +93,8 @@ TextLeafAccessibleWrap::get_clippedSubstringBounds(
     /* [out] */ int __RPC_FAR *aWidth,
     /* [out] */ int __RPC_FAR *aHeight)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aX = *aY = *aWidth = *aHeight = 0;
   nscoord x, y, width, height, docX, docY, docWidth, docHeight;
   HRESULT rv = get_unclippedSubstringBounds(aStartIndex, aEndIndex, &x, &y, &width, &height);
@@ -117,9 +118,9 @@ __try {
   *aY = clippedRect.y;
   *aWidth = clippedRect.width;
   *aHeight = clippedRect.height;
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -131,7 +132,8 @@ TextLeafAccessibleWrap::get_unclippedSubstringBounds(
     /* [out] */ int __RPC_FAR *aWidth,
     /* [out] */ int __RPC_FAR *aHeight)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aX = *aY = *aWidth = *aHeight = 0;
 
   if (IsDefunct())
@@ -141,9 +143,9 @@ __try {
                                  aX, aY, aWidth, aHeight))) {
     return E_FAIL;
   }
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -151,7 +153,8 @@ TextLeafAccessibleWrap::scrollToSubstring(
     /* [in] */ unsigned int aStartIndex,
     /* [in] */ unsigned int aEndIndex)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   if (IsDefunct())
     return E_FAIL;
 
@@ -165,10 +168,9 @@ __try {
   nsresult rv =
     nsCoreUtils::ScrollSubstringTo(GetFrame(), range,
                                    nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
-  if (NS_FAILED(rv))
-    return E_FAIL;
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return S_OK;
+  return NS_SUCCEEDED(rv) ? S_OK : E_FAIL;
+
+  A11Y_TRYBLOCK_END
 }
 
 nsIFrame*
@@ -242,7 +244,8 @@ STDMETHODIMP
 TextLeafAccessibleWrap::get_fontFamily(
     /* [retval][out] */ BSTR __RPC_FAR *aFontFamily)
 {
-__try {
+  A11Y_TRYBLOCK_BEGIN
+
   *aFontFamily = NULL;
 
   nsIFrame* frame = GetFrame();
@@ -260,9 +263,7 @@ __try {
   *aFontFamily = ::SysAllocStringLen(name.get(), name.Length());
   if (!*aFontFamily)
     return E_OUTOFMEMORY;
-
-} __except(FilterA11yExceptions(::GetExceptionCode(),
-                                GetExceptionInformation())) { }
-
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }

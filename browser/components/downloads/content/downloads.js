@@ -356,7 +356,7 @@ const DownloadsPanel = {
       if (DownloadsView.richListBox.itemCount > 0) {
         DownloadsView.richListBox.focus();
       } else {
-        DownloadsView.downloadsHistory.focus();
+        this.panel.focus();
       }
     }
   },

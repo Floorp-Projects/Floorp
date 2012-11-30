@@ -322,6 +322,9 @@ public:
   // shutting down. The decoder monitor must be held while calling this.
   bool IsShutdown();
 
+protected:
+  virtual uint32_t GetAmpleVideoFrames() { return mAmpleVideoFrames; }
+
 private:
   class WakeDecoderRunnable : public nsRunnable {
   public:
@@ -781,7 +784,7 @@ private:
 
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.
-  nsVideoInfo mInfo;
+  VideoInfo mInfo;
 };
 
 } // namespace mozilla;

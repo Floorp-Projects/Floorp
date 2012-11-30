@@ -85,6 +85,39 @@ MediaEngineDefaultVideoSource::GetOptions()
   return &mOpts;
 }
 
+static void AllocateSolidColorFrame(layers::PlanarYCbCrImage::Data& aData,
+                                    int aWidth, int aHeight,
+                                    int aY, int aCb, int aCr)
+{
+  MOZ_ASSERT(!(aWidth&1));
+  MOZ_ASSERT(!(aHeight&1));
+  // Allocate a single frame with a solid color
+  int yLen = aWidth*aHeight;
+  int cbLen = yLen>>2;
+  int crLen = cbLen;
+  uint8_t* frame = (uint8_t*) PR_Malloc(yLen+cbLen+crLen);
+  memset(frame, aY, yLen);
+  memset(frame+yLen, aCb, cbLen);
+  memset(frame+yLen+cbLen, aCr, crLen);
+
+  aData.mYChannel = frame;
+  aData.mYSize = gfxIntSize(aWidth, aHeight);
+  aData.mYStride = aWidth;
+  aData.mCbCrStride = aWidth>>1;
+  aData.mCbChannel = frame + yLen;
+  aData.mCrChannel = aData.mCbChannel + cbLen;
+  aData.mCbCrSize = gfxIntSize(aWidth>>1, aHeight>>1);
+  aData.mPicX = 0;
+  aData.mPicY = 0;
+  aData.mPicSize = gfxIntSize(aWidth, aHeight);
+  aData.mStereoMode = STEREO_MODE_MONO;
+}
+
+static void ReleaseFrame(layers::PlanarYCbCrImage::Data& aData)
+{
+  PR_Free(aData.mYChannel);
+}
+
 nsresult
 MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
@@ -104,31 +137,16 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mImageContainer = layers::LayerManager::CreateImageContainer();
 
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);
-
-  int len = ((DEFAULT_WIDTH * DEFAULT_HEIGHT) * 3 / 2);
   mImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
-  uint8_t* frame = (uint8_t*) PR_Malloc(len);
-  memset(frame, 0x80, len); // Gray
-
-  const uint8_t lumaBpp = 8;
-  const uint8_t chromaBpp = 4;
 
   layers::PlanarYCbCrImage::Data data;
-  data.mYChannel = frame;
-  data.mYSize = gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  data.mYStride = DEFAULT_WIDTH * lumaBpp / 8.0;
-  data.mCbCrStride = DEFAULT_WIDTH * chromaBpp / 8.0;
-  data.mCbChannel = frame + DEFAULT_HEIGHT * data.mYStride;
-  data.mCrChannel = data.mCbChannel + DEFAULT_HEIGHT * data.mCbCrStride / 2;
-  data.mCbCrSize = gfxIntSize(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2);
-  data.mPicX = 0;
-  data.mPicY = 0;
-  data.mPicSize = gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  data.mStereoMode = STEREO_MODE_MONO;
-
+  // Allocate a single blank Image
+  mCb = 16;
+  mCr = 16;
+  AllocateSolidColorFrame(data, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0x80, mCb, mCr);
   // SetData copies data, so we can free the frame
   mImage->SetData(data);
-  PR_Free(frame);
+  ReleaseFrame(data);
 
   // AddTrack takes ownership of segment
   VideoSegment *segment = new VideoSegment();
@@ -195,10 +213,43 @@ MediaEngineDefaultVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
 NS_IMETHODIMP
 MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
 {
-  VideoSegment segment;
+  // Update the target color
+  if (mCr <= 16) {
+    if (mCb < 240) {
+      mCb++;
+    } else {
+      mCr++;
+    }
+  } else if (mCb >= 240) {
+    if (mCr < 240) {
+      mCr++;
+    } else {
+      mCb--;
+    }
+  } else if (mCr >= 240) {
+    if (mCb > 16) {
+      mCb--;
+    } else {
+      mCr--;
+    }
+  } else {
+    mCr--;
+  }
 
-  nsRefPtr<layers::PlanarYCbCrImage> image = mImage;
-  segment.AppendFrame(image.forget(), USECS_PER_S / DEFAULT_FPS, gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+  // Allocate a single solid color image
+  ImageFormat format = PLANAR_YCBCR;
+  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);
+  nsRefPtr<layers::PlanarYCbCrImage> ycbcr_image =
+      static_cast<layers::PlanarYCbCrImage*>(image.get());
+  layers::PlanarYCbCrImage::Data data;
+  AllocateSolidColorFrame(data, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0x80, mCb, mCr);
+  ycbcr_image->SetData(data);
+  // SetData copies data, so we can free the frame
+  ReleaseFrame(data);
+
+  // AddTrack takes ownership of segment
+  VideoSegment segment;
+  segment.AppendFrame(ycbcr_image.forget(), USECS_PER_S / DEFAULT_FPS, gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT));
   mSource->AppendToTrack(mTrackID, &segment);
 
   return NS_OK;

@@ -7,7 +7,7 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "Guiddef.h"
+#include "guiddef.h"
 %}
 
 [ref] native MSCOMIIDRef(IID);

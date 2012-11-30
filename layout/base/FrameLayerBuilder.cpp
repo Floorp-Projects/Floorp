@@ -1534,7 +1534,7 @@ ContainerState::ThebesLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBu
     return nullptr;
   }
 
-  return mImage->GetContainer(aBuilder);
+  return mImage->GetContainer(mLayer->Manager(), aBuilder);
 }
 
 void
@@ -2407,7 +2407,9 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       props->MoveBy(-offset);
       nsIntRegion invalid = props->ComputeDifferences(layer, nullptr);
       if (aLayerState == LAYER_SVG_EFFECTS) {
-        invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->GetUnderlyingFrame(), invalid.GetBounds());
+        invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->GetUnderlyingFrame(),
+                                                                        aItem->ToReferenceFrame(),
+                                                                        invalid.GetBounds());
       }
       if (!invalid.IsEmpty()) {
 #ifdef DEBUG_INVALIDATIONS

@@ -142,11 +142,14 @@ CPPSRCS		= \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		RootMarking.cpp \
 		Marking.cpp \
 		Memory.cpp \
 		Statistics.cpp \
 		StoreBuffer.cpp \
 		FindSCCs.cpp \
+		Iteration.cpp \
+		Verifier.cpp \
 		StringBuffer.cpp \
 		Unicode.cpp \
 		Xdr.cpp \

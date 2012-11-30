@@ -1608,8 +1608,6 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
     return;
   }
 
-  event->SetTrusted(true);
-
   nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
   if (!progress) {
     return;
@@ -1617,6 +1615,8 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
 
   progress->InitProgressEvent(aType, false, false, aLengthComputable,
                               aLoaded, (aTotal == UINT64_MAX) ? 0 : aTotal);
+
+  event->SetTrusted(true);
 
   if (aUseLSEventWrapper) {
     nsCOMPtr<nsIDOMProgressEvent> xhrprogressEvent =
@@ -3420,13 +3420,13 @@ nsXMLHttpRequest::WithCredentials()
 NS_IMETHODIMP
 nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials)
 {
-  nsresult rv = NS_OK;
+  ErrorResult rv;
   SetWithCredentials(aWithCredentials, rv);
-  return rv;
+  return rv.ErrorCode();
 }
 
 void
-nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials, nsresult& aRv)
+nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv)
 {
   // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT & mState) {
@@ -3438,7 +3438,7 @@ nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials, nsresult& aRv)
   if (HasOrHasHadOwner() &&
       !(mState & (XML_HTTP_REQUEST_UNSENT | XML_HTTP_REQUEST_ASYNC))) {
     LogMessage("WithCredentialsSyncXHRWarning", GetOwner());
-    aRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
 

@@ -497,29 +497,31 @@ AlphaBoxBlur::Blur()
 
       // No need to use CheckedInt here - we have validated it in the constructor.
       size_t szB = stride * size.height;
-      unsigned char* tmpData = new uint8_t[szB];
-
+      uint8_t* tmpData = new uint8_t[szB];
       memset(tmpData, 0, szB);
 
+      uint8_t* a = mData;
+      uint8_t* b = tmpData;
       if (mBlurRadius.width > 0) {
-        BoxBlurHorizontal(mData, tmpData, horizontalLobes[0][0], horizontalLobes[0][1], stride, GetSize().height, mSkipRect);
-        BoxBlurHorizontal(tmpData, mData, horizontalLobes[1][0], horizontalLobes[1][1], stride, GetSize().height, mSkipRect);
-        BoxBlurHorizontal(mData, tmpData, horizontalLobes[2][0], horizontalLobes[2][1], stride, GetSize().height, mSkipRect);
+        BoxBlurHorizontal(a, b, horizontalLobes[0][0], horizontalLobes[0][1], stride, GetSize().height, mSkipRect);
+        BoxBlurHorizontal(b, a, horizontalLobes[1][0], horizontalLobes[1][1], stride, GetSize().height, mSkipRect);
+        BoxBlurHorizontal(a, b, horizontalLobes[2][0], horizontalLobes[2][1], stride, GetSize().height, mSkipRect);
       } else {
-        uint8_t *tmp = mData;
-        mData = tmpData;
-        tmpData = tmp;
+        a = tmpData;
+        b = mData;
       }
+      // The result is in 'b' here.
       if (mBlurRadius.height > 0) {
-        BoxBlurVertical(tmpData, mData, verticalLobes[0][0], verticalLobes[0][1], stride, GetSize().height, mSkipRect);
-        BoxBlurVertical(mData, tmpData, verticalLobes[1][0], verticalLobes[1][1], stride, GetSize().height, mSkipRect);
-        BoxBlurVertical(tmpData, mData, verticalLobes[2][0], verticalLobes[2][1], stride, GetSize().height, mSkipRect);
+        BoxBlurVertical(b, a, verticalLobes[0][0], verticalLobes[0][1], stride, GetSize().height, mSkipRect);
+        BoxBlurVertical(a, b, verticalLobes[1][0], verticalLobes[1][1], stride, GetSize().height, mSkipRect);
+        BoxBlurVertical(b, a, verticalLobes[2][0], verticalLobes[2][1], stride, GetSize().height, mSkipRect);
       } else {
-        uint8_t *tmp = mData;
-        mData = tmpData;
-        tmpData = tmp;
+        a = b;
       }
-
+      // The result is in 'a' here.
+      if (a == tmpData) {
+        memcpy(mData, tmpData, szB);
+      }
       delete [] tmpData;
     } else {
       size_t integralImageStride = GetAlignedStride<16>(integralImageSize.width * 4);

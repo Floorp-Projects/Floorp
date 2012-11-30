@@ -1114,8 +1114,14 @@ RasterImage::GetCurrentImage()
 
 
 NS_IMETHODIMP
-RasterImage::GetImageContainer(ImageContainer **_retval)
+RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
 {
+  int32_t maxTextureSize = aManager->GetMaxTextureSize();
+  if (mSize.width > maxTextureSize || mSize.height > maxTextureSize) {
+    *_retval = nullptr;
+    return NS_OK;
+  }
+
   if (mImageContainer) {
     *_retval = mImageContainer;
     NS_ADDREF(*_retval);
