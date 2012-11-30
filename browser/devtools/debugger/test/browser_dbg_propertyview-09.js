@@ -19,7 +19,7 @@ function test()
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    gDebugger = gPane.contentWindow;
+    gDebugger = gPane.panelWin;
 
     gDebugger.DebuggerController.StackFrames.autoScopeExpand = true;
     gDebugger.DebuggerView.Variables.nonEnumVisible = false;

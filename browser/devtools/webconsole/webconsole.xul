@@ -63,12 +63,6 @@
   <vbox class="hud-outer-wrapper" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
-#ifdef XP_MACOSX
-        <toolbarbutton id="webconsole-close-button"
-                       class="devtools-closebutton"
-                       tooltiptext="&btnClose.tooltip;"/>
-#endif
-
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
                        category="net" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageNet.tooltip;">
@@ -119,29 +113,10 @@
 
         <spacer flex="1"/>
 
-        <toolbarbutton label="&btnPosition.label;" type="menu"
-                       class="devtools-toolbarbutton"
-                       tooltiptext="&btnPosition.tooltip;">
-          <menupopup>
-            <menuitem label="&positionMenu.above;" type="checkbox"
-                      autocheck="false" consolePosition="above"/>
-            <menuitem label="&positionMenu.below;" type="checkbox"
-                      autocheck="false" consolePosition="below"/>
-            <menuitem label="&positionMenu.window;" type="checkbox"
-                      autocheck="false" consolePosition="window"/>
-          </menupopup>
-        </toolbarbutton>
-
         <textbox class="compact hud-filter-box devtools-searchinput" type="search"
                  placeholder="&filterBox.placeholder;"/>
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
-
-#ifndef XP_MACOSX
-        <toolbarbutton id="webconsole-close-button"
-                       class="devtools-closebutton"
-                       tooltiptext="&btnClose.tooltip;"/>
-#endif
       </toolbar>
       <richlistbox class="hud-output-node" orient="vertical" flex="1"
                    seltype="multiple" context="output-contextmenu"

@@ -39,7 +39,7 @@ browser/components/tabview/Makefile
 browser/components/thumbnails/Makefile
 browser/devtools/Makefile
 browser/devtools/debugger/Makefile
-browser/devtools/highlighter/Makefile
+browser/devtools/inspector/Makefile
 browser/devtools/scratchpad/Makefile
 browser/devtools/shared/Makefile
 browser/devtools/sourceeditor/Makefile
@@ -119,7 +119,7 @@ if [ "$ENABLE_TESTS" ]; then
     browser/components/test/Makefile
     browser/components/thumbnails/test/Makefile
     browser/devtools/debugger/test/Makefile
-    browser/devtools/highlighter/test/Makefile
+    browser/devtools/inspector/test/Makefile
     browser/devtools/scratchpad/test/Makefile
     browser/devtools/shared/test/Makefile
     browser/devtools/sourceeditor/test/Makefile

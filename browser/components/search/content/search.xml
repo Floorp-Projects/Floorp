@@ -628,7 +628,7 @@
       <!--
         This overrides the searchParam property in autocomplete.xml.  We're
         hijacking this property as a vehicle for delivering the privacy
-        information about the window into the guys of nsSearchSuggestions.
+        information about the window into the guts of nsSearchSuggestions.
 
         Note that the setter is the same as the parent.  We were not sure whether
         we can override just the getter.  If that proves to be the case, the setter

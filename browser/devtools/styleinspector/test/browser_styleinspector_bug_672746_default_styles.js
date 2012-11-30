@@ -5,7 +5,8 @@
 // Tests that the checkbox to show only user styles works properly.
 
 let doc;
-let stylePanel;
+let inspector;
+let computedView;
 
 function createDocument()
 {
@@ -14,9 +15,20 @@ function createDocument()
     '<span id="matches" class="matches">Some styled text</span>' +
     '</div>';
   doc.title = "Style Inspector Default Styles Test";
-  // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
-  stylePanel = new ComputedViewPanel(window);
-  stylePanel.createPanel(doc.body, runStyleInspectorTests);
+
+  openInspector(openComputedView);
+}
+
+function openComputedView(aInspector)
+{
+  inspector = aInspector;
+
+  inspector.sidebar.once("computedview-ready", function() {
+    inspector.sidebar.select("computedview");
+    computedView = getComputedView(inspector);
+
+    runStyleInspectorTests();
+  });
 }
 
 function runStyleInspectorTests()
@@ -30,12 +42,11 @@ function SI_inspectNode()
   let span = doc.querySelector("#matches");
   ok(span, "captain, we have the matches span");
 
-  let htmlTree = stylePanel.cssHtmlTree;
-  stylePanel.selectNode(span);
+  inspector.selection.setNode(span);
 
-  is(span, htmlTree.viewedElement,
+  is(span, computedView.viewedElement,
     "style inspector node matches the selected node");
-  is(htmlTree.viewedElement, stylePanel.cssLogic.viewedElement,
+  is(computedView.viewedElement, computedView.cssLogic.viewedElement,
      "cssLogic node matches the cssHtmlTree node");
 }
 
@@ -53,10 +64,11 @@ function SI_check()
 function SI_toggleDefaultStyles()
 {
   // Click on the checkbox.
-  let iframe = stylePanel.iframe;
-  let checkbox = iframe.contentDocument.querySelector(".onlyuserstyles");
+  let doc = computedView.styleDocument;
+  let checkbox = doc.querySelector(".onlyuserstyles");
   Services.obs.addObserver(SI_checkDefaultStyles, "StyleInspector-populated", false);
-  EventUtils.synthesizeMouse(checkbox, 5, 5, {}, iframe.contentWindow);
+
+  checkbox.click();
 }
 
 function SI_checkDefaultStyles()
@@ -68,14 +80,13 @@ function SI_checkDefaultStyles()
   is(propertyVisible("background-color"), true,
       "span background-color property is visible");
 
-  stylePanel.destroy();
   finishUp();
 }
 
 function propertyVisible(aName)
 {
   info("Checking property visibility for " + aName);
-  let propertyViews = stylePanel.cssHtmlTree.propertyViews;
+  let propertyViews = computedView.propertyViews;
   for each (let propView in propertyViews) {
     if (propView.name == aName) {
       return propView.visible;
@@ -86,7 +97,7 @@ function propertyVisible(aName)
 
 function finishUp()
 {
-  doc = stylePanel = null;
+  doc = inspector = computedView = null;
   gBrowser.removeCurrentTab();
   finish();
 }

@@ -18,7 +18,7 @@ function test()
   debug_tab_pane(TAB1_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    gDebugger = gPane.contentWindow;
+    gDebugger = gPane.panelWin;
     gVariablesView = gDebugger.DebuggerView.Variables;
 
     testVariablesView();

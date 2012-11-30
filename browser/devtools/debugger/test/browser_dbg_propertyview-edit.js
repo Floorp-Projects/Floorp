@@ -22,7 +22,7 @@ function test() {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.contentWindow;
+    gDebugger = gPane.panelWin;
 
     gDebugger.DebuggerController.StackFrames.autoScopeExpand = true;
     gDebugger.DebuggerView.Variables.nonEnumVisible = false;
