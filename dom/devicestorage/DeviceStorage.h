@@ -46,8 +46,8 @@ private:
   nsresult EnumerateInternal(const JS::Value & aName,
                              const JS::Value & aOptions,
                              JSContext* aCx,
-                             uint8_t aArgc, 
-                             bool aEditable, 
+                             uint8_t aArgc,
+                             bool aEditable,
                              nsIDOMDeviceStorageCursor** aRetval);
 
   nsString mStorageType;
