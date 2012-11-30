@@ -449,7 +449,7 @@ function executeJSScript(msg) {
  * For executeAsync, it will return a response when marionetteScriptFinished/arguments[arguments.length-1] 
  * method is called, or if it times out.
  */
-function executeWithCallback(msg, async) {
+function executeWithCallback(msg, useFinish) {
   curWindow.addEventListener("unload", errUnload, false);
   let script = msg.json.value;
   asyncTestCommandId = msg.json.id;
@@ -478,7 +478,7 @@ function executeWithCallback(msg, async) {
   }, true);
 
   let scriptSrc;
-  if (async) {
+  if (useFinish) {
     if (msg.json.timeout == null || msg.json.timeout == 0) {
       sendError("Please set a timeout", 21, null);
     }
