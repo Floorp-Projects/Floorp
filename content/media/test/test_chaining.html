@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: chained ogg files.</title>
+  <meta charset='utf-8'>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function finish_test(element) {
+  if (element.parentNode)
+    element.parentNode.removeChild(element);
+  manager.finished(element.token);
+}
+
+function onended(e) {
+  var t = e.target;
+  is(t._metadataCount, t._links, "We should have received "+ t._links +
+     " metadataloaded event. " + t.src);
+
+  // If we encounter a file that has links with a different numbers of channel,
+  // we stop the decoding at the end of the first link. Hence, we report normal
+  // |seekable| and |buffered| values.
+  if (t._links != 1) {
+    is(t.seekable.length, 0, "No seekable ranges should be reported." + t.src);
+    is(t.buffered.length, 0, "No buffered region should be reported." + t.src);
+  }
+
+  is(t.played.length, 1, "The played region should be continuous." + t.src);
+
+  if (t._links != 1) {
+    var oldCurrentTime = t.currentTime;
+    t.currentTime = 0.0;
+    is(t.currentTime, oldCurrentTime,
+        "Seeking should be disabled when playing chained media." + t.src);
+  }
+
+  finish_test(t);
+}
+
+function onmetadataloaded(e) {
+  var t = e.target;
+  if (! t._metadataCount) {
+    t._metadataCount = 0;
+  }
+
+  if (t._metadataCount > 1 && t._links === 1) {
+    ok(false, "We should receive only one \"loadedmetadata\" event for a chained file we don't support.")
+  }
+
+  // We should be able to assert equality here, but somehow it fails (rarely but
+  // still) on try. Instead, we give it a little slack and assert that the index
+  // increases monotonically.
+  ok(t.mozGetMetadata().index >= t._metadataCount || t._links === 1,
+     "The metadata index value should increase." + t.src);
+
+  // The files have all a user comment name 'index' that increments at each link
+  // in the chained media.
+  t._metadataCount++;
+  if (!t.playing && !t.ended) {
+    t.play();
+  }
+}
+
+function startTest(test, token) {
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var element = document.createElement(elemType);
+  document.body.appendChild(element);
+  manager.started(token);
+  element._links= test.links;
+  element.src = test.name;
+  element.token = token;
+  element.controls = true;
+  element.addEventListener("loadedmetadata", onmetadataloaded);
+  element.addEventListener("ended", onended);
+}
+
+manager.runTests(gChainingTests, startTest);
+</script>
+</pre>
+</body>
+</html>
