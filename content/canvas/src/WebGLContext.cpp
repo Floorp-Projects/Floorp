@@ -876,14 +876,13 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-WebGLContext::GetContextAttributes(dom::WebGLContextAttributes &result)
+WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributesInitializer> &retval)
 {
+    retval.SetNull();
     if (!IsContextStable())
-    {
-        // XXXbz spec says we should still return our attributes in
-        // this case!  Should we store them all in mOptions?
         return;
-    }
+
+    dom::WebGLContextAttributes& result = retval.SetValue();
 
     gl::ContextFormat cf = gl->ActualFormat();
     result.alpha = cf.alpha > 0;
