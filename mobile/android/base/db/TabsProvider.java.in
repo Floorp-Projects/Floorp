@@ -236,15 +236,19 @@ public class TabsProvider extends ContentProvider {
             }
 
             String databasePath = getDatabasePath(profile);
+
+            // Before bug 768532, the database was located outside if the
+            // profile on Android 2.2. Make sure it is moved inside the profile
+            // directory.
+            if (Build.VERSION.SDK_INT == 8) {
+                File oldPath = mContext.getDatabasePath("tabs-" + profile + ".db");
+                if (oldPath.exists()) {
+                    oldPath.renameTo(new File(databasePath));
+                }
+            }
+
             dbHelper = new DatabaseHelper(getContext(), databasePath);
             mDatabasePerProfile.put(profile, dbHelper);
-
-            // When running on Android releases older than 8, the returned
-            // database path is just filename, not the full path. We need
-            // the full path when unlocking the database.
-            if (Build.VERSION.SDK_INT <= 8) {
-                databasePath = mContext.getDatabasePath(databasePath).getAbsolutePath();
-            }
 
             DBUtils.ensureDatabaseIsNotLocked(dbHelper, databasePath);
         }
@@ -255,13 +259,6 @@ public class TabsProvider extends ContentProvider {
 
     private String getDatabasePath(String profile) {
         trace("Getting database path for profile: " + profile);
-
-        // On Android releases older than 2.3, it's not possible to use
-        // SQLiteOpenHelper with a full path. Fallback to using separate
-        // db files per profile in the app directory.
-        if (Build.VERSION.SDK_INT <= 8) {
-            return "tabs-" + profile + ".db";
-        }
 
         File profileDir = GeckoProfile.get(mContext, profile).getDir();
         if (profileDir == null) {
