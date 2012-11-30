@@ -83,6 +83,7 @@ class WebGLExtensionBase;
 
 namespace dom {
 struct WebGLContextAttributes;
+struct WebGLContextAttributesInitializer;
 }
 
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
@@ -398,7 +399,7 @@ public:
         return mHeight;
     }
         
-    void GetContextAttributes(dom::WebGLContextAttributes& retval);
+    void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributesInitializer>& retval);
     bool IsContextLost() const { return !IsContextStable(); }
     void GetSupportedExtensions(JSContext *cx, dom::Nullable< nsTArray<nsString> > &retval);
     JSObject* GetExtension(JSContext* cx, const nsAString& aName, ErrorResult& rv);
