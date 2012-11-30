@@ -328,6 +328,7 @@
  "uriloader/exthandler/tests/mochitest/test_handlerApps.xhtml": "",
  "widget/tests/test_bug760802.html": "",
  "dom/tests/mochitest/ajax/offline": "SLOW_DIRECTORY",
- "layout/base/tests": "SLOW_DIRECTORY"
+ "layout/base/tests": "SLOW_DIRECTORY",
+ "Harness_sanity/test_bug816847.html": "No test app installed"
  }
 }
