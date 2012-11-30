@@ -1117,6 +1117,7 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
       appStartup->DestroyHiddenWindow();
 
     gDirServiceProvider->DoShutdown();
+    SAMPLE_MARKER("Shutdown early");
 
     WriteConsoleLog();
 
