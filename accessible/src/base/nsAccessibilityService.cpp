@@ -210,32 +210,12 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
                                                         nsIContent* aContent,
                                                         Accessible* aContext)
 {
-  // We can have several cases here:
-  // 1) a text or html embedded document where the contentDocument variable in
-  //    the object element holds the content;
-  // 2) web content that uses a plugin, which means we will have to go to
-  //    the plugin to get the accessible content;
-  // 3) an image or imagemap, where the image frame points back to the object
-  //    element DOMNode.
-
+  // nsObjectFrame means a plugin, so we need to use the accessibility support
+  // of the plugin.
   if (aFrame->GetRect().IsEmpty())
     return nullptr;
 
-  // 1) for object elements containing either HTML or TXT documents
-  nsCOMPtr<nsIDOMHTMLObjectElement> obj(do_QueryInterface(aContent));
-  if (obj) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    obj->GetContentDocument(getter_AddRefs(domDoc));
-    if (domDoc) {
-      Accessible* newAcc =
-        new OuterDocAccessible(aContent, aContext->Document());
-      NS_ADDREF(newAcc);
-      return newAcc;
-    }
-  }
-
 #if defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)
-  // 2) for plugins
   nsRefPtr<nsNPAPIPluginInstance> pluginInstance;
   if (NS_SUCCEEDED(aFrame->GetPluginInstance(getter_AddRefs(pluginInstance))) &&
       pluginInstance) {
@@ -254,6 +234,8 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
     if (!AtkSocketAccessible::gCanEmbed)
       return nullptr;
 
+    // Note this calls into the plugin, so crazy things may happen and aFrame
+    // may go away.
     nsCString plugId;
     nsresult rv = pluginInstance->GetValueFromPlugin(
       NPPVpluginNativeAccessibleAtkPlugId, &plugId);
@@ -268,11 +250,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
   }
 #endif
 
-  // 3) for images and imagemaps, or anything else with a child frame
-  // we have the object frame, get the image frame
-  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
-  return childFrame ?
-    CreateAccessibleByFrameType(childFrame, aContent, aContext) : nullptr;
+  return nullptr;
 }
 
 void
