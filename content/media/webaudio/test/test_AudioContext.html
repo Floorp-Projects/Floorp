@@ -22,6 +22,7 @@ addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   var ac = new mozAudioContext();
   ok(ac, "Create a mozAudioContext object");
+  is(ac.sampleRate, 44100, "Correct sample rate");
   SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 });
