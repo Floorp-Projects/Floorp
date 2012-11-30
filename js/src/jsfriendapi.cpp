@@ -580,7 +580,7 @@ js::UnmarkGrayGCThing(void *thing)
 JS_FRIEND_API(void)
 js::VisitGrayWrapperTargets(JSCompartment *comp, GCThingCallback *callback, void *closure)
 {
-    for (WrapperMap::Enum e(comp->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+    for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
         gc::Cell *thing = e.front().key.wrapped;
         if (thing->isMarked(gc::GRAY))
             callback(closure, thing);
