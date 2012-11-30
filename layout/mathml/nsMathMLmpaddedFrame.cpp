@@ -444,3 +444,11 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
 
   return NS_OK;
 }
+
+/* virtual */ nsresult
+nsMathMLmpaddedFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
+                                      nsHTMLReflowMetrics& aDesiredSize)
+{
+  ProcessAttributes();
+  return Place(aRenderingContext, false, aDesiredSize);
+}
