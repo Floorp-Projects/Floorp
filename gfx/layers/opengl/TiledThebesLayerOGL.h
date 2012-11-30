@@ -113,6 +113,9 @@ public:
   TiledThebesLayerOGL(LayerManagerOGL *aManager);
   virtual ~TiledThebesLayerOGL();
 
+  // Layer implementation
+  const nsIntRegion& GetValidLowPrecisionRegion() const { return mLowPrecisionVideoMemoryTiledBuffer.GetValidRegion(); }
+
   // LayerOGL impl
   void Destroy() {}
   Layer* GetLayer() { return this; }
@@ -132,7 +135,6 @@ public:
   void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* mTiledBuffer);
   void ProcessUploadQueue();
   void ProcessLowPrecisionUploadQueue();
-  const nsIntRegion& GetValidLowPrecisionRegion() const { return mLowPrecisionVideoMemoryTiledBuffer.GetValidRegion(); }
 
   void MemoryPressure();
 
