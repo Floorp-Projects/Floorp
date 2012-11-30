@@ -63,6 +63,7 @@ CPPSRCS		= \
   nsProfilerFactory.cpp \
   nsProfiler.cpp \
   TableTicker.cpp \
+  JSObjectBuilder.cpp \
   $(NULL)
 
 XPIDLSRCS = \
