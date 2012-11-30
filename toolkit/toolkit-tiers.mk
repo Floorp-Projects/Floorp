@@ -173,6 +173,8 @@ tier_platform_dirs += \
 		media/omx-plugin \
 		media/omx-plugin/gb \
 		media/omx-plugin/gb235 \
+		media/omx-plugin/lib/hc/libstagefright \
+		media/omx-plugin/hc \
 		$(NULL)
 endif
 
