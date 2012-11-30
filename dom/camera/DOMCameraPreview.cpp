@@ -91,9 +91,10 @@ public:
 
   void NotifyConsumptionChanged(MediaStreamGraph* aGraph, Consumption aConsuming)
   {
-    const char* state;
-
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+
+#ifdef PR_LOGGING
+    const char* state;
 
     switch (aConsuming) {
       case NOT_CONSUMED:
@@ -110,6 +111,7 @@ public:
     }
 
     DOM_CAMERA_LOGA("camera viewfinder is %s\n", state);
+#endif
     nsCOMPtr<nsIRunnable> previewControl;
 
     switch (aConsuming) {
