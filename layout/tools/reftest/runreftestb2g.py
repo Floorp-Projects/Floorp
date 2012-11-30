@@ -406,6 +406,7 @@ user_pref("reftest.browser.iframe.enabled", true);
 user_pref("reftest.remote", true);
 user_pref("reftest.uri", "%s");
 user_pref("toolkit.telemetry.prompted", true);
+user_pref("marionette.loadearly", true);
 """ % reftestlist)
 
         #workaround for jsreftests.
