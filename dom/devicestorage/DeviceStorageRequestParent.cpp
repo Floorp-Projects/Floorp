@@ -11,21 +11,28 @@
 #include "mozilla/dom/ipc/Blob.h"
 #include "ContentParent.h"
 #include "nsProxyRelease.h"
+#include "AppProcessPermissions.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace dom {
 namespace devicestorage {
 
 DeviceStorageRequestParent::DeviceStorageRequestParent(const DeviceStorageParams& aParams)
-  : mMutex("DeviceStorageRequestParent::mMutex")
+  : mParams(aParams)
+  , mMutex("DeviceStorageRequestParent::mMutex")
   , mActorDestoryed(false)
 {
   MOZ_COUNT_CTOR(DeviceStorageRequestParent);
+}
 
-  switch (aParams.type()) {
+void
+DeviceStorageRequestParent::Dispatch()
+{
+  switch (mParams.type()) {
     case DeviceStorageParams::TDeviceStorageAddParams:
     {
-      DeviceStorageAddParams p = aParams;
+      DeviceStorageAddParams p = mParams;
 
       nsCOMPtr<nsIFile> f;
       NS_NewLocalFile(p.fullpath(), false, getter_AddRefs(f));
@@ -48,7 +55,7 @@ DeviceStorageRequestParent::DeviceStorageRequestParent(const DeviceStorageParams
 
     case DeviceStorageParams::TDeviceStorageGetParams:
     {
-      DeviceStorageGetParams p = aParams;
+      DeviceStorageGetParams p = mParams;
 
       nsCOMPtr<nsIFile> f;
       NS_NewLocalFile(p.fullpath(), false, getter_AddRefs(f));
@@ -65,7 +72,7 @@ DeviceStorageRequestParent::DeviceStorageRequestParent(const DeviceStorageParams
 
     case DeviceStorageParams::TDeviceStorageDeleteParams:
     {
-      DeviceStorageDeleteParams p = aParams;
+      DeviceStorageDeleteParams p = mParams;
 
       nsCOMPtr<nsIFile> f;
       NS_NewLocalFile(p.fullpath(), false, getter_AddRefs(f));
@@ -81,7 +88,7 @@ DeviceStorageRequestParent::DeviceStorageRequestParent(const DeviceStorageParams
 
     case DeviceStorageParams::TDeviceStorageStatParams:
     {
-      DeviceStorageStatParams p = aParams;
+      DeviceStorageStatParams p = mParams;
 
       nsCOMPtr<nsIFile> f;
       NS_NewLocalFile(p.fullpath(), false, getter_AddRefs(f));
@@ -97,7 +104,7 @@ DeviceStorageRequestParent::DeviceStorageRequestParent(const DeviceStorageParams
 
     case DeviceStorageParams::TDeviceStorageEnumerationParams:
     {
-      DeviceStorageEnumerationParams p = aParams;
+      DeviceStorageEnumerationParams p = mParams;
 
       nsCOMPtr<nsIFile> f;
       NS_NewLocalFile(p.fullpath(), false, getter_AddRefs(f));
@@ -116,6 +123,94 @@ DeviceStorageRequestParent::DeviceStorageRequestParent(const DeviceStorageParams
       break;
     }
   }
+}
+
+bool
+DeviceStorageRequestParent::EnsureRequiredPermissions(mozilla::dom::ContentParent* aParent)
+{
+  if (mozilla::Preferences::GetBool("device.storage.testing", false)) {
+    return true;
+  }
+
+  nsString type;
+  DeviceStorageRequestType requestType;
+
+  switch (mParams.type())
+  {
+    case DeviceStorageParams::TDeviceStorageAddParams:
+    {
+      DeviceStorageAddParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_CREATE;
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageGetParams:
+    {
+      DeviceStorageGetParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_READ;
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageDeleteParams:
+    {
+      DeviceStorageDeleteParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_DELETE;
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageStatParams:
+    {
+      DeviceStorageStatParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_STAT;
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageEnumerationParams:
+    {
+      DeviceStorageEnumerationParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_READ;
+      break;
+    }
+
+    default:
+    {
+      return false;
+    }
+  }
+
+  // The 'apps' type is special.  We only want this exposed
+  // if the caller has the "webapps-manage" permission.
+  if (type.EqualsLiteral("apps")) {
+    if (!AssertAppProcessPermission(aParent, "webapps-manage")) {
+      return false;
+    }
+  }
+
+  nsAutoCString permissionName;
+  nsresult rv = DeviceStorageTypeChecker::GetPermissionForType(type, permissionName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCString access;
+  rv = DeviceStorageTypeChecker::GetAccessForRequest(requestType, access);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  permissionName.AppendLiteral("-");
+  permissionName.Append(access);
+
+  if (!AssertAppProcessPermission(aParent, permissionName.get())) {
+    return false;
+  }
+
+  return true;
 }
 
 DeviceStorageRequestParent::~DeviceStorageRequestParent()
