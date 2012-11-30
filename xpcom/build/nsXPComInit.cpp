@@ -618,6 +618,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
     nsCycleCollector_shutdown();
 
+    SAMPLE_MARKER("Shutdown xpcom");
     mozilla::PoisonWrite();
 
     if (moduleLoaders) {
