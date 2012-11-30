@@ -266,6 +266,7 @@ DIST_FILES += \
   libplc4.so \
   libplds4.so \
   libmozsqlite3.so \
+  libsoundtouch.so \
   libnssutil3.so \
   libnss3.so \
   libssl3.so \
