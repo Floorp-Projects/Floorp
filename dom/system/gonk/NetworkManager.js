@@ -148,6 +148,25 @@ function NetworkManager() {
   settingsLock.get(SETTINGS_USB_DHCPSERVER_ENDIP, this);
 
   this.setAndConfigureActive();
+
+  let self = this;
+  this.waitForConnectionReadyCallback = null;
+  settingsLock.get(SETTINGS_WIFI_ENABLED, {
+    handle: function (aName, aResult) {
+      if (!aResult) {
+        return;
+      }
+      // Turn on wifi tethering when the mobile data connection is established.
+      self.waitForConnectionReadyCallback = (function callback() {
+        let settingsLock = gSettingsService.createLock();
+        settingsLock.set(SETTINGS_WIFI_ENABLED, aResult, null);
+      });
+    },
+
+    handleError: function (aErrorMessage) {
+      debug("Error reading the 'tethering.wifi.enabled' setting: " + aErrorMessage);
+    }
+  });
 }
 NetworkManager.prototype = {
   classID:   NETWORKMANAGER_CID,
@@ -184,6 +203,11 @@ NetworkManager.prototype = {
             // to set default route only on preferred network
             this.removeDefaultRoute(network.name);
             this.setAndConfigureActive();
+            // Turn on wifi tethering when the callback is set.
+            if (this.waitForConnectionReadyCallback) {
+              this.waitForConnectionReadyCallback.call(this);
+              this.waitForConnectionReadyCallback = null;
+            }
             break;
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
             // Remove host route for data calls
@@ -647,7 +671,8 @@ NetworkManager.prototype = {
     if (resetSettings) {
       let settingsLock = gSettingsService.createLock();
       this.tetheringSettings[SETTINGS_WIFI_ENABLED] = false;
-      settingsLock.set("tethering.wifi.enabled", false, null);
+      // Disable wifi tethering with a useful error message for the user.
+      settingsLock.set("tethering.wifi.enabled", false, null, msg);
     }
 
     debug("setWifiTethering: " + (msg ? msg : "success"));
@@ -675,6 +700,9 @@ NetworkManager.prototype = {
       this.notifyError(true, callback, "mobile interface is not registered");
       return;
     }
+    // Clear this flag to prevent unexpected action.
+    this.waitForConnectionReadyCallback = null;
+
     this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = mobile.name;
 
     let params = this.getWifiTetheringParameters(enable, this._tetheringInterface[TETHERING_TYPE_WIFI]);
