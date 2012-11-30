@@ -228,6 +228,17 @@ WrapForSameCompartment(JSContext *cx, HandleObject obj, Value *vp)
 }
 
 bool
+JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &wrapper)
+{
+    JS_ASSERT(wrapped.wrapped);
+    JS_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
+    JS_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
+    // todo: uncomment when bug 815999 is fixed:
+    // JS_ASSERT(!wrapped.wrapped->isMarked(gc::GRAY));
+    return crossCompartmentWrappers.put(wrapped, wrapper);
+}
+
+bool
 JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existing)
 {
     JS_ASSERT(cx->compartment == this);
@@ -337,7 +348,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existing)
         if (!wrapped)
             return false;
         vp->setString(wrapped);
-        if (!crossCompartmentWrappers.put(orig, *vp))
+        if (!putWrapper(orig, *vp))
             return false;
 
         if (str->compartment()->isGCMarking()) {
@@ -385,7 +396,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existing)
 
     vp->setObject(*wrapper);
 
-    if (!crossCompartmentWrappers.put(key, *vp))
+    if (!putWrapper(key, *vp))
         return false;
 
     return true;
