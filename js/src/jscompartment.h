@@ -118,7 +118,7 @@ class AutoDebugModeGC;
 struct DebugScopes;
 }
 
-struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNodeBase
+struct JSCompartment : public js::gc::GraphNodeBase
 {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
@@ -158,6 +158,7 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
 #endif
 
   private:
+    bool                         needsBarrier_;
     bool                         ionUsingBarriers_;
   public:
 
