@@ -1702,6 +1702,7 @@ GetRegionArea(const nsIntRegion& aRegion)
   return area;
 }
 
+#ifdef MOZ_ANDROID_OMTC
 static float
 GetDisplayportCoverage(const gfx::Rect& aDisplayPort,
                        const gfx3DMatrix& aTransformToScreen,
@@ -1725,6 +1726,7 @@ GetDisplayportCoverage(const gfx::Rect& aDisplayPort,
 
   return 1.0f;
 }
+#endif // MOZ_ANDROID_OMTC
 
 float
 LayerManagerOGL::ComputeRenderIntegrity()
@@ -1777,7 +1779,7 @@ LayerManagerOGL::ComputeRenderIntegrity()
       }
     }
   }
-#endif
+#endif // MOZ_ANDROID_OMTC
 
   nsIntRegion screenRegion(screenRect);
   nsIntRegion lowPrecisionScreenRegion(screenRect);
