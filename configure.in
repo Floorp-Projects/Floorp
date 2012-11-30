@@ -5574,15 +5574,6 @@ if test -n "$MOZ_SOUNDTOUCH"; then
     AC_DEFINE(MOZ_SOUNDTOUCH)
 fi
 
-if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT"; then
-   SOUNDTOUCH_LIBS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)soundtouch.$(LIB_SUFFIX)'
-else
-    SOUNDTOUCH_LIBS='-lsoundtouch'
-fi
-AC_SUBST(SOUNDTOUCH_CFLAGS)
-AC_SUBST(SOUNDTOUCH_LIBS)
-AC_SUBST(SOUNDTOUCH_CONFIG)
-
 if test -n "$MOZ_CUBEB"; then
     case "$target" in
     *-android*|*-linuxandroid*)
