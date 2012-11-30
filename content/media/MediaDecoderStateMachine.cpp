@@ -17,6 +17,7 @@
 #include "VideoSegment.h"
 #include "ImageContainer.h"
 
+#include "prenv.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
@@ -1181,8 +1182,10 @@ uint32_t MediaDecoderStateMachine::PlayFromAudioQueue(uint64_t aFrameOffset,
   }
   int64_t offset = -1;
   uint32_t frames = 0;
-  LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of data to stream for AudioData at %lld",
-                     mDecoder.get(), audio->mFrames, audio->mTime));
+  if (!PR_GetEnv("MOZ_QUIET")) {
+    LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of data to stream for AudioData at %lld",
+                       mDecoder.get(), audio->mFrames, audio->mTime));
+  }
   mAudioStream->Write(audio->mAudioData,
                       audio->mFrames);
 
@@ -2168,8 +2171,10 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
     return;
   }
 
-  LOG(PR_LOG_DEBUG, ("%p Decoder playing video frame %lld",
-                     mDecoder.get(), aData->mTime));
+  if (!PR_GetEnv("MOZ_QUIET")) {
+    LOG(PR_LOG_DEBUG, ("%p Decoder playing video frame %lld",
+                       mDecoder.get(), aData->mTime));
+  }
 
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
   if (container) {
