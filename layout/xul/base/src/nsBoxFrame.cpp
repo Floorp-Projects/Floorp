@@ -1897,6 +1897,7 @@ nsBoxFrame::SupportsOrdinalsInChildren()
   return true;
 }
 
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 static nsIFrame*
 SortedMerge(nsIFrame *aLeft, nsIFrame *aRight)
 {
@@ -1904,7 +1905,7 @@ SortedMerge(nsIFrame *aLeft, nsIFrame *aRight)
 
   nsIFrame *result;
   // Unroll first iteration to avoid null-check 'result' inside the loop.
-  if (aLeft->GetOrdinal() <= aRight->GetOrdinal()) {
+  if (IsLessThanOrEqual(aLeft, aRight)) {
     result = aLeft;
     aLeft = aLeft->GetNextSibling();
     if (!aLeft) {
@@ -1923,7 +1924,7 @@ SortedMerge(nsIFrame *aLeft, nsIFrame *aRight)
 
   nsIFrame *last = result;
   for (;;) {
-    if (aLeft->GetOrdinal() <= aRight->GetOrdinal()) {
+    if (IsLessThanOrEqual(aLeft, aRight)) {
       last->SetNextSibling(aLeft);
       last = aLeft;
       aLeft = aLeft->GetNextSibling();
@@ -1944,6 +1945,7 @@ SortedMerge(nsIFrame *aLeft, nsIFrame *aRight)
   }
 }
 
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 static nsIFrame*
 MergeSort(nsIFrame *aSource)
 {
@@ -1964,7 +1966,7 @@ MergeSort(nsIFrame *aSource)
     // sorted[1] is a list of length 2 (or nullptr).
     // sorted[2] is a list of length 4 (or nullptr). etc.
     for (left = &sorted[0]; left != fill && *left; ++left) {
-      current = SortedMerge(*left, current);
+      current = SortedMerge<IsLessThanOrEqual>(*left, current);
       *left = nullptr;
     }
 
@@ -1979,45 +1981,73 @@ MergeSort(nsIFrame *aSource)
   nsIFrame *result = nullptr;
   for (left = &sorted[0]; left != fill; ++left) {
     if (*left) {
-      result = result ? SortedMerge(*left, result) : *left;
+      result = result ? SortedMerge<IsLessThanOrEqual>(*left, result) : *left;
     }
   }
   return result;
 }
 
+// Forward-declare these so their definition can fall down below CheckBoxOrder
+// to make the diff prettier
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+bool IsFrameListSorted(nsFrameList& aFrameList);
+
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+void SortFrameList(nsFrameList& aFrameList);
+
+// Helper less-than-or-equal function, used in CheckBoxOrder() as a
+// template-parameter for the sorting functions.
+bool
+IsBoxOrdinalLEQ(nsIFrame* aFrame1,
+                nsIFrame* aFrame2)
+{
+  return aFrame1->GetOrdinal() <= aFrame2->GetOrdinal();
+}
+
 void 
 nsBoxFrame::CheckBoxOrder()
 {
-  if (!SupportsOrdinalsInChildren())
-    return;
+  if (SupportsOrdinalsInChildren() &&
+      !IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
+    SortFrameList<IsBoxOrdinalLEQ>(mFrames);
+  }
+}
 
-  if (mFrames.IsEmpty()) {
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+bool
+IsFrameListSorted(nsFrameList& aFrameList)
+{
+  if (aFrameList.IsEmpty()) {
     // empty lists are trivially sorted.
-    return;
+    return true;
   }
 
   // We'll walk through the list with two iterators, one trailing behind the
   // other. The list is sorted IFF trailingIter <= iter, across the whole list.
-  nsFrameList::Enumerator trailingIter(mFrames);
-  nsFrameList::Enumerator iter(mFrames);
+  nsFrameList::Enumerator trailingIter(aFrameList);
+  nsFrameList::Enumerator iter(aFrameList);
   iter.Next(); // Skip |iter| past first frame. (List is nonempty, so we can.)
 
   // Now, advance the iterators in parallel, comparing each adjacent pair.
   while (!iter.AtEnd()) {
     MOZ_ASSERT(!trailingIter.AtEnd(), "trailing iter shouldn't finish first");
-    if (trailingIter.get()->GetOrdinal() > iter.get()->GetOrdinal()) {
-      break;
+    if (!IsLessThanOrEqual(trailingIter.get(), iter.get())) {
+      return false;
     }
     trailingIter.Next();
     iter.Next();
   }
 
-  // If we hit the end without breaking, then the list is sorted.
-  if (iter.AtEnd())
-    return;
+  // We made it to the end without returning early, so the list is sorted.
+  return true;
+}
 
-  nsIFrame* head = MergeSort(mFrames.FirstChild());
-  mFrames = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+void
+SortFrameList(nsFrameList& aFrameList)
+{
+  nsIFrame* head = MergeSort<IsLessThanOrEqual>(aFrameList.FirstChild());
+  aFrameList = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
 }
 
 nsresult
