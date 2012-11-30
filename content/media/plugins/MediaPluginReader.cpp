@@ -160,6 +160,9 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
       aKeyframeSkip = false;
     }
 
+    if (frame.mSize == 0)
+      return true;
+
     VideoData::YCbCrBuffer b;
     b.mPlanes[0].mData = static_cast<uint8_t *>(frame.Y.mData);
     b.mPlanes[0].mStride = frame.Y.mStride;
