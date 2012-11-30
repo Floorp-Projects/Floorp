@@ -23,7 +23,7 @@ function test() {
         tiltOpened = true;
 
         Services.obs.addObserver(finalize, DESTROYED, false);
-        InspectorUI.closeInspectorUI();
+        Tilt.destroy(Tilt.currentWindowId);
       }
     }, false, function suddenDeath()
     {

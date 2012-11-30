@@ -29,8 +29,10 @@ function test()
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.contentWindow;
+    gDebugger = gPane.panelWin;
     resumed = true;
+
+    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
@@ -48,12 +50,10 @@ function test()
     executeSoon(startTest);
   }
 
-  window.addEventListener("Debugger:SourceShown", onScriptShown);
-
   function startTest()
   {
     if (scriptShown && framesAdded && resumed && !testStarted) {
-      window.removeEventListener("Debugger:SourceShown", onScriptShown);
+      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
@@ -79,7 +79,7 @@ function test()
     isnot(gScripts.selectedValue, gScripts.values[0],
           "the correct script is selected");
 
-    gBreakpoints = gPane.breakpoints;
+    gBreakpoints = gPane.getAllBreakpoints();
     is(Object.keys(gBreakpoints), 0, "no breakpoints");
     ok(!gPane.getBreakpoint("chocolate", 3), "getBreakpoint('chocolate', 3) returns falsey");
 

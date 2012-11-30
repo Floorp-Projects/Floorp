@@ -25,7 +25,6 @@ ToolbarView.prototype = {
    */
   initialize: function DVT_initialize() {
     dumpn("Initializing the ToolbarView");
-    this._closeButton = document.getElementById("close");
     this._togglePanesButton = document.getElementById("toggle-panes");
     this._resumeButton = document.getElementById("resume");
     this._stepOverButton = document.getElementById("step-over");
@@ -44,7 +43,6 @@ ToolbarView.prototype = {
     this._stepInTooltip = L10N.getFormatStr("stepInTooltip", [stepInKey]);
     this._stepOutTooltip = L10N.getFormatStr("stepOutTooltip", [stepOutKey]);
 
-    this._closeButton.addEventListener("click", this._onCloseClick, false);
     this._togglePanesButton.addEventListener("mousedown", this._onTogglePanesPressed, false);
     this._resumeButton.addEventListener("mousedown", this._onResumePressed, false);
     this._stepOverButton.addEventListener("mousedown", this._onStepOverPressed, false);
@@ -55,7 +53,6 @@ ToolbarView.prototype = {
     this._stepInButton.setAttribute("tooltiptext", this._stepInTooltip);
     this._stepOutButton.setAttribute("tooltiptext", this._stepOutTooltip);
 
-    this.toggleCloseButton(!window._isRemoteDebugger && !window._isChromeDebugger);
     // TODO: bug 806775
     // this.toggleChromeGlobalsContainer(window._isChromeDebugger);
   },
@@ -65,22 +62,11 @@ ToolbarView.prototype = {
    */
   destroy: function DVT_destroy() {
     dumpn("Destroying the ToolbarView");
-    this._closeButton.removeEventListener("click", this._onCloseClick, false);
     this._togglePanesButton.removeEventListener("mousedown", this._onTogglePanesPressed, false);
     this._resumeButton.removeEventListener("mousedown", this._onResumePressed, false);
     this._stepOverButton.removeEventListener("mousedown", this._onStepOverPressed, false);
     this._stepInButton.removeEventListener("mousedown", this._onStepInPressed, false);
     this._stepOutButton.removeEventListener("mousedown", this._onStepOutPressed, false);
-  },
-
-  /**
-   * Sets the close button hidden or visible. It's hidden by default.
-   *
-   * @param boolean aVisibleFlag
-   *        Specifies the intended visibility.
-   */
-  toggleCloseButton: function DVT_toggleCloseButton(aVisibleFlag) {
-    this._closeButton.setAttribute("hidden", !aVisibleFlag);
   },
 
   /**
@@ -177,7 +163,6 @@ ToolbarView.prototype = {
     }
   },
 
-  _closeButton: null,
   _togglePanesButton: null,
   _resumeButton: null,
   _stepOverButton: null,
