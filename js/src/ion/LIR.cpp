@@ -130,6 +130,17 @@ LSnapshot::New(MIRGenerator *gen, MResumePoint *mir, BailoutKind kind)
     return snapshot;
 }
 
+void
+LSnapshot::rewriteRecoveredInput(LUse input)
+{
+    // Mark any operands to this snapshot with the same value as input as being
+    // equal to the instruction's result.
+    for (size_t i = 0; i < numEntries(); i++) {
+        if (getEntry(i)->isUse() && getEntry(i)->toUse()->virtualRegister() == input.virtualRegister())
+            setEntry(i, LUse(input.virtualRegister(), LUse::RECOVERED_INPUT));
+    }
+}
+
 bool
 LPhi::init(MIRGenerator *gen)
 {
