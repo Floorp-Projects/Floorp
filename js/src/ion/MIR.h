@@ -5639,6 +5639,7 @@ class MResumePoint : public MNode
     uint32 stackDepth_;
     jsbytecode *pc_;
     MResumePoint *caller_;
+    MInstruction *instruction_;
     Mode mode_;
 
     MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent, Mode mode);
@@ -5682,6 +5683,12 @@ class MResumePoint : public MNode
         for (MResumePoint *it = caller_; it; it = it->caller_)
             count++;
         return count;
+    }
+    MInstruction *instruction() {
+        return instruction_;
+    }
+    void setInstruction(MInstruction *ins) {
+        instruction_ = ins;
     }
     Mode mode() const {
         return mode_;
