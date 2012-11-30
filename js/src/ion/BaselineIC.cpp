@@ -20,7 +20,7 @@ namespace js {
 namespace ion {
 
 ICMonitoredStub::ICMonitoredStub(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub)
-  : ICStub(kind, false, true, stubCode),
+  : ICStub(kind, ICStub::Monitored, stubCode),
     firstMonitorStub_(firstMonitorStub)
 {
     // If the first monitored stub is a ICTypeMonitor_Fallback stub, then
@@ -33,11 +33,27 @@ ICMonitoredStub::ICMonitoredStub(Kind kind, IonCode *stubCode, ICStub *firstMoni
 bool
 ICMonitoredFallbackStub::initMonitoringChain(JSContext *cx)
 {
+    JS_ASSERT(fallbackMonitorStub_ == NULL);
+
     ICTypeMonitor_Fallback::Compiler compiler(cx, this);
     ICTypeMonitor_Fallback *stub = compiler.getStub();
     if (!stub)
         return false;
     fallbackMonitorStub_ = stub;
+    return true;
+}
+
+bool
+ICUpdatedStub::initUpdatingChain(JSContext *cx)
+{
+    JS_ASSERT(firstUpdateStub_ == NULL);
+
+    ICTypeUpdate_Fallback::Compiler compiler(cx);
+    ICTypeUpdate_Fallback *stub = compiler.getStub();
+    if (!stub)
+        return false;
+
+    firstUpdateStub_ = stub;
     return true;
 }
 
@@ -95,6 +111,18 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
         return false;
 
     EmitCallVM(code, masm);
+    return true;
+}
+
+bool
+ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm)
+{
+    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCode *code = ion->getVMWrapper(DoTypeUpdateFallbackInfo);
+    if (!code)
+        return false;
+
+    EmitCallTypeUpdateIC(masm, code);
     return true;
 }
 
@@ -182,18 +210,32 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 bool
+DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue value)
+{
+    /*
+    switch(stub->kind()) {
+      case ICStub::SetElem_Dense:
+        RootedTypeObject type(cx, stub->type());
+        ///// update typeset on |type|
+        break;
+      default:
+        break;
+    }
+    ///// create and add new type-update stub for |value|
+    */
+    return true;
+}
+
+typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, ICUpdatedStub *, HandleValue);
+const VMFunction DoTypeUpdateFallbackInfo =
+    FunctionInfo<DoTypeUpdateFallbackFn>(DoTypeUpdateFallback);
+
+bool
 ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    JS_ASSERT(R0 == JSReturnOperand);
-
-    // R0 contains the input value to be checked.
-    // R2.scratchReg() contains the return address back to the mainline code.
-    //
-    // It's ok to clobber BaselineTailCallReg here because even on ARM where it matters,
-    // we will never be returning to it.
-    masm.loadPtr(Address(BaselineStubReg, (int32_t) ICTypeUpdate_Fallback::offsetOfEntryPoint()),
-                 BaselineTailCallReg);
-    masm.jump(BaselineTailCallReg);
+    // Just store false into R1.scratchReg() and return.
+    masm.move32(Imm32(0), R1.scratchReg());
+    EmitReturnFromIC(masm);
     return true;
 }
 
@@ -653,11 +695,8 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
 
     // Try to generate new stubs.
     if (obj->isDenseArray() && index.isInt32()) {
-        // Don't attach multiple dense array stubs.
-        if (stub->hasStub(ICStub::SetElem_Dense))
-            return true;
-
-        ICSetElem_Dense::Compiler compiler(cx);
+        RootedTypeObject type(cx, obj->getType(cx));
+        ICSetElem_Dense::Compiler compiler(cx, type);
         ICStub *denseStub = compiler.getStub();
         if (!denseStub)
             return false;
@@ -700,7 +739,11 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 bool
 ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
 {
+    // R0 = object
+    // R1 = key
+    // Stack = { ... rhs-value, <return-addr>? }
     Label failure;
+    Label failureUnstow;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
@@ -712,8 +755,33 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     Register obj = masm.extractObject(R0, ExtractTemp0);
     masm.branchTestObjShape(Assembler::NotEqual, obj, shape, &failure);
 
+    // Stow both R0 and R1 (object and key)
+    // But R0 and R1 still hold their values.
+    EmitStowICValues(masm, 2);
+
+    // We may need to free up some registers
+    GeneralRegisterSet regs(availableGeneralRegs(0));
+    regs.take(R0);
+
+    // Guard that the type object matches.
+    Register typeReg = regs.takeAny();
+    masm.loadPtr(Address(BaselineStubReg, ICSetElem_Dense::offsetOfType()), typeReg);
+    masm.branchPtr(Assembler::NotEqual, Address(obj, JSObject::offsetOfType()), typeReg,
+                   &failureUnstow);
+
+    // Stack is now: { ..., rhs-value, object-value, key-value, maybe?-RET-ADDR }
+    // Load rhs-value in to R0
+    masm.loadValue(Address(BaselineStackReg, 2 * sizeof(Value) + ICStackValueOffset), R0);
+
+    // Call the type-update stub.
+    if (!callTypeUpdateIC(masm))
+        return false;
+
+    // Unstow R0 and R1 (object and key)
+    EmitUnstowICValues(masm, 2);
+
     // Load obj->elements in scratchReg.
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    regs = availableGeneralRegs(2);
     Register scratchReg = regs.takeAny();
     masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
 
@@ -732,6 +800,10 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadValue(Address(BaselineStackReg, ICStackValueOffset), R0);
     masm.storeValue(R0, element);
     EmitReturnFromIC(masm);
+
+    // Failure case - fail but first unstow R0 and R1
+    masm.bind(&failureUnstow);
+    EmitUnstowICValues(masm, 2);
 
     // Failure case - jump to next stub
     masm.bind(&failure);

@@ -137,30 +137,26 @@ namespace ion {
 // different TypeObject to update.  New input types must be tracked on a typeobject-to-
 // typeobject basis.
 //
-// However, the typechains for TypeUpdate ICs do not have their own fallbacks.  This
-// is because the type update stubs do NOT return to the mainline code (as with monitor
-// ICs).  They return back to the stub they were entered from.  This means that they
-// must be entered via a |call|, which alters the return address, and makes it
-// difficult to make VMCalls while still allowing for stack inspection.
+// Type-update ICs cannot be called in tail position (they must return to the
+// the stub that called them so that the stub may continue to perform its original
+// purpose).  This means that any VMCall to perform a manual type update from C++ must be
+// done from within the main IC stub.  This necessitates that the stub enter a
+// "BaselineStub" frame before making the call.
 //
-// To deal with this issue, we take the following steps:
-//  [1] We guarantee that the type update IC is entered with register-accessible
-//      values saved to stack, the value to check in R0, and the return address
-//      in R2.scratchReg()
+// If the type-update IC chain could itself make the VMCall, then the BaselineStub frame
+// must be entered before calling the type-update chain, and exited afterward.  This
+// is very expensive for a common case where we expect the type-update fallback to not
+// be called.  To avoid the cost of entering and exiting a BaselineStub frame when
+// using the type-update IC chain, we design the chain to not perform any VM-calls
+// in its fallback.
 //
-//  [2] The last type check stub in any individual chain sends control flow to
-//      an "Update fallback" stub, which is shared beteen all chains on an IC.
-//      the update fallback stub has the sole job of jumping to a different entry
-//      point on the regular fallback stub.
-//
-//  [3] The IC's main fallback stub has two entry points: the regular one that
-//      is entered when all IC stubs fail their guards, and a special entry
-//      point for when an IC stub succeeded, but its subsequent typechecks all
-//      failed.  In the latter case, the fallback stub fixes its stack state,
-//      and jumps into main fallback stub codepath, which does the operation as
-//      well as the typeset update manually.  Along with adding a new IC stub
-//      for the operation (if that's possible), it also initializes the type
-//      stub chain for that IC stub to include the input type seen.
+// Instead, the type-update IC chain is responsible for returning 1 or 0, depending
+// on if a type is represented in the chain or not.  The fallback stub simply returns
+// 0, and all other optimized stubs return 1.
+// If the chain returns 1, then the IC stub goes ahead and performs its operation.
+// If the chain returns 0, then the IC stub performs a call to the fallback function
+// inline (doing the requisite BaselineStub frame enter/exit).
+// This allows us to avoid the expensive subfram enter/exit in the common case.
 //
 //                                 r e t u r n    p a t h
 //   <--------------.-----------------.-----------------.-----------------.
@@ -168,27 +164,27 @@ namespace ion {
 //        +-----------+     +-----------+     +-----------+     +-----------+
 //   ---->| Stub 1    |---->| Stub 2    |---->| Stub 3    |---->| FB Stub   |
 //        +-----------+     +-----------+     +-----------+     +-----------+
-//          |   ^             |   ^             |   ^                ^
-//          |   |             |   |             |   |                |
-//          |   |             |   |             |   |                |
-//          |   |             |   |             v   |                |
+//          |   ^             |   ^             |   ^
+//          |   |             |   |             |   |
+//          |   |             |   |             |   |----------------.
+//          |   |             |   |             v   |1               |0
 //          |   |             |   |         +-----------+    +-----------+
-//          |   |             |   |         | Type 3.1  |--->| Update FB |
+//          |   |             |   |         | Type 3.1  |--->|    FB 3   |
 //          |   |             |   |         +-----------+    +-----------+
-//          |   |             |   |                                   ^
-//          |   |             |   \-------------.-----------------.   |
-//          |   |             |   |             |                 |   \------.
-//          |   |             v   |             |                 |          |
-//          |   |         +-----------+     +-----------+     +-----------+  |
-//          |   |         | Type 2.1  |---->| Type 2.2  |---->| Type 2.3  |--/
-//          |   |         +-----------+     +-----------+     +-----------+  |
-//          |   |                                                            |
-//          |   \-------------.                                              |
-//          |   |             |                                              |
-//          v   |             |                                              |
-//     +-----------+     +-----------+                                       |
-//     | Type 1.1  |---->| Type 1.2  |---------------------------------------/
-//     +-----------+     +-----------+
+//          |   |             |   |
+//          |   |             |   \-------------.-----------------.
+//          |   |             |   |             |                 |
+//          |   |             v   |1            |1                |0
+//          |   |         +-----------+     +-----------+     +-----------+
+//          |   |         | Type 2.1  |---->| Type 2.2  |---->|    FB 2   |
+//          |   |         +-----------+     +-----------+     +-----------+
+//          |   |
+//          |   \-------------.-----------------.
+//          |   |             |                 |
+//          v   |1            |1                |0
+//     +-----------+     +-----------+     +-----------+
+//     | Type 1.1  |---->| Type 1.2  |---->|   FB 1    |
+//     +-----------+     +-----------+     +-----------+
 //
 
 
@@ -290,6 +286,7 @@ class ICEntry
 class ICFallbackStub;
 class ICMonitoredStub;
 class ICMonitoredFallbackStub;
+class ICUpdatedStub;
 
 //
 // Base class for all IC stubs.
@@ -309,13 +306,20 @@ class ICStub
         return (k > INVALID) && (k < LIMIT);
     }
 
+    enum Trait {
+        Regular             = 0x0,
+        Fallback            = 0x1,
+        Monitored           = 0x2,
+        MonitoredFallback   = 0x3,
+        Updated             = 0x4
+    };
+
   protected:
     // The kind of the stub.
     //  High bit is 'isFallback' flag.
     //  Second high bit is 'isMonitored' flag.
-    bool     isFallback_  : 1;
-    bool     isMonitored_ : 1;
-    Kind     kind_        : 14;
+    Trait   trait_ : 3;
+    Kind    kind_  : 13;
 
     // The raw jitcode to call for this stub.
     uint8_t *stubCode_;
@@ -325,8 +329,7 @@ class ICStub
     ICStub *next_;
 
     inline ICStub(Kind kind, IonCode *stubCode)
-      : isFallback_(false),
-        isMonitored_(false),
+      : trait_(Regular),
         kind_(kind),
         stubCode_(stubCode->raw()),
         next_(NULL)
@@ -334,19 +337,8 @@ class ICStub
         JS_ASSERT(stubCode != NULL);
     }
 
-    inline ICStub(Kind kind, bool isFallback, IonCode *stubCode)
-      : isFallback_(isFallback),
-        isMonitored_(false),
-        kind_(kind),
-        stubCode_(stubCode->raw()),
-        next_(NULL)
-    {
-        JS_ASSERT(stubCode != NULL);
-    }
-
-    inline ICStub(Kind kind, bool isFallback, bool isMonitored, IonCode *stubCode)
-      : isFallback_(isFallback),
-        isMonitored_(isMonitored),
+    inline ICStub(Kind kind, Trait trait, IonCode *stubCode)
+      : trait_(trait),
         kind_(kind),
         stubCode_(stubCode->raw()),
         next_(NULL)
@@ -361,15 +353,19 @@ class ICStub
     }
 
     inline bool isFallback() const {
-        return isFallback_;
+        return trait_ == Fallback || trait_ == MonitoredFallback;
     }
 
     inline bool isMonitored() const {
-        return isMonitored_ && !isFallback_;
+        return trait_ == Monitored;
+    }
+
+    inline bool isUpdated() const {
+        return trait_ == Updated;
     }
 
     inline bool isMonitoredFallback() const {
-        return isMonitored_ && isFallback_;
+        return trait_ == MonitoredFallback;
     }
 
     inline const ICFallbackStub *toFallbackStub() const {
@@ -400,6 +396,16 @@ class ICStub
     inline ICMonitoredFallbackStub *toMonitoredFallbackStub() {
         JS_ASSERT(isMonitoredFallback());
         return reinterpret_cast<ICMonitoredFallbackStub *>(this);
+    }
+
+    inline const ICUpdatedStub *toUpdatedStub() const {
+        JS_ASSERT(isUpdated());
+        return reinterpret_cast<const ICUpdatedStub *>(this);
+    }
+
+    inline ICUpdatedStub *toUpdatedStub() {
+        JS_ASSERT(isUpdated());
+        return reinterpret_cast<ICUpdatedStub *>(this);
     }
 
 #define KIND_METHODS(kindName)   \
@@ -464,16 +470,20 @@ class ICFallbackStub : public ICStub
     ICStub **           lastStubPtrAddr_;
 
     ICFallbackStub(Kind kind, IonCode *stubCode)
-      : ICStub(kind, true, false, stubCode),
+      : ICStub(kind, ICStub::Fallback, stubCode),
         icEntry_(NULL),
         numOptimizedStubs_(0),
         lastStubPtrAddr_(NULL) {}
 
-    ICFallbackStub(Kind kind, bool isMonitored, IonCode *stubCode)
-      : ICStub(kind, true, isMonitored, stubCode),
+    ICFallbackStub(Kind kind, Trait trait, IonCode *stubCode)
+      : ICStub(kind, trait, stubCode),
         icEntry_(NULL),
         numOptimizedStubs_(0),
-        lastStubPtrAddr_(NULL) {}
+        lastStubPtrAddr_(NULL)
+    {
+        JS_ASSERT(trait == ICStub::Fallback ||
+                  trait == ICStub::MonitoredFallback);
+    }
 
   public:
     inline ICEntry *icEntry() const {
@@ -552,7 +562,7 @@ class ICMonitoredFallbackStub : public ICFallbackStub
     ICTypeMonitor_Fallback *    fallbackMonitorStub_;
 
     ICMonitoredFallbackStub(Kind kind, IonCode *stubCode)
-      : ICFallbackStub(kind, true, stubCode),
+      : ICFallbackStub(kind, ICStub::MonitoredFallback, stubCode),
         fallbackMonitorStub_(NULL) {}
 
   public:
@@ -560,6 +570,55 @@ class ICMonitoredFallbackStub : public ICFallbackStub
 
     inline ICTypeMonitor_Fallback *fallbackMonitorStub() const {
         return fallbackMonitorStub_;
+    }
+};
+
+// Updated stubs are IC stubs that use a TypeUpdate IC to track
+// the status of heap typesets that need to be updated.
+class ICUpdatedStub : public ICStub
+{
+  protected:
+    // Pointer to the start of the type updating stub chain.
+    ICStub *            firstUpdateStub_;
+
+    uint32_t            numOptimizedStubs_;
+
+    ICUpdatedStub(Kind kind, IonCode *stubCode)
+      : ICStub(kind, ICStub::Updated, stubCode),
+        firstUpdateStub_(NULL),
+        numOptimizedStubs_(0)
+    {}
+
+  public:
+    bool initUpdatingChain(JSContext *cx);
+
+    void addOptimizedUpdateStub(ICStub *stub) {
+        if (firstUpdateStub_->isTypeUpdate_Fallback()) {
+            stub->setNext(firstUpdateStub_);
+            firstUpdateStub_ = stub;
+        } else {
+            ICStub *iter = firstUpdateStub_;
+            JS_ASSERT(iter->next() != NULL);
+            while (!iter->next()->isTypeUpdate_Fallback())
+                iter = iter->next();
+            JS_ASSERT(iter->next()->next() == NULL);
+            stub->setNext(iter->next());
+            iter->setNext(stub);
+        }
+
+        numOptimizedStubs_++;
+    }
+
+    inline ICStub *firstUpdateStub() const {
+        return firstUpdateStub_;
+    }
+
+    inline uint32_t numOptimizedStubs() const {
+        return numOptimizedStubs_;
+    }
+
+    static inline size_t offsetOfFirstUpdateStub() {
+        return offsetof(ICUpdatedStub, firstUpdateStub_);
     }
 };
 
@@ -586,6 +645,10 @@ class ICStubCompiler
 
     // Emits a normal (non-tail) call to a VMFunction wrapper.
     bool callVM(const VMFunction &fun, MacroAssembler &masm);
+
+    // Emits a call to a type-update IC, assuming that the value to be
+    // checked is already in R0.
+    bool callTypeUpdateIC(MacroAssembler &masm);
 
     inline GeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
         GeneralRegisterSet regs(GeneralRegisterSet::All());
@@ -727,42 +790,33 @@ class ICTypeMonitor_Fallback : public ICStub
 
 // TypeUpdate
 
+extern const VMFunction DoTypeUpdateFallbackInfo;
+
 // The TypeUpdate fallback is not a regular fallback, since it just
 // forwards to a different entry point in the main fallback stub.
 class ICTypeUpdate_Fallback : public ICStub
 {
-    uint8_t *entryPoint_;
-
-    ICTypeUpdate_Fallback(IonCode *stubCode, uint8_t *entryPoint)
-      : ICStub(ICStub::TypeUpdate_Fallback, stubCode),
-        entryPoint_(entryPoint)
-    { }
+    ICTypeUpdate_Fallback(IonCode *stubCode)
+      : ICStub(ICStub::TypeUpdate_Fallback, stubCode)
+    {}
 
   public:
-    static inline ICTypeUpdate_Fallback *New(IonCode *code, uint8_t *entryPoint) {
-        return new ICTypeUpdate_Fallback(code, entryPoint);
-    }
-
-    static inline size_t offsetOfEntryPoint() {
-        return offsetof(ICTypeUpdate_Fallback, entryPoint_);
+    static inline ICTypeUpdate_Fallback *New(IonCode *code) {
+        return new ICTypeUpdate_Fallback(code);
     }
 
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
-      CodeLocationLabel fallbackEntryPoint_;
-
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, CodeLocationLabel fallbackEntryPoint)
-          : ICStubCompiler(cx, ICStub::TypeUpdate_Fallback),
-            fallbackEntryPoint_(fallbackEntryPoint)
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::TypeUpdate_Fallback)
         { }
 
-        ICStub *getStub() {
-            // TODO: Fix NULL to calculate and pass actual entrypoint.
-            return ICTypeUpdate_Fallback::New(getStubCode(), fallbackEntryPoint_.raw());
+        ICTypeUpdate_Fallback *getStub() {
+            return ICTypeUpdate_Fallback::New(getStubCode());
         }
     };
 };
@@ -1028,10 +1082,8 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
             ICGetElem_Fallback *stub = ICGetElem_Fallback::New(getStubCode());
             if (!stub)
                 return NULL;
-            if (!stub->initMonitoringChain(cx)) {
-                delete stub;
+            if (!stub->initMonitoringChain(cx))
                 return NULL;
-            }
             return stub;
         }
     };
@@ -1096,26 +1148,50 @@ class ICSetElem_Fallback : public ICFallbackStub
     };
 };
 
-class ICSetElem_Dense : public ICStub
+class ICSetElem_Dense : public ICUpdatedStub
 {
-    ICSetElem_Dense(IonCode *stubCode)
-      : ICStub(SetElem_Dense, stubCode) {}
+    HeapPtrTypeObject type_;
+
+    ICSetElem_Dense(IonCode *stubCode, HandleTypeObject type)
+      : ICUpdatedStub(SetElem_Dense, stubCode),
+        type_(type) {}
 
   public:
-    static inline ICSetElem_Dense *New(IonCode *code) {
-        return new ICSetElem_Dense(code);
+    static inline ICSetElem_Dense *New(IonCode *code, HandleTypeObject type) {
+        return new ICSetElem_Dense(code, type);
+    }
+
+    static size_t offsetOfType() {
+        return offsetof(ICSetElem_Dense, type_);
+    }
+
+    HeapPtrTypeObject &type() {
+        return type_;
     }
 
     class Compiler : public ICStubCompiler {
+        // Compiler is only live on stack during compilation, it should
+        // outlive any RootedTypeObject it's passed.  So it can just
+        // use the handle.
+        HandleTypeObject type_;
+
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::SetElem_Dense) {}
+        Compiler(JSContext *cx, HandleTypeObject type)
+          : ICStubCompiler(cx, ICStub::SetElem_Dense),
+            type_(type) {}
 
         ICStub *getStub() {
-            return ICSetElem_Dense::New(getStubCode());
+            ICSetElem_Dense *stub = ICSetElem_Dense::New(getStubCode(), type_);
+            if (!stub)
+                return NULL;
+            if (!stub->initUpdatingChain(cx)) {
+                delete stub;
+                return NULL;
+            }
+            return stub;
         }
     };
 };

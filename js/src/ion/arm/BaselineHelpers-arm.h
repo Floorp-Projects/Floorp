@@ -155,6 +155,87 @@ EmitLeaveStubFrame(MacroAssembler &masm)
 }
 
 inline void
+EmitStowICValues(MacroAssembler &masm, int values)
+{
+    JS_ASSERT(values >= 0 && values <= 2);
+    switch(values) {
+      case 1:
+        // Stow R0
+        masm.pushValue(R0);
+        break;
+      case 2:
+        // Stow R0 and R1
+        masm.pushValue(R0);
+        masm.pushValue(R1);
+        break;
+    }
+}
+
+inline void
+EmitUnstowICValues(MacroAssembler &masm, int values)
+{
+    JS_ASSERT(values >= 0 && values <= 2);
+    switch(values) {
+      case 1:
+        // Unstow R0
+        masm.popValue(R0);
+        break;
+      case 2:
+        // Untow R0 and R1
+        masm.popValue(R1);
+        masm.popValue(R0);
+        break;
+    }
+}
+
+inline void
+EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code)
+{
+    JS_ASSERT(R2 == ValueOperand(r1, r0));
+    // R0 contains the value that needs to be typechecked.
+
+    // Save the current BaselineStubReg to stack, as well as the TailCallReg,
+    // since on ARM, the LR is live.
+    masm.push(BaselineStubReg);
+    masm.push(BaselineTailCallReg);
+
+    // This is expected to be called from within an IC, when BaselineStubReg
+    // is properly initialized to point to the stub.
+    masm.loadPtr(Address(BaselineStubReg, ICUpdatedStub::offsetOfFirstUpdateStub()),
+                 BaselineStubReg);
+
+    // TODO: Change r0 uses below to use masm's configurable scratch register instead.
+
+    // Load stubcode pointer from BaselineStubReg into BaselineTailCallReg.
+    masm.loadPtr(Address(BaselineStubReg, ICStub::offsetOfStubCode()), r0);
+
+    // Call the stubcode.
+    masm.ma_blx(r0);
+
+    // Restore the old stub reg and tailcall reg.
+    masm.pop(BaselineTailCallReg);
+    masm.pop(BaselineStubReg);
+
+    // The update IC will store 0 or 1 in R1.scratchReg() reflecting if the
+    // value in R0 type-checked properly or not.
+    Label success;
+    masm.cmp32(R1.scratchReg(), Imm32(1));
+    masm.j(Assembler::Equal, &success);
+
+    // If the IC failed, then call the update fallback function.
+    EmitEnterStubFrame(masm, R1.scratchReg());
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    EmitCallVM(code, masm);
+    EmitLeaveStubFrame(masm);
+
+    // Success at end.
+    masm.bind(&success);
+}
+
+inline void
 EmitStubGuardFailure(MacroAssembler &masm)
 {
     JS_ASSERT(R2 == ValueOperand(r1, r0));
