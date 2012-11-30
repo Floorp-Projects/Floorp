@@ -919,6 +919,9 @@ CompileBackEnd(MIRGenerator *mir)
     if (mir->shouldCancel("DCE"))
         return NULL;
 
+    // Passes after this point must not move instructions; these analyses
+    // depend on knowing the final order in which instructions will execute.
+
     if (js_IonOptions.edgeCaseAnalysis) {
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
