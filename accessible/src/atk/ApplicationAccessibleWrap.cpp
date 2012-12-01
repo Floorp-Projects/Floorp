@@ -52,10 +52,6 @@ struct GnomeAccessibilityModule
     GnomeAccessibilityShutdown shutdown;
 };
 
-
-/* supporting */
-PRLogModuleInfo *gMaiLog = NULL;
-
 static GnomeAccessibilityModule sAtkBridge = {
 #ifdef AIX
     "libatk-bridge.a(libatk-bridge.so.0)", NULL,
@@ -82,16 +78,11 @@ static gboolean toplevel_event_watcher(GSignalInvocationHint*, guint,
 ApplicationAccessibleWrap::ApplicationAccessibleWrap():
   ApplicationAccessible()
 {
-  MAI_LOG_DEBUG(("======Create AppRootAcc=%p\n", (void*)this));
-
   if (ShouldA11yBeEnabled()) {
       // Load and initialize gail library.
       nsresult rv = LoadGtkModule(sGail);
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv))
           (*sGail.init)();
-      } else {
-          MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
-      }
   }
 }
 
@@ -114,8 +105,6 @@ nsAccessNodeWrap::InitAccessibility()
   nsresult rv = LoadGtkModule(sAtkBridge);
   if (NS_SUCCEEDED(rv)) {
     (*sAtkBridge.init)();
-  } else {
-    MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
   }
 
   if (!sToplevel_event_hook_added) {
@@ -136,7 +125,6 @@ nsAccessNodeWrap::InitAccessibility()
 
 ApplicationAccessibleWrap::~ApplicationAccessibleWrap()
 {
-  MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
   AccessibleWrap::ShutdownAtkObject();
 }
 
@@ -351,9 +339,6 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
     NS_ENSURE_ARG(aModule.libName);
 
     if (!(aModule.lib = PR_LoadLibrary(aModule.libName))) {
-
-        MAI_LOG_DEBUG(("Fail to load lib: %s in default path\n", aModule.libName));
-
         //try to load the module with "gtk-2.0/modules" appended
         char *curLibPath = PR_GetLibraryPath();
         nsAutoCString libPath(curLibPath);
@@ -362,7 +347,6 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
 #else
         libPath.Append(":/usr/lib");
 #endif
-        MAI_LOG_DEBUG(("Current Lib path=%s\n", libPath.get()));
         PR_FreeLibraryName(curLibPath);
 
         int16_t loc1 = 0, loc2 = 0;
@@ -377,16 +361,13 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
             sub.Append("/gtk-2.0/modules/");
             sub.Append(aModule.libName);
             aModule.lib = PR_LoadLibrary(sub.get());
-            if (aModule.lib) {
-                MAI_LOG_DEBUG(("Ok, load %s from %s\n", aModule.libName, sub.get()));
+            if (aModule.lib)
                 break;
-            }
+
             loc1 = loc2+1;
         }
-        if (!aModule.lib) {
-            MAI_LOG_DEBUG(("Fail to load %s\n", aModule.libName));
+        if (!aModule.lib)
             return NS_ERROR_FAILURE;
-        }
     }
 
     //we have loaded the library, try to get the function ptrs
@@ -396,9 +377,6 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
                                                    aModule.shutdownName))) {
 
         //fail, :(
-        MAI_LOG_DEBUG(("Fail to find symbol %s in %s",
-                       aModule.init ? aModule.shutdownName : aModule.initName,
-                       aModule.libName));
         PR_UnloadLibrary(aModule.lib);
         aModule.lib = NULL;
         return NS_ERROR_FAILURE;
