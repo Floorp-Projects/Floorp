@@ -164,8 +164,8 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
 
   try:
     for d in dumps:
-      log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
-      print "Crash dump filename: " + d
+      stackwalkOutput = []
+      stackwalkOutput.append("Crash dump filename: " + d)
       if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
         # run minidump stackwalk
         p = subprocess.Popen([stackwalkPath, d, symbolsPath],
@@ -174,19 +174,21 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
         (out, err) = p.communicate()
         if len(out) > 3:
           # minidump_stackwalk is chatty, so ignore stderr when it succeeds.
-          print out
+          stackwalkOutput.append(out)
         else:
-          print "stderr from minidump_stackwalk:"
-          print err
+          stackwalkOutput.append("stderr from minidump_stackwalk:")
+          stackwalkOutput.append(err)
         if p.returncode != 0:
-          print "minidump_stackwalk exited with return code %d" % p.returncode
+          stackwalkOutput.append("minidump_stackwalk exited with return code %d" % p.returncode)
       else:
         if not symbolsPath:
-          print "No symbols path given, can't process dump."
+          stackwalkOutput.append("No symbols path given, can't process dump.")
         if not stackwalkPath:
-          print "MINIDUMP_STACKWALK not set, can't process dump."
+          stackwalkOutput.append("MINIDUMP_STACKWALK not set, can't process dump.")
         elif stackwalkPath and not os.path.exists(stackwalkPath):
-          print "MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath
+          stackwalkOutput.append("MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath)
+      log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
+      print '\n'.join(stackwalkOutput)
       dumpSavePath = os.environ.get('MINIDUMP_SAVE_PATH', None)
       if dumpSavePath:
         shutil.move(d, dumpSavePath)
