@@ -2271,14 +2271,10 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
   return;
 }
 
-NS_IMETHODIMP
-nsTableFrame::RemoveFrame(ChildListID     aListID,
-                          nsIFrame*       aOldFrame)
+void
+nsTableFrame::DoRemoveFrame(ChildListID     aListID,
+                            nsIFrame*       aOldFrame)
 {
-  NS_ASSERTION(aListID == kColGroupList ||
-               NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP !=
-                 aOldFrame->GetStyleDisplay()->mDisplay,
-               "Wrong list name; use kColGroupList iff colgroup");
   if (aListID == kColGroupList) {
     nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
@@ -2322,17 +2318,41 @@ nsTableFrame::RemoveFrame(ChildListID     aListID,
       nsIntRect damageArea;
       cellMap->RebuildConsideringCells(nullptr, nullptr, 0, 0, false, damageArea);
 
-      MatchCellMapToColCache(cellMap);
+      ((nsTableFrame*)GetFirstInFlow())->MatchCellMapToColCache(cellMap);
     }
   }
-  // for now, just bail and recalc all of the collapsing borders
-  // as the cellmap changes we need to recalc
-  if (IsBorderCollapse()) {
-    SetFullBCDamageArea();
+}
+
+NS_IMETHODIMP
+nsTableFrame::RemoveFrame(ChildListID     aListID,
+                          nsIFrame*       aOldFrame)
+{
+  NS_ASSERTION(aListID == kColGroupList ||
+               NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP !=
+                 aOldFrame->GetStyleDisplay()->mDisplay,
+               "Wrong list name; use kColGroupList iff colgroup");
+  nsIPresShell* shell = PresContext()->PresShell();
+  nsTableFrame* lastParent = nullptr;
+  while (aOldFrame) {
+    nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();
+    nsTableFrame* parent = static_cast<nsTableFrame*>(aOldFrame->GetParent());
+    if (parent != lastParent) {
+      parent->DrainSelfOverflowList();
+    }
+    parent->DoRemoveFrame(aListID, aOldFrame);
+    aOldFrame = oldFrameNextContinuation;
+    if (parent != lastParent) {
+      // for now, just bail and recalc all of the collapsing borders
+      // as the cellmap changes we need to recalc
+      if (parent->IsBorderCollapse()) {
+        parent->SetFullBCDamageArea();
+      }
+      parent->SetGeometryDirty();
+      shell->FrameNeedsReflow(parent, nsIPresShell::eTreeChange,
+                              NS_FRAME_HAS_DIRTY_CHILDREN);
+      lastParent = parent;
+    }
   }
-  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
-  SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::RemoveFrame\n");
   Dump(true, true, true);
