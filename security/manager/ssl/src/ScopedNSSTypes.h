@@ -10,8 +10,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/mozalloc_oom.h"
 #include "mozilla/Scoped.h"
-#include "nsError.h"
-#include "nsDebug.h"
+
 #include "prio.h"
 #include "cert.h"
 #include "cms.h"
