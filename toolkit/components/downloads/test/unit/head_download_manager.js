@@ -119,7 +119,8 @@ function addDownload(aParams)
 
   // This will throw if it isn't found, and that would mean test failure, so no
   // try catch block
-  var test = dm.getDownload(dl.id);
+  if (!aParams.isPrivate)
+    var test = dm.getDownload(dl.id);
 
   aParams.runBeforeStart.call(undefined, dl);
 

@@ -612,6 +612,7 @@ class ReadBarriered
   public:
     ReadBarriered() : value(NULL) {}
     ReadBarriered(T *value) : value(value) {}
+    ReadBarriered(Unrooted<T*> unrooted) : value(unrooted) {}
 
     T *get() const {
         if (!value)

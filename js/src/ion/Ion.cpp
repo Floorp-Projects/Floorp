@@ -849,6 +849,15 @@ CompileBackEnd(MIRGenerator *mir)
 
         if (mir->shouldCancel("Alias analysis"))
             return NULL;
+
+        // Eliminating dead resume point operands requires basic block
+        // instructions to be numbered. Reuse the numbering computed during
+        // alias analysis.
+        if (!EliminateDeadResumePointOperands(mir, graph))
+            return NULL;
+
+        if (mir->shouldCancel("Eliminate dead resume point operands"))
+            return NULL;
     }
 
     if (js_IonOptions.edgeCaseAnalysis) {
@@ -918,6 +927,9 @@ CompileBackEnd(MIRGenerator *mir)
 
     if (mir->shouldCancel("DCE"))
         return NULL;
+
+    // Passes after this point must not move instructions; these analyses
+    // depend on knowing the final order in which instructions will execute.
 
     if (js_IonOptions.edgeCaseAnalysis) {
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);

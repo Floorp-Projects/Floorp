@@ -5608,6 +5608,13 @@ TypeScript::CheckBytecode(JSContext *cx, HandleScript script, jsbytecode *pc, co
         if (IgnorePushed(pc, i))
             continue;
 
+        /*
+         * Ignore undefined values, these may have been inserted by Ion to
+         * substitute for dead values.
+         */
+        if (val.isUndefined())
+            continue;
+
         Type type = GetValueType(cx, val);
 
         if (!types->hasType(type)) {

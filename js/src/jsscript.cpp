@@ -120,7 +120,8 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
 #endif
 
         StackBaseShape base(&CallClass, cx->global(), BaseShape::VAROBJ | BaseShape::DELEGATE);
-        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
+
+        UnrootedUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
@@ -129,6 +130,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
                          (bi->kind() == CONSTANT ? JSPROP_READONLY : 0);
         unsigned frameIndex = bi.frameIndex();
         StackShape child(nbase, id, slot++, 0, attrs, Shape::HAS_SHORTID, frameIndex);
+        DropUnrooted(nbase);
 
         self->callObjShape_ = self->callObjShape_->getChildBinding(cx, child);
         if (!self->callObjShape_)
