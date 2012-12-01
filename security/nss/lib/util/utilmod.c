@@ -18,8 +18,7 @@
 
 #include "prprf.h" 
 #include "prsystem.h"
-#include "pkcs11t.h"
-#include "secitem.h"
+#include "secport.h"
 #include "utilpars.h" 
 #include "secerr.h"
 #if defined (_WIN32)
@@ -116,15 +115,19 @@ char *_NSSUTIL_GetOldSecmodName(const char *dbname,const char *filename)
     char *sep;
 
     sep = PORT_Strrchr(dirPath,*NSSUTIL_PATH_SEPARATOR);
-#ifdef WINDOWS
+#ifdef _WIN32
     if (!sep) {
+	/* utilparst.h defines NSSUTIL_PATH_SEPARATOR as "/" for all
+	 * platforms. */
 	sep = PORT_Strrchr(dirPath,'\\');
     }
 #endif
     if (sep) {
-	*(sep)=0;
+	*sep = 0;
+	file = PR_smprintf("%s"NSSUTIL_PATH_SEPARATOR"%s", dirPath, filename);
+    } else {
+	file = PR_smprintf("%s", filename);
     }
-    file= PR_smprintf("%s"NSSUTIL_PATH_SEPARATOR"%s", dirPath, filename);
     PORT_Free(dirPath);
     return file;
 }
@@ -138,7 +141,6 @@ static SECStatus nssutil_AddSecmodDB(NSSDBType dbType, const char *appName,
 #endif
 #include <fcntl.h>
 
-#ifndef WINCE
 /* same as fopen, except it doesn't use umask, but explicit */
 FILE *
 lfopen(const char *name, const char *mode, int flags)
@@ -157,7 +159,6 @@ lfopen(const char *name, const char *mode, int flags)
     /* file inherits fd */
     return file;
 }
-#endif
 
 #define MAX_LINE_LENGTH 2048
 
@@ -180,13 +181,12 @@ nssutil_ReadSecmodDB(NSSDBType dbType, const char *appName,
     char *paramsValue=NULL;
     PRBool failed = PR_TRUE;
 
-    if (dbname == NULL) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return NULL;
-    }
-
     moduleList = (char **) PORT_ZAlloc(useCount*sizeof(char **));
     if (moduleList == NULL) return NULL;
+
+    if (dbname == NULL) {
+	goto return_default;
+    }
 
     /* do we really want to use streams here */
     fd = fopen(dbname, "r");
@@ -354,7 +354,7 @@ done:
 	    goto bail;
 	}
 
-	/* old one doesn't exist */
+	/* old one exists */
 	status = PR_Access(olddbname, PR_ACCESS_EXISTS);
 	if (status == PR_SUCCESS) {
 	    PR_smprintf_free(olddbname);
@@ -367,6 +367,8 @@ bail:
 	    PR_smprintf_free(olddbname);
 	}
     }
+
+return_default:
 	
     if (!moduleList[0]) {
 	char * newParams;
@@ -467,11 +469,7 @@ nssutil_DeleteSecmodDB(NSSDBType dbType, const char *appName,
     /* do we really want to use streams here */
     fd = fopen(dbname, "r");
     if (fd == NULL) goto loser;
-#ifdef WINCE
-    fd2 = fopen(dbname2, "w+");
-#else
     fd2 = lfopen(dbname2, "w+", O_CREAT|O_RDWR|O_TRUNC);
-#endif
     if (fd2 == NULL) goto loser;
 
     name = NSSUTIL_ArgGetParamValue("name",args);
@@ -590,11 +588,7 @@ nssutil_AddSecmodDB(NSSDBType dbType, const char *appName,
     (void) nssutil_DeleteSecmodDB(dbType, appName, filename, 
 				  dbname, module, rw);
 
-#ifdef WINCE
-    fd = fopen(dbname, "a+");
-#else
     fd = lfopen(dbname, "a+", O_CREAT|O_RDWR|O_APPEND);
-#endif
     if (fd == NULL) {
 	return SECFailure;
     }

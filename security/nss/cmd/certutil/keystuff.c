@@ -14,9 +14,7 @@
 
 #if defined(XP_WIN) || defined (XP_PC)
 #include <time.h>
-#ifndef WINCE
 #include <conio.h>
-#endif
 #endif
 
 #if defined(__sun) && !defined(SVR4)
@@ -96,7 +94,7 @@ UpdateRNG(void)
     /* Get random noise from keyboard strokes */
     count = 0;
     while (count < sizeof randbuf) {
-#if defined(XP_UNIX) || defined(WINCE)
+#if defined(XP_UNIX)
 	c = getc(stdin);
 #else
 	c = getch();

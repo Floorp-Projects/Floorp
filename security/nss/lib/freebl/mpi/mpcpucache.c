@@ -74,13 +74,13 @@ void freebl_cpuid(unsigned long op, unsigned long *eax,
                          unsigned long *edx)
 {
 /* sigh GCC isn't smart enough to save the ebx PIC register on it's own
- * in this case, so do it by hand. */
-	__asm__("pushl %%ebx\n\t"
+ * in this case, so do it by hand. Use edi to store ebx and pass the
+ * value returned in ebx from cpuid through edi. */
+	__asm__("mov %%ebx,%%edi\n\t"
 		  "cpuid\n\t"
-		  "mov %%ebx,%1\n\t"
-		  "popl %%ebx\n\t"
+		  "xchgl %%ebx,%%edi\n\t"
 		: "=a" (*eax),
-		  "=r" (*ebx),
+		  "=D" (*ebx),
 		  "=c" (*ecx),
 		  "=d" (*edx)
 		: "0" (op));

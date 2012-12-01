@@ -20,10 +20,8 @@
 #include "secpkcs7.h"
 #include "secpkcs5.h"
 #include <stdarg.h>
-#if !defined(_WIN32_WCE)
 #include <sys/stat.h>
 #include <errno.h>
-#endif
 
 #ifdef XP_UNIX
 #include <unistd.h>

@@ -2,7 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.21 $ $Date: 2012/04/25 14:49:29 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.22 $ $Date: 2012/11/30 02:40:52 $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -44,5 +44,11 @@ endif
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 # Generate certdata.c.
-generate:
-	$(PERL) certdata.perl < certdata.txt
+
+# By default, use the unmodified certdata.txt.
+ifndef NSS_CERTDATA_TXT
+NSS_CERTDATA_TXT = certdata.txt
+endif
+
+$(OBJDIR)/certdata.c: $(NSS_CERTDATA_TXT) certdata.perl
+	$(PERL) certdata.perl < $(NSS_CERTDATA_TXT) > $@
