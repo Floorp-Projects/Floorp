@@ -11,10 +11,13 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.17 2012/11/14 01:14:12 wtc%google.com Exp $
+ * $Id: secder.h,v 1.16 2012/04/25 14:50:16 gerv%gerv.net Exp $
  */
 
+#if defined(_WIN32_WCE)
+#else
 #include <time.h>
+#endif
 
 #include "plarena.h"
 #include "prlong.h"
