@@ -146,7 +146,7 @@ PK11_ReadULongAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
  */
 CK_BBOOL
 PK11_HasAttributeSet( PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
-				                      CK_ATTRIBUTE_TYPE type )
+				 CK_ATTRIBUTE_TYPE type, PRBool haslock )
 {
     CK_BBOOL ckvalue = CK_FALSE;
     CK_ATTRIBUTE theTemplate;
@@ -156,10 +156,10 @@ PK11_HasAttributeSet( PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
     PK11_SETATTRS( &theTemplate, type, &ckvalue, sizeof( CK_BBOOL ) );
 
     /* Retrieve attribute value. */
-    PK11_EnterSlotMonitor(slot);
+    if (!haslock) PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB( slot )->C_GetAttributeValue( slot->session, id,
                                                     &theTemplate, 1 );
-    PK11_ExitSlotMonitor(slot);
+    if (!haslock) PK11_ExitSlotMonitor(slot);
     if( crv != CKR_OK ) {
         PORT_SetError( PK11_MapError( crv ) );
         return CK_FALSE;
@@ -254,7 +254,7 @@ PK11_GetAttributes(PRArenaPool *arena,PK11SlotInfo *slot,
 PRBool
 PK11_IsPermObject(PK11SlotInfo *slot, CK_OBJECT_HANDLE handle)
 {
-    return (PRBool) PK11_HasAttributeSet(slot, handle, CKA_TOKEN);
+    return (PRBool) PK11_HasAttributeSet(slot, handle, CKA_TOKEN, PR_FALSE);
 }
 
 char *
@@ -600,8 +600,8 @@ pk11_FindAttrInTemplate(CK_ATTRIBUTE *attr, unsigned int numAttrs,
  * figure out which hash algorithm to use until we decryptted this.
  */
 SECStatus
-PK11_VerifyRecover(SECKEYPublicKey *key,
-			 	SECItem *sig, SECItem *dsig, void *wincx)
+PK11_VerifyRecover(SECKEYPublicKey *key, const SECItem *sig,
+		   SECItem *dsig, void *wincx)
 {
     PK11SlotInfo *slot = key->pkcs11Slot;
     CK_OBJECT_HANDLE id = key->pkcs11ID;
@@ -660,7 +660,8 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
  * verify a signature from its hash.
  */
 SECStatus
-PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
+PK11_Verify(SECKEYPublicKey *key, const SECItem *sig, const SECItem *hash,
+	    void *wincx)
 {
     PK11SlotInfo *slot = key->pkcs11Slot;
     CK_OBJECT_HANDLE id = key->pkcs11ID;
@@ -729,12 +730,13 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
  * sign a hash. The algorithm is determined by the key.
  */
 SECStatus
-PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, SECItem *hash)
+PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, const SECItem *hash)
 {
     PK11SlotInfo *slot = key->pkcs11Slot;
     CK_MECHANISM mech = {0, NULL, 0 };
     PRBool owner = PR_TRUE;
     CK_SESSION_HANDLE session;
+    PRBool haslock = PR_FALSE;
     CK_ULONG len;
     CK_RV crv;
 
@@ -745,24 +747,27 @@ PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, SECItem *hash)
     }
 
     session = pk11_GetNewSession(slot,&owner);
-    if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
+    haslock = (!owner || !(slot->isThreadSafe));
+    if (haslock) PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_SignInit(session,&mech,key->pkcs11ID);
     if (crv != CKR_OK) {
-	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+	if (haslock) PK11_ExitSlotMonitor(slot);
 	pk11_CloseSession(slot,session,owner);
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
-	/* PKCS11 2.20 says if CKA_ALWAYS_AUTHENTICATE then 
-	 * do C_Login with CKU_CONTEXT_SPECIFIC 
-	 * between C_SignInit and C_Sign */
-	if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_ALWAYS_AUTHENTICATE)) {
-		PK11_DoPassword(slot, PR_FALSE, key->wincx, PR_TRUE);
-	}
+
+    /* PKCS11 2.20 says if CKA_ALWAYS_AUTHENTICATE then 
+     * do C_Login with CKU_CONTEXT_SPECIFIC 
+     * between C_SignInit and C_Sign */
+    if (SECKEY_HAS_ATTRIBUTE_SET_LOCK(key, CKA_ALWAYS_AUTHENTICATE, haslock)) {
+	PK11_DoPassword(slot, session, PR_FALSE, key->wincx, haslock, PR_TRUE);
+    }
+
     len = sig->len;
     crv = PK11_GETTAB(slot)->C_Sign(session,hash->data,
 					hash->len, sig->data, &len);
-    if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+    if (haslock) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
     sig->len = len;
     if (crv != CKR_OK) {
@@ -788,6 +793,7 @@ pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
     CK_ULONG out = maxLen;
     PRBool owner = PR_TRUE;
     CK_SESSION_HANDLE session;
+    PRBool haslock = PR_FALSE;
     CK_RV crv;
 
     if (key->keyType != rsaKey) {
@@ -803,23 +809,26 @@ pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
 	PK11_HandlePasswordCheck(slot, key->wincx);
     }
     session = pk11_GetNewSession(slot,&owner);
-    if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
+    haslock = (!owner || !(slot->isThreadSafe));
+    if (haslock) PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_DecryptInit(session, mech, key->pkcs11ID);
     if (crv != CKR_OK) {
-	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+	if (haslock) PK11_ExitSlotMonitor(slot);
 	pk11_CloseSession(slot,session,owner);
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
-	/* PKCS11 2.20 says if CKA_ALWAYS_AUTHENTICATE then 
-	 * do C_Login with CKU_CONTEXT_SPECIFIC 
-	 * between C_DecryptInit and C_Decrypt */
-	/* But see note above about servers */
-	if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_ALWAYS_AUTHENTICATE)) {
-		PK11_DoPassword(slot, PR_FALSE, key->wincx, PR_TRUE);
-	}
+
+    /* PKCS11 2.20 says if CKA_ALWAYS_AUTHENTICATE then 
+     * do C_Login with CKU_CONTEXT_SPECIFIC 
+     * between C_DecryptInit and C_Decrypt
+     * ... But see note above about servers */
+     if (SECKEY_HAS_ATTRIBUTE_SET_LOCK(key, CKA_ALWAYS_AUTHENTICATE, haslock)) {
+	PK11_DoPassword(slot, session, PR_FALSE, key->wincx, haslock, PR_TRUE);
+    }
+
     crv = PK11_GETTAB(slot)->C_Decrypt(session,enc, encLen, data, &out);
-    if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+    if (haslock) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
     *outLen = out;
     if (crv != CKR_OK) {

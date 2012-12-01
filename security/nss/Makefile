@@ -26,9 +26,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-ifeq ($(OS_TARGET),WINCE)
-DIRS	= lib	# omit cmd since wince has no command line shell
-endif
+
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -51,10 +49,10 @@ nss_build_all: build_coreconf build_nspr build_dbm all
 nss_clean_all: clobber_coreconf clobber_nspr clobber_dbm clobber
 
 build_coreconf:
-	cd $(CORE_DEPTH)/coreconf ;  $(MAKE)
+	$(MAKE) -C $(CORE_DEPTH)/coreconf
 
 clobber_coreconf:
-	cd $(CORE_DEPTH)/coreconf ;  $(MAKE) clobber
+	$(MAKE) -C $(CORE_DEPTH)/coreconf clobber
 
 NSPR_CONFIG_STATUS = $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)/config.status
 NSPR_CONFIGURE = $(CORE_DEPTH)/../nsprpub/configure
@@ -109,20 +107,20 @@ $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 	--with-dist-includedir='$(NSPR_PREFIX)/include'
 
 build_nspr: $(NSPR_CONFIG_STATUS)
-	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; $(MAKE)
+	$(MAKE) -C $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)
 
 clobber_nspr: $(NSPR_CONFIG_STATUS)
-	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; $(MAKE) clobber
+	$(MAKE) -C $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) clobber
 
 build_dbm:
 ifdef NSS_DISABLE_DBM
 	@echo "skipping the build of DBM"
 else
-	cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs
+	$(MAKE) -C $(CORE_DEPTH)/dbm export libs
 endif
 
 clobber_dbm:
-	cd $(CORE_DEPTH)/dbm ; $(MAKE) clobber
+	$(MAKE) -C $(CORE_DEPTH)/dbm clobber
 
 moz_import::
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))

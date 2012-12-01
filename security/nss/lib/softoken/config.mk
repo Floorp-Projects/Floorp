@@ -65,7 +65,3 @@ endif
 ifeq ($(OS_TARGET),SunOS)
 OS_LIBS += -lbsm 
 endif
-
-ifeq ($(OS_TARGET),WINCE)
-DEFINES += -DDBM_USING_NSPR
-endif

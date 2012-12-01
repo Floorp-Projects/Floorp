@@ -2663,7 +2663,7 @@ PK11_GetAllSlotsForCert(CERTCertificate *cert, void *arg)
 	nssCryptokiObject *instance = *ip;
 	PK11SlotInfo *slot = instance->token->pk11slot;
 	if (slot) {
-	    PK11_AddSlotToList(slotList, slot);
+	    PK11_AddSlotToList(slotList, slot, PR_TRUE);
 	    found = PR_TRUE;
 	}
     }
