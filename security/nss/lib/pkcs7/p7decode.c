@@ -5,7 +5,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.30 2012/11/27 22:48:08 bsmith%mozilla.com Exp $
+ * $Id: p7decode.c,v 1.29 2012/04/25 14:50:06 gerv%gerv.net Exp $
  */
 
 #include "p7local.h"
@@ -1280,12 +1280,12 @@ SEC_PKCS7ContentIsSigned(SEC_PKCS7ContentInfo *cinfo)
 static PRBool
 sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 			   SECCertUsage certusage,
-			   const SECItem *detached_digest,
+			   SECItem *detached_digest,
 			   HASH_HashType digest_type,
 			   PRBool keepcerts)
 {
     SECAlgorithmID **digestalgs, *bulkid;
-    const SECItem *digest;
+    SECItem *digest;
     SECItem **digests;
     SECItem **rawcerts;
     CERTSignedCrl **crls;
@@ -1774,7 +1774,7 @@ SEC_PKCS7VerifySignature(SEC_PKCS7ContentInfo *cinfo,
 PRBool
 SEC_PKCS7VerifyDetachedSignature(SEC_PKCS7ContentInfo *cinfo,
 				 SECCertUsage certusage,
-				 const SECItem *detached_digest,
+				 SECItem *detached_digest,
 				 HASH_HashType digest_type,
 				 PRBool keepcerts)
 {

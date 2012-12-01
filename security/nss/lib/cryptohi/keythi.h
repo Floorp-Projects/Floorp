@@ -214,12 +214,7 @@ typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
 #define SECKEY_HAS_ATTRIBUTE_SET(key,attribute) \
     (0 != (key->staticflags & SECKEY_Attributes_Cached)) ? \
     (0 != (key->staticflags & SECKEY_##attribute)) : \
-    PK11_HasAttributeSet(key->pkcs11Slot,key->pkcs11ID,attribute, PR_FALSE)
-
-#define SECKEY_HAS_ATTRIBUTE_SET_LOCK(key,attribute, haslock) \
-    (0 != (key->staticflags & SECKEY_Attributes_Cached)) ? \
-    (0 != (key->staticflags & SECKEY_##attribute)) : \
-    PK11_HasAttributeSet(key->pkcs11Slot,key->pkcs11ID,attribute, haslock)
+    PK11_HasAttributeSet(key->pkcs11Slot,key->pkcs11ID,attribute)
 
 /*
 ** A generic key structure
