@@ -234,6 +234,19 @@ BaselineCompiler::emit_JSOP_DUP()
 }
 
 bool
+BaselineCompiler::emit_JSOP_DUP2()
+{
+    frame.syncStack(0);
+
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+
+    frame.push(R0);
+    frame.push(R1);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GOTO()
 {
     frame.syncStack(0);
