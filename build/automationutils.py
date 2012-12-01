@@ -175,6 +175,19 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
         if len(out) > 3:
           # minidump_stackwalk is chatty, so ignore stderr when it succeeds.
           stackwalkOutput.append(out)
+          # The top frame of the crash is always the line after "Thread N (crashed)"
+          # Examples:
+          #  0  libc.so + 0xa888
+          #  0  libnss3.so!nssCertificate_Destroy [certificate.c : 102 + 0x0]
+          #  0  mozjs.dll!js::GlobalObject::getDebuggers() [GlobalObject.cpp:89df18f9b6da : 580 + 0x0]
+          #  0  libxul.so!void js::gc::MarkInternal<JSObject>(JSTracer*, JSObject**) [Marking.cpp : 92 + 0x28]
+          lines = out.splitlines()
+          for i, line in enumerate(lines):
+            if "(crashed)" in line:
+              match = re.search(r"^ 0  (?:.*!)?(?:void )?([^\[]+)", lines[i+1])
+              if match:
+                topFrame = "@ %s" % match.group(1).strip()
+              break
         else:
           stackwalkOutput.append("stderr from minidump_stackwalk:")
           stackwalkOutput.append(err)
@@ -187,7 +200,9 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
           stackwalkOutput.append("MINIDUMP_STACKWALK not set, can't process dump.")
         elif stackwalkPath and not os.path.exists(stackwalkPath):
           stackwalkOutput.append("MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath)
-      log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
+      if not topFrame:
+        topFrame = "Unknown top frame"
+      log.info("PROCESS-CRASH | %s | application crashed [%s]", testName, topFrame)
       print '\n'.join(stackwalkOutput)
       dumpSavePath = os.environ.get('MINIDUMP_SAVE_PATH', None)
       if dumpSavePath:
