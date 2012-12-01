@@ -647,6 +647,7 @@
                    removable="false"
                    title="&socialToolbar.title;"
                    hidden="true"
+                   skipintoolbarset="true"
                    observes="socialActiveBroadcaster">
         <toolbarbutton id="social-provider-button"
                        class="toolbarbutton-1"
