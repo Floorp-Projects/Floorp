@@ -3517,15 +3517,29 @@ MDefinition *
 IonBuilder::createThisScripted(MDefinition *callee)
 {
     // Get callee.prototype.
+    //
     // This instruction MUST be idempotent: since it does not correspond to an
-    // explicit operation in the bytecode, we cannot use resumeAfter(). But
-    // calling GetProperty can trigger a GC, and thus invalidation.
-    MCallGetProperty *getProto = MCallGetProperty::New(callee, cx->names().classPrototype);
-
-    // Getters may not override |prototype| fetching, so this is repeatable.
-    getProto->markUneffectful();
+    // explicit operation in the bytecode, we cannot use resumeAfter().
+    // Getters may not override |prototype| fetching, so this operation is indeed idempotent.
+    // - First try an idempotent property cache.
+    // - Upon failing idempotent property cache, we can't use a non-idempotent cache,
+    //   therefore we fallback to CallGetProperty
+    //
+    // Note: both CallGetProperty and GetPropertyCache can trigger a GC,
+    //       and thus invalidation.
+    MInstruction *getProto;
+    if (!invalidatedIdempotentCache()) {
+        MGetPropertyCache *getPropCache = MGetPropertyCache::New(callee, cx->names().classPrototype);
+        getPropCache->setIdempotent();
+        getProto = getPropCache;
+    } else {
+        MCallGetProperty *callGetProp = MCallGetProperty::New(callee, cx->names().classPrototype);
+        callGetProp->setIdempotent();
+        getProto = callGetProp;
+    }
     current->add(getProto);
 
+    // Create this from prototype
     MCreateThis *createThis = MCreateThis::New(callee, getProto, NULL);
     current->add(createThis);
 
