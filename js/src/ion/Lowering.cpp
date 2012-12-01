@@ -1033,6 +1033,12 @@ LIRGenerator::visitStart(MStart *start)
 }
 
 bool
+LIRGenerator::visitNop(MNop *nop)
+{
+    return true;
+}
+
+bool
 LIRGenerator::visitOsrEntry(MOsrEntry *entry)
 {
     LOsrEntry *lir = new LOsrEntry;

@@ -598,6 +598,25 @@ class MOsrEntry : public MNullaryInstruction
     }
 };
 
+// No-op instruction. This cannot be moved or eliminated, and is intended for
+// anchoring resume points at arbitrary points in a block.
+class MNop : public MNullaryInstruction
+{
+  protected:
+    MNop() {
+    }
+
+  public:
+    INSTRUCTION_HEADER(Nop);
+    static MNop *New() {
+        return new MNop();
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // A constant js::Value.
 class MConstant : public MNullaryInstruction
 {
