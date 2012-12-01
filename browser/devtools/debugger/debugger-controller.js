@@ -1174,6 +1174,8 @@ SourceScripts.prototype = {
         Cu.reportError("Error loading " + aUrl);
         return;
       }
+      aSource.loaded = true;
+      aSource.text = aResponse.source;
       aCallback(aSource.url, aResponse.source);
     });
   }
