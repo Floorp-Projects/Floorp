@@ -16,28 +16,8 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-struct MaiUtil
-{
-  AtkUtil parent;
-  GList* listener_list;
-};
-
-struct MaiUtilClass
-{
-  AtkUtilClass parent_class;
-};
-
-#define MAI_TYPE_UTIL              (mai_util_get_type ())
-#define MAI_UTIL(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                                    MAI_TYPE_UTIL, MaiUtil))
-#define MAI_UTIL_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), \
-                                    MAI_TYPE_UTIL, MaiUtilClass))
-#define MAI_IS_UTIL(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                                    MAI_TYPE_UTIL))
-#define MAI_IS_UTIL_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), \
-                                    MAI_TYPE_UTIL))
-#define MAI_UTIL_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                                    MAI_TYPE_UTIL, MaiUtilClass))
+typedef AtkUtil MaiUtil;
+typedef AtkUtilClass MaiUtilClass;
 
 #define MAI_VERSION MOZILLA_VERSION
 #define MAI_NAME "Gecko"
