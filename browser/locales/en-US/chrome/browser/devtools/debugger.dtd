@@ -108,6 +108,21 @@
 <!ENTITY debuggerUI.seMenuCondBreak     "Add conditional breakpoint">
 <!ENTITY debuggerUI.seMenuCondBreak.key "B">
 
+<!-- LOCALIZATION NOTE (debuggerUI.seMenuAddWatch): This is the text that
+  -  appears in the source editor context menu for adding an expression. -->
+<!ENTITY debuggerUI.seMenuAddWatch      "Selection to watch expression">
+<!ENTITY debuggerUI.seMenuAddWatch.key  "E">
+
+<!-- LOCALIZATION NOTE (debuggerUI.addWatch): This is the text that
+  -  appears in the watch expressions context menu for adding an expression. -->
+<!ENTITY debuggerUI.addWatch            "Add watch expression">
+<!ENTITY debuggerUI.addWatch.key        "E">
+
+<!-- LOCALIZATION NOTE (debuggerUI.removeWatch): This is the text that
+  -  appears in the watch expressions context menu for removing all expressions. -->
+<!ENTITY debuggerUI.removeAllWatch      "Remove all watch expressions">
+<!ENTITY debuggerUI.removeAllWatch.key  "E">
+
 <!-- LOCALIZATION NOTE (debuggerUI.stepping): These are the keycodes that
   -  control the stepping commands in the debugger (continue, step over,
   -  step in and step out). -->
@@ -115,4 +130,3 @@
 <!ENTITY debuggerUI.stepping.stepOver   "VK_F7">
 <!ENTITY debuggerUI.stepping.stepIn     "VK_F8">
 <!ENTITY debuggerUI.stepping.stepOut    "VK_F8">
-
