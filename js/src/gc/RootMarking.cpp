@@ -205,6 +205,19 @@ IsAddressableGCThing(JSRuntime *rt, uintptr_t w,
     return CGCT_VALID;
 }
 
+#ifdef JSGC_ROOT_ANALYSIS
+bool
+js::gc::IsAddressableGCThing(JSRuntime *rt, uintptr_t w)
+{
+    void *thing;
+    ArenaHeader *aheader;
+    AllocKind thingKind;
+    ConservativeGCTest status =
+        IsAddressableGCThing(rt, w, false, &thingKind, &aheader, &thing);
+    return status == CGCT_VALID;
+}
+#endif
+
 /*
  * Returns CGCT_VALID and mark it if the w can be a  live GC thing and sets
  * thingKind accordingly. Otherwise returns the reason for rejection.
