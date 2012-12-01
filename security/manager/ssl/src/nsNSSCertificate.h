@@ -19,7 +19,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
-#include "ScopedNSSTypes.h"
 #include "certt.h"
 
 class nsAutoString;
@@ -57,7 +56,7 @@ public:
   static char* defaultServerNickname(CERTCertificate* cert);
 
 private:
-  mozilla::ScopedCERTCertificate mCert;
+  CERTCertificate *mCert;
   bool             mPermDelete;
   uint32_t         mCertType;
   nsCOMPtr<nsIASN1Object> mASN1Structure;
@@ -84,15 +83,11 @@ public:
   NS_DECL_NSIX509CERTLIST
 
   nsNSSCertList(CERTCertList *certList = nullptr, bool adopt = false);
+  virtual ~nsNSSCertList();
 
   static CERTCertList *DupCertList(CERTCertList *aCertList);
 private:
-   virtual ~nsNSSCertList() { }
-
-   mozilla::ScopedCERTCertList mCertList;
-
-   nsNSSCertList(const nsNSSCertList &) MOZ_DELETE;
-   void operator=(const nsNSSCertList &) MOZ_DELETE;
+  CERTCertList *mCertList;
 };
 
 class nsNSSCertListEnumerator: public nsISimpleEnumerator
@@ -102,13 +97,9 @@ public:
    NS_DECL_NSISIMPLEENUMERATOR
 
    nsNSSCertListEnumerator(CERTCertList *certList);
+   virtual ~nsNSSCertListEnumerator();
 private:
-   virtual ~nsNSSCertListEnumerator() { }
-
-   mozilla::ScopedCERTCertList mCertList;
-
-   nsNSSCertListEnumerator(const nsNSSCertListEnumerator &) MOZ_DELETE;
-   void operator=(const nsNSSCertListEnumerator &) MOZ_DELETE;
+   CERTCertList *mCertList;
 };
 
 

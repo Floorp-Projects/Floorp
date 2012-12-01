@@ -3,12 +3,12 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
+#include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
 
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "nsNSSComponent.h"
+
 #include "nsNSSIOLayer.h"
 #include "nsIWebProgressListener.h"
 #include "nsProtectedAuthThread.h"
@@ -19,7 +19,6 @@
 #include "nsIPrompt.h"
 #include "nsProxyRelease.h"
 #include "PSMRunnable.h"
-#include "ScopedNSSTypes.h"
 #include "nsIConsoleService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsCRT.h"
@@ -881,9 +880,10 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   }
 
 
-  ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
+  CERTCertificate *peerCert = SSL_PeerCertificate(fd);
   const char* caName = nullptr; // caName is a pointer only, no ownership
-  char* certOrgName = CERT_GetOrgName(&serverCert->issuer);
+  char* certOrgName = CERT_GetOrgName(&peerCert->issuer);
+  CERT_DestroyCertificate(peerCert);
   caName = certOrgName ? certOrgName : signer;
 
   const char* verisignName = "Verisign, Inc.";
@@ -917,8 +917,12 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject,
                                                                status);
 
+    CERTCertificate *serverCert = SSL_PeerCertificate(fd);
     if (serverCert) {
       RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert));
+      CERT_DestroyCertificate(serverCert);
+      serverCert = nullptr;
+
       nsCOMPtr<nsIX509Cert> prevcert;
       infoObject->GetPreviousCert(getter_AddRefs(prevcert));
 

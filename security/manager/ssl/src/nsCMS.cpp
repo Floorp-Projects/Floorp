@@ -14,10 +14,10 @@
 #include "nsArrayUtils.h"
 #include "nsCertVerificationThread.h"
 #include "nsCERTValInParamWrapper.h"
-#include "ScopedNSSTypes.h"
 
 #include "prlog.h"
 
+#include "nsNSSCleaner.h"
 #include "nsNSSComponent.h"
 
 #ifdef PR_LOGGING
@@ -27,6 +27,8 @@ extern PRLogModuleInfo* gPIPNSSLog;
 using namespace mozilla;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsCMSMessage, nsICMSMessage, 
                                             nsICMSMessage2)
@@ -538,7 +540,8 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
     if (!nssRecipientCert)
       return NS_ERROR_FAILURE;
 
-    ScopedCERTCertificate c(nssRecipientCert->GetCert());
+    CERTCertificate *c = nssRecipientCert->GetCert();
+    CERTCertificateCleaner rcCleaner(c);
     recipientCerts.set(i, c);
   }
   
@@ -576,7 +579,8 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
 
   // Create and attach recipient information //
   for (i=0; i < recipientCertCount; i++) {
-    ScopedCERTCertificate rc(recipientCerts.get(i));
+    CERTCertificate *rc = recipientCerts.get(i);
+    CERTCertificateCleaner rcCleaner(rc);
     if ((recipientInfo = NSS_CMSRecipientInfo_Create(m_cmsMsg, rc)) == nullptr) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't create recipient info\n"));
       goto loser;
@@ -607,8 +611,7 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   NSSCMSContentInfo *cinfo;
   NSSCMSSignedData *sigd;
   NSSCMSSignerInfo *signerinfo;
-  ScopedCERTCertificate scert;
-  ScopedCERTCertificate ecert;
+  CERTCertificate *scert = nullptr, *ecert = nullptr;
   nsCOMPtr<nsIX509Cert2> aSigningCert2 = do_QueryInterface(aSigningCert);
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -626,6 +629,9 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
       ecert = aEncryptCert2->GetCert();
     }
   }
+
+  CERTCertificateCleaner ecertCleaner(ecert);
+  CERTCertificateCleaner scertCleaner(scert);
 
   /*
    * create the message object

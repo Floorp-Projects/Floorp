@@ -34,11 +34,13 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
 #include "nsIProgrammingLanguage.h"
+
 #include "nsXULAppAPI.h"
-#include "ScopedNSSTypes.h"
 
 #include "nspr.h"
+#include "pk11func.h"
 #include "certdb.h"
+#include "cert.h"
 #include "secerr.h"
 #include "nssb64.h"
 #include "secasn1.h"
@@ -46,6 +48,8 @@
 #include "ssl.h"
 #include "ocsp.h"
 #include "plbase64.h"
+#include "cms.h"
+#include "cert.h"
 
 using namespace mozilla;
 
@@ -55,7 +59,12 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
+NSSCleanupAutoPtrClass(CERTCertificateList, CERT_DestroyCertificateList)
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
+NSSCleanupAutoPtrClass(NSSCMSMessage, NSS_CMSMessage_Destroy)
 NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
+NSSCleanupAutoPtrClass(NSSCMSSignedData, NSS_CMSSignedData_Destroy)
+NSSCleanupAutoPtrClass(PK11SlotList, PK11_FreeSlotList)
 
 // This is being stored in an uint32_t that can otherwise
 // only take values from nsIX509Cert's list of cert types.
@@ -189,6 +198,7 @@ void nsNSSCertificate::destructorSafeDestroyNSSReference()
   }
 
   if (mCert) {
+    CERT_DestroyCertificate(mCert);
     mCert = nullptr;
   }
 }
@@ -766,7 +776,7 @@ nsNSSCertificate::GetIssuer(nsIX509Cert * *aIssuer)
 
   NS_ENSURE_ARG(aIssuer);
   *aIssuer = nullptr;
-  ScopedCERTCertificate issuer;
+  CERTCertificate *issuer;
   issuer = CERT_FindCertIssuer(mCert, PR_Now(), certUsageSSLClient);
   if (issuer) {
     nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(issuer);
@@ -774,6 +784,7 @@ nsNSSCertificate::GetIssuer(nsIX509Cert * *aIssuer)
       *aIssuer = cert;
       NS_ADDREF(*aIssuer);
     }
+    CERT_DestroyCertificate(issuer);
   }
   return NS_OK;
 }
@@ -811,8 +822,8 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   NS_ENSURE_ARG(_rvChain);
   nsresult rv;
   /* Get the cert chain from NSS */
+  CERTCertList *nssChain = nullptr;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
-  ScopedCERTCertList nssChain;
   nssChain = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLClient);
   if (!nssChain)
     return NS_ERROR_FAILURE;
@@ -834,6 +845,8 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   NS_IF_ADDREF(*_rvChain);
   rv = NS_OK;
 done:
+  if (nssChain)
+    CERT_DestroyCertList(nssChain);
   return rv;
 }
 
@@ -850,7 +863,8 @@ nsNSSCertificate::GetAllTokenNames(uint32_t *aLength, PRUnichar*** aTokenNames)
   *aTokenNames = nullptr;
 
   /* Get the slots from NSS */
-  ScopedPK11SlotList slots;
+  PK11SlotList *slots = nullptr;
+  PK11SlotListCleaner slotCleaner(slots);
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting slots for \"%s\"\n", mCert->nickname));
   slots = PK11_GetAllSlotsForCert(mCert, nullptr);
   if (!slots) {
@@ -1068,7 +1082,8 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  ScopedNSSCMSMessage cmsg(NSS_CMSMessage_Create(nullptr));
+  NSSCMSMessage *cmsg = NSS_CMSMessage_Create(nullptr);
+  NSSCMSMessageCleaner cmsgCleaner(cmsg);
   if (!cmsg) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("nsNSSCertificate::ExportAsCMS - can't create CMS message\n"));
@@ -1078,8 +1093,8 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
   /*
    * first, create SignedData with the certificate only (no chain)
    */
-  ScopedNSSCMSSignedData sigd(NSS_CMSSignedData_CreateCertsOnly(cmsg, mCert,
-                                                                false));
+  NSSCMSSignedData *sigd = NSS_CMSSignedData_CreateCertsOnly(cmsg, mCert, false);
+  NSSCMSSignedDataCleaner sigdCleaner(sigd);
   if (!sigd) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("nsNSSCertificate::ExportAsCMS - can't create SignedData\n"));
@@ -1095,8 +1110,8 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
    */
   if (chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChain ||
       chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot) {
-    ScopedCERTCertificate issuerCert(
-        CERT_FindCertIssuer(mCert, PR_Now(), certUsageAnyCA));
+    CERTCertificate *issuerCert = CERT_FindCertIssuer(mCert, PR_Now(), certUsageAnyCA);
+    CERTCertificateCleaner issuerCertCleaner(issuerCert);
     /*
      * the issuerCert of a self signed root is the cert itself,
      * so make sure we're not adding duplicates, again
@@ -1104,11 +1119,11 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
     if (issuerCert && issuerCert != mCert) {
       bool includeRoot = 
         (chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot);
-      ScopedCERTCertificateList certChain(
-          CERT_CertChainFromCert(issuerCert, certUsageAnyCA, includeRoot));
+      CERTCertificateList *certChain = CERT_CertChainFromCert(issuerCert, certUsageAnyCA, includeRoot);
+      CERTCertificateListCleaner certChainCleaner(certChain);
       if (certChain) {
         if (NSS_CMSSignedData_AddCertList(sigd, certChain) == SECSuccess) {
-          certChain.forget();
+          certChainCleaner.detach();
         }
         else {
           PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
@@ -1120,7 +1135,7 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
         /* try to add the issuerCert, at least */
         if (NSS_CMSSignedData_AddCertificate(sigd, issuerCert)
             == SECSuccess) {
-          issuerCert.forget();
+          issuerCertCleaner.detach();
         }
         else {
           PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
@@ -1134,7 +1149,7 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
   NSSCMSContentInfo *cinfo = NSS_CMSMessage_GetContentInfo(cmsg);
   if (NSS_CMSContentInfo_SetContent_SignedData(cmsg, cinfo, sigd)
        == SECSuccess) {
-    sigd.forget();
+    sigdCleaner.detach();
   }
   else {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
@@ -1492,8 +1507,11 @@ nsNSSCertificate::Equals(nsIX509Cert *other, bool *result)
   if (!other2)
     return NS_ERROR_FAILURE;
  
-  ScopedCERTCertificate cert(other2->GetCert());
+  CERTCertificate *cert = other2->GetCert();
   *result = (mCert == cert);
+  if (cert) {
+    CERT_DestroyCertificate(cert);
+  }
   return NS_OK;
 }
 
@@ -1579,6 +1597,13 @@ nsNSSCertList::nsNSSCertList(CERTCertList *certList, bool adopt)
     }
   } else {
     mCertList = CERT_NewCertList();
+  }
+}
+
+nsNSSCertList::~nsNSSCertList()
+{
+  if (mCertList) {
+    CERT_DestroyCertList(mCertList);
   }
 }
 
@@ -1679,6 +1704,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSCertListEnumerator,
 nsNSSCertListEnumerator::nsNSSCertListEnumerator(CERTCertList *certList)
 {
   mCertList = nsNSSCertList::DupCertList(certList);
+}
+
+nsNSSCertListEnumerator::~nsNSSCertListEnumerator()
+{
+  if (mCertList) {
+    CERT_DestroyCertList(mCertList);
+  }
 }
 
 /* boolean hasMoreElements (); */

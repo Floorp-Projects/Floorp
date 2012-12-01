@@ -7,7 +7,6 @@
 #ifndef _NSNSSCALLBACKS_H_
 #define _NSNSSCALLBACKS_H_
 
-#include "nsCOMPtr.h"
 #include "pk11func.h"
 #include "nspr.h"
 #include "ocspt.h"
@@ -15,9 +14,6 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
-#include "nsString.h"
-
-class nsILoadGroup;
 
 char*
 PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
