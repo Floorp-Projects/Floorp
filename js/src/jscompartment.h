@@ -115,7 +115,7 @@ struct TypeInferenceSizes;
 
 namespace js {
 class AutoDebugModeGC;
-struct DebugScopes;
+class DebugScopes;
 }
 
 struct JSCompartment : public js::gc::GraphNodeBase
