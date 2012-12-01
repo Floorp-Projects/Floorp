@@ -115,6 +115,13 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   mHasAudio(false)
 {
   MOZ_COUNT_CTOR(WebMReader);
+  // Zero these member vars to avoid crashes in VP8 destroy and Vorbis clear
+  // functions when destructor is called before |Init|.
+  memset(&mVP8, 0, sizeof(vpx_codec_ctx_t));
+  memset(&mVorbisBlock, 0, sizeof(vorbis_block));
+  memset(&mVorbisDsp, 0, sizeof(vorbis_dsp_state));
+  memset(&mVorbisInfo, 0, sizeof(vorbis_info));
+  memset(&mVorbisComment, 0, sizeof(vorbis_comment));
 }
 
 WebMReader::~WebMReader()
