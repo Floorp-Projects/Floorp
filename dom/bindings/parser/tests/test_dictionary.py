@@ -196,3 +196,16 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Dictionary arg must not be in a nullable union")
+
+    parser = parser.reset()
+    parser.parse("""
+        dictionary A {
+        };
+        interface X {
+          A? doFoo();
+        };
+    """)
+    results = parser.finish()
+
+    harness.ok(True, "Dictionary return value can be nullable")
+

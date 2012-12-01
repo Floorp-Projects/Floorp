@@ -562,6 +562,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     mSearchEngines.add(new SearchEngine(name, icon));
                 }
             }
+            mCursorAdapter.notifyDataSetChanged();
 
             // show suggestions opt-in if user hasn't been prompted
             if (!suggestionsPrompted && mSuggestClient != null) {
@@ -571,7 +572,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             Log.e(LOGTAG, "Error getting search engine JSON", e);
         }
 
-        mCursorAdapter.notifyDataSetChanged();
         filterSuggestions(mSearchTerm);
     }
 

@@ -279,6 +279,7 @@ CONFIG_STATUS_DEPS := \
   $(wildcard $(TOPSRCDIR)/*/confvars.sh) \
   $(CONFIGURES) \
   $(TOPSRCDIR)/allmakefiles.sh \
+  $(TOPSRCDIR)/CLOBBER \
   $(TOPSRCDIR)/nsprpub/configure \
   $(TOPSRCDIR)/config/milestone.txt \
   $(TOPSRCDIR)/js/src/config/milestone.txt \

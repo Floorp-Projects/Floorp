@@ -78,6 +78,8 @@ static const KeyPair kKeyPairs[] = {
     // applications on such locale may want to know AltGraph key press.
     // Therefore, we should map AltGr keycode for them only on GTK.
     { NS_VK_ALTGR,      GDK_ISO_Level3_Shift },
+    { NS_VK_ALTGR,      GDK_ISO_Level5_Shift },
+    // We assume that Mode_switch is always used for level3 shift.
     { NS_VK_ALTGR,      GDK_Mode_switch },
 
     { NS_VK_PAUSE,      GDK_Pause },
@@ -93,7 +95,7 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_CONVERT,    GDK_Henkan },
     { NS_VK_NONCONVERT, GDK_Muhenkan },
     // { NS_VK_ACCEPT,     GDK_XXX },
-    { NS_VK_MODECHANGE, GDK_Mode_switch },
+    // { NS_VK_MODECHANGE, GDK_XXX },
     { NS_VK_SPACE,      GDK_space },
     { NS_VK_PAGE_UP,    GDK_Page_Up },
     { NS_VK_PAGE_DOWN,  GDK_Page_Down },
@@ -193,7 +195,8 @@ KeymapWrapper::GetModifierName(Modifier aModifier)
         case SUPER:        return "Super";
         case HYPER:        return "Hyper";
         case META:         return "Meta";
-        case ALTGR:        return "AltGr";
+        case LEVEL3:       return "Level3";
+        case LEVEL5:       return "Level5";
         case NOT_MODIFIER: return "NotModifier";
         default:           return "InvalidValue";
     }
@@ -221,7 +224,8 @@ KeymapWrapper::GetModifierForGDKKeyval(guint aGdkKeyval)
         case GDK_Meta_L:
         case GDK_Meta_R:           return META;
         case GDK_ISO_Level3_Shift:
-        case GDK_Mode_switch:      return ALTGR;
+        case GDK_Mode_switch:      return LEVEL3;
+        case GDK_ISO_Level5_Shift: return LEVEL5;
         default:                   return NOT_MODIFIER;
     }
 }
@@ -248,8 +252,10 @@ KeymapWrapper::GetModifierMask(Modifier aModifier) const
             return mModifierMasks[INDEX_HYPER];
         case META:
             return mModifierMasks[INDEX_META];
-        case ALTGR:
-            return mModifierMasks[INDEX_ALTGR];
+        case LEVEL3:
+            return mModifierMasks[INDEX_LEVEL3];
+        case LEVEL5:
+            return mModifierMasks[INDEX_LEVEL5];
         default:
             return 0;
     }
@@ -320,11 +326,12 @@ KeymapWrapper::Init()
 
     PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
         ("KeymapWrapper(%p): Init, CapsLock=0x%X, NumLock=0x%X, "
-         "ScrollLock=0x%X, AltGr=0x%X, Shift=0x%X, Ctrl=0x%X, Alt=0x%X, "
-         "Meta=0x%X, Super=0x%X, Hyper=0x%X",
+         "ScrollLock=0x%X, Level3=0x%X, Level5=0x%X, "
+         "Shift=0x%X, Ctrl=0x%X, Alt=0x%X, Meta=0x%X, Super=0x%X, Hyper=0x%X",
          this,
          GetModifierMask(CAPS_LOCK), GetModifierMask(NUM_LOCK),
-         GetModifierMask(SCROLL_LOCK), GetModifierMask(ALTGR),
+         GetModifierMask(SCROLL_LOCK), GetModifierMask(LEVEL3),
+         GetModifierMask(LEVEL5),
          GetModifierMask(SHIFT), GetModifierMask(CTRL),
          GetModifierMask(ALT), GetModifierMask(META),
          GetModifierMask(SUPER), GetModifierMask(HYPER)));
@@ -475,8 +482,11 @@ KeymapWrapper::InitBySystemSettings()
             case INDEX_HYPER:
                 modifier = HYPER;
                 break;
-            case INDEX_ALTGR:
-                modifier = ALTGR;
+            case INDEX_LEVEL3:
+                modifier = LEVEL3;
+                break;
+            case INDEX_LEVEL5:
+                modifier = LEVEL5;
                 break;
             default:
                 MOZ_NOT_REACHED("All indexes must be handled here");
@@ -589,7 +599,8 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
         keymapWrapper->AreModifiersActive(HYPER, aModifierState)) {
         aInputEvent.modifiers |= MODIFIER_OS;
     }
-    if (keymapWrapper->AreModifiersActive(ALTGR, aModifierState)) {
+    if (keymapWrapper->AreModifiersActive(LEVEL3, aModifierState) ||
+        keymapWrapper->AreModifiersActive(LEVEL5, aModifierState)) {
         aInputEvent.modifiers |= MODIFIER_ALTGRAPH;
     }
     if (keymapWrapper->AreModifiersActive(CAPS_LOCK, aModifierState)) {

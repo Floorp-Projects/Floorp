@@ -50,6 +50,11 @@ MOCHITEST_FILES += \
 		test_contextmenu.html \
 		subtst_contextmenu.html \
 		$(NULL)
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_FILES += \
+		privateBrowsingMode.js \
+		$(NULL)
+endif
 endif
 
 # The following tests are disabled because they are unreliable:

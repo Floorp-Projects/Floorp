@@ -172,7 +172,7 @@ function gen_addDownloadRows(aDataRows)
                              .join(", ");
   let statement = Services.downloads.DBConnection.createAsyncStatement(
                   "INSERT INTO moz_downloads (" + columnNames +
-                                    ") VALUES(" + parameterNames + ")");
+                  ", guid) VALUES(" + parameterNames + ", GENERATE_GUID())");
   try {
     // Execute the statement for each of the provided downloads in reverse.
     for (let i = aDataRows.length - 1; i >= 0; i--) {
@@ -193,7 +193,7 @@ function gen_addDownloadRows(aDataRows)
         handleResult: function(aResultSet) { },
         handleError: function(aError)
         {
-          Cu.reportError(aError);
+          Cu.reportError(aError.message + " (Result = " + aError.result + ")");
         },
         handleCompletion: function(aReason)
         {
@@ -202,8 +202,10 @@ function gen_addDownloadRows(aDataRows)
       });
       yield;
 
-      // At each iteration, ensure that the end time in the global template is
-      // distinct, as this column is used to sort each download in its category.
+      // At each iteration, ensure that the start and end time in the global
+      // template is distinct, as these column are used to sort each download
+      // in its category.
+      gDownloadRowTemplate.startTime++;
       gDownloadRowTemplate.endTime++;
     }
   } finally {

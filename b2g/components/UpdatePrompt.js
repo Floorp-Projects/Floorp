@@ -260,8 +260,21 @@ UpdatePrompt.prototype = {
   },
 
   downloadUpdate: function UP_downloadUpdate(aUpdate) {
+    if (!aUpdate) {
+      aUpdate = Services.um.activeUpdate;
+      if (!aUpdate) {
+        log("No active update found to download");
+        return;
+      }
+    }
+
     Services.aus.downloadUpdate(aUpdate, true);
     Services.aus.addDownloadListener(this);
+  },
+
+  handleDownloadCancel: function UP_handleDownloadCancel() {
+    log("Pausing download");
+    Services.aus.pauseDownload();
   },
 
   finishUpdate: function UP_finishUpdate() {
@@ -346,6 +359,9 @@ UpdatePrompt.prototype = {
       case "update-available-result":
         this.handleAvailableResult(detail);
         this._update = null;
+        break;
+      case "update-download-cancel":
+        this.handleDownloadCancel();
         break;
       case "update-prompt-apply-result":
         this.handleApplyPromptResult(detail);
