@@ -15,10 +15,10 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsNSSCertHelper.h"
+#include "nsNSSCleaner.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIArray.h"
 #include "PSMRunnable.h"
-#include "ScopedNSSTypes.h"
 
 #include "secerr.h"
 
@@ -33,6 +33,8 @@
                        //file.
 
 namespace {
+
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -778,7 +780,8 @@ AppendErrorTextMismatch(const nsString &host,
   const PRUnichar *params[1];
   nsresult rv;
 
-  ScopedCERTCertificate nssCert;
+  CERTCertificate *nssCert = nullptr;
+  CERTCertificateCleaner nssCertCleaner(nssCert);
 
   nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(ix509, &rv);
   if (cert2)
