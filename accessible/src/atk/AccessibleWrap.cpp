@@ -141,11 +141,6 @@ struct MaiAtkObjectClass
 
 static guint mai_atk_object_signals [LAST_SIGNAL] = { 0, };
 
-#ifdef MAI_LOGGING
-int32_t sMaiAtkObjCreated = 0;
-int32_t sMaiAtkObjDeleted = 0;
-#endif
-
 G_BEGIN_DECLS
 /* callbacks for MaiAtkObject */
 static void classInitCB(AtkObjectClass *aClass);
@@ -232,33 +227,15 @@ mai_atk_object_get_type(void)
     return type;
 }
 
-#ifdef MAI_LOGGING
-int32_t AccessibleWrap::mAccWrapCreated = 0;
-int32_t AccessibleWrap::mAccWrapDeleted = 0;
-#endif
-
 AccessibleWrap::
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
   Accessible(aContent, aDoc), mAtkObject(nullptr)
 {
-#ifdef MAI_LOGGING
-  ++mAccWrapCreated;
-#endif
-  MAI_LOG_DEBUG(("==AccessibleWrap creating: this=%p,total=%d left=%d\n",
-                 (void*)this, mAccWrapCreated,
-                 (mAccWrapCreated-mAccWrapDeleted)));
 }
 
 AccessibleWrap::~AccessibleWrap()
 {
     NS_ASSERTION(!mAtkObject, "ShutdownAtkObject() is not called");
-
-#ifdef MAI_LOGGING
-    ++mAccWrapDeleted;
-#endif
-    MAI_LOG_DEBUG(("==AccessibleWrap deleting: this=%p,total=%d left=%d\n",
-                   (void*)this, mAccWrapDeleted,
-                   (mAccWrapCreated-mAccWrapDeleted)));
 }
 
 void
@@ -482,8 +459,6 @@ GetUniqueMaiAtkTypeName(uint16_t interfacesBits)
                 interfacesBits);
     name[MAI_ATK_TYPE_NAME_LEN] = '\0';
 
-    MAI_LOG_DEBUG(("MaiWidget::LastedTypeName=%s\n", name));
-
     return name;
 }
 
@@ -603,13 +578,6 @@ initializeCB(AtkObject *aAtkObj, gpointer aData)
   /* initialize object */
   MAI_ATK_OBJECT(aAtkObj)->accWrap =
     static_cast<AccessibleWrap*>(aData);
-
-#ifdef MAI_LOGGING
-    ++sMaiAtkObjCreated;
-#endif
-    MAI_LOG_DEBUG(("MaiAtkObj Create obj=%p for AccWrap=%p, all=%d, left=%d\n",
-                   (void*)aAtkObj, (void*)aData, sMaiAtkObjCreated,
-                   (sMaiAtkObjCreated-sMaiAtkObjDeleted)));
 }
 
 void
@@ -618,13 +586,6 @@ finalizeCB(GObject *aObj)
     if (!IS_MAI_OBJECT(aObj))
         return;
     NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap == nullptr, "AccWrap NOT null");
-
-#ifdef MAI_LOGGING
-    ++sMaiAtkObjDeleted;
-#endif
-    MAI_LOG_DEBUG(("MaiAtkObj Delete obj=%p, all=%d, left=%d\n",
-                   (void*)aObj, sMaiAtkObjCreated,
-                   (sMaiAtkObjCreated-sMaiAtkObjDeleted)));
 
     // call parent finalize function
     // finalize of GObjectClass will unref the accessible parent if has
@@ -992,7 +953,6 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
     case nsIAccessibleEvent::EVENT_FOCUS:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_FOCUS\n"));
         a11y::RootAccessible* rootAccWrap = accWrap->RootAccessible();
         if (rootAccWrap && rootAccWrap->mActivated) {
             atk_focus_tracker_notify(atkObj);
@@ -1015,7 +975,6 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
       }
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_VALUE_CHANGE\n"));
         nsCOMPtr<nsIAccessibleValue> value(do_QueryObject(accessible));
         if (value) {    // Make sure this is a numeric value
             // Don't fire for MSAA string value changes (e.g. text editing)
@@ -1029,7 +988,6 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
     case nsIAccessibleEvent::EVENT_SELECTION_REMOVE:
     {
       // XXX: dupe events may be fired
-      MAI_LOG_DEBUG(("\n\nReceived: EVENT_SELECTION_CHANGED\n"));
       AccSelChangeEvent* selChangeEvent = downcast_accEvent(aEvent);
       g_signal_emit_by_name(AccessibleWrap::GetAtkObject(selChangeEvent->Widget()),
                             "selection_changed");
@@ -1038,128 +996,86 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
     case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
     {
-      MAI_LOG_DEBUG(("\n\nReceived: EVENT_SELECTION_CHANGED\n"));
       g_signal_emit_by_name(atkObj, "selection_changed");
       break;
     }
 
     case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_SELECTION_CHANGED\n"));
         g_signal_emit_by_name(atkObj, "text_selection_changed");
         break;
 
     case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CARET_MOVED\n"));
-
         AccCaretMoveEvent* caretMoveEvent = downcast_accEvent(aEvent);
         NS_ASSERTION(caretMoveEvent, "Event needs event data");
         if (!caretMoveEvent)
             break;
 
         int32_t caretOffset = caretMoveEvent->GetCaretOffset();
-
-        MAI_LOG_DEBUG(("\n\nCaret postion: %d", caretOffset));
-        g_signal_emit_by_name(atkObj,
-                              "text_caret_moved",
-                              // Curent caret position
-                              caretOffset);
+        g_signal_emit_by_name(atkObj, "text_caret_moved", caretOffset);
       } break;
 
     case nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_ATTRIBUTE_CHANGED\n"));
-
-        g_signal_emit_by_name(atkObj,
-                              "text-attributes-changed");
+        g_signal_emit_by_name(atkObj, "text-attributes-changed");
         break;
 
     case nsIAccessibleEvent::EVENT_TABLE_MODEL_CHANGED:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_MODEL_CHANGED\n"));
         g_signal_emit_by_name(atkObj, "model_changed");
         break;
 
     case nsIAccessibleEvent::EVENT_TABLE_ROW_INSERT:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_INSERT\n"));
         AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         int32_t rowIndex = tableEvent->GetIndex();
         int32_t numRows = tableEvent->GetCount();
 
-        g_signal_emit_by_name(atkObj,
-                              "row_inserted",
-                              // After which the rows are inserted
-                              rowIndex,
-                              // The number of the inserted
-                              numRows);
+        g_signal_emit_by_name(atkObj, "row_inserted", rowIndex, numRows);
      } break;
 
    case nsIAccessibleEvent::EVENT_TABLE_ROW_DELETE:
      {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_DELETE\n"));
         AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         int32_t rowIndex = tableEvent->GetIndex();
         int32_t numRows = tableEvent->GetCount();
 
-        g_signal_emit_by_name(atkObj,
-                              "row_deleted",
-                              // After which the rows are deleted
-                              rowIndex,
-                              // The number of the deleted
-                              numRows);
+        g_signal_emit_by_name(atkObj, "row_deleted", rowIndex, numRows);
       } break;
 
     case nsIAccessibleEvent::EVENT_TABLE_ROW_REORDER:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_REORDER\n"));
         g_signal_emit_by_name(atkObj, "row_reordered");
         break;
       }
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_INSERT:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_INSERT\n"));
         AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         int32_t colIndex = tableEvent->GetIndex();
         int32_t numCols = tableEvent->GetCount();
-
-        g_signal_emit_by_name(atkObj,
-                              "column_inserted",
-                              // After which the columns are inserted
-                              colIndex,
-                              // The number of the inserted
-                              numCols);
+        g_signal_emit_by_name(atkObj, "column_inserted", colIndex, numCols);
       } break;
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_DELETE:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_DELETE\n"));
         AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         int32_t colIndex = tableEvent->GetIndex();
         int32_t numCols = tableEvent->GetCount();
-
-        g_signal_emit_by_name(atkObj,
-                              "column_deleted",
-                              // After which the columns are deleted
-                              colIndex,
-                              // The number of the deleted
-                              numCols);
+        g_signal_emit_by_name(atkObj, "column_deleted", colIndex, numCols);
       } break;
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_REORDER:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_REORDER\n"));
         g_signal_emit_by_name(atkObj, "column_reordered");
         break;
 
     case nsIAccessibleEvent::EVENT_SECTION_CHANGED:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_SECTION_CHANGED\n"));
         g_signal_emit_by_name(atkObj, "visible_data_changed");
         break;
 
@@ -1176,16 +1092,11 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
          * Need more verification by AT test.
          */
     case nsIAccessibleEvent::EVENT_MENU_START:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENU_START\n"));
-        break;
-
     case nsIAccessibleEvent::EVENT_MENU_END:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENU_END\n"));
         break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_ACTIVATED\n"));
         accessible->AsRoot()->mActivated = true;
         guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
@@ -1196,7 +1107,6 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
     case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_DEACTIVATED\n"));
         accessible->AsRoot()->mActivated = false;
         guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
@@ -1204,52 +1114,41 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
     case nsIAccessibleEvent::EVENT_WINDOW_MAXIMIZE:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_MAXIMIZE\n"));
         guint id = g_signal_lookup ("maximize", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_MINIMIZE:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_MINIMIZE\n"));
         guint id = g_signal_lookup ("minimize", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_RESTORE:
       {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_RESTORE\n"));
         guint id = g_signal_lookup ("restore", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
-      {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_COMPLETE\n"));
         g_signal_emit_by_name (atkObj, "load_complete");
-      } break;
+      break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
-      {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_RELOAD\n"));
         g_signal_emit_by_name (atkObj, "reload");
-      } break;
+      break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED:
-      {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_STOPPED\n"));
         g_signal_emit_by_name (atkObj, "load_stopped");
-      } break;
+      break;
 
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENUPOPUP_START\n"));
         atk_focus_tracker_notify(atkObj); // fire extra focus event
         atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, true);
         atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, true);
         break;
 
     case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENUPOPUP_END\n"));
         atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, false);
         atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, false);
         break;
@@ -1262,8 +1161,6 @@ nsresult
 AccessibleWrap::FireAtkStateChangeEvent(AccEvent* aEvent,
                                         AtkObject* aObject)
 {
-    MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
-
     AccStateChangeEvent* event = downcast_accEvent(aEvent);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
@@ -1294,8 +1191,6 @@ nsresult
 AccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
                                         AtkObject* aObject)
 {
-    MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_REMOVED/INSERTED\n"));
-
     AccTextChangeEvent* event = downcast_accEvent(aEvent);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
@@ -1335,12 +1230,6 @@ nsresult
 AccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
                                      AtkObject* aObject, bool aIsAdded)
 {
-    if (aIsAdded) {
-        MAI_LOG_DEBUG(("\n\nReceived: Show event\n"));
-    } else {
-        MAI_LOG_DEBUG(("\n\nReceived: Hide event\n"));
-    }
-
     int32_t indexInParent = getIndexInParentCB(aObject);
     AtkObject *parentObject = getParentCB(aObject);
     NS_ENSURE_STATE(parentObject);
