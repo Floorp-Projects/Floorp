@@ -143,7 +143,8 @@ ion::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
 
         // Remove unused instructions.
         for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
-            if (!inst->isEffectful() && !inst->hasUses() && !inst->isGuard() &&
+            if (!inst->isEffectful() && !inst->resumePoint() &&
+                !inst->hasUses() && !inst->isGuard() &&
                 !inst->isControlInstruction()) {
                 inst = block->discardAt(inst);
             } else {
