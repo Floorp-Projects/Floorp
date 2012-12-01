@@ -5,7 +5,7 @@
 /*
  * Interface to the PKCS7 implementation.
  *
- * $Id: secpkcs7.h,v 1.9 2012/04/25 14:50:06 gerv%gerv.net Exp $
+ * $Id: secpkcs7.h,v 1.10 2012/11/27 22:48:08 bsmith%mozilla.com Exp $
  */
 
 #ifndef _SECPKCS7_H_
@@ -129,7 +129,7 @@ extern PRBool SEC_PKCS7VerifySignature(SEC_PKCS7ContentInfo *cinfo,
  */
 extern PRBool SEC_PKCS7VerifyDetachedSignature(SEC_PKCS7ContentInfo *cinfo,
 					       SECCertUsage certusage,
-					       SECItem *detached_digest,
+					       const SECItem *detached_digest,
 					       HASH_HashType digest_type,
 					       PRBool keepcerts);
 

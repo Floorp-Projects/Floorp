@@ -2,7 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.18 $ $Date: 2012/04/25 14:49:28 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.19 $ $Date: 2012/11/14 01:14:10 $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -29,7 +29,7 @@ endif
 export:: private_export
 
 # can't do this in manifest.mn because OS_TARGET isn't defined there.
-ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET))) # list omits WINCE
+ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
 ifdef NSS_BUILD_CAPI
 DIRS += capi
 endif

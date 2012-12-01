@@ -317,7 +317,7 @@ extern SECStatus SECU_StoreCRL(PK11SlotInfo *slot, SECItem *derCrl,
 ** 	"len" the amount of data to sign
 ** 	"pk" the private key to encrypt with
 */
-extern SECStatus SECU_DerSignDataCRL(PRArenaPool *arena, CERTSignedData *sd,
+extern SECStatus SECU_DerSignDataCRL(PLArenaPool *arena, CERTSignedData *sd,
                                      unsigned char *buf, int len,
                                      SECKEYPrivateKey *pk, SECOidTag algID);
 
@@ -334,14 +334,14 @@ SECU_SignAndEncodeCRL(CERTCertificate *issuer, CERTSignedCrl *signCrl,
                       SECOidTag hashAlgTag, SignAndEncodeFuncExitStat *resCode);
 
 extern SECStatus
-SECU_CopyCRL(PRArenaPool *destArena, CERTCrl *destCrl, CERTCrl *srcCrl);
+SECU_CopyCRL(PLArenaPool *destArena, CERTCrl *destCrl, CERTCrl *srcCrl);
 
 /*
 ** Finds the crl Authority Key Id extension. Returns NULL if no such extension
 ** was found.
 */
 CERTAuthKeyID *
-SECU_FindCRLAuthKeyIDExten (PRArenaPool *arena, CERTSignedCrl *crl);
+SECU_FindCRLAuthKeyIDExten (PLArenaPool *arena, CERTSignedCrl *crl);
 
 /*
  * Find the issuer of a crl. Cert usage should be checked before signing a crl.
@@ -353,12 +353,12 @@ SECU_FindCrlIssuer(CERTCertDBHandle *dbHandle, SECItem* subject,
 
 /* call back function used in encoding of an extension. Called from
  * SECU_EncodeAndAddExtensionValue */
-typedef SECStatus (* EXTEN_EXT_VALUE_ENCODER) (PRArenaPool *extHandleArena,
+typedef SECStatus (* EXTEN_EXT_VALUE_ENCODER) (PLArenaPool *extHandleArena,
                                                void *value, SECItem *encodedValue);
 
 /* Encodes and adds extensions to the CRL or CRL entries. */
 SECStatus 
-SECU_EncodeAndAddExtensionValue(PRArenaPool *arena, void *extHandle, 
+SECU_EncodeAndAddExtensionValue(PLArenaPool *arena, void *extHandle, 
                                 void *value, PRBool criticality, int extenType, 
                                 EXTEN_EXT_VALUE_ENCODER EncodeValueFn);
 

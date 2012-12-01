@@ -27,6 +27,16 @@
  */
 static char* loader_GetOriginalPathname(const char* link)
 {
+#ifdef __GLIBC__
+    char* tmp = realpath(link, NULL);
+    char* resolved;
+    if (! tmp)
+    	return NULL;
+    resolved = PR_Malloc(strlen(tmp) + 1);
+    strcpy(resolved, tmp); /* This is necessary because PR_Free might not be using free() */
+    free(tmp);
+    return resolved;
+#else
     char* resolved = NULL;
     char* input = NULL;
     PRUint32 iterations = 0;
@@ -61,6 +71,7 @@ static char* loader_GetOriginalPathname(const char* link)
         input = NULL;
     }
     return input;
+#endif
 }
 #endif /* XP_UNIX */
 
