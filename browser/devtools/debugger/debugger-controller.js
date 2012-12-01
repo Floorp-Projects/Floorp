@@ -634,6 +634,7 @@ StackFrames.prototype = {
       scope.separator = arrow;
       scope.allowNameInput = true;
       scope.allowDeletion = true;
+      scope.contextMenu = "debuggerWatchExpressionsContextMenu";
       scope.switch = DebuggerView.WatchExpressions.switchExpression;
       scope.delete = DebuggerView.WatchExpressions.deleteExpression;
 

@@ -127,9 +127,9 @@ function testFrameEval() {
             testModification(scope.get("document.title = 43").target, test4, function(scope) {
               testModification(scope.get("document.title").target, test5, function(scope) {
                 testExprDeletion(scope.get("this").target, test6, function(scope) {
-                  testExprDeletion(scope.get("ermahgerd").target, test7, function(scope) {
+                  testExprDeletion(null, test7, function(scope) {
                     resumeAndFinish();
-                  }, 44, 0, true);
+                  }, 44, 0, true, true);
                 }, 44);
               }, " \t\r\n", "\"43\"", 44, 1, true);
             }, " \t\r\ndocument.title \t\r\n", "\"43\"", 44);
@@ -143,7 +143,7 @@ function testFrameEval() {
   addWatchExpression("ermahgerd");
   addWatchExpression("aArg");
   addWatchExpression("document.title");
-  addWatchExpression("document.title = 42");
+  addCmdWatchExpression("document.title = 42");
 
   executeSoon(function() {
     gDebuggee.ermahgerd(); // ermahgerd!!
@@ -246,7 +246,7 @@ function testModification(aVar, aTest, aCallback, aNewValue, aNewResult, aArgRes
 }
 
 function testExprDeletion(aVar, aTest, aCallback, aArgResult,
-                          aLocalScopeIndex = 1, aFinalFlag = null)
+                          aLocalScopeIndex = 1, aFinalFlag = null, aRemoveAllFlag = null)
 {
   let testContinued = false;
   let fetchedVariables = false;
@@ -317,6 +317,11 @@ function testExprDeletion(aVar, aTest, aCallback, aArgResult,
       aTest(scope);
       aCallback(scope);
     });
+  }
+
+  if (aRemoveAllFlag) {
+    gWatch._onCmdRemoveAllExpressions();
+    return;
   }
 
   EventUtils.sendMouseEvent({ type: "click" },
@@ -482,6 +487,11 @@ function test7(scope) {
 
 function addWatchExpression(string) {
   gWatch.addExpression(string);
+  gDebugger.editor.focus();
+}
+
+function addCmdWatchExpression(string) {
+  gWatch._onCmdAddExpression(string);
   gDebugger.editor.focus();
 }
 
