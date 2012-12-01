@@ -263,8 +263,6 @@ let DebuggerView = {
 
       // Get the source text from the active thread.
       DebuggerController.SourceScripts.getText(aSource, function(aUrl, aText) {
-        aSource.loaded = true;
-        aSource.text = aText;
         this.setEditorSource(aSource, aOptions);
       }.bind(this));
     }
