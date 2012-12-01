@@ -13,3 +13,7 @@ SHARED_LIBRARY =
 IMPORT_LIBRARY =
 PROGRAM        =
 
+ifeq (WINCE,$(OS_ARCH))
+CSRCS += wincemain.c
+endif
+

@@ -1684,7 +1684,9 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
      * a database */
     if (create) {
 	/* NO NSPR call for this? :( */
+#ifndef WINCE
 	chmod (dbname, 0600);
+#endif
     }
 
     if (flags != SDB_RDONLY) {
@@ -1821,7 +1823,6 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
 	enableCache = PR_TRUE;
      } else {
 	char *tempDir = NULL;
-        PRBool mustFreeTempDir = PR_TRUE;
 	PRUint32 tempOps = 0;
 	/*
 	 *  Use PR_Access to determine how expensive it
@@ -1829,37 +1830,14 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
 	 * check in the temp directory. If the temp directory is faster, cache
 	 * the database there. */
 	tempDir = sdb_getTempDir(sqlDB);
-
-        if (!tempDir) {
-            mustFreeTempDir = PR_FALSE; /* getenv will return references */
-            tempDir = getenv("TEMP");
-            if (!tempDir)
-                tempDir = getenv("TMP");
-            if (!tempDir) {
-                tempDir = tempnam(NULL, NULL);
-                if (tempDir) {
-                    char dirsep = PR_GetDirectorySeparator();
-                    char *end = PORT_Strrchr(tempDir, dirsep);
-                    mustFreeTempDir = PR_TRUE;
-                    if (end) {
-                        /* We shorten the temp filename string to contain
-                         * only the directory name.
-                         */
-                        *end = 0;
-                    }
-                }
-            }
-        }
-        
 	if (tempDir) {
 	    tempOps = sdb_measureAccess(tempDir);
+	    PORT_Free(tempDir);
 
 	    /* There is a cost to continually copying the database. 
 	     * Account for that cost  with the arbitrary factor of 10 */
 	    enableCache = (PRBool)(tempOps > accessOps * 10);
 	}
-	if (mustFreeTempDir)
-            PORT_Free(tempDir);
     }
 
     if (enableCache) {
