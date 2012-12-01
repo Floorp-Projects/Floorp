@@ -403,6 +403,8 @@ var shell = {
           content.removeEventListener('load', shell_homeLoaded);
           shell.isHomeLoaded = true;
 
+          Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+
           if ('pendingChromeEvents' in shell) {
             shell.pendingChromeEvents.forEach((shell.sendChromeEvent).bind(shell));
           }

@@ -138,7 +138,13 @@ nsContextMenu.prototype = {
     }
 
     var shouldShow = this.onSaveableLink || isMailtoInternal || this.onPlainTextLink;
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    var isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
+    this.showItem("context-openlink", shouldShow && !isWindowPrivate);
+    this.showItem("context-openlinkprivate", shouldShow);
+#else
     this.showItem("context-openlink", shouldShow);
+#endif
     this.showItem("context-openlinkintab", shouldShow);
     this.showItem("context-openlinkincurrent", this.onPlainTextLink);
     this.showItem("context-sep-open", shouldShow);
@@ -682,6 +688,16 @@ nsContextMenu.prototype = {
     openLinkIn(this.linkURL, "window",
                { charset: doc.characterSet,
                  referrerURI: doc.documentURIObject });
+  },
+
+  // Open linked-to URL in a new private window.
+  openLinkInPrivateWindow : function () {
+    var doc = this.target.ownerDocument;
+    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
+    openLinkIn(this.linkURL, "window",
+               { charset: doc.characterSet,
+                 referrerURI: doc.documentURIObject,
+                 private: true });
   },
 
   // Open linked-to URL in a new tab.

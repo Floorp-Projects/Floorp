@@ -4292,6 +4292,7 @@ IonBuilder::resume(MInstruction *ins, jsbytecode *pc, MResumePoint::Mode mode)
     if (!resumePoint)
         return false;
     ins->setResumePoint(resumePoint);
+    resumePoint->setInstruction(ins);
     return true;
 }
 
