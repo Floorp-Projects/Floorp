@@ -18,7 +18,11 @@
 #include "certdb.h"
 #include "sechash.h"
 
+#include "nsNSSCleaner.h"
+
 using namespace mozilla;
+
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsRecentBadCertsService, 
                               nsIRecentBadCertsService)
@@ -74,8 +78,9 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
   }
 
   if (foundDER.len) {
+    CERTCertificate *nssCert;
     CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-    ScopedCERTCertificate nssCert(CERT_FindCertByDERCert(certdb, &foundDER));
+    nssCert = CERT_FindCertByDERCert(certdb, &foundDER);
     if (!nssCert) 
       nssCert = CERT_NewTempCertificate(certdb, &foundDER,
                                         nullptr, // no nickname
@@ -88,6 +93,8 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
       return NS_ERROR_FAILURE;
 
     status->mServerCert = nsNSSCertificate::Create(nssCert);
+    CERT_DestroyCertificate(nssCert);
+
     status->mHaveCertErrorBits = true;
     status->mIsDomainMismatch = isDomainMismatch;
     status->mIsNotValidAtThisTime = isNotValidAtThisTime;
