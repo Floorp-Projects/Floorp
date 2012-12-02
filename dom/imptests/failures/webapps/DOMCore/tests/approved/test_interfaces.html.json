@@ -88,6 +88,7 @@
   "MutationRecord interface: attribute oldValue": true,
   "Node interface: operation cloneNode(boolean)": true,
   "Document interface: existence and properties of interface object": true,
+  "Document interface constructor": true,
   "Document interface: existence and properties of interface prototype object": true,
   "Document interface: existence and properties of interface prototype object's \"constructor\" property": true,
   "Document interface: attribute implementation": true,

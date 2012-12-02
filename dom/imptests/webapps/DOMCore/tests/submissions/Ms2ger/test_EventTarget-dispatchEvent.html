@@ -39,11 +39,20 @@ test(function() {
   var e = document.createEvent("Event")
   e.initEvent("type", false, false)
 
+  var called = []
+
   var target = document.createElement("div")
   target.addEventListener("type", function() {
+    called.push("First")
     throw new Error()
-  }, false);
+  }, false)
+
+  target.addEventListener("type", function() {
+    called.push("Second")
+  }, false)
 
   assert_equals(target.dispatchEvent(e), true, "dispatchEvent must return true")
+  assert_array_equals(called, ["First", "Second"],
+                      "Should have continued to call other event listeners")
 }, "Exceptions from event listeners must not be propagated.")
 </script>

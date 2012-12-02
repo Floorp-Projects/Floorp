@@ -32,4 +32,23 @@ test(function() {
   assert_equals(t3.data, "34")
   assert_equals(t4.data, "4")
 })
+
+// https://www.w3.org/Bugs/Public/show_bug.cgi?id=19837
+test(function() {
+  var div = document.createElement("div")
+  var t1 = div.appendChild(document.createTextNode(""))
+  var t2 = div.appendChild(document.createTextNode("a"))
+  var t3 = div.appendChild(document.createTextNode(""))
+  assert_array_equals(div.childNodes, [t1, t2, t3])
+  div.normalize();
+  assert_array_equals(div.childNodes, [t2])
+}, "Empty text nodes separated by a non-empty text node")
+test(function() {
+  var div = document.createElement("div")
+  var t1 = div.appendChild(document.createTextNode(""))
+  var t2 = div.appendChild(document.createTextNode(""))
+  assert_array_equals(div.childNodes, [t1, t2])
+  div.normalize();
+  assert_array_equals(div.childNodes, [])
+}, "Empty text nodes")
 </script>

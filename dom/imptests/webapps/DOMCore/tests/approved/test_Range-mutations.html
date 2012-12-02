@@ -224,26 +224,41 @@ function testSplitText(oldNode, offset, startContainer, startOffset, endContaine
 
 	// Finally, the splitText stuff itself:
 	//
-	// "If old node's parent is not null, then for every boundary point whose
-	// node is old node:"
+	// "If parent is not null, run these substeps:
 	//
-	//   * "Let original offset equal what the boundary point's offset was
-	//   before this splitText invocation replaced the data of node."
+	//   * "For each range whose start node is node and start offset is greater
+	//   than offset, set its start node to new node and decrease its start
+	//   offset by offset.
 	//
-	//   * "If original offset is greater than offset, set the boundary point's
-	//   node to new node and its offset to original offset minus offset."
-	if (oldNode.parentNode
-	&& startContainer == oldNode
-	&& originalStartOffset > offset) {
-		startContainer = newNode;
-		startOffset = originalStartOffset - offset;
-	}
+	//   * "For each range whose end node is node and end offset is greater
+	//   than offset, set its end node to new node and decrease its end offset
+	//   by offset.
+	//
+	//   * "For each range whose start node is parent and start offset is equal
+	//   to the index of node + 1, increase its start offset by one.
+	//
+	//   * "For each range whose end node is parent and end offset is equal to
+	//   the index of node + 1, increase its end offset by one."
+	if (oldNode.parentNode) {
+		if (startContainer == oldNode && originalStartOffset > offset) {
+			startContainer = newNode;
+			startOffset = originalStartOffset - offset;
+		}
 
-	if (oldNode.parentNode
-	&& endContainer == oldNode
-	&& originalEndOffset > offset) {
-		endContainer = newNode;
-		endOffset = originalEndOffset - offset;
+		if (endContainer == oldNode && originalEndOffset > offset) {
+			endContainer = newNode;
+			endOffset = originalEndOffset - offset;
+		}
+
+		if (startContainer == oldNode.parentNode
+		&& startOffset == 1 + indexOf(oldNode)) {
+			startOffset++;
+		}
+
+		if (endContainer == oldNode.parentNode
+		&& endOffset == 1 + indexOf(oldNode)) {
+			endOffset++;
+		}
 	}
 
 	return [startContainer, startOffset, endContainer, endOffset];
