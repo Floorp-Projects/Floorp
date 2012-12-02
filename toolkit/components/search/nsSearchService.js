@@ -3679,7 +3679,7 @@ var engineMetadataService = {
       let initializer = this._initializer = Promise.defer();
       TaskUtils.spawn((function task_init() {
         LOG("metadata init: starting");
-        switch(this._initState) {
+        switch (this._initState) {
           case engineMetadataService._InitStates.NOT_STARTED:
             // 1. Load json file if it exists
             try {
@@ -3741,9 +3741,9 @@ var engineMetadataService = {
             break;
 
           default:
-              throw new Error("Internal error: invalid state " + this._initState);
-          }}).bind(this)).then(
-
+            throw new Error("Internal error: invalid state " + this._initState);
+        }
+      }).bind(this)).then(
         // 3. Inform any observers
         function onSuccess() {
           initializer.resolve();
@@ -3766,7 +3766,7 @@ var engineMetadataService = {
    */
   syncInit: function epsSyncInit() {
     LOG("metadata syncInit: starting");
-    switch(this._initState) {
+    switch (this._initState) {
       case engineMetadataService._InitStates.NOT_STARTED:
         let jsonFile = new FileUtils.File(this._jsonFile);
         // 1. Load json file if it exists
