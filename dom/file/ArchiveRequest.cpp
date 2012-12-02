@@ -263,19 +263,8 @@ ArchiveRequest::Create(nsIDOMWindow* aOwner,
   return request.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ArchiveRequest)
-
-// C++ traverse
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ArchiveRequest,
-                                                  DOMRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArchiveReader)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-// Unlink
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ArchiveRequest,
-                                                DOMRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mArchiveReader)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ArchiveRequest, DOMRequest,
+                                     mArchiveReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ArchiveRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMArchiveRequest)
