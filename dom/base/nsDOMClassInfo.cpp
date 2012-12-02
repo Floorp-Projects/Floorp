@@ -7652,10 +7652,8 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsDependentJSString name(id);
 
-  const nsGlobalNameStruct *name_struct = nullptr;
-
-  nameSpaceManager->LookupNavigatorName(name, &name_struct);
-
+  const nsGlobalNameStruct* name_struct =
+    nameSpaceManager->LookupNavigatorName(name);
   if (!name_struct) {
     return NS_OK;
   }
