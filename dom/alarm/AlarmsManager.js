@@ -141,15 +141,10 @@ AlarmsManager.prototype = {
     if (!Services.prefs.getBoolPref("dom.mozAlarms.enabled"))
       return null;
 
-    let principal = aWindow.document.nodePrincipal;
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
-
-    let perm = Services.perms.testExactPermissionFromPrincipal(principal, "alarms");
-
     // Only pages with perm set can use the alarms.
-    this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;
-
-    if (!this.hasPrivileges)
+    let principal = aWindow.document.nodePrincipal;
+    let perm = Services.perms.testExactPermissionFromPrincipal(principal, "alarms");
+    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION)
       return null;
 
     this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);

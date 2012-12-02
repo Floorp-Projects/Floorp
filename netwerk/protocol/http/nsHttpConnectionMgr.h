@@ -378,7 +378,7 @@ private:
 
         nsHalfOpenSocket(nsConnectionEntry *ent,
                          nsAHttpTransaction *trans,
-                         uint8_t caps);
+                         uint32_t caps);
         ~nsHalfOpenSocket();
         
         nsresult SetupStreams(nsISocketTransport **,
@@ -408,7 +408,7 @@ private:
         nsCOMPtr<nsISocketTransport>   mSocketTransport;
         nsCOMPtr<nsIAsyncOutputStream> mStreamOut;
         nsCOMPtr<nsIAsyncInputStream>  mStreamIn;
-        uint8_t                        mCaps;
+        uint32_t                       mCaps;
 
         // mSpeculative is set if the socket was created from
         // SpeculativeConnect(). It is cleared when a transaction would normally
@@ -461,7 +461,7 @@ private:
     bool     ProcessPendingQForEntry(nsConnectionEntry *);
     bool     IsUnderPressure(nsConnectionEntry *ent,
                              nsHttpTransaction::Classifier classification);
-    bool     AtActiveConnectionLimit(nsConnectionEntry *, uint8_t caps);
+    bool     AtActiveConnectionLimit(nsConnectionEntry *, uint32_t caps);
     nsresult TryDispatchTransaction(nsConnectionEntry *ent,
                                     bool onlyReusedConnection,
                                     nsHttpTransaction *trans);
@@ -470,7 +470,7 @@ private:
                                  nsHttpConnection *);
     nsresult DispatchAbstractTransaction(nsConnectionEntry *,
                                          nsAHttpTransaction *,
-                                         uint8_t,
+                                         uint32_t,
                                          nsHttpConnection *,
                                          int32_t);
     nsresult BuildPipeline(nsConnectionEntry *,
@@ -482,7 +482,7 @@ private:
     void     ClosePersistentConnections(nsConnectionEntry *ent);
     void     ReportProxyTelemetry(nsConnectionEntry *ent);
     nsresult CreateTransport(nsConnectionEntry *, nsAHttpTransaction *,
-                             uint8_t, bool);
+                             uint32_t, bool);
     void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
     void     StartedConnect();
     void     RecvdConnect();

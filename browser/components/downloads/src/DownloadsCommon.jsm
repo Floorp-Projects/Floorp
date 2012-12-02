@@ -206,10 +206,10 @@ this.DownloadsCommon = {
   },
 
   /**
-   * Given an iterable collection of nsIDownload's, generates and returns
+   * Given an iterable collection of DownloadDataItems, generates and returns
    * statistics about that collection.
    *
-   * @param aDownloads An iterable collection of nsIDownloads.
+   * @param aDataItems An iterable collection of DownloadDataItems.
    *
    * @return Object whose properties are the generated statistics. Currently,
    *         we return the following properties:
@@ -226,7 +226,7 @@ this.DownloadsCommon = {
    *                           complete.
    *         percentComplete : The percentage of bytes successfully downloaded.
    */
-  summarizeDownloads: function DC_summarizeDownloads(aDownloads)
+  summarizeDownloads: function DC_summarizeDownloads(aDataItems)
   {
     let summary = {
       numActive: 0,
@@ -238,17 +238,15 @@ this.DownloadsCommon = {
       // slowestSpeed is Infinity so that we can use Math.min to
       // find the slowest speed. We'll set this to 0 afterwards if
       // it's still at Infinity by the time we're done iterating all
-      // downloads.
+      // dataItems.
       slowestSpeed: Infinity,
       rawTimeLeft: -1,
       percentComplete: -1
     }
 
-    // If no download has been loaded, don't use the methods of the Download
-    // Manager service, so that it is not initialized unnecessarily.
-    for (let download of aDownloads) {
+    for (let dataItem of aDataItems) {
       summary.numActive++;
-      switch (download.state) {
+      switch (dataItem.state) {
         case nsIDM.DOWNLOAD_PAUSED:
           summary.numPaused++;
           break;
@@ -257,21 +255,21 @@ this.DownloadsCommon = {
           break;
         case nsIDM.DOWNLOAD_DOWNLOADING:
           summary.numDownloading++;
-          if (download.size > 0 && download.speed > 0) {
-            let sizeLeft = download.size - download.amountTransferred;
+          if (dataItem.maxBytes > 0 && dataItem.speed > 0) {
+            let sizeLeft = dataItem.maxBytes - dataItem.currBytes;
             summary.rawTimeLeft = Math.max(summary.rawTimeLeft,
-                                           sizeLeft / download.speed);
+                                           sizeLeft / dataItem.speed);
             summary.slowestSpeed = Math.min(summary.slowestSpeed,
-                                            download.speed);
+                                            dataItem.speed);
           }
           break;
       }
       // Only add to total values if we actually know the download size.
-      if (download.size > 0 &&
-          download.state != nsIDM.DOWNLOAD_CANCELED &&
-          download.state != nsIDM.DOWNLOAD_FAILED) {
-        summary.totalSize += download.size;
-        summary.totalTransferred += download.amountTransferred;
+      if (dataItem.maxBytes > 0 &&
+          dataItem.state != nsIDM.DOWNLOAD_CANCELED &&
+          dataItem.state != nsIDM.DOWNLOAD_FAILED) {
+        summary.totalSize += dataItem.maxBytes;
+        summary.totalTransferred += dataItem.currBytes;
       }
     }
 
@@ -371,7 +369,7 @@ const DownloadsData = {
   {
     // Start receiving real-time events.
     aDownloadManagerService.addListener(this);
-    Services.obs.addObserver(this, "download-manager-remove-download", false);
+    Services.obs.addObserver(this, "download-manager-remove-download-guid", false);
     Services.obs.addObserver(this, "download-manager-database-type-changed",
                              false);
   },
@@ -385,7 +383,7 @@ const DownloadsData = {
 
     // Stop receiving real-time events.
     Services.obs.removeObserver(this, "download-manager-database-type-changed");
-    Services.obs.removeObserver(this, "download-manager-remove-download");
+    Services.obs.removeObserver(this, "download-manager-remove-download-guid");
     Services.downloads.removeListener(this);
   },
 
@@ -437,12 +435,12 @@ const DownloadsData = {
     // Indicate to the view that a batch loading operation is in progress.
     aView.onDataLoadStarting();
 
-    // Sort backwards by download identifier, ensuring that the most recent
+    // Sort backwards by start time, ensuring that the most recent
     // downloads are added first regardless of their state.
     let loadedItemsArray = [dataItem
                             for each (dataItem in this.dataItems)
                             if (dataItem)];
-    loadedItemsArray.sort(function(a, b) b.downloadId - a.downloadId);
+    loadedItemsArray.sort(function(a, b) b.startTime - a.startTime);
     loadedItemsArray.forEach(
       function (dataItem) aView.onDataItemAdded(dataItem, false)
     );
@@ -498,7 +496,7 @@ const DownloadsData = {
    *        if it doesn't already exist in the list.  This should implement
    *        either nsIDownload or mozIStorageRow.  If the item exists, this
    *        argument is only used to retrieve the download identifier.
-   * @param aMayReuseId
+   * @param aMayReuseGUID
    *        If false, indicates that the download should not be added if a
    *        download with the same identifier was removed in the meantime.  This
    *        ensures that, while loading the list asynchronously, downloads that
@@ -507,21 +505,21 @@ const DownloadsData = {
    * @return New or existing data item, or null if the item was deleted from the
    *         list of available downloads.
    */
-  _getOrAddDataItem: function DD_getOrAddDataItem(aSource, aMayReuseId)
+  _getOrAddDataItem: function DD_getOrAddDataItem(aSource, aMayReuseGUID)
   {
-    let downloadId = (aSource instanceof Ci.nsIDownload)
-                     ? aSource.id
-                     : aSource.getResultByName("id");
-    if (downloadId in this.dataItems) {
-      let existingItem = this.dataItems[downloadId];
-      if (existingItem || !aMayReuseId) {
+    let downloadGuid = (aSource instanceof Ci.nsIDownload)
+                       ? aSource.guid
+                       : aSource.getResultByName("guid");
+    if (downloadGuid in this.dataItems) {
+      let existingItem = this.dataItems[downloadGuid];
+      if (existingItem || !aMayReuseGUID) {
         // Returns null if the download was removed and we can't reuse the item.
         return existingItem;
       }
     }
 
     let dataItem = new DownloadsDataItem(aSource);
-    this.dataItems[downloadId] = dataItem;
+    this.dataItems[downloadGuid] = dataItem;
 
     // Create the view items before returning.
     let addToStartOfList = aSource instanceof Ci.nsIDownload;
@@ -612,10 +610,10 @@ const DownloadsData = {
         // Order by descending download identifier so that the most recent
         // downloads are notified first to the listening views.
         let statement = Services.downloads.DBConnection.createAsyncStatement(
-          "SELECT id, target, name, source, referrer, state, "
+          "SELECT guid, target, name, source, referrer, state, "
         +        "startTime, endTime, currBytes, maxBytes "
         + "FROM moz_downloads "
-        + "ORDER BY id DESC"
+        + "ORDER BY startTime DESC"
         );
         try {
           this._pendingStatement = statement.executeAsync(this);
@@ -691,10 +689,11 @@ const DownloadsData = {
   observe: function DD_observe(aSubject, aTopic, aData)
   {
     switch (aTopic) {
-      case "download-manager-remove-download":
+      case "download-manager-remove-download-guid":
         // If a single download was removed, remove the corresponding data item.
         if (aSubject) {
-          this._removeDataItem(aSubject.QueryInterface(Ci.nsISupportsPRUint32));
+          this._removeDataItem(aSubject.QueryInterface(Ci.nsISupportsCString)
+                                       .data);
           break;
         }
 
@@ -702,11 +701,15 @@ const DownloadsData = {
         // and remove those that don't exist anymore.
         for each (let dataItem in this.dataItems) {
           if (dataItem) {
-            try {
-              Services.downloads.getDownload(dataItem.downloadId);
-            } catch (ex) {
-              this._removeDataItem(dataItem.downloadId);
-            }
+            // Bug 449811 - We have to bind to the dataItem because Javascript
+            // doesn't do fresh let-bindings per loop iteration.
+            let dataItemBinding = dataItem;
+            Services.downloads.getDownloadByGUID(dataItemBinding.downloadGuid,
+                                                 function(aStatus, aResult) {
+              if (aStatus == Components.results.NS_ERROR_NOT_AVAILABLE) {
+                this._removeDataItem(dataItemBinding.downloadGuid);
+              }
+            }.bind(this));
           }
         }
         break;
@@ -758,15 +761,11 @@ const DownloadsData = {
     // the database with the same ID as before. This means that the nsIDownload
     // that the dataItem holds might now need updating.
     //
-    // It's possible, however, that dataItem.download is still a lazy getter
-    // if we never read the download property after initializing the dataItem
-    // from a data row in the downloads database. In that case, we can leave
-    // it alone - the next time the download property is accessed, the right
-    // download object will be retrieved.
-    let downloadIsGetter = Object.getOwnPropertyDescriptor(dataItem, "download")
-                                 .value === undefined;
-    if (!downloadIsGetter) {
-      dataItem.download = aDownload;
+    // We only overwrite this in the event that _download exists, because if it
+    // doesn't, that means that no caller ever tried to get the nsIDownload,
+    // which means it was never retrieved and doesn't need to be overwritten.
+    if (dataItem._download) {
+      dataItem._download = aDownload;
     }
 
     this._views.forEach(
@@ -884,10 +883,10 @@ DownloadsDataItem.prototype = {
    */
   _initFromDownload: function DDI_initFromDownload(aDownload)
   {
-    this.download = aDownload;
+    this._download = aDownload;
 
     // Fetch all the download properties eagerly.
-    this.downloadId = aDownload.id;
+    this.downloadGuid = aDownload.guid;
     this.file = aDownload.target.spec;
     this.target = aDownload.displayName;
     this.uri = aDownload.source.spec;
@@ -917,7 +916,8 @@ DownloadsDataItem.prototype = {
   _initFromDataRow: function DDI_initFromDataRow(aStorageRow)
   {
     // Get the download properties from the data row.
-    this.downloadId = aStorageRow.getResultByName("id");
+    this._download = null;
+    this.downloadGuid = aStorageRow.getResultByName("guid");
     this.file = aStorageRow.getResultByName("target");
     this.target = aStorageRow.getResultByName("name");
     this.uri = aStorageRow.getResultByName("source");
@@ -928,10 +928,6 @@ DownloadsDataItem.prototype = {
     this.currBytes = aStorageRow.getResultByName("currBytes");
     this.maxBytes = aStorageRow.getResultByName("maxBytes");
 
-    // Allows accessing the underlying download object lazily.
-    XPCOMUtils.defineLazyGetter(this, "download", function ()
-                                Services.downloads.getDownload(this.downloadId));
-
     // Now we have to determine if the download is resumable, but don't want to
     // access the underlying download object unnecessarily.  The only case where
     // the property is relevant is when we are currently downloading data, and
@@ -939,10 +935,15 @@ DownloadsDataItem.prototype = {
     // loaded very soon in any case.  In all the other cases, including a paused
     // download, we assume that the download is resumable.  The property will be
     // updated as soon as the underlying download state changes.
+
+    // We'll start by assuming we're resumable, and then if we're downloading,
+    // update resumable property in case we were wrong.
+    this.resumable = true;
+
     if (this.state == nsIDM.DOWNLOAD_DOWNLOADING) {
-      this.resumable = this.download.resumable;
-    } else {
-      this.resumable = true;
+      this.getDownload(function(aDownload) {
+        this.resumable = aDownload.resumable;
+      }.bind(this));
     }
 
     // Compute the other properties without accessing the download object.
@@ -950,6 +951,35 @@ DownloadsDataItem.prototype = {
     this.percentComplete = this.maxBytes <= 0
                            ? -1
                            : Math.round(this.currBytes / this.maxBytes * 100);
+  },
+
+  /**
+   * Asynchronous getter for the download object corresponding to this data item.
+   *
+   * @param aCallback
+   *        A callback function which will be called when the download object is
+   *        available.  It should accept one argument which will be the download
+   *        object.
+   */
+  getDownload: function DDI_getDownload(aCallback) {
+    if (this._download) {
+      // Return the download object asynchronously to the caller
+      let download = this._download;
+      Services.tm.mainThread.dispatch(function () aCallback(download),
+                                      Ci.nsIThread.DISPATCH_NORMAL);
+    } else {
+      Services.downloads.getDownloadByGUID(this.downloadGuid,
+                                           function(aStatus, aResult) {
+        if (!Components.isSuccessCode(aStatus)) {
+          Cu.reportError(
+            new Components.Exception("Cannot retrieve download for GUID: " +
+                                     this.downloadGuid));
+        } else {
+          this._download = aResult;
+          aCallback(aResult);
+        }
+      }.bind(this));
+    }
   },
 
   /**
@@ -1452,19 +1482,16 @@ const DownloadsIndicatorData = {
   _lastTimeLeft: -1,
 
   /**
-   * A generator function for the downloads that this summary is currently
+   * A generator function for the dataItems that this summary is currently
    * interested in. This generator is passed off to summarizeDownloads in order
-   * to generate statistics about the downloads we care about - in this case,
-   * it's all active downloads.
+   * to generate statistics about the dataItems we care about - in this case,
+   * it's all dataItems for active downloads.
    */
-  _activeDownloads: function DID_activeDownloads()
+  _activeDataItems: function DID_activeDataItems()
   {
-    // If no download has been loaded, don't use the methods of the Download
-    // Manager service, so that it is not initialized unnecessarily.
-    if (this._itemCount > 0) {
-      let downloads = Services.downloads.activeDownloads;
-      while (downloads.hasMoreElements()) {
-        yield downloads.getNext().QueryInterface(Ci.nsIDownload);
+    for each (let dataItem in DownloadsCommon.data.dataItems) {
+      if (dataItem && dataItem.inProgress) {
+        yield dataItem;
       }
     }
   },
@@ -1475,7 +1502,7 @@ const DownloadsIndicatorData = {
   _refreshProperties: function DID_refreshProperties()
   {
     let summary =
-      DownloadsCommon.summarizeDownloads(this._activeDownloads());
+      DownloadsCommon.summarizeDownloads(this._activeDataItems());
 
     // Determine if the indicator should be shown or get attention.
     this._hasDownloads = (this._itemCount > 0);
@@ -1563,7 +1590,7 @@ DownloadsSummaryData.prototype = {
     DownloadsViewPrototype.removeView.call(this, aView);
 
     if (this._views.length == 0) {
-      // Clear out our collection of DownloadsDataItems. If we ever have
+      // Clear out our collection of DownloadDataItems. If we ever have
       // another view registered with us, this will get re-populated.
       this._dataItems = [];
     }
@@ -1656,17 +1683,17 @@ DownloadsSummaryData.prototype = {
   //// Property updating based on current download status
 
   /**
-   * A generator function for the downloads that this summary is currently
+   * A generator function for the dataItems that this summary is currently
    * interested in. This generator is passed off to summarizeDownloads in order
-   * to generate statistics about the downloads we care about - in this case,
-   * it's the downloads in this._dataItems after the first few to exclude,
+   * to generate statistics about the dataItems we care about - in this case,
+   * it's the dataItems in this._dataItems after the first few to exclude,
    * which was set when constructing this DownloadsSummaryData instance.
    */
-  _downloadsForSummary: function DSD_downloadsForSummary()
+  _dataItemsForSummary: function DSD_dataItemsForSummary()
   {
     if (this._dataItems.length > 0) {
       for (let i = this._numToExclude; i < this._dataItems.length; ++i) {
-        yield this._dataItems[i].download;
+        yield this._dataItems[i];
       }
     }
   },
@@ -1678,7 +1705,7 @@ DownloadsSummaryData.prototype = {
   {
     // Pre-load summary with default values.
     let summary =
-      DownloadsCommon.summarizeDownloads(this._downloadsForSummary());
+      DownloadsCommon.summarizeDownloads(this._dataItemsForSummary());
 
     this._description = DownloadsCommon.strings
                                        .otherDownloads(summary.numActive);

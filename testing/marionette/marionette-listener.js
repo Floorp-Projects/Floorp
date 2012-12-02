@@ -120,6 +120,7 @@ function startListeners() {
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
   addMessageListenerId("Marionette:setState", setState);
+  addMessageListenerId("Marionette:screenShot", screenShot);
 }
 
 /**
@@ -200,6 +201,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
   removeMessageListenerId("Marionette:setState", setState);
+  removeMessageListenerId("Marionette:screenShot", screenShot);
   this.elementManager.reset();
   // reset frame to the top-most frame
   curWindow = content;
@@ -449,7 +451,7 @@ function executeJSScript(msg) {
  * For executeAsync, it will return a response when marionetteScriptFinished/arguments[arguments.length-1] 
  * method is called, or if it times out.
  */
-function executeWithCallback(msg, async) {
+function executeWithCallback(msg, useFinish) {
   curWindow.addEventListener("unload", errUnload, false);
   let script = msg.json.value;
   asyncTestCommandId = msg.json.id;
@@ -478,7 +480,7 @@ function executeWithCallback(msg, async) {
   }, true);
 
   let scriptSrc;
-  if (async) {
+  if (useFinish) {
     if (msg.json.timeout == null || msg.json.timeout == 0) {
       sendError("Please set a timeout", 21, null);
     }
@@ -942,6 +944,88 @@ function importScript(msg) {
   file.write(msg.json.script, msg.json.script.length);
   file.close();
   sendOk();
+}
+
+/**
+ * Saves a screenshot and returns a Base64 string
+ */
+function screenShot(msg) {
+  let node = null;
+  if (msg.json.element) {
+    try {
+      node = elementManager.getKnownElement(msg.json.element, curWindow)
+    }
+    catch (e) {
+      sendResponse(e.message, e.code, e.stack);
+      return;
+    }
+  }
+  else {
+      node = curWindow;
+  }
+  let highlights = msg.json.highlights;
+
+  var document = curWindow.document;
+  var rect, win, width, height, left, top, needsOffset;
+  // node can be either a window or an arbitrary DOM node
+  if (node == curWindow) {
+    // node is a window
+    win = node;
+    width = win.innerWidth;
+    height = win.innerHeight;
+    top = 0;
+    left = 0;
+    // offset needed for highlights to take 'outerHeight' of window into account
+    needsOffset = true;
+  }
+  else {
+    // node is an arbitrary DOM node
+    win = node.ownerDocument.defaultView;
+    rect = node.getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
+    top = rect.top;
+    left = rect.left;
+    // offset for highlights not needed as they will be relative to this node
+    needsOffset = false;
+  }
+
+  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  canvas.width = width;
+  canvas.height = height;
+  var ctx = canvas.getContext("2d");
+  // Draws the DOM contents of the window to the canvas
+  ctx.drawWindow(win, left, top, width, height, 'rgb(255,255,255)');
+
+  // This section is for drawing a red rectangle around each element passed in via the highlights array
+  if (highlights) {
+    ctx.lineWidth = "2";
+    ctx.strokeStyle = "red";
+    ctx.save();
+
+    for (var i = 0; i < highlights.length; ++i) {
+      var elem = highlights[i];
+      rect = elem.getBoundingClientRect();
+
+      var offsetY = 0, offsetX = 0;
+      if (needsOffset) {
+        var offset = getChromeOffset(elem);
+        offsetX = offset.x;
+        offsetY = offset.y;
+      } else {
+        // Don't need to offset the window chrome, just make relative to containing node
+        offsetY = -top;
+        offsetX = -left;
+      }
+
+      // Draw the rectangle
+      ctx.strokeRect(rect.left + offsetX, rect.top + offsetY, rect.width, rect.height);
+    }
+  }
+
+  // Return the Base64 String back to the client bindings and they can manage
+  // saving the file to disk if it is required
+  sendResponse({value:canvas.toDataURL("image/png","")});
 }
 
 //call register self when we get loaded

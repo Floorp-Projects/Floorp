@@ -1451,15 +1451,41 @@ class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
 // Adds two integers, returning an integer value.
 class LAddI : public LBinaryMath<0>
 {
+    bool recoversInput_;
+
   public:
     LIR_HEADER(AddI);
+
+    LAddI()
+      : recoversInput_(false)
+    { }
+
+    virtual bool recoversInput() const {
+        return recoversInput_;
+    }
+    void setRecoversInput() {
+        recoversInput_ = true;
+    }
 };
 
 // Subtracts two integers, returning an integer value.
 class LSubI : public LBinaryMath<0>
 {
+    bool recoversInput_;
+
   public:
     LIR_HEADER(SubI);
+
+    LSubI()
+      : recoversInput_(false)
+    { }
+
+    virtual bool recoversInput() const {
+        return recoversInput_;
+    }
+    void setRecoversInput() {
+        recoversInput_ = true;
+    }
 };
 
 // Performs an add, sub, mul, or div on two double values.

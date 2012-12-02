@@ -24,22 +24,6 @@ class nsCString;
 
 // XXX nsTextFragmentPool?
 
-// XXX these need I18N spankage
-#define XP_IS_SPACE(_ch) \
-  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n') || ((_ch) == '\r'))
-
-#define XP_IS_UPPERCASE(_ch) \
-  (((_ch) >= 'A') && ((_ch) <= 'Z'))
-
-#define XP_IS_LOWERCASE(_ch) \
-  (((_ch) >= 'a') && ((_ch) <= 'z'))
-
-#define XP_TO_LOWER(_ch) ((_ch) | 32)
-
-#define XP_TO_UPPER(_ch) ((_ch) & ~32)
-
-#define XP_IS_SPACE_W XP_IS_SPACE
-
 /**
  * A fragment of text. If mIs2b is 1 then the m2b pointer is valid
  * otherwise the m1b pointer is valid. If m1b is used then each byte

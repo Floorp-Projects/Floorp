@@ -937,7 +937,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
     uint32_t  len = aLength;
     bool      trailingSpace = false;
     for (int32_t i = 0; i < aLength; i++) {
-      if (XP_IS_SPACE(aString[i]) && (i > 0)) {
+      if (dom::IsSpaceCharacter(aString[i]) && (i > 0)) {
         len = i;  // don't include the space when measuring
         trailingSpace = true;
         break;

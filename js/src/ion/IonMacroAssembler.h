@@ -658,6 +658,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         movePtr(ImmWord(p->sizePointer()), temp);
         add32(Imm32(-1), Address(temp, 0));
     }
+
+    void printf(const char *output);
+    void printf(const char *output, Register value);
 };
 
 } // namespace ion

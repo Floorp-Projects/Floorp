@@ -97,9 +97,9 @@ public class PanningPerfAPI {
         long lastTime = 0;
         float totalTime = mFrameTimes.get(mFrameTimes.size() - 1);
         for (int i = 0; i < mCheckerboardAmounts.size(); i++) {
-          long elapsedTime = mFrameTimes.get(i) - lastTime;
-          mCheckerboardAmounts.set(i, mCheckerboardAmounts.get(i) * elapsedTime / totalTime);
-          lastTime = mFrameTimes.get(i);
+            long elapsedTime = mFrameTimes.get(i) - lastTime;
+            mCheckerboardAmounts.set(i, mCheckerboardAmounts.get(i) * elapsedTime / totalTime);
+            lastTime = mFrameTimes.get(i);
         }
 
         return mCheckerboardAmounts;

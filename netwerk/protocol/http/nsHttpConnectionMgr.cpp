@@ -323,7 +323,7 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     nsCOMPtr<nsIInterfaceRequestor> wrappedCallbacks;
     NS_NewInterfaceRequestorAggregation(callbacks, nullptr, getter_AddRefs(wrappedCallbacks));
 
-    uint8_t caps = ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
+    uint32_t caps = ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
     nsRefPtr<NullHttpTransaction> trans =
         new NullHttpTransaction(ci, wrappedCallbacks, caps);
 
@@ -1080,7 +1080,7 @@ nsHttpConnectionMgr::ReportFailedToProcess(nsIURI *uri)
 //  (2) keep-alive enabled and at max-persistent-connections-per-server/proxy
 //  (3) keep-alive disabled and at max-connections-per-server
 bool
-nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, uint8_t caps)
+nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, uint32_t caps)
 {
     nsHttpConnectionInfo *ci = ent->mConnInfo;
 
@@ -1414,7 +1414,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
          ent->mConnInfo->HashKey().get(), uint32_t(trans->Caps())));
 
     nsHttpTransaction::Classifier classification = trans->Classification();
-    uint8_t caps = trans->Caps();
+    uint32_t caps = trans->Caps();
 
     // no keep-alive means no pipelines either
     if (!(caps & NS_HTTP_ALLOW_KEEPALIVE))
@@ -1542,7 +1542,7 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
                                          nsHttpTransaction *trans,
                                          nsHttpConnection *conn)
 {
-    uint8_t caps = trans->Caps();
+    uint32_t caps = trans->Caps();
     int32_t priority = trans->Priority();
     nsresult rv;
 
@@ -1594,7 +1594,7 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
 nsresult
 nsHttpConnectionMgr::DispatchAbstractTransaction(nsConnectionEntry *ent,
                                                  nsAHttpTransaction *aTrans,
-                                                 uint8_t caps,
+                                                 uint32_t caps,
                                                  nsHttpConnection *conn,
                                                  int32_t priority)
 {
@@ -1789,7 +1789,7 @@ nsHttpConnectionMgr::RecvdConnect()
 nsresult
 nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
                                      nsAHttpTransaction *trans,
-                                     uint8_t caps,
+                                     uint32_t caps,
                                      bool speculative)
 {
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
@@ -2400,7 +2400,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsHttpConnectionMgr::nsHalfOpenSocket,
 nsHttpConnectionMgr::
 nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
                                    nsAHttpTransaction *trans,
-                                   uint8_t caps)
+                                   uint32_t caps)
     : mEnt(ent),
       mTransaction(trans),
       mCaps(caps),

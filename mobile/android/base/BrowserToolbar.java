@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
@@ -35,11 +36,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
@@ -54,13 +53,13 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
     private View mAwesomeBar;
-    private View mAwesomeBarRightEdge;
-    private View mAddressBarBg;
-    private TextView mTitle;
+    private GeckoFrameLayout mAwesomeBarRightEdge;
+    private BrowserToolbarBackground mAddressBarBg;
+    private GeckoTextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
     private boolean mAnimateSiteSecurity;
-    private ImageButton mTabs;
+    private GeckoImageButton mTabs;
     private int mTabsPaneWidth;
     private ImageView mBack;
     private ImageView mForward;
@@ -69,9 +68,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     public ImageButton mSiteSecurity;
     public ImageButton mReader;
     private AnimationDrawable mProgressSpinner;
-    private TextSwitcher mTabsCount;
+    private GeckoTextSwitcher mTabsCount;
     private ImageView mShadow;
-    private ImageButton mMenu;
+    private GeckoImageButton mMenu;
     private LinearLayout mActionItemBar;
     private MenuPopup mMenuPopup;
     private List<View> mFocusOrder;
@@ -125,7 +124,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // Only used on tablet layout. We need a separate view for the background
         // because we need to slide it left/right for hiding/shoing the tabs sidebar
         // See prepareTabsAnimation().
-        mAddressBarBg = mLayout.findViewById(R.id.address_bar_bg);
+        mAddressBarBg = (BrowserToolbarBackground) mLayout.findViewById(R.id.address_bar_bg);
 
         // Only used on tablet layout. The tabs sidebar slide animation is implemented
         // in terms of translating the inner elements of the tablet toolbar to give the
@@ -133,13 +132,13 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // in the same position during the animation while the elements on the left
         // (favicon, back, forware, lock icon, title, ...) slide behind it.
         // See prepareTabsAnimation().
-        mAwesomeBarRightEdge = mLayout.findViewById(R.id.awesome_bar_right_edge);
+        mAwesomeBarRightEdge = (GeckoFrameLayout) mLayout.findViewById(R.id.awesome_bar_right_edge);
 
         // This will hold the translation width inside the toolbar when the tabs
         // pane is visible. It will affect the padding applied to the title TextView.
         mTabsPaneWidth = 0;
 
-        mTitle = (TextView) mLayout.findViewById(R.id.awesome_bar_title);
+        mTitle = (GeckoTextView) mLayout.findViewById(R.id.awesome_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
         if (Build.VERSION.SDK_INT >= 16)
             mTitle.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -179,7 +178,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             }
         });
 
-        mTabs = (ImageButton) mLayout.findViewById(R.id.tabs);
+        mTabs = (GeckoImageButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 toggleTabs();
@@ -187,7 +186,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         });
         mTabs.setImageLevel(0);
 
-        mTabsCount = (TextSwitcher) mLayout.findViewById(R.id.tabs_count);
+        mTabsCount = (GeckoTextSwitcher) mLayout.findViewById(R.id.tabs_count);
         mTabsCount.removeAllViews();
         mTabsCount.setFactory(this);
         mTabsCount.setText("");
@@ -292,7 +291,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mTitleSlideLeft.setDuration(lockAnimDuration);
         mTitleSlideRight.setDuration(lockAnimDuration);
 
-        mMenu = (ImageButton) mLayout.findViewById(R.id.menu);
+        mMenu = (GeckoImageButton) mLayout.findViewById(R.id.menu);
         mActionItemBar = (LinearLayout) mLayout.findViewById(R.id.menu_items);
         mHasSoftMenuButton = !mActivity.hasPermanentMenuKey();
 
@@ -472,13 +471,17 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mCount = count;
         mHandler.postDelayed(new Runnable() {
             public void run() {
-                ((TextView) mTabsCount.getCurrentView()).setTextColor(mActivity.getResources().getColor(R.color.url_bar_text_highlight));
+                GeckoTextView view = (GeckoTextView) mTabsCount.getCurrentView();
+                view.setSelected(true);
+                view.setPrivateMode(false);
             }
         }, mDuration);
 
         mHandler.postDelayed(new Runnable() {
             public void run() {
-                ((TextView) mTabsCount.getCurrentView()).setTextColor(mActivity.getResources().getColor(R.color.tabs_counter_color));
+                GeckoTextView view = (GeckoTextView) mTabsCount.getCurrentView();
+                view.setSelected(false);
+                view.setPrivateMode(Tabs.getInstance().getSelectedTab().isPrivate());
             }
         }, 2 * mDuration);
     }
@@ -784,12 +787,20 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             updateTabCount(Tabs.getInstance().getCount());
             updateBackButton(tab.canDoBack());
             updateForwardButton(tab.canDoForward());
-            updateBackgroundColor(tab.isPrivate() ? 1 : 0);
-        }
-    }
 
-    private void updateBackgroundColor(int level) {
-        mAwesomeBar.getBackground().setLevel(level);
+            mAddressBarBg.setPrivateMode(tab.isPrivate());
+
+            if (mAwesomeBar instanceof GeckoButton)
+                ((GeckoButton) mAwesomeBar).setPrivateMode(tab.isPrivate());
+            else if (mAwesomeBar instanceof GeckoRelativeLayout)
+                ((GeckoRelativeLayout) mAwesomeBar).setPrivateMode(tab.isPrivate());
+
+            mTabs.setPrivateMode(tab.isPrivate());
+            mTabsCount.setPrivateMode(tab.isPrivate());
+            ((GeckoTextView) mTabsCount.getCurrentView()).setPrivateMode(tab.isPrivate());
+            mTitle.setPrivateMode(tab.isPrivate());
+            mMenu.setPrivateMode(tab.isPrivate());
+        }
     }
 
     public void destroy() {
@@ -819,7 +830,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return true;
     }
 
-    public static class RightEdge extends FrameLayout
+    public static class RightEdge extends GeckoFrameLayout
                                   implements LightweightTheme.OnChangeListener { 
         private BrowserApp mActivity;
 
@@ -846,12 +857,16 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             if (drawable == null)
                 return;
 
+            StateListDrawable stateList = new StateListDrawable();
+            stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.address_bar_bg_private));
+            stateList.addState(new int[] {}, drawable);
+
             int[] padding =  new int[] { getPaddingLeft(),
                                          getPaddingTop(),
                                          getPaddingRight(),
                                          getPaddingBottom()
                                        };
-            setBackgroundDrawable(drawable);
+            setBackgroundDrawable(stateList);
             setPadding(padding[0], padding[1], padding[2], padding[3]);
         }
 
