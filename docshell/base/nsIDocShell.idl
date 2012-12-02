@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(318CE516-3F7A-41F6-8F3D-3661650F7A46)]
+[scriptable, builtinclass, uuid(a106db7f-6449-4a6b-914f-834ba308c3e2)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -118,6 +118,8 @@ interface nsIDocShell : nsISupports
    * @param aWindowTarget   - Window target for the load.
    * @param aTypeHint       - A hint as to the content-type of the resulting
    *                          data.  May be null or empty if no hint.
+   * @param aFileName       - Non-null when the link should be downloaded as
+                              the given filename.
    * @param aPostDataStream - Post data stream (if POSTing)
    * @param aHeadersStream  - Stream containing "extra" request headers...
    * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
@@ -130,6 +132,7 @@ interface nsIDocShell : nsISupports
                               in uint32_t aFlags,
                               in wstring aWindowTarget,
                               in string aTypeHint,
+                              in AString aFileName,
                               in nsIInputStream aPostDataStream,
                               in nsIInputStream aHeadersStream,
                               in unsigned long aLoadFlags,
