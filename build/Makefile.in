@@ -97,6 +97,12 @@ endif
 
 endif
 
+# Put a useful .gdbinit in the bin directory, to be picked up automatically
+# by GDB when we debug executables there.
+GDBINIT_FILES := .gdbinit
+GDBINIT_DEST = $(FINAL_TARGET)
+INSTALL_TARGETS += GDBINIT
+
 include $(topsrcdir)/config/rules.mk
 
 # we install to _leaktest/
