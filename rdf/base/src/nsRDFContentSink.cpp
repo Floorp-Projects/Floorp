@@ -56,7 +56,6 @@
 #include "nsTArray.h"
 #include "nsXPIDLString.h"
 #include "prlog.h"
-#include "prmem.h"
 #include "rdf.h"
 #include "rdfutil.h"
 #include "nsReadableUtils.h"
@@ -356,7 +355,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 
         delete mContextStack;
     }
-    PR_FREEIF(mText);
+    moz_free(mText);
 
 
     if (--gRefCnt == 0) {
@@ -763,7 +762,7 @@ RDFContentSinkImpl::AddText(const PRUnichar* aText, int32_t aLength)
 {
     // Create buffer when we first need it
     if (0 == mTextSize) {
-        mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * 4096);
+        mText = (PRUnichar *) moz_malloc(sizeof(PRUnichar) * 4096);
         if (!mText) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -781,7 +780,7 @@ RDFContentSinkImpl::AddText(const PRUnichar* aText, int32_t aLength)
         int32_t newSize = (2 * mTextSize > (mTextSize + aLength)) ?
                           (2 * mTextSize) : (mTextSize + aLength);
         PRUnichar* newText = 
-            (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * newSize);
+            (PRUnichar *) moz_realloc(mText, sizeof(PRUnichar) * newSize);
         if (!newText)
             return NS_ERROR_OUT_OF_MEMORY;
         mTextSize = newSize;

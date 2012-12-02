@@ -1,5 +1,11 @@
 # .gdbinit file for debugging Mozilla
 
+# You may need to put an 'add-auto-load-safe-path' command in your
+# $HOME/.gdbinit file to get GDB to trust this file. If your builds are
+# generally in $HOME/moz, then you can say:
+#
+#  add-auto-load-safe-path ~/moz
+
 # Don't stop for the SIG32/33/etc signals that Flash produces
 handle SIG32 noprint nostop pass
 handle SIG33 noprint nostop pass

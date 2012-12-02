@@ -23,7 +23,6 @@ XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
                 .getInterface(Ci.nsIDOMWindowUtils);
 });
 
-const FOCUS_CHANGE_DELAY = 20;
 const RESIZE_SCROLL_DELAY = 20;
 
 let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
@@ -51,7 +50,6 @@ let FormAssistant = {
   isKeyboardOpened: false,
   selectionStart: 0,
   selectionEnd: 0,
-  blurTimeout: null,
   scrollIntoViewTimeout: null,
   _focusedElement: null,
 
@@ -95,22 +93,13 @@ let FormAssistant = {
         if (this.isTextInputElement(target) && this.isIMEDisabled())
           return;
 
-        if (target && this.isFocusableElement(target)) {
-          if (this.blurTimeout) {
-            this.blurTimeout = content.clearTimeout(this.blurTimeout);
-            this.handleIMEStateDisabled();
-          }
+        if (target && this.isFocusableElement(target))
           this.handleIMEStateEnabled(target);
-        }
         break;
 
       case "blur":
-        if (this.focusedElement) {
-          this.blurTimeout = content.setTimeout(function () {
-            this.blurTimeout = null;
-            this.handleIMEStateDisabled();
-          }.bind(this), FOCUS_CHANGE_DELAY);
-        }
+        if (this.focusedElement)
+          this.handleIMEStateDisabled();
         break;
 
       case 'mousedown':

@@ -4450,15 +4450,19 @@ def getEnumValueName(value):
     # characters in them.  Deal with the former by returning "_empty",
     # deal with possible name collisions from that by throwing if the
     # enum value is actually "_empty", and throw on any value
-    # containing chars other than [a-z] or '-' for now. Replace '-' with '_'.
-    value = value.replace('-', '_')
+    # containing non-ASCII chars for now. Replace all chars other than
+    # [0-9A-Za-z_] with '_'.
+    if re.match("[^\x20-\x7E]", value):
+        raise SyntaxError('Enum value "' + value + '" contains non-ASCII characters')
+    if re.match("^[0-9]", value):
+        raise SyntaxError('Enum value "' + value + '" starts with a digit')
+    value = re.sub(r'[^0-9A-Za-z_]', '_', value)
+    if re.match("^_[A-Z]|__", value):
+        raise SyntaxError('Enum value "' + value + '" is reserved by the C++ spec')
     if value == "_empty":
         raise SyntaxError('"_empty" is not an IDL enum value we support yet')
     if value == "":
         return "_empty"
-    if not re.match("^[a-z_]+$", value):
-        raise SyntaxError('Enum value "' + value + '" contains characters '
-                          'outside [a-z_]')
     return MakeNativeName(value)
 
 class CGEnum(CGThing):
