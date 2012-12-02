@@ -5,14 +5,9 @@
 
 
 @AB_CD@.jar:
-% locale browser @AB_CD@ %locale/@AB_CD@/browser/
-  locale/@AB_CD@/browser/about.dtd                (%chrome/about.dtd)
-  locale/@AB_CD@/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
-  locale/@AB_CD@/browser/notification.dtd         (%chrome/notification.dtd)
-  locale/@AB_CD@/browser/webapps.dtd              (%chrome/webapps.dtd)
-  locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
+% locale b2g-l10n @AB_CD@ %locale/@AB_CD@/b2g-l10n/
 
-* locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)
-% override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
-* locale/@AB_CD@/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)
-% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
+% override chrome://global/locale/netError.dtd           chrome://b2g-l10n/locale/netError.dtd
+% override chrome://global/locale/appstrings.properties  chrome://b2g-l10n/locale/appstrings.properties
+* locale/@AB_CD@/b2g-l10n/netError.dtd             (%chrome/overrides/netError.dtd)
+* locale/@AB_CD@/b2g-l10n/appstrings.properties    (%chrome/overrides/appstrings.properties)

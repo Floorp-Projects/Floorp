@@ -28,6 +28,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "gActivityDistributor",
                                    "@mozilla.org/network/http-activity-distributor;1",
                                    "nsIHttpActivityDistributor");
 
+XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
+                                  "resource:///modules/devtools/gDevTools.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
+                                  "resource:///modules/devtools/Target.jsm");
+
 this.EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider", "JSTermHelpers",
                          "PageErrorListener", "ConsoleAPIListener",
                          "NetworkResponseListener", "NetworkMonitor",
@@ -1564,7 +1570,12 @@ this.JSTermHelpers = function JSTermHelpers(aOwner)
   Object.defineProperty(aOwner.sandbox, "$0", {
     get: function() {
       try {
-        return aOwner.chromeWindow().InspectorUI.selection;
+        let window = aOwner.chromeWindow();
+        let target = TargetFactory.forTab(window.gBrowser.selectedTab);
+        let panel = gDevTools.getPanelForTarget("inspector", target);
+        if (panel) {
+          return panel.selection.node;
+        }
       }
       catch (ex) {
         aOwner.window.console.error(ex.message);

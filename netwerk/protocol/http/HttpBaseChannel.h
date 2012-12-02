@@ -62,7 +62,7 @@ public:
   HttpBaseChannel();
   virtual ~HttpBaseChannel();
 
-  virtual nsresult Init(nsIURI *aURI, uint8_t aCaps, nsProxyInfo *aProxyInfo,
+  virtual nsresult Init(nsIURI *aURI, uint32_t aCaps, nsProxyInfo *aProxyInfo,
                         uint32_t aProxyResolveFlags,
                         nsIURI *aProxyURI);
 
@@ -252,8 +252,8 @@ protected:
 
   nsresult                          mStatus;
   uint32_t                          mLoadFlags;
+  uint32_t                          mCaps;
   int16_t                           mPriority;
-  uint8_t                           mCaps;
   uint8_t                           mRedirectionLimit;
 
   uint32_t                          mApplyConversion            : 1;

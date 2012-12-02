@@ -17,6 +17,13 @@
 
 #include "MPAPI.h"
 
+#if defined(ANDROID) || defined(MOZ_WIDGET_GONK)
+#include "android/log.h"
+#define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "MediaPluginHost" , ## args)
+#else
+#define ALOG(args...) /* do nothing */
+#endif
+
 using namespace MPAPI;
 
 Decoder::Decoder() :
@@ -92,7 +99,9 @@ static PluginHost sPluginHost = {
   GetIntPref
 };
 
-void MediaPluginHost::TryLoad(const char *name)
+// Return true if Omx decoding is supported on the device. This checks the
+// built in whitelist/blacklist and preferences to see if that is overridden.
+static bool IsOmxSupported()
 {
   bool forceEnabled =
       Preferences::GetBool("stagefright.force-enabled", false);
@@ -101,7 +110,7 @@ void MediaPluginHost::TryLoad(const char *name)
 
   if (disabled) {
     NS_WARNING("XXX stagefright disabled\n");
-    return;
+    return false;
   }
 
   if (!forceEnabled) {
@@ -111,27 +120,79 @@ void MediaPluginHost::TryLoad(const char *name)
       if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_STAGEFRIGHT, &status))) {
         if (status != nsIGfxInfo::FEATURE_NO_INFO) {
           NS_WARNING("XXX stagefright blacklisted\n");
-          return;
+          return false;
         }
       }
     }
   }
+  return true;
+}
 
-  PRLibrary *lib = PR_LoadLibrary(name);
-  if (lib) {
-    Manifest *manifest = static_cast<Manifest *>(PR_FindSymbol(lib, "MPAPI_MANIFEST"));
-    if (manifest)
-      mPlugins.AppendElement(manifest);
+// Return the name of the shared library that implements Omx based decoding. This varies
+// depending on libstagefright version installed on the device and whether it is B2G vs Android.
+// nullptr is returned if Omx decoding is not supported on the device,
+static const char* GetOmxLibraryName()
+{
+  if (!IsOmxSupported())
+    return nullptr;
+
+#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
+  nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
+  NS_ASSERTION(infoService, "Could not find a system info service");
+
+  int32_t version;
+  nsresult rv = infoService->GetPropertyAsInt32(NS_LITERAL_STRING("version"), &version);
+  if (NS_SUCCEEDED(rv)) {
+    ALOG("Android Version is: %d", version);
   }
+
+  nsAutoString release_version;
+  rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("release_version"), release_version);
+  if (NS_SUCCEEDED(rv)) {
+    ALOG("Android Release Version is: %s", NS_LossyConvertUTF16toASCII(release_version).get());
+  }
+
+  if (version == 13 || version == 12 || version == 11) {
+    return "lib/libomxpluginhc.so";
+  }
+  else if (version == 10 && release_version >= NS_LITERAL_STRING("2.3.6")) {
+    // Gingerbread versions from 2.3.6 and above have a different DataSource
+    // layout to those on 2.3.5 and below.
+    return "lib/libomxplugingb.so";
+  }
+  else if (version == 9 || (version == 10 && release_version <= NS_LITERAL_STRING("2.3.5"))) {
+    // Gingerbread versions from 2.3.5 and below have a different DataSource
+    // than 2.3.6 and above.
+    return "lib/libomxplugingb235.so";
+  }
+  else if (version < 9) {
+    // Froyo and below are not supported
+    return nullptr;
+  }
+
+  // Default libomxplugin for non-gingerbread devices
+  return "lib/libomxplugin.so";
+
+#elif defined(ANDROID) && defined(MOZ_WIDGET_GONK)
+  return "libomxplugin.so";
+#endif
 }
 
 MediaPluginHost::MediaPluginHost() {
   MOZ_COUNT_CTOR(MediaPluginHost);
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-  TryLoad("lib/libomxplugin.so");
-#elif defined(ANDROID) && defined(MOZ_WIDGET_GONK)
-  TryLoad("libomxplugin.so");
-#endif
+
+  const char* name = GetOmxLibraryName();
+  ALOG("Loading OMX Plugin: %s", name ? name : "nullptr");
+  if (name) {
+    PRLibrary *lib = PR_LoadLibrary(name);
+    if (lib) {
+      Manifest *manifest = static_cast<Manifest *>(PR_FindSymbol(lib, "MPAPI_MANIFEST"));
+      if (manifest) {
+        mPlugins.AppendElement(manifest);
+        ALOG("OMX plugin successfully loaded");
+     }
+    }
+  }
 }
 
 MediaPluginHost::~MediaPluginHost() {

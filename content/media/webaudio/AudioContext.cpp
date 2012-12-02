@@ -31,6 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioContext, Release)
 AudioContext::AudioContext(nsIDOMWindow* aWindow)
   : mWindow(aWindow)
   , mDestination(new AudioDestinationNode(this))
+  , mSampleRate(44100) // hard-code for now
 {
   SetIsDOMBinding();
 }

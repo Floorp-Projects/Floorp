@@ -65,11 +65,14 @@
 using namespace android;
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::services;
 
 bool gDrawRequest = false;
 static nsAppShell *gAppShell = NULL;
 static int epollfd = 0;
 static int signalfds[2] = {0};
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAppShell, nsBaseAppShell, nsIObserver)
 
 namespace mozilla {
 
@@ -586,6 +589,7 @@ GeckoInputDispatcher::unregisterInputChannel(const sp<InputChannel>& inputChanne
 nsAppShell::nsAppShell()
     : mNativeCallbackRequest(false)
     , mHandlers()
+    , mEnableDraw(false)
 {
     gAppShell = this;
 }
@@ -624,16 +628,39 @@ nsAppShell::Init()
 
     InitGonkMemoryPressureMonitoring();
 
+    nsCOMPtr<nsIObserverService> obsServ = GetObserverService();
+    if (obsServ) {
+        obsServ->AddObserver(this, "browser-ui-startup-complete", false);
+    }
+
     // Delay initializing input devices until the screen has been
     // initialized (and we know the resolution).
     return rv;
 }
 
 NS_IMETHODIMP
+nsAppShell::Observe(nsISupports* aSubject,
+                    const char* aTopic,
+                    const PRUnichar* aData)
+{
+    if (strcmp(aTopic, "browser-ui-startup-complete")) {
+        return nsBaseAppShell::Observe(aSubject, aTopic, aData);
+    }
+
+    mEnableDraw = true;
+    NotifyEvent();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAppShell::Exit()
 {
-  OrientationObserver::ShutDown();
-  return nsBaseAppShell::Exit();
+    OrientationObserver::ShutDown();
+    nsCOMPtr<nsIObserverService> obsServ = GetObserverService();
+    if (obsServ) {
+        obsServ->RemoveObserver(this, "browser-ui-startup-complete");
+    }
+    return nsBaseAppShell::Exit();
 }
 
 void
@@ -705,7 +732,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         NativeEventCallback();
     }
 
-    if (gDrawRequest) {
+    if (gDrawRequest && mEnableDraw) {
         gDrawRequest = false;
         nsWindow::DoDraw();
     }

@@ -279,6 +279,10 @@ nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
       }
     }
   }
+  if (maps.IsEmpty()) {
+    MOZ_ASSERT(!mFirstMap);
+    return;
+  }
 
   int32_t mapIndex = maps.Length() - 1;  // Might end up -1
   nsCellMap* nextMap = maps.ElementAt(mapIndex);

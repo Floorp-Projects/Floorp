@@ -215,6 +215,32 @@ public class CrashReporter extends Activity
         fc.close();
     }
 
+    private String readLogcat() {
+        BufferedReader br = null;
+        try {
+            // get the last 200 lines of logcat
+            Process proc = Runtime.getRuntime().exec(new String[] {
+                "logcat", "-v", "threadtime", "-t", "200", "-d", "*:D"
+            });
+            StringBuffer sb = new StringBuffer();
+            br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            for (String s = br.readLine(); s != null; s = br.readLine()) {
+                sb.append(s).append('\n');
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "Unable to get logcat: " + e.toString();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
+    }
+
     private void sendReport(File minidumpFile, Map<String, String> extras, File extrasFile) {
         Log.i(LOGTAG, "sendReport: " + minidumpFile.getPath());
         final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
@@ -273,6 +299,9 @@ public class CrashReporter extends Activity
                 }
             }
             sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
+            if (Build.VERSION.SDK_INT >= 16) {
+                sendPart(os, boundary, "Android_Logcat", readLogcat());
+            }
 
             sendFile(os, boundary, MINI_DUMP_PATH_KEY, minidumpFile);
             os.write(("\r\n--" + boundary + "--\r\n").getBytes());

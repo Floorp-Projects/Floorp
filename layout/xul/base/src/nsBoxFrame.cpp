@@ -134,7 +134,7 @@ nsBoxFrame::SetInitialChildList(ChildListID     aListID,
   if (r == NS_OK) {
     // initialize our list of infos.
     nsBoxLayoutState state(PresContext());
-    CheckBoxOrder(state);
+    CheckBoxOrder();
     if (mLayoutManager)
       mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
   } else {
@@ -1039,7 +1039,7 @@ nsBoxFrame::InsertFrames(ChildListID     aListID,
    // manager; otherwise the slice we give the layout manager will
    // just be bogus.  If the layout manager cares about the order, we
    // just lose.
-   CheckBoxOrder(state);
+   CheckBoxOrder();
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
@@ -1072,7 +1072,7 @@ nsBoxFrame::AppendFrames(ChildListID     aListID,
    // manager; otherwise the slice we give the layout manager will
    // just be bogus.  If the layout manager cares about the order, we
    // just lose.
-   CheckBoxOrder(state);
+   CheckBoxOrder();
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
@@ -1897,120 +1897,22 @@ nsBoxFrame::SupportsOrdinalsInChildren()
   return true;
 }
 
-static nsIFrame*
-SortedMerge(nsBoxLayoutState& aState, nsIFrame *aLeft, nsIFrame *aRight)
+// Helper less-than-or-equal function, used in CheckBoxOrder() as a
+// template-parameter for the sorting functions.
+bool
+IsBoxOrdinalLEQ(nsIFrame* aFrame1,
+                nsIFrame* aFrame2)
 {
-  NS_PRECONDITION(aLeft && aRight, "SortedMerge must have non-empty lists");
-
-  nsIFrame *result;
-  // Unroll first iteration to avoid null-check 'result' inside the loop.
-  if (aLeft->GetOrdinal(aState) <= aRight->GetOrdinal(aState)) {
-    result = aLeft;
-    aLeft = aLeft->GetNextSibling();
-    if (!aLeft) {
-      result->SetNextSibling(aRight);
-      return result;
-    }
-  }
-  else {
-    result = aRight;
-    aRight = aRight->GetNextSibling();
-    if (!aRight) {
-      result->SetNextSibling(aLeft);
-      return result;
-    }
-  }
-
-  nsIFrame *last = result;
-  for (;;) {
-    if (aLeft->GetOrdinal(aState) <= aRight->GetOrdinal(aState)) {
-      last->SetNextSibling(aLeft);
-      last = aLeft;
-      aLeft = aLeft->GetNextSibling();
-      if (!aLeft) {
-        last->SetNextSibling(aRight);
-        return result;
-      }
-    }
-    else {
-      last->SetNextSibling(aRight);
-      last = aRight;
-      aRight = aRight->GetNextSibling();
-      if (!aRight) {
-        last->SetNextSibling(aLeft);
-        return result;
-      }
-    }
-  }
-}
-
-static nsIFrame*
-MergeSort(nsBoxLayoutState& aState, nsIFrame *aSource)
-{
-  NS_PRECONDITION(aSource, "MergeSort null arg");
-
-  nsIFrame *sorted[32] = { nullptr };
-  nsIFrame **fill = &sorted[0];
-  nsIFrame **left;
-  nsIFrame *rest = aSource;
-
-  do {
-    nsIFrame *current = rest;
-    rest = rest->GetNextSibling();
-    current->SetNextSibling(nullptr);
-
-    // Merge it with sorted[0] if present; then merge the result with sorted[1] etc.
-    // sorted[0] is a list of length 1 (or nullptr).
-    // sorted[1] is a list of length 2 (or nullptr).
-    // sorted[2] is a list of length 4 (or nullptr). etc.
-    for (left = &sorted[0]; left != fill && *left; ++left) {
-      current = SortedMerge(aState, *left, current);
-      *left = nullptr;
-    }
-
-    // Fill the empty slot that we couldn't merge with the last result.
-    *left = current;
-
-    if (left == fill)
-      ++fill;
-  } while (rest);
-
-  // Collect and merge the results.
-  nsIFrame *result = nullptr;
-  for (left = &sorted[0]; left != fill; ++left) {
-    if (*left) {
-      result = result ? SortedMerge(aState, *left, result) : *left;
-    }
-  }
-  return result;
+  return aFrame1->GetOrdinal() <= aFrame2->GetOrdinal();
 }
 
 void 
-nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
+nsBoxFrame::CheckBoxOrder()
 {
-  nsIFrame *child = mFrames.FirstChild();
-  if (!child)
-    return;
-
-  if (!SupportsOrdinalsInChildren())
-    return;
-
-  // Run through our list of children and check whether we
-  // need to sort them.
-  uint32_t maxOrdinal = child->GetOrdinal(aState);
-  child = child->GetNextSibling();
-  for ( ; child; child = child->GetNextSibling()) {
-    uint32_t ordinal = child->GetOrdinal(aState);
-    if (ordinal < maxOrdinal)
-      break;
-    maxOrdinal = ordinal;
+  if (SupportsOrdinalsInChildren() &&
+      !nsLayoutUtils::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
+    nsLayoutUtils::SortFrameList<IsBoxOrdinalLEQ>(mFrames);
   }
-
-  if (!child)
-    return;
-
-  nsIFrame* head = MergeSort(aState, mFrames.FirstChild());
-  mFrames = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
 }
 
 nsresult
@@ -2035,13 +1937,13 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)
   if (!SupportsOrdinalsInChildren())
     return NS_OK;
 
-  uint32_t ord = aChild->GetOrdinal(aState);
+  uint32_t ord = aChild->GetOrdinal();
   
   nsIFrame* child = mFrames.FirstChild();
   nsIFrame* newPrevSib = nullptr;
 
   while (child) {
-    if (ord < child->GetOrdinal(aState)) {
+    if (ord < child->GetOrdinal()) {
       break;
     }
 

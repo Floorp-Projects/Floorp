@@ -26,6 +26,9 @@ bool
 EliminatePhis(MIRGenerator *mir, MIRGraph &graph);
 
 bool
+EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph);
+
+bool
 EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph);
 
 bool

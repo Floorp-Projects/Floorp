@@ -722,6 +722,8 @@ public:
    */
   void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
+    NS_ASSERTION(!aMatrix.IsSingular(), 
+                 "Shouldn't be trying to draw with a singular matrix!");
     mPendingTransform = nullptr;
     if (mTransform == aMatrix) {
       return;
@@ -1146,7 +1148,6 @@ public:
    * Can be used anytime
    */
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
-  virtual const nsIntRegion& GetValidLowPrecisionRegion() const { return mValidRegion; }
 
   virtual ThebesLayer* AsThebesLayer() { return this; }
 

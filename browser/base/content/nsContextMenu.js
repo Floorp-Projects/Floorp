@@ -138,7 +138,13 @@ nsContextMenu.prototype = {
     }
 
     var shouldShow = this.onSaveableLink || isMailtoInternal || this.onPlainTextLink;
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    var isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
+    this.showItem("context-openlink", shouldShow && !isWindowPrivate);
+    this.showItem("context-openlinkprivate", shouldShow);
+#else
     this.showItem("context-openlink", shouldShow);
+#endif
     this.showItem("context-openlinkintab", shouldShow);
     this.showItem("context-openlinkincurrent", this.onPlainTextLink);
     this.showItem("context-sep-open", shouldShow);
@@ -412,11 +418,19 @@ nsContextMenu.prototype = {
   },
 
   inspectNode: function CM_inspectNode() {
-    if (InspectorUI.isTreePanelOpen) {
-      InspectorUI.inspectNode(this.target);
-      InspectorUI.stopInspecting();
+    let gBrowser = this.browser.ownerDocument.defaultView.gBrowser;
+    let imported = {};
+    Cu.import("resource:///modules/devtools/Target.jsm", imported);
+    var target = imported.TargetFactory.forTab(gBrowser.selectedTab);
+    let inspector = gDevTools.getPanelForTarget("inspector", target);
+    if (inspector && inspector.isReady) {
+      inspector.selection.setNode(this.target);
     } else {
-      InspectorUI.openInspectorUI(this.target);
+      let toolbox = gDevTools.openToolboxForTab(target, "inspector");
+      toolbox.once("inspector-ready", function(event, panel) {
+        let inspector = gDevTools.getPanelForTarget("inspector", target);
+        inspector.selection.setNode(this.target, "browser-context-menu");
+      }.bind(this));
     }
   },
 
@@ -674,6 +688,16 @@ nsContextMenu.prototype = {
     openLinkIn(this.linkURL, "window",
                { charset: doc.characterSet,
                  referrerURI: doc.documentURIObject });
+  },
+
+  // Open linked-to URL in a new private window.
+  openLinkInPrivateWindow : function () {
+    var doc = this.target.ownerDocument;
+    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
+    openLinkIn(this.linkURL, "window",
+               { charset: doc.characterSet,
+                 referrerURI: doc.documentURIObject,
+                 private: true });
   },
 
   // Open linked-to URL in a new tab.

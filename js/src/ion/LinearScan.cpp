@@ -325,8 +325,12 @@ UsePosition *
 LiveInterval::nextUseAfter(CodePosition after)
 {
     for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
-        if (usePos->pos >= after && usePos->use->policy() != LUse::KEEPALIVE)
-            return *usePos;
+        if (usePos->pos >= after) {
+            LUse::Policy policy = usePos->use->policy();
+            JS_ASSERT(policy != LUse::RECOVERED_INPUT);
+            if (policy != LUse::KEEPALIVE)
+                return *usePos;
+        }
     }
     return NULL;
 }
@@ -673,6 +677,10 @@ LinearScanAllocator::buildLivenessInfo()
 
                     JS_ASSERT(!(hasUseRegister && hasUseRegisterAtStart));
 #endif
+
+                    // Don't treat RECOVERED_INPUT uses as keeping the vreg alive.
+                    if (use->policy() == LUse::RECOVERED_INPUT)
+                        continue;
 
                     CodePosition to;
                     if (use->isFixedRegister()) {
@@ -1127,6 +1135,15 @@ LinearScanAllocator::reifyAllocations()
                 def->setOutput(*interval->getAllocation());
 
                 spillFrom = interval->getAllocation();
+            }
+
+            if (reg->ins()->recoversInput()) {
+                LSnapshot *snapshot = reg->ins()->snapshot();
+                for (size_t i = 0; i < snapshot->numEntries(); i++) {
+                    LAllocation *entry = snapshot->getEntry(i);
+                    if (entry->isUse() && entry->toUse()->policy() == LUse::RECOVERED_INPUT)
+                        *entry = *def->output();
+                }
             }
 
             if (reg->mustSpillAtDefinition() && !reg->ins()->isPhi() &&
