@@ -292,6 +292,7 @@ CPPSRCS +=	MIR.cpp \
 		LICM.cpp \
 		LinearScan.cpp \
 		LIR.cpp \
+		LiveRangeAllocator.cpp \
 		Lowering.cpp \
 		Lowering-shared.cpp \
 		MCallOptimize.cpp \
