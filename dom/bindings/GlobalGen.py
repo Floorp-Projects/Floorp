@@ -6,13 +6,10 @@
 # and generate information for subsequent phases.
 
 import os
-import cStringIO
 import WebIDL
 import cPickle
-from Configuration import *
+from Configuration import Configuration
 from Codegen import GlobalGenRoots, replaceFileIfChanged
-# import Codegen in general, so we can set a variable on it
-import Codegen
 
 def generate_file(config, name, action):
 

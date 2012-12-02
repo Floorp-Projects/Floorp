@@ -5,7 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys, os.path, re, xpidl, itertools
+import sys, os, xpidl
 
 # --makedepend-output support.
 make_dependencies = []
@@ -75,20 +75,6 @@ def readConfigFile(filename):
 
 def firstCap(str):
     return str[0].upper() + str[1:]
-
-def attributeVariableTypeAndName(a):
-    if a.realtype.nativeType('in').endswith('*'):
-        l = ["nsCOMPtr<%s> %s" % (a.realtype.nativeType('in').strip('* '),
-                   a.name)]
-    elif a.realtype.nativeType('in').count("nsAString"):
-        l = ["nsAutoString %s" % a.name]
-    elif a.realtype.nativeType('in').count("JS::Value"):
-        l = ["JS::Value %s" % a.name]
-    else:
-        l = ["%s%s" % (a.realtype.nativeType('in'),
-                       a.name)]
-
-    return ", ".join(l)
 
 def print_header_file(fd, conf):
     fd.write("#if defined MOZ_GENERATED_EVENT_LIST\n")
