@@ -3385,28 +3385,13 @@ nsEditor::FindNode(nsINode *aCurrentNode,
   return FindNode(candidate, aGoForward, aEditableNode, bNoBlockCrossing);
 }
 
-already_AddRefed<nsIDOMNode>
-nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, 
+nsIDOMNode*
+nsEditor::GetRightmostChild(nsIDOMNode* aCurrentNode,
                             bool bNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(aCurrentNode, nullptr);
-  nsCOMPtr<nsIDOMNode> resultNode, temp = aCurrentNode;
-  bool hasChildren;
-  aCurrentNode->HasChildNodes(&hasChildren);
-  while (hasChildren) {
-    temp->GetLastChild(getter_AddRefs(resultNode));
-    if (resultNode) {
-      if (bNoBlockCrossing && IsBlockNode(resultNode)) {
-        return resultNode.forget();
-      }
-      resultNode->HasChildNodes(&hasChildren);
-      temp = resultNode;
-    } else {
-      hasChildren = false;
-    }
-  }
-
-  return resultNode.forget();
+  nsCOMPtr<nsINode> currentNode = do_QueryInterface(aCurrentNode);
+  nsIContent* result = GetRightmostChild(currentNode, bNoBlockCrossing);
+  return result ? result->AsDOMNode() : nullptr;
 }
 
 nsIContent*
@@ -3457,28 +3442,13 @@ nsEditor::GetLeftmostChild(nsINode *aCurrentNode,
   return nullptr;
 }
 
-already_AddRefed<nsIDOMNode>
-nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode,
+nsIDOMNode*
+nsEditor::GetLeftmostChild(nsIDOMNode* aCurrentNode,
                            bool bNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(aCurrentNode, nullptr);
-  nsCOMPtr<nsIDOMNode> resultNode, temp = aCurrentNode;
-  bool hasChildren;
-  aCurrentNode->HasChildNodes(&hasChildren);
-  while (hasChildren) {
-    temp->GetFirstChild(getter_AddRefs(resultNode));
-    if (resultNode) {
-      if (bNoBlockCrossing && IsBlockNode(resultNode)) {
-        return resultNode.forget();
-      }
-      resultNode->HasChildNodes(&hasChildren);
-      temp = resultNode;
-    } else {
-      hasChildren = false;
-    }
-  }
-
-  return resultNode.forget();
+  nsCOMPtr<nsINode> currentNode = do_QueryInterface(aCurrentNode);
+  nsIContent* result = GetLeftmostChild(currentNode, bNoBlockCrossing);
+  return result ? result->AsDOMNode() : nullptr;
 }
 
 bool
