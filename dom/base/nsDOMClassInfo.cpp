@@ -1708,13 +1708,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #endif
 };
 
-// Objects that should be constructable through |new Name();|
-struct nsContractIDMapData
-{
-  int32_t mDOMClassInfoID;
-  const char *mContractID;
-};
-
 #define NS_DEFINE_CONTRACT_CTOR(_class, _contract_id)                           \
   nsresult                                                                      \
   _class##Ctor(nsISupports** aInstancePtrResult)                                \
