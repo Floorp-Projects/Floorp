@@ -14,8 +14,11 @@
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Util.h"
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
+
+using namespace mozilla;
 
 nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
 {
@@ -407,7 +410,7 @@ void nsView::RemoveChild(nsView *child)
   {
     nsView* prevKid = nullptr;
     nsView* kid = mFirstChild;
-    bool found = false;
+    DebugOnly<bool> found = false;
     while (nullptr != kid) {
       if (kid == child) {
         if (nullptr != prevKid) {
