@@ -19,5 +19,4 @@ vcm_media_payload_type_t vcm_rtp_to_media_payload (int32_t ptype,
                                             uint16_t mode);
 
 
-int32_t mediaPayloadToVcmRtp (vcm_media_payload_type_t payload_in);
 #endif /* VCM_UTIL_H_ */
