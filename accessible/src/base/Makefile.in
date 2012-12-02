@@ -58,6 +58,7 @@ EXPORTS_mozilla/a11y = \
   DocManager.h \
   FocusManager.h \
   AccTypes.h \
+  Platform.h \
   States.h \
   Role.h \
   $(NULL)

@@ -155,21 +155,6 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
   return E_INVALIDARG;
 }
  
-void nsAccessNodeWrap::InitAccessibility()
-{
-  Compatibility::Init();
-
-  nsWinUtils::MaybeStartWindowEmulation();
-}
-
-void nsAccessNodeWrap::ShutdownAccessibility()
-{
-  NS_IF_RELEASE(gTextEvent);
-  ::DestroyCaret();
-
-  nsWinUtils::ShutdownWindowEmulation();
-}
-
 int nsAccessNodeWrap::FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTERS *aExceptionInfo)
 {
   if (aCode == EXCEPTION_ACCESS_VIOLATION) {
