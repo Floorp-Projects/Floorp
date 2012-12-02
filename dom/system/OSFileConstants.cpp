@@ -64,6 +64,7 @@ typedef struct {
   nsString libDir;
   nsString tmpDir;
   nsString profileDir;
+  nsString localProfileDir;
 } Paths;
 
 /**
@@ -133,6 +134,7 @@ nsresult InitOSFileConstants()
 
   GetPathToSpecialDir(NS_OS_TEMP_DIR, paths->tmpDir);
   GetPathToSpecialDir(NS_APP_USER_PROFILE_50_DIR, paths->profileDir);
+  GetPathToSpecialDir(NS_APP_USER_PROFILE_LOCAL_50_DIR, paths->localProfileDir);
 
   gPaths = paths.forget();
   return NS_OK;
@@ -673,6 +675,10 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
   }
 
   if (!SetStringProperty(cx, objPath, "profileDir", gPaths->profileDir)) {
+    return false;
+  }
+
+  if (!SetStringProperty(cx, objPath, "localProfileDir", gPaths->localProfileDir)) {
     return false;
   }
 
