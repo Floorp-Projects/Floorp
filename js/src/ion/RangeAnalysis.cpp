@@ -475,6 +475,27 @@ Range::precisionLossMul(const Range *lhs, const Range *rhs)
 }
 
 bool
+Range::negativeZeroMul(const Range *lhs, const Range *rhs)
+{
+    EnsureRange(&lhs);
+    EnsureRange(&rhs);
+
+    // Both values are positive
+    if (lhs->lower_ >= 0 && rhs->lower_ >= 0)
+        return false;
+
+    // Both values are negative (non zero)
+    if (lhs->upper_ < 0 && rhs->upper_ < 0)
+        return false;
+
+    // One operand is positive (non zero)
+    if (lhs->lower_ > 0 || rhs->lower_ > 0)
+        return false;
+
+    return true;
+}
+
+bool
 Range::update(const Range *other)
 {
     bool changed =
@@ -630,6 +651,8 @@ MMul::computeRange()
     Range *right = getOperand(1)->range();
     if (isPossibleTruncated())
         implicitTruncate_ = !Range::precisionLossMul(left, right);
+    if (canBeNegativeZero())
+        canBeNegativeZero_ = Range::negativeZeroMul(left, right);
     setRange(Range::mul(left, right));
 }
 
