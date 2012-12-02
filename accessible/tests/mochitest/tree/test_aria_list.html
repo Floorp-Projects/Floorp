@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ARIA lists</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // list
+
+      var accTree =
+        { LIST: [
+          { LISTITEM: [
+            { TEXT_LEAF: [ ] }
+          ] }
+        ] };
+
+      testAccessibleTree("list", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // crazy list (mad mix of ARIA and HTML)
+
+      accTree = { // div@role="list"
+        role: ROLE_LIST,
+        children: [
+          { // li text leaf
+             role: ROLE_TEXT_LEAF,
+             name: "item1",
+             children: [ ]
+          },
+          { // li@role="listitem"
+            role: ROLE_LISTITEM,
+            children: [
+              { // text leaf
+                role: ROLE_TEXT_LEAF,
+                name: "item2",
+                children: [ ]
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("crazy_list", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Build the context dependent tree"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=804461">
+    Mozilla Bug 804461
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="list" role="list">
+    <div role="listitem">item1</div>
+  </div>
+
+  <div id="crazy_list" role="list">
+    <ul role="presentation">
+      <li>item1</li>
+      <li role="listitem">item2</li>
+    </ul>
+  </div>
+</body>
+</html>
