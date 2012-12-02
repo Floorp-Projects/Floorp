@@ -381,16 +381,16 @@ nsDOMEvent::StopImmediatePropagation()
 
 static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aEvent->currentTarget);
-  if (node)
+  nsIDOMEventTarget* target = aEvent->currentTarget;
+  if (nsCOMPtr<nsINode> node = do_QueryInterface(target)) {
     return node->OwnerDoc();
+  }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aEvent->currentTarget);
-  if (!window)
-    return nullptr;
+  if (nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(target)) {
+    return window->GetExtantDoc();
+  }
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
-  return doc;
+  return nullptr;
 }
 
 static void
