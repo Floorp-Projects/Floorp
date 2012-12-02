@@ -98,7 +98,7 @@ var properties2 = {
   honorificSuffix: "dummyHonorificSuffix",
   additionalName: "dummyadditionalName",
   nickname: "dummyNickname",
-  tel: [{type: ["test"], value: "123456789", carrier: "myCarrier"},{type: ["home", "custom"], value: "234567890"}],
+  tel: [{type: ["test"], value: "7932012345", carrier: "myCarrier"},{type: ["home", "custom"], value: "7932012346"}],
   email: [{type: ["test"], value: "a@b.c"}, {value: "b@c.d"}],
   adr: [adr1, adr2],
   impp: [{type: ["aim"], value:"im1"}, {value: "im2"}],
@@ -479,7 +479,7 @@ var steps = [
     ok(true, "Retrieving by substring tel1");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
-                   filterValue: properties1.tel[1].value.substring(1,5)};
+                   filterValue: properties1.tel[1].value.substring(0,5)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");
@@ -494,7 +494,7 @@ var steps = [
     ok(true, "Retrieving by substring tel2");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
-                   filterValue: "7654"};
+                   filterValue: "9876"};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");
@@ -509,7 +509,7 @@ var steps = [
     ok(true, "Retrieving by substring tel3");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
-                   filterValue: "876-5432"};
+                   filterValue: "98765432"};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");

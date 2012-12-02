@@ -234,7 +234,14 @@ class LUse : public LAllocation
         // Keep the used virtual register alive, and use whatever allocation is
         // available. This is similar to ANY but hints to the register allocator
         // that it is never useful to optimize this site.
-        KEEPALIVE
+        KEEPALIVE,
+
+        // For snapshot inputs, indicates that the associated instruction will
+        // write this input to its output register before bailing out.
+        // The register allocator may thus allocate that output register, and
+        // does not need to keep the virtual register alive (alternatively,
+        // this may be treated as KEEPALIVE).
+        RECOVERED_INPUT
     };
 
     void set(Policy policy, uint32 reg, bool usedAtStart) {
@@ -641,6 +648,12 @@ class LInstruction
     void assignSnapshot(LSnapshot *snapshot);
     void initSafepoint();
 
+    // For an instruction which has a MUST_REUSE_INPUT output, whether that
+    // output register will be restored to its original value when bailing out.
+    virtual bool recoversInput() const {
+        return false;
+    }
+
     virtual void print(FILE *fp);
     static void printName(FILE *fp, Opcode op);
     virtual void printName(FILE *fp);
@@ -898,6 +911,7 @@ class LSnapshot : public TempObject
     void setBailoutKind(BailoutKind kind) {
         bailoutKind_ = kind;
     }
+    void rewriteRecoveredInput(LUse input);
 };
 
 struct SafepointNunboxEntry {

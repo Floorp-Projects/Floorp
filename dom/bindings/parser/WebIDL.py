@@ -1190,17 +1190,6 @@ class IDLNullableType(IDLType):
                 raise WebIDLError("The inner type of a nullable type must not "
                                   "be a union type that itself has a nullable "
                                   "type as a member type", [self.location])
-            # Check for dictionaries in the union
-            for memberType in self.inner.flatMemberTypes:
-                if memberType.isDictionary():
-                    raise WebIDLError("The inner type of a nullable type must "
-                                      "not be a union type containing a "
-                                      "dictionary type",
-                                      [self.location, memberType.location])
-                    
-        if self.inner.isDictionary():
-            raise WebIDLError("The inner type of a nullable type must not be a "
-                              "dictionary type", [self.location])
 
         self.name = self.inner.name
         return self
@@ -2540,6 +2529,19 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                         raise WebIDLError("Dictionary argument not followed by "
                                           "a required argument must be "
                                           "optional", [argument.location])
+
+                    # An argument cannot be a Nullable Dictionary
+                    if argument.type.nullable():
+                        raise WebIDLError("An argument cannot be a nullable dictionary",
+                                          [argument.location])
+
+                # An argument cannot be a nullable union containing a dictionary
+                if argument.type.isUnion() and argument.type.nullable():
+                    for memberType in argument.type.inner.flatMemberTypes:
+                        if memberType.isDictionary():
+                            raise WebIDLError("An argument cannot be a nullable union "
+                                              "containing a dictionary",
+                                              [argument.location, memberType.location])
 
                 # Only the last argument can be variadic
                 if variadicArgument:

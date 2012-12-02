@@ -89,16 +89,16 @@
 #include "jsobj.h"
 #include "jsscope.h"
 #include "jswrapper.h"
-#include "vm/threadpool.h"
-#include "vm/forkjoin.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/StubCalls.h"
 #include "methodjit/StubCalls-inl.h"
 
 #include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/ForkJoin.h"
 #include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
+#include "vm/ThreadPool.h"
 
 #include "ds/Sort.h"
 

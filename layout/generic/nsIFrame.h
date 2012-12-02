@@ -2727,7 +2727,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) = 0;
 
   // Implemented in nsBox, used in nsBoxFrame
-  uint32_t GetOrdinal(nsBoxLayoutState& aBoxLayoutState);
+  uint32_t GetOrdinal();
 
   virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) = 0;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) = 0;

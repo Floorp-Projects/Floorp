@@ -303,7 +303,8 @@ MediaDecoder::MediaDecoder() :
   mInitialVolume(0.0),
   mRequestedSeekTime(-1.0),
   mDuration(-1),
-  mSeekable(true),
+  mTransportSeekable(true),
+  mMediaSeekable(true),
   mReentrantMonitor("media.decoder"),
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
@@ -435,7 +436,8 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
   }
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    mDecoderStateMachine->SetSeekable(mSeekable);
+    mDecoderStateMachine->SetTransportSeekable(mTransportSeekable);
+    mDecoderStateMachine->SetMediaSeekable(mMediaSeekable);
     mDecoderStateMachine->SetDuration(mDuration);
     mDecoderStateMachine->SetVolume(mInitialVolume);
     mDecoderStateMachine->SetAudioCaptured(mInitialAudioCaptured);
@@ -631,10 +633,19 @@ void MediaDecoder::AudioAvailable(float* aFrameBuffer,
   mOwner->NotifyAudioAvailable(frameBuffer.forget(), aFrameBufferLength, aTime);
 }
 
-void MediaDecoder::MetadataLoaded(uint32_t aChannels,
-                                      uint32_t aRate,
-                                      bool aHasAudio,
-                                      const MetadataTags* aTags)
+void MediaDecoder::QueueMetadata(int64_t aPublishTime,
+                                 int aChannels,
+                                 int aRate,
+                                 bool aHasAudio,
+                                 MetadataTags* aTags)
+{
+  NS_ASSERTION(mDecoderStateMachine->OnDecodeThread(),
+               "Should be on decode thread.");
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aTags);
+}
+
+void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown) {
@@ -1185,25 +1196,36 @@ void MediaDecoder::SetMediaDuration(int64_t aDuration)
   GetStateMachine()->SetDuration(aDuration);
 }
 
-void MediaDecoder::SetSeekable(bool aSeekable)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mSeekable = aSeekable;
+void MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(NS_IsMainThread() || OnDecodeThread());
+  mMediaSeekable = aMediaSeekable;
   if (mDecoderStateMachine) {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    mDecoderStateMachine->SetSeekable(aSeekable);
+    mDecoderStateMachine->SetMediaSeekable(aMediaSeekable);
   }
 }
 
-bool MediaDecoder::IsSeekable()
+void MediaDecoder::SetTransportSeekable(bool aTransportSeekable)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mSeekable;
+  mTransportSeekable = aTransportSeekable;
+  if (mDecoderStateMachine) {
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    mDecoderStateMachine->SetTransportSeekable(aTransportSeekable);
+  }
+}
+
+bool MediaDecoder::IsTransportSeekable()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mTransportSeekable;
 }
 
 bool MediaDecoder::IsMediaSeekable()
 {
-  return GetStateMachine()->IsSeekable();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(OnDecodeThread() || NS_IsMainThread());
+  return mMediaSeekable;
 }
 
 nsresult MediaDecoder::GetSeekable(nsTimeRanges* aSeekable)
@@ -1211,18 +1233,22 @@ nsresult MediaDecoder::GetSeekable(nsTimeRanges* aSeekable)
   //TODO : change 0.0 to GetInitialTime() when available
   double initialTime = 0.0;
 
-  if (IsSeekable()) {
+  // We can seek in buffered range if the media is seekable. Also, we can seek
+  // in unbuffered ranges if the transport level is seekable (local file or the
+  // server supports range requests, etc.)
+  if (!IsMediaSeekable()) {
+    return NS_OK;
+  } else if (!IsTransportSeekable()){
+    if (mDecoderStateMachine &&
+        mDecoderStateMachine->IsSeekableInBufferedRanges()) {
+      return GetBuffered(aSeekable);
+    } else {
+      return NS_OK;
+    }
+  } else {
     double end = IsInfinite() ? std::numeric_limits<double>::infinity()
                               : initialTime + GetDuration();
     aSeekable->Add(initialTime, end);
-    return NS_OK;
-  }
-
-  if (mDecoderStateMachine && mDecoderStateMachine->IsSeekableInBufferedRanges()) {
-    return GetBuffered(aSeekable);
-  } else {
-    // The stream is not seekable using only buffered ranges, and is not
-    // seekable. Don't allow seeking (return no ranges in |seekable|).
     return NS_OK;
   }
 }

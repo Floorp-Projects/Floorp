@@ -664,7 +664,7 @@ nsIOService::SetOffline(bool offline)
 {
     // When someone wants to go online (!offline) after we got XPCOM shutdown
     // throw ERROR_NOT_AVAILABLE to prevent return to online state.
-    if (mShutdown && !offline)
+    if ((mShutdown || mOfflineForProfileChange) && !offline)
         return NS_ERROR_NOT_AVAILABLE;
 
     // SetOffline() may re-enter while it's shutting down services.
@@ -741,7 +741,7 @@ nsIOService::SetOffline(bool offline)
     }
 
     // Don't notify here, as the above notifications (if used) suffice.
-    if (mShutdown && mOffline) {
+    if ((mShutdown || mOfflineForProfileChange) && mOffline) {
         // be sure to try and shutdown both (even if the first fails)...
         // shutdown dns service first, because it has callbacks for socket transport
         if (mDNSService) {
@@ -912,8 +912,8 @@ nsIOService::Observe(nsISupports *subject,
     }
     else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mOffline) {
-            SetOffline(true);
             mOfflineForProfileChange = true;
+            SetOffline(true);
         }
     }
     else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {

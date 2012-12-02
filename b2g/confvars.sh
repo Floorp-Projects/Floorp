@@ -28,6 +28,7 @@ MOZ_APP_STATIC_INI=1
 if test "$OS_TARGET" = "Android"; then
 MOZ_CAPTURE=1
 MOZ_RAW=1
+MOZ_AUDIO_CHANNEL_MANAGER=1
 fi
 
 # use custom widget for html:select

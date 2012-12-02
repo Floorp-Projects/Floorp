@@ -34,7 +34,7 @@ function test() {
 
               pickDone = true;
               Services.obs.addObserver(cleanup, DESTROYED, false);
-              InspectorUI.closeInspectorUI();
+              Tilt.destroy(Tilt.currentWindowId);
             }
           });
         };

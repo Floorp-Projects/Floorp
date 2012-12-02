@@ -278,7 +278,6 @@ Load(JSContext *cx,
 {
     unsigned i;
     JSString *str;
-    JSScript *script;
     jsval result;
     FILE *file;
 

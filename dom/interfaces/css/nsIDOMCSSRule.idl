@@ -25,8 +25,10 @@ interface nsIDOMCSSRule : nsISupports
   const unsigned short      FONT_FACE_RULE                 = 5;
   const unsigned short      PAGE_RULE                      = 6;
   const unsigned short      KEYFRAMES_RULE                 = 7;
-  const unsigned short      MOZ_KEYFRAMES_RULE             = 7;
   const unsigned short      KEYFRAME_RULE                  = 8;
+  // When layout.css.prefixes.animations is disabled/removed,
+  // we should remove these two MOZ_* constants.
+  const unsigned short      MOZ_KEYFRAMES_RULE             = 7;
   const unsigned short      MOZ_KEYFRAME_RULE              = 8;
   const unsigned short      NAMESPACE_RULE                 = 10;
   const unsigned short      SUPPORTS_RULE                  = 12;
