@@ -13,14 +13,17 @@ DIRS := \
   $(NULL)
 
 MOCHITEST_FILES := \
+  test_CharacterData-remove.html.json \
   test_DOMImplementation-createDocument.html.json \
+  test_DOMImplementation-createHTMLDocument.html.json \
   test_Document-createElementNS.html.json \
   test_Document-getElementsByTagName.html.json \
+  test_DocumentType-remove.html.json \
+  test_Element-remove.html.json \
   test_Event-constructors.html.json \
   test_Event-defaultPrevented.html.json \
   test_EventTarget-dispatchEvent.html.json \
   test_Node-isEqualNode.xhtml.json \
-  test_Node-replaceChild.html.json \
   test_NodeFilter-constants.html.json \
   test_Range-attributes.html.json \
   test_Range-commonAncestorContainer.html.json \
