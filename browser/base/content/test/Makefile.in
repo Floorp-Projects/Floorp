@@ -320,6 +320,7 @@ _BROWSER_FILES += \
                 browser_save_link-perwindowpb.js \
                 browser_save_private_link_perwindowpb.js \
                 browser_tabMatchesInAwesomebar_perwindowpb.js \
+                browser_tab_drag_drop_perwindow.js \
                 $(NULL)
 else
 _BROWSER_FILES += \
