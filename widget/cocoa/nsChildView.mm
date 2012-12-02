@@ -55,6 +55,7 @@
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
+#include "mozilla/a11y/Platform.h"
 #endif
 
 #include "mozilla/Preferences.h"

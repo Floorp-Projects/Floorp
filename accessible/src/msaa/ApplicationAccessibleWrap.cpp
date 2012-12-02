@@ -155,16 +155,3 @@ ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion)
   A11Y_TRYBLOCK_END
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// ApplicationAccessibleWrap public static
-
-void
-ApplicationAccessibleWrap::PreCreate()
-{
-}
-
-void
-ApplicationAccessibleWrap::Unload()
-{
-}
-
