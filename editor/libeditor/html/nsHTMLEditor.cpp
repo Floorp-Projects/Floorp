@@ -2271,42 +2271,31 @@ nsHTMLEditor::Align(const nsAString& aAlignType)
 NS_IMETHODIMP
 nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {
-  if (aTagName.IsEmpty() || !aReturn )
-    return NS_ERROR_NULL_POINTER;
-  
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> currentNode;
+  NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aReturn, NS_ERROR_NULL_POINTER);
 
-  if (aNode)
-    currentNode = aNode;
-  else
-  {
+  nsCOMPtr<nsINode> current = do_QueryInterface(aNode);
+  if (!current) {
     // If no node supplied, get it from anchor node of current selection
-    nsCOMPtr<nsISelection>selection;
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-    nsCOMPtr<nsIDOMNode> anchorNode;
-    res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
-    if(NS_FAILED(res)) return res;
+    nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
     NS_ENSURE_TRUE(anchorNode, NS_ERROR_FAILURE);
 
     // Try to get the actual selected node
-    bool hasChildren = false;
-    anchorNode->HasChildNodes(&hasChildren);
-    if (hasChildren)
-    {
-      int32_t offset;
-      res = selection->GetAnchorOffset(&offset);
-      if(NS_FAILED(res)) return res;
-      currentNode = nsEditor::GetChildAt(anchorNode, offset);
+    if (anchorNode->HasChildNodes() && anchorNode->IsContent()) {
+      int32_t offset = selection->GetAnchorOffset();
+      current = anchorNode->GetChildAt(offset);
     }
     // anchor node is probably a text node - just use that
-    if (!currentNode)
-      currentNode = anchorNode;
+    if (!current) {
+      current = anchorNode;
+    }
   }
-   
+
+  nsCOMPtr<nsIDOMNode> currentNode = current->AsDOMNode();
+
   nsAutoString TagName(aTagName);
   ToLowerCase(TagName);
   bool getLink = IsLinkTag(TagName);
@@ -2373,19 +2362,14 @@ NODE_FOUND:
 
     currentNode = parent;
   }
-  if (bNodeFound)
-  {
-    nsCOMPtr<nsIDOMElement> currentElement = do_QueryInterface(currentNode);
-    if (currentElement)
-    {
-      *aReturn = currentElement;
-      // Getters must addref
-      NS_ADDREF(*aReturn);
-    }
-  }
-  else res = NS_EDITOR_ELEMENT_NOT_FOUND;
 
-  return res;
+  if (!bNodeFound) {
+    return NS_EDITOR_ELEMENT_NOT_FOUND;
+  }
+
+  nsCOMPtr<nsIDOMElement> currentElement = do_QueryInterface(currentNode);
+  currentElement.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
