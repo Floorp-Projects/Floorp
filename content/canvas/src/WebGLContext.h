@@ -10,6 +10,7 @@
 #include "WebGLObjectModel.h"
 #include "WebGLBuffer.h"
 #include "WebGLVertexAttribData.h"
+#include "WebGLShaderPrecisionFormat.h"
 #include <stdarg.h>
 #include <vector>
 
@@ -78,7 +79,6 @@ class WebGLMemoryPressureObserver;
 class WebGLRectangleObject;
 class WebGLContextBoundObject;
 class WebGLActiveInfo;
-class WebGLShaderPrecisionFormat;
 class WebGLExtensionBase;
 
 namespace dom {
@@ -2778,39 +2778,6 @@ protected:
     nsString mName;
 };
 
-class WebGLShaderPrecisionFormat MOZ_FINAL
-    : public nsISupports
-    , public WebGLContextBoundObject
-{
-public:
-    WebGLShaderPrecisionFormat(WebGLContext *context, WebGLint rangeMin, WebGLint rangeMax, WebGLint precision) :
-        WebGLContextBoundObject(context),
-        mRangeMin(rangeMin),
-        mRangeMax(rangeMax),
-        mPrecision(precision)
-    {
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
-
-    NS_DECL_ISUPPORTS
-
-    // WebIDL WebGLShaderPrecisionFormat API
-    WebGLint RangeMin() const {
-        return mRangeMin;
-    }
-    WebGLint RangeMax() const {
-        return mRangeMax;
-    }
-    WebGLint Precision() const {
-        return mPrecision;
-    }
-
-protected:
-    WebGLint mRangeMin;
-    WebGLint mRangeMax;
-    WebGLint mPrecision;
-};
 
 inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
     return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()
