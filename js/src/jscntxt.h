@@ -896,7 +896,7 @@ struct JSRuntime : js::RuntimeFriendFields
      * Linked list of all js::Debugger objects. This may be accessed by the GC
      * thread, if any, or a thread that is in a request and holds gcLock.
      */
-    JSCList             debuggerList;
+    mozilla::LinkedList<js::Debugger> debuggerList;
 
     /*
      * Head of circular list of all enabled Debuggers that have
