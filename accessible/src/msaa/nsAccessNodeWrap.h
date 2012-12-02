@@ -77,10 +77,6 @@ public: // construction, destruction
                                                  REFIID aIID,
                                                  void** aInstancePtr);
 
-
-    static void InitAccessibility();
-    static void ShutdownAccessibility();
-
     static int FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTERS *aExceptionInfo);
 
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg,
@@ -90,11 +86,12 @@ public: // construction, destruction
 
 protected:
 
-    /**
-     * It is used in HyperTextAccessibleWrap for IA2::newText/oldText
-     * implementation.
-     */
-    static AccTextChangeEvent* gTextEvent;
+  /**
+   * It is used in HyperTextAccessibleWrap for IA2::newText/oldText
+   * implementation.
+   */
+  static AccTextChangeEvent* gTextEvent;
+  friend void PlatformShutdown();
 };
 
 } // namespace a11y
