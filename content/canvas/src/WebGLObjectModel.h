@@ -283,6 +283,47 @@ protected:
     uint32_t mContextGeneration;
 };
 
+// this class is a mixin for GL objects that have dimensions
+// that we need to track.
+class WebGLRectangleObject
+{
+public:
+    WebGLRectangleObject()
+        : mWidth(0), mHeight(0) { }
+
+    WebGLRectangleObject(WebGLsizei width, WebGLsizei height)
+        : mWidth(width), mHeight(height) { }
+
+    WebGLsizei Width() const { return mWidth; }
+    void width(WebGLsizei value) { mWidth = value; }
+
+    WebGLsizei Height() const { return mHeight; }
+    void height(WebGLsizei value) { mHeight = value; }
+
+    void setDimensions(WebGLsizei width, WebGLsizei height) {
+        mWidth = width;
+        mHeight = height;
+    }
+
+    void setDimensions(WebGLRectangleObject *rect) {
+        if (rect) {
+            mWidth = rect->Width();
+            mHeight = rect->Height();
+        } else {
+            mWidth = 0;
+            mHeight = 0;
+        }
+    }
+
+    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
+        return Width() == other.Width() && Height() == other.Height(); 
+    }
+
+protected:
+    WebGLsizei mWidth;
+    WebGLsizei mHeight;
+};
+
 }// namespace mozilla
 
 template <typename T>

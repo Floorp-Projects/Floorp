@@ -9,6 +9,7 @@
 #include "WebGLElementArrayCache.h"
 #include "WebGLObjectModel.h"
 #include "WebGLBuffer.h"
+#include "WebGLRenderbuffer.h"
 #include "WebGLVertexAttribData.h"
 #include "WebGLShaderPrecisionFormat.h"
 #include <stdarg.h>
@@ -74,9 +75,7 @@ class WebGLProgram;
 class WebGLShader;
 class WebGLFramebuffer;
 class WebGLUniformLocation;
-class WebGLRenderbuffer;
 class WebGLMemoryPressureObserver;
-class WebGLRectangleObject;
 class WebGLContextBoundObject;
 class WebGLActiveInfo;
 class WebGLExtensionBase;
@@ -150,47 +149,6 @@ inline bool is_pot_assuming_nonnegative(WebGLsizei x)
 {
     return x && (x & (x-1)) == 0;
 }
-
-// this class is a mixin for GL objects that have dimensions
-// that we need to track.
-class WebGLRectangleObject
-{
-public:
-    WebGLRectangleObject()
-        : mWidth(0), mHeight(0) { }
-
-    WebGLRectangleObject(WebGLsizei width, WebGLsizei height)
-        : mWidth(width), mHeight(height) { }
-
-    WebGLsizei Width() const { return mWidth; }
-    void width(WebGLsizei value) { mWidth = value; }
-
-    WebGLsizei Height() const { return mHeight; }
-    void height(WebGLsizei value) { mHeight = value; }
-
-    void setDimensions(WebGLsizei width, WebGLsizei height) {
-        mWidth = width;
-        mHeight = height;
-    }
-
-    void setDimensions(WebGLRectangleObject *rect) {
-        if (rect) {
-            mWidth = rect->Width();
-            mHeight = rect->Height();
-        } else {
-            mWidth = 0;
-            mHeight = 0;
-        }
-    }
-
-    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
-        return Width() == other.Width() && Height() == other.Height(); 
-    }
-
-protected:
-    WebGLsizei mWidth;
-    WebGLsizei mHeight;
-};
 
 struct WebGLContextOptions {
     // these are defaults
@@ -2142,99 +2100,6 @@ protected:
     int mAttribMaxNameLength;
 };
 
-class WebGLRenderbuffer MOZ_FINAL
-    : public nsISupports
-    , public WebGLRefCountedObject<WebGLRenderbuffer>
-    , public LinkedListElement<WebGLRenderbuffer>
-    , public WebGLRectangleObject
-    , public WebGLContextBoundObject
-    , public nsWrapperCache
-{
-public:
-    WebGLRenderbuffer(WebGLContext *context)
-        : WebGLContextBoundObject(context)
-        , mInternalFormat(0)
-        , mInternalFormatForGL(0)
-        , mHasEverBeenBound(false)
-        , mInitialized(false)
-    {
-        SetIsDOMBinding();
-        mContext->MakeContextCurrent();
-        mContext->gl->fGenRenderbuffers(1, &mGLName);
-        mContext->mRenderbuffers.insertBack(this);
-    }
-
-    ~WebGLRenderbuffer() {
-        DeleteOnce();
-    }
-
-    void Delete() {
-        mContext->MakeContextCurrent();
-        mContext->gl->fDeleteRenderbuffers(1, &mGLName);
-        LinkedListElement<WebGLRenderbuffer>::removeFrom(mContext->mRenderbuffers);
-    }
-
-    bool HasEverBeenBound() { return mHasEverBeenBound; }
-    void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    WebGLuint GLName() const { return mGLName; }
-
-    bool Initialized() const { return mInitialized; }
-    void SetInitialized(bool aInitialized) { mInitialized = aInitialized; }
-
-    WebGLenum InternalFormat() const { return mInternalFormat; }
-    void SetInternalFormat(WebGLenum aInternalFormat) { mInternalFormat = aInternalFormat; }
-    
-    WebGLenum InternalFormatForGL() const { return mInternalFormatForGL; }
-    void SetInternalFormatForGL(WebGLenum aInternalFormatForGL) { mInternalFormatForGL = aInternalFormatForGL; }
-    
-    int64_t MemoryUsage() const {
-        int64_t pixels = int64_t(Width()) * int64_t(Height());
-
-        // If there is no defined format, we're not taking up any memory
-        if (!mInternalFormatForGL) {
-            return 0;
-        }
-
-        switch (mInternalFormatForGL) {
-            case LOCAL_GL_STENCIL_INDEX8:
-                return pixels;
-            case LOCAL_GL_RGBA4:
-            case LOCAL_GL_RGB5_A1:
-            case LOCAL_GL_RGB565:
-            case LOCAL_GL_DEPTH_COMPONENT16:
-                return 2 * pixels;
-            case LOCAL_GL_RGB8:
-            case LOCAL_GL_DEPTH_COMPONENT24:
-                return 3*pixels;
-            case LOCAL_GL_RGBA8:
-            case LOCAL_GL_DEPTH24_STENCIL8:
-                return 4*pixels;
-            default:
-                break;
-        }
-        NS_ABORT();
-        return 0;
-    }
-
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLRenderbuffer)
-
-protected:
-
-    WebGLuint mGLName;
-    WebGLenum mInternalFormat;
-    WebGLenum mInternalFormatForGL;
-    bool mHasEverBeenBound;
-    bool mInitialized;
-
-    friend class WebGLFramebuffer;
-};
 
 class WebGLFramebufferAttachment
 {
