@@ -2778,7 +2778,8 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLINTRINSIC)
           {
             PropertyName *name = script_->getName(GET_UINT32_INDEX(PC));
-            jsop_intrinsicname(name, knownPushedType(0));
+            if (!jsop_intrinsicname(name, knownPushedType(0)))
+                return Compile_Error;
             frame.extra(frame.peek(-1)).name = name;
           }
           END_CASE(JSOP_INTRINSICNAME)
@@ -5793,12 +5794,23 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
     return true;
 }
 
-void
+bool
 mjit::Compiler::jsop_intrinsicname(PropertyName *name, JSValueType type)
 {
+    if (type == JSVAL_TYPE_UNKNOWN) {
+        prepareStubCall(Uses(0));
+        masm.move(ImmPtr(name), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::IntrinsicName, REJOIN_FALLTHROUGH);
+        testPushedType(REJOIN_FALLTHROUGH, 0, /* ool = */ false);
+        frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+        return true;
+    }
+
     RootedValue vp(cx, NullValue());
-    cx->global().get()->getIntrinsicValue(cx, name, &vp);
+    if (!cx->global().get()->getIntrinsicValue(cx, name, &vp))
+        return false;
     frame.push(vp);
+    return true;
 }
 
 void
