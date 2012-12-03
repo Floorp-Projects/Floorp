@@ -1582,6 +1582,9 @@ PopOffPrec(SprintStack *ss, uint8_t prec, jsbytecode **ppc = NULL)
         ss->offsets[top] = off - 2;
         ss->sprinter.setOffset(off - 2);
         off = Sprint(&ss->sprinter, "(%s)", ss->sprinter.stringAt(off));
+        /* If allocation failed, return any safe string. */
+        if (off < 0)
+            off = 0;
         if (ss->printer->decompiledOpcodes && pc)
             ss->printer->decompiled(pc).parenthesized = true;
     } else {
