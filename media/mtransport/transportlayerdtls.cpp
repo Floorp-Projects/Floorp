@@ -465,6 +465,7 @@ bool TransportLayerDtls::Setup() {
   pr_fd.forget(); // ownership transfered to ssl_fd;
 
   if (role_ == CLIENT) {
+    MOZ_MTLOG(PR_LOG_DEBUG, "Setting up DTLS as client");
     rv = SSL_GetClientAuthDataHook(ssl_fd, GetClientAuthDataHook,
                                    this);
     if (rv != SECSuccess) {
@@ -472,6 +473,7 @@ bool TransportLayerDtls::Setup() {
       return false;
     }
   } else {
+    MOZ_MTLOG(PR_LOG_DEBUG, "Setting up DTLS as server");
     // Server side
     rv = SSL_ConfigSecureServer(ssl_fd, identity_->cert(),
                                 identity_->privkey(),
