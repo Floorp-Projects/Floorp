@@ -487,30 +487,30 @@ WebSocket::WrapObject(JSContext* cx, JSObject* scope, bool* triedToWrap)
 
 // Constructor:
 already_AddRefed<WebSocket>
-WebSocket::Constructor(JSContext* aCx,
-                       nsISupports* aGlobal,
+WebSocket::Constructor(const GlobalObject& aGlobal,
+                       JSContext* aCx,
                        const nsAString& aUrl,
                        ErrorResult& aRv)
 {
   Sequence<nsString> protocols;
-  return WebSocket::Constructor(aCx, aGlobal, aUrl, protocols, aRv);
+  return WebSocket::Constructor(aGlobal, aCx, aUrl, protocols, aRv);
 }
 
 already_AddRefed<WebSocket>
-WebSocket::Constructor(JSContext* aCx,
-                       nsISupports* aGlobal,
+WebSocket::Constructor(const GlobalObject& aGlobal,
+                       JSContext* aCx,
                        const nsAString& aUrl,
                        const nsAString& aProtocol,
                        ErrorResult& aRv)
 {
   Sequence<nsString> protocols;
   protocols.AppendElement(aProtocol);
-  return WebSocket::Constructor(aCx, aGlobal, aUrl, protocols, aRv);
+  return WebSocket::Constructor(aGlobal, aCx, aUrl, protocols, aRv);
 }
 
 already_AddRefed<WebSocket>
-WebSocket::Constructor(JSContext* aCx,
-                       nsISupports* aGlobal,
+WebSocket::Constructor(const GlobalObject& aGlobal,
+                       JSContext* aCx,
                        const nsAString& aUrl,
                        const Sequence<nsString>& aProtocols,
                        ErrorResult& aRv)
@@ -520,7 +520,8 @@ WebSocket::Constructor(JSContext* aCx,
     return nullptr;
   }
 
-  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
+    do_QueryInterface(aGlobal.Get());
   if (!scriptPrincipal) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -532,13 +533,13 @@ WebSocket::Constructor(JSContext* aCx,
     return nullptr;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobal.Get());
   if (!sgo) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.Get());
   if (!ownerWindow) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
