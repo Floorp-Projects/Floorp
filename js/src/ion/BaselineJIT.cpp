@@ -275,6 +275,11 @@ TraceStub(JSTracer *trc, ICStub *stub)
         MarkTypeObject(trc, &setElemStub->type(), "baseline-setelem-dense-stub-type");
         break;
       }
+      case ICStub::TypeMonitor_TypeObject: {
+        ICTypeMonitor_TypeObject *monitorStub = stub->toTypeMonitor_TypeObject();
+        MarkTypeObject(trc, &monitorStub->type(), "baseline-monitor-typeobject");
+        break;
+      }
       default:
         break;
     }
