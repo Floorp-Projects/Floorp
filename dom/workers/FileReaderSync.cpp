@@ -31,6 +31,7 @@
 USING_WORKERS_NAMESPACE
 using namespace mozilla;
 using mozilla::dom::Optional;
+using mozilla::dom::WorkerGlobalObject;
 
 NS_IMPL_ADDREF_INHERITED(FileReaderSync, DOMBindingBase)
 NS_IMPL_RELEASE_INHERITED(FileReaderSync, DOMBindingBase)
@@ -57,12 +58,11 @@ FileReaderSync::_finalize(JSFreeOp* aFop)
 
 // static
 FileReaderSync*
-FileReaderSync::Constructor(JSContext* aCx, JSObject* aGlobal,
-                            ErrorResult& aRv)
+FileReaderSync::Constructor(const WorkerGlobalObject& aGlobal, ErrorResult& aRv)
 {
-  nsRefPtr<FileReaderSync> frs = new FileReaderSync(aCx);
+  nsRefPtr<FileReaderSync> frs = new FileReaderSync(aGlobal.GetContext());
 
-  if (!Wrap(aCx, aGlobal, frs)) {
+  if (!Wrap(aGlobal.GetContext(), aGlobal.Get(), frs)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
