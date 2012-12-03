@@ -195,7 +195,8 @@ runTavaruaRadio(void *)
     for (unsigned int i = 0; i < buffer.bytesused; i++) {
       switch (buf[i]) {
       case TAVARUA_EVT_RADIO_READY:
-        NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_ENABLE,                                                 hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
+        NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_ENABLE,
+                                                hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
         break;
       case TAVARUA_EVT_SEEK_COMPLETE:
         NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_SEEK,
