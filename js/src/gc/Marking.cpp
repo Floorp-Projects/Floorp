@@ -592,6 +592,17 @@ ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
 
     JS_ASSERT(color == BLACK || color == GRAY);
     if (color == BLACK) {
+        /*
+         * Having black->gray edges violates our promise to the cycle
+         * collector. This can happen if we're collecting a compartment and it
+         * has an edge to an uncollected compartment: it's possible that the
+         * source and destination of the cross-compartment edge should be gray,
+         * but the source was marked black by the conservative scanner.
+         */
+        if (cell->isMarked(GRAY)) {
+            JS_ASSERT(!cell->compartment()->isCollecting());
+            trc->runtime->gcFoundBlackGrayEdges = true;
+        }
         return c->isGCMarking();
     } else {
         if (c->isGCMarkingBlack()) {
