@@ -106,7 +106,7 @@ js::IterateCells(JSRuntime *rt, JSCompartment *compartment, AllocKind thingKind,
 }
 
 void
-js::IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, void *data)
+js::IterateGrayObjects(JSCompartment *compartment, GCThingCallback cellCallback, void *data)
 {
     JS_ASSERT(compartment);
     AutoPrepareForTracing prep(compartment->rt);

@@ -564,6 +564,12 @@ js::GCThingIsMarkedGray(void *thing)
     return reinterpret_cast<gc::Cell *>(thing)->isMarked(gc::GRAY);
 }
 
+extern JS_FRIEND_API(bool)
+js::AreGCGrayBitsValid(JSRuntime *rt)
+{
+    return rt->gcGrayBitsValid;
+}
+
 JS_FRIEND_API(JSGCTraceKind)
 js::GCThingTraceKind(void *thing)
 {
@@ -572,13 +578,7 @@ js::GCThingTraceKind(void *thing)
 }
 
 JS_FRIEND_API(void)
-js::UnmarkGrayGCThing(void *thing)
-{
-    static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
-}
-
-JS_FRIEND_API(void)
-js::VisitGrayWrapperTargets(JSCompartment *comp, GCThingCallback *callback, void *closure)
+js::VisitGrayWrapperTargets(JSCompartment *comp, GCThingCallback callback, void *closure)
 {
     for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
         gc::Cell *thing = e.front().key.wrapped;
