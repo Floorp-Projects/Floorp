@@ -442,13 +442,6 @@ abstract public class GeckoApp
         return null;
     }
 
-    synchronized Favicons getFavicons() {
-        if (mFavicons == null)
-            mFavicons = new Favicons(this);
-
-        return mFavicons;
-    }
-
     Class<?> getPluginClass(String packageName, String className)
             throws NameNotFoundException, ClassNotFoundException {
         Context pluginContext = mAppContext.createPackageContext(packageName,
@@ -785,7 +778,7 @@ abstract public class GeckoApp
         (new GeckoAsyncTask<Void, Void, String>(mAppContext, GeckoAppShell.getHandler()) {
             @Override
             public String doInBackground(Void... params) {
-                return getFavicons().getFaviconUrlForPageUrl(url);
+                return Favicons.getInstance().getFaviconUrlForPageUrl(url);
             }
 
             @Override
@@ -1480,6 +1473,7 @@ abstract public class GeckoApp
 
         mAppContext = this;
         Tabs.getInstance().attachToActivity(this);
+        Favicons.getInstance().attachToContext(this);
 
         // Check to see if the activity is restarted after configuration change.
         if (getLastNonConfigurationInstance() != null) {
