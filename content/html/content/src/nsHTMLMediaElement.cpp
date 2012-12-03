@@ -117,6 +117,8 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 
 #include "mozilla/Preferences.h"
 
+#include "nsIPermissionManager.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -3467,6 +3469,22 @@ nsHTMLMediaElement::GetMozAudioChannelType(nsAString& aString)
 NS_IMETHODIMP
 nsHTMLMediaElement::SetMozAudioChannelType(const nsAString& aString)
 {
+  // Only normal channel doesn't need permission.
+  if (!aString.EqualsASCII("normal")) {
+    nsCOMPtr<nsIPermissionManager> permissionManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    if (!permissionManager) {
+      return NS_ERROR_FAILURE;
+    }
+
+    uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
+    permissionManager->TestExactPermissionFromPrincipal(NodePrincipal(),
+      nsCString(NS_LITERAL_CSTRING("audio-channel-") + NS_ConvertUTF16toUTF8(aString)).get(), &perm);
+    if (perm != nsIPermissionManager::ALLOW_ACTION) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+  }
+  // Then assign
   AudioChannelType tmpType;
 
   if (aString.EqualsASCII("normal")) {
