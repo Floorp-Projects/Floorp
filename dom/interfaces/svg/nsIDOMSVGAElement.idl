@@ -12,7 +12,7 @@
 
 interface nsIDOMSVGAnimatedString;
 
-[scriptable, uuid(DBC9B56C-3DE3-4475-A934-EE88D3BCB03C)]
+[scriptable, uuid(6e0eff6e-ce35-4c01-ab3c-ae81b79b40ca)]
 interface nsIDOMSVGAElement
   : nsIDOMSVGElement
 /*
@@ -33,4 +33,5 @@ interface nsIDOMSVGAElement
 */
 {
   readonly attribute nsIDOMSVGAnimatedString target;
+  attribute DOMString download;
 };

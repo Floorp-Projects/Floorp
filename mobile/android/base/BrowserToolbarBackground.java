@@ -21,7 +21,7 @@ public class BrowserToolbarBackground extends GeckoLinearLayout
     private CurveTowards mSide;
     private CanvasDelegate mCanvasDelegate;
 
-    private enum CurveTowards { NONE, LEFT, RIGHT };
+    public enum CurveTowards { NONE, LEFT, RIGHT };
 
     public BrowserToolbarBackground(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -126,5 +126,17 @@ public class BrowserToolbarBackground extends GeckoLinearLayout
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         onLightweightThemeChanged();
+    }
+
+    public CurveTowards getCurveTowards() {
+        return mSide;
+    }
+
+    public void setCurveTowards(CurveTowards side) {
+        if (side == mSide)
+            return;
+
+        mSide = side;
+        invalidate();
     }
 }
