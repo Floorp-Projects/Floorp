@@ -2454,7 +2454,7 @@ abstract public class GeckoApp
 
     public boolean showAwesomebar(AwesomeBar.Target aTarget, String aUrl) {
         Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra(AwesomeBar.TARGET_KEY, aTarget.name());
 
         // if we were passed in a url, show it
@@ -2475,6 +2475,7 @@ abstract public class GeckoApp
 
         int requestCode = GeckoAppShell.sActivityHelper.makeRequestCodeForAwesomebar();
         startActivityForResult(intent, requestCode);
+        overridePendingTransition (R.anim.awesomebar_fade_in, R.anim.awesomebar_hold_still);
         return true;
     }
 
