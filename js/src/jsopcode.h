@@ -390,6 +390,7 @@ class Sprinter
     char                    *base;          /* malloc'd buffer address */
     size_t                  size;           /* size of buffer allocated at base */
     ptrdiff_t               offset;         /* offset of next free char in buffer */
+    bool                    reportedOOM;    /* this sprinter has reported OOM in string ops */
 
     bool realloc_(size_t newSize);
 
@@ -438,6 +439,16 @@ class Sprinter
     /* Get the offset */
     ptrdiff_t getOffset() const;
     ptrdiff_t getOffsetOf(const char *string) const;
+
+    /*
+     * Report that a string operation failed to get the memory it requested. The
+     * first call to this function calls JS_ReportOutOfMemory, and sets this
+     * Sprinter's outOfMemory flag; subsequent calls do nothing.
+     */
+    void reportOutOfMemory();
+
+    /* Return true if this Sprinter ran out of memory. */
+    bool hadOutOfMemory() const;
 };
 
 extern ptrdiff_t
