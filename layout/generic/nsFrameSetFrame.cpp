@@ -1227,13 +1227,11 @@ bool
 nsHTMLFramesetFrame::CanResize(bool aVertical, 
                                bool aLeft) 
 {
-  nsIFrame* child;
   int32_t childX;
   int32_t startX;
   if (aVertical) {
     startX = (aLeft) ? 0 : mNumCols-1;
     for (childX = startX; childX < mNonBorderChildCount; childX += mNumCols) {
-      child = mFrames.FrameAt(childX);
       if (!CanChildResize(aVertical, aLeft, childX)) {
         return false;
       }
@@ -1242,7 +1240,6 @@ nsHTMLFramesetFrame::CanResize(bool aVertical,
     startX = (aLeft) ? 0 : (mNumRows - 1) * mNumCols;
     int32_t endX = startX + mNumCols;
     for (childX = startX; childX < endX; childX++) {
-      child = mFrames.FrameAt(childX);
       if (!CanChildResize(aVertical, aLeft, childX)) {
         return false;
       }
