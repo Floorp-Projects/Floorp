@@ -431,7 +431,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
     }
 
     BufferOffset insertEntry(uint32 instSize, uint8 *inst, Pool *p, uint8 *data, PoolEntry *pe = NULL) {
-        if (this->oom() && !this->bail())
+        if (this->oom())
             return BufferOffset();
         int token;
         if (p != NULL) {
@@ -726,12 +726,9 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                     // the last pool, which means it cannot affect the alignment of any other
                     // Sub Pools.
                     IonSpew(IonSpew_Pools, "[%d]***Offset was still out of range!***", id, codeOffset - magicAlign);
-                    IonSpew(IonSpew_Pools, "[%d] Too complicated; bailingp", id);
-                    this->fail_bail();
                     outcasts[poolIdx].append(iter->getOffset());
                     memcpy(&outcastEntries[poolIdx][numSkips * p->immSize], &p->poolData[idx * p->immSize], p->immSize);
                     numSkips++;
-                    return;
                 } else {
                     preservedEntries[idx] = true;
                 }
