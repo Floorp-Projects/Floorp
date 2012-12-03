@@ -2583,7 +2583,7 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index,
 
 void
 MacroAssemblerARMCompat::linkExitFrame() {
-    uint8 *dest = ((uint8*)GetIonContext()->cx->runtime) + offsetof(JSRuntime, ionTop);
+    uint8 *dest = ((uint8*)GetIonContext()->compartment->rt) + offsetof(JSRuntime, ionTop);
     movePtr(ImmWord(dest), ScratchRegister);
     ma_str(StackPointer, Operand(ScratchRegister, 0));
 }
