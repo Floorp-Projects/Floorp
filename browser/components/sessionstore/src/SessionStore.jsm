@@ -886,9 +886,16 @@ let SessionStoreInternal = {
       winData._shouldRestore = true;
 #endif
 
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      // Save the window if it has multiple tabs or a single saveable tab and
+      // it's not private.
+      if (!winData.isPrivate && (winData.tabs.length > 1 ||
+          (winData.tabs.length == 1 && this._shouldSaveTabState(winData.tabs[0])))) {
+#else
       // save the window if it has multiple tabs or a single saveable tab
       if (winData.tabs.length > 1 ||
           (winData.tabs.length == 1 && this._shouldSaveTabState(winData.tabs[0]))) {
+#endif
         // we don't want to save the busy state
         delete winData.busy;
 
