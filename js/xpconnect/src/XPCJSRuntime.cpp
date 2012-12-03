@@ -818,9 +818,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
         }
         case JSFINALIZE_COLLECTION_END:
         {
-            if (!isCompartmentGC)
-                self->GetXPConnect()->ClearGCBeforeCC();
-
             // mThreadRunningGC indicates that GC is running
             { // scoped lock
                 XPCAutoLock lock(self->GetMapLock());
