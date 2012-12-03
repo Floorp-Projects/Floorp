@@ -160,8 +160,10 @@ struct ScaleRequest
 
     weakImage = aImage->asWeakPtr();
     srcRect = aSrcFrame->GetRect();
-    dstSize.width = NSToIntRoundUp(srcRect.width * scale.width);
-    dstSize.height = NSToIntRoundUp(srcRect.height * scale.height);
+
+    nsIntRect dstRect = srcRect;
+    dstRect.ScaleRoundOut(scale.width, scale.height);
+    dstSize = dstRect.Size();
   }
 
   // This can only be called on the main thread.
