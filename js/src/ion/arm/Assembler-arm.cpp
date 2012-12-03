@@ -2462,14 +2462,24 @@ AutoFlushCache::update(uintptr_t newStart, size_t len)
 
 AutoFlushCache::~AutoFlushCache()
 {
-    if (!myCompartment_)
+   if (!myCompartment_)
         return;
 
+    flushAnyway();
     IonSpewCont(IonSpew_CacheFlush, ">", name_);
     if (myCompartment_->flusher() == this) {
         IonSpewFin(IonSpew_CacheFlush);
         myCompartment_->setFlusher(NULL);
     }
+
+}
+void
+AutoFlushCache::flushAnyway()
+{
+    if (!myCompartment_)
+        return;
+
+    IonSpewCont(IonSpew_CacheFlush, "|", name_);
 
     if (!used_)
         return;
@@ -2479,6 +2489,7 @@ AutoFlushCache::~AutoFlushCache()
     } else {
         JSC::ExecutableAllocator::cacheFlush(NULL, 0xff000000);
     }
+    used_ = false;
 
 }
 Assembler *Assembler::dummy = NULL;

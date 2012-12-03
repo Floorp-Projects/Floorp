@@ -479,6 +479,8 @@ RES_XML = \
 	$(NULL)
 
 RES_ANIM = \
+  res/anim/awesomebar_fade_in.xml \
+  res/anim/awesomebar_hold_still.xml \
   res/anim/grow_fade_in.xml \
   res/anim/grow_fade_in_center.xml \
   res/anim/shrink_fade_out.xml \

@@ -2691,7 +2691,7 @@ let RIL = {
         options.rilMessageType = "sendMMI";
         options.reason = MMI_SC_TO_CF_REASON[sc];
         options.number = mmi.sia;
-        options.serviceClass = mmi.sib;
+        options.serviceClass = this._siToServiceClass(mmi.sib);
         if (options.action == CALL_FORWARD_ACTION_QUERY_STATUS) {
           this.queryCallForwardStatus(options);
           return;
@@ -3959,6 +3959,44 @@ let RIL = {
       toa = TOA_INTERNATIONAL;
     }
     return toa;
+  },
+
+  /**
+   * Helper for translating basic service group to call forwarding service class
+   * parameter.
+   */
+  _siToServiceClass: function _siToServiceClass(si) {
+    if (!si) {
+      return ICC_SERVICE_CLASS_NONE;
+    }
+
+    let serviceCode = parseInt(si, 10);
+    switch (serviceCode) {
+      case 10:
+        return ICC_SERVICE_CLASS_SMS + ICC_SERVICE_CLASS_FAX  + ICC_SERVICE_CLASS_VOICE;
+      case 11:
+        return ICC_SERVICE_CLASS_VOICE;
+      case 12:
+        return ICC_SERVICE_CLASS_SMS + ICC_SERVICE_CLASS_FAX;
+      case 13:
+        return ICC_SERVICE_CLASS_FAX;
+      case 16:
+        return ICC_SERVICE_CLASS_SMS;
+      case 19:
+        return ICC_SERVICE_CLASS_FAX + ICC_SERVICE_CLASS_VOICE;
+      case 21:
+        return ICC_SERVICE_CLASS_PAD + ICC_SERVICE_CLASS_DATA_ASYNC;
+      case 22:
+        return ICC_SERVICE_CLASS_PACKET + ICC_SERVICE_CLASS_DATA_SYNC;
+      case 25:
+        return ICC_SERVICE_CLASS_DATA_ASYNC;
+      case 26:
+        return ICC_SERVICE_CLASS_DATA_SYNC + SERVICE_CLASS_VOICE;
+      case 99:
+        return ICC_SERVICE_CLASS_PACKET;
+      default:
+        return ICC_SERVICE_CLASS_NONE;
+    }
   },
 
   /**

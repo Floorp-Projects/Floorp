@@ -22,7 +22,7 @@ class HTMLListAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLListAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    HyperTextAccessibleWrap(aContent, aDoc) { }
+    HyperTextAccessibleWrap(aContent, aDoc) { mFlags |= eListAccessible; }
   virtual ~HTMLListAccessible() { }
 
   // nsISupports

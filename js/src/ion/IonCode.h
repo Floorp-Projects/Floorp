@@ -576,8 +576,25 @@ struct AutoFlushCache {
     static void updateTop(uintptr_t p, size_t len);
     ~AutoFlushCache();
     AutoFlushCache(const char * nonce, IonCompartment *comp = NULL);
+    void flushAnyway();
 };
 
+// If you are currently in the middle of modifing Ion-compiled code, which
+// is going to be flushed at *some* point, but determine that you *must*
+// call a function *right* *now*, two things can go wrong:
+//   1)  The flusher that you were using is still active, but you are about to
+//       enter jitted code, so it needs to be flushed
+//   2) the called function can re-enter a compilation/modification path which
+//       will use your AFC, and thus not flush when his compilation is done
+
+struct AutoFlushInhibitor {
+  private:
+    IonCompartment *ic_;
+    AutoFlushCache *afc;
+  public:
+    AutoFlushInhibitor(IonCompartment *ic);
+    ~AutoFlushInhibitor();
+};
 } // namespace ion
 
 namespace gc {
