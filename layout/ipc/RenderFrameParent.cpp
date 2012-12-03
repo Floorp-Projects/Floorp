@@ -489,19 +489,12 @@ public:
 
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE
   {
-    if (MessageLoop::current() != mUILoop) {
-      // We have to send this message from the "UI thread" (main
-      // thread).
-      mUILoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &RemoteContentController::RequestContentRepaint,
-                          aFrameMetrics));
-      return;
-    }
-    if (mRenderFrame) {
-      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->UpdateFrame(aFrameMetrics);
-    }
+    // We always need to post requests into the "UI thread" otherwise the
+    // requests may get processed out of order.
+    mUILoop->PostTask(
+      FROM_HERE,
+      NewRunnableMethod(this, &RemoteContentController::DoRequestContentRepaint,
+                        aFrameMetrics));
   }
 
   virtual void HandleDoubleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
@@ -558,6 +551,14 @@ public:
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
 private:
+  void DoRequestContentRepaint(const FrameMetrics& aFrameMetrics)
+  {
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      browser->UpdateFrame(aFrameMetrics);
+    }
+  }
+
   MessageLoop* mUILoop;
   RenderFrameParent* mRenderFrame;
 };
