@@ -74,22 +74,22 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static XMLHttpRequest*
-  Constructor(JSContext* aCx, JSObject* aGlobal,
+  Constructor(const WorkerGlobalObject& aGlobal,
               const MozXMLHttpRequestParametersWorkers& aParams,
               ErrorResult& aRv);
 
   static XMLHttpRequest*
-  Constructor(JSContext* aCx, JSObject* aGlobal,
-              const nsAString& ignored, ErrorResult& aRv)
+  Constructor(const WorkerGlobalObject& aGlobal, const nsAString& ignored,
+              ErrorResult& aRv)
   {
     // Pretend like someone passed null, so we can pick up the default values
     MozXMLHttpRequestParametersWorkers params;
-    if (!params.Init(aCx, nullptr, JS::NullValue())) {
+    if (!params.Init(aGlobal.GetContext(), nullptr, JS::NullValue())) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
 
-    return Constructor(aCx, aGlobal, params, aRv);
+    return Constructor(aGlobal, params, aRv);
   }
 
   void

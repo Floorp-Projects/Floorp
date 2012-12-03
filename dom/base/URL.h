@@ -18,21 +18,23 @@ class URL MOZ_FINAL
 {
 public:
   // WebIDL methods
-  static void CreateObjectURL(nsISupports* aGlobal, nsIDOMBlob* aBlob,
+  static void CreateObjectURL(const GlobalObject& aGlobal, nsIDOMBlob* aBlob,
                               const objectURLOptions& aOptions,
-                              nsAString& aResult,
+                              nsString& aResult,
                               ErrorResult& aError);
-  static void CreateObjectURL(nsISupports* aGlobal, nsIDOMMediaStream* aStream,
+  static void CreateObjectURL(const GlobalObject& aGlobal,
+                              nsIDOMMediaStream* aStream,
                               const mozilla::dom::objectURLOptions& aOptions,
-                              nsAString& aResult,
+                              nsString& aResult,
                               mozilla::ErrorResult& aError);
-  static void RevokeObjectURL(nsISupports* aGlobal, const nsAString& aURL);
+  static void RevokeObjectURL(const GlobalObject& aGlobal,
+                              const nsAString& aURL);
 
 private:
   static void CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
                                       const nsACString& aScheme,
                                       const mozilla::dom::objectURLOptions& aOptions,
-                                      nsAString& aResult,
+                                      nsString& aResult,
                                       mozilla::ErrorResult& aError);
 };
 

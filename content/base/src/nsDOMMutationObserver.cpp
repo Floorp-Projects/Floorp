@@ -548,11 +548,11 @@ nsDOMMutationObserver::TakeRecords(
 
 // static
 already_AddRefed<nsDOMMutationObserver>
-nsDOMMutationObserver::Constructor(nsISupports* aGlobal,
+nsDOMMutationObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                                    mozilla::dom::MutationCallback& aCb,
                                    mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
