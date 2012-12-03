@@ -791,6 +791,68 @@ add_test(function test_update_network_name() {
 });
 
 /**
+ * Verify Proactive Command : Timer Management
+ */
+add_test(function test_stk_proactive_command_timer_management() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  // Timer Management - Start
+  let timer_management_1 = [
+    0xD0,
+    0x11,
+    0x81, 0x03, 0x01, 0x27, 0x00,
+    0x82, 0x02, 0x81, 0x82,
+    0xA4, 0x01, 0x01,
+    0xA5, 0x03, 0x10, 0x20, 0x30
+  ];
+
+  for(let i = 0 ; i < timer_management_1.length; i++) {
+    pduHelper.writeHexOctet(timer_management_1[i]);
+  }
+
+  let berTlv = berHelper.decode(timer_management_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_TIMER_MANAGEMENT);
+  do_check_eq(tlv.value.commandQualifier, STK_TIMER_START);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER, ctlvs);
+  do_check_eq(tlv.value.timerId, 0x01);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TIMER_VALUE, ctlvs);
+  do_check_eq(tlv.value.timerValue, (0x01 * 60 * 60) + (0x02 * 60) + 0x03);
+
+  // Timer Management - Deactivate
+  let timer_management_2 = [
+    0xD0,
+    0x0C,
+    0x81, 0x03, 0x01, 0x27, 0x01,
+    0x82, 0x02, 0x81, 0x82,
+    0xA4, 0x01, 0x01
+  ];
+
+  for(let i = 0 ; i < timer_management_2.length; i++) {
+    pduHelper.writeHexOctet(timer_management_2[i]);
+  }
+
+  berTlv = berHelper.decode(timer_management_2.length);
+  ctlvs = berTlv.value;
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_TIMER_MANAGEMENT);
+  do_check_eq(tlv.value.commandQualifier, STK_TIMER_DEACTIVATE);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER, ctlvs);
+  do_check_eq(tlv.value.timerId, 0x01);
+
+  run_next_test();
+});
+
+/**
  * Verify Proactive Command : Provide Local Information
  */
 add_test(function test_stk_proactive_command_provide_local_information() {
