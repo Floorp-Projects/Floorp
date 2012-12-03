@@ -991,8 +991,9 @@ CompileStatus
 mjit::CanMethodJIT(JSContext *cx, JSScript *scriptArg, jsbytecode *pc,
                    bool construct, CompileRequest request, StackFrame *frame)
 {
+    bool compiledOnce = false;
     RootedScript script(cx, scriptArg);
-  restart:
+  checkOutput:
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
@@ -1057,7 +1058,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *scriptArg, jsbytecode *pc,
             FreeOp *fop = cx->runtime->defaultFreeOp();
             jit->destroy(fop);
             fop->free_(jit);
-            goto restart;
+            return Compile_Skipped;
         }
 
         jith->setValid(jit);
@@ -1083,6 +1084,8 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *scriptArg, jsbytecode *pc,
 
     if (desc.chunk)
         return Compile_Okay;
+    if (compiledOnce)
+        return Compile_Skipped;
 
     if (!cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
         ++desc.counter <= INFER_USES_BEFORE_COMPILE)
@@ -1110,7 +1113,8 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *scriptArg, jsbytecode *pc,
          * Compiling a script can occasionally trigger its own recompilation,
          * so go back through the compilation logic.
          */
-        goto restart;
+        compiledOnce = true;
+        goto checkOutput;
     }
 
     /* Non-OOM errors should have an associated exception. */
