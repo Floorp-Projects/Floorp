@@ -1560,29 +1560,50 @@ $(foreach category,$(INSTALL_TARGETS),\
 # Preprocessing rules
 #
 # The PP_TARGETS variable contains a list of all preprocessing target
-# categories. Each category defines a target path, and optional extra flags
-# like the following:
+# categories. Each category has associated variables listing input files, the
+# output directory, extra preprocessor flags, and so on. For example:
 #
-# FOO_PATH := target_path
-# FOO_FLAGS := -Dsome_flag
-# PP_TARGETS += FOO
+#   FOO := input-file
+#   FOO_PATH := target-directory
+#   FOO_FLAGS := -Dsome_flag
+#   PP_TARGETS += FOO
 #
-# Additionally, a FOO_TARGET variable may be added to indicate the target for
-# which the files and executables are installed. Default is "libs".
+# If PP_TARGETS lists a category name <C> (like FOO, above), then we consult the
+# following make variables to see what to do:
+#
+# - <C> lists input files to be preprocessed with config/Preprocessor.py. We
+#   search VPATH for the names given here. If an input file name ends in '.in',
+#   that suffix is omitted from the output file name.
+#
+# - <C>_PATH names the directory in which to place the preprocessed output
+#   files. We create this directory if it does not already exist. Setting
+#   this variable is optional; if unset, we install the files in $(CURDIR).
+#
+# - <C>_FLAGS lists flags to pass to Preprocessor.py, in addition to the usual
+#   bunch. Setting this variable is optional.
+#
+# - <C>_TARGET names the 'make' target that should depend on creating the output
+#   files. Setting this variable is optional; if unset, we preprocess the
+#   files for the 'libs' target.
 
 # preprocess_file_template defines preprocessing rules.
-# $(call preprocess_file_template, source_file, target_path, extra_flags)
+# $(call preprocess_file_template, source_file, output_file,
+#                                  makefile_target, extra_flags)
 define preprocess_file_template
-$(2)/$(notdir $(1)): $(1) $$(call mkdir_deps,$(2)) $$(GLOBAL_DEPS)
+$(2): $(1) $$(call mkdir_deps,$(dir $(2))) $$(GLOBAL_DEPS)
 	$$(RM) $$@
 	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(4) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) $$< > $$@
-$(or $(3),libs):: $(2)/$(notdir $(1))
+$(3):: $(2)
 endef
 
-$(foreach category,$(PP_TARGETS),\
-  $(foreach file,$($(category)),\
-    $(eval $(call preprocess_file_template,$(file),$($(category)_PATH),$($(category)_TARGET),$($(category)_FLAGS)))\
-   )\
+$(foreach category,$(PP_TARGETS),						\
+  $(foreach file,$($(category)),						\
+    $(eval $(call preprocess_file_template,					\
+                  $(file),							\
+                  $(or $($(category)_PATH),$(CURDIR))/$(notdir $(file:.in=)),	\
+                  $(or $($(category)_TARGET),libs),				\
+                  $($(category)_FLAGS)))					\
+   )										\
  )
 
 ################################################################################
