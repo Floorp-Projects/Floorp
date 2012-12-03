@@ -3256,22 +3256,19 @@ JSObject::setLastProperty(JSContext *cx, HandleObject obj, js::Shape *shape)
     return true;
 }
 
-bool
-JSObject::setSlotSpan(JSContext *cx, uint32_t span)
+/* static */ bool
+JSObject::setSlotSpan(JSContext *cx, HandleObject obj, uint32_t span)
 {
-    JS_ASSERT(inDictionaryMode());
-    js::BaseShape *base = lastProperty()->base();
+    JS_ASSERT(obj->inDictionaryMode());
 
-    size_t oldSpan = base->slotSpan();
-
+    size_t oldSpan = obj->lastProperty()->base()->slotSpan();
     if (oldSpan == span)
         return true;
 
-    RootedObject self(cx, this);
-    if (!JSObject::updateSlotsForSpan(cx, self, oldSpan, span))
+    if (!JSObject::updateSlotsForSpan(cx, obj, oldSpan, span))
         return false;
 
-    base->setSlotSpan(span);
+    obj->lastProperty()->base()->setSlotSpan(span);
     return true;
 }
 
@@ -3728,7 +3725,8 @@ JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
 
     *slotp = slot;
 
-    if (inDictionaryMode() && !setSlotSpan(cx, slot + 1))
+    RootedObject self(cx, this);
+    if (inDictionaryMode() && !setSlotSpan(cx, self, slot + 1))
         return false;
 
     return true;

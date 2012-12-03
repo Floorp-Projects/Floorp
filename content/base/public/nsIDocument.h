@@ -600,7 +600,7 @@ public:
    */
   virtual int32_t GetNumberOfCatalogStyleSheets() const = 0;
   virtual nsIStyleSheet* GetCatalogStyleSheetAt(int32_t aIndex) const = 0;
-  virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void AddCatalogStyleSheet(nsCSSStyleSheet* aSheet) = 0;
   virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI) = 0;
 
   enum additionalSheetType {

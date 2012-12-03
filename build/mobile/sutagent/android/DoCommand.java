@@ -107,7 +107,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.13";
+    private final String prgVersion = "SUTAgentAndroid Version 1.15";
 
     public enum Command
         {
@@ -1335,7 +1335,6 @@ private void CancelNotification()
             }
         if (tmpFile.exists()) 
             {
-            Log.i("CLINT", "tmpfile exists");
             return("/data/local");
             }
         Log.e("SUTAgentAndroid", "ERROR: Cannot access world writeable test root");
@@ -3253,69 +3252,9 @@ private void CancelNotification()
         String sRet = "";
         File    srcFile = new File(sApp);
 
-        sRet = CopyFile(sApp, GetTmpDir() + "/" + srcFile.getName());
-        try {
-            out.write(sRet.getBytes());
-            out.flush();
-            }
-        catch (IOException e1)
-            {
-            e1.printStackTrace();
-            }
-
         try
             {
-            pProc = Runtime.getRuntime().exec(this.getSuArgs("mv " + GetTmpDir() + "/" +
-                                                             srcFile.getName() +
-                                                             " /data/local/tmp/" +
-                                                             srcFile.getName() + ";exit"));
-
-            RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
-            outThrd.start();
-            try {
-                outThrd.joinAndStopRedirect(90000);
-                int nRet = pProc.exitValue();
-                sRet = "\nmove complete [" + nRet + "]";
-                }
-            catch (IllegalThreadStateException itse) {
-                itse.printStackTrace();
-                sRet = "\nmove command timed out";
-            }
-            try
-                {
-                out.write(sRet.getBytes());
-                out.flush();
-                }
-            catch (IOException e1)
-                {
-                e1.printStackTrace();
-                }
-
-            pProc = Runtime.getRuntime().exec(this.getSuArgs("chmod 666 /data/local/tmp/" +
-                                                             srcFile.getName() + ";exit"));
-            RedirOutputThread outThrd2 = new RedirOutputThread(pProc, out);
-            outThrd2.start();
-            try {
-                outThrd2.joinAndStopRedirect(10000);
-                int nRet2 = pProc.exitValue();
-                sRet = "\npermission change complete [" + nRet2 + "]\n";
-                }
-            catch (IllegalThreadStateException itse) {
-                itse.printStackTrace();
-                sRet = "\npermission change timed out";
-            }
-            try {
-                out.write(sRet.getBytes());
-                out.flush();
-                }
-            catch (IOException e1)
-                {
-                e1.printStackTrace();
-                }
-
-            pProc = Runtime.getRuntime().exec(this.getSuArgs("pm install -r /data/local/tmp/" +
-                                                             srcFile.getName() + " Cleanup" +
-                                                             ";exit"));
+            pProc = Runtime.getRuntime().exec(this.getSuArgs("pm install -r " + sApp + " Cleanup;exit"));
             RedirOutputThread outThrd3 = new RedirOutputThread(pProc, out);
             outThrd3.start();
             try {
@@ -3335,29 +3274,6 @@ private void CancelNotification()
                 {
                 e1.printStackTrace();
                 }
-
-            pProc = Runtime.getRuntime().exec(this.getSuArgs("rm /data/local/tmp/" +
-                                                             srcFile.getName() + ";exit"));
-            RedirOutputThread outThrd4 = new RedirOutputThread(pProc, out);
-            outThrd4.start();
-            try {
-                outThrd4.joinAndStopRedirect(60000);
-                int nRet4 = pProc.exitValue();
-                sRet = "\ntmp file removed [" + nRet4 + "]";
-                }
-            catch (IllegalThreadStateException itse) {
-                itse.printStackTrace();
-                sRet = "\nrm command timed out";
-            }
-            try {
-                out.write(sRet.getBytes());
-                out.flush();
-                }
-            catch (IOException e1)
-                {
-                e1.printStackTrace();
-                }
-            sRet = "\nSuccess";
             }
         catch (IOException e)
             {

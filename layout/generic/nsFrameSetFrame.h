@@ -93,8 +93,6 @@ public:
                         nsSize&  aSize, 
                         nsIntPoint& aCellIndex);
 
-  static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
-
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
@@ -189,18 +187,11 @@ protected:
                         nsSize&                  aSize,
                         nsIntPoint*              aCellIndex = 0);
   
-  bool CanResize(bool aVertical, 
-                   bool aLeft); 
+  bool CanResize(bool aVertical, bool aLeft); 
 
-  bool CanChildResize(bool    aVertical, 
-                        bool    aLeft, 
-                        int32_t aChildX,
-                        bool    aFrameset);
+  bool CanChildResize(bool aVertical, bool aLeft, int32_t aChildX);
   
-  void SetBorderResize(int32_t*                   aChildTypes, 
-                       nsHTMLFramesetBorderFrame* aBorderFrame);
-
-  bool ChildIsFrameset(nsIFrame* aChild); 
+  void SetBorderResize(nsHTMLFramesetBorderFrame* aBorderFrame);
 
   static int FrameResizePrefCallback(const char* aPref, void* aClosure);
 
@@ -210,7 +201,6 @@ protected:
   nsHTMLFramesetFrame* mTopLevelFrameset;
   nsHTMLFramesetBorderFrame** mVerBorders;  // vertical borders
   nsHTMLFramesetBorderFrame** mHorBorders;  // horizontal borders
-  int32_t*         mChildTypes; // frameset/frame distinction of children
   nsFrameborder*   mChildFrameborder; // the frameborder attr of children
   nsBorderColor*   mChildBorderColors;
   nscoord*         mRowSizes;  // currently computed row sizes

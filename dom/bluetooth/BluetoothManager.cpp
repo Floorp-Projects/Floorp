@@ -25,15 +25,7 @@ USING_BLUETOOTH_NAMESPACE
 
 DOMCI_DATA(BluetoothManager, BluetoothManager)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothManager)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothManager,
-                                                  nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothManager,
-                                                nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_0(BluetoothManager, nsDOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBluetoothManager)

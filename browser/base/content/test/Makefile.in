@@ -50,6 +50,11 @@ MOCHITEST_FILES += \
 		test_contextmenu.html \
 		subtst_contextmenu.html \
 		$(NULL)
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_FILES += \
+		privateBrowsingMode.js \
+		$(NULL)
+endif
 endif
 
 # The following tests are disabled because they are unreliable:
@@ -158,7 +163,6 @@ _BROWSER_FILES = \
                  browser_bug735471.js \
                  browser_bug743421.js \
                  browser_bug749738.js \
-                 browser_bug767836.js \
                  browser_bug783614.js \
                  browser_bug797677.js \
                  browser_canonizeURL.js \
@@ -272,6 +276,7 @@ _BROWSER_FILES = \
                  browser_bug812562.js \
                  blockPluginVulnerableUpdatable.xml \
                  blockPluginVulnerableNoUpdate.xml \
+                 blockNoPlugins.xml \
                  browser_utilityOverlay.js \
                  browser_social.js \
                  browser_social_toolbar.js \
@@ -307,12 +312,14 @@ endif
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 _BROWSER_FILES += \
                 browser_bug763468_perwindowpb.js \
+                browser_bug767836_perwindowpb.js \
                 browser_private_browsing_window.js \
                 browser_save_link-perwindowpb.js \
                 $(NULL)
 else
 _BROWSER_FILES += \
                 browser_bug763468.js \
+                browser_bug767836.js \
                 browser_save_link.js \
                 $(NULL)
 endif

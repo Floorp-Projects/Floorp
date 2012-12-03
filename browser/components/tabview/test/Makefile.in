@@ -68,7 +68,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug619937.js \
                  browser_tabview_bug622835.js \
                  browser_tabview_bug623768.js \
-                 browser_tabview_bug624265.js \
                  browser_tabview_bug624692.js \
                  browser_tabview_bug624727.js \
                  browser_tabview_bug624847.js \
@@ -166,6 +165,17 @@ _BROWSER_FILES = \
                  test_bug678374.html \
                  test_bug678374_icon16.png \
                  $(NULL)
+
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+_BROWSER_FILES += \
+                browser_tabview_bug624265_perwindowpb.js \
+                $(NULL)
+else
+_BROWSER_FILES += \
+                browser_tabview_bug624265.js \
+                $(NULL)
+endif
+
 
 # browser_tabview_bug597980.js is disabled for leaking, see bug 711907
 

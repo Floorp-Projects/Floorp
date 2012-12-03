@@ -1198,9 +1198,12 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 PDeviceStorageRequestParent*
 ContentParent::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
 {
-  DeviceStorageRequestParent* result = new DeviceStorageRequestParent(aParams);
-  NS_ADDREF(result);
-  return result;
+  nsRefPtr<DeviceStorageRequestParent> result = new DeviceStorageRequestParent(aParams);
+  if (!result->EnsureRequiredPermissions(this)) {
+      return nullptr;
+  }
+  result->Dispatch();
+  return result.forget().get();
 }
 
 bool
@@ -1830,6 +1833,9 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
 bool
 ContentParent::RecvAddGeolocationListener()
 {
+  if (!AssertAppProcessPermission(this, "geolocation")) {
+    return false;
+  }
   if (mGeolocationWatchID == -1) {
     nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
     if (!geo) {
@@ -1844,20 +1850,28 @@ ContentParent::RecvAddGeolocationListener()
 bool
 ContentParent::RecvRemoveGeolocationListener()
 {
-  if (mGeolocationWatchID != -1) {
-    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-    if (!geo) {
-      return true;
-    }
-    geo->ClearWatch(mGeolocationWatchID);
-    mGeolocationWatchID = -1;
+  if (mGeolocationWatchID == -1) {
+    return true;
   }
+
+  if (!AssertAppProcessPermission(this, "geolocation")) {
+    return false;
+  }
+  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+  if (!geo) {
+    return true;
+  }
+  geo->ClearWatch(mGeolocationWatchID);
+  mGeolocationWatchID = -1;
   return true;
 }
 
 NS_IMETHODIMP
 ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
+  if (!AssertAppProcessPermission(this, "geolocation")) {
+    return NS_ERROR_FAILURE;
+  }
   unused << SendGeolocationUpdate(GeoPosition(postion));
   return NS_OK;
 }

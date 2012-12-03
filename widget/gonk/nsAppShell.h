@@ -64,6 +64,9 @@ class nsAppShell : public nsBaseAppShell {
 public:
     nsAppShell();
 
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIOBSERVER
+
     nsresult Init();
 
     NS_IMETHOD Exit() MOZ_OVERRIDE;
@@ -87,6 +90,11 @@ private:
 
     // This is somewhat racy but is perfectly safe given how the callback works
     bool mNativeCallbackRequest;
+
+    // This gets flipped when we observe a browser-ui-startup-complete.
+    // browser-ui-startup-complete means that we're really ready to draw
+    // and can stop the boot animation
+    bool mEnableDraw;
     nsTArray<FdHandler> mHandlers;
 
     android::sp<android::EventHub>               mEventHub;

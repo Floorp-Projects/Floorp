@@ -1684,8 +1684,21 @@ LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
     SubtractTransformedRegion(aScreenRegion, incompleteRegion, transformToScreen);
 
     // See if there's any incomplete low-precision rendering
-    incompleteRegion.Sub(incompleteRegion, thebesLayer->GetValidLowPrecisionRegion());
-    if (!incompleteRegion.IsEmpty()) {
+    TiledLayerComposer* composer = nullptr;
+    ShadowLayer* shadow = aLayer->AsShadowLayer();
+    if (shadow) {
+      composer = shadow->AsTiledLayerComposer();
+      if (composer) {
+        incompleteRegion.Sub(incompleteRegion, composer->GetValidLowPrecisionRegion());
+        if (!incompleteRegion.IsEmpty()) {
+          SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
+        }
+      }
+    }
+
+    // If we can't get a valid low precision region, assume it's the same as
+    // the high precision region.
+    if (!composer) {
       SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
     }
   }
@@ -1702,6 +1715,7 @@ GetRegionArea(const nsIntRegion& aRegion)
   return area;
 }
 
+#ifdef MOZ_ANDROID_OMTC
 static float
 GetDisplayportCoverage(const gfx::Rect& aDisplayPort,
                        const gfx3DMatrix& aTransformToScreen,
@@ -1725,6 +1739,7 @@ GetDisplayportCoverage(const gfx::Rect& aDisplayPort,
 
   return 1.0f;
 }
+#endif // MOZ_ANDROID_OMTC
 
 float
 LayerManagerOGL::ComputeRenderIntegrity()
@@ -1746,7 +1761,6 @@ LayerManagerOGL::ComputeRenderIntegrity()
 #ifdef MOZ_ANDROID_OMTC
   // Use the transform on the primary scrollable layer and its FrameMetrics
   // to find out how much of the viewport the current displayport covers
-  bool hasLowPrecision = true;
   Layer* primaryScrollable = GetPrimaryScrollableLayer();
   if (primaryScrollable) {
     // This is derived from the code in
@@ -1759,7 +1773,24 @@ LayerManagerOGL::ComputeRenderIntegrity()
     transform.ScalePost(devPixelRatioX, devPixelRatioY, 1);
     const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
 
+    // Clip the screen rect to the document bounds
+    gfxRect documentBounds =
+      transform.TransformBounds(gfxRect(metrics.mScrollableRect.x - metrics.mScrollOffset.x,
+                                        metrics.mScrollableRect.y - metrics.mScrollOffset.y,
+                                        metrics.mScrollableRect.width,
+                                        metrics.mScrollableRect.height));
+    documentBounds.RoundOut();
+    screenRect = screenRect.Intersect(nsIntRect(documentBounds.x, documentBounds.y,
+                                                documentBounds.width, documentBounds.height));
+
+    // If the screen rect is empty, the user has scrolled entirely into
+    // over-scroll and so we can be considered to have full integrity.
+    if (screenRect.IsEmpty()) {
+      return 1.0f;
+    }
+
     // Work out how much of the critical display-port covers the screen
+    bool hasLowPrecision = false;
     if (!metrics.mCriticalDisplayPort.IsEmpty()) {
       hasLowPrecision = true;
       highPrecisionMultiplier =
@@ -1772,12 +1803,17 @@ LayerManagerOGL::ComputeRenderIntegrity()
         lowPrecisionMultiplier =
           GetDisplayportCoverage(metrics.mDisplayPort, transform, screenRect);
       } else {
-        highPrecisionMultiplier =
+        lowPrecisionMultiplier = highPrecisionMultiplier =
           GetDisplayportCoverage(metrics.mDisplayPort, transform, screenRect);
       }
     }
   }
-#endif
+
+  // If none of the screen is covered, we have zero integrity.
+  if (highPrecisionMultiplier <= 0.0f && lowPrecisionMultiplier <= 0.0f) {
+    return 0.0f;
+  }
+#endif // MOZ_ANDROID_OMTC
 
   nsIntRegion screenRegion(screenRect);
   nsIntRegion lowPrecisionScreenRegion(screenRect);
@@ -1796,7 +1832,7 @@ LayerManagerOGL::ComputeRenderIntegrity()
     }
 
     return ((highPrecisionIntegrity * highPrecisionMultiplier) +
-            (lowPrecisionIntegrity * lowPrecisionMultiplier)) / 2.f;
+            (lowPrecisionIntegrity * lowPrecisionMultiplier)) / 2;
   }
 
   return 1.f;

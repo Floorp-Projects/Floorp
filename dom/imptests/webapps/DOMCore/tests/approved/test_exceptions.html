@@ -1,0 +1,100 @@
+<!doctype html>
+<title>DOMException-throwing tests</title>
+<link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
+<div id=log></div>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+/**
+ * This file just picks one case where browsers are supposed to throw an
+ * exception, and tests the heck out of whether it meets the spec.  In the
+ * future, all these checks should be in assert_throws(), but we don't want
+ * every browser failing every assert_throws() check until they fix every
+ * single bug in their exception-throwing.
+ *
+ * We don't go out of our way to test everything that's already tested by
+ * interfaces.html, like whether all constants are present on the object, but
+ * some things are duplicated.
+ */
+setup({explicit_done: true});
+
+function testException(exception, global, desc) {
+	test(function() {
+		assert_equals(global.Object.getPrototypeOf(exception),
+		              global.DOMException.prototype);
+	}, desc + "Object.getPrototypeOf(exception) === DOMException.prototype");
+
+	test(function() {
+		// WebIDL 4.9.2 as of September 28, 2012: "There must be a property named
+		// “name” on the exception interface prototype object with attributes {
+		// [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true } and
+		// whose value is the identifier of the exception."  Thus, this is
+		// inherited, not own.
+		assert_false(exception.hasOwnProperty("name"));
+	}, desc + "!exception.hasOwnProperty(\"name\")");
+
+	test(function() {
+		assert_equals(exception.name, "HierarchyRequestError");
+	}, desc + "exception.name === \"HierarchyRequestError\"");
+
+	test(function() {
+		// WebIDL 4.9.1.1 as of September 28, 2012: "Call the [[DefineOwnProperty]]
+		// internal method of O passing “message”, Property Descriptor { [[Value]]:
+		// S, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true },
+		// and false as arguments."  Thus, this is an own property.
+		assert_true(exception.hasOwnProperty("message"));
+	}, desc + "exception.hasOwnProperty(\"message\")");
+
+	test(function() {
+		var desc = global.Object.getOwnPropertyDescriptor(exception, "message");
+		assert_true(desc.writable, "must be writable");
+		assert_false(desc.enumerable, "must not be enumerable");
+		assert_true(desc.configurable, "must be configurable");
+	}, desc + "Object.getOwnPropertyDescriptor(exception, \"message\")");
+
+	test(function() {
+		// Can't test anything more specific, since it's implementation-defined :(
+		assert_equals(typeof exception.message, "string");
+	}, desc + "typeof exception.message === \"string\"");
+
+	test(function() {
+		// WebIDL: "The class string of the exception object must be the identifier
+		// of the exception."
+		assert_equals(global.Object.prototype.toString.call(exception),
+					  "[object DOMException]");
+	}, desc + "Object.prototype.toString.call(exception) === \"[object DOMException]\"");
+
+	test(function() {
+		assert_equals(exception.code, global.DOMException.HIERARCHY_REQUEST_ERR);
+	}, desc + "exception.code === DOMException.HIERARCHY_REQUEST_ERR");
+}
+
+
+// Test in current window
+var exception = null;
+try {
+	// This should throw a HierarchyRequestError in every browser since the
+	// Stone Age, so we're really only testing exception-throwing details.
+	document.documentElement.appendChild(document);
+} catch(e) {
+	exception = e;
+}
+testException(exception, window, "");
+
+// Test in iframe
+var iframe = document.createElement("iframe");
+iframe.src = "about:blank";
+iframe.onload = function() {
+	var exception = null;
+	try {
+		iframe.contentDocument.documentElement.appendChild(iframe.contentDocument);
+	} catch(e) {
+		exception = e;
+	}
+	testException(exception, iframe.contentWindow, "In iframe: ");
+
+	document.body.removeChild(iframe);
+	done();
+};
+document.body.appendChild(iframe);
+</script>

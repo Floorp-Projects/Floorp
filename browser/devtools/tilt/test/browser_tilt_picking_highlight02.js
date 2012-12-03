@@ -59,7 +59,7 @@ function whenUnhighlighting() {
   executeSoon(function() {
     Services.obs.removeObserver(whenUnhighlighting, UNHIGHLIGHTING);
     Services.obs.addObserver(cleanup, DESTROYED, false);
-    InspectorUI.closeInspectorUI();
+    Tilt.destroy(Tilt.currentWindowId);
   });
 }
 

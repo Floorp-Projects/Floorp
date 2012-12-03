@@ -18,6 +18,7 @@ MOCHITEST_BROWSER_FILES = \
 
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
+  browser_private_resume.js \
   browser_privatebrowsing.js \
   browser_privatebrowsing_cancel.js \
   $(NULL)

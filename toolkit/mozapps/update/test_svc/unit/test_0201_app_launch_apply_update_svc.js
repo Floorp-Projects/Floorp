@@ -108,6 +108,10 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
 
+  if (IS_WIN) {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, true);
+  }
+
   removeUpdateDirsAndFiles();
 
   symlinkUpdateFilesIntoBundleDirectory();

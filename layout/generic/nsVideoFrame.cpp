@@ -187,6 +187,9 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                       presContext->AppUnitsToGfxUnits(area.height));
   r = CorrectForAspectRatio(r, videoSize);
   r.Round();
+  if (r.IsEmpty()) {
+    return nullptr;
+  }
   gfxIntSize scaleHint(static_cast<int32_t>(r.Width()),
                        static_cast<int32_t>(r.Height()));
   container->SetScaleHint(scaleHint);
@@ -357,7 +360,7 @@ public:
     }
     nsHTMLMediaElement* elem =
       static_cast<nsHTMLMediaElement*>(mFrame->GetContent());
-    return elem->IsPotentiallyPlaying() ? LAYER_ACTIVE : LAYER_INACTIVE;
+    return elem->IsPotentiallyPlaying() ? LAYER_ACTIVE_FORCE : LAYER_INACTIVE;
   }
 };
 

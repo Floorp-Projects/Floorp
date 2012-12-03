@@ -552,6 +552,10 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEvent) {
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput& aEvent) {
   if (mGeckoContentController) {
     MonitorAutoLock monitor(mMonitor);
 
@@ -563,11 +567,6 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEven
                                                         NS_lround(point.y)));
     return nsEventStatus_eConsumeNoDefault;
   }
-  return nsEventStatus_eIgnore;
-}
-
-nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput& aEvent) {
-  // XXX: Implement this.
   return nsEventStatus_eIgnore;
 }
 

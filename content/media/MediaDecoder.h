@@ -504,11 +504,14 @@ public:
   void SetMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
 
   // Set a flag indicating whether seeking is supported
-  virtual void SetSeekable(bool aSeekable);
-
-  // Return true if seeking is supported.
-  virtual bool IsSeekable();
-  bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void SetTransportSeekable(bool aTransportSeekable) MOZ_FINAL MOZ_OVERRIDE;
+  // Returns true if this media supports seeking. False for example for WebM
+  // files without an index and chained ogg files.
+  virtual bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
+  // Returns true if seeking is supported on a transport level (e.g. the server
+  // supports range requests, we are playing a file, etc.).
+  virtual bool IsTransportSeekable();
 
   // Return the time ranges that can be seeked into.
   virtual nsresult GetSeekable(nsTimeRanges* aSeekable);
@@ -633,6 +636,15 @@ public:
   void SetAudioChannelType(AudioChannelType aType) { mAudioChannelType = aType; }
   AudioChannelType GetAudioChannelType() { return mAudioChannelType; }
 
+  // Send a new set of metadata to the state machine, to be dispatched to the
+  // main thread to be presented when the |currentTime| of the media is greater
+  // or equal to aPublishTime.
+  void QueueMetadata(int64_t aPublishTime,
+                     int aChannels,
+                     int aRate,
+                     bool aHasAudio,
+                     MetadataTags* aTags);
+
   /******
    * The following methods must only be called on the main
    * thread.
@@ -649,10 +661,7 @@ public:
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
-  void MetadataLoaded(uint32_t aChannels,
-                      uint32_t aRate,
-                      bool aHasAudio,
-                      const MetadataTags* aTags);
+  void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags);
 
   // Called when the first frame has been loaded.
   // Call on the main thread only.
@@ -902,9 +911,12 @@ public:
   // True when playback should start with audio captured (not playing).
   bool mInitialAudioCaptured;
 
-  // True if the media resource is seekable (server supports byte range
-  // requests).
-  bool mSeekable;
+  // True if the resource is seekable at a transport level (server supports byte
+  // range requests, local file, etc.).
+  bool mTransportSeekable;
+
+  // True if the media is seekable (i.e. supports random access).
+  bool mMediaSeekable;
 
   /******
    * The following member variables can be accessed from any thread.

@@ -25,8 +25,10 @@ interface nsIDOMLockedFile;
 [scriptable, builtinclass, uuid(47438729-7f3f-4a66-b6d4-d1297c593d46)]
 interface nsIDOMFileHandle : nsISupports
 {
+  [binaryname(DOMName)]
   readonly attribute DOMString name;
 
+  [binaryname(DOMType)]
   readonly attribute DOMString type;
 
   // mode can be either "readonly" or "readwrite"

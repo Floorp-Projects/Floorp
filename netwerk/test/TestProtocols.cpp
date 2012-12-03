@@ -512,15 +512,12 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
   URLLoadInfo* info = (URLLoadInfo*)context;
 
   if (info) {
-    double connectTime;
-    double readTime;
     uint32_t httpStatus;
     bool bHTTPURL = false;
 
     info->mTotalTime = PR_Now() - info->mTotalTime;
 
-    connectTime = (info->mConnectTime/1000.0)/1000.0;
-    readTime    = ((info->mTotalTime-info->mConnectTime)/1000.0)/1000.0;
+    double readTime = ((info->mTotalTime-info->mConnectTime)/1000.0)/1000.0;
 
     nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
     if (pHTTPCon) {
@@ -536,7 +533,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
         NS_ERROR_UNKNOWN_PROXY_HOST == aStatus) {
       LOG(("\tDNS lookup failed.\n"));
     }
-    LOG(("\tTime to connect: %.3f seconds\n", connectTime));
+    LOG(("\tTime to connect: %.3f seconds\n", (info->mConnectTime/1000.0)/1000.0));
     LOG(("\tTime to read: %.3f seconds.\n", readTime));
     LOG(("\tRead: %lld bytes.\n", info->mBytesRead));
     if (info->mBytesRead == int64_t(0)) {

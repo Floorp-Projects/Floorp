@@ -46,7 +46,7 @@ public:
     // called to check the transaction status.
     virtual bool     IsDone() = 0;
     virtual nsresult Status() = 0;
-    virtual uint8_t  Caps() = 0;
+    virtual uint32_t Caps() = 0;
 
     // called to find out how much request data is available for writing.
     virtual uint64_t Available() = 0;
@@ -142,7 +142,7 @@ public:
                            nsresult status, uint64_t progress); \
     bool     IsDone(); \
     nsresult Status(); \
-    uint8_t  Caps();   \
+    uint32_t Caps();   \
     uint64_t Available(); \
     nsresult ReadSegments(nsAHttpSegmentReader *, uint32_t, uint32_t *); \
     nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *); \

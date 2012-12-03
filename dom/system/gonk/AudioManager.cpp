@@ -38,7 +38,7 @@ using namespace mozilla;
 // Refer AudioService.java from Android
 static int sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
   10,  // voice call
-  10,  // system
+  15,  // system
   7,   // ring
   15,  // music
   7,   // alarm
@@ -47,7 +47,7 @@ static int sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
   7,   // enforced audible
   15,  // DTMF
   15,  // TTS
-  10,  // FM
+  15,  // FM
 };
 
 // A bitwise variable for recording what kind of headset is attached.
@@ -371,6 +371,12 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
       aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE :
       AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
     InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
+    // sync volume with music after powering on fm radio
+    if (aFmRadioAudioEnabled) {
+      int32_t volIndex = 0;
+      AudioSystem::getStreamVolumeIndex(static_cast<audio_stream_type_t>(AUDIO_STREAM_MUSIC), &volIndex);
+      AudioSystem::setStreamVolumeIndex(static_cast<audio_stream_type_t>(AUDIO_STREAM_FM), volIndex);
+    }
     return NS_OK;
   } else {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -381,6 +387,10 @@ NS_IMETHODIMP
 AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
   status_t status =
     AudioSystem::setStreamVolumeIndex(static_cast<audio_stream_type_t>(aStream), aIndex);
+  // sync the fm stream volume with music volume
+  if (aStream == AUDIO_STREAM_MUSIC && IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
+    AudioSystem::setStreamVolumeIndex(static_cast<audio_stream_type_t>(AUDIO_STREAM_FM), aIndex);
+  }
   return status ? NS_ERROR_FAILURE : NS_OK;
 }
 

@@ -24,8 +24,7 @@
   cursor: pointer;
 }
 
-#downloadsSummary,
-#downloadsPanel[hasdownloads] #downloadsHistory {
+#downloadsPanel[hasdownloads] #downloadsFooter {
   border-top: 1px solid ThreeDShadow;
   background-image: -moz-linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }

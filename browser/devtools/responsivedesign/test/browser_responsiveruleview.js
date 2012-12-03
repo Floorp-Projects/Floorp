@@ -5,6 +5,7 @@ function test() {
   let instance;
 
   let ruleView;
+  let inspector;
 
   waitForExplicitFinish();
 
@@ -47,27 +48,26 @@ function test() {
 
     instance.setSize(500, 500);
 
-    Services.obs.addObserver(onInspectorUIOpen,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-    InspectorUI.openInspectorUI();
+    openInspector(onInspectorUIOpen);
   }
 
-  function onInspectorUIOpen() {
-    Services.obs.removeObserver(onInspectorUIOpen,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
+  function onInspectorUIOpen(aInspector) {
+    inspector = aInspector;
+    ok(inspector, "Got inspector instance");
+    inspector.sidebar.select("ruleview");
 
     let div = content.document.getElementsByTagName("div")[0];
-    InspectorUI.inspectNode(div);
-    InspectorUI.stopInspecting();
 
-    InspectorUI.currentInspector.once("sidebaractivated-ruleview", testShrink);
-
-    InspectorUI.sidebar.show();
-    InspectorUI.sidebar.activatePanel("ruleview");
+    inspector.sidebar.once("ruleview-ready", function() {
+      Services.obs.addObserver(testShrink, "StyleInspector-populated", false);
+      inspector.selection.setNode(div);
+    });
   }
 
   function testShrink() {
-    ruleView = InspectorUI.sidebar._toolContext("ruleview").view;
+    Services.obs.removeObserver(testShrink, "StyleInspector-populated");
+
+    ruleView = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
 
     is(numberOfRules(), 2, "Should have two rules initially.");
 
@@ -96,7 +96,6 @@ function test() {
     // Menus are correctly updated?
     is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"), "false", "menu unchecked");
 
-    InspectorUI.closeInspectorUI();
     gBrowser.removeCurrentTab();
     finish();
   }
