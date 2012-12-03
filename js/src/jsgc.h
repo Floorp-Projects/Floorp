@@ -933,6 +933,24 @@ struct GCMarker : public JSTracer {
     void stop();
     void reset();
 
+    struct GrayRoot {
+        void *thing;
+        JSGCTraceKind kind;
+#ifdef DEBUG
+        JSTraceNamePrinter debugPrinter;
+        const void *debugPrintArg;
+        size_t debugPrintIndex;
+#endif
+
+        GrayRoot(void *thing, JSGCTraceKind kind)
+          : thing(thing), kind(kind) {}
+    };
+
+    typedef Vector<GrayRoot, 0, SystemAllocPolicy> GrayRootVector;
+
+    bool saveGrayRoots(GrayRootVector &vec);
+    void restoreGrayRoots(GrayRootVector &vec);
+
     void pushObject(JSObject *obj) {
         pushTaggedPtr(ObjectTag, obj);
     }
@@ -1065,21 +1083,8 @@ struct GCMarker : public JSTracer {
     /* Count of arenas that are currently in the stack. */
     mozilla::DebugOnly<size_t> markLaterArenas;
 
-    struct GrayRoot {
-        void *thing;
-        JSGCTraceKind kind;
-#ifdef DEBUG
-        JSTraceNamePrinter debugPrinter;
-        const void *debugPrintArg;
-        size_t debugPrintIndex;
-#endif
-
-        GrayRoot(void *thing, JSGCTraceKind kind)
-          : thing(thing), kind(kind) {}
-    };
-
     bool grayFailed;
-    Vector<GrayRoot, 0, SystemAllocPolicy> grayRoots;
+    GrayRootVector grayRoots;
 };
 
 void
