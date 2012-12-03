@@ -224,7 +224,8 @@ MobileCFInfo.prototype = {
                       action: 'r',
                       reason: 'r',
                       number: 'r',
-                      timeSeconds: 'r'},
+                      timeSeconds: 'r',
+                      serviceClass: 'r'},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozMobileCFInfo]),
   classID:        MOBILECFINFO_CID,
   classInfo:      XPCOMUtils.generateCI({
@@ -240,7 +241,8 @@ MobileCFInfo.prototype = {
   action: -1,
   reason: -1,
   number: null,
-  timeSeconds: 0
+  timeSeconds: 0,
+  serviceClass: -1
 };
 
 function RILContentHelper() {
