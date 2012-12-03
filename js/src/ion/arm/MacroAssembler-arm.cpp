@@ -68,7 +68,20 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register
 void
 MacroAssemblerARM::inc64(AbsoluteAddress dest)
 {
-    JS_NOT_REACHED("NYI");
+
+    ma_strd(r0, r1, EDtrAddr(sp, EDtrOffImm(-8)), PreIndex);
+
+    ma_mov(Imm32((int32)dest.addr), ScratchRegister);
+
+    ma_ldrd(EDtrAddr(ScratchRegister, EDtrOffImm(0)), r0, r1);
+
+    ma_add(Imm32(1), r0, SetCond);
+    ma_adc(Imm32(0), r1, NoSetCond);
+
+    ma_strd(r0, r1, EDtrAddr(ScratchRegister, EDtrOffImm(0)));
+
+    ma_ldrd(EDtrAddr(sp, EDtrOffImm(8)), r0, r1, PostIndex);
+
 }
 
 bool
