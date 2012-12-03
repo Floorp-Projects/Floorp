@@ -370,17 +370,25 @@ StyleEditorChrome.prototype = {
               aEditor.removeActionListener(this);
               self.selectedStyleSheetIndex = aEditor.styleSheetIndex;
               aEditor.sourceEditor.setCaretPosition(line - 1, col - 1);
+
+              let newSheet = self._styleSheetToSelect.sheet;
+              let newLine = self._styleSheetToSelect.line;
+              let newCol = self._styleSheetToSelect.col;
+              self._styleSheetToSelect = null;
+              if (newSheet != sheet) {
+                self._window.setTimeout(self.selectStyleSheet.bind(self, newSheet, newLine, newCol), 0);
+              }
             }
           });
         } else {
           // If a line or column was specified we move the caret appropriately.
           aEditor.sourceEditor.setCaretPosition(line - 1, col - 1);
+          self._styleSheetToSelect = null;
         }
       }
 
       this._view.activeSummary = summary;
       this.selectedStyleSheetIndex = aEditor.styleSheetIndex;
-      this._styleSheetToSelect = null;
     }.bind(this);
 
     if (!this.editors.length) {
