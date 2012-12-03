@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WebGLShader.h"
 #include "WebGLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
@@ -11,6 +12,41 @@ using namespace mozilla;
 JSObject*
 WebGLShader::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap) {
     return dom::WebGLShaderBinding::Wrap(cx, scope, this, triedToWrap);
+}
+
+WebGLShader::WebGLShader(WebGLContext *context, WebGLenum stype)
+    : WebGLContextBoundObject(context)
+    , mType(stype)
+    , mNeedsTranslation(true)
+    , mAttribMaxNameLength(0)
+    , mCompileStatus(false)
+{
+    SetIsDOMBinding();
+    mContext->MakeContextCurrent();
+    mGLName = mContext->gl->fCreateShader(mType);
+    mContext->mShaders.insertBack(this);
+}
+
+void
+WebGLShader::Delete() {
+    mSource.Truncate();
+    mTranslationLog.Truncate();
+    mContext->MakeContextCurrent();
+    mContext->gl->fDeleteShader(mGLName);
+    LinkedListElement<WebGLShader>::removeFrom(mContext->mShaders);
+}
+
+size_t
+WebGLShader::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+    return aMallocSizeOf(this) +
+           mSource.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
+           mTranslationLog.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
+void
+WebGLShader::SetTranslationSuccess() {
+    mTranslationLog.SetIsVoid(true);
+    mNeedsTranslation = false;
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLShader)

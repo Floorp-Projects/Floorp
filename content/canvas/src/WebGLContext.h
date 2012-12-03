@@ -8,6 +8,7 @@
 
 #include "WebGLElementArrayCache.h"
 #include "WebGLObjectModel.h"
+#include "WebGLShader.h"
 #include "WebGLBuffer.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLVertexAttribData.h"
@@ -41,8 +42,6 @@
 #include "ForceDiscreteGPUHelperCGL.h"
 #endif
 
-#include "angle/ShaderLang.h"
-
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
@@ -72,7 +71,6 @@ namespace mozilla {
 
 class WebGLTexture;
 class WebGLProgram;
-class WebGLShader;
 class WebGLFramebuffer;
 class WebGLUniformLocation;
 class WebGLMemoryPressureObserver;
@@ -1638,148 +1636,6 @@ public:
 
         return mFakeBlackStatus == DoNeedFakeBlack;
     }
-};
-
-struct WebGLMappedIdentifier {
-    nsCString original, mapped; // ASCII strings
-    WebGLMappedIdentifier(const nsACString& o, const nsACString& m) : original(o), mapped(m) {}
-};
-
-struct WebGLUniformInfo {
-    uint32_t arraySize;
-    bool isArray;
-    ShDataType type;
-
-    WebGLUniformInfo(uint32_t s = 0, bool a = false, ShDataType t = SH_NONE)
-        : arraySize(s), isArray(a), type(t) {}
-
-    int ElementSize() const {
-        switch (type) {
-            case SH_INT:
-            case SH_FLOAT:
-            case SH_BOOL:
-            case SH_SAMPLER_2D:
-            case SH_SAMPLER_CUBE:
-                return 1;
-            case SH_INT_VEC2:
-            case SH_FLOAT_VEC2:
-            case SH_BOOL_VEC2:
-                return 2;
-            case SH_INT_VEC3:
-            case SH_FLOAT_VEC3:
-            case SH_BOOL_VEC3:
-                return 3;
-            case SH_INT_VEC4:
-            case SH_FLOAT_VEC4:
-            case SH_BOOL_VEC4:
-            case SH_FLOAT_MAT2:
-                return 4;
-            case SH_FLOAT_MAT3:
-                return 9;
-            case SH_FLOAT_MAT4:
-                return 16;
-            default:
-                NS_ABORT(); // should never get here
-                return 0;
-        }
-    }
-};
-
-class WebGLShader MOZ_FINAL
-    : public nsISupports
-    , public WebGLRefCountedObject<WebGLShader>
-    , public LinkedListElement<WebGLShader>
-    , public WebGLContextBoundObject
-    , public nsWrapperCache
-{
-    friend class WebGLContext;
-    friend class WebGLProgram;
-
-public:
-    WebGLShader(WebGLContext *context, WebGLenum stype)
-        : WebGLContextBoundObject(context)
-        , mType(stype)
-        , mNeedsTranslation(true)
-        , mAttribMaxNameLength(0)
-        , mCompileStatus(false)
-    {
-        SetIsDOMBinding();
-        mContext->MakeContextCurrent();
-        mGLName = mContext->gl->fCreateShader(mType);
-        mContext->mShaders.insertBack(this);
-    }
-
-    ~WebGLShader() {
-        DeleteOnce();
-    }
-    
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
-        return aMallocSizeOf(this) +
-               mSource.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-               mTranslationLog.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    }
-
-    void Delete() {
-        mSource.Truncate();
-        mTranslationLog.Truncate();
-        mContext->MakeContextCurrent();
-        mContext->gl->fDeleteShader(mGLName);
-        LinkedListElement<WebGLShader>::removeFrom(mContext->mShaders);
-    }
-
-    WebGLuint GLName() { return mGLName; }
-    WebGLenum ShaderType() { return mType; }
-
-    void SetSource(const nsAString& src) {
-        // XXX do some quick gzip here maybe -- getting this will be very rare
-        mSource.Assign(src);
-    }
-
-    const nsString& Source() const { return mSource; }
-
-    void SetNeedsTranslation() { mNeedsTranslation = true; }
-    bool NeedsTranslation() const { return mNeedsTranslation; }
-
-    void SetCompileStatus (bool status) {
-        mCompileStatus = status;
-    }
-
-    bool CompileStatus() const {
-        return mCompileStatus;
-    }
-
-    void SetTranslationSuccess() {
-        mTranslationLog.SetIsVoid(true);
-        mNeedsTranslation = false;
-    }
-
-    void SetTranslationFailure(const nsCString& msg) {
-        mTranslationLog.Assign(msg); 
-    }
-
-    const nsCString& TranslationLog() const { return mTranslationLog; }
-
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLShader)
-
-protected:
-
-    WebGLuint mGLName;
-    WebGLenum mType;
-    nsString mSource;
-    nsCString mTranslationLog; // The translation log should contain only ASCII characters
-    bool mNeedsTranslation;
-    nsTArray<WebGLMappedIdentifier> mAttributes;
-    nsTArray<WebGLMappedIdentifier> mUniforms;
-    nsTArray<WebGLUniformInfo> mUniformInfos;
-    int mAttribMaxNameLength;
-    bool mCompileStatus;
 };
 
 /** Takes an ASCII string like "foo[i]", turns it into "foo" and returns "[i]" in bracketPart
