@@ -388,6 +388,7 @@ struct NoteWeakMapChildrenTracer : public JSTracer
     {
     }
     nsCycleCollectionTraversalCallback &mCb;
+    bool mTracedAny;
     JSObject *mMap;
     void *mKey;
     void *mKeyDelegate;
@@ -406,6 +407,7 @@ TraceWeakMappingChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         return;
     if (AddToCCKind(kind)) {
         tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey, tracer->mKeyDelegate, thing);
+        tracer->mTracedAny = true;
     } else {
         JS_TraceChildren(trc, thing, kind);
     }
@@ -430,10 +432,12 @@ TraceWeakMapping(js::WeakMapTracer *trc, JSObject *m,
 {
     MOZ_ASSERT(trc->callback == TraceWeakMapping);
     NoteWeakMapsTracer *tracer = static_cast<NoteWeakMapsTracer *>(trc);
-    if (vkind == JSTRACE_STRING)
-        return;
-    if (!xpc_IsGrayGCThing(v) && !tracer->mCb.WantAllTraces())
-        return;
+
+    // If nothing that could be held alive by this entry is marked gray, return.
+    if ((!k || !xpc_IsGrayGCThing(k)) && MOZ_LIKELY(!tracer->mCb.WantAllTraces())) {
+        if (!v || !xpc_IsGrayGCThing(v) || vkind == JSTRACE_STRING)
+            return;
+    }
 
     // The cycle collector can only properly reason about weak maps if it can
     // reason about the liveness of their keys, which in turn requires that
@@ -448,17 +452,25 @@ TraceWeakMapping(js::WeakMapTracer *trc, JSObject *m,
     if (!AddToCCKind(kkind))
         k = nullptr;
 
-    JSObject *kdelegate = NULL;
-    if (kkind == JSTRACE_OBJECT)
+    JSObject *kdelegate = nullptr;
+    if (k && kkind == JSTRACE_OBJECT)
         kdelegate = js::GetWeakmapKeyDelegate((JSObject *)k);
 
     if (AddToCCKind(vkind)) {
         tracer->mCb.NoteWeakMapping(m, k, kdelegate, v);
     } else {
+        tracer->mChildTracer.mTracedAny = false;
         tracer->mChildTracer.mMap = m;
         tracer->mChildTracer.mKey = k;
         tracer->mChildTracer.mKeyDelegate = kdelegate;
-        JS_TraceChildren(&tracer->mChildTracer, v, vkind);
+
+        if (v && vkind != JSTRACE_STRING)
+            JS_TraceChildren(&tracer->mChildTracer, v, vkind);
+
+        // The delegate could hold alive the key, so report something to the CC
+        // if we haven't already.
+        if (!tracer->mChildTracer.mTracedAny && k && xpc_IsGrayGCThing(k) && kdelegate)
+            tracer->mCb.NoteWeakMapping(m, k, kdelegate, nullptr);
     }
 }
 
