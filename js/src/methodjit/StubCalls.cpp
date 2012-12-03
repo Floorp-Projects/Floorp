@@ -98,6 +98,15 @@ stubs::Name(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::IntrinsicName(VMFrame &f, PropertyName *name)
+{
+    RootedValue rval(f.cx);
+    if (!f.cx->global().get()->getIntrinsicValue(f.cx, name, &rval))
+        THROW();
+    f.regs.sp[0] = rval;
+}
+
+void JS_FASTCALL
 stubs::GetElem(VMFrame &f)
 {
     MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
