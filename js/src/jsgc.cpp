@@ -2909,9 +2909,29 @@ JSCompartment::findOutgoingEdges(ComponentFinder& finder)
         finder.addEdgeTo(rt->atomsCompartment);
 
     for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        JS_ASSERT(e.front().key.kind != CrossCompartmentKey::StringWrapper);
+        CrossCompartmentKey::Kind kind = e.front().key.kind;
+        JS_ASSERT(kind != CrossCompartmentKey::StringWrapper);
         Cell *other = e.front().key.wrapped;
-        if (!other->isMarked(BLACK) || other->isMarked(GRAY)) {
+        if (kind == CrossCompartmentKey::ObjectWrapper) {
+            /*
+             * Add edge to wrapped object compartment if wrapped object is not
+             * marked black to indicate that wrapper compartment not be swept
+             * after wrapped compartment.
+             */
+            if (!other->isMarked(BLACK) || other->isMarked(GRAY)) {
+                JSCompartment *w = other->compartment();
+                if (w->isGCMarking())
+                    finder.addEdgeTo(w);
+            }
+        } else {
+            JS_ASSERT(kind == CrossCompartmentKey::DebuggerScript ||
+                      kind == CrossCompartmentKey::DebuggerObject ||
+                      kind == CrossCompartmentKey::DebuggerEnvironment);
+            /*
+             * Add edge for debugger object wrappers, to ensure (in conjuction
+             * with call to Debugger::findCompartmentEdges below) that debugger
+             * and debuggee objects are always swept in the same group.
+             */
             JSCompartment *w = other->compartment();
             if (w->isGCMarking())
                 finder.addEdgeTo(w);
@@ -3002,11 +3022,13 @@ GrayLinkSlot(RawObject o)
     return IsCrossCompartmentWrapper(o) ? JSSLOT_GC_GRAY_LINK : Debugger::gcGrayLinkSlot();
 }
 
+#ifdef DEBUG
 static void
 AssertNotOnGrayList(RawObject o)
 {
     JS_ASSERT_IF(IsGrayListObject(o), o->getReservedSlot(GrayLinkSlot(o)).isUndefined());
 }
+#endif
 
 static Cell *
 CrossCompartmentPointerReferent(RawObject o)
@@ -3225,29 +3247,6 @@ EndMarkingCompartmentGroup(JSRuntime *rt)
 #endif
 
     JS_ASSERT(rt->gcMarker.isDrained());
-
-    {
-        gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_FIND_BLACK_GRAY);
-
-        /*
-         * Having black->gray edges violates our promise to the cycle
-         * collector. This can happen if we're collecting a compartment and it has
-         * an edge to an uncollected compartment: it's possible that the source and
-         * destination of the cross-compartment edge should be gray, but the source
-         * was marked black by the conservative scanner.
-         */
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
-                Cell *dst = e.front().key.wrapped;
-                Cell *src = ToMarkable(e.front().value);
-                JS_ASSERT(src->compartment() == c);
-                if (IsCellMarked(&src) && !src->isMarked(GRAY) && dst->isMarked(GRAY)) {
-                    JS_ASSERT(!dst->compartment()->isCollecting());
-                    rt->gcFoundBlackGrayEdges = true;
-                }
-            }
-        }
-    }
 }
 
 static void
