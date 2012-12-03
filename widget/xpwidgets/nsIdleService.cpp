@@ -647,6 +647,9 @@ nsIdleService::IdleTimerCallback(void)
   // Remember that we no longer have a timer running.
   mCurrentlySetToTimeoutAt = TimeStamp();
 
+  // Find the last detected idle time.
+  uint32_t lastIdleTimeInMS = static_cast<uint32_t>((TimeStamp::Now() -
+                              mLastUserInteraction).ToMilliseconds());
   // Get the current idle time.
   uint32_t currentIdleTimeInMS;
 
@@ -671,10 +674,8 @@ nsIdleService::IdleTimerCallback(void)
 
   // Check if we have had some user interaction we didn't handle previously
   // we do the calculation in ms to lessen the chance for rounding errors to
-  // trigger wrong results, it is also very important that we call PR_Now AFTER
-  // the call to GetIdleTime().
-  TimeDuration aIdleTime = TimeStamp::Now() - mLastUserInteraction;
-  if (aIdleTime.ToMilliseconds() > currentIdleTimeInMS)
+  // trigger wrong results.
+  if (lastIdleTimeInMS > currentIdleTimeInMS)
   {
     // We had user activity, so handle that part first (to ensure the listeners
     // don't risk getting an non-idle after they get a new idle indication.
@@ -798,7 +799,7 @@ nsIdleService::SetTimerExpiryIfBefore(TimeStamp aNextTimeout)
 
     TimeDuration deltaTime = mCurrentlySetToTimeoutAt - currentTime;
     PR_LOG(sLog, PR_LOG_DEBUG,
-           ("idleService: IdleService", "reset timer expiry to %0.f msec from now",
+           ("idleService: IdleService reset timer expiry to %0.f msec from now",
             deltaTime.ToMilliseconds()));
 #ifdef ANDROID
     __android_log_print(ANDROID_LOG_INFO, "IdleService",
