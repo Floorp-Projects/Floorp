@@ -705,7 +705,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         if (Tabs.getInstance().getSelectedTab().getState() == Tab.STATE_LOADING)
             return;
 
-        if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
+        if (image != null) {
             image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
             mFavicon.setImageBitmap(image);
         } else {
