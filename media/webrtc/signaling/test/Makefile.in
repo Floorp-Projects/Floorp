@@ -34,6 +34,12 @@ LIBS += \
 endif
 endif
 
+ifdef MOZ_NATIVE_LIBVPX
+LIBS += \
+  $(MOZ_LIBVPX_LIBS) \
+  $(NULL)
+endif
+
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 LIBS += \
   $(XLIBS) \
