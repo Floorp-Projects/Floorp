@@ -56,7 +56,6 @@ function test() {
     let win = OpenBrowserWindow(options);
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad, false);
-      win.gBrowser.stop(); // Cancel the current home page load
       windowsToClose.push(win);
       callback(win);
     }, false);
