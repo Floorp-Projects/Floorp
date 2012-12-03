@@ -1163,22 +1163,13 @@ RadioInterfaceLayer.prototype = {
    * Track the active call and update the audio system as its state changes.
    */
   _activeCall: null,
-  updateCallAudioState: function updateCallAudioState() {
-    if (!this._activeCall) {
-      // Disable audio.
-      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
-      debug("No active call, put audio system into PHONE_STATE_NORMAL: "
-            + gAudioManager.phoneState);
-      return;
-    }
-    switch (this._activeCall.state) {
-      case nsIRadioInterfaceLayer.CALL_STATE_INCOMING:
-        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
-        debug("Incoming call, put audio system into PHONE_STATE_RINGTONE: "
-              + gAudioManager.phoneState);
-        break;
+  updateCallAudioState: function updateCallAudioState(call) {
+    switch (call.state) {
       case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
+      case nsIRadioInterfaceLayer.CALL_STATE_ALERTING:
       case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
+        call.isActive = true;
+        this._activeCall = call;
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
         if (this.speakerEnabled) {
           gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
@@ -1186,6 +1177,28 @@ RadioInterfaceLayer.prototype = {
         }
         debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
               + gAudioManager.phoneState);
+        break;
+      case nsIRadioInterfaceLayer.CALL_STATE_INCOMING:
+        call.isActive = false;
+        if (!this._activeCall) {
+          // We can change the phone state into RINGTONE only when there's
+          // no active call.
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
+          debug("Incoming call, put audio system into PHONE_STATE_RINGTONE: "
+                + gAudioManager.phoneState);
+        }
+        break;
+      case nsIRadioInterfaceLayer.CALL_STATE_HELD: // Fall through...
+      case nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED:
+        call.isActive = false;
+        if (this._activeCall &&
+            this._activeCall.callIndex == call.callIndex) {
+          // Previously active call is not active now. Disable audio.
+          this._activeCall = null;
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+          debug("No active call, put audio system into PHONE_STATE_NORMAL: "
+                + gAudioManager.phoneState);
+        }
         break;
     }
   },
@@ -1211,15 +1224,7 @@ RadioInterfaceLayer.prototype = {
     if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
       gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
-
-    if (call.isActive) {
-      this._activeCall = call;
-    } else if (this._activeCall &&
-               this._activeCall.callIndex == call.callIndex) {
-      // Previously active call is not active now.
-      this._activeCall = null;
-    }
-    this.updateCallAudioState();
+    this.updateCallAudioState(call);
     this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },
 
@@ -1228,11 +1233,8 @@ RadioInterfaceLayer.prototype = {
    */
   handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
-    if (call.isActive) {
-      this._activeCall = null;
-    }
-    this.updateCallAudioState();
     call.state = nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED;
+    this.updateCallAudioState(call);
     this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },
 
