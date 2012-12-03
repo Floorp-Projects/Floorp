@@ -1169,11 +1169,11 @@ CompressIndex(int index, const nsTextFragment*fragment)
   if (fragment->Is2b()) {
     const PRUnichar *data=fragment->Get2b();
     while(*data && index) {
-      if (XP_IS_SPACE_W(*data)){
+      if (dom::IsSpaceCharacter(*data)){
         do {
           ++data;
           --index;
-        }while(XP_IS_SPACE_W(*data) && index);
+        }while(dom::IsSpaceCharacter(*data) && index);
       }
       else {
         ++data;
@@ -1185,11 +1185,11 @@ CompressIndex(int index, const nsTextFragment*fragment)
   else {
     const char *data=fragment->Get1b();
     while(*data && index) {
-      if (XP_IS_SPACE_W(*data)){
+      if (dom::IsSpaceCharacter(*data)){
         do {
           ++data;
           --index;
-        }while(XP_IS_SPACE_W(*data) && index);
+        }while(dom::IsSpaceCharacter(*data) && index);
       }
       else {
         ++data;

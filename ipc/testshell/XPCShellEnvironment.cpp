@@ -276,26 +276,22 @@ Load(JSContext *cx,
      unsigned argc,
      jsval *vp)
 {
-    unsigned i;
-    JSString *str;
-    JSScript *script;
     jsval result;
-    FILE *file;
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
 
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (unsigned i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString filename(cx, str);
         if (!filename)
             return JS_FALSE;
-        file = fopen(filename.ptr(), "r");
+        FILE *file = fopen(filename.ptr(), "r");
         if (!file) {
             JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
             return JS_FALSE;

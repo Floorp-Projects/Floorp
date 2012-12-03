@@ -5,7 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys, os.path, re, xpidl, itertools
+import sys, os, xpidl
 
 # --makedepend-output support.
 make_dependencies = []
@@ -269,7 +269,7 @@ def init_value(attribute):
             return "NS_LITERAL_STRING(\"%s\")" % attribute.defvalue
         if realtype.count("nsACString"):
             return "NS_LITERAL_CSTRING(\"%s\")" % attribute.defvalue
-        raise IDLError("Default value is not supported for type %s" % realtype)
+        raise xpidl.IDLError("Default value is not supported for type %s" % realtype)
 
 def write_header(iface, fd):
     attributes = []

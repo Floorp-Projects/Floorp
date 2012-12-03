@@ -115,7 +115,8 @@
 
       //////////////////////////////////////////////////////////////////////////
       // test gEmptyRoleMap
-      testRole("cell", ROLE_NOTHING);
+      testRole("buttontable_row", ROLE_NOTHING);
+      testRole("buttontable_cell", ROLE_NOTHING);
 
       // abstract roles
       var abstract_roles = ["composite", "landmark", "structure", "widget",
@@ -275,8 +276,8 @@
 
   <!-- test gEmptyRoleMap -->
   <table role="button">
-    <tr>
-      <td id="cell">cell</td>
+    <tr id="buttontable_row">
+      <td id="buttontable_cell">cell</td>
     </tr>
   </table>
 

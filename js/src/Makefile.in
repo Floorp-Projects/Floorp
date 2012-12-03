@@ -109,9 +109,9 @@ CPPSRCS		= \
 		jswatchpoint.cpp \
 		jsweakmap.cpp \
 		jsworkers.cpp \
-		threadpool.cpp \
-		monitor.cpp \
-		forkjoin.cpp \
+		ThreadPool.cpp \
+		Monitor.cpp \
+		ForkJoin.cpp \
 		jswrapper.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \
@@ -296,6 +296,7 @@ CPPSRCS +=	MIR.cpp \
 		LICM.cpp \
 		LinearScan.cpp \
 		LIR.cpp \
+		LiveRangeAllocator.cpp \
 		Lowering.cpp \
 		Lowering-shared.cpp \
 		MCallOptimize.cpp \

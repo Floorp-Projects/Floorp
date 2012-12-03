@@ -660,6 +660,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadBaselineOrIonCode(Register script);
+
+    void printf(const char *output);
+    void printf(const char *output, Register value);
 };
 
 } // namespace ion

@@ -916,7 +916,7 @@ JSCompartment::sweepBreakpoints(FreeOp *fop)
 {
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
 
-    if (JS_CLIST_IS_EMPTY(&rt->debuggerList))
+    if (rt->debuggerList.isEmpty())
         return;
 
     for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {

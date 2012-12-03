@@ -1,0 +1,42 @@
+diff --git a/media/omx-plugin/include/gb/stagefright/DataSource.h b/media/omx-plugin/include/gb/stagefright/DataSource.h
+index 752d193..a3da3ed 100644
+--- a/media/omx-plugin/include/gb/stagefright/DataSource.h
++++ b/media/omx-plugin/include/gb/stagefright/DataSource.h
+@@ -26,20 +26,12 @@
+ #include <utils/RefBase.h>
+ #include <utils/threads.h>
+ 
+-#if !defined(STAGEFRIGHT_EXPORT)
+-#define STAGEFRIGHT_EXPORT
+-#endif
+-
+-#if !defined(MOZ_STAGEFRIGHT_OFF_T)
+-#define MOZ_STAGEFRIGHT_OFF_T off64_t
+-#endif
+-
+ namespace android {
+ 
+ struct AMessage;
+ class String8;
+ 
+-class STAGEFRIGHT_EXPORT DataSource : public RefBase {
++class DataSource : public RefBase {
+ public:
+     enum Flags {
+         kWantsPrefetching      = 1,
+@@ -55,13 +47,13 @@ public:
+ 
+     virtual status_t initCheck() const = 0;
+ 
+-    virtual ssize_t readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size_t size) = 0;
++    virtual ssize_t readAt(off_t offset, void *data, size_t size) = 0;
+ 
+     // Convenience methods:
+     bool getUInt16(off_t offset, uint16_t *x);
+ 
+     // May return ERROR_UNSUPPORTED.
+-    virtual status_t getSize(MOZ_STAGEFRIGHT_OFF_T *size);
++    virtual status_t getSize(off_t *size);
+ 
+     virtual uint32_t flags() {
+         return 0;

@@ -1280,15 +1280,46 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
     return JS_WriteBytes(aWriter, &value, sizeof(value));
   }
 
+  IDBTransaction* transaction = cloneWriteInfo->mTransaction;
+  FileManager* fileManager = transaction->Database()->Manager();
+
+  file::FileHandle* fileHandle = nullptr;
+  if (NS_SUCCEEDED(UnwrapObject<file::FileHandle>(aCx, aObj, fileHandle))) {
+    nsRefPtr<FileInfo> fileInfo = fileHandle->GetFileInfo();
+
+    // Throw when trying to store non IDB file handles or IDB file handles
+    // across databases.
+    if (!fileInfo || fileInfo->Manager() != fileManager) {
+      return false;
+    }
+
+    NS_ConvertUTF16toUTF8 convType(fileHandle->Type());
+    uint32_t convTypeLength = SwapBytes(convType.Length());
+
+    NS_ConvertUTF16toUTF8 convName(fileHandle->Name());
+    uint32_t convNameLength = SwapBytes(convName.Length());
+
+    if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_FILEHANDLE,
+                            cloneWriteInfo->mFiles.Length()) ||
+        !JS_WriteBytes(aWriter, &convTypeLength, sizeof(uint32_t)) ||
+        !JS_WriteBytes(aWriter, convType.get(), convType.Length()) ||
+        !JS_WriteBytes(aWriter, &convNameLength, sizeof(uint32_t)) ||
+        !JS_WriteBytes(aWriter, convName.get(), convName.Length())) {
+      return false;
+    }
+
+    StructuredCloneFile* file = cloneWriteInfo->mFiles.AppendElement();
+    file->mFileInfo = fileInfo.forget();
+
+    return true;
+  }
+
   nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
   nsContentUtils::XPConnect()->
     GetWrappedNativeOfJSObject(aCx, aObj, getter_AddRefs(wrappedNative));
 
   if (wrappedNative) {
     nsISupports* supports = wrappedNative->Native();
-
-    IDBTransaction* transaction = cloneWriteInfo->mTransaction;
-    FileManager* fileManager = transaction->Database()->Manager();
 
     nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
     if (blob) {
@@ -1369,47 +1400,6 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
       cloneFile->mFile = blob.forget();
       cloneFile->mFileInfo = fileInfo.forget();
       cloneFile->mInputStream = inputStream.forget();
-
-      return true;
-    }
-
-    nsCOMPtr<nsIDOMFileHandle> fileHandle = do_QueryInterface(supports);
-    if (fileHandle) {
-      nsRefPtr<FileInfo> fileInfo = fileHandle->GetFileInfo();
-
-      // Throw when trying to store non IDB file handles or IDB file handles
-      // across databases.
-      if (!fileInfo || fileInfo->Manager() != fileManager) {
-        return false;
-      }
-
-      nsString type;
-      if (NS_FAILED(fileHandle->GetType(type))) {
-        NS_WARNING("Failed to get type!");
-        return false;
-      }
-      NS_ConvertUTF16toUTF8 convType(type);
-      uint32_t convTypeLength = SwapBytes(convType.Length());
-
-      nsString name;
-      if (NS_FAILED(fileHandle->GetName(name))) {
-        NS_WARNING("Failed to get name!");
-        return false;
-      }
-      NS_ConvertUTF16toUTF8 convName(name);
-      uint32_t convNameLength = SwapBytes(convName.Length());
-
-      if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_FILEHANDLE,
-                              cloneWriteInfo->mFiles.Length()) ||
-          !JS_WriteBytes(aWriter, &convTypeLength, sizeof(uint32_t)) ||
-          !JS_WriteBytes(aWriter, convType.get(), convType.Length()) ||
-          !JS_WriteBytes(aWriter, &convNameLength, sizeof(uint32_t)) ||
-          !JS_WriteBytes(aWriter, convName.get(), convName.Length())) {
-        return false;
-      }
-
-      StructuredCloneFile* file = cloneWriteInfo->mFiles.AppendElement();
-      file->mFileInfo = fileInfo.forget();
 
       return true;
     }
