@@ -3621,7 +3621,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, StackFrame
         return false;
 
     script->isActiveEval = true;
-    return ExecuteKernel(cx, script, *env, thisv, EXECUTE_DEBUG, fp, rval);
+    ExecuteType type = !fp && env->isGlobal() ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
+    return ExecuteKernel(cx, script, *env, thisv, type, fp, rval);
 }
 
 static JSBool
