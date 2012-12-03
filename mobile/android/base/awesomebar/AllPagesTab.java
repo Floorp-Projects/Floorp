@@ -578,16 +578,21 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         mSuggestionsOptInPrompt = LayoutInflater.from(mContext).inflate(R.layout.awesomebar_suggestion_prompt, (LinearLayout)getView(), false);
         ((TextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title))
                 .setText(getResources().getString(R.string.suggestions_prompt, mSearchEngines.get(0).name));
-        mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes).setOnClickListener(new OnClickListener() {
+
+        final View yesButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes);
+        final View noButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_no);
+        OnClickListener listener = new OnClickListener() {
             public void onClick(View v) {
-                setSuggestionsEnabled(true);
+                // Prevent the buttons from being clicked multiple times (bug 816902)
+                yesButton.setOnClickListener(null);
+                noButton.setOnClickListener(null);
+
+                setSuggestionsEnabled(v == yesButton);
             }
-        });
-        mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_no).setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                setSuggestionsEnabled(false);
-            }
-        });
+        };
+        yesButton.setOnClickListener(listener);
+        noButton.setOnClickListener(listener);
+
         mSuggestionsOptInPrompt.setVisibility(View.GONE);
         ((LinearLayout)getView()).addView(mSuggestionsOptInPrompt, 0);
     }
