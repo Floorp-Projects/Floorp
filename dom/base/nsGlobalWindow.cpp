@@ -11092,11 +11092,9 @@ nsGlobalChromeWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
 // nsGlobalModalWindow implementation
 
 // QueryInterface implementation for nsGlobalModalWindow
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalModalWindow)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalModalWindow,
-                                                  nsGlobalWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValue)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsGlobalModalWindow,
+                                     nsGlobalWindow,
+                                     mReturnValue)
 
 DOMCI_DATA(ModalContentWindow, nsGlobalModalWindow)
 
@@ -11107,12 +11105,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 
 NS_IMPL_ADDREF_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 NS_IMPL_RELEASE_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
-
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGlobalModalWindow,
-                                                nsGlobalWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValue)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 NS_IMETHODIMP

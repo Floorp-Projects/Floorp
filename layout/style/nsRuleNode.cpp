@@ -3580,7 +3580,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     return nullptr;
 
   nsStyleCoord tempCoord;
-  bool unitOK;
+  DebugOnly<bool> unitOK;
   for (nsCSSShadowItem* item = shadowList->ShadowAt(0);
        aList;
        aList = aList->mNext, ++item) {

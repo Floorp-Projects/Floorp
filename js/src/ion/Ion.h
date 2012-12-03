@@ -150,6 +150,13 @@ struct IonOptions
     // stop running this function in IonMonkey. (default 512)
     uint32 slowCallLimit;
 
+    // When caller runs in IM, but callee not, we take a slow path to the interpreter.
+    // This has a significant overhead. In order to decrease the number of times this happens,
+    // the useCount gets incremented faster to compile this function in IM and use the fastpath.
+    //
+    // Default: 5
+    uint32 slowCallIncUseCount;
+
     void setEagerCompilation() {
         eagerCompilation = true;
         usesBeforeCompile = usesBeforeCompileNoJaeger = 0;
@@ -183,7 +190,8 @@ struct IonOptions
         inlineMaxTotalBytecodeLength(800),
         inlineUseCountRatio(128),
         eagerCompilation(false),
-        slowCallLimit(512)
+        slowCallLimit(512),
+        slowCallIncUseCount(5)
     {
     }
 };

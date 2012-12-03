@@ -25,6 +25,7 @@
 #include "nsIDOMWakeLock.h"
 #include "AudioChannelCommon.h"
 #include "DecoderTraits.h"
+#include "MediaMetadataManager.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -119,10 +120,10 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  virtual void MetadataLoaded(uint32_t aChannels,
-                              uint32_t aRate,
+  virtual void MetadataLoaded(int aChannels,
+                              int aRate,
                               bool aHasAudio,
-                              const mozilla::MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
+                              const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
@@ -693,7 +694,7 @@ protected:
   static PLDHashOperator BuildObjectFromTags(nsCStringHashKey::KeyType aKey,
                                              nsCString aValue,
                                              void* aUserArg);
-  nsAutoPtr<const mozilla::MetadataTags> mTags;
+  nsAutoPtr<const MetadataTags> mTags;
 
   // URI of the resource we're attempting to load. This stores the value we
   // return in the currentSrc attribute. Use GetCurrentSrc() to access the

@@ -26,7 +26,6 @@
 #include "jsprototypes.h"
 #include "jsutil.h"
 #include "prmjtime.h"
-#include "vm/threadpool.h"
 
 #include "ds/LifoAlloc.h"
 #include "gc/Statistics.h"
@@ -34,6 +33,7 @@
 #include "js/Vector.h"
 #include "vm/Stack.h"
 #include "vm/SPSProfiler.h"
+#include "vm/ThreadPool.h"
 
 #include "ion/PcScriptCache.h"
 
@@ -896,7 +896,7 @@ struct JSRuntime : js::RuntimeFriendFields
      * Linked list of all js::Debugger objects. This may be accessed by the GC
      * thread, if any, or a thread that is in a request and holds gcLock.
      */
-    JSCList             debuggerList;
+    mozilla::LinkedList<js::Debugger> debuggerList;
 
     /*
      * Head of circular list of all enabled Debuggers that have

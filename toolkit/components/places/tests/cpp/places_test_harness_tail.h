@@ -6,6 +6,9 @@
 
 #include "nsWidgetsCID.h"
 #include "nsIComponentRegistrar.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#endif
 
 #ifndef TEST_NAME
 #error "Must #define TEST_NAME before including places_test_harness_tail.h"
@@ -90,6 +93,32 @@ main(int aArgc,
     fail("Couldn't get the profile directory.");
     return -1;
   }
+
+#ifdef MOZ_CRASHREPORTER
+    char* enabled = PR_GetEnv("MOZ_CRASHREPORTER");
+    if (enabled && !strcmp(enabled, "1")) {
+      // bug 787458: move this to an even-more-common location to use in all
+      // C++ unittests
+      nsCOMPtr<nsICrashReporter> crashreporter =
+        do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+      if (crashreporter) {
+        fprintf(stderr, "Setting up crash reporting\n");
+
+        nsCOMPtr<nsIProperties> dirsvc =
+          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+        if (!dirsvc)
+          NS_RUNTIMEABORT("Couldn't get directory service");
+        nsCOMPtr<nsIFile> cwd;
+        nsresult rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR,
+                                  NS_GET_IID(nsIFile),
+                                  getter_AddRefs(cwd));
+        if (NS_FAILED(rv))
+          NS_RUNTIMEABORT("Couldn't get CWD");
+        crashreporter->SetEnabled(true);
+        crashreporter->SetMinidumpPath(cwd);
+      }
+    }
+#endif
 
   nsRefPtr<WaitForConnectionClosed> spinClose = new WaitForConnectionClosed();
 

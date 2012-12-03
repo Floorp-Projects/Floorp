@@ -783,6 +783,11 @@ this.DOMApplicationRegistry = {
     // already installed application.
     let isUpdate = (app.installState == "installed");
 
+    // An app download would only be triggered for two reasons: an app
+    // update or while retrying to download a previously failed or canceled
+    // instalation.
+    app.retryingDownload = !isUpdate;
+
     // We need to get the update manifest here, not the webapp manifest.
     let file = FileUtils.getFile(DIRECTORY_NAME,
                                  ["webapps", id, "update.webapp"], true);
@@ -854,12 +859,11 @@ this.DOMApplicationRegistry = {
 
   applyDownload: function applyDownload(aManifestURL) {
     debug("applyDownload for " + aManifestURL);
-    let app = this.getAppByManifestURL(aManifestURL);
+    let id = this._appIdForManifestURL(aManifestURL);
+    let app = this.webapps[id];
     if (!app || (app && !app.readyToApplyDownload)) {
       return;
     }
-
-    let id = this._appIdForManifestURL(app.manifestURL);
 
     // Clean up the deprecated manifest cache if needed.
     if (id in this._manifestCache) {
@@ -883,17 +887,25 @@ this.DOMApplicationRegistry = {
 
     // Get the manifest, and set properties.
     this.getManifestFor(app.origin, (function(aData) {
+      app.downloading = false;
+      app.downloadAvailable = false;
+      app.downloadSize = 0;
+      app.installState = "installed";
       app.readyToApplyDownload = false;
-      this.broadcastMessage("Webapps:PackageEvent",
-                            { type: "applied",
-                              manifestURL: app.manifestURL,
-                              app: app,
-                              manifest: aData });
-      // Update the permissions for this app.
-      PermissionsInstaller.installPermissions({ manifest: aData,
-                                                origin: app.origin,
-                                                manifestURL: app.manifestURL },
-                                              true);
+      delete app.retryingDownload;
+
+      DOMApplicationRegistry._saveApps(function() {
+        DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
+                                                { type: "applied",
+                                                  manifestURL: app.manifestURL,
+                                                  app: app,
+                                                  manifest: aData });
+        // Update the permissions for this app.
+        PermissionsInstaller.installPermissions({ manifest: aData,
+                                                  origin: app.origin,
+                                                  manifestURL: app.manifestURL },
+                                                true);
+      });
     }).bind(this));
   },
 
@@ -1692,7 +1704,8 @@ this.DOMApplicationRegistry = {
       return;
 
     let id = this._appId(aOrigin);
-    if (!id || this.webapps[id].installState == "pending") {
+    let app = this.webapps[id];
+    if (!id || (app.installState == "pending" && !app.retryingDownload)) {
       aCallback(null);
       return;
     }

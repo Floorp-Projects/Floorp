@@ -297,7 +297,7 @@ npnComplete:
 
 // called on the socket thread
 nsresult
-nsHttpConnection::Activate(nsAHttpTransaction *trans, uint8_t caps, int32_t pri)
+nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri)
 {
     nsresult rv;
 
@@ -358,7 +358,7 @@ failed_activation:
 }
 
 void
-nsHttpConnection::SetupNPN(uint8_t caps)
+nsHttpConnection::SetupNPN(uint32_t caps)
 {
     if (mSetupNPNCalled)                                /* do only once */
         return;

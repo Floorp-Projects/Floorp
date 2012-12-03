@@ -369,6 +369,9 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree)
       testStates(acc, statesObj.states, statesObj.extraStates,
                  statesObj.absentStates, statesObj.absentExtraStates);
 
+    } else if (prop == "tagName") {
+      is(accTree[prop], acc.DOMNode.tagName, msg);
+
     } else if (prop != "children") {
       is(acc[prop], accTree[prop], msg);
     }

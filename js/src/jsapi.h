@@ -888,6 +888,8 @@ class ValueOperations
     JSObject *toObjectOrNull() const { return value()->toObjectOrNull(); }
     void *toGCThing() const { return value()->toGCThing(); }
 
+    JSValueType extractNonDoubleType() const { return value()->extractNonDoubleType(); }
+
 #ifdef DEBUG
     JSWhyMagic whyMagic() const { return value()->whyMagic(); }
 #endif

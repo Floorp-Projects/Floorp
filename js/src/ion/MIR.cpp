@@ -591,43 +591,53 @@ NeedNegativeZeroCheck(MDefinition *def)
     // Test if all uses have the same symantic for -0 and 0
     for (MUseIterator use = def->usesBegin(); use != def->usesEnd(); use++) {
         if (use->node()->isResumePoint())
-            return true;
+            continue;
 
         MDefinition *use_def = use->node()->toDefinition();
         switch (use_def->op()) {
           case MDefinition::Op_Add: {
             // x + y gives -0, when both x and y are -0
-            // - When other operand can't produce -0 (i.e. all opcodes, except Mul/Div/ToInt32)
-            //   Remove negative zero check on this operand 
-            // - When both operands can produce -0 (both Mul/Div/ToInt32 opcode)
-            //   We can remove the check eagerly on this operand.
-            MDefinition *operand = use_def->getOperand(0);
-            if (operand == def) {
-                operand = use_def->getOperand(1);
 
-                // Don't remove check when both operands are same definition
-                // As removing it from one operand, will remove it from both.
-                if (operand == def)
-                    return true;
+            // Figure out the order in which the addition's operands will
+            // execute. EdgeCaseAnalysis::analyzeLate has renumbered the MIR
+            // definitions for us so that this just requires comparing ids.
+            MDefinition *first = use_def->getOperand(0);
+            MDefinition *second = use_def->getOperand(1);
+            if (first->id() > second->id()) {
+                MDefinition *temp = first;
+                first = second;
+                second = temp;
             }
 
-            // Check if check is possibly eagerly removed on other operand
-            // and don't remove check eagerly on this operand in that case.
-            if (operand->isMul()) {
-                MMul *mul = operand->toMul();
-                if (!mul->canBeNegativeZero())
+            if (def == first) {
+                // Negative zero checks can be removed on the first executed
+                // operand only if it is guaranteed the second executed operand
+                // will produce a value other than -0. While the second is
+                // typed as an int32, a bailout taken between execution of the
+                // operands may change that type and cause a -0 to flow to the
+                // second.
+                //
+                // There is no way to test whether there are any bailouts
+                // between execution of the operands, so remove negative
+                // zero checks from the first only if the second's type is
+                // independent from type changes that may occur after bailing.
+                switch (second->op()) {
+                  case MDefinition::Op_Constant:
+                  case MDefinition::Op_BitAnd:
+                  case MDefinition::Op_BitOr:
+                  case MDefinition::Op_BitXor:
+                  case MDefinition::Op_BitNot:
+                  case MDefinition::Op_Lsh:
+                  case MDefinition::Op_Rsh:
+                    break;
+                  default:
                     return true;
-            } else if (operand->isDiv()) {
-                MDiv *div = operand->toDiv();
-                if (!div->canBeNegativeZero())
-                    return true;
-            } else if (operand->isToInt32()) {
-                MToInt32 *int32 = operand->toToInt32();
-                if (!int32->canBeNegativeZero())
-                    return true;
-            } else if (operand->isPhi()) {
-                return true;
+                }
             }
+
+            // The negative zero check can always be removed on the second
+            // executed operand; by the time this executes the first will have
+            // been evaluated as int32 and the addition's result cannot be -0.
             break;
           }
           case MDefinition::Op_StoreElement:
@@ -1235,6 +1245,7 @@ MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *cal
     stackDepth_(block->stackDepth()),
     pc_(pc),
     caller_(caller),
+    instruction_(NULL),
     mode_(mode)
 {
 }

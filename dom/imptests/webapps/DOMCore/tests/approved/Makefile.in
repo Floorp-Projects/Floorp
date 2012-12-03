@@ -13,7 +13,11 @@ DIRS := \
   $(NULL)
 
 MOCHITEST_FILES := \
+  test_exceptions.html \
   test_interfaces.html \
+  test_Node-compareDocumentPosition.html \
+  test_Node-contains.html \
+  test_Node-properties.html \
   test_Range-cloneContents.html \
   test_Range-cloneRange.html \
   test_Range-collapse.html \

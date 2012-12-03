@@ -5,33 +5,46 @@
 
 this.EXPORTED_SYMBOLS = ["PhoneNumberUtils"];
 
-const DEBUG = true;
-function debug(s) { dump("-*- PhoneNumberutils: " + s + "\n"); }
+const DEBUG = false;
+function debug(s) { if(DEBUG) dump("-*- PhoneNumberutils: " + s + "\n"); }
 
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/PhoneNumber.jsm");
 Cu.import("resource://gre/modules/mcc_iso3166_table.jsm");
 
+#ifdef MOZ_B2G_RIL
 XPCOMUtils.defineLazyServiceGetter(this, "ril",
                                    "@mozilla.org/ril/content-helper;1",
                                    "nsIRILContentHelper");
+#endif
 
 this.PhoneNumberUtils = {
   //  1. See whether we have a network mcc
   //  2. If we don't have that, look for the simcard mcc
   //  3. TODO: If we don't have that or its 0 (not activated), pick up the last used mcc
   //  4. If we don't have, default to some mcc
+
+  // mcc for Brasil
+  _mcc: '724',
+
   _getCountryName: function() {
     let mcc;
     let countryName;
+
+#ifdef MOZ_B2G_RIL
     // Get network mcc.
     if (ril.voiceConnectionInfo && ril.voiceConnectionInfo.network)
       mcc = ril.voiceConnectionInfo.network.mcc;
 
     // Get SIM mcc or set it to mcc for Brasil
     if (!mcc)
-      mcc = ril.iccInfo.mcc || '724';
+      mcc = ril.iccInfo.mcc || this._mcc;
+#else
+    mcc = this._mcc;
+#endif
 
     countryName = MCC_ISO3166_TABLE[mcc];
     debug("MCC: " + mcc + "countryName: " + countryName);
@@ -39,11 +52,18 @@ this.PhoneNumberUtils = {
   },
 
   parse: function(aNumber) {
+    debug("call parse: " + aNumber);
     let result = PhoneNumber.Parse(aNumber, this._getCountryName());
-    debug("InternationalFormat: " + result.internationalFormat);
-    debug("InternationalNumber: " + result.internationalNumber);
-    debug("NationalNumber: " + result.nationalNumber);
-    debug("NationalFormat: " + result.nationalFormat);
+    if (DEBUG) {
+      if (result) {
+        debug("InternationalFormat: " + result.internationalFormat);
+        debug("InternationalNumber: " + result.internationalNumber);
+        debug("NationalNumber: " + result.nationalNumber);
+        debug("NationalFormat: " + result.nationalFormat);
+      } else {
+        debug("No result!\n");
+      }
+    }
     return result;
   },
 
@@ -51,5 +71,5 @@ this.PhoneNumberUtils = {
     let countryName = MCC_ISO3166_TABLE[aMCC];
     debug("found country name: " + countryName);
     return PhoneNumber.Parse(aNumber, countryName);
-  },
+  }
 };

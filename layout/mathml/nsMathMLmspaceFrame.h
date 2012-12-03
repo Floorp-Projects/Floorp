@@ -42,6 +42,10 @@ protected:
   
   virtual int GetSkipSides() const { return 0; }
 
+  virtual nsresult
+  MeasureForWidth(nsRenderingContext& aRenderingContext,
+                  nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+
 private:
   nscoord mWidth;
   nscoord mHeight;

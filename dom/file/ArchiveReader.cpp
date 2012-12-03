@@ -222,29 +222,11 @@ ArchiveReader::GenerateArchiveRequest()
   return ArchiveRequest::Create(mWindow, this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ArchiveReader)
-
-// C++ traverse
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ArchiveReader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBlob)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mData.fileList)
-
-  for (uint32_t i = 0; i < tmp->mRequests.Length(); i++) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRequests[i]");
-    cb.NoteXPCOMChild(static_cast<nsIDOMArchiveRequest*>(tmp->mRequests[i].get()));
-  }
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-// Unlink
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ArchiveReader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBlob)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mData.fileList)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequests)
-  tmp->mRequests.Clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_4(ArchiveReader,
+                           mBlob,
+                           mWindow,
+                           mData.fileList,
+                           mRequests)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ArchiveReader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMArchiveReader)
