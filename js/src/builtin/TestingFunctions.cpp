@@ -448,6 +448,32 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+GCState(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc != 0) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Too many arguments");
+        return false;
+    }
+
+    const char *state;
+    gc::State globalState = cx->runtime->gcIncrementalState;
+    if (globalState == gc::NO_INCREMENTAL)
+        state = "none";
+    else if (globalState == gc::MARK)
+        state = "mark";
+    else if (globalState == gc::SWEEP)
+        state = "sweep";
+    else
+        JS_NOT_REACHED("Unobserveable global GC state");
+
+    *vp = StringValue(js_NewStringCopyZ(cx, state));
+    return true;
+}
+
+static JSBool
 GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -903,6 +929,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gcslice", GCSlice, 1, 0,
 "gcslice(n)",
 "  Run an incremental GC slice that marks about n objects."),
+
+    JS_FN_HELP("gcstate", GCState, 0, 0,
+"gcstate()",
+"  Report the global GC state."),
 
     JS_FN_HELP("gcPreserveCode", GCPreserveCode, 0, 0,
 "gcPreserveCode()",
