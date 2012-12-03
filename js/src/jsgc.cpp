@@ -3518,8 +3518,13 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
                 break;
             }
         }
+
         if (rt->gcFinalizeCallback)
             rt->gcFinalizeCallback(&fop, JSFINALIZE_COLLECTION_END, !isFull);
+
+        /* If we finished a full GC, then the gray bits are correct. */
+        if (isFull)
+            rt->gcGrayBitsValid = true;
     }
 
     /* Set up list of compartments for sweeping of background things. */
