@@ -91,6 +91,7 @@ class DocumentFragment;
 class DocumentType;
 class DOMImplementation;
 class Element;
+class GlobalObject;
 class HTMLBodyElement;
 class Link;
 class ProcessingInstruction;
@@ -1801,8 +1802,9 @@ public:
   {
     return GetScopeObject();
   }
-  static already_AddRefed<nsIDocument> Constructor(nsISupports* aGlobal,
-                                                   mozilla::ErrorResult& rv);
+  static already_AddRefed<nsIDocument>
+    Constructor(const mozilla::dom::GlobalObject& aGlobal,
+                mozilla::ErrorResult& rv);
   virtual mozilla::dom::DOMImplementation*
     GetImplementation(mozilla::ErrorResult& rv) = 0;
   void GetURL(nsString& retval) const;

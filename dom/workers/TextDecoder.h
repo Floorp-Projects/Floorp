@@ -32,7 +32,7 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static TextDecoder*
-  Constructor(JSContext* aCx, JSObject* aObj,
+  Constructor(const WorkerGlobalObject& aGlobal,
               const nsAString& aEncoding,
               const TextDecoderOptionsWorkers& aOptions,
               ErrorResult& aRv);
