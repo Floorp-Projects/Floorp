@@ -10449,15 +10449,15 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
 }
 
 already_AddRefed<nsIDocument>
-nsIDocument::Constructor(nsISupports* aGlobal, ErrorResult& rv)
+nsIDocument::Constructor(const GlobalObject& aGlobal, ErrorResult& rv)
 {
-  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aGlobal.Get());
   if (!global) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(aGlobal.Get());
   if (!prin) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

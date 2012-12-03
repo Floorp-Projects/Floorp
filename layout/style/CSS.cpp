@@ -7,6 +7,7 @@
 
 #include "CSS.h"
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsCSSParser.h"
 #include "nsGlobalWindow.h"
 #include "nsIDOMDocument.h"
@@ -45,7 +46,7 @@ GetParsingInfo(nsISupports* aGlobal,
 }
 
 /* static */ bool
-CSS::Supports(nsISupports* aGlobal,
+CSS::Supports(const GlobalObject& aGlobal,
               const nsAString& aProperty,
               const nsAString& aValue,
               ErrorResult& aRv)
@@ -53,7 +54,7 @@ CSS::Supports(nsISupports* aGlobal,
   nsCSSParser parser;
   SupportsParsingInfo info;
 
-  nsresult rv = GetParsingInfo(aGlobal, info);
+  nsresult rv = GetParsingInfo(aGlobal.Get(), info);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
@@ -64,14 +65,14 @@ CSS::Supports(nsISupports* aGlobal,
 }
 
 /* static */ bool
-CSS::Supports(nsISupports* aGlobal,
+CSS::Supports(const GlobalObject& aGlobal,
               const nsAString& aCondition,
               ErrorResult& aRv)
 {
   nsCSSParser parser;
   SupportsParsingInfo info;
 
-  nsresult rv = GetParsingInfo(aGlobal, info);
+  nsresult rv = GetParsingInfo(aGlobal.Get(), info);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
