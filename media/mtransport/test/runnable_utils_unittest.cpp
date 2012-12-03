@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -83,6 +84,7 @@ class RunnableArgsTest : public ::testing::Test {
   TargetClass cl_;
 };
 
+
 class DispatchTest : public ::testing::Test {
  public:
   DispatchTest() : ran_(0), cl_(&ran_) {}
@@ -121,9 +123,11 @@ class DispatchTest : public ::testing::Test {
     ASSERT_EQ(10, z);
   }
 
- private:
+ protected:
   int ran_;
   TargetClass cl_;
+
+ private:
   nsCOMPtr<nsIEventTarget> target_;
 };
 
@@ -151,6 +155,34 @@ TEST_F(DispatchTest, Test1Set) {
 TEST_F(DispatchTest, TestRet) {
   TestRet();
 }
+
+void SetNonMethod(TargetClass *cl, int x) {
+  cl->m1(x);
+}
+
+int SetNonMethodRet(TargetClass *cl, int x) {
+  cl->m1(x);
+
+  return x;
+}
+
+TEST_F(DispatchTest, TestNonMethod) {
+  test_utils->sts_target()->Dispatch(
+      WrapRunnableNM(SetNonMethod, &cl_, 10), NS_DISPATCH_SYNC);
+
+  ASSERT_EQ(1, ran_);
+}
+
+TEST_F(DispatchTest, TestNonMethodRet) {
+  int z;
+
+  test_utils->sts_target()->Dispatch(
+      WrapRunnableNMRet(SetNonMethodRet, &cl_, 10, &z), NS_DISPATCH_SYNC);
+
+  ASSERT_EQ(1, ran_);
+  ASSERT_EQ(10, z);
+}
+
 
 
 } // end of namespace

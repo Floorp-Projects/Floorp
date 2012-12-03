@@ -21,6 +21,21 @@ class runnable_args_base : public nsRunnable {
 };
 
 
+// The generated file contains four major function templates
+// (in variants for arbitrary numbers of arguments up to 10,
+// which is why it is machine generated). The four templates
+// are:
+//
+// WrapRunnable(o, m, ...) -- wraps a member function m of an object ptr o 
+// WrapRunnableRet(o, m, ..., r) -- wraps a member function m of an object ptr o
+//                                  the function returns something that can
+//                                  be assigned to *r
+// WrapRunnableNM(f, ...) -- wraps a function f
+// WrapRunnableNMRet(f, ..., r) -- wraps a function f that returns something
+//                                 that can be assigned to *r
+// 
+// All of these template functions return a Runnable* which can be passed
+// to Dispatch().
 #include "runnable_utils_generated.h"
 
 // Temporary hack. Really we want to have a template which will do this
