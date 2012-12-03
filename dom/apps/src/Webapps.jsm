@@ -805,6 +805,8 @@ this.DOMApplicationRegistry = {
         } else {
           // hosted app with no appcache, nothing to do, but we fire a
           // downloaded event
+          debug("No appcache found, sending 'downloaded' for " + aManifestURL);
+          app.downloadAvailable = false;
           DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
                                                   { type: "downloaded",
                                                     manifestURL: aManifestURL,
@@ -979,7 +981,7 @@ this.DOMApplicationRegistry = {
     }
 
     function updateHostedApp(aManifest) {
-      debug("updateHostedApp");
+      debug("updateHostedApp " + aData.manifestURL);
       let id = this._appId(app.origin);
 
       if (id in this._manifestCache) {
@@ -1007,18 +1009,11 @@ this.DOMApplicationRegistry = {
 
       let manifest = new ManifestHelper(aManifest, app.origin);
 
-      if (manifest.appcache_path) {
-        app.installState = "updating";
-        app.downloadAvailable = true;
-        app.downloading = true;
-        app.downloadsize = 0;
-        app.readyToApplyDownload = false;
-      } else {
-        app.installState = "installed";
-        app.downloadAvailable = false;
-        app.downloading = false;
-        app.readyToApplyDownload = false;
-      }
+      app.installState = "installed";
+      app.downloading = false;
+      app.downloadsize = 0;
+      app.readyToApplyDownload = false;
+      app.downloadAvailable = !!manifest.appcache_path;
 
       app.name = aManifest.name;
       app.csp = aManifest.csp || "";
@@ -1028,12 +1023,11 @@ this.DOMApplicationRegistry = {
       this.webapps[id] = app;
 
       this._saveApps(function() {
-        aData.event = "downloadapplied";
+        aData.app = app;
+        aData.event = manifest.appcache_path ? "downloadavailable"
+                                             : "downloadapplied";
         aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
       });
-
-      // Preload the appcache if needed.
-      this.startOfflineCacheDownload(manifest, app);
 
       // Update the permissions for this app.
       PermissionsInstaller.installPermissions({ manifest: aManifest,
@@ -1046,16 +1040,15 @@ this.DOMApplicationRegistry = {
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", aData.manifestURL, true);
+    xhr.responseType = "json";
     if (app.etag) {
       xhr.setRequestHeader("If-None-Match", app.etag);
     }
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
-        let manifest;
-        try {
-          manifest = JSON.parse(xhr.responseText);
-        } catch(e) {
+        let manifest = xhr.response;
+        if (manifest == null) {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
