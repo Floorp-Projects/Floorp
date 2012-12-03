@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=802982
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Excessive getUserMedia calls</title>
+  <script type="application/javascript">
+
+  function boom()
+  {
+    for (var j = 0; j < 100; ++j) {
+      navigator.mozGetUserMedia({}, {}, {});
+    }
+  }
+
+  </script>
+</head>
+
+<body onload="boom();"></body>
+</html>
