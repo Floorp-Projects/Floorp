@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifdef IBMBIDI
 
-#include "prmem.h"
 #include "nsBidi.h"
 #include "nsUnicodeProperties.h"
 #include "nsCRT.h"
@@ -192,7 +191,7 @@ bool nsBidi::GetMemory(void **aMemory, size_t *aSize, bool aMayAllocate, size_t 
     if(!aMayAllocate) {
       return false;
     } else {
-      *aMemory=PR_MALLOC(aSizeNeeded);
+      *aMemory=moz_malloc(aSizeNeeded);
       if (*aMemory!=NULL) {
         *aSize=aSizeNeeded;
         return true;
@@ -208,7 +207,7 @@ bool nsBidi::GetMemory(void **aMemory, size_t *aSize, bool aMayAllocate, size_t 
       return false;
     } else if(aSizeNeeded!=*aSize && aMayAllocate) {
       /* we may try to grow or shrink */
-      void *memory=PR_REALLOC(*aMemory, aSizeNeeded);
+      void *memory=moz_realloc(*aMemory, aSizeNeeded);
 
       if(memory!=NULL) {
         *aMemory=memory;
@@ -227,9 +226,12 @@ bool nsBidi::GetMemory(void **aMemory, size_t *aSize, bool aMayAllocate, size_t 
 
 void nsBidi::Free()
 {
-  PR_FREEIF(mDirPropsMemory);
-  PR_FREEIF(mLevelsMemory);
-  PR_FREEIF(mRunsMemory);
+  moz_free(mDirPropsMemory);
+  mDirPropsMemory = nullptr;
+  moz_free(mLevelsMemory);
+  mLevelsMemory = nullptr;
+  moz_free(mRunsMemory);
+  mRunsMemory = nullptr;
 }
 
 /* SetPara ------------------------------------------------------------ */
