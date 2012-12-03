@@ -355,6 +355,9 @@ var gChainingTests = [
   // A file that consist in 4 links of audio, then another link that has video.
   // We should stop right after the 4 audio links.
   { name:"chained-audio-video.ogg", type:"video/ogg", links: 4 },
+  // An opus file that has two links, with a different preskip value for each
+  // link. We should be able to play both links.
+  { name:"variable-preskip.opus", type:"audio/ogg; codec=opus", links: 2 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
