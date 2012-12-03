@@ -740,8 +740,10 @@ void
 nsGeolocationService::HandleMozsettingValue(const bool aValue)
 {
     if (!aValue) {
-      // Do not shutdown the mGeolocators, but instead just stop the
-      // device and do a final update of null.  See bug #816850.
+      // turn things off
+      for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
+        mGeolocators[i]->Shutdown();
+      }
       StopDevice();
       Update(nullptr);
       mLastPosition = nullptr;
