@@ -2540,7 +2540,7 @@ CheckForCompartmentMismatches(JSRuntime *rt)
 }
 #endif
 
-static void
+static bool
 BeginMarkPhase(JSRuntime *rt)
 {
     int64_t currentTime = PRMJ_Now();
@@ -2550,7 +2550,7 @@ BeginMarkPhase(JSRuntime *rt)
 #endif
 
     rt->gcIsFull = true;
-    DebugOnly<bool> any = false;
+    bool any = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         /* Assert that compartment state is as we expect */
         JS_ASSERT(!c->isCollecting());
@@ -2560,9 +2560,10 @@ BeginMarkPhase(JSRuntime *rt)
 
         /* Set up which compartments will be collected. */
         if (c->isGCScheduled()) {
-            any = true;
-            if (c != rt->atomsCompartment)
+            if (c != rt->atomsCompartment) {
+                any = true;
                 c->setGCState(JSCompartment::Mark);
+            }
         } else {
             rt->gcIsFull = false;
         }
@@ -2574,7 +2575,8 @@ BeginMarkPhase(JSRuntime *rt)
     }
 
     /* Check that at least one compartment is scheduled for collection. */
-    JS_ASSERT(any);
+    if (!any)
+        return false;
 
     /*
      * Atoms are not in the cross-compartment map. So if there are any
@@ -2698,6 +2700,8 @@ BeginMarkPhase(JSRuntime *rt)
             c->scheduledForDestruction = true;
     }
     rt->gcFoundBlackGrayEdges = false;
+
+    return true;
 }
 
 void
@@ -3815,7 +3819,11 @@ IncrementalCollectSlice(JSRuntime *rt,
     switch (rt->gcIncrementalState) {
 
       case MARK_ROOTS:
-        BeginMarkPhase(rt);
+        if (!BeginMarkPhase(rt)) {
+            rt->gcIncrementalState = NO_INCREMENTAL;
+            return;
+        }
+
         if (rt->hasContexts())
             PushZealSelectedObjects(rt);
 
