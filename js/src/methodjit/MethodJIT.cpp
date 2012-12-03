@@ -20,6 +20,7 @@
 #include "jscompartment.h"
 #include "jsscope.h"
 #include "ion/Ion.h"
+#include "ion/IonCode.h"
 #include "ion/IonCompartment.h"
 #include "methodjit/Retcon.h"
 
@@ -1036,6 +1037,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
 #ifdef JS_ION
         ion::IonContext ictx(cx, cx->compartment, NULL);
         ion::IonActivation activation(cx, NULL);
+        ion::AutoFlushInhibitor afi(cx->compartment->ionCompartment());
 #endif
 
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);

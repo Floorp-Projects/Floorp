@@ -554,7 +554,7 @@ public class AboutHomeContent extends ScrollView
                             }
                         });
 
-                        Favicons favicons = mActivity.getFavicons();
+                        Favicons favicons = Favicons.getInstance();
                         favicons.loadFavicon(pageUrl, iconUrl, true,
                                     new Favicons.OnFaviconLoadedListener() {
                             public void onFaviconLoaded(String url, Bitmap favicon) {
