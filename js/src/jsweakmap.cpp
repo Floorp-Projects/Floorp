@@ -76,6 +76,30 @@ WeakMapBase::resetCompartmentWeakMapList(JSCompartment *c)
     }
 }
 
+bool
+WeakMapBase::saveCompartmentWeakMapList(JSCompartment *c, WeakMapVector &vector)
+{
+    WeakMapBase *m = c->gcWeakMapList;
+    while (m) {
+        if (!vector.append(m))
+            return false;
+        m = m->next;
+    }
+    return true;
+}
+
+void
+WeakMapBase::restoreCompartmentWeakMapLists(WeakMapVector &vector)
+{
+    for (WeakMapBase **p = vector.begin(); p != vector.end(); p++) {
+        WeakMapBase *m = *p;
+        JS_ASSERT(m->next == WeakMapNotInList);
+        JSCompartment *c = m->compartment;
+        m->next = c->gcWeakMapList;
+        c->gcWeakMapList = m;
+    }
+}
+
 void
 WeakMapBase::removeWeakMapFromList(WeakMapBase *weakmap)
 {
