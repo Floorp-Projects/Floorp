@@ -465,10 +465,20 @@ WebappsApplication.prototype = {
 
   checkForUpdate: function() {
     let request = this.createRequest();
-    cpmm.sendAsyncMessage("Webapps:CheckForUpdate",
-                          { manifestURL: this.manifestURL,
-                            oid: this._id,
-                            requestID: this.getRequestId(request) });
+
+    // We can't update apps that are not removable.
+    if (!this.removable) {
+      Services.tm.currentThread.dispatch({
+        run: function checkUpdateFail() {
+          Services.DOMRequest.fireError(request, "NOT_UPDATABLE");
+        }
+      }, Ci.nsIEventTarget.DISPATCH_NORMAL)
+    } else {
+      cpmm.sendAsyncMessage("Webapps:CheckForUpdate",
+                            { manifestURL: this.manifestURL,
+                              oid: this._id,
+                              requestID: this.getRequestId(request) });
+    }
     return request;
   },
 
