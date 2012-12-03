@@ -20,11 +20,11 @@ public:
 
   // The WebIDL constructor.
   static already_AddRefed<TextEncoder>
-  Constructor(nsISupports* aGlobal,
+  Constructor(const GlobalObject& aGlobal,
               const nsAString& aEncoding,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal);
+    nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal.Get());
     txtEncoder->Init(aEncoding, aRv);
     if (aRv.Failed()) {
       return nullptr;
