@@ -137,6 +137,7 @@ FENNEC_JAVA_FILES = \
   Telemetry.java \
   TextSelection.java \
   TextSelectionHandle.java \
+  ThumbnailHelper.java \
   WebAppAllocator.java \
   ZoomConstraints.java \
   gfx/BitmapUtils.java \
