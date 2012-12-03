@@ -296,8 +296,10 @@ public class Favicons {
 
             image = downloadFavicon(faviconUrl);
 
-            if (image != null) {
+            if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
                 saveFaviconToDb(image);
+            } else {
+                image = null;
             }
 
             return image;
