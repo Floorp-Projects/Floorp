@@ -4146,6 +4146,8 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     PropDesc *unwrappedDesc = descs.append();
     if (!unwrappedDesc || !desc->unwrapDebuggerObjectsInto(cx, dbg, obj, unwrappedDesc))
         return false;
+    if (!unwrappedDesc->checkGetter(cx) || !unwrappedDesc->checkSetter(cx))
+        return false;
 
     {
         PropDesc *rewrappedDesc = descs.append();
@@ -4190,6 +4192,8 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         if (!unwrappedDescs.append())
             return false;
         if (!descs[i].unwrapDebuggerObjectsInto(cx, dbg, obj, &unwrappedDescs[i]))
+            return false;
+        if (!unwrappedDescs[i].checkGetter(cx) || !unwrappedDescs[i].checkSetter(cx))
             return false;
     }
 
