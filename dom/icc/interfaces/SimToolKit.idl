@@ -356,6 +356,29 @@ dictionary MozStkLocationEvent
   jsval locationInfo;
 };
 
+dictionary MozStkTimer
+{
+  /**
+   * Identifier of a timer.
+   */
+  octet timerId;
+
+  /**
+   * Length of time during which the timer has to run.
+   * The resolution of a timer is 1 second.
+   */
+  unsigned long timerValue;
+
+  /**
+   * The action requested from UICC.
+   * It shall be one of below:
+   * - nsIDOMMozIccManager.STK_TIMER_START
+   * - nsIDOMMozIccManager.STK_TIMER_DEACTIVATE
+   * - nsIDOMMozIccManager.STK_TIMER_GET_CURRENT_VALUE
+   */
+  unsigned short timerAction;
+};
+
 dictionary MozStkCommand
 {
   /**
@@ -420,6 +443,10 @@ dictionary MozStkCommand
    * options is MozStkProvideLocalInfo.
    *
    * When typeOfCommand is
+   * - STK_CMD_TIMER_MANAGEMENT
+   * option is MozStkTimer
+   *
+   * When typeOfCommand is
    * - STK_CMD_POLL_OFF
    * options is null.
    *
@@ -482,6 +509,16 @@ dictionary MozStkResponse
    * @see MozStkLocalInfo
    */
   jsval localInfo;
+
+  /**
+   * The response for STK_CMD_TIMER_MANAGEMENT.
+   * The 'timerValue' is needed if the action of STK_CMD_TIMER_MANAGEMENT is
+   * 'STK_TIMER_DEACTIVATE' or 'STK_TIMER_GET_CURRENT_VALUE'. It shall state
+   * the current value of a timer. And the resolution is 1 second.
+   *
+   * @see MozStkTimer
+   */
+  jsval timer;
 };
 
 dictionary MozStkCallEvent
