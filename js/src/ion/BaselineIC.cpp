@@ -134,17 +134,31 @@ bool
 ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleValue val)
 {
     bool wasEmptyMonitorChain = (numOptimizedMonitorStubs_ == 0);
-    // This is just a no-op for now, as we add more optimized type monitor stubs,
-    // this will fill out, for example:
-    //
-    //  if (val.isInt32()) {
-    //      ICTypeMonitor_Int32::Compiler compiler(cx);
-    //      ICStub *stub = compiler.getStub();
-    //      if (!stub)
-    //          return false;
-    //      addOptimizedMonitorStub(stub);
-    //      return true;
-    //  }
+
+    if (numOptimizedMonitorStubs_ >= MAX_OPTIMIZED_STUBS) {
+        // TODO: if the TypeSet becomes unknown or has the AnyObject type,
+        // replace stubs with a single stub to handle these.
+        return true;
+    }
+
+    if (val.isPrimitive()) {
+        JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
+        ICTypeMonitor_Type::Compiler compiler(cx, type);
+        ICStub *stub = compiler.getStub();
+        if (!stub)
+            return false;
+        addOptimizedMonitorStub(stub);
+    } else {
+        RootedTypeObject type(cx, val.toObject().getType(cx));
+        if (!type)
+            return false;
+        ICTypeMonitor_TypeObject::Compiler compiler(cx, type);
+        ICStub *stub = compiler.getStub();
+        if (!stub)
+            return false;
+        addOptimizedMonitorStub(stub);
+    }
+
     bool firstMonitorStubAdded = wasEmptyMonitorChain && (numOptimizedMonitorStubs_ > 0);
 
     if (firstMonitorStubAdded) {
@@ -180,9 +194,11 @@ DoTypeMonitorFallback(JSContext *cx, ICTypeMonitor_Fallback *stub, HandleValue v
     jsbytecode *pc = stub->mainFallbackStub()->icEntry()->pc(script);
     types::TypeScript::Monitor(cx, script, pc, value);
 
+    if (!stub->addMonitorStubForValue(cx, value))
+        return false;
+
     // Copy input value to res.
     res.set(value);
-
     return true;
 }
 
@@ -203,6 +219,61 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoTypeMonitorFallbackInfo, masm);
+}
+
+bool
+ICTypeMonitor_Type::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    switch (type_) {
+      case JSVAL_TYPE_INT32:
+        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_DOUBLE:
+        // TI double type implies int32.
+        masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_BOOLEAN:
+        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_STRING:
+        masm.branchTestString(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_NULL:
+        masm.branchTestNull(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_UNDEFINED:
+        masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected type");
+    }
+
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICTypeMonitor_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    // Guard on the object's TypeObject.
+    Register obj = masm.extractObject(R0, ExtractTemp0);
+    masm.loadPtr(Address(obj, JSObject::offsetOfType()), R1.scratchReg());
+
+    Address expectedType(BaselineStubReg, ICTypeMonitor_TypeObject::offsetOfType());
+    masm.branchPtr(Assembler::NotEqual, expectedType, R1.scratchReg(), &failure);
+
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //

@@ -256,6 +256,14 @@ class ICEntry
 #define IC_STUB_KIND_LIST(_)    \
                                 \
     _(TypeMonitor_Fallback)     \
+    _(TypeMonitor_Int32)        \
+    _(TypeMonitor_Double)       \
+    _(TypeMonitor_Boolean)      \
+    _(TypeMonitor_String)       \
+    _(TypeMonitor_Null)         \
+    _(TypeMonitor_Undefined)    \
+    _(TypeMonitor_TypeObject)   \
+                                \
     _(TypeUpdate_Fallback)      \
                                 \
     _(Compare_Fallback)         \
@@ -709,6 +717,8 @@ class ICMultiStubCompiler : public ICStubCompiler
 // can be retreived).
 class ICTypeMonitor_Fallback : public ICStub
 {
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
     // Pointer to the main fallback stub for the IC.
     ICMonitoredFallbackStub *   mainFallbackStub_;
 
@@ -784,6 +794,85 @@ class ICTypeMonitor_Fallback : public ICStub
 
         ICTypeMonitor_Fallback *getStub() {
             return ICTypeMonitor_Fallback::New(getStubCode(), mainFallbackStub_);
+        }
+    };
+};
+
+class ICTypeMonitor_Type : public ICStub
+{
+    ICTypeMonitor_Type(Kind kind, IonCode *stubCode)
+        : ICStub(kind, stubCode)
+    { }
+
+  public:
+    static inline ICTypeMonitor_Type *New(Kind kind, IonCode *code) {
+        return new ICTypeMonitor_Type(kind, code);
+    }
+
+    static Kind KindFromType(JSValueType type) {
+        switch (type) {
+          case JSVAL_TYPE_INT32:     return TypeMonitor_Int32;
+          case JSVAL_TYPE_DOUBLE:    return TypeMonitor_Double;
+          case JSVAL_TYPE_BOOLEAN:   return TypeMonitor_Boolean;
+          case JSVAL_TYPE_STRING:    return TypeMonitor_String;
+          case JSVAL_TYPE_NULL:      return TypeMonitor_Null;
+          case JSVAL_TYPE_UNDEFINED: return TypeMonitor_Undefined;
+          default: JS_NOT_REACHED("Invalid type");
+        }
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        JSValueType type_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSValueType type)
+          : ICStubCompiler(cx, ICTypeMonitor_Type::KindFromType(type)),
+            type_(type)
+        { }
+
+        ICTypeMonitor_Type *getStub() {
+            return ICTypeMonitor_Type::New(kind, getStubCode());
+        }
+    };
+};
+
+class ICTypeMonitor_TypeObject : public ICStub
+{
+    HeapPtrTypeObject type_;
+
+    ICTypeMonitor_TypeObject(IonCode *stubCode, HandleTypeObject type)
+      : ICStub(TypeMonitor_TypeObject, stubCode),
+        type_(type)
+    { }
+
+  public:
+    static inline ICTypeMonitor_TypeObject *New(IonCode *code, HandleTypeObject type) {
+        return new ICTypeMonitor_TypeObject(code, type);
+    }
+
+    HeapPtrTypeObject &type() {
+        return type_;
+    }
+
+    static size_t offsetOfType() {
+        return offsetof(ICTypeMonitor_TypeObject, type_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        HandleTypeObject type_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, HandleTypeObject type)
+          : ICStubCompiler(cx, TypeMonitor_TypeObject),
+            type_(type)
+        { }
+
+        ICTypeMonitor_TypeObject *getStub() {
+            return ICTypeMonitor_TypeObject::New(getStubCode(), type_);
         }
     };
 };
