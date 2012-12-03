@@ -332,6 +332,12 @@ abstract public class BrowserApp extends GeckoApp
             mAboutHomeContent.refresh();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mBrowserToolbar.fromAwesomeBarSearch();
+    }
+
     public View getActionBarLayout() {
         int actionBarRes;
 
