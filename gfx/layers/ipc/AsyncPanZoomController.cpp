@@ -853,17 +853,15 @@ const gfx::Rect AsyncPanZoomController::CalculatePendingDisplayPort(
   // probably not work at all for RTL content. This is not intended to be
   // incredibly accurate; it'll just prevent the entire displayport from being
   // outside the content rect (which causes bad things to happen).
-  if (enlargedX || enlargedY) {
-    if (scrollOffset.x + compositionBounds.width > scrollableRect.width) {
-      scrollOffset.x -= compositionBounds.width + scrollOffset.x - scrollableRect.width;
-    } else if (scrollOffset.x < scrollableRect.x) {
-      scrollOffset.x = scrollableRect.x;
-    }
-    if (scrollOffset.y + compositionBounds.height > scrollableRect.height) {
-      scrollOffset.y -= compositionBounds.height + scrollOffset.y - scrollableRect.height;
-    } else if (scrollOffset.y < scrollableRect.y) {
-      scrollOffset.y = scrollableRect.y;
-    }
+  if (scrollOffset.x + compositionBounds.width > scrollableRect.width) {
+    scrollOffset.x -= compositionBounds.width + scrollOffset.x - scrollableRect.width;
+  } else if (scrollOffset.x < scrollableRect.x) {
+    scrollOffset.x = scrollableRect.x;
+  }
+  if (scrollOffset.y + compositionBounds.height > scrollableRect.height) {
+    scrollOffset.y -= compositionBounds.height + scrollOffset.y - scrollableRect.height;
+  } else if (scrollOffset.y < scrollableRect.y) {
+    scrollOffset.y = scrollableRect.y;
   }
 
   gfx::Rect shiftedDisplayPort = displayPort;
