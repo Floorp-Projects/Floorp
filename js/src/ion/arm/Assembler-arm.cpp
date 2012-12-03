@@ -1637,6 +1637,10 @@ Assembler::as_b(BOffImm off, Condition c, bool isPatchable)
 BufferOffset
 Assembler::as_b(Label *l, Condition c, bool isPatchable)
 {
+    if (m_buffer.oom()) {
+        BufferOffset ret;
+        return ret;
+    }
     m_buffer.markNextAsBranch();
     if (l->bound()) {
         BufferOffset ret = as_nop();
