@@ -64,36 +64,32 @@ SettingsListener.observe('audio.volume.master', 0.5, function(value) {
   audioManager.masterVolume = Math.max(0.0, Math.min(value, 1.0));
 });
 
-let audioSettings = [];
+let audioChannelSettings = [];
 
 if ("nsIAudioManager" in Ci) {
   const nsIAudioManager = Ci.nsIAudioManager;
-  audioSettings = [
-    // settings name, default value, stream type
-    ['audio.volume.voice_call', 10, nsIAudioManager.STREAM_TYPE_VOICE_CALL],
-    ['audio.volume.system', 15,  nsIAudioManager.STREAM_TYPE_SYSTEM],
-    ['audio.volume.ring', 7, nsIAudioManager.STREAM_TYPE_RING],
-    ['audio.volume.music', 15, nsIAudioManager.STREAM_TYPE_MUSIC],
-    ['audio.volume.alarm', 7, nsIAudioManager.STREAM_TYPE_ALARM],
-    ['audio.volume.notification', 7, nsIAudioManager.STREAM_TYPE_NOTIFICATION],
-    ['audio.volume.bt_sco', 15, nsIAudioManager.STREAM_TYPE_BLUETOOTH_SCO],
-    ['audio.volume.enforced_audible', 7, nsIAudioManager.STREAM_TYPE_ENFORCED_AUDIBLE],
-    ['audio.volume.dtmf', 15, nsIAudioManager.STREAM_TYPE_DTMF],
-    ['audio.volume.tts', 15, nsIAudioManager.STREAM_TYPE_TTS],
-    ['audio.volume.fm', 15, nsIAudioManager.STREAM_TYPE_FM],
+  audioChannelSettings = [
+    // settings name, max value, apply to stream types
+    ['audio.volume.content', 15, [nsIAudioManager.STREAM_TYPE_SYSTEM, nsIAudioManager.STREAM_TYPE_MUSIC, nsIAudioManager.STREAM_TYPE_FM]],
+    ['audio.volume.notification', 15, [nsIAudioManager.STREAM_TYPE_RING, nsIAudioManager.STREAM_TYPE_NOTIFICATION]],
+    ['audio.volume.alarm', 15, [nsIAudioManager.STREAM_TYPE_ALARM]],
+    ['audio.volume.telephony', 5, [nsIAudioManager.STREAM_TYPE_VOICE_CALL]],
+    ['audio.volume.bt_sco', 15, [nsIAudioManager.STREAM_TYPE_BLUETOOTH_SCO]],
   ];
 }
 
-for each (let [setting, defaultValue, streamType] in audioSettings) {
-  (function AudioStreamSettings(s, d, t) {
-    SettingsListener.observe(s, d, function(value) {
+for each (let [setting, maxValue, streamTypes] in audioChannelSettings) {
+  (function AudioStreamSettings(setting, maxValue, streamTypes) {
+    SettingsListener.observe(setting, maxValue, function(value) {
       let audioManager = Services.audioManager;
       if (!audioManager)
         return;
 
-      audioManager.setStreamVolumeIndex(t, Math.min(value, d));
+      for each(let streamType in streamTypes) {
+        audioManager.setStreamVolumeIndex(streamType, Math.min(value, maxValue));
+      }
     });
-  })(setting, defaultValue, streamType);
+  })(setting, maxValue, streamTypes);
 }
 
 // =================== Console ======================
