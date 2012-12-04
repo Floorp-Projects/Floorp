@@ -2668,20 +2668,30 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     // This protects against floating-point inaccuracies causing problems
     // in the checks below.
     transform.NudgeToIntegers();
-  } 
-  if (aContainerFrame && aState == LAYER_INACTIVE) {
+  }
+  gfxMatrix transform2d;
+  if (aContainerFrame &&
+      aState == LAYER_INACTIVE &&
+      (!aTransform || (aTransform->Is2D(&transform2d) &&
+                       !transform2d.HasNonTranslation()))) {
     // When we have an inactive ContainerLayer, translate the container by the offset to the
     // reference frame (and offset all child layers by the reverse) so that the coordinate
     // space of the child layers isn't affected by scrolling.
+    // This gets confusing for complicated transform (since we'd have to compute the scale
+    // factors for the matrix), so we don't bother. Any frames that are building an nsDisplayTransform
+    // for a css transform would have 0,0 as their offset to the reference frame, so this doesn't
+    // matter.
     nsPoint appUnitOffset = aDisplayListBuilder->ToReferenceFrame(aContainerFrame);
     nscoord appUnitsPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
     offset = nsIntPoint(
         int32_t(NSAppUnitsToDoublePixels(appUnitOffset.x, appUnitsPerDevPixel)*aIncomingScale.mXScale),
         int32_t(NSAppUnitsToDoublePixels(appUnitOffset.y, appUnitsPerDevPixel)*aIncomingScale.mYScale));
   }
-  transform = transform * gfx3DMatrix::Translation(offset.x + aIncomingScale.mOffset.x, offset.y + aIncomingScale.mOffset.y, 0);
+  transform = gfx3DMatrix::Translation(aIncomingScale.mOffset.x, aIncomingScale.mOffset.y, 0) * 
+              transform * 
+              gfx3DMatrix::Translation(offset.x, offset.y, 0);
 
-  gfxMatrix transform2d;
+
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   gfxSize scale;
   bool isRetained = aLayer->Manager()->IsWidgetLayerManager();
