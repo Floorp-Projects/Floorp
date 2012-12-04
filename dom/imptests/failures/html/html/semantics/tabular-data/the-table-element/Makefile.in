@@ -10,7 +10,6 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  test_createTBody.html.json \
   test_table-insertRow.html.json \
   test_table-rows.html.json \
   $(NULL)
