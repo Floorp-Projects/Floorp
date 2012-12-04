@@ -395,7 +395,7 @@ LiveRangeAllocator<VREG>::init()
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition *def = ins->getDef(j);
                 if (def->policy() != LDefinition::PASSTHROUGH) {
-                    uint32 reg = def->virtualRegister();
+                    uint32_t reg = def->virtualRegister();
                     if (!vregs[reg].init(reg, block, *ins, def, /* isTemp */ false))
                         return false;
                 }
@@ -478,7 +478,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
             for (unsigned int j = 0; j < phiSuccessor->numPhis(); j++) {
                 LPhi *phi = phiSuccessor->getPhi(j);
                 LAllocation *use = phi->getOperand(mblock->positionInPhiSuccessor());
-                uint32 reg = use->toUse()->virtualRegister();
+                uint32_t reg = use->toUse()->virtualRegister();
                 live->insert(reg);
             }
         }

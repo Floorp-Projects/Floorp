@@ -129,12 +129,12 @@ class TypeOracle
     }
 
     /* |pc| must be a |JSOP_CALL|. */
-    virtual types::StackTypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc) {
+    virtual types::StackTypeSet *getCallTarget(JSScript *caller, uint32_t argc, jsbytecode *pc) {
         // Same assertion as TypeInferenceOracle::getCallTarget.
         JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE && JSOp(*pc) != JSOP_EVAL);
         return NULL;
     }
-    virtual types::StackTypeSet *getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbytecode *pc) {
+    virtual types::StackTypeSet *getCallArg(JSScript *script, uint32_t argc, uint32_t arg, jsbytecode *pc) {
         return NULL;
     }
     virtual types::StackTypeSet *getCallReturn(JSScript *script, jsbytecode *pc) {
@@ -222,8 +222,8 @@ class TypeInferenceOracle : public TypeOracle
     bool propertyReadAccessGetter(JSScript *script, jsbytecode *pc);
     types::HeapTypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::StackTypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::StackTypeSet **barrier);
-    types::StackTypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
-    types::StackTypeSet *getCallArg(JSScript *caller, uint32 argc, uint32 arg, jsbytecode *pc);
+    types::StackTypeSet *getCallTarget(JSScript *caller, uint32_t argc, jsbytecode *pc);
+    types::StackTypeSet *getCallArg(JSScript *caller, uint32_t argc, uint32_t arg, jsbytecode *pc);
     types::StackTypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
     bool inObjectIsDenseArray(JSScript *script, jsbytecode *pc);
     bool inArrayIsPacked(JSScript *script, jsbytecode *pc);

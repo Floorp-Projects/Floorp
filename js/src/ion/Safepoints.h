@@ -21,7 +21,7 @@ struct SafepointNunboxEntry;
 class LAllocation;
 class LSafepoint;
 
-static const uint32 INVALID_SAFEPOINT_OFFSET = uint32(-1);
+static const uint32_t INVALID_SAFEPOINT_OFFSET = uint32_t(-1);
 
 class SafepointWriter
 {
@@ -29,13 +29,13 @@ class SafepointWriter
     BitSet *frameSlots_;
 
   public:
-    bool init(uint32 slotCount);
+    bool init(uint32_t slotCount);
 
   private:
     // A safepoint entry is written in the order these functions appear.
-    uint32 startEntry();
+    uint32_t startEntry();
 
-    void writeOsiCallPointOffset(uint32 osiPointOffset);
+    void writeOsiCallPointOffset(uint32_t osiPointOffset);
     void writeGcRegs(LSafepoint *safepoint);
     void writeGcSlots(LSafepoint *safepoint);
     void writeValueSlots(LSafepoint *safepoint);
@@ -52,7 +52,7 @@ class SafepointWriter
     size_t size() const {
         return stream_.length();
     }
-    const uint8 *buffer() const {
+    const uint8_t *buffer() const {
         return stream_.buffer();
     }
 };
@@ -60,27 +60,27 @@ class SafepointWriter
 class SafepointReader
 {
     CompactBufferReader stream_;
-    uint32 frameSlots_;
-    uint32 currentSlotChunk_;
-    uint32 currentSlotChunkNumber_;
-    uint32 osiCallPointOffset_;
+    uint32_t frameSlots_;
+    uint32_t currentSlotChunk_;
+    uint32_t currentSlotChunkNumber_;
+    uint32_t osiCallPointOffset_;
     GeneralRegisterSet gcSpills_;
     GeneralRegisterSet valueSpills_;
     GeneralRegisterSet allSpills_;
-    uint32 nunboxSlotsRemaining_;
+    uint32_t nunboxSlotsRemaining_;
 
   private:
     void advanceFromGcRegs();
     void advanceFromGcSlots();
     void advanceFromValueSlots();
-    bool getSlotFromBitmap(uint32 *slot);
+    bool getSlotFromBitmap(uint32_t *slot);
 
   public:
     SafepointReader(IonScript *script, const SafepointIndex *si);
 
     static CodeLocationLabel InvalidationPatchPoint(IonScript *script, const SafepointIndex *si);
 
-    uint32 osiCallPointOffset() const {
+    uint32_t osiCallPointOffset() const {
         return osiCallPointOffset_;
     }
     GeneralRegisterSet gcSpills() const {
@@ -92,13 +92,13 @@ class SafepointReader
     GeneralRegisterSet allSpills() const {
         return allSpills_;
     }
-    uint32 osiReturnPointOffset() const;
+    uint32_t osiReturnPointOffset() const;
 
     // Returns true if a slot was read, false if there are no more slots.
-    bool getGcSlot(uint32 *slot);
+    bool getGcSlot(uint32_t *slot);
 
     // Returns true if a slot was read, false if there are no more value slots.
-    bool getValueSlot(uint32 *slot);
+    bool getValueSlot(uint32_t *slot);
 
     // Returns true if a nunbox slot was read, false if there are no more
     // nunbox slots.

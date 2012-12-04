@@ -12,7 +12,7 @@ using namespace js;
 using namespace js::ion;
 
 void
-Assembler::executableCopy(uint8 *buffer)
+Assembler::executableCopy(uint8_t *buffer)
 {
     AssemblerX86Shared::executableCopy(buffer);
 
@@ -25,7 +25,7 @@ Assembler::executableCopy(uint8 *buffer)
 class RelocationIterator
 {
     CompactBufferReader reader_;
-    uint32 offset_;
+    uint32_t offset_;
 
   public:
     RelocationIterator(CompactBufferReader &reader)
@@ -39,15 +39,15 @@ class RelocationIterator
         return true;
     }
 
-    uint32 offset() const {
+    uint32_t offset() const {
         return offset_;
     }
 };
 
 static inline IonCode *
-CodeFromJump(uint8 *jump)
+CodeFromJump(uint8_t *jump)
 {
-    uint8 *target = (uint8 *)JSC::X86Assembler::getRel32Target(jump);
+    uint8_t *target = (uint8_t *)JSC::X86Assembler::getRel32Target(jump);
     return IonCode::FromExecutable(target);
 }
 

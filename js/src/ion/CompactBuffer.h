@@ -28,17 +28,17 @@ class CompactBufferWriter;
 
 class CompactBufferReader
 {
-    const uint8 *buffer_;
-    const uint8 *end_;
+    const uint8_t *buffer_;
+    const uint8_t *end_;
 
-    uint32 readVariableLength() {
-        uint32 val = 0;
-        uint32 shift = 0;
-        uint8 byte;
+    uint32_t readVariableLength() {
+        uint32_t val = 0;
+        uint32_t shift = 0;
+        uint8_t byte;
         while (true) {
             JS_ASSERT(shift < 32);
             byte = readByte();
-            val |= (uint32(byte) >> 1) << shift;
+            val |= (uint32_t(byte) >> 1) << shift;
             shift += 7;
             if (!(byte & 1))
                 return val;
@@ -48,35 +48,35 @@ class CompactBufferReader
     }
 
   public:
-    CompactBufferReader(const uint8 *start, const uint8 *end)
+    CompactBufferReader(const uint8_t *start, const uint8_t *end)
       : buffer_(start),
         end_(end)
     { }
     inline CompactBufferReader(const CompactBufferWriter &writer);
-    uint8 readByte() {
+    uint8_t readByte() {
         JS_ASSERT(buffer_ < end_);
         return *buffer_++;
     }
-    uint32 readFixedUint32() {
-        uint32 b0 = readByte();
-        uint32 b1 = readByte();
-        uint32 b2 = readByte();
-        uint32 b3 = readByte();
+    uint32_t readFixedUint32_t() {
+        uint32_t b0 = readByte();
+        uint32_t b1 = readByte();
+        uint32_t b2 = readByte();
+        uint32_t b3 = readByte();
         return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
     }
-    uint16 readFixedUint16() {
-        uint32 b0 = readByte();
-        uint32 b1 = readByte();
+    uint16_t readFixedUint16_t() {
+        uint32_t b0 = readByte();
+        uint32_t b1 = readByte();
         return b0 | (b1 << 8);
     }
-    uint32 readUnsigned() {
+    uint32_t readUnsigned() {
         return readVariableLength();
     }
-    int32 readSigned() {
-        uint8 b = readByte();
+    int32_t readSigned() {
+        uint8_t b = readByte();
         bool isNegative = !!(b & (1 << 0));
         bool more = !!(b & (1 << 1));
-        int32 result = b >> 2;
+        int32_t result = b >> 2;
         if (more)
             result |= readUnsigned() << 6;
         if (isNegative)
@@ -92,7 +92,7 @@ class CompactBufferReader
 
 class CompactBufferWriter
 {
-    js::Vector<uint8, 32, SystemAllocPolicy> buffer_;
+    js::Vector<uint8_t, 32, SystemAllocPolicy> buffer_;
     bool enoughMemory_;
 
   public:
@@ -102,21 +102,21 @@ class CompactBufferWriter
 
     // Note: writeByte() takes uint32 to catch implicit casts with a runtime
     // assert.
-    void writeByte(uint32 byte) {
+    void writeByte(uint32_t byte) {
         JS_ASSERT(byte <= 0xFF);
         enoughMemory_ &= buffer_.append(byte);
     }
-    void writeUnsigned(uint32 value) {
+    void writeUnsigned(uint32_t value) {
         do {
-            uint8 byte = ((value & 0x7F) << 1) | (value > 0x7F);
+            uint8_t byte = ((value & 0x7F) << 1) | (value > 0x7F);
             writeByte(byte);
             value >>= 7;
         } while (value);
     }
-    void writeSigned(int32 v) {
+    void writeSigned(int32_t v) {
         bool isNegative = v < 0;
-        uint32 value = isNegative ? -v : v;
-        uint8 byte = ((value & 0x3F) << 2) | ((value > 0x3F) << 1) | uint32(isNegative);
+        uint32_t value = isNegative ? -v : v;
+        uint8_t byte = ((value & 0x3F) << 2) | ((value > 0x3F) << 1) | uint32_t(isNegative);
         writeByte(byte);
 
         // Write out the rest of the bytes, if needed.
@@ -125,23 +125,23 @@ class CompactBufferWriter
             return;
         writeUnsigned(value);
     }
-    void writeFixedUint32(uint32 value) {
+    void writeFixedUint32_t(uint32_t value) {
         writeByte(value & 0xFF);
         writeByte((value >> 8) & 0xFF);
         writeByte((value >> 16) & 0xFF);
         writeByte((value >> 24) & 0xFF);
     }
-    void writeFixedUint16(uint16 value) {
+    void writeFixedUint16_t(uint16_t value) {
         writeByte(value & 0xFF);
         writeByte(value >> 8);
     }
     size_t length() const {
         return buffer_.length();
     }
-    uint8 *buffer() {
+    uint8_t *buffer() {
         return &buffer_[0];
     }
-    const uint8 *buffer() const {
+    const uint8_t *buffer() const {
         return &buffer_[0];
     }
     bool oom() const {

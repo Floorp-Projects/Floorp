@@ -76,7 +76,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitMonitorTypes(LMonitorTypes *lir);
     bool visitCallNative(LCallNative *call);
     bool emitCallInvokeFunction(LInstruction *call, Register callereg,
-                                uint32 argc, uint32 unusedStack);
+                                uint32_t argc, uint32_t unusedStack);
     bool visitCallGeneric(LCallGeneric *call);
     bool visitCallKnown(LCallKnown *call);
     bool visitCallConstructor(LCallConstructor *call);
