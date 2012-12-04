@@ -14,6 +14,7 @@
 
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
+#include "nsILoadGroup.h"
 #include "nsIOutputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsISocketTransportService.h"
@@ -111,6 +112,11 @@ public:
     const mozilla::TimeStamp GetPendingTime() { return mPendingTime; }
     bool UsesPipelining() const { return mCaps & NS_HTTP_ALLOW_PIPELINING; }
 
+    void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI) { mLoadGroupCI = aLoadGroupCI; } 
+    nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() { return mLoadGroupCI.get(); }
+    void DispatchedAsBlocking();
+    void RemoveDispatchedAsBlocking();
+
 private:
     nsresult Restart();
     nsresult RestartInProgress();
@@ -123,6 +129,7 @@ private:
     nsresult HandleContent(char *, uint32_t count, uint32_t *contentRead, uint32_t *contentRemaining);
     nsresult ProcessData(char *, uint32_t, uint32_t *);
     void     DeleteSelfOnConsumerThread();
+    void     ReleaseBlockingTransaction();
 
     Classifier Classify();
     void       CancelPipeline(uint32_t reason);
@@ -143,6 +150,7 @@ private:
     nsCOMPtr<nsISupports>           mSecurityInfo;
     nsCOMPtr<nsIAsyncInputStream>   mPipeIn;
     nsCOMPtr<nsIAsyncOutputStream>  mPipeOut;
+    nsCOMPtr<nsILoadGroupConnectionInfo> mLoadGroupCI;
 
     nsCOMPtr<nsISupports>             mChannel;
     nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
@@ -204,6 +212,7 @@ private:
     bool                            mProxyConnectFailed;
     bool                            mHttpResponseMatched;
     bool                            mPreserveStream;
+    bool                            mDispatchedAsBlocking;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted
