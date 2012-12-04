@@ -693,6 +693,8 @@ let RIL = {
    */
   preferredNetworkType: null,
 
+  _receivedSmsCbPagesMap: {},
+
   initRILState: function initRILState() {
     /**
      * One of the RADIO_STATE_* constants.
@@ -4437,6 +4439,98 @@ let RIL = {
     this.sendSMS(options);
   },
 
+  _processReceivedSmsCbPage: function _processReceivedSmsCbPage(original) {
+    if (original.numPages <= 1) {
+      if (original.body) {
+        original.fullBody = original.body;
+        delete original.body;
+      } else if (original.data) {
+        original.fullData = original.data;
+        delete original.data;
+      }
+      return original;
+    }
+
+    // Hash = <serial>:<mcc>:<mnc>:<lac>:<cid>
+    let hash = original.serial + ":" + this.iccInfo.mcc + ":"
+               + this.iccInfo.mnc + ":";
+    switch (original.geographicalScope) {
+      case CB_GSM_GEOGRAPHICAL_SCOPE_CELL_WIDE_IMMEDIATE:
+      case CB_GSM_GEOGRAPHICAL_SCOPE_CELL_WIDE:
+        hash += this.voiceRegistrationState.cell.gsmLocationAreaCode + ":"
+             + this.voiceRegistrationState.cell.gsmCellId;
+        break;
+      case CB_GSM_GEOGRAPHICAL_SCOPE_LOCATION_AREA_WIDE:
+        hash += this.voiceRegistrationState.cell.gsmLocationAreaCode + ":";
+        break;
+      default:
+        hash += ":";
+        break;
+    }
+
+    let index = original.pageIndex;
+
+    let options = this._receivedSmsCbPagesMap[hash];
+    if (!options) {
+      options = original;
+      this._receivedSmsCbPagesMap[hash] = options;
+
+      options.receivedPages = 0;
+      options.pages = [];
+    } else if (options.pages[index]) {
+      // Duplicated page?
+      if (DEBUG) {
+        debug("Got duplicated page no." + index + " of a multipage SMSCB: "
+              + JSON.stringify(original));
+      }
+      return null;
+    }
+
+    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      options.pages[index] = original.data;
+      delete original.data;
+    } else {
+      options.pages[index] = original.body;
+      delete original.body;
+    }
+    options.receivedPages++;
+    if (options.receivedPages < options.numPages) {
+      if (DEBUG) {
+        debug("Got page no." + index + " of a multipage SMSCB: "
+              + JSON.stringify(options));
+      }
+      return null;
+    }
+
+    // Remove from map
+    delete this._receivedSmsCbPagesMap[hash];
+
+    // Rebuild full body
+    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      // Uint8Array doesn't have `concat`, so we have to merge all pages by hand.
+      let fullDataLen = 0;
+      for (let i = 1; i <= options.numPages; i++) {
+        fullDataLen += options.pages[i].length;
+      }
+
+      options.fullData = new Uint8Array(fullDataLen);
+      for (let d= 0, i = 1; i <= options.numPages; i++) {
+        let data = options.pages[i];
+        for (let j = 0; j < data.length; j++) {
+          options.fullData[d++] = data[j];
+        }
+      }
+    } else {
+      options.fullBody = options.pages.join("");
+    }
+
+    if (DEBUG) {
+      debug("Got full multipage SMSCB: " + JSON.stringify(options));
+    }
+
+    return options;
+  },
+
   /**
    * Handle incoming messages from the main UI thread.
    *
@@ -5527,6 +5621,11 @@ RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICITED_RESPONSE_NEW_
     if (DEBUG) {
       debug("Failed to parse Cell Broadcast message: " + JSON.stringify(e));
     }
+    return;
+  }
+
+  message = this._processReceivedSmsCbPage(message);
+  if (!message) {
     return;
   }
 
@@ -6964,10 +7063,10 @@ let GsmPDUHelper = {
    * @see 3GPP TS 23.041 section 9.4.1.2.1
    */
   readCbSerialNumber: function readCbSerialNumber(msg) {
-    let serial = Buf.readUint8() << 8 | Buf.readUint8();
-    msg.geographicalScope = (serial >>> 14) & 0x03;
-    msg.messageCode = (serial >>> 4) & 0x03FF;
-    msg.updateNumber = serial & 0x0F;
+    msg.serial = Buf.readUint8() << 8 | Buf.readUint8();
+    msg.geographicalScope = (msg.serial >>> 14) & 0x03;
+    msg.messageCode = (msg.serial >>> 4) & 0x03FF;
+    msg.updateNumber = msg.serial & 0x0F;
   },
 
   /**
@@ -7172,6 +7271,7 @@ let GsmPDUHelper = {
     // Validity                                                   GSM ETWS UMTS
     let msg = {
       // Internally used in ril_worker:
+      serial:               null,                              //  O   O    O
       updateNumber:         null,                              //  O   O    O
       format:               null,                              //  O   O    O
       dcs:                  0x0F,                              //  O   X    O
