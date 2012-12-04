@@ -894,15 +894,9 @@ js::IsIncrementalBarrierNeeded(JSContext *cx)
 }
 
 JS_FRIEND_API(bool)
-js::IsIncrementalBarrierNeededOnObject(RawObject obj)
+js::IsIncrementalBarrierNeededOnGCThing(void *thing, JSGCTraceKind kind)
 {
-    return obj->compartment()->needsBarrier();
-}
-
-JS_FRIEND_API(bool)
-js::IsIncrementalBarrierNeededOnScript(JSScript *script)
-{
-    return script->compartment()->needsBarrier();
+    return static_cast<gc::Cell *>(thing)->compartment()->needsBarrier();
 }
 
 JS_FRIEND_API(void)
