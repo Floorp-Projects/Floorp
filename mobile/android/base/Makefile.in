@@ -103,6 +103,8 @@ FENNEC_JAVA_FILES = \
   MenuButton.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
+  MenuPanel.java \
+  MenuPopup.java \
   MultiChoicePreference.java \
   NSSBridge.java \
   CustomEditText.java \
