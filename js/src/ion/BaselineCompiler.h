@@ -68,7 +68,11 @@ namespace ion {
     _(JSOP_SUB)                \
     _(JSOP_MUL)                \
     _(JSOP_LT)                 \
+    _(JSOP_LE)                 \
     _(JSOP_GT)                 \
+    _(JSOP_GE)                 \
+    _(JSOP_EQ)                 \
+    _(JSOP_NE)                 \
     _(JSOP_BITNOT)             \
     _(JSOP_NEG)                \
     _(JSOP_GETELEM)            \

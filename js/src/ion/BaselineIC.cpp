@@ -318,33 +318,43 @@ static bool
 DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, HandleValue rhs,
                   MutableHandleValue ret)
 {
-    uint8_t *returnAddr;
-    RootedScript script(cx, GetTopIonJSScript(cx, NULL, (void **)&returnAddr));
+    RootedScript script(cx, GetTopIonJSScript(cx));
 
     // Perform the compare operation.
     JSOp op = JSOp(*stub->icEntry()->pc(script));
+    JSBool out;
+
     switch(op) {
-      case JSOP_LT: {
-        // Do the less than.
-        JSBool out;
+      case JSOP_LT:
         if (!LessThan(cx, lhs, rhs, &out))
             return false;
-        ret.setBoolean(out);
         break;
-      }
-      case JSOP_GT: {
-        // Do the less than.
-        JSBool out;
+      case JSOP_LE:
+        if (!LessThanOrEqual(cx, lhs, rhs, &out))
+            return false;
+        break;
+      case JSOP_GT:
         if (!GreaterThan(cx, lhs, rhs, &out))
             return false;
-        ret.setBoolean(out);
         break;
-      }
+      case JSOP_GE:
+        if (!GreaterThanOrEqual(cx, lhs, rhs, &out))
+            return false;
+        break;
+      case JSOP_EQ:
+        if (!LooselyEqual<true>(cx, lhs, rhs, &out))
+            return false;
+        break;
+      case JSOP_NE:
+        if (!LooselyEqual<false>(cx, lhs, rhs, &out))
+            return false;
+        break;
       default:
         JS_ASSERT(!"Unhandled baseline compare op");
         return false;
     }
 
+    ret.setBoolean(out);
 
     // Check to see if a new stub should be generated.
     if (stub->numOptimizedStubs() >= ICCompare_Fallback::MAX_OPTIMIZED_STUBS) {
