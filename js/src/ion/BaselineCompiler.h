@@ -67,6 +67,8 @@ namespace ion {
     _(JSOP_ADD)                \
     _(JSOP_LT)                 \
     _(JSOP_GT)                 \
+    _(JSOP_BITNOT)             \
+    _(JSOP_NEG)                \
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
     _(JSOP_GETGNAME)           \
@@ -112,10 +114,15 @@ class BaselineCompiler : public BaselineCompilerSpecific
     OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
 
+    // JSOP_NEG, JSOP_BITNOT
+    bool emitUnaryArith();
+
     // JSOP_BITXOR, JSOP_LSH, JSOP_ADD etc.
     bool emitBinaryArith();
+
     // Handles JSOP_LT, JSOP_GT, and friends
     bool emitCompare();
+
     bool emitToBoolean();
     bool emitTest(bool branchIfTrue);
     bool emitAndOr(bool branchIfTrue);
