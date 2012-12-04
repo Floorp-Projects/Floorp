@@ -16,6 +16,7 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, JSScript *script)
     script(script),
     pc(NULL),
     frame(cx, script, masm),
+    stubSpace_(),
     icEntries_(),
     icLoadLabels_()
 {

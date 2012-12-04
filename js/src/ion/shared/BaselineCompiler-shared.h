@@ -26,6 +26,7 @@ class BaselineCompilerShared
 
     FrameInfo frame;
 
+    ICStubSpace stubSpace_;
     js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries_;
 
     // Labels for the 'movWithPatch' for loading IC entry pointers in

@@ -107,7 +107,26 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     MethodStatus compile();
 
+    class AutoRooter : public AutoGCRooter
+    {
+        BaselineCompiler *compiler_;
+
+      public:
+        AutoRooter(JSContext *cx, BaselineCompiler *compiler)
+          : AutoGCRooter(cx, BASELINECOMPILER),
+            compiler_(compiler)
+        { }
+
+        BaselineCompiler *compiler() const {
+            return compiler_;
+        }
+    };
+
+    void trace(JSTracer *trc);
+
   private:
+    AutoRooter autoRooter_;
+
     MethodStatus emitBody();
 
     bool emitPrologue();
