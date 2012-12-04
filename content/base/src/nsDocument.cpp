@@ -2108,7 +2108,7 @@ AppendAuthorSheet(nsIStyleSheet *aSheet, void *aData)
 static void
 AppendSheetsToStyleSet(nsStyleSet* aStyleSet,
                        const nsCOMArray<nsIStyleSheet>& aSheets,
-                       nsStyleSet::sheetType aType) 
+                       nsStyleSet::sheetType aType)
 {
   for (int32_t i = aSheets.Count() - 1; i >= 0; --i) {
     aStyleSet->AppendStyleSheet(aType, aSheets[i]);
@@ -7290,7 +7290,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
 
   if (mCreatingStaticClone) {
     nsCOMPtr<nsILoadGroup> loadGroup;
-    
+
     // |mDocumentContainer| is the container of the document that is being
     // created and not the original container. See CreateStaticClone function().
     nsCOMPtr<nsIDocumentLoader> docLoader = do_QueryReferent(mDocumentContainer);
@@ -9496,6 +9496,8 @@ nsDocument::UpdateVisibilityState()
                                          NS_LITERAL_STRING("mozvisibilitychange"),
                                          /* bubbles = */ true,
                                          /* cancelable = */ false);
+
+    EnumerateFreezableElements(NotifyActivityChanged, nullptr);
   }
 }
 

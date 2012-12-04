@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[scriptable, uuid(efa52d52-a876-486f-8739-87e1a13bc42d)]
+[scriptable, uuid(75ccaaec-6920-43ae-a56f-ee7a693f3d31)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -141,6 +141,10 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
    //   Use case: dialer, voip
    // * publicnotification
    //   Always plays in speaker, even when headphones are plugged in.
-
    attribute DOMString mozAudioChannelType;
+
+  // In addition the media element has this new events:
+  // * onmozinterruptbegin - called when the media element is interrupted
+  //   because of the audiochannel manager.
+  // * onmozinterruptend - called when the interruption is concluded
 };

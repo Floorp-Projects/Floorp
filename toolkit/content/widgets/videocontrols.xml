@@ -345,7 +345,8 @@
                                "loadstart", "timeupdate", "progress",
                                "playing", "waiting", "canplay", "canplaythrough",
                                "seeking", "seeked", "emptied", "loadedmetadata",
-                               "error", "suspend", "stalled"],
+                               "error", "suspend", "stalled",
+                               "mozinterruptbegin", "mozinterruptend" ],
 
                 firstFrameShown : false,
                 timeUpdateCount : 0,
@@ -640,6 +641,10 @@
                                     this.startFadeOut(this.controlBar);
                                 this.controlsSpacer.removeAttribute("hideCursor");
                             }
+                            break;
+                        case "mozinterruptbegin":
+                        case "mozinterruptend":
+                            // Nothing to do...
                             break;
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
