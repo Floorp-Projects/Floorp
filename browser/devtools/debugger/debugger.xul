@@ -57,8 +57,8 @@
              oncommand="DebuggerView.Options._toggleShowPanesOnStartup()"/>
     <command id="toggleShowNonEnum"
              oncommand="DebuggerView.Options._toggleShowVariablesNonEnum()"/>
-    <command id="toggleShowVariablesSearchbox"
-             oncommand="DebuggerView.Options._toggleShowVariablesSearchbox()"/>
+    <command id="toggleShowVariablesFilterBox"
+             oncommand="DebuggerView.Options._toggleShowVariablesFilterBox()"/>
   </commandset>
 
   <popupset id="debuggerPopupset">
@@ -142,11 +142,11 @@
                 label="&debuggerUI.showNonEnums;"
                 accesskey="&debuggerUI.showNonEnums.key;"
                 command="toggleShowNonEnum"/>
-      <menuitem id="show-vars-searchbox"
+      <menuitem id="show-vars-filter-box"
                 type="checkbox"
-                label="&debuggerUI.showVarsSearch;"
-                accesskey="&debuggerUI.showVarsSearch.key;"
-                command="toggleShowVariablesSearchbox"/>
+                label="&debuggerUI.showVarsFilter;"
+                accesskey="&debuggerUI.showVarsFilter.key;"
+                command="toggleShowVariablesFilterBox"/>
     </menupopup>
   </popupset>
 
