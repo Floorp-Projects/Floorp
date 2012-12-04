@@ -67,18 +67,34 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     // should be available.
     Register scratchReg = BaselineTailCallReg;
 
-    Label revertRegister;
+    Label revertRegister, maybeNegZero;
     switch(op_) {
       case JSOP_ADD:
         // Add R0 and R1.  Don't need to explicitly unbox.
-        masm.movl(R1.payloadReg(), scratchReg);
-        masm.addl(R0.payloadReg(), scratchReg);
+        masm.movl(R0.payloadReg(), scratchReg);
+        masm.addl(R1.payloadReg(), scratchReg);
 
         // Just jump to failure on overflow.  R0 and R1 are preserved, so we can just jump to
         // the next stub.
         masm.j(Assembler::Overflow, &failure);
 
         // Just overwrite the payload, the tag is still fine.
+        masm.movl(scratchReg, R0.payloadReg());
+        break;
+      case JSOP_SUB:
+        masm.movl(R0.payloadReg(), scratchReg);
+        masm.subl(R1.payloadReg(), scratchReg);
+        masm.j(Assembler::Overflow, &failure);
+        masm.movl(scratchReg, R0.payloadReg());
+        break;
+      case JSOP_MUL:
+        masm.movl(R0.payloadReg(), scratchReg);
+        masm.imull(R1.payloadReg(), scratchReg);
+        masm.j(Assembler::Overflow, &failure);
+
+        masm.testl(scratchReg, scratchReg);
+        masm.j(Assembler::Zero, &maybeNegZero);
+
         masm.movl(scratchReg, R0.payloadReg());
         break;
       case JSOP_BITOR:
@@ -135,6 +151,19 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Return.
     EmitReturnFromIC(masm);
+
+    if (op_ == JSOP_MUL) {
+        masm.bind(&maybeNegZero);
+
+        // Result is -0 if exactly one of lhs or rhs is negative.
+        masm.movl(R0.payloadReg(), scratchReg);
+        masm.orl(R1.payloadReg(), scratchReg);
+        masm.j(Assembler::Signed, &failure);
+
+        // Result is +0.
+        masm.xorl(R0.payloadReg(), R0.payloadReg());
+        EmitReturnFromIC(masm);
+    }
 
     // Revert the content of R0 in the fallible >>> case.
     if (op_ == JSOP_URSH && !allowDouble_) {
