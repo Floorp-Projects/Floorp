@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+<table id="t" border="1" style="width:100%">
+  <tbody><tr><td></td></tr></tbody>
+</table>
+<script>
+var t = document.getElementById("t");
+window.addEventListener("MozReftestInvalidate", function() {
+  t.style.transform = "rotate(90deg)";
+  document.documentElement.removeAttribute("class");
+}, false);
+</script>
+</body>
+</html>

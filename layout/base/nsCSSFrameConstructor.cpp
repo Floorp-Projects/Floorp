@@ -7793,9 +7793,8 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
                            nsChangeHint aChange)
 {
   // We check GetStyleDisplay()->HasTransform() in addition to checking
-  // IsTransformed() since we can get here for some frames that don't have the
-  // NS_FRAME_MAY_BE_TRANSFORMED bit set (e.g. nsTableFrame; for a transformed
-  // table that bit is only set on the nsTableOuterFrame).
+  // IsTransformed() since we can get here for some frames that don't support
+  // CSS transforms.
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
                aFrame->IsTransformed() ||
                aFrame->GetStyleDisplay()->HasTransform(),
