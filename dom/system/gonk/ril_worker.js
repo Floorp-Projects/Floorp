@@ -270,6 +270,21 @@ let Buf = {
     return this.readUint8Unchecked();
   },
 
+  readUint8Array: function readUint8Array(length) {
+    // Translate to 0..currentParcelSize
+    let last = this.currentParcelSize - this.readAvailable;
+    last += (length - 1);
+    this.ensureIncomingAvailable(last);
+
+    let array = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      array[i] = this.readUint8Unchecked();
+    }
+
+    this.readAvailable -= length;
+    return array;
+  },
+
   readUint16: function readUint16() {
     return this.readUint8() | this.readUint8() << 8;
   },
@@ -6434,7 +6449,7 @@ let GsmPDUHelper = {
    */
   readDataCodingScheme: function readDataCodingScheme(msg) {
     let dcs = this.readHexOctet();
-    if (DEBUG) debug("PDU: read dcs: " + dcs);
+    if (DEBUG) debug("PDU: read SMS dcs: " + dcs);
 
     // No message class by default.
     let messageClass = PDU_DCS_MSG_CLASS_NORMAL;
@@ -6965,6 +6980,122 @@ let GsmPDUHelper = {
    */
   readCbMessageIdentifier: function readCbMessageIdentifier(msg) {
     msg.messageId = Buf.readUint8() << 8 | Buf.readUint8();
+
+    if ((msg.format != CB_FORMAT_ETWS)
+        && (msg.messageId >= CB_GSM_MESSAGEID_ETWS_BEGIN)
+        && (msg.messageId <= CB_GSM_MESSAGEID_ETWS_END)) {
+      // `In the case of transmitting CBS message for ETWS, a part of
+      // Message Code can be used to command mobile terminals to activate
+      // emergency user alert and message popup in order to alert the users.`
+      msg.etws = {
+        emergencyUserAlert: msg.messageCode & 0x0200 ? true : false,
+        popup:              msg.messageCode & 0x0100 ? true : false
+      };
+
+      let warningType = msg.messageId - CB_GSM_MESSAGEID_ETWS_BEGIN;
+      if (warningType < CB_ETWS_WARNING_TYPE_NAMES.length) {
+        msg.etws.warningType = warningType;
+      }
+    }
+  },
+
+  /**
+   * Read CBS Data Coding Scheme.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.038 section 5.
+   */
+  readCbDataCodingScheme: function readCbDataCodingScheme(msg) {
+    let dcs = Buf.readUint8();
+    if (DEBUG) debug("PDU: read CBS dcs: " + dcs);
+
+    let language = null, hasLanguageIndicator = false;
+    // `Any reserved codings shall be assumed to be the GSM 7bit default
+    // alphabet.`
+    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+    let messageClass = PDU_DCS_MSG_CLASS_NORMAL;
+
+    switch (dcs & PDU_DCS_CODING_GROUP_BITS) {
+      case 0x00: // 0000
+        language = CB_DCS_LANG_GROUP_1[dcs & 0x0F];
+        break;
+
+      case 0x10: // 0001
+        switch (dcs & 0x0F) {
+          case 0x00:
+            hasLanguageIndicator = true;
+            break;
+          case 0x01:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            hasLanguageIndicator = true;
+            break;
+        }
+        break;
+
+      case 0x20: // 0010
+        language = CB_DCS_LANG_GROUP_2[dcs & 0x0F];
+        break;
+
+      case 0x40: // 01xx
+      case 0x50:
+      //case 0x60: Text Compression, not supported
+      //case 0x70: Text Compression, not supported
+      case 0x90: // 1001
+        encoding = (dcs & 0x0C);
+        if (encoding == 0x0C) {
+          encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+        }
+        messageClass = (dcs & PDU_DCS_MSG_CLASS_BITS);
+        break;
+
+      case 0xF0:
+        encoding = (dcs & 0x04) ? PDU_DCS_MSG_CODING_8BITS_ALPHABET
+                                : PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+        switch(dcs & PDU_DCS_MSG_CLASS_BITS) {
+          case 0x01: messageClass = PDU_DCS_MSG_CLASS_USER_1; break;
+          case 0x02: messageClass = PDU_DCS_MSG_CLASS_USER_2; break;
+          case 0x03: messageClass = PDU_DCS_MSG_CLASS_3; break;
+        }
+        break;
+
+      case 0x30: // 0011 (Reserved)
+      case 0x80: // 1000 (Reserved)
+      case 0xA0: // 1010..1100 (Reserved)
+      case 0xB0:
+      case 0xC0:
+        break;
+
+      default:
+        throw new Error("Unsupported CBS data coding scheme: " + dcs);
+    }
+
+    msg.dcs = dcs;
+    msg.encoding = encoding;
+    msg.language = language;
+    msg.messageClass = GECKO_SMS_MESSAGE_CLASSES[messageClass];
+    msg.hasLanguageIndicator = hasLanguageIndicator;
+  },
+
+  /**
+   * Read GSM CBS message page parameter.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.1.2.4
+   */
+  readCbPageParameter: function readCbPageParameter(msg) {
+    let octet = Buf.readUint8();
+    msg.pageIndex = (octet >>> 4) & 0x0F;
+    msg.numPages = octet & 0x0F;
+    if (!msg.pageIndex || !msg.numPages) {
+      // `If a mobile receives the code 0000 in either the first field or the
+      // second field then it shall treat the CBS message exactly the same as a
+      // CBS message with page parameter 0001 0001 (i.e. a single page message).`
+      msg.pageIndex = msg.numPages = 1;
+    }
   },
 
   /**
@@ -6985,6 +7116,53 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read CBS-Message-Information-Page
+   *
+   * @param msg
+   *        message object for output.
+   * @param length
+   *        length of cell broadcast data to read in octets.
+   *
+   * @see 3GPP TS 23.041 section 9.3.19
+   */
+  readGsmCbData: function readGsmCbData(msg, length) {
+    let bufAdapter = {
+      readHexOctet: function readHexOctet() {
+        return Buf.readUint8();
+      }
+    };
+
+    msg.body = null;
+    msg.data = null;
+    switch (msg.encoding) {
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
+        msg.body = this.readSeptetsToString.call(bufAdapter,
+                                                 (length * 8 / 7), 0,
+                                                 PDU_NL_IDENTIFIER_DEFAULT,
+                                                 PDU_NL_IDENTIFIER_DEFAULT);
+        if (msg.hasLanguageIndicator) {
+          msg.language = msg.body.substring(0, 2);
+          msg.body = msg.body.substring(3);
+        }
+        break;
+
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
+        msg.data = Buf.readUint8Array(length);
+        break;
+
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
+        if (msg.hasLanguageIndicator) {
+          msg.language = this.readSeptetsToString.call(bufAdapter, 2, 0,
+                                                       PDU_NL_IDENTIFIER_DEFAULT,
+                                                       PDU_NL_IDENTIFIER_DEFAULT);
+          length -= 2;
+        }
+        msg.body = this.readUCS2String.call(bufAdapter, length);
+        break;
+    }
+  },
+
+  /**
    * Read Cell GSM/ETWS/UMTS Broadcast Message.
    *
    * @param pduLength
@@ -6996,11 +7174,21 @@ let GsmPDUHelper = {
       // Internally used in ril_worker:
       updateNumber:         null,                              //  O   O    O
       format:               null,                              //  O   O    O
+      dcs:                  0x0F,                              //  O   X    O
+      encoding:             PDU_DCS_MSG_CODING_7BITS_ALPHABET, //  O   X    O
+      hasLanguageIndicator: false,                             //  O   X    O
+      data:                 null,                              //  O   X    O
+      body:                 null,                              //  O   X    O
+      pageIndex:            1,                                 //  O   X    X
+      numPages:             1,                                 //  O   X    X
 
       // DOM attributes:
       geographicalScope:    null,                              //  O   O    O
       messageCode:          null,                              //  O   O    O
       messageId:            null,                              //  O   O    O
+      language:             null,                              //  O   X    O
+      fullBody:             null,                              //  O   X    O
+      fullData:             null,                              //  O   X    O
       messageClass:         GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL], //  O   x    O
       etws:                 null                               //  ?   O    ?
       /*{
@@ -7015,7 +7203,34 @@ let GsmPDUHelper = {
       return this.readEtwsCbMessage(msg);
     }
 
+    if (pduLength <= CB_MESSAGE_SIZE_GSM) {
+      msg.format = CB_FORMAT_GSM;
+      return this.readGsmCbMessage(msg, pduLength);
+    }
+
     return null;
+  },
+
+  /**
+   * Read GSM Cell Broadcast Message.
+   *
+   * @param msg
+   *        message object for output.
+   * @param pduLength
+   *        total length of the incomint PDU in octets.
+   *
+   * @see 3GPP TS 23.041 clause 9.4.1.2
+   */
+  readGsmCbMessage: function readGsmCbMessage(msg, pduLength) {
+    this.readCbSerialNumber(msg);
+    this.readCbMessageIdentifier(msg);
+    this.readCbDataCodingScheme(msg);
+    this.readCbPageParameter(msg);
+
+    // GSM CB message header takes 6 octets.
+    this.readGsmCbData(msg, pduLength - 6);
+
+    return msg;
   },
 
   /**
