@@ -285,7 +285,9 @@ class ICEntry
     _(GetElem_Dense)            \
                                 \
     _(SetElem_Fallback)         \
-    _(SetElem_Dense)
+    _(SetElem_Dense)            \
+                                \
+    _(GetName_Fallback)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -1277,6 +1279,43 @@ class ICSetElem_Dense : public ICUpdatedStub
             if (!stub)
                 return NULL;
             if (!stub->initUpdatingChain(cx)) {
+                delete stub;
+                return NULL;
+            }
+            return stub;
+        }
+    };
+};
+
+// GetName
+//      JSOP_GETGNAME
+class ICGetName_Fallback : public ICMonitoredFallbackStub
+{
+    ICGetName_Fallback(IonCode *stubCode)
+      : ICMonitoredFallbackStub(ICStub::GetName_Fallback, stubCode)
+    { }
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static inline ICGetName_Fallback *New(IonCode *code) {
+        return new ICGetName_Fallback(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetName_Fallback)
+        { }
+
+        ICStub *getStub() {
+            ICGetName_Fallback *stub = ICGetName_Fallback::New(getStubCode());
+            if (!stub)
+                return NULL;
+            if (!stub->initMonitoringChain(cx)) {
                 delete stub;
                 return NULL;
             }

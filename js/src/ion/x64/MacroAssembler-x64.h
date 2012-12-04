@@ -203,6 +203,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             movq(src.valueReg(), dest.valueReg());
     }
     void boxValue(JSValueType type, Register src, Register dest) {
+        JS_ASSERT(src != dest);
+
         JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
         movq(ImmShiftedTag(tag), dest);
 
