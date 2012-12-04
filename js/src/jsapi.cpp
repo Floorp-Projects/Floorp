@@ -786,6 +786,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcDynamicHeapGrowth(false),
     gcDynamicMarkSlice(false),
     gcShouldCleanUpEverything(false),
+    gcGrayBitsValid(false),
     gcIsNeeded(0),
     gcStats(thisFromCtor()),
     gcNumber(0),
@@ -939,6 +940,8 @@ JSRuntime::init(uint32_t maxbytes)
     dtoaState = js_NewDtoaState();
     if (!dtoaState)
         return false;
+
+    dateTimeInfo.updateTimeZoneAdjustment();
 
     if (!stackSpace.init())
         return false;
@@ -1571,7 +1574,6 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
     AutoMaybeTouchDeadCompartments agc(cx);
 
     JSCompartment *destination = target->compartment();
-    WrapperMap &map = destination->crossCompartmentWrappers;
     Value origv = ObjectValue(*origobj);
     JSObject *newIdentity;
 
@@ -1583,7 +1585,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
         if (!origobj->swap(cx, target))
             MOZ_CRASH();
         newIdentity = origobj;
-    } else if (WrapperMap::Ptr p = map.lookup(origv)) {
+    } else if (WrapperMap::Ptr p = destination->lookupWrapper(origv)) {
         // There might already be a wrapper for the original object in
         // the new compartment. If there is, we use its identity and swap
         // in the contents of |target|.
@@ -1591,7 +1593,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
 
         // When we remove origv from the wrapper map, its wrapper, newIdentity,
         // must immediately cease to be a cross-compartment wrapper. Neuter it.
-        map.remove(p);
+        destination->removeWrapper(p);
         NukeCrossCompartmentWrapper(cx, newIdentity);
 
         if (!newIdentity->swap(cx, target))
@@ -1615,7 +1617,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
         JS_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
         if (!origobj->swap(cx, newIdentityWrapper))
             MOZ_CRASH();
-        origobj->compartment()->crossCompartmentWrappers.put(ObjectValue(*newIdentity), origv);
+        origobj->compartment()->putWrapper(ObjectValue(*newIdentity), origv);
     }
 
     // The new identity object might be one of several things. Return it to avoid
@@ -1652,7 +1654,6 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 
     JSObject *newWrapper;
     JSCompartment *destination = targetobj->compartment();
-    WrapperMap &map = destination->crossCompartmentWrappers;
 
     // |origv| is the map entry we're looking up. The map entries are going to
     // be for |origobj|, not |origwrapper|.
@@ -1660,14 +1661,14 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 
     // There might already be a wrapper for the original object in the new
     // compartment.
-    if (WrapperMap::Ptr p = map.lookup(origv)) {
+    if (WrapperMap::Ptr p = destination->lookupWrapper(origv)) {
         // There is. Make the existing cross-compartment wrapper a same-
         // compartment wrapper.
         newWrapper = &p->value.toObject();
 
         // When we remove origv from the wrapper map, its wrapper, newWrapper,
         // must immediately cease to be a cross-compartment wrapper. Neuter it.
-        map.remove(p);
+        destination->removeWrapper(p);
         NukeCrossCompartmentWrapper(cx, newWrapper);
 
         if (!newWrapper->swap(cx, targetwrapper))
@@ -1707,8 +1708,8 @@ js_TransplantObjectWithWrapper(JSContext *cx,
         JS_ASSERT(Wrapper::wrappedObject(wrapperGuts) == targetobj);
         if (!origwrapper->swap(cx, wrapperGuts))
             MOZ_CRASH();
-        origwrapper->compartment()->crossCompartmentWrappers.put(ObjectValue(*targetobj),
-                                                                 ObjectValue(*origwrapper));
+        origwrapper->compartment()->putWrapper(ObjectValue(*targetobj),
+                                               ObjectValue(*origwrapper));
     }
 
     return newWrapper;
@@ -6672,7 +6673,7 @@ JS_ClearDateCaches(JSContext *cx)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    js_ClearDateCaches();
+    cx->runtime->dateTimeInfo.updateTimeZoneAdjustment();
 }
 
 /************************************************************************/
@@ -6872,8 +6873,8 @@ JS_ReportPendingException(JSContext *cx)
 }
 
 struct JSExceptionState {
-    JSBool throwing;
-    jsval  exception;
+    bool throwing;
+    jsval exception;
 };
 
 JS_PUBLIC_API(JSExceptionState *)

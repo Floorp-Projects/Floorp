@@ -7,7 +7,7 @@
 %undef WINSTRIPE_AERO
 
 @media (-moz-windows-default-theme) {
-  #downloadsPanel[hasdownloads] #downloadsFooter {
+  #downloadsPanel[hasdownloads] > #downloadsFooter {
     background-color: #f1f5fb;
   }
 

@@ -63,6 +63,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
 nsScreen::nsScreen()
   : mEventListener(nullptr)
 {
+  SetIsDOMBinding();
 }
 
 void

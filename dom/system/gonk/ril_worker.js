@@ -270,6 +270,21 @@ let Buf = {
     return this.readUint8Unchecked();
   },
 
+  readUint8Array: function readUint8Array(length) {
+    // Translate to 0..currentParcelSize
+    let last = this.currentParcelSize - this.readAvailable;
+    last += (length - 1);
+    this.ensureIncomingAvailable(last);
+
+    let array = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      array[i] = this.readUint8Unchecked();
+    }
+
+    this.readAvailable -= length;
+    return array;
+  },
+
   readUint16: function readUint16() {
     return this.readUint8() | this.readUint8() << 8;
   },
@@ -678,6 +693,15 @@ let RIL = {
    */
   preferredNetworkType: null,
 
+  /**
+   * Parsed Cell Broadcast search lists.
+   * cellBroadcastConfigs.MMI should be preserved over rild reset.
+   */
+  cellBroadcastConfigs: null,
+  mergedCellBroadcastConfig: null,
+
+  _receivedSmsCbPagesMap: {},
+
   initRILState: function initRILState() {
     /**
      * One of the RADIO_STATE_* constants.
@@ -782,6 +806,14 @@ let RIL = {
     * Regular expresion to parse MMI codes.
     */
     this._mmiRegExp = null;
+
+    /**
+     * Cell Broadcast Search Lists.
+     */
+    let cbmmi = this.cellBroadcastConfigs && this.cellBroadcastConfigs.MMI;
+    this.cellBroadcastConfigs = {
+      MMI: cbmmi || null
+    };
   },
   
   get muted() {
@@ -1656,6 +1688,18 @@ let RIL = {
       } else {
         if (DEBUG) debug("PLMN: Both PLMNSEL/SPDI not available");
       }
+
+      if (this.isICCServiceAvailable("CBMI")) {
+        this.getCBMI();
+      } else {
+        this.cellBroadcastConfigs.CBMI = null;
+      }
+      if (this.isICCServiceAvailable("CBMIR")) {
+        this.getCBMIR();
+      } else {
+        this.cellBroadcastConfigs.CBMIR = null;
+      }
+      this._mergeAllCellBroadcastConfigs();
     }
 
     // ICC_EF_UST has the same value with ICC_EF_SST.
@@ -1670,6 +1714,116 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_TRANSPARENT,
       callback:  callback,
+    });
+  },
+
+  /**
+   * Read EFcbmi (Cell Broadcast Message Identifier selection)
+   *
+   * @see 3GPP TS 31.102 v110.02.0 section 4.2.14 EFcbmi
+   */
+  getCBMI: function getCBMI() {
+    function callback() {
+      let strLength = Buf.readUint32();
+
+      // Each Message Identifier takes two octets and each octet is encoded
+      // into two chars.
+      let numIds = strLength / 4, list = null;
+      if (numIds) {
+        list = [];
+        for (let i = 0, id; i < numIds; i++) {
+          id = GsmPDUHelper.readHexOctet() << 8 | GsmPDUHelper.readHexOctet();
+          // `Unused entries shall be set to 'FF FF'.`
+          if (id != 0xFFFF) {
+            list.push(id);
+            list.push(id + 1);
+          }
+        }
+      }
+      if (DEBUG) {
+        debug("CBMI: " + JSON.stringify(list));
+      }
+
+      Buf.readStringDelimiter(strLength);
+
+      this.cellBroadcastConfigs.CBMI = list;
+      this._mergeAllCellBroadcastConfigs();
+    }
+
+    function onerror() {
+      this.cellBroadcastConfigs.CBMI = null;
+      this._mergeAllCellBroadcastConfigs();
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_CBMI,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_CBMI),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+      onerror:   onerror
+    });
+  },
+
+  /**
+   * Read EFcbmir (Cell Broadcast Message Identifier Range selection)
+   *
+   * @see 3GPP TS 31.102 v110.02.0 section 4.2.22 EFcbmir
+   */
+  getCBMIR: function getCBMIR() {
+    function callback() {
+      let strLength = Buf.readUint32();
+
+      // Each Message Identifier range takes four octets and each octet is
+      // encoded into two chars.
+      let numIds = strLength / 8, list = null;
+      if (numIds) {
+        list = [];
+        for (let i = 0, from, to; i < numIds; i++) {
+          // `Bytes one and two of each range identifier equal the lower value
+          // of a cell broadcast range, bytes three and four equal the upper
+          // value of a cell broadcast range.`
+          from = GsmPDUHelper.readHexOctet() << 8 | GsmPDUHelper.readHexOctet();
+          to = GsmPDUHelper.readHexOctet() << 8 | GsmPDUHelper.readHexOctet();
+          // `Unused entries shall be set to 'FF FF'.`
+          if ((from != 0xFFFF) && (to != 0xFFFF)) {
+            list.push(from);
+            list.push(to + 1);
+          }
+        }
+      }
+      if (DEBUG) {
+        debug("CBMIR: " + JSON.stringify(list));
+      }
+
+      Buf.readStringDelimiter(strLength);
+
+      this.cellBroadcastConfigs.CBMIR = list;
+      this._mergeAllCellBroadcastConfigs();
+    }
+
+    function onerror() {
+      this.cellBroadcastConfigs.CBMIR = null;
+      this._mergeAllCellBroadcastConfigs();
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_CBMIR,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_CBMIR),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+      onerror:   onerror
     });
   },
 
@@ -2414,6 +2568,56 @@ let RIL = {
     Buf.sendParcel();
   },
 
+  setCellBroadcastSearchList: function setCellBroadcastSearchList(options) {
+    try {
+      let str = options.searchListStr;
+      this.cellBroadcastConfigs.MMI = this._convertCellBroadcastSearchList(str);
+    } catch (e) {
+      if (DEBUG) {
+        debug("Invalid Cell Broadcast search list: " + e);
+      }
+      options.rilRequestError = ERROR_GENERIC_FAILURE;
+      this.sendDOMMessage(options);
+      return;
+    }
+
+    this._mergeAllCellBroadcastConfigs();
+  },
+
+  updateCellBroadcastConfig: function updateCellBroadcastConfig() {
+    let activate = (this.mergedCellBroadcastConfig != null)
+                   && (this.mergedCellBroadcastConfig.length > 0);
+    if (activate) {
+      this.setGsmSmsBroadcastConfig(this.mergedCellBroadcastConfig);
+    } else {
+      // It's unnecessary to set config first if we're deactivating.
+      this.setGsmSmsBroadcastActivation(false);
+    }
+  },
+
+  setGsmSmsBroadcastConfig: function setGsmSmsBroadcastConfig(config) {
+    Buf.newParcel(REQUEST_GSM_SET_BROADCAST_SMS_CONFIG);
+
+    let numConfigs = config ? config.length / 2 : 0;
+    Buf.writeUint32(numConfigs);
+    for (let i = 0; i < config.length;) {
+      Buf.writeUint32(config[i++]);
+      Buf.writeUint32(config[i++]);
+      Buf.writeUint32(0x00);
+      Buf.writeUint32(0xFF);
+      Buf.writeUint32(1);
+    }
+
+    Buf.sendParcel();
+  },
+
+  setGsmSmsBroadcastActivation: function setGsmSmsBroadcastActivation(activate) {
+    Buf.newParcel(REQUEST_GSM_SMS_BROADCAST_ACTIVATION);
+    Buf.writeUint32(1);
+    Buf.writeUint32(activate ? 1 : 0);
+    Buf.sendParcel();
+  },
+
   /**
    * Start a DTMF Tone.
    *
@@ -2691,7 +2895,7 @@ let RIL = {
         options.rilMessageType = "sendMMI";
         options.reason = MMI_SC_TO_CF_REASON[sc];
         options.number = mmi.sia;
-        options.serviceClass = mmi.sib;
+        options.serviceClass = this._siToServiceClass(mmi.sib);
         if (options.action == CALL_FORWARD_ACTION_QUERY_STATUS) {
           this.queryCallForwardStatus(options);
           return;
@@ -3360,6 +3564,8 @@ let RIL = {
           case ICC_EF_PLMNsel:
           case ICC_EF_SPN:
           case ICC_EF_SST:
+          case ICC_EF_CBMI:
+          case ICC_EF_CBMIR:
             return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
         }
       case CARD_APPTYPE_USIM:
@@ -3371,6 +3577,8 @@ let RIL = {
           case ICC_EF_MSISDN:
           case ICC_EF_SPN:
           case ICC_EF_SPDI:
+          case ICC_EF_CBMI:
+          case ICC_EF_CBMIR:
             return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
 
           default:
@@ -3962,6 +4170,44 @@ let RIL = {
   },
 
   /**
+   * Helper for translating basic service group to call forwarding service class
+   * parameter.
+   */
+  _siToServiceClass: function _siToServiceClass(si) {
+    if (!si) {
+      return ICC_SERVICE_CLASS_NONE;
+    }
+
+    let serviceCode = parseInt(si, 10);
+    switch (serviceCode) {
+      case 10:
+        return ICC_SERVICE_CLASS_SMS + ICC_SERVICE_CLASS_FAX  + ICC_SERVICE_CLASS_VOICE;
+      case 11:
+        return ICC_SERVICE_CLASS_VOICE;
+      case 12:
+        return ICC_SERVICE_CLASS_SMS + ICC_SERVICE_CLASS_FAX;
+      case 13:
+        return ICC_SERVICE_CLASS_FAX;
+      case 16:
+        return ICC_SERVICE_CLASS_SMS;
+      case 19:
+        return ICC_SERVICE_CLASS_FAX + ICC_SERVICE_CLASS_VOICE;
+      case 21:
+        return ICC_SERVICE_CLASS_PAD + ICC_SERVICE_CLASS_DATA_ASYNC;
+      case 22:
+        return ICC_SERVICE_CLASS_PACKET + ICC_SERVICE_CLASS_DATA_SYNC;
+      case 25:
+        return ICC_SERVICE_CLASS_DATA_ASYNC;
+      case 26:
+        return ICC_SERVICE_CLASS_DATA_SYNC + SERVICE_CLASS_VOICE;
+      case 99:
+        return ICC_SERVICE_CLASS_PACKET;
+      default:
+        return ICC_SERVICE_CLASS_NONE;
+    }
+  },
+
+  /**
    * @param message A decoded SMS-DELIVER message.
    *
    * @see 3GPP TS 31.111 section 7.1.1
@@ -4382,6 +4628,282 @@ let RIL = {
     options.segmentSeq = next + 1;
 
     this.sendSMS(options);
+  },
+
+  _processReceivedSmsCbPage: function _processReceivedSmsCbPage(original) {
+    if (original.numPages <= 1) {
+      if (original.body) {
+        original.fullBody = original.body;
+        delete original.body;
+      } else if (original.data) {
+        original.fullData = original.data;
+        delete original.data;
+      }
+      return original;
+    }
+
+    // Hash = <serial>:<mcc>:<mnc>:<lac>:<cid>
+    let hash = original.serial + ":" + this.iccInfo.mcc + ":"
+               + this.iccInfo.mnc + ":";
+    switch (original.geographicalScope) {
+      case CB_GSM_GEOGRAPHICAL_SCOPE_CELL_WIDE_IMMEDIATE:
+      case CB_GSM_GEOGRAPHICAL_SCOPE_CELL_WIDE:
+        hash += this.voiceRegistrationState.cell.gsmLocationAreaCode + ":"
+             + this.voiceRegistrationState.cell.gsmCellId;
+        break;
+      case CB_GSM_GEOGRAPHICAL_SCOPE_LOCATION_AREA_WIDE:
+        hash += this.voiceRegistrationState.cell.gsmLocationAreaCode + ":";
+        break;
+      default:
+        hash += ":";
+        break;
+    }
+
+    let index = original.pageIndex;
+
+    let options = this._receivedSmsCbPagesMap[hash];
+    if (!options) {
+      options = original;
+      this._receivedSmsCbPagesMap[hash] = options;
+
+      options.receivedPages = 0;
+      options.pages = [];
+    } else if (options.pages[index]) {
+      // Duplicated page?
+      if (DEBUG) {
+        debug("Got duplicated page no." + index + " of a multipage SMSCB: "
+              + JSON.stringify(original));
+      }
+      return null;
+    }
+
+    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      options.pages[index] = original.data;
+      delete original.data;
+    } else {
+      options.pages[index] = original.body;
+      delete original.body;
+    }
+    options.receivedPages++;
+    if (options.receivedPages < options.numPages) {
+      if (DEBUG) {
+        debug("Got page no." + index + " of a multipage SMSCB: "
+              + JSON.stringify(options));
+      }
+      return null;
+    }
+
+    // Remove from map
+    delete this._receivedSmsCbPagesMap[hash];
+
+    // Rebuild full body
+    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      // Uint8Array doesn't have `concat`, so we have to merge all pages by hand.
+      let fullDataLen = 0;
+      for (let i = 1; i <= options.numPages; i++) {
+        fullDataLen += options.pages[i].length;
+      }
+
+      options.fullData = new Uint8Array(fullDataLen);
+      for (let d= 0, i = 1; i <= options.numPages; i++) {
+        let data = options.pages[i];
+        for (let j = 0; j < data.length; j++) {
+          options.fullData[d++] = data[j];
+        }
+      }
+    } else {
+      options.fullBody = options.pages.join("");
+    }
+
+    if (DEBUG) {
+      debug("Got full multipage SMSCB: " + JSON.stringify(options));
+    }
+
+    return options;
+  },
+
+  _mergeCellBroadcastConfigs: function _mergeCellBroadcastConfigs(list, from, to) {
+    if (!list) {
+      return [from, to];
+    }
+
+    for (let i = 0, f1, t1; i < list.length;) {
+      f1 = list[i++];
+      t1 = list[i++];
+      if (to == f1) {
+        // ...[from]...[to|f1]...(t1)
+        list[i - 2] = from;
+        return list;
+      }
+
+      if (to < f1) {
+        // ...[from]...(to)...[f1] or ...[from]...(to)[f1]
+        if (i > 2) {
+          // Not the first range pair, merge three arrays.
+          return list.slice(0, i - 2).concat([from, to]).concat(list.slice(i - 2));
+        } else {
+          return [from, to].concat(list);
+        }
+      }
+
+      if (from > t1) {
+        // ...[f1]...(t1)[from] or ...[f1]...(t1)...[from]
+        continue;
+      }
+
+      // Have overlap or merge-able adjacency with [f1]...(t1). Replace it
+      // with [min(from, f1)]...(max(to, t1)).
+
+      let changed = false;
+      if (from < f1) {
+        // [from]...[f1]...(t1) or [from][f1]...(t1)
+        // Save minimum from value.
+        list[i - 2] = from;
+        changed = true;
+      }
+
+      if (to <= t1) {
+        // [from]...[to](t1) or [from]...(to|t1)
+        // Can't have further merge-able adjacency. Return.
+        return list;
+      }
+
+      // Try merging possible next adjacent range.
+      let j = i;
+      for (let f2, t2; j < list.length;) {
+        f2 = list[j++];
+        t2 = list[j++];
+        if (to > t2) {
+          // [from]...[f2]...[t2]...(to) or [from]...[f2]...[t2](to)
+          // Merge next adjacent range again.
+          continue;
+        }
+
+        if (to < t2) {
+          if (to < f2) {
+            // [from]...(to)[f2] or [from]...(to)...[f2]
+            // Roll back and give up.
+            j -= 2;
+          } else if (to < t2) {
+            // [from]...[to|f2]...(t2), or [from]...[f2]...[to](t2)
+            // Merge to [from]...(t2) and give up.
+            to = t2;
+          }
+        }
+
+        break;
+      }
+
+      // Save maximum to value.
+      list[i - 1] = to;
+
+      if (j != i) {
+        // Remove merged adjacent ranges.
+        let ret = list.slice(0, i);
+        if (j < list.length) {
+          ret = ret.concat(list.slice(j));
+        }
+        return ret;
+      }
+
+      return list;
+    }
+
+    // Append to the end.
+    list.push(from);
+    list.push(to);
+
+    return list;
+  },
+
+  /**
+   * Merge all members of cellBroadcastConfigs into mergedCellBroadcastConfig.
+   */
+  _mergeAllCellBroadcastConfigs: function _mergeAllCellBroadcastConfigs() {
+    if (!("CBMI" in this.cellBroadcastConfigs)
+        || !("CBMIR" in this.cellBroadcastConfigs)
+        || !("MMI" in this.cellBroadcastConfigs)) {
+      if (DEBUG) {
+        debug("cell broadcast configs not ready, waiting ...");
+      }
+      return;
+    }
+    if (DEBUG) {
+      debug("Cell Broadcast search lists: " + JSON.stringify(this.cellBroadcastConfigs));
+    }
+
+    let list = null;
+    for each (let ll in this.cellBroadcastConfigs) {
+      if (ll == null) {
+        continue;
+      }
+
+      for (let i = 0; i < ll.length; i += 2) {
+        list = this._mergeCellBroadcastConfigs(list, ll[i], ll[i + 1]);
+      }
+    }
+
+    if (DEBUG) {
+      debug("Cell Broadcast search lists(merged): " + JSON.stringify(list));
+    }
+    this.mergedCellBroadcastConfig = list;
+    this.updateCellBroadcastConfig();
+  },
+
+  /**
+   * Check whether search list from settings is settable by MMI, that is,
+   * whether the range is bounded in any entries of CB_NON_MMI_SETTABLE_RANGES.
+   */
+  _checkCellBroadcastMMISettable: function _checkCellBroadcastMMISettable(from, to) {
+    if ((to <= from) || (from >= 65536) || (from < 0)) {
+      return false;
+    }
+
+    for (let i = 0, f, t; i < CB_NON_MMI_SETTABLE_RANGES.length;) {
+      f = CB_NON_MMI_SETTABLE_RANGES[i++];
+      t = CB_NON_MMI_SETTABLE_RANGES[i++];
+      if ((from < t) && (to > f)) {
+        // Have overlap.
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
+   * Convert Cell Broadcast settings string into search list.
+   */
+  _convertCellBroadcastSearchList: function _convertCellBroadcastSearchList(searchListStr) {
+    let parts = searchListStr && searchListStr.split(",");
+    if (!parts) {
+      return null;
+    }
+
+    let list = null;
+    let result, from, to;
+    for (let range of parts) {
+      // Match "12" or "12-34". The result will be ["12", "12", null] or
+      // ["12-34", "12", "34"].
+      result = range.match(/^(\d+)(?:-(\d+))?$/);
+      if (!result) {
+        throw "Invalid format";
+      }
+
+      from = parseInt(result[1]);
+      to = (result[2] != null) ? parseInt(result[2]) + 1 : from + 1;
+      if (!this._checkCellBroadcastMMISettable(from, to)) {
+        throw "Invalid range";
+      }
+
+      if (list == null) {
+        list = [];
+      }
+      list.push(from);
+      list.push(to);
+    }
+
+    return list;
   },
 
   /**
@@ -5241,7 +5763,11 @@ RIL[REQUEST_CDMA_VALIDATE_AND_WRITE_AKEY] = null;
 RIL[REQUEST_CDMA_SEND_SMS] = null;
 RIL[REQUEST_CDMA_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GSM_GET_BROADCAST_SMS_CONFIG] = null;
-RIL[REQUEST_GSM_SET_BROADCAST_SMS_CONFIG] = null;
+RIL[REQUEST_GSM_SET_BROADCAST_SMS_CONFIG] = function REQUEST_GSM_SET_BROADCAST_SMS_CONFIG(length, options) {
+  if (options.rilRequestError == ERROR_SUCCESS) {
+    this.setGsmSmsBroadcastActivation(true);
+  }
+};
 RIL[REQUEST_GSM_SMS_BROADCAST_ACTIVATION] = null;
 RIL[REQUEST_CDMA_GET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_CDMA_SET_BROADCAST_SMS_CONFIG] = null;
@@ -5331,6 +5857,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
       this.getIMEISV();
     }
     this.getBasebandVersion();
+    this.updateCellBroadcastConfig();
   }
 
   this.radioState = newState;
@@ -5466,7 +5993,25 @@ RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = function UNSOLICITED_RESPONSE_SIM
   this.getICCStatus();
 };
 RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = null;
-RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = null;
+RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS(length) {
+  let message;
+  try {
+    message = GsmPDUHelper.readCbMessage(Buf.readUint32());
+  } catch (e) {
+    if (DEBUG) {
+      debug("Failed to parse Cell Broadcast message: " + JSON.stringify(e));
+    }
+    return;
+  }
+
+  message = this._processReceivedSmsCbPage(message);
+  if (!message) {
+    return;
+  }
+
+  message.rilMessageType = "cellbroadcast-received";
+  this.sendDOMMessage(message);
+};
 RIL[UNSOLICITED_CDMA_RUIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_RESTRICTED_STATE_CHANGED] = null;
 RIL[UNSOLICITED_ENTER_EMERGENCY_CALLBACK_MODE] = null;
@@ -6383,7 +6928,7 @@ let GsmPDUHelper = {
    */
   readDataCodingScheme: function readDataCodingScheme(msg) {
     let dcs = this.readHexOctet();
-    if (DEBUG) debug("PDU: read dcs: " + dcs);
+    if (DEBUG) debug("PDU: read SMS dcs: " + dcs);
 
     // No message class by default.
     let messageClass = PDU_DCS_MSG_CLASS_NORMAL;
@@ -6887,6 +7432,305 @@ let GsmPDUHelper = {
     // we write two \0 delimiters.
     Buf.writeUint16(0);
     Buf.writeUint16(0);
+  },
+
+  /**
+   * Read GSM CBS message serial number.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.1.2.1
+   */
+  readCbSerialNumber: function readCbSerialNumber(msg) {
+    msg.serial = Buf.readUint8() << 8 | Buf.readUint8();
+    msg.geographicalScope = (msg.serial >>> 14) & 0x03;
+    msg.messageCode = (msg.serial >>> 4) & 0x03FF;
+    msg.updateNumber = msg.serial & 0x0F;
+  },
+
+  /**
+   * Read GSM CBS message message identifier.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.1.2.2
+   */
+  readCbMessageIdentifier: function readCbMessageIdentifier(msg) {
+    msg.messageId = Buf.readUint8() << 8 | Buf.readUint8();
+
+    if ((msg.format != CB_FORMAT_ETWS)
+        && (msg.messageId >= CB_GSM_MESSAGEID_ETWS_BEGIN)
+        && (msg.messageId <= CB_GSM_MESSAGEID_ETWS_END)) {
+      // `In the case of transmitting CBS message for ETWS, a part of
+      // Message Code can be used to command mobile terminals to activate
+      // emergency user alert and message popup in order to alert the users.`
+      msg.etws = {
+        emergencyUserAlert: msg.messageCode & 0x0200 ? true : false,
+        popup:              msg.messageCode & 0x0100 ? true : false
+      };
+
+      let warningType = msg.messageId - CB_GSM_MESSAGEID_ETWS_BEGIN;
+      if (warningType < CB_ETWS_WARNING_TYPE_NAMES.length) {
+        msg.etws.warningType = warningType;
+      }
+    }
+  },
+
+  /**
+   * Read CBS Data Coding Scheme.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.038 section 5.
+   */
+  readCbDataCodingScheme: function readCbDataCodingScheme(msg) {
+    let dcs = Buf.readUint8();
+    if (DEBUG) debug("PDU: read CBS dcs: " + dcs);
+
+    let language = null, hasLanguageIndicator = false;
+    // `Any reserved codings shall be assumed to be the GSM 7bit default
+    // alphabet.`
+    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+    let messageClass = PDU_DCS_MSG_CLASS_NORMAL;
+
+    switch (dcs & PDU_DCS_CODING_GROUP_BITS) {
+      case 0x00: // 0000
+        language = CB_DCS_LANG_GROUP_1[dcs & 0x0F];
+        break;
+
+      case 0x10: // 0001
+        switch (dcs & 0x0F) {
+          case 0x00:
+            hasLanguageIndicator = true;
+            break;
+          case 0x01:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            hasLanguageIndicator = true;
+            break;
+        }
+        break;
+
+      case 0x20: // 0010
+        language = CB_DCS_LANG_GROUP_2[dcs & 0x0F];
+        break;
+
+      case 0x40: // 01xx
+      case 0x50:
+      //case 0x60: Text Compression, not supported
+      //case 0x70: Text Compression, not supported
+      case 0x90: // 1001
+        encoding = (dcs & 0x0C);
+        if (encoding == 0x0C) {
+          encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+        }
+        messageClass = (dcs & PDU_DCS_MSG_CLASS_BITS);
+        break;
+
+      case 0xF0:
+        encoding = (dcs & 0x04) ? PDU_DCS_MSG_CODING_8BITS_ALPHABET
+                                : PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+        switch(dcs & PDU_DCS_MSG_CLASS_BITS) {
+          case 0x01: messageClass = PDU_DCS_MSG_CLASS_USER_1; break;
+          case 0x02: messageClass = PDU_DCS_MSG_CLASS_USER_2; break;
+          case 0x03: messageClass = PDU_DCS_MSG_CLASS_3; break;
+        }
+        break;
+
+      case 0x30: // 0011 (Reserved)
+      case 0x80: // 1000 (Reserved)
+      case 0xA0: // 1010..1100 (Reserved)
+      case 0xB0:
+      case 0xC0:
+        break;
+
+      default:
+        throw new Error("Unsupported CBS data coding scheme: " + dcs);
+    }
+
+    msg.dcs = dcs;
+    msg.encoding = encoding;
+    msg.language = language;
+    msg.messageClass = GECKO_SMS_MESSAGE_CLASSES[messageClass];
+    msg.hasLanguageIndicator = hasLanguageIndicator;
+  },
+
+  /**
+   * Read GSM CBS message page parameter.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.1.2.4
+   */
+  readCbPageParameter: function readCbPageParameter(msg) {
+    let octet = Buf.readUint8();
+    msg.pageIndex = (octet >>> 4) & 0x0F;
+    msg.numPages = octet & 0x0F;
+    if (!msg.pageIndex || !msg.numPages) {
+      // `If a mobile receives the code 0000 in either the first field or the
+      // second field then it shall treat the CBS message exactly the same as a
+      // CBS message with page parameter 0001 0001 (i.e. a single page message).`
+      msg.pageIndex = msg.numPages = 1;
+    }
+  },
+
+  /**
+   * Read ETWS Primary Notification message warning type.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.3.24
+   */
+  readCbWarningType: function readCbWarningType(msg) {
+    let word = Buf.readUint8() << 8 | Buf.readUint8();
+    msg.etws = {
+      warningType:        (word >>> 9) & 0x7F,
+      popup:              word & 0x80 ? true : false,
+      emergencyUserAlert: word & 0x100 ? true : false
+    };
+  },
+
+  /**
+   * Read CBS-Message-Information-Page
+   *
+   * @param msg
+   *        message object for output.
+   * @param length
+   *        length of cell broadcast data to read in octets.
+   *
+   * @see 3GPP TS 23.041 section 9.3.19
+   */
+  readGsmCbData: function readGsmCbData(msg, length) {
+    let bufAdapter = {
+      readHexOctet: function readHexOctet() {
+        return Buf.readUint8();
+      }
+    };
+
+    msg.body = null;
+    msg.data = null;
+    switch (msg.encoding) {
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
+        msg.body = this.readSeptetsToString.call(bufAdapter,
+                                                 (length * 8 / 7), 0,
+                                                 PDU_NL_IDENTIFIER_DEFAULT,
+                                                 PDU_NL_IDENTIFIER_DEFAULT);
+        if (msg.hasLanguageIndicator) {
+          msg.language = msg.body.substring(0, 2);
+          msg.body = msg.body.substring(3);
+        }
+        break;
+
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
+        msg.data = Buf.readUint8Array(length);
+        break;
+
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
+        if (msg.hasLanguageIndicator) {
+          msg.language = this.readSeptetsToString.call(bufAdapter, 2, 0,
+                                                       PDU_NL_IDENTIFIER_DEFAULT,
+                                                       PDU_NL_IDENTIFIER_DEFAULT);
+          length -= 2;
+        }
+        msg.body = this.readUCS2String.call(bufAdapter, length);
+        break;
+    }
+  },
+
+  /**
+   * Read Cell GSM/ETWS/UMTS Broadcast Message.
+   *
+   * @param pduLength
+   *        total length of the incoming PDU in octets.
+   */
+  readCbMessage: function readCbMessage(pduLength) {
+    // Validity                                                   GSM ETWS UMTS
+    let msg = {
+      // Internally used in ril_worker:
+      serial:               null,                              //  O   O    O
+      updateNumber:         null,                              //  O   O    O
+      format:               null,                              //  O   O    O
+      dcs:                  0x0F,                              //  O   X    O
+      encoding:             PDU_DCS_MSG_CODING_7BITS_ALPHABET, //  O   X    O
+      hasLanguageIndicator: false,                             //  O   X    O
+      data:                 null,                              //  O   X    O
+      body:                 null,                              //  O   X    O
+      pageIndex:            1,                                 //  O   X    X
+      numPages:             1,                                 //  O   X    X
+
+      // DOM attributes:
+      geographicalScope:    null,                              //  O   O    O
+      messageCode:          null,                              //  O   O    O
+      messageId:            null,                              //  O   O    O
+      language:             null,                              //  O   X    O
+      fullBody:             null,                              //  O   X    O
+      fullData:             null,                              //  O   X    O
+      messageClass:         GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL], //  O   x    O
+      etws:                 null                               //  ?   O    ?
+      /*{
+        warningType:        null,                              //  X   O    X
+        popup:              false,                             //  X   O    X
+        emergencyUserAlert: false,                             //  X   O    X
+      }*/
+    };
+
+    if (pduLength <= CB_MESSAGE_SIZE_ETWS) {
+      msg.format = CB_FORMAT_ETWS;
+      return this.readEtwsCbMessage(msg);
+    }
+
+    if (pduLength <= CB_MESSAGE_SIZE_GSM) {
+      msg.format = CB_FORMAT_GSM;
+      return this.readGsmCbMessage(msg, pduLength);
+    }
+
+    return null;
+  },
+
+  /**
+   * Read GSM Cell Broadcast Message.
+   *
+   * @param msg
+   *        message object for output.
+   * @param pduLength
+   *        total length of the incomint PDU in octets.
+   *
+   * @see 3GPP TS 23.041 clause 9.4.1.2
+   */
+  readGsmCbMessage: function readGsmCbMessage(msg, pduLength) {
+    this.readCbSerialNumber(msg);
+    this.readCbMessageIdentifier(msg);
+    this.readCbDataCodingScheme(msg);
+    this.readCbPageParameter(msg);
+
+    // GSM CB message header takes 6 octets.
+    this.readGsmCbData(msg, pduLength - 6);
+
+    return msg;
+  },
+
+  /**
+   * Read ETWS Primary Notification Message.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 clause 9.4.1.3
+   */
+  readEtwsCbMessage: function readEtwsCbMessage(msg) {
+    this.readCbSerialNumber(msg);
+    this.readCbMessageIdentifier(msg);
+    this.readCbWarningType(msg);
+
+    // Octet 7..56 is Warning Security Information. However, according to
+    // section 9.4.1.3.6, `The UE shall ignore this parameter.` So we just skip
+    // processing it here.
+
+    return msg;
   },
 };
 

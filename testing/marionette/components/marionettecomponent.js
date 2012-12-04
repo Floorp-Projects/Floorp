@@ -8,6 +8,7 @@ const MARIONETTE_CONTRACTID = "@mozilla.org/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 const DEBUGGER_ENABLED_PREF = 'devtools.debugger.remote-enabled';
 const MARIONETTE_ENABLED_PREF = 'marionette.defaultPrefs.enabled';
+const MARIONETTE_LOADEARLY_PREF = 'marionette.loadearly';
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -18,7 +19,7 @@ function MarionetteComponent() {
   this._loaded = false;
   // set up the logger
   this.logger = Log4Moz.repository.getLogger("Marionette");
-  this.logger.level = Log4Moz.Level["All"];
+  this.logger.level = Log4Moz.Level["INFO"];
   let logf = FileUtils.getFile('ProfD', ['marionette.log']);
   
   let formatter = new Log4Moz.BasicFormatter();
@@ -38,22 +39,36 @@ MarionetteComponent.prototype = {
     let observerService = Services.obs;
     switch (aTopic) {
       case "profile-after-change":
+        let appName = Services.appinfo.name;
         let enabled = false;
+        let loadearly = appName == 'B2G' ? false : true;
         try {
           enabled = Services.prefs.getBoolPref(MARIONETTE_ENABLED_PREF);
+          loadearly = Services.prefs.getBoolPref(MARIONETTE_LOADEARLY_PREF);
         } catch(e) {}
         if (enabled) {
-          this.logger.info("marionette enabled");
+          this.logger.info("marionette enabled, loadearly: " + loadearly);
 
           //add observers
-          observerService.addObserver(this, "final-ui-startup", false);
+          if (loadearly) {
+            observerService.addObserver(this, "final-ui-startup", false);
+          }
+          else {
+            observerService.addObserver(this, "system-message-listener-ready", false);
+          }
           observerService.addObserver(this, "xpcom-shutdown", false);
         }
         else {
           this.logger.info("marionette not enabled");
         }
         break;
+      case "system-message-listener-ready":
+        this.logger.info("marionette initializing at system-message-listener-ready");
+        observerService.removeObserver(this, "system-message-listener-ready");
+        this.init();
+        break;
       case "final-ui-startup":
+        this.logger.info("marionette initializing at final-ui-startup");
         observerService.removeObserver(this, "final-ui-startup");
         this.init();
         break;
@@ -75,7 +90,7 @@ MarionetteComponent.prototype = {
         port = 2828;
       }
       try {
-        Cu.import('resource:///modules/devtools/dbg-server.jsm');
+        Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
         DebuggerServer.addActors('chrome://marionette/content/marionette-actors.js');
         // This pref is required for the remote debugger to open a socket,
         // so force it to true.  See bug 761252.
@@ -87,8 +102,9 @@ MarionetteComponent.prototype = {
         Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, true);
         // Always allow remote connections.
         DebuggerServer.initTransport(function () { return true; });
-        DebuggerServer.openListener(port, true);
+        DebuggerServer.openListener(port);
         Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, original);
+        this.logger.info("marionette listener opened");
       }
       catch(e) {
         this.logger.error('exception: ' + e.name + ', ' + e.message);

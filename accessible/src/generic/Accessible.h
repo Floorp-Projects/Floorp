@@ -790,18 +790,19 @@ public: // XXX: a small hack to make these visible for nsARIAMap
     eHTMLTableRowAccessible = 1 << 15,
     eImageAccessible = 1 << 16,
     eImageMapAccessible = 1 << 17,
-    eListControlAccessible = 1 << 18,
-    eMenuButtonAccessible = 1 << 19,
-    eMenuPopupAccessible = 1 << 20,
-    eProgressAccessible = 1 << 21,
-    eRootAccessible = 1 << 22,
-    eSelectAccessible = 1 << 23,
-    eTableAccessible = 1 << 24,
-    eTableCellAccessible = 1 << 25,
-    eTableRowAccessible = 1 << 26,
-    eTextLeafAccessible = 1 << 27,
-    eXULDeckAccessible = 1 << 28,
-    eXULTreeAccessible = 1 << 29
+    eListAccessible = 1 << 18,
+    eListControlAccessible = 1 << 19,
+    eMenuButtonAccessible = 1 << 20,
+    eMenuPopupAccessible = 1 << 21,
+    eProgressAccessible = 1 << 22,
+    eRootAccessible = 1 << 23,
+    eSelectAccessible = 1 << 24,
+    eTableAccessible = 1 << 25,
+    eTableCellAccessible = 1 << 26,
+    eTableRowAccessible = 1 << 27,
+    eTextLeafAccessible = 1 << 28,
+    eXULDeckAccessible = 1 << 29,
+    eXULTreeAccessible = 1 << 30
   };
 
 protected:
