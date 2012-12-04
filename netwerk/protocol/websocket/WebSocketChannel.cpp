@@ -2079,6 +2079,12 @@ WebSocketChannel::SetupRequest()
                                   nsIRequest::LOAD_BYPASS_CACHE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // we never let websockets be blocked by head CSS/JS loads to avoid
+  // potential deadlock where server generation of CSS/JS requires
+  // an XHR signal.
+  rv = mChannel->SetLoadUnblocked(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // draft-ietf-hybi-thewebsocketprotocol-07 illustrates Upgrade: websocket
   // in lower case, so go with that. It is technically case insensitive.
   rv = mChannel->HTTPUpgrade(NS_LITERAL_CSTRING("websocket"), this);
