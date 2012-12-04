@@ -1722,6 +1722,7 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
             IonSpew(IonSpew_Invalidate, "#%d rectifier frame @ %p", frameno, it.fp());
             break;
           case IonFrame_Bailed_JS:
+          case IonFrame_Bailed_BaselineStub:
             JS_NOT_REACHED("invalid");
             break;
           case IonFrame_Bailed_Rectifier:

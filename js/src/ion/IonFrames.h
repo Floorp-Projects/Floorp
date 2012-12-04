@@ -175,8 +175,8 @@ class OsiIndex
 // The descriptor is organized into three sections:
 // [ frame size | constructing bit | frame type ]
 // < highest - - - - - - - - - - - - - - lowest >
-static const uintptr_t FRAMESIZE_SHIFT = 3;
-static const uintptr_t FRAMETYPE_BITS = 3;
+static const uintptr_t FRAMESIZE_SHIFT = 4;
+static const uintptr_t FRAMETYPE_BITS = 4;
 static const uintptr_t FRAMETYPE_MASK = (1 << FRAMETYPE_BITS) - 1;
 
 // Ion frames have a few important numbers associated with them:

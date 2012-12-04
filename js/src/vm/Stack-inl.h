@@ -594,7 +594,12 @@ StackIter::ionForEachCanonicalActualArg(Op op)
 {
     JS_ASSERT(isIon());
 #ifdef JS_ION
-    ionInlineFrames_.forEachCanonicalActualArg(op, 0, -1);
+    if (ionFrames_.isOptimizedJS()) {
+        ionInlineFrames_.forEachCanonicalActualArg(op, 0, -1);
+    } else {
+        JS_ASSERT(ionFrames_.isBaselineJS());
+        ionFrames_.forEachCanonicalActualArg(op, 0, -1);
+    }
 #endif
 }
 
