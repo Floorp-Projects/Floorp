@@ -7,7 +7,6 @@
 #define nsFileStreams_h__
 
 #include "nsAlgorithm.h"
-#include "nsAutoPtr.h"
 #include "nsIFileStreams.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -142,7 +141,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    nsAutoPtr<nsLineBuffer<char> > mLineBuffer;
+    nsLineBuffer<char> *mLineBuffer;
 
     /**
      * The file being opened.
