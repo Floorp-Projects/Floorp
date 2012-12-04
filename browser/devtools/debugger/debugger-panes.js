@@ -51,8 +51,7 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
    * @param number aDepth
    *        The frame depth specified by the debugger.
    */
-  addFrame:
-  function DVSF_addFrame(aFrameName, aFrameDetails, aDepth) {
+  addFrame: function DVSF_addFrame(aFrameName, aFrameDetails, aDepth) {
     // Stackframes are UI elements which benefit from visible panes.
     DebuggerView.showPanesSoon();
 
@@ -965,6 +964,7 @@ create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
     this._container = new StackList(document.getElementById("expressions"));
     this._variables = document.getElementById("variables");
 
+    this._container.setAttribute("context", "debuggerWatchExpressionsContextMenu");
     this._container.permaText = L10N.getStr("addWatchExpressionText");
     this._container.itemFactory = this._createItemView;
     this._container.addEventListener("click", this._onClick, false);
@@ -1131,9 +1131,35 @@ create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Called when the add watch expression key sequence was pressed.
+   */
+  _onCmdAddExpression: function BP__onCmdAddExpression(aText) {
+    // Only add a new expression if there's no pending input.
+    if (this.getExpressions().indexOf("") == -1) {
+      this.addExpression(aText || DebuggerView.editor.getSelectedText());
+    }
+  },
+
+  /**
+   * Called when the remove all watch expressions key sequence was pressed.
+   */
+  _onCmdRemoveAllExpressions: function BP__onCmdRemoveAllExpressions() {
+    // Empty the view of all the watch expressions and clear the cache.
+    this.empty();
+    this._cache = [];
+
+    // Synchronize with the controller's watch expressions store.
+    DebuggerController.StackFrames.syncWatchExpressions();
+  },
+
+  /**
    * The click listener for this container.
    */
   _onClick: function DVWE__onClick(e) {
+    if (e.button != 0) {
+      // Only allow left-click to trigger this event.
+      return;
+    }
     let expressionItem = this.getItemForElement(e.target);
     if (!expressionItem) {
       // The container is empty or we didn't click on an actual item.
