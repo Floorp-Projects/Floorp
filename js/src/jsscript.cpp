@@ -2608,7 +2608,9 @@ JSScript::markChildren(JSTracer *trc)
         }
     }
 
+#ifdef JS_ION
     ion::TraceIonScripts(trc, this);
+#endif
 }
 
 void
