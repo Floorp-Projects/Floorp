@@ -412,11 +412,13 @@ this.ICC_EF_ADN    = 0x6f3a;
 this.ICC_EF_FDN    = 0x6f3b;
 this.ICC_EF_SMS    = 0x6f3c;
 this.ICC_EF_MSISDN = 0x6f40;
+this.ICC_EF_CBMI   = 0x6f45;
 this.ICC_EF_SPN    = 0x6f46;
 this.ICC_EF_SDN    = 0x6f49;
 this.ICC_EF_EXT1   = 0x6f4a;
 this.ICC_EF_EXT2   = 0x6f4b;
 this.ICC_EF_EXT3   = 0x6f4c;
+this.ICC_EF_CBMIR  = 0x6f50;
 this.ICC_EF_AD     = 0x6fad;
 this.ICC_EF_PHASE  = 0x6fae;
 this.ICC_EF_PNN    = 0x6fc5;
@@ -913,15 +915,19 @@ this.GECKO_ICC_SERVICES = {
     ADN: 2,
     FDN: 3,
     PLMNSEL: 7,
+    CBMI: 14,
     SPN: 17,
     SDN: 18,
     DATA_DOWNLOAD_SMS_PP: 26,
+    CBMIR: 30,
     BDN: 31
   },
   usim: {
     FDN: 2,
     SDN: 4,
     BDN: 6,
+    CBMI: 15,
+    CBMIR: 16,
     SPN: 19,
     DATA_DOWNLOAD_SMS_PP: 28,
     SPDI: 51
