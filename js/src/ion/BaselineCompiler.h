@@ -65,6 +65,8 @@ namespace ion {
     _(JSOP_RSH)                \
     _(JSOP_URSH)               \
     _(JSOP_ADD)                \
+    _(JSOP_SUB)                \
+    _(JSOP_MUL)                \
     _(JSOP_LT)                 \
     _(JSOP_GT)                 \
     _(JSOP_BITNOT)             \

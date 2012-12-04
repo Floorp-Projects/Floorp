@@ -65,6 +65,7 @@ class AssemblerX86Shared
         LessThanOrEqual = JSC::X86Assembler::ConditionLE,
         Overflow = JSC::X86Assembler::ConditionO,
         Signed = JSC::X86Assembler::ConditionS,
+        NotSigned = JSC::X86Assembler::ConditionNS,
         Zero = JSC::X86Assembler::ConditionE,
         NonZero = JSC::X86Assembler::ConditionNE,
         Parity = JSC::X86Assembler::ConditionP,
