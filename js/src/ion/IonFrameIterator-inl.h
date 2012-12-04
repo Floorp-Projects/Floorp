@@ -71,6 +71,24 @@ InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned c
     s.readFrameArgs(op, argv, NULL, NULL, start, nformal, end);
 }
 
+template <class Op>
+inline void
+IonFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const
+{
+    JS_ASSERT(isBaselineJS());
+
+    unsigned nactual = numActualArgs();
+    if (count == unsigned(-1))
+        count = nactual - start;
+
+    unsigned end = start + count;
+    JS_ASSERT(start <= end && end <= nactual);
+
+    Value *argv = actualArgs();
+    for (unsigned i = start; i < end; i++)
+        op(argv[i]);
+}
+
 } // namespace ion
 } // namespace js
 

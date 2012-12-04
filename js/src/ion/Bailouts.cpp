@@ -350,6 +350,11 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
         return;
     }
 
+    if (frame->prevType() == IonFrame_BaselineStub) {
+        frame->changePrevType(IonFrame_Bailed_BaselineStub);
+        return;
+    }
+
     JS_ASSERT(frame->prevType() == IonFrame_OptimizedJS);
     frame->changePrevType(IonFrame_Bailed_JS);
 }

@@ -1724,7 +1724,11 @@ StackIter::numActualArgs() const
         return interpFrame()->numActualArgs();
       case ION:
 #ifdef JS_ION
-        return ionInlineFrames_.numActualArgs();
+        if (ionFrames_.isOptimizedJS())
+            return ionInlineFrames_.numActualArgs();
+
+        JS_ASSERT(ionFrames_.isBaselineJS());
+        return ionFrames_.numActualArgs();
 #else
         break;
 #endif
