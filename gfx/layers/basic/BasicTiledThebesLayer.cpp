@@ -559,7 +559,9 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     mTiledBuffer.PaintThebes(this, mValidRegion, invalidRegion, aCallback, aCallbackData);
     mTiledBuffer.ReadLock();
 
-    static_cast<BasicImplData*>(aMaskLayer->ImplData())->Paint(aContext, nullptr);
+    if (aMaskLayer) {
+      static_cast<BasicImplData*>(aMaskLayer->ImplData())->Paint(aContext, nullptr);
+    }
 
     // Create a heap copy owned and released by the compositor. This is needed
     // since we're sending this over an async message and content needs to be
