@@ -713,7 +713,7 @@ Scope.prototype = {
     let document = this.document;
 
     let element = this._target = document.createElement("vbox");
-    element.id = this._id;
+    element.id = this._idString;
     element.className = aClassName;
 
     let arrow = this._arrow = document.createElement("hbox");
