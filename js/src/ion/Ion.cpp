@@ -1170,7 +1170,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     JS_ASSERT(!builder->script()->ion);
     JSContext *cx = GetIonContext()->cx;
 
-    IonSpewNewFunction(graph, builder->script().unsafeGet());
+    IonSpewNewFunction(graph, builder->script());
 
     if (!builder->build()) {
         IonSpew(IonSpew_Abort, "Builder failed to build.");
@@ -1510,7 +1510,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         }
         calleeToken = CalleeToToken(&fp->callee());
     } else {
-        calleeToken = CalleeToToken(fp->script().unsafeGet());
+        calleeToken = CalleeToToken(fp->script());
     }
 
     // Caller must construct |this| before invoking the Ion function.
@@ -1817,6 +1817,7 @@ void
 ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
+    AutoAssertNoGC nogc;
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
     AutoFlushCache afc ("Invalidate");
 

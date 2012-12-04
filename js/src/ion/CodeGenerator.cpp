@@ -311,7 +311,7 @@ CodeGenerator::visitLambda(LLambda *lir)
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-    masm.storePtr(ImmGCPtr(fun->nonLazyScript().unsafeGet()),
+    masm.storePtr(ImmGCPtr(fun->nonLazyScript()),
                   Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
     masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
