@@ -1,0 +1,9 @@
+{
+  "document.characterSet": true,
+  "foreignDoc.characterSet": true,
+  "xmlDoc.characterSet": true,
+  "xmlElement.namespaceURI": true,
+  "xmlElement.className": true,
+  "detachedXmlElement.namespaceURI": true,
+  "detachedXmlElement.className": true
+}

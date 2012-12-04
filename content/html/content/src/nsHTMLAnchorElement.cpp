@@ -47,7 +47,7 @@ public:
   virtual bool Draggable() const MOZ_OVERRIDE;
 
   // nsIDOMHTMLAnchorElement
-  NS_DECL_NSIDOMHTMLANCHORELEMENT  
+  NS_DECL_NSIDOMHTMLANCHORELEMENT
 
   // DOM memory reporter participant
   NS_DECL_SIZEOF_EXCLUDING_THIS
@@ -92,7 +92,7 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
-  
+
   virtual void OnDNSPrefetchDeferred();
   virtual void OnDNSPrefetchRequested();
   virtual bool HasDeferredDNSPrefetchRequest();
@@ -160,6 +160,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Download, download)
 
 int32_t
 nsHTMLAnchorElement::TabIndexDefault()

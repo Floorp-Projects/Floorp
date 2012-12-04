@@ -19,15 +19,7 @@ DOMCI_DATA(MozVoicemail, mozilla::dom::telephony::Voicemail)
 
 USING_TELEPHONY_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(Voicemail)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Voicemail,
-                                                  nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Voicemail,
-                                                nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_0(Voicemail, nsDOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Voicemail)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozVoicemail)

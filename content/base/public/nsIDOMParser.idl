@@ -92,21 +92,6 @@ interface nsIDOMParser : nsISupports
                        in nsIScriptGlobalObject scriptObject);
 };
 
-/**
- * The nsIDOMParserJS interface provides a scriptable way of calling init().
- * Do NOT use this interface from languages other than JavaScript.
- */
-[scriptable, uuid(ba6bcd6c-63d8-49b3-bc8a-1e5e895645bc)]
-interface nsIDOMParserJS : nsISupports
-{
-  /**
-   * Just like nsIDOMParser.init, but callable from JS.
-   */
-  void init([optional] in nsIPrincipal principal,
-            [optional] in nsIURI documentURI,
-            [optional] in nsIURI baseURI);
-};
-
 %{ C++
 #define NS_DOMPARSER_CID                            \
  { /* 3a8a3a50-512c-11d4-9a54-000064657374 */       \

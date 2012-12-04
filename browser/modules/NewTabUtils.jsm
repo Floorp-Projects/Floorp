@@ -19,9 +19,23 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource:///modules/PageThumbs.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "gPrincipal", function () {
   let uri = Services.io.newURI("about:newtab", null, null);
   return Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
+});
+
+XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function () {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
+
+XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = 'utf8';
+  return converter;
 });
 
 // The preference that tells whether this feature is enabled.
@@ -40,21 +54,116 @@ const HISTORY_RESULTS_LIMIT = 100;
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 
 /**
+ * Calculate the MD5 hash for a string.
+ * @param aValue
+ *        The string to convert.
+ * @return The base64 representation of the MD5 hash.
+ */
+function toHash(aValue) {
+  let value = gUnicodeConverter.convertToByteArray(aValue);
+  gCryptoHash.init(gCryptoHash.MD5);
+  gCryptoHash.update(value, value.length);
+  return gCryptoHash.finish(true);
+}
+
+/**
  * Singleton that provides storage functionality.
  */
-let Storage = {
+XPCOMUtils.defineLazyGetter(this, "Storage", function() {
+  return new LinksStorage();
+});
+
+function LinksStorage() {
+  // Handle migration of data across versions.
+  try {
+    if (this._storedVersion < this._version) {
+      // This is either an upgrade, or version information is missing.
+      if (this._storedVersion < 1) {
+        this._migrateToV1();
+      }
+      // Add further migration steps here.
+    }
+    else {
+      // This is a downgrade.  Since we cannot predict future, upgrades should
+      // be backwards compatible.  We will set the version to the old value
+      // regardless, so, on next upgrade, the migration steps will run again.
+      // For this reason, they should also be able to run multiple times, even
+      // on top of an already up-to-date storage.
+    }
+  } catch (ex) {
+    // Something went wrong in the update process, we can't recover from here,
+    // so just clear the storage and start from scratch (dataloss!).
+    Components.utils.reportError(
+      "Unable to migrate the newTab storage to the current version. "+
+      "Restarting from scratch.\n" + ex);
+    this.clear();
+  }
+
+  // Set the version to the current one.
+  this._storedVersion = this._version;
+}
+
+LinksStorage.prototype = {
+  get _version() 1,
+
+  get _prefs() Object.freeze({
+    pinnedLinks: "browser.newtabpage.pinned",
+    blockedLinks: "browser.newtabpage.blocked",
+  }),
+
+  get _storedVersion() {
+    if (this.__storedVersion === undefined) {
+      try {
+        this.__storedVersion =
+          Services.prefs.getIntPref("browser.newtabpage.storageVersion");
+      } catch (ex) {
+        this.__storedVersion = 0;
+      }
+    }
+    return this.__storedVersion;
+  },
+  set _storedVersion(aValue) {
+    Services.prefs.setIntPref("browser.newtabpage.storageVersion", aValue);
+    this.__storedVersion = aValue;
+    return aValue;
+  },
+
   /**
-   * The dom storage instance used to persist data belonging to the New Tab Page.
+   * V1 changes storage from chromeappsstore.sqlite to prefs.
    */
-  get domStorage() {
-    let sm = Services.domStorageManager;
-    let storage = sm.getLocalStorageForPrincipal(gPrincipal, "");
-
-    // Cache this value, overwrite the getter.
-    let descriptor = {value: storage, enumerable: true};
-    Object.defineProperty(this, "domStorage", descriptor);
-
-    return storage;
+  _migrateToV1: function Storage__migrateToV1() {
+    // Import data from the old chromeappsstore.sqlite file, if exists.
+    let file = FileUtils.getFile("ProfD", ["chromeappsstore.sqlite"]);
+    if (!file.exists())
+      return;
+    let db = Services.storage.openUnsharedDatabase(file);
+    let stmt = db.createStatement(
+      "SELECT key, value FROM webappsstore2 WHERE scope = 'batwen.:about'");
+    try {
+      while (stmt.executeStep()) {
+        let key = stmt.row.key;
+        let value = JSON.parse(stmt.row.value);
+        switch (key) {
+          case "pinnedLinks":
+            this.set(key, value);
+            break;
+          case "blockedLinks":
+            // Convert urls to hashes.
+            let hashes = {};
+            for (let url in value) {
+              hashes[toHash(url)] = 1;
+            }
+            this.set(key, hashes);
+            break;
+          default:
+            // Ignore unknown keys.
+            break;
+        }
+      }
+    } finally {
+      stmt.finalize();
+      db.close();
+    }
   },
 
   /**
@@ -65,11 +174,11 @@ let Storage = {
    */
   get: function Storage_get(aKey, aDefault) {
     let value;
-
     try {
-      value = JSON.parse(this.domStorage.getItem(aKey));
+      let prefValue = Services.prefs.getComplexValue(this._prefs[aKey],
+                                                     Ci.nsISupportsString).data;
+      value = JSON.parse(prefValue);
     } catch (e) {}
-
     return value || aDefault;
   },
 
@@ -79,18 +188,22 @@ let Storage = {
    * @param aValue The value to set.
    */
   set: function Storage_set(aKey, aValue) {
-    this.domStorage.setItem(aKey, JSON.stringify(aValue));
+    // Page titles may contain unicode, thus use complex values.
+    let string = Cc["@mozilla.org/supports-string;1"]
+                   .createInstance(Ci.nsISupportsString);
+    string.data = JSON.stringify(aValue);
+    Services.prefs.setComplexValue(this._prefs[aKey], Ci.nsISupportsString,
+                                   string);
   },
 
   /**
    * Clears the storage and removes all values.
    */
   clear: function Storage_clear() {
-    this.domStorage.clear();
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference])
+    for each (let pref in this._prefs) {
+      Services.prefs.clearUserPref(pref);
+    }
+  }
 };
 
 
@@ -355,7 +468,7 @@ let BlockedLinks = {
    * @param aLink The link to block.
    */
   block: function BlockedLinks_block(aLink) {
-    this.links[aLink.url] = 1;
+    this.links[toHash(aLink.url)] = 1;
     this.save();
 
     // Make sure we unpin blocked links.
@@ -368,7 +481,7 @@ let BlockedLinks = {
    */
   unblock: function BlockedLinks_unblock(aLink) {
     if (this.isBlocked(aLink)) {
-      delete this.links[aLink.url];
+      delete this.links[toHash(aLink.url)];
       this.save();
     }
   },
@@ -385,7 +498,7 @@ let BlockedLinks = {
    * @param aLink The link to check.
    */
   isBlocked: function BlockedLinks_isBlocked(aLink) {
-    return (aLink.url in this.links);
+    return (toHash(aLink.url) in this.links);
   },
 
   /**

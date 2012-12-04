@@ -120,6 +120,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords)
 NS_IMPL_URI_ATTR(nsHTMLAreaElement, Href, href)
 NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Download, download)
 
 int32_t
 nsHTMLAreaElement::TabIndexDefault()

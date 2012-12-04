@@ -54,7 +54,6 @@
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@soundtouch@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
@@ -161,6 +160,7 @@
 @BINPATH@/components/dom_wifi.xpt
 @BINPATH@/components/dom_system_gonk.xpt
 @BINPATH@/components/dom_icc.xpt
+@BINPATH@/components/dom_cellbroadcast.xpt
 #endif
 #ifdef MOZ_B2G_FM
 @BINPATH@/components/dom_fm.xpt
@@ -378,10 +378,6 @@
 @BINPATH@/components/nsHelperAppDlg.js
 @BINPATH@/components/nsDownloadManagerUI.manifest
 @BINPATH@/components/nsDownloadManagerUI.js
-@BINPATH@/components/NetworkGeolocationProvider.manifest
-@BINPATH@/components/NetworkGeolocationProvider.js
-@BINPATH@/components/GPSDGeolocationProvider.manifest
-@BINPATH@/components/GPSDGeolocationProvider.js
 @BINPATH@/components/nsSidebar.manifest
 @BINPATH@/components/nsSidebar.js
 #ifndef MOZ_WIDGET_GONK

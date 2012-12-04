@@ -207,6 +207,15 @@ MOCHITEST_FILES += \
 		bug603918.webm \
 		bug604067.webm \
 		chain.ogv \
+		chain.ogg \
+		chain.opus \
+		variable-samplerate.ogg \
+		variable-samplerate.opus \
+		variable-channel.ogg \
+		variable-channel.opus \
+		chained-video.ogv \
+		chained-audio-video.ogg \
+		variable-preskip.opus \
 		dirac.ogg \
 		multiple-bos.ogg \
 		split.webm \
@@ -299,6 +308,7 @@ MOCHITEST_FILES += \
 		contentDuration7.sjs \
 		test_framebuffer.html \
 		test_seekable2.html \
+		test_chaining.html \
 		$(NULL)
 else
 MOCHITEST_FILES += \

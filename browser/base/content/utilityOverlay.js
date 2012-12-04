@@ -222,6 +222,7 @@ function openLinkIn(url, where, params) {
   // Currently, this parameter works only for where=="tab" or "current"
   var aIsUTF8               = params.isUTF8;
   var aInitiatingDoc        = params.initiatingDoc;
+  var aIsPrivate            = params.private;
 
   if (where == "save") {
     if (!aInitiatingDoc) {
@@ -267,8 +268,14 @@ function openLinkIn(url, where, params) {
     sa.AppendElement(aPostData);
     sa.AppendElement(allowThirdPartyFixupSupports);
 
-    Services.ww.openWindow(w || window, getBrowserURL(),
-                           null, "chrome,dialog=no,all", sa);
+    let features = "chrome,dialog=no,all";
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    if (aIsPrivate) {
+      features += ",private";
+    }
+#endif
+
+    Services.ww.openWindow(w || window, getBrowserURL(), null, features, sa);
     return;
   }
 

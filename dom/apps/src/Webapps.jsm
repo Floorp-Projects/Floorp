@@ -783,6 +783,11 @@ this.DOMApplicationRegistry = {
     // already installed application.
     let isUpdate = (app.installState == "installed");
 
+    // An app download would only be triggered for two reasons: an app
+    // update or while retrying to download a previously failed or canceled
+    // instalation.
+    app.retryingDownload = !isUpdate;
+
     // We need to get the update manifest here, not the webapp manifest.
     let file = FileUtils.getFile(DIRECTORY_NAME,
                                  ["webapps", id, "update.webapp"], true);
@@ -800,6 +805,8 @@ this.DOMApplicationRegistry = {
         } else {
           // hosted app with no appcache, nothing to do, but we fire a
           // downloaded event
+          debug("No appcache found, sending 'downloaded' for " + aManifestURL);
+          app.downloadAvailable = false;
           DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
                                                   { type: "downloaded",
                                                     manifestURL: aManifestURL,
@@ -854,12 +861,11 @@ this.DOMApplicationRegistry = {
 
   applyDownload: function applyDownload(aManifestURL) {
     debug("applyDownload for " + aManifestURL);
-    let app = this.getAppByManifestURL(aManifestURL);
+    let id = this._appIdForManifestURL(aManifestURL);
+    let app = this.webapps[id];
     if (!app || (app && !app.readyToApplyDownload)) {
       return;
     }
-
-    let id = this._appIdForManifestURL(app.manifestURL);
 
     // Clean up the deprecated manifest cache if needed.
     if (id in this._manifestCache) {
@@ -883,17 +889,25 @@ this.DOMApplicationRegistry = {
 
     // Get the manifest, and set properties.
     this.getManifestFor(app.origin, (function(aData) {
+      app.downloading = false;
+      app.downloadAvailable = false;
+      app.downloadSize = 0;
+      app.installState = "installed";
       app.readyToApplyDownload = false;
-      this.broadcastMessage("Webapps:PackageEvent",
-                            { type: "applied",
-                              manifestURL: app.manifestURL,
-                              app: app,
-                              manifest: aData });
-      // Update the permissions for this app.
-      PermissionsInstaller.installPermissions({ manifest: aData,
-                                                origin: app.origin,
-                                                manifestURL: app.manifestURL },
-                                              true);
+      delete app.retryingDownload;
+
+      DOMApplicationRegistry._saveApps(function() {
+        DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
+                                                { type: "applied",
+                                                  manifestURL: app.manifestURL,
+                                                  app: app,
+                                                  manifest: aData });
+        // Update the permissions for this app.
+        PermissionsInstaller.installPermissions({ manifest: aData,
+                                                  origin: app.origin,
+                                                  manifestURL: app.manifestURL },
+                                                true);
+      });
     }).bind(this));
   },
 
@@ -967,7 +981,7 @@ this.DOMApplicationRegistry = {
     }
 
     function updateHostedApp(aManifest) {
-      debug("updateHostedApp");
+      debug("updateHostedApp " + aData.manifestURL);
       let id = this._appId(app.origin);
 
       if (id in this._manifestCache) {
@@ -995,18 +1009,11 @@ this.DOMApplicationRegistry = {
 
       let manifest = new ManifestHelper(aManifest, app.origin);
 
-      if (manifest.appcache_path) {
-        app.installState = "updating";
-        app.downloadAvailable = true;
-        app.downloading = true;
-        app.downloadsize = 0;
-        app.readyToApplyDownload = false;
-      } else {
-        app.installState = "installed";
-        app.downloadAvailable = false;
-        app.downloading = false;
-        app.readyToApplyDownload = false;
-      }
+      app.installState = "installed";
+      app.downloading = false;
+      app.downloadsize = 0;
+      app.readyToApplyDownload = false;
+      app.downloadAvailable = !!manifest.appcache_path;
 
       app.name = aManifest.name;
       app.csp = aManifest.csp || "";
@@ -1016,12 +1023,11 @@ this.DOMApplicationRegistry = {
       this.webapps[id] = app;
 
       this._saveApps(function() {
-        aData.event = "downloadapplied";
+        aData.app = app;
+        aData.event = manifest.appcache_path ? "downloadavailable"
+                                             : "downloadapplied";
         aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
       });
-
-      // Preload the appcache if needed.
-      this.startOfflineCacheDownload(manifest, app);
 
       // Update the permissions for this app.
       PermissionsInstaller.installPermissions({ manifest: aManifest,
@@ -1034,16 +1040,15 @@ this.DOMApplicationRegistry = {
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", aData.manifestURL, true);
+    xhr.responseType = "json";
     if (app.etag) {
       xhr.setRequestHeader("If-None-Match", app.etag);
     }
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
-        let manifest;
-        try {
-          manifest = JSON.parse(xhr.responseText);
-        } catch(e) {
+        let manifest = xhr.response;
+        if (manifest == null) {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
@@ -1533,7 +1538,7 @@ this.DOMApplicationRegistry = {
         continue;
       }
 
-      if (!this.webapps[id].removable)
+      if (!app.removable)
         return;
 
       // Clean up the deprecated manifest cache if needed.
@@ -1564,6 +1569,7 @@ this.DOMApplicationRegistry = {
       delete this.webapps[id];
 
       this._saveApps((function() {
+        aData.manifestURL = app.manifestURL;
         this.broadcastMessage("Webapps:Uninstall:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-uninstall", appNote);
         this.broadcastMessage("Webapps:RemoveApp", { id: id });
@@ -1692,7 +1698,8 @@ this.DOMApplicationRegistry = {
       return;
 
     let id = this._appId(aOrigin);
-    if (!id || this.webapps[id].installState == "pending") {
+    let app = this.webapps[id];
+    if (!id || (app.installState == "pending" && !app.retryingDownload)) {
       aCallback(null);
       return;
     }
@@ -1762,13 +1769,15 @@ this.DOMApplicationRegistry = {
         }
 
         let origin = this.webapps[record.id].origin;
+        let manifestURL = this.webapps[record.id].manifestURL;
         delete this.webapps[record.id];
         let dir = this._getAppDir(record.id);
         try {
           dir.remove(true);
         } catch (e) {
         }
-        this.broadcastMessage("Webapps:Uninstall:Return:OK", { origin: origin });
+        this.broadcastMessage("Webapps:Uninstall:Return:OK", { origin: origin,
+                                                               manifestURL: manifestURL });
       } else {
         if (this.webapps[record.id]) {
           this.webapps[record.id] = record.value;

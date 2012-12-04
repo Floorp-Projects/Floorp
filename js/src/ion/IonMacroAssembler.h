@@ -143,8 +143,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchPtr(cond, Address(scratch, BaseShape::offsetOfClass()), ImmWord(clasp), label);
     }
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
-        branchPtr(Assembler::NotEqual, Address(obj, JSObject::offsetOfShape()),
-                  ImmGCPtr(shape), label);
+        branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
     }
 
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
@@ -658,7 +657,58 @@ class MacroAssembler : public MacroAssemblerSpecific
         movePtr(ImmWord(p->sizePointer()), temp);
         add32(Imm32(-1), Address(temp, 0));
     }
+
+    void printf(const char *output);
+    void printf(const char *output, Register value);
 };
+
+static inline Assembler::Condition
+JSOpToCondition(JSOp op)
+{
+    switch (op) {
+      case JSOP_EQ:
+      case JSOP_STRICTEQ:
+        return Assembler::Equal;
+      case JSOP_NE:
+      case JSOP_STRICTNE:
+        return Assembler::NotEqual;
+      case JSOP_LT:
+        return Assembler::LessThan;
+      case JSOP_LE:
+        return Assembler::LessThanOrEqual;
+      case JSOP_GT:
+        return Assembler::GreaterThan;
+      case JSOP_GE:
+        return Assembler::GreaterThanOrEqual;
+      default:
+        JS_NOT_REACHED("Unrecognized comparison operation");
+        return Assembler::Equal;
+    }
+}
+
+static inline Assembler::DoubleCondition
+JSOpToDoubleCondition(JSOp op)
+{
+    switch (op) {
+      case JSOP_EQ:
+      case JSOP_STRICTEQ:
+        return Assembler::DoubleEqual;
+      case JSOP_NE:
+      case JSOP_STRICTNE:
+        return Assembler::DoubleNotEqualOrUnordered;
+      case JSOP_LT:
+        return Assembler::DoubleLessThan;
+      case JSOP_LE:
+        return Assembler::DoubleLessThanOrEqual;
+      case JSOP_GT:
+        return Assembler::DoubleGreaterThan;
+      case JSOP_GE:
+        return Assembler::DoubleGreaterThanOrEqual;
+      default:
+        JS_NOT_REACHED("Unexpected comparison operation");
+        return Assembler::DoubleEqual;
+    }
+}
 
 } // namespace ion
 } // namespace js

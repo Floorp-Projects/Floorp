@@ -148,6 +148,25 @@ function NetworkManager() {
   settingsLock.get(SETTINGS_USB_DHCPSERVER_ENDIP, this);
 
   this.setAndConfigureActive();
+
+  let self = this;
+  this.waitForConnectionReadyCallback = null;
+  settingsLock.get(SETTINGS_WIFI_ENABLED, {
+    handle: function (aName, aResult) {
+      if (!aResult) {
+        return;
+      }
+      // Turn on wifi tethering when the mobile data connection is established.
+      self.waitForConnectionReadyCallback = (function callback() {
+        let settingsLock = gSettingsService.createLock();
+        settingsLock.set(SETTINGS_WIFI_ENABLED, aResult, null);
+      });
+    },
+
+    handleError: function (aErrorMessage) {
+      debug("Error reading the 'tethering.wifi.enabled' setting: " + aErrorMessage);
+    }
+  });
 }
 NetworkManager.prototype = {
   classID:   NETWORKMANAGER_CID,
@@ -184,6 +203,11 @@ NetworkManager.prototype = {
             // to set default route only on preferred network
             this.removeDefaultRoute(network.name);
             this.setAndConfigureActive();
+            // Turn on wifi tethering when the callback is set.
+            if (this.waitForConnectionReadyCallback) {
+              this.waitForConnectionReadyCallback.call(this);
+              this.waitForConnectionReadyCallback = null;
+            }
             break;
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
             // Remove host route for data calls
@@ -443,6 +467,8 @@ NetworkManager.prototype = {
         Services.prefs.clearUserPref("network.proxy.share_proxy_settings");
         Services.prefs.clearUserPref("network.proxy.http");
         Services.prefs.clearUserPref("network.proxy.http_port");
+        Services.prefs.clearUserPref("network.proxy.ssl");
+        Services.prefs.clearUserPref("network.proxy.ssl_port");
         debug("No proxy support for " + this.active.name + " network interface.");
         return;
       }
@@ -453,8 +479,10 @@ NetworkManager.prototype = {
       // Do not use this proxy server for all protocols.
       Services.prefs.setBoolPref("network.proxy.share_proxy_settings", false);
       Services.prefs.setCharPref("network.proxy.http", this.active.httpProxyHost);
+      Services.prefs.setCharPref("network.proxy.ssl", this.active.httpProxyHost);
       let port = this.active.httpProxyPort == "" ? 8080 : this.active.httpProxyPort;
       Services.prefs.setIntPref("network.proxy.http_port", port);
+      Services.prefs.setIntPref("network.proxy.ssl_port", port);
     } catch (ex) {
        debug("Exception " + ex + ". Unable to set proxy setting for "
              + this.active.name + " network interface.");
@@ -647,7 +675,8 @@ NetworkManager.prototype = {
     if (resetSettings) {
       let settingsLock = gSettingsService.createLock();
       this.tetheringSettings[SETTINGS_WIFI_ENABLED] = false;
-      settingsLock.set("tethering.wifi.enabled", false, null);
+      // Disable wifi tethering with a useful error message for the user.
+      settingsLock.set("tethering.wifi.enabled", false, null, msg);
     }
 
     debug("setWifiTethering: " + (msg ? msg : "success"));
@@ -675,6 +704,9 @@ NetworkManager.prototype = {
       this.notifyError(true, callback, "mobile interface is not registered");
       return;
     }
+    // Clear this flag to prevent unexpected action.
+    this.waitForConnectionReadyCallback = null;
+
     this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = mobile.name;
 
     let params = this.getWifiTetheringParameters(enable, this._tetheringInterface[TETHERING_TYPE_WIFI]);

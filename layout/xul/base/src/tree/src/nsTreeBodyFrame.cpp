@@ -59,6 +59,7 @@
 #include "nsIScriptableRegion.h"
 
 #include "mozilla/Likely.h"
+#include "mozilla/Util.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1305,7 +1306,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
   nscoord maxWidth = aTextRect.width;
 
   if (aColumn->Overflow()) {
-    nsresult rv;
+    DebugOnly<nsresult> rv;
     nsTreeColumn* nextColumn = aColumn->GetNext();
     while (nextColumn && width > maxWidth) {
       while (nextColumn) {

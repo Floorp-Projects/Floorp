@@ -1148,7 +1148,6 @@ public:
    * Can be used anytime
    */
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
-  virtual const nsIntRegion& GetValidLowPrecisionRegion() const { return mValidRegion; }
 
   virtual ThebesLayer* AsThebesLayer() { return this; }
 

@@ -1322,7 +1322,9 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
   // We need a new thebes layer
   nsRefPtr<ThebesLayer> layer;
   ThebesDisplayItemLayerUserData* data;
+#ifndef MOZ_ANDROID_OMTC
   bool didResetScrollPositionForLayerPixelAlignment = false;
+#endif
   if (mNextFreeRecycledThebesLayer < mRecycledThebesLayers.Length()) {
     // Recycle a layer
     layer = mRecycledThebesLayers[mNextFreeRecycledThebesLayer];
@@ -1348,7 +1350,9 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
         !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001) ||
         data->mAppUnitsPerDevPixel != mAppUnitsPerDevPixel) {
       InvalidateEntireThebesLayer(layer, aActiveScrolledRoot);
+#ifndef MOZ_ANDROID_OMTC
       didResetScrollPositionForLayerPixelAlignment = true;
+#endif
     }
     if (!data->mRegionToInvalidate.IsEmpty()) {
 #ifdef DEBUG_INVALIDATIONS
@@ -1375,7 +1379,9 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
     data = new ThebesDisplayItemLayerUserData();
     layer->SetUserData(&gThebesDisplayItemLayerUserData, data);
     ResetScrollPositionForLayerPixelAlignment(aActiveScrolledRoot);
+#ifndef MOZ_ANDROID_OMTC
     didResetScrollPositionForLayerPixelAlignment = true;
+#endif
   }
   data->mXScale = mParameters.mXScale;
   data->mYScale = mParameters.mYScale;
@@ -1981,6 +1987,58 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 #endif
 }
 
+/**
+ * Checks if aAncestor is an ancestor of aFrame
+ */
+static bool IsFrameAncestorOf(const nsIFrame *aAncestor, const nsIFrame *aFrame)
+{
+  if (!aFrame) {
+    return false;
+  }
+  for (const nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    if (f == aAncestor) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Chooses a single active scrolled root for the entire display list, used
+ * when we are flattening layers.
+ */
+static bool ChooseActiveScrolledRoot(nsDisplayListBuilder *aBuilder,
+                                     const nsDisplayList& aList,
+                                     const nsIFrame **aActiveScrolledRoot)
+{
+  for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
+    nsDisplayItem::Type type = item->GetType();
+    if (type == nsDisplayItem::TYPE_CLIP ||
+        type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
+      if (!ChooseActiveScrolledRoot(aBuilder,
+                                    *item->GetSameCoordinateSystemChildren(),
+                                    aActiveScrolledRoot)) {
+        return false;
+      }
+      continue;
+    }
+
+    if (!*aActiveScrolledRoot) {
+      // Try using the actual active scrolled root of the backmost item, as that
+      // should result in the least invalidation when scrolling.
+      aBuilder->IsFixedItem(item, aActiveScrolledRoot);
+    } else if (!IsFrameAncestorOf(*aActiveScrolledRoot, item->GetUnderlyingFrame())) {
+      // If there are items that aren't descendants of the background's active scrolled
+      // root, then give up and just use the container's reference frame instead.
+      return false;
+    }
+  }
+  if (!*aActiveScrolledRoot) {
+    return false;
+  }
+  return true;
+}
+
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -2004,6 +2062,17 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
   const nsIFrame* lastActiveScrolledRoot = nullptr;
   nsPoint topLeft;
+
+  // When NO_COMPONENT_ALPHA is set, items will be flattened into a single
+  // layer, so we need to choose which active scrolled root to use for all
+  // items.
+  if (aFlags & NO_COMPONENT_ALPHA) {
+    if (!ChooseActiveScrolledRoot(mBuilder, aList, &lastActiveScrolledRoot)) {
+      lastActiveScrolledRoot = mContainerReferenceFrame;
+    }
+
+    topLeft = lastActiveScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+  }
 
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayItem::Type type = item->GetType();
@@ -2040,12 +2109,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     bool forceInactive;
     const nsIFrame* activeScrolledRoot;
     if (aFlags & NO_COMPONENT_ALPHA) {
-      // When NO_COMPONENT_ALPHA is set, items will be flattened onto the
-      // reference frame. In this case, force the active scrolled root to
-      // that frame.
       forceInactive = true;
-      activeScrolledRoot = mContainerReferenceFrame;
-      topLeft = nsPoint(0, 0);
+      activeScrolledRoot = lastActiveScrolledRoot;
       isFixed = mBuilder->IsFixedItem(item, nullptr, activeScrolledRoot);
     } else {
       forceInactive = false;
@@ -2662,20 +2727,30 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     // This protects against floating-point inaccuracies causing problems
     // in the checks below.
     transform.NudgeToIntegers();
-  } 
-  if (aContainerFrame && aState == LAYER_INACTIVE) {
+  }
+  gfxMatrix transform2d;
+  if (aContainerFrame &&
+      aState == LAYER_INACTIVE &&
+      (!aTransform || (aTransform->Is2D(&transform2d) &&
+                       !transform2d.HasNonTranslation()))) {
     // When we have an inactive ContainerLayer, translate the container by the offset to the
     // reference frame (and offset all child layers by the reverse) so that the coordinate
     // space of the child layers isn't affected by scrolling.
+    // This gets confusing for complicated transform (since we'd have to compute the scale
+    // factors for the matrix), so we don't bother. Any frames that are building an nsDisplayTransform
+    // for a css transform would have 0,0 as their offset to the reference frame, so this doesn't
+    // matter.
     nsPoint appUnitOffset = aDisplayListBuilder->ToReferenceFrame(aContainerFrame);
     nscoord appUnitsPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
     offset = nsIntPoint(
         int32_t(NSAppUnitsToDoublePixels(appUnitOffset.x, appUnitsPerDevPixel)*aIncomingScale.mXScale),
         int32_t(NSAppUnitsToDoublePixels(appUnitOffset.y, appUnitsPerDevPixel)*aIncomingScale.mYScale));
   }
-  transform = transform * gfx3DMatrix::Translation(offset.x + aIncomingScale.mOffset.x, offset.y + aIncomingScale.mOffset.y, 0);
+  transform = gfx3DMatrix::Translation(aIncomingScale.mOffset.x, aIncomingScale.mOffset.y, 0) * 
+              transform * 
+              gfx3DMatrix::Translation(offset.x, offset.y, 0);
 
-  gfxMatrix transform2d;
+
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   gfxSize scale;
   bool isRetained = aLayer->Manager()->IsWidgetLayerManager();

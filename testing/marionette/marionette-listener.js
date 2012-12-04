@@ -61,8 +61,9 @@ let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 function registerSelf() {
   Services.io.manageOfflineStatus = false;
   Services.io.offline = false;
-  let register = sendSyncMessage("Marionette:register", {value: winUtil.outerWindowID, href: content.location.href});
-  
+  let msg = {value: winUtil.outerWindowID, href: content.location.href};
+  let register = sendSyncMessage("Marionette:register", msg);
+
   if (register[0]) {
     listenerId = register[0];
     startListeners();
@@ -120,6 +121,7 @@ function startListeners() {
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
   addMessageListenerId("Marionette:setState", setState);
+  addMessageListenerId("Marionette:screenShot", screenShot);
 }
 
 /**
@@ -150,16 +152,16 @@ function setState(msg) {
     elementManager.setSearchTimeout(msg.json.searchTimeout);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
     return;
   }
-  sendOk();
+  sendOk(msg.json.command_id);
 }
 
 /**
  * Restarts all our listeners after this listener was put to sleep
  */
-function restart() {
+function restart(msg) {
   removeMessageListener("Marionette:restart", restart);
   registerSelf();
 }
@@ -200,6 +202,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
   removeMessageListenerId("Marionette:setState", setState);
+  removeMessageListenerId("Marionette:screenShot", screenShot);
   this.elementManager.reset();
   // reset frame to the top-most frame
   curWindow = content;
@@ -320,7 +323,8 @@ function createExecuteContentSandbox(aWindow, timeout) {
                   500, null, asyncTestCommandId);
       }
       else {
-        sendResponse({value: elementManager.wrapValue(value), status: status}, asyncTestCommandId);
+        sendResponse({value: elementManager.wrapValue(value), status: status},
+                     asyncTestCommandId);
       }
     }
     else {
@@ -350,12 +354,13 @@ function createExecuteContentSandbox(aWindow, timeout) {
  * or directly (for 'mochitest' like JS Marionette tests)
  */
 function executeScript(msg, directInject) {
+  let asyncTestCommandId = msg.json.command_id;
   let script = msg.json.value;
 
   if (msg.json.newSandbox || !sandbox) {
     sandbox = createExecuteContentSandbox(curWindow, msg.json.timeout);
     if (!sandbox) {
-      sendError("Could not create sandbox!");
+      sendError("Could not create sandbox!", asyncTestCommandId);
       return;
     }
   }
@@ -375,10 +380,10 @@ function executeScript(msg, directInject) {
       marionetteLogObj.clearLogs();
       marionettePerf.clearPerfData();
       if (res == undefined || res.passed == undefined) {
-        sendError("Marionette.finish() not called", 17, null);
+        sendError("Marionette.finish() not called", 17, null, asyncTestCommandId);
       }
       else {
-        sendResponse({value: elementManager.wrapValue(res)});
+        sendResponse({value: elementManager.wrapValue(res)}, asyncTestCommandId);
       }
     }
     else {
@@ -387,7 +392,7 @@ function executeScript(msg, directInject) {
           msg.json.args, curWindow);
       }
       catch(e) {
-        sendError(e.message, e.code, e.stack);
+        sendError(e.message, e.code, e.stack, asyncTestCommandId);
         return;
       }
 
@@ -405,12 +410,12 @@ function executeScript(msg, directInject) {
                                                perf: elementManager.wrapValue(marionettePerf.getPerfData())});
       marionetteLogObj.clearLogs();
       marionettePerf.clearPerfData();
-      sendResponse({value: elementManager.wrapValue(res)});
+      sendResponse({value: elementManager.wrapValue(res)}, asyncTestCommandId);
     }
   }
   catch (e) {
     // 17 = JavascriptException
-    sendError(e.name + ': ' + e.message, 17, e.stack);
+    sendError(e.name + ': ' + e.message, 17, e.stack, asyncTestCommandId);
   }
 }
 
@@ -419,7 +424,7 @@ function executeScript(msg, directInject) {
  */
 function setTestName(msg) {
   marionetteTestName = msg.json.value;
-  sendOk();
+  sendOk(msg.json.command_id);
 }
 
 /**
@@ -449,10 +454,10 @@ function executeJSScript(msg) {
  * For executeAsync, it will return a response when marionetteScriptFinished/arguments[arguments.length-1] 
  * method is called, or if it times out.
  */
-function executeWithCallback(msg, async) {
+function executeWithCallback(msg, useFinish) {
   curWindow.addEventListener("unload", errUnload, false);
   let script = msg.json.value;
-  asyncTestCommandId = msg.json.id;
+  let asyncTestCommandId = msg.json.command_id;
 
   if (msg.json.newSandbox || !sandbox) {
     sandbox = createExecuteContentSandbox(curWindow, msg.json.timeout);
@@ -461,6 +466,7 @@ function executeWithCallback(msg, async) {
       return;
     }
   }
+  sandbox.tag = script;
 
   // Error code 28 is scriptTimeout, but spec says execute_async should return 21 (Timeout),
   // see http://code.google.com/p/selenium/wiki/JsonWireProtocol#/session/:sessionId/execute_async.
@@ -478,9 +484,9 @@ function executeWithCallback(msg, async) {
   }, true);
 
   let scriptSrc;
-  if (async) {
+  if (useFinish) {
     if (msg.json.timeout == null || msg.json.timeout == 0) {
-      sendError("Please set a timeout", 21, null);
+      sendError("Please set a timeout", 21, null, asyncTestCommandId);
     }
     scriptSrc = script;
   }
@@ -490,7 +496,7 @@ function executeWithCallback(msg, async) {
         msg.json.args, curWindow);
     }
     catch(e) {
-      sendError(e.message, e.code, e.stack);
+      sendError(e.message, e.code, e.stack, asyncTestCommandId);
       return;
     }
 
@@ -523,10 +529,10 @@ function setSearchTimeout(msg) {
     elementManager.setSearchTimeout(msg.json.value);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
     return;
   }
-  sendOk();
+  sendOk(msg.json.command_id);
 }
 
 /**
@@ -534,6 +540,7 @@ function setSearchTimeout(msg) {
  * All other navigation is handled by the server (in chrome space).
  */
 function goUrl(msg) {
+  let command_id = msg.json.command_id;
   addEventListener("DOMContentLoaded", function onDOMContentLoaded(event) {
     // Prevent DOMContentLoaded events from frames from invoking this code,
     // unless the event is coming from the frame associated with the current
@@ -544,11 +551,11 @@ function goUrl(msg) {
 
       let errorRegex = /about:.+(error)|(blocked)\?/;
       if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)) {
-        sendError("Error loading page", 13, null);
+        sendError("Error loading page", 13, null, command_id);
         return;
       }
 
-      sendOk();
+      sendOk(command_id);
     }
   }, false);
   curWindow.location = msg.json.value;
@@ -558,14 +565,14 @@ function goUrl(msg) {
  * Get the current URI
  */
 function getUrl(msg) {
-  sendResponse({value: curWindow.location.href});
+  sendResponse({value: curWindow.location.href}, msg.json.command_id);
 }
 
 /**
  * Get the current Title of the window
  */
 function getTitle(msg) {
-  sendResponse({value: curWindow.top.document.title});
+  sendResponse({value: curWindow.top.document.title}, msg.json.command_id);
 }
 
 /**
@@ -574,7 +581,7 @@ function getTitle(msg) {
 function getPageSource(msg) {
   var XMLSerializer = curWindow.XMLSerializer;
   var pageSource = new XMLSerializer().serializeToString(curWindow.document);
-  sendResponse({value: pageSource });
+  sendResponse({value: pageSource}, msg.json.command_id);
 }
 
 /**
@@ -582,7 +589,7 @@ function getPageSource(msg) {
  */
 function goBack(msg) {
   curWindow.history.back();
-  sendOk();
+  sendOk(msg.json.command_id);
 }
 
 /**
@@ -590,15 +597,19 @@ function goBack(msg) {
  */
 function goForward(msg) {
   curWindow.history.forward();
-  sendOk();
+  sendOk(msg.json.command_id);
 }
 
 /**
  * Refresh the page
  */
 function refresh(msg) {
+  let command_id = msg.json.command_id;
   curWindow.location.reload(true);
-  let listen = function() { removeEventListener("DOMContentLoaded", arguments.callee, false); sendOk() } ;
+  let listen = function() {
+    removeEventListener("DOMContentLoaded", arguments.callee, false);
+    sendOk(command_id);
+  };
   addEventListener("DOMContentLoaded", listen, false);
 }
 
@@ -606,13 +617,14 @@ function refresh(msg) {
  * Find an element in the document using requested search strategy 
  */
 function findElementContent(msg) {
+  let command_id = msg.json.command_id;
   try {
-    let on_success = function(id) { sendResponse({value:id}); };
+    let on_success = function(id, cmd_id) { sendResponse({value:id}, cmd_id); };
     let on_error = sendError;
-    elementManager.find(curWindow, msg.json, on_success, on_error, false);
+    elementManager.find(curWindow, msg.json, on_success, on_error, false, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -620,13 +632,14 @@ function findElementContent(msg) {
  * Find elements in the document using requested search strategy 
  */
 function findElementsContent(msg) {
+  let command_id = msg.json.command_id;
   try {
-    let on_success = function(id) { sendResponse({value:id}); };
+    let on_success = function(id, cmd_id) { sendResponse({value:id}, cmd_id); };
     let on_error = sendError;
-    elementManager.find(curWindow, msg.json, on_success, on_error, true);
+    elementManager.find(curWindow, msg.json, on_success, on_error, true, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -634,14 +647,15 @@ function findElementsContent(msg) {
  * Send click event to element
  */
 function clickElement(msg) {
+  let command_id = msg.json.command_id;
   let el;
   try {
     el = elementManager.getKnownElement(msg.json.element, curWindow);
     utils.click(el);
-    sendOk();
+    sendOk(command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -649,12 +663,14 @@ function clickElement(msg) {
  * Get a given attribute of an element
  */
 function getElementAttribute(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    sendResponse({value: utils.getElementAttribute(el, msg.json.name)});
+    sendResponse({value: utils.getElementAttribute(el, msg.json.name)},
+                 command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -662,12 +678,13 @@ function getElementAttribute(msg) {
  * Get the text of this element. This includes text from child elements.
  */
 function getElementText(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    sendResponse({value: utils.getElementText(el)});
+    sendResponse({value: utils.getElementText(el)}, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -675,12 +692,13 @@ function getElementText(msg) {
  * Get the tag name of an element.
  */
 function getElementTagName(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    sendResponse({value: el.tagName.toLowerCase()});
+    sendResponse({value: el.tagName.toLowerCase()}, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -688,12 +706,13 @@ function getElementTagName(msg) {
  * Check if element is displayed
  */
 function isElementDisplayed(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    sendResponse({value: utils.isElementDisplayed(el)});
+    sendResponse({value: utils.isElementDisplayed(el)}, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -701,13 +720,15 @@ function isElementDisplayed(msg) {
  * Get the size of the element and return it
  */
 function getElementSize(msg){
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     let clientRect = el.getBoundingClientRect();  
-    sendResponse({value: {width: clientRect.width, height: clientRect.height}});
+    sendResponse({value: {width: clientRect.width, height: clientRect.height}},
+                 command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -715,12 +736,13 @@ function getElementSize(msg){
  * Check if element is enabled
  */
 function isElementEnabled(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    sendResponse({value: utils.isElementEnabled(el)});
+    sendResponse({value: utils.isElementEnabled(el)}, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -728,12 +750,13 @@ function isElementEnabled(msg) {
  * Check if element is selected
  */
 function isElementSelected(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    sendResponse({value: utils.isElementSelected(el)});
+    sendResponse({value: utils.isElementSelected(el)}, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -741,13 +764,14 @@ function isElementSelected(msg) {
  * Send keys to element
  */
 function sendKeysToElement(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     utils.type(curWindow.document, el, msg.json.value.join(""), true);
-    sendOk();
+    sendOk(command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -755,6 +779,7 @@ function sendKeysToElement(msg) {
  * Get the position of an element
  */
 function getElementPosition(msg) {
+  let command_id = msg.json.command_id;
   try{
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     var x = el.offsetLeft;
@@ -783,10 +808,10 @@ function getElementPosition(msg) {
     location.x = x;
     location.y = y;
 
-    sendResponse({value: location});
+    sendResponse({value: location}, command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -794,13 +819,14 @@ function getElementPosition(msg) {
  * Clear the text of an element
  */
 function clearElement(msg) {
+  let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     utils.clearElement(el);
-    sendOk();
+    sendOk(command_id);
   }
   catch (e) {
-    sendError(e.message, e.code, e.stack);
+    sendError(e.message, e.code, e.stack, command_id);
   }
 }
 
@@ -809,14 +835,15 @@ function clearElement(msg) {
  * its index in window.frames, or the iframe's name or id.
  */
 function switchToFrame(msg) {
+  let command_id = msg.json.command_id;
   function checkLoad() { 
     let errorRegex = /about:.+(error)|(blocked)\?/;
     if (curWindow.document.readyState == "complete") {
-      sendOk();
+      sendOk(command_id);
       return;
     } 
     else if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)) {
-      sendError("Error loading page", 13, null);
+      sendError("Error loading page", 13, null, command_id);
       return;
     }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -874,7 +901,7 @@ function switchToFrame(msg) {
     }
   }
   if (foundFrame == null) {
-    sendError("Unable to locate frame: " + msg.json.value, 8, null);
+    sendError("Unable to locate frame: " + msg.json.value, 8, null, command_id);
     return;
   }
 
@@ -884,7 +911,9 @@ function switchToFrame(msg) {
     // The frame we want to switch to is a remote frame; notify our parent to handle
     // the switch.
     curWindow = content;
-    sendToServer('Marionette:switchToFrame', {frame: foundFrame, win: parWindow});
+    sendToServer('Marionette:switchToFrame', {frame: foundFrame,
+                                              win: parWindow,
+                                              command_id: command_id});
   }
   else {
     curWindow = curWindow.contentWindow;
@@ -893,8 +922,9 @@ function switchToFrame(msg) {
   }
 }
 
-function getAppCacheStatus() {
-  sendResponse({ value: curWindow.applicationCache.status });  
+function getAppCacheStatus(msg) {
+  sendResponse({ value: curWindow.applicationCache.status },
+               msg.json.command_id);
 } 
 
 // emulator callbacks
@@ -929,19 +959,105 @@ function emulatorCmdResult(msg) {
 }
 
 function importScript(msg) {
+  let command_id = msg.json.command_id;
   let file;
   if (importedScripts.exists()) {
-    file = FileUtils.openFileOutputStream(importedScripts, FileUtils.MODE_APPEND | FileUtils.MODE_WRONLY);
+    file = FileUtils.openFileOutputStream(importedScripts,
+        FileUtils.MODE_APPEND | FileUtils.MODE_WRONLY);
   }
   else {
     //Note: The permission bits here don't actually get set (bug 804563)
-    importedScripts.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
-    file = FileUtils.openFileOutputStream(importedScripts, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+    importedScripts.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE,
+                                 parseInt("0666", 8));
+    file = FileUtils.openFileOutputStream(importedScripts,
+                                          FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
     importedScripts.permissions = parseInt("0666", 8); //actually set permissions
   }
   file.write(msg.json.script, msg.json.script.length);
   file.close();
-  sendOk();
+  sendOk(command_id);
+}
+
+/**
+ * Saves a screenshot and returns a Base64 string
+ */
+function screenShot(msg) {
+  let node = null;
+  if (msg.json.element) {
+    try {
+      node = elementManager.getKnownElement(msg.json.element, curWindow)
+    }
+    catch (e) {
+      sendResponse(e.message, e.code, e.stack);
+      return;
+    }
+  }
+  else {
+      node = curWindow;
+  }
+  let highlights = msg.json.highlights;
+
+  var document = curWindow.document;
+  var rect, win, width, height, left, top, needsOffset;
+  // node can be either a window or an arbitrary DOM node
+  if (node == curWindow) {
+    // node is a window
+    win = node;
+    width = win.innerWidth;
+    height = win.innerHeight;
+    top = 0;
+    left = 0;
+    // offset needed for highlights to take 'outerHeight' of window into account
+    needsOffset = true;
+  }
+  else {
+    // node is an arbitrary DOM node
+    win = node.ownerDocument.defaultView;
+    rect = node.getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
+    top = rect.top;
+    left = rect.left;
+    // offset for highlights not needed as they will be relative to this node
+    needsOffset = false;
+  }
+
+  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  canvas.width = width;
+  canvas.height = height;
+  var ctx = canvas.getContext("2d");
+  // Draws the DOM contents of the window to the canvas
+  ctx.drawWindow(win, left, top, width, height, 'rgb(255,255,255)');
+
+  // This section is for drawing a red rectangle around each element passed in via the highlights array
+  if (highlights) {
+    ctx.lineWidth = "2";
+    ctx.strokeStyle = "red";
+    ctx.save();
+
+    for (var i = 0; i < highlights.length; ++i) {
+      var elem = highlights[i];
+      rect = elem.getBoundingClientRect();
+
+      var offsetY = 0, offsetX = 0;
+      if (needsOffset) {
+        var offset = getChromeOffset(elem);
+        offsetX = offset.x;
+        offsetY = offset.y;
+      } else {
+        // Don't need to offset the window chrome, just make relative to containing node
+        offsetY = -top;
+        offsetX = -left;
+      }
+
+      // Draw the rectangle
+      ctx.strokeRect(rect.left + offsetX, rect.top + offsetY, rect.width, rect.height);
+    }
+  }
+
+  // Return the Base64 String back to the client bindings and they can manage
+  // saving the file to disk if it is required
+  sendResponse({value:canvas.toDataURL("image/png","")});
 }
 
 //call register self when we get loaded

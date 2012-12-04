@@ -2,11 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function getSimpleMeasurementsFromTelemetryPing() {
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-  let str = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
-  TelemetryPing.observe(str, "get-payload", "");
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
+  let ping = TelemetryPing.getPayload();
 
-  return JSON.parse(str.data).simpleMeasurements;
+  return ping.simpleMeasurements;
 }
 
 function test() {

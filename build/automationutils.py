@@ -164,8 +164,9 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
 
   try:
     for d in dumps:
-      log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
-      print "Crash dump filename: " + d
+      stackwalkOutput = []
+      stackwalkOutput.append("Crash dump filename: " + d)
+      topFrame = None
       if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
         # run minidump stackwalk
         p = subprocess.Popen([stackwalkPath, d, symbolsPath],
@@ -174,19 +175,36 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
         (out, err) = p.communicate()
         if len(out) > 3:
           # minidump_stackwalk is chatty, so ignore stderr when it succeeds.
-          print out
+          stackwalkOutput.append(out)
+          # The top frame of the crash is always the line after "Thread N (crashed)"
+          # Examples:
+          #  0  libc.so + 0xa888
+          #  0  libnss3.so!nssCertificate_Destroy [certificate.c : 102 + 0x0]
+          #  0  mozjs.dll!js::GlobalObject::getDebuggers() [GlobalObject.cpp:89df18f9b6da : 580 + 0x0]
+          #  0  libxul.so!void js::gc::MarkInternal<JSObject>(JSTracer*, JSObject**) [Marking.cpp : 92 + 0x28]
+          lines = out.splitlines()
+          for i, line in enumerate(lines):
+            if "(crashed)" in line:
+              match = re.search(r"^ 0  (?:.*!)?(?:void )?([^\[]+)", lines[i+1])
+              if match:
+                topFrame = "@ %s" % match.group(1).strip()
+              break
         else:
-          print "stderr from minidump_stackwalk:"
-          print err
+          stackwalkOutput.append("stderr from minidump_stackwalk:")
+          stackwalkOutput.append(err)
         if p.returncode != 0:
-          print "minidump_stackwalk exited with return code %d" % p.returncode
+          stackwalkOutput.append("minidump_stackwalk exited with return code %d" % p.returncode)
       else:
         if not symbolsPath:
-          print "No symbols path given, can't process dump."
+          stackwalkOutput.append("No symbols path given, can't process dump.")
         if not stackwalkPath:
-          print "MINIDUMP_STACKWALK not set, can't process dump."
+          stackwalkOutput.append("MINIDUMP_STACKWALK not set, can't process dump.")
         elif stackwalkPath and not os.path.exists(stackwalkPath):
-          print "MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath
+          stackwalkOutput.append("MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath)
+      if not topFrame:
+        topFrame = "Unknown top frame"
+      log.info("PROCESS-CRASH | %s | application crashed [%s]", testName, topFrame)
+      print '\n'.join(stackwalkOutput)
       dumpSavePath = os.environ.get('MINIDUMP_SAVE_PATH', None)
       if dumpSavePath:
         shutil.move(d, dumpSavePath)

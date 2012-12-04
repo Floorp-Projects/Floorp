@@ -31,15 +31,7 @@ namespace mozilla {
 namespace dom {
 namespace sms {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(SmsManager)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsManager,
-                                                  nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsManager,
-                                                nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_0(SmsManager, nsDOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SmsManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozSmsManager)
