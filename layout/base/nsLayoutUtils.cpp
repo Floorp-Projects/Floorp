@@ -3824,15 +3824,20 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   gfxRect devPixelDirty =
     nsLayoutUtils::RectToGfxRect(aDirty, aAppUnitsPerDevPixel);
 
-  bool ignoreScale = false;
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  ignoreScale = true;
-#endif
-  gfxRect fill = devPixelFill;
-  bool didSnap = aCtx->UserToDevicePixelSnapped(fill, ignoreScale);
   gfxMatrix currentMatrix = aCtx->CurrentMatrix();
-  if (didSnap && currentMatrix.HasNonAxisAlignedTransform()) {
-    // currentMatrix must have some rotation by a multiple of 90 degrees.
+  gfxRect fill = devPixelFill;
+  bool didSnap;
+  // Snap even if we have a scale in the context. But don't snap if
+  // we have something that's not translation+scale, or if the scale flips in
+  // the X or Y direction, because snapped image drawing can't handle that yet.
+  if (!currentMatrix.HasNonAxisAlignedTransform() &&
+      currentMatrix.xx > 0.0 && currentMatrix.yy > 0.0 &&
+      aCtx->UserToDevicePixelSnapped(fill, true)) {
+    didSnap = true;
+    if (fill.IsEmpty()) {
+      return SnappedImageDrawingParameters();
+    }
+  } else {
     didSnap = false;
     fill = devPixelFill;
   }
