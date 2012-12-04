@@ -175,6 +175,8 @@ static const char* GetOmxLibraryName()
 
 #elif defined(ANDROID) && defined(MOZ_WIDGET_GONK)
   return "libomxplugin.so";
+#else
+  return nullptr;
 #endif
 }
 
