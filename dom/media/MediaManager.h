@@ -68,6 +68,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
 typedef enum {
   MEDIA_START,
   MEDIA_STOP,
+  MEDIA_RELEASE
 } MediaOperation;
 
 // Generic class for running long media operations off the main thread, and
@@ -100,21 +101,12 @@ public:
     , mSourceStream(aStream)
     {}
 
-  ~MediaOperationRunnable()
-  {
-    // nsDOMMediaStreams are cycle-collected and thus main-thread-only for
-    // refcounting and releasing
-    if (mStream) {
-      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-      NS_ProxyRelease(mainThread,mStream,false);
-    }
-  }
-
   NS_IMETHOD
   Run()
   {
-    // No locking between these is required as all the callbacks for the
-    // same MediaStream will occur on the same thread.
+    // No locking between these is required as all the callbacks (other
+    // than MEDIA_RELEASE) for the same MediaStream will occur on the same
+    // thread.
     if (mStream) {
       mSourceStream = mStream->GetStream()->AsSourceStream();
     }
@@ -143,7 +135,6 @@ public:
           nsRefPtr<GetUserMediaNotificationEvent> event =
             new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING);
 
-
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         }
         break;
@@ -168,15 +159,23 @@ public:
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         }
         break;
+      case MEDIA_RELEASE:
+        // We go to MainThread to die
+        break;
+    }
+    if (mType != MEDIA_RELEASE) {
+      // nsDOMMediaStreams aren't thread-safe... sigh.
+      mType = MEDIA_RELEASE;
+      NS_DispatchToMainThread(this);
     }
     return NS_OK;
   }
 
 private:
   MediaOperation mType;
-  nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe
-  nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe
-  nsRefPtr<nsDOMMediaStream> mStream;       // not threadsafe
+  nsRefPtr<MediaEngineSource> mAudioSource;
+  nsRefPtr<MediaEngineSource> mVideoSource;
+  nsRefPtr<nsDOMMediaStream> mStream;
   SourceMediaStream *mSourceStream;
 };
 
