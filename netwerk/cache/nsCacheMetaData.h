@@ -18,8 +18,7 @@ public:
 
     ~nsCacheMetaData() {
         mBufferSize = mMetaSize = 0;  
-        moz_free(mBuffer);
-        mBuffer = nullptr;
+        PR_FREEIF(mBuffer);
     }
 
     const char *  GetElement(const char * key);

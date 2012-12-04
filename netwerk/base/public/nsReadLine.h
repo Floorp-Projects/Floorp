@@ -7,6 +7,7 @@
 #ifndef nsReadLine_h__
 #define nsReadLine_h__
 
+#include "prmem.h"
 #include "nsIInputStream.h"
 #include "mozilla/Likely.h"
 
@@ -41,12 +42,42 @@
 template<typename CharT>
 class nsLineBuffer {
   public:
-    nsLineBuffer() : start(buf), end(buf) { }
-
   CharT buf[kLineBufferSize+1];
   CharT* start;
   CharT* end;
 };
+
+/**
+ * Initialize a line buffer for use with NS_ReadLine.
+ *
+ * @param aBufferPtr
+ *        Pointer to pointer to a line buffer. Upon successful return,
+ *        *aBufferPtr will contain a valid pointer to a line buffer, for use
+ *        with NS_ReadLine. Use PR_Free when the buffer is no longer needed.
+ *
+ * @retval NS_OK Success.
+ * @retval NS_ERROR_OUT_OF_MEMORY Not enough memory to allocate the line buffer.
+ *
+ * @par Example:
+ * @code
+ *    nsLineBuffer* lb;
+ *    rv = NS_InitLineBuffer(&lb);
+ *    if (NS_SUCCEEDED(rv)) {
+ *      // do stuff...
+ *      PR_Free(lb);
+ *    }
+ * @endcode
+ */
+template<typename CharT>
+nsresult
+NS_InitLineBuffer (nsLineBuffer<CharT> ** aBufferPtr) {
+  *aBufferPtr = PR_NEW(nsLineBuffer<CharT>);
+  if (!(*aBufferPtr))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  (*aBufferPtr)->start = (*aBufferPtr)->end = (*aBufferPtr)->buf;
+  return NS_OK;
+}
 
 /**
  * Read a line from an input stream. Lines are separated by '\r' (0x0D) or '\n'
@@ -55,7 +86,8 @@ class nsLineBuffer {
  * @param aStream
  *        The stream to read from
  * @param aBuffer
- *        The line buffer to use.  A single line buffer must not be used with
+ *        The line buffer to use. Must have been inited with
+ *        NS_InitLineBuffer before. A single line buffer must not be used with
  *        different input streams.
  * @param aLine [out]
  *        The string where the line will be stored.
