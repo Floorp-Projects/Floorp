@@ -1037,8 +1037,7 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
             continue;
 
         // Iterate the wrappers looking for anything interesting.
-        WrapperMap &pmap = c->crossCompartmentWrappers;
-        for (WrapperMap::Enum e(pmap); !e.empty(); e.popFront()) {
+        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             // Some cross-compartment wrappers are for strings.  We're not
             // interested in those.
             const CrossCompartmentKey &k = e.front().key;
@@ -1075,17 +1074,18 @@ js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
     JS_ASSERT(origTarget);
     Value origv = ObjectValue(*origTarget);
     JSCompartment *wcompartment = wobj->compartment();
-    WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
 
     // If we're mapping to a different target (as opposed to just recomputing
     // for the same target), we must not have an existing wrapper for the new
     // target, otherwise this will break.
-    JS_ASSERT_IF(origTarget != newTarget, !pmap.has(ObjectValue(*newTarget)));
+    JS_ASSERT_IF(origTarget != newTarget,
+                 !wcompartment->lookupWrapper(ObjectValue(*newTarget)));
 
     // The old value should still be in the cross-compartment wrapper map, and
     // the lookup should return wobj.
-    JS_ASSERT(&pmap.lookup(origv)->value.unsafeGet()->toObject() == wobj);
-    pmap.remove(origv);
+    WrapperMap::Ptr p = wcompartment->lookupWrapper(origv);
+    JS_ASSERT(&p->value.unsafeGet()->toObject() == wobj);
+    wcompartment->removeWrapper(p);
 
     // When we remove origv from the wrapper map, its wrapper, wobj, must
     // immediately cease to be a cross-compartment wrapper. Neuter it.
@@ -1117,7 +1117,7 @@ js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
 
     // Update the entry in the compartment's wrapper map to point to the old
     // wrapper, which has now been updated (via reuse or swap).
-    pmap.put(ObjectValue(*newTarget), ObjectValue(*wobj));
+    wcompartment->putWrapper(ObjectValue(*newTarget), ObjectValue(*wobj));
     return true;
 }
 
@@ -1134,8 +1134,7 @@ js::RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
         return false;
 
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
-        WrapperMap &pmap = c->crossCompartmentWrappers;
-        if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
+        if (WrapperMap::Ptr wp = c->lookupWrapper(origv)) {
             // We found a wrapper. Remember and root it.
             toTransplant.infallibleAppend(WrapperValue(wp));
         }
@@ -1165,8 +1164,7 @@ js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
             continue;
 
         // Iterate over the wrappers, filtering appropriately.
-        WrapperMap &pmap = c->crossCompartmentWrappers;
-        for (WrapperMap::Enum e(pmap); !e.empty(); e.popFront()) {
+        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             // Filter out non-objects.
             const CrossCompartmentKey &k = e.front().key;
             if (k.kind != CrossCompartmentKey::ObjectWrapper)

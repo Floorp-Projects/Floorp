@@ -27,6 +27,10 @@ public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
         return drawableState;
     }
 
+    public boolean isPrivateMode() {
+        return mIsPrivate;
+    }
+
     public void setPrivateMode(boolean isPrivate) {
         if (mIsPrivate != isPrivate) {
             mIsPrivate = isPrivate;

@@ -686,8 +686,7 @@ bool OggReader::ReadOggChain()
 #ifdef MOZ_OPUS
   if ((newOpusState && ReadHeaders(newOpusState)) &&
       (mOpusState->mRate == newOpusState->mRate) &&
-      (mOpusState->mChannels == newOpusState->mChannels) &&
-      (mOpusState->mPreSkip == newOpusState->mPreSkip)) {
+      (mOpusState->mChannels == newOpusState->mChannels)) {
     mOpusState->Reset();
     mOpusState = newOpusState;
     mOpusSerial = mOpusState->mSerial;

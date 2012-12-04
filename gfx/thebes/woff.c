@@ -11,6 +11,7 @@
 #include "zlib.h"
 
 #ifdef WOFF_MOZILLA_CLIENT /* define this when building as part of Gecko */
+# include "mozilla/mozalloc.h"
 # define malloc  moz_malloc
 # define realloc moz_realloc
 # define free    moz_free
