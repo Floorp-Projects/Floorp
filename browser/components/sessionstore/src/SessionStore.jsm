@@ -724,7 +724,9 @@ let SessionStoreInternal = {
     }
     else if (this._restoreLastWindow && aWindow.toolbar.visible &&
              this._closedWindows.length
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+             && !PrivateBrowsingUtils.isWindowPrivate(aWindow)
+#else
              && !this._inPrivateBrowsing
 #endif
              ) {
