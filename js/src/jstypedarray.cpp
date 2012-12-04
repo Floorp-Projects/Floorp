@@ -375,6 +375,7 @@ ArrayBufferObject::addView(RawObject view)
         // Move the multiview buffer list link into this view since we're
         // prepending it to the list.
         SetBufferLink(view, BufferLink(*views));
+        SetBufferLink(*views, UNSET_BUFFER_LINK);
         WeakObjectSlotBarrierPost(view, BufferView::NEXT_BUFFER_SLOT, "view.nextbuffer");
     }
 
@@ -543,6 +544,15 @@ ArrayBufferObject::obj_trace(JSTracer *trc, RawObject obj)
                 JSObject **bufList = &obj->compartment()->gcLiveArrayBuffers;
                 SetBufferLink(firstView, *bufList);
                 *bufList = obj;
+            } else {
+#ifdef DEBUG
+                bool found = false;
+                for (JSObject *p = obj->compartment()->gcLiveArrayBuffers; p; p = BufferLink(p)) {
+                    if (p == obj)
+                        found = true;
+                }
+                JS_ASSERT(found);
+#endif
             }
         }
     }
