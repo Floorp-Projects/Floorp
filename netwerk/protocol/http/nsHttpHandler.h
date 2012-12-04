@@ -98,6 +98,7 @@ public:
     PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
     uint32_t       ConnectTimeout()  { return mConnectTimeout; }
     uint32_t       ParallelSpeculativeConnectLimit() { return mParallelSpeculativeConnectLimit; }
+    bool           CritialRequestPrioritization() { return mCritialRequestPrioritization; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -400,6 +401,10 @@ private:
     // The maximum number of current global half open sockets allowable
     // when starting a new speculative connection.
     uint32_t       mParallelSpeculativeConnectLimit;
+
+    // Whether or not to block requests for non head js/css items (e.g. media)
+    // while those elements load.
+    bool           mCritialRequestPrioritization;
 };
 
 //-----------------------------------------------------------------------------
