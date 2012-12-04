@@ -948,6 +948,13 @@ this.CB_DCS_LANG_GROUP_2 = [
   null, null, null, null, null, null
 ];
 
+// See 3GPP TS 23.041 v11.2.0 section 9.4.1.2.2
+this.CB_NON_MMI_SETTABLE_RANGES = [
+  /*0x1000 - 0x107F*/4096,  4224,  /*0x1080 - 0x10FF*/4224,  4352,
+  /*0x1112 - 0x1112*/4370,  4371,  /*0x111F - 0x111F*/4383,  4384,
+  /*0xF000 - 0xFFFE*/61440, 65535, /*0xFFFF - 0xFFFF*/65535, 65536
+];
+
 // User Data max length in septets
 this.CB_MAX_CONTENT_7BIT = 93;
 // User Data max length in octets
