@@ -389,6 +389,14 @@ class MochiRemote(Mochitest):
             return 1
         return 0
 
+    def printDeviceInfo(self):
+        try:
+            logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
+            print ''.join(logcat)
+            print self._dm.getInfo()
+        except devicemanager.DMError:
+            print "WARNING: Error getting device information"
+
     def buildRobotiumConfig(self, options, browserEnv):
         deviceRoot = self._dm.getDeviceRoot()
         fHandle = tempfile.NamedTemporaryFile(suffix='.config',
@@ -500,6 +508,7 @@ def main():
                 result = mochitest.runTests(options)
                 if result != 0:
                     print "ERROR: runTests() exited with code %s" % result
+                    mochitest.printDeviceInfo()
                 # Ensure earlier failures aren't overwritten by success on this run
                 if retVal is None or retVal == 0:
                     retVal = result
@@ -541,15 +550,9 @@ def main():
                 pass
             retVal = 1
 
-    try:
-        logcat = dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
-        print ''.join(logcat)
-        print dm.getInfo()
-    except devicemanager.DMError:
-        print "WARNING: Error getting device information at end of test"
+    mochitest.printDeviceInfo()
 
     sys.exit(retVal)
-        
+
 if __name__ == "__main__":
     main()
-
