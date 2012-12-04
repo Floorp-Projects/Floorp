@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462106
+-->
+<window title="Mozilla Bug 462106"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="initAndRunTests()">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <!-- test code goes here -->
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 462106 **/
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+function copy(str, doc) {
+  if (!doc) {
+    doc = document;
+  }
+  Cc["@mozilla.org/widget/clipboardhelper;1"].
+  getService(Ci.nsIClipboardHelper).
+  copyString(str, doc);
+}
+
+function getLoadContext() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
+function paste() {
+  let trans = Cc["@mozilla.org/widget/transferable;1"].
+              createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
+  trans.addDataFlavor("text/unicode");
+  let clip = Cc["@mozilla.org/widget/clipboard;1"].
+             getService(Ci.nsIClipboard);
+  clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
+  let str = {}, length = {};
+  try {
+    trans.getTransferData("text/unicode", str, length);
+  } catch (e) {
+    str = null;
+  }
+  if (str) {
+    str = str.value.QueryInterface(Ci.nsISupportsString);
+    if (str)
+      str = str.data.substring(0, length.value / 2);
+  }
+  return str;
+}
+
+function testOnWindow(options, callback) {
+  var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow);
+
+  let win = mainWindow.OpenBrowserWindow(options);
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    callback(win);
+  }, false);
+};
+
+function initAndRunTests() {
+  SimpleTest.waitForExplicitFinish();
+
+  const data = "random number: " + Math.random();
+  copy(data);
+  is(data, paste(), "Data successfully copied before entering the private browsing mode");
+  testOnWindow({private: true}, function (aPrivateWindow) {
+    aPrivateWindow.close();
+
+    // the data should still be on the clipboard because it was copied before
+    // entering the private browsing mode
+    is(data, paste(), "Copied data persisted after leaving the private browsing mode");
+
+    const data2 = "another random number: " + Math.random();
+
+    testOnWindow({private: true}, function (aPrivateWindow) {
+      copy(data2, aPrivateWindow.document); // copy the data inside the private browsing mode
+      setTimeout(function() { // without this, the test fails sporadically
+        // the data should be on the clipboard inside the private browsing mode
+        is(data2, paste(), "Data successfully copied inside the private browsing mode");
+        aPrivateWindow.close();
+        // the data should no longer be on the clipboard at this stage
+        isnot(data2, paste(), "Data no longer available after leaving the private browsing mode");
+
+        SimpleTest.finish();
+      }, 0);
+    });
+  });
+}
+
+  ]]>
+  </script>
+</window>
