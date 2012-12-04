@@ -7,12 +7,14 @@
 #include "nsIConverterInputStream.h"
 #include "nsIUnicharLineInputStream.h"
 #include "nsString.h"
-#include "nsReadLine.h"
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIByteBuffer.h"
 #include "nsIUnicharBuffer.h"
+
+template<typename T> class nsLineBuffer;
 
 #define NS_CONVERTERINPUTSTREAM_CONTRACTID "@mozilla.org/intl/converter-input-stream;1"
 
@@ -58,5 +60,5 @@ class nsConverterInputStream : public nsIConverterInputStream,
     uint32_t  mUnicharDataLength;
     PRUnichar mReplacementChar;
 
-    nsLineBuffer<PRUnichar>* mLineBuffer;    
+    nsAutoPtr<nsLineBuffer<PRUnichar> > mLineBuffer;
 };
