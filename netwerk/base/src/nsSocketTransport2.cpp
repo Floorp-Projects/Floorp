@@ -19,7 +19,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "netCore.h"
-#include "prmem.h"
 #include "plstr.h"
 #include "prnetdb.h"
 #include "prerror.h"
