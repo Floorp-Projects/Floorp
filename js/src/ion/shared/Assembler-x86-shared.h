@@ -912,7 +912,9 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
-
+    void notl(const Register &reg) {
+        masm.notl_r(reg.code());
+    }
     void shrl(const Imm32 imm, const Register &dest) {
         masm.shrl_i8r(imm.value, dest.code());
     }

@@ -123,6 +123,34 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+bool
+ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+
+    switch (op) {
+      case JSOP_BITNOT:
+        masm.ma_mvn(R0.payloadReg(), R0.payloadReg());
+        break;
+      case JSOP_NEG:
+        // Guard against 0 and MIN_INT, both result in a double.
+        masm.branchTest32(Assembler::Zero, R0.payloadReg(), Imm32(0x7fffffff), &failure);
+
+        // Compile -x as 0 - x.
+        masm.ma_rsb(R0.payloadReg(), Imm32(0), R0.payloadReg());
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected op");
+        return false;
+    }
+
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
 
 } // namespace ion
 } // namespace js

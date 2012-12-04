@@ -642,6 +642,71 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 //
+// UnaryArith_Fallback
+//
+
+static bool
+DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val,
+                     MutableHandleValue res)
+{
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+
+    JSOp op = JSOp(*pc);
+
+    switch (op) {
+      case JSOP_BITNOT: {
+        int32_t result;
+        if (!BitNot(cx, val, &result))
+            return false;
+        res.setInt32(result);
+        break;
+      }
+      case JSOP_NEG:
+        if (!NegOperation(cx, script, pc, val, res))
+            return false;
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected op");
+        return false;
+    }
+
+    if (stub->numOptimizedStubs() >= ICUnaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard/replace stubs.
+        return true;
+    }
+
+    if (!val.isInt32() || !res.isInt32())
+        return true;
+
+    ICUnaryArith_Int32::Compiler compiler(cx, op);
+    ICStub *int32Stub = compiler.getStub();
+    if (!int32Stub)
+        return false;
+    stub->addNewStub(int32Stub);
+    return true;
+}
+
+typedef bool (*DoUnaryArithFallbackFn)(JSContext *, ICUnaryArith_Fallback *, HandleValue,
+                                       MutableHandleValue);
+static const VMFunction DoUnaryArithFallbackInfo =
+    FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback);
+
+bool
+ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoUnaryArithFallbackInfo, masm);
+}
+
+//
 // GetElem_Fallback
 //
 
