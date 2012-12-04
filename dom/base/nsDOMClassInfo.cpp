@@ -1709,7 +1709,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 };
 
 #define NS_DEFINE_CONTRACT_CTOR(_class, _contract_id)                           \
-  nsresult                                                                      \
+  static nsresult                                                               \
   _class##Ctor(nsISupports** aInstancePtrResult)                                \
   {                                                                             \
     nsresult rv = NS_OK;                                                        \
@@ -1718,11 +1718,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
     return rv;                                                                  \
   }
 
-NS_DEFINE_CONTRACT_CTOR(DOMParser, NS_DOMPARSER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(FileReader, NS_FILEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(ArchiveReader, NS_ARCHIVEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(FormData, NS_FORMDATA_CONTRACTID)
-NS_DEFINE_CONTRACT_CTOR(XMLSerializer, NS_XMLSERIALIZER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
                         "@mozilla.org/document-transformer;1?type=xslt")
@@ -1735,11 +1733,11 @@ NS_DEFINE_CONTRACT_CTOR(MozActivity, NS_DOMACTIVITY_CONTRACTID)
 #undef NS_DEFINE_CONTRACT_CTOR
 
 #define NS_DEFINE_EVENT_CTOR(_class)                        \
-  nsresult                                                  \
+  static nsresult                                           \
   NS_DOM##_class##Ctor(nsISupports** aInstancePtrResult)    \
   {                                                         \
-    nsIDOMEvent* e = nullptr;                                \
-    nsresult rv = NS_NewDOM##_class(&e, nullptr, nullptr);    \
+    nsIDOMEvent* e = nullptr;                               \
+    nsresult rv = NS_NewDOM##_class(&e, nullptr, nullptr);  \
     *aInstancePtrResult = e;                                \
     return rv;                                              \
   }
@@ -1755,7 +1753,7 @@ NS_DEFINE_EVENT_CTOR(WheelEvent)
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
 
-nsresult
+static nsresult
 NS_XMLHttpRequestCtor(nsISupports** aInstancePtrResult)
 {
   nsXMLHttpRequest* xhr = new nsXMLHttpRequest();
@@ -1790,13 +1788,12 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 #define MOZ_GENERATED_EVENT(_event_interface) \
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(_event_interface)
 #include "GeneratedEvents.h"
+#undef MOZ_GENERATED_EVENT_LIST
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, sms::SmsFilter::NewSmsFilter)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XMLHttpRequest, NS_XMLHttpRequestCtor)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(DOMParser, DOMParserCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FileReader, FileReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ArchiveReader, ArchiveReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FormData, FormDataCtor)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XMLSerializer, XMLSerializerCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XPathEvaluator, XPathEvaluatorCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(EventSource, EventSourceCtor)
@@ -1805,6 +1802,8 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozActivity, MozActivityCtor)
 #endif
 };
+#undef NS_DEFINE_CONSTRUCTOR_FUNC_DATA
+#undef NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
 nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nullptr;
@@ -3930,7 +3929,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMParser, nsIDOMParser)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMParser)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMParserJS)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLSerializer, nsIDOMSerializer)
