@@ -51,8 +51,7 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
    * @param number aDepth
    *        The frame depth specified by the debugger.
    */
-  addFrame:
-  function DVSF_addFrame(aFrameName, aFrameDetails, aDepth) {
+  addFrame: function DVSF_addFrame(aFrameName, aFrameDetails, aDepth) {
     // Stackframes are UI elements which benefit from visible panes.
     DebuggerView.showPanesSoon();
 
