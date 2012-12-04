@@ -5504,7 +5504,20 @@ RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = function UNSOLICITED_RESPONSE_SIM
   this.getICCStatus();
 };
 RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = null;
-RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = null;
+RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS(length) {
+  let message;
+  try {
+    message = GsmPDUHelper.readCbMessage(Buf.readUint32());
+  } catch (e) {
+    if (DEBUG) {
+      debug("Failed to parse Cell Broadcast message: " + JSON.stringify(e));
+    }
+    return;
+  }
+
+  message.rilMessageType = "cellbroadcast-received";
+  this.sendDOMMessage(message);
+};
 RIL[UNSOLICITED_CDMA_RUIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_RESTRICTED_STATE_CHANGED] = null;
 RIL[UNSOLICITED_ENTER_EMERGENCY_CALLBACK_MODE] = null;
@@ -6925,6 +6938,104 @@ let GsmPDUHelper = {
     // we write two \0 delimiters.
     Buf.writeUint16(0);
     Buf.writeUint16(0);
+  },
+
+  /**
+   * Read GSM CBS message serial number.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.1.2.1
+   */
+  readCbSerialNumber: function readCbSerialNumber(msg) {
+    let serial = Buf.readUint8() << 8 | Buf.readUint8();
+    msg.geographicalScope = (serial >>> 14) & 0x03;
+    msg.messageCode = (serial >>> 4) & 0x03FF;
+    msg.updateNumber = serial & 0x0F;
+  },
+
+  /**
+   * Read GSM CBS message message identifier.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.1.2.2
+   */
+  readCbMessageIdentifier: function readCbMessageIdentifier(msg) {
+    msg.messageId = Buf.readUint8() << 8 | Buf.readUint8();
+  },
+
+  /**
+   * Read ETWS Primary Notification message warning type.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.3.24
+   */
+  readCbWarningType: function readCbWarningType(msg) {
+    let word = Buf.readUint8() << 8 | Buf.readUint8();
+    msg.etws = {
+      warningType:        (word >>> 9) & 0x7F,
+      popup:              word & 0x80 ? true : false,
+      emergencyUserAlert: word & 0x100 ? true : false
+    };
+  },
+
+  /**
+   * Read Cell GSM/ETWS/UMTS Broadcast Message.
+   *
+   * @param pduLength
+   *        total length of the incoming PDU in octets.
+   */
+  readCbMessage: function readCbMessage(pduLength) {
+    // Validity                                                   GSM ETWS UMTS
+    let msg = {
+      // Internally used in ril_worker:
+      updateNumber:         null,                              //  O   O    O
+      format:               null,                              //  O   O    O
+
+      // DOM attributes:
+      geographicalScope:    null,                              //  O   O    O
+      messageCode:          null,                              //  O   O    O
+      messageId:            null,                              //  O   O    O
+      messageClass:         GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL], //  O   x    O
+      etws:                 null                               //  ?   O    ?
+      /*{
+        warningType:        null,                              //  X   O    X
+        popup:              false,                             //  X   O    X
+        emergencyUserAlert: false,                             //  X   O    X
+      }*/
+    };
+
+    if (pduLength <= CB_MESSAGE_SIZE_ETWS) {
+      msg.format = CB_FORMAT_ETWS;
+      return this.readEtwsCbMessage(msg);
+    }
+
+    return null;
+  },
+
+  /**
+   * Read ETWS Primary Notification Message.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 clause 9.4.1.3
+   */
+  readEtwsCbMessage: function readEtwsCbMessage(msg) {
+    this.readCbSerialNumber(msg);
+    this.readCbMessageIdentifier(msg);
+    this.readCbWarningType(msg);
+
+    // Octet 7..56 is Warning Security Information. However, according to
+    // section 9.4.1.3.6, `The UE shall ignore this parameter.` So we just skip
+    // processing it here.
+
+    return msg;
   },
 };
 

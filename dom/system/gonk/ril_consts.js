@@ -937,6 +937,8 @@ this.CB_FORMAT_ETWS = 1;
 this.CB_FORMAT_CMAS = 2;
 this.CB_FORMAT_UMTS = 3;
 
+this.CB_MESSAGE_SIZE_ETWS = 56;
+
 // GSM Cell Broadcast Geographical Scope
 // See 3GPP TS 23.041 clause 9.4.1.2.1
 this.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES = [
