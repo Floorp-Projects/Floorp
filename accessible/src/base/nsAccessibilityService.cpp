@@ -830,6 +830,15 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         } else if (frame->AccessibleType() == eHTMLTableCellAccessible &&
                    aContext->ARIARoleMap() == &nsARIAMap::gEmptyRoleMap) {
           roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+
+        } else if (content->Tag() == nsGkAtoms::dt ||
+                   content->Tag() == nsGkAtoms::li ||
+                   content->Tag() == nsGkAtoms::dd ||
+                   frame->AccessibleType() == eHTMLLiAccessible) {
+          nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
+          if (contextRoleMap &&
+              !(contextRoleMap->accTypes & Accessible::eListAccessible))
+            roleMapEntry = &nsARIAMap::gEmptyRoleMap;
         }
       }
     }
@@ -1237,18 +1246,30 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     return accessible;
   }
 
-  if (tag == nsGkAtoms::dt || tag == nsGkAtoms::li) {
-    // Create list item accessible unconditionally by tag name. nsBlockFrame
-    // creates the list item accessible for other elements styled as list items.
-    Accessible* accessible = new HTMLLIAccessible(aContent, document);
-    NS_ADDREF(accessible);
-    return accessible;
+  if (aContext->IsOfType(Accessible::eListAccessible)) {
+    // If list item is a child of accessible list then create an accessible for
+    // it unconditionally by tag name. nsBlockFrame creates the list item
+    // accessible for other elements styled as list items.
+    if (aContext->GetContent() == aContent->GetParent()) {
+      if (tag == nsGkAtoms::dt || tag == nsGkAtoms::li) {
+        Accessible* accessible = new HTMLLIAccessible(aContent, document);
+        NS_ADDREF(accessible);
+        return accessible;
+      }
+
+      if (tag == nsGkAtoms::dd) {
+        Accessible* accessible = new HyperTextAccessibleWrap(aContent, document);
+        NS_ADDREF(accessible);
+        return accessible;
+      }
+    }
+
+    return nullptr;
   }
 
   if (tag == nsGkAtoms::abbr ||
       tag == nsGkAtoms::acronym ||
       tag == nsGkAtoms::blockquote ||
-      tag == nsGkAtoms::dd ||
       tag == nsGkAtoms::form ||
       tag == nsGkAtoms::h1 ||
       tag == nsGkAtoms::h2 ||
@@ -1326,7 +1347,10 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLLabelAccessible(aContent, document);
       break;
     case eHTMLLiAccessible:
-      newAcc = new HTMLLIAccessible(aContent, document);
+      if (aContext->IsOfType(Accessible::eListAccessible) &&
+          aContext->GetContent() == aContent->GetParent()) {
+        newAcc = new HTMLLIAccessible(aContent, document);
+      }
       break;
     case eHTMLSelectListAccessible:
       newAcc = new HTMLSelectListAccessible(aContent, document);
@@ -1374,8 +1398,10 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLTextFieldAccessible(aContent, document);
       break;
     case eHyperTextAccessible:
-      newAcc = new HyperTextAccessibleWrap(aContent, document);
+      if (aContent->Tag() != nsGkAtoms::dt && aContent->Tag() != nsGkAtoms::dd)
+        newAcc = new HyperTextAccessibleWrap(aContent, document);
       break;
+
     case eImageAccessible:
       newAcc = new ImageAccessibleWrap(aContent, document);
       break;

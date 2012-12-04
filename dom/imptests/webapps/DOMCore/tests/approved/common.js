@@ -25,14 +25,37 @@ function setupRangeTests() {
 	testDiv = document.createElement("div");
 	testDiv.id = "test";
 	document.body.insertBefore(testDiv, document.body.firstChild);
+
+	paras = [];
+	paras.push(document.createElement("p"));
+	paras[0].setAttribute("id", "a");
 	// Test some diacritics, to make sure browsers are using code units here
 	// and not something like grapheme clusters.
-	testDiv.innerHTML = "<p id=a>A&#x308;b&#x308;c&#x308;d&#x308;e&#x308;f&#x308;g&#x308;h&#x308;\n"
-		+ "<p id=b style=display:none>Ijklmnop\n"
-		+ "<p id=c>Qrstuvwx"
-		+ "<p id=d style=display:none>Yzabcdef"
-		+ "<p id=e style=display:none>Ghijklmn";
-	paras = testDiv.querySelectorAll("p");
+	paras[0].textContent = "A\u0308b\u0308c\u0308d\u0308e\u0308f\u0308g\u0308h\u0308\n";
+	testDiv.appendChild(paras[0]);
+
+	paras.push(document.createElement("p"));
+	paras[1].setAttribute("id", "b");
+	paras[1].setAttribute("style", "display:none");
+	paras[1].textContent = "Ijklmnop\n";
+	testDiv.appendChild(paras[1]);
+
+	paras.push(document.createElement("p"));
+	paras[2].setAttribute("id", "c");
+	paras[2].textContent = "Qrstuvwx";
+	testDiv.appendChild(paras[2]);
+
+	paras.push(document.createElement("p"));
+	paras[3].setAttribute("id", "d");
+	paras[3].setAttribute("style", "display:none");
+	paras[3].textContent = "Yzabcdef";
+	testDiv.appendChild(paras[3]);
+
+	paras.push(document.createElement("p"));
+	paras[4].setAttribute("id", "e");
+	paras[4].setAttribute("style", "display:none");
+	paras[4].textContent = "Ghijklmn";
+	testDiv.appendChild(paras[4]);
 
 	detachedDiv = document.createElement("div");
 	detachedPara1 = document.createElement("p");
@@ -272,12 +295,11 @@ function setupRangeTests() {
 		"foreignPara1.firstChild",
 		"detachedPara1",
 		"detachedPara1.firstChild",
-		"detachedPara1",
-		"detachedPara1.firstChild",
+		"detachedPara2",
+		"detachedPara2.firstChild",
 		"testDiv",
 		"document",
 		"detachedDiv",
-		"detachedPara2",
 		"foreignDoc",
 		"foreignPara2",
 		"xmlDoc",

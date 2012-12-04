@@ -63,6 +63,41 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line.");
 
+    EventUtils.synthesizeKey("g", { metaKey: true });
+    ok(gEditor.getCaretPosition().line == 12 &&
+       gEditor.getCaretPosition().col == 0,
+      "The editor didn't jump to the correct line after Meta+G");
+
+    EventUtils.synthesizeKey("n", { ctrlKey: true });
+    ok(gEditor.getCaretPosition().line == 13 &&
+       gEditor.getCaretPosition().col == 0,
+      "The editor didn't jump to the correct line after Ctrl+N");
+
+    EventUtils.synthesizeKey("G", { metaKey: true, shiftKey: true });
+    ok(gEditor.getCaretPosition().line == 12 &&
+       gEditor.getCaretPosition().col == 0,
+      "The editor didn't jump to the correct line after Meta+Shift+G");
+
+    EventUtils.synthesizeKey("p", { ctrlKey: true });
+    ok(gEditor.getCaretPosition().line == 11 &&
+       gEditor.getCaretPosition().col == 0,
+      "The editor didn't jump to the correct line after Ctrl+P");
+
+    for (let i = 0; i < 100; i++) {
+      EventUtils.sendKey("DOWN");
+    }
+    ok(gEditor.getCaretPosition().line == 32 &&
+       gEditor.getCaretPosition().col == 0,
+      "The editor didn't jump to the correct line after multiple DOWN keys");
+
+    for (let i = 0; i < 100; i++) {
+      EventUtils.sendKey("UP");
+    }
+    ok(gEditor.getCaretPosition().line == 0 &&
+       gEditor.getCaretPosition().col == 0,
+      "The editor didn't jump to the correct line after multiple UP keys");
+
+
     token = "debugger";
     write("#" + token);
     ok(gEditor.getCaretPosition().line == 2 &&

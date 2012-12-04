@@ -16,8 +16,8 @@ class nsGUIEvent;
 
 // Interface ID for nsILinkHandler
 #define NS_ILINKHANDLER_IID \
-  { 0xd85670a1, 0x224a, 0x4562, \
-    { 0x87, 0xa9, 0x43, 0xa5, 0x24, 0xe7, 0xd0, 0x1b } }
+  { 0xceb9aade, 0x43da, 0x4f1a, \
+    { 0xac, 0x8a, 0xc7, 0x09, 0xfb, 0x22, 0x46, 0x64 } }
 
 /**
  * Interface used for handling clicks on links
@@ -34,12 +34,14 @@ public:
    * @param aTargetSpec indicates where the link is targeted (may be an empty
    *        string)
    * @param aPostDataStream the POST data to send
+   * @param aFileName non-null when the link should be downloaded as the given file
    * @param aHeadersDataStream ???
    * @param aIsTrusted false if the triggerer is an untrusted DOM event.
    */
-  NS_IMETHOD OnLinkClick(nsIContent* aContent, 
+  NS_IMETHOD OnLinkClick(nsIContent* aContent,
                          nsIURI* aURI,
                          const PRUnichar* aTargetSpec,
+                         const nsAString& aFileName,
                          nsIInputStream* aPostDataStream,
                          nsIInputStream* aHeadersDataStream,
                          bool aIsTrusted) = 0;
@@ -54,14 +56,16 @@ public:
    * @param aURI a URI obect that defines the destination for the link
    * @param aTargetSpec indicates where the link is targeted (may be an empty
    *        string)
+   * @param aFileName non-null when the link should be downloaded as the given file
    * @param aPostDataStream the POST data to send
    * @param aHeadersDataStream ???
    * @param aDocShell (out-param) the DocShell that the request was opened on
    * @param aRequest the request that was opened
    */
-  NS_IMETHOD OnLinkClickSync(nsIContent* aContent, 
+  NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
                              nsIURI* aURI,
                              const PRUnichar* aTargetSpec,
+                             const nsAString& aFileName,
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
                              nsIDocShell** aDocShell = 0,

@@ -5,6 +5,13 @@
 
 %include ../shared.inc
 
+/* Font for code */
+
+.devtools-monospace {
+  font: message-box;
+  font-family: monospace;
+}
+
 /* Toolbar and Toolbar items */
 
 .devtools-toolbar {
