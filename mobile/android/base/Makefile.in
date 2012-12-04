@@ -90,6 +90,7 @@ FENNEC_JAVA_FILES = \
   GeckoSubMenu.java \
   GeckoPreferences.java \
   GeckoProfile.java \
+  GeckoPopupMenu.java \
   GeckoThread.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
@@ -559,7 +560,14 @@ RES_DRAWABLE_BASE = \
   res/drawable/find_prev.png \
   res/drawable/larry_blue.png \
   res/drawable/larry_green.png \
-  res/drawable/menu.xml \
+  res/drawable/menu.png \
+  res/drawable/menu_pb.png \
+  res/drawable/menu_panel_bg.9.png \
+  res/drawable/menu_popup_bg.9.png \
+  res/drawable/menu_popup_arrow.png \
+  res/drawable/menu_item_check.png \
+  res/drawable/menu_item_more.png \
+  res/drawable/menu_item_uncheck.png \
   res/drawable/site_security_identified.png \
   res/drawable/site_security_verified.png \
   res/drawable/urlbar_stop.png \
@@ -636,6 +644,14 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/find_prev.png \
   res/drawable-hdpi/larry_blue.png \
   res/drawable-hdpi/larry_green.png \
+  res/drawable-hdpi/menu.png \
+  res/drawable-hdpi/menu_pb.png \
+  res/drawable-hdpi/menu_panel_bg.9.png \
+  res/drawable-hdpi/menu_popup_bg.9.png \
+  res/drawable-hdpi/menu_popup_arrow.png \
+  res/drawable-hdpi/menu_item_check.png \
+  res/drawable-hdpi/menu_item_more.png \
+  res/drawable-hdpi/menu_item_uncheck.png \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
   res/drawable-hdpi/urlbar_stop.png \
@@ -705,6 +721,14 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/reading_list.png \
   res/drawable-xhdpi/larry_blue.png \
   res/drawable-xhdpi/larry_green.png \
+  res/drawable-xhdpi/menu.png \
+  res/drawable-xhdpi/menu_pb.png \
+  res/drawable-xhdpi/menu_panel_bg.9.png \
+  res/drawable-xhdpi/menu_popup_bg.9.png \
+  res/drawable-xhdpi/menu_popup_arrow.png \
+  res/drawable-xhdpi/menu_item_check.png \
+  res/drawable-xhdpi/menu_item_more.png \
+  res/drawable-xhdpi/menu_item_uncheck.png \
   res/drawable-xhdpi/remote_tabs_off.png \
   res/drawable-xhdpi/remote_tabs_on.png \
   res/drawable-xhdpi/site_security_identified.png \
@@ -742,14 +766,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_tools.png \
   res/drawable-mdpi-v11/ic_menu_quit.png \
   res/drawable-mdpi-v11/ic_status_logo.png \
-  res/drawable-mdpi-v11/menu.png \
-  res/drawable-mdpi-v11/menu_pb.png \
-  res/drawable-mdpi-v11/menu_panel_bg.9.png \
-  res/drawable-mdpi-v11/menu_popup_bg.9.png \
-  res/drawable-mdpi-v11/menu_popup_arrow.png \
-  res/drawable-mdpi-v11/menu_item_check.png \
-  res/drawable-mdpi-v11/menu_item_more.png \
-  res/drawable-mdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
@@ -777,14 +793,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_tools.png \
   res/drawable-hdpi-v11/ic_menu_quit.png \
   res/drawable-hdpi-v11/ic_status_logo.png \
-  res/drawable-hdpi-v11/menu.png \
-  res/drawable-hdpi-v11/menu_pb.png \
-  res/drawable-hdpi-v11/menu_panel_bg.9.png \
-  res/drawable-hdpi-v11/menu_popup_bg.9.png \
-  res/drawable-hdpi-v11/menu_popup_arrow.png \
-  res/drawable-hdpi-v11/menu_item_check.png \
-  res/drawable-hdpi-v11/menu_item_more.png \
-  res/drawable-hdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
@@ -812,14 +820,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_tools.png \
   res/drawable-xhdpi-v11/ic_menu_quit.png \
   res/drawable-xhdpi-v11/ic_status_logo.png \
-  res/drawable-xhdpi-v11/menu.png \
-  res/drawable-xhdpi-v11/menu_pb.png \
-  res/drawable-xhdpi-v11/menu_panel_bg.9.png \
-  res/drawable-xhdpi-v11/menu_popup_bg.9.png \
-  res/drawable-xhdpi-v11/menu_popup_arrow.png \
-  res/drawable-xhdpi-v11/menu_item_check.png \
-  res/drawable-xhdpi-v11/menu_item_more.png \
-  res/drawable-xhdpi-v11/menu_item_uncheck.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \
