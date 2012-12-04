@@ -31,7 +31,12 @@ EXPORTS_NAMESPACES = \
   mozilla/dom \
   $(NULL)
 
-EXPORTS = AudioChannelCommon.h
+EXPORTS = AudioChannelService.h \
+          AudioChannelCommon.h
+
+CPPSRCS += \
+  AudioChannelService.cpp \
+  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

@@ -234,6 +234,8 @@ static void Shutdown();
 #include "nsIAlarmHalService.h"
 #include "nsMixedContentBlocker.h"
 
+#include "AudioChannelService.h"
+
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/alarm/AlarmHalService.h"
 #include "mozilla/dom/time/TimeService.h"
@@ -648,7 +650,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGeolocation, Init)
 #define NS_GEOLOCATION_SERVICE_CID \
   { 0x404d02a, 0x1CA, 0xAAAB, { 0x47, 0x62, 0x94, 0x4b, 0x1b, 0xf2, 0xf7, 0xb5 } }
 
+#define NS_AUDIOCHANNEL_SERVICE_CID \
+  { 0xf712e983, 0x048a, 0x443f, { 0x88, 0x02, 0xfc, 0xc3, 0xd9, 0x27, 0xce, 0xac }}
+
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsGeolocationService, nsGeolocationService::GetGeolocationService)
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AudioChannelService, AudioChannelService::GetAudioChannelService)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(CSPService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMixedContentBlocker)
@@ -664,7 +671,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(OSFileConstantsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TCPSocketChild)
 
 static nsresult
-Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID, 
+Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
                                    void **aResult)
 {
     if (!aResult)
@@ -673,7 +680,7 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
     nsScriptSecurityManager *obj = nsScriptSecurityManager::GetScriptSecurityManager();
-    if (!obj) 
+    if (!obj)
         return NS_ERROR_OUT_OF_MEMORY;
     if (NS_FAILED(obj->QueryInterface(aIID, aResult)))
         return NS_ERROR_FAILURE;
@@ -796,6 +803,7 @@ NS_DEFINE_NAMED_CID(NS_EDITINGCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTSERVICESDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
+NS_DEFINE_NAMED_CID(NS_AUDIOCHANNEL_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
 NS_DEFINE_NAMED_CID(CSPSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MIXEDCONTENTBLOCKER_CID);
@@ -1075,6 +1083,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_TEXTSERVICESDOCUMENT_CID, false, NULL, nsTextServicesDocumentConstructor },
   { &kNS_GEOLOCATION_SERVICE_CID, false, NULL, nsGeolocationServiceConstructor },
   { &kNS_GEOLOCATION_CID, false, NULL, nsGeolocationConstructor },
+  { &kNS_AUDIOCHANNEL_SERVICE_CID, false, NULL, AudioChannelServiceConstructor },
   { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
   { &kCSPSERVICE_CID, false, NULL, CSPServiceConstructor },
   { &kNS_MIXEDCONTENTBLOCKER_CID, false, NULL, nsMixedContentBlockerConstructor },
@@ -1216,6 +1225,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/textservices/textservicesdocument;1", &kNS_TEXTSERVICESDOCUMENT_CID },
   { "@mozilla.org/geolocation/service;1", &kNS_GEOLOCATION_SERVICE_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
+  { "@mozilla.org/audiochannel/service;1", &kNS_AUDIOCHANNEL_SERVICE_CID },
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
   { CSPSERVICE_CONTRACTID, &kCSPSERVICE_CID },
   { NS_MIXEDCONTENTBLOCKER_CONTRACTID, &kNS_MIXEDCONTENTBLOCKER_CID },
@@ -1299,5 +1309,5 @@ static const mozilla::Module kLayoutModule = {
   Initialize,
   LayoutModuleDtor
 };
-  
+
 NSMODULE_DEFN(nsLayoutModule) = &kLayoutModule;
