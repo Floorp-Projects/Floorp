@@ -505,7 +505,8 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "nsIDOMIccManager.h"
 #include "StkCommandEvent.h"
 #include "nsIDOMMozCellBroadcast.h"
-#endif
+#include "nsIDOMMozCellBroadcastEvent.h"
+#endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_FM
 #include "FMRadio.h"
@@ -4109,7 +4110,12 @@ nsDOMClassInfo::Init()
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCellBroadcast)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
-#endif
+
+  DOM_CLASSINFO_MAP_BEGIN(MozCellBroadcastEvent, nsIDOMMozCellBroadcastEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCellBroadcastEvent)
+     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+#endif // MOZ_B2G_RIL
 
   DOM_CLASSINFO_MAP_BEGIN(USSDReceivedEvent, nsIDOMUSSDReceivedEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMUSSDReceivedEvent)

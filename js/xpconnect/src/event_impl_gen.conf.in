@@ -30,6 +30,7 @@ simple_events = [
     'ICCCardLockErrorEvent',
     'MozWifiStatusChangeEvent',
     'MozWifiConnectionInfoEvent',
+    'MozCellBroadcastEvent',
 #endif
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent'
