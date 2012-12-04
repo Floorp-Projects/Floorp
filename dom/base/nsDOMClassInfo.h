@@ -257,7 +257,6 @@ public:
   static jsid sOpener_id;
   static jsid sAll_id;
   static jsid sTags_id;
-  static jsid sAddEventListener_id;
   static jsid sBaseURIObject_id;
   static jsid sNodePrincipal_id;
   static jsid sDocumentURIObject_id;
@@ -265,10 +264,6 @@ public:
   static jsid sPackages_id;
   static jsid sWrappedJSObject_id;
   static jsid sURL_id;
-  static jsid sKeyPath_id;
-  static jsid sAutoIncrement_id;
-  static jsid sUnique_id;
-  static jsid sMultiEntry_id;
   static jsid sOnload_id;
   static jsid sOnerror_id;
 

@@ -3,151 +3,60 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi.h"
+#ifndef JSOBJECTBUILDER_H
+#define JSOBJECTBUILDER_H
+
+#include "JSAObjectBuilder.h"
+
+class JSCustomObject;
+class JSCustomObjectBuilder;
+class JSContext;
+class nsAString;
 
 /* this is handy wrapper around JSAPI to make it more pleasant to use.
  * We collect the JSAPI errors and so that callers don't need to */
-class JSObjectBuilder
+class JSObjectBuilder : public JSAObjectBuilder
 {
-  public:
-
-  void DefineProperty(JSObject *aObject, const char *name, JSObject *aValue)
-  {
-    if (!mOk)
-      return;
-
-    mOk = JS_DefineProperty(mCx, aObject, name, OBJECT_TO_JSVAL(aValue), NULL, NULL, JSPROP_ENUMERATE);
-  }
-
-  void DefineProperty(JSObject *aObject, const char *name, int value)
-  {
-    if (!mOk)
-      return;
-
-    mOk = JS_DefineProperty(mCx, aObject, name, INT_TO_JSVAL(value), NULL, NULL, JSPROP_ENUMERATE);
-  }
-
-  void DefineProperty(JSObject *aObject, const char *name, double value)
-  {
-    if (!mOk)
-      return;
-
-    mOk = JS_DefineProperty(mCx, aObject, name, DOUBLE_TO_JSVAL(value), NULL, NULL, JSPROP_ENUMERATE);
-  }
-
-  void DefineProperty(JSObject *aObject, const char *name, nsAString &value)
-  {
-    if (!mOk)
-      return;
-
-    const nsString &flat = PromiseFlatString(value);
-    JSString *string = JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()), flat.Length());
-    if (!string)
-      mOk = JS_FALSE;
-
-    if (!mOk)
-      return;
-
-    mOk = JS_DefineProperty(mCx, aObject, name, STRING_TO_JSVAL(string), NULL, NULL, JSPROP_ENUMERATE);
-  }
-
-  void DefineProperty(JSObject *aObject, const char *name, const char *value, size_t valueLength)
-  {
-    if (!mOk)
-      return;
-
-    JSString *string = JS_InternStringN(mCx, value, valueLength);
-    if (!string) {
-      mOk = JS_FALSE;
-      return;
-    }
-
-    mOk = JS_DefineProperty(mCx, aObject, name, STRING_TO_JSVAL(string), NULL, NULL, JSPROP_ENUMERATE);
-  }
-
-  void DefineProperty(JSObject *aObject, const char *name, const char *value)
-  {
-    DefineProperty(aObject, name, value, strlen(value));
-  }
-
-  void ArrayPush(JSObject *aArray, int value)
-  {
-    if (!mOk)
-      return;
-
-    jsval objval = INT_TO_JSVAL(value);
-    uint32_t length;
-    mOk = JS_GetArrayLength(mCx, aArray, &length);
-
-    if (!mOk)
-      return;
-
-    mOk = JS_SetElement(mCx, aArray, length, &objval);
-  }
-
-  void ArrayPush(JSObject *aArray, const char *value)
-  {
-    if (!mOk)
-      return;
-
-    JSString *string = JS_NewStringCopyN(mCx, value, strlen(value));
-    if (!string) {
-      mOk = JS_FALSE;
-      return;
-    }
-
-    jsval objval = STRING_TO_JSVAL(string);
-    uint32_t length;
-    mOk = JS_GetArrayLength(mCx, aArray, &length);
-
-    if (!mOk)
-      return;
-
-    mOk = JS_SetElement(mCx, aArray, length, &objval);
-  }
-
-  void ArrayPush(JSObject *aArray, JSObject *aObject)
-  {
-    if (!mOk)
-      return;
-
-    jsval objval = OBJECT_TO_JSVAL(aObject);
-    uint32_t length;
-    mOk = JS_GetArrayLength(mCx, aArray, &length);
-
-    if (!mOk)
-      return;
-
-    mOk = JS_SetElement(mCx, aArray, length, &objval);
-  }
-
-  JSObject *CreateArray() {
-    JSObject *array = JS_NewArrayObject(mCx, 0, NULL);
-    if (!array)
-      mOk = JS_FALSE;
-
-    return array;
-  }
-
-  JSObject *CreateObject() {
-    JSObject *obj = JS_NewObject(mCx, NULL, NULL, NULL);
-    if (!obj)
-      mOk = JS_FALSE;
-
-    return obj;
-  }
-
-
+public:
   // We need to ensure that this object lives on the stack so that GC sees it properly
-  JSObjectBuilder(JSContext *aCx) : mCx(aCx), mOk(JS_TRUE)
-  {
+  explicit JSObjectBuilder(JSContext *aCx);
+  ~JSObjectBuilder() {}
+
+  void DefineProperty(JSCustomObject *aObject, const char *name, JSCustomObject *aValue);
+  void DefineProperty(JSCustomObject *aObject, const char *name, JSCustomArray *aValue);
+  void DefineProperty(JSCustomObject *aObject, const char *name, int value);
+  void DefineProperty(JSCustomObject *aObject, const char *name, double value);
+  void DefineProperty(JSCustomObject *aObject, const char *name, nsAString &value);
+  void DefineProperty(JSCustomObject *aObject, const char *name, const char *value, size_t valueLength);
+  void DefineProperty(JSCustomObject *aObject, const char *name, const char *value);
+  void ArrayPush(JSCustomArray *aArray, int value);
+  void ArrayPush(JSCustomArray *aArray, const char *value);
+  void ArrayPush(JSCustomArray *aArray, JSCustomArray *aObject);
+  void ArrayPush(JSCustomArray *aArray, JSCustomObject *aObject);
+  JSCustomArray *CreateArray();
+  JSCustomObject *CreateObject();
+
+  JSObject* GetJSObject(JSCustomObject* aObject) { return (JSObject*)aObject; }
+
+private:
+  JSObjectBuilder(const JSObjectBuilder&);
+  JSObjectBuilder& operator=(const JSObjectBuilder&);
+
+  void* operator new(size_t);
+  void* operator new[](size_t);
+  void operator delete(void*) {
+    // Since JSObjectBuilder has a virtual destructor the compiler
+    // has to provide a destructor in the object file that will call
+    // operate delete in case there is a derived class since its
+    // destructor wont know how to free this instance.
+    abort();
   }
-  private:
-  JSObjectBuilder(JSObjectBuilder&);
+  void operator delete[](void*);
 
   JSContext *mCx;
   JSObject *mObj;
-  JSBool mOk;
+  int mOk;
 };
 
+#endif
 

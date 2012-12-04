@@ -215,6 +215,7 @@ MOCHITEST_FILES += \
 		variable-channel.opus \
 		chained-video.ogv \
 		chained-audio-video.ogg \
+		variable-preskip.opus \
 		dirac.ogg \
 		multiple-bos.ogg \
 		split.webm \

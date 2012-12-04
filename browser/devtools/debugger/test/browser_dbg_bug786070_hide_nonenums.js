@@ -57,8 +57,8 @@ function testNonEnumProperties() {
           "There should be just one property in the .nonenum container.");
 
         // Uncheck 'show hidden properties'.
-        gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "false");
-        gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
+        gDebugger.DebuggerView.Options._showVariablesOnlyEnumItem.setAttribute("checked", "true");
+        gDebugger.DebuggerView.Options._toggleShowVariablesOnlyEnum();
 
         executeSoon(function() {
           ok(details.hasAttribute("open"),
@@ -68,8 +68,8 @@ function testNonEnumProperties() {
             ".nonenum container should become hidden.");
 
           // Check 'show hidden properties'.
-          gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "true");
-          gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
+          gDebugger.DebuggerView.Options._showVariablesOnlyEnumItem.setAttribute("checked", "false");
+          gDebugger.DebuggerView.Options._toggleShowVariablesOnlyEnum();
 
           executeSoon(function() {
             ok(details.hasAttribute("open"),
@@ -89,8 +89,8 @@ function testNonEnumProperties() {
                 ".nonenum container should be hidden.");
 
               // Uncheck 'show hidden properties'.
-              gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "false");
-              gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
+              gDebugger.DebuggerView.Options._showVariablesOnlyEnumItem.setAttribute("checked", "true");
+              gDebugger.DebuggerView.Options._toggleShowVariablesOnlyEnum();
 
               executeSoon(function() {
                 ok(!details.hasAttribute("open"),
@@ -100,8 +100,8 @@ function testNonEnumProperties() {
                   ".nonenum container should stay hidden.");
 
                 // Check 'show hidden properties'.
-                gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "true");
-                gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
+                gDebugger.DebuggerView.Options._showVariablesOnlyEnumItem.setAttribute("checked", "false");
+                gDebugger.DebuggerView.Options._toggleShowVariablesOnlyEnum();
 
                 executeSoon(function() {
                   gDebugger.DebuggerController.activeThread.resume(function() {

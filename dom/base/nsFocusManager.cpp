@@ -133,23 +133,13 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFocusManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFocusManager)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsFocusManager)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFocusManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedContent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstBlurEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstFocusEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowBeingLowered)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFocusManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActiveWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedContent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstBlurEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstFocusEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowBeingLowered)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_6(nsFocusManager,
+                           mActiveWindow,
+                           mFocusedWindow,
+                           mFocusedContent,
+                           mFirstBlurEvent,
+                           mFirstFocusEvent,
+                           mWindowBeingLowered)
 
 nsFocusManager* nsFocusManager::sInstance = nullptr;
 bool nsFocusManager::sMouseFocusesFormControl = false;

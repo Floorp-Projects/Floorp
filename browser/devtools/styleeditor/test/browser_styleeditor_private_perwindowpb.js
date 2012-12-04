@@ -19,21 +19,29 @@ function test() {
       aWindow.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
       cache.evictEntries(Ci.nsICache.STORE_ANYWHERE);
       launchStyleEditorChromeFromWindow(aWindow, function(aChrome) {
-        aChrome.addChromeListener({
-          onEditorAdded: function(aChrome, aEditor) {
-            if (aEditor.isLoaded) {
-              checkCache();
-            } else {
-              aEditor.addActionListener({
-                onLoad: checkCache
-              });
-            }
-          }
-        });
+        if (aChrome.isContentAttached) {
+          onEditorAdded(aChrome, aChrome.editors[0]);
+        } else {
+          aChrome.addChromeListener({
+            onEditorAdded: onEditorAdded
+          });
+        }
       });
     }, true);
 
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);
+  }
+
+  function onEditorAdded(aChrome, aEditor) {
+    aChrome.removeChromeListener(this);
+
+    if (aEditor.isLoaded) {
+      checkCache();
+    } else {
+      aEditor.addActionListener({
+        onLoad: checkCache
+      });
+    }
   }
 
   function testOnWindow(options, callback) {

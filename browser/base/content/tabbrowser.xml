@@ -624,7 +624,13 @@
                   autocomplete.unregisterOpenPage(this.mBrowser.registeredOpenURI);
                   delete this.mBrowser.registeredOpenURI;
                 }
-                if (!isBlankPageURL(aLocation.spec)) {
+                if (!isBlankPageURL(aLocation.spec)
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+                    // Tabs in private windows aren't registered as "Open" so
+                    // that they don't appear as switch-to-tab candidates.
+                    && !PrivateBrowsingUtils.isWindowPrivate(window)
+#endif
+                    ) {
                   autocomplete.registerOpenPage(aLocation);
                   this.mBrowser.registeredOpenURI = aLocation;
                 }

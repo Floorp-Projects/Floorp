@@ -18,7 +18,9 @@ MOCHITEST_FILES := \
   test_CharacterData-appendData.html \
   test_CharacterData-deleteData.html \
   test_CharacterData-insertData.html \
+  test_CharacterData-remove.html \
   test_CharacterData-replaceData.html \
+  test_ChildNode-remove.js \
   test_Document-adoptNode.html \
   test_Document-createComment.html \
   test_Document-createElement.html \
@@ -32,10 +34,12 @@ MOCHITEST_FILES := \
   test_Document-getElementsByTagName.html \
   test_Document-getElementsByTagNameNS.html \
   test_Document-importNode.html \
+  test_DocumentType-remove.html \
   test_DOMException-constants.html \
   test_DOMImplementation-createDocument.html \
   test_DOMImplementation-createDocumentType.html \
   test_DOMImplementation-createHTMLDocument.html \
+  test_DOMImplementation-hasFeature.html \
   test_Element-childElementCount-dynamic-add.html \
   test_Element-childElementCount-dynamic-add.svg \
   test_Element-childElementCount-dynamic-add.xhtml \
@@ -70,6 +74,7 @@ MOCHITEST_FILES := \
   test_Element-previousElementSibling.html \
   test_Element-previousElementSibling.svg \
   test_Element-previousElementSibling.xhtml \
+  test_Element-remove.html \
   test_Element-removeAttributeNS.html \
   test_Element-siblingElement-null.html \
   test_Element-siblingElement-null.svg \

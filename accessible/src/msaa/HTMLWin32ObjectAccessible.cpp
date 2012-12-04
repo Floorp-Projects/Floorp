@@ -20,7 +20,8 @@ HTMLWin32ObjectOwnerAccessible::
   AccessibleWrap(aContent, aDoc), mHwnd(aHwnd)
 {
   // Our only child is a HTMLWin32ObjectAccessible object.
-  mNativeAccessible = new HTMLWin32ObjectAccessible(mHwnd);
+  if (mHwnd)
+    mNativeAccessible = new HTMLWin32ObjectAccessible(mHwnd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
