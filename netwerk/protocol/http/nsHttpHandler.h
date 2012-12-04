@@ -97,6 +97,7 @@ public:
     PRIntervalTime SpdyPingThreshold() { return mSpdyPingThreshold; }
     PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
     uint32_t       ConnectTimeout()  { return mConnectTimeout; }
+    uint32_t       ParallelSpeculativeConnectLimit() { return mParallelSpeculativeConnectLimit; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -152,6 +153,11 @@ public:
     nsresult ProcessPendingQ(nsHttpConnectionInfo *cinfo)
     {
         return mConnMgr->ProcessPendingQ(cinfo);
+    }
+
+    nsresult ProcessPendingQ()
+    {
+        return mConnMgr->ProcessPendingQ();
     }
 
     nsresult GetSocketThreadTarget(nsIEventTarget **target)
@@ -390,6 +396,10 @@ private:
     // The maximum amount of time to wait for socket transport to be
     // established. In milliseconds.
     uint32_t       mConnectTimeout;
+
+    // The maximum number of current global half open sockets allowable
+    // when starting a new speculative connection.
+    uint32_t       mParallelSpeculativeConnectLimit;
 };
 
 //-----------------------------------------------------------------------------
