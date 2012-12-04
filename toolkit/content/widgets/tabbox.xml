@@ -785,7 +785,12 @@
 #else
         false
 #endif
-      </field>    
+      </field>
+      <field name="TelemetryStopwatch" readonly="true">
+        let tmp = {};
+        Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", tmp);
+        tmp.TelemetryStopwatch;
+      </field>
     </implementation>
 
     <handlers>
@@ -795,6 +800,11 @@
           return;
 
         if (this != this.parentNode.selectedItem) { // Not selected yet
+          let stopwatchid = this.parentNode.getAttribute("stopwatchid");
+          if (stopwatchid) {
+            this.TelemetryStopwatch.start(stopwatchid);
+          }
+
           // Call this before setting the 'ignorefocus' attribute because this
           // will pass on focus if the formerly selected tab was focused as well.
           this.parentNode._selectNewTab(this);
@@ -811,6 +821,10 @@
           if (!isTabFocused) {
             this.setAttribute("ignorefocus", "true");
             setTimeout(function (tab) tab.removeAttribute("ignorefocus"), 0, this);
+          }
+
+          if (stopwatchid) {
+            this.TelemetryStopwatch.finish(stopwatchid);
           }
         }
         // Otherwise this tab is already selected and we will fall

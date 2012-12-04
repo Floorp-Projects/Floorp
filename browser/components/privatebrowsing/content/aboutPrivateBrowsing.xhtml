@@ -64,12 +64,6 @@
       // Focus the location bar
       mainWindow.focusAndSelectUrlBar();
 
-      function openSanitizeDialog() {
-        let browserGlue = Cc["@mozilla.org/browser/browserglue;1"].
-                          getService(Ci.nsIBrowserGlue);
-        browserGlue.sanitize(mainWindow);
-      }
-
       function setFavIcon(url) {
         var icon = document.createElement("link");
         icon.setAttribute("rel", "icon");

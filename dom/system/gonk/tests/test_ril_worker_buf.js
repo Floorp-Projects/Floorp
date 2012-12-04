@@ -48,7 +48,7 @@ function add_test_incoming_parcel(parcel, handler) {
 // Test normal parcel handling.
 add_test_incoming_parcel(null,
   function test_normal_parcel_handling(worker) {
-    do_check_throws(function normal_handler(worker) {
+    do_check_throws(function normal_handler() {
       // reads exactly the same size, should not throw anything.
       worker.Buf.readUint32();
     });
@@ -61,7 +61,7 @@ add_test_incoming_parcel(null,
     do_check_throws(function under_read_handler() {
       // reads less than parcel size, should not throw.
       worker.Buf.readUint16();
-    }, false);
+    });
   }
 );
 
@@ -78,7 +78,27 @@ add_test_incoming_parcel(null,
     do_check_throws(function over_read_handler() {
       // reads more than parcel size, should throw an error.
       buf.readUint8();
-    }, new Error("Trying to read data beyond the parcel end!").result);
+    },"Trying to read data beyond the parcel end!");
   }
 );
 
+// Test Buf.readUint8Array.
+add_test_incoming_parcel(null,
+  function test_buf_readUint8Array(worker) {
+    let buf = worker.Buf;
+
+    let u8array = buf.readUint8Array(1);
+    do_check_eq(u8array instanceof Uint8Array, true);
+    do_check_eq(u8array.length, 1);
+    do_check_eq(buf.readAvailable, 3);
+
+    u8array = buf.readUint8Array(2);
+    do_check_eq(u8array.length, 2);
+    do_check_eq(buf.readAvailable, 1);
+
+    do_check_throws(function over_read_handler() {
+      // reads more than parcel size, should throw an error.
+      u8array = buf.readUint8Array(2);
+    }, "Trying to read data beyond the parcel end!");
+  }
+);

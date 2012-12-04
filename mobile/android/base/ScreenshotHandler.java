@@ -367,7 +367,7 @@ public final class ScreenshotHandler implements Runnable {
                     {
                         Tab tab = Tabs.getInstance().getTab(tabId);
                         if (tab != null) {
-                            GeckoApp.mAppContext.handleThumbnailData(tab, data);
+                            ThumbnailHelper.getInstance().handleThumbnailData(tab, data);
                         }
                         break;
                     }

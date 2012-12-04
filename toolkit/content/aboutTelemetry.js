@@ -16,7 +16,7 @@ const bundle = Services.strings.createBundle(
 const brandBundle = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties");
 const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].
-  getService(Ci.nsIObserver);
+  getService(Ci.nsITelemetryPing);
 
 // Maximum height of a histogram bar (in em)
 const MAX_BAR_HEIGHT = 18;
@@ -685,14 +685,7 @@ function onLoad() {
   }
 
   // Get the Telemetry Ping payload
-  let pingData = Cc['@mozilla.org/supports-string;1'].
-    createInstance(Ci.nsISupportsString);
-  TelemetryPing.observe(pingData, "get-payload", "");
-  let ping = {};
-  try {
-    ping = JSON.parse(pingData.data);
-  } catch (e) {
-  }
+  let ping = TelemetryPing.getPayload();
 
   // Show simple measurements
   if (Object.keys(ping.simpleMeasurements).length) {
