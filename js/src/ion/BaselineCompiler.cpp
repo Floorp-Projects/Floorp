@@ -561,6 +561,42 @@ BaselineCompiler::emitBinaryArith()
 }
 
 bool
+BaselineCompiler::emitUnaryArith()
+{
+    // Allocate IC entry and stub.
+    ICUnaryArith_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    if (!entry)
+        return false;
+
+    // Keep top stack value in R0.
+    frame.popRegsAndSync(1);
+
+    // Call IC
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    // Mark R0 as pushed stack value.
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_BITNOT()
+{
+    return emitUnaryArith();
+}
+
+bool
+BaselineCompiler::emit_JSOP_NEG()
+{
+    return emitUnaryArith();
+}
+
+bool
 BaselineCompiler::emit_JSOP_LT()
 {
     return emitCompare();

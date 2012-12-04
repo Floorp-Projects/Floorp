@@ -278,6 +278,9 @@ class ICEntry
     _(BinaryArith_Fallback)     \
     _(BinaryArith_Int32)        \
                                 \
+    _(UnaryArith_Fallback)      \
+    _(UnaryArith_Int32)         \
+                                \
     _(Call_Fallback)            \
     _(Call_Scripted)            \
                                 \
@@ -1139,6 +1142,64 @@ class ICBinaryArith_Int32 : public ICStub
 
         ICStub *getStub() {
             return ICBinaryArith_Int32::New(getStubCode());
+        }
+    };
+};
+
+// UnaryArith
+//     JSOP_BITNOT
+//     JSOP_NEG
+
+class ICUnaryArith_Fallback : public ICFallbackStub
+{
+    ICUnaryArith_Fallback(IonCode *stubCode)
+      : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static inline ICUnaryArith_Fallback *New(IonCode *code) {
+        return new ICUnaryArith_Fallback(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback)
+        {}
+
+        ICStub *getStub() {
+            return ICUnaryArith_Fallback::New(getStubCode());
+        }
+    };
+};
+
+class ICUnaryArith_Int32 : public ICStub
+{
+    ICUnaryArith_Int32(IonCode *stubCode)
+      : ICStub(UnaryArith_Int32, stubCode)
+    {}
+
+  public:
+    static inline ICUnaryArith_Int32 *New(IonCode *code) {
+        return new ICUnaryArith_Int32(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op)
+        {}
+
+        ICStub *getStub() {
+            return ICUnaryArith_Int32::New(getStubCode());
         }
     };
 };
