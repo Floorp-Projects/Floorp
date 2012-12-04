@@ -185,7 +185,7 @@ function OptionsView() {
   this._togglePauseOnExceptions = this._togglePauseOnExceptions.bind(this);
   this._toggleShowPanesOnStartup = this._toggleShowPanesOnStartup.bind(this);
   this._toggleShowVariablesNonEnum = this._toggleShowVariablesNonEnum.bind(this);
-  this._toggleShowVariablesSearchbox = this._toggleShowVariablesSearchbox.bind(this);
+  this._toggleShowVariablesFilterBox = this._toggleShowVariablesFilterBox.bind(this);
 }
 
 OptionsView.prototype = {
@@ -198,12 +198,12 @@ OptionsView.prototype = {
     this._pauseOnExceptionsItem = document.getElementById("pause-on-exceptions");
     this._showPanesOnStartupItem = document.getElementById("show-panes-on-startup");
     this._showVariablesNonEnumItem = document.getElementById("show-vars-nonenum");
-    this._showVariablesSearchboxItem = document.getElementById("show-vars-searchbox");
+    this._showVariablesFilterBoxItem = document.getElementById("show-vars-filter-box");
 
     this._pauseOnExceptionsItem.setAttribute("checked", "false");
     this._showPanesOnStartupItem.setAttribute("checked", Prefs.panesVisibleOnStartup);
     this._showVariablesNonEnumItem.setAttribute("checked", Prefs.variablesNonEnumVisible);
-    this._showVariablesSearchboxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
+    this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
   },
 
   /**
@@ -255,16 +255,16 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'show variables searchbox' menuitem command.
    */
-  _toggleShowVariablesSearchbox: function DVO__toggleShowVariablesSearchbox() {
+  _toggleShowVariablesFilterBox: function DVO__toggleShowVariablesFilterBox() {
     DebuggerView.Variables.searchEnabled = Prefs.variablesSearchboxVisible =
-      this._showVariablesSearchboxItem.getAttribute("checked") == "true";
+      this._showVariablesFilterBoxItem.getAttribute("checked") == "true";
   },
 
   _button: null,
   _pauseOnExceptionsItem: null,
   _showPanesOnStartupItem: null,
   _showVariablesNonEnumItem: null,
-  _showVariablesSearchboxItem: null
+  _showVariablesFilterBoxItem: null
 };
 
 /**
