@@ -160,6 +160,7 @@ private:
     nsresult ContinueConnect();
     void     SpeculativeConnect();
     nsresult SetupTransaction();
+    void     SetupTransactionLoadGroupInfo();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
     nsresult ContinueProcessResponse(nsresult);

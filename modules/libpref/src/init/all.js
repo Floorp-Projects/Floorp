@@ -910,6 +910,10 @@ pref("network.http.connection-retry-timeout", 250);
 // to give up if the OS does not give up first
 pref("network.http.connection-timeout", 90);
 
+// The maximum number of current global half open sockets allowable
+// when starting a new speculative connection.
+pref("network.http.speculative-parallel-limit", 6);
+
 // Disable IPv6 for backup connections to workaround problems about broken
 // IPv6 connectivity.
 pref("network.http.fast-fallback-to-IPv4", true);

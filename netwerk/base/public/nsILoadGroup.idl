@@ -8,11 +8,12 @@
 interface nsISimpleEnumerator;
 interface nsIRequestObserver;
 interface nsIInterfaceRequestor;
+interface nsILoadGroupConnectionInfo;
 
 /**
  * A load group maintains a collection of nsIRequest objects. 
  */
-[scriptable, uuid(3de0a31c-feaf-400f-9f1e-4ef71f8b20cc)]
+[scriptable, uuid(19501006-46e3-4634-b97d-26eff894b4d3)]
 interface nsILoadGroup : nsIRequest
 {
     /**
@@ -71,4 +72,36 @@ interface nsILoadGroup : nsIRequest
      * Notification callbacks for the load group.
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
+
+    /**
+     * Connection information for managing things like js/css
+     * connection blocking, and per-tab connection grouping
+     */
+    readonly attribute nsILoadGroupConnectionInfo connectionInfo;
+};
+
+/**
+ * Used to maintain state about the connections of a load group and
+ * how they interact with blocking items like HEAD css/js loads.
+ */
+[uuid(d1f9f18e-3d85-473a-ad58-a2367d7cdb2a)]
+interface nsILoadGroupConnectionInfo : nsISupports
+{
+    /**
+     * Number of active blocking transactions associated with this load group
+     */
+    readonly attribute unsigned long blockingTransactionCount;
+
+    /**
+     * Increase the number of active blocking transactions associated
+     * with this load group by one.
+     */
+    void addBlockingTransaction();
+
+    /**
+     * Decrease the number of active blocking transactions associated
+     * with this load group by one. The return value is the number of remaining
+     * blockers.
+     */
+    unsigned long removeBlockingTransaction();
 };
