@@ -89,7 +89,7 @@ CSS_PSEUDO_CLASS(mozLocaleDir, ":-moz-locale-dir")
 // -moz-lwtheme may be used to match a document that has a lightweight theme
 CSS_PSEUDO_CLASS(mozLWTheme, ":-moz-lwtheme")
 
-// -moz-lwtheme-brighttext matches a document that has a bright lightweight theme
+// -moz-lwtheme-brighttext matches a document that has a dark lightweight theme
 CSS_PSEUDO_CLASS(mozLWThemeBrightText, ":-moz-lwtheme-brighttext")
 
 // -moz-lwtheme-darktext matches a document that has a bright lightweight theme
