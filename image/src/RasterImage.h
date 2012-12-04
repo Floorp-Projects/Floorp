@@ -153,10 +153,7 @@ public:
   NS_DECL_IMGICONTAINERDEBUG
 #endif
 
-  // XXX(seth) Currently the constructor is required to be public because it's
-  // exposed as part of the image module and imgTools needs it. New code should
-  // create images using ImageFactory.
-  RasterImage(imgStatusTracker* aStatusTracker = nullptr);
+  // (no public constructor - use ImageFactory)
   virtual ~RasterImage();
 
   virtual nsresult StartAnimation();
@@ -736,6 +733,8 @@ private: // data
   bool StoringSourceData() const;
 
 protected:
+  RasterImage(imgStatusTracker* aStatusTracker = nullptr);
+
   bool ShouldAnimate();
 
   friend class ImageFactory;
