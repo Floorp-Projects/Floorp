@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
 		green.png \
+		test_bug200416.html \
 		test_bug290026.html \
 		test_bug291780.html \
 		test_bug316447.html \
