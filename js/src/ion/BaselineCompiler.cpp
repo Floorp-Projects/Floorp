@@ -20,7 +20,8 @@ using namespace js::ion;
 
 BaselineCompiler::BaselineCompiler(JSContext *cx, JSScript *script)
   : BaselineCompilerSpecific(cx, script),
-    return_(new HeapLabel())
+    return_(new HeapLabel()),
+    autoRooter_(cx, this)
 {
 }
 
@@ -49,6 +50,9 @@ BaselineCompiler::compile()
         IonSpew(IonSpew_Abort, "Script needs arguments object");
         return Method_CantCompile;
     }
+
+    // Pin analysis info during compilation.
+    analyze::AutoEnterAnalysis autoEnterAnalysis(cx);
 
     if (!emitPrologue())
         return Method_Error;
@@ -84,6 +88,9 @@ BaselineCompiler::compile()
     if (icEntries_.length())
         baselineScript->copyICEntries(&icEntries_[0], masm);
 
+    // Adopt fallback stubs from the compiler into the baseline script.
+    baselineScript->adoptFallbackStubs(&stubSpace_);
+
     // Patch IC loads using IC entries
     for (size_t i = 0; i < icLoadLabels_.length(); i++) {
         CodeOffsetLabel label = icLoadLabels_[i];
@@ -95,6 +102,20 @@ BaselineCompiler::compile()
     }
 
     return Method_Compiled;
+}
+
+void
+BaselineCompiler::trace(JSTracer *trc)
+{
+    // The stubcodes that have been allocated for the ICs that have been compiled
+    // so far need to marked.  There should only be fallback stubs in any IC chains.
+    for (size_t i = 0; i < icEntries_.length(); i++) {
+        ICEntry &entry = icEntries_[i];
+        JS_ASSERT(entry.firstStub() != NULL);
+        JS_ASSERT(entry.firstStub()->isFallback());
+        JS_ASSERT(entry.firstStub()->next() == NULL);
+        entry.firstStub()->trace(trc);
+    }
 }
 
 #ifdef DEBUG
@@ -261,7 +282,7 @@ BaselineCompiler::emitToBoolean()
 {
     // Allocate IC entry and stub.
     ICToBool_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -332,7 +353,7 @@ BaselineCompiler::emit_JSOP_POS()
 {
     // Allocate IC entry and stub.
     ICToNumber_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -553,7 +574,7 @@ BaselineCompiler::emitBinaryArith()
 {
     // Allocate IC entry and stub.
     ICBinaryArith_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -577,7 +598,7 @@ BaselineCompiler::emitUnaryArith()
 {
     // Allocate IC entry and stub.
     ICUnaryArith_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -649,7 +670,7 @@ BaselineCompiler::emitCompare()
 {
     // Allocate IC entry and stub.
     ICCompare_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -675,7 +696,7 @@ BaselineCompiler::emit_JSOP_GETELEM()
 {
     // Allocate IC entry and stub.
     ICGetElem_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -699,7 +720,7 @@ BaselineCompiler::emit_JSOP_SETELEM()
 {
     // Allocate IC entry and stub.
     ICSetElem_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -745,7 +766,7 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 
     // Allocate IC entry and stub.
     ICGetName_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -847,7 +868,7 @@ BaselineCompiler::emitCall()
 
     // Allocate IC entry and stub.
     ICCall_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
     if (!entry)
         return false;
 
@@ -892,6 +913,8 @@ bool
 BaselineCompiler::emit_JSOP_RETURN()
 {
     JS_ASSERT(frame.stackDepth() == 1);
+
+    JS_GC(cx->runtime);
 
     frame.popValue(JSReturnOperand);
     masm.jump(return_);

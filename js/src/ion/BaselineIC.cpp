@@ -19,6 +19,65 @@
 namespace js {
 namespace ion {
 
+void
+ICStub::markCode(JSTracer *trc, const char *name)
+{
+    IonCode *stubIonCode = ionCode();
+    MarkIonCodeUnbarriered(trc, &stubIonCode, name);
+}
+
+/* static */ void
+ICStub::trace(JSTracer *trc)
+{
+    markCode(trc, "baseline-stub-ioncode");
+
+    // If the stub is a monitored fallback stub, then mark the monitor ICs hanging
+    // off of that stub.  We don't need to worry about the regular monitored stubs,
+    // because the regular monitored stubs will always have a monitored fallback stub
+    // that references the same stub chain.
+    if (isMonitoredFallback()) {
+        ICTypeMonitor_Fallback *lastMonStub = toMonitoredFallbackStub()->fallbackMonitorStub();
+        for (ICStub *monStub = lastMonStub->firstMonitorStub();
+             monStub != NULL;
+             monStub = monStub->next())
+        {
+            JS_ASSERT_IF(monStub->next() == NULL, monStub == lastMonStub);
+            monStub->markCode(trc, "baseline-monitor-stub-ioncode");
+        }
+    }
+
+    if (isUpdated()) {
+        for (ICStub *updateStub = toUpdatedStub()->firstUpdateStub();
+             updateStub != NULL;
+             updateStub = updateStub->next())
+        {
+            JS_ASSERT_IF(updateStub->next() == NULL, updateStub->isTypeUpdate_Fallback());
+            updateStub->markCode(trc, "baseline-update-stub-ioncode");
+        }
+    }
+
+    switch (kind()) {
+      case ICStub::Call_Scripted: {
+        ICCall_Scripted *callStub = toCall_Scripted();
+        MarkObject(trc, &callStub->callee(), "baseline-callstub-callee");
+        break;
+      }
+      case ICStub::SetElem_Dense: {
+        ICSetElem_Dense *setElemStub = toSetElem_Dense();
+        MarkTypeObject(trc, &setElemStub->type(), "baseline-setelem-dense-stub-type");
+        break;
+      }
+      case ICStub::TypeMonitor_TypeObject: {
+        ICTypeMonitor_TypeObject *monitorStub = toTypeMonitor_TypeObject();
+        MarkTypeObject(trc, &monitorStub->type(), "baseline-monitor-typeobject");
+        break;
+      }
+      default:
+        break;
+    }
+}
+
+
 ICMonitoredStub::ICMonitoredStub(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub)
   : ICStub(kind, ICStub::Monitored, stubCode),
     firstMonitorStub_(firstMonitorStub)
@@ -31,12 +90,12 @@ ICMonitoredStub::ICMonitoredStub(Kind kind, IonCode *stubCode, ICStub *firstMoni
 }
 
 bool
-ICMonitoredFallbackStub::initMonitoringChain(JSContext *cx)
+ICMonitoredFallbackStub::initMonitoringChain(JSContext *cx, ICStubSpace *space)
 {
     JS_ASSERT(fallbackMonitorStub_ == NULL);
 
     ICTypeMonitor_Fallback::Compiler compiler(cx, this);
-    ICTypeMonitor_Fallback *stub = compiler.getStub();
+    ICTypeMonitor_Fallback *stub = compiler.getStub(space);
     if (!stub)
         return false;
     fallbackMonitorStub_ = stub;
@@ -44,12 +103,12 @@ ICMonitoredFallbackStub::initMonitoringChain(JSContext *cx)
 }
 
 bool
-ICUpdatedStub::initUpdatingChain(JSContext *cx)
+ICUpdatedStub::initUpdatingChain(JSContext *cx, ICStubSpace *space)
 {
     JS_ASSERT(firstUpdateStub_ == NULL);
 
     ICTypeUpdate_Fallback::Compiler compiler(cx);
-    ICTypeUpdate_Fallback *stub = compiler.getStub();
+    ICTypeUpdate_Fallback *stub = compiler.getStub(space);
     if (!stub)
         return false;
 
@@ -131,7 +190,7 @@ ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm)
 //
 
 bool
-ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleValue val)
+ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, ICStubSpace *space, HandleValue val)
 {
     bool wasEmptyMonitorChain = (numOptimizedMonitorStubs_ == 0);
 
@@ -144,7 +203,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleValue val)
     if (val.isPrimitive()) {
         JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
         ICTypeMonitor_Type::Compiler compiler(cx, type);
-        ICStub *stub = compiler.getStub();
+        ICStub *stub = compiler.getStub(space);
         if (!stub)
             return false;
         addOptimizedMonitorStub(stub);
@@ -153,7 +212,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleValue val)
         if (!type)
             return false;
         ICTypeMonitor_TypeObject::Compiler compiler(cx, type);
-        ICStub *stub = compiler.getStub();
+        ICStub *stub = compiler.getStub(space);
         if (!stub)
             return false;
         addOptimizedMonitorStub(stub);
@@ -194,7 +253,7 @@ DoTypeMonitorFallback(JSContext *cx, ICTypeMonitor_Fallback *stub, HandleValue v
     jsbytecode *pc = stub->mainFallbackStub()->icEntry()->pc(script);
     types::TypeScript::Monitor(cx, script, pc, value);
 
-    if (!stub->addMonitorStubForValue(cx, value))
+    if (!stub->addMonitorStubForValue(cx, ICStubSpace::StubSpaceFor(script), value))
         return false;
 
     // Copy input value to res.
@@ -367,7 +426,7 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     if (lhs.isInt32()) {
         if (rhs.isInt32()) {
             ICCompare_Int32::Compiler compilerInt32(cx, op);
-            ICStub *int32Stub = compilerInt32.getStub();
+            ICStub *int32Stub = compilerInt32.getStub(ICStubSpace::StubSpaceFor(script));
             if (!int32Stub)
                 return false;
 
@@ -404,6 +463,8 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 static bool
 DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, MutableHandleValue ret)
 {
+    RootedScript script(cx, GetTopIonJSScript(cx));
+
     bool cond = ToBoolean(arg);
     ret.setBoolean(cond);
 
@@ -418,7 +479,7 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
     if (arg.isBoolean()) {
         // Attach the new bool-specialized stub.
         ICToBool_Bool::Compiler compilerBool(cx);
-        ICStub *boolStub = compilerBool.getStub();
+        ICStub *boolStub = compilerBool.getStub(ICStubSpace::StubSpaceFor(script));
         if (!boolStub)
             return false;
 
@@ -428,7 +489,7 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
 
     if (arg.isInt32()) {
         ICToBool_Int32::Compiler compiler(cx);
-        ICStub *int32Stub = compiler.getStub();
+        ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!int32Stub)
             return false;
 
@@ -540,8 +601,7 @@ static bool
 DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue lhs,
                       HandleValue rhs, MutableHandleValue ret)
 {
-    uint8_t *returnAddr;
-    RootedScript script(cx, GetTopIonJSScript(cx, NULL, (void **)&returnAddr));
+    RootedScript script(cx, GetTopIonJSScript(cx));
 
     // Perform the compare operation.
     JSOp op = JSOp(*stub->icEntry()->pc(script));
@@ -618,7 +678,7 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     // TODO: unlink previous !allowDouble stub.
     bool allowDouble = ret.isDouble();
     ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
-    ICStub *int32Stub = compilerInt32.getStub();
+    ICStub *int32Stub = compilerInt32.getStub(ICStubSpace::StubSpaceFor(script));
     if (!int32Stub)
         return false;
     stub->addNewStub(int32Stub);
@@ -684,7 +744,7 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
         return true;
 
     ICUnaryArith_Int32::Compiler compiler(cx, op);
-    ICStub *int32Stub = compiler.getStub();
+    ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
     if (!int32Stub)
         return false;
     stub->addNewStub(int32Stub);
@@ -717,6 +777,8 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 static bool
 DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
+    RootedScript script(cx, GetTopIonJSScript(cx));
+
     if (!GetElementMonitored(cx, lhs, rhs, res))
         return false;
 
@@ -737,7 +799,7 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
             return true;
 
         ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub());
-        ICStub *denseStub = compiler.getStub();
+        ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!denseStub)
             return false;
 
@@ -837,7 +899,7 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     if (obj->isDenseArray() && index.isInt32()) {
         RootedTypeObject type(cx, obj->getType(cx));
         ICSetElem_Dense::Compiler compiler(cx, type);
-        ICStub *denseStub = compiler.getStub();
+        ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!denseStub)
             return false;
 
@@ -1040,7 +1102,7 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
             return true;
 
         ICCall_Scripted::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(), fun);
-        ICStub *newStub = compiler.getStub();
+        ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!newStub)
             return false;
 
