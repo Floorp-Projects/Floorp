@@ -74,7 +74,7 @@ IonBailoutIterator::dump() const
     }
 }
 
-static JSScript*
+static UnrootedScript
 GetBailedJSScript(JSContext *cx)
 {
     AutoAssertNoGC nogc;
@@ -85,7 +85,7 @@ GetBailedJSScript(JSContext *cx)
     switch (GetCalleeTokenTag(frame->calleeToken())) {
       case CalleeToken_Function: {
         JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-        return fun->nonLazyScript().get(nogc);
+        return fun->nonLazyScript();
       }
       case CalleeToken_Script:
         return CalleeTokenToScript(frame->calleeToken());
@@ -178,8 +178,8 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
         regs.pc = GetNextPc(regs.pc);
 
     IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p (line %d)",
-            pcOff, (void *)script().get(nogc), PCToLineNumber(script().get(nogc), regs.pc));
-    JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, script().get(nogc), regs.pc));
+            pcOff, (void *)script(), PCToLineNumber(script(), regs.pc));
+    JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, script(), regs.pc));
 }
 
 static StackFrame *
@@ -324,7 +324,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
       // we flag it here manually that the entry has happened.
       case Bailout_ArgumentCheck:
         fp->unsetPushedSPSFrame();
-        Probes::enterScript(cx, fp->script().unsafeGet(), fp->script()->function(), fp);
+        Probes::enterScript(cx, fp->script(), fp->script()->function(), fp);
         return BAILOUT_RETURN_ARGUMENT_CHECK;
     }
 
@@ -502,8 +502,9 @@ ion::ReflowTypeInfo(uint32_t bailoutResult)
 uint32_t
 ion::RecompileForInlining()
 {
+    AutoAssertNoGC nogc;
     JSContext *cx = GetIonContext()->cx;
-    RawScript script = cx->fp()->script().unsafeGet();
+    UnrootedScript script = cx->fp()->script();
 
     IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename,
             script->lineno);
@@ -663,7 +664,7 @@ ion::ThunkToInterpreter(Value *vp)
 
         IonSpew(IonSpew_Bailouts, "Performing inline OSR %s:%d",
                 cx->fp()->script()->filename,
-                PCToLineNumber(cx->fp()->script().unsafeGet(), cx->regs().pc));
+                PCToLineNumber(cx->fp()->script(), cx->regs().pc));
 
         // We want to OSR again. We need to avoid the problem where frequent
         // bailouts cause recursive nestings of Interpret and EnterIon. The
