@@ -2489,7 +2489,7 @@ InCrossCompartmentMap(JSObject *src, Cell *dst, JSGCTraceKind dstKind)
 
     if (dstKind == JSTRACE_OBJECT) {
         Value key = ObjectValue(*static_cast<JSObject *>(dst));
-        if (WrapperMap::Ptr p = srccomp->crossCompartmentWrappers.lookup(key)) {
+        if (WrapperMap::Ptr p = srccomp->lookupWrapper(key)) {
             if (*p->value.unsafeGet() == ObjectValue(*src))
                 return true;
         }
@@ -2499,7 +2499,7 @@ InCrossCompartmentMap(JSObject *src, Cell *dst, JSGCTraceKind dstKind)
      * If the cross-compartment edge is caused by the debugger, then we don't
      * know the right hashtable key, so we have to iterate.
      */
-    for (WrapperMap::Enum e(srccomp->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+    for (JSCompartment::WrapperEnum e(srccomp); !e.empty(); e.popFront()) {
         if (e.front().key.wrapped == dst && ToMarkable(e.front().value) == src)
             return true;
     }
@@ -2540,7 +2540,7 @@ CheckForCompartmentMismatches(JSRuntime *rt)
 }
 #endif
 
-static void
+static bool
 BeginMarkPhase(JSRuntime *rt)
 {
     int64_t currentTime = PRMJ_Now();
@@ -2550,7 +2550,7 @@ BeginMarkPhase(JSRuntime *rt)
 #endif
 
     rt->gcIsFull = true;
-    DebugOnly<bool> any = false;
+    bool any = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         /* Assert that compartment state is as we expect */
         JS_ASSERT(!c->isCollecting());
@@ -2560,9 +2560,10 @@ BeginMarkPhase(JSRuntime *rt)
 
         /* Set up which compartments will be collected. */
         if (c->isGCScheduled()) {
-            any = true;
-            if (c != rt->atomsCompartment)
+            if (c != rt->atomsCompartment) {
+                any = true;
                 c->setGCState(JSCompartment::Mark);
+            }
         } else {
             rt->gcIsFull = false;
         }
@@ -2574,7 +2575,8 @@ BeginMarkPhase(JSRuntime *rt)
     }
 
     /* Check that at least one compartment is scheduled for collection. */
-    JS_ASSERT(any);
+    if (!any)
+        return false;
 
     /*
      * Atoms are not in the cross-compartment map. So if there are any
@@ -2676,7 +2678,7 @@ BeginMarkPhase(JSRuntime *rt)
 
     /* Set the maybeAlive flag based on cross-compartment edges. */
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             Cell *dst = e.front().key.wrapped;
             dst->compartment()->maybeAlive = true;
         }
@@ -2698,6 +2700,8 @@ BeginMarkPhase(JSRuntime *rt)
             c->scheduledForDestruction = true;
     }
     rt->gcFoundBlackGrayEdges = false;
+
+    return true;
 }
 
 void
@@ -2876,7 +2880,7 @@ DropStringWrappers(JSRuntime *rt)
      * compartment group.
      */
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             if (e.front().key.kind == CrossCompartmentKey::StringWrapper)
                 e.removeFront();
         }
@@ -2909,9 +2913,29 @@ JSCompartment::findOutgoingEdges(ComponentFinder& finder)
         finder.addEdgeTo(rt->atomsCompartment);
 
     for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        JS_ASSERT(e.front().key.kind != CrossCompartmentKey::StringWrapper);
+        CrossCompartmentKey::Kind kind = e.front().key.kind;
+        JS_ASSERT(kind != CrossCompartmentKey::StringWrapper);
         Cell *other = e.front().key.wrapped;
-        if (!other->isMarked(BLACK) || other->isMarked(GRAY)) {
+        if (kind == CrossCompartmentKey::ObjectWrapper) {
+            /*
+             * Add edge to wrapped object compartment if wrapped object is not
+             * marked black to indicate that wrapper compartment not be swept
+             * after wrapped compartment.
+             */
+            if (!other->isMarked(BLACK) || other->isMarked(GRAY)) {
+                JSCompartment *w = other->compartment();
+                if (w->isGCMarking())
+                    finder.addEdgeTo(w);
+            }
+        } else {
+            JS_ASSERT(kind == CrossCompartmentKey::DebuggerScript ||
+                      kind == CrossCompartmentKey::DebuggerObject ||
+                      kind == CrossCompartmentKey::DebuggerEnvironment);
+            /*
+             * Add edge for debugger object wrappers, to ensure (in conjuction
+             * with call to Debugger::findCompartmentEdges below) that debugger
+             * and debuggee objects are always swept in the same group.
+             */
             JSCompartment *w = other->compartment();
             if (w->isGCMarking())
                 finder.addEdgeTo(w);
@@ -3002,11 +3026,13 @@ GrayLinkSlot(RawObject o)
     return IsCrossCompartmentWrapper(o) ? JSSLOT_GC_GRAY_LINK : Debugger::gcGrayLinkSlot();
 }
 
+#ifdef DEBUG
 static void
 AssertNotOnGrayList(RawObject o)
 {
     JS_ASSERT_IF(IsGrayListObject(o), o->getReservedSlot(GrayLinkSlot(o)).isUndefined());
 }
+#endif
 
 static Cell *
 CrossCompartmentPointerReferent(RawObject o)
@@ -3225,29 +3251,6 @@ EndMarkingCompartmentGroup(JSRuntime *rt)
 #endif
 
     JS_ASSERT(rt->gcMarker.isDrained());
-
-    {
-        gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_FIND_BLACK_GRAY);
-
-        /*
-         * Having black->gray edges violates our promise to the cycle
-         * collector. This can happen if we're collecting a compartment and it has
-         * an edge to an uncollected compartment: it's possible that the source and
-         * destination of the cross-compartment edge should be gray, but the source
-         * was marked black by the conservative scanner.
-         */
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
-                Cell *dst = e.front().key.wrapped;
-                Cell *src = ToMarkable(e.front().value);
-                JS_ASSERT(src->compartment() == c);
-                if (IsCellMarked(&src) && !src->isMarked(GRAY) && dst->isMarked(GRAY)) {
-                    JS_ASSERT(!dst->compartment()->isCollecting());
-                    rt->gcFoundBlackGrayEdges = true;
-                }
-            }
-        }
-    }
 }
 
 static void
@@ -3382,7 +3385,7 @@ BeginSweepPhase(JSRuntime *rt)
     JS_ASSERT(!rt->gcCompartmentGroup);
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         JS_ASSERT(!c->gcIncomingGrayPointers);
-        for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             if (e.front().key.kind != CrossCompartmentKey::StringWrapper)
                 AssertNotOnGrayList(&e.front().value.get().toObject());
         }
@@ -3515,8 +3518,13 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
                 break;
             }
         }
+
         if (rt->gcFinalizeCallback)
             rt->gcFinalizeCallback(&fop, JSFINALIZE_COLLECTION_END, !isFull);
+
+        /* If we finished a full GC, then the gray bits are correct. */
+        if (isFull)
+            rt->gcGrayBitsValid = true;
     }
 
     /* Set up list of compartments for sweeping of background things. */
@@ -3551,7 +3559,7 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
         JS_ASSERT(!c->gcIncomingGrayPointers);
         JS_ASSERT(!c->gcLiveArrayBuffers);
 
-        for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             if (e.front().key.kind != CrossCompartmentKey::StringWrapper)
                 AssertNotOnGrayList(&e.front().value.get().toObject());
         }
@@ -3816,7 +3824,11 @@ IncrementalCollectSlice(JSRuntime *rt,
     switch (rt->gcIncrementalState) {
 
       case MARK_ROOTS:
-        BeginMarkPhase(rt);
+        if (!BeginMarkPhase(rt)) {
+            rt->gcIncrementalState = NO_INCREMENTAL;
+            return;
+        }
+
         if (rt->hasContexts())
             PushZealSelectedObjects(rt);
 

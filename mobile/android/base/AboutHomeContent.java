@@ -742,8 +742,8 @@ public class AboutHomeContent extends ScrollView
             // Just using getWidth() will use incorrect values during onMeasure when rotating the device
             // Instead we pass in the measuredWidth, which is correct
             int w = getColumnWidth(measuredWidth);
-            Tabs.setThumbnailWidth(w);
-            heightMeasureSpec = MeasureSpec.makeMeasureSpec((int)(w*Tabs.getThumbnailAspectRatio()*numRows) + getPaddingTop() + getPaddingBottom(),
+            ThumbnailHelper.getInstance().setThumbnailWidth(w);
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec((int)(w*ThumbnailHelper.THUMBNAIL_ASPECT_RATIO*numRows) + getPaddingTop() + getPaddingBottom(),
                                                                  MeasureSpec.EXACTLY);
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
@@ -771,7 +771,7 @@ public class AboutHomeContent extends ScrollView
         public void bindView(View view, Context context, Cursor cursor) {
             super.bindView(view, context, cursor);
             view.setLayoutParams(new AbsListView.LayoutParams(mTopSitesGrid.getColumnWidth(),
-                                                            Math.round(mTopSitesGrid.getColumnWidth()*Tabs.getThumbnailAspectRatio())));
+                                                            Math.round(mTopSitesGrid.getColumnWidth()*ThumbnailHelper.THUMBNAIL_ASPECT_RATIO)));
         }
     }
 
