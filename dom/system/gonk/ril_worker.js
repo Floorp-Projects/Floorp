@@ -693,6 +693,13 @@ let RIL = {
    */
   preferredNetworkType: null,
 
+  /**
+   * Parsed Cell Broadcast search lists.
+   * cellBroadcastConfigs.MMI should be preserved over rild reset.
+   */
+  cellBroadcastConfigs: null,
+  mergedCellBroadcastConfig: null,
+
   _receivedSmsCbPagesMap: {},
 
   initRILState: function initRILState() {
@@ -799,6 +806,14 @@ let RIL = {
     * Regular expresion to parse MMI codes.
     */
     this._mmiRegExp = null;
+
+    /**
+     * Cell Broadcast Search Lists.
+     */
+    let cbmmi = this.cellBroadcastConfigs && this.cellBroadcastConfigs.MMI;
+    this.cellBroadcastConfigs = {
+      MMI: cbmmi || null
+    };
   },
   
   get muted() {
@@ -2428,6 +2443,56 @@ let RIL = {
     Buf.writeUint32(2);
     Buf.writeUint32(success ? 1 : 0);
     Buf.writeUint32(cause);
+    Buf.sendParcel();
+  },
+
+  setCellBroadcastSearchList: function setCellBroadcastSearchList(options) {
+    try {
+      let str = options.searchListStr;
+      this.cellBroadcastConfigs.MMI = this._convertCellBroadcastSearchList(str);
+    } catch (e) {
+      if (DEBUG) {
+        debug("Invalid Cell Broadcast search list: " + e);
+      }
+      options.rilRequestError = ERROR_GENERIC_FAILURE;
+      this.sendDOMMessage(options);
+      return;
+    }
+
+    this._mergeAllCellBroadcastConfigs();
+  },
+
+  updateCellBroadcastConfig: function updateCellBroadcastConfig() {
+    let activate = (this.mergedCellBroadcastConfig != null)
+                   && (this.mergedCellBroadcastConfig.length > 0);
+    if (activate) {
+      this.setGsmSmsBroadcastConfig(this.mergedCellBroadcastConfig);
+    } else {
+      // It's unnecessary to set config first if we're deactivating.
+      this.setGsmSmsBroadcastActivation(false);
+    }
+  },
+
+  setGsmSmsBroadcastConfig: function setGsmSmsBroadcastConfig(config) {
+    Buf.newParcel(REQUEST_GSM_SET_BROADCAST_SMS_CONFIG);
+
+    let numConfigs = config ? config.length / 2 : 0;
+    Buf.writeUint32(numConfigs);
+    for (let i = 0; i < config.length;) {
+      Buf.writeUint32(config[i++]);
+      Buf.writeUint32(config[i++]);
+      Buf.writeUint32(0x00);
+      Buf.writeUint32(0xFF);
+      Buf.writeUint32(1);
+    }
+
+    Buf.sendParcel();
+  },
+
+  setGsmSmsBroadcastActivation: function setGsmSmsBroadcastActivation(activate) {
+    Buf.newParcel(REQUEST_GSM_SMS_BROADCAST_ACTIVATION);
+    Buf.writeUint32(1);
+    Buf.writeUint32(activate ? 1 : 0);
     Buf.sendParcel();
   },
 
@@ -4531,6 +4596,182 @@ let RIL = {
     return options;
   },
 
+  _mergeCellBroadcastConfigs: function _mergeCellBroadcastConfigs(list, from, to) {
+    if (!list) {
+      return [from, to];
+    }
+
+    for (let i = 0, f1, t1; i < list.length;) {
+      f1 = list[i++];
+      t1 = list[i++];
+      if (to == f1) {
+        // ...[from]...[to|f1]...(t1)
+        list[i - 2] = from;
+        return list;
+      }
+
+      if (to < f1) {
+        // ...[from]...(to)...[f1] or ...[from]...(to)[f1]
+        if (i > 2) {
+          // Not the first range pair, merge three arrays.
+          return list.slice(0, i - 2).concat([from, to]).concat(list.slice(i - 2));
+        } else {
+          return [from, to].concat(list);
+        }
+      }
+
+      if (from > t1) {
+        // ...[f1]...(t1)[from] or ...[f1]...(t1)...[from]
+        continue;
+      }
+
+      // Have overlap or merge-able adjacency with [f1]...(t1). Replace it
+      // with [min(from, f1)]...(max(to, t1)).
+
+      let changed = false;
+      if (from < f1) {
+        // [from]...[f1]...(t1) or [from][f1]...(t1)
+        // Save minimum from value.
+        list[i - 2] = from;
+        changed = true;
+      }
+
+      if (to <= t1) {
+        // [from]...[to](t1) or [from]...(to|t1)
+        // Can't have further merge-able adjacency. Return.
+        return list;
+      }
+
+      // Try merging possible next adjacent range.
+      let j = i;
+      for (let f2, t2; j < list.length;) {
+        f2 = list[j++];
+        t2 = list[j++];
+        if (to > t2) {
+          // [from]...[f2]...[t2]...(to) or [from]...[f2]...[t2](to)
+          // Merge next adjacent range again.
+          continue;
+        }
+
+        if (to < t2) {
+          if (to < f2) {
+            // [from]...(to)[f2] or [from]...(to)...[f2]
+            // Roll back and give up.
+            j -= 2;
+          } else if (to < t2) {
+            // [from]...[to|f2]...(t2), or [from]...[f2]...[to](t2)
+            // Merge to [from]...(t2) and give up.
+            to = t2;
+          }
+        }
+
+        break;
+      }
+
+      // Save maximum to value.
+      list[i - 1] = to;
+
+      if (j != i) {
+        // Remove merged adjacent ranges.
+        let ret = list.slice(0, i);
+        if (j < list.length) {
+          ret = ret.concat(list.slice(j));
+        }
+        return ret;
+      }
+
+      return list;
+    }
+
+    // Append to the end.
+    list.push(from);
+    list.push(to);
+
+    return list;
+  },
+
+  /**
+   * Merge all members of cellBroadcastConfigs into mergedCellBroadcastConfig.
+   */
+  _mergeAllCellBroadcastConfigs: function _mergeAllCellBroadcastConfigs() {
+    if (DEBUG) {
+      debug("Cell Broadcast search lists: " + JSON.stringify(this.cellBroadcastConfigs));
+    }
+
+    let list = null;
+    for each (let ll in this.cellBroadcastConfigs) {
+      if (ll == null) {
+        continue;
+      }
+
+      for (let i = 0; i < ll.length; i += 2) {
+        list = this._mergeCellBroadcastConfigs(list, ll[i], ll[i + 1]);
+      }
+    }
+
+    if (DEBUG) {
+      debug("Cell Broadcast search lists(merged): " + JSON.stringify(list));
+    }
+    this.mergedCellBroadcastConfig = list;
+    this.updateCellBroadcastConfig();
+  },
+
+  /**
+   * Check whether search list from settings is settable by MMI, that is,
+   * whether the range is bounded in any entries of CB_NON_MMI_SETTABLE_RANGES.
+   */
+  _checkCellBroadcastMMISettable: function _checkCellBroadcastMMISettable(from, to) {
+    if ((to <= from) || (from >= 65536) || (from < 0)) {
+      return false;
+    }
+
+    for (let i = 0, f, t; i < CB_NON_MMI_SETTABLE_RANGES.length;) {
+      f = CB_NON_MMI_SETTABLE_RANGES[i++];
+      t = CB_NON_MMI_SETTABLE_RANGES[i++];
+      if ((from < t) && (to > f)) {
+        // Have overlap.
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
+   * Convert Cell Broadcast settings string into search list.
+   */
+  _convertCellBroadcastSearchList: function _convertCellBroadcastSearchList(searchListStr) {
+    let parts = searchListStr && searchListStr.split(",");
+    if (!parts) {
+      return null;
+    }
+
+    let list = null;
+    let result, from, to;
+    for (let range of parts) {
+      // Match "12" or "12-34". The result will be ["12", "12", null] or
+      // ["12-34", "12", "34"].
+      result = range.match(/^(\d+)(?:-(\d+))?$/);
+      if (!result) {
+        throw "Invalid format";
+      }
+
+      from = parseInt(result[1]);
+      to = (result[2] != null) ? parseInt(result[2]) + 1 : from + 1;
+      if (!this._checkCellBroadcastMMISettable(from, to)) {
+        throw "Invalid range";
+      }
+
+      if (list == null) {
+        list = [];
+      }
+      list.push(from);
+      list.push(to);
+    }
+
+    return list;
+  },
+
   /**
    * Handle incoming messages from the main UI thread.
    *
@@ -5388,7 +5629,11 @@ RIL[REQUEST_CDMA_VALIDATE_AND_WRITE_AKEY] = null;
 RIL[REQUEST_CDMA_SEND_SMS] = null;
 RIL[REQUEST_CDMA_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GSM_GET_BROADCAST_SMS_CONFIG] = null;
-RIL[REQUEST_GSM_SET_BROADCAST_SMS_CONFIG] = null;
+RIL[REQUEST_GSM_SET_BROADCAST_SMS_CONFIG] = function REQUEST_GSM_SET_BROADCAST_SMS_CONFIG(length, options) {
+  if (options.rilRequestError == ERROR_SUCCESS) {
+    this.setGsmSmsBroadcastActivation(true);
+  }
+};
 RIL[REQUEST_GSM_SMS_BROADCAST_ACTIVATION] = null;
 RIL[REQUEST_CDMA_GET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_CDMA_SET_BROADCAST_SMS_CONFIG] = null;
@@ -5478,6 +5723,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
       this.getIMEISV();
     }
     this.getBasebandVersion();
+    this.updateCellBroadcastConfig();
   }
 
   this.radioState = newState;

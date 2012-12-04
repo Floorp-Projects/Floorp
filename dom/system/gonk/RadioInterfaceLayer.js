@@ -52,6 +52,7 @@ const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
 const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
+const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
 
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
@@ -270,6 +271,10 @@ function RadioInterfaceLayer() {
   // Read the 'time.nitz.automatic-update.enabled' setting to see if
   // we need to adjust the system clock time and time zone by NITZ.
   lock.get(kTimeNitzAutomaticUpdateEnabled, this);
+
+  // Read the Cell Broadcast Search List setting, string of integers or integer
+  // ranges separated by comma, to set listening channels.
+  lock.get(kCellBroadcastSearchList, this);
 
   this._messageManagerByRequest = {};
 
@@ -623,6 +628,9 @@ RadioInterfaceLayer.prototype = {
       case "setCallForward":
         this.handleSetCallForward(message);
         break;
+      case "setCellBroadcastSearchList":
+        this.handleSetCellBroadcastSearchList(message);
+        break;
       default:
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
@@ -914,6 +922,27 @@ RadioInterfaceLayer.prototype = {
     this._preferredNetworkType = message.networkType;
     debug("_preferredNetworkType is now " +
           RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType]);
+  },
+
+  setCellBroadcastSearchList: function setCellBroadcastSearchList(newSearchListStr) {
+    if (newSearchListStr == this._cellBroadcastSearchListStr) {
+      return;
+    }
+
+    this.worker.postMessage({
+      rilMessageType: "setCellBroadcastSearchList",
+      searchListStr: newSearchListStr
+    });
+  },
+
+  handleSetCellBroadcastSearchList: function handleSetCellBroadcastSearchList(message) {
+    if (message.rilRequestError != RIL.ERROR_SUCCESS) {
+      let lock = gSettingsService.createLock();
+      lock.set(kCellBroadcastSearchList, this._cellBroadcastSearchListStr, null);
+      return;
+    }
+
+    this._cellBroadcastSearchListStr = message.searchListStr;
   },
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
@@ -1656,6 +1685,9 @@ RadioInterfaceLayer.prototype = {
   // the network immediately when users enable network-based time.
   _lastNitzMessage: null,
 
+  // Cell Broadcast settings values.
+  _cellBroadcastSearchListStr: null,
+
   // nsISettingsServiceCallback
   handle: function handle(aName, aResult) {
     switch(aName) {
@@ -1716,6 +1748,10 @@ RadioInterfaceLayer.prototype = {
         if (this._nitzAutomaticUpdateEnabled && this._lastNitzMessage) {
           this.setNitzTime(this._lastNitzMessage);
         }
+        break;
+      case kCellBroadcastSearchList:
+        debug("'" + kCellBroadcastSearchList + "' is now " + aResult);
+        this.setCellBroadcastSearchList(aResult);
         break;
     };
   },
