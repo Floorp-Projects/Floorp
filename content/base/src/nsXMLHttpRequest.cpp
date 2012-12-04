@@ -78,6 +78,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
+#include "nsIHttpChannelInternal.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsStreamListenerWrapper.h"
@@ -2963,6 +2964,15 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   // Blocking gets are common enough out of XHR that we should mark
   // the channel slow by default for pipeline purposes
   AddLoadFlags(mChannel, nsIRequest::INHIBIT_PIPELINE);
+
+  nsCOMPtr<nsIHttpChannelInternal>
+    internalHttpChannel(do_QueryInterface(mChannel));
+  if (internalHttpChannel) {
+    // we never let XHR be blocked by head CSS/JS loads to avoid
+    // potential deadlock where server generation of CSS/JS requires
+    // an XHR signal.
+    internalHttpChannel->SetLoadUnblocked(true);
+  }
 
   if (!IsSystemXHR()) {
     // Always create a nsCORSListenerProxy here even if it's
