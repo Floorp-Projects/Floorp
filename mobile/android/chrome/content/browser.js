@@ -5112,8 +5112,11 @@ var ViewportHandler = {
     let width = this.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth);
     let height = this.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight);
 
+    // Allow zoom unless explicity disabled or minScale and maxScale are equal.
+    // WebKit allows 0, "no", or "false" for viewport-user-scalable.
+    // Note: NaN != NaN. Therefore if minScale and maxScale are undefined the clause has no effect.
     let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
-    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr); // WebKit allows 0, "no", or "false"
+    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr) && (minScale != maxScale);
 
     if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
       // Only check for HandheldFriendly if we don't have a viewport meta tag
