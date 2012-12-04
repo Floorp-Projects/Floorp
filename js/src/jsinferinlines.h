@@ -703,7 +703,7 @@ UseNewTypeForClone(JSFunction *fun)
      * instance a singleton type and clone the underlying script.
      */
 
-    RawScript script = fun->nonLazyScript().get(nogc);
+    UnrootedScript script = fun->nonLazyScript();
 
     if (script->length >= 50)
         return false;
@@ -905,7 +905,7 @@ TypeScript::GetPcScript(JSContext *cx, MutableHandleScript script, jsbytecode **
         return;
     }
 #endif
-    script.set(cx->fp()->script().get(nogc));
+    script.set(cx->fp()->script());
     *pc = cx->regs().pc;
 }
 
