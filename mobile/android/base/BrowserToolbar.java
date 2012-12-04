@@ -68,8 +68,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private boolean mAnimateSiteSecurity;
     private GeckoImageButton mTabs;
     private int mTabsPaneWidth;
-    private ImageView mBack;
-    private ImageView mForward;
+    private ImageButton mBack;
+    private ImageButton mForward;
     public ImageButton mFavicon;
     public ImageButton mStop;
     public ImageButton mSiteSecurity;
@@ -996,6 +996,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             ((GeckoTextView) mTabsCount.getCurrentView()).setPrivateMode(tab.isPrivate());
             mTitle.setPrivateMode(tab.isPrivate());
             mMenu.setPrivateMode(tab.isPrivate());
+
+            if (mBack instanceof BackButton)
+                ((BackButton) mBack).setPrivateMode(tab.isPrivate());
+
+            if (mForward instanceof ForwardButton)
+                ((ForwardButton) mForward).setPrivateMode(tab.isPrivate());
         }
     }
 

@@ -9,10 +9,22 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
+XPCOMUtils.defineLazyServiceGetter(this, "uuidGenerator",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
 XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
   return Cc["@mozilla.org/childprocessmessagemanager;1"]
            .getService(Ci.nsIMessageSender);
 });
+
+function debug(str) {
+  dump("=*= AlertsService.js : " + str + "\n");
+}
 
 // -----------------------------------------------------------------------
 // Alerts Service
@@ -20,7 +32,6 @@ XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
 
 function AlertsService() {
   cpmm.addMessageListener("app-notification-return", this);
-  this._id = 0;
 }
 
 AlertsService.prototype = {
@@ -43,43 +54,67 @@ AlertsService.prototype = {
   },
 
   // nsIAppNotificationService
-  _listeners: [],
-
-  receiveMessage: function receiveMessage(aMessage) {
-    let data = aMessage.data;
-    if (aMessage.name !== "app-notification-return" ||
-        !this._listeners[data.id]) {
-      return;
-    }
-
-    let obs = this._listeners[data.id];
-    let topic = data.type == "desktop-notification-click" ? "alertclickcallback"
-                                                          : "alertfinished";
-    obs.observe(null, topic, null);
-
-    // we're done with this notification
-    if (topic === "alertfinished")
-      delete this._listeners[data.id];
-  },
-
-  // This method is called in the content process, so we remote the call
-  // to shell.js
   showAppNotification: function showAppNotification(aImageURL,
                                                     aTitle,
                                                     aText,
                                                     aTextClickable,
                                                     aManifestURL,
                                                     aAlertListener) {
-    let id = "app-notif" + this._id++;
-    this._listeners[id] = aAlertListener;
+    let uid = "app-notif-" + uuidGenerator.generateUUID();
+
+    this._listeners[uid] = {
+      observer: aAlertListener,
+      title: aTitle,
+      text: aText,
+      manifestURL: aManifestURL,
+      imageURL: aImageURL
+    };
+
     cpmm.sendAsyncMessage("app-notification-send", {
       imageURL: aImageURL,
       title: aTitle,
       text: aText,
       textClickable: aTextClickable,
       manifestURL: aManifestURL,
-      id: id
+      uid: uid
     });
+  },
+
+  // AlertsService.js custom implementation
+  _listeners: [],
+
+  receiveMessage: function receiveMessage(aMessage) {
+    let data = aMessage.data;
+    let listener = this._listeners[data.uid];
+    if (aMessage.name !== "app-notification-return" || !listener) {
+      return;
+    }
+
+    let topic = data.topic;
+
+    try {
+      listener.observer.observe(null, topic, null);
+    } catch (e) {
+      // It seems like there is no callbacks anymore, forward the click on
+      // notification via a system message containing the title/text/icon of
+      // the notification so the app get a change to react.
+      if (data.target) {
+        gSystemMessenger.sendMessage("notification", {
+            title: listener.title,
+            body: listener.text,
+            imageURL: listener.imageURL
+          },
+          Services.io.newURI(data.target, null, null),
+          Services.io.newURI(listener.manifestURL, null, null));
+      }
+
+      cpmm.sendAsyncMessage("app-notification-sysmsg-request", listener);
+    }
+
+    // we're done with this notification
+    if (topic === "alertfinished") {
+      delete this._listeners[data.uid];
+    }
   }
 };
 

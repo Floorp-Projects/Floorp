@@ -136,16 +136,12 @@ xpc_IsGrayGCThing(void *thing)
 extern JSBool
 xpc_GCThingIsGrayCCThing(void *thing);
 
-// Implemented in nsXPConnect.cpp.
-extern void
-xpc_UnmarkGrayGCThingRecursive(void *thing, JSGCTraceKind kind);
-
 // Unmark gray for known-nonnull cases
 MOZ_ALWAYS_INLINE void
 xpc_UnmarkNonNullGrayObject(JSObject *obj)
 {
     if (xpc_IsGrayGCThing(obj))
-        xpc_UnmarkGrayGCThingRecursive(obj, JSTRACE_OBJECT);
+        js::UnmarkGrayGCThingRecursively(obj, JSTRACE_OBJECT);
     else if (js::IsIncrementalBarrierNeededOnObject(obj))
         js::IncrementalReferenceBarrier(obj);
 }
@@ -165,7 +161,7 @@ xpc_UnmarkGrayScript(JSScript *script)
 {
     if (script) {
         if (xpc_IsGrayGCThing(script))
-            xpc_UnmarkGrayGCThingRecursive(script, JSTRACE_SCRIPT);
+            js::UnmarkGrayGCThingRecursively(script, JSTRACE_SCRIPT);
         else if (js::IsIncrementalBarrierNeededOnScript(script))
             js::IncrementalReferenceBarrier(script);
     }

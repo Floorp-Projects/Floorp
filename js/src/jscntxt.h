@@ -650,6 +650,12 @@ struct JSRuntime : js::RuntimeFriendFields
     bool                gcShouldCleanUpEverything;
 
     /*
+     * The gray bits can become invalid if UnmarkGray overflows the stack. A
+     * full GC will reset this bit, since it fills in all the gray bits.
+     */
+    bool                gcGrayBitsValid;
+
+    /*
      * These flags must be kept separate so that a thread requesting a
      * compartment GC doesn't cancel another thread's concurrent request for a
      * full GC.

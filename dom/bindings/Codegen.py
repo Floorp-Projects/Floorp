@@ -2492,7 +2492,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         templateBody = ""
         if descriptor.castable:
-            if descriptor.prefable:
+            if descriptor.prefable and not descriptor.hasXPConnectImpls:
                 raise TypeError("We don't support prefable castable object "
                                 "arguments (like %s), because we don't know "
                                 "how to handle them being preffed off" %
@@ -3205,7 +3205,7 @@ if (!returnArray) {
             wrap = "%s(cx, ${obj}, %s, ${jsvalPtr})" % (wrapMethod, result)
             # We don't support prefable stuff in workers.
             assert(not descriptor.prefable or not descriptor.workers)
-            if not descriptor.prefable:
+            if not descriptor.prefable and not descriptor.hasXPConnectImpls:
                 # Non-prefable bindings can only fail to wrap as a new-binding object
                 # if they already threw an exception.  Same thing for
                 # non-prefable bindings.
