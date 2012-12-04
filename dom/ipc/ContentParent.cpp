@@ -1833,9 +1833,6 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
 bool
 ContentParent::RecvAddGeolocationListener()
 {
-  if (!AssertAppProcessPermission(this, "geolocation")) {
-    return false;
-  }
   if (mGeolocationWatchID == -1) {
     nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
     if (!geo) {
@@ -1850,28 +1847,20 @@ ContentParent::RecvAddGeolocationListener()
 bool
 ContentParent::RecvRemoveGeolocationListener()
 {
-  if (mGeolocationWatchID == -1) {
-    return true;
+  if (mGeolocationWatchID != -1) {
+    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+    if (!geo) {
+      return true;
+    }
+    geo->ClearWatch(mGeolocationWatchID);
+    mGeolocationWatchID = -1;
   }
-
-  if (!AssertAppProcessPermission(this, "geolocation")) {
-    return false;
-  }
-  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-  if (!geo) {
-    return true;
-  }
-  geo->ClearWatch(mGeolocationWatchID);
-  mGeolocationWatchID = -1;
   return true;
 }
 
 NS_IMETHODIMP
 ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
-  if (!AssertAppProcessPermission(this, "geolocation")) {
-    return NS_ERROR_FAILURE;
-  }
   unused << SendGeolocationUpdate(GeoPosition(postion));
   return NS_OK;
 }
