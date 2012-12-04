@@ -464,6 +464,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Autoplay, autoplay)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Loop, loop)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, DefaultMuted, muted)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, Preload, preload, NULL)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, MozAudioChannelType, mozaudiochannel, "normal")
 
 NS_IMETHODIMP
 nsHTMLMediaElement::GetMozSrcObject(JSContext* aCtx, jsval *aParams)
@@ -1934,9 +1935,9 @@ nsHTMLMediaElement::WakeLockBoolWrapper& nsHTMLMediaElement::WakeLockBoolWrapper
 }
 
 bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
-                                          nsIAtom* aAttribute,
-                                          const nsAString& aValue,
-                                          nsAttrValue& aResult)
+                                        nsIAtom* aAttribute,
+                                        const nsAString& aValue,
+                                        nsAttrValue& aResult)
 {
   // Mappings from 'preload' attribute strings to an enumeration.
   static const nsAttrValue::EnumTable kPreloadTable[] = {
@@ -1944,6 +1945,17 @@ bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
     { "none",     nsHTMLMediaElement::PRELOAD_ATTR_NONE },
     { "metadata", nsHTMLMediaElement::PRELOAD_ATTR_METADATA },
     { "auto",     nsHTMLMediaElement::PRELOAD_ATTR_AUTO },
+    { 0 }
+  };
+
+  // Mappings from 'mozaudiochannel' attribute strings to an enumeration.
+  static const nsAttrValue::EnumTable kMozAudioChannelAttributeTable[] = {
+    { "normal",             AUDIO_CHANNEL_NORMAL },
+    { "content",            AUDIO_CHANNEL_CONTENT },
+    { "notification",       AUDIO_CHANNEL_NOTIFICATION },
+    { "alarm",              AUDIO_CHANNEL_ALARM },
+    { "telephony",          AUDIO_CHANNEL_TELEPHONY },
+    { "publicnotification", AUDIO_CHANNEL_PUBLICNOTIFICATION },
     { 0 }
   };
 
@@ -1958,10 +1970,50 @@ bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::preload) {
       return aResult.ParseEnumValue(aValue, kPreloadTable, false);
     }
+
+    if (aAttribute == nsGkAtoms::mozaudiochannel) {
+      bool parsed = aResult.ParseEnumValue(aValue, kMozAudioChannelAttributeTable, false,
+                                           &kMozAudioChannelAttributeTable[0]);
+      if (!parsed) {
+        return false;
+      }
+
+      AudioChannelType audioChannelType = static_cast<AudioChannelType>(aResult.GetEnumValue());
+
+      if (audioChannelType != mAudioChannelType &&
+          !mDecoder &&
+          CheckAudioChannelPermissions(aValue)) {
+        mAudioChannelType = audioChannelType;
+      }
+
+      return true;
+    }
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);
+}
+
+bool nsHTMLMediaElement::CheckAudioChannelPermissions(const nsAString& aString)
+{
+#ifdef MOZ_B2G
+  // Only normal channel doesn't need permission.
+  if (!aString.EqualsASCII("normal")) {
+    nsCOMPtr<nsIPermissionManager> permissionManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    if (!permissionManager) {
+      return false;
+    }
+
+    uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
+    permissionManager->TestExactPermissionFromPrincipal(NodePrincipal(),
+      nsCString(NS_LITERAL_CSTRING("audio-channel-") + NS_ConvertUTF16toUTF8(aString)).get(), &perm);
+    if (perm != nsIPermissionManager::ALLOW_ACTION) {
+      return false;
+    }
+  }
+#endif
+  return true;
 }
 
 void nsHTMLMediaElement::DoneCreatingElement()
@@ -3436,78 +3488,6 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch)
 {
   mPreservesPitch = aPreservesPitch;
   mDecoder->SetPreservesPitch(aPreservesPitch);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLMediaElement::GetMozAudioChannelType(nsAString& aString)
-{
-  switch (mAudioChannelType) {
-    case AUDIO_CHANNEL_NORMAL:
-      aString.AssignLiteral("normal");
-      break;
-    case AUDIO_CHANNEL_CONTENT:
-      aString.AssignLiteral("content");
-      break;
-    case AUDIO_CHANNEL_NOTIFICATION:
-      aString.AssignLiteral("notification");
-      break;
-    case AUDIO_CHANNEL_ALARM:
-      aString.AssignLiteral("alarm");
-      break;
-    case AUDIO_CHANNEL_TELEPHONY:
-      aString.AssignLiteral("telephony");
-      break;
-    case AUDIO_CHANNEL_PUBLICNOTIFICATION:
-      aString.AssignLiteral("publicnotification");
-      break;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLMediaElement::SetMozAudioChannelType(const nsAString& aString)
-{
-  // Only normal channel doesn't need permission.
-  if (!aString.EqualsASCII("normal")) {
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-    if (!permissionManager) {
-      return NS_ERROR_FAILURE;
-    }
-
-    uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
-    permissionManager->TestExactPermissionFromPrincipal(NodePrincipal(),
-      nsCString(NS_LITERAL_CSTRING("audio-channel-") + NS_ConvertUTF16toUTF8(aString)).get(), &perm);
-    if (perm != nsIPermissionManager::ALLOW_ACTION) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
-  }
-  // Then assign
-  AudioChannelType tmpType;
-
-  if (aString.EqualsASCII("normal")) {
-    tmpType = AUDIO_CHANNEL_NORMAL;
-  } else if (aString.EqualsASCII("content")) {
-    tmpType = AUDIO_CHANNEL_CONTENT;
-  } else if (aString.EqualsASCII("notification")) {
-    tmpType = AUDIO_CHANNEL_NOTIFICATION;
-  } else if (aString.EqualsASCII("alarm")) {
-    tmpType = AUDIO_CHANNEL_ALARM;
-  } else if (aString.EqualsASCII("telephony")) {
-    tmpType = AUDIO_CHANNEL_TELEPHONY;
-  } else if (aString.EqualsASCII("publicnotification")) {
-    tmpType = AUDIO_CHANNEL_PUBLICNOTIFICATION;
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (tmpType != mAudioChannelType && mDecoder) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mAudioChannelType = tmpType;
   return NS_OK;
 }
 
