@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<!-- There is, at present, no official xsd for (X)HTML5. A pity. Usefulness would depend on the parser and extensions made by the site.  -->
+<title>testcase</title>
+    <style type="text/css">
+* { margin: 0; padding: 0; }
+.hide { top: 80% !important; width: 75% !important;  height: 50% !important; }
+
+#details
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    border: 10mm dotted red;
+    border-radius: 100em;
+    background-color: lime;
+    height: 0%;
+    overflow: scroll;
+    -moz-transition-property: top width;
+    -moz-transition-duration: 0.75s;
+    opacity: 0.9;
+}
+
+    </style>
+</head>
+<body>
+
+
+<section id="details" class="hide">
+I'm a test of hiding animation
+<button onclick="this.parentNode.classList.add('hide')">Click me to hide</button>
+</section>
+
+<script>
+var x = document.getElementById('details');
+var kNumIterations = 5;
+var currentIteration = 0;
+
+function doe() {
+  x.classList.toggle('hide');
+  if (++currentIteration >= kNumIterations) {
+    clearInterval(inrval);
+    document.documentElement.removeAttribute('class');
+  }
+}
+var inrval = setInterval(doe, 800);
+</script>
+</body>
+</html>
