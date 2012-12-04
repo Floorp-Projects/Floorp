@@ -151,10 +151,12 @@ let DebuggerController = {
     }
 
     let client;
+
     // Remote debugging gets the debuggee from a RemoteTarget object.
     if (this._target && this._target.isRemote) {
-      client = this.client = this._target.client;
+      window._isRemoteDebugger = true;
 
+      client = this.client = this._target.client;
       this._target.on("close", this._onTabDetached);
       this._target.on("navigate", this._onTabNavigated);
 
@@ -167,13 +169,13 @@ let DebuggerController = {
       return;
     }
 
-    // Content debugging can connect directly to the page.
+    // Content or chrome debugging can connect directly to the debuggee.
     // TODO: convert this to use a TabTarget.
     let transport = window._isChromeDebugger
       ? debuggerSocketConnect(Prefs.remoteHost, Prefs.remotePort)
       : DebuggerServer.connectPipe();
-    client = this.client = new DebuggerClient(transport);
 
+    client = this.client = new DebuggerClient(transport);
     client.addListener("tabNavigated", this._onTabNavigated);
     client.addListener("tabDetached", this._onTabDetached);
 
@@ -201,11 +203,12 @@ let DebuggerController = {
     this.client.removeListener("tabNavigated", this._onTabNavigated);
     this.client.removeListener("tabDetached", this._onTabDetached);
 
-    if (!this._target.isRemote) {
+    // When remote debugging, the connection is closed by the RemoteTarget.
+    if (!window._isRemoteDebugger) {
       this.client.close();
-      this.client = null;
     }
 
+    this.client = null;
     this.tabClient = null;
     this.activeThread = null;
   },
@@ -235,8 +238,7 @@ let DebuggerController = {
    * @param object aTabGrip
    *        The remote protocol grip of the tab.
    */
-  _startDebuggingTab: function DC__startDebuggingTab
-      (aClient, aTabGrip, aCallback=function(){}) {
+  _startDebuggingTab: function DC__startDebuggingTab(aClient, aTabGrip, aCallback) {
     if (!aClient) {
       Cu.reportError("No client found!");
       return;
@@ -262,7 +264,9 @@ let DebuggerController = {
         this.SourceScripts.connect();
         aThreadClient.resume();
 
-        aCallback();
+        if (aCallback) {
+          aCallback();
+        }
       }.bind(this));
     }.bind(this));
   },
@@ -275,8 +279,7 @@ let DebuggerController = {
    * @param object aChromeDebugger
    *        The remote protocol grip of the chrome debugger.
    */
-  _startChromeDebugging: function DC__startChromeDebugging
-      (aClient, aChromeDebugger, aCallback=function(){}) {
+  _startChromeDebugging: function DC__startChromeDebugging(aClient, aChromeDebugger, aCallback) {
     if (!aClient) {
       Cu.reportError("No client found!");
       return;
@@ -295,7 +298,9 @@ let DebuggerController = {
       this.SourceScripts.connect();
       aThreadClient.resume();
 
-      aCallback();
+      if (aCallback) {
+        aCallback();
+      }
     }.bind(this));
   },
 

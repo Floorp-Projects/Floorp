@@ -627,7 +627,7 @@ FilterView.prototype = {
    * @param object aView
    */
   set target(aView) {
-    var placeholder = "";
+    let placeholder = "";
     switch (aView) {
       case DebuggerView.ChromeGlobals:
         placeholder = L10N.getFormatStr("emptyChromeGlobalsFilterText", [this._fileSearchKey]);
