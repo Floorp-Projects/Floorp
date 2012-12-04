@@ -72,6 +72,8 @@
 
 #include "ImageContainer.h"
 #include "nsIPowerManagerService.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 #ifdef MOZ_OGG
 #include "OggDecoder.h"
@@ -3364,10 +3366,10 @@ static double ClampPlaybackRate(double aPlaybackRate)
   if (aPlaybackRate == 0.0) {
     return aPlaybackRate;
   }
-  if (NS_ABS(aPlaybackRate) < MIN_PLAYBACKRATE) {
+  if (std::abs(aPlaybackRate) < MIN_PLAYBACKRATE) {
     return aPlaybackRate < 0 ? -MIN_PLAYBACKRATE : MIN_PLAYBACKRATE;
   }
-  if (NS_ABS(aPlaybackRate) > MAX_PLAYBACKRATE) {
+  if (std::abs(aPlaybackRate) > MAX_PLAYBACKRATE) {
     return aPlaybackRate < 0 ? -MAX_PLAYBACKRATE : MAX_PLAYBACKRATE;
   }
   return aPlaybackRate;
