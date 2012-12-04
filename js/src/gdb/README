@@ -163,14 +163,15 @@ them all); and OPTIONS are drawn from the list below.
   Build the C++ executable that GDB debugs to run the tests in BUILDDIR.
   If omitted, create a 'gdb-tests' subdirectory of LIBDIR.
 
-(If a path like LIBDIR or SRCDIR is relative, it is interpreted relative to
-the directory that was current when run-tests.py was executed, regardless
-of whatever changes to the current directory the test harness makes.)
+(It is safe to use relative paths for LIBDIR, SRCDIR, and so on. They are
+always interpreted relative to the directory that was current when
+run-tests.py was started.)
 
-For example, since I build in a subdirectory 'obj~' of the js/src directory, I
-use this command from js/src to run the pretty-printer unit tests:
+For example, since I build in a subdirectory 'obj~' of the 'js/src'
+directory, I use this command from 'js/src' to run the pretty-printer unit
+tests:
 
-  $ python gdb/run-tests.py --libdir=obj~
+  $ python gdb/run-tests.py obj~
 
 Writing new unit tests
 ----------------------
@@ -178,13 +179,13 @@ Writing new unit tests
 Each unit test consists of a Python script, possibly with some accompanying
 C++ code. Running tests works like this:
 
-- The run-tests.py script calls 'make' to compile all the '.cpp' files in
-  js/src/gdb/tests, and then links them with js/src/gdb/gdb-tests.cpp and
-  LIBDIR/libmozjs.so, producing a single executable file.
+- The run-tests.py script calls 'make' in 'BUILDDIR/gdb' to build
+  'gdb-tests'.
 
 - Then, for each '.py' test script in js/src/gdb/tests, the harness starts
-  GDB on the executable, and has it run js/src/gdb/lib-for-tests/prolog.py,
-  and then the given test script.
+  GDB on the 'gdb-tests' executable, and then has GDB run
+  js/src/gdb/lib-for-tests/prolog.py, passing it the test script's path as
+  its first command-line argument.
 
 Thanks To:
 ----------
