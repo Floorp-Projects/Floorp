@@ -929,6 +929,34 @@ this.GECKO_ICC_SERVICES = {
 };
 
 /**
+ * Cell Broadcast constants
+ */
+
+this.CB_FORMAT_GSM  = 0;
+this.CB_FORMAT_ETWS = 1;
+this.CB_FORMAT_CMAS = 2;
+this.CB_FORMAT_UMTS = 3;
+
+// GSM Cell Broadcast Geographical Scope
+// See 3GPP TS 23.041 clause 9.4.1.2.1
+this.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES = [
+  "cell-immediate",
+  "plmn",
+  "location-area",
+  "cell"
+];
+
+// ETWS Warning-Type
+// see 3GPP TS 23.041 clause 9.3.24
+this.CB_ETWS_WARNING_TYPE_NAMES = [
+  "earthquake",
+  "tsunami",
+  "earthquake-tsunami",
+  "test",
+  "other"
+];
+
+/**
  * GSM PDU constants
  */
 

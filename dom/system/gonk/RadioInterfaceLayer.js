@@ -96,6 +96,10 @@ const RIL_IPC_VOICEMAIL_MSG_NAMES = [
   "RIL:RegisterVoicemailMsg"
 ];
 
+const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
+  "RIL:RegisterCellBroadcastMsg"
+];
+
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
                                    "@mozilla.org/sms/smsservice;1",
                                    "nsISmsService");
@@ -283,6 +287,9 @@ function RadioInterfaceLayer() {
   for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
   }
+  for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
+    ppmm.addMessageListener(msgname, this);
+  }
   Services.obs.addObserver(this, "xpcom-shutdown", false);
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
   Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
@@ -341,6 +348,12 @@ RadioInterfaceLayer.prototype = {
       if (!msg.target.assertPermission("voicemail")) {
         debug("Voicemail message " + msg.name +
               " from a content process with no 'voicemail' privileges.");
+        return null;
+      }
+    } else if (RIL_IPC_CELLBROADCAST_MSG_NAMES.indexOf(msg.name) != -1) {
+      if (!msg.target.assertPermission("cellbroadcast")) {
+        debug("Cell Broadcast message " + msg.name +
+              " from a content process with no 'cellbroadcast' privileges.");
         return null;
       }
     } else {
@@ -453,6 +466,9 @@ RadioInterfaceLayer.prototype = {
         this.saveRequestTarget(msg);
         this.getCallForwardingOption(msg.json);
         break;
+      case "RIL:RegisterCellBroadcastMsg":
+        this.registerMessageTarget("cellbroadcast", msg.target);
+        break;
     }
   },
 
@@ -543,6 +559,11 @@ RadioInterfaceLayer.prototype = {
       case "sms-send-failed":
         this.handleSmsSendFailed(message);
         return;
+      case "cellbroadcast-received":
+        message.timestamp = Date.now();
+        this._sendTargetMessage("cellbroadcast", "RIL:CellBroadcastReceived",
+                                message);
+        break;
       case "datacallstatechange":
         this.handleDataCallState(message);
         break;
@@ -1581,6 +1602,9 @@ RadioInterfaceLayer.prototype = {
           ppmm.removeMessageListener(msgname, this);
         }
         for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
+          ppmm.removeMessageListener(msgname, this);
+        }
+        for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
           ppmm.removeMessageListener(msgname, this);
         }
         // Shutdown all RIL network interfaces
