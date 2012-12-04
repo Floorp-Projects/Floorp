@@ -20,8 +20,6 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
-import android.view.MotionEvent;
-import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
@@ -1084,30 +1082,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
             onLightweightThemeChanged();
-        }
-    }
-
-    private class TailTouchDelegate extends TouchDelegate {
-        public TailTouchDelegate(Rect bounds, View delegateView) {
-            super(bounds, delegateView);
-        }
-
-        @Override 
-        public boolean onTouchEvent(MotionEvent event) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    // Android bug 36445: Touch Delegation not reset on ACTION_DOWN.
-                    if (!super.onTouchEvent(event)) {
-                        MotionEvent cancelEvent = MotionEvent.obtain(event);
-                        cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
-                        super.onTouchEvent(cancelEvent);
-                        return false;
-                     } else {
-                        return true;
-                     }
-                default:
-                    return super.onTouchEvent(event);
-            }
         }
     }
 }
