@@ -55,14 +55,6 @@ clamped( const T& a, const T& min, const T& max )
 
 }
 
-template <class T>
-inline
-T
-NS_ABS( const T& a )
-  {
-    return a < 0 ? -a : a;
-  }
-
 template <class InputIterator, class T>
 inline
 uint32_t

@@ -30,6 +30,8 @@
 
 #include "nsMathMLOperators.h"
 #include "nsMathMLChar.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 
@@ -744,7 +746,7 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, uint32_t aHint)
   // or in sloppy markups without protective <mrow></mrow>
   bool isNormal =
     (aHint & NS_STRETCH_NORMAL)
-    && bool(float(NS_ABS(a - b))
+    && bool(float(std::abs(a - b))
               < (1.0f - NS_MATHML_DELIMITER_FACTOR) * float(b));
   // Nearer: True if 'a' is around max{ +/-10% of 'b' , 'b' - 5pt },
   // as documented in The TeXbook, Ch.17, p.152.
@@ -754,7 +756,7 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, uint32_t aHint)
     float c = NS_MAX(float(b) * NS_MATHML_DELIMITER_FACTOR,
                      float(b) - nsPresContext::
                      CSSPointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
-    isNearer = bool(float(NS_ABS(b - a)) <= (float(b) - c));
+    isNearer = bool(float(std::abs(b - a)) <= (float(b) - c));
   }
   // Smaller: Mainly for transitory use, to compare two candidate
   // choices
@@ -781,7 +783,7 @@ IsSizeBetter(nscoord a, nscoord olda, nscoord b, uint32_t aHint)
     return (a <= olda) ? (olda > b) : (a <= b);
 
   // XXXkt prob want log scale here i.e. 1.5 is closer to 1 than 0.5
-  return NS_ABS(a - b) < NS_ABS(olda - b);
+  return std::abs(a - b) < std::abs(olda - b);
 }
 
 // We want to place the glyphs even when they don't fit at their
