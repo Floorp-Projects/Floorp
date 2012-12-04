@@ -7,6 +7,8 @@
 #include "gfxImageSurface.h"
 #include "sampler.h"
 #include "gfxPlatform.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
@@ -361,7 +363,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     if (!aRegionToPaint.IsEmpty()) {
       break;
     }
-    if (NS_ABS(scrollDiffY) >= NS_ABS(scrollDiffX)) {
+    if (std::abs(scrollDiffY) >= std::abs(scrollDiffX)) {
       tileBounds.x += incX;
     } else {
       tileBounds.y += incY;

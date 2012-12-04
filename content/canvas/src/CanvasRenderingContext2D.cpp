@@ -97,6 +97,8 @@
 #include "nsHTMLImageElement.h"
 #include "nsHTMLVideoElement.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -3739,8 +3741,8 @@ CanvasRenderingContext2D::CreateImageData(JSContext* cx, double sw,
   int32_t wi = JS_DoubleToInt32(sw);
   int32_t hi = JS_DoubleToInt32(sh);
 
-  uint32_t w = NS_ABS(wi);
-  uint32_t h = NS_ABS(hi);
+  uint32_t w = std::abs(wi);
+  uint32_t h = std::abs(hi);
   return mozilla::dom::CreateImageData(cx, this, w, h, error);
 }
 

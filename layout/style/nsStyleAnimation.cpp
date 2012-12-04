@@ -22,10 +22,11 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "prlog.h"
-#include <math.h>
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
 #include "nsPrintfCString.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 
@@ -383,7 +384,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           // just like eUnit_Integer.
           int32_t startInt = aStartValue.GetIntValue();
           int32_t endInt = aEndValue.GetIntValue();
-          aDistance = NS_ABS(endInt - startInt);
+          aDistance = std::abs(endInt - startInt);
           return true;
         }
         default:
@@ -394,13 +395,13 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
         aStartValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
       int32_t endVal =
         aEndValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-      aDistance = NS_ABS(startVal - endVal);
+      aDistance = std::abs(startVal - endVal);
       return true;
     }
     case eUnit_Integer: {
       int32_t startInt = aStartValue.GetIntValue();
       int32_t endInt = aEndValue.GetIntValue();
-      aDistance = NS_ABS(endInt - startInt);
+      aDistance = std::abs(endInt - startInt);
       return true;
     }
     case eUnit_Coord: {
@@ -1293,7 +1294,7 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
   XYshear /= scaleY;
 
   // A*D - B*C should now be 1 or -1
-  NS_ASSERTION(0.99 < NS_ABS(A*D - B*C) && NS_ABS(A*D - B*C) < 1.01,
+  NS_ASSERTION(0.99 < std::abs(A*D - B*C) && std::abs(A*D - B*C) < 1.01,
                "determinant should now be 1 or -1");
   if (A * D < B * C) {
     A = -A;

@@ -28,6 +28,8 @@
 #include "nsIVariant.h"
 #include "nsStyleConsts.h"
 #include "nsAutoPtr.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 namespace mozilla {
 namespace dom {
@@ -1254,7 +1256,7 @@ public:
         (lineOrPageDeltaX > 0 && lineOrPageDeltaY < 0)) {
       return 0; // We cannot guess the answer in this case.
     }
-    return (NS_ABS(lineOrPageDeltaX) > NS_ABS(lineOrPageDeltaY)) ?
+    return (std::abs(lineOrPageDeltaX) > std::abs(lineOrPageDeltaY)) ?
              lineOrPageDeltaX : lineOrPageDeltaY;
   }
 
