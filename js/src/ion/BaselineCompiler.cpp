@@ -652,6 +652,52 @@ BaselineCompiler::emit_JSOP_SETELEM()
 }
 
 bool
+BaselineCompiler::emit_JSOP_GETGNAME()
+{
+    RootedPropertyName name(cx, script->getName(pc));
+
+    if (name == cx->names().undefined) {
+        frame.push(UndefinedValue());
+        return true;
+    }
+    if (name == cx->names().NaN) {
+        frame.push(cx->runtime->NaNValue);
+        return true;
+    }
+    if (name == cx->names().Infinity) {
+        frame.push(cx->runtime->positiveInfinityValue);
+        return true;
+    }
+
+    frame.syncStack(0);
+
+    // Allocate IC entry and stub.
+    ICGetName_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    if (!entry)
+        return false;
+
+    masm.movePtr(ImmGCPtr(&script->global()), R0.scratchReg());
+
+    // Call IC.
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    // Mark R0 as pushed stack value.
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_CALLGNAME()
+{
+    return emit_JSOP_GETGNAME();
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
     uint32_t local = GET_SLOTNO(pc);
