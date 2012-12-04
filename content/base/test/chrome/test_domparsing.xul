@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Test for the Mozilla extesion of the DOM Parsing and Serialization API"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=816410"
+     target="_blank">Mozilla Bug 816410</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript;version=1.7"><![CDATA[
+"use strict";
+/** Test for Bug 816410 **/
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+function throws(a, type, message) {
+  for (let fn of Array.isArray(a) ? a : [a]) {
+    try {
+      fn();
+      ok(false, message);
+    } catch (e) {
+      if (type) {
+        is(e.name, type, message);
+      } else {
+        ok(true, message);
+      }
+    }
+  }
+}
+
+// DOMParser constructor should not throw for null arguments
+new DOMParser(undefined);
+new DOMParser(null);
+
+throws([
+  function() { new DOMParser(false); },
+  function() { new DOMParser(0); },
+  function() { new DOMParser(""); },
+  function() { new DOMParser({}); },
+], "TypeError", "DOMParser constructor should throw for extra arguments");
+
+{
+  let parser = new DOMParser();
+  throws(function() {
+    parser.init();
+  }, "NS_ERROR_UNEXPECTED", "init method should throw when DOMParser is created by constructor");
+}
+
+// XMLSerializer constructor should not throw for extra arguments
+new XMLSerializer(undefined);
+new XMLSerializer(null);
+new XMLSerializer(false);
+new XMLSerializer(0);
+new XMLSerializer("");
+new XMLSerializer({});
+
+runTest(new DOMParser(), new XMLSerializer());
+
+{
+  let parser = Cc["@mozilla.org/xmlextras/domparser;1"]
+               .createInstance(Ci.nsIDOMParser);
+  parser.init();
+  throws(function() {
+    parser.init();
+  }, "NS_ERROR_UNEXPECTED", "init method should throw when called twice");
+}
+
+runTest(Cc["@mozilla.org/xmlextras/domparser;1"]
+        .createInstance(Ci.nsIDOMParser),
+        Cc["@mozilla.org/xmlextras/xmlserializer;1"]
+        .createInstance(Ci.nsIDOMSerializer));
+
+function runTest(parser, serializer) {
+  is(typeof parser.parseFromString, "function", "parseFromString should exist");
+  is(typeof parser.parseFromBuffer, "function", "parseFromBuffer should exist");
+  is(typeof parser.parseFromStream, "function", "parseFromStream should exist");
+  is(typeof parser.init, "function", "init should exist");
+
+  is(typeof serializer.serializeToString, "function", "serializeToString should exist");
+  is(typeof serializer.serializeToStream, "function", "serializeToStream should exist");
+
+  let tests = [
+    {input: "<html></html>", type: "text/html",
+     expected: '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body></body></html>'},
+    {input: "<xml></xml>", type: "text/xml", expected: "<xml/>"},
+    {input: "<xml></xml>", type: "application/xml", expected: "<xml/>"},
+    {input: "<html></html>", type: "application/xhtml+xml", expected: "<html/>"},
+    {input: "<svg></svg>", type: "image/svg+xml", expected: "<svg/>"},
+  ];
+  for (let t of tests) {
+    is(serializer.serializeToString(parser.parseFromString(t.input, t.type)), t.expected,
+       "parseFromString test for " + t.type);
+
+    let ostream = {
+      data: "",
+      write: function(buf, count) { this.data += buf; return count; }
+    };
+    serializer.serializeToStream(parser.parseFromString(t.input, t.type), ostream, "UTF-8");
+    is(ostream.data, t.expected, "serializeToStream test for " + t.type);
+
+    if (t.type === "text/html") {
+      // parseFromBuffer and parseFromStream don't support "text/html".
+      continue;
+    }
+
+    let array = Array.map(t.input, function(c) { return c.charCodeAt(c); });
+    let inputs = [
+      {array: array, name: "parseFromBuffer (array)"},
+      {array: new Uint8Array(array), name: "parseFromBuffer (Uint8Array)"},
+    ];
+    for (let input of inputs) {
+      let a = input.array;
+      is(serializer.serializeToString(parser.parseFromBuffer(a, a.length, t.type)), t.expected,
+         input.name + " test for " + t.type);
+      throws(function() {
+          parser.parseFromBuffer(a, a.length + 1, t.type);
+        }, "NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY",
+        input.name + " should throw if bufLen parameter is greater than actual length"
+      );
+    }
+
+    let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                 createInstance(Ci.nsIStringInputStream);
+    istream.setData(t.input, -1);
+    is(serializer.serializeToString(parser.parseFromStream(istream, null, array.length, t.type)),
+       t.expected, "parseFromStream test for " + t.type);
+  }
+  throws(function() {
+    parser.parseFromString("<xml></xml>", "foo/bar");
+  }, "TypeError", "parseFromString should throw for the unknown type");
+}
+  ]]></script>
+</window>
