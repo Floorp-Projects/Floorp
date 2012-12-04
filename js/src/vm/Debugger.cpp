@@ -24,6 +24,7 @@
 #include "methodjit/Retcon.h"
 #include "js/Vector.h"
 
+#include "gc/FindSCCs-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -1560,7 +1561,7 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
 }
 
 /* static */ void
-Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder &finder)
+Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder<JSCompartment> &finder)
 {
     /*
      * For debugger cross compartment wrappers, add edges in the opposite
@@ -1574,7 +1575,8 @@ Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder &fin
             continue;
         if (dbg->scripts.hasKeyInCompartment(comp) ||
             dbg->objects.hasKeyInCompartment(comp) ||
-            dbg->environments.hasKeyInCompartment(comp)) {
+            dbg->environments.hasKeyInCompartment(comp))
+        {
             finder.addEdgeTo(w);
         }
     }

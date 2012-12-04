@@ -451,6 +451,7 @@ class GCCompartmentsIter {
     JSCompartment *operator->() const { return get(); }
 };
 
+/* Iterates over all compartments in the current compartment group. */
 class GCCompartmentGroupIter {
   private:
     JSCompartment *current;
@@ -458,14 +459,14 @@ class GCCompartmentGroupIter {
   public:
     GCCompartmentGroupIter(JSRuntime *rt) {
         JS_ASSERT(rt->isHeapBusy());
-        current = rt->gcCompartmentGroup;
+        current = rt->gcCurrentCompartmentGroup;
     }
 
-    bool done() const { return current == NULL; }
+    bool done() const { return !current; }
 
     void next() {
         JS_ASSERT(!done());
-        current = NextGraphNode(current);
+        current = current->nextNodeInGroup();
     }
 
     JSCompartment *get() const {

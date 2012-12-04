@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FindSCCs.h"
-
 #include "jsfriendapi.h"
+
+#include "gc/FindSCCs.h"
 
 namespace js {
 namespace gc {
 
-ComponentFinder::ComponentFinder(uintptr_t sl)
+template<class Node>
+ComponentFinder<Node>::ComponentFinder(uintptr_t sl)
   : clock(1),
     stack(NULL),
     firstComponent(NULL),
@@ -21,78 +22,50 @@ ComponentFinder::ComponentFinder(uintptr_t sl)
 {
 }
 
-ComponentFinder::~ComponentFinder()
+template<class Node>
+ComponentFinder<Node>::~ComponentFinder()
 {
     JS_ASSERT(!stack);
     JS_ASSERT(!firstComponent);
 }
 
+template<class Node>
 void
-ComponentFinder::addNode(GraphNodeBase *v)
+ComponentFinder<Node>::addNode(Node *v)
 {
     if (v->gcDiscoveryTime == Undefined) {
         JS_ASSERT(v->gcLowLink == Undefined);
-        JS_ASSERT(!v->gcNextGraphNode);
         processNode(v);
     }
 }
 
+template<class Node>
 void
-ComponentFinder::checkStackFull()
-{
-    /*
-     * Check for exceeding the size of the C stack.
-     *
-     * If this happens we give up and return all vertices in one group, by
-     * pushing them onto the output list with lowLink set to 1.
-     */
-
-    if (!stackFull) {
-        int stackDummy;
-        if (!JS_CHECK_STACK_SIZE(stackLimit, &stackDummy))
-            stackFull = true;
-    }
-
-    if (stackFull) {
-        GraphNodeBase *w;
-        while (stack) {
-            w = stack;
-            stack = w->gcNextGraphNode;
-
-            w->gcLowLink = 1;
-            w->gcNextGraphNode = firstComponent;
-            firstComponent = w;
-        }
-    }
-}
-
-void
-ComponentFinder::processNode(GraphNodeBase *v)
+ComponentFinder<Node>::processNode(Node *v)
 {
     v->gcDiscoveryTime = clock;
     v->gcLowLink = clock;
     ++clock;
 
-    JS_ASSERT(!v->gcNextGraphNode);
     v->gcNextGraphNode = stack;
     stack = v;
 
-    checkStackFull();
-    if (stackFull)
+    int stackDummy;
+    if (stackFull || !JS_CHECK_STACK_SIZE(stackLimit, &stackDummy)) {
+        stackFull = true;
         return;
+    }
 
-    GraphNodeBase *old = cur;
+    Node *old = cur;
     cur = v;
     cur->findOutgoingEdges(*this);
     cur = old;
 
-    if (stackFull) {
-        JS_ASSERT(!stack);
+    if (stackFull)
         return;
-    }
 
     if (v->gcLowLink == v->gcDiscoveryTime) {
-        GraphNodeBase *w;
+        Node *w;
         do {
             JS_ASSERT(stack);
             w = stack;
@@ -110,6 +83,12 @@ ComponentFinder::processNode(GraphNodeBase *v)
              */
             w->gcDiscoveryTime = Finished;
 
+            /* Figure out which group we're in. */
+            if (firstComponent && firstComponent->gcLowLink == w->gcLowLink)
+                w->gcNextGraphComponent = firstComponent->gcNextGraphComponent;
+            else
+                w->gcNextGraphComponent = firstComponent;
+
             /*
              * Prepend the component to the beginning of the output list to
              * reverse the list and achieve the desired order.
@@ -120,8 +99,9 @@ ComponentFinder::processNode(GraphNodeBase *v)
     }
 }
 
+template<class Node>
 void
-ComponentFinder::addEdgeTo(GraphNodeBase *w)
+ComponentFinder<Node>::addEdgeTo(Node *w)
 {
     if (w->gcDiscoveryTime == Undefined) {
         processNode(w);
@@ -131,45 +111,44 @@ ComponentFinder::addEdgeTo(GraphNodeBase *w)
     }
 }
 
-GraphNodeBase *
-ComponentFinder::getResultsList()
+template<class Node>
+Node *
+ComponentFinder<Node>::getResultsList()
 {
+    if (stackFull) {
+        /*
+         * All nodes after the stack overflow are in |stack|. Put them all in
+         * one big component of their own.
+         */
+        Node *firstGoodComponent = firstComponent;
+        for (Node *v = stack; v; v = stack) {
+            stack = v->gcNextGraphNode;
+            v->gcNextGraphComponent = firstGoodComponent;
+            v->gcNextGraphNode = firstComponent;
+            firstComponent = v;
+        }
+        stackFull = false;
+    }
+
     JS_ASSERT(!stack);
-    GraphNodeBase *result = firstComponent;
+
+    Node *result = firstComponent;
     firstComponent = NULL;
+
+    for (Node *v = result; v; v = v->gcNextGraphNode) {
+        v->gcDiscoveryTime = Undefined;
+        v->gcLowLink = Undefined;
+    }
+
     return result;
 }
 
-GraphNodeBase *
-ComponentFinder::removeFirstGroup(GraphNodeBase *resultsList)
+template<class Node>
+/* static */ void
+ComponentFinder<Node>::mergeCompartmentGroups(Node *first)
 {
-    /* Remove the first group from resultsList and return the new list head. */
-
-    JS_ASSERT(resultsList);
-
-    GraphNodeBase *v = resultsList;
-    unsigned lowLink = v->gcLowLink;
-
-    GraphNodeBase *last;
-    do {
-        v->gcDiscoveryTime = Undefined;
-        v->gcLowLink = Undefined;
-        last = v;
-        v = v->gcNextGraphNode;
-    }
-    while (v && v->gcLowLink == lowLink);
-
-    last->gcNextGraphNode = NULL;
-    return v;
-}
-
-void
-ComponentFinder::removeAllRemaining(GraphNodeBase *resultsList)
-{
-    for (GraphNodeBase *v = resultsList; v; v = v->gcNextGraphNode) {
-        v->gcDiscoveryTime = Undefined;
-        v->gcLowLink = Undefined;
-    }
+    for (Node *v = first; v; v = v->gcNextGraphNode)
+        v->gcNextGraphComponent = NULL;
 }
 
 } /* namespace gc */

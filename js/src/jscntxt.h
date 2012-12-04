@@ -718,8 +718,8 @@ struct JSRuntime : js::RuntimeFriendFields
     /*
      * Incremental sweep state.
      */
-    JSCompartment       *gcRemainingCompartmentGroups;
-    JSCompartment       *gcCompartmentGroup;
+    JSCompartment       *gcCompartmentGroups;
+    JSCompartment       *gcCurrentCompartmentGroup;
     int                 gcSweepPhase;
     JSCompartment       *gcSweepCompartment;
     int                 gcSweepKindIndex;
