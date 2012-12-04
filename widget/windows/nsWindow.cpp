@@ -5471,8 +5471,6 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
                          NS_MAX(nonClientSize.right, mHorResizeMargin),
                          NS_MAX(nonClientSize.bottom, mVertResizeMargin));
 
-  bool contentMayOverlap = false;
-
   bool top    = false;
   bool bottom = false;
   bool left   = false;
@@ -5480,10 +5478,8 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
 
   if (my >= winRect.top && my < winRect.top + borderSize.top) {
     top = true;
-    contentMayOverlap = (my >= winRect.top + nonClientSize.top);
   } else if (my <= winRect.bottom && my > winRect.bottom - borderSize.bottom) {
     bottom = true;
-    contentMayOverlap = (my <= winRect.bottom - nonClientSize.bottom);
   }
 
   // (the 2x case here doubles the resize area for corners)
@@ -5491,13 +5487,9 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
   if (mx >= winRect.left &&
       mx < winRect.left + (multiplier * borderSize.left)) {
     left = true;
-    contentMayOverlap =
-      contentMayOverlap || (mx >= winRect.left + nonClientSize.left);
   } else if (mx <= winRect.right &&
              mx > winRect.right - (multiplier * borderSize.right)) {
     right = true;
-    contentMayOverlap =
-      contentMayOverlap || (mx <= winRect.right - nonClientSize.right);
   }
 
   if (isResizable) {
@@ -5526,7 +5518,7 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
       testResult = HTBORDER;
   }
 
-  if (!sIsInMouseCapture && allowContentOverride && contentMayOverlap) {
+  if (!sIsInMouseCapture && allowContentOverride) {
     LPARAM lParam = MAKELPARAM(mx, my);
     LPARAM lParamClient = lParamToClient(lParam);
     bool result = DispatchMouseEvent(NS_MOUSE_MOZHITTEST, 0, lParamClient,
