@@ -39,6 +39,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 #include "nsIAtom.h"
@@ -1501,6 +1502,11 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     SheetComplete(aLoadData, rv);
     return rv;
   }
+
+  nsCOMPtr<nsIHttpChannelInternal>
+    internalHttpChannel(do_QueryInterface(channel));
+  if (internalHttpChannel)
+      internalHttpChannel->SetLoadAsBlocking(!aLoadData->mWasAlternate);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
