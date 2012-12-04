@@ -63,16 +63,32 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    Label revertRegister;
+    Label revertRegister, maybeNegZero;
     switch(op_) {
       case JSOP_ADD:
-        masm.unboxInt32(R1, ExtractTemp0);
+        masm.unboxInt32(R0, ExtractTemp0);
         // Just jump to failure on overflow. R0 and R1 are preserved, so we can just jump to
         // the next stub.
-        masm.addl(R0.valueReg(), ExtractTemp0);
+        masm.addl(R1.valueReg(), ExtractTemp0);
         masm.j(Assembler::Overflow, &failure);
 
         // Box the result
+        masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
+        break;
+      case JSOP_SUB:
+        masm.unboxInt32(R0, ExtractTemp0);
+        masm.subl(R1.valueReg(), ExtractTemp0);
+        masm.j(Assembler::Overflow, &failure);
+        masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
+        break;
+      case JSOP_MUL:
+        masm.unboxInt32(R0, ExtractTemp0);
+        masm.imull(R1.valueReg(), ExtractTemp0);
+        masm.j(Assembler::Overflow, &failure);
+
+        masm.testl(ExtractTemp0, ExtractTemp0);
+        masm.j(Assembler::Zero, &maybeNegZero);
+
         masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());
         break;
       case JSOP_BITOR:
@@ -131,6 +147,19 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Return from stub.
     EmitReturnFromIC(masm);
+
+    if (op_ == JSOP_MUL) {
+        masm.bind(&maybeNegZero);
+
+        // Result is -0 if exactly one of lhs or rhs is negative.
+        masm.movl(R0.valueReg(), ScratchReg);
+        masm.orl(R1.valueReg(), ScratchReg);
+        masm.j(Assembler::Signed, &failure);
+
+        // Result is +0.
+        masm.moveValue(Int32Value(0), R0);
+        EmitReturnFromIC(masm);
+    }
 
     // Revert the content of R0 in the fallible >>> case.
     if (op_ == JSOP_URSH && !allowDouble_) {

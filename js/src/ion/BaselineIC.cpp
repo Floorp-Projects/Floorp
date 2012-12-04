@@ -536,12 +536,19 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     // Perform the compare operation.
     JSOp op = JSOp(*stub->icEntry()->pc(script));
     switch(op) {
-      case JSOP_ADD: {
+      case JSOP_ADD:
         // Do an add.
         if (!AddValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
             return false;
         break;
-      }
+      case JSOP_SUB:
+        if (!SubValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+            return false;
+        break;
+      case JSOP_MUL:
+        if (!MulValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+            return false;
+        break;
       case JSOP_BITOR: {
         int32_t result;
         if (!BitOr(cx, lhs, rhs, &result))
@@ -598,26 +605,13 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         return true;
 
     // Try to generate new stubs.
-    switch(op) {
-      case JSOP_BITOR:
-      case JSOP_BITXOR:
-      case JSOP_BITAND:
-      case JSOP_LSH:
-      case JSOP_RSH:
-      case JSOP_URSH:
-      case JSOP_ADD: {
-        bool allowDouble = ret.isDouble();
-        ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
-        ICStub *int32Stub = compilerInt32.getStub();
-        if (!int32Stub)
-            return false;
-        stub->addNewStub(int32Stub);
-        break;
-      }
-      default:
-        JS_NOT_REACHED("Unhandled baseline arith op");
+    // TODO: unlink previous !allowDouble stub.
+    bool allowDouble = ret.isDouble();
+    ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
+    ICStub *int32Stub = compilerInt32.getStub();
+    if (!int32Stub)
         return false;
-    }
+    stub->addNewStub(int32Stub);
     return true;
 }
 

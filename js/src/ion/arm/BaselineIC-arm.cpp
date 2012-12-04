@@ -71,6 +71,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     // Add R0 and R1.  Don't need to explicitly unbox, just use R2's payloadReg.
     Register scratchReg = R2.payloadReg();
 
+    Label maybeNegZero;
     switch(op_) {
       case JSOP_ADD:
         masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg);
@@ -81,8 +82,24 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
         // Box the result and return.  We know R0.typeReg() already contains the integer
         // tag, so we just need to move the result value into place.
-        masm.movePtr(scratchReg, R0.payloadReg());
+        masm.mov(scratchReg, R0.payloadReg());
         break;
+      case JSOP_SUB:
+        masm.ma_sub(R0.payloadReg(), R1.payloadReg(), scratchReg);
+        masm.j(Assembler::Overflow, &failure);
+        masm.mov(scratchReg, R0.payloadReg());
+        break;
+      case JSOP_MUL: {
+        Assembler::Condition cond = masm.ma_check_mul(R0.payloadReg(), R1.payloadReg(), scratchReg,
+                                                      Assembler::Overflow);
+        masm.j(cond, &failure);
+
+        masm.ma_cmp(scratchReg, Imm32(0));
+        masm.j(Assembler::Equal, &maybeNegZero);
+
+        masm.mov(scratchReg, R0.payloadReg());
+        break;
+      }
       case JSOP_BITOR:
         masm.ma_orr(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
         break;
@@ -107,7 +124,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.ma_cmp(scratchReg, Imm32(0));
         masm.j(Assembler::LessThan, &failure);
         // Move result for return.
-        masm.movePtr(scratchReg, R0.payloadReg());
+        masm.mov(scratchReg, R0.payloadReg());
         break;
       default:
         JS_NOT_REACHED("Unhandled op for BinaryArith_Int32.");
@@ -115,6 +132,18 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     }
 
     EmitReturnFromIC(masm);
+
+    if (op_ == JSOP_MUL) {
+        masm.bind(&maybeNegZero);
+
+        // Result is -0 if exactly one of lhs or rhs is negative.
+        masm.ma_cmn(R0.payloadReg(), R1.payloadReg());
+        masm.j(Assembler::Signed, &failure);
+
+        // Result is +0.
+        masm.ma_mov(Imm32(0), R0.payloadReg());
+        EmitReturnFromIC(masm);
+    }
 
     // Failure case - jump to next stub
     masm.bind(&failure);
