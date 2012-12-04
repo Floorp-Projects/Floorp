@@ -1987,6 +1987,58 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 #endif
 }
 
+/**
+ * Checks if aAncestor is an ancestor of aFrame
+ */
+static bool IsFrameAncestorOf(const nsIFrame *aAncestor, const nsIFrame *aFrame)
+{
+  if (!aFrame) {
+    return false;
+  }
+  for (const nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    if (f == aAncestor) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Chooses a single active scrolled root for the entire display list, used
+ * when we are flattening layers.
+ */
+static bool ChooseActiveScrolledRoot(nsDisplayListBuilder *aBuilder,
+                                     const nsDisplayList& aList,
+                                     const nsIFrame **aActiveScrolledRoot)
+{
+  for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
+    nsDisplayItem::Type type = item->GetType();
+    if (type == nsDisplayItem::TYPE_CLIP ||
+        type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
+      if (!ChooseActiveScrolledRoot(aBuilder,
+                                    *item->GetSameCoordinateSystemChildren(),
+                                    aActiveScrolledRoot)) {
+        return false;
+      }
+      continue;
+    }
+
+    if (!*aActiveScrolledRoot) {
+      // Try using the actual active scrolled root of the backmost item, as that
+      // should result in the least invalidation when scrolling.
+      aBuilder->IsFixedItem(item, aActiveScrolledRoot);
+    } else if (!IsFrameAncestorOf(*aActiveScrolledRoot, item->GetUnderlyingFrame())) {
+      // If there are items that aren't descendants of the background's active scrolled
+      // root, then give up and just use the container's reference frame instead.
+      return false;
+    }
+  }
+  if (!*aActiveScrolledRoot) {
+    return false;
+  }
+  return true;
+}
+
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -2010,6 +2062,17 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
   const nsIFrame* lastActiveScrolledRoot = nullptr;
   nsPoint topLeft;
+
+  // When NO_COMPONENT_ALPHA is set, items will be flattened into a single
+  // layer, so we need to choose which active scrolled root to use for all
+  // items.
+  if (aFlags & NO_COMPONENT_ALPHA) {
+    if (!ChooseActiveScrolledRoot(mBuilder, aList, &lastActiveScrolledRoot)) {
+      lastActiveScrolledRoot = mContainerReferenceFrame;
+    }
+
+    topLeft = lastActiveScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+  }
 
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayItem::Type type = item->GetType();
@@ -2046,12 +2109,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     bool forceInactive;
     const nsIFrame* activeScrolledRoot;
     if (aFlags & NO_COMPONENT_ALPHA) {
-      // When NO_COMPONENT_ALPHA is set, items will be flattened onto the
-      // reference frame. In this case, force the active scrolled root to
-      // that frame.
       forceInactive = true;
-      activeScrolledRoot = mContainerReferenceFrame;
-      topLeft = nsPoint(0, 0);
+      activeScrolledRoot = lastActiveScrolledRoot;
       isFixed = mBuilder->IsFixedItem(item, nullptr, activeScrolledRoot);
     } else {
       forceInactive = false;
