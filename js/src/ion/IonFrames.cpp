@@ -145,6 +145,9 @@ IonFrameIterator::isEntryJSFrame() const
     if (prevType() == IonFrame_OptimizedJS || prevType() == IonFrame_Bailed_JS)
         return false;
 
+    if (prevType() == IonFrame_BaselineStub || prevType() == IonFrame_Bailed_BaselineStub)
+        return false;
+
     if (prevType() == IonFrame_Entry)
         return true;
 
@@ -197,7 +200,10 @@ IonFrameIterator::prevFp() const
     // This quick fix must be removed as soon as bug 717297 land.  This is
     // needed because the descriptor size of JS-to-JS frame which is just after
     // a Rectifier frame should not change. (cf EnsureExitFrame function)
-    if (prevType() == IonFrame_Bailed_Rectifier || prevType() == IonFrame_Bailed_JS) {
+    if (prevType() == IonFrame_Bailed_Rectifier ||
+        prevType() == IonFrame_Bailed_JS ||
+        prevType() == IonFrame_Bailed_BaselineStub)
+    {
         JS_ASSERT(type_ == IonFrame_Exit);
         currentSize = SizeOfFramePrefix(IonFrame_OptimizedJS);
     }
@@ -226,6 +232,8 @@ IonFrameIterator::operator++()
     type_ = current()->prevType();
     if (type_ == IonFrame_Bailed_JS)
         type_ = IonFrame_OptimizedJS;
+    else if (type_ == IonFrame_Bailed_BaselineStub)
+        type_ = IonFrame_BaselineStub;
     returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
     return *this;
@@ -703,6 +711,9 @@ MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
           case IonFrame_BaselineJS:
             MarkBaselineJSFrame(trc, frames);
             break;
+          case IonFrame_BaselineStub:
+            // Stub frames are not marked.
+            break;
           case IonFrame_OptimizedJS:
             MarkIonJSFrame(trc, frames);
             break;
@@ -1073,7 +1084,7 @@ IonFrameIterator::isConstructing() const
         ++parent;
     } while (!parent.done() && !parent.isScripted());
 
-    if (parent.isScripted()) {
+    if (parent.isOptimizedJS()) {
         // In the case of a JS frame, look up the pc from the snapshot.
         InlineFrameIterator inlinedParent(&parent);
 
@@ -1084,6 +1095,18 @@ IonFrameIterator::isConstructing() const
         JS_ASSERT(js_CodeSpec[*inlinedParent.pc()].format & JOF_INVOKE);
 
         return (JSOp)*inlinedParent.pc() == JSOP_NEW;
+    }
+
+    if (parent.isBaselineJS()) {
+        JSContext *cx = GetIonContext()->cx;
+        RootedScript script(cx);
+        jsbytecode *pc;
+
+        parent.baselineScriptAndPc(&script, &pc);
+
+        JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE);
+
+        return JSOp(*pc) == JSOP_NEW;
     }
 
     JS_ASSERT(parent.done());
@@ -1171,6 +1194,7 @@ IonFrameIterator::dump() const
         dumpBaseline();
         break;
       case IonFrame_BaselineStub:
+      case IonFrame_Bailed_BaselineStub:
         fprintf(stderr, " Baseline stub frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;

@@ -43,6 +43,9 @@ enum FrameType
     // bailed out.
     IonFrame_Bailed_JS,
 
+    // Like Bailed_JS, but the caller is a baseline stub frame.
+    IonFrame_Bailed_BaselineStub,
+
     // A bailed rectifier frame is a rectifier frame signalling that its callee
     // has been bailed out.
     IonFrame_Bailed_Rectifier,
@@ -191,6 +194,9 @@ class IonFrameIterator
 
     uintptr_t *spillBase() const;
     MachineState machineState() const;
+
+    template <class Op>
+    inline void forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const;
 
     void dump() const;
 };
