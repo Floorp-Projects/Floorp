@@ -43,7 +43,7 @@
                      android:paddingBottom="15dip"
                      android:paddingLeft="20dip"
                      android:paddingRight="20dip"
-                     android:src="@drawable/menu"
+                     android:src="@drawable/tabs_menu"
                      android:contentDescription="@string/menu"
                      android:background="@drawable/action_bar_button"/>
 
