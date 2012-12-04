@@ -240,14 +240,30 @@ BrowserRootActor.prototype = {
    * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest: function BRA_preNest() {
-    // Nothing to be done here for chrome windows.
+    // Disable events in all open windows.
+    let e = windowMediator.getEnumerator(null);
+    while (e.hasMoreElements()) {
+      let win = e.getNext();
+      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.suppressEventHandling(true);
+      windowUtils.suspendTimeouts();
+    }
   },
 
   /**
    * Prepare to exit a nested event loop by enabling debuggee events.
    */
   postNest: function BRA_postNest(aNestData) {
-    // Nothing to be done here for chrome windows.
+    // Enable events in all open windows.
+    let e = windowMediator.getEnumerator(null);
+    while (e.hasMoreElements()) {
+      let win = e.getNext();
+      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.resumeTimeouts();
+      windowUtils.suppressEventHandling(false);
+    }
   },
 
   // nsIWindowMediatorListener.
