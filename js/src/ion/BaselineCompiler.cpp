@@ -615,7 +615,31 @@ BaselineCompiler::emit_JSOP_LT()
 }
 
 bool
+BaselineCompiler::emit_JSOP_LE()
+{
+    return emitCompare();
+}
+
+bool
 BaselineCompiler::emit_JSOP_GT()
+{
+    return emitCompare();
+}
+
+bool
+BaselineCompiler::emit_JSOP_GE()
+{
+    return emitCompare();
+}
+
+bool
+BaselineCompiler::emit_JSOP_EQ()
+{
+    return emitCompare();
+}
+
+bool
+BaselineCompiler::emit_JSOP_NE()
 {
     return emitCompare();
 }

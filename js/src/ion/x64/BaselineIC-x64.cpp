@@ -22,22 +22,13 @@ namespace ion {
 bool
 ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    // The condition to test on depends on the opcode
-    Assembler::Condition cond;
-    switch(op) {
-      case JSOP_LT: cond = Assembler::LessThan; break;
-      case JSOP_GT: cond = Assembler::GreaterThan; break;
-      default:
-        JS_ASSERT(!"Unhandled op for ICCompare_Int32!");
-        return false;
-    }
-
     // Guard that R0 is an integer and R1 is an integer.
     Label failure;
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
     // Directly compare the int32 payload of R0 and R1.
+    Assembler::Condition cond = JSOpToCondition(op);
     masm.cmpl(R0.valueReg(), R1.valueReg());
     masm.setCC(cond, ScratchReg);
     masm.movzxbl(ScratchReg, ScratchReg);
