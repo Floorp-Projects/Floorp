@@ -408,7 +408,6 @@ RES_LAYOUT = \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel.xml \
-  res/layout/tabs_panel_toolbar.xml \
   res/layout/tabs_panel_toolbar_menu.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
@@ -425,7 +424,6 @@ RES_LAYOUT = \
   $(NULL)
  
 RES_LAYOUT_LAND_V14 = \
-  res/layout-land-v14/tabs_panel_toolbar.xml \
   res/layout-land-v14/tabs_panel_toolbar_menu.xml \
   $(NULL)
 
@@ -529,12 +527,15 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_back.xml \
   res/drawable/ic_menu_bookmark_add.png \
   res/drawable/ic_menu_bookmark_remove.png \
+  res/drawable/ic_menu_close_all_tabs.png \
   res/drawable/ic_menu_desktop_mode_off.xml \
   res/drawable/ic_menu_desktop_mode_on.xml \
   res/drawable/ic_menu_forward.png \
   res/drawable/ic_menu_new_private_tab.png \
-  res/drawable/ic_menu_new_tab.png \
+  res/drawable/ic_menu_new_private_tab_small.png \
+  res/drawable/ic_menu_new_tab_small.png \
   res/drawable/ic_menu_reload.png \
+  res/drawable/ic_menu_synced_tabs.png \
   res/drawable/ic_menu_quit.xml \
   res/drawable/ic_status_logo.png \
   res/drawable/remote_tabs_off.png \
@@ -616,10 +617,14 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_awesomebar_star.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
+  res/drawable-hdpi/ic_menu_close_all_tabs.png \
   res/drawable-hdpi/ic_menu_forward.png \
   res/drawable-hdpi/ic_menu_new_private_tab.png \
+  res/drawable-hdpi/ic_menu_new_private_tab_small.png \
   res/drawable-hdpi/ic_menu_new_tab.png \
+  res/drawable-hdpi/ic_menu_new_tab_small.png \
   res/drawable-hdpi/ic_menu_reload.png \
+  res/drawable-hdpi/ic_menu_synced_tabs.png \
   res/drawable-hdpi/ic_status_logo.png \
   res/drawable-hdpi/remote_tabs_off.png \
   res/drawable-hdpi/remote_tabs_on.png \
@@ -698,10 +703,14 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_awesomebar_star.png \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xhdpi/ic_menu_bookmark_remove.png \
+  res/drawable-xhdpi/ic_menu_close_all_tabs.png \
   res/drawable-xhdpi/ic_menu_forward.png \
   res/drawable-xhdpi/ic_menu_new_private_tab.png \
+  res/drawable-xhdpi/ic_menu_new_private_tab_small.png \
   res/drawable-xhdpi/ic_menu_new_tab.png \
+  res/drawable-xhdpi/ic_menu_new_tab_small.png \
   res/drawable-xhdpi/ic_menu_reload.png \
+  res/drawable-xhdpi/ic_menu_synced_tabs.png \
   res/drawable-xhdpi/ic_status_logo.png \
   res/drawable-xhdpi/tab_new.png \
   res/drawable-xhdpi/tab_close.png \
@@ -750,7 +759,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_back.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-mdpi-v11/ic_menu_close_all_tabs.png \
   res/drawable-mdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-mdpi-v11/ic_menu_desktop_mode_on.png \
   res/drawable-mdpi-v11/ic_menu_downloads.png \
@@ -762,7 +770,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_settings.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
-  res/drawable-mdpi-v11/ic_menu_synced_tabs.png \
   res/drawable-mdpi-v11/ic_menu_tools.png \
   res/drawable-mdpi-v11/ic_menu_quit.png \
   res/drawable-mdpi-v11/ic_status_logo.png \
@@ -777,7 +784,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_back.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-hdpi-v11/ic_menu_close_all_tabs.png \
   res/drawable-hdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-hdpi-v11/ic_menu_desktop_mode_on.png \
   res/drawable-hdpi-v11/ic_menu_downloads.png \
@@ -789,7 +795,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_settings.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
-  res/drawable-hdpi-v11/ic_menu_synced_tabs.png \
   res/drawable-hdpi-v11/ic_menu_tools.png \
   res/drawable-hdpi-v11/ic_menu_quit.png \
   res/drawable-hdpi-v11/ic_status_logo.png \
@@ -804,7 +809,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_back.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-xhdpi-v11/ic_menu_close_all_tabs.png \
   res/drawable-xhdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-xhdpi-v11/ic_menu_desktop_mode_on.png \
   res/drawable-xhdpi-v11/ic_menu_downloads.png \
@@ -816,7 +820,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi-v11/ic_menu_settings.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
-  res/drawable-xhdpi-v11/ic_menu_synced_tabs.png \
   res/drawable-xhdpi-v11/ic_menu_tools.png \
   res/drawable-xhdpi-v11/ic_menu_quit.png \
   res/drawable-xhdpi-v11/ic_status_logo.png \
@@ -1017,7 +1020,9 @@ RES_COLOR = \
 RES_MENU = \
   res/menu/awesomebar_contextmenu.xml \
   res/menu/gecko_app_menu.xml \
+  res/menu/tabs_menu.xml \
   res/menu/titlebar_contextmenu.xml \
+  res/menu-v11/tabs_menu.xml \
   $(NULL)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
