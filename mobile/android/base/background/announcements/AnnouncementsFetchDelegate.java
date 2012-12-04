@@ -14,6 +14,11 @@ public interface AnnouncementsFetchDelegate {
   public long getLastFetch();
 
   /**
+   * @return the Date header string of the last response, or null if not present.
+   */
+  public String getLastDate();
+
+  /**
    * @return the current system locale (e.g., en_us).
    */
   public Locale getLocale();
@@ -30,9 +35,12 @@ public interface AnnouncementsFetchDelegate {
 
   /*
    * Callback methods.
+   * Note that we provide both a local fetch time and a server date here.
+   * This is so we can track how long we've waited (local), and supply the
+   * date back to the server for If-Modified-Since.
    */
-  public void onNoNewAnnouncements(long fetched);
-  public void onNewAnnouncements(List<Announcement> snippets, long fetched);
+  public void onNoNewAnnouncements(long localFetchTime, String serverDate);
+  public void onNewAnnouncements(List<Announcement> snippets, long localFetchTime, String serverDate);
   public void onLocalError(Exception e);
   public void onRemoteError(Exception e);
   public void onRemoteFailure(int status);

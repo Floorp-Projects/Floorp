@@ -184,12 +184,25 @@ public class AnnouncementsService extends IntentService implements Announcements
   }
 
   protected void setLastFetch(final long fetch) {
-    this.getSharedPreferences().edit().putLong(AnnouncementsConstants.PREF_LAST_FETCH, fetch).commit();
+    this.getSharedPreferences().edit().putLong(AnnouncementsConstants.PREF_LAST_FETCH_LOCAL_TIME, fetch).commit();
+  }
+
+  public long getLastFetch() {
+    return this.getSharedPreferences().getLong(AnnouncementsConstants.PREF_LAST_FETCH_LOCAL_TIME, 0L);
+  }
+
+  protected String setLastDate(final String fetch) {
+    if (fetch == null) {
+      this.getSharedPreferences().edit().remove(AnnouncementsConstants.PREF_LAST_FETCH_SERVER_DATE).commit();
+      return null;
+    }
+    this.getSharedPreferences().edit().putString(AnnouncementsConstants.PREF_LAST_FETCH_SERVER_DATE, fetch).commit();
+    return fetch;
   }
 
   @Override
-  public long getLastFetch() {
-    return getSharedPreferences().getLong(AnnouncementsConstants.PREF_LAST_FETCH, 0L);
+  public String getLastDate() {
+    return this.getSharedPreferences().getString(AnnouncementsConstants.PREF_LAST_FETCH_SERVER_DATE, null);
   }
 
   /**
@@ -235,16 +248,23 @@ public class AnnouncementsService extends IntentService implements Announcements
     return AnnouncementsConstants.ANNOUNCE_USER_AGENT;
   }
 
-  @Override
-  public void onNoNewAnnouncements(long fetched) {
-    Logger.info(LOG_TAG, "No new announcements to display.");
+  protected void persistTimes(long fetched, String date) {
     setLastFetch(fetched);
+    if (date != null) {
+      setLastDate(date);
+    }
   }
 
   @Override
-  public void onNewAnnouncements(List<Announcement> announcements, long fetched) {
+  public void onNoNewAnnouncements(long fetched, String date) {
+    Logger.info(LOG_TAG, "No new announcements to display.");
+    persistTimes(fetched, date);
+  }
+
+  @Override
+  public void onNewAnnouncements(List<Announcement> announcements, long fetched, String date) {
     Logger.info(LOG_TAG, "Processing announcements: " + announcements.size());
-    setLastFetch(fetched);
+    persistTimes(fetched, date);
     processAnnouncements(announcements);
   }
 
