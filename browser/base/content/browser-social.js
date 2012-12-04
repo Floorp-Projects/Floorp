@@ -27,7 +27,6 @@ let SocialUI = {
       SocialChatBar.update();
     });
 
-    this.updateActiveBroadcaster();
     Social.init(this._providerReady.bind(this));
   },
 
@@ -119,6 +118,7 @@ let SocialUI = {
     SocialShareButton.init();
     SocialSidebar.init();
     SocialMenu.populate();
+    this.updateActiveBroadcaster();
   },
 
   updateToggleCommand: function SocialUI_updateToggleCommand() {
