@@ -254,7 +254,10 @@ BookmarkImporter.prototype = {
     // implicit ending of the FOO container. The output will be FOO and BAR as
     // siblings. If there's another <dl> following (as in "content 2"), those
     // items will be treated as further siblings of FOO and BAR
-    if (frame.containerNesting == 0) {
+    // This special frame popping business, of course, only happens when our
+    // frame array has more than one element so we can avoid situations where
+    // we don't have a frame to parse into anymore.
+    if (frame.containerNesting == 0 && this._frames.length > 1) {
       this._frames.pop();
     }
 
