@@ -21,14 +21,17 @@
     {
       if (!WIN) {
         ok(true,
-           "Nothing to test because accessible plugins are supported on Windows only");
+           "It's Windows specific test. Feel free to extend the test.");
 
         SimpleTest.finish();
         return;
       }
 
-      testRole("plugin", ROLE_EMBEDDED_OBJECT);
-      testStates("plugin", STATE_UNAVAILABLE);
+      testStates("plugin-windowless", STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowless", { EMBEDDED_OBJECT: [ ] });
+
+      testStates("plugin-windowed", 0, 0, STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowed", { EMBEDDED_OBJECT: [ { NOTHING: [] } ] });
 
       SimpleTest.finish();
     }
@@ -40,13 +43,19 @@
 <body>
 
   <a target="_blank"
-     title="embed and object HTML tags should be given an accessible role of embedded object"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=485270">Mozilla Bug 485270</a>
+     title="Embed and object HTML tags should be given an accessible role of embedded object"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=485270">Bug 485270</a>
+  <a target="_blank"
+     title="Embedded object accessibles for inaccessible/windowless plugins should not expose a NULL child"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=816856">Bug 816856</a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <embed id="plugin" type="application/x-test" width="300" height="300"></embed>
+  <embed id="plugin-windowless" type="application/x-test"
+         width="300" height="300"></embed>
+  <embed id="plugin-windowed" type="application/x-test" wmode="window"
+         width="300" height="300"></embed>
 </body>
 </html>

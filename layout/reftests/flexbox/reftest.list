@@ -100,6 +100,9 @@ test-pref(layout.css.flexbox.enabled,true) == flexbox-items-as-stacking-contexts
 test-pref(layout.css.flexbox.enabled,true) == flexbox-minSize-horiz-1.xhtml flexbox-minSize-horiz-1-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml
 
+# Tests for the order in which we paint flex items
+test-pref(layout.css.flexbox.enabled,true) == flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
+
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
 test-pref(layout.css.flexbox.enabled,true) == flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-position-absolute-2.xhtml  flexbox-position-absolute-2-ref.xhtml

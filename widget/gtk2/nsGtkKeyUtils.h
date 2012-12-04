@@ -13,6 +13,13 @@
 
 #include <gdk/gdk.h>
 
+// ISO level5 shift is supported on GTK3
+#ifndef GDK_ISO_Level5_Shift
+#define GDK_ISO_Level5_Shift 0xFE11
+#define GDK_ISO_Level5_Latch 0xFE12
+#define GDK_ISO_Level5_Lock  0xFE13
+#endif // #ifndef GDK_ISO_Level5_Shift
+
 namespace mozilla {
 namespace widget {
 
@@ -56,7 +63,8 @@ public:
         META               = 0x0040,
         SUPER              = 0x0080,
         HYPER              = 0x0100,
-        ALTGR              = 0x0200
+        LEVEL3             = 0x0200,
+        LEVEL5             = 0x0400
     };
 
     /**
@@ -173,7 +181,8 @@ protected:
         INDEX_META,
         INDEX_SUPER,
         INDEX_HYPER,
-        INDEX_ALTGR,
+        INDEX_LEVEL3,
+        INDEX_LEVEL5,
         COUNT_OF_MODIFIER_INDEX
     };
     guint mModifierMasks[COUNT_OF_MODIFIER_INDEX];

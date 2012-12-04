@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import org.json.JSONException;
@@ -25,7 +24,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -64,7 +62,6 @@ public class Tab {
     private ContentObserver mContentObserver;
     private int mCheckerboardColor = Color.WHITE;
     private int mState;
-    private ByteBuffer mThumbnailBuffer;
     private Bitmap mThumbnailBitmap;
     private boolean mDesktopMode;
     private boolean mEnteringReaderMode;
@@ -155,33 +152,25 @@ public class Tab {
         return mThumbnail;
     }
 
-    synchronized public ByteBuffer getThumbnailBuffer() {
-        int capacity = Tabs.getThumbnailWidth() * Tabs.getThumbnailHeight() * 2 /* 16 bpp */;
-        if (mThumbnailBuffer != null && mThumbnailBuffer.capacity() == capacity)
-            return mThumbnailBuffer;
-        freeBuffer();
-        mThumbnailBitmap = null;
-        mThumbnailBuffer = DirectBufferAllocator.allocate(capacity);
-        return mThumbnailBuffer;
-    }
-
-    synchronized public Bitmap getThumbnailBitmap() {
-        // Bug 787318 - Honeycomb has a bug with bitmap caching, we can't
-        // reuse the bitmap there.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB
-            || Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB_MR2) {
-            if (mThumbnailBitmap != null)
-                return mThumbnailBitmap;
-        } else {
-            if (mThumbnailBitmap != null)
+    public Bitmap getThumbnailBitmap(int width, int height) {
+        if (mThumbnailBitmap != null) {
+            // Bug 787318 - Honeycomb has a bug with bitmap caching, we can't
+            // reuse the bitmap there.
+            boolean honeycomb = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                              && Build.VERSION.SDK_INT <= Build.VERSION_CODES.HONEYCOMB_MR2);
+            boolean sizeChange = mThumbnailBitmap.getWidth() != width
+                              || mThumbnailBitmap.getHeight() != height;
+            if (honeycomb || sizeChange) {
                 mThumbnailBitmap.recycle();
+                mThumbnailBitmap = null;
+            }
         }
-        return mThumbnailBitmap = Bitmap.createBitmap(Tabs.getThumbnailWidth(), Tabs.getThumbnailHeight(), Bitmap.Config.RGB_565);
-    }
 
-    synchronized void freeBuffer() {
-        DirectBufferAllocator.free(mThumbnailBuffer);
-        mThumbnailBuffer = null;
+        if (mThumbnailBitmap == null) {
+            mThumbnailBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+        }
+
+        return mThumbnailBitmap;
     }
 
     public void updateThumbnail(final Bitmap b) {

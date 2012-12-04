@@ -44,7 +44,7 @@ var httpserver = new HttpServer();
 var gFinished = false;
 
 function telemetry_ping () {
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.observe(null, "test-gather-startup", null);
   TelemetryPing.observe(null, "test-enable-load-save-notifications", null);
   TelemetryPing.observe(null, "test-ping", SERVER);
@@ -99,7 +99,7 @@ function telemetryObserver(aSubject, aTopic, aData) {
   let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
   setupTestData();
 
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.observe(histogramsFile, "test-save-histograms", null);
   TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
   telemetry_ping();
@@ -269,7 +269,7 @@ function runAsyncTestObserver(aSubject, aTopic, aData) {
   httpserver.registerPathHandler(PATH, checkHistogramsAsync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms2.dat");
 
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     Services.obs.removeObserver(arguments.callee, aTopic);
 
@@ -306,14 +306,14 @@ function runInvalidJSONTest() {
   writeStringToFile(histogramsFile, "this.is.invalid.JSON");
   do_check_true(histogramsFile.exists());
   
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
   do_check_false(histogramsFile.exists());
 }
 
 function runOldPingFileTest() {
   let histogramsFile = getSavedHistogramsFile("old-histograms.dat");
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.observe(histogramsFile, "test-save-histograms", null);
   do_check_true(histogramsFile.exists());
 

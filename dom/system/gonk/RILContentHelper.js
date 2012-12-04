@@ -47,6 +47,10 @@ const VOICEMAILSTATUS_CID=
   Components.ID("{5467f2eb-e214-43ea-9b89-67711241ec8e}");
 const MOBILECFINFO_CID=
   Components.ID("{a4756f16-e728-4d9f-8baa-8464f894888a}");
+const CELLBROADCASTMESSAGE_CID =
+  Components.ID("{29474c96-3099-486f-bb4a-3c9a1da834e4}");
+const CELLBROADCASTETWSINFO_CID =
+  Components.ID("{59f176ee-9dcd-4005-9d47-f6be0cd08e17}");
 
 const RIL_IPC_MSG_NAMES = [
   "RIL:CardStateChanged",
@@ -72,7 +76,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:StkSessionEnd",
   "RIL:DataError",
   "RIL:SetCallForwardingOption",
-  "RIL:GetCallForwardingOption"
+  "RIL:GetCallForwardingOption",
+  "RIL:CellBroadcastReceived"
 ];
 
 const kVoiceChangedTopic     = "mobile-connection-voice-changed";
@@ -224,7 +229,8 @@ MobileCFInfo.prototype = {
                       action: 'r',
                       reason: 'r',
                       number: 'r',
-                      timeSeconds: 'r'},
+                      timeSeconds: 'r',
+                      serviceClass: 'r'},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozMobileCFInfo]),
   classID:        MOBILECFINFO_CID,
   classInfo:      XPCOMUtils.generateCI({
@@ -240,7 +246,68 @@ MobileCFInfo.prototype = {
   action: -1,
   reason: -1,
   number: null,
-  timeSeconds: 0
+  timeSeconds: 0,
+  serviceClass: -1
+};
+
+function CellBroadcastMessage(pdu) {
+  this.geographicalScope = RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[pdu.geographicalScope];
+  this.messageCode = pdu.messageCode;
+  this.messageId = pdu.messageId;
+  this.language = pdu.language;
+  this.body = pdu.fullBody;
+  this.messageClass = pdu.messageClass;
+  this.timestamp = new Date(pdu.timestamp);
+
+  if (pdu.etws != null) {
+    this.etws = new CellBroadcastEtwsInfo(pdu.etws);
+  }
+}
+CellBroadcastMessage.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozCellBroadcastMessage]),
+  classID:        CELLBROADCASTMESSAGE_CID,
+  classInfo:      XPCOMUtils.generateCI({
+    classID:          CELLBROADCASTMESSAGE_CID,
+    classDescription: "CellBroadcastMessage",
+    flags:            Ci.nsIClassInfo.DOM_OBJECT,
+    interfaces:       [Ci.nsIDOMMozCellBroadcastMessage]
+  }),
+
+  // nsIDOMMozCellBroadcastMessage
+
+  geographicalScope: null,
+  messageCode: null,
+  messageId: null,
+  language: null,
+  body: null,
+  messageClass: null,
+  timestamp: null,
+
+  etws: null
+};
+
+function CellBroadcastEtwsInfo(etwsInfo) {
+  if (etwsInfo.warningType != null) {
+    this.warningType = RIL.CB_ETWS_WARNING_TYPE_NAMES[etwsInfo.warningType];
+  }
+  this.emergencyUserAlert = etwsInfo.emergencyUserAlert;
+  this.popup = etwsInfo.popup;
+}
+CellBroadcastEtwsInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozCellBroadcastEtwsInfo]),
+  classID:        CELLBROADCASTETWSINFO_CID,
+  classInfo:      XPCOMUtils.generateCI({
+    classID:          CELLBROADCASTETWSINFO_CID,
+    classDescription: "CellBroadcastEtwsInfo",
+    flags:            Ci.nsIClassInfo.DOM_OBJECT,
+    interfaces:       [Ci.nsIDOMMozCellBroadcastEtwsInfo]
+  }),
+
+  // nsIDOMMozCellBroadcastEtwsInfo
+
+  warningType: null,
+  emergencyUserAlert: null,
+  popup: null
 };
 
 function RILContentHelper() {
@@ -617,6 +684,14 @@ RILContentHelper.prototype = {
     this.unregisterCallback("_voicemailCallbacks", callback);
   },
 
+  registerCellBroadcastCallback: function registerCellBroadcastCallback(callback) {
+    this.registerCallback("_cellBroadcastCallbacks", callback);
+  },
+
+  unregisterCellBroadcastCallback: function unregisterCellBroadcastCallback(callback) {
+    this.unregisterCallback("_cellBroadcastCallbacks", callback);
+  },
+
   registerTelephonyMsg: function registerTelephonyMsg() {
     debug("Registering for telephony-related messages");
     cpmm.sendAsyncMessage("RIL:RegisterTelephonyMsg");
@@ -630,6 +705,11 @@ RILContentHelper.prototype = {
   registerVoicemailMsg: function registerVoicemailMsg() {
     debug("Registering for voicemail-related messages");
     cpmm.sendAsyncMessage("RIL:RegisterVoicemailMsg");
+  },
+
+  registerCellBroadcastMsg: function registerCellBroadcastMsg() {
+    debug("Registering for Cell Broadcast related messages");
+    cpmm.sendAsyncMessage("RIL:RegisterCellBroadcastMsg");
   },
 
   enumerateCalls: function enumerateCalls(callback) {
@@ -865,6 +945,12 @@ RILContentHelper.prototype = {
         break;
       case "RIL:SetCallForwardingOption":
         this.handleSetCallForwardingOption(msg.json);
+        break;
+      case "RIL:CellBroadcastReceived":
+        let message = new CellBroadcastMessage(msg.json);
+        this._deliverCallback("_cellBroadcastCallbacks",
+                              "notifyMessageReceived",
+                              [message]);
         break;
     }
   },

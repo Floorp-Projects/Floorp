@@ -123,6 +123,7 @@ function MarionetteRemoteFrame(windowId, frameId) {
   this.frameId = frameId;
   this.targetFrameId = null;
   this.messageManager = null;
+  this.command_id = null;
 }
 // persistent list of remote frames that Marionette has loaded a frame script in
 let remoteFrames = [];
@@ -239,6 +240,10 @@ MarionetteDriverActor.prototype = {
     messageManager.removeMessageListener("Marionette:switchToFrame", this);
   },
 
+  logRequest: function MDA_logRequest(type, data) {
+    logger.debug("Got request: " + type + ", data: " + JSON.stringify(data) + ", id: " + this.command_id);
+  },
+
   /**
    * Generic method to pass a response to the client
    *
@@ -250,9 +255,12 @@ MarionetteDriverActor.prototype = {
    */
   sendToClient: function MDA_sendToClient(msg, command_id) {
     logger.info("sendToClient: " + JSON.stringify(msg) + ", " + command_id + ", " + this.command_id);
-    if (this.command_id != null &&
-        command_id != null &&
+    if (!command_id) {
+      logger.warn("got a response with no command_id");
+    }
+    else if (this.command_id &&
         this.command_id != command_id) {
+      logger.warn("ignoring out-of-sync response");
       return;
     }
     this.conn.send(msg);
@@ -432,8 +440,20 @@ MarionetteDriverActor.prototype = {
     }
   },
 
+  getCommandId: function MDA_getCommandId() {
+    return this.uuidGen.generateUUID().toString();
+  },
+
   /**
    * Marionette API:
+   *
+   * All methods implementing a command from the client should create a
+   * command_id, and then use this command_id in all messages exchanged with
+   * the frame scripts and with responses sent to the client.  This prevents
+   * commands and responses from getting out-of-sync, which can happen in
+   * the case of execute_async calls that timeout and then later send a
+   * response, and other situations.  See bug 779011. See setScriptTimeout()
+   * for a basic example.
    */
 
   /**
@@ -444,6 +464,8 @@ MarionetteDriverActor.prototype = {
    *
    */
   newSession: function MDA_newSession() {
+    this.command_id = this.getCommandId();
+
     this.scriptTimeout = 10000;
 
     function waitForWindow() {
@@ -471,11 +493,13 @@ MarionetteDriverActor.prototype = {
       this.messageManager.broadcastAsyncMessage("Marionette:restart", {});
     }
     else {
-      this.sendError("Session already running", 500, null);
+      this.sendError("Session already running", 500, null, this.command_id);
     }
   },
 
   getSessionCapabilities: function MDA_getSessionCapabilities(){
+    this.command_id = this.getCommandId();
+
     let rotatable = appName == "B2G" ? true : false;
 
     let value = {
@@ -492,10 +516,12 @@ MarionetteDriverActor.prototype = {
           'version': Services.appinfo.version
     };
 
-    this.sendResponse(value);
+    this.sendResponse(value, this.command_id);
   },
 
   getStatus: function MDA_getStatus(){
+    this.command_id = this.getCommandId();
+
     let arch;
     try {
       arch = (Services.appinfo.XPCOMABI || 'unknown').split('-')[0]
@@ -517,7 +543,7 @@ MarionetteDriverActor.prototype = {
           }
     };
 
-    this.sendResponse(value);
+    this.sendResponse(value, this.command_id);
   },
 
   /**
@@ -528,30 +554,34 @@ MarionetteDriverActor.prototype = {
    *        'level' member hold log level
    */
   log: function MDA_log(aRequest) {
+    this.command_id = this.getCommandId();
     this.marionetteLog.log(aRequest.value, aRequest.level);
-    this.sendOk();
+    this.sendOk(this.command_id);
   },
 
   /**
    * Return all logged messages.
    */
   getLogs: function MDA_getLogs() {
-    this.sendResponse(this.marionetteLog.getLogs());
+    this.command_id = this.getCommandId();
+    this.sendResponse(this.marionetteLog.getLogs(), this.command_id);
   },
   
   /**
    * Log some performance data
    */
   addPerfData: function MDA_addPerfData(aRequest) {
+    this.command_id = this.getCommandId();
     this.marionettePerf.addPerfData(aRequest.suite, aRequest.name, aRequest.value);
-    this.sendOk();
+    this.sendOk(this.command_id);
   },
 
   /**
    * Retrieve the performance data
    */
   getPerfData: function MDA_getPerfData() {
-    this.sendResponse(this.marionettePerf.getPerfData());
+    this.command_id = this.getCommandId();
+    this.sendResponse(this.marionettePerf.getPerfData(), this.command_id);
   },
 
   /**
@@ -561,13 +591,15 @@ MarionetteDriverActor.prototype = {
    *        'value' member holds the name of the context to be switched to
    */
   setContext: function MDA_setContext(aRequest) {
+    this.command_id = this.getCommandId();
+    this.logRequest("setContext", aRequest);
     let context = aRequest.value;
     if (context != "content" && context != "chrome") {
-      this.sendError("invalid context", 500, null);
+      this.sendError("invalid context", 500, null, this.command_id);
     }
     else {
       this.context = context;
-      this.sendOk();
+      this.sendOk(this.command_id);
     }
   },
 
@@ -637,11 +669,11 @@ MarionetteDriverActor.prototype = {
    *        True if the script is asynchronous
    */
   executeScriptInSandbox: function MDA_executeScriptInSandbox(sandbox, script,
-     directInject, async) {
+     directInject, async, command_id) {
 
     if (directInject && async &&
         (this.scriptTimeout == null || this.scriptTimeout == 0)) {
-      this.sendError("Please set a timeout", 21, null);
+      this.sendError("Please set a timeout", 21, null, command_id);
       return;
     }
 
@@ -657,12 +689,13 @@ MarionetteDriverActor.prototype = {
 
     if (directInject && !async &&
         (res == undefined || res.passed == undefined)) {
-      this.sendError("finish() not called", 500, null);
+      this.sendError("finish() not called", 500, null, command_id);
       return;
     }
 
     if (!async) {
-      this.sendResponse(this.curBrowser.elementManager.wrapValue(res));
+      this.sendResponse(this.curBrowser.elementManager.wrapValue(res),
+                        command_id);
     }
   },
 
@@ -678,6 +711,8 @@ MarionetteDriverActor.prototype = {
    *        function body
    */
   execute: function MDA_execute(aRequest, directInject) {
+    let command_id = this.command_id = this.getCommandId();
+    this.logRequest("execute", aRequest);
     if (aRequest.newSandbox == undefined) {
       //if client does not send a value in newSandbox, 
       //then they expect the same behaviour as webdriver
@@ -687,7 +722,8 @@ MarionetteDriverActor.prototype = {
       this.sendAsync("executeScript", {value: aRequest.value,
                                        args: aRequest.args,
                                        newSandbox: aRequest.newSandbox,
-                                       timeout: this.scriptTimeout});
+                                       timeout: this.scriptTimeout,
+                                       command_id: command_id});
       return;
     }
 
@@ -695,7 +731,10 @@ MarionetteDriverActor.prototype = {
     let marionette = new Marionette(this, curWindow, "chrome",
                                     this.marionetteLog, this.marionettePerf,
                                     this.scriptTimeout, this.testName);
-    let _chromeSandbox = this.createExecuteSandbox(curWindow, marionette, aRequest.args, aRequest.specialPowers);
+    let _chromeSandbox = this.createExecuteSandbox(curWindow,
+                                                   marionette,
+                                                   aRequest.args,
+                                                   aRequest.specialPowers);
     if (!_chromeSandbox)
       return;
 
@@ -714,10 +753,11 @@ MarionetteDriverActor.prototype = {
                      "};" +
                      "func.apply(null, __marionetteParams);";
       }
-      this.executeScriptInSandbox(_chromeSandbox, script, directInject, false);
+      this.executeScriptInSandbox(_chromeSandbox, script, directInject,
+                                  false, command_id);
     }
     catch (e) {
-      this.sendError(e.name + ': ' + e.message, 17, e.stack);
+      this.sendError(e.name + ': ' + e.message, 17, e.stack, command_id);
     }
   },
 
@@ -728,13 +768,14 @@ MarionetteDriverActor.prototype = {
    *        'value' member is time in milliseconds to set timeout
    */
   setScriptTimeout: function MDA_setScriptTimeout(aRequest) {
+    this.command_id = this.getCommandId();
     let timeout = parseInt(aRequest.value);
     if(isNaN(timeout)){
-      this.sendError("Not a Number", 500, null);
+      this.sendError("Not a Number", 500, null, this.command_id);
     }
     else {
       this.scriptTimeout = timeout;
-      this.sendOk();
+      this.sendOk(this.command_id);
     }
   },
 
@@ -747,6 +788,7 @@ MarionetteDriverActor.prototype = {
    *        'timeout' member will be used as the script timeout if it is given
    */
   executeJSScript: function MDA_executeJSScript(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     //all pure JS scripts will need to call Marionette.finish() to complete the test.
     if (aRequest.newSandbox == undefined) {
       //if client does not send a value in newSandbox, 
@@ -754,8 +796,8 @@ MarionetteDriverActor.prototype = {
       aRequest.newSandbox = true;
     }
     if (this.context == "chrome") {
-      if (aRequest.timeout) {
-        this.executeWithCallback(aRequest, aRequest.timeout);
+      if (aRequest.async) {
+        this.executeWithCallback(aRequest, aRequest.async);
       }
       else {
         this.execute(aRequest, true);
@@ -766,7 +808,8 @@ MarionetteDriverActor.prototype = {
                                           args: aRequest.args,
                                           newSandbox: aRequest.newSandbox,
                                           async: aRequest.async,
-                                          timeout: this.scriptTimeout });
+                                          timeout: this.scriptTimeout,
+                                          command_id: command_id });
    }
   },
 
@@ -786,19 +829,20 @@ MarionetteDriverActor.prototype = {
    *        function body
    */
   executeWithCallback: function MDA_executeWithCallback(aRequest, directInject) {
+    let command_id = this.command_id = this.getCommandId();
     if (aRequest.newSandbox == undefined) {
       //if client does not send a value in newSandbox, 
       //then they expect the same behaviour as webdriver
       aRequest.newSandbox = true;
     }
-    this.command_id = this.uuidGen.generateUUID().toString();
 
     if (this.context == "content") {
       this.sendAsync("executeAsyncScript", {value: aRequest.value,
                                             args: aRequest.args,
                                             id: this.command_id,
                                             newSandbox: aRequest.newSandbox,
-                                            timeout: this.scriptTimeout});
+                                            timeout: this.scriptTimeout,
+                                            command_id: command_id});
       return;
     }
 
@@ -875,7 +919,8 @@ MarionetteDriverActor.prototype = {
                 + '__marionetteFunc.apply(null, __marionetteParams);';
       }
 
-      this.executeScriptInSandbox(_chromeSandbox, script, directInject, true);
+      this.executeScriptInSandbox(_chromeSandbox, script, directInject,
+                                  true, command_id);
     } catch (e) {
       chromeAsyncReturnFunc(e.name + ": " + e.message, 17);
     }
@@ -888,7 +933,9 @@ MarionetteDriverActor.prototype = {
    *        'value' member holds the url to navigate to
    */
   goUrl: function MDA_goUrl(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context != "chrome") {
+      aRequest.command_id = command_id;
       this.sendAsync("goUrl", aRequest);
       return;
     }
@@ -897,7 +944,7 @@ MarionetteDriverActor.prototype = {
     let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     function checkLoad() { 
       if (curWindow.document.readyState == "complete") { 
-        sendOk();
+        sendOk(command_id);
         return;
       } 
       checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -909,11 +956,12 @@ MarionetteDriverActor.prototype = {
    * Gets current url
    */
   getUrl: function MDA_getUrl() {
+    this.command_id = this.getCommandId();
     if (this.context == "chrome") {
-      this.sendResponse(this.getCurrentWindow().location.href);
+      this.sendResponse(this.getCurrentWindow().location.href, this.command_id);
     }
     else {
-      this.sendAsync("getUrl", {});
+      this.sendAsync("getUrl", {command_id: this.command_id});
     }
   },
 
@@ -921,21 +969,23 @@ MarionetteDriverActor.prototype = {
    * Gets the current title of the window
    */
   getTitle: function MDA_getTitle() {
-    this.sendAsync("getTitle", {});
+    this.command_id = this.getCommandId();
+    this.sendAsync("getTitle", {command_id: this.command_id});
   },
 
   /**
    * Gets the page source of the content document
    */
   getPageSource: function MDA_getPageSource(){
+    this.command_id = this.getCommandId();
     if (this.context == "chrome"){
       var curWindow = this.getCurrentWindow();
       var XMLSerializer = curWindow.XMLSerializer; 
       var pageSource = new XMLSerializer().serializeToString(curWindow.document);
-      this.sendResponse(pageSource);
+      this.sendResponse(pageSource, this.command_id);
     }
     else {
-      this.sendAsync("getPageSource", {});
+      this.sendAsync("getPageSource", {command_id: this.command_id});
     }
   },
 
@@ -943,30 +993,34 @@ MarionetteDriverActor.prototype = {
    * Go back in history
    */
   goBack: function MDA_goBack() {
-    this.sendAsync("goBack", {});
+    this.command_id = this.getCommandId();
+    this.sendAsync("goBack", {command_id: this.command_id});
   },
 
   /**
    * Go forward in history
    */
   goForward: function MDA_goForward() {
-    this.sendAsync("goForward", {});
+    this.command_id = this.getCommandId();
+    this.sendAsync("goForward", {command_id: this.command_id});
   },
 
   /**
    * Refresh the page
    */
   refresh: function MDA_refresh() {
-    this.sendAsync("refresh", {});
+    this.command_id = this.getCommandId();
+    this.sendAsync("refresh", {command_id: this.command_id});
   },
 
   /**
    * Get the current window's server-assigned ID
    */
   getWindow: function MDA_getWindow() {
+    this.command_id = this.getCommandId();
     for (let i in this.browsers) {
       if (this.curBrowser == this.browsers[i]) {
-        this.sendResponse(i);
+        this.sendResponse(i, this.command_id);
       }
     }
   },
@@ -975,6 +1029,7 @@ MarionetteDriverActor.prototype = {
    * Get the server-assigned IDs of all available windows
    */
   getWindows: function MDA_getWindows() {
+    this.command_id = this.getCommandId();
     let res = [];
     let winEn = this.getWinEnumerator(); 
     while(winEn.hasMoreElements()) {
@@ -983,7 +1038,7 @@ MarionetteDriverActor.prototype = {
       winId = winId + ((appName == "B2G") ? '-b2g' : '');
       res.push(winId)
     }
-    this.sendResponse(res);
+    this.sendResponse(res, this.command_id);
   },
 
   /**
@@ -994,6 +1049,7 @@ MarionetteDriverActor.prototype = {
    *        'value' member holds the name or id of the window to switch to
    */
   switchToWindow: function MDA_switchToWindow(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     let winEn = this.getWinEnumerator(); 
     while(winEn.hasMoreElements()) {
       let foundWin = winEn.getNext();
@@ -1010,11 +1066,12 @@ MarionetteDriverActor.prototype = {
           utils.window = foundWin;
           this.curBrowser = this.browsers[winId];
         }
-        this.sendOk();
+        this.sendOk(command_id);
         return;
       }
     }
-    this.sendError("Unable to locate window " + aRequest.value, 23, null);
+    this.sendError("Unable to locate window " + aRequest.value, 23, null,
+                   command_id);
   },
  
   /**
@@ -1027,15 +1084,17 @@ MarionetteDriverActor.prototype = {
    *                of the frame to switch to
    */
   switchToFrame: function MDA_switchToFrame(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
+    this.logRequest("switchToFrame", aRequest);
     let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let checkLoad = function() { 
       let errorRegex = /about:.+(error)|(blocked)\?/;
       if (curWindow.document.readyState == "complete") { 
-        this.sendOk();
+        this.sendOk(command_id);
         return;
       } 
       else if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)) {
-        this.sendError("Error loading page", 13, null);
+        this.sendError("Error loading page", 13, null, command_id);
         return;
       }
       
@@ -1096,7 +1155,8 @@ MarionetteDriverActor.prototype = {
         this.curFrame.focus();
         checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
       } else {
-        this.sendError("Unable to locate frame: " + aRequest.value, 8, null);
+        this.sendError("Unable to locate frame: " + aRequest.value, 8, null,
+                       command_id);
       }
     }
     else {
@@ -1108,6 +1168,7 @@ MarionetteDriverActor.prototype = {
         // we send the message to the right listener.
         this.switchToGlobalMessageManager();
       }
+      aRequest.command_id = command_id;
       this.sendAsync("switchToFrame", aRequest);
     }
   },
@@ -1119,17 +1180,19 @@ MarionetteDriverActor.prototype = {
    *        'value' holds the search timeout in milliseconds
    */
   setSearchTimeout: function MDA_setSearchTimeout(aRequest) {
+    this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
         this.curBrowser.elementManager.setSearchTimeout(aRequest.value);
-        this.sendOk();
+        this.sendOk(this.command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, this.command_id);
       }
     }
     else {
-      this.sendAsync("setSearchTimeout", {value: aRequest.value});
+      this.sendAsync("setSearchTimeout", {value: aRequest.value,
+                                          command_id: this.command_id});
     }
   },
 
@@ -1141,20 +1204,30 @@ MarionetteDriverActor.prototype = {
    *        'value' member is the value the client is looking for
    */
   findElement: function MDA_findElement(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       let id;
       try {
         let on_success = this.sendResponse.bind(this);
         let on_error = this.sendError.bind(this);
-        id = this.curBrowser.elementManager.find(this.getCurrentWindow(),aRequest, on_success, on_error, false);
+        id = this.curBrowser.elementManager.find(
+                              this.getCurrentWindow(),
+                              aRequest,
+                              on_success,
+                              on_error,
+                              false,
+                              command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
         return;
       }
     }
     else {
-      this.sendAsync("findElementContent", {value: aRequest.value, using: aRequest.using, element: aRequest.element});
+      this.sendAsync("findElementContent", {value: aRequest.value,
+                                            using: aRequest.using,
+                                            element: aRequest.element,
+                                            command_id: command_id});
     }
   },
 
@@ -1166,20 +1239,29 @@ MarionetteDriverActor.prototype = {
    *        'value' member is the value the client is looking for
    */
   findElements: function MDA_findElements(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       let id;
       try {
         let on_success = this.sendResponse.bind(this);
         let on_error = this.sendError.bind(this);
-        id = this.curBrowser.elementManager.find(this.getCurrentWindow(), aRequest, on_success, on_error, true);
+        id = this.curBrowser.elementManager.find(this.getCurrentWindow(),
+                                                 aRequest,
+                                                 on_success,
+                                                 on_error,
+                                                 true,
+                                                 command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
         return;
       }
     }
     else {
-      this.sendAsync("findElementsContent", {value: aRequest.value, using: aRequest.using, element: aRequest.element});
+      this.sendAsync("findElementsContent", {value: aRequest.value,
+                                             using: aRequest.using,
+                                             element: aRequest.element,
+                                             command_id: command_id});
     }
   },
 
@@ -1191,19 +1273,22 @@ MarionetteDriverActor.prototype = {
    *        the element that will be clicked
    */
   clickElement: function MDA_clickElement(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
         //NOTE: click atom fails, fall back to click() action
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
         el.click();
-        this.sendOk();
+        this.sendOk(command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("clickElement", {element: aRequest.element});
+      this.sendAsync("clickElement", {element: aRequest.element,
+                                      command_id: command_id});
     }
   },
 
@@ -1216,17 +1301,22 @@ MarionetteDriverActor.prototype = {
    *        'name' member holds the name of the attribute to retrieve
    */
   getElementAttribute: function MDA_getElementAttribute(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
-        this.sendResponse(utils.getElementAttribute(el, aRequest.name));
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
+        this.sendResponse(utils.getElementAttribute(el, aRequest.name),
+                          command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("getElementAttribute", {element: aRequest.element, name: aRequest.name});
+      this.sendAsync("getElementAttribute", {element: aRequest.element,
+                                             name: aRequest.name,
+                                             command_id: command_id});
     }
   },
 
@@ -1238,21 +1328,24 @@ MarionetteDriverActor.prototype = {
    *        the element that will be inspected 
    */
   getElementText: function MDA_getElementText(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       //Note: for chrome, we look at text nodes, and any node with a "label" field
       try {
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
         let lines = [];
         this.getVisibleText(el, lines);
         lines = lines.join("\n");
-        this.sendResponse(lines);
+        this.sendResponse(lines, command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("getElementText", {element: aRequest.element});
+      this.sendAsync("getElementText", {element: aRequest.element,
+                                        command_id: command_id});
     }
   },
 
@@ -1264,17 +1357,20 @@ MarionetteDriverActor.prototype = {
    *        the element that will be inspected 
    */
   getElementTagName: function MDA_getElementTagName(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
-        this.sendResponse(el.tagName.toLowerCase());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
+        this.sendResponse(el.tagName.toLowerCase(), command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("getElementTagName", {element: aRequest.element});
+      this.sendAsync("getElementTagName", {element: aRequest.element,
+                                           command_id: command_id});
     }
   },
 
@@ -1286,17 +1382,20 @@ MarionetteDriverActor.prototype = {
    *        the element that will be checked 
    */
   isElementDisplayed: function MDA_isElementDisplayed(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
-        this.sendResponse(utils.isElementDisplayed(el));
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
+        this.sendResponse(utils.isElementDisplayed(el), command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("isElementDisplayed", {element:aRequest.element});
+      this.sendAsync("isElementDisplayed", {element:aRequest.element,
+                                            command_id: command_id});
     }
   },
 
@@ -1308,23 +1407,26 @@ MarionetteDriverActor.prototype = {
    *        the element that will be checked
    */
   isElementEnabled: function MDA_isElementEnabled(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
         //Selenium atom doesn't quite work here
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
         if (el.disabled != undefined) {
-          this.sendResponse(!!!el.disabled);
+          this.sendResponse(!!!el.disabled, command_id);
         }
         else {
-        this.sendResponse(true);
+        this.sendResponse(true, command_id);
         }
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("isElementEnabled", {element:aRequest.element});
+      this.sendAsync("isElementEnabled", {element:aRequest.element,
+                                          command_id: command_id});
     }
   },
 
@@ -1336,42 +1438,49 @@ MarionetteDriverActor.prototype = {
    *        the element that will be checked
    */
   isElementSelected: function MDA_isElementSelected(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
         //Selenium atom doesn't quite work here
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
         if (el.checked != undefined) {
-          this.sendResponse(!!el.checked);
+          this.sendResponse(!!el.checked, command_id);
         }
         else if (el.selected != undefined) {
-          this.sendResponse(!!el.selected);
+          this.sendResponse(!!el.selected, command_id);
         }
         else {
-          this.sendResponse(true);
+          this.sendResponse(true, command_id);
         }
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("isElementSelected", {element:aRequest.element});
+      this.sendAsync("isElementSelected", {element:aRequest.element,
+                                           command_id: command_id});
     }
   },
 
   getElementSize: function MDA_getElementSize(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
         let clientRect = el.getBoundingClientRect();  
-        this.sendResponse({width: clientRect.width, height: clientRect.height});
+        this.sendResponse({width: clientRect.width, height: clientRect.height},
+                          command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("getElementSize", {element:aRequest.element});
+      this.sendAsync("getElementSize", {element:aRequest.element,
+                                        command_id: command_id});
     }
   },
 
@@ -1384,19 +1493,23 @@ MarionetteDriverActor.prototype = {
    *        'value' member holds the value to send to the element
    */
   sendKeysToElement: function MDA_sendKeysToElement(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       try {
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
         el.focus();
         utils.sendString(aRequest.value.join(""), utils.window);
-        this.sendOk();
+        this.sendOk(command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("sendKeysToElement", {element:aRequest.element, value: aRequest.value});
+      this.sendAsync("sendKeysToElement", {element:aRequest.element,
+                                           value: aRequest.value,
+                                           command_id: command_id});
     }
   },
 
@@ -1406,8 +1519,11 @@ MarionetteDriverActor.prototype = {
    * The test name is used in logging messages.
    */
   setTestName: function MDA_setTestName(aRequest) {
+    this.command_id = this.getCommandId();
+    this.logRequest("setTestName", aRequest);
     this.testName = aRequest.value;
-    this.sendAsync("setTestName", {value: aRequest.value});
+    this.sendAsync("setTestName", {value: aRequest.value,
+                                   command_id: this.command_id});
   },
 
   /**
@@ -1418,29 +1534,34 @@ MarionetteDriverActor.prototype = {
    *        the element that will be cleared 
    */
   clearElement: function MDA_clearElement(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       //the selenium atom doesn't work here
       try {
-        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let el = this.curBrowser.elementManager.getKnownElement(
+            aRequest.element, this.getCurrentWindow());
         if (el.nodeName == "textbox") {
           el.value = "";
         }
         else if (el.nodeName == "checkbox") {
           el.checked = false;
         }
-        this.sendOk();
+        this.sendOk(command_id);
       }
       catch (e) {
-        this.sendError(e.message, e.code, e.stack);
+        this.sendError(e.message, e.code, e.stack, command_id);
       }
     }
     else {
-      this.sendAsync("clearElement", {element:aRequest.element});
+      this.sendAsync("clearElement", {element:aRequest.element,
+                                      command_id: command_id});
     }
   },
 
   getElementPosition: function MDA_getElementPosition(aRequest) {
-      this.sendAsync("getElementPosition", {element:aRequest.element});
+    this.command_id = this.getCommandId();
+    this.sendAsync("getElementPosition", {element:aRequest.element,
+                                          command_id: this.command_id});
   },
 
   /**
@@ -1452,9 +1573,10 @@ MarionetteDriverActor.prototype = {
    * 1 then it deletes the session otherwise it closes the window
    */
   closeWindow: function MDA_closeWindow() {
+    let command_id = this.command_id = this.getCommandId();
     if (appName == "B2G") {
       // We can't close windows so just return
-      this.sendOk();
+      this.sendOk(command_id);
     }
     else {
       // Get the total number of windows
@@ -1474,10 +1596,11 @@ MarionetteDriverActor.prototype = {
       try{
         this.messageManager.removeDelayedFrameScript(FRAME_SCRIPT); 
         this.getCurrentWindow().close();
-        this.sendOk();
+        this.sendOk(command_id);
       }
       catch (e) {
-        this.sendError("Could not close window: " + e.message, 13, e.stack);
+        this.sendError("Could not close window: " + e.message, 13, e.stack,
+                       command_id);
       }
     }
   }, 
@@ -1492,10 +1615,13 @@ MarionetteDriverActor.prototype = {
    * and can safely be reused.
    */
   deleteSession: function MDA_deleteSession() {
+    let command_id = this.command_id = this.getCommandId();
     if (this.curBrowser != null) {
       if (appName == "B2G") {
-        this.globalMessageManager.broadcastAsyncMessage("Marionette:sleepSession" + this.curBrowser.mainContentId, {});
-        this.curBrowser.knownFrames.splice(this.curBrowser.knownFrames.indexOf(this.curBrowser.mainContentId), 1);
+        this.globalMessageManager.broadcastAsyncMessage(
+            "Marionette:sleepSession" + this.curBrowser.mainContentId, {});
+        this.curBrowser.knownFrames.splice(
+            this.curBrowser.knownFrames.indexOf(this.curBrowser.mainContentId), 1);
       }
       else {
         //don't set this pref for B2G since the framescript can be safely reused
@@ -1513,7 +1639,7 @@ MarionetteDriverActor.prototype = {
         winEnum.getNext().messageManager.removeDelayedFrameScript(FRAME_SCRIPT); 
       }
     }
-    this.sendOk();
+    this.sendOk(command_id);
     this.removeMessageManagerListeners(this.globalMessageManager);
     this.switchToGlobalMessageManager();
     // reset frame to the top-most frame
@@ -1533,7 +1659,8 @@ MarionetteDriverActor.prototype = {
    * Returns the current status of the Application Cache
    */
   getAppCacheStatus: function MDA_getAppCacheStatus(aRequest) {
-    this.sendAsync("getAppCacheStatus");
+    this.command_id = this.getCommandId();
+    this.sendAsync("getAppCacheStatus", {command_id: this.command_id});
   },
 
   _emu_cb_id: 0,
@@ -1574,24 +1701,38 @@ MarionetteDriverActor.prototype = {
   },
   
   importScript: function MDA_importScript(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       let file;
       if (this.importedScripts.exists()) {
-        file = FileUtils.openFileOutputStream(this.importedScripts, FileUtils.MODE_APPEND | FileUtils.MODE_WRONLY);
+        file = FileUtils.openFileOutputStream(this.importedScripts,
+            FileUtils.MODE_APPEND | FileUtils.MODE_WRONLY);
       }
       else {
         //Note: The permission bits here don't actually get set (bug 804563)
-        this.importedScripts.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
-        file = FileUtils.openFileOutputStream(this.importedScripts, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+        this.importedScripts.createUnique(
+            Components.interfaces.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
+        file = FileUtils.openFileOutputStream(this.importedScripts,
+            FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
         this.importedScripts.permissions = parseInt("0666", 8); //actually set permissions
       }
       file.write(aRequest.script, aRequest.script.length);
       file.close();
-      this.sendOk();
+      this.sendOk(command_id);
     }
     else {
-      this.sendAsync("importScript", {script: aRequest.script});
+      this.sendAsync("importScript", {script: aRequest.script,
+                                      command_id: command_id});
     }
+  },
+
+  /**
+   * Takes a screenshot of a DOM node. If there is no node given a screenshot
+   * of the window will be taken.
+   */
+  screenShot: function MDA_saveScreenshot(aRequest) {
+    this.sendAsync("screenShot", {element: aRequest.element,
+                                  highlights: aRequest.highlights});
   },
 
   /**
@@ -1652,6 +1793,7 @@ MarionetteDriverActor.prototype = {
           let frame = remoteFrames[i];
           if ((frame.messageManager == mm)) {
             this.currentRemoteFrame = frame;
+            this.currentRemoteFrame.command_id = message.json.command_id;
             this.messageManager = frame.messageManager;
             this.addMessageManagerListeners(this.messageManager);
             this.messageManager.sendAsyncMessage("Marionette:restart", {});
@@ -1666,6 +1808,7 @@ MarionetteDriverActor.prototype = {
         this.messageManager = mm;
         let aFrame = new MarionetteRemoteFrame(message.json.win, message.json.frame);
         aFrame.messageManager = this.messageManager;
+        aFrame.command_id = message.json.command_id;
         remoteFrames.push(aFrame);
         this.currentRemoteFrame = aFrame;
         break;
@@ -1693,7 +1836,8 @@ MarionetteDriverActor.prototype = {
           this.sendAsync(
               "setState",
               {scriptTimeout: this.scriptTimeout,
-               searchTimeout: this.curBrowser.elementManager.searchTimeout});
+               searchTimeout: this.curBrowser.elementManager.searchTimeout,
+               command_id: this.currentRemoteFrame.command_id});
         }
 
         let browserType;
@@ -1771,7 +1915,8 @@ MarionetteDriverActor.prototype.requestTypes = {
   "importScript": MarionetteDriverActor.prototype.importScript,
   "getAppCacheStatus": MarionetteDriverActor.prototype.getAppCacheStatus,
   "closeWindow": MarionetteDriverActor.prototype.closeWindow,
-  "setTestName": MarionetteDriverActor.prototype.setTestName
+  "setTestName": MarionetteDriverActor.prototype.setTestName,
+  "screenShot": MarionetteDriverActor.prototype.screenShot
 };
 
 /**

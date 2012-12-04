@@ -2019,6 +2019,12 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms till a tab switch is complete including the first paint"
   },
+  "FX_TAB_CLICK_MS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 20,
+    "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
+  },
   "FX_KEYWORD_URL_USERSET": {
     "kind": "boolean",
     "description": "Firefox: keyword.URL has a user-set value"

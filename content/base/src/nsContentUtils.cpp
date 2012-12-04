@@ -4663,7 +4663,6 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
 
   if (!aClick) {
     handler->OnOverLink(aContent, aLinkURI, aTargetSpec.get());
-
     return;
   }
 
@@ -4681,9 +4680,25 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
   }
 
   // Only pass off the click event if the script security manager says it's ok.
+  // We need to rest aTargetSpec for forced downloads.
   if (NS_SUCCEEDED(proceed)) {
-    handler->OnLinkClick(aContent, aLinkURI, aTargetSpec.get(), nullptr, nullptr,
-                         aIsTrusted);
+
+    // A link/area element with a download attribute is allowed to set
+    // a pseudo Content-Disposition header.
+    // For security reasons we only allow websites to declare same-origin resources
+    // as downloadable. If this check fails we will just do the normal thing
+    // (i.e. navigate to the resource).
+    nsAutoString fileName;
+    if ((!aContent->IsHTML(nsGkAtoms::a) && !aContent->IsHTML(nsGkAtoms::area) &&
+         !aContent->IsSVG(nsGkAtoms::a)) ||
+        !aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::download, fileName) ||
+        NS_FAILED(aContent->NodePrincipal()->CheckMayLoad(aLinkURI, false, true))) {
+      fileName.SetIsVoid(true); // No actionable download attribute was found.
+    }
+
+    handler->OnLinkClick(aContent, aLinkURI,
+                         fileName.IsVoid() ? aTargetSpec.get() : EmptyString().get(),
+                         fileName, nullptr, nullptr, aIsTrusted);
   }
 }
 

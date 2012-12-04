@@ -8,6 +8,8 @@
 #define AbstractMediaDecoder_h_
 
 #include "nsISupports.h"
+#include "nsDataHashtable.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla
 {
@@ -19,6 +21,9 @@ namespace layers
 class MediaResource;
 class ReentrantMonitor;
 class VideoFrameContainer;
+class TimedMetadata;
+
+typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
 /**
  * The AbstractMediaDecoder class describes the public interface for a media decoder
@@ -61,11 +66,23 @@ public:
   // Set the duration of the media in microseconds.
   virtual void SetMediaDuration(int64_t aDuration) = 0;
 
+  // Set the media as being seekable or not.
+  virtual void SetMediaSeekable(bool aMediaSeekable) = 0;
+
+  // Set the transport level as being seekable or not.
+  virtual void SetTransportSeekable(bool aTransportSeekable) = 0;
+
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
   virtual mozilla::layers::ImageContainer* GetImageContainer() = 0;
 
-  // Return true if seeking is supported.
+  // Return true if the media layer supports seeking.
+  virtual bool IsTransportSeekable() = 0;
+
+  // Return true if the transport layer supports seeking.
   virtual bool IsMediaSeekable() = 0;
+
+  virtual void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags) = 0;
+  virtual void QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags) = 0;
 
   // Set the media end time in microseconds
   virtual void SetMediaEndTime(int64_t aTime) = 0;
@@ -96,6 +113,32 @@ public:
     uint32_t& mDecoded;
   };
 };
+
+class AudioMetadataEventRunner : public nsRunnable
+{
+  private:
+    nsRefPtr<AbstractMediaDecoder> mDecoder;
+  public:
+    AudioMetadataEventRunner(AbstractMediaDecoder* aDecoder, int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
+      : mDecoder(aDecoder),
+        mChannels(aChannels),
+        mRate(aRate),
+        mHasAudio(aHasAudio),
+        mTags(aTags)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    mDecoder->MetadataLoaded(mChannels, mRate, mHasAudio, mTags);
+    return NS_OK;
+  }
+
+  int mChannels;
+  int mRate;
+  bool mHasAudio;
+  MetadataTags* mTags;
+};
+
 
 }
 

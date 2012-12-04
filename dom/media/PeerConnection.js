@@ -444,15 +444,16 @@ PeerConnection.prototype = {
 
   addIceCandidate: function(cand) {
     if (!cand) {
-      throw "Invalid candidate passed to addIceCandidate!";
+      throw "NULL candidate passed to addIceCandidate!";
     }
-    if (!cand.candidate || !cand.sdpMid || !cand.sdpMLineIndex) {
+
+    if (!cand.candidate || !cand.sdpMLineIndex) {
       throw "Invalid candidate passed to addIceCandidate!";
     }
 
     this._queueOrRun({
       func: this._pc.addIceCandidate,
-      args: [cand.candidate, cand.sdpMid, cand.sdpMLineIndex],
+      args: [cand.candidate, cand.sdpMid || "", cand.sdpMLineIndex],
       wait: false
     });
   },

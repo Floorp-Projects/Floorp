@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test for the DOM Parsing and Serialization Standard</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=816410">Mozilla Bug 816410</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+"use strict";
+/** Test for Bug 816410 **/
+
+function throws(fn, type, message) {
+  try {
+    fn();
+    ok(false, message);
+  } catch (e) {
+    if (type) {
+      is(e.name, type, message);
+    } else {
+      ok(true, message);
+    }
+  }
+}
+
+let parser = new DOMParser();
+is(typeof parser.parseFromString, "function", "parseFromString should exist");
+is(typeof parser.parseFromBuffer, "undefined", "parseFromBuffer should NOT be visible from unprivileged callers");
+is(typeof parser.parseFromStream, "undefined", "parseFromStream should NOT be visible from unprivileged callers");
+is(typeof parser.init, "undefined", "init should NOT be visible from unprivileged callers");
+
+// The three-arguments constructor should not be visible from
+// unprivileged callers for interoperability with other browsers.
+// But we have no way to do that right now.
+try {
+  new DOMParser(undefined);
+  new DOMParser(null);
+  new DOMParser(false);
+  new DOMParser(0);
+  new DOMParser("");
+  new DOMParser({});
+} catch (e) {
+  todo(false, "DOMParser constructor should not throw for extra arguments");
+}
+
+let serializer = new XMLSerializer();
+is(typeof serializer.serializeToString, "function", "serializeToString should exist");
+is(typeof serializer.serializeToStream, "undefined", "serializeToStream should NOT be visible from unprivileged callers");
+
+// XMLSerializer constructor should not throw for extra arguments
+new XMLSerializer(undefined);
+new XMLSerializer(null);
+new XMLSerializer(false);
+new XMLSerializer(0);
+new XMLSerializer("");
+new XMLSerializer({});
+
+let tests = [
+  {input: "<html></html>", type: "text/html",
+   expected: '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body></body></html>'},
+  {input: "<xml></xml>", type: "text/xml", expected: "<xml/>"},
+  {input: "<xml></xml>", type: "application/xml", expected: "<xml/>"},
+  {input: "<html></html>", type: "application/xhtml+xml", expected: "<html/>"},
+  {input: "<svg></svg>", type: "image/svg+xml", expected: "<svg/>"},
+];
+for (let t of tests) {
+  is(serializer.serializeToString(parser.parseFromString(t.input, t.type)), t.expected,
+     "parseFromString test for " + t.type);
+}
+
+throws(function() {
+  parser.parseFromString("<xml></xml>", "foo/bar");
+}, "TypeError", "parseFromString should throw for the unknown type");
+</script>
+</pre>
+</body>
+</html>

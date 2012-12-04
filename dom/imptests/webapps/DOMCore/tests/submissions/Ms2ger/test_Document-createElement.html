@@ -1,5 +1,11 @@
 <!DOCTYPE html>
+<meta charset=utf-8>
 <title>Document.createElement</title>
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createelement">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-localname">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-tagname">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-prefix">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-namespaceuri">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
@@ -9,6 +15,7 @@ test(function() {
       valid = [
         //[input, localName],
         [undefined, "undefined"],
+        [null, "null"],
         ["foo", "foo"],
         ["f1oo", "f1oo"],
         ["foo1", "foo1"],
@@ -43,17 +50,21 @@ test(function() {
        "f<oo"
      ]
 
-  for (var i = 0, il = valid.length; i < il; i++) {
-    var test = valid[i],
-        elt = document.createElement(test[0])
-    assert_true(elt instanceof Element)
-    assert_equals(elt.localName, test[1])
-    assert_equals(elt.tagName, test[1].toUpperCase())
-    assert_equals(elt.prefix, null)
-    assert_equals(elt.namespaceURI, HTMLNS)
-  }
-  for (var i = 0, il = invalid.length; i < il; i++) {
-    assert_throws("INVALID_CHARACTER_ERR", function() { document.createElement(invalid[i]) })
-  }
+  valid.forEach(function(t) {
+    test(function() {
+      var elt = document.createElement(t[0])
+      assert_true(elt instanceof Element)
+      assert_true(elt instanceof Node)
+      assert_equals(elt.localName, t[1])
+      assert_equals(elt.tagName, t[1].toUpperCase())
+      assert_equals(elt.prefix, null)
+      assert_equals(elt.namespaceURI, HTMLNS)
+    }, "createElement(" + format_value(t[0]) + ")");
+  });
+  invalid.forEach(function(arg) {
+    test(function() {
+      assert_throws("INVALID_CHARACTER_ERR", function() { document.createElement(arg) })
+    }, "createElement(" + format_value(arg) + ")");
+  });
 })
 </script>

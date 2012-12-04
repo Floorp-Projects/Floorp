@@ -40,6 +40,95 @@ ion::SplitCriticalEdges(MIRGraph &graph)
     return true;
 }
 
+// Operands to a resume point which are dead at the point of the resume can be
+// replaced with undefined values. This analysis supports limited detection of
+// dead operands, pruning those which are defined in the resume point's basic
+// block and have no uses outside the block or at points later than the resume
+// point.
+//
+// This is intended to ensure that extra resume points within a basic block
+// will not artificially extend the lifetimes of any SSA values. This could
+// otherwise occur if the new resume point captured a value which is created
+// between the old and new resume point and is dead at the new resume point.
+bool
+ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
+{
+    for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
+        if (mir->shouldCancel("Eliminate Dead Resume Point Operands (main loop)"))
+            return false;
+
+        // The logic below can get confused on infinite loops.
+        if (block->isLoopHeader() && block->backedge() == *block)
+            continue;
+
+        for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
+            // No benefit to replacing constant operands with other constants.
+            if (ins->isConstant())
+                continue;
+
+            // Scanning uses does not give us sufficient information to tell
+            // where instructions that are involved in box/unbox operations or
+            // parameter passing might be live. Rewriting uses of these terms
+            // in resume points may affect the interpreter's behavior. Rather
+            // than doing a more sophisticated analysis, just ignore these.
+            if (ins->isUnbox() || ins->isParameter())
+                continue;
+
+            // Check if this instruction's result is only used within the
+            // current block, and keep track of its last use in a definition
+            // (not resume point). This requires the instructions in the block
+            // to be numbered, ensured by running this immediately after alias
+            // analysis.
+            uint32 maxDefinition = 0;
+            for (MUseDefIterator uses(*ins); uses; uses++) {
+                if (uses.def()->block() != *block || uses.def()->isBox() || uses.def()->isPassArg()) {
+                    maxDefinition = UINT32_MAX;
+                    break;
+                }
+                maxDefinition = Max(maxDefinition, uses.def()->id());
+            }
+            if (maxDefinition == UINT32_MAX)
+                continue;
+
+            // Walk the uses a second time, removing any in resume points after
+            // the last use in a definition.
+            for (MUseIterator uses(ins->usesBegin()); uses != ins->usesEnd(); ) {
+                if (uses->node()->isDefinition()) {
+                    uses++;
+                    continue;
+                }
+                MResumePoint *mrp = uses->node()->toResumePoint();
+                if (mrp->block() != *block ||
+                    !mrp->instruction() ||
+                    mrp->instruction() == *ins ||
+                    mrp->instruction()->id() <= maxDefinition)
+                {
+                    uses++;
+                    continue;
+                }
+
+                // Store an undefined value in place of all dead resume point
+                // operands. Making any such substitution can in general alter
+                // the interpreter's behavior, even though the code is dead, as
+                // the interpreter will still execute opcodes whose effects
+                // cannot be observed. If the undefined value were to flow to,
+                // say, a dead property access the interpreter could throw an
+                // exception; we avoid this problem by removing dead operands
+                // before removing dead code.
+                MConstant *constant = MConstant::New(UndefinedValue());
+                block->insertBefore(*(block->begin()), constant);
+                uses = mrp->replaceOperand(uses, constant);
+            }
+
+            MResumePoint *mrp = ins->resumePoint();
+            if (!mrp)
+                continue;
+        }
+    }
+
+    return true;
+}
+
 // Instructions are useless if they are unused and have no side effects.
 // This pass eliminates useless instructions.
 // The graph itself is unchanged.
@@ -54,7 +143,8 @@ ion::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
 
         // Remove unused instructions.
         for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
-            if (!inst->isEffectful() && !inst->hasUses() && !inst->isGuard() &&
+            if (!inst->isEffectful() && !inst->resumePoint() &&
+                !inst->hasUses() && !inst->isGuard() &&
                 !inst->isControlInstruction()) {
                 inst = block->discardAt(inst);
             } else {

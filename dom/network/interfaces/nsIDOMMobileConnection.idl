@@ -24,6 +24,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   const long ICC_SERVICE_CLASS_DATA_ASYNC = (1 << 5);
   const long ICC_SERVICE_CLASS_PACKET = (1 << 6);
   const long ICC_SERVICE_CLASS_PAD = (1 << 7);
+  const long ICC_SERVICE_CLASS_MAX = (1 << 7);
 
   /**
    * Indicates the state of the device's ICC card.
@@ -455,7 +456,7 @@ interface nsIDOMMozMobileICCInfo : nsISupports
   readonly attribute DOMString msisdn;
 };
 
-[scriptable, uuid(2e40982a-ddf6-4d92-a3e8-4d69ce5a3a2e)]
+[scriptable, uuid(d1b35ad8-99aa-47cc-ab49-2e72b00e39df)]
 interface nsIDOMMozMobileCFInfo : nsISupports
 {
   /**
@@ -515,4 +516,10 @@ interface nsIDOMMozMobileCFInfo : nsISupports
    * seconds to wait before call is forwarded.
    */
   readonly attribute unsigned short timeSeconds;
+
+  /**
+   * Service for which the call forward is set up. It should be one of the
+   * nsIDOMMozMobileConnectionInfo.ICC_SERVICE_CLASS_* values.
+   */
+  readonly attribute unsigned short serviceClass;
 };

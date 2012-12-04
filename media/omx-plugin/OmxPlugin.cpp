@@ -27,25 +27,19 @@ using namespace MPAPI;
 
 namespace android {
 
-// MediaStreamSource is a DataSource that reads from a MPAPI media stream.
+#if !defined(MOZ_STAGEFRIGHT_OFF_T)
+#define MOZ_STAGEFRIGHT_OFF_T off64_t
+#endif
 
+// MediaStreamSource is a DataSource that reads from a MPAPI media stream.
 class MediaStreamSource : public DataSource {
   PluginHost *mPluginHost;
 public:
   MediaStreamSource(PluginHost *aPluginHost, Decoder *aDecoder);
 
   virtual status_t initCheck() const;
-  virtual ssize_t readAt(off64_t offset, void *data, size_t size);
-  virtual ssize_t readAt(off_t offset, void *data, size_t size) {
-    return readAt(static_cast<off64_t>(offset), data, size);
-  }
-  virtual status_t getSize(off_t *size) {
-    off64_t size64;
-    status_t status = getSize(&size64);
-    *size = size64;
-    return status;
-  }
-  virtual status_t getSize(off64_t *size);
+  virtual ssize_t readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size_t size);
+  virtual status_t getSize(MOZ_STAGEFRIGHT_OFF_T *size);
   virtual uint32_t flags() {
     return kWantsPrefetching;
   }
@@ -74,7 +68,7 @@ status_t MediaStreamSource::initCheck() const
   return OK;
 }
 
-ssize_t MediaStreamSource::readAt(off64_t offset, void *data, size_t size)
+ssize_t MediaStreamSource::readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size_t size)
 {
   char *ptr = reinterpret_cast<char *>(data);
   size_t todo = size;
@@ -90,7 +84,7 @@ ssize_t MediaStreamSource::readAt(off64_t offset, void *data, size_t size)
   return size;
 }
 
-status_t MediaStreamSource::getSize(off64_t *size)
+status_t MediaStreamSource::getSize(MOZ_STAGEFRIGHT_OFF_T *size)
 {
   uint64_t length = mPluginHost->GetLength(mDecoder);
   if (length == static_cast<uint64_t>(-1))
@@ -109,6 +103,7 @@ namespace OmxPlugin {
 
 const int OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
 const int OMX_QCOM_COLOR_FormatYVU420SemiPlanar = 0x7FA30C00;
+const int OMX_TI_COLOR_FormatYUV420PackedSemiPlanar = 0x7F000100;
 
 class OmxDecoder {
   PluginHost *mPluginHost;
@@ -259,12 +254,14 @@ static uint32_t GetVideoCreationFlags(PluginHost* aPluginHost)
   int32_t flags = 0;
   aPluginHost->GetIntPref("media.stagefright.omxcodec.flags", &flags);
   if (flags != 0) {
+#if !defined(MOZ_ANDROID_GB)
     LOG("media.stagefright.omxcodec.flags=%d", flags);
     if ((flags & OMXCodec::kHardwareCodecsOnly) != 0) {
       LOG("FORCE HARDWARE DECODING");
     } else if ((flags & OMXCodec::kSoftwareCodecsOnly) != 0) {
       LOG("FORCE SOFTWARE DECODING");
     }
+#endif
   }
   return static_cast<uint32_t>(flags);
 #endif
@@ -311,7 +308,11 @@ static sp<MediaSource> CreateVideoSource(PluginHost* aPluginHost,
     // Throw away the videoSource and try again with new flags.
     LOG("Falling back to software decoder");
     videoSource.clear();
+#if defined(MOZ_ANDROID_GB)
+    flags = OMXCodec::kPreferSoftwareCodecs;
+#else
     flags = OMXCodec::kSoftwareCodecsOnly;
+#endif
   }
 
   MOZ_ASSERT(flags != 0);
@@ -507,14 +508,19 @@ bool OmxDecoder::SetVideoFormat() {
   }
 
   int32_t cropRight, cropBottom;
+  // Gingerbread does not support the kKeyCropRect key
+#if !defined(MOZ_ANDROID_GB)
   if (!format->findRect(kKeyCropRect, &mVideoCropLeft, &mVideoCropTop,
                                       &cropRight, &cropBottom)) {
+#endif
     mVideoCropLeft = 0;
     mVideoCropTop = 0;
     cropRight = mVideoStride - 1;
     cropBottom = mVideoSliceHeight - 1;
     LOG("crop rect not available, assuming no cropping");
+#if !defined(MOZ_ANDROID_GB)
   }
+#endif
 
   if (mVideoCropLeft < 0 || mVideoCropLeft >= cropRight || cropRight >= mVideoStride ||
       mVideoCropTop < 0 || mVideoCropTop >= cropBottom || cropBottom >= mVideoSliceHeight) {

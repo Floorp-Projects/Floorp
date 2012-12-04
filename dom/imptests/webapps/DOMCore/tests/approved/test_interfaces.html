@@ -209,6 +209,7 @@ interface Node : EventTarget {
   boolean isDefaultNamespace(DOMString? namespace);
 };
 
+[Constructor]
 interface Document : Node {
   readonly attribute DOMImplementation implementation;
   readonly attribute DOMString URL;

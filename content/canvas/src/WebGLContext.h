@@ -8,8 +8,11 @@
 
 #include "WebGLElementArrayCache.h"
 #include "WebGLObjectModel.h"
+#include "WebGLShader.h"
 #include "WebGLBuffer.h"
+#include "WebGLRenderbuffer.h"
 #include "WebGLVertexAttribData.h"
+#include "WebGLShaderPrecisionFormat.h"
 #include <stdarg.h>
 #include <vector>
 
@@ -38,8 +41,6 @@
 #ifdef XP_MACOSX
 #include "ForceDiscreteGPUHelperCGL.h"
 #endif
-
-#include "angle/ShaderLang.h"
 
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Nullable.h"
@@ -70,19 +71,16 @@ namespace mozilla {
 
 class WebGLTexture;
 class WebGLProgram;
-class WebGLShader;
 class WebGLFramebuffer;
 class WebGLUniformLocation;
-class WebGLRenderbuffer;
 class WebGLMemoryPressureObserver;
-class WebGLRectangleObject;
 class WebGLContextBoundObject;
 class WebGLActiveInfo;
-class WebGLShaderPrecisionFormat;
 class WebGLExtensionBase;
 
 namespace dom {
 struct WebGLContextAttributes;
+struct WebGLContextAttributesInitializer;
 }
 
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
@@ -149,47 +147,6 @@ inline bool is_pot_assuming_nonnegative(WebGLsizei x)
 {
     return x && (x & (x-1)) == 0;
 }
-
-// this class is a mixin for GL objects that have dimensions
-// that we need to track.
-class WebGLRectangleObject
-{
-public:
-    WebGLRectangleObject()
-        : mWidth(0), mHeight(0) { }
-
-    WebGLRectangleObject(WebGLsizei width, WebGLsizei height)
-        : mWidth(width), mHeight(height) { }
-
-    WebGLsizei Width() const { return mWidth; }
-    void width(WebGLsizei value) { mWidth = value; }
-
-    WebGLsizei Height() const { return mHeight; }
-    void height(WebGLsizei value) { mHeight = value; }
-
-    void setDimensions(WebGLsizei width, WebGLsizei height) {
-        mWidth = width;
-        mHeight = height;
-    }
-
-    void setDimensions(WebGLRectangleObject *rect) {
-        if (rect) {
-            mWidth = rect->Width();
-            mHeight = rect->Height();
-        } else {
-            mWidth = 0;
-            mHeight = 0;
-        }
-    }
-
-    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
-        return Width() == other.Width() && Height() == other.Height(); 
-    }
-
-protected:
-    WebGLsizei mWidth;
-    WebGLsizei mHeight;
-};
 
 struct WebGLContextOptions {
     // these are defaults
@@ -398,7 +355,7 @@ public:
         return mHeight;
     }
         
-    void GetContextAttributes(dom::WebGLContextAttributes& retval);
+    void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributesInitializer>& retval);
     bool IsContextLost() const { return !IsContextStable(); }
     void GetSupportedExtensions(JSContext *cx, dom::Nullable< nsTArray<nsString> > &retval);
     JSObject* GetExtension(JSContext* cx, const nsAString& aName, ErrorResult& rv);
@@ -1681,148 +1638,6 @@ public:
     }
 };
 
-struct WebGLMappedIdentifier {
-    nsCString original, mapped; // ASCII strings
-    WebGLMappedIdentifier(const nsACString& o, const nsACString& m) : original(o), mapped(m) {}
-};
-
-struct WebGLUniformInfo {
-    uint32_t arraySize;
-    bool isArray;
-    ShDataType type;
-
-    WebGLUniformInfo(uint32_t s = 0, bool a = false, ShDataType t = SH_NONE)
-        : arraySize(s), isArray(a), type(t) {}
-
-    int ElementSize() const {
-        switch (type) {
-            case SH_INT:
-            case SH_FLOAT:
-            case SH_BOOL:
-            case SH_SAMPLER_2D:
-            case SH_SAMPLER_CUBE:
-                return 1;
-            case SH_INT_VEC2:
-            case SH_FLOAT_VEC2:
-            case SH_BOOL_VEC2:
-                return 2;
-            case SH_INT_VEC3:
-            case SH_FLOAT_VEC3:
-            case SH_BOOL_VEC3:
-                return 3;
-            case SH_INT_VEC4:
-            case SH_FLOAT_VEC4:
-            case SH_BOOL_VEC4:
-            case SH_FLOAT_MAT2:
-                return 4;
-            case SH_FLOAT_MAT3:
-                return 9;
-            case SH_FLOAT_MAT4:
-                return 16;
-            default:
-                NS_ABORT(); // should never get here
-                return 0;
-        }
-    }
-};
-
-class WebGLShader MOZ_FINAL
-    : public nsISupports
-    , public WebGLRefCountedObject<WebGLShader>
-    , public LinkedListElement<WebGLShader>
-    , public WebGLContextBoundObject
-    , public nsWrapperCache
-{
-    friend class WebGLContext;
-    friend class WebGLProgram;
-
-public:
-    WebGLShader(WebGLContext *context, WebGLenum stype)
-        : WebGLContextBoundObject(context)
-        , mType(stype)
-        , mNeedsTranslation(true)
-        , mAttribMaxNameLength(0)
-        , mCompileStatus(false)
-    {
-        SetIsDOMBinding();
-        mContext->MakeContextCurrent();
-        mGLName = mContext->gl->fCreateShader(mType);
-        mContext->mShaders.insertBack(this);
-    }
-
-    ~WebGLShader() {
-        DeleteOnce();
-    }
-    
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
-        return aMallocSizeOf(this) +
-               mSource.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-               mTranslationLog.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    }
-
-    void Delete() {
-        mSource.Truncate();
-        mTranslationLog.Truncate();
-        mContext->MakeContextCurrent();
-        mContext->gl->fDeleteShader(mGLName);
-        LinkedListElement<WebGLShader>::removeFrom(mContext->mShaders);
-    }
-
-    WebGLuint GLName() { return mGLName; }
-    WebGLenum ShaderType() { return mType; }
-
-    void SetSource(const nsAString& src) {
-        // XXX do some quick gzip here maybe -- getting this will be very rare
-        mSource.Assign(src);
-    }
-
-    const nsString& Source() const { return mSource; }
-
-    void SetNeedsTranslation() { mNeedsTranslation = true; }
-    bool NeedsTranslation() const { return mNeedsTranslation; }
-
-    void SetCompileStatus (bool status) {
-        mCompileStatus = status;
-    }
-
-    bool CompileStatus() const {
-        return mCompileStatus;
-    }
-
-    void SetTranslationSuccess() {
-        mTranslationLog.SetIsVoid(true);
-        mNeedsTranslation = false;
-    }
-
-    void SetTranslationFailure(const nsCString& msg) {
-        mTranslationLog.Assign(msg); 
-    }
-
-    const nsCString& TranslationLog() const { return mTranslationLog; }
-
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLShader)
-
-protected:
-
-    WebGLuint mGLName;
-    WebGLenum mType;
-    nsString mSource;
-    nsCString mTranslationLog; // The translation log should contain only ASCII characters
-    bool mNeedsTranslation;
-    nsTArray<WebGLMappedIdentifier> mAttributes;
-    nsTArray<WebGLMappedIdentifier> mUniforms;
-    nsTArray<WebGLUniformInfo> mUniformInfos;
-    int mAttribMaxNameLength;
-    bool mCompileStatus;
-};
-
 /** Takes an ASCII string like "foo[i]", turns it into "foo" and returns "[i]" in bracketPart
   * 
   * \param string input/output: the string to split, becomes the string without the bracket part
@@ -2141,99 +1956,6 @@ protected:
     int mAttribMaxNameLength;
 };
 
-class WebGLRenderbuffer MOZ_FINAL
-    : public nsISupports
-    , public WebGLRefCountedObject<WebGLRenderbuffer>
-    , public LinkedListElement<WebGLRenderbuffer>
-    , public WebGLRectangleObject
-    , public WebGLContextBoundObject
-    , public nsWrapperCache
-{
-public:
-    WebGLRenderbuffer(WebGLContext *context)
-        : WebGLContextBoundObject(context)
-        , mInternalFormat(0)
-        , mInternalFormatForGL(0)
-        , mHasEverBeenBound(false)
-        , mInitialized(false)
-    {
-        SetIsDOMBinding();
-        mContext->MakeContextCurrent();
-        mContext->gl->fGenRenderbuffers(1, &mGLName);
-        mContext->mRenderbuffers.insertBack(this);
-    }
-
-    ~WebGLRenderbuffer() {
-        DeleteOnce();
-    }
-
-    void Delete() {
-        mContext->MakeContextCurrent();
-        mContext->gl->fDeleteRenderbuffers(1, &mGLName);
-        LinkedListElement<WebGLRenderbuffer>::removeFrom(mContext->mRenderbuffers);
-    }
-
-    bool HasEverBeenBound() { return mHasEverBeenBound; }
-    void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    WebGLuint GLName() const { return mGLName; }
-
-    bool Initialized() const { return mInitialized; }
-    void SetInitialized(bool aInitialized) { mInitialized = aInitialized; }
-
-    WebGLenum InternalFormat() const { return mInternalFormat; }
-    void SetInternalFormat(WebGLenum aInternalFormat) { mInternalFormat = aInternalFormat; }
-    
-    WebGLenum InternalFormatForGL() const { return mInternalFormatForGL; }
-    void SetInternalFormatForGL(WebGLenum aInternalFormatForGL) { mInternalFormatForGL = aInternalFormatForGL; }
-    
-    int64_t MemoryUsage() const {
-        int64_t pixels = int64_t(Width()) * int64_t(Height());
-
-        // If there is no defined format, we're not taking up any memory
-        if (!mInternalFormatForGL) {
-            return 0;
-        }
-
-        switch (mInternalFormatForGL) {
-            case LOCAL_GL_STENCIL_INDEX8:
-                return pixels;
-            case LOCAL_GL_RGBA4:
-            case LOCAL_GL_RGB5_A1:
-            case LOCAL_GL_RGB565:
-            case LOCAL_GL_DEPTH_COMPONENT16:
-                return 2 * pixels;
-            case LOCAL_GL_RGB8:
-            case LOCAL_GL_DEPTH_COMPONENT24:
-                return 3*pixels;
-            case LOCAL_GL_RGBA8:
-            case LOCAL_GL_DEPTH24_STENCIL8:
-                return 4*pixels;
-            default:
-                break;
-        }
-        NS_ABORT();
-        return 0;
-    }
-
-    WebGLContext *GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLRenderbuffer)
-
-protected:
-
-    WebGLuint mGLName;
-    WebGLenum mInternalFormat;
-    WebGLenum mInternalFormatForGL;
-    bool mHasEverBeenBound;
-    bool mInitialized;
-
-    friend class WebGLFramebuffer;
-};
 
 class WebGLFramebufferAttachment
 {
@@ -2777,39 +2499,6 @@ protected:
     nsString mName;
 };
 
-class WebGLShaderPrecisionFormat MOZ_FINAL
-    : public nsISupports
-    , public WebGLContextBoundObject
-{
-public:
-    WebGLShaderPrecisionFormat(WebGLContext *context, WebGLint rangeMin, WebGLint rangeMax, WebGLint precision) :
-        WebGLContextBoundObject(context),
-        mRangeMin(rangeMin),
-        mRangeMax(rangeMax),
-        mPrecision(precision)
-    {
-    }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
-
-    NS_DECL_ISUPPORTS
-
-    // WebIDL WebGLShaderPrecisionFormat API
-    WebGLint RangeMin() const {
-        return mRangeMin;
-    }
-    WebGLint RangeMax() const {
-        return mRangeMax;
-    }
-    WebGLint Precision() const {
-        return mPrecision;
-    }
-
-protected:
-    WebGLint mRangeMin;
-    WebGLint mRangeMax;
-    WebGLint mPrecision;
-};
 
 inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
     return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()

@@ -109,8 +109,7 @@ public:
   // null if one is not found. The returned nsGlobalNameStruct is only
   // guaranteed to be valid until the next call to any of the methods
   // in this class.
-  nsresult LookupNavigatorName(const nsAString& aName,
-                               const nsGlobalNameStruct **aNameStruct);
+  const nsGlobalNameStruct* LookupNavigatorName(const nsAString& aName);
 
   nsresult RegisterClassName(const char *aClassName,
                              int32_t aDOMClassInfoID,

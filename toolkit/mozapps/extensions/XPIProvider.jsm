@@ -1802,7 +1802,7 @@ var XPIProvider = {
     }
     catch (e) { }
     
-    const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+    const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
     TelemetryPing.observe(null, "Add-ons", data);
   },
 

@@ -18,6 +18,7 @@ extern "C" {
 #include "nsTimeRanges.h"
 #include "mozilla/TimeStamp.h"
 #include "VorbisUtils.h"
+#include "MediaMetadataManager.h"
 
 namespace mozilla {
 
@@ -77,6 +78,7 @@ static const int PAGE_STEP = 8192;
 
 OggReader::OggReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
+    mMonitor("OggReader"),
     mTheoraState(nullptr),
     mVorbisState(nullptr),
     mOpusState(nullptr),
@@ -86,7 +88,9 @@ OggReader::OggReader(AbstractMediaDecoder* aDecoder)
     mOpusSerial(0),
     mTheoraSerial(0),
     mOpusPreSkip(0),
-    mPageOffset(0)
+    mPageOffset(0),
+    mIsChained(false),
+    mDecodedAudioFrames(0)
 {
   MOZ_COUNT_CTOR(OggReader);
   memset(&mTheoraInfo, 0, sizeof(mTheoraInfo));
@@ -400,6 +404,9 @@ nsresult OggReader::DecodeVorbis(ogg_packet* aPacket) {
                                    frames,
                                    buffer.forget(),
                                    channels));
+
+    mDecodedAudioFrames += frames;
+
     endFrame -= frames;
     if (vorbis_synthesis_read(&mVorbisState->mDsp, frames) != 0) {
       return NS_ERROR_FAILURE;
@@ -544,6 +551,9 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
                                  frames,
                                  buffer.forget(),
                                  channels));
+
+  mDecodedAudioFrames += frames;
+
   return NS_OK;
 }
 #endif /* MOZ_OPUS */
@@ -584,7 +594,7 @@ bool OggReader::DecodeAudioData()
 #endif
   }
 
-  if (packet->e_o_s) {
+  if ((packet->e_o_s) && (!ReadOggChain())) {
     // We've encountered an end of bitstream packet, or we've hit the end of
     // file while trying to decode, so inform the audio queue that there'll
     // be no more samples.
@@ -593,6 +603,114 @@ bool OggReader::DecodeAudioData()
   }
 
   return true;
+}
+
+void OggReader::SetChained(bool aIsChained) {
+  {
+    ReentrantMonitorAutoEnter mon(mMonitor);
+    mIsChained = aIsChained;
+  }
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mDecoder->SetMediaSeekable(false);
+  }
+}
+
+bool OggReader::ReadOggChain()
+{
+
+  bool chained = false;
+  OpusState* newOpusState = nullptr;
+  VorbisState* newVorbisState = nullptr;
+  int channels = 0;
+  long rate = 0;
+  MetadataTags* tags = nullptr;
+
+  if (HasVideo() || HasSkeleton() || !HasAudio()) {
+    return false;
+  }
+
+  ogg_page page;
+  int64_t pageOffset = ReadOggPage(&page);
+  if ((pageOffset == -1) || (!ogg_page_bos(&page))) {
+    return false;
+  }
+
+  int serial = ogg_page_serialno(&page);
+  if (mCodecStates.Get(serial, nullptr)) {
+    return false;
+  }
+
+  nsAutoPtr<OggCodecState> codecState;
+  codecState = OggCodecState::Create(&page);
+  if (!codecState) {
+    return false;
+  }
+
+  if (mVorbisState && (codecState->GetType() == OggCodecState::TYPE_VORBIS)) {
+    newVorbisState = static_cast<VorbisState*>(codecState.get());
+  }
+#ifdef MOZ_OPUS
+  else if (mOpusState && (codecState->GetType() == OggCodecState::TYPE_OPUS)) {
+    newOpusState = static_cast<OpusState*>(codecState.get());
+  }
+#endif
+  else {
+    return false;
+  }
+
+  mCodecStates.Put(serial, codecState.forget());
+  mKnownStreams.AppendElement(serial);
+  OggCodecState* state = nullptr;
+  mCodecStates.Get(serial, &state);
+
+  NS_ENSURE_TRUE(state, false);
+
+  if (NS_FAILED(state->PageIn(&page))) {
+    return false;
+  }
+
+  if ((newVorbisState && ReadHeaders(newVorbisState)) &&
+      (mVorbisState->mInfo.rate == newVorbisState->mInfo.rate) &&
+      (mVorbisState->mInfo.channels == newVorbisState->mInfo.channels)) {
+    mVorbisState->Reset();
+    mVorbisState = newVorbisState;
+    mVorbisSerial = mVorbisState->mSerial;
+    LOG(PR_LOG_DEBUG, ("New vorbis ogg link, serial=%d\n", mVorbisSerial));
+    chained = true;
+    rate = mVorbisState->mInfo.rate;
+    channels = mVorbisState->mInfo.channels;
+    tags = mVorbisState->GetTags();
+  }
+
+#ifdef MOZ_OPUS
+  if ((newOpusState && ReadHeaders(newOpusState)) &&
+      (mOpusState->mRate == newOpusState->mRate) &&
+      (mOpusState->mChannels == newOpusState->mChannels)) {
+    mOpusState->Reset();
+    mOpusState = newOpusState;
+    mOpusSerial = mOpusState->mSerial;
+    chained = true;
+    rate = mOpusState->mRate;
+    channels = mOpusState->mChannels;
+    tags = mOpusState->GetTags();
+  }
+#endif
+
+  if (chained) {
+    SetChained(true);
+    {
+      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+      mDecoder->QueueMetadata((mDecodedAudioFrames * USECS_PER_S) / rate,
+                               channels,
+                               rate,
+                               HasAudio(),
+                               tags);
+    }
+    return true;
+  }
+
+  return false;
 }
 
 nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
@@ -943,6 +1061,7 @@ int64_t OggReader::RangeEndTime(int64_t aStartOffset,
       // This page is from a bitstream which we haven't encountered yet.
       // It's probably from a new "link" in a "chained" ogg. Don't
       // bother even trying to find a duration...
+      SetChained(true);
       endTime = -1;
       break;
     }
@@ -1207,6 +1326,8 @@ nsresult OggReader::Seek(int64_t aTarget,
                            int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  if (mIsChained)
+    return NS_ERROR_FAILURE;
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
   nsresult res;
   MediaResource* resource = mDecoder->GetResource();
@@ -1603,6 +1724,11 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
 
 nsresult OggReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
 {
+  {
+    mozilla::ReentrantMonitorAutoEnter mon(mMonitor);
+    if (mIsChained)
+      return NS_ERROR_FAILURE;
+  }
 #ifdef OGG_ESTIMATE_BUFFERED
   MediaResource* stream = mDecoder->GetResource();
   int64_t durationUs = 0;
@@ -1698,6 +1824,7 @@ nsresult OggReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
         // ogg), return OK to abort the finding any further ranges. This
         // prevents us searching through the rest of the media when we
         // may not be able to extract timestamps from it.
+        SetChained(true);
         return NS_OK;
       }
     }

@@ -1,0 +1,40 @@
+From 9345aaa5ca1c2fb7d62981b2a538e0ce20612c38 Mon Sep 17 00:00:00 2001
+From: Jean-Marc Valin <jmvalin@jmvalin.ca>
+Date: Fri, 30 Nov 2012 17:36:36 -0500
+Subject: [PATCH] Fixes an out-of-bounds read issue with the padding handling
+ code
+
+This was reported by Juri Aedla and is limited to reading memory up
+to about 60 kB beyond the compressed buffer. This can only be triggered
+by a compressed packet more than about 16 MB long, so it's not a problem
+for RTP. In theory, it *could* crash an Ogg decoder if the memory just after
+the incoming packet is out-of-range.
+---
+ src/opus_decoder.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/src/opus_decoder.c b/src/opus_decoder.c
+index 167e4e4..0be6730 100644
+--- a/src/opus_decoder.c
++++ b/src/opus_decoder.c
+@@ -641,16 +641,14 @@ static int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
+       /* Padding flag is bit 6 */
+       if (ch&0x40)
+       {
+-         int padding=0;
+          int p;
+          do {
+             if (len<=0)
+                return OPUS_INVALID_PACKET;
+             p = *data++;
+             len--;
+-            padding += p==255 ? 254: p;
++            len -= p==255 ? 254: p;
+          } while (p==255);
+-         len -= padding;
+       }
+       if (len<0)
+          return OPUS_INVALID_PACKET;
+-- 
+1.7.11.7
+
