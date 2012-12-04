@@ -937,7 +937,33 @@ this.CB_FORMAT_ETWS = 1;
 this.CB_FORMAT_CMAS = 2;
 this.CB_FORMAT_UMTS = 3;
 
+// CBS Data Coding Scheme: Language groups
+// see 3GPP TS 23.038 section 5
+this.CB_DCS_LANG_GROUP_1 = [
+  "de", "en", "it", "fr", "es", "nl", "sv", "da", "pt", "fi",
+  "no", "el", "tr", "hu", "pl", null
+];
+this.CB_DCS_LANG_GROUP_2 = [
+  "cs", "he", "ar", "ru", "is", null, null, null, null, null,
+  null, null, null, null, null, null
+];
+
+// User Data max length in septets
+this.CB_MAX_CONTENT_7BIT = 93;
+// User Data max length in octets
+this.CB_MAX_CONTENT_8BIT = 82;
+// User Data max length in chars
+this.CB_MAX_CONTENT_UCS2 = 41;
+
 this.CB_MESSAGE_SIZE_ETWS = 56;
+this.CB_MESSAGE_SIZE_GSM  = 88;
+
+// GSM Cell Broadcast Geographical Scope
+// See 3GPP TS 23.041 clause 9.4.1.2.1
+this.CB_GSM_GEOGRAPHICAL_SCOPE_CELL_WIDE_IMMEDIATE = 0;
+this.CB_GSM_GEOGRAPHICAL_SCOPE_PLMN_WIDE           = 1;
+this.CB_GSM_GEOGRAPHICAL_SCOPE_LOCATION_AREA_WIDE  = 2;
+this.CB_GSM_GEOGRAPHICAL_SCOPE_CELL_WIDE           = 3;
 
 // GSM Cell Broadcast Geographical Scope
 // See 3GPP TS 23.041 clause 9.4.1.2.1
@@ -947,6 +973,11 @@ this.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES = [
   "location-area",
   "cell"
 ];
+
+// GSM Cell Broadcast Message Identifiers
+// see 3GPP TS 23.041 clause 9.4.1.2.2
+this.CB_GSM_MESSAGEID_ETWS_BEGIN = 0x1100;
+this.CB_GSM_MESSAGEID_ETWS_END   = 0x1107;
 
 // ETWS Warning-Type
 // see 3GPP TS 23.041 clause 9.3.24
@@ -1141,6 +1172,8 @@ this.PDU_DCS_MSG_CLASS_0                = 0x00;
 this.PDU_DCS_MSG_CLASS_1                = 0x01;
 this.PDU_DCS_MSG_CLASS_2                = 0x02;
 this.PDU_DCS_MSG_CLASS_3                = 0x03;
+this.PDU_DCS_MSG_CLASS_USER_1           = 0x04;
+this.PDU_DCS_MSG_CLASS_USER_2           = 0x05;
 this.PDU_DCS_CODING_GROUP_BITS          = 0xF0;
 this.PDU_DCS_MSG_CLASS_BITS             = 0x03;
 this.PDU_DCS_MWI_ACTIVE_BITS            = 0x08;
@@ -1157,6 +1190,8 @@ GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_0]      = "class-0";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_1]      = "class-1";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]      = "class-2";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_3]      = "class-3";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_USER_1] = "user-1";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_USER_2] = "user-2";
 
 // Because service center timestamp omit the century. Yay.
 this.PDU_TIMESTAMP_YEAR_OFFSET = 2000;
