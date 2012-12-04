@@ -32,7 +32,7 @@
 #define __restrict
 #endif
 
-#include "WebGLContext.h"
+#include "WebGLTexture.h"
 #include "mozilla/StandardInteger.h"
 
 #if defined _MSC_VER
