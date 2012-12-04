@@ -110,7 +110,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eSortAction,
     eNoLiveAttr,
-    kGenericAccType,
+    Accessible::eTableCellAccessible,
     kNoReqStates,
     eARIASelectable,
     eARIAReadonly
@@ -144,7 +144,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    Accessible::eListAccessible,
     kNoReqStates
   },
   { // document
@@ -175,7 +175,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    Accessible::eSelectAccessible,
+    Accessible::eSelectAccessible | Accessible::eTableAccessible,
     states::FOCUSABLE,
     eARIAMultiSelectable,
     eARIAReadonly
@@ -187,7 +187,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    Accessible::eTableCellAccessible,
     kNoReqStates,
     eARIASelectable,
     eARIAReadonly
@@ -239,7 +239,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    Accessible::eListAccessible,
     states::READONLY
   },
   { // listbox
@@ -429,7 +429,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    Accessible::eTableRowAccessible,
     kNoReqStates,
     eARIASelectable
   },
@@ -450,7 +450,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eSortAction,
     eNoLiveAttr,
-    kGenericAccType,
+    Accessible::eTableCellAccessible,
     kNoReqStates,
     eARIASelectable,
     eARIAReadonly
@@ -603,7 +603,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    Accessible::eSelectAccessible,
+    Accessible::eSelectAccessible | Accessible::eTableAccessible,
     kNoReqStates,
     eARIAReadonly,
     eARIAMultiSelectable

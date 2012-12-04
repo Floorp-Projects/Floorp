@@ -2541,6 +2541,8 @@ TypeCompartment::nukeTypes(FreeOp *fop)
 # endif
     }
 #endif /* JS_METHODJIT */
+
+    pendingNukeTypes = false;
 }
 
 void
@@ -5606,6 +5608,13 @@ TypeScript::CheckBytecode(JSContext *cx, HandleScript script, jsbytecode *pc, co
         const js::Value &val = sp[-defCount + i];
         TypeSet *types = analysis->pushedTypes(pc, i);
         if (IgnorePushed(pc, i))
+            continue;
+
+        /*
+         * Ignore undefined values, these may have been inserted by Ion to
+         * substitute for dead values.
+         */
+        if (val.isUndefined())
             continue;
 
         Type type = GetValueType(cx, val);

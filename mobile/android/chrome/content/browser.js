@@ -5112,8 +5112,11 @@ var ViewportHandler = {
     let width = this.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth);
     let height = this.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight);
 
+    // Allow zoom unless explicity disabled or minScale and maxScale are equal.
+    // WebKit allows 0, "no", or "false" for viewport-user-scalable.
+    // Note: NaN != NaN. Therefore if minScale and maxScale are undefined the clause has no effect.
     let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
-    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr); // WebKit allows 0, "no", or "false"
+    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr) && (minScale != maxScale);
 
     if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
       // Only check for HandheldFriendly if we don't have a viewport meta tag
@@ -7838,11 +7841,13 @@ var Tabs = {
     }
     // if the tab was last touched more than browser.tabs.expireTime seconds ago,
     // zombify it
-    let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
-    if (lruTab && tabAgeMs > expireTimeMs) {
-      MemoryObserver.zombify(lruTab);
-      Telemetry.addData("FENNEC_TAB_EXPIRED", tabAgeMs / 1000);
-      return true;
+    if (lruTab) {
+      let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
+      if (tabAgeMs > expireTimeMs) {
+        MemoryObserver.zombify(lruTab);
+        Telemetry.addData("FENNEC_TAB_EXPIRED", tabAgeMs / 1000);
+        return true;
+      }
     }
     return false;
   },

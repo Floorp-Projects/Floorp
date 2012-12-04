@@ -26,6 +26,10 @@ function test()
   }
   else
   {
+    // Enumerate the global once before we turn on gczeal, so we're not
+    // trying to do all the enumerate hook object creation with a gc on
+    // every object, because that makes tests time out.
+    for (z in this);
     jit(true);
     gczeal(2);
 

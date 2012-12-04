@@ -90,14 +90,14 @@ Link::LinkState() const
       return nsEventStates();
     }
 
+    // Assume that we are not visited until we are told otherwise.
+    self->mLinkState = eLinkState_Unvisited;
+
     // We have a good href, so register with History.
     if (mHistory) {
       nsresult rv = mHistory->RegisterVisitedCallback(hrefURI, self);
       if (NS_SUCCEEDED(rv)) {
         self->mRegistered = true;
-
-        // Assume that we are not visited until we are told otherwise.
-        self->mLinkState = eLinkState_Unvisited;
 
         // And make sure we are in the document's link map.
         nsIDocument *doc = element->GetCurrentDoc();

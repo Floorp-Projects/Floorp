@@ -30,7 +30,7 @@ endif # gtk2
 endif # mac
 endif # windows
 
-EXTRA_PP_COMPONENTS = \
+EXTRA_COMPONENTS := \
   components.manifest \
   CommandLineHandler.js \
   ContentPermission.js \

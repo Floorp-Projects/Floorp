@@ -115,7 +115,7 @@ struct TypeInferenceSizes;
 
 namespace js {
 class AutoDebugModeGC;
-struct DebugScopes;
+class DebugScopes;
 }
 
 struct JSCompartment : public js::gc::GraphNodeBase
@@ -273,7 +273,6 @@ struct JSCompartment : public js::gc::GraphNodeBase
         return gcState == Finished;
     }
 
-
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
@@ -297,8 +296,11 @@ struct JSCompartment : public js::gc::GraphNodeBase
 
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
+
+  private:
     js::WrapperMap               crossCompartmentWrappers;
 
+  public:
     /*
      * These flags help us to discover if a compartment that shouldn't be alive
      * manages to outlive a GC.
@@ -400,6 +402,20 @@ struct JSCompartment : public js::gc::GraphNodeBase
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
+
+    bool putWrapper(const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
+
+    js::WrapperMap::Ptr lookupWrapper(const js::Value& wrapped) {
+        return crossCompartmentWrappers.lookup(wrapped);
+    }
+
+    void removeWrapper(js::WrapperMap::Ptr p) {
+        crossCompartmentWrappers.remove(p);
+    }
+
+    struct WrapperEnum : public js::WrapperMap::Enum {
+        WrapperEnum(JSCompartment *c) : js::WrapperMap::Enum(c->crossCompartmentWrappers) {}
+    };
 
     void mark(JSTracer *trc);
     void markTypes(JSTracer *trc);

@@ -252,6 +252,7 @@ MOCHITEST_FILES_A = \
 		file_XHRDocURI.text \
 		file_XHRDocURI.text^headers^ \
 		test_DOMException.html \
+		test_domparsing.html \
 		test_meta_viewport0.html \
 		test_meta_viewport1.html \
 		test_meta_viewport2.html \

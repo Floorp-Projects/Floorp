@@ -503,7 +503,7 @@ interface WebGLRenderingContext {
     readonly attribute GLsizei drawingBufferWidth;
     readonly attribute GLsizei drawingBufferHeight;
 
-    [WebGLHandlesContextLoss] WebGLContextAttributes getContextAttributes();
+    [WebGLHandlesContextLoss] WebGLContextAttributes? getContextAttributes();
     [WebGLHandlesContextLoss] boolean isContextLost();
 
     sequence<DOMString>? getSupportedExtensions();

@@ -87,6 +87,7 @@ void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 void JS_FASTCALL BindName(VMFrame &f, PropertyName *name);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, PropertyName *name);
+void JS_FASTCALL IntrinsicName(VMFrame &f, PropertyName *name);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f, PropertyName *name);
 void JS_FASTCALL GetPropNoCache(VMFrame &f, PropertyName *name);

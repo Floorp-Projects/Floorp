@@ -23,7 +23,7 @@ function test() {
             isnot(publicDownload.cancelable, null,
                   "Download must be cancelable");
             // Cancel the download
-            Services.downloads.cancelDownload(publicDownload.id);
+            publicDownload.cancel();
           }
           break;
         case Services.downloads.DOWNLOAD_CANCELED:
@@ -36,17 +36,17 @@ function test() {
               is(Services.downloads.activeDownloadCount, 0,
                  "Check public download is not active on private window");
               privateDownload = testDownload(aWin, true);
-              // Try to cancel the download but will fail since it's private
-              try {
-                Services.downloads.cancelDownload(privateDownload.id);
-                ok(false, "Cancel private download should have failed.");
-              } catch (e) {
+              waitForDownloadState(privateDownload,
+                Services.downloads.DOWNLOAD_QUEUED, function() {
+                isnot(privateDownload.cancelable, null,
+                      "Private download must be cancelable");
+                privateDownload.cancel();
                 testOnWindow(false, function(aWin) {
                   is(Services.downloads.activeDownloadCount, 0,
-                   "Check that there are no active downloads");
+                     "Check that there are no active downloads on a new public window");
                   cleanUp();
                 });
-              }
+              });
             });
           }
           break;

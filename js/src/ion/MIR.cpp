@@ -588,48 +588,67 @@ MUrsh::infer(const TypeOracle::BinaryTypes &b)
 static inline bool
 NeedNegativeZeroCheck(MDefinition *def)
 {
-    // Test if all uses have the same symantic for -0 and 0
+    // Test if all uses have the same semantics for -0 and 0
     for (MUseIterator use = def->usesBegin(); use != def->usesEnd(); use++) {
         if (use->node()->isResumePoint())
-            return true;
+            continue;
 
         MDefinition *use_def = use->node()->toDefinition();
         switch (use_def->op()) {
           case MDefinition::Op_Add: {
+            // If add is truncating -0 and 0 are observed as the same.
+            if (use_def->toAdd()->isTruncated())
+                break;
+
             // x + y gives -0, when both x and y are -0
-            // - When other operand can't produce -0 (i.e. all opcodes, except Mul/Div/ToInt32)
-            //   Remove negative zero check on this operand 
-            // - When both operands can produce -0 (both Mul/Div/ToInt32 opcode)
-            //   We can remove the check eagerly on this operand.
-            MDefinition *operand = use_def->getOperand(0);
-            if (operand == def) {
-                operand = use_def->getOperand(1);
 
-                // Don't remove check when both operands are same definition
-                // As removing it from one operand, will remove it from both.
-                if (operand == def)
-                    return true;
+            // Figure out the order in which the addition's operands will
+            // execute. EdgeCaseAnalysis::analyzeLate has renumbered the MIR
+            // definitions for us so that this just requires comparing ids.
+            MDefinition *first = use_def->getOperand(0);
+            MDefinition *second = use_def->getOperand(1);
+            if (first->id() > second->id()) {
+                MDefinition *temp = first;
+                first = second;
+                second = temp;
             }
 
-            // Check if check is possibly eagerly removed on other operand
-            // and don't remove check eagerly on this operand in that case.
-            if (operand->isMul()) {
-                MMul *mul = operand->toMul();
-                if (!mul->canBeNegativeZero())
+            if (def == first) {
+                // Negative zero checks can be removed on the first executed
+                // operand only if it is guaranteed the second executed operand
+                // will produce a value other than -0. While the second is
+                // typed as an int32, a bailout taken between execution of the
+                // operands may change that type and cause a -0 to flow to the
+                // second.
+                //
+                // There is no way to test whether there are any bailouts
+                // between execution of the operands, so remove negative
+                // zero checks from the first only if the second's type is
+                // independent from type changes that may occur after bailing.
+                switch (second->op()) {
+                  case MDefinition::Op_Constant:
+                  case MDefinition::Op_BitAnd:
+                  case MDefinition::Op_BitOr:
+                  case MDefinition::Op_BitXor:
+                  case MDefinition::Op_BitNot:
+                  case MDefinition::Op_Lsh:
+                  case MDefinition::Op_Rsh:
+                    break;
+                  default:
                     return true;
-            } else if (operand->isDiv()) {
-                MDiv *div = operand->toDiv();
-                if (!div->canBeNegativeZero())
-                    return true;
-            } else if (operand->isToInt32()) {
-                MToInt32 *int32 = operand->toToInt32();
-                if (!int32->canBeNegativeZero())
-                    return true;
-            } else if (operand->isPhi()) {
-                return true;
+                }
             }
+
+            // The negative zero check can always be removed on the second
+            // executed operand; by the time this executes the first will have
+            // been evaluated as int32 and the addition's result cannot be -0.
             break;
           }
+          case MDefinition::Op_Sub:
+            // If sub is truncating -0 and 0 are observed as the same
+            if (use_def->toSub()->isTruncated())
+                break;
+            /* Fall through...  */
           case MDefinition::Op_StoreElement:
           case MDefinition::Op_StoreElementHole:
           case MDefinition::Op_LoadElement:
@@ -638,7 +657,6 @@ NeedNegativeZeroCheck(MDefinition *def)
           case MDefinition::Op_LoadTypedArrayElementHole:
           case MDefinition::Op_CharCodeAt:
           case MDefinition::Op_Mod:
-          case MDefinition::Op_Sub:
             // Only allowed to remove check when definition is the second operand
             if (use_def->getOperand(0) == def)
                 return true;
@@ -662,6 +680,7 @@ NeedNegativeZeroCheck(MDefinition *def)
           case MDefinition::Op_BitOr:
           case MDefinition::Op_BitXor:
           case MDefinition::Op_Abs:
+          case MDefinition::Op_TruncateToInt32:
             // Always allowed to remove check. No matter which operand.
             break;
           default:
@@ -725,36 +744,36 @@ MDiv::analyzeEdgeCasesForward()
     // If lhs is a constant int != INT32_MIN, then
     // negative overflow check can be skipped.
     if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(INT32_MIN))
-        canBeNegativeOverflow_ = false;
+        setCanBeNegativeZero(false);
 
     // If rhs is a constant int != -1, likewise.
     if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(-1))
-        canBeNegativeOverflow_ = false;
+        setCanBeNegativeZero(false);
 
     // If lhs is != 0, then negative zero check can be skipped.
     if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(0))
-        canBeNegativeZero_ = false;
+        setCanBeNegativeZero(false);
 
     // If rhs is >= 0, likewise.
     if (rhs()->isConstant()) {
         const js::Value &val = rhs()->toConstant()->value();
         if (val.isInt32() && val.toInt32() >= 0)
-            canBeNegativeZero_ = false;
+            setCanBeNegativeZero(false);
     }
 }
 
 void
 MDiv::analyzeEdgeCasesBackward()
 {
-    if (canBeNegativeZero_)
-        canBeNegativeZero_ = NeedNegativeZeroCheck(this);
+    if (canBeNegativeZero() && !NeedNegativeZeroCheck(this))
+        setCanBeNegativeZero(false);
 }
 
 void
 MDiv::analyzeTruncateBackward()
 {
-    if (!isTruncated())
-        setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
+    if (!isTruncated() && js::ion::EdgeCaseAnalysis::AllUsesTruncate(this))
+        setTruncated(true);
 }
 
 bool
@@ -764,8 +783,7 @@ MDiv::updateForReplacement(MDefinition *ins_)
     MDiv *ins = ins_->toDiv();
     // Since EdgeCaseAnalysis is not being run before GVN, its information does
     // not need to be merged here.
-    if (isTruncated())
-        setTruncated(ins->isTruncated());
+    setTruncated(isTruncated() && ins->isTruncated());
     return true;
 }
 
@@ -829,8 +847,8 @@ MMod::foldsTo(bool useValueNumbers)
 void
 MAdd::analyzeTruncateBackward()
 {
-    if (!isTruncated())
-        setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
+    if (!isTruncated() && js::ion::EdgeCaseAnalysis::AllUsesTruncate(this))
+        setTruncated(true);
 }
 
 bool
@@ -838,8 +856,7 @@ MAdd::updateForReplacement(MDefinition *ins_)
 {
     JS_ASSERT(ins_->isAdd());
     MAdd *ins = ins_->toAdd();
-    if (isTruncated())
-        setTruncated(ins->isTruncated());
+    setTruncated(isTruncated() && ins->isTruncated());
     return true;
 }
 
@@ -852,8 +869,8 @@ MAdd::fallible()
 void
 MSub::analyzeTruncateBackward()
 {
-    if (!isTruncated())
-        setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
+    if (!isTruncated() && js::ion::EdgeCaseAnalysis::AllUsesTruncate(this))
+        setTruncated(true);
 }
 
 bool
@@ -861,8 +878,7 @@ MSub::updateForReplacement(MDefinition *ins_)
 {
     JS_ASSERT(ins_->isSub());
     MSub *ins = ins_->toSub();
-    if (isTruncated())
-        setTruncated(ins->isTruncated());
+    setTruncated(isTruncated() && ins->isTruncated());
     return true;
 }
 
@@ -883,7 +899,7 @@ MMul::foldsTo(bool useValueNumbers)
         return this;
 
     if (EqualValues(useValueNumbers, lhs(), rhs()))
-        canBeNegativeZero_ = false;
+        setCanBeNegativeZero(false);
 
     return this;
 }
@@ -900,14 +916,14 @@ MMul::analyzeEdgeCasesForward()
     if (lhs()->isConstant()) {
         const js::Value &val = lhs()->toConstant()->value();
         if (val.isInt32() && val.toInt32() > 0)
-            canBeNegativeZero_ = false;
+            setCanBeNegativeZero(false);
     }
 
     // If rhs is > 0, likewise.
     if (rhs()->isConstant()) {
         const js::Value &val = rhs()->toConstant()->value();
         if (val.isInt32() && val.toInt32() > 0)
-            canBeNegativeZero_ = false;
+            setCanBeNegativeZero(false);
     }
 
 }
@@ -915,15 +931,15 @@ MMul::analyzeEdgeCasesForward()
 void
 MMul::analyzeEdgeCasesBackward()
 {
-    if (canBeNegativeZero_)
-        canBeNegativeZero_ = NeedNegativeZeroCheck(this);
+    if (canBeNegativeZero() && !NeedNegativeZeroCheck(this))
+        setCanBeNegativeZero(false);
 }
 
 void
 MMul::analyzeTruncateBackward()
 {
-    if (!isPossibleTruncated())
-        setPossibleTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
+    if (!isPossibleTruncated() && js::ion::EdgeCaseAnalysis::AllUsesTruncate(this))
+        setPossibleTruncated(true);
 }
 
 bool
@@ -931,8 +947,12 @@ MMul::updateForReplacement(MDefinition *ins_)
 {
     JS_ASSERT(ins_->isMul());
     MMul *ins = ins_->toMul();
-    if (isPossibleTruncated())
-        setPossibleTruncated(ins->isPossibleTruncated());
+    // setPossibleTruncated can reset the canBenegativeZero check,
+    // therefore first query the state, before setting the new state.
+    bool truncated = isPossibleTruncated() && ins->isPossibleTruncated();
+    bool negativeZero = canBeNegativeZero() || ins->canBeNegativeZero();
+    setPossibleTruncated(truncated);
+    setCanBeNegativeZero(negativeZero);
     return true;
 }
 
@@ -944,21 +964,11 @@ MMul::canOverflow()
     return !range() || !range()->isFinite();
 }
 
-bool
-MMul::canBeNegativeZero()
-{
-    if (!range())
-        return canBeNegativeZero_;
-    if (range()->lower() > 0 || range()->upper() < 0)
-        return false;
-    return canBeNegativeZero_;
-}
-
 void
 MBinaryArithInstruction::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
 {
     // Retrieve type information of lhs and rhs
-    // Rhs is defaulted to int32 first, 
+    // Rhs is defaulted to int32 first,
     // because in some cases there is no rhs type information
     MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag());
     MIRType rhs = MIRType_Int32;
@@ -1235,6 +1245,7 @@ MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *cal
     stackDepth_(block->stackDepth()),
     pc_(pc),
     caller_(caller),
+    instruction_(NULL),
     mode_(mode)
 {
 }
@@ -1273,7 +1284,8 @@ MToInt32::foldsTo(bool useValueNumbers)
 void
 MToInt32::analyzeEdgeCasesBackward()
 {
-    canBeNegativeZero_ = NeedNegativeZeroCheck(this);
+    if (!NeedNegativeZeroCheck(this))
+        setCanBeNegativeZero(false);
 }
 
 MDefinition *

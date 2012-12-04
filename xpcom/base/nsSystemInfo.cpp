@@ -173,6 +173,8 @@ nsSystemInfo::Init()
             SetPropertyAsAString(NS_LITERAL_STRING("device"), str);
         if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str))
             SetPropertyAsAString(NS_LITERAL_STRING("manufacturer"), str);
+        if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build$VERSION", "RELEASE", str))
+            SetPropertyAsAString(NS_LITERAL_STRING("release_version"), str);
         int32_t version;
         if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
             version = 0;

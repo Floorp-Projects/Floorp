@@ -48,13 +48,31 @@
   } while (0)
 
 #define ENSURE_CALLED_BEFORE_ASYNC_OPEN()                                      \
-  if (mIsPending || mWasOpened) {                                              \
-    nsPrintfCString msg("'%s' called after AsyncOpen: %s +%d",                 \
-                        __FUNCTION__, __FILE__, __LINE__);                     \
-    NECKO_MAYBE_ABORT(msg);                                                    \
-  }                                                                            \
-  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);                           \
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+  do {                                                                         \
+    if (mIsPending || mWasOpened) {                                            \
+      nsPrintfCString msg("'%s' called after AsyncOpen: %s +%d",               \
+                          __FUNCTION__, __FILE__, __LINE__);                   \
+      NECKO_MAYBE_ABORT(msg);                                                  \
+    }                                                                          \
+    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);                         \
+    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);                      \
+  } while (0)
+
+// Fails call if made after request observers (on-modify-request, etc) have been
+// called
+
+#define ENSURE_CALLED_BEFORE_CONNECT()                                         \
+  do {                                                                         \
+    if (mRequestObserversCalled) {                                             \
+      nsPrintfCString msg("'%s' called too late: %s +%d",                      \
+                          __FUNCTION__, __FILE__, __LINE__);                   \
+      NECKO_MAYBE_ABORT(msg);                                                  \
+      if (mIsPending)                                                          \
+        return NS_ERROR_IN_PROGRESS;                                           \
+      MOZ_ASSERT(mWasOpened);                                                  \
+      return NS_ERROR_ALREADY_OPENED;                                          \
+    }                                                                          \
+  } while (0)
 
 namespace mozilla {
 namespace net {

@@ -47,7 +47,6 @@ test(function() {
   });
 }, "If child's parent is not the context node, a NotFoundError exception should be thrown")
 test(function() {
-  // TODO: https://www.w3.org/Bugs/Public/show_bug.cgi?id=17318
   var nodes = [
     document.implementation.createDocumentType("html", "", ""),
     document.createTextNode("text"),
@@ -58,7 +57,7 @@ test(function() {
   var a = document.createElement("div");
   var b = document.createElement("div");
   nodes.forEach(function(node) {
-    assert_throws("NotFoundError", function() {
+    assert_throws("HierarchyRequestError", function() {
       node.replaceChild(a, b);
     });
   });

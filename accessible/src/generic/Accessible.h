@@ -172,8 +172,12 @@ public:
   /**
    * Return true if ARIA role is specified on the element.
    */
-  bool HasARIARole() const
-    { return mRoleMapEntry; }
+  bool HasARIARole() const { return mRoleMapEntry; }
+
+  /**
+   * Retrun ARIA role map if any.
+   */
+  nsRoleMapEntry* ARIARoleMap() const { return mRoleMapEntry; }
 
   /**
    * Return accessible role specified by ARIA (see constants in
@@ -693,6 +697,11 @@ public:
   bool HasOwnContent() const { return mContent && !(mFlags & eSharedNode); }
 
   /**
+   * Return true if accessible is of given type.
+   */
+  bool IsOfType(uint32_t aType) const { return mFlags & aType; }
+
+  /**
   * Return true if the accessible has a numeric value.
   */
   bool HasNumericValue() const;
@@ -778,17 +787,22 @@ public: // XXX: a small hack to make these visible for nsARIAMap
     eHyperTextAccessible = 1 << 12,
     eHTMLFileInputAccessible = 1 << 13,
     eHTMLListItemAccessible = 1 << 14,
-    eImageAccessible = 1 << 15,
-    eImageMapAccessible = 1 << 16,
-    eListControlAccessible = 1 << 17,
-    eMenuButtonAccessible = 1 << 18,
-    eMenuPopupAccessible = 1 << 19,
-    eProgressAccessible = 1 << 20,
-    eRootAccessible = 1 << 21,
-    eSelectAccessible = 1 << 22,
-    eTextLeafAccessible = 1 << 23,
-    eXULDeckAccessible = 1 << 24,
-    eXULTreeAccessible = 1 << 25
+    eHTMLTableRowAccessible = 1 << 15,
+    eImageAccessible = 1 << 16,
+    eImageMapAccessible = 1 << 17,
+    eListAccessible = 1 << 18,
+    eListControlAccessible = 1 << 19,
+    eMenuButtonAccessible = 1 << 20,
+    eMenuPopupAccessible = 1 << 21,
+    eProgressAccessible = 1 << 22,
+    eRootAccessible = 1 << 23,
+    eSelectAccessible = 1 << 24,
+    eTableAccessible = 1 << 25,
+    eTableCellAccessible = 1 << 26,
+    eTableRowAccessible = 1 << 27,
+    eTextLeafAccessible = 1 << 28,
+    eXULDeckAccessible = 1 << 29,
+    eXULTreeAccessible = 1 << 30
   };
 
 protected:

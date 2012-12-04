@@ -499,23 +499,20 @@ nsScriptNameSpaceManager::LookupNameInternal(const nsAString& aName,
   return nullptr;
 }
 
-nsresult
-nsScriptNameSpaceManager::LookupNavigatorName(const nsAString& aName,
-                                              const nsGlobalNameStruct **aNameStruct)
+const nsGlobalNameStruct*
+nsScriptNameSpaceManager::LookupNavigatorName(const nsAString& aName)
 {
   GlobalNameMapEntry *entry =
     static_cast<GlobalNameMapEntry *>
                (PL_DHashTableOperate(&mNavigatorNames, &aName,
                                      PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry) &&
-      !((&entry->mGlobalName)->mDisabled)) {
-    *aNameStruct = &entry->mGlobalName;
-  } else {
-    *aNameStruct = nullptr;
+  if (!PL_DHASH_ENTRY_IS_BUSY(entry) ||
+      entry->mGlobalName.mDisabled) {
+    return nullptr;
   }
 
-  return NS_OK;
+  return &entry->mGlobalName;
 }
 
 nsresult

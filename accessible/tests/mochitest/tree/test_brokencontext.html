@@ -27,7 +27,6 @@
 
     var tree =
       { PUSHBUTTON: [ // table
-        { NOTHING: [ // tbody
           { NOTHING: [ // tr
             { NOTHING: [ // th
               { TEXT_LEAF: [ ] }
@@ -35,10 +34,64 @@
             { NOTHING: [ // td
               { TEXT_LEAF: [ ] }
             ] }
-          ] },
-        ] },
+          ] }
       ] };
     testAccessibleTree("button_table", tree);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // HTML list elements outside list context.
+
+    ok(!isAccessible("presentation_ul"),
+                     "presentational ul shouldn't be accessible");
+    ok(!isAccessible("item_in_presentation_ul"),
+                     "li in presentational ul shouldn't be accessible");
+    ok(!isAccessible("styleditem_in_presentation_ul"),
+                     "list styled span in presentational ul shouldn't be accessible");
+
+    ok(!isAccessible("presentation_ol"),
+                     "presentational ol shouldn't be accessible");
+    ok(!isAccessible("item_in_presentation_ol"),
+                     "li in presentational ol shouldn't be accessible");
+
+    ok(!isAccessible("presentation_dl"),
+                     "presentational dl shouldn't be accessible");
+    ok(!isAccessible("dt_in_presentation_dl"),
+                     "dt in presentational dl shouldn't be accessible");
+    ok(!isAccessible("dd_in_presentation_dl"),
+                     "dd in presentational dl shouldn't be accessible");
+
+    tree =
+      { PUSHBUTTON: [ // ul
+        { NOTHING: [ // li
+          { STATICTEXT: [ ] },
+          { TEXT_LEAF: [ ] }
+        ] },
+        { NOTHING: [ // span styled as a list
+          { STATICTEXT: [ ] },
+          { TEXT_LEAF: [ ] }
+        ] }
+      ] };
+    testAccessibleTree("button_ul", tree);
+
+    tree =
+      { PUSHBUTTON: [ // ol
+        { NOTHING: [ // li
+          { STATICTEXT: [ ] },
+          { TEXT_LEAF: [ ] }
+        ] }
+      ] };
+    testAccessibleTree("button_ol", tree);
+
+    tree =
+      { PUSHBUTTON: [ // dl
+        { NOTHING: [ // dt
+          { TEXT_LEAF: [ ] }
+        ] },
+        { NOTHING: [ // dd
+          { TEXT_LEAF: [ ] }
+        ] }
+      ] };
+    testAccessibleTree("button_dl", tree);
 
     ////////////////////////////////////////////////////////////////////////////
     // Styled as HTML table elements, accessible is created by tag name
@@ -74,6 +127,11 @@
      title="Create accessible by tag name as fallback if table descendant style is used out of table context">
     Mozilla Bug 706849
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=804461"
+     title="Build the context dependent tree ">
+    Mozilla Bug 804461
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -93,6 +151,37 @@
       <td id="td_in_button_table">not a cell</td>
     </tr>
   </table>
+
+  <!-- HTML list elements out of list -->
+  <ul role="presentation" id="presentation_ul">
+    <li id="item_in_presentation_ul">item</li>
+    <span id="styleditem_in_presentation_ul"
+          style="display:list-item">Oranges</span>
+  </ul>
+
+  <ol role="presentation" id="presentation_ol">
+    <li id="item_in_presentation_ol">item</li>
+  </ol>
+
+  <dl role="presentation" id="presentation_dl">
+    <dt id="dt_in_presentation_dl">term</dt>
+    <dd id="dd_in_presentation_dl">definition</dd>
+  </dl>
+
+  <ul role="button" id="button_ul">
+    <li id="item_in_button_ul">item</li>
+    <span id="styleditem_in_button_ul"
+          style="display:list-item">Oranges</span>
+  </ul>
+
+  <ol role="button" id="button_ol">
+    <li id="item_in_button_ul">item</li>
+  </ol>
+
+  <dl role="button" id="button_dl">
+    <dt id="dt_in_button_dl">term</ld>
+    <dd id="dd_in_button_dl">definition</dd>
+  </dl>
 
   <!-- styled as HTML table elements -->
   <a id="a_as_td" style="display:table-cell;" href="http://www.google.com">Google</a>

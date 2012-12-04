@@ -2032,24 +2032,11 @@ END_CASE(JSOP_BITNOT)
 
 BEGIN_CASE(JSOP_NEG)
 {
-    /*
-     * When the operand is int jsval, INT32_FITS_IN_JSVAL(i) implies
-     * INT32_FITS_IN_JSVAL(-i) unless i is 0 or INT32_MIN when the
-     * results, -0.0 or INT32_MAX + 1, are double values.
-     */
-    Value ref = regs.sp[-1];
-    int32_t i;
-    if (ref.isInt32() && (i = ref.toInt32()) != 0 && i != INT32_MIN) {
-        i = -i;
-        regs.sp[-1].setInt32(i);
-    } else {
-        double d;
-        if (!ToNumber(cx, regs.sp[-1], &d))
-            goto error;
-        d = -d;
-        if (!regs.sp[-1].setNumber(d) && !ref.isDouble())
-            TypeScript::MonitorOverflow(cx, script, regs.pc);
-    }
+    RootedValue &val = rootValue0;
+    val = regs.sp[-1];
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!NegOperation(cx, script, regs.pc, val, res))
+        goto error;
 }
 END_CASE(JSOP_NEG)
 
@@ -3023,7 +3010,7 @@ BEGIN_CASE(JSOP_ENDINIT)
 {
     /* FIXME remove JSOP_ENDINIT bug 588522 */
     JS_ASSERT(regs.stackDepth() >= 1);
-    JS_ASSERT(regs.sp[-1].isObject());
+    JS_ASSERT(regs.sp[-1].isObject() || regs.sp[-1].isUndefined());
 }
 END_CASE(JSOP_ENDINIT)
 
