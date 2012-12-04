@@ -1189,7 +1189,7 @@ HttpChannelChild::IsFromCache(bool *value)
 NS_IMETHODIMP
 HttpChannelChild::ResumeAt(uint64_t startPos, const nsACString& entityID)
 {
-  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+  ENSURE_CALLED_BEFORE_CONNECT();
   mStartPos = startPos;
   mEntityID = entityID;
   mSendResumeAt = true;
