@@ -44,11 +44,11 @@ function testPref()
 {
   is(gDebugger.Prefs.variablesSearchboxVisible, false,
     "The debugger searchbox should be preffed as hidden.");
-  isnot(gDebugger.DebuggerView.Options._showVariablesSearchboxItem.getAttribute("checked"), "true",
+  isnot(gDebugger.DebuggerView.Options._showVariablesFilterBoxItem.getAttribute("checked"), "true",
     "The options menu item should not be checked.");
 
-  gDebugger.DebuggerView.Options._showVariablesSearchboxItem.setAttribute("checked", "true");
-  gDebugger.DebuggerView.Options._toggleShowVariablesSearchbox();
+  gDebugger.DebuggerView.Options._showVariablesFilterBoxItem.setAttribute("checked", "true");
+  gDebugger.DebuggerView.Options._toggleShowVariablesFilterBox();
 
   executeSoon(function() {
     ok(gDebugger.DebuggerView.Variables._searchboxNode,
@@ -57,11 +57,11 @@ function testPref()
       "There searchbox element should be found.");
     is(gDebugger.Prefs.variablesSearchboxVisible, true,
       "The debugger searchbox should now be preffed as visible.");
-    is(gDebugger.DebuggerView.Options._showVariablesSearchboxItem.getAttribute("checked"), "true",
+    is(gDebugger.DebuggerView.Options._showVariablesFilterBoxItem.getAttribute("checked"), "true",
       "The options menu item should now be checked.");
 
-    gDebugger.DebuggerView.Options._showVariablesSearchboxItem.setAttribute("checked", "false");
-    gDebugger.DebuggerView.Options._toggleShowVariablesSearchbox();
+    gDebugger.DebuggerView.Options._showVariablesFilterBoxItem.setAttribute("checked", "false");
+    gDebugger.DebuggerView.Options._toggleShowVariablesFilterBox();
 
     executeSoon(function() {
       ok(!gDebugger.DebuggerView.Variables._searchboxNode,
@@ -70,7 +70,7 @@ function testPref()
         "There searchbox element should not be found.");
       is(gDebugger.Prefs.variablesSearchboxVisible, false,
         "The debugger searchbox should now be preffed as hidden.");
-      isnot(gDebugger.DebuggerView.Options._showVariablesSearchboxItem.getAttribute("checked"), "true",
+      isnot(gDebugger.DebuggerView.Options._showVariablesFilterBoxItem.getAttribute("checked"), "true",
         "The options menu item should now be unchecked.");
 
       executeSoon(function() {
