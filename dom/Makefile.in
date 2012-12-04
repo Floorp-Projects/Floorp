@@ -82,6 +82,7 @@ PARALLEL_DIRS += \
   telephony \
   wifi \
   icc \
+  cellbroadcast \
   $(NULL)
 endif
 

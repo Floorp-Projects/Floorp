@@ -31,8 +31,9 @@
 #include "gc/Statistics.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
-#include "vm/Stack.h"
+#include "vm/DateTime.h"
 #include "vm/SPSProfiler.h"
+#include "vm/Stack.h"
 #include "vm/ThreadPool.h"
 
 #include "ion/PcScriptCache.h"
@@ -896,7 +897,7 @@ struct JSRuntime : js::RuntimeFriendFields
     bool                alwaysPreserveCode;
 
     /* Had an out-of-memory error which did not populate an exception. */
-    JSBool              hadOutOfMemory;
+    bool                hadOutOfMemory;
 
     /*
      * Linked list of all js::Debugger objects. This may be accessed by the GC
@@ -975,6 +976,8 @@ struct JSRuntime : js::RuntimeFriendFields
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
+
+    js::DateTimeInfo    dateTimeInfo;
 
     js::ConservativeGCData conservativeGC;
 
@@ -1346,7 +1349,7 @@ struct JSContext : js::ContextFriendFields,
     bool                hasVersionOverride;
 
     /* Exception state -- the exception member is a GC root by definition. */
-    JSBool              throwing;            /* is there a pending exception? */
+    bool                throwing;            /* is there a pending exception? */
     js::Value           exception;           /* most-recently-thrown exception */
 
     /* Per-context run options. */
@@ -1606,8 +1609,6 @@ struct JSContext : js::ContextFriendFields,
             functionCallback(fun, scr, this, entering);
     }
 #endif
-
-    DSTOffsetCache dstOffsetCache;
 
     /* List of currently active non-escaping enumerators (for-in). */
     js::PropertyIteratorObject *enumerators;

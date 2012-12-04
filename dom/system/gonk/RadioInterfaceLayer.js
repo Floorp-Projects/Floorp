@@ -52,6 +52,7 @@ const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
 const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
+const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
 
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
@@ -94,6 +95,10 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
   "RIL:RegisterVoicemailMsg"
+];
+
+const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
+  "RIL:RegisterCellBroadcastMsg"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
@@ -267,6 +272,10 @@ function RadioInterfaceLayer() {
   // we need to adjust the system clock time and time zone by NITZ.
   lock.get(kTimeNitzAutomaticUpdateEnabled, this);
 
+  // Read the Cell Broadcast Search List setting, string of integers or integer
+  // ranges separated by comma, to set listening channels.
+  lock.get(kCellBroadcastSearchList, this);
+
   this._messageManagerByRequest = {};
 
   // Manage message targets in terms of permission. Only the authorized and
@@ -281,6 +290,9 @@ function RadioInterfaceLayer() {
     ppmm.addMessageListener(msgname, this);
   }
   for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
+    ppmm.addMessageListener(msgname, this);
+  }
+  for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
   }
   Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -341,6 +353,12 @@ RadioInterfaceLayer.prototype = {
       if (!msg.target.assertPermission("voicemail")) {
         debug("Voicemail message " + msg.name +
               " from a content process with no 'voicemail' privileges.");
+        return null;
+      }
+    } else if (RIL_IPC_CELLBROADCAST_MSG_NAMES.indexOf(msg.name) != -1) {
+      if (!msg.target.assertPermission("cellbroadcast")) {
+        debug("Cell Broadcast message " + msg.name +
+              " from a content process with no 'cellbroadcast' privileges.");
         return null;
       }
     } else {
@@ -453,6 +471,9 @@ RadioInterfaceLayer.prototype = {
         this.saveRequestTarget(msg);
         this.getCallForwardingOption(msg.json);
         break;
+      case "RIL:RegisterCellBroadcastMsg":
+        this.registerMessageTarget("cellbroadcast", msg.target);
+        break;
     }
   },
 
@@ -543,6 +564,11 @@ RadioInterfaceLayer.prototype = {
       case "sms-send-failed":
         this.handleSmsSendFailed(message);
         return;
+      case "cellbroadcast-received":
+        message.timestamp = Date.now();
+        this._sendTargetMessage("cellbroadcast", "RIL:CellBroadcastReceived",
+                                message);
+        break;
       case "datacallstatechange":
         this.handleDataCallState(message);
         break;
@@ -601,6 +627,9 @@ RadioInterfaceLayer.prototype = {
         break;
       case "setCallForward":
         this.handleSetCallForward(message);
+        break;
+      case "setCellBroadcastSearchList":
+        this.handleSetCellBroadcastSearchList(message);
         break;
       default:
         throw new Error("Don't know about this message type: " +
@@ -893,6 +922,27 @@ RadioInterfaceLayer.prototype = {
     this._preferredNetworkType = message.networkType;
     debug("_preferredNetworkType is now " +
           RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType]);
+  },
+
+  setCellBroadcastSearchList: function setCellBroadcastSearchList(newSearchListStr) {
+    if (newSearchListStr == this._cellBroadcastSearchListStr) {
+      return;
+    }
+
+    this.worker.postMessage({
+      rilMessageType: "setCellBroadcastSearchList",
+      searchListStr: newSearchListStr
+    });
+  },
+
+  handleSetCellBroadcastSearchList: function handleSetCellBroadcastSearchList(message) {
+    if (message.rilRequestError != RIL.ERROR_SUCCESS) {
+      let lock = gSettingsService.createLock();
+      lock.set(kCellBroadcastSearchList, this._cellBroadcastSearchListStr, null);
+      return;
+    }
+
+    this._cellBroadcastSearchListStr = message.searchListStr;
   },
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
@@ -1583,6 +1633,9 @@ RadioInterfaceLayer.prototype = {
         for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
           ppmm.removeMessageListener(msgname, this);
         }
+        for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
+          ppmm.removeMessageListener(msgname, this);
+        }
         // Shutdown all RIL network interfaces
         this.dataNetworkInterface.shutdown();
         this.mmsNetworkInterface.shutdown();
@@ -1631,6 +1684,9 @@ RadioInterfaceLayer.prototype = {
   // Remember the last NITZ message so that we can set the time based on
   // the network immediately when users enable network-based time.
   _lastNitzMessage: null,
+
+  // Cell Broadcast settings values.
+  _cellBroadcastSearchListStr: null,
 
   // nsISettingsServiceCallback
   handle: function handle(aName, aResult) {
@@ -1692,6 +1748,10 @@ RadioInterfaceLayer.prototype = {
         if (this._nitzAutomaticUpdateEnabled && this._lastNitzMessage) {
           this.setNitzTime(this._lastNitzMessage);
         }
+        break;
+      case kCellBroadcastSearchList:
+        debug("'" + kCellBroadcastSearchList + "' is now " + aResult);
+        this.setCellBroadcastSearchList(aResult);
         break;
     };
   },
