@@ -11,6 +11,7 @@ MOZ_APP_UA_NAME=Firefox
 MOZ_UA_OS_AGNOSTIC=1
 
 MOZ_B2G_VERSION=1.0.0-prerelease
+MOZ_B2G_OS_NAME=Boot2Gecko
 
 MOZ_BRANDING_DIRECTORY=b2g/branding/unofficial
 MOZ_OFFICIAL_BRANDING_DIRECTORY=b2g/branding/official

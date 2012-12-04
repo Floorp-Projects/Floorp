@@ -153,12 +153,14 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
                                      '@mozilla.org/settingsService;1',
                                      'nsISettingsService');
   let lock = gSettingsService.createLock();
-  //MOZ_B2G_VERSION is set in b2g/confvars.sh, and is outputed as a #define value
-  //from configure.in, defaults to 1.0.0 if this value is not exist
+  // MOZ_B2G_VERSION is set in b2g/confvars.sh, and is output as a #define value
+  // from configure.in, defaults to 1.0.0 if this value is not exist.
 #filter attemptSubstitution
   let os_version = '@MOZ_B2G_VERSION@';
+  let os_name = '@MOZ_B2G_OS_NAME@';
 #unfilter attemptSubstitution
   lock.set('deviceinfo.os', os_version, null, null);
+  lock.set('deviceinfo.software', os_name + ' ' + os_version, null, null);
 
   let appInfo = Cc["@mozilla.org/xre/app-info;1"]
                   .getService(Ci.nsIXULAppInfo);
@@ -168,8 +170,9 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
   let update_channel = Services.prefs.getCharPref('app.update.channel');
   lock.set('deviceinfo.update_channel', update_channel, null, null);
 
-  //Get the hardware info from android properties
-  let hardware_version = null;
+  // Get the hardware info and firmware revision from device properties.
+  let hardware_info = null;
+  let firmware_revision = null;
   try {
     let cutils = ctypes.open('libcutils.so');
     let cbuf = ctypes.char.array(128)();
@@ -185,12 +188,14 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
       c_property_get(key, cbuf, defaultValue);
       return cbuf.readString();
     }
-    hardware_version = property_get('ro.hardware');
+    hardware_info = property_get('ro.hardware');
+    firmware_revision = property_get('ro.firmware_revision');
     cutils.close();
   } catch(e) {
-    //Error
+    // Error.
   }
-  lock.set('deviceinfo.hardware', hardware_version, null, null);
+  lock.set('deviceinfo.hardware', hardware_info, null, null);
+  lock.set('deviceinfo.firmware_revision', firmware_revision, null, null);
 })();
 
 // =================== Debugger ====================
