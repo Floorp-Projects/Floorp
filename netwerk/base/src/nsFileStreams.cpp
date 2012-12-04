@@ -418,7 +418,7 @@ nsFileInputStream::Close()
     }
 
     // null out mLineBuffer in case Close() is called again after failing
-    PR_FREEIF(mLineBuffer);
+    mLineBuffer = nullptr;
     nsresult rv = nsFileStreamBase::Close();
     if (NS_FAILED(rv)) return rv;
     if (mFile && (mBehaviorFlags & DELETE_ON_CLOSE)) {
@@ -453,10 +453,9 @@ nsFileInputStream::ReadLine(nsACString& aLine, bool* aResult)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mLineBuffer) {
-        nsresult rv = NS_InitLineBuffer(&mLineBuffer);
-        if (NS_FAILED(rv)) return rv;
+      mLineBuffer = new nsLineBuffer<char>;
     }
-    return NS_ReadLine(this, mLineBuffer, aLine, aResult);
+    return NS_ReadLine(this, mLineBuffer.get(), aLine, aResult);
 }
 
 NS_IMETHODIMP
@@ -465,7 +464,7 @@ nsFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PR_FREEIF(mLineBuffer); // this invalidates the line buffer
+    mLineBuffer = nullptr;
     if (!mFD) {
         if (mBehaviorFlags & REOPEN_ON_REWIND) {
             rv = Open(mFile, mIOFlags, mPerm);
