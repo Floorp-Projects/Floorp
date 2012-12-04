@@ -896,17 +896,12 @@ nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec,
 {
     SetupPACThread();
 
-    nsCOMPtr<nsIURI> pacURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(pacURI), spec);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (mPACMan->IsPACURI(pacURI) && !forceReload)
+    if (mPACMan->IsPACURI(spec) && !forceReload)
         return NS_OK;
 
     mFailedProxies.Clear();
 
-    return mPACMan->LoadPACFromURI(pacURI);
+    return mPACMan->LoadPACFromURI(spec);
 }
 
 void

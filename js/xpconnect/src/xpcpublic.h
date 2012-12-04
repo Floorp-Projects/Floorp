@@ -140,10 +140,7 @@ xpc_GCThingIsGrayCCThing(void *thing);
 MOZ_ALWAYS_INLINE void
 xpc_UnmarkNonNullGrayObject(JSObject *obj)
 {
-    if (xpc_IsGrayGCThing(obj))
-        js::UnmarkGrayGCThingRecursively(obj, JSTRACE_OBJECT);
-    else if (js::IsIncrementalBarrierNeededOnObject(obj))
-        js::IncrementalReferenceBarrier(obj);
+    JS::ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
 }
 
 // Remove the gray color from the given JSObject and any other objects that can
@@ -159,12 +156,9 @@ xpc_UnmarkGrayObject(JSObject *obj)
 inline JSScript *
 xpc_UnmarkGrayScript(JSScript *script)
 {
-    if (script) {
-        if (xpc_IsGrayGCThing(script))
-            js::UnmarkGrayGCThingRecursively(script, JSTRACE_SCRIPT);
-        else if (js::IsIncrementalBarrierNeededOnScript(script))
-            js::IncrementalReferenceBarrier(script);
-    }
+    if (script)
+        JS::ExposeGCThingToActiveJS(script, JSTRACE_SCRIPT);
+
     return script;
 }
 

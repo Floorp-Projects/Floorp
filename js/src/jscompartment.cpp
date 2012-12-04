@@ -109,7 +109,8 @@ JSCompartment::init(JSContext *cx)
      * shouldn't interfere with benchmarks which create tons of date objects
      * (unless they also create tons of iframes, which seems unlikely).
      */
-    js_ClearDateCaches();
+    if (cx)
+        cx->runtime->dateTimeInfo.updateTimeZoneAdjustment();
 
     activeAnalysis = activeInference = false;
     types.init(cx);

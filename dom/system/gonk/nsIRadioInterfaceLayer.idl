@@ -10,6 +10,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 interface nsIDOMMozVoicemailStatus;
 interface nsISmsRequest;
+interface nsIDOMMozCellBroadcastMessage;
 
 [scriptable, uuid(0faabc35-644d-4ed5-b109-425280ff1cdf)]
 interface nsIRILTelephonyCallback : nsISupports
@@ -136,11 +137,23 @@ interface nsIRILContactCallback : nsISupports
                            in jsval contacts);
 };
 
+[scriptable, uuid(c5e31c2c-a6a1-44c3-a30e-7fdfb4dc1750)]
+interface nsIRILCellBroadcastCallback : nsISupports
+{
+  /**
+   * Called when a Cell Broadcast message has been received by the network.
+   *
+   * @param message
+   *        The received Cell Broadcast Message.
+   */
+  void notifyMessageReceived(in nsIDOMMozCellBroadcastMessage message);
+};
+
 /**
  * Helper that runs in the content process and exposes information
  * to the DOM.
  */
-[scriptable, uuid(2abe554b-e07c-44b0-9719-02190460188d)]
+[scriptable, uuid(8c35c286-7a84-410d-9b36-b15f2cadf78f)]
 interface nsIRILContentHelper : nsIMobileConnectionProvider
 {
   void registerTelephonyCallback(in nsIRILTelephonyCallback callback);
@@ -148,6 +161,9 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
 
   void registerVoicemailCallback(in nsIRILVoicemailCallback callback);
   void unregisterVoicemailCallback(in nsIRILVoicemailCallback callback);
+
+  void registerCellBroadcastCallback(in nsIRILCellBroadcastCallback callback);
+  void unregisterCellBroadcastCallback(in nsIRILCellBroadcastCallback callback);
 
   /**
    * Called when a content process registers receiving unsolicited messages from
@@ -168,6 +184,16 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
    * message.
    */
   void registerVoicemailMsg();
+
+  /**
+   * Called when a content process registers receiving unsolicited messages from
+   * RadioInterfaceLayer in the chrome process. Only a content process that has
+   * the 'cellbroadcast' permission is allowed to register. Note that content
+   * doesn't need to unregister because the chrome process will remove it from
+   * the registration list once the chrome receives a 'child-process-shutdown'
+   * message.
+   */
+  void registerCellBroadcastMsg();
 
   /**
    * Will continue calling callback.enumerateCallState until the callback
