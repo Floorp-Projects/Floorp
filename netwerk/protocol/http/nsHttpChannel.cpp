@@ -4316,22 +4316,16 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // timing.
     mAsyncOpenTime = TimeStamp::Now();
 
-    // the only time we already know the proxy information at this
-    // point is if we are proxying a non-http protocol like ftp
+    // the only time we would already know the proxy information at this
+    // point would be if we were proxying a non-http protocol like ftp
     if (!mProxyInfo && NS_SUCCEEDED(ResolveProxy()))
         return NS_OK;
 
-    // If we get here, we're either proxying a non-http protocol, or
-    // async proxy resolution failed (try to proceed synchronously)
     rv = BeginConnect();
-    if (NS_FAILED(rv)) {
-        LOG(("Calling AsyncAbort [rv=%x mCanceled=%i]\n", rv, mCanceled));
-        AsyncAbort(rv);
-    }
+    if (NS_FAILED(rv))
+        ReleaseListeners();
 
-    // We must always return NS_OK after we've added channel to loadGroup
-    // and/or notified observers.
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -4441,15 +4435,15 @@ nsHttpChannel::BeginConnect()
     else
         rv = Connect();
     if (NS_FAILED(rv)) {
+        LOG(("Calling AsyncAbort [rv=%x mCanceled=%i]\n", rv, mCanceled));
         CloseCacheEntry(true);
-        return rv;
+        AsyncAbort(rv);
     } else if (mLoadFlags & LOAD_CLASSIFY_URI) {
         nsRefPtr<nsChannelClassifier> classifier = new nsChannelClassifier();
         rv = classifier->Start(this);
         if (NS_FAILED(rv)) {
-            // returning an error would cause DoNotifyListener: we want Cancel()
             Cancel(rv);
-            return NS_OK;
+            return rv;
         }
     }
 
@@ -4521,6 +4515,7 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
     }
 
     if (NS_FAILED(rv)) {
+        Cancel(rv);
         DoNotifyListener();
     }
     return NS_OK;
