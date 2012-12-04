@@ -154,8 +154,7 @@ NotifyEnumerator(nsHTMLMediaElement* aElement,
                  AudioChannelType aType, void* aData)
 {
   if (aElement) {
-    // TODO: this part will be cover by a different patch.
-    // aElement->NotifyAudioChannelStateChanged();
+    aElement->NotifyAudioChannelStateChanged();
   }
   return PL_DHASH_NEXT;
 }
