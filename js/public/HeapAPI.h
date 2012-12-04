@@ -7,6 +7,8 @@
 #ifndef js_heap_api_h___
 #define js_heap_api_h___
 
+#include "jsfriendapi.h"
+
 /* These values are private to the JS engine. */
 namespace js {
 namespace gc {
@@ -69,6 +71,23 @@ static inline JSCompartment *
 GetObjectCompartment(JSObject *obj)
 {
     return GetGCThingCompartment(obj);
+}
+
+/*
+ * This should be called when an object that is marked gray is exposed to the JS
+ * engine (by handing it to running JS code or writing it into live JS
+ * data). During incremental GC, since the gray bits haven't been computed yet,
+ * we conservatively mark the object black.
+ */
+static JS_ALWAYS_INLINE void
+ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
+{
+    JS_ASSERT(kind != JSTRACE_SHAPE);
+
+    if (js::GCThingIsMarkedGray(thing))
+        js::UnmarkGrayGCThingRecursively(thing, kind);
+    else if (js::IsIncrementalBarrierNeededOnGCThing(thing, kind))
+        js::IncrementalReferenceBarrier(thing);
 }
 
 } /* namespace JS */
