@@ -80,6 +80,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
+        $(DEPTH)/dom/audiochannel/$(LIB_PREFIX)domaudiochannel_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/notification/$(LIB_PREFIX)jsdomnotification_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/system/$(LIB_PREFIX)domsystem_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/workers/$(LIB_PREFIX)domworkers_s.$(LIB_SUFFIX) \
@@ -289,6 +290,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/src/storage \
 		   -I$(topsrcdir)/dom/src/offline \
 		   -I$(topsrcdir)/dom/src/geolocation \
+		   -I$(topsrcdir)/dom/audiochannel \
 		   -I$(topsrcdir)/dom/contacts \
 		   -I$(topsrcdir)/dom/settings \
 		   -I$(topsrcdir)/dom/permission \
