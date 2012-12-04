@@ -1088,7 +1088,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
         IONALLOC =    -29, /* js::ion::AutoTempAllocatorRooter */
         WRAPVECTOR =  -30, /* js::AutoWrapperVector */
         WRAPPER =     -31, /* js::AutoWrapperRooter */
-        BASELINECOMPILER=-32, /* js::ion::BaselineCompiler */
+        BASELINECOMPILER=-32 /* js::ion::BaselineCompiler */
     };
 
   private:
