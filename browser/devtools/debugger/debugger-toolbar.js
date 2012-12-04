@@ -184,7 +184,7 @@ function OptionsView() {
   dumpn("OptionsView was instantiated");
   this._togglePauseOnExceptions = this._togglePauseOnExceptions.bind(this);
   this._toggleShowPanesOnStartup = this._toggleShowPanesOnStartup.bind(this);
-  this._toggleShowVariablesNonEnum = this._toggleShowVariablesNonEnum.bind(this);
+  this._toggleShowVariablesOnlyEnum = this._toggleShowVariablesOnlyEnum.bind(this);
   this._toggleShowVariablesFilterBox = this._toggleShowVariablesFilterBox.bind(this);
 }
 
@@ -197,12 +197,12 @@ OptionsView.prototype = {
     this._button = document.getElementById("debugger-options");
     this._pauseOnExceptionsItem = document.getElementById("pause-on-exceptions");
     this._showPanesOnStartupItem = document.getElementById("show-panes-on-startup");
-    this._showVariablesNonEnumItem = document.getElementById("show-vars-nonenum");
+    this._showVariablesOnlyEnumItem = document.getElementById("show-vars-only-enum");
     this._showVariablesFilterBoxItem = document.getElementById("show-vars-filter-box");
 
     this._pauseOnExceptionsItem.setAttribute("checked", "false");
     this._showPanesOnStartupItem.setAttribute("checked", Prefs.panesVisibleOnStartup);
-    this._showVariablesNonEnumItem.setAttribute("checked", Prefs.variablesNonEnumVisible);
+    this._showVariablesOnlyEnumItem.setAttribute("checked", Prefs.variablesOnlyEnumVisible);
     this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
   },
 
@@ -247,9 +247,9 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'show non-enumerables' menuitem command.
    */
-  _toggleShowVariablesNonEnum: function DVO__toggleShowVariablesNonEnum() {
-    DebuggerView.Variables.nonEnumVisible = Prefs.variablesNonEnumVisible =
-      this._showVariablesNonEnumItem.getAttribute("checked") == "true";
+  _toggleShowVariablesOnlyEnum: function DVO__toggleShowVariablesOnlyEnum() {
+    DebuggerView.Variables.onlyEnumVisible = Prefs.variablesOnlyEnumVisible =
+      this._showVariablesOnlyEnumItem.getAttribute("checked") == "true";
   },
 
   /**
@@ -263,7 +263,7 @@ OptionsView.prototype = {
   _button: null,
   _pauseOnExceptionsItem: null,
   _showPanesOnStartupItem: null,
-  _showVariablesNonEnumItem: null,
+  _showVariablesOnlyEnumItem: null,
   _showVariablesFilterBoxItem: null
 };
 

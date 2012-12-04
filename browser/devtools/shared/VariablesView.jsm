@@ -139,6 +139,7 @@ VariablesView.prototype = {
 
   /**
    * Specifies if enumerable properties and variables should be displayed.
+   * These variables and properties are visible by default.
    * @param boolean aFlag
    */
   set enumVisible(aFlag) {
@@ -151,6 +152,7 @@ VariablesView.prototype = {
 
   /**
    * Specifies if non-enumerable properties and variables should be displayed.
+   * These variables and properties are visible by default.
    * @param boolean aFlag
    */
   set nonEnumVisible(aFlag) {
@@ -158,6 +160,21 @@ VariablesView.prototype = {
 
     for (let [, scope] in this) {
       scope._nonEnumVisible = aFlag;
+    }
+  },
+
+  /**
+   * Specifies if only enumerable properties and variables should be displayed.
+   * Both types of these variables and properties are visible by default.
+   * @param boolean aFlag
+   */
+  set onlyEnumVisible(aFlag) {
+    if (aFlag) {
+      this.enumVisible = true;
+      this.nonEnumVisible = false;
+    } else {
+      this.enumVisible = true;
+      this.nonEnumVisible = true;
     }
   },
 

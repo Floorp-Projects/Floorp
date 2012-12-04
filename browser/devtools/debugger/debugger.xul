@@ -55,8 +55,8 @@
              oncommand="DebuggerView.Options._togglePauseOnExceptions()"/>
     <command id="toggleShowPanesOnStartup"
              oncommand="DebuggerView.Options._toggleShowPanesOnStartup()"/>
-    <command id="toggleShowNonEnum"
-             oncommand="DebuggerView.Options._toggleShowVariablesNonEnum()"/>
+    <command id="toggleShowOnlyEnum"
+             oncommand="DebuggerView.Options._toggleShowVariablesOnlyEnum()"/>
     <command id="toggleShowVariablesFilterBox"
              oncommand="DebuggerView.Options._toggleShowVariablesFilterBox()"/>
   </commandset>
@@ -137,11 +137,11 @@
                 label="&debuggerUI.showPanesOnInit;"
                 accesskey="&debuggerUI.showPanesOnInit.key;"
                 command="toggleShowPanesOnStartup"/>
-      <menuitem id="show-vars-nonenum"
+      <menuitem id="show-vars-only-enum"
                 type="checkbox"
-                label="&debuggerUI.showNonEnums;"
-                accesskey="&debuggerUI.showNonEnums.key;"
-                command="toggleShowNonEnum"/>
+                label="&debuggerUI.showOnlyEnum;"
+                accesskey="&debuggerUI.showOnlyEnum.key;"
+                command="toggleShowOnlyEnum"/>
       <menuitem id="show-vars-filter-box"
                 type="checkbox"
                 label="&debuggerUI.showVarsFilter;"
