@@ -3534,13 +3534,13 @@ nsresult nsHTMLMediaElement::UpdateChannelMuteState()
   // We have to mute this channel:
   if (mute && !mChannelMuted) {
     mChannelMuted = true;
-    SetMutedInternal(mMuted);
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptbegin"));
   } else if (!mute && mChannelMuted) {
     mChannelMuted = false;
-    SetMutedInternal(mMuted);
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptend"));
   }
+
+  SetMutedInternal(mMuted);
 #endif
 
   return NS_OK;
