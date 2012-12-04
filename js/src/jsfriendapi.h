@@ -12,8 +12,6 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
-#include "js/HeapAPI.h"
-
 #include "mozilla/GuardObjects.h"
 
 /*
@@ -893,10 +891,7 @@ extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSContext *cx);
 
 extern JS_FRIEND_API(bool)
-IsIncrementalBarrierNeededOnObject(RawObject obj);
-
-extern JS_FRIEND_API(bool)
-IsIncrementalBarrierNeededOnScript(JSScript *obj);
+IsIncrementalBarrierNeededOnGCThing(void *thing, JSGCTraceKind kind);
 
 extern JS_FRIEND_API(void)
 IncrementalReferenceBarrier(void *ptr);
