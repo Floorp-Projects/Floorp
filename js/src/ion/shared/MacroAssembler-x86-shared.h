@@ -29,7 +29,7 @@ class MacroAssemblerX86Shared : public Assembler
     // reserved for unexpected spills or C++ function calls. It is maintained
     // by functions which track stack alignment, which for clear distinction
     // use StudlyCaps (for example, Push, Pop).
-    uint32 framePushed_;
+    uint32_t framePushed_;
 
   public:
     MacroAssemblerX86Shared()
@@ -158,14 +158,14 @@ class MacroAssemblerX86Shared : public Assembler
         pop(reg);
         framePushed_ -= STACK_SLOT_SIZE;
     }
-    void implicitPop(uint32 args) {
+    void implicitPop(uint32_t args) {
         JS_ASSERT(args % STACK_SLOT_SIZE == 0);
         framePushed_ -= args;
     }
-    uint32 framePushed() const {
+    uint32_t framePushed() const {
         return framePushed_;
     }
-    void setFramePushed(uint32 framePushed) {
+    void setFramePushed(uint32_t framePushed) {
         framePushed_ = framePushed;
     }
 
@@ -352,15 +352,15 @@ class MacroAssemblerX86Shared : public Assembler
 
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
-    bool buildFakeExitFrame(const Register &scratch, uint32 *offset) {
-        mozilla::DebugOnly<uint32> initialDepth = framePushed();
+    bool buildFakeExitFrame(const Register &scratch, uint32_t *offset) {
+        mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
 
         CodeLabel *cl = new CodeLabel();
         if (!addCodeLabel(cl))
             return false;
         mov(cl->dest(), scratch);
 
-        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         Push(scratch);
 
@@ -372,14 +372,14 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     bool buildOOLFakeExitFrame(void *fakeReturnAddr) {
-        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         Push(ImmWord(fakeReturnAddr));
         return true;
     }
 
     void callWithExitFrame(IonCode *target) {
-        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         call(target);
     }

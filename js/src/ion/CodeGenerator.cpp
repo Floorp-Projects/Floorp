@@ -341,7 +341,7 @@ CodeGenerator::visitOsiPoint(LOsiPoint *lir)
 
     JS_ASSERT(masm.framePushed() == frameSize());
 
-    uint32 osiCallPointOffset;
+    uint32_t osiCallPointOffset;
     if (!markOsiPoint(lir, &osiCallPointOffset))
         return false;
 
@@ -477,9 +477,9 @@ CodeGenerator::visitStackArgT(LStackArgT *lir)
 {
     const LAllocation *arg = lir->getArgument();
     MIRType argType = lir->mir()->getArgument()->type();
-    uint32 argslot = lir->argslot();
+    uint32_t argslot = lir->argslot();
 
-    int32 stack_offset = StackOffsetOfPassedArg(argslot);
+    int32_t stack_offset = StackOffsetOfPassedArg(argslot);
     Address dest(StackPointer, stack_offset);
 
     if (arg->isFloatReg())
@@ -496,8 +496,8 @@ bool
 CodeGenerator::visitStackArgV(LStackArgV *lir)
 {
     ValueOperand val = ToValue(lir, 0);
-    uint32 argslot = lir->argslot();
-    int32 stack_offset = StackOffsetOfPassedArg(argslot);
+    uint32_t argslot = lir->argslot();
+    int32_t stack_offset = StackOffsetOfPassedArg(argslot);
 
     masm.storeValue(val, Address(StackPointer, stack_offset));
     return pushedArgumentSlots_.append(StackOffsetToSlot(stack_offset));
@@ -532,7 +532,7 @@ bool
 CodeGenerator::visitStoreSlotV(LStoreSlotV *store)
 {
     Register base = ToRegister(store->slots());
-    int32 offset  = store->mir()->slot() * sizeof(Value);
+    int32_t offset = store->mir()->slot() * sizeof(Value);
 
     const ValueOperand value = ToValue(store, LStoreSlotV::Value);
 
@@ -603,7 +603,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     // Misc. temporary registers.
     const Register tempReg = ToRegister(call->getTempReg());
 
-    DebugOnly<uint32> initialStack = masm.framePushed();
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
 
     masm.checkStackAlignment();
 
@@ -627,7 +627,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.Push(argUintNReg);
 
     // Construct native exit frame.
-    uint32 safepointOffset;
+    uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(tempReg, &safepointOffset))
         return false;
     masm.enterFakeExitFrame();
@@ -687,7 +687,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     const Register argArgc      = ToRegister(call->getArgArgc());
     const Register argVp        = ToRegister(call->getArgVp());
 
-    DebugOnly<uint32> initialStack = masm.framePushed();
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
 
     masm.checkStackAlignment();
 
@@ -723,7 +723,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     masm.movePtr(StackPointer, argObj);
 
     // Construct native exit frame.
-    uint32 safepointOffset;
+    uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(argJSContext, &safepointOffset))
         return false;
     masm.enterFakeExitFrame(ION_FRAME_DOMMETHOD);
@@ -786,12 +786,12 @@ CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir)
     return callVM(GetIntrinsicValueInfo, lir);
 }
 
-typedef bool (*InvokeFunctionFn)(JSContext *, JSFunction *, uint32, Value *, Value *);
+typedef bool (*InvokeFunctionFn)(JSContext *, JSFunction *, uint32_t, Value *, Value *);
 static const VMFunction InvokeFunctionInfo = FunctionInfo<InvokeFunctionFn>(InvokeFunction);
 
 bool
 CodeGenerator::emitCallInvokeFunction(LInstruction *call, Register calleereg,
-                                      uint32 argc, uint32 unusedStack)
+                                      uint32_t argc, uint32_t unusedStack)
 {
     // Nestle %esp up to the argument vector.
     // Each path must account for framePushed_ separately, for callVM to be valid.
@@ -826,7 +826,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
     Register nargsreg  = ToRegister(call->getNargsReg());
-    uint32 unusedStack = StackOffsetOfPassedArg(call->argslot());
+    uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
     Label invoke, thunk, makeCall, end;
 
     // Known-target case is handled by LCallKnown.
@@ -861,7 +861,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.freeStack(unusedStack);
 
     // Construct the IonFramePrefix.
-    uint32 descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
     masm.Push(Imm32(call->numActualArgs()));
     masm.Push(calleereg);
     masm.Push(Imm32(descriptor));
@@ -887,7 +887,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Finally call the function in objreg.
     masm.bind(&makeCall);
-    uint32 callOffset = masm.callIon(objreg);
+    uint32_t callOffset = masm.callIon(objreg);
     if (!markSafepointAt(callOffset, call))
         return false;
 
@@ -913,7 +913,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     JSContext *cx = GetIonContext()->cx;
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
-    uint32 unusedStack = StackOffsetOfPassedArg(call->argslot());
+    uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
     JSFunction *target = call->getSingleTarget();
     Label end, invoke;
 
@@ -957,13 +957,13 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.freeStack(unusedStack);
 
     // Construct the IonFramePrefix.
-    uint32 descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
     masm.Push(Imm32(call->numActualArgs()));
     masm.Push(calleereg);
     masm.Push(Imm32(descriptor));
 
     // Finally call the function in objreg.
-    uint32 callOffset = masm.callIon(objreg);
+    uint32_t callOffset = masm.callIon(objreg);
     if (!markSafepointAt(callOffset, call))
         return false;
 
@@ -993,7 +993,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     return true;
 }
 
-typedef bool (*InvokeConstructorFn)(JSContext *, JSObject *, uint32, Value *, Value *);
+typedef bool (*InvokeConstructorFn)(JSContext *, JSObject *, uint32_t, Value *, Value *);
 static const VMFunction InvokeConstructorInfo =
     FunctionInfo<InvokeConstructorFn>(ion::InvokeConstructor);
 
@@ -1006,8 +1006,8 @@ CodeGenerator::visitCallConstructor(LCallConstructor *call)
     const LAllocation *callee = call->getFunction();
     Register calleereg = ToRegister(callee);
 
-    uint32 callargslot = call->argslot();
-    uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
+    uint32_t callargslot = call->argslot();
+    uint32_t unusedStack = StackOffsetOfPassedArg(callargslot);
 
     // Nestle %esp up to the argument vector.
     masm.freeStack(unusedStack);
@@ -1214,7 +1214,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
         masm.bind(&rejoin);
 
         // Finally call the function in objreg, as assigned by one of the paths above.
-        uint32 callOffset = masm.callIon(objreg);
+        uint32_t callOffset = masm.callIon(objreg);
         if (!markSafepointAt(callOffset, apply))
             return false;
 
@@ -1245,7 +1245,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 }
 
 // Registers safe for use before generatePrologue().
-static const uint32 EntryTempMask = Registers::TempMask & ~(1 << OsrFrameReg.code());
+static const uint32_t EntryTempMask = Registers::TempMask & ~(1 << OsrFrameReg.code());
 
 bool
 CodeGenerator::generateArgumentsChecks()
@@ -1265,10 +1265,10 @@ CodeGenerator::generateArgumentsChecks()
 
     // Indexes need to be shifted by one, to skip the scope chain slot.
     JS_ASSERT(info.scopeChainSlot() == 0);
-    static const uint32 START_SLOT = 1;
+    static const uint32_t START_SLOT = 1;
 
     Label mismatched;
-    for (uint32 i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
+    for (uint32_t i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
         const types::TypeSet *types = param->typeSet();
@@ -1277,7 +1277,7 @@ CodeGenerator::generateArgumentsChecks()
 
         // Use ReturnReg as a scratch register here, since not all platforms
         // have an actual ScratchReg.
-        int32 offset = ArgToStackOffset((i - START_SLOT) * sizeof(Value));
+        int32_t offset = ArgToStackOffset((i - START_SLOT) * sizeof(Value));
         masm.guardTypeSet(Address(StackPointer, offset), types, temp, &mismatched);
     }
 
@@ -1423,7 +1423,7 @@ CodeGenerator::maybeCreateScriptCounts()
         MResumePoint *resume = block->entryResumePoint();
         while (resume->caller())
             resume = resume->caller();
-        uint32 offset = resume->pc() - script->code;
+        uint32_t offset = resume->pc() - script->code;
         JS_ASSERT(offset < script->length);
 
         if (!counts->block(i).init(block->id(), offset, block->numSuccessors()))
@@ -1443,13 +1443,13 @@ struct ScriptCountBlockState
 
     Sprinter printer;
 
-    uint32 instructionBytes;
-    uint32 spillBytes;
+    uint32_t instructionBytes;
+    uint32_t spillBytes;
 
     // Pointer to instructionBytes, spillBytes, or NULL, depending on the last
     // instruction processed.
-    uint32 *last;
-    uint32 lastLength;
+    uint32_t *last;
+    uint32_t lastLength;
 
   public:
     ScriptCountBlockState(IonBlockCounts *block, MacroAssembler *masm)
@@ -1563,7 +1563,7 @@ class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
-typedef JSObject *(*NewInitArrayFn)(JSContext *, uint32, types::TypeObject *);
+typedef JSObject *(*NewInitArrayFn)(JSContext *, uint32_t, types::TypeObject *);
 static const VMFunction NewInitArrayInfo =
     FunctionInfo<NewInitArrayFn>(NewInitArray);
 
@@ -1620,7 +1620,7 @@ CodeGenerator::visitNewArray(LNewArray *lir)
 {
     Register objReg = ToRegister(lir->output());
     JSObject *templateObject = lir->mir()->templateObject();
-    uint32 count = lir->mir()->count();
+    uint32_t count = lir->mir()->count();
 
     JS_ASSERT(count < JSObject::NELEMENTS_LIMIT);
 
@@ -2420,7 +2420,7 @@ bool
 CodeGenerator::visitBoundsCheck(LBoundsCheck *lir)
 {
     if (lir->index()->isConstant()) {
-        // Use uint32_t so that the comparison is unsigned.
+        // Use uint32 so that the comparison is unsigned.
         uint32_t index = ToInt32(lir->index());
         if (lir->length()->isConstant()) {
             uint32_t length = ToInt32(lir->length());
@@ -2442,14 +2442,14 @@ CodeGenerator::visitBoundsCheck(LBoundsCheck *lir)
 bool
 CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange *lir)
 {
-    int32 min = lir->mir()->minimum();
-    int32 max = lir->mir()->maximum();
+    int32_t min = lir->mir()->minimum();
+    int32_t max = lir->mir()->maximum();
     JS_ASSERT(max >= min);
 
     Register temp = ToRegister(lir->getTemp(0));
     if (lir->index()->isConstant()) {
-        int32 nmin, nmax;
-        int32 index = ToInt32(lir->index());
+        int32_t nmin, nmax;
+        int32_t index = ToInt32(lir->index());
         if (SafeAdd(index, min, &nmin) && SafeAdd(index, max, &nmax) && nmin >= 0) {
             masm.cmp32(ToOperand(lir->length()), Imm32(nmax));
             return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
@@ -2467,7 +2467,7 @@ CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange *lir)
             masm.add32(Imm32(min), temp);
             if (!bailoutIf(Assembler::Overflow, lir->snapshot()))
                 return false;
-            int32 diff;
+            int32_t diff;
             if (SafeSub(max, min, &diff))
                 max = diff;
             else
@@ -2497,7 +2497,7 @@ CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange *lir)
 bool
 CodeGenerator::visitBoundsCheckLower(LBoundsCheckLower *lir)
 {
-    int32 min = lir->mir()->minimum();
+    int32_t min = lir->mir()->minimum();
     masm.cmp32(ToRegister(lir->index()), Imm32(min));
     return bailoutIf(Assembler::LessThan, lir->snapshot());
 }
@@ -3106,7 +3106,7 @@ CodeGenerator::visitGetArgument(LGetArgument *lir)
     size_t argvOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
 
     if (index->isConstant()) {
-        int32 i = index->toConstant()->toInt32();
+        int32_t i = index->toConstant()->toInt32();
         Address argPtr(StackPointer, sizeof(Value) * i + argvOffset);
         masm.loadValue(argPtr, result);
     } else {
@@ -3167,7 +3167,7 @@ CodeGenerator::link()
     ExecutionMode executionMode = gen->info().executionMode();
     JS_ASSERT(!HasIonScript(script, executionMode));
 
-    uint32 scriptFrameSize = frameClass_ == FrameSizeClass::None()
+    uint32_t scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
 
@@ -4344,7 +4344,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     const Register PrivateReg = ToRegister(ins->getPrivReg());
     const Register ValueReg = ToRegister(ins->getValueReg());
 
-    DebugOnly<uint32> initialStack = masm.framePushed();
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
 
     masm.checkStackAlignment();
 
@@ -4360,7 +4360,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     // Rooting will happen at GC time.
     masm.movePtr(StackPointer, ObjectReg);
 
-    uint32 safepointOffset;
+    uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
         return false;
     masm.enterFakeExitFrame(ION_FRAME_DOMGETTER);
@@ -4409,7 +4409,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     const Register PrivateReg = ToRegister(ins->getPrivReg());
     const Register ValueReg = ToRegister(ins->getValueReg());
 
-    DebugOnly<uint32> initialStack = masm.framePushed();
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
 
     masm.checkStackAlignment();
 
@@ -4426,7 +4426,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     // Rooting will happen at GC time.
     masm.movePtr(StackPointer, ObjectReg);
 
-    uint32 safepointOffset;
+    uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
         return false;
     masm.enterFakeExitFrame(ION_FRAME_DOMSETTER);
