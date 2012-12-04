@@ -82,7 +82,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         break;
       case JSOP_BITXOR:
         masm.xorl(R1.valueReg(), R0.valueReg());
-        masm.boxValue(JSVAL_TYPE_INT32, R0.valueReg(), R0.valueReg());
+        masm.tagValue(JSVAL_TYPE_INT32, R0.valueReg(), R0);
         break;
       case JSOP_BITAND:
         masm.andq(R1.valueReg(), R0.valueReg());
