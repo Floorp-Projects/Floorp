@@ -1,0 +1,90 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMMozCellBroadcastEtwsInfo;
+
+/**
+ * MozCellBroadcastMessage encapsulates Cell Broadcast short message service
+ * (CBS) messages.
+ */
+[scriptable, uuid(cb210e8b-ad9c-4052-b70c-02ec0c25d669)]
+interface nsIDOMMozCellBroadcastMessage : nsISupports
+{
+  /**
+   * Indication of the geographical area over which the Message Code is unique,
+   * and the display mode.
+   *
+   * Possible values are: "cell-immediate", "plmn", "location-area" and "cell".
+   */
+  readonly attribute DOMString geographicalScope;
+
+  /**
+   * The Message Code differentiates between messages from the same source and
+   * type (e.g., with the same Message Identifier).
+   */
+  readonly attribute unsigned short messageCode;
+
+  /**
+   * Source and type of the message. For example, "Automotive Association"
+   * (= source), "Traffic Reports" (= type) could correspond to one value. The
+   * Message Identifier is coded in binary.
+   */
+  readonly attribute unsigned short messageId;
+
+  /**
+   * ISO-639-1 language code for this message. Null if unspecified.
+   */
+  readonly attribute DOMString language;
+
+  /**
+   * Text message carried by the message.
+   */
+  readonly attribute DOMString body;
+
+  /**
+   * Possible values are "normal", "class-0", "class-1", "class-2", "class-3",
+   * "user-1", and "user-2".
+   */
+  readonly attribute DOMString messageClass;
+
+  /**
+   * System time stamp at receival.
+   */
+  readonly attribute jsval timestamp; // jsval is for Date.
+
+  /**
+   * Additional ETWS-specific info.
+   */
+  readonly attribute nsIDOMMozCellBroadcastEtwsInfo etws;
+};
+
+/**
+ * ETWS (Earthquake and Tsunami Warning service) Primary Notification message
+ * specific information.
+ */
+[scriptable, uuid(af009d9a-f5e8-4573-a6ee-a85118465bed)]
+interface nsIDOMMozCellBroadcastEtwsInfo : nsISupports
+{
+  /**
+   * Warning type. Possible values are "earthquake", "tsunami",
+   * "earthquake-tsunami", "test" and "other".
+   */
+  readonly attribute ACString warningType;
+
+  /**
+   * Emergency user alert indication. It is used to command mobile terminals to
+   * activate emergency user alert upon the reception of ETWS primary
+   * notification.
+   */
+  readonly attribute boolean emergencyUserAlert;
+
+  /**
+   * Message popup indication. It is used to command mobile terminals to
+   * activate message popup upon the reception of ETWS primary notification.
+   */
+  readonly attribute boolean popup;
+};
+

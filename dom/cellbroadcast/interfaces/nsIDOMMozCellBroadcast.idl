@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEventTarget.idl"
+
+/**
+ * Cell Broadcast short message service (CBS) permits a number of
+ * unacknowledged general CBS messages to be broadcast to all receivers within
+ * a particular region.
+ */
+[scriptable, builtinclass, uuid(06bf2607-cd01-4307-9063-b6eac13b4613)]
+interface nsIDOMMozCellBroadcast : nsIDOMEventTarget
+{
+  [implicit_jscontext] attribute jsval onreceived;
+};
+

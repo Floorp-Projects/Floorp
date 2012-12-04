@@ -56,10 +56,8 @@ public class Favicons {
         public void onFaviconLoaded(String url, Bitmap favicon);
     }
 
-    public Favicons(Context context) {
+    public Favicons() {
         Log.d(LOGTAG, "Creating Favicons instance");
-
-        mContext = context;
 
         mLoadTasks = Collections.synchronizedMap(new HashMap<Long,LoadFaviconTask>());
         mNextFaviconLoadId = 0;
@@ -167,6 +165,18 @@ public class Favicons {
         }
         if (mHttpClient != null)
             mHttpClient.close();
+    }
+
+    private static class FaviconsInstanceHolder {
+        private static final Favicons INSTANCE = new Favicons();
+    }
+
+    public static Favicons getInstance() {
+       return Favicons.FaviconsInstanceHolder.INSTANCE;
+    }
+
+    public void attachToContext(Context context) {
+        mContext = context;
     }
 
     private class LoadFaviconTask extends AsyncTask<Void, Void, Bitmap> {
@@ -286,8 +296,10 @@ public class Favicons {
 
             image = downloadFavicon(faviconUrl);
 
-            if (image != null) {
+            if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
                 saveFaviconToDb(image);
+            } else {
+                image = null;
             }
 
             return image;
