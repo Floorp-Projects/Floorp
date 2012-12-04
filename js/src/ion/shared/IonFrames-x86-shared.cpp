@@ -25,9 +25,9 @@ InvalidationBailoutStack::checkInvariants() const
     CalleeToken token = frame->calleeToken();
     JS_ASSERT(token);
 
-    uint8 *rawBase = ionScript()->method()->raw();
-    uint8 *rawLimit = rawBase + ionScript()->method()->instructionsSize();
-    uint8 *osiPoint = osiPointReturnAddress();
+    uint8_t *rawBase = ionScript()->method()->raw();
+    uint8_t *rawLimit = rawBase + ionScript()->method()->instructionsSize();
+    uint8_t *osiPoint = osiPointReturnAddress();
     JS_ASSERT(rawBase <= osiPoint && osiPoint <= rawLimit);
 #endif
 }

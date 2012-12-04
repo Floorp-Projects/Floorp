@@ -117,7 +117,7 @@ C1Spewer::spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *i
         for (size_t i = 0; i < vreg->numIntervals(); i++) {
             LiveInterval *live = vreg->getInterval(i);
             if (live->numRanges()) {
-                fprintf(fp, "%d object \"", (i == 0) ? vreg->id() : int32(nextId++));
+                fprintf(fp, "%d object \"", (i == 0) ? vreg->id() : int32_t(nextId++));
                 LAllocation::PrintAllocation(fp, live->getAllocation());
                 fprintf(fp, "\" %d -1", vreg->id());
                 for (size_t j = 0; j < live->numRanges(); j++) {
@@ -155,14 +155,14 @@ C1Spewer::spewPass(FILE *fp, MBasicBlock *block)
     fprintf(fp, "    to_bci -1\n");
 
     fprintf(fp, "    predecessors");
-    for (uint32 i = 0; i < block->numPredecessors(); i++) {
+    for (uint32_t i = 0; i < block->numPredecessors(); i++) {
         MBasicBlock *pred = block->getPredecessor(i);
         fprintf(fp, " \"B%d\"", pred->id());
     }
     fprintf(fp, "\n");
 
     fprintf(fp, "    successors");
-    for (uint32 i = 0; i < block->numSuccessors(); i++) {
+    for (uint32_t i = 0; i < block->numSuccessors(); i++) {
         MBasicBlock *successor = block->getSuccessor(i);
         fprintf(fp, " \"B%d\"", successor->id());
     }
@@ -181,7 +181,7 @@ C1Spewer::spewPass(FILE *fp, MBasicBlock *block)
     fprintf(fp, "      begin_locals\n");
     fprintf(fp, "        size %d\n", (int)block->numEntrySlots());
     fprintf(fp, "        method \"None\"\n");
-    for (uint32 i = 0; i < block->numEntrySlots(); i++) {
+    for (uint32_t i = 0; i < block->numEntrySlots(); i++) {
         MDefinition *ins = block->getEntrySlot(i);
         fprintf(fp, "        ");
         fprintf(fp, "%d ", i);

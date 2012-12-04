@@ -26,7 +26,7 @@ bool
 EdgeCaseAnalysis::analyzeLate()
 {
     // Renumber definitions for NeedNegativeZeroCheck under analyzeEdgeCasesBackward.
-    uint32 nextId = 1;
+    uint32_t nextId = 1;
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         if (mir->shouldCancel("Analyze Late (first loop)"))

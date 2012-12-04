@@ -43,7 +43,7 @@ LIRGeneratorX86::useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Regi
 bool
 LIRGeneratorX86::lowerConstantDouble(double d, MInstruction *mir)
 {
-    uint32 index;
+    uint32_t index;
     if (!lirGraph_.addConstantToPool(DoubleValue(d), &index))
         return false;
 
@@ -55,7 +55,7 @@ bool
 LIRGeneratorX86::visitConstant(MConstant *ins)
 {
     if (ins->type() == MIRType_Double) {
-        uint32 index;
+        uint32_t index;
         if (!lirGraph_.addConstantToPool(ins->value(), &index))
             return false;
         LDouble *lir = new LDouble(LConstantIndex::FromIndex(index));
@@ -88,7 +88,7 @@ LIRGeneratorX86::visitBox(MBox *box)
 
     // Otherwise, we should not define a new register for the payload portion
     // of the output, so bypass defineBox().
-    uint32 vreg = getVirtualRegister();
+    uint32_t vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
@@ -198,13 +198,13 @@ LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
     LPhi *type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
     LPhi *payload = current->getPhi(lirIndex + VREG_DATA_OFFSET);
 
-    uint32 typeVreg = getVirtualRegister();
+    uint32_t typeVreg = getVirtualRegister();
     if (typeVreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
     phi->setVirtualRegister(typeVreg);
 
-    uint32 payloadVreg = getVirtualRegister();
+    uint32_t payloadVreg = getVirtualRegister();
     if (payloadVreg >= MAX_VIRTUAL_REGISTERS)
         return false;
     JS_ASSERT(typeVreg + 1 == payloadVreg);
@@ -217,7 +217,7 @@ LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 }
 
 void
-LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex)
+LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex)
 {
     MDefinition *operand = phi->getOperand(inputPosition);
     LPhi *type = block->getPhi(lirIndex + VREG_TYPE_OFFSET);

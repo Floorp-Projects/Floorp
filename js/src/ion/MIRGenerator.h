@@ -79,7 +79,7 @@ class MIRGenerator
     CompileInfo *info_;
     TempAllocator *temp_;
     JSFunction *fun_;
-    uint32 nslots_;
+    uint32_t nslots_;
     MIRGraph *graph_;
     bool error_;
     size_t cancelBuild_;
