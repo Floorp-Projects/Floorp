@@ -42,6 +42,10 @@ endif
 endif
 
 ifdef GNU_CC
+ifeq (ppc,$(findstring ppc,$(OS_TEST)))
+USE_VMX=1
+VMX_CFLAGS=-maltivec
+endif
 ifeq (86,$(findstring 86,$(OS_TEST)))
 USE_MMX=1
 MMX_CFLAGS=-mmmx -Winline
@@ -156,3 +160,6 @@ pixman-mmx.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(MMX_CFLAGS)
 pixman-sse2.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(SSE2_CFLAGS)
 
 pixman-arm-neon.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(ARM_NEON_CFLAGS)
+
+pixman-vmx.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(VMX_CFLAGS)
+
