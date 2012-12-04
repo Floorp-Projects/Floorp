@@ -11,9 +11,10 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsopcode.h"
-#include "gc/Heap.h"
 #include "BaselineJIT.h"
 #include "BaselineRegisters.h"
+
+#include "gc/Heap.h"
 
 namespace js {
 namespace ion {
@@ -187,7 +188,6 @@ namespace ion {
 //     +-----------+     +-----------+     +-----------+
 //
 
-
 class ICStub;
 
 //
@@ -319,6 +319,17 @@ class ICStub
         return (k > INVALID) && (k < LIMIT);
     }
 
+    static const char *KindString(Kind k) {
+        switch(k) {
+#define DEF_KIND_STR(kindName) case kindName: return #kindName;
+            IC_STUB_KIND_LIST(DEF_KIND_STR)
+#undef DEF_KIND_STR
+          default:
+            JS_NOT_REACHED("Invalid kind.");
+            return "INVALID_KIND";
+        }
+    }
+
     enum Trait {
         Regular             = 0x0,
         Fallback            = 0x1,
@@ -326,6 +337,9 @@ class ICStub
         MonitoredFallback   = 0x3,
         Updated             = 0x4
     };
+
+    void markCode(JSTracer *trc, const char *name);
+    void trace(JSTracer *trc);
 
   protected:
     // The kind of the stub.
@@ -579,7 +593,7 @@ class ICMonitoredFallbackStub : public ICFallbackStub
         fallbackMonitorStub_(NULL) {}
 
   public:
-    bool initMonitoringChain(JSContext *cx);
+    bool initMonitoringChain(JSContext *cx, ICStubSpace *space);
 
     inline ICTypeMonitor_Fallback *fallbackMonitorStub() const {
         return fallbackMonitorStub_;
@@ -603,7 +617,7 @@ class ICUpdatedStub : public ICStub
     {}
 
   public:
-    bool initUpdatingChain(JSContext *cx);
+    bool initUpdatingChain(JSContext *cx, ICStubSpace *space);
 
     void addOptimizedUpdateStub(ICStub *stub) {
         if (firstUpdateStub_->isTypeUpdate_Fallback()) {
@@ -694,7 +708,7 @@ class ICStubCompiler
     }
 
   public:
-    virtual ICStub *getStub() = 0;
+    virtual ICStub *getStub(ICStubSpace *space) = 0;
 };
 
 // Base class for stub compilers that can generate multiple stubcodes.
@@ -722,6 +736,8 @@ class ICMultiStubCompiler : public ICStubCompiler
 // can be retreived).
 class ICTypeMonitor_Fallback : public ICStub
 {
+    friend class ICStubSpace;
+
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
     // Pointer to the main fallback stub for the IC.
@@ -764,8 +780,10 @@ class ICTypeMonitor_Fallback : public ICStub
     }
 
   public:
-    static inline ICTypeMonitor_Fallback *New(IonCode *code, ICMonitoredFallbackStub *mainFbStub) {
-        return new ICTypeMonitor_Fallback(code, mainFbStub);
+    static inline ICTypeMonitor_Fallback *New(
+        ICStubSpace *space, IonCode *code, ICMonitoredFallbackStub *mainFbStub)
+    {
+        return space->allocate<ICTypeMonitor_Fallback>(code, mainFbStub);
     }
 
     inline ICFallbackStub *mainFallbackStub() const {
@@ -782,7 +800,7 @@ class ICTypeMonitor_Fallback : public ICStub
 
     // Create a new monitor stub for the type of the given value, and
     // add it to this chain.
-    bool addMonitorStubForValue(JSContext *cx, HandleValue val);
+    bool addMonitorStubForValue(JSContext *cx, ICStubSpace *space, HandleValue val);
 
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
@@ -797,21 +815,23 @@ class ICTypeMonitor_Fallback : public ICStub
             mainFallbackStub_(mainFallbackStub)
         { }
 
-        ICTypeMonitor_Fallback *getStub() {
-            return ICTypeMonitor_Fallback::New(getStubCode(), mainFallbackStub_);
+        ICTypeMonitor_Fallback *getStub(ICStubSpace *space) {
+            return ICTypeMonitor_Fallback::New(space, getStubCode(), mainFallbackStub_);
         }
     };
 };
 
 class ICTypeMonitor_Type : public ICStub
 {
+    friend class ICStubSpace;
+
     ICTypeMonitor_Type(Kind kind, IonCode *stubCode)
         : ICStub(kind, stubCode)
     { }
 
   public:
-    static inline ICTypeMonitor_Type *New(Kind kind, IonCode *code) {
-        return new ICTypeMonitor_Type(kind, code);
+    static inline ICTypeMonitor_Type *New(ICStubSpace *space, Kind kind, IonCode *code) {
+        return space->allocate<ICTypeMonitor_Type>(kind, code);
     }
 
     static Kind KindFromType(JSValueType type) {
@@ -837,14 +857,16 @@ class ICTypeMonitor_Type : public ICStub
             type_(type)
         { }
 
-        ICTypeMonitor_Type *getStub() {
-            return ICTypeMonitor_Type::New(kind, getStubCode());
+        ICTypeMonitor_Type *getStub(ICStubSpace *space) {
+            return ICTypeMonitor_Type::New(space, kind, getStubCode());
         }
     };
 };
 
 class ICTypeMonitor_TypeObject : public ICStub
 {
+    friend class ICStubSpace;
+
     HeapPtrTypeObject type_;
 
     ICTypeMonitor_TypeObject(IonCode *stubCode, HandleTypeObject type)
@@ -853,8 +875,10 @@ class ICTypeMonitor_TypeObject : public ICStub
     { }
 
   public:
-    static inline ICTypeMonitor_TypeObject *New(IonCode *code, HandleTypeObject type) {
-        return new ICTypeMonitor_TypeObject(code, type);
+    static inline ICTypeMonitor_TypeObject *New(
+            ICStubSpace *space, IonCode *code, HandleTypeObject type)
+    {
+        return space->allocate<ICTypeMonitor_TypeObject>(code, type);
     }
 
     HeapPtrTypeObject &type() {
@@ -876,8 +900,8 @@ class ICTypeMonitor_TypeObject : public ICStub
             type_(type)
         { }
 
-        ICTypeMonitor_TypeObject *getStub() {
-            return ICTypeMonitor_TypeObject::New(getStubCode(), type_);
+        ICTypeMonitor_TypeObject *getStub(ICStubSpace *space) {
+            return ICTypeMonitor_TypeObject::New(space, getStubCode(), type_);
         }
     };
 };
@@ -890,13 +914,15 @@ extern const VMFunction DoTypeUpdateFallbackInfo;
 // forwards to a different entry point in the main fallback stub.
 class ICTypeUpdate_Fallback : public ICStub
 {
+    friend class ICStubSpace;
+
     ICTypeUpdate_Fallback(IonCode *stubCode)
       : ICStub(ICStub::TypeUpdate_Fallback, stubCode)
     {}
 
   public:
-    static inline ICTypeUpdate_Fallback *New(IonCode *code) {
-        return new ICTypeUpdate_Fallback(code);
+    static inline ICTypeUpdate_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICTypeUpdate_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -909,8 +935,8 @@ class ICTypeUpdate_Fallback : public ICStub
           : ICStubCompiler(cx, ICStub::TypeUpdate_Fallback)
         { }
 
-        ICTypeUpdate_Fallback *getStub() {
-            return ICTypeUpdate_Fallback::New(getStubCode());
+        ICTypeUpdate_Fallback *getStub(ICStubSpace *space) {
+            return ICTypeUpdate_Fallback::New(space, getStubCode());
         }
     };
 };
@@ -921,14 +947,16 @@ class ICTypeUpdate_Fallback : public ICStub
 
 class ICCompare_Fallback : public ICFallbackStub
 {
+    friend class ICStubSpace;
+
     ICCompare_Fallback(IonCode *stubCode)
       : ICFallbackStub(ICStub::Compare_Fallback, stubCode) {}
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICCompare_Fallback *New(IonCode *code) {
-        return new ICCompare_Fallback(code);
+    static inline ICCompare_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCompare_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -940,20 +968,22 @@ class ICCompare_Fallback : public ICFallbackStub
         Compiler(JSContext *cx)
           : ICStubCompiler(cx, ICStub::Compare_Fallback) {}
 
-        ICStub *getStub() {
-            return ICCompare_Fallback::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_Fallback::New(space, getStubCode());
         }
     };
 };
 
 class ICCompare_Int32 : public ICFallbackStub
 {
+    friend class ICStubSpace;
+
     ICCompare_Int32(IonCode *stubCode)
       : ICFallbackStub(ICStub::Compare_Int32, stubCode) {}
 
   public:
-    static inline ICCompare_Int32 *New(IonCode *code) {
-        return new ICCompare_Int32(code);
+    static inline ICCompare_Int32 *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCompare_Int32>(code);
     }
 
     // Compiler for this stub kind.
@@ -965,8 +995,8 @@ class ICCompare_Int32 : public ICFallbackStub
         Compiler(JSContext *cx, JSOp op)
           : ICMultiStubCompiler(cx, ICStub::Compare_Int32, op) {}
 
-        ICStub *getStub() {
-            return ICCompare_Int32::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_Int32::New(space, getStubCode());
         }
     };
 };
@@ -976,14 +1006,16 @@ class ICCompare_Int32 : public ICFallbackStub
 
 class ICToBool_Fallback : public ICFallbackStub
 {
+    friend class ICStubSpace;
+
     ICToBool_Fallback(IonCode *stubCode)
       : ICFallbackStub(ICStub::ToBool_Fallback, stubCode) {}
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICToBool_Fallback *New(IonCode *code) {
-        return new ICToBool_Fallback(code);
+    static inline ICToBool_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICToBool_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -995,20 +1027,22 @@ class ICToBool_Fallback : public ICFallbackStub
         Compiler(JSContext *cx)
           : ICStubCompiler(cx, ICStub::ToBool_Fallback) {}
 
-        ICStub *getStub() {
-            return ICToBool_Fallback::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICToBool_Fallback::New(space, getStubCode());
         }
     };
 };
 
 class ICToBool_Bool : public ICStub
 {
+    friend class ICStubSpace;
+
     ICToBool_Bool(IonCode *stubCode)
       : ICStub(ICStub::ToBool_Bool, stubCode) {}
 
   public:
-    static inline ICToBool_Bool *New(IonCode *code) {
-        return new ICToBool_Bool(code);
+    static inline ICToBool_Bool *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICToBool_Bool>(code);
     }
 
     // Compiler for this stub kind.
@@ -1020,20 +1054,22 @@ class ICToBool_Bool : public ICStub
         Compiler(JSContext *cx)
           : ICStubCompiler(cx, ICStub::ToBool_Bool) {}
 
-        ICStub *getStub() {
-            return ICToBool_Bool::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICToBool_Bool::New(space, getStubCode());
         }
     };
 };
 
 class ICToBool_Int32 : public ICStub
 {
+    friend class ICStubSpace;
+
     ICToBool_Int32(IonCode *stubCode)
       : ICStub(ICStub::ToBool_Int32, stubCode) {}
 
   public:
-    static inline ICToBool_Int32 *New(IonCode *code) {
-        return new ICToBool_Int32(code);
+    static inline ICToBool_Int32 *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICToBool_Int32>(code);
     }
 
     // Compiler for this stub kind.
@@ -1045,8 +1081,8 @@ class ICToBool_Int32 : public ICStub
         Compiler(JSContext *cx)
           : ICStubCompiler(cx, ICStub::ToBool_Int32) {}
 
-        ICStub *getStub() {
-            return ICToBool_Int32::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICToBool_Int32::New(space, getStubCode());
         }
     };
 };
@@ -1056,12 +1092,14 @@ class ICToBool_Int32 : public ICStub
 
 class ICToNumber_Fallback : public ICFallbackStub
 {
+    friend class ICStubSpace;
+
     ICToNumber_Fallback(IonCode *stubCode)
       : ICFallbackStub(ICStub::ToNumber_Fallback, stubCode) {}
 
   public:
-    static inline ICToNumber_Fallback *New(IonCode *code) {
-        return new ICToNumber_Fallback(code);
+    static inline ICToNumber_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICToNumber_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -1073,8 +1111,8 @@ class ICToNumber_Fallback : public ICFallbackStub
         Compiler(JSContext *cx)
           : ICStubCompiler(cx, ICStub::ToNumber_Fallback) {}
 
-        ICStub *getStub() {
-            return ICToNumber_Fallback::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICToNumber_Fallback::New(space, getStubCode());
         }
     };
 };
@@ -1086,14 +1124,16 @@ class ICToNumber_Fallback : public ICFallbackStub
 
 class ICBinaryArith_Fallback : public ICFallbackStub
 {
+    friend class ICStubSpace;
+
     ICBinaryArith_Fallback(IonCode *stubCode)
       : ICFallbackStub(BinaryArith_Fallback, stubCode) {}
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICBinaryArith_Fallback *New(IonCode *code) {
-        return new ICBinaryArith_Fallback(code);
+    static inline ICBinaryArith_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICBinaryArith_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -1105,20 +1145,22 @@ class ICBinaryArith_Fallback : public ICFallbackStub
         Compiler(JSContext *cx)
           : ICStubCompiler(cx, ICStub::BinaryArith_Fallback) {}
 
-        ICStub *getStub() {
-            return ICBinaryArith_Fallback::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_Fallback::New(space, getStubCode());
         }
     };
 };
 
 class ICBinaryArith_Int32 : public ICStub
 {
+    friend class ICStubSpace;
+
     ICBinaryArith_Int32(IonCode *stubCode)
       : ICStub(BinaryArith_Int32, stubCode) {}
 
   public:
-    static inline ICBinaryArith_Int32 *New(IonCode *code) {
-        return new ICBinaryArith_Int32(code);
+    static inline ICBinaryArith_Int32 *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICBinaryArith_Int32>(code);
     }
 
     // Compiler for this stub kind.
@@ -1140,8 +1182,8 @@ class ICBinaryArith_Int32 : public ICStub
           : ICStubCompiler(cx, ICStub::BinaryArith_Int32),
             op_(op), allowDouble_(allowDouble) {}
 
-        ICStub *getStub() {
-            return ICBinaryArith_Int32::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_Int32::New(space, getStubCode());
         }
     };
 };
@@ -1152,14 +1194,16 @@ class ICBinaryArith_Int32 : public ICStub
 
 class ICUnaryArith_Fallback : public ICFallbackStub
 {
+    friend class ICStubSpace;
+
     ICUnaryArith_Fallback(IonCode *stubCode)
       : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICUnaryArith_Fallback *New(IonCode *code) {
-        return new ICUnaryArith_Fallback(code);
+    static inline ICUnaryArith_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICUnaryArith_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -1172,21 +1216,23 @@ class ICUnaryArith_Fallback : public ICFallbackStub
           : ICStubCompiler(cx, ICStub::UnaryArith_Fallback)
         {}
 
-        ICStub *getStub() {
-            return ICUnaryArith_Fallback::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICUnaryArith_Fallback::New(space, getStubCode());
         }
     };
 };
 
 class ICUnaryArith_Int32 : public ICStub
 {
+    friend class ICStubSpace;
+
     ICUnaryArith_Int32(IonCode *stubCode)
       : ICStub(UnaryArith_Int32, stubCode)
     {}
 
   public:
-    static inline ICUnaryArith_Int32 *New(IonCode *code) {
-        return new ICUnaryArith_Int32(code);
+    static inline ICUnaryArith_Int32 *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICUnaryArith_Int32>(code);
     }
 
     class Compiler : public ICMultiStubCompiler {
@@ -1198,8 +1244,8 @@ class ICUnaryArith_Int32 : public ICStub
           : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op)
         {}
 
-        ICStub *getStub() {
-            return ICUnaryArith_Int32::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICUnaryArith_Int32::New(space, getStubCode());
         }
     };
 };
@@ -1209,6 +1255,8 @@ class ICUnaryArith_Int32 : public ICStub
 
 class ICGetElem_Fallback : public ICMonitoredFallbackStub
 {
+    friend class ICStubSpace;
+
     ICGetElem_Fallback(IonCode *stubCode)
       : ICMonitoredFallbackStub(ICStub::GetElem_Fallback, stubCode)
     { }
@@ -1216,8 +1264,8 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICGetElem_Fallback *New(IonCode *code) {
-        return new ICGetElem_Fallback(code);
+    static inline ICGetElem_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetElem_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -1230,11 +1278,11 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
           : ICStubCompiler(cx, ICStub::GetElem_Fallback)
         { }
 
-        ICStub *getStub() {
-            ICGetElem_Fallback *stub = ICGetElem_Fallback::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            ICGetElem_Fallback *stub = ICGetElem_Fallback::New(space, getStubCode());
             if (!stub)
                 return NULL;
-            if (!stub->initMonitoringChain(cx))
+            if (!stub->initMonitoringChain(cx, space))
                 return NULL;
             return stub;
         }
@@ -1243,12 +1291,16 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
 
 class ICGetElem_Dense : public ICMonitoredStub
 {
+    friend class ICStubSpace;
+
     ICGetElem_Dense(IonCode *stubCode, ICStub *firstMonitorStub)
       : ICMonitoredStub(GetElem_Dense, stubCode, firstMonitorStub) {}
 
   public:
-    static inline ICGetElem_Dense *New(IonCode *code, ICStub *firstMonitorStub) {
-        return new ICGetElem_Dense(code, firstMonitorStub);
+    static inline ICGetElem_Dense *New(
+            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub)
+    {
+        return space->allocate<ICGetElem_Dense>(code, firstMonitorStub);
     }
 
     class Compiler : public ICStubCompiler {
@@ -1262,8 +1314,8 @@ class ICGetElem_Dense : public ICMonitoredStub
           : ICStubCompiler(cx, ICStub::GetElem_Dense),
             firstMonitorStub_(firstMonitorStub) {}
 
-        ICStub *getStub() {
-            return ICGetElem_Dense::New(getStubCode(), firstMonitorStub_);
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetElem_Dense::New(space, getStubCode(), firstMonitorStub_);
         }
     };
 };
@@ -1273,6 +1325,8 @@ class ICGetElem_Dense : public ICMonitoredStub
 
 class ICSetElem_Fallback : public ICFallbackStub
 {
+    friend class ICStubSpace;
+
     ICSetElem_Fallback(IonCode *stubCode)
       : ICFallbackStub(ICStub::SetElem_Fallback, stubCode)
     { }
@@ -1280,8 +1334,8 @@ class ICSetElem_Fallback : public ICFallbackStub
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICSetElem_Fallback *New(IonCode *code) {
-        return new ICSetElem_Fallback(code);
+    static inline ICSetElem_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICSetElem_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -1294,14 +1348,16 @@ class ICSetElem_Fallback : public ICFallbackStub
           : ICStubCompiler(cx, ICStub::SetElem_Fallback)
         { }
 
-        ICStub *getStub() {
-            return ICSetElem_Fallback::New(getStubCode());
+        ICStub *getStub(ICStubSpace *space) {
+            return ICSetElem_Fallback::New(space, getStubCode());
         }
     };
 };
 
 class ICSetElem_Dense : public ICUpdatedStub
 {
+    friend class ICStubSpace;
+
     HeapPtrTypeObject type_;
 
     ICSetElem_Dense(IonCode *stubCode, HandleTypeObject type)
@@ -1309,8 +1365,8 @@ class ICSetElem_Dense : public ICUpdatedStub
         type_(type) {}
 
   public:
-    static inline ICSetElem_Dense *New(IonCode *code, HandleTypeObject type) {
-        return new ICSetElem_Dense(code, type);
+    static inline ICSetElem_Dense *New(ICStubSpace *space, IonCode *code, HandleTypeObject type) {
+        return space->allocate<ICSetElem_Dense>(code, type);
     }
 
     static size_t offsetOfType() {
@@ -1335,14 +1391,10 @@ class ICSetElem_Dense : public ICUpdatedStub
           : ICStubCompiler(cx, ICStub::SetElem_Dense),
             type_(type) {}
 
-        ICStub *getStub() {
-            ICSetElem_Dense *stub = ICSetElem_Dense::New(getStubCode(), type_);
-            if (!stub)
+        ICStub *getStub(ICStubSpace *space) {
+            ICSetElem_Dense *stub = ICSetElem_Dense::New(space, getStubCode(), type_);
+            if (!stub || !stub->initUpdatingChain(cx, space))
                 return NULL;
-            if (!stub->initUpdatingChain(cx)) {
-                delete stub;
-                return NULL;
-            }
             return stub;
         }
     };
@@ -1352,6 +1404,8 @@ class ICSetElem_Dense : public ICUpdatedStub
 //      JSOP_GETGNAME
 class ICGetName_Fallback : public ICMonitoredFallbackStub
 {
+    friend class ICStubSpace;
+
     ICGetName_Fallback(IonCode *stubCode)
       : ICMonitoredFallbackStub(ICStub::GetName_Fallback, stubCode)
     { }
@@ -1359,8 +1413,8 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICGetName_Fallback *New(IonCode *code) {
-        return new ICGetName_Fallback(code);
+    static inline ICGetName_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetName_Fallback>(code);
     }
 
     class Compiler : public ICStubCompiler {
@@ -1372,14 +1426,10 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub
           : ICStubCompiler(cx, ICStub::GetName_Fallback)
         { }
 
-        ICStub *getStub() {
-            ICGetName_Fallback *stub = ICGetName_Fallback::New(getStubCode());
-            if (!stub)
+        ICStub *getStub(ICStubSpace *space) {
+            ICGetName_Fallback *stub = ICGetName_Fallback::New(space, getStubCode());
+            if (!stub || !stub->initMonitoringChain(cx, space))
                 return NULL;
-            if (!stub->initMonitoringChain(cx)) {
-                delete stub;
-                return NULL;
-            }
             return stub;
         }
     };
@@ -1403,6 +1453,8 @@ class ICCallStubCompiler : public ICStubCompiler
 
 class ICCall_Fallback : public ICMonitoredFallbackStub
 {
+    friend class ICStubSpace;
+
     ICCall_Fallback(IonCode *stubCode)
       : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode)
     { }
@@ -1410,8 +1462,8 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICCall_Fallback *New(IonCode *code) {
-        return new ICCall_Fallback(code);
+    static inline ICCall_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCall_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -1424,14 +1476,10 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
           : ICCallStubCompiler(cx, ICStub::Call_Fallback)
         { }
 
-        ICStub *getStub() {
-            ICCall_Fallback *stub = ICCall_Fallback::New(getStubCode());
-            if (!stub)
+        ICStub *getStub(ICStubSpace *space) {
+            ICCall_Fallback *stub = ICCall_Fallback::New(space, getStubCode());
+            if (!stub || !stub->initMonitoringChain(cx, space))
                 return NULL;
-            if (!stub->initMonitoringChain(cx)) {
-                delete stub;
-                return NULL;
-            }
             return stub;
         }
     };
@@ -1439,6 +1487,8 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
 
 class ICCall_Scripted : public ICMonitoredStub
 {
+    friend class ICStubSpace;
+
     HeapPtrFunction callee_;
 
     ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee)
@@ -1447,8 +1497,10 @@ class ICCall_Scripted : public ICMonitoredStub
     { }
 
   public:
-    static inline ICCall_Scripted *New(IonCode *code, ICStub *firstMonitorStub, HandleFunction callee) {
-        return new ICCall_Scripted(code, firstMonitorStub, callee);
+    static inline ICCall_Scripted *New(
+            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub, HandleFunction callee)
+    {
+        return space->allocate<ICCall_Scripted>(code, firstMonitorStub, callee);
     }
 
     static size_t offsetOfCallee() {
@@ -1472,8 +1524,8 @@ class ICCall_Scripted : public ICMonitoredStub
             callee_(cx, callee)
         { }
 
-        ICStub *getStub() {
-            return ICCall_Scripted::New(getStubCode(), firstMonitorStub_, callee_);
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, callee_);
         }
     };
 };

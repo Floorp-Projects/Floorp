@@ -16,8 +16,25 @@
 using namespace js;
 using namespace js::ion;
 
+/* static */ ICStubSpace *
+ICStubSpace::FallbackStubSpaceFor(JSScript *script)
+{
+    JS_ASSERT(script->hasBaselineScript());
+    return script->baselineScript()->fallbackStubSpace();
+}
+
+/* static */ ICStubSpace *
+ICStubSpace::StubSpaceFor(JSScript *script)
+{
+    JS_ASSERT(script->hasBaselineScript());
+    return script->baselineScript()->optimizedStubSpace();
+}
+
+
 BaselineScript::BaselineScript()
-  : method_(NULL)
+  : method_(NULL),
+    fallbackStubSpace_(),
+    optimizedStubSpace_()
 { }
 
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12; //XXX
@@ -220,10 +237,12 @@ static const unsigned DataAlignment = sizeof(uintptr_t);
 BaselineScript *
 BaselineScript::New(JSContext *cx, size_t icEntries)
 {
+    size_t paddedBaselineScriptSize = AlignBytes(sizeof(BaselineScript), DataAlignment);
+
     size_t icEntriesSize = icEntries * sizeof(ICEntry);
     size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
 
-    size_t allocBytes = sizeof(BaselineScript) + paddedICEntriesSize;
+    size_t allocBytes = paddedBaselineScriptSize + paddedICEntriesSize;
 
     uint8_t *buffer = (uint8_t *)cx->malloc_(allocBytes);
     if (!buffer)
@@ -232,57 +251,12 @@ BaselineScript::New(JSContext *cx, size_t icEntries)
     BaselineScript *script = reinterpret_cast<BaselineScript *>(buffer);
     new (script) BaselineScript();
 
-    uint8_t *scriptEnd = buffer + sizeof(BaselineScript);
-    uint8_t *icEntryStart = (uint8_t *) AlignBytes((uintptr_t) scriptEnd, DataAlignment);
+    uint8_t *icEntryStart = buffer + paddedBaselineScriptSize;
 
     script->icEntriesOffset_ = (uint32_t) (icEntryStart - buffer);
     script->icEntries_ = icEntries;
 
     return script;
-}
-
-static void
-TraceStub(JSTracer *trc, ICStub *stub)
-{
-    IonCode *stubIonCode = stub->ionCode();
-    MarkIonCodeUnbarriered(trc, &stubIonCode, "baseline-stub-ioncode");
-
-    // If the stub is a monitored fallback stub, then mark the monitor ICs hanging
-    // off of that stub.  We don't need to worry about the regular monitored stubs,
-    // because the regular monitored stubs will always have a monitored fallback stub
-    // that references the same stub chain.
-    if (stub->isMonitoredFallback()) {
-        ICTypeMonitor_Fallback *lastMonStub =
-            stub->toMonitoredFallbackStub()->fallbackMonitorStub();
-        for (ICStub *monStub = lastMonStub->firstMonitorStub();
-             monStub != NULL;
-             monStub = monStub->next())
-        {
-            JS_ASSERT_IF(monStub->next() == NULL, monStub == lastMonStub);
-            IonCode *monStubIonCode = monStub->ionCode();
-            MarkIonCodeUnbarriered(trc, &monStubIonCode, "baseline-monitor-stub-ioncode");
-        }
-    }
-
-    switch (stub->kind()) {
-      case ICStub::Call_Scripted: {
-        ICCall_Scripted *callStub = stub->toCall_Scripted();
-        MarkObject(trc, &callStub->callee(), "baseline-callstub-callee");
-        break;
-      }
-      case ICStub::SetElem_Dense: {
-        ICSetElem_Dense *setElemStub = stub->toSetElem_Dense();
-        MarkTypeObject(trc, &setElemStub->type(), "baseline-setelem-dense-stub-type");
-        break;
-      }
-      case ICStub::TypeMonitor_TypeObject: {
-        ICTypeMonitor_TypeObject *monitorStub = stub->toTypeMonitor_TypeObject();
-        MarkTypeObject(trc, &monitorStub->type(), "baseline-monitor-typeobject");
-        break;
-      }
-      default:
-        break;
-    }
 }
 
 void
@@ -294,7 +268,7 @@ BaselineScript::trace(JSTracer *trc)
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry &ent = icEntry(i);
         for (ICStub *stub = ent.firstStub(); stub; stub = stub->next())
-            TraceStub(trc, stub);
+            stub->trace(trc);
     }
 }
 
@@ -351,4 +325,10 @@ BaselineScript::copyICEntries(const ICEntry *entries, MacroAssembler &masm)
         if (realEntry.firstStub()->isFallback())
             realEntry.firstStub()->toFallbackStub()->fixupICEntry(&realEntry);
     }
+}
+
+void
+BaselineScript::adoptFallbackStubs(ICStubSpace *stubSpace)
+{
+    fallbackStubSpace_.adoptFrom(stubSpace);
 }

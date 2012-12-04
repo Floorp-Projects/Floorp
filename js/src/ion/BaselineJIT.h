@@ -10,19 +10,53 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+
 #include "IonCode.h"
 #include "ion/IonMacroAssembler.h"
+
+#include "ds/LifoAlloc.h"
 
 namespace js {
 namespace ion {
 
 struct ICEntry;
 
+// ICStubSpace is an abstraction for allocation policy and storage for stub data.
+struct ICStubSpace
+{
+  private:
+    const static size_t STUB_DEFAULT_CHUNK_SIZE = 256;
+    LifoAlloc allocator_;
+
+    inline void *alloc_(size_t size) {
+        return allocator_.alloc(size);
+    }
+
+  public:
+    inline ICStubSpace()
+      : allocator_(STUB_DEFAULT_CHUNK_SIZE) {}
+
+    JS_DECLARE_NEW_METHODS(allocate, alloc_, inline)
+
+    inline void adoptFrom(ICStubSpace *other) {
+        allocator_.transferFrom(&(other->allocator_));
+    }
+
+    static ICStubSpace *FallbackStubSpaceFor(JSScript *script);
+    static ICStubSpace *StubSpaceFor(JSScript *script);
+};
+
 struct BaselineScript
 {
   private:
     // Code pointer containing the actual method.
     HeapPtr<IonCode> method_;
+
+    // Allocated space for fallback stubs.
+    ICStubSpace fallbackStubSpace_;
+
+    // Allocated space for optimized stubs.
+    ICStubSpace optimizedStubSpace_;
 
   private:
     void trace(JSTracer *trc);
@@ -46,6 +80,14 @@ struct BaselineScript
         return (ICEntry *)(reinterpret_cast<uint8_t *>(this) + icEntriesOffset_);
     }
 
+    ICStubSpace *fallbackStubSpace() {
+        return &fallbackStubSpace_;
+    }
+
+    ICStubSpace *optimizedStubSpace() {
+        return &optimizedStubSpace_;
+    }
+
     IonCode *method() const {
         return method_;
     }
@@ -63,6 +105,7 @@ struct BaselineScript
     }
 
     void copyICEntries(const ICEntry *entries, MacroAssembler &masm);
+    void adoptFallbackStubs(ICStubSpace *stubSpace);
 };
 
 MethodStatus

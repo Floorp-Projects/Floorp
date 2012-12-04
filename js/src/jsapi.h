@@ -1087,7 +1087,8 @@ class JS_PUBLIC_API(AutoGCRooter) {
         IONMASM =     -28, /* js::ion::MacroAssembler */
         IONALLOC =    -29, /* js::ion::AutoTempAllocatorRooter */
         WRAPVECTOR =  -30, /* js::AutoWrapperVector */
-        WRAPPER =     -31  /* js::AutoWrapperRooter */
+        WRAPPER =     -31, /* js::AutoWrapperRooter */
+        BASELINECOMPILER=-32, /* js::ion::BaselineCompiler */
     };
 
   private:
