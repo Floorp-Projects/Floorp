@@ -51,6 +51,7 @@ FENNEC_JAVA_FILES = \
   awesomebar/AllPagesTab.java \
   awesomebar/BookmarksTab.java \
   awesomebar/HistoryTab.java \
+  BackButton.java \
   BrowserApp.java \
   BrowserToolbar.java \
   BrowserToolbarBackground.java \
@@ -71,6 +72,7 @@ FENNEC_JAVA_FILES = \
   FlowLayout.java \
   FontSizePreference.java \
   FormAssistPopup.java \
+  ForwardButton.java \
   GeckoAccessibility.java \
   GeckoApplication.java \
   GeckoApp.java \
@@ -135,6 +137,7 @@ FENNEC_JAVA_FILES = \
   Telemetry.java \
   TextSelection.java \
   TextSelectionHandle.java \
+  ThumbnailHelper.java \
   WebAppAllocator.java \
   ZoomConstraints.java \
   gfx/BitmapUtils.java \
@@ -226,6 +229,7 @@ FENNEC_PP_XML_FILES = \
   res/color/awesome_bar_title_hint.xml \
   res/color/tabs_counter_color.xml \
   res/drawable/address_bar_bg.xml \
+  res/drawable/address_bar_nav_button.xml \
   res/drawable/address_bar_url.xml \
   res/drawable/awesomebar_tabs_bg.xml \
   res/drawable/menu_level.xml \
@@ -479,6 +483,8 @@ RES_XML = \
 	$(NULL)
 
 RES_ANIM = \
+  res/anim/awesomebar_fade_in.xml \
+  res/anim/awesomebar_hold_still.xml \
   res/anim/grow_fade_in.xml \
   res/anim/grow_fade_in_center.xml \
   res/anim/shrink_fade_out.xml \
@@ -536,10 +542,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/tab_thumbnail_shadow.png \
   res/drawable/tabs_carat.png \
   res/drawable/tabs_carat_pb.png \
-  res/drawable/address_bar_back_button.xml \
-  res/drawable/address_bar_back_button_bg.xml \
-  res/drawable/address_bar_back_button_pressed_bg.xml \
-  res/drawable/address_bar_forward_button.xml \
   res/drawable/address_bar_texture_port.png \
   res/drawable/address_bar_texture_port_pb.png \
   res/drawable/address_bar_url_default.9.png \
@@ -894,8 +896,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/address_bar_bg_private.xml \
   res/drawable-large-mdpi-v11/address_bar_texture_tablet.png \
   res/drawable-large-mdpi-v11/address_bar_texture_tablet_pb.png \
-  res/drawable-large-mdpi-v11/address_bar_back_button_bg.png \
-  res/drawable-large-mdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-mdpi-v11/address_bar_url_default.9.png \
   res/drawable-large-mdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-mdpi-v11/address_bar_url_pressed.9.png \
@@ -922,8 +922,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
 RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/address_bar_texture_tablet.png \
   res/drawable-large-hdpi-v11/address_bar_texture_tablet_pb.png \
-  res/drawable-large-hdpi-v11/address_bar_back_button_bg.png \
-  res/drawable-large-hdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-hdpi-v11/address_bar_url_default.9.png \
   res/drawable-large-hdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-hdpi-v11/address_bar_url_pressed.9.png \
@@ -950,8 +948,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/address_bar_texture_tablet.png \
   res/drawable-large-xhdpi-v11/address_bar_texture_tablet_pb.png \
-  res/drawable-large-xhdpi-v11/address_bar_back_button_bg.png \
-  res/drawable-large-xhdpi-v11/address_bar_back_button_pressed_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_url_default.9.png \
   res/drawable-large-xhdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-xhdpi-v11/address_bar_url_pressed.9.png \

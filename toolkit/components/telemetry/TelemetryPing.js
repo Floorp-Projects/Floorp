@@ -491,9 +491,8 @@ TelemetryPing.prototype = {
     this._slowSQLStartup = Telemetry.slowSQL;
   },
 
-  getCurrentSessionPayloadAndSlug: function getCurrentSessionPayloadAndSlug(reason) {
+  getCurrentSessionPayload: function getCurrentSessionPayload(reason) {
     // use a deterministic url for testing.
-    let isTestPing = (reason == "test-ping");
     let payloadObj = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: getSimpleMeasurements(),
@@ -520,8 +519,15 @@ TelemetryPing.prototype = {
       payloadObj.simpleMeasurements.savedPings = this._pingsLoaded;
     }
 
-    let slug = (isTestPing ? reason : this._uuid);
     payloadObj.info = this.getMetadata(reason);
+
+    return payloadObj;
+  },
+
+  getCurrentSessionPayloadAndSlug: function getCurrentSessionPayloadAndSlug(reason) {
+    let isTestPing = (reason == "test-ping");
+    let payloadObj = this.getCurrentSessionPayload(reason);
+    let slug = (isTestPing ? reason : this._uuid);
     return { slug: slug, payload: JSON.stringify(payloadObj) };
   },
 
@@ -924,6 +930,15 @@ TelemetryPing.prototype = {
     Services.obs.removeObserver(this, "quit-application-granted");
   },
 
+  getPayload: function getPayload() {
+    // This function returns the current Telemetry payload to the caller.
+    // We only gather startup info once.
+    if (Object.keys(this._slowSQLStartup).length == 0)
+      this.gatherStartupInformation();
+    this.gatherMemory();
+    return this.getCurrentSessionPayload("gather-payload");
+  },
+
   /**
    * This observer drives telemetry.
    */
@@ -992,16 +1007,6 @@ TelemetryPing.prototype = {
         this._isIdleObserver = true;
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       break;
-    case "get-payload":
-      // This handler returns the current Telemetry payload to the caller.
-      // We only gather startup info once.
-      if (Object.keys(this._slowSQLStartup).length == 0)
-        this.gatherStartupInformation();
-      this.gatherMemory();
-      let data = this.getCurrentSessionPayloadAndSlug("gather-payload");
-
-      aSubject.QueryInterface(Ci.nsISupportsString).data = data.payload;
-      break;
     case "test-save-histograms":
       this.saveHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
       break;
@@ -1037,7 +1042,7 @@ TelemetryPing.prototype = {
   },
 
   classID: Components.ID("{55d6a5fa-130e-4ee6-a158-0133af3b86ba}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelemetryPing]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelemetryPing]);

@@ -82,3 +82,72 @@ vcm_media_payload_type_t vcmRtpToMediaPayload (int32_t ptype,
     }
     return type;
 }
+
+#define EXTRACT_DYNAMIC_PAYLOAD_TYPE(PTYPE) ((PTYPE)>>16)
+#define CLEAR_DYNAMIC_PAYLOAD_TYPE(PTYPE)   (PTYPE & 0x0000FFFF)
+#define CHECK_DYNAMIC_PAYLOAD_TYPE(PTYPE)   (PTYPE & 0xFFFF0000)
+/* TODO -- This function is temporary, to deal with the fact
+   that we currently have two different codec representations.
+   It should be removed when the media types are unified.  */
+int32_t mediaPayloadToVcmRtp (vcm_media_payload_type_t payload_in)
+{
+    int vcmPayload = -1;
+    int rtp_payload = -1;
+
+    if (CHECK_DYNAMIC_PAYLOAD_TYPE(payload_in)) {
+      vcmPayload = CLEAR_DYNAMIC_PAYLOAD_TYPE(payload_in);
+    } else {
+      //static payload type
+      vcmPayload = payload_in;
+    }
+
+    switch(vcmPayload) {
+        case VCM_Media_Payload_G711Ulaw64k:
+          rtp_payload = RTP_PCMU;
+          break;
+
+        case VCM_Media_Payload_G729:
+          rtp_payload = RTP_G729;
+          break;
+
+        case VCM_Media_Payload_Wide_Band_256k:
+          rtp_payload = RTP_L16;
+          break;
+
+        case VCM_Media_Payload_G722_64k:
+          rtp_payload = RTP_G722;
+          break;
+
+        case VCM_Media_Payload_ILBC20:
+        case VCM_Media_Payload_ILBC30:
+          rtp_payload = RTP_ILBC;
+          break;
+
+        case VCM_Media_Payload_ISAC:
+          rtp_payload = RTP_ISAC;
+          break;
+
+        case VCM_Media_Payload_H263:
+          rtp_payload = RTP_H263;
+          break;
+
+        case VCM_Media_Payload_H264:
+           rtp_payload = RTP_H264_P0;
+           break;
+
+        case VCM_Media_Payload_VP8:
+          rtp_payload = RTP_VP8;
+          break;
+
+        case VCM_Media_Payload_OPUS:
+          rtp_payload = RTP_OPUS;
+          break;
+
+        default:
+          rtp_payload = RTP_NONE;
+          break;
+    }
+
+  return rtp_payload;
+
+}

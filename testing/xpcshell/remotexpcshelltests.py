@@ -415,6 +415,17 @@ def main():
 
     parser = RemoteXPCShellOptions()
     options, args = parser.parse_args()
+    if not options.localAPK:
+      for file in os.listdir(os.path.join(options.objdir, "dist")):
+        if (file.endswith(".apk") and file.startswith("fennec")):
+          options.localAPK = os.path.join(options.objdir, "dist")
+          options.localAPK = os.path.join(options.localAPK, file)
+          print >>sys.stderr, "using APK: " + options.localAPK
+          break
+      else:
+        print >>sys.stderr, "Error: please specify an APK"
+        sys.exit(1)
+
     options = parser.verifyRemoteOptions(options)
 
     if len(args) < 1 and options.manifest is None:
@@ -439,18 +450,6 @@ def main():
 
     if not options.objdir:
       print >>sys.stderr, "Error: You must specify an objdir"
-      sys.exit(1)
-
-    if not options.localAPK:
-      for file in os.listdir(os.path.join(options.objdir, "dist")):
-        if (file.endswith(".apk") and file.startswith("fennec")):
-          options.localAPK = os.path.join(options.objdir, "dist")
-          options.localAPK = os.path.join(options.localAPK, file)
-          print >>sys.stderr, "using APK: " + options.localAPK
-          break
-
-    if not options.localAPK:
-      print >>sys.stderr, "Error: please specify an APK"
       sys.exit(1)
 
     xpcsh = XPCShellRemote(dm, options, args)

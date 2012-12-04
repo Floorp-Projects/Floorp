@@ -30,12 +30,13 @@ function PaymentUI() {
 
 PaymentUI.prototype = {
 
-  confirmPaymentRequest: function confirmPaymentRequest(aRequests,
+  confirmPaymentRequest: function confirmPaymentRequest(aRequestId,
+                                                        aRequests,
                                                         aSuccessCb,
                                                         aErrorCb) {
     let _error = function _error(errorMsg) {
       if (aErrorCb) {
-        aErrorCb.onresult(errorMsg);
+        aErrorCb.onresult(aRequestId, errorMsg);
       }
     };
 
@@ -66,7 +67,7 @@ PaymentUI.prototype = {
       }
 
       if (msg.userSelection && aSuccessCb) {
-        aSuccessCb.onresult(msg.userSelection);
+        aSuccessCb.onresult(aRequestId, msg.userSelection);
       } else if (msg.errorMsg) {
         _error(msg.errorMsg);
       }
@@ -77,12 +78,12 @@ PaymentUI.prototype = {
     browser.shell.sendChromeEvent(detail);
   },
 
-  showPaymentFlow: function showPaymentFlow(aPaymentFlowInfo, aErrorCb) {
-    debug("showPaymentFlow. uri " + aPaymentFlowInfo.uri);
-
+  showPaymentFlow: function showPaymentFlow(aRequestId,
+                                            aPaymentFlowInfo,
+                                            aErrorCb) {
     let _error = function _error(errorMsg) {
       if (aErrorCb) {
-        aErrorCb.onresult(errorMsg);
+        aErrorCb.onresult(aRequestId, errorMsg);
       }
     };
 
@@ -124,6 +125,7 @@ PaymentUI.prototype = {
       let mm = frameLoader.messageManager;
       try {
         mm.loadFrameScript(kPaymentShimFile, true);
+        mm.sendAsyncMessage("Payment:LoadShim", { requestId: aRequestId });
       } catch (e) {
         debug("Error loading " + kPaymentShimFile + " as a frame script: " + e);
         _error("ERROR_LOADING_PAYMENT_SHIM");

@@ -136,6 +136,11 @@ AutoFlushCache::update(uintptr_t newStart, size_t len)
 {
 }
 
+void
+AutoFlushCache::flushAnyway()
+{
+}
+
 AutoFlushCache::~AutoFlushCache()
 {
     if (!myCompartment_)

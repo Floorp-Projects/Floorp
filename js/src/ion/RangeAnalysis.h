@@ -183,6 +183,7 @@ class Range : public TempObject {
     static Range * shr(const Range *lhs, int32 c);
 
     static bool precisionLossMul(const Range *lhs, const Range *rhs);
+    static bool negativeZeroMul(const Range *lhs, const Range *rhs);
 
     inline void makeLowerInfinite() {
         lower_infinite_ = true;

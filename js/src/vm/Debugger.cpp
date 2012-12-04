@@ -651,7 +651,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
         }
 
         CrossCompartmentKey key(CrossCompartmentKey::DebuggerEnvironment, object, env);
-        if (!object->compartment()->crossCompartmentWrappers.put(key, ObjectValue(*envobj))) {
+        if (!object->compartment()->putWrapper(key, ObjectValue(*envobj))) {
             environments.remove(env);
             js_ReportOutOfMemory(cx);
             return false;
@@ -689,7 +689,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
 
             if (obj->compartment() != object->compartment()) {
                 CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
-                if (!object->compartment()->crossCompartmentWrappers.put(key, ObjectValue(*dobj))) {
+                if (!object->compartment()->putWrapper(key, ObjectValue(*dobj))) {
                     objects.remove(obj);
                     js_ReportOutOfMemory(cx);
                     return false;
@@ -2499,6 +2499,13 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
 
         GlobalObject *global = c->maybeGlobal();
         if (global) {
+            /*
+             * We pulled |global| out of nowhere, so it's possible that it was
+             * marked gray by XPConnect. Since we're now exposing it to JS code,
+             * we need to mark it black.
+             */
+            ExposeGCThingToActiveJS(global, JSTRACE_OBJECT);
+
             Value globalValue(ObjectValue(*global));
             if (!dbg->wrapDebuggeeValue(cx, &globalValue))
                 return false;
@@ -2612,7 +2619,7 @@ Debugger::wrapScript(JSContext *cx, HandleScript script)
         }
 
         CrossCompartmentKey key(CrossCompartmentKey::DebuggerScript, object, script);
-        if (!object->compartment()->crossCompartmentWrappers.put(key, ObjectValue(*scriptobj))) {
+        if (!object->compartment()->putWrapper(key, ObjectValue(*scriptobj))) {
             scripts.remove(script);
             js_ReportOutOfMemory(cx);
             return NULL;

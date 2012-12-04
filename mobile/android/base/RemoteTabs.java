@@ -71,7 +71,7 @@ public class RemoteTabs extends LinearLayout
     public void hide() {
     }
 
-    void autoHidePanel() {
+    private void autoHidePanel() {
         mTabsPanel.autoHidePanel();
     }
 
