@@ -137,6 +137,7 @@ FENNEC_JAVA_FILES = \
   TabsPanelButton.java \
   TabsTray.java \
   TabsAccessor.java \
+  TailTouchDelegate.java \
   Telemetry.java \
   TextSelection.java \
   TextSelectionHandle.java \
