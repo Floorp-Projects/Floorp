@@ -1661,7 +1661,12 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
     case NS_ERROR_FILE_ACCESS_DENIED:
         if (type == kWriteError) {
           // Attempt to write without sufficient permissions.
+#if defined(ANDROID)
+          // On Android, assume the SD card is missing or read-only
+          msgId.AssignLiteral("accessErrorSD");
+#else
           msgId.AssignLiteral("accessError");
+#endif
         }
         else
         {
