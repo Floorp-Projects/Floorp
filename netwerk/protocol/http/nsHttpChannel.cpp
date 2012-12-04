@@ -4445,10 +4445,12 @@ nsHttpChannel::BeginConnect()
         (BYPASS_LOCAL_CACHE(mLoadFlags)))
         mCaps |= NS_HTTP_REFRESH_DNS;
 
-    if (mLoadAsBlocking)
-        mCaps |= NS_HTTP_LOAD_AS_BLOCKING;
-    if (mLoadUnblocked)
-        mCaps |= NS_HTTP_LOAD_UNBLOCKED;
+    if (gHttpHandler->CritialRequestPrioritization()) {
+        if (mLoadAsBlocking)
+            mCaps |= NS_HTTP_LOAD_AS_BLOCKING;
+        if (mLoadUnblocked)
+            mCaps |= NS_HTTP_LOAD_UNBLOCKED;
+    }
 
     // Force-Reload should reset the persistent connection pool for this host
     if (mLoadFlags & LOAD_FRESH_CONNECTION) {
