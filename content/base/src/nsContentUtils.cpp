@@ -6168,7 +6168,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
                                  jsval& aBlob)
 {
   uint32_t blobLen = aData.Length();
-  void* blobData = PR_Malloc(blobLen);
+  void* blobData = moz_malloc(blobLen);
   nsCOMPtr<nsIDOMBlob> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);

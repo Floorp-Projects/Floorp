@@ -17,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIXMLHttpRequest.h"
-#include "prmem.h"
 #include "nsAutoPtr.h"
 
 #include "mozilla/GuardObjects.h"
@@ -423,7 +422,7 @@ protected:
         sDataOwners = nullptr;
       }
 
-      PR_Free(mData);
+      moz_free(mData);
     }
 
     static void EnsureMemoryReporterRegistered();
