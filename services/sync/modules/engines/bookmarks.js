@@ -485,14 +485,21 @@ BookmarksStore.prototype = {
   },
   
   applyIncoming: function BStore_applyIncoming(record) {
-    // Don't bother with pre and post-processing for deletions.
+    let isSpecial = record.id in kSpecialIds;
+
     if (record.deleted) {
+      if (isSpecial) {
+        this._log.warn("Ignoring deletion for special record " + record.id);
+        return;
+      }
+
+      // Don't bother with pre and post-processing for deletions.
       Store.prototype.applyIncoming.call(this, record);
       return;
     }
 
     // For special folders we're only interested in child ordering.
-    if ((record.id in kSpecialIds) && record.children) {
+    if (isSpecial && record.children) {
       this._log.debug("Processing special node: " + record.id);
       // Reorder children later
       this._childrenToOrder[record.id] = record.children;
@@ -768,6 +775,11 @@ BookmarksStore.prototype = {
   },
 
   remove: function BStore_remove(record) {
+    if (kSpecialIds.isSpecialGUID(record.id)) {
+      this._log.warn("Refusing to remove special folder " + record.id);
+      return;
+    }
+
     let itemId = this.idForGUID(record.id);
     if (itemId <= 0) {
       this._log.debug("Item " + record.id + " already removed");
