@@ -485,13 +485,7 @@ AlphaBoxBlur::Blur()
     IntSize integralImageSize(size.width + maxLeftLobe + horizontalLobes[1][1],
                               size.height + verticalLobes[0][0] + verticalLobes[1][1] + 1);
 
-#ifdef IS_BIG_ENDIAN
-    const bool cIsBigEndian = true;
-#else
-    const bool cIsBigEndian = false;
-#endif
-
-    if (cIsBigEndian || (integralImageSize.width * integralImageSize.height) > (1 << 24)) {
+    if ((integralImageSize.width * integralImageSize.height) > (1 << 24)) {
       // Fallback to old blurring code when the surface is so large it may
       // overflow our integral image!
 
@@ -564,6 +558,16 @@ GenerateIntegralRow(uint32_t  *aDest, const uint8_t *aSource, uint32_t *aPreviou
   }
   for (uint32_t x = aLeftInflation; x < (aSourceWidth + aLeftInflation); x += 4) {
       uint32_t alphaValues = *(uint32_t*)(aSource + (x - aLeftInflation));
+#if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN || defined __BIG_ENDIAN__
+      currentRowSum += (alphaValues >> 24) & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+      currentRowSum += (alphaValues >> 16) & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+      currentRowSum += (alphaValues >> 8) & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+      currentRowSum += alphaValues & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+#else
       currentRowSum += alphaValues & 0xff;
       *aDest++ = *aPreviousRow++ + currentRowSum;
       alphaValues >>= 8;
@@ -575,6 +579,7 @@ GenerateIntegralRow(uint32_t  *aDest, const uint8_t *aSource, uint32_t *aPreviou
       alphaValues >>= 8;
       currentRowSum += alphaValues & 0xff;
       *aDest++ = *aPreviousRow++ + currentRowSum;
+#endif
   }
   pixel = aSource[aSourceWidth - 1];
   for (uint32_t x = (aSourceWidth + aLeftInflation); x < (aSourceWidth + aLeftInflation + aRightInflation); x++) {
@@ -599,10 +604,6 @@ GenerateIntegralImage_C(int32_t aLeftInflation, int32_t aRightInflation,
   GenerateIntegralRow(aIntegralImage, aSource, aIntegralImage,
                       aSize.width, aLeftInflation, aRightInflation);
   for (int y = 1; y < aTopInflation + 1; y++) {
-    uint32_t *intRow = aIntegralImage + (y * stride32bit);
-    uint32_t *intPrevRow = aIntegralImage + (y - 1) * stride32bit;
-    uint32_t *intFirstRow = aIntegralImage;
-
     GenerateIntegralRow(aIntegralImage + (y * stride32bit), aSource, aIntegralImage + (y - 1) * stride32bit,
                         aSize.width, aLeftInflation, aRightInflation);
   }
