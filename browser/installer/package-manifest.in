@@ -565,28 +565,34 @@
 ; All the pref files must be part of base to prevent migration bugs
 @BINPATH@/@PREF_DIR@/firefox.js
 @BINPATH@/@PREF_DIR@/firefox-branding.js
-#ifdef MOZ_SERVICES_AITC
-@BINPATH@/@PREF_DIR@/services-aitc.js
-#endif
-#ifdef MOZ_SERVICES_NOTIFICATIONS
-@BINPATH@/@PREF_DIR@/services-notifications.js
-#endif
-#ifdef MOZ_SERVICES_SYNC
-@BINPATH@/@PREF_DIR@/services-sync.js
-#endif
-#ifdef MOZ_SERVICES_HEALTHREPORT
-@BINPATH@/@PREF_DIR@/healthreport-prefs.js
-#endif
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
+@BINPATH@/defaults/profile/prefs.js
+
 #ifndef LIBXUL_SDK
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
+; Technically this is an app pref file, but we are keeping it in the original
+; gre location for now.
 @BINPATH@/defaults/pref/channel-prefs.js
 #else
+; For Fx-on-xr, channel-prefs lives with the app preferences. (Bug 762588)
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 #endif
-@BINPATH@/defaults/profile/prefs.js
+
+; Services (gre) prefs
+#ifdef MOZ_SERVICES_AITC
+@BINPATH@/defaults/pref/services-aitc.js
+#endif
+#ifdef MOZ_SERVICES_NOTIFICATIONS
+@BINPATH@/defaults/pref/services-notifications.js
+#endif
+#ifdef MOZ_SERVICES_SYNC
+@BINPATH@/defaults/pref/services-sync.js
+#endif
+#ifdef MOZ_SERVICES_HEALTHREPORT
+@BINPATH@/defaults/pref/healthreport-prefs.js
+#endif
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 
