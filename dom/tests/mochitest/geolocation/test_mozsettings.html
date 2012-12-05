@@ -42,30 +42,53 @@ SpecialPowers.addPermission("settings-read", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
 
+ok(navigator.geolocation, "get geolocation object");
+
 toggleGeolocationSetting(false, function() {
     ok(true, "turned off geolocation via mozSettings");
     setTimeout(function() {
-	navigator.geolocation.getCurrentPosition(successCallbackAfterMozsetting, failureCallbackAfterMozsetting);
+	navigator.geolocation.getCurrentPosition(successCallbackAfterMozsettingOff,
+                                                 failureCallbackAfterMozsettingOff);
       }, 500); // need to wait a bit for all of these async callbacks to finish
   });
 
-function successCallbackAfterMozsetting(position) {
+function successCallbackAfterMozsettingOff(position) {
   ok(false, "Success callback should not have been called after setting geolocation.enabled to false.");
 
   toggleGeolocationSetting(true, function() {
-      reset_prompt();
-      SimpleTest.finish();
+      ok(true, "turned on geolocation via mozSettings");
+      setTimeout(function() {
+         navigator.geolocation.getCurrentPosition(successCallbackAfterMozsettingOn,
+                                                  failureCallbackAfterMozsettingOn);
+        }, 500); // need to wait a bit for all of these async callbacks to finish
     });
 }
 
-function failureCallbackAfterMozsetting(error) {
+function failureCallbackAfterMozsettingOff(error) {
   ok(true, "Geolocation didn't work after setting geolocation.enabled to false.");
 
   toggleGeolocationSetting(true, function() {
-      reset_prompt();
-      SimpleTest.finish();
+      ok(true, "turned on geolocation via mozSettings");
+      setTimeout(function() {
+         navigator.geolocation.getCurrentPosition(successCallbackAfterMozsettingOn,
+                                                  failureCallbackAfterMozsettingOn);
+        }, 500); // need to wait a bit for all of these async callbacks to finish
     });
- }
+}
+
+function successCallbackAfterMozsettingOn(position) {
+  ok(true, "Geolocation worked after setting geolocation.enabled to true.");
+
+  reset_prompt();
+  SimpleTest.finish();
+}
+
+function failureCallbackAfterMozsettingOn(error) {
+  ok(false, "Geolocation didn't work after setting geolocation.enabled to true.");
+
+  reset_prompt();
+  SimpleTest.finish();
+}
 
 </script>
 </pre>
