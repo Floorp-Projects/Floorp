@@ -3,6 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+const PLUGIN_SCRIPTED_STATE_NONE = 0;
+const PLUGIN_SCRIPTED_STATE_FIRED = 1;
+const PLUGIN_SCRIPTED_STATE_DONE = 2;
+
 function getPluginInfo(pluginElement)
 {
   var tagMimetype;
@@ -227,6 +231,16 @@ var gPluginHandler = {
         let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
         self.addLinkClickCallback(manageLink, "managePlugins");
         break;
+
+      case "PluginScripted":
+        let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
+        if (browser._pluginScriptedState == PLUGIN_SCRIPTED_STATE_NONE) {
+          browser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_FIRED;
+          setTimeout(function() {
+            gPluginHandler.handlePluginScripted(this);
+          }.bind(browser), 500);
+        }
+        break;
     }
 
     // Hide the in-content UI if it's too big. The crashed plugin handler already did this.
@@ -235,6 +249,41 @@ var gPluginHandler = {
       if (overlay != null && self.isTooSmall(plugin, overlay))
           overlay.style.visibility = "hidden";
     }
+  },
+
+  handlePluginScripted: function PH_handlePluginScripted(aBrowser) {
+    let contentWindow = aBrowser.contentWindow;
+    if (!contentWindow)
+      return;
+
+    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    let haveVisibleCTPPlugin = cwu.plugins.some(function(plugin) {
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      let doc = plugin.ownerDocument;
+      let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+      if (!overlay)
+        return false;
+
+      // if the plugin's style is 240x200, it's a good bet we set that in
+      // toolkit/mozapps/plugins/content/pluginProblemContent.css
+      // (meaning this plugin was never actually given a size, so it's really
+      // not part of visible content)
+      let computedStyle = contentWindow.getComputedStyle(plugin);
+      let isInvisible = ((computedStyle.width == "240px" &&
+                          computedStyle.height == "200px") ||
+                         gPluginHandler.isTooSmall(plugin, overlay));
+      return (!isInvisible &&
+              gPluginHandler.canActivatePlugin(objLoadingContent));
+    });
+
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
+    if (notification && !haveVisibleCTPPlugin) {
+      notification.dismissed = false;
+      PopupNotifications._update(notification.anchorElement);
+    }
+
+    aBrowser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_DONE;
   },
 
   isKnownPlugin: function PH_isKnownPlugin(objLoadingContent) {
@@ -591,7 +640,9 @@ var gPluginHandler = {
         gPluginHandler._removeClickToPlayOverlays(contentWindow);
       }
     }];
-    let options = { dismissed: true, centerActions: centerActions };
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
+    let dismissed = notification ? notification.dismissed : true;
+    let options = { dismissed: dismissed, centerActions: centerActions };
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
                             messageString, "plugins-notification-icon",
                             mainAction, secondaryActions, options);
