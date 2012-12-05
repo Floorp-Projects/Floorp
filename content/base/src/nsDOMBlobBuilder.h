@@ -119,8 +119,7 @@ protected:
     if (!bufferLen.isValid())
       return false;
 
-    // PR_ memory functions are still fallible
-    void* data = PR_Realloc(mData, bufferLen.value());
+    void* data = moz_realloc(mData, bufferLen.value());
     if (!data)
       return false;
 
