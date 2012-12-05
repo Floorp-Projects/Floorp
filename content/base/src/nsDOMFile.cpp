@@ -36,8 +36,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 
-#include "plbase64.h"
-#include "prmem.h"
 #include "mozilla/dom/FileListBinding.h"
 
 using namespace mozilla;
