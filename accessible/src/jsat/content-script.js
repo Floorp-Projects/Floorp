@@ -192,12 +192,12 @@ function scroll(aMessage) {
     if (!horiz && content.scrollMaxY &&
         ((page > 0 && content.scrollY < content.scrollMaxY) ||
          (page < 0 && content.scrollY > 0))) {
-      content.scroll(0, content.innerHeight);
+      content.scroll(0, content.innerHeight * page + content.scrollY);
       return true;
     } else if (horiz && content.scrollMaxX &&
                ((page > 0 && content.scrollX < content.scrollMaxX) ||
                 (page < 0 && content.scrollX > 0))) {
-      content.scroll(content.innerWidth, 0);
+      content.scroll(content.innerWidth * page + content.scrollX);
       return true;
     }
 
