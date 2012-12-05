@@ -8,8 +8,8 @@ const {utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = ["BagheeraServer"];
 
-Cu.import("resource://gre/modules/services-common/log4moz.js");
-Cu.import("resource://gre/modules/services-common/utils.js");
+Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://testing-common/httpd.js");
 
 
