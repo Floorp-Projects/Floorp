@@ -10,8 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])
 
 import traceback
 from remotexpcshelltests import XPCShellRemote, RemoteXPCShellOptions
-from automationutils import *
-from mozdevice import devicemanagerADB
+from mozdevice import devicemanagerADB, DMError
 
 DEVICE_TEST_ROOT = '/data/local/tests'
 

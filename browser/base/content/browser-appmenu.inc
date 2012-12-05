@@ -27,12 +27,6 @@
                       label="&newNavigatorCmd.label;"
                       command="cmd_newNavigator"
                       key="key_newNavigator"/>
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-            <menuitem id="appmenu_newPrivateWindow"
-                      label="&newPrivateWindow.label;"
-                      command="Tools:PrivateBrowsing"
-                      key="key_privatebrowsing"/>
-#endif
             <menuseparator/>
             <menuitem id="appmenu_openFile"
                       label="&openFileCmd.label;"
@@ -40,7 +34,13 @@
                       key="openFileKb"/>
           </menupopup>
       </splitmenu>
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      <menuitem id="appmenu_newPrivateWindow"
+                class="menuitem-iconic menuitem-iconic-tooltip"
+                label="&newPrivateWindow.label;"
+                command="Tools:PrivateBrowsing"
+                key="key_privatebrowsing"/>
+#else
       <menuitem id="appmenu_privateBrowsing"
                 class="menuitem-iconic menuitem-iconic-tooltip"
                 label="&privateBrowsingCmd.start.label;"
