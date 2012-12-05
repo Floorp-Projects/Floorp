@@ -1846,49 +1846,6 @@ class AutoKeepAtoms {
     ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
 };
 
-class AutoReleasePtr {
-    void        *ptr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    AutoReleasePtr(const AutoReleasePtr &other) MOZ_DELETE;
-    AutoReleasePtr operator=(const AutoReleasePtr &other) MOZ_DELETE;
-
-  public:
-    explicit AutoReleasePtr(void *ptr
-                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(ptr)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    void forget() { ptr = NULL; }
-    ~AutoReleasePtr() { js_free(ptr); }
-};
-
-/*
- * FIXME: bug 602774: cleaner API for AutoReleaseNullablePtr
- */
-class AutoReleaseNullablePtr {
-    void        *ptr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    AutoReleaseNullablePtr(const AutoReleaseNullablePtr &other) MOZ_DELETE;
-    AutoReleaseNullablePtr operator=(const AutoReleaseNullablePtr &other) MOZ_DELETE;
-
-  public:
-    explicit AutoReleaseNullablePtr(void *ptr
-                                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(ptr)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    void reset(void *ptr2) {
-        if (ptr)
-            js_free(ptr);
-        ptr = ptr2;
-    }
-    ~AutoReleaseNullablePtr() { if (ptr) js_free(ptr); }
-};
-
 } /* namespace js */
 
 class JSAutoResolveFlags
