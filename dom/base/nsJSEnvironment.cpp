@@ -49,7 +49,6 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsDOMScriptObjectHolder.h"
-#include "prmem.h"
 #include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
 #include "nsScriptNameSpaceManager.h"
@@ -4106,24 +4105,18 @@ public:
 
 protected:
   JSContext *mContext;
-  jsval *mArgv;
-  uint32_t mArgc;
+  FallibleTArray<jsval> mArgv;
 };
 
 nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, jsval *argv,
                            nsresult *prv) :
-    mContext(aContext),
-    mArgv(nullptr),
-    mArgc(argc)
+    mContext(aContext)
 {
   // copy the array - we don't know its lifetime, and ours is tied to xpcom
   // refcounting.  Alloc zero'd array so cleanup etc is safe.
-  if (argc) {
-    mArgv = (jsval *) PR_CALLOC(argc * sizeof(jsval));
-    if (!mArgv) {
-      *prv = NS_ERROR_OUT_OF_MEMORY;
-      return;
-    }
+  if (!mArgv.EnsureLengthAtLeast(argc)) {
+    *prv = NS_ERROR_OUT_OF_MEMORY;
+    return;
   }
 
   // Callers are allowed to pass in a null argv even for argc > 0. They can
@@ -4148,13 +4141,10 @@ nsJSArgArray::~nsJSArgArray()
 void
 nsJSArgArray::ReleaseJSObjects()
 {
-  if (mArgv) {
-    PR_DELETE(mArgv);
-  }
-  if (mArgc > 0) {
-    mArgc = 0;
+  if (!mArgv.IsEmpty())
     NS_DROP_JS_OBJECTS(this, nsJSArgArray);
-  }
+
+  mArgv.Clear();
 }
 
 // QueryInterface implementation for nsJSArgArray
@@ -4167,12 +4157,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSArgArray)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSArgArray)
-  jsval *argv = tmp->mArgv;
-  if (argv) {
-    jsval *end;
-    for (end = argv + tmp->mArgc; argv < end; ++argv) {
-      if (JSVAL_IS_GCTHING(*argv))
-        NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(JSVAL_TO_GCTHING(*argv),
+  uint32_t length = tmp->mArgv.Length();
+  for (uint32_t i = 0; i < length; i++) {
+      if (JSVAL_IS_GCTHING(tmp->mArgv[i])) {
+        NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(JSVAL_TO_GCTHING(tmp->mArgv[i]),
                                                    "mArgv[i]")
     }
   }
@@ -4190,15 +4178,15 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSArgArray)
 nsresult
 nsJSArgArray::GetArgs(uint32_t *argc, void **argv)
 {
-  *argv = (void *)mArgv;
-  *argc = mArgc;
+  *argv = (void *)mArgv.Elements();
+  *argc = mArgv.Length();
   return NS_OK;
 }
 
 // nsIArray impl
 NS_IMETHODIMP nsJSArgArray::GetLength(uint32_t *aLength)
 {
-  *aLength = mArgc;
+  *aLength = mArgv.Length();
   return NS_OK;
 }
 
@@ -4206,7 +4194,7 @@ NS_IMETHODIMP nsJSArgArray::GetLength(uint32_t *aLength)
 NS_IMETHODIMP nsJSArgArray::QueryElementAt(uint32_t index, const nsIID & uuid, void * *result)
 {
   *result = nullptr;
-  if (index >= mArgc)
+  if (index >= mArgv.Length())
     return NS_ERROR_INVALID_ARG;
 
   if (uuid.Equals(NS_GET_IID(nsIVariant)) || uuid.Equals(NS_GET_IID(nsISupports))) {
