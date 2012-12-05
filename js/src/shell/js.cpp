@@ -123,6 +123,7 @@ static bool enableMethodJit = true;
 static bool enableTypeInference = true;
 static bool enableDisassemblyDumps = false;
 static bool enableIon = true;
+static bool enableBaseline = true;
 
 static bool printTiming = false;
 
@@ -4635,6 +4636,8 @@ NewContext(JSRuntime *rt)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     if (enableIon)
         JS_ToggleOptions(cx, JSOPTION_ION);
+    if (enableBaseline)
+        JS_ToggleOptions(cx, JSOPTION_BASELINE);
     return cx;
 }
 
@@ -4781,6 +4784,11 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption("no-ion")) {
         enableIon = false;
         JS_ToggleOptions(cx, JSOPTION_ION);
+    }
+
+    if (op->getBoolOption("no-baseline")) {
+        enableBaseline = false;
+        JS_ToggleOptions(cx, JSOPTION_BASELINE);
     }
 
     if (const char *str = op->getStringOption("ion-gvn")) {
@@ -5088,6 +5096,8 @@ main(int argc, char **argv, char **envp)
         || !op.addStringOption('\0', "ion-parallel-compile", "on/off",
                                "Compile scripts off thread (default: off)")
 #endif
+        || !op.addBoolOption('\0', "baseline", "Enable baseline compiler (default)")
+        || !op.addBoolOption('\0', "no-baseline", "Disable baseline compiler")
     )
     {
         return EXIT_FAILURE;
