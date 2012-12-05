@@ -1097,8 +1097,8 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
 
     RootedFunction fun(cx, obj->toFunction());
     if (obj->toFunction()->hasScript()) {
-        RootedScript script(cx, fun->nonLazyScript());
-        if (!script->hasBaselineScript() && !script->hasIonScript())
+        RootedScript calleeScript(cx, fun->nonLazyScript());
+        if (!calleeScript->hasBaselineScript() && !calleeScript->hasIonScript())
             return true;
 
         ICCall_Scripted::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(), fun);
