@@ -238,6 +238,20 @@ BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
   return aTile;
 }
 
+BasicTiledThebesLayer::BasicTiledThebesLayer(BasicShadowLayerManager* const aManager)
+  : ThebesLayer(aManager, static_cast<BasicImplData*>(this))
+  , mLastScrollOffset(0, 0)
+  , mFirstPaint(true)
+{
+  MOZ_COUNT_CTOR(BasicTiledThebesLayer);
+  mLowPrecisionTiledBuffer.SetResolution(gfxPlatform::GetLowPrecisionResolution());
+}
+
+BasicTiledThebesLayer::~BasicTiledThebesLayer()
+{
+  MOZ_COUNT_DTOR(BasicTiledThebesLayer);
+}
+
 void
 BasicTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
