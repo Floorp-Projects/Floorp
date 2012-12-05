@@ -2024,8 +2024,14 @@ static bool SelectorMatches(Element* aElement,
         break;
 
       case nsCSSPseudoClasses::ePseudoClass_scope:
-        if (aElement != aElement->OwnerDoc()->GetRootElement()) {
-          return false;
+        if (aTreeMatchContext.HasSpecifiedScope()) {
+          if (!aTreeMatchContext.IsScopeElement(aElement)) {
+            return false;
+          }
+        } else {
+          if (aElement != aElement->OwnerDoc()->GetRootElement()) {
+            return false;
+          }
         }
         break;
 
