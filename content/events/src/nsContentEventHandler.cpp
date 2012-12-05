@@ -369,7 +369,7 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
                               uint32_t aNativeLength,
                               bool aExpandToClusterBoundaries)
 {
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv = iter->Init(mRootContent);
   NS_ENSURE_SUCCESS(rv, rv);
 
