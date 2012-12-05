@@ -14,6 +14,7 @@ Cu.import("resource://gre/modules/PermissionSettings.jsm");
 this.EXPORTED_SYMBOLS = ["PermissionsInstaller",
                          "expandPermissions",
                          "PermissionsTable",
+                         "appendAccessToPermName"
                         ];
 const UNKNOWN_ACTION = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 const ALLOW_ACTION = Ci.nsIPermissionManager.ALLOW_ACTION;
@@ -30,17 +31,6 @@ const PERM_TO_STRING = ["unknown", "allow", "deny", "prompt"];
 
 function debug(aMsg) {
   //dump("-*-*- PermissionsInstaller.jsm : " + aMsg + "\n");
-}
-
-/**
- * Converts ['read', 'write'] to ['contacts-read', 'contacts-write'], etc...
- * @param string aPermName
- * @param Array aSuffixes
- * @returns Array
- **/
-function mapSuffixes(aPermName, aSuffixes)
-{
-  return aSuffixes.map(function(suf) { return aPermName + "-" + suf; });
 }
 
 // Permissions Matrix: https://docs.google.com/spreadsheet/ccc?key=0Akyz_Bqjgf5pdENVekxYRjBTX0dCXzItMnRyUU1RQ0E#gid=0
@@ -248,6 +238,23 @@ this.PermissionsTable =  { geolocation: {
                          };
 
 /**
+ * Append access modes to the permission name as suffixes.
+ *   e.g. permission name 'contacts' with ['read', 'write'] =
+ *   ['contacts-read', contacts-write']
+ * @param string aPermName
+ * @param array aAccess
+ * @returns array containing access-appended permission names.
+ **/
+this.appendAccessToPermName = function appendAccessToPermName(aPermName, aAccess) {
+  if (aAccess.length == 0) {
+    return [aPermName];
+  }
+  return aAccess.map(function(aMode) {
+    return aPermName + "-" + aMode;
+  });
+};
+
+/**
  * Expand an access string into multiple permission names,
  *   e.g: perm 'contacts' with 'readwrite' =
  *   ['contacts-read', 'contacts-create', contacts-write']
@@ -301,12 +308,12 @@ this.expandPermissions = function expandPermissions(aPermName, aAccess, aChannel
     return [];
   }
 
-  let permArr = mapSuffixes(aPermName, requestedSuffixes);
+  let permArr = appendAccessToPermName(aPermName, requestedSuffixes);
 
   // Add the same suffix to each of the additions.
   if (tableEntry.additional) {
     for each (let additional in tableEntry.additional) {
-      permArr = permArr.concat(mapSuffixes(additional, requestedSuffixes));
+      permArr = permArr.concat(appendAccessToPermName(additional, requestedSuffixes));
     }
   }
 
