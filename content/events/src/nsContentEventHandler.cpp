@@ -222,7 +222,8 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
 }
 #endif
 
-static uint32_t GetNativeTextLength(nsIContent* aContent, uint32_t aMaxLength = UINT32_MAX)
+/* static */ uint32_t
+nsContentEventHandler::GetNativeTextLength(nsIContent* aContent, uint32_t aMaxLength)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     uint32_t textLengthDifference =
