@@ -7,7 +7,6 @@
 #define txLog_h__
 
 #include "prlog.h"
-#include "prmem.h"
 #endif
 
 #ifdef PR_LOGGING
