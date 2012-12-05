@@ -3075,10 +3075,12 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_ION            JS_BIT(20)      /* IonMonkey */
 
+#define JSOPTION_BASELINE       JS_BIT(21)      /* Baseline compiler. */
+
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(21) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(22) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32_t)
