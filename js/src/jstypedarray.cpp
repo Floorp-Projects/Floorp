@@ -594,11 +594,11 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
 }
 
 void
-ArrayBufferObject::resetArrayBufferList(JSCompartment *compartment)
+ArrayBufferObject::resetArrayBufferList(JSCompartment *comp)
 {
-    JSObject *buffer = compartment->gcLiveArrayBuffers;
+    JSObject *buffer = comp->gcLiveArrayBuffers;
     JS_ASSERT(buffer != UNSET_BUFFER_LINK);
-    compartment->gcLiveArrayBuffers = NULL;
+    comp->gcLiveArrayBuffers = NULL;
 
     while (buffer) {
         JSObject *view = *GetViewList(&buffer->asArrayBuffer());
@@ -609,6 +609,38 @@ ArrayBufferObject::resetArrayBufferList(JSCompartment *compartment)
 
         SetBufferLink(view, UNSET_BUFFER_LINK);
         buffer = nextBuffer;
+    }
+}
+
+/* static */ bool
+ArrayBufferObject::saveArrayBufferList(JSCompartment *comp, ArrayBufferVector &vector)
+{
+    JSObject *obj = comp->gcLiveArrayBuffers;
+    while (obj) {
+        JS_ASSERT(obj != UNSET_BUFFER_LINK);
+        ArrayBufferObject *buffer = &obj->asArrayBuffer();
+        if (!vector.append(buffer))
+            return false;
+
+        JSObject *view = *GetViewList(buffer);
+        JS_ASSERT(view);
+        obj = BufferLink(view);
+    }
+    return true;
+}
+
+/* static */ void
+ArrayBufferObject::restoreArrayBufferLists(ArrayBufferVector &vector)
+{
+    for (ArrayBufferObject **p = vector.begin(); p != vector.end(); p++) {
+        ArrayBufferObject *buffer = *p;
+        JSCompartment *comp = buffer->compartment();
+        JSObject *firstView = *GetViewList(&buffer->asArrayBuffer());
+        JS_ASSERT(firstView);
+        JS_ASSERT(firstView->compartment() == comp);
+        JS_ASSERT(BufferLink(firstView) == UNSET_BUFFER_LINK);
+        SetBufferLink(firstView, comp->gcLiveArrayBuffers);
+        comp->gcLiveArrayBuffers = buffer;
     }
 }
 

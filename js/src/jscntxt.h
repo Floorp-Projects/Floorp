@@ -450,6 +450,10 @@ class PerThreadData : public js::PerThreadDataFriendFields
     bool associatedWith(const JSRuntime *rt) { return runtime_ == rt; }
 };
 
+namespace gc {
+class MarkingValidator;
+} // namespace gc
+
 } // namespace js
 
 struct JSRuntime : js::RuntimeFriendFields
@@ -728,6 +732,10 @@ struct JSRuntime : js::RuntimeFriendFields
      * List head of arenas allocated during the sweep phase.
      */
     js::gc::ArenaHeader *gcArenasAllocatedDuringSweep;
+
+#ifdef DEBUG
+    js::gc::MarkingValidator *gcMarkingValidator;
+#endif
 
     /*
      * Indicates that a GC slice has taken place in the middle of an animation
