@@ -18,6 +18,7 @@ Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
+Cu.import("resource://gre/modules/SystemMessagePermissionsChecker.jsm");
 
 function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
@@ -333,7 +334,13 @@ this.DOMApplicationRegistry = {
       } else {
         messageName = aMessage;
       }
-      msgmgr.registerPage(messageName, href, manifestURL);
+
+      if (SystemMessagePermissionsChecker
+            .isSystemMessagePermittedToRegister(messageName,
+                                                aApp.origin,
+                                                aManifest)) {
+        msgmgr.registerPage(messageName, href, manifestURL);
+      }
     });
   },
 
@@ -380,7 +387,13 @@ this.DOMApplicationRegistry = {
 
       let launchPath = Services.io.newURI(description.href, null, null);
       let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
-      msgmgr.registerPage("activity", launchPath, manifestURL);
+
+      if (SystemMessagePermissionsChecker
+            .isSystemMessagePermittedToRegister("activity",
+                                                aApp.origin,
+                                                aManifest)) {
+        msgmgr.registerPage("activity", launchPath, manifestURL);
+      }
     }
     return activitiesToRegister;
   },
@@ -984,6 +997,7 @@ this.DOMApplicationRegistry = {
       debug("updateHostedApp " + aData.manifestURL);
       let id = this._appId(app.origin);
 
+      // Clean up the deprecated manifest cache if needed.
       if (id in this._manifestCache) {
         delete this._manifestCache[id];
       }
@@ -1033,7 +1047,7 @@ this.DOMApplicationRegistry = {
       PermissionsInstaller.installPermissions({ manifest: aManifest,
                                                 origin: app.origin,
                                                 manifestURL: aData.manifestURL },
-                                                true);
+                                              true);
     }
 
     // First, we download the manifest.
