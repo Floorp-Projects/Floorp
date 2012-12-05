@@ -65,17 +65,12 @@ ComponentFinder<Node>::processNode(Node *v)
         return;
 
     if (v->gcLowLink == v->gcDiscoveryTime) {
+        Node *nextComponent = firstComponent;
         Node *w;
         do {
             JS_ASSERT(stack);
             w = stack;
             stack = w->gcNextGraphNode;
-
-            /*
-             * Record the elements of a component by setting all their gcLowLink
-             * fields to the same value.
-             */
-            w->gcLowLink = v->gcDiscoveryTime;
 
             /*
              * Record that the element is no longer on the stack by setting the
@@ -84,10 +79,7 @@ ComponentFinder<Node>::processNode(Node *v)
             w->gcDiscoveryTime = Finished;
 
             /* Figure out which group we're in. */
-            if (firstComponent && firstComponent->gcLowLink == w->gcLowLink)
-                w->gcNextGraphComponent = firstComponent->gcNextGraphComponent;
-            else
-                w->gcNextGraphComponent = firstComponent;
+            w->gcNextGraphComponent = nextComponent;
 
             /*
              * Prepend the component to the beginning of the output list to
