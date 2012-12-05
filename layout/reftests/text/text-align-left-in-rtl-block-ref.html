@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 806284</title>
+    <style type="text/css">
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+
+        #t { width:20em; border: 1px solid black; }
+    </style>
+</head>
+<body>
+<iframe id="t" src="text-align-left-in-rtl-block-iframe.html"></iframe>
+<script type="text/javascript">
+function test()
+{
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", test, false);
+</script>
+</body>
+</html>
