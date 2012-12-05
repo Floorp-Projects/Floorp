@@ -677,6 +677,22 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
         domMediaStream_->GetStream())->GetSegmentsAdded();
   }
 
+  //Stops generating new audio data for transmission.
+  //Should be called before Cleanup of the peer connection.
+  void CloseSendStreams() {
+    static_cast<Fake_AudioStreamSource*>(
+        domMediaStream_->GetStream())->StopStream();
+  }
+
+  //Stops pulling audio data off the receivers.
+  //Should be called before Cleanup of the peer connection.
+  void CloseReceiveStreams() {
+    std::vector<nsDOMMediaStream *> streams =
+                            pObserver->GetStreams();
+    for(int i=0; i < streams.size(); i++) {
+      streams[i]->GetStream()->AsSourceStream()->StopStream();
+    }
+  }
 
 public:
   mozilla::RefPtr<sipcc::PeerConnectionImpl> pc;
@@ -1189,6 +1205,8 @@ TEST_F(SignalingTest, OfferModifiedAnswer)
   OfferModifiedAnswer(constraints, constraints, SHOULD_SENDRECV_AV,
                       SHOULD_SENDRECV_AV);
   PR_Sleep(kDefaultTimeout * 2); // Wait for completion
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
 }
 
 TEST_F(SignalingTest, FullCall)
@@ -1199,6 +1217,8 @@ TEST_F(SignalingTest, FullCall)
 
   PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
 
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
   // Check that we wrote a bunch of data
   ASSERT_GE(a1_.GetPacketsSent(0), 40);
   //ASSERT_GE(a2_.GetPacketsSent(0), 40);
@@ -1214,6 +1234,8 @@ TEST_F(SignalingTest, FullCallTrickle)
 
   PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
 
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
   ASSERT_GE(a1_.GetPacketsSent(0), 40);
   ASSERT_GE(a2_.GetPacketsReceived(0), 40);
 }
