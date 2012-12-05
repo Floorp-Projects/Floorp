@@ -6,6 +6,7 @@
 #define DOM_CAMERA_CAMERA_RECORDER_PROFILES_H
 
 #include "nsISupportsImpl.h"
+#include "nsMimeTypes.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "jsapi.h"
@@ -119,6 +120,14 @@ public:
     switch (mFileFormat) {
       case THREE_GPP: return "3gp";
       case MPEG4:     return "mp4";
+      default:        return nullptr;
+    }
+  }
+  const char* GetFileMimeType() const
+  {
+    switch (mFileFormat) {
+      case THREE_GPP: return VIDEO_3GPP;
+      case MPEG4:     return VIDEO_MP4;
       default:        return nullptr;
     }
   }

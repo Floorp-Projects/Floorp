@@ -72,38 +72,6 @@ private:
   static nsAutoPtr<DeviceStorageTypeChecker> sDeviceStorageTypeChecker;
 };
 
-class DeviceStorageFile MOZ_FINAL
-  : public nsISupports {
-public:
-  nsCOMPtr<nsIFile> mFile;
-  nsString mPath;
-  nsString mStorageType;
-  bool mEditable;
-
-  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile, const nsAString& aPath);
-  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile);
-  void SetPath(const nsAString& aPath);
-  void SetEditable(bool aEditable);
-
-  NS_DECL_ISUPPORTS
-
-  // we want to make sure that the names of file can't reach
-  // outside of the type of storage the user asked for.
-  bool IsSafePath();
-
-  nsresult Remove();
-  nsresult Write(nsIInputStream* aInputStream);
-  nsresult Write(InfallibleTArray<uint8_t>& bits);
-  void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRTime aSince = 0);
-  void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRTime aSince, nsAString& aRootPath);
-
-  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType);
-
-private:
-  void NormalizeFilePath();
-  void AppendRelativePath();
-};
-
 class ContinueCursorEvent MOZ_FINAL : public nsRunnable
 {
 public:
