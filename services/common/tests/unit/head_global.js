@@ -46,7 +46,7 @@ function addResourceAlias() {
 
   let modules = ["aitc", "common", "crypto"];
   for each (let module in modules) {
-    let uri = Services.io.newURI("resource:///modules/services-" + module + "/",
+    let uri = Services.io.newURI("resource://gre/modules/services-" + module + "/",
                                  null, null);
     handler.setSubstitution("services-" + module, uri);
   }
