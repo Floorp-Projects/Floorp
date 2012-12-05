@@ -575,7 +575,7 @@ CodeGeneratorX86Shared::visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation
     LInstruction *ins = ool->ins();
     Register reg = ToRegister(ins->getDef(0));
 
-    LAllocation *lhs = ins->getOperand(0);
+    mozilla::DebugOnly<LAllocation *> lhs = ins->getOperand(0);
     LAllocation *rhs = ins->getOperand(1);
 
     JS_ASSERT(reg == ToRegister(lhs));
