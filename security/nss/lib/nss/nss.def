@@ -1011,3 +1011,13 @@ PK11_PQG_ParamGenV2;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.14.1 {    # NSS 3.14.1 release
+;+    global:
+OCSP_CreateFailureResponse;
+OCSP_CreateSingleResponseGood;
+OCSP_CreateSingleResponseUnknown;
+OCSP_CreateSingleResponseRevoked;
+OCSP_CreateSuccessResponseEncodedBasicV1;
+;+    local:
+;+       *;
+;+};

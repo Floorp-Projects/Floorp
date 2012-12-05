@@ -31,13 +31,7 @@ typedef struct DIR_Struct {
  typedef unsigned long mode_t;
  typedef          long uid_t;
  typedef          long gid_t;
-
-#ifdef WINCE
- typedef          long ino_t;
-#else
  typedef          long off_t;
-#endif
-
  typedef unsigned long nlink_t;
 #endif 
 

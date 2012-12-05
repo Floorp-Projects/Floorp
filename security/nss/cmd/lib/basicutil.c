@@ -17,10 +17,8 @@
 
 #include "basicutil.h"
 #include <stdarg.h>
-#if !defined(_WIN32_WCE)
 #include <sys/stat.h>
 #include <errno.h>
-#endif
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -91,11 +89,7 @@ SECU_PrintSystemError(char *progName, char *msg, ...)
     va_start(args, msg);
     fprintf(stderr, "%s: ", progName);
     vfprintf(stderr, msg, args);
-#if defined(_WIN32_WCE)
-    fprintf(stderr, ": %d\n", PR_GetOSError());
-#else
     fprintf(stderr, ": %s\n", strerror(errno));
-#endif
     va_end(args);
 }
 
