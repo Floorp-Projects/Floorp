@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIPrincipal;
+
 /**
  * nsIHttpAuthManager
  *
@@ -19,7 +21,7 @@
  * Java client fetches content from a HTTP site that the user
  * has already logged into.
  */
-[scriptable, uuid(1301b517-ac72-48f6-a781-70c196eaaf3d)]
+[scriptable, uuid(54f90444-c52b-4d2d-8916-c59a2bb25938)]
 interface nsIHttpAuthManager : nsISupports
 {
     /**
@@ -45,6 +47,12 @@ interface nsIHttpAuthManager : nsISupports
      *        return value containing user name.
      * @param aUserPassword
      *        return value containing user password.
+     * @param aIsPrivate
+     *        whether to look up a private or public identity (they are
+     *        stored separately, for use by private browsing)
+     * @param aPrincipal
+     *        the principal from which to derive information about which
+     *        app/mozbrowser is in use for this request
      */
     void getAuthIdentity(in ACString aScheme,
                          in ACString aHost,
@@ -55,7 +63,8 @@ interface nsIHttpAuthManager : nsISupports
                          out AString aUserDomain,
                          out AString aUserName,
                          out AString aUserPassword,
-                         [optional] in bool aIsPrivate);
+                         [optional] in bool aIsPrivate,
+                         [optional] in nsIPrincipal aPrincipal);
 
     /**
      * Store auth identity.
@@ -80,6 +89,12 @@ interface nsIHttpAuthManager : nsISupports
      *        optional string containing user name.
      * @param aUserPassword
      *        optional string containing user password.
+     * @param aIsPrivate
+     *        whether to store a private or public identity (they are
+     *        stored separately, for use by private browsing)
+     * @param aPrincipal
+     *        the principal from which to derive information about which
+     *        app/mozbrowser is in use for this request
      */
     void setAuthIdentity(in ACString aScheme,
                          in ACString aHost,
@@ -90,7 +105,8 @@ interface nsIHttpAuthManager : nsISupports
                          in AString  aUserDomain,
                          in AString  aUserName,
                          in AString  aUserPassword,
-                         [optional] in boolean aIsPrivate);
+                         [optional] in boolean aIsPrivate,
+                         [optional] in nsIPrincipal aPrincipal);
 
     /**
      * Clear all auth cache.
