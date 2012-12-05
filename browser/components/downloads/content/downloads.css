@@ -96,7 +96,10 @@ richlistitem[type="download"]:not([selected]) button {
   visibility: hidden;
 }
 
-#downloadsSummary:not([inprogress="true"]) > vbox > #downloadsSummaryProgress,
-#downloadsSummary:not([inprogress="true"]) > vbox > #downloadsSummaryDetails {
+#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
+#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
+#downloadsFooter[showingsummary] > #downloadsHistory,
+#downloadsFooter:not([showingsummary]) > #downloadsSummary
+{
   display: none;
 }
