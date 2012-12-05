@@ -165,10 +165,38 @@ BaselineCompiler::emitEpilogue()
     return true;
 }
 
+bool
+BaselineCompiler::emitStackCheck()
+{
+    // Allocate IC entry and stub.
+    ICStackCheck_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
+    if (!entry)
+        return false;
+
+    Label skipIC;
+    uintptr_t *limitAddr = &cx->runtime->ionStackLimit;
+    masm.loadPtr(AbsoluteAddress(limitAddr), R0.scratchReg());
+    masm.branchPtr(Assembler::AboveOrEqual, BaselineStackReg, R0.scratchReg(), &skipIC);
+
+    // Call IC
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    masm.bind(&skipIC);
+    return true;
+}
+
 MethodStatus
 BaselineCompiler::emitBody()
 {
     pc = script->code;
+
+    if (!emitStackCheck())
+        return Method_Error;
 
     while (true) {
         SPEW_OPCODE();
