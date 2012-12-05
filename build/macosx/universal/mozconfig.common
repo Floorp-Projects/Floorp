@@ -39,7 +39,7 @@ if test "$MOZ_BUILD_APP" = "i386" -o "$MOZ_BUILD_APP" = "x86_64"; then
   AR=ar
   AS=$CC
   LD=ld
-  STRIP="strip -x -S"
+  STRIP="strip"
 
   # Let configure know that we mean business.
   if test "$NATIVE_CPU" != "$TARGET_CPU" ; then
