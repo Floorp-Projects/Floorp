@@ -14,9 +14,8 @@ DIRS = $(NULL)
 # Include config.mk explicitly so we can override FINAL_TARGET.
 include $(topsrcdir)/config/config.mk
 
-# config.mk sets FINAL_TARGET to $(DIST)/bin, but we want to copy build products
-# into a WebappRT-specific subdirectory, so we redefine it here.
-FINAL_TARGET = $(DIST)/bin/webapprt
+# Place webapprt resources in a separate app dir
+DIST_SUBDIR = webapprt
 
 ifneq (,$(filter WINNT,$(OS_ARCH)))
 DIRS += win
