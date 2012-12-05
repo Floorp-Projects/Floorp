@@ -161,6 +161,7 @@
 #include "nsIJARChannel.h"
 
 #include "prlog.h"
+#include "prmem.h"
 
 #include "nsISelectionDisplay.h"
 
