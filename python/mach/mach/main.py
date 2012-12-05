@@ -303,7 +303,7 @@ To see more help for a specific command, run:
             if not result:
                 result = 0
 
-            assert isinstance(result, int)
+            assert isinstance(result, (int, long))
 
             return result
         except KeyboardInterrupt as ki:
