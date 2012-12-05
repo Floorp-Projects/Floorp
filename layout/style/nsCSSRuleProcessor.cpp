@@ -1782,8 +1782,7 @@ static bool SelectorMatches(Element* aElement,
         break;
 
       case nsCSSPseudoClasses::ePseudoClass_root:
-        if (aElement->GetParent() ||
-            aElement != aElement->OwnerDoc()->GetRootElement()) {
+        if (aElement != aElement->OwnerDoc()->GetRootElement()) {
           return false;
         }
         break;
@@ -2021,6 +2020,12 @@ static bool SelectorMatches(Element* aElement,
               (dirString.EqualsLiteral("ltr") && !elementIsLTR)) {
             return false;
           }
+        }
+        break;
+
+      case nsCSSPseudoClasses::ePseudoClass_scope:
+        if (aElement != aElement->OwnerDoc()->GetRootElement()) {
+          return false;
         }
         break;
 
