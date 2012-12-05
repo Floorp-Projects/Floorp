@@ -274,7 +274,7 @@ class TestMozconfigLoader(unittest.TestCase):
                 'single': '1'
             })
 
-    def test_read_topsrcdir_defines(self):
+    def test_read_topsrcdir_defined(self):
         """Ensure $topsrcdir references work as expected."""
         with NamedTemporaryFile(mode='w') as mozconfig:
             mozconfig.write('TEST=$topsrcdir')
@@ -284,4 +284,15 @@ class TestMozconfigLoader(unittest.TestCase):
             result = loader.read_mozconfig(mozconfig.name)
 
             self.assertEqual(result['env']['added']['TEST'], loader.topsrcdir)
+
+    def test_read_empty_variable_value(self):
+        """Ensure empty variable values are parsed properly."""
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            mozconfig.write('EMPTY=\n')
+            mozconfig.flush()
+
+            result = self.get_loader().read_mozconfig(mozconfig.name)
+
+            self.assertIn('EMPTY', result['env']['added'])
+            self.assertEqual(result['env']['added']['EMPTY'], '')
 

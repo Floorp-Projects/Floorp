@@ -299,7 +299,6 @@ class MozconfigLoader(ProcessExecutionMixin):
 
                 name = in_variable
                 value = None
-
                 if in_variable:
                     # Reached the end of a multi-line variable.
                     if line.endswith("'") and not line.endswith("\\'"):
@@ -313,24 +312,25 @@ class MozconfigLoader(ProcessExecutionMixin):
                     equal_pos = line.find('=')
 
                     if equal_pos < 1:
-                        # TODO log warning
+                        # TODO log warning?
                         continue
 
                     name = line[0:equal_pos]
-                    has_quote = line[equal_pos + 1] == "'"
+                    value = line[equal_pos + 1:]
 
-                    if has_quote:
-                        value = line[equal_pos + 2:]
-                    else:
-                        value = line[equal_pos + 1:]
+                    if len(value):
+                        has_quote = value[0] == "'"
 
-                    # Lines with a quote not ending in a quote are multi-line.
-                    if has_quote and not value.endswith("'"):
-                        in_variable = name
-                        current.append(value)
-                        continue
-                    else:
-                        value = value[:-1] if has_quote else value
+                        if has_quote:
+                            value = value[1:]
+
+                        # Lines with a quote not ending in a quote are multi-line.
+                        if has_quote and not value.endswith("'"):
+                            in_variable = name
+                            current.append(value)
+                            continue
+                        else:
+                            value = value[:-1] if has_quote else value
 
                 assert name is not None
 
