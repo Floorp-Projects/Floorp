@@ -100,6 +100,9 @@
     /* :root tests */
     :root { background-color: green; }
 
+    /* :-moz-scope tests */
+    :-moz-scope { background-color: green; }
+
     /* :nth-child(n) tests */
     .nthchild1 > :nth-last-child(odd) { background-color: lime; }
     .nthchild1 > :nth-child(odd) { background-color: lime; }
@@ -537,7 +540,9 @@
 
         var namespaced = /\|[^=]/.test( q );
         var prepend = namespaced ? "xHTML|*#root3 " : "#root3 ";
-        q = (restrict === false || restrict === ":root" ? "" : prepend) + q.replace(/,/g, ", " + prepend);
+        q = (restrict === false || restrict === ":root" ||
+             restrict === ":-moz-scope" ? "" : prepend) +
+            q.replace(/,/g, ", " + prepend);
         var nq = q.replace(/>/g, "&gt;").replace(/</g, "&lt;");
 
         if ( namespaced ) {
@@ -630,16 +635,20 @@
 
       if ( root == document ) {
         t( ":root Selector", ":root", ["html"], false );
+        t( ":-moz-scope Selector", ":-moz-scope", ["html"], false );
       } else {
         t( ":root Selector", ":root", [], ":root" );
+        t( ":-moz-scope Selector", ":-moz-scope", [], ":-moz-scope" );
 
         if ( !root.parentNode ) {
           t( ":root All Selector", ":root *", [], ":root" );
+          t( ":-moz-scope All Selector", ":-moz-scope *", [], ":-moz-scope" );
         }
       }
 
       if ( root.parentNode || root == document ) {
         assert( query(":root *").length == query("*").length - (root == document ? 1 : 0), type + ": :root All Selector" );
+        assert( query(":-moz-scope *").length == query("*").length - (root == document ? 1 : 0), type + ": :-moz-scope All Selector" );
       }
 
       t( "Element Selector", "p", ["firstp","ap","sndp","en","sap","first"] );
