@@ -251,7 +251,6 @@ _BROWSER_FILES = \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \
-                 browser_tabMatchesInAwesomebar.js \
                  file_bug550565_popup.html \
                  file_bug550565_favicon.ico \
                  browser_aboutHome.js \
@@ -318,6 +317,7 @@ _BROWSER_FILES += \
                 browser_private_browsing_window.js \
                 browser_save_link-perwindowpb.js \
                 browser_save_private_link_perwindowpb.js \
+                browser_tabMatchesInAwesomebar_perwindowpb.js \
                 $(NULL)
 else
 _BROWSER_FILES += \
@@ -325,6 +325,7 @@ _BROWSER_FILES += \
                 browser_bug767836.js \
                 browser_save_link.js \
                 browser_save_private_link.js \
+                browser_tabMatchesInAwesomebar.js \
                 $(NULL)
 endif
 
