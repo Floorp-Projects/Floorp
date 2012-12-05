@@ -270,7 +270,6 @@ class ICEntry
     _(Compare_Int32)            \
                                 \
     _(ToBool_Fallback)          \
-    _(ToBool_Bool)              \
     _(ToBool_Int32)             \
                                 \
     _(ToNumber_Fallback)        \
@@ -1031,33 +1030,6 @@ class ICToBool_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICToBool_Fallback::New(space, getStubCode());
-        }
-    };
-};
-
-class ICToBool_Bool : public ICStub
-{
-    friend class ICStubSpace;
-
-    ICToBool_Bool(IonCode *stubCode)
-      : ICStub(ICStub::ToBool_Bool, stubCode) {}
-
-  public:
-    static inline ICToBool_Bool *New(ICStubSpace *space, IonCode *code) {
-        return space->allocate<ICToBool_Bool>(code);
-    }
-
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::ToBool_Bool) {}
-
-        ICStub *getStub(ICStubSpace *space) {
-            return ICToBool_Bool::New(space, getStubCode());
         }
     };
 };
