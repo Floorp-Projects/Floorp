@@ -15,6 +15,8 @@
 #include "nsCOMPtr.h"
 #include "plhash.h"
 #include "nsCRT.h"
+#include "nsIObserver.h"
+
 
 
 struct nsHttpAuthPath {
@@ -180,6 +182,8 @@ public:
                                  const char *host,
                                  int32_t     port,
                                  const char *path,
+                                 uint32_t    appId,
+                                 bool        inBrowserElement,
                                  nsHttpAuthEntry **entry);
 
     // |scheme|, |host|, and |port| are required
@@ -189,6 +193,8 @@ public:
                                    const char *host,
                                    int32_t     port,
                                    const char *realm,
+                                   uint32_t    appId,
+                                   bool        inBrowserElement,
                                    nsHttpAuthEntry **entry);
 
     // |scheme|, |host|, and |port| are required
@@ -203,13 +209,17 @@ public:
                           const char *realm,
                           const char *credentials,
                           const char *challenge,
+                          uint32_t    appId,
+                          bool        inBrowserElement,
                           const nsHttpAuthIdentity *ident,
                           nsISupports *metadata);
 
     void ClearAuthEntry(const char *scheme,
                         const char *host,
                         int32_t     port,
-                        const char *realm);
+                        const char *realm,
+                        uint32_t    appId,
+                        bool        inBrowserElement);
 
     // expire all existing auth list entries including proxy auths. 
     nsresult ClearAll();
@@ -218,6 +228,8 @@ private:
     nsHttpAuthNode *LookupAuthNode(const char *scheme,
                                    const char *host,
                                    int32_t     port,
+                                   uint32_t    appId,
+                                   bool        inBrowserElement,
                                    nsCString  &key);
 
     // hash table allocation functions
@@ -227,9 +239,21 @@ private:
     static void         FreeEntry(void *, PLHashEntry *he, unsigned flag);
 
     static PLHashAllocOps gHashAllocOps;
+
+    class AppDataClearObserver : public nsIObserver {
+    public:
+      NS_DECL_ISUPPORTS
+      NS_DECL_NSIOBSERVER
+      AppDataClearObserver(nsHttpAuthCache* aOwner) : mOwner(aOwner) {}
+      virtual ~AppDataClearObserver() {}
+      nsHttpAuthCache* mOwner;
+    };
+
+    void ClearAppData(uint32_t appId, bool browserOnly);
     
 private:
     PLHashTable *mDB; // "host:port" --> nsHttpAuthNode
+    nsRefPtr<AppDataClearObserver> mObserver;
 };
 
 #endif // nsHttpAuthCache_h__
