@@ -517,7 +517,7 @@ TypeInferenceOracle::elementWriteNeedsBarrier(JSScript *script, jsbytecode *pc)
 }
 
 StackTypeSet *
-TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc)
+TypeInferenceOracle::getCallTarget(JSScript *caller, uint32_t argc, jsbytecode *pc)
 {
     JS_ASSERT(caller == this->script_);
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE && JSOp(*pc) != JSOP_EVAL);
@@ -527,7 +527,7 @@ TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc
 }
 
 StackTypeSet *
-TypeInferenceOracle::getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbytecode *pc)
+TypeInferenceOracle::getCallArg(JSScript *script, uint32_t argc, uint32_t arg, jsbytecode *pc)
 {
     JS_ASSERT(argc >= arg);
     // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.

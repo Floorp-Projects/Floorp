@@ -71,9 +71,9 @@ class IonActivationIterator;
 class IonFrameIterator
 {
   protected:
-    uint8 *current_;
+    uint8_t *current_;
     FrameType type_;
-    uint8 *returnAddressToFp_;
+    uint8_t *returnAddressToFp_;
     size_t frameSize_;
 
   private:
@@ -83,7 +83,7 @@ class IonFrameIterator
     void dumpBaseline() const;
 
   public:
-    IonFrameIterator(uint8 *top)
+    IonFrameIterator(uint8_t *top)
       : current_(top),
         type_(IonFrame_Exit),
         returnAddressToFp_(NULL),
@@ -99,12 +99,12 @@ class IonFrameIterator
     FrameType type() const {
         return type_;
     }
-    uint8 *fp() const {
+    uint8_t *fp() const {
         return current_;
     }
 
     inline IonCommonFrameLayout *current() const;
-    inline uint8 *returnAddress() const;
+    inline uint8_t *returnAddress() const;
 
     IonJSFrameLayout *jsFrame() const {
         JS_ASSERT(isScripted());
@@ -157,14 +157,14 @@ class IonFrameIterator
 
     // Returns the return address of the frame above this one (that is, the
     // return address that returns back to the current frame).
-    uint8 *returnAddressToFp() const {
+    uint8_t *returnAddressToFp() const {
         return returnAddressToFp_;
     }
 
     // Previous frame information extracted from the current frame.
     inline size_t prevFrameLocalSize() const;
     inline FrameType prevType() const;
-    uint8 *prevFp() const;
+    uint8_t *prevFp() const;
 
     // Returns the stack space used by the current frame, in bytes. This does
     // not include the size of its fixed header.
@@ -203,7 +203,7 @@ class IonFrameIterator
 
 class IonActivationIterator
 {
-    uint8 *top_;
+    uint8_t *top_;
     IonActivation *activation_;
 
   private:
@@ -218,7 +218,7 @@ class IonActivationIterator
     IonActivation *activation() const {
         return activation_;
     }
-    uint8 *top() const {
+    uint8_t *top() const {
         return top_;
     }
     bool more() const;
@@ -296,7 +296,7 @@ class InlineFrameIterator
     HeapPtr<JSFunction> callee_;
     HeapPtr<JSScript> script_;
     jsbytecode *pc_;
-    uint32 numActualArgs_;
+    uint32_t numActualArgs_;
 
   private:
     void findNextFrame();

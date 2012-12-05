@@ -43,7 +43,7 @@ AllocationIntegrityState::record()
             InstructionInfo &info = blockInfo.phis[j];
             LPhi *phi = block->getPhi(j);
             for (size_t k = 0; k < phi->numDefs(); k++) {
-                uint32 vreg = phi->getDef(k)->virtualRegister();
+                uint32_t vreg = phi->getDef(k)->virtualRegister();
                 virtualRegisters[vreg] = phi->getDef(k);
                 if (!info.outputs.append(vreg))
                     return false;
@@ -59,7 +59,7 @@ AllocationIntegrityState::record()
             InstructionInfo &info = instructions[ins->id()];
 
             for (size_t k = 0; k < ins->numDefs(); k++) {
-                uint32 vreg = ins->getDef(k)->virtualRegister();
+                uint32_t vreg = ins->getDef(k)->virtualRegister();
                 virtualRegisters[vreg] = ins->getDef(k);
                 if (!info.outputs.append(vreg))
                     return false;
@@ -122,7 +122,7 @@ AllocationIntegrityState::check(bool populateSafepoints)
 
             size_t inputIndex = 0;
             for (LInstruction::InputIterator alloc(*ins); alloc.more(); alloc.next()) {
-                uint32 vreg = info.inputs[inputIndex++];
+                uint32_t vreg = info.inputs[inputIndex++];
                 if (vreg == UINT32_MAX)
                     continue;
 
@@ -149,7 +149,7 @@ AllocationIntegrityState::check(bool populateSafepoints)
 
 bool
 AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
-                                         uint32 vreg, LAllocation alloc, bool populateSafepoints)
+                                         uint32_t vreg, LAllocation alloc, bool populateSafepoints)
 {
     for (LInstructionReverseIterator iter(block->rbegin(ins)); iter != block->rend(); iter++) {
         ins = *iter;
@@ -254,7 +254,7 @@ AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
         LPhi *phi = block->getPhi(i);
         if (info.outputs[0] == vreg) {
             for (size_t j = 0; j < phi->numOperands(); j++) {
-                uint32 newvreg = info.inputs[j];
+                uint32_t newvreg = info.inputs[j];
                 LBlock *predecessor = graph.getBlock(block->mir()->getPredecessor(j)->id());
                 if (!addPredecessor(predecessor, newvreg, alloc))
                     return false;
@@ -275,7 +275,7 @@ AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
 }
 
 bool
-AllocationIntegrityState::addPredecessor(LBlock *block, uint32 vreg, LAllocation alloc)
+AllocationIntegrityState::addPredecessor(LBlock *block, uint32_t vreg, LAllocation alloc)
 {
     // There is no need to reanalyze if we have already seen this predecessor.
     // We share the seen allocations across analysis of each use, as there will
@@ -368,7 +368,7 @@ AllocationIntegrityState::dump()
 
             size_t index = 0;
             for (LInstruction::InputIterator alloc(*ins); alloc.more(); alloc.next()) {
-                uint32 vreg = info.inputs[index++];
+                uint32_t vreg = info.inputs[index++];
                 if (vreg == UINT32_MAX)
                     continue;
                 printf(" [use v%u ", vreg);
@@ -428,7 +428,7 @@ RegisterAllocator::init()
 }
 
 LMoveGroup *
-RegisterAllocator::getInputMoveGroup(uint32 ins)
+RegisterAllocator::getInputMoveGroup(uint32_t ins)
 {
     InstructionData *data = &insData[ins];
     JS_ASSERT(!data->ins()->isPhi());
@@ -445,7 +445,7 @@ RegisterAllocator::getInputMoveGroup(uint32 ins)
 }
 
 LMoveGroup *
-RegisterAllocator::getMoveGroupAfter(uint32 ins)
+RegisterAllocator::getMoveGroupAfter(uint32_t ins)
 {
     InstructionData *data = &insData[ins];
     JS_ASSERT(!data->ins()->isPhi());

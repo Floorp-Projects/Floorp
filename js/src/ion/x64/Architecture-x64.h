@@ -14,23 +14,23 @@ namespace js {
 namespace ion {
 
 static const ptrdiff_t STACK_SLOT_SIZE       = 8;
-static const uint32 MAX_STACK_SLOTS          = 256;
-static const uint32 DOUBLE_STACK_ALIGNMENT   = 1;
+static const uint32_t MAX_STACK_SLOTS          = 256;
+static const uint32_t DOUBLE_STACK_ALIGNMENT   = 1;
 
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
 //   +8 for gpr spills
 //   +8 for double spills
-static const uint32 ION_FRAME_SLACK_SIZE     = 24;
+static const uint32_t ION_FRAME_SLACK_SIZE     = 24;
 
 #ifdef _WIN64
-static const uint32 ShadowStackSpace = 32;
+static const uint32_t ShadowStackSpace = 32;
 #else
-static const uint32 ShadowStackSpace = 0;
+static const uint32_t ShadowStackSpace = 0;
 #endif
 
 // An offset that is illegal for a local variable's stack allocation.
-static const int32 INVALID_STACK_SLOT       = -1;
+static const int32_t INVALID_STACK_SLOT       = -1;
 
 class Registers {
   public:
@@ -47,12 +47,12 @@ class Registers {
     static const Code StackPointer = JSC::X86Registers::esp;
     static const Code Invalid = JSC::X86Registers::invalid_reg;
 
-    static const uint32 Total = 16;
-    static const uint32 Allocatable = 14;
+    static const uint32_t Total = 16;
+    static const uint32_t Allocatable = 14;
 
-    static const uint32 AllMask = (1 << Total) - 1;
+    static const uint32_t AllMask = (1 << Total) - 1;
 
-    static const uint32 ArgRegMask =
+    static const uint32_t ArgRegMask =
 # if !defined(_WIN64)
         (1 << JSC::X86Registers::edi) |
         (1 << JSC::X86Registers::esi) |
@@ -62,7 +62,7 @@ class Registers {
         (1 << JSC::X86Registers::r8) |
         (1 << JSC::X86Registers::r9);
 
-    static const uint32 VolatileMask =
+    static const uint32_t VolatileMask =
         (1 << JSC::X86Registers::eax) |
         (1 << JSC::X86Registers::ecx) |
         (1 << JSC::X86Registers::edx) |
@@ -75,7 +75,7 @@ class Registers {
         (1 << JSC::X86Registers::r10) |
         (1 << JSC::X86Registers::r11);
 
-    static const uint32 NonVolatileMask =
+    static const uint32_t NonVolatileMask =
         (1 << JSC::X86Registers::ebx) |
 #if defined(_WIN64)
         (1 << JSC::X86Registers::esi) |
@@ -87,32 +87,32 @@ class Registers {
         (1 << JSC::X86Registers::r14) |
         (1 << JSC::X86Registers::r15);
 
-    static const uint32 WrapperMask = VolatileMask;
+    static const uint32_t WrapperMask = VolatileMask;
 
-    static const uint32 SingleByteRegs = VolatileMask | NonVolatileMask;
+    static const uint32_t SingleByteRegs = VolatileMask | NonVolatileMask;
 
-    static const uint32 NonAllocatableMask =
+    static const uint32_t NonAllocatableMask =
         (1 << JSC::X86Registers::esp) |
         (1 << JSC::X86Registers::r11);      // This is ScratchReg.
 
     // Registers that can be allocated without being saved, generally.
-    static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
+    static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;
 
-    static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
+    static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 
     // Registers returned from a JS -> JS call.
-    static const uint32 JSCallMask =
+    static const uint32_t JSCallMask =
         (1 << JSC::X86Registers::ecx);
 
     // Registers returned from a JS -> C call.
-    static const uint32 CallMask =
+    static const uint32_t CallMask =
         (1 << JSC::X86Registers::eax);
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 };
 
 // Smallest integer type that can hold a register bitmask.
-typedef uint16 PackedRegisterMask;
+typedef uint16_t PackedRegisterMask;
 
 class FloatRegisters {
   public:
@@ -128,12 +128,12 @@ class FloatRegisters {
 
     static const Code Invalid = JSC::X86Registers::invalid_xmm;
 
-    static const uint32 Total = 16;
-    static const uint32 Allocatable = 15;
+    static const uint32_t Total = 16;
+    static const uint32_t Allocatable = 15;
 
-    static const uint32 AllMask = (1 << Total) - 1;
+    static const uint32_t AllMask = (1 << Total) - 1;
 
-    static const uint32 VolatileMask = 
+    static const uint32_t VolatileMask = 
 #if defined(_WIN64)
         (1 << JSC::X86Registers::xmm0) |
         (1 << JSC::X86Registers::xmm1) |
@@ -145,14 +145,14 @@ class FloatRegisters {
         AllMask;
 #endif
 
-    static const uint32 NonVolatileMask = AllMask & ~VolatileMask;
+    static const uint32_t NonVolatileMask = AllMask & ~VolatileMask;
 
-    static const uint32 WrapperMask = VolatileMask;
+    static const uint32_t WrapperMask = VolatileMask;
 
-    static const uint32 NonAllocatableMask =
+    static const uint32_t NonAllocatableMask =
         (1 << JSC::X86Registers::xmm15);    // This is ScratchFloatReg.
 
-    static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
+    static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
 } // namespace ion

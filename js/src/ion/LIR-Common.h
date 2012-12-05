@@ -123,16 +123,16 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
 // Constant 32-bit integer.
 class LInteger : public LInstructionHelper<1, 0, 0>
 {
-    int32 i32_;
+    int32_t i32_;
 
   public:
     LIR_HEADER(Integer);
 
-    LInteger(int32 i32)
+    LInteger(int32_t i32)
       : i32_(i32)
     { }
 
-    int32 getValue() const {
+    int32_t getValue() const {
         return i32_;
     }
 };
@@ -465,12 +465,12 @@ class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0>
 // Writes a typed argument for a function call to the frame's argument vector.
 class LStackArgT : public LInstructionHelper<0, 1, 0>
 {
-    uint32 argslot_; // Index into frame-scope argument vector.
+    uint32_t argslot_; // Index into frame-scope argument vector.
 
   public:
     LIR_HEADER(StackArgT);
 
-    LStackArgT(uint32 argslot, const LAllocation &arg)
+    LStackArgT(uint32_t argslot, const LAllocation &arg)
       : argslot_(argslot)
     {
         setOperand(0, arg);
@@ -479,7 +479,7 @@ class LStackArgT : public LInstructionHelper<0, 1, 0>
     MPassArg *mir() const {
         return this->mir_->toPassArg();
     }
-    uint32 argslot() const {
+    uint32_t argslot() const {
         return argslot_;
     }
     const LAllocation *getArgument() {
@@ -490,16 +490,16 @@ class LStackArgT : public LInstructionHelper<0, 1, 0>
 // Writes an untyped argument for a function call to the frame's argument vector.
 class LStackArgV : public LInstructionHelper<0, BOX_PIECES, 0>
 {
-    uint32 argslot_; // Index into frame-scope argument vector.
+    uint32_t argslot_; // Index into frame-scope argument vector.
 
   public:
     LIR_HEADER(StackArgV);
 
-    LStackArgV(uint32 argslot)
+    LStackArgV(uint32_t argslot)
       : argslot_(argslot)
     { }
 
-    uint32 argslot() const {
+    uint32_t argslot() const {
         return argslot_;
     }
 };
@@ -510,14 +510,14 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
 {
     // Slot below which %esp should be adjusted to make the call.
     // Zero for a function without arguments.
-    uint32 argslot_;
+    uint32_t argslot_;
 
   public:
-    LJSCallInstructionHelper(uint32 argslot)
+    LJSCallInstructionHelper(uint32_t argslot)
       : argslot_(argslot)
     { }
 
-    uint32 argslot() const {
+    uint32_t argslot() const {
         return argslot_;
     }
     MCall *mir() const {
@@ -535,12 +535,12 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     // arguments and the number of actual arguments. The number of stack
     // argument includes the |undefined| padding added in case of underflow.
     // Does not include |this|.
-    uint32 numStackArgs() const {
+    uint32_t numStackArgs() const {
         JS_ASSERT(mir()->numStackArgs() >= 1);
         return mir()->numStackArgs() - 1; // |this| is not a formal argument.
     }
     // Does not include |this|.
-    uint32 numActualArgs() const {
+    uint32_t numActualArgs() const {
         return mir()->numActualArgs();
     }
 
@@ -554,7 +554,7 @@ class LCallGeneric : public LJSCallInstructionHelper<BOX_PIECES, 1, 2>
   public:
     LIR_HEADER(CallGeneric);
 
-    LCallGeneric(const LAllocation &func, uint32 argslot,
+    LCallGeneric(const LAllocation &func, uint32_t argslot,
                  const LDefinition &nargsreg, const LDefinition &tmpobjreg)
       : JSCallHelper(argslot)
     {
@@ -580,7 +580,7 @@ class LCallKnown : public LJSCallInstructionHelper<BOX_PIECES, 1, 1>
   public:
     LIR_HEADER(CallKnown);
 
-    LCallKnown(const LAllocation &func, uint32 argslot, const LDefinition &tmpobjreg)
+    LCallKnown(const LAllocation &func, uint32_t argslot, const LDefinition &tmpobjreg)
       : JSCallHelper(argslot)
     {
         setOperand(0, func);
@@ -601,7 +601,7 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
   public:
     LIR_HEADER(CallNative);
 
-    LCallNative(uint32 argslot,
+    LCallNative(uint32_t argslot,
                 const LDefinition &argJSContext, const LDefinition &argUintN,
                 const LDefinition &argVp, const LDefinition &tmpreg)
       : JSCallHelper(argslot)
@@ -635,7 +635,7 @@ class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 5>
   public:
     LIR_HEADER(CallDOMNative);
 
-    LCallDOMNative(uint32 argslot,
+    LCallDOMNative(uint32_t argslot,
                    const LDefinition &argJSContext, const LDefinition &argObj,
                    const LDefinition &argPrivate, const LDefinition &argArgc,
                    const LDefinition &argVp)
@@ -672,7 +672,7 @@ class LCallConstructor : public LJSCallInstructionHelper<BOX_PIECES, 1, 0>
   public:
     LIR_HEADER(CallConstructor);
 
-    LCallConstructor(const LAllocation &func, uint32 argslot)
+    LCallConstructor(const LAllocation &func, uint32_t argslot)
       : JSCallHelper(argslot)
     {
         setOperand(0, func);
@@ -1724,7 +1724,7 @@ class LOsrEntry : public LInstructionHelper<1, 0, 0>
 {
   protected:
     Label label_;
-    uint32 frameDepth_;
+    uint32_t frameDepth_;
 
   public:
     LIR_HEADER(OsrEntry);
@@ -1733,10 +1733,10 @@ class LOsrEntry : public LInstructionHelper<1, 0, 0>
       : frameDepth_(0)
     { }
 
-    void setFrameDepth(uint32 depth) {
+    void setFrameDepth(uint32_t depth) {
         frameDepth_ = depth;
     }
-    uint32 getFrameDepth() {
+    uint32_t getFrameDepth() {
         return frameDepth_;
     }
     Label *label() {
@@ -3102,7 +3102,7 @@ class MPhi;
 // corresponding to the predecessor taken in the control flow graph.
 class LPhi : public LInstruction
 {
-    uint32 numInputs_;
+    uint32_t numInputs_;
     LAllocation *inputs_;
     LDefinition def_;
 

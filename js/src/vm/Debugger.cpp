@@ -3621,7 +3621,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, StackFrame
         return false;
 
     script->isActiveEval = true;
-    return ExecuteKernel(cx, script, *env, thisv, EXECUTE_DEBUG, fp, rval);
+    ExecuteType type = !fp && env->isGlobal() ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
+    return ExecuteKernel(cx, script, *env, thisv, type, fp, rval);
 }
 
 static JSBool
@@ -4146,6 +4147,8 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     PropDesc *unwrappedDesc = descs.append();
     if (!unwrappedDesc || !desc->unwrapDebuggerObjectsInto(cx, dbg, obj, unwrappedDesc))
         return false;
+    if (!unwrappedDesc->checkGetter(cx) || !unwrappedDesc->checkSetter(cx))
+        return false;
 
     {
         PropDesc *rewrappedDesc = descs.append();
@@ -4190,6 +4193,8 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         if (!unwrappedDescs.append())
             return false;
         if (!descs[i].unwrapDebuggerObjectsInto(cx, dbg, obj, &unwrappedDescs[i]))
+            return false;
+        if (!unwrappedDescs[i].checkGetter(cx) || !unwrappedDescs[i].checkSetter(cx))
             return false;
     }
 
