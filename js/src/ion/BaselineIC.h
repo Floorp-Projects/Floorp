@@ -290,7 +290,9 @@ class ICEntry
     _(SetElem_Fallback)         \
     _(SetElem_Dense)            \
                                 \
-    _(GetName_Fallback)
+    _(GetName_Fallback)         \
+                                \
+    _(GetProp_Fallback)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -1428,6 +1430,39 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             ICGetName_Fallback *stub = ICGetName_Fallback::New(space, getStubCode());
+            if (!stub || !stub->initMonitoringChain(cx, space))
+                return NULL;
+            return stub;
+        }
+    };
+};
+
+class ICGetProp_Fallback : public ICMonitoredFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICGetProp_Fallback(IonCode *stubCode)
+      : ICMonitoredFallbackStub(ICStub::GetProp_Fallback, stubCode)
+    { }
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static inline ICGetProp_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetProp_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetProp_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            ICGetProp_Fallback *stub = ICGetProp_Fallback::New(space, getStubCode());
             if (!stub || !stub->initMonitoringChain(cx, space))
                 return NULL;
             return stub;

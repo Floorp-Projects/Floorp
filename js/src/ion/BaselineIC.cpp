@@ -1057,6 +1057,63 @@ ICGetName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 //
+// GetProp_Fallback
+//
+
+static bool
+DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, MutableHandleValue res)
+{
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+
+    JS_ASSERT(JSOp(*pc) == JSOP_GETPROP ||
+              JSOp(*pc) == JSOP_CALLPROP ||
+              JSOp(*pc) == JSOP_LENGTH);
+
+    RootedPropertyName name(cx, script->getName(pc));
+    RootedId id(cx, NameToId(name));
+
+    RootedObject obj(cx, ToObjectFromStack(cx, val));
+    if (!obj)
+        return false;
+
+    if (obj->getOps()->getProperty) {
+        if (!GetPropertyGenericMaybeCallXML(cx, JSOp(*pc), obj, id, res))
+            return false;
+    } else {
+        if (!GetPropertyHelper(cx, obj, id, 0, res))
+            return false;
+    }
+
+#if JS_HAS_NO_SUCH_METHOD
+    // Handle objects with __noSuchMethod__.
+    if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(res.isPrimitive())) {
+        if (!OnUnknownMethod(cx, obj, IdToValue(id), res))
+            return false;
+    }
+#endif
+
+    types::TypeScript::Monitor(cx, script, pc, res);
+    return true;
+}
+
+typedef bool (*DoGetPropFallbackFn)(JSContext *, ICGetProp_Fallback *, HandleValue, MutableHandleValue);
+static const VMFunction DoGetPropFallbackInfo = FunctionInfo<DoGetPropFallbackFn>(DoGetPropFallback);
+
+bool
+ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoGetPropFallbackInfo, masm);
+}
+
+//
 // Call_Fallback
 //
 
