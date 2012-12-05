@@ -98,6 +98,7 @@ HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 != text-align-justify-last-end.html text-align-justify-last-center.html
 != text-align-justify-last-end.html text-align-justify-last-justify.html
 != text-align-justify-last-center.html text-align-justify-last-justify.html
+== text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
 == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
