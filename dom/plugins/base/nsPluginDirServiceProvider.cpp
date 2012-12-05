@@ -8,6 +8,7 @@
 #include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsDependentString.h"
+#include "prmem.h"
 #include "nsArrayEnumerator.h"
 #include "mozilla/Preferences.h"
 
