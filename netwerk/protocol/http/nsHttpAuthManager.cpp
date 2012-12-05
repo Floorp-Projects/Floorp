@@ -8,6 +8,7 @@
 #include "nsHttpAuthManager.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#include "nsIPrincipal.h"
 
 NS_IMPL_ISUPPORTS1(nsHttpAuthManager, nsIHttpAuthManager)
 
@@ -56,22 +57,32 @@ nsHttpAuthManager::GetAuthIdentity(const nsACString & aScheme,
                                    nsAString & aUserDomain,
                                    nsAString & aUserName,
                                    nsAString & aUserPassword,
-                                   bool aIsPrivate)
+                                   bool aIsPrivate,
+                                   nsIPrincipal* aPrincipal)
 {
   nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
   nsHttpAuthEntry * entry = nullptr;
   nsresult rv;
+  uint32_t appId = NECKO_NO_APP_ID;
+  bool inBrowserElement = false;
+  if (aPrincipal) {
+    appId = aPrincipal->GetAppId();
+    inBrowserElement = aPrincipal->GetIsInBrowserElement();
+  }
+
   if (!aPath.IsEmpty())
     rv = auth_cache->GetAuthEntryForPath(PromiseFlatCString(aScheme).get(),
                                          PromiseFlatCString(aHost).get(),
                                          aPort,
                                          PromiseFlatCString(aPath).get(),
+                                         appId, inBrowserElement,
                                          &entry);
   else
     rv = auth_cache->GetAuthEntryForDomain(PromiseFlatCString(aScheme).get(),
                                            PromiseFlatCString(aHost).get(),
                                            aPort,
                                            PromiseFlatCString(aRealm).get(),
+                                           appId, inBrowserElement,
                                            &entry);
 
   if (NS_FAILED(rv))
@@ -95,11 +106,19 @@ nsHttpAuthManager::SetAuthIdentity(const nsACString & aScheme,
                                    const nsAString & aUserDomain,
                                    const nsAString & aUserName,
                                    const nsAString & aUserPassword,
-                                   bool aIsPrivate)
+                                   bool aIsPrivate,
+                                   nsIPrincipal* aPrincipal)
 {
   nsHttpAuthIdentity ident(PromiseFlatString(aUserDomain).get(),
                            PromiseFlatString(aUserName).get(),
                            PromiseFlatString(aUserPassword).get());
+
+  uint32_t appId = NECKO_NO_APP_ID;
+  bool inBrowserElement = false;
+  if (aPrincipal) {
+    appId = aPrincipal->GetAppId();
+    inBrowserElement = aPrincipal->GetIsInBrowserElement();
+  }
 
   nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
   return auth_cache->SetAuthEntry(PromiseFlatCString(aScheme).get(),
@@ -109,6 +128,7 @@ nsHttpAuthManager::SetAuthIdentity(const nsACString & aScheme,
                                   PromiseFlatCString(aRealm).get(),
                                   nullptr,  // credentials
                                   nullptr,  // challenge
+                                  appId, inBrowserElement,
                                   &ident,
                                   nullptr); // metadata
 }
