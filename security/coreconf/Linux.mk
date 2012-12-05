@@ -132,7 +132,7 @@ endif
 G++INCLUDES		= -I/usr/include/g++
 
 #
-# Always set CPU_TAG on Linux, WINCE.
+# Always set CPU_TAG on Linux.
 #
 CPU_TAG = _$(CPU_ARCH)
 

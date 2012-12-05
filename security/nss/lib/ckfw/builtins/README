@@ -20,17 +20,16 @@ variants), SHLIB_PATH (32-bit HP-UX), LIBPATH (AIX), or PATH (Windows).
 
 3. In this directory, run addbuiltin to add the new root certificate. The
 argument to the -n option should be replaced by the nickname of the root
-certificate. Then run "gmake generate".
+certificate.
 
     % addbuiltin -n "Nickname of the Root Certificate" -t C,C,C < newroot.der >> certdata.txt
-    % gmake generate
 
 4. Edit nssckbi.h to bump the version of the module.
 
 5. Run gmake in this directory to build the nssckbi module.
 
 6. After you verify that the new nssckbi module is correct, check in
-certdata.txt, certdata.c, and nssckbi.h.
+certdata.txt and nssckbi.h.
 
 II. Removing a Builtin Root CA Certificate
 
@@ -38,11 +37,9 @@ II. Removing a Builtin Root CA Certificate
 
 2. Edit certdata.txt and remove the root CA certificate.
 
-3. Run "gmake generate".
+3. Edit nssckbi.h to bump the version of the module.
 
-4. Edit nssckbi.h to bump the version of the module.
+4. Run gmake in this directory to build the nssckbi module.
 
-5. Run gmake in this directory to build the nssckbi module.
-
-6. After you verify that the new nssckbi module is correct, check in
-certdata.txt, certdata.c, and nssckbi.h.
+5. After you verify that the new nssckbi module is correct, check in
+certdata.txt and nssckbi.h.

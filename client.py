@@ -96,10 +96,10 @@ def toggle_trailing_blank_line(depname):
 
   if not lines[-1].strip():
       # trailing line is blank, removing it
-      open(depname, "w").writelines(lines[:-1])
+      open(depname, "wb").writelines(lines[:-1])
   else:
       # adding blank line
-      open(depname, "a").write("\n")
+      open(depname, "ab").write("\n")
 
 o = OptionParser(usage="client.py [options] update_nspr tagname | update_nss tagname | update_libffi tagname | update_webidlparser tagname")
 o.add_option("--skip-mozilla", dest="skip_mozilla",

@@ -8,16 +8,10 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <shlobj.h>     /* for CSIDL constants */
-
-#if defined(_WIN32_WCE)
-#include <stdlib.h>	/* Win CE puts lots of stuff here. */
-#include "prprf.h"	/* for PR_snprintf */
-#else
 #include <time.h>
 #include <io.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
 #include <stdio.h>
 #include "prio.h"
 #include "prerror.h"
@@ -46,6 +40,7 @@ size_t RNG_GetNoise(void *buf, size_t maxbuf)
     DWORD   dwHigh, dwLow, dwVal;
     int     n = 0;
     int     nBytes;
+    time_t  sTime;
 
     if (maxbuf <= 0)
         return 0;
@@ -80,22 +75,11 @@ size_t RNG_GetNoise(void *buf, size_t maxbuf)
     if (maxbuf <= 0)
         return n;
 
-    {
-#if defined(_WIN32_WCE)
-    // get the number of milliseconds elapsed since Windows CE was started. 
-    FILETIME sTime;
-    SYSTEMTIME st;
-    GetSystemTime(&st);
-    SystemTimeToFileTime(&st,&sTime);
-#else
-    time_t  sTime;
     // get the time in seconds since midnight Jan 1, 1970
     time(&sTime);
-#endif
     nBytes = sizeof(sTime) > maxbuf ? maxbuf : sizeof(sTime);
     memcpy(((char *)buf) + n, &sTime, nBytes);
     n += nBytes;
-    }
 
     return n;
 }
@@ -154,10 +138,8 @@ EnumSystemFiles(Handler func)
     static const int folders[] = {
     	CSIDL_BITBUCKET,  
 	CSIDL_RECENT,
-#ifndef WINCE		     
 	CSIDL_INTERNET_CACHE, 
 	CSIDL_HISTORY,
-#endif
 	0
     };
     int i = 0;
@@ -271,13 +253,11 @@ void RNG_SystemInfoForRNG(void)
     int             nBytes;
     MEMORYSTATUS    sMem;
     HANDLE          hVal;
-#if !defined(_WIN32_WCE)
     DWORD           dwSerialNum;
     DWORD           dwComponentLen;
     DWORD           dwSysFlags;
     char            volName[128];
     DWORD           dwSectors, dwBytes, dwFreeClusters, dwNumClusters;
-#endif
 
     nBytes = RNG_GetNoise(buffer, 20);  // get up to 20 bytes
     RNG_RandomUpdate(buffer, nBytes);
@@ -285,16 +265,13 @@ void RNG_SystemInfoForRNG(void)
     sMem.dwLength = sizeof(sMem);
     GlobalMemoryStatus(&sMem);                // assorted memory stats
     RNG_RandomUpdate(&sMem, sizeof(sMem));
-#if !defined(_WIN32_WCE)
+
     dwVal = GetLogicalDrives();
     RNG_RandomUpdate(&dwVal, sizeof(dwVal));  // bitfields in bits 0-25
-#endif
 
-#if !defined(_WIN32_WCE)
     dwVal = sizeof(buffer);
     if (GetComputerName(buffer, &dwVal))
         RNG_RandomUpdate(buffer, dwVal);
-#endif
 
     hVal = GetCurrentProcess();               // 4 or 8 byte pseudo handle (a
                                               // constant!) of current process
@@ -306,7 +283,6 @@ void RNG_SystemInfoForRNG(void)
     dwVal = GetCurrentThreadId();             // thread ID (4 bytes)
     RNG_RandomUpdate(&dwVal, sizeof(dwVal));
 
-#if !defined(_WIN32_WCE)
     volName[0] = '\0';
     buffer[0] = '\0';
     GetVolumeInformation(NULL,
@@ -331,7 +307,6 @@ void RNG_SystemInfoForRNG(void)
         RNG_RandomUpdate(&dwFreeClusters, sizeof(dwFreeClusters));
         RNG_RandomUpdate(&dwNumClusters,  sizeof(dwNumClusters));
     }
-#endif
 
     // Skip the potentially slow file scanning if the OS's PRNG worked.
     if (!usedWindowsPRNG)
@@ -351,63 +326,6 @@ static void rng_systemJitter(void)
     }
 }
 
-
-#if defined(_WIN32_WCE)
-void RNG_FileForRNG(const char *filename)
-{
-    PRFileDesc *    file;
-    int             nBytes;
-    PRFileInfo      infoBuf;
-    unsigned char   buffer[1024];
-
-    if (PR_GetFileInfo(filename, &infoBuf) != PR_SUCCESS)
-        return;
-
-    RNG_RandomUpdate((unsigned char*)&infoBuf, sizeof(infoBuf));
-
-    file = PR_Open(filename, PR_RDONLY, 0);
-    if (file != NULL) {
-        for (;;) {
-            PRInt32 bytes = PR_Read(file, buffer, sizeof buffer);
-
-            if (bytes <= 0)
-                break;
-
-            RNG_RandomUpdate(buffer, bytes);
-            totalFileBytes += bytes;
-            if (totalFileBytes > maxFileBytes)
-                break;
-        }
-
-        PR_Close(file);
-    }
-
-    nBytes = RNG_GetNoise(buffer, 20);  // get up to 20 bytes
-    RNG_RandomUpdate(buffer, nBytes);
-}
-
-/*
- * The Windows CE and Windows Mobile FIPS Security Policy, page 13,
- * (http://csrc.nist.gov/groups/STM/cmvp/documents/140-1/140sp/140sp825.pdf)
- * says CeGenRandom is the right function to call for creating a seed
- * for a random number generator.
- */
-size_t RNG_SystemRNG(void *dest, size_t maxLen)
-{
-    size_t bytes = 0;
-    usedWindowsPRNG = PR_FALSE;
-    if (CeGenRandom(maxLen, dest)) {
-	bytes = maxLen;
-	usedWindowsPRNG = PR_TRUE;
-    }
-    if (bytes == 0) {
-	bytes = rng_systemFromNoise(dest,maxLen);
-    }
-    return bytes;
-}
-
-
-#else /* not WinCE */
 
 void RNG_FileForRNG(const char *filename)
 {
@@ -542,6 +460,4 @@ done:
     FreeLibrary(hModule);
     return bytes;
 }
-#endif  /* not WinCE */
-
 #endif  /* is XP_WIN */

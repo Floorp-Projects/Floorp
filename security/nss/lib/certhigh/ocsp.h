@@ -5,7 +5,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.22 2012/09/22 13:41:58 wtc%google.com Exp $
+ * $Id: ocsp.h,v 1.23 2012/11/17 11:52:38 kaie%kuix.de Exp $
  */
 
 #ifndef _OCSP_H_
@@ -18,6 +18,7 @@
 #include "keyt.h"
 #include "certt.h"
 #include "ocspt.h"
+#include "prerror.h"
 
 
 /************************************************************************/
@@ -632,6 +633,35 @@ CERT_CreateOCSPCertID(CERTCertificate *cert, PRTime time);
  */
 extern SECStatus
 CERT_DestroyOCSPCertID(CERTOCSPCertID* certID);
+
+
+extern CERTOCSPSingleResponse*
+OCSP_CreateSingleResponseGood(PLArenaPool *arena,
+                              CERTOCSPCertID *id, 
+                              PRTime thisUpdate, PRTime *nextUpdate);
+
+extern CERTOCSPSingleResponse*
+OCSP_CreateSingleResponseUnknown(PLArenaPool *arena,
+                                 CERTOCSPCertID *id, 
+                                 PRTime thisUpdate, PRTime *nextUpdate);
+
+extern CERTOCSPSingleResponse*
+OCSP_CreateSingleResponseRevoked(PLArenaPool *arena,
+                                 CERTOCSPCertID *id,
+                                 PRTime thisUpdate, PRTime *nextUpdate,
+                                 PRTime revocationTime);
+
+extern SECItem*
+OCSP_CreateSuccessResponseEncodedBasicV1(PLArenaPool *arena,
+                                         CERTCertificate *responderCert,
+                                         PRBool idByName, /* false: by key */
+                                         PRTime producedAt,
+                                         CERTOCSPSingleResponse **responses,
+                                         void *wincx);
+
+extern SECItem*
+OCSP_CreateFailureResponse(PLArenaPool *arena, PRErrorCode reason);
+
 /************************************************************************/
 SEC_END_PROTOS
 
