@@ -12,6 +12,7 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Selection;
+import android.text.TextUtils;
 import android.text.style.UnderlineSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.BackgroundColorSpan;
@@ -71,6 +72,7 @@ final class GeckoEditable
     private InputFilter[] mFilters;
 
     private final SpannableStringBuilder mText;
+    private final SpannableStringBuilder mChangedText;
     private final Editable mProxy;
     private GeckoEditableListener mListener;
     private final ActionQueue mActionQueue;
@@ -244,6 +246,7 @@ final class GeckoEditable
         mUpdateGecko = true;
 
         mText = new SpannableStringBuilder();
+        mChangedText = new SpannableStringBuilder();
 
         final Class<?>[] PROXY_INTERFACES = { Editable.class };
         mProxy = (Editable)Proxy.newProxyInstance(
@@ -551,6 +554,13 @@ final class GeckoEditable
         });
     }
 
+    private void geckoReplaceText(int start, int oldEnd, CharSequence newText) {
+        // Don't use replace() because Gingerbread has a bug where if the replaced text
+        // has the same spans as the original text, the spans will end up being deleted
+        mText.delete(start, oldEnd);
+        mText.insert(start, newText);
+    }
+
     @Override
     public void onTextChange(final String text, final int start,
                       final int unboundedOldEnd, final int unboundedNewEnd) {
@@ -565,7 +575,7 @@ final class GeckoEditable
            number to denote "end of the text". Fix that here */
         final int oldEnd = unboundedOldEnd > mText.length() ? mText.length() : unboundedOldEnd;
         // new end should always match text
-        if (unboundedNewEnd < (start + text.length())) {
+        if (start != 0 && unboundedNewEnd != (start + text.length())) {
             throw new IllegalArgumentException("newEnd does not match text");
         }
         final int newEnd = start + text.length();
@@ -576,19 +586,50 @@ final class GeckoEditable
            to increment the seqno here as well */
         ++mGeckoUpdateSeqno;
 
+        mChangedText.clearSpans();
+        mChangedText.replace(0, mChangedText.length(), text);
+        // Preserve as many spans as possible
+        TextUtils.copySpansFrom(mText, start, Math.min(oldEnd, newEnd),
+                                Object.class, mChangedText, 0);
+
         if (!mActionQueue.isEmpty()) {
             final Action action = mActionQueue.peek();
             if (action.mType == Action.TYPE_REPLACE_TEXT &&
-                    action.mStart == start &&
-                    text.equals(action.mSequence.toString())) {
-                // Replace using saved text to preserve spans
-                mText.replace(start, oldEnd, action.mSequence,
-                              0, action.mSequence.length());
+                    start <= action.mStart &&
+                    action.mStart + action.mSequence.length() <= newEnd) {
+
+                // actionNewEnd is the new end of the original replacement action
+                final int actionNewEnd = action.mStart + action.mSequence.length();
+                int selStart = Selection.getSelectionStart(mText);
+                int selEnd = Selection.getSelectionEnd(mText);
+
+                // Replace old spans with new spans
+                mChangedText.replace(action.mStart - start, actionNewEnd - start,
+                                     action.mSequence);
+                geckoReplaceText(start, oldEnd, mChangedText);
+
+                // delete/insert above might have moved our selection to somewhere else
+                // this happens when the Gecko text change covers a larger range than
+                // the original replacement action. Fix selection here
+                if (selStart >= start && selStart <= oldEnd) {
+                    selStart = selStart < action.mStart ? selStart :
+                               selStart < action.mEnd   ? actionNewEnd :
+                                                          selStart + actionNewEnd - action.mEnd;
+                    mText.setSpan(Selection.SELECTION_START, selStart, selStart,
+                                  Spanned.SPAN_POINT_POINT);
+                }
+                if (selEnd >= start && selEnd <= oldEnd) {
+                    selEnd = selEnd < action.mStart ? selEnd :
+                             selEnd < action.mEnd   ? actionNewEnd :
+                                                      selEnd + actionNewEnd - action.mEnd;
+                    mText.setSpan(Selection.SELECTION_END, selEnd, selEnd,
+                                  Spanned.SPAN_POINT_POINT);
+                }
             } else {
-                mText.replace(start, oldEnd, text, 0, text.length());
+                geckoReplaceText(start, oldEnd, mChangedText);
             }
         } else {
-            mText.replace(start, oldEnd, text, 0, text.length());
+            geckoReplaceText(start, oldEnd, mChangedText);
         }
         geckoPostToUI(new Runnable() {
             public void run() {
