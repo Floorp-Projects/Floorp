@@ -633,6 +633,9 @@ public:
     AndroidGeckoEvent(int aType) {
         Init(aType);
     }
+    AndroidGeckoEvent(int aType, int aAction) {
+        Init(aType, aAction);
+    }
     AndroidGeckoEvent(int x1, int y1, int x2, int y2) {
         Init(x1, y1, x2, y2);
     }
@@ -648,6 +651,7 @@ public:
 
     void Init(JNIEnv *jenv, jobject jobj);
     void Init(int aType);
+    void Init(int aType, int aAction);
     void Init(int x1, int y1, int x2, int y2);
     void Init(int aType, const nsIntRect &aRect);
     void Init(AndroidGeckoEvent *aResizeEvent);
@@ -816,7 +820,8 @@ public:
         IME_ADD_COMPOSITION_RANGE = 3,
         IME_UPDATE_COMPOSITION = 4,
         IME_REMOVE_COMPOSITION = 5,
-        IME_ACKNOWLEDGE_FOCUS = 6
+        IME_ACKNOWLEDGE_FOCUS = 6,
+        IME_FLUSH_CHANGES = 7
     };
 };
 

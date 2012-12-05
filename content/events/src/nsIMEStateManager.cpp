@@ -62,6 +62,8 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   void     Init(nsIWidget* aWidget,
                 nsPresContext* aPresContext,
@@ -79,6 +81,7 @@ private:
   void ObserveEditableNode();
 
   bool mObserving;
+  uint32_t mPreAttrChangeLength;
 };
 
 /******************************************************************/
@@ -974,6 +977,50 @@ nsTextStateManager::ContentRemoved(nsIDocument* aDocument,
   if (childOffset)
     nsContentUtils::AddScriptRunner(
         new TextChangeEvent(this, offset, offset + childOffset, offset));
+}
+
+static nsIContent*
+GetContentBR(mozilla::dom::Element *aElement) {
+  if (!aElement->IsNodeOfType(nsINode::eCONTENT)) {
+    return nullptr;
+  }
+  nsIContent *content = static_cast<nsIContent*>(aElement);
+  return content->IsHTML(nsGkAtoms::br) ? content : nullptr;
+}
+
+void
+nsTextStateManager::AttributeWillChange(nsIDocument* aDocument,
+                                        mozilla::dom::Element* aElement,
+                                        int32_t      aNameSpaceID,
+                                        nsIAtom*     aAttribute,
+                                        int32_t      aModType)
+{
+  nsIContent *content = GetContentBR(aElement);
+  mPreAttrChangeLength = content ?
+    nsContentEventHandler::GetNativeTextLength(content) : 0;
+}
+
+void
+nsTextStateManager::AttributeChanged(nsIDocument* aDocument,
+                                     mozilla::dom::Element* aElement,
+                                     int32_t aNameSpaceID,
+                                     nsIAtom* aAttribute,
+                                     int32_t aModType)
+{
+  nsIContent *content = GetContentBR(aElement);
+  if (!content) {
+    return;
+  }
+  uint32_t postAttrChangeLength =
+    nsContentEventHandler::GetNativeTextLength(content);
+  if (postAttrChangeLength != mPreAttrChangeLength) {
+    uint32_t start;
+    if (NS_SUCCEEDED(nsContentEventHandler::GetFlatTextOffsetOfRange(
+        mRootContent, content, 0, &start))) {
+      nsContentUtils::AddScriptRunner(new TextChangeEvent(this, start,
+        start + mPreAttrChangeLength, start + postAttrChangeLength));
+    }
+  }
 }
 
 bool
