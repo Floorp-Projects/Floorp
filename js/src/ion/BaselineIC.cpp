@@ -186,6 +186,34 @@ ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm)
 }
 
 //
+// StackCheck_Fallback
+//
+
+static bool
+DoStackCheckFallback(JSContext *cx, ICStackCheck_Fallback *stub)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    return true;
+}
+
+typedef bool (*DoStackCheckFallbackFn)(JSContext *, ICStackCheck_Fallback *);
+static const VMFunction DoStackCheckFallbackInfo =
+    FunctionInfo<DoStackCheckFallbackFn>(DoStackCheckFallback);
+
+bool
+ICStackCheck_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoStackCheckFallbackInfo, masm);
+}
+
+//
 // TypeMonitor_Fallback
 //
 
