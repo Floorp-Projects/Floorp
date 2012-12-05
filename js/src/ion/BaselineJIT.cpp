@@ -95,7 +95,7 @@ static IonExecStatus
 EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
 {
     JS_CHECK_RECURSION(cx, return IonExec_Aborted);
-    JS_ASSERT(ion::IsEnabled(cx));
+    JS_ASSERT(ion::IsBaselineEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
 
     EnterIonCode enter = cx->compartment->ionCompartment()->enterJIT();
@@ -210,6 +210,9 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
 MethodStatus
 ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
 {
+    // Skip if baseline compilation is disabledf in options.
+    JS_ASSERT(ion::IsBaselineEnabled(cx));
+
     // Skip if the script has been disabled.
     if (script->baseline == BASELINE_DISABLED_SCRIPT)
         return Method_Skipped;

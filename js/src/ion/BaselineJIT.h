@@ -108,6 +108,11 @@ struct BaselineScript
     void adoptFallbackStubs(ICStubSpace *stubSpace);
 };
 
+inline bool IsBaselineEnabled(JSContext *cx)
+{
+    return cx->hasRunOption(JSOPTION_BASELINE);
+}
+
 MethodStatus
 CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp);
 

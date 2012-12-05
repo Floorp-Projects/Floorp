@@ -1411,8 +1411,6 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
 {
     JS_ASSERT(ion::IsEnabled(cx));
 
-    return ion::CanEnterBaselineJIT(cx, script, fp);
-
     // Skip if the script has been disabled.
     if (script->ion == ION_DISABLED_SCRIPT)
         return Method_Skipped;
@@ -1564,8 +1562,6 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 IonExecStatus
 ion::Cannon(JSContext *cx, StackFrame *fp)
 {
-    return ion::EnterBaselineMethod(cx, fp);
-
     AssertCanGC();
     RootedScript script(cx, fp->script());
     IonScript *ion = script->ion;
