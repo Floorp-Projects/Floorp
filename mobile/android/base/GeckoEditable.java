@@ -570,6 +570,12 @@ final class GeckoEditable
         }
         final int newEnd = start + text.length();
 
+        /* Text changes affect the selection as well, and we may not receive another selection
+           update as a result of selection notification masking on the Gecko side; therefore,
+           in order to prevent previous stale selection notifications from occurring, we need
+           to increment the seqno here as well */
+        ++mGeckoUpdateSeqno;
+
         if (!mActionQueue.isEmpty()) {
             final Action action = mActionQueue.peek();
             if (action.mType == Action.TYPE_REPLACE_TEXT &&
