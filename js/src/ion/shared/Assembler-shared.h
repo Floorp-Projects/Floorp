@@ -493,11 +493,11 @@ class CodeLocationJump
 
 class CodeLocationCall
 {
-    uint8 *raw_;
+    uint8_t *raw_;
     mozilla::DebugOnly<bool> absolute_;
 
 #ifdef JS_SMALL_BRANCH
-    uint8 *jumpTableEntry_;
+    uint8_t *jumpTableEntry_;
 #endif
 
   public:
@@ -508,26 +508,26 @@ class CodeLocationCall
     }
 
     void operator = (CodeOffsetCall base) {
-        raw_ = (uint8 *) base.offset();
+        raw_ = (uint8_t *) base.offset();
         absolute_ = false;
 #ifdef JS_SMALL_BRANCH
-        jumpTableEntry_ = (uint8 *) base.jumpTableIndex();
+        jumpTableEntry_ = (uint8_t *) base.jumpTableIndex();
 #endif
     }
 
     void repoint(IonCode *code, MacroAssembler* masm = NULL);
 
-    uint8 *raw() const {
+    uint8_t *raw() const {
         JS_ASSERT(absolute_);
         return raw_;
     }
-    uint8 *offset() const {
+    uint8_t *offset() const {
         JS_ASSERT(!absolute_);
         return raw_;
     }
 
 #ifdef JS_SMALL_BRANCH
-    uint8 *jumpTableEntry() {
+    uint8_t *jumpTableEntry() {
         JS_ASSERT(absolute_);
         return jumpTableEntry_;
     }
