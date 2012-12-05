@@ -128,6 +128,7 @@
  "docshell/test/test_bug598895.html": "",
  "docshell/test/test_bug637644.html": "",
  "docshell/test/test_bug668513.html": "RANDOM",
+ "docshell/test/test_framedhistoryframes.html": "bug 784321",
  "dom/browser-element/mochitest/test_browserElement_oop_SecurityChange.html": "TIMED_OUT, bug 766586",
  "dom/browser-element/mochitest/test_browserElement_inproc_AppFramePermission.html": "",
  "dom/browser-element/mochitest/test_browserElement_inproc_AppWindowNamespace.html": "TIMED_OUT, bug 783509",
