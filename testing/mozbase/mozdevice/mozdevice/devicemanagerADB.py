@@ -209,7 +209,8 @@ class DeviceManagerADB(DeviceManager):
             try:
                 localZip = tempfile.mktemp() + ".zip"
                 remoteZip = remoteDir + "/adbdmtmp.zip"
-                subprocess.check_output(["zip", "-r", localZip, '.'], cwd=localDir)
+                subprocess.Popen(["zip", "-r", localZip, '.'], cwd=localDir,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
                 self.pushFile(localZip, remoteZip)
                 os.remove(localZip)
                 data = self._runCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir]).stdout.read()
