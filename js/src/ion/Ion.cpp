@@ -1183,7 +1183,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     // incremental read barriers.
     if (js_IonOptions.parallelCompilation &&
         OffThreadCompilationAvailable(cx) &&
-        !IsIncrementalGCInProgress(cx->runtime))
+        cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL)
     {
         builder->script()->ion = ION_COMPILING_SCRIPT;
 
