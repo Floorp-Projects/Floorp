@@ -10,10 +10,6 @@
 
 include manifest.mn
 
-ifdef NSS_DISABLE_DBM
-DIRS =
-endif
-
 #######################################################################
 # (2) Include "global" configuration information. (OPTIONAL)          #
 #######################################################################
@@ -24,13 +20,11 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (3) Include "component" configuration information. (OPTIONAL)       #
 #######################################################################
 
-
-
 #######################################################################
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-
+include ../platlibs.mk
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -48,9 +42,6 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-coreconf_hack:
-	cd ../coreconf; gmake
-	gmake import
 
-RelEng_bld: coreconf_hack
-	gmake
+include ../platrules.mk
+
