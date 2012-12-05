@@ -20,6 +20,7 @@ _SIMPLETEST_FILES =	LogController.js \
 			WindowSnapshot.js \
 			MockObjects.js \
 			NativeKeyCodes.js \
+			paint_listener.js \
 			$(DEPTH)/testing/specialpowers/content/MozillaLogger.js \
 			$(DEPTH)/docshell/test/chrome/docshell_helpers.js \
 			$(NULL)
