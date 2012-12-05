@@ -28,26 +28,24 @@ function runTest() {
     assert_equals(js1, "Unicåde", "js1 should be defined.");
     assert_equals(js2, "Unicåde", "js2 should be defined.");
   }, "Test loading utf-16 javascript files");
-  var t = async_test("Test loading various utf-16 files");
-  var count = 3;
-  ifr1.onload = ifr1.onerror = ifr2.onload = ifr2.onerror = function() {
-    var ifr = this;
-    t.step(function() {
-      assert_true(ifr.document.body instanceof HTMLBodyElement, ifr.name + " should load.");
-    });
-    if (!--count) {
+  var tests = [
+    {ifr: ifr1, fails: false, name: "Test loading utf-16, big endian, with BOM"},
+    {ifr: ifr2, fails: false, name: "Test loading utf-16, little endian, with BOM"},
+    {ifr: ifr3, fails: true, name: "Test loading utf-16le xml fails"},
+  ];
+  tests.forEach(function(test) {
+    var t = async_test(test.name);
+    var fails = test.fails;
+    var ifr = test.ifr;
+    ifr.onload = ifr.onerror = function() {
+      t.step(fails ? function() {
+        assert_equals(ifr.document.body, null, ifr.name + " should NOT load.");
+      } : function() {
+        assert_true(ifr.document.body instanceof HTMLBodyElement, ifr.name + " should load.");
+      });
       t.done();
-    }
-  };
-  ifr3.onload = ifr3.onerror = function() {
-    var ifr = this;
-    t.step(function() {
-      assert_equals(ifr.document.body, null, ifr.name + " should NOT load.");
-    });
-    if (!--count) {
-      t.done();
-    }
-  };
+    };
+  });
 }
 
 </script>
