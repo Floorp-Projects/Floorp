@@ -55,6 +55,8 @@
 #include "prenv.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 
@@ -1338,8 +1340,8 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
           listY = NSToIntRound(listY / scale);
         }
 
-        if (NS_ABS(listX - aRequestedX) <= kSlop &&
-            NS_ABS(listY - aRequestedY) <= kSlop) {
+        if (std::abs(listX - aRequestedX) <= kSlop &&
+            std::abs(listY - aRequestedY) <= kSlop) {
           // collision! offset and start over
           if (bouncedX & 0x1)
             aRequestedX -= kOffset;

@@ -328,6 +328,8 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
     StackFrame *caller = cx->fp();
     JS_ASSERT(IsBuiltinEvalForScope(caller->scopeChain(), args.calleev()));
     JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
+    JS_ASSERT_IF(caller->isFunctionFrame(),
+                 caller->compartment() == caller->callee().compartment());
 
     if (!WarnOnTooManyArgs(cx, args))
         return false;

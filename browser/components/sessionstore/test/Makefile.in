@@ -36,7 +36,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_394759_basic.js \
 	browser_394759_behavior.js \
 	browser_394759_purge.js \
-	browser_394759_privatebrowsing.js \
 	browser_408470.js \
 	browser_408470_sample.html \
 	browser_423132.js \
@@ -139,10 +138,12 @@ MOCHITEST_BROWSER_FILES = \
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
 	browser_354894_perwindowpb.js \
+	browser_394759_perwindowpb.js \
 	$(NULL)
 else
 MOCHITEST_BROWSER_FILES += \
 	browser_354894.js \
+	browser_394759_privatebrowsing.js \
 	$(NULL)
 endif
 

@@ -13,7 +13,6 @@ class MotionEventHelper {
     private static final String LOGTAG = "RobocopMotionEventHelper";
 
     private static final long DRAG_EVENTS_PER_SECOND = 20; // 20 move events per second when doing a drag
-    private static final long LONG_PRESS_DURATION = 2000;
 
     private final Instrumentation mInstrumentation;
     private final int mSurfaceOffsetX;
@@ -135,15 +134,5 @@ class MotionEventHelper {
     public void doubleTap(float x, float y) {
         tap(x, y);
         tap(x, y);
-    }
-
-    public void longPress(float x, float y) {
-        long downTime = down(x, y);
-        try {
-            Thread.sleep(LONG_PRESS_DURATION);
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-        }
-        up(downTime, x, y);
     }
 }

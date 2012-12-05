@@ -184,8 +184,8 @@ function OptionsView() {
   dumpn("OptionsView was instantiated");
   this._togglePauseOnExceptions = this._togglePauseOnExceptions.bind(this);
   this._toggleShowPanesOnStartup = this._toggleShowPanesOnStartup.bind(this);
-  this._toggleShowVariablesNonEnum = this._toggleShowVariablesNonEnum.bind(this);
-  this._toggleShowVariablesSearchbox = this._toggleShowVariablesSearchbox.bind(this);
+  this._toggleShowVariablesOnlyEnum = this._toggleShowVariablesOnlyEnum.bind(this);
+  this._toggleShowVariablesFilterBox = this._toggleShowVariablesFilterBox.bind(this);
 }
 
 OptionsView.prototype = {
@@ -197,13 +197,13 @@ OptionsView.prototype = {
     this._button = document.getElementById("debugger-options");
     this._pauseOnExceptionsItem = document.getElementById("pause-on-exceptions");
     this._showPanesOnStartupItem = document.getElementById("show-panes-on-startup");
-    this._showVariablesNonEnumItem = document.getElementById("show-vars-nonenum");
-    this._showVariablesSearchboxItem = document.getElementById("show-vars-searchbox");
+    this._showVariablesOnlyEnumItem = document.getElementById("show-vars-only-enum");
+    this._showVariablesFilterBoxItem = document.getElementById("show-vars-filter-box");
 
     this._pauseOnExceptionsItem.setAttribute("checked", "false");
     this._showPanesOnStartupItem.setAttribute("checked", Prefs.panesVisibleOnStartup);
-    this._showVariablesNonEnumItem.setAttribute("checked", Prefs.variablesNonEnumVisible);
-    this._showVariablesSearchboxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
+    this._showVariablesOnlyEnumItem.setAttribute("checked", Prefs.variablesOnlyEnumVisible);
+    this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
   },
 
   /**
@@ -247,24 +247,24 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'show non-enumerables' menuitem command.
    */
-  _toggleShowVariablesNonEnum: function DVO__toggleShowVariablesNonEnum() {
-    DebuggerView.Variables.nonEnumVisible = Prefs.variablesNonEnumVisible =
-      this._showVariablesNonEnumItem.getAttribute("checked") == "true";
+  _toggleShowVariablesOnlyEnum: function DVO__toggleShowVariablesOnlyEnum() {
+    DebuggerView.Variables.onlyEnumVisible = Prefs.variablesOnlyEnumVisible =
+      this._showVariablesOnlyEnumItem.getAttribute("checked") == "true";
   },
 
   /**
    * Listener handling the 'show variables searchbox' menuitem command.
    */
-  _toggleShowVariablesSearchbox: function DVO__toggleShowVariablesSearchbox() {
+  _toggleShowVariablesFilterBox: function DVO__toggleShowVariablesFilterBox() {
     DebuggerView.Variables.searchEnabled = Prefs.variablesSearchboxVisible =
-      this._showVariablesSearchboxItem.getAttribute("checked") == "true";
+      this._showVariablesFilterBoxItem.getAttribute("checked") == "true";
   },
 
   _button: null,
   _pauseOnExceptionsItem: null,
   _showPanesOnStartupItem: null,
-  _showVariablesNonEnumItem: null,
-  _showVariablesSearchboxItem: null
+  _showVariablesOnlyEnumItem: null,
+  _showVariablesFilterBoxItem: null
 };
 
 /**
@@ -627,7 +627,7 @@ FilterView.prototype = {
    * @param object aView
    */
   set target(aView) {
-    var placeholder = "";
+    let placeholder = "";
     switch (aView) {
       case DebuggerView.ChromeGlobals:
         placeholder = L10N.getFormatStr("emptyChromeGlobalsFilterText", [this._fileSearchKey]);
@@ -665,7 +665,7 @@ FilterView.prototype = {
         : rawLength;
 
       file = rawValue.slice(0, fileEnd);
-      line = ~~(rawValue.slice(fileEnd + 1, lineEnd)) || -1;
+      line = ~~(rawValue.slice(fileEnd + 1, lineEnd)) || 0;
       token = rawValue.slice(lineEnd + 1);
       isGlobal = false;
       isVariable = false;
@@ -673,7 +673,7 @@ FilterView.prototype = {
     // Global searches dissalow the use of file or line flags.
     else if (globalFlagIndex == 0) {
       file = "";
-      line = -1;
+      line = 0;
       token = rawValue.slice(1);
       isGlobal = true;
       isVariable = false;
@@ -681,7 +681,7 @@ FilterView.prototype = {
     // Variable searches dissalow the use of file or line flags.
     else if (variableFlagIndex == 0) {
       file = "";
-      line = -1;
+      line = 0;
       token = rawValue.slice(1);
       isGlobal = false;
       isVariable = true;
@@ -778,7 +778,7 @@ FilterView.prototype = {
    */
   _performLineSearch: function DVF__performLineSearch(aLine) {
     // Don't search for lines if the input hasn't changed.
-    if (this._prevSearchedLine != aLine && aLine > -1) {
+    if (this._prevSearchedLine != aLine && aLine > 0) {
       DebuggerView.editor.setCaretPosition(aLine - 1);
     }
     this._prevSearchedLine = aLine;
@@ -841,13 +841,27 @@ FilterView.prototype = {
    * The key press listener for the search container.
    */
   _onKeyPress: function DVF__onScriptsKeyPress(e) {
+    // This attribute is not implemented in Gecko at this time, see bug 680830.
+    e.char = String.fromCharCode(e.charCode);
+
     let [file, line, token, isGlobal, isVariable] = this.searchboxInfo;
-    let isDifferentToken, isReturnKey, action;
+    let isDifferentToken, isReturnKey, action = -1;
 
     if (this._prevSearchedToken != token) {
       isDifferentToken = true;
     }
-    switch (e.keyCode) {
+
+    // Meta+G and Ctrl+N focus next matches.
+    if ((e.char == "g" && e.metaKey) || e.char == "n" && e.ctrlKey) {
+      action = 0;
+    }
+    // Meta+Shift+G and Ctrl+P focus previous matches.
+    else if ((e.char == "G" && e.metaKey) || e.char == "p" && e.ctrlKey) {
+      action = 1;
+    }
+    // Return, enter down and up keys focus next or previous matches, while
+    // the escape key switches focus from the search container.
+    else switch (e.keyCode) {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
         isReturnKey = true;
@@ -861,15 +875,13 @@ FilterView.prototype = {
       case e.DOM_VK_ESCAPE:
         action = 2;
         break;
-      default:
-        action = -1;
     }
 
     if (action == 2) {
       DebuggerView.editor.focus();
       return;
     }
-    if (action == -1 || !token) {
+    if (action == -1 || (token.length == 0 && line == 0)) {
       return;
     }
 
@@ -894,6 +906,18 @@ FilterView.prototype = {
         DebuggerView.Variables.expandFirstSearchResults();
       }
       this._prevSearchedToken = token;
+      return;
+    }
+
+    // Increment or decrement the specified line.
+    if (!isReturnKey && token.length == 0 && line > 0) {
+      line += action == 0 ? 1 : -1;
+      let lineCount = DebuggerView.editor.getLineCount();
+      let lineTarget = line < 1 ? 1 : line > lineCount ? lineCount : line;
+
+      DebuggerView.editor.setCaretPosition(lineTarget - 1);
+      this._searchbox.value = file + SEARCH_LINE_FLAG + lineTarget;
+      this._prevSearchedLine = lineTarget;
       return;
     }
 
@@ -982,7 +1006,7 @@ FilterView.prototype = {
   _variableSearchKey: "",
   _target: null,
   _prevSearchedFile: "",
-  _prevSearchedLine: -1,
+  _prevSearchedLine: 0,
   _prevSearchedToken: ""
 };
 

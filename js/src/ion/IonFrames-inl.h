@@ -55,7 +55,7 @@ IonFrameIterator::current() const
     return (IonCommonFrameLayout *)current_;
 }
 
-inline uint8 *
+inline uint8_t *
 IonFrameIterator::returnAddress() const
 {
     IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;

@@ -27,8 +27,29 @@ function testSimpleCall() {
       let testVar = testScope.addVar("something");
       let duplVar = testScope.addVar("something");
 
+      info("Scope id: " + testScope.target.id);
+      info("Scope name: " + testScope.target.name);
+      info("Variable id: " + testVar.target.id);
+      info("Variable name: " + testVar.target.name);
+
+      ok(testScope,
+        "Should have created a scope.");
       ok(testVar,
         "Should have created a variable.");
+
+      ok(testScope.id.contains("test-scope"),
+        "Should have the correct scope id.");
+      ok(testScope.target.id.contains("test-scope"),
+        "Should have the correct scope id on the element.");
+      is(testScope.name, "test-scope",
+        "Should have the correct scope name.");
+
+      ok(testVar.id.contains("something"),
+        "Should have the correct variable id.");
+      ok(testVar.target.id.contains("something"),
+        "Should have the correct variable id on the element.");
+      is(testVar.name, "something",
+        "Should have the correct variable name.");
 
       is(duplVar, null,
         "Shouldn't be able to duplicate variables in the same scope.");
