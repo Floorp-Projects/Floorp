@@ -2407,11 +2407,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   min-width: 280px;
 }
 
-#download-monitor {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0, 108px, 18px, 90px);
-}
-
 /* Bookmarks roots menu-items */
 #appmenu_subscribeToPage:not([disabled]),
 #appmenu_subscribeToPageMenu,

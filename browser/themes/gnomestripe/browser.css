@@ -1790,12 +1790,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   display: -moz-box; /* display chevron icon in text mode */
 }
 
-#download-monitor {
-  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-
 /* ::::: Keyboard UI Panel ::::: */
 
 .KUI-panel-closebutton {
