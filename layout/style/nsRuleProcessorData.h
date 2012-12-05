@@ -149,6 +149,21 @@ struct NS_STACK_CLASS TreeMatchContext {
     return mVisitedHandling;
   }
 
+  void AddScopeElement(mozilla::dom::Element* aElement) {
+    NS_PRECONDITION(mHaveSpecifiedScope,
+                    "Should be set before calling AddScopeElement()");
+    mScopes.AppendElement(aElement);
+  }
+  bool IsScopeElement(mozilla::dom::Element* aElement) const {
+    return mScopes.Contains(aElement);
+  }
+  void SetHasSpecifiedScope() {
+    mHaveSpecifiedScope = true;
+  }
+  bool HasSpecifiedScope() const {
+    return mHaveSpecifiedScope;
+  }
+
   // Is this matching operation for the creation of a style context?
   // (If it is, we need to set slow selector bits on nodes indicating
   // that certain restyling needs to happen.)
@@ -162,10 +177,16 @@ struct NS_STACK_CLASS TreeMatchContext {
   // undefined (it might get set appropriately, or might not).
   bool mHaveRelevantLink;
 
+  // If true, then our contextual reference element set is specified,
+  // and is given by mScopes.
+  bool mHaveSpecifiedScope;
+
   // How matching should be performed.  See the documentation for
   // nsRuleWalker::VisitedHandlingType.
   nsRuleWalker::VisitedHandlingType mVisitedHandling;
 
+  // For matching :scope
+  nsAutoTArray<mozilla::dom::Element*, 1> mScopes;
  public:
   // The document we're working with.
   nsIDocument* const mDocument;
@@ -204,6 +225,7 @@ struct NS_STACK_CLASS TreeMatchContext {
                    MatchVisited aMatchVisited = eMatchVisitedDefault)
     : mForStyling(aForStyling)
     , mHaveRelevantLink(false)
+    , mHaveSpecifiedScope(false)
     , mVisitedHandling(aVisitedHandling)
     , mDocument(aDocument)
     , mScopedRoot(nullptr)
