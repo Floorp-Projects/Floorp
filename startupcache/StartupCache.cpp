@@ -139,7 +139,15 @@ StartupCache::~StartupCache()
   // but an early shutdown means either mTimer didn't run 
   // or the write thread is still running.
   WaitOnWriteThread();
-  WriteToDisk();
+
+  // If we shutdown quickly timer wont have fired. Instead of writing
+  // it on the main thread and block the shutdown we simply wont update
+  // the startup cache. Always do this if the file doesn't exist since
+  // we use it part of the packge step.
+  if (!mArchive) {
+    WriteToDisk();
+  }
+
   gStartupCache = nullptr;
   (void)::NS_UnregisterMemoryReporter(mMappingMemoryReporter);
   (void)::NS_UnregisterMemoryReporter(mDataMemoryReporter);
