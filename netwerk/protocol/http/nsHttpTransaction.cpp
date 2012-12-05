@@ -27,6 +27,7 @@
 #include "nsComponentManagerUtils.h" // do_CreateInstance
 #include "nsServiceManagerUtils.h"   // do_GetService
 #include "nsIHttpActivityObserver.h"
+#include "nsSocketTransportService2.h"
 
 
 using namespace mozilla;
@@ -407,8 +408,10 @@ nsHttpTransaction::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)
         MutexAutoLock lock(mCallbacksLock);
         mCallbacks = aCallbacks;
     }
-    if (mConnection) {
-        mConnection->SetSecurityCallbacks(aCallbacks);
+
+    if (gSocketTransportService) {
+        nsRefPtr<UpdateSecurityCallbacks> event = new UpdateSecurityCallbacks(this, aCallbacks);
+        gSocketTransportService->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
     }
 }
 
