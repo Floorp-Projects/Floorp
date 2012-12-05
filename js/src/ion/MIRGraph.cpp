@@ -79,7 +79,21 @@ MBasicBlock::New(MIRGraph &graph, CompileInfo &info,
     if (!block->init())
         return NULL;
 
-    if (!block->inherit(pred))
+    if (!block->inherit(pred, 0))
+        return NULL;
+
+    return block;
+}
+
+MBasicBlock *
+MBasicBlock::NewPopN(MIRGraph &graph, CompileInfo &info,
+                     MBasicBlock *pred, jsbytecode *entryPc, Kind kind, uint32_t popped)
+{
+    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, kind);
+    if (!block->init())
+        return NULL;
+
+    if (!block->inherit(pred, popped))
         return NULL;
 
     return block;
@@ -150,22 +164,26 @@ MBasicBlock::init()
 void
 MBasicBlock::copySlots(MBasicBlock *from)
 {
-    JS_ASSERT(stackPosition_ == from->stackPosition_);
+    JS_ASSERT(stackPosition_ <= from->stackPosition_);
 
     for (uint32_t i = 0; i < stackPosition_; i++)
         slots_[i] = from->slots_[i];
 }
 
 bool
-MBasicBlock::inherit(MBasicBlock *pred)
+MBasicBlock::inherit(MBasicBlock *pred, uint32_t popped)
 {
     if (pred) {
         stackPosition_ = pred->stackPosition_;
+        JS_ASSERT(stackPosition_ >= popped);
+        stackPosition_ -= popped;
         if (kind_ != PENDING_LOOP_HEADER)
             copySlots(pred);
     } else {
         uint32_t stackDepth = info().script()->analysis()->getCode(pc()).stackDepth;
         stackPosition_ = info().firstStackSlot() + stackDepth;
+        JS_ASSERT(stackPosition_ >= popped);
+        stackPosition_ -= popped;
     }
 
     JS_ASSERT(info_.nslots() >= stackPosition_);
@@ -544,12 +562,18 @@ MBasicBlock::discardPhiAt(MPhiIterator &at)
 bool
 MBasicBlock::addPredecessor(MBasicBlock *pred)
 {
+    return addPredecessorPopN(pred, 0);
+}
+
+bool
+MBasicBlock::addPredecessorPopN(MBasicBlock *pred, uint32_t popped)
+{
     JS_ASSERT(pred);
     JS_ASSERT(predecessors_.length() > 0);
 
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(pred->lastIns_);
-    JS_ASSERT(pred->stackPosition_ == stackPosition_);
+    JS_ASSERT(pred->stackPosition_ == stackPosition_ + popped);
 
     for (uint32_t i = 0; i < stackPosition_; i++) {
         MDefinition *mine = getSlot(i);
