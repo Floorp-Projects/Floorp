@@ -666,6 +666,13 @@ AndroidGeckoEvent::Init(int aType)
 }
 
 void
+AndroidGeckoEvent::Init(int aType, int aAction)
+{
+    mType = aType;
+    mAction = aAction;
+}
+
+void
 AndroidGeckoEvent::Init(int x1, int y1, int x2, int y2)
 {
     mType = DRAW;

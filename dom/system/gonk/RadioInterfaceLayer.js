@@ -1417,6 +1417,17 @@ RadioInterfaceLayer.prototype = {
                                            timestamp,
                                            true);
 
+    gSystemMessenger.broadcastMessage("sms-sent",
+                                      {id: id,
+                                       delivery: DOM_SMS_DELIVERY_SENT,
+                                       deliveryStatus: RIL.GECKO_SMS_DELIVERY_STATUS_PENDING,
+                                       sender: message.sender || null,
+                                       receiver: options.number,
+                                       body: options.fullBody,
+                                       messageClass: messageClass,
+                                       timestamp: timestamp,
+                                       read: true});
+
     if (!options.requestStatusReport) {
       // No more used if STATUS-REPORT not requested.
       delete this._sentSmsEnvelopes[message.envelopeId];
