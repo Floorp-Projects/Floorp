@@ -9,11 +9,20 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "prprf.h"
+#include "mozIApplicationClearPrivateDataParams.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
+#include "nsNetUtil.h"
 
 static inline void
-GetAuthKey(const char *scheme, const char *host, int32_t port, nsCString &key)
+GetAuthKey(const char *scheme, const char *host, int32_t port, uint32_t appId, bool inBrowserElement, nsCString &key)
 {
-    key.Assign(scheme);
+    key.Truncate();
+    key.AppendInt(appId);
+    key.Append(':');
+    key.AppendInt(inBrowserElement);
+    key.Append(':');
+    key.Append(scheme);
     key.AppendLiteral("://");
     key.Append(host);
     key.Append(':');
@@ -41,13 +50,23 @@ StrEquivalent(const PRUnichar *a, const PRUnichar *b)
 
 nsHttpAuthCache::nsHttpAuthCache()
     : mDB(nullptr)
+    , mObserver(new AppDataClearObserver(this))
 {
+    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+    if (obsSvc) {
+        obsSvc->AddObserver(mObserver, "webapps-clear-data", false);
+    }
 }
 
 nsHttpAuthCache::~nsHttpAuthCache()
 {
     if (mDB)
         ClearAll();
+    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+    if (obsSvc) {
+        obsSvc->RemoveObserver(mObserver, "webapps-clear-data");
+        mObserver->mOwner = nullptr;
+    }
 }
 
 nsresult
@@ -71,13 +90,15 @@ nsHttpAuthCache::GetAuthEntryForPath(const char *scheme,
                                      const char *host,
                                      int32_t     port,
                                      const char *path,
+                                     uint32_t    appId,
+                                     bool        inBrowserElement,
                                      nsHttpAuthEntry **entry)
 {
     LOG(("nsHttpAuthCache::GetAuthEntryForPath [key=%s://%s:%d path=%s]\n",
         scheme, host, port, path));
 
     nsAutoCString key;
-    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, appId, inBrowserElement, key);
     if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -90,6 +111,8 @@ nsHttpAuthCache::GetAuthEntryForDomain(const char *scheme,
                                        const char *host,
                                        int32_t     port,
                                        const char *realm,
+                                       uint32_t    appId,
+                                       bool        inBrowserElement,
                                        nsHttpAuthEntry **entry)
 
 {
@@ -97,7 +120,7 @@ nsHttpAuthCache::GetAuthEntryForDomain(const char *scheme,
         scheme, host, port, realm));
 
     nsAutoCString key;
-    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, appId, inBrowserElement, key);
     if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -113,6 +136,8 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
                               const char *realm,
                               const char *creds,
                               const char *challenge,
+                              uint32_t    appId,
+                              bool        inBrowserElement,
                               const nsHttpAuthIdentity *ident,
                               nsISupports *metadata)
 {
@@ -127,7 +152,7 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
     }
 
     nsAutoCString key;
-    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, appId, inBrowserElement, key);
 
     if (!node) {
         // create a new entry node and set the given entry
@@ -149,13 +174,15 @@ void
 nsHttpAuthCache::ClearAuthEntry(const char *scheme,
                                 const char *host,
                                 int32_t     port,
-                                const char *realm)
+                                const char *realm,
+                                uint32_t    appId,
+                                bool        inBrowserElement)
 {
     if (!mDB)
         return;
 
     nsAutoCString key;
-    GetAuthKey(scheme, host, port, key);
+    GetAuthKey(scheme, host, port, appId, inBrowserElement, key);
     PL_HashTableRemove(mDB, key.get());
 }
 
@@ -179,12 +206,14 @@ nsHttpAuthNode *
 nsHttpAuthCache::LookupAuthNode(const char *scheme,
                                 const char *host,
                                 int32_t     port,
+                                uint32_t    appId,
+                                bool        inBrowserElement,
                                 nsCString  &key)
 {
     if (!mDB)
         return nullptr;
 
-    GetAuthKey(scheme, host, port, key);
+    GetAuthKey(scheme, host, port, appId, inBrowserElement, key);
 
     return (nsHttpAuthNode *) PL_HashTableLookup(mDB, key.get());
 }
@@ -231,6 +260,62 @@ PLHashAllocOps nsHttpAuthCache::gHashAllocOps =
     nsHttpAuthCache::AllocEntry,
     nsHttpAuthCache::FreeEntry
 };
+
+NS_IMPL_ISUPPORTS1(nsHttpAuthCache::AppDataClearObserver, nsIObserver)
+
+NS_IMETHODIMP
+nsHttpAuthCache::AppDataClearObserver::Observe(nsISupports *subject,
+                                               const char *      topic,
+                                               const PRUnichar * data_unicode)
+{
+    NS_ENSURE_TRUE(mOwner, NS_ERROR_NOT_AVAILABLE);
+
+    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
+            do_QueryInterface(subject);
+    if (!params) {
+        NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    uint32_t appId;
+    bool browserOnly;
+
+    nsresult rv = params->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = params->GetBrowserOnly(&browserOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    MOZ_ASSERT(appId != NECKO_UNKNOWN_APP_ID);
+    mOwner->ClearAppData(appId, browserOnly);
+    return NS_OK;
+}
+
+static int
+RemoveEntriesForApp(PLHashEntry *entry, int32_t number, void *arg)
+{
+    nsDependentCString key(static_cast<const char*>(entry->key));
+    nsAutoCString* prefix = static_cast<nsAutoCString*>(arg);
+    if (StringBeginsWith(key, *prefix)) {
+        return HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE;
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
+void
+nsHttpAuthCache::ClearAppData(uint32_t appId, bool browserOnly)
+{
+    if (!mDB) {
+        return;
+    }
+    nsAutoCString keyPrefix;
+    keyPrefix.AppendInt(appId);
+    keyPrefix.Append(':');
+    if (browserOnly) {
+        keyPrefix.AppendInt(browserOnly);
+        keyPrefix.Append(':');
+    }
+    PL_HashTableEnumerateEntries(mDB, RemoveEntriesForApp, &keyPrefix);
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpAuthIdentity
