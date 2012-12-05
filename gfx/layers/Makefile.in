@@ -142,6 +142,7 @@ EXPORTS_mozilla/layers =\
         RenderTrace.h \
         SharedImageUtils.h \
         ShmemYCbCrImage.h \
+        TaskThrottler.h \
         $(NULL)
 
 CPPSRCS += \
@@ -161,6 +162,7 @@ CPPSRCS += \
         ShadowLayerParent.cpp \
         ShadowLayersParent.cpp \
         ShmemYCbCrImage.cpp \
+        TaskThrottler.cpp \
         $(NULL)
 
 ifdef MOZ_X11 #{
