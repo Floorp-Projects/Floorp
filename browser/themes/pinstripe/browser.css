@@ -3130,10 +3130,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   @hudButtonPressed@
 }
 
-#download-monitor {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadStatusIcon.png");
-}
-
 /* ::::: Keyboard UI Panel ::::: */
 
 .KUI-panel {
