@@ -1090,28 +1090,14 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, MutableHandleValue res)
+TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSOp op,
+                  uint32_t argc, Value *vp, MutableHandleValue res, bool *attachedStub)
 {
+    *attachedStub = false;
+
     RootedValue callee(cx, vp[0]);
     RootedValue thisv(cx, vp[1]);
 
-    Value *args = vp + 2;
-
-    RootedScript script(cx, GetTopIonJSScript(cx));
-    JSOp op = JSOp(*stub->icEntry()->pc(script));
-
-    if (op == JSOP_NEW) {
-        if (!InvokeConstructor(cx, callee, argc, args, res.address()))
-            return false;
-    } else {
-        JS_ASSERT(op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
-        if (!Invoke(cx, thisv, callee, argc, args, res.address()))
-            return false;
-    }
-
-    types::TypeScript::Monitor(cx, res);
-
-    // Attach new stub.
     if (stub->numOptimizedStubs() >= ICCall_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with generic call stub.
         return true;
@@ -1136,8 +1122,44 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
             return false;
 
         stub->addNewStub(newStub);
+        *attachedStub = true;
         return true;
     }
+
+    return true;
+}
+
+static bool
+DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, MutableHandleValue res)
+{
+    RootedValue callee(cx, vp[0]);
+    RootedValue thisv(cx, vp[1]);
+
+    Value *args = vp + 2;
+
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    JSOp op = JSOp(*stub->icEntry()->pc(script));
+
+    bool attachedStub;
+    if (!TryAttachCallStub(cx, stub, script, op, argc, vp, res, &attachedStub))
+        return false;
+    // TODO: Add spew indicating failure to attach optimized stub for this call.
+
+    if (op == JSOP_NEW) {
+        if (!InvokeConstructor(cx, callee, argc, args, res.address()))
+            return false;
+    } else {
+        JS_ASSERT(op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
+        if (!Invoke(cx, thisv, callee, argc, args, res.address()))
+            return false;
+    }
+
+    types::TypeScript::Monitor(cx, res);
+
+    // Attach a new TypeMonitor stub for this value.
+    ICTypeMonitor_Fallback *typeMonFbStub = stub->fallbackMonitorStub();
+    if (!typeMonFbStub->addMonitorStubForValue(cx, ICStubSpace::StubSpaceFor(script), res))
+        return false;
 
     return true;
 }
