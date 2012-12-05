@@ -1377,7 +1377,11 @@ nsObjectLoadingContent::UpdateObjectParameters()
   // If we have a loaded channel and channel parameters did not change, use it
   // to determine what we would load.
   bool useChannel = mChannelLoaded && !(retval & eParamChannelChanged);
-  if (mChannel && useChannel) {
+  // If we have a channel and are type loading, as opposed to having an existing
+  // channel for a previous load.
+  bool newChannel = useChannel && mType == eType_Loading;
+
+  if (newChannel && mChannel) {
     nsCString channelType;
     rv = mChannel->GetContentType(channelType);
     if (NS_FAILED(rv)) {
@@ -1465,11 +1469,8 @@ nsObjectLoadingContent::UpdateObjectParameters()
         stateInvalid = true;
       }
     }
-  }
-
-  if (useChannel && !mChannel) {
-    // - (useChannel && !mChannel) is true if a channel was opened but
-    //   is no longer around, in which case we can't load.
+  } else if (newChannel) {
+    LOG(("OBJLC [%p]: We failed to open a channel, marking invalid", this));
     stateInvalid = true;
   }
 
@@ -1491,8 +1492,8 @@ nsObjectLoadingContent::UpdateObjectParameters()
   if (stateInvalid) {
     newType = eType_Null;
     newMime.Truncate();
-  } else if (useChannel) {
-      // If useChannel is set above, we considered it in setting newMime
+  } else if (newChannel) {
+      // If newChannel is set above, we considered it in setting newMime
       newType = GetTypeOfContent(newMime);
       LOG(("OBJLC [%p]: Using channel type", this));
   } else if (((caps & eAllowPluginSkipChannel) || !newURI) &&
@@ -1507,6 +1508,22 @@ nsObjectLoadingContent::UpdateObjectParameters()
     // Unloadable - no URI, and no plugin type. Non-plugin types (images,
     // documents) always load with a channel.
     newType = eType_Null;
+  }
+
+  ///
+  /// Handle existing channels
+  ///
+
+  if (useChannel && newType == eType_Loading) {
+    // We decided to use a channel, and also that the previous channel is still
+    // usable, so re-use the existing values.
+    newType = mType;
+    newMime = mContentType;
+    newURI = mURI;
+  } else if (useChannel && !newChannel) {
+    // We have an existing channel, but did not decide to use one.
+    retval = (ParameterUpdateFlags)(retval | eParamChannelChanged);
+    useChannel = false;
   }
 
   ///
@@ -1546,6 +1563,13 @@ nsObjectLoadingContent::UpdateObjectParameters()
     LOG(("OBJLC [%p]: Object effective mime type changed (%s -> %s)",
          this, mContentType.get(), newMime.get()));
     mContentType = newMime;
+  }
+
+  // If we decided to keep using info from an old channel, but also that state
+  // changed, we need to invalidate it.
+  if (useChannel && !newChannel && (retval & eParamStateChanged)) {
+    mType = eType_Loading;
+    retval = (ParameterUpdateFlags)(retval | eParamChannelChanged);
   }
 
   return retval;
