@@ -741,9 +741,6 @@ nsGeolocationService::HandleMozsettingValue(const bool aValue)
 {
     if (!aValue) {
       // turn things off
-      for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
-        mGeolocators[i]->Shutdown();
-      }
       StopDevice();
       Update(nullptr);
       mLastPosition = nullptr;
