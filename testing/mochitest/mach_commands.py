@@ -23,6 +23,8 @@ from mach.decorators import (
 generic_help = 'Test to run. Can be specified as a single file, a ' +\
 'directory, or omitted. If omitted, the entire test suite is executed.'
 
+debugger_help = 'Debugger binary to run test in. Program name or path.'
+
 
 class MochitestRunner(MozbuildObject):
     """Easily run mochitests.
@@ -50,7 +52,7 @@ class MochitestRunner(MozbuildObject):
         self.run_chrome_suite()
         self.run_browser_chrome_suite()
 
-    def run_mochitest_test(self, test_file=None, suite=None):
+    def run_mochitest_test(self, suite=None, test_file=None, debugger=None):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -59,6 +61,9 @@ class MochitestRunner(MozbuildObject):
 
         suite is the type of mochitest to run. It can be one of ('plain',
         'chrome', 'browser').
+
+        debugger is a program name or path to a binary (presumably a debugger)
+        to run the test in. e.g. 'gdb'
         """
 
         # TODO hook up harness via native Python
@@ -82,38 +87,53 @@ class MochitestRunner(MozbuildObject):
         else:
             env = {}
 
+        pass_thru = False
+
+        if debugger:
+            env[b'EXTRA_TEST_ARGS'] = '--debugger=%s' % debugger
+            pass_thru = True
+
         return self._run_make(directory='.', target=target, append_env=env,
-            ensure_exit_code=False)
+            ensure_exit_code=False, pass_thru=pass_thru)
 
 
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('mochitest-plain', help='Run a plain mochitest.')
+    @CommandArgument('--debugger', '-d', metavar='DEBUGGER',
+        help=debugger_help)
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
-    def run_mochitest_plain(self, test_file):
-        return self.run_mochitest(test_file, 'plain')
+    def run_mochitest_plain(self, test_file, debugger=None):
+        return self.run_mochitest(test_file, 'plain', debugger=debugger)
 
     @Command('mochitest-chrome', help='Run a chrome mochitest.')
+    @CommandArgument('--debugger', '-d', metavar='DEBUGGER',
+        help=debugger_help)
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
-    def run_mochitest_chrome(self, test_file):
-        return self.run_mochitest(test_file, 'chrome')
+    def run_mochitest_chrome(self, test_file, debugger=None):
+        return self.run_mochitest(test_file, 'chrome', debugger=debugger)
 
     @Command('mochitest-browser', help='Run a mochitest with browser chrome.')
+    @CommandArgument('--debugger', '-d', metavar='DEBUGGER',
+        help=debugger_help)
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
-    def run_mochitest_browser(self, test_file):
-        return self.run_mochitest(test_file, 'browser')
+    def run_mochitest_browser(self, test_file, debugger=None):
+        return self.run_mochitest(test_file, 'browser', debugger=debugger)
 
     @Command('mochitest-a11y', help='Run an a11y mochitest.')
+    @CommandArgument('--debugger', '-d', metavar='DEBUGGER',
+        help=debugger_help)
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
-    def run_mochitest_a11y(self, test_file):
-        return self.run_mochitest(test_file, 'a11y')
+    def run_mochitest_a11y(self, test_file, debugger=None):
+        return self.run_mochitest(test_file, 'a11y', debugger=debugger)
 
-    def run_mochitest(self, test_file, flavor):
+    def run_mochitest(self, test_file, flavor, debugger=None):
         self._ensure_state_subdir_exists('.')
 
         mochitest = self._spawn(MochitestRunner)
-        return mochitest.run_mochitest_test(test_file, flavor)
+        return mochitest.run_mochitest_test(test_file=test_file, suite=flavor,
+            debugger=debugger)
