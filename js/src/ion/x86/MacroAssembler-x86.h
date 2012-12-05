@@ -607,6 +607,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movl(src.payloadReg(), dest);
     }
 
+    void notBoolean(const ValueOperand &val) {
+        xorl(Imm32(1), val.payloadReg());
+    }
+
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.

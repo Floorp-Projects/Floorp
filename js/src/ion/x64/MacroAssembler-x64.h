@@ -707,6 +707,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         shlq(Imm32(1), dest);
     }
 
+    void notBoolean(const ValueOperand &val) {
+        xorq(Imm32(1), val.valueReg());
+    }
+
     // Unbox any non-double value into dest. Prefer unboxInt32 or unboxBoolean
     // instead if the source type is known.
     void unboxNonDouble(const ValueOperand &src, const Register &dest) {

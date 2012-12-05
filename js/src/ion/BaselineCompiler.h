@@ -42,6 +42,7 @@ namespace ion {
     _(JSOP_IFNE)               \
     _(JSOP_AND)                \
     _(JSOP_OR)                 \
+    _(JSOP_NOT)                \
     _(JSOP_POS)                \
     _(JSOP_LOOPHEAD)           \
     _(JSOP_LOOPENTRY)          \

@@ -475,18 +475,9 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
         return true;
     }
 
+    JS_ASSERT(!arg.isBoolean());
+
     // Try to generate new stubs.
-    if (arg.isBoolean()) {
-        // Attach the new bool-specialized stub.
-        ICToBool_Bool::Compiler compilerBool(cx);
-        ICStub *boolStub = compilerBool.getStub(ICStubSpace::StubSpaceFor(script));
-        if (!boolStub)
-            return false;
-
-        stub->addNewStub(boolStub);
-        return true;
-    }
-
     if (arg.isInt32()) {
         ICToBool_Int32::Compiler compiler(cx);
         ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
@@ -517,25 +508,6 @@ ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Call.
     return tailCallVM(fun, masm);
-}
-
-//
-// ToBool_Bool
-//
-
-bool
-ICToBool_Bool::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    // Just guard that R0 is a boolean and leave it be if so.
-    Label failure;
-    masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-
-    return true;
 }
 
 //
