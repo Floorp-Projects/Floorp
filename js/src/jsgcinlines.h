@@ -528,7 +528,7 @@ template <typename T>
 inline T *
 TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
 {
-    AssertCanGC();
+    AutoAssertNoGC nogc;
     JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
     JS_ASSERT_IF(cx->compartment == cx->runtime->atomsCompartment,
                  kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
