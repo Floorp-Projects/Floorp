@@ -20,12 +20,12 @@
 #include "base/basictypes.h"
 #include "prrwlock.h"
 #include <media/MediaProfiles.h>
+#include "DeviceStorage.h"
 #include "nsIDOMCameraManager.h"
 #include "DOMCameraControl.h"
 #include "CameraControlImpl.h"
 #include "CameraCommon.h"
 #include "GonkRecorder.h"
-
 
 namespace mozilla {
 
@@ -106,11 +106,11 @@ protected:
   android::MediaProfiles*   mMediaProfiles;
   android::GonkRecorder*    mRecorder;
 
-  nsString                  mVideoFile;
-
   // camcorder profile settings for the desired quality level
   nsRefPtr<GonkRecorderProfileManager> mProfileManager;
   nsRefPtr<GonkRecorderProfile> mRecorderProfile;
+
+  nsRefPtr<DeviceStorageFile> mVideoFile;
 
 private:
   nsGonkCameraControl(const nsGonkCameraControl&) MOZ_DELETE;
