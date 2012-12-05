@@ -534,6 +534,15 @@ final class GeckoEditable
         }
         final int seqnoWhenPosted = ++mGeckoUpdateSeqno;
 
+        /* An event (keypress, etc.) has potentially changed the selection,
+           synchronize the selection here. There is not a race with the UI thread
+           because the UI thread should be blocked on the event action */
+        if (!mActionQueue.isEmpty() &&
+            mActionQueue.peek().mType == Action.TYPE_EVENT) {
+            Selection.setSelection(mText, start, end);
+            return;
+        }
+
         geckoPostToUI(new Runnable() {
             public void run() {
                 mActionQueue.syncWithGecko();
