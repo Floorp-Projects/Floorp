@@ -55,8 +55,7 @@ public class TabsPanel extends LinearLayout
     private TabsListContainer mListContainer;
     private TabsLayoutChangeListener mLayoutChangeListener;
 
-    private static ImageButton mMenuButton;
-    private static ImageButton mAddTab;
+    private ImageButton mMenuButton;
     private static ImageButton mRemoteTabs;
     private TextView mTitle;
 
@@ -98,8 +97,8 @@ public class TabsPanel extends LinearLayout
 
     void initToolbar() {
         mTitle = (TextView) mToolbar.findViewById(R.id.title);
-        mAddTab = (ImageButton) mToolbar.findViewById(R.id.add_tab);
-        mAddTab.setOnClickListener(new Button.OnClickListener() {
+        ImageButton addTab = (ImageButton) mToolbar.findViewById(R.id.add_tab);
+        addTab.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 mActivity.addTab();
                 mActivity.autoHideTabs();
@@ -122,21 +121,6 @@ public class TabsPanel extends LinearLayout
                 TabsPanel.this.openTabsMenu();
             }
         });
-
-        // Set a touch delegate to Add-Tab button, so the touch events on its tail
-        // are passed to the menu button.
-        if (!GeckoApp.mAppContext.isTablet()) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    int height = mAddTab.getHeight();
-                    int width = mAddTab.getWidth();
-                    int tail = (int) (height * 1.125) / 2;
-                    Rect bounds = new Rect(width - tail, 0, width, height);
-                    mAddTab.setTouchDelegate(new TailTouchDelegate(bounds, mMenuButton));
-                }
-            });
-        }
 
         mPopupMenu.setAnchor(mMenuButton);
     }
