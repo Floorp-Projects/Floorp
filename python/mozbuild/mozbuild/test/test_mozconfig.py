@@ -274,3 +274,14 @@ class TestMozconfigLoader(unittest.TestCase):
                 'single': '1'
             })
 
+    def test_read_topsrcdir_defines(self):
+        """Ensure $topsrcdir references work as expected."""
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            mozconfig.write('TEST=$topsrcdir')
+            mozconfig.flush()
+
+            loader = self.get_loader()
+            result = loader.read_mozconfig(mozconfig.name)
+
+            self.assertEqual(result['env']['added']['TEST'], loader.topsrcdir)
+

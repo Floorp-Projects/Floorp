@@ -170,7 +170,8 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         env = dict(os.environ)
 
-        args = self._normalize_command([self._loader_script, path], True)
+        args = self._normalize_command([self._loader_script, self.topsrcdir,
+            path], True)
 
         output = subprocess.check_output(args, stderr=subprocess.PIPE,
             cwd=self.topsrcdir, env=env)
