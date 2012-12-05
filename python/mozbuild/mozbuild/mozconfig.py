@@ -26,6 +26,12 @@ supported. Please move it to %s/.mozconfig or set an explicit path
 via the $MOZCONFIG environment variable.
 '''.strip()
 
+MOZCONFIG_BAD_EXIT_CODE = '''
+Evaluation of your mozconfig exited with an error. This could be triggered
+by a command inside your mozconfig failing. Please change your mozconfig
+to not error and/or to catch errors in executed commands.
+'''.strip()
+
 
 class MozconfigFindException(Exception):
     """Raised when a mozconfig location is not defined properly."""
@@ -37,8 +43,9 @@ class MozconfigLoadException(Exception):
     This typically indicates a malformed or misbehaving mozconfig file.
     """
 
-    def __init__(self, path, message):
+    def __init__(self, path, message, output=None):
         self.path = path
+        self.output = output
         Exception.__init__(self, message)
 
 
@@ -173,8 +180,22 @@ class MozconfigLoader(ProcessExecutionMixin):
         args = self._normalize_command([self._loader_script, self.topsrcdir,
             path], True)
 
-        output = subprocess.check_output(args, stderr=subprocess.PIPE,
-            cwd=self.topsrcdir, env=env)
+        try:
+            # We need to capture stderr because that's where the shell sends
+            # errors if execution fails.
+            output = subprocess.check_output(args, stderr=subprocess.STDOUT,
+                cwd=self.topsrcdir, env=env)
+        except subprocess.CalledProcessError as e:
+            lines = e.output.splitlines()
+
+            # Output before actual execution shouldn't be relevant.
+            try:
+                index = lines.index('------END_BEFORE_SOURCE')
+                lines = lines[index + 1:]
+            except ValueError:
+                pass
+
+            raise MozconfigLoadException(path, MOZCONFIG_BAD_EXIT_CODE, lines)
 
         parsed = self._parse_loader_output(output)
 
@@ -245,7 +266,7 @@ class MozconfigLoader(ProcessExecutionMixin):
         current_type = None
         in_variable = None
 
-        for line in output.split('\n'):
+        for line in output.splitlines():
             if not len(line):
                 continue
 

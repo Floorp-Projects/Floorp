@@ -17,6 +17,7 @@ from tempfile import (
 
 from mozbuild.mozconfig import (
     MozconfigFindException,
+    MozconfigLoadException,
     MozconfigLoader,
 )
 
@@ -295,4 +296,19 @@ class TestMozconfigLoader(unittest.TestCase):
 
             self.assertIn('EMPTY', result['env']['added'])
             self.assertEqual(result['env']['added']['EMPTY'], '')
+
+    def test_read_load_exception(self):
+        """Ensure non-0 exit codes in mozconfigs are handled properly."""
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            mozconfig.write('echo "hello world"\n')
+            mozconfig.write('exit 1\n')
+            mozconfig.flush()
+
+            with self.assertRaises(MozconfigLoadException) as e:
+                self.get_loader().read_mozconfig(mozconfig.name)
+
+            self.assertTrue(e.exception.message.startswith(
+                'Evaluation of your mozconfig exited with an error'))
+            self.assertEquals(e.exception.path, mozconfig.name)
+            self.assertEquals(e.exception.output, ['hello world'])
 
