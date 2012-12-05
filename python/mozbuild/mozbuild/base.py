@@ -1,22 +1,20 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import unicode_literals
 
 import logging
 import os
-import pymake.parser
 import subprocess
 import sys
 import which
-
-from pymake.data import Makefile
 
 from mach.mixin.logging import LoggingMixin
 from mach.mixin.process import ProcessExecutionMixin
 
 from .config import BuildConfig
+from .mozconfig import MozconfigLoader
 
 
 class MozbuildObject(ProcessExecutionMixin):
@@ -41,19 +39,32 @@ class MozbuildObject(ProcessExecutionMixin):
         self.populate_logger()
         self.log_manager = log_manager
 
-        self._config_guess_output = None
         self._make = None
         self._topobjdir = topobjdir
+        self._mozconfig = None
+        self._config_guess_output = None
 
     @property
     def topobjdir(self):
         if self._topobjdir is None:
-            self._load_mozconfig()
-
-        if self._topobjdir is None:
-            self._topobjdir = 'obj-%s' % self._config_guess
+            if self.mozconfig['topobjdir'] is None:
+                self._topobjdir = 'obj-%s' % self._config_guess
+            else:
+                self._topobjdir = self.mozconfig['topobjdir']
 
         return self._topobjdir
+
+    @property
+    def mozconfig(self):
+        """Returns information about the current mozconfig file.
+
+        This a dict as returned by MozconfigLoader.read_mozconfig()
+        """
+        if self._mozconfig is None:
+            loader = MozconfigLoader(self.topsrcdir)
+            self._mozconfig = loader.read_mozconfig()
+
+        return self._mozconfig
 
     @property
     def distdir(self):
@@ -66,63 +77,6 @@ class MozbuildObject(ProcessExecutionMixin):
     @property
     def statedir(self):
         return os.path.join(self.topobjdir, '.mozbuild')
-
-
-    def _load_mozconfig(self, path=None):
-        # The mozconfig loader outputs a make file. We parse and load this make
-        # file with pymake and evaluate it in a context similar to client.mk.
-
-        loader = os.path.join(self.topsrcdir, 'build', 'autoconf',
-            'mozconfig2client-mk')
-
-        # os.environ from a library function is somewhat evil. But, mozconfig
-        # files are tightly coupled with the environment by definition. In the
-        # future, perhaps we'll have a more sanitized environment for mozconfig
-        # execution.
-        #
-        # The force of str is required because subprocess on Python <2.7.3
-        # does not like unicode in environment keys or values. At the time this
-        # was written, Mozilla shipped Python 2.7.2 with MozillaBuild.
-        env = dict(os.environ)
-        if path is not None:
-            env[str('MOZCONFIG')] = path
-
-        env[str('CONFIG_GUESS')] = self._config_guess
-
-        args = self._normalize_command([loader, self.topsrcdir], True)
-
-        output = subprocess.check_output(args, stderr=subprocess.PIPE,
-            cwd=self.topsrcdir, env=env)
-
-        # The output is make syntax. We parse this in a specialized make
-        # context.
-        statements = pymake.parser.parsestring(output, 'mozconfig')
-
-        makefile = Makefile(workdir=self.topsrcdir, env={
-            'TOPSRCDIR': self.topsrcdir,
-            'CONFIG_GUESS': self._config_guess})
-
-        statements.execute(makefile)
-
-        def get_value(name):
-            exp = makefile.variables.get(name)[2]
-
-            return exp.resolvestr(makefile, makefile.variables)
-
-        for name, flavor, source, value in makefile.variables:
-            # We only care about variables that came from the parsed mozconfig.
-            if source != pymake.data.Variables.SOURCE_MAKEFILE:
-                continue
-
-            # Ignore some pymake built-ins.
-            if name in ('.PYMAKE', 'MAKELEVEL', 'MAKEFLAGS'):
-                continue
-
-            if name == 'MOZ_OBJDIR':
-                self._topobjdir = get_value(name)
-
-            # If we want to extract other variables defined by mozconfig, here
-            # is where we'd do it.
 
     @property
     def _config_guess(self):
