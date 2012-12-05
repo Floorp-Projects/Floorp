@@ -43,7 +43,7 @@ class ProcessExecutionMixin(LoggingMixin):
     def run_process(self, args=None, cwd=None, append_env=None,
         explicit_env=None, log_name=None, log_level=logging.INFO,
         line_handler=None, require_unix_environment=False,
-        ensure_exit_code=0, ignore_children=False):
+        ensure_exit_code=0, ignore_children=False, pass_thru=False):
         """Runs a single process to completion.
 
         Takes a list of arguments to run where the first item is the
@@ -65,6 +65,13 @@ class ProcessExecutionMixin(LoggingMixin):
         what is expected. If it is an integer, we raise an Exception if the
         exit code does not match this value. If it is True, we ensure the exit
         code is 0. If it is False, we don't perform any exit code validation.
+
+        pass_thru is a special execution mode where the child process inherits
+        this process's standard file handles (stdin, stdout, stderr) as well as
+        additional file descriptors. It should be used for interactive processes
+        where buffering from mozprocess could be an issue. pass_thru does not
+        use mozprocess. Therefore, arguments like log_name, line_handler,
+        and ignore_children have no effect.
         """
         args = self._normalize_command(args, require_unix_environment)
 
@@ -94,12 +101,15 @@ class ProcessExecutionMixin(LoggingMixin):
 
         self.log(logging.DEBUG, 'process', {'env': use_env}, 'Environment: {env}')
 
-        p = ProcessHandlerMixin(args, cwd=cwd, env=use_env,
-            processOutputLine=[handleLine], universal_newlines=True,
-            ignore_children=ignore_children)
-        p.run()
-        p.processOutput()
-        status = p.wait()
+        if pass_thru:
+            status = subprocess.call(args, cwd=cwd, env=use_env)
+        else:
+            p = ProcessHandlerMixin(args, cwd=cwd, env=use_env,
+                processOutputLine=[handleLine], universal_newlines=True,
+                ignore_children=ignore_children)
+            p.run()
+            p.processOutput()
+            status = p.wait()
 
         if ensure_exit_code is False:
             return status
