@@ -122,7 +122,8 @@ class MozbuildObject(ProcessExecutionMixin):
     def _run_make(self, directory=None, filename=None, target=None, log=True,
             srcdir=False, allow_parallel=True, line_handler=None,
             append_env=None, explicit_env=None, ignore_errors=False,
-            ensure_exit_code=0, silent=True, print_directory=True):
+            ensure_exit_code=0, silent=True, print_directory=True,
+            pass_thru=False):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -179,6 +180,7 @@ class MozbuildObject(ProcessExecutionMixin):
             'log_level': logging.INFO,
             'require_unix_environment': True,
             'ensure_exit_code': ensure_exit_code,
+            'pass_thru': pass_thru,
 
             # Make manages its children, so mozprocess doesn't need to bother.
             # Having mozprocess manage children can also have side-effects when
