@@ -1855,12 +1855,11 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        ExecutionMode executionMode;
+        ExecutionMode executionMode = SequentialExecution;
         switch (co.kind()) {
           case types::CompilerOutput::MethodJIT:
             continue;
           case types::CompilerOutput::Ion:
-            executionMode = SequentialExecution;
             break;
           case types::CompilerOutput::ParallelIon:
             executionMode = ParallelExecution;
