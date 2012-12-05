@@ -177,6 +177,8 @@ IsPhiObservable(MPhi *phi)
     if (slot == 1)
         return true;
 
+    // If the Phi is one of the formal argument, and we are using an argument
+    // object in the function.  The phi might be observable after a bailout.
     CompileInfo &info = phi->block()->info();
     if (info.fun() && info.hasArguments()) {
         // We do not support arguments object inside inline frames yet.
