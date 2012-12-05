@@ -113,7 +113,7 @@ types::StackTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
     types::StackTypeSet *barrier;
-    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script_, pc, &barrier);
+    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script(), pc, &barrier);
 
     JS_ASSERT(returnTypes);
     return returnTypes;
@@ -129,7 +129,7 @@ IonBuilder::getInlineReturnType()
 types::StackTypeSet *
 IonBuilder::getInlineArgTypeSet(uint32_t argc, uint32_t arg)
 {
-    types::StackTypeSet *argTypes = oracle->getCallArg(script_, argc, arg, pc);
+    types::StackTypeSet *argTypes = oracle->getCallArg(script(), argc, arg, pc);
     JS_ASSERT(argTypes);
     return argTypes;
 }
