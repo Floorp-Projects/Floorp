@@ -583,6 +583,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
 
+    void notBoolean(const ValueOperand &val) {
+        ma_eor(Imm32(1), val.payloadReg());
+    }
+
     // boxing code
     void boxDouble(const FloatRegister &src, const ValueOperand &dest);
     void boxNonDouble(JSValueType type, const Register &src, const ValueOperand &dest);

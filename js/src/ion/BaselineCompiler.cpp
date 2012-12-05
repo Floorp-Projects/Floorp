@@ -297,7 +297,8 @@ BaselineCompiler::emitToBoolean()
     if (!entry)
         return false;
 
-    // CODEGEN
+    Label skipIC;
+    masm.branchTestBoolean(Assembler::Equal, R0, &skipIC);
 
     // Call IC
     CodeOffsetLabel patchOffset;
@@ -306,6 +307,7 @@ BaselineCompiler::emitToBoolean()
     if (!addICLoadLabel(patchOffset))
         return false;
 
+    masm.bind(&skipIC);
     return true;
 }
 
@@ -315,7 +317,8 @@ BaselineCompiler::emitTest(bool branchIfTrue)
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
 
-    emitToBoolean();
+    if (!emitToBoolean())
+        return false;
 
     // IC will leave a JSBool value (guaranteed) in R0, just need to branch on it.
     masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
@@ -341,7 +344,8 @@ BaselineCompiler::emitAndOr(bool branchIfTrue)
     frame.syncStack(0);
 
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
-    emitToBoolean();
+    if (!emitToBoolean())
+        return false;
 
     masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
     return true;
@@ -357,6 +361,21 @@ bool
 BaselineCompiler::emit_JSOP_OR()
 {
     return emitAndOr(true);
+}
+
+bool
+BaselineCompiler::emit_JSOP_NOT()
+{
+    // Keep top stack value in R0.
+    frame.popRegsAndSync(1);
+
+    if (!emitToBoolean())
+        return false;
+
+    masm.notBoolean(R0);
+
+    frame.push(R0);
+    return true;
 }
 
 bool
