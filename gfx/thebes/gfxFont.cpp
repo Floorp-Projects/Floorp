@@ -46,6 +46,8 @@
 #include "sampler.h"
 
 #include <algorithm>
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -2774,8 +2776,8 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
             uint16_t(os2->version) >= 2) {
             // version 2 and later includes the x-height field
             SET_SIGNED(xHeight, os2->sxHeight);
-            // NS_ABS because of negative xHeight seen in Kokonor (Tibetan) font
-            aMetrics.xHeight = NS_ABS(aMetrics.xHeight);
+            // std::abs because of negative xHeight seen in Kokonor (Tibetan) font
+            aMetrics.xHeight = std::abs(aMetrics.xHeight);
         }
         // this should always be present
         if (os2data.Length() >= offsetof(OS2Table, yStrikeoutPosition) +

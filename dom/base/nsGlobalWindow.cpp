@@ -7034,11 +7034,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                    reinterpret_cast<void**>(&thisSupports));
     NS_ASSERTION(thisSupports, "Failed to QI to nsCycleCollectionISupports!");
 
-    nsresult rv = nsContentUtils::HoldJSObjects(thisSupports, participant);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("nsContentUtils::HoldJSObjects failed!");
-      return;
-    }
+    nsContentUtils::HoldJSObjects(thisSupports, participant);
   }
 
   mCachedXBLPrototypeHandlers.Put(aKey, aHandler.get());

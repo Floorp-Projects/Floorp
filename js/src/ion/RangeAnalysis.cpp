@@ -136,7 +136,7 @@ RangeAnalysis::addBetaNobes()
 
         MDefinition *left = compare->getOperand(0);
         MDefinition *right = compare->getOperand(1);
-        int32 bound;
+        int32_t bound;
         MDefinition *val = NULL;
 
         JSOp jsop = compare->jsop();
@@ -435,20 +435,20 @@ Range::mul(const Range *lhs, const Range *rhs)
 }
 
 Range *
-Range::shl(const Range *lhs, int32 c)
+Range::shl(const Range *lhs, int32_t c)
 {
     EnsureRange(&lhs);
-    int32 shift = c & 0x1f;
+    int32_t shift = c & 0x1f;
     return new Range(
         (int64_t)lhs->lower_ << shift,
         (int64_t)lhs->upper_ << shift);
 }
 
 Range *
-Range::shr(const Range *lhs, int32 c)
+Range::shr(const Range *lhs, int32_t c)
 {
     EnsureRange(&lhs);
-    int32 shift = c & 0x1f;
+    int32_t shift = c & 0x1f;
     return new Range(
         (int64_t)lhs->lower_ >> shift,
         (int64_t)lhs->upper_ >> shift);
@@ -588,7 +588,7 @@ MLsh::computeRange()
     if (!right->isConstant())
         return;
 
-    int32 c = right->toConstant()->value().toInt32();
+    int32_t c = right->toConstant()->value().toInt32();
     const Range *other = getOperand(0)->range();
     setRange(Range::shl(other, c));
 }
@@ -600,7 +600,7 @@ MRsh::computeRange()
     if (!right->isConstant())
         return;
 
-    int32 c = right->toConstant()->value().toInt32();
+    int32_t c = right->toConstant()->value().toInt32();
     Range *other = getOperand(0)->range();
     setRange(Range::shr(other, c));
 }
@@ -872,7 +872,7 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
         if (!bound.add(lhsInitial, -1))
             return NULL;
 
-        int32 lhsConstant;
+        int32_t lhsConstant;
         if (!SafeSub(0, lhs.constant, &lhsConstant))
             return NULL;
         if (!bound.add(lhsConstant))
@@ -954,7 +954,7 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
     if (!limitSum.multiply(modified.constant) || !limitSum.add(initialSum))
         return;
 
-    int32 negativeConstant;
+    int32_t negativeConstant;
     if (!SafeSub(0, modified.constant, &negativeConstant) || !limitSum.add(negativeConstant))
         return;
 
@@ -1075,7 +1075,7 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
     // lowerTerm + lowerConstant + indexConstant >= 0
     // lowerTerm >= -lowerConstant - indexConstant
 
-    int32 lowerConstant = 0;
+    int32_t lowerConstant = 0;
     if (!SafeSub(lowerConstant, index.constant, &lowerConstant))
         return false;
     if (!SafeSub(lowerConstant, lower->sum.constant(), &lowerConstant))
@@ -1088,7 +1088,7 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
     //
     // upperTerm + upperConstant < boundsLength
 
-    int32 upperConstant = index.constant;
+    int32_t upperConstant = index.constant;
     if (!SafeAdd(upper->sum.constant(), upperConstant, &upperConstant))
         return false;
     MBoundsCheck *upperCheck = MBoundsCheck::New(upperTerm, ins->length());

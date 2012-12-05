@@ -39,7 +39,7 @@ IonFrameIterator::IonFrameIterator(const IonActivationIterator &activations)
 }
 
 IonFrameIterator::IonFrameIterator(IonJSFrameLayout *fp)
-  : current_((uint8 *)fp),
+  : current_((uint8_t *)fp),
     type_(IonFrame_OptimizedJS),
     returnAddressToFp_(fp->returnAddress()),
     frameSize_(fp->prevFrameLocalSize())
@@ -57,7 +57,7 @@ bool
 IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
 {
     AutoAssertNoGC nogc;
-    uint8 *returnAddr = returnAddressToFp();
+    uint8_t *returnAddr = returnAddressToFp();
     RawScript script = this->script();
     // N.B. the current IonScript is not the same as the frame's
     // IonScript if the frame has since been invalidated.
@@ -67,8 +67,8 @@ IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
     if (!invalidated)
         return false;
 
-    int32 invalidationDataOffset = ((int32 *) returnAddr)[-1];
-    uint8 *ionScriptDataOffset = returnAddr + invalidationDataOffset;
+    int32_t invalidationDataOffset = ((int32_t *) returnAddr)[-1];
+    uint8_t *ionScriptDataOffset = returnAddr + invalidationDataOffset;
     IonScript *ionScript = (IonScript *) Assembler::getPointer(ionScriptDataOffset);
     JS_ASSERT(ionScript->containsReturnAddress(returnAddr));
     *ionScriptOut = ionScript;
@@ -193,7 +193,7 @@ IonFrameIterator::actualArgs() const
     return jsFrame()->argv() + 1;
 }
 
-uint8 *
+uint8_t *
 IonFrameIterator::prevFp() const
 {
     size_t currentSize = SizeOfFramePrefix(type_);
@@ -228,7 +228,7 @@ IonFrameIterator::operator++()
 
     // Note: prevFp() needs the current type, so set it after computing the
     // next frame.
-    uint8 *prev = prevFp();
+    uint8_t *prev = prevFp();
     type_ = current()->prevType();
     if (type_ == IonFrame_Bailed_JS)
         type_ = IonFrame_OptimizedJS;
@@ -267,14 +267,14 @@ IonFrameIterator::machineState() const
 }
 
 static void
-CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 localSlot)
+CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t localSlot)
 {
     AssertCanGC();
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
-    uint32 base = CountArgSlots(frame.maybeCallee()) + frame.script()->nfixed;
-    uint32 skipSlots = base + localSlot - 1;
+    uint32_t base = CountArgSlots(frame.maybeCallee()) + frame.script()->nfixed;
+    uint32_t skipSlots = base + localSlot - 1;
 
     for (unsigned i = 0; i < skipSlots; i++)
         si.skip();
@@ -301,7 +301,7 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
     JSTryNote *tn = script->trynotes()->vector;
     JSTryNote *tnEnd = tn + script->trynotes()->length;
 
-    uint32 pcOffset = uint32(pc - script->main());
+    uint32_t pcOffset = uint32_t(pc - script->main());
     for (; tn != tnEnd; ++tn) {
         if (pcOffset < tn->start)
             continue;
@@ -314,7 +314,7 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
         JS_ASSERT(JSOp(*(script->main() + tn->start + tn->length)) == JSOP_ENDITER);
         JS_ASSERT(tn->stackDepth > 0);
 
-        uint32 localSlot = tn->stackDepth;
+        uint32_t localSlot = tn->stackDepth;
         CloseLiveIterator(cx, frame, localSlot);
     }
 }
@@ -439,11 +439,11 @@ ReadAllocation(const IonFrameIterator &frame, const LAllocation *a)
         return frame.machineState().read(reg);
     }
     if (a->isStackSlot()) {
-        uint32 slot = a->toStackSlot()->slot();
+        uint32_t slot = a->toStackSlot()->slot();
         return *frame.jsFrame()->slotRef(slot);
     }
-    uint32 index = a->toArgument()->index();
-    uint8 *argv = reinterpret_cast<uint8 *>(frame.jsFrame()->argv());
+    uint32_t index = a->toArgument()->index();
+    uint8_t *argv = reinterpret_cast<uint8_t *>(frame.jsFrame()->argv());
     return *reinterpret_cast<uintptr_t *>(argv + index);
 }
 
@@ -540,7 +540,7 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     // Scan through slots which contain pointers (or on punboxing systems,
     // actual values).
-    uint32 slot;
+    uint32_t slot;
     while (safepoint.getGcSlot(&slot)) {
         uintptr_t *ref = layout->slotRef(slot);
         gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(ref), "ion-gc-slot");
@@ -657,8 +657,8 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         return;
 
     // Mark arguments of the VM wrapper.
-    uint8 *argBase = frame.exitFrame()->argBase();
-    for (uint32 explicitArg = 0; explicitArg < f->explicitArgs; explicitArg++) {
+    uint8_t *argBase = frame.exitFrame()->argBase();
+    for (uint32_t explicitArg = 0; explicitArg < f->explicitArgs; explicitArg++) {
         switch (f->argRootType(explicitArg)) {
           case VMFunction::RootNone:
             break;
@@ -803,7 +803,7 @@ OsiIndex::fixUpOffset(MacroAssembler &masm)
     callPointDisplacement_ = masm.actualOffset(callPointDisplacement_);
 }
 
-uint32
+uint32_t
 OsiIndex::returnPointDisplacement() const
 {
     // In general, pointer arithmetic on code is bad, but in this case,

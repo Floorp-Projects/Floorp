@@ -47,14 +47,18 @@
              oncommand="DebuggerView.Breakpoints._onCmdAddBreakpoint()"/>
     <command id="addConditionalBreakpointCommand"
              oncommand="DebuggerView.Breakpoints._onCmdAddConditionalBreakpoint()"/>
+    <command id="addWatchExpressionCommand"
+             oncommand="DebuggerView.WatchExpressions._onCmdAddExpression()"/>
+    <command id="removeAllWatchExpressionsCommand"
+             oncommand="DebuggerView.WatchExpressions._onCmdRemoveAllExpressions()"/>
     <command id="togglePauseOnExceptions"
              oncommand="DebuggerView.Options._togglePauseOnExceptions()"/>
     <command id="toggleShowPanesOnStartup"
              oncommand="DebuggerView.Options._toggleShowPanesOnStartup()"/>
-    <command id="toggleShowNonEnum"
-             oncommand="DebuggerView.Options._toggleShowVariablesNonEnum()"/>
-    <command id="toggleShowVariablesSearchbox"
-             oncommand="DebuggerView.Options._toggleShowVariablesSearchbox()"/>
+    <command id="toggleShowOnlyEnum"
+             oncommand="DebuggerView.Options._toggleShowVariablesOnlyEnum()"/>
+    <command id="toggleShowVariablesFilterBox"
+             oncommand="DebuggerView.Options._toggleShowVariablesFilterBox()"/>
   </commandset>
 
   <popupset id="debuggerPopupset">
@@ -68,6 +72,10 @@
                 label="&debuggerUI.seMenuCondBreak;"
                 key="addConditionalBreakpointKey"
                 command="addConditionalBreakpointCommand"/>
+      <menuitem id="se-dbg-cMenu-addAsWatch"
+                label="&debuggerUI.seMenuAddWatch;"
+                key="addWatchExpressionKey"
+                command="addWatchExpressionCommand"/>
       <menuseparator/>
       <menuitem id="se-cMenu-copy"/>
       <menuseparator/>
@@ -101,6 +109,20 @@
                 key="variableSearchKey"
                 command="variableSearchCommand"/>
     </menupopup>
+
+    <menupopup id="debuggerWatchExpressionsContextMenu">
+      <menuitem id="add-watch-expression"
+                label="&debuggerUI.addWatch;"
+                accesskey="&debuggerUI.addWatch.key;"
+                key="addWatchExpressionKey"
+                command="addWatchExpressionCommand"/>
+      <menuitem id="removeAll-watch-expression"
+                label="&debuggerUI.removeAllWatch;"
+                accesskey="&debuggerUI.removeAllWatch.key;"
+                key="removeAllWatchExpressionsKey"
+                command="removeAllWatchExpressionsCommand"/>
+    </menupopup>
+
     <menupopup id="debuggerPrefsContextMenu"
                position="before_end"
                onpopupshowing="DebuggerView.Options._onPopupShowing()"
@@ -115,16 +137,16 @@
                 label="&debuggerUI.showPanesOnInit;"
                 accesskey="&debuggerUI.showPanesOnInit.key;"
                 command="toggleShowPanesOnStartup"/>
-      <menuitem id="show-vars-nonenum"
+      <menuitem id="show-vars-only-enum"
                 type="checkbox"
-                label="&debuggerUI.showNonEnums;"
-                accesskey="&debuggerUI.showNonEnums.key;"
-                command="toggleShowNonEnum"/>
-      <menuitem id="show-vars-searchbox"
+                label="&debuggerUI.showOnlyEnum;"
+                accesskey="&debuggerUI.showOnlyEnum.key;"
+                command="toggleShowOnlyEnum"/>
+      <menuitem id="show-vars-filter-box"
                 type="checkbox"
-                label="&debuggerUI.showVarsSearch;"
-                accesskey="&debuggerUI.showVarsSearch.key;"
-                command="toggleShowVariablesSearchbox"/>
+                label="&debuggerUI.showVarsFilter;"
+                accesskey="&debuggerUI.showVarsFilter.key;"
+                command="toggleShowVariablesFilterBox"/>
     </menupopup>
   </popupset>
 
@@ -170,6 +192,14 @@
          key="&debuggerUI.seMenuCondBreak.key;"
          modifiers="accel shift"
          command="addConditionalBreakpointCommand"/>
+    <key id="addWatchExpressionKey"
+         key="&debuggerUI.seMenuAddWatch.key;"
+         modifiers="accel shift"
+         command="addWatchExpressionCommand"/>
+    <key id="removeAllWatchExpressionsKey"
+         key="&debuggerUI.removeAllWatch.key;"
+         modifiers="accel alt"
+         command="removeAllWatchExpressionsCommand"/>
   </keyset>
 
   <vbox id="body" flex="1">

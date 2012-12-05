@@ -4133,7 +4133,11 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, jsval *argv,
       mArgv[i] = argv[i];
   }
 
-  *prv = argc > 0 ? NS_HOLD_JS_OBJECTS(this, nsJSArgArray) : NS_OK;
+  if (argc > 0) {
+    NS_HOLD_JS_OBJECTS(this, nsJSArgArray);
+  }
+
+  *prv = NS_OK;
 }
 
 nsJSArgArray::~nsJSArgArray()

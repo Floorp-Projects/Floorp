@@ -27,7 +27,7 @@ using namespace js::ion;
 using mozilla::DebugOnly;
 
 IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32 loopDepth)
+                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32_t loopDepth)
   : MIRGenerator(cx->compartment, temp, graph, info),
     backgroundCodegen_(NULL),
     recompileInfo(cx->compartment->types.compiledInfo),
@@ -75,7 +75,7 @@ IonBuilder::spew(const char *message)
 #endif
 }
 
-static inline int32
+static inline int32_t
 GetJumpOffset(jsbytecode *pc)
 {
     JS_ASSERT(js_CodeSpec[JSOp(*pc)].type() == JOF_JUMP);
@@ -148,7 +148,7 @@ IonBuilder::CFGState::LookupSwitch(jsbytecode *exitpc)
 }
 
 JSFunction *
-IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
+IonBuilder::getSingleCallTarget(uint32_t argc, jsbytecode *pc)
 {
     AutoAssertNoGC nogc;
 
@@ -164,7 +164,7 @@ IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
 }
 
 uint32_t
-IonBuilder::getPolyCallTargets(uint32 argc, jsbytecode *pc,
+IonBuilder::getPolyCallTargets(uint32_t argc, jsbytecode *pc,
                                AutoObjectVector &targets, uint32_t maxTargets)
 {
     types::TypeSet *calleeTypes = oracle->getCallTarget(script_, argc, pc);
@@ -283,7 +283,7 @@ IonBuilder::build()
         return false;
 
     // Initialize local variables.
-    for (uint32 i = 0; i < info().nlocals(); i++) {
+    for (uint32_t i = 0; i < info().nlocals(); i++) {
         MConstant *undef = MConstant::New(UndefinedValue());
         current->add(undef);
         current->initSlot(info().localSlot(i), undef);
@@ -336,7 +336,7 @@ IonBuilder::build()
     // So we attach the initial resume point to each parameter, which the type
     // analysis explicitly checks (this is the same mechanism used for
     // effectful operations).
-    for (uint32 i = 0; i < CountArgSlots(info().fun()); i++) {
+    for (uint32_t i = 0; i < CountArgSlots(info().fun()); i++) {
         MInstruction *ins = current->getEntrySlot(i)->toInstruction();
         if (ins->type() == MIRType_Value)
             ins->setResumePoint(current->entryResumePoint());
@@ -474,7 +474,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     IonSpew(IonSpew_Inlining, "Initializing %u local slots", info().nlocals());
 
     // Initialize local variables.
-    for (uint32 i = 0; i < info().nlocals(); i++) {
+    for (uint32_t i = 0; i < info().nlocals(); i++) {
         MConstant *undef = MConstant::New(UndefinedValue());
         current->add(undef);
         current->initSlot(info().localSlot(i), undef);
@@ -496,9 +496,9 @@ void
 IonBuilder::rewriteParameters()
 {
     JS_ASSERT(info().scopeChainSlot() == 0);
-    static const uint32 START_SLOT = 1;
+    static const uint32_t START_SLOT = 1;
 
-    for (uint32 i = START_SLOT; i < CountArgSlots(info().fun()); i++) {
+    for (uint32_t i = START_SLOT; i < CountArgSlots(info().fun()); i++) {
         MParameter *param = current->getSlot(i)->toParameter();
 
         // Find the original (not cloned) type set for the MParameter, as we
@@ -555,7 +555,7 @@ IonBuilder::initParameters()
     current->add(param);
     current->initSlot(info().thisSlot(), param);
 
-    for (uint32 i = 0; i < info().nargs(); i++) {
+    for (uint32_t i = 0; i < info().nargs(); i++) {
         param = MParameter::New(i, oracle->parameterTypeSet(script_, i));
         current->add(param);
         current->initSlot(info().argSlot(i), param);
@@ -2213,7 +2213,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     // Move defaultcase to the end, to maintain RPO.
     graph().moveBlockToEnd(defaultcase);
 
-    JS_ASSERT(tableswitch->numCases() == (uint32)(high - low + 1));
+    JS_ASSERT(tableswitch->numCases() == (uint32_t)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
 
     // Sort the list of blocks that still needs to get processed by pc
@@ -2417,7 +2417,7 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
 
     // Create CFGState
     CFGState state = CFGState::LookupSwitch(exitpc);
-    if (!state.lookupswitch.bodies->init(bodyBlocks.length()))
+    if (!state.lookupswitch.bodies || !state.lookupswitch.bodies->init(bodyBlocks.length()))
         return ControlStatus_Error;
 
     // Fill bodies in CFGState using bodies in bodyBlocks, move them to
@@ -2475,8 +2475,8 @@ IonBuilder::jsop_andor(JSOp op)
 bool
 IonBuilder::jsop_dup2()
 {
-    uint32 lhsSlot = current->stackDepth() - 2;
-    uint32 rhsSlot = current->stackDepth() - 1;
+    uint32_t lhsSlot = current->stackDepth() - 2;
+    uint32_t rhsSlot = current->stackDepth() - 1;
     current->pushSlot(lhsSlot);
     current->pushSlot(rhsSlot);
     return true;
@@ -2818,7 +2818,7 @@ class AutoAccumulateExits
 
 
 bool
-IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
+IonBuilder::jsop_call_inline(HandleFunction callee, uint32_t argc, bool constructing,
                              MConstant *constFun, MBasicBlock *bottom,
                              Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
 {
@@ -2844,7 +2844,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     MDefinitionVector argv;
     if (!argv.resizeUninitialized(argc + 1))
         return false;
-    for (int32 i = argc; i >= 0; i--)
+    for (int32_t i = argc; i >= 0; i--)
         argv[i] = current->pop();
 
     // Compilation information is allocated for the duration of the current tempLifoAlloc
@@ -2914,7 +2914,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
 }
 
 bool
-IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32 argc)
+IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32_t argc)
 {
     AssertCanGC();
 
@@ -3177,8 +3177,8 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int
     fallbackEndBlock->add(prepCall);
 
     // Grab the arguments for the call directly from the current block's stack.
-    for (int32 i = 0; i <= argc; i++) {
-        int32 argno = argc - i;
+    for (int32_t i = 0; i <= argc; i++) {
+        int32_t argno = argc - i;
         MDefinition *argDefn = fallbackEndBlock->pop();
         JS_ASSERT(!argDefn->isPassArg());
         MPassArg *passArg = MPassArg::New(argDefn);
@@ -3210,11 +3210,11 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int
 }
 
 bool
-IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing,
+IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32_t argc, bool constructing,
                                types::StackTypeSet *types, types::StackTypeSet *barrier)
 {
 #ifdef DEBUG
-    uint32 origStackDepth = current->stackDepth();
+    uint32_t origStackDepth = current->stackDepth();
 #endif
 
     IonSpew(IonSpew_Inlining, "Inlining %d targets", (int) targets.length());
@@ -3225,7 +3225,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
 
     // Unwrap all the MPassArgs and replace them with their inputs, and discard the
     // MPassArgs.
-    for (int32 i = argc; i >= 0; i--) {
+    for (int32_t i = argc; i >= 0; i--) {
         // Unwrap each MPassArg, replacing it with its contents.
         int argSlotDepth = -((int) i + 1);
         MPassArg *passArg = top->peek(argSlotDepth)->toPassArg();
@@ -3621,7 +3621,7 @@ IonBuilder::createThis(HandleFunction target, MDefinition *callee)
 }
 
 bool
-IonBuilder::jsop_funcall(uint32 argc)
+IonBuilder::jsop_funcall(uint32_t argc)
 {
     // Stack for JSOP_FUNCALL:
     // 1:      MPassArg(arg0)
@@ -3670,7 +3670,7 @@ IonBuilder::jsop_funcall(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_funapply(uint32 argc)
+IonBuilder::jsop_funapply(uint32_t argc)
 {
     RootedFunction native(cx, getSingleCallTarget(argc, pc));
     if (argc != 2)
@@ -3740,7 +3740,7 @@ IonBuilder::jsop_funapply(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_call(uint32 argc, bool constructing)
+IonBuilder::jsop_call(uint32_t argc, bool constructing)
 {
     AssertCanGC();
 
@@ -3777,17 +3777,17 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
 }
 
 MCall *
-IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing)
+IonBuilder::makeCallHelper(HandleFunction target, uint32_t argc, bool constructing)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.
 
-    uint32 targetArgs = argc;
+    uint32_t targetArgs = argc;
 
     // Collect number of missing arguments provided that the target is
     // scripted. Native functions are passed an explicit 'argc' parameter.
     if (target && !target->isNative())
-        targetArgs = Max<uint32>(target->nargs, argc);
+        targetArgs = Max<uint32_t>(target->nargs, argc);
 
     MCall *call = MCall::New(target, targetArgs + 1, argc, constructing);
     if (!call)
@@ -3806,7 +3806,7 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing
 
     // Add explicit arguments.
     // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
-    for (int32 i = argc; i > 0; i--)
+    for (int32_t i = argc; i > 0; i--)
         call->addArg(i, current->pop()->toPassArg());
 
     // Place an MPrepareCall before the first passed argument, before we
@@ -3847,7 +3847,7 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing
 }
 
 bool
-IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
+IonBuilder::makeCallBarrier(HandleFunction target, uint32_t argc,
                             bool constructing,
                             types::StackTypeSet *types,
                             types::StackTypeSet *barrier)
@@ -3864,7 +3864,7 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
 }
 
 bool
-IonBuilder::makeCall(HandleFunction target, uint32 argc, bool constructing)
+IonBuilder::makeCall(HandleFunction target, uint32_t argc, bool constructing)
 {
     types::StackTypeSet *barrier;
     types::StackTypeSet *types = oracle->returnTypeSet(script_, pc, &barrier);
@@ -3889,7 +3889,7 @@ IonBuilder::jsop_compare(JSOp op)
 }
 
 JSObject *
-IonBuilder::getNewArrayTemplateObject(uint32 count)
+IonBuilder::getNewArrayTemplateObject(uint32_t count)
 {
     RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, count));
     if (!templateObject)
@@ -3910,7 +3910,7 @@ IonBuilder::getNewArrayTemplateObject(uint32 count)
 }
 
 bool
-IonBuilder::jsop_newarray(uint32 count)
+IonBuilder::jsop_newarray(uint32_t count)
 {
     JS_ASSERT(script_->compileAndGo);
 
@@ -4064,7 +4064,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     MSlots *slots = MSlots::New(obj);
     current->add(slots);
 
-    uint32 slot = templateObject->dynamicSlotIndex(shape->slot());
+    uint32_t slot = templateObject->dynamicSlotIndex(shape->slot());
     MStoreSlot *store = MStoreSlot::New(slots, slot, value);
     if (needsBarrier)
         store->setNeedsBarrier();
@@ -4074,7 +4074,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
 }
 
 MBasicBlock *
-IonBuilder::addBlock(MBasicBlock *block, uint32 loopDepth)
+IonBuilder::addBlock(MBasicBlock *block, uint32_t loopDepth)
 {
     if (!block)
         return NULL;
@@ -4109,7 +4109,7 @@ IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode 
 }
 
 MBasicBlock *
-IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth)
+IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32_t loopDepth)
 {
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
     return addBlock(block, loopDepth);
@@ -4134,7 +4134,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
     // Initialize |scopeChain|.
     {
-        uint32 slot = info().scopeChainSlot();
+        uint32_t slot = info().scopeChainSlot();
 
         MOsrScopeChain *scopev = MOsrScopeChain::New(entry);
         osrBlock->add(scopev);
@@ -4143,7 +4143,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
     if (info().fun()) {
         // Initialize |this| parameter.
-        uint32 slot = info().thisSlot();
+        uint32_t slot = info().thisSlot();
         ptrdiff_t offset = StackFrame::offsetOfThis(info().fun());
 
         MOsrValue *thisv = MOsrValue::New(entry, offset);
@@ -4151,8 +4151,8 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         osrBlock->initSlot(slot, thisv);
 
         // Initialize arguments.
-        for (uint32 i = 0; i < info().nargs(); i++) {
-            uint32 slot = info().argSlot(i);
+        for (uint32_t i = 0; i < info().nargs(); i++) {
+            uint32_t slot = info().argSlot(i);
             ptrdiff_t offset = StackFrame::offsetOfFormalArg(info().fun(), i);
 
             MOsrValue *osrv = MOsrValue::New(entry, offset);
@@ -4162,8 +4162,8 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     }
 
     // Initialize locals.
-    for (uint32 i = 0; i < info().nlocals(); i++) {
-        uint32 slot = info().localSlot(i);
+    for (uint32_t i = 0; i < info().nlocals(); i++) {
+        uint32_t slot = info().localSlot(i);
         ptrdiff_t offset = StackFrame::offsetOfFixed(i);
 
         MOsrValue *osrv = MOsrValue::New(entry, offset);
@@ -4172,9 +4172,9 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     }
 
     // Initialize stack.
-    uint32 numSlots = preheader->stackDepth() - CountArgSlots(info().fun()) - info().nlocals();
-    for (uint32 i = 0; i < numSlots; i++) {
-        uint32 slot = info().stackSlot(i);
+    uint32_t numSlots = preheader->stackDepth() - CountArgSlots(info().fun()) - info().nlocals();
+    for (uint32_t i = 0; i < numSlots; i++) {
+        uint32_t slot = info().stackSlot(i);
         ptrdiff_t offset = StackFrame::offsetOfFixed(info().nlocals() + i);
 
         MOsrValue *osrv = MOsrValue::New(entry, offset);
@@ -4209,14 +4209,14 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         return NULL;
 
     // Fill slotTypes with the types of the predecessor block.
-    for (uint32 i = 0; i < osrBlock->stackDepth(); i++)
+    for (uint32_t i = 0; i < osrBlock->stackDepth(); i++)
         slotTypes[i] = MIRType_Value;
 
     // Update slotTypes for slots that may have a different type at this join point.
     if (!oracle->getOsrTypes(loopEntry, slotTypes))
         return NULL;
 
-    for (uint32 i = 1; i < osrBlock->stackDepth(); i++) {
+    for (uint32_t i = 1; i < osrBlock->stackDepth(); i++) {
         // Unbox the MOsrValue if it is known to be unboxable.
         switch (slotTypes[i]) {
           case MIRType_Boolean:
@@ -6295,7 +6295,7 @@ IonBuilder::jsop_lambda(JSFunction *fun)
 }
 
 bool
-IonBuilder::jsop_deflocalfun(uint32 local, JSFunction *fun)
+IonBuilder::jsop_deflocalfun(uint32_t local, JSFunction *fun)
 {
     JS_ASSERT(script_->analysis()->usesScopeChain());
 
@@ -6310,7 +6310,7 @@ IonBuilder::jsop_deflocalfun(uint32 local, JSFunction *fun)
 }
 
 bool
-IonBuilder::jsop_defvar(uint32 index)
+IonBuilder::jsop_defvar(uint32_t index)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_DEFVAR || JSOp(*pc) == JSOP_DEFCONST);
 
@@ -6388,7 +6388,7 @@ IonBuilder::jsop_toid()
 }
 
 bool
-IonBuilder::jsop_iter(uint8 flags)
+IonBuilder::jsop_iter(uint8_t flags)
 {
     MDefinition *obj = current->pop();
     MInstruction *ins = MIteratorStart::New(obj, flags);

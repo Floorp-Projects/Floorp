@@ -19,10 +19,13 @@ function test() {
 
             let browser = aWindow.gBrowser.selectedBrowser;
             browser.addEventListener("load", function() {
+              // Ignore non-related loads (could be about:privatebrowsing for example, see bug 817932)
+              if (browser.currentURI.spec != url) {
+                return;
+              }
+
               browser.removeEventListener("load", arguments.callee, true);
 
-              is(browser.currentURI.spec, url,
-                 "The correct URL should be loaded via the open location dialog");
               executeSoon(callback);
             }, true);
 

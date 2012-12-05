@@ -105,6 +105,12 @@ WebappsRegistry.prototype = {
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
+        if (!AppsUtils.checkManifestContentType(installOrigin, this._getOrigin(aURL),
+                                                xhr.getResponseHeader("content-type"))) {
+          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+          return;
+        }
+
         let manifest;
         try {
           manifest = JSON.parse(xhr.responseText, installOrigin);
@@ -214,6 +220,12 @@ WebappsRegistry.prototype = {
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
+        if (!AppsUtils.checkManifestContentType(installOrigin, this._getOrigin(aURL),
+                                                xhr.getResponseHeader("content-type"))) {
+          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+          return;
+        }
+
         let manifest;
         try {
           manifest = JSON.parse(xhr.responseText, installOrigin);
