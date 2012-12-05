@@ -15,6 +15,7 @@
 #include "InputData.h"
 #include "Axis.h"
 #include "nsContentUtils.h"
+#include "TaskThrottler.h"
 
 #include "base/message_loop.h"
 
@@ -458,6 +459,7 @@ private:
   void SetState(PanZoomState aState);
 
   nsRefPtr<CompositorParent> mCompositorParent;
+  TaskThrottler mPaintThrottler;
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
 
