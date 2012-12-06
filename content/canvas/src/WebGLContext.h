@@ -1192,6 +1192,292 @@ static bool SplitLastSquareBracket(nsACString& string, nsCString& bracketPart)
     return true;
 }
 
+typedef nsDataHashtable<nsCStringHashKey, nsCString> CStringMap;
+typedef nsDataHashtable<nsCStringHashKey, WebGLUniformInfo> CStringToUniformInfoMap;
+
+class WebGLProgram MOZ_FINAL
+    : public nsISupports
+    , public WebGLRefCountedObject<WebGLProgram>
+    , public LinkedListElement<WebGLProgram>
+    , public WebGLContextBoundObject
+    , public nsWrapperCache
+{
+public:
+    WebGLProgram(WebGLContext *context)
+        : WebGLContextBoundObject(context)
+        , mLinkStatus(false)
+        , mGeneration(0)
+        , mAttribMaxNameLength(0)
+    {
+        SetIsDOMBinding();
+        mContext->MakeContextCurrent();
+        mGLName = mContext->gl->fCreateProgram();
+        mContext->mPrograms.insertBack(this);
+    }
+
+    ~WebGLProgram() {
+        DeleteOnce();
+    }
+
+    void Delete() {
+        DetachShaders();
+        mContext->MakeContextCurrent();
+        mContext->gl->fDeleteProgram(mGLName);
+        LinkedListElement<WebGLProgram>::removeFrom(mContext->mPrograms);
+    }
+
+    void DetachShaders() {
+        mAttachedShaders.Clear();
+    }
+
+    WebGLuint GLName() { return mGLName; }
+    const nsTArray<WebGLRefPtr<WebGLShader> >& AttachedShaders() const { return mAttachedShaders; }
+    bool LinkStatus() { return mLinkStatus; }
+    uint32_t Generation() const { return mGeneration.value(); }
+    void SetLinkStatus(bool val) { mLinkStatus = val; }
+
+    bool ContainsShader(WebGLShader *shader) {
+        return mAttachedShaders.Contains(shader);
+    }
+
+    // return true if the shader wasn't already attached
+    bool AttachShader(WebGLShader *shader) {
+        if (ContainsShader(shader))
+            return false;
+        mAttachedShaders.AppendElement(shader);
+
+        mContext->MakeContextCurrent();
+        mContext->gl->fAttachShader(GLName(), shader->GLName());
+
+        return true;
+    }
+
+    // return true if the shader was found and removed
+    bool DetachShader(WebGLShader *shader) {
+        if (!mAttachedShaders.RemoveElement(shader))
+            return false;
+
+        mContext->MakeContextCurrent();
+        mContext->gl->fDetachShader(GLName(), shader->GLName());
+
+        return true;
+    }
+
+    bool HasAttachedShaderOfType(GLenum shaderType) {
+        for (uint32_t i = 0; i < mAttachedShaders.Length(); ++i) {
+            if (mAttachedShaders[i] && mAttachedShaders[i]->ShaderType() == shaderType) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool HasBothShaderTypesAttached() {
+        return
+            HasAttachedShaderOfType(LOCAL_GL_VERTEX_SHADER) &&
+            HasAttachedShaderOfType(LOCAL_GL_FRAGMENT_SHADER);
+    }
+
+    bool HasBadShaderAttached() {
+        for (uint32_t i = 0; i < mAttachedShaders.Length(); ++i) {
+            if (mAttachedShaders[i] && !mAttachedShaders[i]->CompileStatus()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    size_t UpperBoundNumSamplerUniforms() {
+        size_t numSamplerUniforms = 0;
+        for (size_t i = 0; i < mAttachedShaders.Length(); ++i) {
+            const WebGLShader *shader = mAttachedShaders[i];
+            if (!shader)
+                continue;
+            for (size_t j = 0; j < shader->mUniformInfos.Length(); ++j) {
+                WebGLUniformInfo u = shader->mUniformInfos[j];
+                if (u.type == SH_SAMPLER_2D ||
+                    u.type == SH_SAMPLER_CUBE)
+                {
+                    numSamplerUniforms += u.arraySize;
+                }
+            }
+        }
+        return numSamplerUniforms;
+    }
+
+    bool NextGeneration()
+    {
+        if (!(mGeneration + 1).isValid())
+            return false; // must exit without changing mGeneration
+        ++mGeneration;
+        return true;
+    }
+
+    /* Called only after LinkProgram */
+    bool UpdateInfo();
+
+    /* Getters for cached program info */
+    bool IsAttribInUse(unsigned i) const { return mAttribsInUse[i]; }
+
+    /* Maps identifier |name| to the mapped identifier |*mappedName|
+     * Both are ASCII strings.
+     */
+    void MapIdentifier(const nsACString& name, nsCString *mappedName) {
+        if (!mIdentifierMap) {
+            // if the identifier map doesn't exist yet, build it now
+            mIdentifierMap = new CStringMap;
+            mIdentifierMap->Init();
+            for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
+                for (size_t j = 0; j < mAttachedShaders[i]->mAttributes.Length(); j++) {
+                    const WebGLMappedIdentifier& attrib = mAttachedShaders[i]->mAttributes[j];
+                    mIdentifierMap->Put(attrib.original, attrib.mapped);
+                }
+                for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
+                    const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
+                    mIdentifierMap->Put(uniform.original, uniform.mapped);
+                }
+            }
+        }
+
+        nsCString mutableName(name);
+        nsCString bracketPart;
+        bool hadBracketPart = SplitLastSquareBracket(mutableName, bracketPart);
+        if (hadBracketPart)
+            mutableName.AppendLiteral("[0]");
+
+        if (mIdentifierMap->Get(mutableName, mappedName)) {
+            if (hadBracketPart) {
+                nsCString mappedBracketPart;
+                bool mappedHadBracketPart = SplitLastSquareBracket(*mappedName, mappedBracketPart);
+                if (mappedHadBracketPart)
+                    mappedName->Append(bracketPart);
+            }
+            return;
+        }
+
+        // not found? We might be in the situation we have a uniform array name and the GL's glGetActiveUniform
+        // returned its name without [0], as is allowed by desktop GL but not in ES. Let's then try with [0].
+        mutableName.AppendLiteral("[0]");
+        if (mIdentifierMap->Get(mutableName, mappedName))
+            return;
+
+        // not found? return name unchanged. This case happens e.g. on bad user input, or when
+        // we're not using identifier mapping, or if we didn't store an identifier in the map because
+        // e.g. its mapping is trivial (as happens for short identifiers)
+        mappedName->Assign(name);
+    }
+
+    /* Un-maps mapped identifier |name| to the original identifier |*reverseMappedName|
+     * Both are ASCII strings.
+     */
+    void ReverseMapIdentifier(const nsACString& name, nsCString *reverseMappedName) {
+        if (!mIdentifierReverseMap) {
+            // if the identifier reverse map doesn't exist yet, build it now
+            mIdentifierReverseMap = new CStringMap;
+            mIdentifierReverseMap->Init();
+            for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
+                for (size_t j = 0; j < mAttachedShaders[i]->mAttributes.Length(); j++) {
+                    const WebGLMappedIdentifier& attrib = mAttachedShaders[i]->mAttributes[j];
+                    mIdentifierReverseMap->Put(attrib.mapped, attrib.original);
+                }
+                for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
+                    const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
+                    mIdentifierReverseMap->Put(uniform.mapped, uniform.original);
+                }
+            }
+        }
+
+        nsCString mutableName(name);
+        nsCString bracketPart;
+        bool hadBracketPart = SplitLastSquareBracket(mutableName, bracketPart);
+        if (hadBracketPart)
+            mutableName.AppendLiteral("[0]");
+
+        if (mIdentifierReverseMap->Get(mutableName, reverseMappedName)) {
+            if (hadBracketPart) {
+                nsCString reverseMappedBracketPart;
+                bool reverseMappedHadBracketPart = SplitLastSquareBracket(*reverseMappedName, reverseMappedBracketPart);
+                if (reverseMappedHadBracketPart)
+                    reverseMappedName->Append(bracketPart);
+            }
+            return;
+        }
+
+        // not found? We might be in the situation we have a uniform array name and the GL's glGetActiveUniform
+        // returned its name without [0], as is allowed by desktop GL but not in ES. Let's then try with [0].
+        mutableName.AppendLiteral("[0]");
+        if (mIdentifierReverseMap->Get(mutableName, reverseMappedName))
+            return;
+
+        // not found? return name unchanged. This case happens e.g. on bad user input, or when
+        // we're not using identifier mapping, or if we didn't store an identifier in the map because
+        // e.g. its mapping is trivial (as happens for short identifiers)
+        reverseMappedName->Assign(name);
+    }
+
+    /* Returns the uniform array size (or 1 if the uniform is not an array) of
+     * the uniform with given mapped identifier.
+     *
+     * Note: the input string |name| is the mapped identifier, not the original identifier.
+     */
+    WebGLUniformInfo GetUniformInfoForMappedIdentifier(const nsACString& name) {
+        if (!mUniformInfoMap) {
+            // if the identifier-to-array-size map doesn't exist yet, build it now
+            mUniformInfoMap = new CStringToUniformInfoMap;
+            mUniformInfoMap->Init();
+            for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
+                for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
+                    const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
+                    const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
+                    mUniformInfoMap->Put(uniform.mapped, info);
+                }
+            }
+        }
+
+        nsCString mutableName(name);
+        nsCString bracketPart;
+        bool hadBracketPart = SplitLastSquareBracket(mutableName, bracketPart);
+        // if there is a bracket, we're either an array or an entry in an array.
+        if (hadBracketPart)
+            mutableName.AppendLiteral("[0]");
+
+        WebGLUniformInfo info;
+        mUniformInfoMap->Get(mutableName, &info);
+        // we don't check if that Get failed, as if it did, it left info with default values
+
+        // if there is a bracket and it's not [0], then we're not an array, we're just an entry in an array
+        if (hadBracketPart && !bracketPart.EqualsLiteral("[0]")) {
+            info.isArray = false;
+            info.arraySize = 1;
+        }
+        return info;
+    }
+
+    WebGLContext *GetParentObject() const {
+        return Context();
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLProgram)
+
+protected:
+
+    WebGLuint mGLName;
+    bool mLinkStatus;
+    // attached shaders of the program object
+    nsTArray<WebGLRefPtr<WebGLShader> > mAttachedShaders;
+    CheckedUint32 mGeneration;
+
+    // post-link data
+    std::vector<bool> mAttribsInUse;
+    nsAutoPtr<CStringMap> mIdentifierMap, mIdentifierReverseMap;
+    nsAutoPtr<CStringToUniformInfoMap> mUniformInfoMap;
+    int mAttribMaxNameLength;
+};
+
+
 class WebGLFramebufferAttachment
 {
     // deleting a texture or renderbuffer immediately detaches it
