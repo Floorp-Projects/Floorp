@@ -95,13 +95,6 @@
 #include "vm/ScopeObject-inl.h"
 #include "vm/String-inl.h"
 
-#ifdef MOZ_VALGRIND
-# define JS_VALGRIND
-#endif
-#ifdef JS_VALGRIND
-# include <valgrind/memcheck.h>
-#endif
-
 #ifdef XP_WIN
 # include "jswin.h"
 #else
