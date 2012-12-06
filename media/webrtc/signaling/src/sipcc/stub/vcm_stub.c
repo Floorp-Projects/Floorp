@@ -133,10 +133,11 @@ void vcmRxReleasePort(cc_mcapid_t mcap_id, cc_groupid_t group_id,cc_streamid_t s
  *
  */
 
-int vcmRxStart(cc_mcapid_t mcap_id, cc_groupid_t group_id, cc_streamid_t stream_id, cc_call_handle_t call_handle,
-                 vcm_media_payload_type_t payload, cpr_ip_addr_t *local_addr, uint16_t port,
-                   vcm_crypto_algorithmID algorithmID,
-                   vcm_crypto_key_t *rx_key, vcm_mediaAttrs_t *attrs)
+int vcmRxStart(cc_mcapid_t mcap_id, cc_groupid_t group_id, cc_streamid_t
+               stream_id, cc_call_handle_t call_handle,
+               const vcm_payload_info_t *payload, cpr_ip_addr_t *local_addr,
+               uint16_t port, vcm_crypto_algorithmID algorithmID,
+               vcm_crypto_key_t *rx_key, vcm_mediaAttrs_t *attrs)
 {
     return 0;
 }
@@ -168,12 +169,13 @@ int vcmRxStart(cc_mcapid_t mcap_id, cc_groupid_t group_id, cc_streamid_t stream_
  *
  */
 
-int vcmTxStart(cc_mcapid_t mcap_id, cc_groupid_t group_id, cc_streamid_t stream_id,  cc_call_handle_t call_handle,
-                   vcm_media_payload_type_t payload, short tos, cpr_ip_addr_t *local_addr, uint16_t local_port, cpr_ip_addr_t *remote_ip_addr,
-                   uint16_t remote_port,
-                   vcm_crypto_algorithmID algorithmID,
-                   vcm_crypto_key_t *tx_key,
-                   vcm_mediaAttrs_t *attrs)
+int vcmTxStart(cc_mcapid_t mcap_id, cc_groupid_t group_id,
+               cc_streamid_t stream_id,  cc_call_handle_t call_handle,
+               const vcm_payload_info_t *payload, short tos,
+               cpr_ip_addr_t *local_addr, uint16_t local_port,
+               cpr_ip_addr_t *remote_ip_addr, uint16_t remote_port,
+               vcm_crypto_algorithmID algorithmID, vcm_crypto_key_t *tx_key,
+               vcm_mediaAttrs_t *attrs)
 {
     return 0;
 }

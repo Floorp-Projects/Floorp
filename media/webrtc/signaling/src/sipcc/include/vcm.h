@@ -22,15 +22,8 @@
 
 #include "cpr_types.h"
 #include "cc_constants.h"
+#include "ccsdp.h"
 
-/**
- * Macro definitions to retrieve dynamic payload type and media payload type from vcm_media_payload_type_t payload
- * for using in vcmRx/TxStart.
- */
-//The result maps to RTP payload type for using internally.
-#define GET_DYNAMIC_PAY_LOAD_TYPE(payload) (payload>>16)
-//The result maps to the enum vcm_media_payload_type_t.
-#define GET_MEDIA_PAYLOAD_TYPE_ENUM(payload) (payload & 0xFFFF)
 
 /** Evaluates to TRUE for audio media streams where id is the mcap_id of the given stream */
 #define CC_IS_AUDIO(id) ((id == CC_AUDIO_1) ? TRUE:FALSE)
@@ -154,49 +147,64 @@ typedef enum {
     vcm_station_single_ring = 0x2
 } vcm_ring_duration_t;
 
-
 /**
- * Media payload type definitions
+ * Structure to carry key codec information
  */
-typedef enum
+typedef struct
 {
-    VCM_Media_Payload_NonStandard = 1,
-    VCM_Media_Payload_G711Alaw64k = 2,
-    VCM_Media_Payload_G711Alaw56k = 3, // "restricted"
-    VCM_Media_Payload_G711Ulaw64k = 4,
-    VCM_Media_Payload_G711Ulaw56k = 5, // "restricted"
-    VCM_Media_Payload_G722_64k = 6,
-    VCM_Media_Payload_G722_56k = 7,
-    VCM_Media_Payload_G722_48k = 8,
-    VCM_Media_Payload_G7231 = 9,
-    VCM_Media_Payload_G728 = 10,
-    VCM_Media_Payload_G729 = 11,
-    VCM_Media_Payload_G729AnnexA = 12,
-    VCM_Media_Payload_Is11172AudioCap = 13,
-    VCM_Media_Payload_Is13818AudioCap = 14,
-    VCM_Media_Payload_G729AnnexB = 15,
-    VCM_Media_Payload_G729AnnexAwAnnexB = 16,
-    VCM_Media_Payload_GSM_Full_Rate = 18,
-    VCM_Media_Payload_GSM_Half_Rate = 19,
-    VCM_Media_Payload_GSM_Enhanced_Full_Rate = 20,
-    VCM_Media_Payload_Wide_Band_256k = 25,
-    VCM_Media_Payload_H263 = 31,
-    VCM_Media_Payload_H264 = 34,
-    VCM_Media_Payload_Data64 = 32,
-    VCM_Media_Payload_Data56 = 33,
-    VCM_Media_Payload_ILBC20 = 39,
-    VCM_Media_Payload_ILBC30 = 40,
-    VCM_Media_Payload_ISAC = 41,
-    VCM_Media_Payload_GSM = 80,
-    VCM_Media_Payload_ActiveVoice = 81,
-    VCM_Media_Payload_G726_32K = 82,
-    VCM_Media_Payload_G726_24K = 83,
-    VCM_Media_Payload_G726_16K = 84,
-    VCM_Media_Payload_OPUS = 109,
-    VCM_Media_Payload_VP8 = 120,
-    VCM_Media_Payload_I420 = 124,
-    VCM_Media_Payload_Max           // Please leave this so we won't get compile errors.
-} vcm_media_payload_type_t;
+  rtp_ptype codec_type;
+
+  /*
+   * NOTE: We keep track of the RTP "PT" field for sending separate from the
+   * one for receiving. This is to support asymmetric payload type values
+   * for a given codec. When we get an offer, we answer with the same payload
+   * type value that the remote offers. If we send an offer and the remote
+   * choses to answer with different value than we offer, we support asymmetric.
+   */
+
+  /* RTP "PT" field we use to send this codec ("remote") */
+  int remote_rtp_pt;
+
+  /* RTP "PT" field we use to receive this codec ("local") */
+  int local_rtp_pt;
+
+  /* Parameters for specific media types */
+  union
+  {
+    struct
+    {
+      int frequency;
+      int packet_size; /* Number of samples in a packet */
+      int channels;
+      int bitrate;     /* Wire bitrate of RTP packet payloads */
+    } audio;
+
+    struct
+    {
+      int width;
+      int height;
+    } video;
+  };
+
+  /* Codec-specific parameters */
+  union
+  {
+    struct {
+        uint16_t mode;
+    } ilbc;
+
+    /* These are outdated, and need to be updated to match the current
+       specification. */
+    struct {
+        uint32_t max_average_bitrate;
+        const char *maxcodedaudiobandwidth;
+        boolean usedtx;
+        boolean stereo;
+        boolean useinbandfec;
+        boolean cbr;
+    } opus;
+  };
+} vcm_payload_info_t;
 
 /**
  * vcm_vad_t
@@ -488,8 +496,7 @@ short vcmStartIceChecks(const char *peerconnection);
 short vcmCreateRemoteStream(
              cc_mcapid_t mcap_id,
              const char *peerconnection,
-             int *pc_stream_id,
-             vcm_media_payload_type_t payload);
+             int *pc_stream_id);
 
 /*!
  *  Release the allocated port
@@ -520,7 +527,7 @@ void vcmRxReleasePort(cc_mcapid_t mcap_id,
  *  @param[in]    group_id    - group identifier associated with the stream
  *  @param[in]    stream_id   - id of the stream one per each media line
  *  @param[in]    call_handle - call handle
- *  @param[in]    payload     - payload type
+ *  @param[in]    payload     - payload information
  *  @param[in]    local_addr  - local ip address to use.
  *  @param[in]    port        - local port (receive)
  *  @param[in]    algorithmID - crypto alogrithm ID
@@ -535,7 +542,7 @@ int vcmRxStart(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle,
-        vcm_media_payload_type_t payload,
+        const vcm_payload_info_t *payload,
         cpr_ip_addr_t *local_addr,
         cc_uint16_t port,
         vcm_crypto_algorithmID algorithmID,
@@ -574,7 +581,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
         cc_call_handle_t  call_handle,
         const char *peerconnection,
         int num_payloads,
-        const vcm_media_payload_type_t* payloads,
+        const vcm_payload_info_t* payloads,
         const char *fingerprint_alg,
         const char *fingerprint,
         vcm_mediaAttrs_t *attrs);
@@ -592,7 +599,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
  *  @param[in]   group_id     - group identifier to which the stream belongs
  *  @param[in]   stream_id    - stream id of the given media type.
  *  @param[in]   call_handle  - call handle
- *  @param[in]   payload      - payload type
+ *  @param[in]   payload      - payload information
  *  @param[in]   tos          - bit marking
  *  @param[in]   local_addr   - local address
  *  @param[in]   local_port   - local port
@@ -610,7 +617,7 @@ int vcmTxStart(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle,
-        vcm_media_payload_type_t payload,
+        const vcm_payload_info_t *payload,
         short tos,
         cpr_ip_addr_t *local_addr,
         cc_uint16_t local_port,
@@ -633,7 +640,7 @@ int vcmTxStart(cc_mcapid_t mcap_id,
  *  @param[in]   pc_track_id  - the track within the media stream
  *  @param[in]   call_handle  - call handle
  *  @param[in]   peerconnection - the peerconnection in use
- *  @param[in]   payload      - payload type
+ *  @param[in]   payload      - payload information
  *  @param[in]   tos          - bit marking
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
@@ -651,7 +658,7 @@ int vcmTxStart(cc_mcapid_t mcap_id,
         int pc_track_id,
         cc_call_handle_t  call_handle,
         const char *peerconnection,
-        vcm_media_payload_type_t payload,
+        const vcm_payload_info_t *payload,
         short tos,
         const char *fingerprint_alg,
         const char *fingerprint,

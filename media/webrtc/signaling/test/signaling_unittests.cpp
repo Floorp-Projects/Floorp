@@ -1366,7 +1366,45 @@ TEST_F(SignalingTest, ChromeOfferAnswer)
   std::string answer = a2_.answer();
 }
 
+TEST_F(SignalingTest, OfferAllDynamicTypes)
+{
+  sipcc::MediaConstraints constraints;
+  std::string offer;
+  for (int i = 96; i < 128; i++)
+  {
+    std::stringstream ss;
+    ss << i;
+    std::cout << "Trying dynamic pt = " << i << std::endl;
+    offer =
+      "v=0\r\n"
+      "o=- 1 1 IN IP4 148.147.200.251\r\n"
+      "s=-\r\n"
+      "b=AS:64\r\n"
+      "t=0 0\r\n"
+      "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+        "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+      "m=audio 9000 RTP/AVP " + ss.str() + "\r\n"
+      "c=IN IP4 148.147.200.251\r\n"
+      "b=TIAS:64000\r\n"
+      "a=rtpmap:" + ss.str() +" opus/48000/2\r\n"
+      "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
+      "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
+      "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+      "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+      "a=sendrecv\r\n";
 
+      //std::cout << "Setting offer to:" << std::endl << offer << std::endl;
+      a2_.SetRemote(TestObserver::OFFER, offer);
+
+      //std::cout << "Creating answer:" << std::endl;
+      a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO);
+
+      std::string answer = a2_.answer();
+
+      ASSERT_NE(answer.find(ss.str() + " opus/"), std::string::npos);
+  }
+
+}
 
 } // End namespace test.
 
