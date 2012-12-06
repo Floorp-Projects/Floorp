@@ -145,6 +145,10 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
       case AUDIO_CHANNEL_PUBLICNOTIFICATION:
         // Nothing to do
         break;
+
+      case AUDIO_CHANNEL_LAST:
+        MOZ_NOT_REACHED();
+        return false;
     }
   }
 
@@ -166,6 +170,10 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
 
     case AUDIO_CHANNEL_PUBLICNOTIFICATION:
       break;
+
+    case AUDIO_CHANNEL_LAST:
+      MOZ_NOT_REACHED();
+      return false;
   }
 
   // Notification if needed.
