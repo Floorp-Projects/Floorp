@@ -624,6 +624,14 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         if (!MulValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
             return false;
         break;
+      case JSOP_DIV:
+        if (!DivValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+            return false;
+        break;
+      case JSOP_MOD:
+        if (!ModValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+            return false;
+        break;
       case JSOP_BITOR: {
         int32_t result;
         if (!BitOr(cx, lhs, rhs, &result))
