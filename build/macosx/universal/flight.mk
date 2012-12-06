@@ -18,6 +18,8 @@ endif
 topsrcdir = $(TOPSRCDIR)
 include $(OBJDIR)/config/autoconf.mk
 
+core_abspath = $(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1))
+
 DIST = $(OBJDIR)/dist
 
 ifdef LIBXUL_SDK # {
@@ -72,7 +74,7 @@ postflight_all:
 	  $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG)
 	mkdir -p $(DIST_UNI)/$(MOZ_PKG_APPNAME)
 	rm -f $(DIST_ARCH_2)/universal
-	ln -s $(DIST_UNI) $(DIST_ARCH_2)/universal
+	ln -s $(call core_abspath,$(DIST_UNI)) $(DIST_ARCH_2)/universal
 	rm -rf $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME)
 	$(TOPSRCDIR)/build/macosx/universal/unify \
           --unify-with-sort "\.manifest$$" \

@@ -12,32 +12,32 @@ function gen_test()
 {
   try {
     // Ensure that state is reset in case previous tests didn't finish.
-    for (let yy in gen_resetState()) yield;
+    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield;
 
     // With this set to false, we should automatically open the panel
     // the first time a download is started.
-    DownloadsCommon.data.panelHasShownBefore = false;
+    DownloadsCommon.getData(window).panelHasShownBefore = false;
 
     prepareForPanelOpen();
-    DownloadsCommon.data._notifyNewDownload();
+    DownloadsCommon.getData(window)._notifyNewDownload();
     yield;
 
     // If we got here, that means the panel opened.
     DownloadsPanel.hidePanel();
 
-    ok(DownloadsCommon.data.panelHasShownBefore,
+    ok(DownloadsCommon.getData(window).panelHasShownBefore,
        "Should have recorded that the panel was opened on a download.")
 
     // Next, make sure that if we start another download, we don't open
     // the panel automatically.
     panelShouldNotOpen();
-    DownloadsCommon.data._notifyNewDownload();
+    DownloadsCommon.getData(window)._notifyNewDownload();
     yield waitFor(2);
   } catch(e) {
     ok(false, e);
   } finally {
     // Clean up when the test finishes.
-    for (let yy in gen_resetState()) yield;
+    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield;
   }
 }
 

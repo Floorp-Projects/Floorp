@@ -32,6 +32,7 @@ MOCHITEST_BROWSER_FILES = \
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
 	browser_bug248970.js \
+	browser_favicon_setAndFetchFaviconForPage.js \
 	$(NULL)
 else
 MOCHITEST_BROWSER_FILES += \
