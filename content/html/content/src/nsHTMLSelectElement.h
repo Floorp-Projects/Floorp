@@ -670,7 +670,11 @@ nsHTMLOptionCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
   if (aBefore.IsNull()) {
     mSelect->Add(element, (nsGenericHTMLElement*)nullptr, aError);
   } else if (aBefore.Value().IsHTMLElement()) {
-    mSelect->Add(element, &aBefore.Value().GetAsHTMLElement(), aError);
+    nsCOMPtr<nsIContent> content =
+      do_QueryInterface(aBefore.Value().GetAsHTMLElement());
+    nsGenericHTMLElement* before =
+      static_cast<nsGenericHTMLElement*>(content.get());
+    mSelect->Add(element, before, aError);
   } else {
     mSelect->Add(element, aBefore.Value().GetAsLong(), aError);
   }

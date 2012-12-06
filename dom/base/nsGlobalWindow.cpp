@@ -11220,16 +11220,27 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
                                              jsval *vp) {                    \
-    EventHandlerNonNull* h = GetOn##name_();                                 \
-    vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
+    if (elm) {                                                               \
+      EventHandlerNonNull* h = elm->GetEventHandler(nsGkAtoms::on##name_);   \
+      if (h) {                                                               \
+        *vp = JS::ObjectValue(*h->Callable());                               \
+        return NS_OK;                                                        \
+      }                                                                      \
+    }                                                                        \
+    *vp = JSVAL_NULL;                                                        \
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
                                              const jsval &v) {               \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
+    if (!elm) {                                                              \
+      return NS_ERROR_OUT_OF_MEMORY;                                         \
+    }                                                                        \
+                                                                             \
     JSObject *obj = mJSObject;                                               \
     if (!obj) {                                                              \
-      /* Just silently do nothing */                                         \
-      return NS_OK;                                                          \
+      return NS_ERROR_UNEXPECTED;                                            \
     }                                                                        \
     nsRefPtr<EventHandlerNonNull> handler;                                   \
     JSObject *callable;                                                      \
@@ -11241,9 +11252,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
         return NS_ERROR_OUT_OF_MEMORY;                                       \
       }                                                                      \
     }                                                                        \
-    ErrorResult rv;                                                          \
-    SetOn##name_(handler, rv);                                               \
-    return rv.ErrorCode();                                                   \
+    return elm->SetEventHandler(nsGkAtoms::on##name_, handler);              \
   }
 #define ERROR_EVENT(name_, id_, type_, struct_)                              \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
@@ -11325,7 +11334,5 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 #include "nsEventNameList.h"
 #undef TOUCH_EVENT
 #undef WINDOW_ONLY_EVENT
-#undef BEFOREUNLOAD_EVENT
-#undef ERROR_EVENT
 #undef EVENT
 

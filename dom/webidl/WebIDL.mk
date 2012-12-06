@@ -39,7 +39,6 @@ webidl_files = \
   Function.webidl \
   GainNode.webidl \
   HTMLCollection.webidl \
-  HTMLElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
   ImageData.webidl \
