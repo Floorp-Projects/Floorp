@@ -486,8 +486,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 mAddressBarBg.requestLayout();
 
                 // If there are action bar items in the toolbar, we have to restore the
-                // alignment of the entry in relation to them.
-                if (mActionItemBar.getVisibility() == View.VISIBLE)
+                // alignment of the entry in relation to them. mAwesomeBarParams might
+                // be null if the activity holding the toolbar is killed before returning
+                // from awesome screen (e.g. "Don't keep activities" is on)
+                if (mActionItemBar.getVisibility() == View.VISIBLE && mAwesomeBarParams != null)
                     ((View) mAwesomeBar.getParent()).setLayoutParams(mAwesomeBarParams);
 
                 // Hide fake right edge, we only use for the animation
