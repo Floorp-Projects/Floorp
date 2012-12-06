@@ -291,6 +291,7 @@ class ICEntry
     _(SetElem_Dense)            \
                                 \
     _(GetName_Fallback)         \
+    _(GetName_Global)           \
                                 \
     _(GetProp_Fallback)
 
@@ -1438,6 +1439,59 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub
             if (!stub || !stub->initMonitoringChain(cx, space))
                 return NULL;
             return stub;
+        }
+    };
+};
+
+// Optimized GETGNAME/CALLGNAME stub.
+class ICGetName_Global : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrShape shape_;
+    uint32_t slot_;
+
+    ICGetName_Global(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape, uint32_t slot)
+      : ICMonitoredStub(GetName_Global, stubCode, firstMonitorStub),
+        shape_(shape),
+        slot_(slot)
+    {}
+
+  public:
+    static inline ICGetName_Global *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
+                                        HandleShape shape, uint32_t slot)
+    {
+        return space->allocate<ICGetName_Global>(code, firstMonitorStub, shape, slot);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    static size_t offsetOfShape() {
+        return offsetof(ICGetName_Global, shape_);
+    }
+    static size_t offsetOfSlot() {
+        return offsetof(ICGetName_Global, slot_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        ICStub *firstMonitorStub_;
+        RootedShape shape_;
+        uint32_t slot_;
+
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, Shape *shape, uint32_t slot)
+          : ICStubCompiler(cx, ICStub::GetName_Global),
+            firstMonitorStub_(firstMonitorStub),
+            shape_(cx, shape),
+            slot_(slot)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetName_Global::New(space, getStubCode(), firstMonitorStub_, shape_, slot_);
         }
     };
 };
