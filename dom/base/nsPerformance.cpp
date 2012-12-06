@@ -12,24 +12,16 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
 #include "nsIDOMWindow.h"
-#include "nsDOMClassInfoID.h"
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceTimingBinding.h"
 #include "mozilla/dom/PerformanceNavigationBinding.h"
 
 using namespace mozilla;
 
-DOMCI_DATA(PerformanceTiming, nsPerformanceTiming)
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsPerformanceTiming, mPerformance)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPerformanceTiming)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPerformanceTiming)
 
-// QueryInterface implementation for nsPerformanceTiming
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPerformanceTiming)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsPerformanceTiming, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsPerformanceTiming, Release)
 
 nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
                                          nsITimedChannel* aChannel)
@@ -140,18 +132,10 @@ nsPerformanceTiming::WrapObject(JSContext *cx, JSObject *scope,
 }
 
 
-
-DOMCI_DATA(PerformanceNavigation, nsPerformanceNavigation)
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsPerformanceNavigation, mPerformance)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPerformanceNavigation)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPerformanceNavigation)
 
-// QueryInterface implementation for nsPerformanceNavigation
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPerformanceNavigation)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsPerformanceNavigation, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsPerformanceNavigation, Release)
 
 nsPerformanceNavigation::nsPerformanceNavigation(nsPerformance* aPerformance)
   : mPerformance(aPerformance)
@@ -172,8 +156,6 @@ nsPerformanceNavigation::WrapObject(JSContext *cx, JSObject *scope,
                                                  triedToWrap);
 }
 
-
-DOMCI_DATA(Performance, nsPerformance)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(nsPerformance,
                                         mWindow, mTiming,
