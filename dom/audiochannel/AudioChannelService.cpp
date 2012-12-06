@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioChannelService.h"
+#include "AudioChannelServiceChild.h"
 
 #include "base/basictypes.h"
 
@@ -30,6 +31,10 @@ AudioChannelService::GetAudioChannelService()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return AudioChannelServiceChild::GetAudioChannelService();
+  }
+
   // If we already exist, exit early
   if (gAudioChannelService) {
     return gAudioChannelService;
@@ -46,6 +51,10 @@ AudioChannelService::GetAudioChannelService()
 void
 AudioChannelService::Shutdown()
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return AudioChannelServiceChild::Shutdown();
+  }
+
   if (gAudioChannelService) {
     delete gAudioChannelService;
     gAudioChannelService = nullptr;
@@ -55,6 +64,7 @@ AudioChannelService::Shutdown()
 NS_IMPL_ISUPPORTS0(AudioChannelService)
 
 AudioChannelService::AudioChannelService()
+: mCurrentHigherChannel(AUDIO_CHANNEL_NORMAL)
 {
   mChannelCounters = new int32_t[AUDIO_CHANNEL_PUBLICNOTIFICATION+1];
 
@@ -78,6 +88,12 @@ AudioChannelService::RegisterMediaElement(nsHTMLMediaElement* aMediaElement,
                                           AudioChannelType aType)
 {
   mMediaElements.Put(aMediaElement, aType);
+  RegisterType(aType);
+}
+
+void
+AudioChannelService::RegisterType(AudioChannelType aType)
+{
   mChannelCounters[aType]++;
 
   // In order to avoid race conditions, it's safer to notify any existing
@@ -94,9 +110,14 @@ AudioChannelService::UnregisterMediaElement(nsHTMLMediaElement* aMediaElement)
   }
 
   mMediaElements.Remove(aMediaElement);
+  UnregisterType(type);
+}
 
-  mChannelCounters[type]--;
-  MOZ_ASSERT(mChannelCounters[type] >= 0);
+void
+AudioChannelService::UnregisterType(AudioChannelType aType)
+{
+  mChannelCounters[aType]--;
+  MOZ_ASSERT(mChannelCounters[aType] >= 0);
 
   // In order to avoid race conditions, it's safer to notify any existing
   // media element any time a new one is registered.
@@ -124,28 +145,62 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
       case AUDIO_CHANNEL_PUBLICNOTIFICATION:
         // Nothing to do
         break;
+
+      case AUDIO_CHANNEL_LAST:
+        MOZ_NOT_REACHED();
+        return false;
     }
   }
+
+  bool muted = false;
 
   // Priorities:
   switch (aType) {
     case AUDIO_CHANNEL_NORMAL:
     case AUDIO_CHANNEL_CONTENT:
-      return !!mChannelCounters[AUDIO_CHANNEL_NOTIFICATION] ||
-             !!mChannelCounters[AUDIO_CHANNEL_ALARM] ||
-             !!mChannelCounters[AUDIO_CHANNEL_TELEPHONY] ||
-             !!mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION];
+      muted = !!mChannelCounters[AUDIO_CHANNEL_NOTIFICATION] ||
+              !!mChannelCounters[AUDIO_CHANNEL_ALARM] ||
+              !!mChannelCounters[AUDIO_CHANNEL_TELEPHONY] ||
+              !!mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION];
 
     case AUDIO_CHANNEL_NOTIFICATION:
     case AUDIO_CHANNEL_ALARM:
     case AUDIO_CHANNEL_TELEPHONY:
-      return ChannelsActiveWithHigherPriorityThan(aType);
+      muted = ChannelsActiveWithHigherPriorityThan(aType);
 
     case AUDIO_CHANNEL_PUBLICNOTIFICATION:
+      break;
+
+    case AUDIO_CHANNEL_LAST:
+      MOZ_NOT_REACHED();
       return false;
   }
 
-  return false;
+  // Notification if needed.
+  if (!muted) {
+
+    // Calculating the most important unmuted channel:
+    AudioChannelType higher = AUDIO_CHANNEL_NORMAL;
+    for (int32_t type = AUDIO_CHANNEL_NORMAL;
+         type <= AUDIO_CHANNEL_PUBLICNOTIFICATION;
+         ++type) {
+      if (mChannelCounters[type]) {
+        higher = (AudioChannelType)type;
+      }
+    }
+
+    if (higher != mCurrentHigherChannel) {
+      mCurrentHigherChannel = higher;
+
+      nsString channelName;
+      channelName.AssignASCII(ChannelName(mCurrentHigherChannel));
+
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      obs->NotifyObservers(nullptr, "audio-channel-changed", channelName.get());
+    }
+  }
+
+  return muted;
 }
 
 
@@ -166,6 +221,13 @@ AudioChannelService::Notify()
 
   // Notify any media element for the main process.
   mMediaElements.EnumerateRead(NotifyEnumerator, nullptr);
+
+  // Notify for the child processes.
+  nsTArray<ContentParent*> children;
+  ContentParent::GetAll(children);
+  for (uint32_t i = 0; i < children.Length(); i++) {
+    unused << children[i]->SendAudioChannelNotify();
+  }
 }
 
 bool
@@ -183,4 +245,31 @@ AudioChannelService::ChannelsActiveWithHigherPriorityThan(AudioChannelType aType
   }
 
   return false;
+}
+
+const char*
+AudioChannelService::ChannelName(AudioChannelType aType)
+{
+  static struct {
+    int32_t type;
+    const char* value;
+  } ChannelNameTable[] = {
+    { AUDIO_CHANNEL_NORMAL,             "normal" },
+    { AUDIO_CHANNEL_CONTENT,            "normal" },
+    { AUDIO_CHANNEL_NOTIFICATION,       "notification" },
+    { AUDIO_CHANNEL_ALARM,              "alarm" },
+    { AUDIO_CHANNEL_TELEPHONY,          "telephony" },
+    { AUDIO_CHANNEL_PUBLICNOTIFICATION, "publicnotification" },
+    { -1,                               "unknown" }
+  };
+
+  for (int i = AUDIO_CHANNEL_NORMAL; ; ++i) {
+    if (ChannelNameTable[i].type == aType ||
+        ChannelNameTable[i].type == -1) {
+      return ChannelNameTable[i].value;
+    }
+  }
+
+  NS_NOTREACHED("Execution should not reach here!");
+  return nullptr;
 }

@@ -25,11 +25,16 @@ MOCHITEST_FILES = \
 		test_form_submission.html \
 		test_form_submission_cap.html \
 		test_form_submission_cap2.html \
-		test_privbrowsing.html \
 		satchel_common.js \
 		subtst_form_submission_1.html \
 		subtst_privbrowsing.html \
 		$(NULL)
+
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_FILES += \
+                test_privbrowsing.html \
+                $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
