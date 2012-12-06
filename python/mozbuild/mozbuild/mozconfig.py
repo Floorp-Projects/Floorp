@@ -177,8 +177,8 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         env = dict(os.environ)
 
-        args = self._normalize_command([self._loader_script, self.topsrcdir,
-            path], True)
+        args = self._normalize_command([self._loader_script,
+            self.topsrcdir.replace(os.sep, '/'), path], True)
 
         try:
             # We need to capture stderr because that's where the shell sends
