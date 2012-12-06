@@ -53,8 +53,6 @@ PR_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
 #define PIB_MAX_MAR_CHANNEL_ID_SIZE 63
 #define PIB_MAX_PRODUCT_VERSION_SIZE 31
 
-#include <stdio.h>
-
 /* The mar program is compiled as a host bin so we don't have access to NSPR at
    runtime.  For that reason we use ntohl, htonl, and define HOST_TO_NETWORK64 
    instead of the NSPR equivalents. */
@@ -68,6 +66,7 @@ PR_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
 #include <unistd.h>
 #endif
 
+#include <stdio.h>
 
 #define HOST_TO_NETWORK64(x) ( \
   ((((uint64_t) x) & 0xFF) << 56) | \
