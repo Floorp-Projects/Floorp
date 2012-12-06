@@ -20,6 +20,7 @@
 #include "gonk/AudioSystem.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "AudioChannelService.h"
 
 using namespace mozilla::dom::gonk;
 using namespace android;
@@ -298,6 +299,12 @@ AudioManager::SetPhoneState(int32_t aState)
   }
 
   mPhoneState = aState;
+
+  nsRefPtr<AudioChannelService> audioChannelService = AudioChannelService::GetAudioChannelService();
+  if (!audioChannelService) {
+    return NS_ERROR_FAILURE;
+  }
+  audioChannelService->SetPhoneInCall(aState == nsIAudioManager::PHONE_STATE_IN_CALL);
   return NS_OK;
 }
 
