@@ -274,6 +274,7 @@ _BROWSER_FILES = \
                  browser_bug734076.js \
                  browser_bug812562.js \
                  browser_bug818009.js \
+                 browser_bug818118.js \
                  blockPluginVulnerableUpdatable.xml \
                  blockPluginVulnerableNoUpdate.xml \
                  blockNoPlugins.xml \
