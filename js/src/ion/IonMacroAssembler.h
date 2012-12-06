@@ -145,6 +145,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
     }
+    void branchTestObjShape(Condition cond, Register obj, Register shape, Label *label) {
+        branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
+    }
 
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
         loadPtr(Address(obj, JSObject::getPrivateDataOffset(nfixed)), dest);
