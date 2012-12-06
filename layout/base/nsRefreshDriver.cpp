@@ -25,9 +25,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIViewManager.h"
 #include "sampler.h"
-
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
+#include "nsNPAPIPluginInstance.h"
 
 using namespace mozilla;
 
@@ -310,6 +308,11 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   NS_PRECONDITION(mPresContext, "Why are we notified after disconnection?");
   NS_PRECONDITION(!nsContentUtils::GetCurrentJSContext(),
                   "Shouldn't have a JSContext on the stack");
+  if (nsNPAPIPluginInstance::InPluginCall()) {
+    NS_ERROR("Refresh driver should not run during plugin call!");
+    // Try to survive this by just ignoring the refresh tick.
+    return NS_OK;
+  }
 
   if (mTestControllingRefreshes && aTimer) {
     // Ignore real refreshes from our timer (but honor the others).
