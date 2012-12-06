@@ -13,6 +13,8 @@ import which
 from mach.mixin.logging import LoggingMixin
 from mach.mixin.process import ProcessExecutionMixin
 
+from mozfile.mozfile import rmtree
+
 from .config import BuildConfig
 from .mozconfig import (
     MozconfigFindException,
@@ -81,6 +83,13 @@ class MozbuildObject(ProcessExecutionMixin):
     @property
     def statedir(self):
         return os.path.join(self.topobjdir, '.mozbuild')
+
+    def remove_objdir(self):
+        """Remove the entire object directory."""
+
+        # We use mozfile because it is faster than shutil.rmtree().
+        # mozfile doesn't like unicode arguments (bug 818783).
+        rmtree(self.topobjdir.encode('utf-8'))
 
     @property
     def _config_guess(self):
