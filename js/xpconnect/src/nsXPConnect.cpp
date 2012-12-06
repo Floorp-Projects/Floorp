@@ -759,14 +759,13 @@ NoteGCThingXPCOMChildren(js::Class *clasp, JSObject *obj,
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
     } else {
-        const DOMClass* domClass;
-        DOMObjectSlot slot = GetDOMClass(obj, domClass);
-        if (slot != eNonDOMObject) {
+        const DOMClass* domClass = GetDOMClass(obj);
+        if (domClass) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
             if (domClass->mDOMObjectIsISupports) {
-                cb.NoteXPCOMChild(UnwrapDOMObject<nsISupports>(obj, slot));
+                cb.NoteXPCOMChild(UnwrapDOMObject<nsISupports>(obj));
             } else if (domClass->mParticipant) {
-                cb.NoteNativeChild(UnwrapDOMObject<void>(obj, slot),
+                cb.NoteNativeChild(UnwrapDOMObject<void>(obj),
                                    domClass->mParticipant);
             }
         }

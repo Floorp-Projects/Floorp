@@ -217,8 +217,7 @@ private:
   Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
-    WorkerPrivate* worker =
-      UnwrapDOMObject<WorkerPrivate>(aObj, eRegularDOMObject);
+    WorkerPrivate* worker = UnwrapDOMObject<WorkerPrivate>(aObj);
     if (worker) {
       worker->_finalize(aFop);
     }
@@ -228,8 +227,7 @@ private:
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
-    WorkerPrivate* worker =
-      UnwrapDOMObject<WorkerPrivate>(aObj, eRegularDOMObject);
+    WorkerPrivate* worker = UnwrapDOMObject<WorkerPrivate>(aObj);
     if (worker) {
       worker->_trace(aTrc);
     }
@@ -361,7 +359,7 @@ private:
     if (aObj) {
       JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == Class()) {
-        return UnwrapDOMObject<WorkerPrivate>(aObj, eRegularDOMObject);
+        return UnwrapDOMObject<WorkerPrivate>(aObj);
       }
     }
 
@@ -378,8 +376,7 @@ private:
   Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
-    WorkerPrivate* worker =
-      UnwrapDOMObject<WorkerPrivate>(aObj, eRegularDOMObject);
+    WorkerPrivate* worker = UnwrapDOMObject<WorkerPrivate>(aObj);
     if (worker) {
       worker->_finalize(aFop);
     }
@@ -389,8 +386,7 @@ private:
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
-    WorkerPrivate* worker =
-      UnwrapDOMObject<WorkerPrivate>(aObj, eRegularDOMObject);
+    WorkerPrivate* worker = UnwrapDOMObject<WorkerPrivate>(aObj);
     if (worker) {
       worker->_trace(aTrc);
     }
@@ -418,7 +414,7 @@ Worker::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
 {
   JSClass* classPtr = JS_GetClass(aObj);
   if (classPtr == Class() || classPtr == ChromeWorker::Class()) {
-    return UnwrapDOMObject<WorkerPrivate>(aObj, eRegularDOMObject);
+    return UnwrapDOMObject<WorkerPrivate>(aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
