@@ -286,7 +286,7 @@ const DownloadsIndicatorView = {
     this._initialized = true;
 
     window.addEventListener("unload", this.onWindowUnload, false);
-    DownloadsCommon.getIndicatorData(window).addView(this);
+    DownloadsCommon.indicatorData.addView(this);
   },
 
   /**
@@ -300,7 +300,7 @@ const DownloadsIndicatorView = {
     this._initialized = false;
 
     window.removeEventListener("unload", this.onWindowUnload, false);
-    DownloadsCommon.getIndicatorData(window).removeView(this);
+    DownloadsCommon.indicatorData.removeView(this);
 
     // Reset the view properties, so that a neutral indicator is displayed if we
     // are visible only temporarily as an anchor.
@@ -327,7 +327,7 @@ const DownloadsIndicatorView = {
       // If the view is initialized, we need to update the elements now that
       // they are finally available in the document.
       if (this._initialized) {
-        DownloadsCommon.getIndicatorData(window).refreshView(this);
+        DownloadsCommon.indicatorData.refreshView(this);
       }
 
       aCallback();
@@ -508,7 +508,7 @@ const DownloadsIndicatorView = {
   {
     if (DownloadsCommon.useToolkitUI) {
       // The panel won't suppress attention for us, we need to clear now.
-      DownloadsCommon.getIndicatorData(window).attention = false;
+      DownloadsCommon.indicatorData.attention = false;
       BrowserDownloadsUI();
     } else {
       DownloadsPanel.showPanel();
