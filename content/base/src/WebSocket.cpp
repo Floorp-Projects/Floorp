@@ -42,6 +42,7 @@
 #include "xpcpublic.h"
 #include "nsContentPolicyUtils.h"
 #include "jsfriendapi.h"
+#include "prmem.h"
 #include "nsDOMFile.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMEventTargetHelper.h"
