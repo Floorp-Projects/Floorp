@@ -38,13 +38,8 @@ WebGLProgram::UpdateInfo()
     GLint attribCount;
     mContext->gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_ATTRIBUTES, &attribCount);
 
-    if (!mAttribsInUse.SetLength(mContext->mGLMaxVertexAttribs)) {
-        ErrorOutOfMemory("updateInfo: out of memory to allocate %d attribs", mContext->mGLMaxVertexAttribs);
-        return false;
-    }
-
-    for (size_t i = 0; i < mAttribsInUse.Length(); i++)
-        mAttribsInUse[i] = false;
+    mAttribsInUse.resize(mContext->mGLMaxVertexAttribs);
+    std::fill(mAttribsInUse.begin(), mAttribsInUse.end(), false);
 
     nsAutoArrayPtr<char> nameBuf(new char[mAttribMaxNameLength]);
 
