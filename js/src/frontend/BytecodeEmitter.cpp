@@ -6750,8 +6750,8 @@ frontend::AddToSrcNoteDelta(JSContext *cx, BytecodeEmitter *bce, jssrcnote *sn, 
     int index;
 
     /*
-     * Called only from OptimizeSpanDeps and FinishTakingSrcNotes to add to
-     * main script note deltas, and only by a small positive amount.
+     * Called only from FinishTakingSrcNotes to add to main script note
+     * deltas, and only by a small positive amount.
      */
     JS_ASSERT(bce->current == &bce->main);
     JS_ASSERT((unsigned) delta < (unsigned) SN_XDELTA_LIMIT);
