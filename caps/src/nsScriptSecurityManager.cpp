@@ -1639,7 +1639,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     // allowed to execute scripts.
 
     bool result;
-    rv = CanExecuteScripts(aCx, subject, &result);
+    rv = CanExecuteScripts(aCx, subject, true, &result);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1673,6 +1673,15 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
                                            nsIPrincipal *aPrincipal,
                                            bool *result)
 {
+    return CanExecuteScripts(cx, aPrincipal, false, result);
+}
+
+nsresult
+nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
+                                           nsIPrincipal *aPrincipal,
+                                           bool aAllowIfNoScriptContext,
+                                           bool *result)
+{
     *result = false; 
 
     if (aPrincipal == mSystemPrincipal)
@@ -1684,7 +1693,13 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
 
     //-- See if the current window allows JS execution
     nsIScriptContext *scriptContext = GetScriptContext(cx);
-    if (!scriptContext) return NS_ERROR_FAILURE;
+    if (!scriptContext) {
+        if (aAllowIfNoScriptContext) {
+            *result = true;
+            return NS_OK;
+        }
+        return NS_ERROR_FAILURE;
+    }
 
     if (!scriptContext->GetScriptsEnabled()) {
         // No scripting on this context, folks

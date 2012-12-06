@@ -483,6 +483,15 @@ private:
                         nsIPrincipal* aSubjectPrincipal,
                         const char* aObjectSecurityLevel);
 
+    /**
+     * Helper for CanExecuteScripts that allows the caller to specify
+     * whether execution should be allowed if cx has no
+     * nsIScriptContext.
+     */
+    nsresult
+    CanExecuteScripts(JSContext* cx, nsIPrincipal *aPrincipal,
+                      bool aAllowIfNoScriptContext, bool *result);
+
     nsresult
     Init();
 
