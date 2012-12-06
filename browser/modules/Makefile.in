@@ -28,8 +28,6 @@ EXTRA_JS_MODULES = \
 	KeywordURLResetPrompter.jsm \
 	$(NULL)
 
-EXTRA_PP_JS_MODULES = RecentWindow.jsm
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXTRA_JS_MODULES += \
 	WindowsPreviewPerTab.jsm \

@@ -53,9 +53,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "KeywordURLResetPrompter",
                                   "resource:///modules/KeywordURLResetPrompter.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource:///modules/RecentWindow.jsm");
-
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -1587,9 +1584,41 @@ BrowserGlue.prototype = {
     }
   },
 
+#ifndef XP_WIN
+#define BROKEN_WM_Z_ORDER
+#endif
+
   // this returns the most recent non-popup browser window
   getMostRecentBrowserWindow: function BG_getMostRecentBrowserWindow() {
-    return RecentWindow.getMostRecentBrowserWindow();
+    function isFullBrowserWindow(win) {
+      return !win.closed &&
+             win.toolbar.visible;
+    }
+
+#ifdef BROKEN_WM_Z_ORDER
+    var win = Services.wm.getMostRecentWindow("navigator:browser");
+
+    // if we're lucky, this isn't a popup, and we can just return this
+    if (win && !isFullBrowserWindow(win)) {
+      win = null;
+      let windowList = Services.wm.getEnumerator("navigator:browser");
+      // this is oldest to newest, so this gets a bit ugly
+      while (windowList.hasMoreElements()) {
+        let nextWin = windowList.getNext();
+        if (isFullBrowserWindow(nextWin))
+          win = nextWin;
+      }
+    }
+    return win;
+#else
+    var windowList = Services.wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
+    while (windowList.hasMoreElements()) {
+      let win = windowList.getNext();
+      if (isFullBrowserWindow(win))
+        return win;
+    }
+    return null;
+#endif
   },
 
 #ifdef MOZ_SERVICES_SYNC
