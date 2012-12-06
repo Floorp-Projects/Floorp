@@ -126,22 +126,26 @@ struct JSCompartment : public js::gc::GraphNodeBase<JSCompartment>
   private:
     friend struct JSRuntime;
     friend struct JSContext;
-    js::GlobalObject             *global_;
+    js::ReadBarriered<js::GlobalObject> global_;
+
+    unsigned                     enterCompartmentDepth;
+
   public:
-    // Nb: global_ might be NULL, if (a) it's the atoms compartment, or (b) the
-    // compartment's global has been collected.  The latter can happen if e.g.
-    // a string in a compartment is rooted but no object is, and thus the
-    // global isn't rooted, and thus the global can be finalized while the
-    // compartment lives on.
-    //
-    // In contrast, JSObject::global() is infallible because marking a JSObject
-    // always marks its global as well.
-    // TODO: add infallible JSScript::global()
-    //
-    js::GlobalObject *maybeGlobal() const {
-        JS_ASSERT_IF(global_, global_->compartment() == this);
-        return global_;
-    }
+    void enter() { enterCompartmentDepth++; }
+    void leave() { enterCompartmentDepth--; }
+
+    /*
+     * Nb: global_ might be NULL, if (a) it's the atoms compartment, or (b) the
+     * compartment's global has been collected.  The latter can happen if e.g.
+     * a string in a compartment is rooted but no object is, and thus the global
+     * isn't rooted, and thus the global can be finalized while the compartment
+     * lives on.
+     *
+     * In contrast, JSObject::global() is infallible because marking a JSObject
+     * always marks its global as well.
+     * TODO: add infallible JSScript::global()
+     */
+    inline js::GlobalObject *maybeGlobal() const;
 
     void initGlobal(js::GlobalObject &global) {
         JS_ASSERT(global.compartment() == this);
@@ -555,7 +559,13 @@ JSContext::typeInferenceEnabled() const
 inline js::Handle<js::GlobalObject*>
 JSContext::global() const
 {
-    return js::Handle<js::GlobalObject*>::fromMarkedLocation(&compartment->global_);
+    /*
+     * It's safe to use |unsafeGet()| here because any compartment that is
+     * on-stack will be marked automatically, so there's no need for a read
+     * barrier on it. Once the compartment is popped, the handle is no longer
+     * safe to use.
+     */
+    return js::Handle<js::GlobalObject*>::fromMarkedLocation(compartment->global_.unsafeGet());
 }
 
 namespace js {
@@ -582,16 +592,8 @@ class AutoCompartment
     JSCompartment * const origin_;
 
   public:
-    AutoCompartment(JSContext *cx, JSObject *target)
-      : cx_(cx),
-        origin_(cx->compartment)
-    {
-        cx_->enterCompartment(target->compartment());
-    }
-
-    ~AutoCompartment() {
-        cx_->leaveCompartment(origin_);
-    }
+    inline AutoCompartment(JSContext *cx, JSObject *target);
+    inline ~AutoCompartment();
 
     JSContext *context() const { return cx_; }
     JSCompartment *origin() const { return origin_; }
