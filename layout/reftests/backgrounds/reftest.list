@@ -138,3 +138,5 @@ random-if(bug685516) != div-background.html div-background-ref.html
 random-if(bug685516) == background-repeat-1-ref.html background-repeat-1.html
 
 random-if(bug685516) == multi-background-clip-content-border.html multi-background-clip-content-border-ref.html
+
+HTTP == background-referrer.html background-referrer-ref.html
