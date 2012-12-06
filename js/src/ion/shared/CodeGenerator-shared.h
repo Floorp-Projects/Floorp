@@ -45,9 +45,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     SnapshotWriter snapshots_;
     IonCode *deoptTable_;
 #ifdef DEBUG
-    uint32 pushedArgs_;
+    uint32_t pushedArgs_;
 #endif
-    uint32 lastOsiPointOffset_;
+    uint32_t lastOsiPointOffset_;
     SafepointWriter safepoints_;
     Label invalidate_;
     CodeOffsetLabel invalidateEpilogueData_;
@@ -65,7 +65,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> barrierOffsets_;
 
     // List of stack slots that have been pushed as arguments to an MCall.
-    js::Vector<uint32, 0, SystemAllocPolicy> pushedArgumentSlots_;
+    js::Vector<uint32_t, 0, SystemAllocPolicy> pushedArgumentSlots_;
 
     // When profiling is enabled, this is the instrumentation manager which
     // maintains state of what script is currently being generated (for inline
@@ -94,28 +94,28 @@ class CodeGeneratorShared : public LInstructionVisitor
     // The initial size of the frame in bytes. These are bytes beyond the
     // constant header present for every Ion frame, used for pre-determined
     // spills.
-    int32 frameDepth_;
+    int32_t frameDepth_;
 
     // Frame class this frame's size falls into (see IonFrame.h).
     FrameSizeClass frameClass_;
 
     // For arguments to the current function.
-    inline int32 ArgToStackOffset(int32 slot) const {
+    inline int32_t ArgToStackOffset(int32_t slot) const {
         return masm.framePushed() + sizeof(IonJSFrameLayout) + slot;
     }
 
     // For the callee of the current function.
-    inline int32 CalleeStackOffset() const {
+    inline int32_t CalleeStackOffset() const {
         return masm.framePushed() + IonJSFrameLayout::offsetOfCalleeToken();
     }
 
-    inline int32 SlotToStackOffset(int32 slot) const {
-        JS_ASSERT(slot > 0 && slot <= int32(graph.localSlotCount()));
-        int32 offset = masm.framePushed() - (slot * STACK_SLOT_SIZE);
+    inline int32_t SlotToStackOffset(int32_t slot) const {
+        JS_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
+        int32_t offset = masm.framePushed() - (slot * STACK_SLOT_SIZE);
         JS_ASSERT(offset >= 0);
         return offset;
     }
-    inline int32 StackOffsetToSlot(int32 offset) const {
+    inline int32_t StackOffsetToSlot(int32_t offset) const {
         // See: SlotToStackOffset. This is used to convert pushed arguments
         // to a slot index that safepoints can use.
         //
@@ -127,10 +127,10 @@ class CodeGeneratorShared : public LInstructionVisitor
     }
 
     // For argument construction for calls. Argslots are Value-sized.
-    inline int32 StackOffsetOfPassedArg(int32 slot) const {
+    inline int32_t StackOffsetOfPassedArg(int32_t slot) const {
         // A slot of 0 is permitted only to calculate %esp offset for calls.
-        JS_ASSERT(slot >= 0 && slot <= int32(graph.argumentSlotCount()));
-        int32 offset = masm.framePushed() -
+        JS_ASSERT(slot >= 0 && slot <= int32_t(graph.argumentSlotCount()));
+        int32_t offset = masm.framePushed() -
                        (graph.localSlotCount() * STACK_SLOT_SIZE) -
                        (slot * sizeof(Value));
         // Passed arguments go below A function's local stack storage.
@@ -144,13 +144,13 @@ class CodeGeneratorShared : public LInstructionVisitor
         return offset;
     }
 
-    inline int32 ToStackOffset(const LAllocation *a) const {
+    inline int32_t ToStackOffset(const LAllocation *a) const {
         if (a->isArgument())
             return ArgToStackOffset(a->toArgument()->index());
         return SlotToStackOffset(a->toStackSlot()->slot());
     }
 
-    uint32 frameSize() const {
+    uint32_t frameSize() const {
         return frameClass_ == FrameSizeClass::None() ? frameDepth_ : frameClass_.frameSize();
     }
 
@@ -170,7 +170,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Encodes an LSnapshot into the compressed snapshot buffer, returning
     // false on failure.
     bool encode(LSnapshot *snapshot);
-    bool encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint, uint32 *startIndex);
+    bool encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint, uint32_t *startIndex);
 
     // Attempts to assign a BailoutId to a snapshot, if one isn't already set.
     // If the bailout table is full, this returns false, which is not a fatal
@@ -184,13 +184,13 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Mark the safepoint on |ins| as corresponding to the current assembler location.
     // The location should be just after a call.
     bool markSafepoint(LInstruction *ins);
-    bool markSafepointAt(uint32 offset, LInstruction *ins);
+    bool markSafepointAt(uint32_t offset, LInstruction *ins);
 
     // Mark the OSI point |ins| as corresponding to the current
     // assembler location inside the |osiIndices_|. Return the assembler
     // location for the OSI point return location within
     // |returnPointOffset|.
-    bool markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset);
+    bool markOsiPoint(LOsiPoint *ins, uint32_t *returnPointOffset);
 
     // Ensure that there is enough room between the last OSI point and the
     // current instruction, such that:
@@ -305,7 +305,7 @@ class OutOfLineCode : public TempObject
 {
     Label entry_;
     Label rejoin_;
-    uint32 framePushed_;
+    uint32_t framePushed_;
     jsbytecode *pc_;
     JSScript *script_;
 
@@ -327,10 +327,10 @@ class OutOfLineCode : public TempObject
     Label *rejoin() {
         return &rejoin_;
     }
-    void setFramePushed(uint32 framePushed) {
+    void setFramePushed(uint32_t framePushed) {
         framePushed_ = framePushed;
     }
-    uint32 framePushed() const {
+    uint32_t framePushed() const {
         return framePushed_;
     }
     void setSource(JSScript *script, jsbytecode *pc) {

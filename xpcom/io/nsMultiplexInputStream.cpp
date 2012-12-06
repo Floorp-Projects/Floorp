@@ -19,6 +19,8 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla::ipc;
 
@@ -509,7 +511,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
             }
 
             // See if we have enough data in the current stream.
-            if (NS_ABS(remaining) < streamPos) {
+            if (std::abs(remaining) < streamPos) {
                 rv = stream->Seek(NS_SEEK_END, remaining);
                 NS_ENSURE_SUCCESS(rv, rv);
 
@@ -517,7 +519,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 mStartedReadingCurrent = true;
 
                 remaining = 0;
-            } else if (NS_ABS(remaining) > streamPos) {
+            } else if (std::abs(remaining) > streamPos) {
                 if (i > oldCurrentStream ||
                     (i == oldCurrentStream && !oldStartedReadingCurrent)) {
                     // We're already at start so no need to seek this stream
@@ -527,7 +529,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                     rv = stream->Tell(&avail);
                     NS_ENSURE_SUCCESS(rv, rv);
 
-                    int64_t newPos = streamPos + NS_MIN(avail, NS_ABS(remaining));
+                    int64_t newPos = streamPos + NS_MIN(avail, std::abs(remaining));
 
                     rv = stream->Seek(NS_SEEK_END, -newPos);
                     NS_ENSURE_SUCCESS(rv, rv);

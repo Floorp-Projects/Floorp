@@ -178,6 +178,8 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyPingThreshold(PR_SecondsToInterval(58))
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
     , mConnectTimeout(90000)
+    , mParallelSpeculativeConnectLimit(6)
+    , mCritialRequestPrioritization(true)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -1136,6 +1138,22 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (NS_SUCCEEDED(rv))
             // the pref is in seconds, but the variable is in milliseconds
             mConnectTimeout = clamped(val, 1, 0xffff) * PR_MSEC_PER_SEC;
+    }
+
+    // The maximum number of current global half open sockets allowable
+    // for starting a new speculative connection.
+    if (PREF_CHANGED(HTTP_PREF("speculative-parallel-limit"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("speculative-parallel-limit"), &val);
+        if (NS_SUCCEEDED(rv))
+            mParallelSpeculativeConnectLimit = (uint32_t) clamped(val, 0, 1024);
+    }
+
+    // Whether or not to block requests for non head js/css items (e.g. media)
+    // while those elements load.
+    if (PREF_CHANGED(HTTP_PREF("rendering-critical-requests-prioritization"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("rendering-critical-requests-prioritization"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mCritialRequestPrioritization = cVar;
     }
 
     // on transition of network.http.diagnostics to true print

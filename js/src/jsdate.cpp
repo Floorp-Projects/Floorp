@@ -176,7 +176,7 @@ YearFromTime(double t)
 }
 
 inline int
-DaysInFebruary(int year)
+DaysInFebruary(double year)
 {
     return IsLeapYear(year) ? 29 : 28;
 }
@@ -228,6 +228,9 @@ MonthFromTime(double t)
 static double
 DateFromTime(double t)
 {
+    if (!MOZ_DOUBLE_IS_FINITE(t))
+        return js_NaN;
+
     double year = YearFromTime(t);
     double d = DayWithinYear(t, year);
 

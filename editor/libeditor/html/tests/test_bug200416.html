@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=200416
+-->
+<title>Test for Bug 200416</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=200416">Mozilla Bug 200416</a>
+<div contenteditable><span>foo<p>bar</p></span></div>
+<script>
+getSelection().collapse(document.querySelector("p").firstChild, 0);
+document.execCommand("delete");
+var innerHTML = document.querySelector("div").innerHTML;
+ok(/foo.*bar/.test(innerHTML), "foo needs to still come before bar");
+</script>

@@ -16,7 +16,7 @@ namespace ion {
 class IonCommonFrameLayout
 {
   private:
-    uint8 *returnAddress_;
+    uint8_t *returnAddress_;
     uintptr_t descriptor_;
 
     static const uintptr_t FrameTypeMask = (1 << FRAMETYPE_BITS) - 1;
@@ -41,7 +41,7 @@ class IonCommonFrameLayout
     void setFrameDescriptor(size_t size, FrameType type) {
         descriptor_ = (size << FRAMESIZE_SHIFT) | type;
     }
-    uint8 *returnAddress() const {
+    uint8_t *returnAddress() const {
         return returnAddress_;
     }
 };
@@ -80,8 +80,8 @@ class IonJSFrameLayout : public IonCommonFrameLayout
 
     // Computes a reference to a slot, where a slot is a distance from the base
     // frame pointer (as would be used for LStackSlot).
-    uintptr_t *slotRef(uint32 slot) {
-        return (uintptr_t *)((uint8 *)this - (slot * STACK_SLOT_SIZE));
+    uintptr_t *slotRef(uint32_t slot) {
+        return (uintptr_t *)((uint8_t *)this - (slot * STACK_SLOT_SIZE));
     }
 
     static inline size_t Size() {
@@ -147,8 +147,8 @@ class IonDOMExitFrameLayout;
 
 class IonExitFrameLayout : public IonCommonFrameLayout
 {
-    inline uint8 *top() {
-        return reinterpret_cast<uint8 *>(this + 1);
+    inline uint8_t *top() {
+        return reinterpret_cast<uint8_t *>(this + 1);
     }
 
   public:
@@ -160,14 +160,14 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     }
 
     inline IonExitFooterFrame *footer() {
-        uint8 *sp = reinterpret_cast<uint8 *>(this);
+        uint8_t *sp = reinterpret_cast<uint8_t *>(this);
         return reinterpret_cast<IonExitFooterFrame *>(sp - IonExitFooterFrame::Size());
     }
 
     // argBase targets the point which precedes the exit frame. Arguments of VM
     // each wrapper are pushed before the exit frame.  This correspond exactly
     // to the value of the argBase register of the generateVMWrapper function.
-    inline uint8 *argBase() {
+    inline uint8_t *argBase() {
         JS_ASSERT(footer()->ionCode() != NULL);
         return top();
     }
@@ -405,11 +405,11 @@ class InvalidationBailoutStack
     double      fpregs_[FloatRegisters::Total];
     uintptr_t   regs_[Registers::Total];
     IonScript   *ionScript_;
-    uint8       *osiPointReturnAddress_;
+    uint8_t       *osiPointReturnAddress_;
 
   public:
-    uint8 *sp() const {
-        return (uint8 *) this + sizeof(InvalidationBailoutStack);
+    uint8_t *sp() const {
+        return (uint8_t *) this + sizeof(InvalidationBailoutStack);
     }
     IonJSFrameLayout *fp() const;
     MachineState machine() {
@@ -419,7 +419,7 @@ class InvalidationBailoutStack
     IonScript *ionScript() const {
         return ionScript_;
     }
-    uint8 *osiPointReturnAddress() const {
+    uint8_t *osiPointReturnAddress() const {
         return osiPointReturnAddress_;
     }
 

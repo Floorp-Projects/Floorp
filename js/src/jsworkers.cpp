@@ -315,7 +315,7 @@ WorkerThread::threadLoop()
 
         ionBuilder = state.ionWorklist.popCopy();
 
-        ion::ExecutionMode executionMode = ionBuilder->info().executionMode();
+        DebugOnly<ion::ExecutionMode> executionMode = ionBuilder->info().executionMode();
         JS_ASSERT(GetIonScript(ionBuilder->script().unsafeGet(), executionMode) == ION_COMPILING_SCRIPT);
 
         state.unlock();

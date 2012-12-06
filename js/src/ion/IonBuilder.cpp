@@ -27,7 +27,7 @@ using namespace js::ion;
 using mozilla::DebugOnly;
 
 IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32 loopDepth)
+                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32_t loopDepth)
   : MIRGenerator(cx->compartment, temp, graph, info),
     backgroundCodegen_(NULL),
     recompileInfo(cx->compartment->types.compiledInfo),
@@ -75,7 +75,7 @@ IonBuilder::spew(const char *message)
 #endif
 }
 
-static inline int32
+static inline int32_t
 GetJumpOffset(jsbytecode *pc)
 {
     JS_ASSERT(js_CodeSpec[JSOp(*pc)].type() == JOF_JUMP);
@@ -148,7 +148,7 @@ IonBuilder::CFGState::LookupSwitch(jsbytecode *exitpc)
 }
 
 JSFunction *
-IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
+IonBuilder::getSingleCallTarget(uint32_t argc, jsbytecode *pc)
 {
     AutoAssertNoGC nogc;
 
@@ -164,7 +164,7 @@ IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
 }
 
 uint32_t
-IonBuilder::getPolyCallTargets(uint32 argc, jsbytecode *pc,
+IonBuilder::getPolyCallTargets(uint32_t argc, jsbytecode *pc,
                                AutoObjectVector &targets, uint32_t maxTargets)
 {
     types::TypeSet *calleeTypes = oracle->getCallTarget(script_, argc, pc);
@@ -283,7 +283,7 @@ IonBuilder::build()
         return false;
 
     // Initialize local variables.
-    for (uint32 i = 0; i < info().nlocals(); i++) {
+    for (uint32_t i = 0; i < info().nlocals(); i++) {
         MConstant *undef = MConstant::New(UndefinedValue());
         current->add(undef);
         current->initSlot(info().localSlot(i), undef);
@@ -336,7 +336,7 @@ IonBuilder::build()
     // So we attach the initial resume point to each parameter, which the type
     // analysis explicitly checks (this is the same mechanism used for
     // effectful operations).
-    for (uint32 i = 0; i < CountArgSlots(info().fun()); i++) {
+    for (uint32_t i = 0; i < CountArgSlots(info().fun()); i++) {
         MInstruction *ins = current->getEntrySlot(i)->toInstruction();
         if (ins->type() == MIRType_Value)
             ins->setResumePoint(current->entryResumePoint());
@@ -474,7 +474,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     IonSpew(IonSpew_Inlining, "Initializing %u local slots", info().nlocals());
 
     // Initialize local variables.
-    for (uint32 i = 0; i < info().nlocals(); i++) {
+    for (uint32_t i = 0; i < info().nlocals(); i++) {
         MConstant *undef = MConstant::New(UndefinedValue());
         current->add(undef);
         current->initSlot(info().localSlot(i), undef);
@@ -496,9 +496,9 @@ void
 IonBuilder::rewriteParameters()
 {
     JS_ASSERT(info().scopeChainSlot() == 0);
-    static const uint32 START_SLOT = 1;
+    static const uint32_t START_SLOT = 1;
 
-    for (uint32 i = START_SLOT; i < CountArgSlots(info().fun()); i++) {
+    for (uint32_t i = START_SLOT; i < CountArgSlots(info().fun()); i++) {
         MParameter *param = current->getSlot(i)->toParameter();
 
         // Find the original (not cloned) type set for the MParameter, as we
@@ -555,7 +555,7 @@ IonBuilder::initParameters()
     current->add(param);
     current->initSlot(info().thisSlot(), param);
 
-    for (uint32 i = 0; i < info().nargs(); i++) {
+    for (uint32_t i = 0; i < info().nargs(); i++) {
         param = MParameter::New(i, oracle->parameterTypeSet(script_, i));
         current->add(param);
         current->initSlot(info().argSlot(i), param);
@@ -796,6 +796,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_IFEQ:
         return jsop_ifeq(JSOP_IFEQ);
+
+      case JSOP_CONDSWITCH:
+        return jsop_condswitch();
 
       case JSOP_BITNOT:
         return jsop_bitnot();
@@ -1194,6 +1197,12 @@ IonBuilder::processCfgEntry(CFGState &state)
       case CFGState::LOOKUP_SWITCH:
         return processNextLookupSwitchCase(state);
 
+      case CFGState::COND_SWITCH_CASE:
+        return processCondSwitchCase(state);
+
+      case CFGState::COND_SWITCH_BODY:
+        return processCondSwitchBody(state);
+
       case CFGState::AND_OR:
         return processAndOrEnd(state);
 
@@ -1581,7 +1590,7 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
 
     // Test if there are still unprocessed successors (cases/default)
     if (state.tableswitch.currentBlock >= state.tableswitch.ins->numBlocks())
-        return processTableSwitchEnd(state);
+        return processSwitchEnd(state.tableswitch.breaks, state.tableswitch.exitpc);
 
     // Get the next successor
     MBasicBlock *successor = state.tableswitch.ins->getBlock(state.tableswitch.currentBlock);
@@ -1610,52 +1619,18 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
 }
 
 IonBuilder::ControlStatus
-IonBuilder::processTableSwitchEnd(CFGState &state)
-{
-    // No break statements and no current
-    // This means that control flow is cut-off from this point
-    // (e.g. all cases have return statements).
-    if (!state.tableswitch.breaks && !current)
-        return ControlStatus_Ended;
-
-    // Create successor block.
-    // If there are breaks, create block with breaks as predecessor
-    // Else create a block with current as predecessor
-    MBasicBlock *successor = NULL;
-    if (state.tableswitch.breaks)
-        successor = createBreakCatchBlock(state.tableswitch.breaks, state.tableswitch.exitpc);
-    else
-        successor = newBlock(current, state.tableswitch.exitpc);
-
-    if (!successor)
-        return ControlStatus_Error;
-
-    // If there is current, the current block flows into this one.
-    // So current is also a predecessor to this block
-    if (current) {
-        current->end(MGoto::New(successor));
-        if (state.tableswitch.breaks)
-            successor->addPredecessor(current);
-    }
-
-    pc = state.tableswitch.exitpc;
-    current = successor;
-    return ControlStatus_Joined;
-}
-
-IonBuilder::ControlStatus
 IonBuilder::processNextLookupSwitchCase(CFGState &state)
 {
     JS_ASSERT(state.state == CFGState::LOOKUP_SWITCH);
 
     size_t curBlock = state.lookupswitch.currentBlock;
     IonSpew(IonSpew_MIR, "processNextLookupSwitchCase curBlock=%d", curBlock);
-    
+
     state.lookupswitch.currentBlock = ++curBlock;
 
     // Test if there are still unprocessed successors (cases/default)
     if (curBlock >= state.lookupswitch.bodies->length())
-        return processLookupSwitchEnd(state);
+        return processSwitchEnd(state.lookupswitch.breaks, state.lookupswitch.exitpc);
 
     // Get the next successor
     MBasicBlock *successor = (*state.lookupswitch.bodies)[curBlock];
@@ -1681,40 +1656,6 @@ IonBuilder::processNextLookupSwitchCase(CFGState &state)
     current = successor;
     pc = current->pc();
     return ControlStatus_Jumped;
-}
-
-IonBuilder::ControlStatus
-IonBuilder::processLookupSwitchEnd(CFGState &state)
-{
-    // No break statements, no current.
-    // This means that control flow is cut-off from this point
-    // (e.g. all cases have return statements).
-    if (!state.lookupswitch.breaks && !current)
-        return ControlStatus_Ended;
-
-    // Create successor block.
-    // If there are breaks, create block with breaks as predecessor
-    // Else create a block with current as predecessor
-    MBasicBlock *successor = NULL;
-    if (state.lookupswitch.breaks)
-        successor = createBreakCatchBlock(state.lookupswitch.breaks, state.lookupswitch.exitpc);
-    else
-        successor = newBlock(current, state.lookupswitch.exitpc);
-
-    if (!successor)
-        return ControlStatus_Ended;
-
-    // If there is current, the current block flows into this one.
-    // So current is also a predecessor to this block
-    if (current) {
-        current->end(MGoto::New(successor));
-        if (state.lookupswitch.breaks)
-            successor->addPredecessor(current);
-    }
-
-    pc = state.lookupswitch.exitpc;
-    current = successor;
-    return ControlStatus_Joined;
 }
 
 IonBuilder::ControlStatus
@@ -1836,16 +1777,61 @@ IonBuilder::processSwitchBreak(JSOp op, jssrcnote *sn)
     JS_ASSERT(found);
     CFGState &state = *found;
 
-    JS_ASSERT(state.state == CFGState::TABLE_SWITCH || state.state == CFGState::LOOKUP_SWITCH);
+    DeferredEdge **breaks = NULL;
+    switch (state.state) {
+      case CFGState::TABLE_SWITCH:
+        breaks = &state.tableswitch.breaks;
+        break;
+      case CFGState::LOOKUP_SWITCH:
+        breaks = &state.lookupswitch.breaks;
+        break;
+      case CFGState::COND_SWITCH_BODY:
+        breaks = &state.condswitch.breaks;
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected switch state.");
+        return ControlStatus_Error;
+    }
 
-    if (state.state == CFGState::TABLE_SWITCH)
-    state.tableswitch.breaks = new DeferredEdge(current, state.tableswitch.breaks);
-    else
-        state.lookupswitch.breaks = new DeferredEdge(current, state.lookupswitch.breaks);
+    *breaks = new DeferredEdge(current, *breaks);
 
     current = NULL;
     pc += js_CodeSpec[op].length;
     return processControlEnd();
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processSwitchEnd(DeferredEdge *breaks, jsbytecode *exitpc)
+{
+    // No break statements, no current.
+    // This means that control flow is cut-off from this point
+    // (e.g. all cases have return statements).
+    if (!breaks && !current)
+        return ControlStatus_Ended;
+
+    // Create successor block.
+    // If there are breaks, create block with breaks as predecessor
+    // Else create a block with current as predecessor
+    MBasicBlock *successor = NULL;
+    if (breaks)
+        successor = createBreakCatchBlock(breaks, exitpc);
+    else
+        successor = newBlock(current, exitpc);
+
+    if (!successor)
+        return ControlStatus_Ended;
+
+    // If there is current, the current block flows into this one.
+    // So current is also a predecessor to this block
+    if (current) {
+        current->end(MGoto::New(successor));
+        if (breaks)
+            successor->addPredecessor(current);
+    }
+
+    pc = exitpc;
+    current = successor;
+    return ControlStatus_Joined;
 }
 
 IonBuilder::ControlStatus
@@ -2213,7 +2199,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     // Move defaultcase to the end, to maintain RPO.
     graph().moveBlockToEnd(defaultcase);
 
-    JS_ASSERT(tableswitch->numCases() == (uint32)(high - low + 1));
+    JS_ASSERT(tableswitch->numCases() == (uint32_t)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
 
     // Sort the list of blocks that still needs to get processed by pc
@@ -2444,6 +2430,292 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
 }
 
 bool
+IonBuilder::jsop_condswitch()
+{
+    // CondSwitch op looks as follows:
+    //   condswitch [length +exit_pc; first case offset +next-case ]
+    //   {
+    //     {
+    //       ... any code ...
+    //       case (+jump) [pcdelta offset +next-case]
+    //     }+
+    //     default (+jump)
+    //     ... jump targets ...
+    //   }
+    //
+    // The default case is always emitted even if there is no default case in
+    // the source.  The last case statement pcdelta source note might have a 0
+    // offset on the last case (not all the time).
+    //
+    // A conditional evaluate the condition of each case and compare it to the
+    // switch value with a strict equality.  Cases conditions are iterated
+    // linearly until one is matching. If one case succeeds, the flow jumps into
+    // the corresponding body block.  The body block might alias others and
+    // might continue in the next body block if the body is not terminated with
+    // a break.
+    //
+    // Algorithm:
+    //  1/ Loop over the case chain to reach the default target
+    //   & Estimate the number of uniq bodies.
+    //  2/ Generate code for all cases (see processCondSwitchCase).
+    //  3/ Generate code for all bodies (see processCondSwitchBody).
+
+    JS_ASSERT(JSOp(*pc) == JSOP_CONDSWITCH);
+    jssrcnote *sn = info().getNote(cx, pc);
+
+    // Get the exit pc
+    jsbytecode *exitpc = pc + js_GetSrcNoteOffset(sn, 0);
+    jsbytecode *firstCase = pc + js_GetSrcNoteOffset(sn, 1);
+
+    // Iterate all cases in the conditional switch.
+    // - Stop at the default case. (always emitted after the last case)
+    // - Estimate the number of uniq bodies. This estimation might be off by 1
+    //   if the default body alias a case body.
+    jsbytecode *curCase = firstCase;
+    jsbytecode *lastTarget = GetJumpOffset(curCase) + curCase;
+    size_t nbBodies = 2; // default target and the first body.
+
+    JS_ASSERT(pc < curCase && curCase <= exitpc);
+    while (JSOp(*curCase) == JSOP_CASE) {
+        // Fetch the next case.
+        jssrcnote *caseSn = info().getNote(cx, curCase);
+        JS_ASSERT(caseSn && SN_TYPE(caseSn) == SRC_PCDELTA);
+        ptrdiff_t off = js_GetSrcNoteOffset(caseSn, 0);
+        curCase = off ? curCase + off : GetNextPc(curCase);
+        JS_ASSERT(pc < curCase && curCase <= exitpc);
+
+        // Count non-aliased cases.
+        jsbytecode *curTarget = GetJumpOffset(curCase) + curCase;
+        if (lastTarget < curTarget)
+            nbBodies++;
+        lastTarget = curTarget;
+    }
+
+    // The current case now be the default case which jump to the body of the
+    // default case, which might be behind the last target.
+    JS_ASSERT(JSOp(*curCase) == JSOP_DEFAULT);
+    jsbytecode *defaultTarget = GetJumpOffset(curCase) + curCase;
+    JS_ASSERT(curCase < defaultTarget && defaultTarget <= exitpc);
+
+    // Allocate the current graph state.
+    CFGState state = CFGState::CondSwitch(exitpc, defaultTarget);
+    if (!state.condswitch.bodies || !state.condswitch.bodies->init(nbBodies))
+        return ControlStatus_Error;
+
+    // We loop on case conditions with processCondSwitchCase.
+    JS_ASSERT(JSOp(*firstCase) == JSOP_CASE);
+    state.stopAt = firstCase;
+    state.state = CFGState::COND_SWITCH_CASE;
+
+    return cfgStack_.append(state);
+}
+
+IonBuilder::CFGState
+IonBuilder::CFGState::CondSwitch(jsbytecode *exitpc, jsbytecode *defaultTarget)
+{
+    CFGState state;
+    state.state = COND_SWITCH_CASE;
+    state.stopAt = NULL;
+    state.condswitch.bodies = (FixedList<MBasicBlock *> *)GetIonContext()->temp->allocate(
+        sizeof(FixedList<MBasicBlock *>));
+    state.condswitch.currentIdx = 0;
+    state.condswitch.defaultTarget = defaultTarget;
+    state.condswitch.defaultIdx = uint32_t(-1);
+    state.condswitch.exitpc = exitpc;
+    state.condswitch.breaks = NULL;
+    return state;
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processCondSwitchCase(CFGState &state)
+{
+    JS_ASSERT(state.state == CFGState::COND_SWITCH_CASE);
+    JS_ASSERT(!state.condswitch.breaks);
+    JS_ASSERT(current);
+    JS_ASSERT(JSOp(*pc) == JSOP_CASE);
+    FixedList<MBasicBlock *> &bodies = *state.condswitch.bodies;
+    jsbytecode *defaultTarget = state.condswitch.defaultTarget;
+    uint32_t &currentIdx = state.condswitch.currentIdx;
+    jsbytecode *lastTarget = currentIdx ? bodies[currentIdx - 1]->pc() : NULL;
+
+    // Fetch the following case in which we will continue.
+    jssrcnote *sn = info().getNote(cx, pc);
+    ptrdiff_t off = js_GetSrcNoteOffset(sn, 0);
+    jsbytecode *casePc = off ? pc + off : GetNextPc(pc);
+    bool caseIsDefault = JSOp(*casePc) == JSOP_DEFAULT;
+    JS_ASSERT(JSOp(*casePc) == JSOP_CASE || caseIsDefault);
+
+    // Allocate the block of the matching case.
+    bool bodyIsNew = false;
+    MBasicBlock *bodyBlock = NULL;
+    jsbytecode *bodyTarget = pc + GetJumpOffset(pc);
+    if (lastTarget < bodyTarget) {
+        // If the default body is in the middle or aliasing the current target.
+        if (lastTarget < defaultTarget && defaultTarget <= bodyTarget) {
+            JS_ASSERT(state.condswitch.defaultIdx == uint32_t(-1));
+            state.condswitch.defaultIdx = currentIdx;
+            bodies[currentIdx] = NULL;
+            // If the default body does not alias any and it would be allocated
+            // later and stored in the defaultIdx location.
+            if (defaultTarget < bodyTarget)
+                currentIdx++;
+        }
+
+        bodyIsNew = true;
+        // Pop switch and case operands.
+        bodyBlock = newBlockPopN(current, bodyTarget, 2);
+        bodies[currentIdx++] = bodyBlock;
+    } else {
+        // This body alias the previous one.
+        JS_ASSERT(lastTarget == bodyTarget);
+        JS_ASSERT(currentIdx > 0);
+        bodyBlock = bodies[currentIdx - 1];
+    }
+
+    if (!bodyBlock)
+        return ControlStatus_Error;
+
+    lastTarget = bodyTarget;
+
+    // Allocate the block of the non-matching case.  This can either be a normal
+    // case or the default case.
+    bool caseIsNew = false;
+    MBasicBlock *caseBlock = NULL;
+    if (!caseIsDefault) {
+        caseIsNew = true;
+        // Pop the case operand.
+        caseBlock = newBlockPopN(current, GetNextPc(pc), 1);
+    } else {
+        // The non-matching case is the default case, which jump directly to its
+        // body. Skip the creation of a default case block and directly create
+        // the default body if it does not alias any previous body.
+
+        if (state.condswitch.defaultIdx == uint32_t(-1)) {
+            // The default target is the last target.
+            JS_ASSERT(lastTarget < defaultTarget);
+            state.condswitch.defaultIdx = currentIdx++;
+            caseIsNew = true;
+        } else if (bodies[state.condswitch.defaultIdx] == NULL) {
+            // The default target is in the middle and it does not alias any
+            // case target.
+            JS_ASSERT(defaultTarget < lastTarget);
+            caseIsNew = true;
+        } else {
+            // The default target is in the middle and it alias a case target.
+            JS_ASSERT(defaultTarget <= lastTarget);
+            caseBlock = bodies[state.condswitch.defaultIdx];
+        }
+
+        // Allocate and register the default body.
+        if (caseIsNew) {
+            // Pop the case & switch operands.
+            caseBlock = newBlockPopN(current, defaultTarget, 2);
+            bodies[state.condswitch.defaultIdx] = caseBlock;
+        }
+    }
+
+    if (!caseBlock)
+        return ControlStatus_Error;
+
+    // Terminate the last case condition block by emitting the code
+    // corresponding to JSOP_CASE bytecode.
+    if (bodyBlock != caseBlock) {
+        MDefinition *caseOperand = current->pop();
+        MDefinition *switchOperand = current->peek(-1);
+        MCompare *cmpResult = MCompare::New(switchOperand, caseOperand, JSOP_STRICTEQ);
+        JS_ASSERT(!cmpResult->isEffectful());
+        current->add(cmpResult);
+        current->end(MTest::New(cmpResult, bodyBlock, caseBlock));
+
+        // Add last case as predecessor of the body if the body is aliasing
+        // the previous case body.
+        if (!bodyIsNew && !bodyBlock->addPredecessorPopN(current, 1))
+            return ControlStatus_Error;
+
+        // Add last case as predecessor of the non-matching case if the
+        // non-matching case is an aliased default case. We need to pop the
+        // switch operand as we skip the default case block and use the default
+        // body block directly.
+        JS_ASSERT_IF(!caseIsNew, caseIsDefault);
+        if (!caseIsNew && !caseBlock->addPredecessorPopN(current, 1))
+            return ControlStatus_Error;
+    } else {
+        // The default case alias the last case body.
+        JS_ASSERT(caseIsDefault);
+        current->pop(); // Case operand
+        current->pop(); // Switch operand
+        current->end(MGoto::New(bodyBlock));
+        if (!bodyIsNew && !bodyBlock->addPredecessor(current))
+            return ControlStatus_Error;
+    }
+
+    if (caseIsDefault) {
+        // The last case condition is finished.  Loop in processCondSwitchBody,
+        // with potential stops in processSwitchBreak.  Check that the bodies
+        // fixed list is over-estimate by at most 1, and shrink the size such as
+        // length can be used as an upper bound while iterating bodies.
+        JS_ASSERT(currentIdx == bodies.length() || currentIdx + 1 == bodies.length());
+        bodies.shrink(bodies.length() - currentIdx);
+
+        // Handle break statements in processSwitchBreak while processing
+        // bodies.
+        ControlFlowInfo breakInfo(cfgStack_.length() - 1, state.condswitch.exitpc);
+        if (!switches_.append(breakInfo))
+            return ControlStatus_Error;
+
+        // Jump into the first body.
+        currentIdx = 0;
+        current = NULL;
+        state.state = CFGState::COND_SWITCH_BODY;
+        return processCondSwitchBody(state);
+    }
+
+    // Continue until the case condition.
+    current = caseBlock;
+    pc = current->pc();
+    state.stopAt = casePc;
+    return ControlStatus_Jumped;
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processCondSwitchBody(CFGState &state)
+{
+    JS_ASSERT(state.state == CFGState::COND_SWITCH_BODY);
+    JS_ASSERT(pc <= state.condswitch.exitpc);
+    FixedList<MBasicBlock *> &bodies = *state.condswitch.bodies;
+    uint32_t &currentIdx = state.condswitch.currentIdx;
+
+    JS_ASSERT(currentIdx <= bodies.length());
+    if (currentIdx == bodies.length()) {
+        JS_ASSERT_IF(current, pc == state.condswitch.exitpc);
+        return processSwitchEnd(state.condswitch.breaks, state.condswitch.exitpc);
+    }
+
+    // Get the next body
+    MBasicBlock *nextBody = bodies[currentIdx++];
+    JS_ASSERT_IF(current, pc == nextBody->pc());
+
+    // Fix the reverse post-order iteration.
+    graph().moveBlockToEnd(nextBody);
+
+    // The last body continue into the new one.
+    if (current) {
+        current->end(MGoto::New(nextBody));
+        nextBody->addPredecessor(current);
+    }
+
+    // Continue in the next body.
+    current = nextBody;
+    pc = current->pc();
+
+    if (currentIdx < bodies.length())
+        state.stopAt = bodies[currentIdx]->pc();
+    else
+        state.stopAt = state.condswitch.exitpc;
+    return ControlStatus_Jumped;
+}
+
+bool
 IonBuilder::jsop_andor(JSOp op)
 {
     jsbytecode *rhsStart = pc + js_CodeSpec[op].length;
@@ -2475,8 +2747,8 @@ IonBuilder::jsop_andor(JSOp op)
 bool
 IonBuilder::jsop_dup2()
 {
-    uint32 lhsSlot = current->stackDepth() - 2;
-    uint32 rhsSlot = current->stackDepth() - 1;
+    uint32_t lhsSlot = current->stackDepth() - 2;
+    uint32_t rhsSlot = current->stackDepth() - 1;
     current->pushSlot(lhsSlot);
     current->pushSlot(rhsSlot);
     return true;
@@ -2818,7 +3090,7 @@ class AutoAccumulateExits
 
 
 bool
-IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
+IonBuilder::jsop_call_inline(HandleFunction callee, uint32_t argc, bool constructing,
                              MConstant *constFun, MBasicBlock *bottom,
                              Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
 {
@@ -2844,7 +3116,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     MDefinitionVector argv;
     if (!argv.resizeUninitialized(argc + 1))
         return false;
-    for (int32 i = argc; i >= 0; i--)
+    for (int32_t i = argc; i >= 0; i--)
         argv[i] = current->pop();
 
     // Compilation information is allocated for the duration of the current tempLifoAlloc
@@ -2914,7 +3186,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
 }
 
 bool
-IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32 argc)
+IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32_t argc)
 {
     AssertCanGC();
 
@@ -3177,8 +3449,8 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int
     fallbackEndBlock->add(prepCall);
 
     // Grab the arguments for the call directly from the current block's stack.
-    for (int32 i = 0; i <= argc; i++) {
-        int32 argno = argc - i;
+    for (int32_t i = 0; i <= argc; i++) {
+        int32_t argno = argc - i;
         MDefinition *argDefn = fallbackEndBlock->pop();
         JS_ASSERT(!argDefn->isPassArg());
         MPassArg *passArg = MPassArg::New(argDefn);
@@ -3210,11 +3482,11 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int
 }
 
 bool
-IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing,
+IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32_t argc, bool constructing,
                                types::StackTypeSet *types, types::StackTypeSet *barrier)
 {
 #ifdef DEBUG
-    uint32 origStackDepth = current->stackDepth();
+    uint32_t origStackDepth = current->stackDepth();
 #endif
 
     IonSpew(IonSpew_Inlining, "Inlining %d targets", (int) targets.length());
@@ -3225,7 +3497,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
 
     // Unwrap all the MPassArgs and replace them with their inputs, and discard the
     // MPassArgs.
-    for (int32 i = argc; i >= 0; i--) {
+    for (int32_t i = argc; i >= 0; i--) {
         // Unwrap each MPassArg, replacing it with its contents.
         int argSlotDepth = -((int) i + 1);
         MPassArg *passArg = top->peek(argSlotDepth)->toPassArg();
@@ -3621,7 +3893,7 @@ IonBuilder::createThis(HandleFunction target, MDefinition *callee)
 }
 
 bool
-IonBuilder::jsop_funcall(uint32 argc)
+IonBuilder::jsop_funcall(uint32_t argc)
 {
     // Stack for JSOP_FUNCALL:
     // 1:      MPassArg(arg0)
@@ -3670,7 +3942,7 @@ IonBuilder::jsop_funcall(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_funapply(uint32 argc)
+IonBuilder::jsop_funapply(uint32_t argc)
 {
     RootedFunction native(cx, getSingleCallTarget(argc, pc));
     if (argc != 2)
@@ -3740,7 +4012,7 @@ IonBuilder::jsop_funapply(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_call(uint32 argc, bool constructing)
+IonBuilder::jsop_call(uint32_t argc, bool constructing)
 {
     AssertCanGC();
 
@@ -3777,17 +4049,17 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
 }
 
 MCall *
-IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing)
+IonBuilder::makeCallHelper(HandleFunction target, uint32_t argc, bool constructing)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.
 
-    uint32 targetArgs = argc;
+    uint32_t targetArgs = argc;
 
     // Collect number of missing arguments provided that the target is
     // scripted. Native functions are passed an explicit 'argc' parameter.
     if (target && !target->isNative())
-        targetArgs = Max<uint32>(target->nargs, argc);
+        targetArgs = Max<uint32_t>(target->nargs, argc);
 
     MCall *call = MCall::New(target, targetArgs + 1, argc, constructing);
     if (!call)
@@ -3806,7 +4078,7 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing
 
     // Add explicit arguments.
     // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
-    for (int32 i = argc; i > 0; i--)
+    for (int32_t i = argc; i > 0; i--)
         call->addArg(i, current->pop()->toPassArg());
 
     // Place an MPrepareCall before the first passed argument, before we
@@ -3847,7 +4119,7 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32 argc, bool constructing
 }
 
 bool
-IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
+IonBuilder::makeCallBarrier(HandleFunction target, uint32_t argc,
                             bool constructing,
                             types::StackTypeSet *types,
                             types::StackTypeSet *barrier)
@@ -3864,7 +4136,7 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
 }
 
 bool
-IonBuilder::makeCall(HandleFunction target, uint32 argc, bool constructing)
+IonBuilder::makeCall(HandleFunction target, uint32_t argc, bool constructing)
 {
     types::StackTypeSet *barrier;
     types::StackTypeSet *types = oracle->returnTypeSet(script_, pc, &barrier);
@@ -3889,7 +4161,7 @@ IonBuilder::jsop_compare(JSOp op)
 }
 
 JSObject *
-IonBuilder::getNewArrayTemplateObject(uint32 count)
+IonBuilder::getNewArrayTemplateObject(uint32_t count)
 {
     RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, count));
     if (!templateObject)
@@ -3910,7 +4182,7 @@ IonBuilder::getNewArrayTemplateObject(uint32 count)
 }
 
 bool
-IonBuilder::jsop_newarray(uint32 count)
+IonBuilder::jsop_newarray(uint32_t count)
 {
     JS_ASSERT(script_->compileAndGo);
 
@@ -4064,7 +4336,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     MSlots *slots = MSlots::New(obj);
     current->add(slots);
 
-    uint32 slot = templateObject->dynamicSlotIndex(shape->slot());
+    uint32_t slot = templateObject->dynamicSlotIndex(shape->slot());
     MStoreSlot *store = MStoreSlot::New(slots, slot, value);
     if (needsBarrier)
         store->setNeedsBarrier();
@@ -4074,7 +4346,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
 }
 
 MBasicBlock *
-IonBuilder::addBlock(MBasicBlock *block, uint32 loopDepth)
+IonBuilder::addBlock(MBasicBlock *block, uint32_t loopDepth)
 {
     if (!block)
         return NULL;
@@ -4099,6 +4371,13 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, MResumePoint *pri
 }
 
 MBasicBlock *
+IonBuilder::newBlockPopN(MBasicBlock *predecessor, jsbytecode *pc, uint32_t popped)
+{
+    MBasicBlock *block = MBasicBlock::NewPopN(graph(), info(), predecessor, pc, MBasicBlock::NORMAL, popped);
+    return addBlock(block, loopDepth_);
+}
+
+MBasicBlock *
 IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
@@ -4109,7 +4388,7 @@ IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode 
 }
 
 MBasicBlock *
-IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth)
+IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32_t loopDepth)
 {
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
     return addBlock(block, loopDepth);
@@ -4134,7 +4413,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
     // Initialize |scopeChain|.
     {
-        uint32 slot = info().scopeChainSlot();
+        uint32_t slot = info().scopeChainSlot();
 
         MOsrScopeChain *scopev = MOsrScopeChain::New(entry);
         osrBlock->add(scopev);
@@ -4143,7 +4422,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
     if (info().fun()) {
         // Initialize |this| parameter.
-        uint32 slot = info().thisSlot();
+        uint32_t slot = info().thisSlot();
         ptrdiff_t offset = StackFrame::offsetOfThis(info().fun());
 
         MOsrValue *thisv = MOsrValue::New(entry, offset);
@@ -4151,8 +4430,8 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         osrBlock->initSlot(slot, thisv);
 
         // Initialize arguments.
-        for (uint32 i = 0; i < info().nargs(); i++) {
-            uint32 slot = info().argSlot(i);
+        for (uint32_t i = 0; i < info().nargs(); i++) {
+            uint32_t slot = info().argSlot(i);
             ptrdiff_t offset = StackFrame::offsetOfFormalArg(info().fun(), i);
 
             MOsrValue *osrv = MOsrValue::New(entry, offset);
@@ -4162,8 +4441,8 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     }
 
     // Initialize locals.
-    for (uint32 i = 0; i < info().nlocals(); i++) {
-        uint32 slot = info().localSlot(i);
+    for (uint32_t i = 0; i < info().nlocals(); i++) {
+        uint32_t slot = info().localSlot(i);
         ptrdiff_t offset = StackFrame::offsetOfFixed(i);
 
         MOsrValue *osrv = MOsrValue::New(entry, offset);
@@ -4172,9 +4451,9 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     }
 
     // Initialize stack.
-    uint32 numSlots = preheader->stackDepth() - CountArgSlots(info().fun()) - info().nlocals();
-    for (uint32 i = 0; i < numSlots; i++) {
-        uint32 slot = info().stackSlot(i);
+    uint32_t numSlots = preheader->stackDepth() - CountArgSlots(info().fun()) - info().nlocals();
+    for (uint32_t i = 0; i < numSlots; i++) {
+        uint32_t slot = info().stackSlot(i);
         ptrdiff_t offset = StackFrame::offsetOfFixed(info().nlocals() + i);
 
         MOsrValue *osrv = MOsrValue::New(entry, offset);
@@ -4209,14 +4488,14 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         return NULL;
 
     // Fill slotTypes with the types of the predecessor block.
-    for (uint32 i = 0; i < osrBlock->stackDepth(); i++)
+    for (uint32_t i = 0; i < osrBlock->stackDepth(); i++)
         slotTypes[i] = MIRType_Value;
 
     // Update slotTypes for slots that may have a different type at this join point.
     if (!oracle->getOsrTypes(loopEntry, slotTypes))
         return NULL;
 
-    for (uint32 i = 1; i < osrBlock->stackDepth(); i++) {
+    for (uint32_t i = 1; i < osrBlock->stackDepth(); i++) {
         // Unbox the MOsrValue if it is known to be unboxable.
         switch (slotTypes[i]) {
           case MIRType_Boolean:
@@ -6295,7 +6574,7 @@ IonBuilder::jsop_lambda(JSFunction *fun)
 }
 
 bool
-IonBuilder::jsop_deflocalfun(uint32 local, JSFunction *fun)
+IonBuilder::jsop_deflocalfun(uint32_t local, JSFunction *fun)
 {
     JS_ASSERT(script_->analysis()->usesScopeChain());
 
@@ -6310,7 +6589,7 @@ IonBuilder::jsop_deflocalfun(uint32 local, JSFunction *fun)
 }
 
 bool
-IonBuilder::jsop_defvar(uint32 index)
+IonBuilder::jsop_defvar(uint32_t index)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_DEFVAR || JSOp(*pc) == JSOP_DEFCONST);
 
@@ -6388,7 +6667,7 @@ IonBuilder::jsop_toid()
 }
 
 bool
-IonBuilder::jsop_iter(uint8 flags)
+IonBuilder::jsop_iter(uint8_t flags)
 {
     MDefinition *obj = current->pop();
     MInstruction *ins = MIteratorStart::New(obj, flags);

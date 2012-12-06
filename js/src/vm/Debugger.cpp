@@ -24,6 +24,7 @@
 #include "methodjit/Retcon.h"
 #include "js/Vector.h"
 
+#include "gc/FindSCCs-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -1560,7 +1561,7 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
 }
 
 /* static */ void
-Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder &finder)
+Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder<JSCompartment> &finder)
 {
     /*
      * For debugger cross compartment wrappers, add edges in the opposite
@@ -1574,7 +1575,8 @@ Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder &fin
             continue;
         if (dbg->scripts.hasKeyInCompartment(comp) ||
             dbg->objects.hasKeyInCompartment(comp) ||
-            dbg->environments.hasKeyInCompartment(comp)) {
+            dbg->environments.hasKeyInCompartment(comp))
+        {
             finder.addEdgeTo(w);
         }
     }
@@ -3621,7 +3623,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, StackFrame
         return false;
 
     script->isActiveEval = true;
-    return ExecuteKernel(cx, script, *env, thisv, EXECUTE_DEBUG, fp, rval);
+    ExecuteType type = !fp && env->isGlobal() ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
+    return ExecuteKernel(cx, script, *env, thisv, type, fp, rval);
 }
 
 static JSBool
@@ -4146,6 +4149,8 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     PropDesc *unwrappedDesc = descs.append();
     if (!unwrappedDesc || !desc->unwrapDebuggerObjectsInto(cx, dbg, obj, unwrappedDesc))
         return false;
+    if (!unwrappedDesc->checkGetter(cx) || !unwrappedDesc->checkSetter(cx))
+        return false;
 
     {
         PropDesc *rewrappedDesc = descs.append();
@@ -4190,6 +4195,8 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         if (!unwrappedDescs.append())
             return false;
         if (!descs[i].unwrapDebuggerObjectsInto(cx, dbg, obj, &unwrappedDescs[i]))
+            return false;
+        if (!unwrappedDescs[i].checkGetter(cx) || !unwrappedDescs[i].checkSetter(cx))
             return false;
     }
 

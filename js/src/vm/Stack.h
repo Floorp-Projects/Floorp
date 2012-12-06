@@ -223,7 +223,8 @@ enum ExecuteType {
     EXECUTE_GLOBAL         =        0x1, /* == StackFrame::GLOBAL */
     EXECUTE_DIRECT_EVAL    =        0x4, /* == StackFrame::EVAL */
     EXECUTE_INDIRECT_EVAL  =        0x5, /* == StackFrame::GLOBAL | EVAL */
-    EXECUTE_DEBUG          =        0xc  /* == StackFrame::EVAL | DEBUGGER */
+    EXECUTE_DEBUG          =        0xc, /* == StackFrame::EVAL | DEBUGGER */
+    EXECUTE_DEBUG_GLOBAL   =        0xd  /* == StackFrame::EVAL | DEBUGGER | GLOBAL */
 };
 
 /*****************************************************************************/

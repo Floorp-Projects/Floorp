@@ -21,7 +21,7 @@ ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph, bool optimistic
     count_(0)
 { }
 
-uint32
+uint32_t
 ValueNumberer::lookupValue(MDefinition *ins)
 {
 
@@ -240,7 +240,7 @@ ValueNumberer::computeValueNumbers()
                     continue;
                 }
 
-                uint32 value = lookupValue(ins);
+                uint32_t value = lookupValue(ins);
 
                 if (!value)
                     return false; // Hashtable insertion failed
@@ -423,7 +423,7 @@ ValueNumberer::analyze()
     return computeValueNumbers() && eliminateRedundancies();
 }
 
-uint32
+uint32_t
 MDefinition::valueNumber() const
 {
     JS_ASSERT(block_);
@@ -432,7 +432,7 @@ MDefinition::valueNumber() const
     return valueNumber_->valueNumber();
 }
 void
-MDefinition::setValueNumber(uint32 vn)
+MDefinition::setValueNumber(uint32_t vn)
 {
     valueNumber_->setValueNumber(vn);
 }

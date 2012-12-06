@@ -18,6 +18,7 @@ Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
+Cu.import("resource://gre/modules/SystemMessagePermissionsChecker.jsm");
 
 function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
@@ -41,6 +42,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
   return Cc["@mozilla.org/system-message-internal;1"]
          .getService(Ci.nsISystemMessagesInternal);
+});
+
+XPCOMUtils.defineLazyGetter(this, "updateSvc", function() {
+  return Cc["@mozilla.org/offlinecacheupdate-service;1"]
+           .getService(Ci.nsIOfflineCacheUpdateService);
 });
 
 #ifdef MOZ_WIDGET_GONK
@@ -333,7 +339,13 @@ this.DOMApplicationRegistry = {
       } else {
         messageName = aMessage;
       }
-      msgmgr.registerPage(messageName, href, manifestURL);
+
+      if (SystemMessagePermissionsChecker
+            .isSystemMessagePermittedToRegister(messageName,
+                                                aApp.origin,
+                                                aManifest)) {
+        msgmgr.registerPage(messageName, href, manifestURL);
+      }
     });
   },
 
@@ -380,7 +392,13 @@ this.DOMApplicationRegistry = {
 
       let launchPath = Services.io.newURI(description.href, null, null);
       let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
-      msgmgr.registerPage("activity", launchPath, manifestURL);
+
+      if (SystemMessagePermissionsChecker
+            .isSystemMessagePermittedToRegister("activity",
+                                                aApp.origin,
+                                                aManifest)) {
+        msgmgr.registerPage("activity", launchPath, manifestURL);
+      }
     }
     return activitiesToRegister;
   },
@@ -918,8 +936,6 @@ this.DOMApplicationRegistry = {
     // if the manifest has an appcache_path property, use it to populate the appcache
     if (aManifest.appcache_path) {
       let appcacheURI = Services.io.newURI(aManifest.fullAppcachePath(), null, null);
-      let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"]
-                            .getService(Ci.nsIOfflineCacheUpdateService);
       let docURI = Services.io.newURI(aManifest.fullLaunchPath(), null, null);
       // We determine the app's 'installState' according to its previous
       // state. Cancelled download should remain as 'pending'. Successfully
@@ -930,8 +946,9 @@ this.DOMApplicationRegistry = {
       // We set the 'downloading' flag right before starting the app
       // download/update.
       aApp.downloading = true;
-      let cacheUpdate = aProfileDir ? updateService.scheduleCustomProfileUpdate(appcacheURI, docURI, aProfileDir)
-                                    : updateService.scheduleAppUpdate(appcacheURI, docURI, aApp.localId, false);
+      let cacheUpdate = aProfileDir
+        ? updateSvc.scheduleCustomProfileUpdate(appcacheURI, docURI, aProfileDir)
+        : updateSvc.scheduleAppUpdate(appcacheURI, docURI, aApp.localId, false);
       cacheUpdate.addObserver(new AppcacheObserver(aApp), false);
       if (aOfflineCacheObserver) {
         cacheUpdate.addObserver(aOfflineCacheObserver, false);
@@ -984,6 +1001,7 @@ this.DOMApplicationRegistry = {
       debug("updateHostedApp " + aData.manifestURL);
       let id = this._appId(app.origin);
 
+      // Clean up the deprecated manifest cache if needed.
       if (id in this._manifestCache) {
         delete this._manifestCache[id];
       }
@@ -1024,16 +1042,30 @@ this.DOMApplicationRegistry = {
 
       this._saveApps(function() {
         aData.app = app;
-        aData.event = manifest.appcache_path ? "downloadavailable"
-                                             : "downloadapplied";
-        aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+        if (!manifest.appcache_path) {
+          aData.event = "downloadapplied";
+          aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+        } else {
+          // Check if the appcache is updatable, and send "downloadavailable" or
+          // "downloadapplied".
+          let updateObserver = {
+            observe: function(aSubject, aTopic, aData) {
+              aData.event =
+                aTopic == "offline-cache-update-available" ? "downloadavailable"
+                                                           : "downloadapplied";
+              aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+            }
+          }
+          updateSvc.checkForUpdate(Services.io.newURI(aData.manifestURL, null, null),
+                                   app.localId, false, updateObserver);
+        }
       });
 
       // Update the permissions for this app.
       PermissionsInstaller.installPermissions({ manifest: aManifest,
                                                 origin: app.origin,
                                                 manifestURL: aData.manifestURL },
-                                                true);
+                                              true);
     }
 
     // First, we download the manifest.
