@@ -78,7 +78,7 @@ AudioChannelService::AudioChannelService()
   }
 
   // Creation of the hash table.
-  mMediaElements.Init();
+  mAgents.Init();
 }
 
 AudioChannelService::~AudioChannelService()
@@ -87,10 +87,10 @@ AudioChannelService::~AudioChannelService()
 }
 
 void
-AudioChannelService::RegisterMediaElement(nsHTMLMediaElement* aMediaElement,
+AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                           AudioChannelType aType)
 {
-  mMediaElements.Put(aMediaElement, aType);
+  mAgents.Put(aAgent, aType);
   RegisterType(aType);
 }
 
@@ -100,19 +100,19 @@ AudioChannelService::RegisterType(AudioChannelType aType)
   mChannelCounters[aType]++;
 
   // In order to avoid race conditions, it's safer to notify any existing
-  // media element any time a new one is registered.
+  // agent any time a new one is registered.
   Notify();
 }
 
 void
-AudioChannelService::UnregisterMediaElement(nsHTMLMediaElement* aMediaElement)
+AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
   AudioChannelType type;
-  if (!mMediaElements.Get(aMediaElement, &type)) {
+  if (!mAgents.Get(aAgent, &type)) {
     return;
   }
 
-  mMediaElements.Remove(aMediaElement);
+  mAgents.Remove(aAgent);
   UnregisterType(type);
 }
 
@@ -123,7 +123,7 @@ AudioChannelService::UnregisterType(AudioChannelType aType)
   MOZ_ASSERT(mChannelCounters[aType] >= 0);
 
   // In order to avoid race conditions, it's safer to notify any existing
-  // media element any time a new one is registered.
+  // agent any time a new one is registered.
   Notify();
 }
 
@@ -167,12 +167,14 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
               !!mChannelCounters[AUDIO_CHANNEL_TELEPHONY] ||
               !!mChannelCounters[AUDIO_CHANNEL_RINGER] ||
               !!mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION];
+      break;
 
     case AUDIO_CHANNEL_NOTIFICATION:
     case AUDIO_CHANNEL_ALARM:
     case AUDIO_CHANNEL_TELEPHONY:
     case AUDIO_CHANNEL_RINGER:
       muted = ChannelsActiveWithHigherPriorityThan(aType);
+      break;
 
     case AUDIO_CHANNEL_PUBLICNOTIFICATION:
       break;
@@ -211,11 +213,11 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
 
 
 static PLDHashOperator
-NotifyEnumerator(nsHTMLMediaElement* aElement,
+NotifyEnumerator(AudioChannelAgent* aAgent,
                  AudioChannelType aType, void* aData)
 {
-  if (aElement) {
-    aElement->NotifyAudioChannelStateChanged();
+  if (aAgent) {
+    aAgent->NotifyAudioChannelStateChanged();
   }
   return PL_DHASH_NEXT;
 }
@@ -225,8 +227,8 @@ AudioChannelService::Notify()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Notify any media element for the main process.
-  mMediaElements.EnumerateRead(NotifyEnumerator, nullptr);
+  // Notify any agent for the main process.
+  mAgents.EnumerateRead(NotifyEnumerator, nullptr);
 
   // Notify for the child processes.
   nsTArray<ContentParent*> children;

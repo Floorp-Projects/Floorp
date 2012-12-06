@@ -74,10 +74,10 @@ AudioChannelServiceChild::GetMuted(AudioChannelType aType, bool aMozHidden)
 }
 
 void
-AudioChannelServiceChild::RegisterMediaElement(nsHTMLMediaElement* aMediaElement,
+AudioChannelServiceChild::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                AudioChannelType aType)
 {
-  AudioChannelService::RegisterMediaElement(aMediaElement, aType);
+  AudioChannelService::RegisterAudioChannelAgent(aAgent, aType);
 
   ContentChild *cc = ContentChild::GetSingleton();
   if (cc) {
@@ -86,14 +86,14 @@ AudioChannelServiceChild::RegisterMediaElement(nsHTMLMediaElement* aMediaElement
 }
 
 void
-AudioChannelServiceChild::UnregisterMediaElement(nsHTMLMediaElement* aMediaElement)
+AudioChannelServiceChild::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
   AudioChannelType type;
-  if (!mMediaElements.Get(aMediaElement, &type)) {
+  if (!mAgents.Get(aAgent, &type)) {
     return;
   }
 
-  AudioChannelService::UnregisterMediaElement(aMediaElement);
+  AudioChannelService::UnregisterAudioChannelAgent(aAgent);
 
   ContentChild *cc = ContentChild::GetSingleton();
   if (cc) {
