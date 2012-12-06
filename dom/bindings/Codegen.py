@@ -1463,9 +1463,11 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                           "  return;\n" +
                           "}\n") % getParentProto
 
-        needConstructor = (needInterfaceObject and
-                           not self.descriptor.hasInstanceInterface)
-        constructHook = "&" + CONSTRUCT_HOOK_NAME + "_holder"
+        if (needInterfaceObject and
+            self.descriptor.needsConstructHookHolder()):
+            constructHookHolder = "&" + CONSTRUCT_HOOK_NAME + "_holder"
+        else:
+            constructHookHolder = "nullptr"
         if self.descriptor.interface.ctor():
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
@@ -1480,6 +1482,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if needInterfaceObject:
             if self.descriptor.hasInstanceInterface:
                 interfaceClass = "&InterfaceObjectClass.mBase"
+            elif self.descriptor.interface.isCallback():
+                interfaceClass = "js::Jsvalify(&js::ObjectClass)"
             else:
                 interfaceClass = "nullptr"
             interfaceCache = "&protoAndIfaceArray[constructors::id::%s]" % self.descriptor.name
@@ -1512,7 +1516,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 "                            %s,\n"
                 "                            %s);" % (
             protoClass, protoCache,
-            interfaceClass, constructHook if needConstructor else "nullptr",
+            interfaceClass, constructHookHolder,
             constructArgs, interfaceCache,
             domClass,
             properties,
@@ -6153,7 +6157,8 @@ class CGDescriptor(CGThing):
             cgThings.append(CGClassConstructHook(descriptor))
             cgThings.append(CGClassHasInstanceHook(descriptor))
             cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
-            cgThings.append(CGClassConstructHookHolder(descriptor))
+            if descriptor.needsConstructHookHolder():
+                cgThings.append(CGClassConstructHookHolder(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
