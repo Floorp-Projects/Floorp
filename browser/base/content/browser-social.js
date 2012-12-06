@@ -118,6 +118,7 @@ let SocialUI = {
     SocialShareButton.init();
     SocialSidebar.init();
     SocialMenu.populate();
+    SocialChatBar.update();
     this.updateActiveBroadcaster();
   },
 
