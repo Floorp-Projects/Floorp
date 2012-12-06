@@ -1960,6 +1960,7 @@ bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
     { "notification",       AUDIO_CHANNEL_NOTIFICATION },
     { "alarm",              AUDIO_CHANNEL_ALARM },
     { "telephony",          AUDIO_CHANNEL_TELEPHONY },
+    { "ringer",             AUDIO_CHANNEL_RINGER },
     { "publicnotification", AUDIO_CHANNEL_PUBLICNOTIFICATION },
     { 0 }
   };
