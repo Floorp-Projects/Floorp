@@ -249,8 +249,14 @@ inline bool IsProxy(RawObject obj)
 }
 
 /* Shared between object and function proxies. */
-const uint32_t JSSLOT_PROXY_HANDLER = 0;
-const uint32_t JSSLOT_PROXY_PRIVATE = 1;
+/*
+ * NOTE: JSSLOT_PROXY_PRIVATE is 0, because that way slot 0 is usable by API
+ * clients for both proxy and non-proxy objects.  So an API client that only
+ * needs to store one slot's worth of data doesn't need to branch on what sort
+ * of object it has.
+ */
+const uint32_t JSSLOT_PROXY_PRIVATE = 0;
+const uint32_t JSSLOT_PROXY_HANDLER = 1;
 const uint32_t JSSLOT_PROXY_EXTRA   = 2;
 /* Function proxies only. */
 const uint32_t JSSLOT_PROXY_CALL = 4;
