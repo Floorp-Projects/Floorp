@@ -239,10 +239,6 @@ nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
       type.EqualsLiteral("mouseup") ||
       type.EqualsLiteral("dragstart")) {
     HideTooltip();
-#ifdef MOZ_XUL
-    if (!mIsSourceTree)
-      mTooltipShownOnce = true;
-#endif
     return NS_OK;
   }
 
@@ -307,10 +303,6 @@ nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode)
                                 false, false);
   aNode->AddSystemEventListener(NS_LITERAL_STRING("mousemove"), this,
                                 false, false);
-  aNode->AddSystemEventListener(NS_LITERAL_STRING("mousedown"), this,
-                                false, false);
-  aNode->AddSystemEventListener(NS_LITERAL_STRING("mouseup"), this,
-                                false, false);
   aNode->AddSystemEventListener(NS_LITERAL_STRING("dragstart"), this,
                                 true, false);
 
@@ -325,8 +317,6 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
 
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mouseout"), this, false);
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mousemove"), this, false);
-  aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"), this, false);
-  aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mouseup"), this, false);
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("dragstart"), this, true);
 
   return NS_OK;
