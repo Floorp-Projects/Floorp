@@ -497,6 +497,35 @@ ValidateGC(JSContext *cx, unsigned argc, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+NondeterminsticGetWeakMapKeys(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc != 1) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+    if (!args[0].isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
+                             "nondeterministicGetWeakMapKeys", "WeakMap",
+                             InformalValueTypeName(args[0]));
+        return false;
+    }
+    JSObject *arr;
+    if (!JS_NondeterministicGetWeakMapKeys(cx, &args[0].toObject(), &arr))
+        return false;
+    if (!arr) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
+                             "nondeterministicGetWeakMapKeys", "WeakMap",
+                             args[0].toObject().getClass()->name);
+        return false;
+    }
+    args.rval().setObject(*arr);
+    return true;
+}
+
 struct JSCountHeapNode {
     void                *thing;
     JSGCTraceKind       kind;
@@ -887,6 +916,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("validategc", ValidateGC, 1, 0,
 "validategc(true|false)",
 "  If true, a separate validation step is performed after an incremental GC."),
+
+    JS_FN_HELP("nondeterministicGetWeakMapKeys", NondeterminsticGetWeakMapKeys, 1, 0,
+"nondeterministicGetWeakMapKeys(weakmap)",
+"  Return an array of the keys in the given WeakMap."),
 
     JS_FN_HELP("internalConst", InternalConst, 1, 0,
 "internalConst(name)",

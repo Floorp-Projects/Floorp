@@ -1254,11 +1254,11 @@ let RIL = {
       }
 
       // Test to see if operator's mcc/mnc match mcc/mnc of PLMN.
-      if (!isOnMatchingPlmn && iccInfoPriv.PLMN) {
-        let iccPlmn = iccInfoPriv.PLMN; // PLMN list
-        for (let plmn in iccPlmn) {
-          let plmnMcc = iccPlmn[plmn].mcc;
-          let plmnMnc = iccPlmn[plmn].mnc;
+      if (!isOnMatchingPlmn && iccInfoPriv.SPDI) {
+        let iccSpdi = iccInfoPriv.SPDI; // PLMN list
+        for (let plmn in iccSpdi) {
+          let plmnMcc = iccSpdi[plmn].mcc;
+          let plmnMnc = iccSpdi[plmn].mnc;
           isOnMatchingPlmn = (plmnMcc == operatorMcc) && (plmnMnc == operatorMnc);
           if (isOnMatchingPlmn) {
             break;
@@ -1270,17 +1270,24 @@ let RIL = {
         // The first bit of display condition tells us if we should display
         // registered PLMN.
         if (DEBUG) debug("updateDisplayCondition: PLMN is HPLMN or PLMN is in PLMN list");
+
+        // TS 31.102 Sec. 4.2.66 and TS 51.011 Sec. 10.3.50
+        // EF_SPDI contains a list of PLMNs in which the Service Provider Name
+        // shall be displayed.
+        iccInfo.isDisplaySpnRequired = true;
         if (iccSpn.spnDisplayCondition & 0x01) {
           iccInfo.isDisplayNetworkNameRequired = true;
-          iccInfo.isDisplaySpnRequired = false;
         } else {
           iccInfo.isDisplayNetworkNameRequired = false;
-          iccInfo.isDisplaySpnRequired = false;
         }
       } else {
         // The second bit of display condition tells us if we should display
         // registered PLMN.
         if (DEBUG) debug("updateICCDisplayName: PLMN isn't HPLMN and PLMN isn't in PLMN list");
+
+        // We didn't found the requirement of displaying network name if
+        // current PLMN isn't HPLMN nor one of PLMN in SPDI. So we keep
+        // isDisplayNetworkNameRequired false.
         if (iccSpn.spnDisplayCondition & 0x02) {
           iccInfo.isDisplayNetworkNameRequired = false;
           iccInfo.isDisplaySpnRequired = false;
@@ -1499,13 +1506,13 @@ let RIL = {
    */
   getPLMNSelector: function getPLMNSelector() {
     function callback() {
-      if (DEBUG) debug("PLMN: [PLMN Selector] Process PLMN Selector");
+      if (DEBUG) debug("PLMN Selector: Process PLMN Selector");
 
       let length = Buf.readUint32();
       this.iccInfoPrivate.PLMN = this.readPLMNEntries(length/6);
       Buf.readStringDelimiter(length);
 
-      if (DEBUG) debug("PLMN: [PLMN Selector] " + JSON.stringify(this.iccInfoPrivate.PLMN));
+      if (DEBUG) debug("PLMN Selector: " + JSON.stringify(this.iccInfoPrivate.PLMN));
 
       if (this.updateDisplayCondition()) {
         this._handleICCInfoChange();
@@ -1530,17 +1537,18 @@ let RIL = {
   /**
    * Read the SPDI (Service Provider Display Information) from the ICC.
    *
-   * See TS 131.102 section 4.2.66
+   * See TS 131.102 section 4.2.66 for USIM and TS 51.011 section 10.3.50
+   * for SIM.
    */
   getSPDI: function getSPDI() {
     function callback() {
-      if (DEBUG) debug("PLMN: [SPDI] Process SPDI callback");
+      if (DEBUG) debug("SPDI: Process SPDI callback");
       let length = Buf.readUint32();
       let tlvTag;
       let tlvLen;
       let readLen = 0;
       let endLoop = false;
-      this.iccInfoPrivate.PLMN = null;
+      this.iccInfoPrivate.SPDI = null;
       while ((readLen < length) && !endLoop) {
         tlvTag = GsmPDUHelper.readHexOctet();
         tlvLen = GsmPDUHelper.readHexOctet();
@@ -1551,7 +1559,7 @@ let RIL = {
           continue;
         case SPDI_TAG_PLMN_LIST:
           // This PLMN list is what we want.
-          this.iccInfoPrivate.PLMN = readPLMNEntries(tlvLen/6);
+          this.iccInfoPrivate.SPDI = readPLMNEntries(tlvLen/6);
           readLen += tlvLen;
           endLoop = true;
           break;
@@ -1569,7 +1577,7 @@ let RIL = {
       }
       Buf.readStringDelimiter(length);
 
-      if (DEBUG) debug("PLMN: [SPDI] " + JSON.stringify(this.iccInfoPrivate.PLMN));
+      if (DEBUG) debug("SPDI: " + JSON.stringify(this.iccInfoPrivate.SPDI));
       if (this.updateDisplayCondition()) {
         this._handleICCInfoChange();
       }
@@ -1679,14 +1687,11 @@ let RIL = {
         if (DEBUG) debug("SPN: SPN service is not available");
       }
 
-      if (this.isICCServiceAvailable("PLMNSEL")) {
-        if (DEBUG) debug("PLMN: PLMNSEL available.");
-        this.getPLMNSelector();
-      } else if (this.isICCServiceAvailable("SPDI")) {
-        if (DEBUG) debug("PLMN: SPDI available.");
+      if (this.isICCServiceAvailable("SPDI")) {
+        if (DEBUG) debug("SPDI: SPDI available.");
         this.getSPDI();
       } else {
-        if (DEBUG) debug("PLMN: Both PLMNSEL/SPDI not available");
+        if (DEBUG) debug("SPDI: SPDI service is not available");
       }
 
       if (this.isICCServiceAvailable("CBMI")) {

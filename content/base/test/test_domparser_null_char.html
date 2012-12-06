@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=817469
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 817469</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=817469">Mozilla Bug 817469</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 817469 **/
+  var doc = new DOMParser().parseFromString("\x00<div id='myElement'>", "text/html");
+  isnot(doc.getElementById("myElement"), null, "Should not stop at null");
+</script>
+</pre>
+</body>
+</html>

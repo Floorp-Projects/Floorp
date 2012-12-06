@@ -6,10 +6,8 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.graphics.Rect;
@@ -22,8 +20,6 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
-import android.view.MotionEvent;
-import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
@@ -39,7 +35,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
@@ -1087,65 +1082,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
             onLightweightThemeChanged();
-        }
-    }
-
-    // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
-    public static class MenuPopup extends PopupWindow {
-        private RelativeLayout mPanel;
-        private int mYOffset;
-
-        public MenuPopup(Context context) {
-            super(context);
-            setFocusable(true);
-
-            // The arrow height is constant for both orientations.
-            mYOffset = (int) (context.getResources().getDimension(R.dimen.menu_popup_offset));
-
-            // Setting a null background makes the popup to not close on touching outside.
-            setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            setWindowLayoutMode(View.MeasureSpec.makeMeasureSpec(context.getResources().getDimensionPixelSize(R.dimen.menu_popup_width), View.MeasureSpec.AT_MOST),
-                                ViewGroup.LayoutParams.WRAP_CONTENT);
-
-            LayoutInflater inflater = LayoutInflater.from(context);
-            RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.menu_popup, null);
-            setContentView(layout);
-
-            mPanel = (RelativeLayout) layout.findViewById(R.id.menu_panel);
-        }
-
-        public void setPanelView(View view) {
-            mPanel.removeAllViews();
-            mPanel.addView(view);
-        }
-
-        @Override
-        public void showAsDropDown(View anchor) {
-            showAsDropDown(anchor, 0, -mYOffset);
-        }
-    }
-
-    private class TailTouchDelegate extends TouchDelegate {
-        public TailTouchDelegate(Rect bounds, View delegateView) {
-            super(bounds, delegateView);
-        }
-
-        @Override 
-        public boolean onTouchEvent(MotionEvent event) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    // Android bug 36445: Touch Delegation not reset on ACTION_DOWN.
-                    if (!super.onTouchEvent(event)) {
-                        MotionEvent cancelEvent = MotionEvent.obtain(event);
-                        cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
-                        super.onTouchEvent(cancelEvent);
-                        return false;
-                     } else {
-                        return true;
-                     }
-                default:
-                    return super.onTouchEvent(event);
-            }
         }
     }
 }

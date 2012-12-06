@@ -267,49 +267,55 @@ t(int64_t t)
 
 struct PhaseInfo
 {
-    unsigned index;
+    Phase index;
     const char *name;
+    Phase parent;
 };
 
+static const Phase PHASE_NO_PARENT = PHASE_LIMIT;
+
 static PhaseInfo phases[] = {
-    { PHASE_GC_BEGIN, "Begin Callback" },
-    { PHASE_WAIT_BACKGROUND_THREAD, "Wait Background Thread" },
-    { PHASE_PURGE, "Purge" },
-    { PHASE_MARK, "Mark" },
-    { PHASE_MARK_DISCARD_CODE, "Mark Discard Code" },
-    { PHASE_MARK_ROOTS, "Mark Roots" },
-    { PHASE_MARK_TYPES, "Mark Types" },
-    { PHASE_MARK_DELAYED, "Mark Delayed" },
-    { PHASE_SWEEP, "Sweep" },
-    { PHASE_SWEEP_MARK_INCOMING_BLACK, "Mark Incoming Black Pointers" },
-    { PHASE_SWEEP_MARK_WEAK, "Mark Weak" },
-    { PHASE_SWEEP_MARK_GRAY, "Mark Gray" },
-    { PHASE_SWEEP_MARK_GRAY_WEAK, "Mark Gray and Weak" },
-    { PHASE_SWEEP_MARK_INCOMING_GRAY, "Mark Incoming Gray Pointers" },
-    { PHASE_FINALIZE_START, "Finalize Start Callback" },
-    { PHASE_SWEEP_ATOMS, "Sweep Atoms" },
-    { PHASE_SWEEP_COMPARTMENTS, "Sweep Compartments" },
-    { PHASE_SWEEP_TABLES, "Sweep Tables" },
-    { PHASE_SWEEP_TABLES_WRAPPER, "Sweep Cross Compartment Wrappers" },
-    { PHASE_SWEEP_TABLES_BASE_SHAPE, "Sweep Base Shapes" },
-    { PHASE_SWEEP_TABLES_INITIAL_SHAPE, "Sweep Intital Shapes" },
-    { PHASE_SWEEP_TABLES_TYPE_OBJECT, "Sweep Type Objects" },
-    { PHASE_SWEEP_TABLES_BREAKPOINT, "Sweep Breakpoints" },
-    { PHASE_SWEEP_TABLES_REGEXP, "Sweep Regexps" },
-    { PHASE_SWEEP_OBJECT, "Sweep Object" },
-    { PHASE_SWEEP_STRING, "Sweep String" },
-    { PHASE_SWEEP_SCRIPT, "Sweep Script" },
-    { PHASE_SWEEP_SHAPE, "Sweep Shape" },
-    { PHASE_SWEEP_DISCARD_CODE, "Sweep Discard Code" },
-    { PHASE_DISCARD_ANALYSIS, "Discard Analysis" },
-    { PHASE_DISCARD_TI, "Discard TI" },
-    { PHASE_FREE_TI_ARENA, "Free TI Arena" },
-    { PHASE_SWEEP_TYPES, "Sweep Types" },
-    { PHASE_CLEAR_SCRIPT_ANALYSIS, "Clear Script Analysis" },
-    { PHASE_FINALIZE_END, "Finalize End Callback" },
-    { PHASE_DESTROY, "Deallocate" },
-    { PHASE_GC_END, "End Callback" },
-    { 0, NULL }
+    { PHASE_GC_BEGIN, "Begin Callback", PHASE_NO_PARENT },
+    { PHASE_WAIT_BACKGROUND_THREAD, "Wait Background Thread", PHASE_NO_PARENT },
+    { PHASE_MARK_DISCARD_CODE, "Mark Discard Code", PHASE_NO_PARENT },
+    { PHASE_PURGE, "Purge", PHASE_NO_PARENT },
+    { PHASE_MARK, "Mark", PHASE_NO_PARENT },
+    { PHASE_MARK_ROOTS, "Mark Roots", PHASE_MARK },
+    { PHASE_MARK_TYPES, "Mark Types", PHASE_MARK_ROOTS },
+    { PHASE_MARK_DELAYED, "Mark Delayed", PHASE_MARK },
+    { PHASE_SWEEP, "Sweep", PHASE_NO_PARENT },
+    { PHASE_SWEEP_MARK, "Mark During Sweeping", PHASE_SWEEP },
+    { PHASE_SWEEP_MARK_DELAYED, "Mark Delayed During Sweeping", PHASE_SWEEP_MARK },
+    { PHASE_SWEEP_MARK_INCOMING_BLACK, "Mark Incoming Black Pointers", PHASE_SWEEP_MARK },
+    { PHASE_SWEEP_MARK_WEAK, "Mark Weak", PHASE_SWEEP_MARK },
+    { PHASE_SWEEP_MARK_INCOMING_GRAY, "Mark Incoming Gray Pointers", PHASE_SWEEP_MARK },
+    { PHASE_SWEEP_MARK_GRAY, "Mark Gray", PHASE_SWEEP_MARK },
+    { PHASE_SWEEP_MARK_GRAY_WEAK, "Mark Gray and Weak", PHASE_SWEEP_MARK },
+    { PHASE_FINALIZE_START, "Finalize Start Callback", PHASE_SWEEP },
+    { PHASE_SWEEP_ATOMS, "Sweep Atoms", PHASE_SWEEP },
+    { PHASE_SWEEP_COMPARTMENTS, "Sweep Compartments", PHASE_SWEEP },
+    { PHASE_SWEEP_DISCARD_CODE, "Sweep Discard Code", PHASE_SWEEP_COMPARTMENTS },
+    { PHASE_SWEEP_TABLES, "Sweep Tables", PHASE_SWEEP_COMPARTMENTS },
+    { PHASE_SWEEP_TABLES_WRAPPER, "Sweep Cross Compartment Wrappers", PHASE_SWEEP_TABLES },
+    { PHASE_SWEEP_TABLES_BASE_SHAPE, "Sweep Base Shapes", PHASE_SWEEP_TABLES },
+    { PHASE_SWEEP_TABLES_INITIAL_SHAPE, "Sweep Intital Shapes", PHASE_SWEEP_TABLES },
+    { PHASE_SWEEP_TABLES_TYPE_OBJECT, "Sweep Type Objects", PHASE_SWEEP_TABLES },
+    { PHASE_SWEEP_TABLES_BREAKPOINT, "Sweep Breakpoints", PHASE_SWEEP_TABLES },
+    { PHASE_SWEEP_TABLES_REGEXP, "Sweep Regexps", PHASE_SWEEP_TABLES },
+    { PHASE_DISCARD_ANALYSIS, "Discard Analysis", PHASE_SWEEP_COMPARTMENTS },
+    { PHASE_DISCARD_TI, "Discard TI", PHASE_DISCARD_ANALYSIS },
+    { PHASE_FREE_TI_ARENA, "Free TI Arena", PHASE_DISCARD_ANALYSIS },
+    { PHASE_SWEEP_TYPES, "Sweep Types", PHASE_DISCARD_ANALYSIS },
+    { PHASE_CLEAR_SCRIPT_ANALYSIS, "Clear Script Analysis", PHASE_DISCARD_ANALYSIS },
+    { PHASE_SWEEP_OBJECT, "Sweep Object", PHASE_SWEEP },
+    { PHASE_SWEEP_STRING, "Sweep String", PHASE_SWEEP },
+    { PHASE_SWEEP_SCRIPT, "Sweep Script", PHASE_SWEEP },
+    { PHASE_SWEEP_SHAPE, "Sweep Shape", PHASE_SWEEP },
+    { PHASE_SWEEP_IONCODE, "Sweep Ion code", PHASE_SWEEP },
+    { PHASE_FINALIZE_END, "Finalize End Callback", PHASE_SWEEP },
+    { PHASE_DESTROY, "Deallocate", PHASE_SWEEP },
+    { PHASE_GC_END, "End Callback", PHASE_NO_PARENT },
+    { PHASE_LIMIT, NULL, PHASE_NO_PARENT }
 };
 
 static void
@@ -441,7 +447,9 @@ Statistics::Statistics(JSRuntime *rt)
     gcDepth(0),
     collectedCount(0),
     compartmentCount(0),
-    nonincrementalReason(NULL)
+    nonincrementalReason(NULL),
+    preBytes(0),
+    phaseNestingDepth(0)
 {
     PodArrayZero(phaseTotals);
     PodArrayZero(counts);
@@ -615,6 +623,15 @@ Statistics::beginPhase(Phase phase)
     /* Guard against re-entry */
     JS_ASSERT(!phaseStartTimes[phase]);
 
+#ifdef DEBUG
+    JS_ASSERT(phases[phase].index == phase);
+    Phase parent = phaseNestingDepth ? phaseNesting[phaseNestingDepth - 1] : PHASE_NO_PARENT;
+    JS_ASSERT(phaseNestingDepth < MAX_NESTING);
+    JS_ASSERT_IF(gcDepth == 1, phases[phase].parent == parent);
+    phaseNesting[phaseNestingDepth] = phase;
+    phaseNestingDepth++;
+#endif
+
     phaseStartTimes[phase] = PRMJ_Now();
 
     if (phase == gcstats::PHASE_MARK)
@@ -626,6 +643,8 @@ Statistics::beginPhase(Phase phase)
 void
 Statistics::endPhase(Phase phase)
 {
+    phaseNestingDepth--;
+
     int64_t t = PRMJ_Now() - phaseStartTimes[phase];
     slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;

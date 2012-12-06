@@ -15,25 +15,25 @@ namespace ion {
 
 class StackSlotAllocator
 {
-    js::Vector<uint32, 4, SystemAllocPolicy> normalSlots;
-    js::Vector<uint32, 4, SystemAllocPolicy> doubleSlots;
-    uint32 height_;
+    js::Vector<uint32_t, 4, SystemAllocPolicy> normalSlots;
+    js::Vector<uint32_t, 4, SystemAllocPolicy> doubleSlots;
+    uint32_t height_;
 
   public:
     StackSlotAllocator() : height_(0)
     { }
 
-    void freeSlot(uint32 index) {
+    void freeSlot(uint32_t index) {
         normalSlots.append(index);
     }
-    void freeDoubleSlot(uint32 index) {
+    void freeDoubleSlot(uint32_t index) {
         doubleSlots.append(index);
     }
-    void freeValueSlot(uint32 index) {
+    void freeValueSlot(uint32_t index) {
         freeDoubleSlot(index);
     }
 
-    uint32 allocateDoubleSlot() {
+    uint32_t allocateDoubleSlot() {
         if (!doubleSlots.empty())
             return doubleSlots.popCopy();
         if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT))
@@ -41,20 +41,20 @@ class StackSlotAllocator
         height_ += (sizeof(double) / STACK_SLOT_SIZE);
         return height_;
     }
-    uint32 allocateSlot() {
+    uint32_t allocateSlot() {
         if (!normalSlots.empty())
             return normalSlots.popCopy();
         if (!doubleSlots.empty()) {
-            uint32 index = doubleSlots.popCopy();
+            uint32_t index = doubleSlots.popCopy();
             normalSlots.append(index - 1);
             return index;
         }
         return ++height_;
     }
-    uint32 allocateValueSlot() {
+    uint32_t allocateValueSlot() {
         return allocateDoubleSlot();
     }
-    uint32 stackHeight() const {
+    uint32_t stackHeight() const {
         return height_;
     }
 };

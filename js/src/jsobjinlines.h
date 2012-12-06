@@ -928,8 +928,10 @@ JSObject::hasProperty(JSContext *cx, js::HandleObject obj,
     js::RootedObject pobj(cx);
     js::RootedShape prop(cx);
     JSAutoResolveFlags rf(cx, flags);
-    if (!lookupGeneric(cx, obj, id, &pobj, &prop))
+    if (!lookupGeneric(cx, obj, id, &pobj, &prop)) {
+        *foundp = false;  /* initialize to shut GCC up */
         return false;
+    }
     *foundp = !!prop;
     return true;
 }

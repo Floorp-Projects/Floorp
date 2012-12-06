@@ -39,6 +39,8 @@
 #include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
 #include "mozilla/Likely.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -6362,7 +6364,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   if (!haveIntersect)
     return false;
   mDamageArea = nsIntRect(startColIndex, startRowIndex,
-                          1 + NS_ABS(int32_t(endColIndex - startColIndex)),
+                          1 + std::abs(int32_t(endColIndex - startColIndex)),
                           1 + endRowIndex - startRowIndex);
 
   Reset();

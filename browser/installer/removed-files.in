@@ -704,7 +704,6 @@ uninstall/UninstallDeerPark.exe
 uninstall/UninstallFirefox.exe
 uninstall/uninst.exe
 uninstall/uninstall.exe
-update.locale
 #ifndef MOZ_UPDATER
   #ifdef XP_MACOSX
     updater.app/
@@ -715,6 +714,7 @@ update.locale
 #endif
 xpicleanup@BIN_SUFFIX@
 #ifdef MOZ_OMNIJAR
+  update.locale
   omni.jar
   chrome/af.jar
   chrome/af.manifest

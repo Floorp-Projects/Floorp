@@ -203,7 +203,7 @@ SystemMessageManager.prototype = {
     if (aTopic === kSystemMessageInternalReady) {
       this._registerManifest();
     }
-    //call the DOMRequestIpcHelper.observe method
+    // Call the DOMRequestIpcHelper.observe method.
     this.__proto__.__proto__.observe.call(this, aSubject, aTopic, aData);
   },
 

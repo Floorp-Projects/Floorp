@@ -5254,6 +5254,20 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8=1
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
+
+    dnl OpenSLES is only available in Android 2.3 and later; we'll change this
+    dnl hard dependency to a dynamic load with graceful runtime failure before
+    dnl we make --enable-webrtc on by default in Android (bug 815905)
+    dnl 
+    if test "$OS_TARGET" = "Android"; then
+       LDFLAGS="$LDFLAGS -lOpenSLES"
+    fi
+    case "$target" in
+    *-android*|*-linuxandroid*)
+       LDFLAGS="$LDFLAGS -lOpenSLES"
+       ;;
+    esac
+
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1
     AC_DEFINE(MOZ_WEBRTC_SIGNALING)
@@ -5270,6 +5284,7 @@ dnl enable once PeerConnection lands
 fi
 
 AC_SUBST(MOZ_WEBRTC)
+AC_SUBST(MOZ_WEBRTC_LEAKING_TESTS)
 AC_SUBST(MOZ_WEBRTC_SIGNALING)
 AC_SUBST(MOZ_PEERCONNECTION)
 AC_SUBST(MOZ_WEBRTC_IN_LIBXUL)
@@ -8510,6 +8525,7 @@ fi
 
 MOZ_B2G_VERSION=${MOZ_B2G_VERSION:-"1.0.0"}
 AC_DEFINE_UNQUOTED(MOZ_B2G_VERSION,"$MOZ_B2G_VERSION")
+AC_DEFINE_UNQUOTED(MOZ_B2G_OS_NAME,"$MOZ_B2G_OS_NAME")
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
@@ -8851,6 +8867,28 @@ echo $MAKEFILES > unallmakefiles
 
 AC_OUTPUT($MAKEFILES)
 
+# target_arch is from {ia32|x64|arm}
+case "$CPU_ARCH" in
+x86_64 | ia64)
+    WEBRTC_TARGET_ARCH=x64
+    ;;
+
+arm*)
+    WEBRTC_TARGET_ARCH=arm
+    ;;
+
+x86)
+    WEBRTC_TARGET_ARCH=ia32
+    ;;
+
+*)
+# unsupported arch for webrtc
+    WEBRTC_TARGET_ARCH=unknown
+    MOZ_WEBRTC=
+    ;;
+
+esac
+
 # Generate Makefiles for WebRTC directly from .gyp files
 if test "${OS_TARGET}" = "WINNT"; then
    if test "$HAVE_64BIT_OS"; then
@@ -8859,6 +8897,9 @@ if test "${OS_TARGET}" = "WINNT"; then
       OS_BITS=32
    fi
    EXTRA_GYP_DEFINES="-D MSVS_VERSION=${_MSVS_VERSION} -D MSVS_OS_BITS=${OS_BITS}"
+
+elif test "${OS_TARGET}" = "Android"; then
+   EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
 fi
 
 if test -n "$MOZ_WEBRTC"; then
@@ -8868,7 +8909,7 @@ dnl Any --include files must also appear in -D FORCED_INCLUDE_FILE= entries
 dnl so that regeneration via dependencies works correctly
    WEBRTC_CONFIG="-D build_with_mozilla=1 --include ${srcdir}/media/webrtc/webrtc_config.gypi -D FORCED_INCLUDE_FILE=${srcdir}/media/webrtc/webrtc_config.gypi"
 
-   GYP_WEBRTC_OPTIONS="--format=mozmake ${WEBRTC_CONFIG} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
+   GYP_WEBRTC_OPTIONS="--format=mozmake ${WEBRTC_CONFIG} -D target_arch=${WEBRTC_TARGET_ARCH} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
 
    $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
      $GYP_WEBRTC_OPTIONS \

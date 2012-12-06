@@ -89,6 +89,10 @@ private:
 
   nsresult SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult);
 
+  // Helper for ParseFromString
+  nsresult ParseFromString(const nsAString& str, const char *contentType,
+                           nsIDOMDocument **aResult);
+
   class AttemptedInitMarker {
   public:
     AttemptedInitMarker(bool* aAttemptedInit) :

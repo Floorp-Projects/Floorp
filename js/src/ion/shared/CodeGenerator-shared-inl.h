@@ -11,7 +11,7 @@
 namespace js {
 namespace ion {
 
-static inline int32
+static inline int32_t
 ToInt32(const LAllocation *a)
 {
     if (a->isConstantValue())

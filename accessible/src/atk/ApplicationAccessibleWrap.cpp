@@ -33,57 +33,6 @@ static const char sATKLibName[] = "libatk-1.0.so.0";
 static const char sATKHyperlinkImplGetTypeSymbol[] =
   "atk_hyperlink_impl_get_type";
 
-/* gail function pointer */
-static guint (* gail_add_global_event_listener) (GSignalEmissionHook listener,
-                                                 const gchar *event_type);
-static void (* gail_remove_global_event_listener) (guint remove_listener);
-static void (* gail_remove_key_event_listener) (guint remove_listener);
-static AtkObject * (*gail_get_root) (void);
-
-/* maiutil */
-
-static guint mai_util_add_global_event_listener(GSignalEmissionHook listener,
-                                                const gchar *event_type);
-static void mai_util_remove_global_event_listener(guint remove_listener);
-static guint mai_util_add_key_event_listener(AtkKeySnoopFunc listener,
-                                             gpointer data);
-static void mai_util_remove_key_event_listener(guint remove_listener);
-static AtkObject *mai_util_get_root(void);
-static G_CONST_RETURN gchar *mai_util_get_toolkit_name(void);
-static G_CONST_RETURN gchar *mai_util_get_toolkit_version(void);
-
-
-/* Misc */
-
-static void _listener_info_destroy(gpointer data);
-static guint add_listener (GSignalEmissionHook listener,
-                           const gchar *object_type,
-                           const gchar *signal,
-                           const gchar *hook_data,
-                           guint gail_listenerid = 0);
-static AtkKeyEventStruct *atk_key_event_from_gdk_event_key(GdkEventKey *key);
-static gboolean notify_hf(gpointer key, gpointer value, gpointer data);
-static void insert_hf(gpointer key, gpointer value, gpointer data);
-static gint mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event,
-                            gpointer func_data);
-
-static GHashTable* sListener_list = NULL;
-static gint sListener_idx = 1;
-
-#define MAI_TYPE_UTIL              (mai_util_get_type ())
-#define MAI_UTIL(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                                    MAI_TYPE_UTIL, MaiUtil))
-#define MAI_UTIL_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), \
-                                    MAI_TYPE_UTIL, MaiUtilClass))
-#define MAI_IS_UTIL(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                                    MAI_TYPE_UTIL))
-#define MAI_IS_UTIL_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), \
-                                    MAI_TYPE_UTIL))
-#define MAI_UTIL_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                                    MAI_TYPE_UTIL, MaiUtilClass))
-
-static GHashTable* sKey_listener_list = NULL;
-static guint sKey_snooper_id = 0;
 static bool sToplevel_event_hook_added = false;
 static gulong sToplevel_show_hook = 0;
 static gulong sToplevel_hide_hook = 0;
@@ -93,24 +42,6 @@ typedef void (*GnomeAccessibilityInit) (void);
 typedef void (*GnomeAccessibilityShutdown) (void);
 G_END_DECLS
 
-struct MaiUtil
-{
-    AtkUtil parent;
-    GList *listener_list;
-};
-
-struct MaiKeyEventInfo
-{
-    AtkKeyEventStruct *key_event;
-    gpointer func_data;
-};
-
-union AtkKeySnoopFuncPointer
-{
-    AtkKeySnoopFunc func_ptr;
-    gpointer data;
-};
-
 struct GnomeAccessibilityModule
 {
     const char *libName;
@@ -119,32 +50,6 @@ struct GnomeAccessibilityModule
     GnomeAccessibilityInit init;
     const char *shutdownName;
     GnomeAccessibilityShutdown shutdown;
-};
-
-struct MaiUtilClass
-{
-    AtkUtilClass parent_class;
-};
-
-GType mai_util_get_type (void);
-static void mai_util_class_init(MaiUtilClass *klass);
-
-/* supporting */
-PRLogModuleInfo *gMaiLog = NULL;
-
-#define MAI_VERSION MOZILLA_VERSION
-#define MAI_NAME "Gecko"
-
-struct MaiUtilListenerInfo
-{
-    gint key;
-    guint signal_id;
-    gulong hook_id;
-    // For window create/destory/minimize/maximize/restore/activate/deactivate
-    // events, we'll chain gail_util's add/remove_global_event_listener.
-    // So we store the listenerid returned by gail's add_global_event_listener
-    // in this structure to call gail's remove_global_event_listener later.
-    guint gail_listenerid;
 };
 
 static GnomeAccessibilityModule sAtkBridge = {
@@ -163,352 +68,6 @@ static GnomeAccessibilityModule sGail = {
     "gnome_accessibility_module_shutdown", NULL
 };
 
-GType
-mai_util_get_type(void)
-{
-    static GType type = 0;
-
-    if (!type) {
-        static const GTypeInfo tinfo = {
-            sizeof(MaiUtilClass),
-            (GBaseInitFunc) NULL, /* base init */
-            (GBaseFinalizeFunc) NULL, /* base finalize */
-            (GClassInitFunc) mai_util_class_init, /* class init */
-            (GClassFinalizeFunc) NULL, /* class finalize */
-            NULL, /* class data */
-            sizeof(MaiUtil), /* instance size */
-            0, /* nb preallocs */
-            (GInstanceInitFunc) NULL, /* instance init */
-            NULL /* value table */
-        };
-
-        type = g_type_register_static(ATK_TYPE_UTIL,
-                                      "MaiUtil", &tinfo, GTypeFlags(0));
-    }
-    return type;
-}
-
-static void
-window_added (AtkObject *atk_obj,
-              guint     index,
-              AtkObject *child)
-{
-  if (!IS_MAI_OBJECT(child))
-      return;
-
-  static guint id =  g_signal_lookup ("create", MAI_TYPE_ATK_OBJECT);
-  g_signal_emit (child, id, 0);
-}
-
-static void
-window_removed (AtkObject *atk_obj,
-                guint     index,
-                AtkObject *child)
-{
-  if (!IS_MAI_OBJECT(child))
-      return;
-
-  static guint id =  g_signal_lookup ("destroy", MAI_TYPE_ATK_OBJECT);
-  g_signal_emit (child, id, 0);
-}
-
-/* intialize the the atk interface (function pointers) with MAI implementation.
- * When atk bridge get loaded, these interface can be used.
- */
-static void
-mai_util_class_init(MaiUtilClass *klass)
-{
-    AtkUtilClass *atk_class;
-    gpointer data;
-
-    data = g_type_class_peek(ATK_TYPE_UTIL);
-    atk_class = ATK_UTIL_CLASS(data);
-
-    // save gail function pointer
-    gail_add_global_event_listener = atk_class->add_global_event_listener;
-    gail_remove_global_event_listener = atk_class->remove_global_event_listener;
-    gail_remove_key_event_listener = atk_class->remove_key_event_listener;
-    gail_get_root = atk_class->get_root;
-
-    atk_class->add_global_event_listener =
-        mai_util_add_global_event_listener;
-    atk_class->remove_global_event_listener =
-        mai_util_remove_global_event_listener;
-    atk_class->add_key_event_listener = mai_util_add_key_event_listener;
-    atk_class->remove_key_event_listener = mai_util_remove_key_event_listener;
-    atk_class->get_root = mai_util_get_root;
-    atk_class->get_toolkit_name = mai_util_get_toolkit_name;
-    atk_class->get_toolkit_version = mai_util_get_toolkit_version;
-
-    sListener_list = g_hash_table_new_full(g_int_hash, g_int_equal, NULL,
-                                           _listener_info_destroy);
-    // Keep track of added/removed windows.
-    AtkObject *root = atk_get_root ();
-    g_signal_connect (root, "children-changed::add", (GCallback) window_added, NULL);
-    g_signal_connect (root, "children-changed::remove", (GCallback) window_removed, NULL);
-}
-
-static guint
-mai_util_add_global_event_listener(GSignalEmissionHook listener,
-                                   const gchar *event_type)
-{
-    guint rc = 0;
-    gchar **split_string;
-
-    split_string = g_strsplit (event_type, ":", 3);
-
-    if (split_string) {
-        if (!strcmp ("window", split_string[0])) {
-            guint gail_listenerid = 0;
-            if (gail_add_global_event_listener) {
-                // call gail's function to track gtk native window events
-                gail_listenerid =
-                    gail_add_global_event_listener(listener, event_type);
-            }
-
-            rc = add_listener (listener, "MaiAtkObject", split_string[1],
-                               event_type, gail_listenerid);
-        }
-        else {
-            rc = add_listener (listener, split_string[1], split_string[2],
-                               event_type);
-        }
-        g_strfreev(split_string);
-    }
-    return rc;
-}
-
-static void
-mai_util_remove_global_event_listener(guint remove_listener)
-{
-    if (remove_listener > 0) {
-        MaiUtilListenerInfo *listener_info;
-        gint tmp_idx = remove_listener;
-
-        listener_info = (MaiUtilListenerInfo *)
-            g_hash_table_lookup(sListener_list, &tmp_idx);
-
-        if (listener_info != NULL) {
-            if (gail_remove_global_event_listener &&
-                listener_info->gail_listenerid) {
-              gail_remove_global_event_listener(listener_info->gail_listenerid);
-            }
-
-            /* Hook id of 0 and signal id of 0 are invalid */
-            if (listener_info->hook_id != 0 && listener_info->signal_id != 0) {
-                /* Remove the emission hook */
-                g_signal_remove_emission_hook(listener_info->signal_id,
-                                              listener_info->hook_id);
-
-                /* Remove the element from the hash */
-                g_hash_table_remove(sListener_list, &tmp_idx);
-            }
-            else {
-                g_warning("Invalid listener hook_id %ld or signal_id %d\n",
-                          listener_info->hook_id, listener_info->signal_id);
-            }
-        }
-        else {
-            // atk-bridge is initialized with gail (e.g. yelp)
-            // try gail_remove_global_event_listener
-            if (gail_remove_global_event_listener) {
-                return gail_remove_global_event_listener(remove_listener);
-            }
-
-            g_warning("No listener with the specified listener id %d",
-                      remove_listener);
-        }
-    }
-    else {
-        g_warning("Invalid listener_id %d", remove_listener);
-    }
-}
-
-static AtkKeyEventStruct *
-atk_key_event_from_gdk_event_key (GdkEventKey *key)
-{
-    AtkKeyEventStruct *event = g_new0(AtkKeyEventStruct, 1);
-    switch (key->type) {
-    case GDK_KEY_PRESS:
-        event->type = ATK_KEY_EVENT_PRESS;
-        break;
-    case GDK_KEY_RELEASE:
-        event->type = ATK_KEY_EVENT_RELEASE;
-        break;
-    default:
-        g_assert_not_reached ();
-        return NULL;
-    }
-    event->state = key->state;
-    event->keyval = key->keyval;
-    event->length = key->length;
-    if (key->string && key->string [0] &&
-        (key->state & GDK_CONTROL_MASK ||
-         g_unichar_isgraph (g_utf8_get_char (key->string)))) {
-        event->string = key->string;
-    }
-    else if (key->type == GDK_KEY_PRESS ||
-             key->type == GDK_KEY_RELEASE) {
-        event->string = gdk_keyval_name (key->keyval);
-    }
-    event->keycode = key->hardware_keycode;
-    event->timestamp = key->time;
-
-    MAI_LOG_DEBUG(("MaiKey:\tsym %u\n\tmods %x\n\tcode %u\n\ttime %lx\n",
-                   (unsigned int) event->keyval,
-                   (unsigned int) event->state,
-                   (unsigned int) event->keycode,
-                   (unsigned long int) event->timestamp));
-    return event;
-}
-
-static gboolean
-notify_hf(gpointer key, gpointer value, gpointer data)
-{
-    MaiKeyEventInfo *info = (MaiKeyEventInfo *)data;
-    AtkKeySnoopFuncPointer atkKeySnoop;
-    atkKeySnoop.data = value;
-    return (atkKeySnoop.func_ptr)(info->key_event, info->func_data) ? TRUE : FALSE;
-}
-
-static void
-insert_hf(gpointer key, gpointer value, gpointer data)
-{
-    GHashTable *new_table = (GHashTable *) data;
-    g_hash_table_insert (new_table, key, value);
-}
-
-static gint
-mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event, gpointer func_data)
-{
-    /* notify each AtkKeySnoopFunc in turn... */
-
-    MaiKeyEventInfo *info = g_new0(MaiKeyEventInfo, 1);
-    gint consumed = 0;
-    if (sKey_listener_list) {
-        GHashTable *new_hash = g_hash_table_new(NULL, NULL);
-        g_hash_table_foreach (sKey_listener_list, insert_hf, new_hash);
-        info->key_event = atk_key_event_from_gdk_event_key (event);
-        info->func_data = func_data;
-        consumed = g_hash_table_foreach_steal (new_hash, notify_hf, info);
-        g_hash_table_destroy (new_hash);
-        g_free(info->key_event);
-    }
-    g_free(info);
-    return (consumed ? 1 : 0);
-}
-
-static guint
-mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
-                                 gpointer data)
-{
-    NS_ENSURE_TRUE(listener, 0);
-
-    static guint key=0;
-
-    if (!sKey_listener_list) {
-        sKey_listener_list = g_hash_table_new(NULL, NULL);
-        sKey_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
-    }
-    AtkKeySnoopFuncPointer atkKeySnoop;
-    atkKeySnoop.func_ptr = listener;
-    g_hash_table_insert(sKey_listener_list, GUINT_TO_POINTER (key++),
-                        atkKeySnoop.data);
-    return key;
-}
-
-static void
-mai_util_remove_key_event_listener (guint remove_listener)
-{
-    if (!sKey_listener_list) {
-        // atk-bridge is initialized with gail (e.g. yelp)
-        // try gail_remove_key_event_listener
-        return gail_remove_key_event_listener(remove_listener);
-    }
-
-    g_hash_table_remove(sKey_listener_list, GUINT_TO_POINTER (remove_listener));
-    if (g_hash_table_size(sKey_listener_list) == 0) {
-        gtk_key_snooper_remove(sKey_snooper_id);
-    }
-}
-
-AtkObject*
-mai_util_get_root(void)
-{
-  ApplicationAccessible* app = ApplicationAcc();
-  if (app)
-    return app->GetAtkObject();
-
-  // We've shutdown, try to use gail instead
-  // (to avoid assert in spi_atk_tidy_windows())
-  // XXX tbsaunde then why didn't we replace the gail atk_util impl?
-  if (gail_get_root)
-    return gail_get_root();
-
-  return nullptr;
-}
-
-G_CONST_RETURN gchar *
-mai_util_get_toolkit_name(void)
-{
-    return MAI_NAME;
-}
-
-G_CONST_RETURN gchar *
-mai_util_get_toolkit_version(void)
-{
-    return MAI_VERSION;
-}
-
-void
-_listener_info_destroy(gpointer data)
-{
-    g_free(data);
-}
-
-guint
-add_listener (GSignalEmissionHook listener,
-              const gchar *object_type,
-              const gchar *signal,
-              const gchar *hook_data,
-              guint gail_listenerid)
-{
-    GType type;
-    guint signal_id;
-    gint rc = 0;
-
-    type = g_type_from_name(object_type);
-    if (type) {
-        signal_id = g_signal_lookup(signal, type);
-        if (signal_id > 0) {
-            MaiUtilListenerInfo *listener_info;
-
-            rc = sListener_idx;
-
-            listener_info =  (MaiUtilListenerInfo *)
-                g_malloc(sizeof(MaiUtilListenerInfo));
-            listener_info->key = sListener_idx;
-            listener_info->hook_id =
-                g_signal_add_emission_hook(signal_id, 0, listener,
-                                           g_strdup(hook_data),
-                                           (GDestroyNotify)g_free);
-            listener_info->signal_id = signal_id;
-            listener_info->gail_listenerid = gail_listenerid;
-
-            g_hash_table_insert(sListener_list, &(listener_info->key),
-                                listener_info);
-            sListener_idx++;
-        }
-        else {
-            g_warning("Invalid signal type %s\n", signal);
-        }
-    }
-    else {
-        g_warning("Invalid object type %s\n", object_type);
-    }
-    return rc;
-}
-
 static nsresult LoadGtkModule(GnomeAccessibilityModule& aModule);
 
 static gboolean toplevel_event_watcher(GSignalInvocationHint*, guint,
@@ -519,16 +78,11 @@ static gboolean toplevel_event_watcher(GSignalInvocationHint*, guint,
 ApplicationAccessibleWrap::ApplicationAccessibleWrap():
   ApplicationAccessible()
 {
-  MAI_LOG_DEBUG(("======Create AppRootAcc=%p\n", (void*)this));
-
   if (ShouldA11yBeEnabled()) {
       // Load and initialize gail library.
       nsresult rv = LoadGtkModule(sGail);
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv))
           (*sGail.init)();
-      } else {
-          MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
-      }
   }
 }
 
@@ -544,15 +98,13 @@ nsAccessNodeWrap::InitAccessibility()
     return;
 
   // Initialize the MAI Utility class, it will overwrite gail_util.
-  g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
+  g_type_class_unref(g_type_class_ref(mai_util_get_type()));
 
   // Init atk-bridge now
   PR_SetEnv("NO_AT_BRIDGE=0");
   nsresult rv = LoadGtkModule(sAtkBridge);
   if (NS_SUCCEEDED(rv)) {
     (*sAtkBridge.init)();
-  } else {
-    MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
   }
 
   if (!sToplevel_event_hook_added) {
@@ -573,7 +125,6 @@ nsAccessNodeWrap::InitAccessibility()
 
 ApplicationAccessibleWrap::~ApplicationAccessibleWrap()
 {
-  MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
   AccessibleWrap::ShutdownAtkObject();
 }
 
@@ -788,9 +339,6 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
     NS_ENSURE_ARG(aModule.libName);
 
     if (!(aModule.lib = PR_LoadLibrary(aModule.libName))) {
-
-        MAI_LOG_DEBUG(("Fail to load lib: %s in default path\n", aModule.libName));
-
         //try to load the module with "gtk-2.0/modules" appended
         char *curLibPath = PR_GetLibraryPath();
         nsAutoCString libPath(curLibPath);
@@ -799,7 +347,6 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
 #else
         libPath.Append(":/usr/lib");
 #endif
-        MAI_LOG_DEBUG(("Current Lib path=%s\n", libPath.get()));
         PR_FreeLibraryName(curLibPath);
 
         int16_t loc1 = 0, loc2 = 0;
@@ -814,16 +361,13 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
             sub.Append("/gtk-2.0/modules/");
             sub.Append(aModule.libName);
             aModule.lib = PR_LoadLibrary(sub.get());
-            if (aModule.lib) {
-                MAI_LOG_DEBUG(("Ok, load %s from %s\n", aModule.libName, sub.get()));
+            if (aModule.lib)
                 break;
-            }
+
             loc1 = loc2+1;
         }
-        if (!aModule.lib) {
-            MAI_LOG_DEBUG(("Fail to load %s\n", aModule.libName));
+        if (!aModule.lib)
             return NS_ERROR_FAILURE;
-        }
     }
 
     //we have loaded the library, try to get the function ptrs
@@ -833,9 +377,6 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
                                                    aModule.shutdownName))) {
 
         //fail, :(
-        MAI_LOG_DEBUG(("Fail to find symbol %s in %s",
-                       aModule.init ? aModule.shutdownName : aModule.initName,
-                       aModule.libName));
         PR_UnloadLibrary(aModule.lib);
         aModule.lib = NULL;
         return NS_ERROR_FAILURE;
