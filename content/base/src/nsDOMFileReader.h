@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
 #include "nsIChannel.h"
+#include "prmem.h"
 
 #include "FileIOObject.h"
 
@@ -80,7 +81,7 @@ protected:
   nsresult ConvertStream(const char *aFileData, uint32_t aDataLen, const char *aCharset, nsAString &aResult); 
 
   void FreeFileData() {
-    moz_free(mFileData);
+    PR_Free(mFileData);
     mFileData = nullptr;
     mDataLen = 0;
   }
