@@ -683,12 +683,12 @@ nsObjectLoadingContent::InstantiatePluginInstance()
   // Flush layout so that the frame is created if possible and the plugin is
   // initialized with the latest information.
   doc->FlushPendingNotifications(Flush_Layout);
-  
+
   if (!thisContent->GetPrimaryFrame()) {
     LOG(("OBJLC [%p]: Not instantiating plugin with no frame", this));
     return NS_OK;
   }
-  
+
   nsresult rv = NS_ERROR_FAILURE;
   nsRefPtr<nsPluginHost> pluginHost =
     already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
@@ -1344,42 +1344,61 @@ nsObjectLoadingContent::UpdateObjectParameters()
       stateInvalid = true;
     }
 
-    // The channel type overrides the guessed / provided type, except when:
+    ObjectType typeHint = newMime.IsEmpty() ?
+                          eType_Null : GetTypeOfContent(newMime);
+
     //
-    // 1) If the channel returns a binary stream type, and we have a type hint
-    //    for a non-document (we never want to display binary-as-document),
-    //    use our type hint instead.
-    // 2) Our type hint is a type that we support with a plugin, ignore the
-    //    server's type
+    // In order of preference:
+    //
+    // 1) Use our type hint if it matches a plugin
+    // 2) If we have eAllowPluginSkipChannel, use the uri file extension if
+    //    it matches a plugin
+    // 3) If the channel returns a binary stream type:
+    //    3a) If we have a type non-null non-document type hint, use that
+    //    3b) If the uri file extension matches a plugin type, use that
+    // 4) Use the channel type
     //
     //    XXX(johns): HTML5's "typesmustmatch" attribute would need to be
     //                honored here if implemented
 
-    ObjectType typeHint = newMime.IsEmpty() ? eType_Null : GetTypeOfContent(newMime);
+    bool overrideChannelType = false;
+    if (typeHint == eType_Plugin) {
+      LOG(("OBJLC [%p]: Using plugin type hint in favor of any channel type",
+           this));
+      overrideChannelType = true;
+    } else if ((caps & eAllowPluginSkipChannel) &&
+               IsPluginEnabledByExtension(newURI, newMime)) {
+      LOG(("OBJLC [%p]: Using extension as type hint for "
+           "eAllowPluginSkipChannel tag (%s)", this, newMime.get()));
+      overrideChannelType = true;
+    } else if (binaryChannelType &&
+               typeHint != eType_Null && typeHint != eType_Document) {
+      LOG(("OBJLC [%p]: Using type hint in favor of binary channel type",
+           this));
+      overrideChannelType = true;
+    } else if (binaryChannelType &&
+               IsPluginEnabledByExtension(newURI, newMime)) {
+      LOG(("OBJLC [%p]: Using extension as type hint for binary channel (%s)",
+           this, newMime.get()));
+      overrideChannelType = true;
+    }
 
-    bool caseOne = binaryChannelType
-                   && typeHint != eType_Null
-                   && typeHint != eType_Document;
-    bool caseTwo = typeHint == eType_Plugin;
-    if (caseOne || caseTwo) {
-        // Set the type we'll use for dispatch on the channel.  Otherwise we could
-        // end up trying to dispatch to a nsFrameLoader, which will complain that
-        // it couldn't find a way to handle application/octet-stream
-        nsAutoCString typeHint, dummy;
-        NS_ParseContentType(newMime, typeHint, dummy);
-        if (!typeHint.IsEmpty()) {
-          mChannel->SetContentType(typeHint);
-        }
-    } else if (binaryChannelType
-               && IsPluginEnabledByExtension(newURI, newMime)) {
-      mChannel->SetContentType(newMime);
+    if (overrideChannelType) {
+      // Set the type we'll use for dispatch on the channel.  Otherwise we could
+      // end up trying to dispatch to a nsFrameLoader, which will complain that
+      // it couldn't find a way to handle application/octet-stream
+      nsAutoCString parsedMime, dummy;
+      NS_ParseContentType(newMime, parsedMime, dummy);
+      if (!parsedMime.IsEmpty()) {
+        mChannel->SetContentType(parsedMime);
+      }
     } else {
       newMime = channelType;
       if (nsPluginHost::IsJavaMIMEType(newMime.get())) {
-        //   Java does not load with a channel, and being java retroactively changes
-        //   how we may have interpreted the codebase to construct this URI above.
-        //   Because the behavior here is more or less undefined, play it safe and
-        //   reject the load.
+        // Java does not load with a channel, and being java retroactively
+        // changes how we may have interpreted the codebase to construct this
+        // URI above.  Because the behavior here is more or less undefined, play
+        // it safe and reject the load.
         LOG(("OBJLC [%p]: Refusing to load with channel with java MIME",
              this));
         stateInvalid = true;
@@ -1396,25 +1415,16 @@ nsObjectLoadingContent::UpdateObjectParameters()
   ///
   /// Determine final type
   ///
+  // In order of preference:
   //  1) If we have attempted channel load, or set stateInvalid above, the type
   //     is always null (fallback)
-  //  2) Otherwise, If we have a loaded channel, we grabbed its mimeType above,
-  //     use that type.
-  //  3) Otherwise, See if we can load this as a plugin without a channel
-  //     (image/document types always need a channel).
-  //     - If we have indication this is a plugin (mime, extension)
-  //       AND:
-  //       - We have eAllowPluginSkipChannel OR
-  //       - We have no URI in the first place (including java)
-  //  3) Otherwise, if we have a URI, set type to loading to indicate
-  //     we'd need a channel to proceed.
-  //  4) Otherwise, type null to indicate unloadable content (fallback)
-  //
-  // XXX(johns): <embed> tags both support URIs and have
-  //   eAllowPluginSkipChannel, meaning it is possible that we have a URI, but
-  //   are not going to open a channel for it. The old objLC code did this (in a
-  //   less obviously-intended way), so it's probably best not to change our
-  //   behavior at this point.
+  //  2) If we have a loaded channel, we grabbed its mimeType above, use that
+  //     type.
+  //  3) If we have a plugin type and no URI, use that type.
+  //  4) If we have a plugin type and eAllowPluginSkipChannel, use that type.
+  //  5) if we have a URI, set type to loading to indicate we'd need a channel
+  //     to proceed.
+  //  6) Otherwise, type null to indicate unloadable content (fallback)
   //
 
   if (stateInvalid) {
@@ -1425,9 +1435,9 @@ nsObjectLoadingContent::UpdateObjectParameters()
       newType = GetTypeOfContent(newMime);
       LOG(("OBJLC [%p]: Using channel type", this));
   } else if (((caps & eAllowPluginSkipChannel) || !newURI) &&
-             (GetTypeOfContent(newMime) == eType_Plugin)) {
+             GetTypeOfContent(newMime) == eType_Plugin) {
     newType = eType_Plugin;
-    LOG(("OBJLC [%p]: Skipping loading channel, type plugin", this));
+    LOG(("OBJLC [%p]: Plugin type with no URI, skipping channel load", this));
   } else if (newURI) {
     // We could potentially load this if we opened a channel on mURI, indicate
     // This by leaving type as loading
@@ -1586,7 +1596,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     return NS_OK;
   }
 
-  // Determine what's going on with our channel
+  // Determine what's going on with our channel.
   if (stateChange & eParamChannelChanged) {
     // If the channel params changed, throw away the channel, but unset
     // mChannelLoaded so we'll still try to open a new one for this load if
@@ -1639,7 +1649,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
            this));
       return NS_OK;
     }
-    
+
     // Load denied, switch to fallback and set disabled/suppressed if applicable
     if (!allowLoad) {
       LOG(("OBJLC [%p]: Load denied by policy", this));
@@ -1740,7 +1750,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
           CloseChannel();
           break;
         }
-        
+
         rv = pluginHost->NewEmbeddedPluginStreamListener(mURI, this, nullptr,
                                                          getter_AddRefs(finalListener));
         // finalListener will receive OnStartRequest below
@@ -1758,7 +1768,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         mType = eType_Null;
         break;
       }
-      
+
       mFrameLoader = nsFrameLoader::Create(thisContent->AsElement(),
                                            mNetworkCreated);
       if (!mFrameLoader) {
@@ -1766,7 +1776,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         mType = eType_Null;
         break;
       }
-      
+
       rv = mFrameLoader->CheckForRecursiveLoad(mURI);
       if (NS_FAILED(rv)) {
         LOG(("OBJLC [%p]: Aborting recursive load", this));
@@ -1850,7 +1860,10 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   NotifyStateChanged(oldType, oldState, false, aNotify);
 
   //
-  // Pass load on to finalListener if loading with a channel
+  // Pass load on to finalListener if loading with a channel.
+  //
+  // We do this after finishing our notification such that re-entrance doesn't
+  // skip notifications or fire them out of order.
   //
 
   if (!mIsLoading) {
