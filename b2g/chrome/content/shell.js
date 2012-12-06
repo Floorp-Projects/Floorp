@@ -134,6 +134,13 @@ var shell = {
       if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED
           && network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
         shell.CrashSubmit.submit(aCrashID);
+
+        // purge the queue.
+        let pending = shell.CrashSubmit.pendingIDs();
+        for (let crashid of pending) {
+          shell.CrashSubmit.submit(crashid);
+        }
+
         Services.obs.removeObserver(observer, topic);
       }
     }, "network-interface-state-changed", false);
