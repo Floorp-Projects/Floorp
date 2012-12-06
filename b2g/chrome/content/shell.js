@@ -626,13 +626,22 @@ var AlertsHelper = {
 
     let topic = detail.type == "desktop-notification-click" ? "alertclickcallback"
                                                             : "alertfinished";
-
     if (uid.startsWith("app-notif")) {
-      listener.mm.sendAsyncMessage("app-notification-return", {
-        uid: uid,
-        topic: topic,
-        target: listener.target
-      });
+      try {
+        listener.mm.sendAsyncMessage("app-notification-return", {
+          uid: uid,
+          topic: topic,
+          target: listener.target
+        });
+      } catch(e) {
+        gSystemMessenger.sendMessage("notification", {
+          title: listener.title,
+          body: listener.text,
+          imageURL: listener.imageURL
+        },
+        Services.io.newURI(listener.target, null, null),
+        Services.io.newURI(listener.manifestURL, null, null));
+      }
     } else if (uid.startsWith("alert")) {
       try {
         listener.observer.observe(null, topic, listener.cookie);
