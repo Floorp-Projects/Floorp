@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioChannelService.h"
+#include "AudioChannelServiceChild.h"
 
 #include "base/basictypes.h"
 
@@ -30,6 +31,10 @@ AudioChannelService::GetAudioChannelService()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return AudioChannelServiceChild::GetAudioChannelService();
+  }
+
   // If we already exist, exit early
   if (gAudioChannelService) {
     return gAudioChannelService;
@@ -46,6 +51,10 @@ AudioChannelService::GetAudioChannelService()
 void
 AudioChannelService::Shutdown()
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return AudioChannelServiceChild::Shutdown();
+  }
+
   if (gAudioChannelService) {
     delete gAudioChannelService;
     gAudioChannelService = nullptr;
@@ -79,6 +88,12 @@ AudioChannelService::RegisterMediaElement(nsHTMLMediaElement* aMediaElement,
                                           AudioChannelType aType)
 {
   mMediaElements.Put(aMediaElement, aType);
+  RegisterType(aType);
+}
+
+void
+AudioChannelService::RegisterType(AudioChannelType aType)
+{
   mChannelCounters[aType]++;
 
   // In order to avoid race conditions, it's safer to notify any existing
@@ -95,9 +110,14 @@ AudioChannelService::UnregisterMediaElement(nsHTMLMediaElement* aMediaElement)
   }
 
   mMediaElements.Remove(aMediaElement);
+  UnregisterType(type);
+}
 
-  mChannelCounters[type]--;
-  MOZ_ASSERT(mChannelCounters[type] >= 0);
+void
+AudioChannelService::UnregisterType(AudioChannelType aType)
+{
+  mChannelCounters[aType]--;
+  MOZ_ASSERT(mChannelCounters[aType] >= 0);
 
   // In order to avoid race conditions, it's safer to notify any existing
   // media element any time a new one is registered.
@@ -193,6 +213,13 @@ AudioChannelService::Notify()
 
   // Notify any media element for the main process.
   mMediaElements.EnumerateRead(NotifyEnumerator, nullptr);
+
+  // Notify for the child processes.
+  nsTArray<ContentParent*> children;
+  ContentParent::GetAll(children);
+  for (uint32_t i = 0; i < children.Length(); i++) {
+    unused << children[i]->SendAudioChannelNotify();
+  }
 }
 
 bool
