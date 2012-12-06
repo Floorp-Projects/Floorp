@@ -87,6 +87,16 @@ public:
     static int ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat);
 
     /**
+     * Return the transform matrix that maps aFrom to the rectangle defined by
+     * aToTopLeft/aToTopRight/aToBottomRight. aFrom must be
+     * nonempty and the destination rectangle must be axis-aligned.
+     */
+    static gfxMatrix TransformRectToRect(const gfxRect& aFrom,
+                                         const gfxPoint& aToTopLeft,
+                                         const gfxPoint& aToTopRight,
+                                         const gfxPoint& aToBottomRight);
+
+    /**
      * If aIn can be represented exactly using an nsIntRect (i.e.
      * integer-aligned edges and coordinates in the int32_t range) then we
      * set aOut to that rectangle, otherwise return failure.
