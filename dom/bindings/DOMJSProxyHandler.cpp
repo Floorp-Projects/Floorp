@@ -67,7 +67,7 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JSObject* obj)
     }
 
     nsWrapperCache* cache;
-    CallQueryInterface(UnwrapDOMObject<nsISupports>(obj, eProxyDOMObject), &cache);
+    CallQueryInterface(UnwrapDOMObject<nsISupports>(obj), &cache);
     cache->SetPreservingWrapper(true);
 
     js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));

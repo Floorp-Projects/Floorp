@@ -578,8 +578,8 @@ ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp)
 inline const NativePropertyHooks*
 GetNativePropertyHooks(JSContext *cx, JSObject *obj, DOMObjectType& type)
 {
-  const DOMClass* domClass;
-  if (GetDOMClass(obj, domClass) != eNonDOMObject) {
+  const DOMClass* domClass = GetDOMClass(obj);
+  if (domClass) {
     type = eInstance;
     return domClass->mNativeHooks;
   }
