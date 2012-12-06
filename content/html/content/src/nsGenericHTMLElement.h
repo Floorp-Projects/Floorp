@@ -239,25 +239,6 @@ public:
     }
     return style;
   }
-#define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
-// The using nsINode::Get/SetOn* are to avoid warnings about shadowing the XPCOM
-// getter and setter on nsINode.
-#define FORWARDED_EVENT(name_, id_, type_, struct_)                           \
-  using nsINode::GetOn##name_;                                                \
-  using nsINode::SetOn##name_;                                                \
-  mozilla::dom::EventHandlerNonNull* GetOn##name_();                          \
-  void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler,               \
-                    mozilla::ErrorResult& error);
-#define ERROR_EVENT(name_, id_, type_, struct_)                               \
-  using nsINode::GetOn##name_;                                                \
-  using nsINode::SetOn##name_;                                                \
-  already_AddRefed<mozilla::dom::EventHandlerNonNull> GetOn##name_();         \
-  void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler,               \
-                    mozilla::ErrorResult& error);
-#include "nsEventNameList.h"
-#undef ERROR_EVENT
-#undef FORWARDED_EVENT
-#undef EVENT
   void GetClassName(nsAString& aClassName)
   {
     GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
