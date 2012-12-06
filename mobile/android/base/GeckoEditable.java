@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.os.Build;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
@@ -12,12 +13,12 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Selection;
+import android.text.TextPaint;
 import android.text.TextUtils;
-import android.text.style.UnderlineSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.BackgroundColorSpan;
+import android.text.style.CharacterStyle;
 import android.util.Log;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -274,6 +275,14 @@ final class GeckoEditable
         });
     }
 
+    private Object getField(Object obj, String field, Object def) {
+        try {
+            return obj.getClass().getField(field).get(obj);
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
     private void uiUpdateGecko(boolean force) {
 
         if (!force && mUIUpdateSeqno == mLastUIUpdateSeqno) {
@@ -318,12 +327,15 @@ final class GeckoEditable
         if (selEnd >= composingStart && selEnd <= composingEnd) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createIMERangeEvent(
                     selEnd - composingStart, selEnd - composingStart,
-                    GeckoEvent.IME_RANGE_CARETPOSITION, 0, 0, 0));
+                    GeckoEvent.IME_RANGE_CARETPOSITION, 0, 0, false, 0, 0, 0));
         }
         int rangeStart = composingStart;
+        TextPaint tp = new TextPaint();
+        TextPaint emptyTp = new TextPaint();
         do {
-            int rangeType, rangeStyles = 0;
-            int rangeForeColor = 0, rangeBackColor = 0;
+            int rangeType, rangeStyles = 0, rangeLineStyle = GeckoEvent.IME_RANGE_LINE_NONE;
+            boolean rangeBoldLine = false;
+            int rangeForeColor = 0, rangeBackColor = 0, rangeLineColor = 0;
             int rangeEnd = mText.nextSpanTransition(rangeStart, composingEnd, Object.class);
 
             if (selStart > rangeStart && selStart < rangeEnd) {
@@ -331,14 +343,15 @@ final class GeckoEditable
             } else if (selEnd > rangeStart && selEnd < rangeEnd) {
                 rangeEnd = selEnd;
             }
-            spans = mText.getSpans(rangeStart, rangeEnd, Object.class);
+            CharacterStyle[] styleSpans =
+                    mText.getSpans(rangeStart, rangeEnd, CharacterStyle.class);
 
             if (DEBUG) {
-                Log.d(LOGTAG, " found " + spans.length + " spans @ " +
+                Log.d(LOGTAG, " found " + styleSpans.length + " spans @ " +
                               rangeStart + "-" + rangeEnd);
             }
 
-            if (spans.length == 0) {
+            if (styleSpans.length == 0) {
                 rangeType = (selStart == rangeStart && selEnd == rangeEnd)
                             ? GeckoEvent.IME_RANGE_SELECTEDRAWTEXT
                             : GeckoEvent.IME_RANGE_RAWINPUT;
@@ -346,23 +359,46 @@ final class GeckoEditable
                 rangeType = (selStart == rangeStart && selEnd == rangeEnd)
                             ? GeckoEvent.IME_RANGE_SELECTEDCONVERTEDTEXT
                             : GeckoEvent.IME_RANGE_CONVERTEDTEXT;
-                for (Object span : spans) {
-                    if (span instanceof UnderlineSpan) {
-                        rangeStyles |= GeckoEvent.IME_RANGE_UNDERLINE;
-                    } else if (span instanceof ForegroundColorSpan) {
-                        rangeStyles |= GeckoEvent.IME_RANGE_FORECOLOR;
-                        rangeForeColor =
-                            ((ForegroundColorSpan)span).getForegroundColor();
-                    } else if (span instanceof BackgroundColorSpan) {
-                        rangeStyles |= GeckoEvent.IME_RANGE_BACKCOLOR;
-                        rangeBackColor =
-                            ((BackgroundColorSpan)span).getBackgroundColor();
+                tp.set(emptyTp);
+                for (CharacterStyle span : styleSpans) {
+                    span.updateDrawState(tp);
+                }
+                int tpUnderlineColor = 0;
+                float tpUnderlineThickness = 0.0f;
+                // These TextPaint fields only exist on Android ICS+ and are not in the SDK
+                if (Build.VERSION.SDK_INT >= 14) {
+                    tpUnderlineColor = (Integer)getField(tp, "underlineColor", 0);
+                    tpUnderlineThickness = (Float)getField(tp, "underlineThickness", 0.0f);
+                }
+                if (tpUnderlineColor != 0) {
+                    rangeStyles |= GeckoEvent.IME_RANGE_UNDERLINE | GeckoEvent.IME_RANGE_LINECOLOR;
+                    rangeLineColor = tpUnderlineColor;
+                    // Approximately translate underline thickness to what Gecko understands
+                    if (tpUnderlineThickness <= 0.5f) {
+                        rangeLineStyle = GeckoEvent.IME_RANGE_LINE_DOTTED;
+                    } else {
+                        rangeLineStyle = GeckoEvent.IME_RANGE_LINE_SOLID;
+                        if (tpUnderlineThickness >= 2.0f) {
+                            rangeBoldLine = true;
+                        }
                     }
+                } else if (tp.isUnderlineText()) {
+                    rangeStyles |= GeckoEvent.IME_RANGE_UNDERLINE;
+                    rangeLineStyle = GeckoEvent.IME_RANGE_LINE_SOLID;
+                }
+                if (tp.getColor() != 0) {
+                    rangeStyles |= GeckoEvent.IME_RANGE_FORECOLOR;
+                    rangeForeColor = tp.getColor();
+                }
+                if (tp.bgColor != 0) {
+                    rangeStyles |= GeckoEvent.IME_RANGE_BACKCOLOR;
+                    rangeBackColor = tp.bgColor;
                 }
             }
             GeckoAppShell.sendEventToGecko(GeckoEvent.createIMERangeEvent(
                     rangeStart - composingStart, rangeEnd - composingStart,
-                    rangeType, rangeStyles, rangeForeColor, rangeBackColor));
+                    rangeType, rangeStyles, rangeLineStyle, rangeBoldLine,
+                    rangeForeColor, rangeBackColor, rangeLineColor));
             rangeStart = rangeEnd;
 
             if (DEBUG) {
@@ -710,13 +746,6 @@ final class GeckoEditable
     }
 
     // Spannable interface
-
-    private static boolean isCompositionSpan(Object what, int flags) {
-        return (flags & Spanned.SPAN_COMPOSING) != 0 ||
-                what instanceof UnderlineSpan ||
-                what instanceof ForegroundColorSpan ||
-                what instanceof BackgroundColorSpan;
-    }
 
     @Override
     public void removeSpan(Object what) {

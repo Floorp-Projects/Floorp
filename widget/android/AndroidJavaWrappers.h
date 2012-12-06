@@ -686,8 +686,11 @@ public:
     int PointerIndex() { return mPointerIndex; }
     int RangeType() { return mRangeType; }
     int RangeStyles() { return mRangeStyles; }
+    int RangeLineStyle() { return mRangeLineStyle; }
+    bool RangeBoldLine() { return mRangeBoldLine; }
     int RangeForeColor() { return mRangeForeColor; }
     int RangeBackColor() { return mRangeBackColor; }
+    int RangeLineColor() { return mRangeLineColor; }
     nsGeoPosition* GeoPosition() { return mGeoPosition; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
@@ -710,8 +713,9 @@ protected:
     int mRepeatCount;
     int mCount;
     int mStart, mEnd;
-    int mRangeType, mRangeStyles;
-    int mRangeForeColor, mRangeBackColor;
+    int mRangeType, mRangeStyles, mRangeLineStyle;
+    bool mRangeBoldLine;
+    int mRangeForeColor, mRangeBackColor, mRangeLineColor;
     double mX, mY, mZ;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra;
@@ -767,8 +771,11 @@ protected:
     static jfieldID jRepeatCountField;
     static jfieldID jRangeTypeField;
     static jfieldID jRangeStylesField;
+    static jfieldID jRangeLineStyleField;
+    static jfieldID jRangeBoldLineField;
     static jfieldID jRangeForeColorField;
     static jfieldID jRangeBackColorField;
+    static jfieldID jRangeLineColorField;
     static jfieldID jLocationField;
 
     static jfieldID jBandwidthField;
