@@ -246,6 +246,7 @@ _BROWSER_FILES = \
                  plugin_clickToPlayDeny.html \
                  plugin_bug749455.html \
                  plugin_bug797677.html \
+                 plugin_bug818009.html \
                  plugin_hidden_to_visible.html \
                  plugin_two_types.html \
                  alltabslistener.html \
@@ -272,6 +273,7 @@ _BROWSER_FILES = \
                  browser_lastAccessedTab.js \
                  browser_bug734076.js \
                  browser_bug812562.js \
+                 browser_bug818009.js \
                  blockPluginVulnerableUpdatable.xml \
                  blockPluginVulnerableNoUpdate.xml \
                  blockNoPlugins.xml \
@@ -318,6 +320,7 @@ _BROWSER_FILES += \
                 browser_save_link-perwindowpb.js \
                 browser_save_private_link_perwindowpb.js \
                 browser_tabMatchesInAwesomebar_perwindowpb.js \
+                browser_tab_drag_drop_perwindow.js \
                 $(NULL)
 else
 _BROWSER_FILES += \

@@ -71,7 +71,7 @@ class StaticScopeIter
     Type type() const;
 
     StaticBlockObject &block() const;
-    JSScript *funScript() const;
+    UnrootedScript funScript() const;
 };
 
 /*****************************************************************************/

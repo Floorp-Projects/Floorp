@@ -12,6 +12,12 @@ resizer {
   width: 15px;
   height: 15px;
 }
+@media (min-resolution: 2dppx) {
+  resizer {
+    background-image: url("chrome://global/skin/icons/resizer@2x.png");
+    background-size: 100% 100%;
+  }
+}
 
 resizer[type="window"] {
   display: none;
@@ -21,6 +27,14 @@ resizer[rtl="true"],
 resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
   background: url("chrome://global/skin/icons/resizer-rtl.png") no-repeat;
 }
+@media (min-resolution: 2dppx) {
+  resizer[rtl="true"],
+  resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
+    background-image: url("chrome://global/skin/icons/resizer-rtl@2x.png");
+    background-size: 100% 100%;
+  }
+}
+
 
 resizer[dir="left"],
 resizer[dir="bottomleft"],

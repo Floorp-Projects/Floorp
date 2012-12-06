@@ -540,10 +540,10 @@ const DownloadsView = {
       DownloadsPanel.panel.removeAttribute("hasdownloads");
     }
 
-    // If we've got some hidden downloads, we should show the summary just
-    // below the list.
-    this.downloadsHistory.collapsed = hiddenCount > 0;
-    DownloadsSummary.visible = this.downloadsHistory.collapsed;
+    // If we've got some hidden downloads, we should activate the
+    // DownloadsSummary. The DownloadsSummary will determine whether or not
+    // it's appropriate to actually display the summary.
+    DownloadsSummary.active = hiddenCount > 0;
   },
 
   /**
@@ -1445,37 +1445,35 @@ DownloadsViewItemController.prototype = {
 const DownloadsSummary = {
 
   /**
-   * Sets the collapsed state of the summary, and automatically subscribes or
-   * unsubscribes from the DownloadsCommon DownloadsSummaryData singleton.
+   * Sets the active state of the summary. When active, the sumamry subscribes
+   * to the DownloadsCommon DownloadsSummaryData singleton.
    *
-   * @param aVisible
-   *        True if the summary should be shown.
+   * @param aActive
+   *        Set to true to activate the summary.
    */
-  set visible(aVisible)
+  set active(aActive)
   {
-    if (aVisible == this._visible || !this._summaryNode) {
-      return this._visible;
+    if (aActive == this._active || !this._summaryNode) {
+      return this._active;
     }
-    if (aVisible) {
+    if (aActive) {
       DownloadsCommon.getSummary(DownloadsView.kItemCountLimit)
                      .addView(this);
     } else {
       DownloadsCommon.getSummary(DownloadsView.kItemCountLimit)
                      .removeView(this);
+      DownloadsFooter.showingSummary = false;
     }
-    this._summaryNode.collapsed = !aVisible;
-    return this._visible = aVisible;
+
+    return this._active = aActive;
   },
 
   /**
-   * Returns the collapsed state of the downloads summary.
+   * Returns the active state of the downloads summary.
    */
-  get visible()
-  {
-    return this._visible;
-  },
+  get active() this._active,
 
-  _visible: false,
+  _active: false,
 
   /**
    * Sets whether or not we show the progress bar.
@@ -1490,6 +1488,8 @@ const DownloadsSummary = {
     } else {
       this._summaryNode.removeAttribute("inprogress");
     }
+    // If progress isn't being shown, then we simply do not show the summary.
+    return DownloadsFooter.showingSummary = aShowingProgress;
   },
 
   /**
@@ -1667,5 +1667,34 @@ const DownloadsFooter = {
       DownloadsView.richListBox.selectedIndex =
         (DownloadsView.richListBox.itemCount - 1);
     }
+  },
+
+  /**
+   * Sets whether or not the Downloads Summary should be displayed in the
+   * footer. If not, the "Show All Downloads" button is shown instead.
+   */
+  set showingSummary(aValue)
+  {
+    if (this._footerNode) {
+      if (aValue) {
+        this._footerNode.setAttribute("showingsummary", "true");
+      } else {
+        this._footerNode.removeAttribute("showingsummary");
+      }
+    }
+    return aValue;
+  },
+
+  /**
+   * Element corresponding to the footer of the downloads panel.
+   */
+  get _footerNode()
+  {
+    let node = document.getElementById("downloadsFooter");
+    if (!node) {
+      return null;
+    }
+    delete this._footerNode;
+    return this._footerNode = node;
   }
 };

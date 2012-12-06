@@ -62,7 +62,7 @@ class DeviceManager:
         output = str(buf.getvalue()[0:-1]).rstrip()
         buf.close()
         if retval != 0:
-            raise DMError("Non-zero return code for command: %s (output: '%s', retval: '%i')" % (cmd, output, retval))
+            raise DMError("Non-zero return code for command: %s (output: '%s', retval: '%s')" % (cmd, output, retval))
         return output
 
     @abstractmethod
@@ -82,14 +82,16 @@ class DeviceManager:
         Make directory structure on the device
         WARNING: does not create last part of the path
         """
-        parts = filename.split('/')
-        name = ""
-        for part in parts:
-            if (part == parts[-1]):
-                break
-            if (part != ""):
-                name += '/' + part
-                self.mkDir(name) # mkDir will check previous existence
+        dirParts = filename.rsplit('/', 1)
+        if not self.dirExists(dirParts[0]):
+            parts = filename.split('/')
+            name = ""
+            for part in parts:
+                if part == parts[-1]:
+                    break
+                if part != "":
+                    name += '/' + part
+                    self.mkDir(name) # mkDir will check previous existence
 
     @abstractmethod
     def pushDir(self, localDir, remoteDir):

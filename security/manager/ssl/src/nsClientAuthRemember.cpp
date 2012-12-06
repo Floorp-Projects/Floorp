@@ -22,11 +22,7 @@
 #include "certdb.h"
 #include "sechash.h"
 
-#include "nsNSSCleaner.h"
-
 using namespace mozilla;
-
-NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsClientAuthRememberService, 
                               nsIObserver,

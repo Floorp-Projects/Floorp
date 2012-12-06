@@ -25,6 +25,7 @@
 #include "nsEventShell.h"
 #include "nsIAccessibleProvider.h"
 #include "OuterDocAccessible.h"
+#include "Platform.h"
 #include "Role.h"
 #include "RootAccessibleWrap.h"
 #include "States.h"
@@ -913,13 +914,8 @@ nsAccessibilityService::Init()
   logging::CheckEnv();
 #endif
 
-  // Create and initialize the application accessible.
-  ApplicationAccessibleWrap::PreCreate();
   gApplicationAccessible = new ApplicationAccessibleWrap();
   NS_ADDREF(gApplicationAccessible); // will release in Shutdown()
-
-  // Initialize accessibility.
-  nsAccessNodeWrap::InitAccessibility();
 
 #ifdef MOZ_CRASHREPORTER
   CrashReporter::
@@ -928,6 +924,10 @@ nsAccessibilityService::Init()
 #endif
 
   gIsShutdown = false;
+
+  // Now its safe to start platform accessibility.
+  PlatformInit();
+
   return true;
 }
 
@@ -956,9 +956,7 @@ nsAccessibilityService::Shutdown()
 
   gIsShutdown = true;
 
-  nsAccessNodeWrap::ShutdownAccessibility();
-
-  ApplicationAccessibleWrap::Unload();
+  PlatformShutdown();
   gApplicationAccessible->Shutdown();
   NS_RELEASE(gApplicationAccessible);
   gApplicationAccessible = nullptr;

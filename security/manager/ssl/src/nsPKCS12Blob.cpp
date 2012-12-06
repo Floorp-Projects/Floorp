@@ -26,15 +26,15 @@
 #include "nsICertificateDialogs.h"
 #include "nsNSSShutDown.h"
 #include "nsCRT.h"
-#include "pk11func.h"
+#include "ScopedNSSTypes.h"
+
 #include "secerr.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-#include "nsNSSCleaner.h"
-NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
+using namespace mozilla;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -360,9 +360,7 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
 //    nsNSSCertificate *cert = reinterpret_cast<nsNSSCertificate *>(certs[i]);
     nsNSSCertificate *cert = (nsNSSCertificate *)certs[i];
     // get it as a CERTCertificate XXX
-    CERTCertificate *nssCert = NULL;
-    CERTCertificateCleaner nssCertCleaner(nssCert);
-    nssCert = cert->GetCert();
+    ScopedCERTCertificate nssCert(cert->GetCert());
     if (!nssCert) {
       rv = NS_ERROR_FAILURE;
       goto finish;

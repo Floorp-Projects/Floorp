@@ -163,8 +163,6 @@
 #include "nsIXSLTProcessorPrivate.h"
 
 #include "nsIDOMLSProgressEvent.h"
-#include "nsIDOMParser.h"
-#include "nsIDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsEventSource.h"
 #include "nsIDOMSettingsManager.h"
@@ -1399,11 +1397,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(StorageItem, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DOMParser, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XMLSerializer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
@@ -3931,14 +3924,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(StorageItem, nsIDOMStorageItem)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageItem)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMToString)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMParser, nsIDOMParser)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMParser)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLSerializer, nsIDOMSerializer)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSerializer)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XMLHttpRequest, nsIXMLHttpRequest)

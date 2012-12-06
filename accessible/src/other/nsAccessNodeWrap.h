@@ -15,15 +15,7 @@
 namespace mozilla {
 namespace a11y {
 
-class nsAccessNodeWrap :  public nsAccessNode
-{
-public: // construction, destruction
-  nsAccessNodeWrap(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsAccessNodeWrap();
-
-    static void InitAccessibility();
-    static void ShutdownAccessibility();
-};
+typedef nsAccessNode nsAccessNodeWrap;
 
 } // namespace a11y
 } // namespace mozilla

@@ -28,6 +28,7 @@ CPPSRCS = \
   nsWinUtils.cpp \
   Compatibility.cpp \
   EnumVariant.cpp \
+  Platform.cpp \
   RootAccessibleWrap.cpp \
   TextLeafAccessibleWrap.cpp \
   $(NULL)
