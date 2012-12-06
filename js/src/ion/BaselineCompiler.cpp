@@ -628,6 +628,18 @@ BaselineCompiler::emit_JSOP_MUL()
 }
 
 bool
+BaselineCompiler::emit_JSOP_DIV()
+{
+    return emitBinaryArith();
+}
+
+bool
+BaselineCompiler::emit_JSOP_MOD()
+{
+    return emitBinaryArith();
+}
+
+bool
 BaselineCompiler::emitBinaryArith()
 {
     // Allocate IC entry and stub.
