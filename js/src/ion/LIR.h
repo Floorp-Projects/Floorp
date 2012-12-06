@@ -365,8 +365,9 @@ class LStackSlot : public LAllocation
     }
 };
 
-// Arguments are reverse indexes into the stack, and like LStackSlot, each
-// index is measured in increments of STACK_SLOT_SIZE.
+// Arguments are reverse indexes into the stack, and as opposed to LStackSlot,
+// each index is measured in bytes because we have to index the middle of a
+// Value on 32 bits architectures.
 class LArgument : public LAllocation
 {
   public:
