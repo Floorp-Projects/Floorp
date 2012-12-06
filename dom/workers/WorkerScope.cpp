@@ -850,9 +850,6 @@ private:
   }
 };
 
-MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
-                  "The MaxProtoChainLength must match our manual DOMJSClasses");
-
 DOMJSClass DedicatedWorkerGlobalScope::sClass = {
   {
     // We don't have to worry about Xray expando slots here because we'll never
@@ -865,8 +862,7 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
     Finalize, NULL, NULL, NULL, NULL, Trace
   },
   {
-    { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
-      prototypes::id::_ID_Count },
+    INTERFACE_CHAIN_1(prototypes::id::EventTarget_workers),
     false,
     &sWorkerNativePropertyHooks
   }

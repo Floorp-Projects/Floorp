@@ -277,9 +277,6 @@ private:
   }
 };
 
-MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
-                  "The MaxProtoChainLength must match our manual DOMJSClasses");
-
 DOMJSClass Worker::sClass = {
   {
     "Worker",
@@ -290,8 +287,7 @@ DOMJSClass Worker::sClass = {
     NULL, NULL, NULL, NULL, Trace
   },
   {
-    { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
-      prototypes::id::_ID_Count },
+    INTERFACE_CHAIN_1(prototypes::id::EventTarget_workers),
     false,
     &sWorkerNativePropertyHooks
   }
@@ -401,9 +397,6 @@ private:
   }
 };
 
-MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
-                  "The MaxProtoChainLength must match our manual DOMJSClasses");
-
 DOMJSClass ChromeWorker::sClass = {
   { "ChromeWorker",
     JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2) |
@@ -413,8 +406,7 @@ DOMJSClass ChromeWorker::sClass = {
     NULL, NULL, NULL, NULL, Trace,
   },
   {
-    { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
-      prototypes::id::_ID_Count },
+    INTERFACE_CHAIN_1(prototypes::id::EventTarget_workers),
     false,
     &sWorkerNativePropertyHooks
   }
