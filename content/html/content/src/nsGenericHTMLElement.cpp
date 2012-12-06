@@ -2082,8 +2082,7 @@ nsGenericHTMLElement::ParseBackgroundAttribute(int32_t aNamespaceID,
     }
 
     mozilla::css::URLValue *url =
-      new mozilla::css::URLValue(uri, buffer, doc->GetDocumentURI(),
-                                 NodePrincipal());
+      new mozilla::css::URLValue(buffer, baseURI, uri, NodePrincipal());
     aResult.SetTo(url, &aValue);
     return true;
   }
