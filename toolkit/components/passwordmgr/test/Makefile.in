@@ -86,12 +86,12 @@ ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_FILES += \
     test_privbrowsing.html \
     $(NULL)
-endif
 
 ifneq ($(OS_TARGET),Linux)
 MOCHITEST_FILES += \
     test_prompt.html \
     $(NULL)
+endif
 endif
 
 # This test doesn't pass because we can't ensure a cross-platform
