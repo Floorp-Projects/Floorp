@@ -9,6 +9,9 @@ Cu.import("resource://services-sync/util.js");
 function run_test() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = new FormEngine(Service)._tracker;
+  // Don't do asynchronous writes.
+  tracker.persistChangedIDs = false;
+
   do_check_empty(tracker.changedIDs);
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
@@ -46,8 +49,5 @@ function run_test() {
   } finally {
     _("Clean up.");
     Svc.Form.removeAllEntries();
-    if (tracker._lazySave) {
-      tracker._lazySave.clear();
-    }
   }
 }

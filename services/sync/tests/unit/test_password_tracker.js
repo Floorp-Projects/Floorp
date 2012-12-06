@@ -10,12 +10,20 @@ Cu.import("resource://services-sync/util.js");
 Service.engineManager.register(PasswordEngine);
 let engine = Service.engineManager.get("passwords");
 let store  = engine._store;
+let tracker = engine._tracker;
 
-function test_tracking() {
+// Don't do asynchronous writes.
+tracker.persistChangedIDs = false;
+
+function run_test() {
+  initTestLogging("Trace");
+  run_next_test();
+}
+
+add_test(function test_tracking() {
   let recordNum = 0;
 
   _("Verify we've got an empty tracker to work with.");
-  let tracker = engine._tracker;
   do_check_empty(tracker.changedIDs);
 
   function createPassword() {
@@ -69,14 +77,13 @@ function test_tracking() {
     store.wipe();
     tracker.clearChangedIDs();
     tracker.resetScore();
-    tracker._lazySave.clear();
     Svc.Obs.notify("weave:engine:stop-tracking");
+    run_next_test();
   }
-}
+});
 
-function test_onWipe() {
+add_test(function test_onWipe() {
   _("Verify we've got an empty tracker to work with.");
-  let tracker = engine._tracker;
   do_check_empty(tracker.changedIDs);
   do_check_eq(tracker.score, 0);
 
@@ -89,16 +96,6 @@ function test_onWipe() {
   } finally {
     tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
+    run_next_test();
   }
-}
-
-function run_test() {
-  initTestLogging("Trace");
-
-  Log4Moz.repository.getLogger("Sync.Engine.Passwords").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Store.Passwords").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Tracker.Passwords").level = Log4Moz.Level.Trace;
-
-  test_tracking();
-  test_onWipe();
-}
+});
