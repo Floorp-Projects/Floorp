@@ -94,6 +94,14 @@ this.MMS_PDU_STATUS_INDETERMINATE = 133;
 this.MMS_PDU_STATUS_FORWARDED     = 134;
 this.MMS_PDU_STATUS_UNREACHABLE   = 135;
 
+// Maximum Values of MMS Parameters
+// @see OMA-TS-MMS_CONF-V1_3-20110511-C 10.2.5
+this.MMS_MAX_LENGTH_SUBJECT                = 40;
+this.MMS_MAX_LENGTH_RECIPIENT              = 312;
+this.MMS_MAX_TOTAL_RECIPIENTS              = 20;
+this.MMS_MAX_LENGTH_NAME_CONTENT_TYPE      = 40;
+this.MMS_MAX_LENGTH_MAILBOX_PORTION        = 256;
+
 this.ALL_CONST_SYMBOLS = undefined; // We want ALL_CONST_SYMBOLS to be exported.
 this.ALL_CONST_SYMBOLS = Object.keys(this);
 
