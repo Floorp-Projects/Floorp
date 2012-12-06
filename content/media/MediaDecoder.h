@@ -655,8 +655,8 @@ public:
   // change. Call on the main thread only.
   void ChangeState(PlayState aState);
 
-  // Called when the metadata from the media file has been read by the reader.
-  // Call on the decode thread only.
+  // May be called by the reader to notify this decoder that the metadata from
+  // the media file has been read. Call on the decode thread only.
   void OnReadMetadataCompleted() MOZ_OVERRIDE { }
 
   // Called when the metadata from the media file has been loaded by the

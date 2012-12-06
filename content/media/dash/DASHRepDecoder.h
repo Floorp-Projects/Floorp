@@ -25,6 +25,7 @@
 namespace mozilla {
 
 class DASHDecoder;
+class DASHRepReader;
 
 class DASHRepDecoder : public MediaDecoder
 {
@@ -39,7 +40,7 @@ public:
     mMPDRepresentation(nullptr),
     mMetadataChunkCount(0),
     mCurrentByteRange(),
-    mSubsegmentIdx(0),
+    mSubsegmentIdx(-1),
     mReader(nullptr)
   {
     MOZ_COUNT_CTOR(DASHRepDecoder);
@@ -128,6 +129,14 @@ public:
   nsresult GetByteRangeForSeek(int64_t const aOffset,
                                MediaByteRange& aByteRange);
 
+  // Gets the number of data byte ranges (not inc. metadata).
+  uint32_t GetNumDataByteRanges() {
+    return mByteRanges.Length();
+  }
+
+  // Notify that a switch is about to happen. Called on the main thread.
+  void PrepareForSwitch();
+
   // Returns true if the current thread is the state machine thread.
   bool OnStateMachineThread() const;
 
@@ -135,14 +144,14 @@ public:
   bool OnDecodeThread() const;
 
   // Returns main decoder's monitor for synchronised access.
-  ReentrantMonitor& GetReentrantMonitor();
+  ReentrantMonitor& GetReentrantMonitor() MOZ_OVERRIDE;
 
   // Called on the decode thread from WebMReader.
   ImageContainer* GetImageContainer();
 
   // Called when Metadata has been read; notifies that index data is read.
   // Called on the decode thread only.
-  void OnReadMetadataCompleted();
+  void OnReadMetadataCompleted() MOZ_OVERRIDE;
 
   // Overridden to cleanup ref to |DASHDecoder|. Called on main thread only.
   void Shutdown() {
@@ -162,6 +171,10 @@ public:
   void DecodeError();
 
 private:
+  // Populates |mByteRanges| by calling |GetIndexByteRanges| from |mReader|.
+  // Called on the main thread only.
+  nsresult PopulateByteRanges();
+
   // The main decoder.
   nsRefPtr<DASHDecoder> mMainDecoder;
   // This decoder's MPD |Representation| object.
@@ -179,12 +192,12 @@ private:
 
   // The current byte range being requested.
   MediaByteRange  mCurrentByteRange;
-  // Index of the current byte range.
-  uint64_t        mSubsegmentIdx;
+  // Index of the current byte range. Initialized to -1.
+  int32_t         mSubsegmentIdx;
 
   // Ptr to the reader object for this |Representation|. Owned by state
   // machine.
-  MediaDecoderReader*   mReader;
+  DASHRepReader* mReader;
 };
 
 } // namespace mozilla
