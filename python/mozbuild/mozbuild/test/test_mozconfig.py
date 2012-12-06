@@ -284,7 +284,8 @@ class TestMozconfigLoader(unittest.TestCase):
             loader = self.get_loader()
             result = loader.read_mozconfig(mozconfig.name)
 
-            self.assertEqual(result['env']['added']['TEST'], loader.topsrcdir)
+            self.assertEqual(result['env']['added']['TEST'],
+                loader.topsrcdir.replace(os.sep, '/'))
 
     def test_read_empty_variable_value(self):
         """Ensure empty variable values are parsed properly."""
@@ -309,6 +310,7 @@ class TestMozconfigLoader(unittest.TestCase):
 
             self.assertTrue(e.exception.message.startswith(
                 'Evaluation of your mozconfig exited with an error'))
-            self.assertEquals(e.exception.path, mozconfig.name)
+            self.assertEquals(e.exception.path,
+                mozconfig.name.replace(os.sep, '/'))
             self.assertEquals(e.exception.output, ['hello world'])
 
