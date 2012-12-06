@@ -137,7 +137,7 @@ static GSourceFuncs xt_event_funcs = {
   xt_event_prepare,
   xt_event_check,
   xt_event_dispatch,
-  g_free,
+  NULL,
   (GSourceFunc)NULL,
   (GSourceDummyMarshal)NULL
 };
@@ -484,6 +484,7 @@ xt_client_xloop_create(void)
     g_source_set_priority(gs, GDK_PRIORITY_EVENTS);
     g_source_set_can_recurse(gs, TRUE);
     tag = g_source_attach(gs, (GMainContext*)NULL);
+    g_source_unref(gs);
 #ifdef VMS
     cnumber = XConnectionNumber(xtdisplay);
 #else
