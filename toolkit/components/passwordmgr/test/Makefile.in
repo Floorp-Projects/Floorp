@@ -53,7 +53,6 @@ MOCHITEST_FILES = \
     test_maxforms_3.html \
     test_notifications.html \
     test_notifications_popup.html \
-    test_privbrowsing.html \
     test_prompt_async.html \
     test_xhr.html \
     test_xml_load.html \
@@ -83,10 +82,16 @@ MOCHITEST_FILES = \
     subtst_prompt_async.html \
     $(NULL)
 
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_FILES += \
+    test_privbrowsing.html \
+    $(NULL)
+
 ifneq ($(OS_TARGET),Linux)
 MOCHITEST_FILES += \
     test_prompt.html \
     $(NULL)
+endif
 endif
 
 # This test doesn't pass because we can't ensure a cross-platform
