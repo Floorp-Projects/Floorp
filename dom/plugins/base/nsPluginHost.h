@@ -199,7 +199,7 @@ public:
 
   nsresult GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin);
 
-  nsresult NewEmbeddedPluginStreamListener(nsIURI* aURL, nsObjectLoadingContent *aContent,
+  nsresult NewEmbeddedPluginStreamListener(nsIURI* aURL,
                                            nsNPAPIPluginInstance* aInstance,
                                            nsIStreamListener **aStreamListener);
 
