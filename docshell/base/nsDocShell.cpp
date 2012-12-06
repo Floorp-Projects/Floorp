@@ -5211,7 +5211,7 @@ nsDocShell::SetIsActive(bool aIsActive)
       win->SetIsBackground(!aIsActive);
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
       if (doc) {
-          doc->PostVisibilityUpdateEvent();
+          doc->UpdateVisibilityState(false);
       }
   }
 
