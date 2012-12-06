@@ -72,6 +72,11 @@ ICStub::trace(JSTracer *trc)
         MarkTypeObject(trc, &monitorStub->type(), "baseline-monitor-typeobject");
         break;
       }
+      case ICStub::GetName_Global: {
+        ICGetName_Global *globalStub = toGetName_Global();
+        MarkShape(trc, &globalStub->shape(), "baseline-global-stub-shape");
+        break;
+      }
       default:
         break;
     }
@@ -1013,9 +1018,34 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-//
-// GetName_Fallback
-//
+// Attach an optimized stub for a GETGNAME/CALLGNAME op.
+static bool
+TryAttachGlobalNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *stub,
+                        HandleObject global, HandlePropertyName name)
+{
+    JS_ASSERT(global->isGlobal());
+
+    RootedId id(cx, NameToId(name));
+
+    // The property must be found, and it must be found as a normal data property.
+    RootedShape shape(cx, global->nativeLookup(cx, id));
+    if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
+        return true;
+
+    JS_ASSERT(shape->slot() >= global->numFixedSlots());
+    uint32_t slot = shape->slot() - global->numFixedSlots();
+
+    // TODO: if there's a previous stub discard it, or just update its Shape + slot?
+
+    ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+    ICGetName_Global::Compiler compiler(cx, monitorStub, global->lastProperty(), slot);
+    ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+    if (!newStub)
+        return false;
+
+    stub->addNewStub(newStub);
+    return true;
+}
 
 static bool
 DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeChain, MutableHandleValue res)
@@ -1037,6 +1067,17 @@ DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeCha
 
     types::TypeScript::Monitor(cx, script, pc, res);
 
+    // Attach new stub.
+    if (stub->numOptimizedStubs() >= ICGetName_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with generic stub.
+        return true;
+    }
+
+    if (js_CodeSpec[*pc].format & JOF_GNAME) {
+        if (!TryAttachGlobalNameStub(cx, script, stub, scopeChain, name))
+            return false;
+    }
+
     return true;
 }
 
@@ -1054,6 +1095,31 @@ ICGetName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoGetNameFallbackInfo, masm);
+}
+
+bool
+ICGetName_Global::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    Register obj = R0.scratchReg();
+    Register scratch = R1.scratchReg();
+
+    // Shape guard.
+    masm.loadPtr(Address(BaselineStubReg, ICGetName_Global::offsetOfShape()), scratch);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, scratch, &failure);
+
+    // Load dynamic slot.
+    masm.loadPtr(Address(obj, JSObject::offsetOfSlots()), obj);
+    masm.load32(Address(BaselineStubReg, ICGetName_Global::offsetOfSlot()), scratch);
+    masm.loadValue(BaseIndex(obj, scratch, TimesEight), R0);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //
