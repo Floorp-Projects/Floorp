@@ -145,6 +145,7 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
       case AUDIO_CHANNEL_NOTIFICATION:
       case AUDIO_CHANNEL_ALARM:
       case AUDIO_CHANNEL_TELEPHONY:
+      case AUDIO_CHANNEL_RINGER:
       case AUDIO_CHANNEL_PUBLICNOTIFICATION:
         // Nothing to do
         break;
@@ -164,11 +165,13 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
       muted = !!mChannelCounters[AUDIO_CHANNEL_NOTIFICATION] ||
               !!mChannelCounters[AUDIO_CHANNEL_ALARM] ||
               !!mChannelCounters[AUDIO_CHANNEL_TELEPHONY] ||
+              !!mChannelCounters[AUDIO_CHANNEL_RINGER] ||
               !!mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION];
 
     case AUDIO_CHANNEL_NOTIFICATION:
     case AUDIO_CHANNEL_ALARM:
     case AUDIO_CHANNEL_TELEPHONY:
+    case AUDIO_CHANNEL_RINGER:
       muted = ChannelsActiveWithHigherPriorityThan(aType);
 
     case AUDIO_CHANNEL_PUBLICNOTIFICATION:
@@ -262,6 +265,7 @@ AudioChannelService::ChannelName(AudioChannelType aType)
     { AUDIO_CHANNEL_NOTIFICATION,       "notification" },
     { AUDIO_CHANNEL_ALARM,              "alarm" },
     { AUDIO_CHANNEL_TELEPHONY,          "telephony" },
+    { AUDIO_CHANNEL_RINGER,             "ringer" },
     { AUDIO_CHANNEL_PUBLICNOTIFICATION, "publicnotification" },
     { -1,                               "unknown" }
   };
