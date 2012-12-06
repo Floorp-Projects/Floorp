@@ -88,6 +88,56 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
         masm.movl(scratchReg, R0.payloadReg());
         break;
+      case JSOP_DIV:
+        // Prevent division by 0.
+        masm.branchTest32(Assembler::Zero, R1.payloadReg(), R1.payloadReg(), &failure);
+
+        // Prevent negative 0 and -2147483648 / -1.
+        masm.branchTest32(Assembler::Zero, R0.payloadReg(), Imm32(0x7fffffff), &failure);
+
+        // For idiv we need eax.
+        JS_ASSERT(R1.typeReg() == eax);
+        masm.movl(R0.payloadReg(), eax);
+        // Preserve R0.payloadReg()/edx, eax is JSVAL_TYPE_INT32.
+        masm.movl(R0.payloadReg(), scratchReg);
+        // Sign extend eax into edx to make (edx:eax), since idiv is 64-bit.
+        masm.cdq();
+        masm.idiv(R1.payloadReg());
+
+        // A remainder implies a double result.
+        masm.branchTest32(Assembler::NonZero, edx, edx, &revertRegister);
+
+        masm.movl(eax, R0.payloadReg());
+        break;
+      case JSOP_MOD:
+      {
+        // x % 0 always results in NaN.
+        masm.branchTest32(Assembler::Zero, R1.payloadReg(), R1.payloadReg(), &failure);
+
+        // Prevent negative 0 and -2147483648 % -1.
+        masm.branchTest32(Assembler::Zero, R0.payloadReg(), Imm32(0x7fffffff), &failure);
+
+        // For idiv we need eax.
+        JS_ASSERT(R1.typeReg() == eax);
+        masm.movl(R0.payloadReg(), eax);
+        // Preserve R0.payloadReg()/edx, eax is JSVAL_TYPE_INT32.
+        masm.movl(R0.payloadReg(), scratchReg);
+        // Sign extend eax into edx to make (edx:eax), since idiv is 64-bit.
+        masm.cdq();
+        masm.idiv(R1.payloadReg());
+
+        // Fail when we would need a negative remainder.
+        Label done;
+        masm.branchTest32(Assembler::NonZero, edx, edx, &done);
+        masm.branchTest32(Assembler::Signed, scratchReg, scratchReg, &revertRegister);
+        masm.branchTest32(Assembler::Signed, R1.payloadReg(), R1.payloadReg(), &revertRegister);
+
+        masm.bind(&done);
+        // Result is in edx, tag in ecx remains untouched.
+        JS_ASSERT(R0.payloadReg() == edx);
+        JS_ASSERT(R0.tagReg() == ecx);
+        break;
+      }
       case JSOP_BITOR:
         // We can overide R0, because the instruction is unfailable.
         // The R0.typeReg() is also still intact.
@@ -143,7 +193,8 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     // Return.
     EmitReturnFromIC(masm);
 
-    if (op_ == JSOP_MUL) {
+    switch(op_) {
+      case JSOP_MUL:
         masm.bind(&maybeNegZero);
 
         // Result is -0 if exactly one of lhs or rhs is negative.
@@ -154,14 +205,26 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         // Result is +0.
         masm.xorl(R0.payloadReg(), R0.payloadReg());
         EmitReturnFromIC(masm);
+        break;
+      case JSOP_DIV:
+      case JSOP_MOD:
+        masm.bind(&revertRegister);
+        masm.movl(scratchReg, R0.payloadReg());
+        masm.movl(ImmType(JSVAL_TYPE_INT32), R1.typeReg());
+        break;
+      case JSOP_URSH:
+        // Revert the content of R0 in the fallible >>> case.
+        if (!allowDouble_) {
+            masm.bind(&revertRegister);
+            masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R0);
+        }
+        break;
+      default:
+        // No special failure handling required.
+        // Fall through to failure.
+        break;
     }
 
-    // Revert the content of R0 in the fallible >>> case.
-    if (op_ == JSOP_URSH && !allowDouble_) {
-        masm.bind(&revertRegister);
-        masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R0);
-        // Fall through to failure.
-    }
     // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
