@@ -63,28 +63,28 @@ static bool
 CheckFrame(StackFrame *fp)
 {
     if (fp->isConstructing()) {
-        IonSpew(IonSpew_Abort, "BASELINE FIXME: constructor frame!");
+        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: constructor frame!");
         return false;
     }
 
     if (fp->isEvalFrame()) {
         // Eval frames are not yet supported.
-        IonSpew(IonSpew_Abort, "BASELINE FIXME: eval frame!");
+        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: eval frame!");
         return false;
     }
 
     if (fp->isGeneratorFrame()) {
-        IonSpew(IonSpew_Abort, "generator frame");
+        IonSpew(IonSpew_BaselineAbort, "generator frame");
         return false;
     }
 
     if (fp->isDebuggerFrame()) {
-        IonSpew(IonSpew_Abort, "BASELINE FIXME: debugger frame!");
+        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: debugger frame!");
         return false;
     }
 
     if (fp->annotation()) {
-        IonSpew(IonSpew_Abort, "frame is annotated");
+        IonSpew(IonSpew_BaselineAbort, "frame is annotated");
         return false;
     }
 
@@ -218,7 +218,7 @@ ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
         return Method_Skipped;
 
     if (cx->compartment->debugMode()) {
-        IonSpew(IonSpew_Abort, "BASELINE FIXME: Not compiling in debug mode!");
+        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: Not compiling in debug mode!");
         return Method_CantCompile;
     }
 

@@ -43,11 +43,11 @@ BaselineCompiler::init()
 MethodStatus
 BaselineCompiler::compile()
 {
-    IonSpew(IonSpew_Scripts, "Baseline compiling script %s:%d (%p)",
+    IonSpew(IonSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
             script->filename, script->lineno, script);
 
     if (script->needsArgsObj()) {
-        IonSpew(IonSpew_Abort, "Script needs arguments object");
+        IonSpew(IonSpew_BaselineAbort, "Script needs arguments object");
         return Method_CantCompile;
     }
 
@@ -79,7 +79,7 @@ BaselineCompiler::compile()
         return Method_Error;
     script->baseline = baselineScript;
 
-    IonSpew(IonSpew_Codegen, "Created BaselineScript %p (raw %p)",
+    IonSpew(IonSpew_BaselineScripts, "Created BaselineScript %p (raw %p)",
             (void *) script->baseline, (void *) code->raw());
 
     script->baseline->setMethod(code);
@@ -201,7 +201,7 @@ BaselineCompiler::emitBody()
     while (true) {
         SPEW_OPCODE();
         JSOp op = JSOp(*pc);
-        IonSpew(IonSpew_Scripts, "Compiling op: %s", js_CodeName[op]);
+        IonSpew(IonSpew_BaselineOp, "Compiling op: %s", js_CodeName[op]);
 
         // Fully sync the stack if there are incoming jumps.
         analyze::Bytecode *code = script->analysis()->maybeCode(pc);
@@ -219,7 +219,7 @@ BaselineCompiler::emitBody()
             // Ignore fat opcodes, we compile the decomposed version instead.
             if (js_CodeSpec[op].format & JOF_DECOMPOSE)
                 break;
-            IonSpew(IonSpew_Abort, "Unhandled op: %s", js_CodeName[op]);
+            IonSpew(IonSpew_BaselineAbort, "Unhandled op: %s", js_CodeName[op]);
             return Method_CantCompile;
 
 #define EMIT_OP(OP)                            \

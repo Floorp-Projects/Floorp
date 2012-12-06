@@ -194,6 +194,13 @@ ion::CheckLogging()
             "  logs       C1 and JSON visualization logging\n"
             "  all        Everything\n"
             "\n"
+            "  bl-aborts  Baseline compiler abort messages\n"
+            "  bl-scripts Baseline script-compilation\n"
+            "  bl-op      Baseline compiler detailed op-specific messages\n"
+            "  bl-ic      Baseline inline-cache messages\n"
+            "  bl-ic-fb   Baseline IC fallback stub messages\n"
+            "  bl-all     All baseline spew\n"
+            "\n"
         );
         exit(0);
         /*NOTREACHED*/
@@ -236,6 +243,24 @@ ion::CheckLogging()
         EnableIonDebugLogging();
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32_t(-1);
+
+    if (ContainsFlag(env, "bl-aborts"))
+        EnableChannel(IonSpew_BaselineAbort);
+    if (ContainsFlag(env, "bl-scripts"))
+        EnableChannel(IonSpew_BaselineScripts);
+    if (ContainsFlag(env, "bl-op"))
+        EnableChannel(IonSpew_BaselineOp);
+    if (ContainsFlag(env, "bl-ic"))
+        EnableChannel(IonSpew_BaselineIC);
+    if (ContainsFlag(env, "bl-ic-fb"))
+        EnableChannel(IonSpew_BaselineICFallback);
+    if (ContainsFlag(env, "bl-all")) {
+        EnableChannel(IonSpew_BaselineAbort);
+        EnableChannel(IonSpew_BaselineScripts);
+        EnableChannel(IonSpew_BaselineOp);
+        EnableChannel(IonSpew_BaselineIC);
+        EnableChannel(IonSpew_BaselineICFallback);
+    }
 
     if (LoggingBits != 0)
         EnableIonDebugLogging();
