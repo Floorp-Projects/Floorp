@@ -1214,93 +1214,6 @@ let RIL = {
   },
 
   /**
-   * This will compute the spnDisplay field of the network.
-   * See TS 22.101 Annex A and TS 51.011 10.3.11 for details.
-   *
-   * @return True if some of iccInfo is changed in by this function.
-   */
-  updateDisplayCondition: function updateDisplayCondition() {
-    // If EFspn isn't existed in SIM or it haven't been read yet, we should
-    // just set isDisplayNetworkNameRequired = true and
-    // isDisplaySpnRequired = false
-    let iccInfo = this.iccInfo;
-    let iccInfoPriv = this.iccInfoPrivate;
-    let iccSpn = iccInfoPriv.SPN;
-    let origIsDisplayNetworkNameRequired = iccInfo.isDisplayNetworkNameRequired;
-    let origIsDisplaySPNRequired = iccInfo.isDisplaySpnRequired;
-
-    if (!iccSpn) {
-      iccInfo.isDisplayNetworkNameRequired = true;
-      iccInfo.isDisplaySpnRequired = false;
-    } else {
-      let operatorMnc = this.operator.mnc;
-      let operatorMcc = this.operator.mcc;
-
-      // First detect if we are on HPLMN or one of the PLMN
-      // specified by the SIM card.
-      let isOnMatchingPlmn = false;
-
-      // If the current network is the one defined as mcc/mnc
-      // in SIM card, it's okay.
-      if (iccInfo.mcc == operatorMcc && iccInfo.mnc == operatorMnc) {
-        isOnMatchingPlmn = true;
-      }
-
-      // Test to see if operator's mcc/mnc match mcc/mnc of PLMN.
-      if (!isOnMatchingPlmn && iccInfoPriv.SPDI) {
-        let iccSpdi = iccInfoPriv.SPDI; // PLMN list
-        for (let plmn in iccSpdi) {
-          let plmnMcc = iccSpdi[plmn].mcc;
-          let plmnMnc = iccSpdi[plmn].mnc;
-          isOnMatchingPlmn = (plmnMcc == operatorMcc) && (plmnMnc == operatorMnc);
-          if (isOnMatchingPlmn) {
-            break;
-          }
-        }
-      }
-
-      if (isOnMatchingPlmn) {
-        // The first bit of display condition tells us if we should display
-        // registered PLMN.
-        if (DEBUG) debug("updateDisplayCondition: PLMN is HPLMN or PLMN is in PLMN list");
-
-        // TS 31.102 Sec. 4.2.66 and TS 51.011 Sec. 10.3.50
-        // EF_SPDI contains a list of PLMNs in which the Service Provider Name
-        // shall be displayed.
-        iccInfo.isDisplaySpnRequired = true;
-        if (iccSpn.spnDisplayCondition & 0x01) {
-          iccInfo.isDisplayNetworkNameRequired = true;
-        } else {
-          iccInfo.isDisplayNetworkNameRequired = false;
-        }
-      } else {
-        // The second bit of display condition tells us if we should display
-        // registered PLMN.
-        if (DEBUG) debug("updateICCDisplayName: PLMN isn't HPLMN and PLMN isn't in PLMN list");
-
-        // We didn't found the requirement of displaying network name if
-        // current PLMN isn't HPLMN nor one of PLMN in SPDI. So we keep
-        // isDisplayNetworkNameRequired false.
-        if (iccSpn.spnDisplayCondition & 0x02) {
-          iccInfo.isDisplayNetworkNameRequired = false;
-          iccInfo.isDisplaySpnRequired = false;
-        } else {
-          iccInfo.isDisplayNetworkNameRequired = false;
-          iccInfo.isDisplaySpnRequired = true;
-        }
-      }
-    }
-
-    if (DEBUG) {
-      debug("updateDisplayCondition: isDisplayNetworkNameRequired = " + iccInfo.isDisplayNetworkNameRequired);
-      debug("updateDisplayCondition: isDisplaySpnRequired = " + iccInfo.isDisplaySpnRequired);
-    }
-
-    return ((origIsDisplayNetworkNameRequired !== iccInfo.isDisplayNetworkNameRequired) ||
-            (origIsDisplaySPNRequired !== iccInfo.isDisplaySpnRequired));
-  },
-
-  /**
    * Get IMSI.
    *
    * @param [optional] aid
@@ -1315,68 +1228,6 @@ let RIL = {
     Buf.writeUint32(1);
     Buf.writeString(aid || this.aid);
     Buf.sendParcel();
-  },
-
-  /**
-   * Get whether specificed (U)SIM service is available.
-   *
-   * @param geckoService
-   *        Service name like "ADN", "BDN", etc.
-   *
-   * @return true if the service is enabled, false otherwise.
-   */
-  isICCServiceAvailable: function isICCServiceAvailable(geckoService) {
-    let serviceTable = this.iccInfo.sst;
-    let index, bitmask;
-    if (this.appType == CARD_APPTYPE_SIM) {
-      /**
-       * Service id is valid in 1..N, and 2 bits are used to code each service.
-       *
-       * +----+--  --+----+----+
-       * | b8 | ...  | b2 | b1 |
-       * +----+--  --+----+----+
-       *
-       * b1 = 0, service not allocated.
-       *      1, service allocated.
-       * b2 = 0, service not activatd.
-       *      1, service allocated.
-       *
-       * @see 3GPP TS 51.011 10.3.7.
-       */
-      let simService = GECKO_ICC_SERVICES.sim[geckoService];
-      if (!simService) {
-        return false;
-      }
-      simService -= 1;
-      index = Math.floor(simService / 4);
-      bitmask = 2 << ((simService % 4) << 1);
-    } else {
-      /**
-       * Service id is valid in 1..N, and 1 bit is used to code each service.
-       *
-       * +----+--  --+----+----+
-       * | b8 | ...  | b2 | b1 |
-       * +----+--  --+----+----+
-       *
-       * b1 = 0, service not avaiable.
-       *      1, service available.
-       * b2 = 0, service not avaiable.
-       *      1, service available.
-       *
-       * @see 3GPP TS 31.102 4.2.8.
-       */
-      let usimService = GECKO_ICC_SERVICES.usim[geckoService];
-      if (!usimService) {
-        return false;
-      }
-      usimService -= 1;
-      index = Math.floor(usimService / 8);
-      bitmask = 1 << ((usimService % 8) << 0);
-    }
-
-    return (serviceTable &&
-           (index < serviceTable.length) &&
-           (serviceTable[index] & bitmask)) != 0;
   },
 
   /**
@@ -3145,8 +2996,8 @@ let RIL = {
           debug("Error processing operator tuple: " + e);
         }
       }
-      if (this.updateDisplayCondition()) {
-        ICCRecordHelper.handleICCInfoChange();
+      if (ICCUtilsHelper.updateDisplayCondition()) {
+        ICCUtilsHelper.handleICCInfoChange();
       }
       this._sendNetworkInfoMessage(NETWORK_INFO_OPERATOR, this.operator);
     }
@@ -3632,7 +3483,7 @@ let RIL = {
       switch (message.epid) {
         case PDU_PID_ANSI_136_R_DATA:
         case PDU_PID_USIM_DATA_DOWNLOAD:
-          if (this.isICCServiceAvailable("DATA_DOWNLOAD_SMS_PP")) {
+          if (ICCUtilsHelper.isICCServiceAvailable("DATA_DOWNLOAD_SMS_PP")) {
             // `If the service "data download via SMS Point-to-Point" is
             // allocated and activated in the (U)SIM Service Table, ... then the
             // ME shall pass the message transparently to the UICC using the
@@ -8582,7 +8433,7 @@ let ICCRecordHelper = {
 
       if (DEBUG) debug("ICCID: " + RIL.iccInfo.iccid);
       if (RIL.iccInfo.iccid) {
-        this.handleICCInfoChange();
+        ICCUtilsHelper.handleICCInfoChange();
       }
     }
 
@@ -8601,7 +8452,7 @@ let ICCRecordHelper = {
       }
       RIL.iccInfo.msisdn = contact.number;
       if (DEBUG) debug("MSISDN: " + RIL.iccInfo.msisdn);
-      this.handleICCInfoChange();
+      ICCUtilsHelper.handleICCInfoChange();
     }
 
     ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_MSISDN,
@@ -8633,7 +8484,7 @@ let ICCRecordHelper = {
         // The 4th byte of the response is the length of MNC.
         RIL.iccInfo.mnc = parseInt(RIL.iccInfo.imsi.substr(3, RIL.iccInfo.ad[3]));
         if (DEBUG) debug("MCC: " + RIL.iccInfo.mcc + " MNC: " + RIL.iccInfo.mnc);
-        this.handleICCInfoChange();
+        ICCUtilsHelper.handleICCInfoChange();
       }
     }
 
@@ -8664,8 +8515,8 @@ let ICCRecordHelper = {
         spnDisplayCondition : spnDisplayCondition,
       };
       RIL.iccInfo.spn = spn;
-      RIL.updateDisplayCondition();
-      this.handleICCInfoChange();
+      ICCUtilsHelper.updateDisplayCondition();
+      ICCUtilsHelper.handleICCInfoChange();
     }
 
     ICCIOHelper.loadTransparentEF({fileId: ICC_EF_SPN,
@@ -8692,40 +8543,40 @@ let ICCRecordHelper = {
       }
 
       // Fetch SPN and PLMN list, if some of them are available.
-      if (RIL.isICCServiceAvailable("SPN")) {
+      if (ICCUtilsHelper.isICCServiceAvailable("SPN")) {
         if (DEBUG) debug("SPN: SPN is available");
         this.getSPN();
       } else {
         if (DEBUG) debug("SPN: SPN service is not available");
       }
 
-      if (RIL.isICCServiceAvailable("SPDI")) {
+      if (ICCUtilsHelper.isICCServiceAvailable("SPDI")) {
         if (DEBUG) debug("SPDI: SPDI available.");
         this.getSPDI();
       } else {
         if (DEBUG) debug("SPDI: SPDI service is not available");
       }
 
-      if (RIL.isICCServiceAvailable("PNN")) {
+      if (ICCUtilsHelper.isICCServiceAvailable("PNN")) {
         if (DEBUG) debug("PNN: PNN is available");
         this.getPNN();
       } else {
         if (DEBUG) debug("PNN: PNN is not available");
       }
 
-      if (RIL.isICCServiceAvailable("OPL")) {
+      if (ICCUtilsHelper.isICCServiceAvailable("OPL")) {
         if (DEBUG) debug("OPL: OPL is available");
         this.getOPL();
       } else {
         if (DEBUG) debug("OPL: OPL is not available");
       }
 
-      if (RIL.isICCServiceAvailable("CBMI")) {
+      if (ICCUtilsHelper.isICCServiceAvailable("CBMI")) {
         this.getCBMI();
       } else {
         RIL.cellBroadcastConfigs.CBMI = null;
       }
-      if (RIL.isICCServiceAvailable("CBMIR")) {
+      if (ICCUtilsHelper.isICCServiceAvailable("CBMIR")) {
         this.getCBMIR();
       } else {
         RIL.cellBroadcastConfigs.CBMIR = null;
@@ -8859,9 +8710,9 @@ let ICCRecordHelper = {
 
       let tag = GsmPDUHelper.readHexOctet();
       let length = GsmPDUHelper.readHexOctet();
-      let value = this.decodeSimTlvs(length);
+      let value = ICCUtilsHelper.decodeSimTlvs(length);
 
-      let adn = this.searchForIccUsimTag(value, ICC_USIM_EFADN_TAG);
+      let adn = ICCUtilsHelper.searchForIccUsimTag(value, ICC_USIM_EFADN_TAG);
       options.fileId = (adn.value[0] << 8) | adn.value[1];
       Buf.readStringDelimiter(bufLen);
 
@@ -8945,8 +8796,8 @@ let ICCRecordHelper = {
       Buf.readStringDelimiter(length);
 
       if (DEBUG) debug("SPDI: " + JSON.stringify(RIL.iccInfoPrivate.SPDI));
-      if (RIL.updateDisplayCondition()) {
-        this.handleICCInfoChange();
+      if (ICCUtilsHelper.updateDisplayCondition()) {
+        ICCUtilsHelper.handleICCInfoChange();
       }
     }
 
@@ -9228,13 +9079,97 @@ let ICCRecordHelper = {
     }
     return plmnList;
   },
+};
 
+/**
+ * Helper functions for ICC utilities.
+ */
+let ICCUtilsHelper = {
   /**
-   * Update the ICC information to RadioInterfaceLayer.
+   * This will compute the spnDisplay field of the network.
+   * See TS 22.101 Annex A and TS 51.011 10.3.11 for details.
+   *
+   * @return True if some of iccInfo is changed in by this function.
    */
-  handleICCInfoChange: function handleICCInfoChange() {
-    RIL.iccInfo.rilMessageType = "iccinfochange";
-    RIL.sendDOMMessage(RIL.iccInfo);
+  updateDisplayCondition: function updateDisplayCondition() {
+    // If EFspn isn't existed in SIM or it haven't been read yet, we should
+    // just set isDisplayNetworkNameRequired = true and
+    // isDisplaySpnRequired = false
+    let iccInfo = RIL.iccInfo;
+    let iccInfoPriv = RIL.iccInfoPrivate;
+    let iccSpn = iccInfoPriv.SPN;
+    let origIsDisplayNetworkNameRequired = iccInfo.isDisplayNetworkNameRequired;
+    let origIsDisplaySPNRequired = iccInfo.isDisplaySpnRequired;
+
+    if (!iccSpn) {
+      iccInfo.isDisplayNetworkNameRequired = true;
+      iccInfo.isDisplaySpnRequired = false;
+    } else {
+      let operatorMnc = RIL.operator.mnc;
+      let operatorMcc = RIL.operator.mcc;
+
+      // First detect if we are on HPLMN or one of the PLMN
+      // specified by the SIM card.
+      let isOnMatchingPlmn = false;
+
+      // If the current network is the one defined as mcc/mnc
+      // in SIM card, it's okay.
+      if (iccInfo.mcc == operatorMcc && iccInfo.mnc == operatorMnc) {
+        isOnMatchingPlmn = true;
+      }
+
+      // Test to see if operator's mcc/mnc match mcc/mnc of PLMN.
+      if (!isOnMatchingPlmn && iccInfoPriv.SPDI) {
+        let iccSpdi = iccInfoPriv.SPDI; // PLMN list
+        for (let plmn in iccSpdi) {
+          let plmnMcc = iccSpdi[plmn].mcc;
+          let plmnMnc = iccSpdi[plmn].mnc;
+          isOnMatchingPlmn = (plmnMcc == operatorMcc) && (plmnMnc == operatorMnc);
+          if (isOnMatchingPlmn) {
+            break;
+          }
+        }
+      }
+
+      if (isOnMatchingPlmn) {
+        // The first bit of display condition tells us if we should display
+        // registered PLMN.
+        if (DEBUG) debug("updateDisplayCondition: PLMN is HPLMN or PLMN is in PLMN list");
+
+        // TS 31.102 Sec. 4.2.66 and TS 51.011 Sec. 10.3.50
+        // EF_SPDI contains a list of PLMNs in which the Service Provider Name
+        // shall be displayed.
+        iccInfo.isDisplaySpnRequired = true;
+        if (iccSpn.spnDisplayCondition & 0x01) {
+          iccInfo.isDisplayNetworkNameRequired = true;
+        } else {
+          iccInfo.isDisplayNetworkNameRequired = false;
+        }
+      } else {
+        // The second bit of display condition tells us if we should display
+        // registered PLMN.
+        if (DEBUG) debug("updateICCDisplayName: PLMN isn't HPLMN and PLMN isn't in PLMN list");
+
+        // We didn't found the requirement of displaying network name if
+        // current PLMN isn't HPLMN nor one of PLMN in SPDI. So we keep
+        // isDisplayNetworkNameRequired false.
+        if (iccSpn.spnDisplayCondition & 0x02) {
+          iccInfo.isDisplayNetworkNameRequired = false;
+          iccInfo.isDisplaySpnRequired = false;
+        } else {
+          iccInfo.isDisplayNetworkNameRequired = false;
+          iccInfo.isDisplaySpnRequired = true;
+        }
+      }
+    }
+
+    if (DEBUG) {
+      debug("updateDisplayCondition: isDisplayNetworkNameRequired = " + iccInfo.isDisplayNetworkNameRequired);
+      debug("updateDisplayCondition: isDisplaySpnRequired = " + iccInfo.isDisplaySpnRequired);
+    }
+
+    return ((origIsDisplayNetworkNameRequired !== iccInfo.isDisplayNetworkNameRequired) ||
+            (origIsDisplaySPNRequired !== iccInfo.isDisplaySpnRequired));
   },
 
   decodeSimTlvs: function decodeSimTlvs(tlvsLen) {
@@ -9259,6 +9194,76 @@ let ICCRecordHelper = {
       }
     }
     return null;
+  },
+
+  /**
+   * Update the ICC information to RadioInterfaceLayer.
+   */
+  handleICCInfoChange: function handleICCInfoChange() {
+    RIL.iccInfo.rilMessageType = "iccinfochange";
+    RIL.sendDOMMessage(RIL.iccInfo);
+  },
+
+  /**
+   * Get whether specificed (U)SIM service is available.
+   *
+   * @param geckoService
+   *        Service name like "ADN", "BDN", etc.
+   *
+   * @return true if the service is enabled, false otherwise.
+   */
+  isICCServiceAvailable: function isICCServiceAvailable(geckoService) {
+    let serviceTable = RIL.iccInfo.sst;
+    let index, bitmask;
+    if (RIL.appType == CARD_APPTYPE_SIM) {
+      /**
+       * Service id is valid in 1..N, and 2 bits are used to code each service.
+       *
+       * +----+--  --+----+----+
+       * | b8 | ...  | b2 | b1 |
+       * +----+--  --+----+----+
+       *
+       * b1 = 0, service not allocated.
+       *      1, service allocated.
+       * b2 = 0, service not activatd.
+       *      1, service allocated.
+       *
+       * @see 3GPP TS 51.011 10.3.7.
+       */
+      let simService = GECKO_ICC_SERVICES.sim[geckoService];
+      if (!simService) {
+        return false;
+      }
+      simService -= 1;
+      index = Math.floor(simService / 4);
+      bitmask = 2 << ((simService % 4) << 1);
+    } else {
+      /**
+       * Service id is valid in 1..N, and 1 bit is used to code each service.
+       *
+       * +----+--  --+----+----+
+       * | b8 | ...  | b2 | b1 |
+       * +----+--  --+----+----+
+       *
+       * b1 = 0, service not avaiable.
+       *      1, service available.
+       * b2 = 0, service not avaiable.
+       *      1, service available.
+       *
+       * @see 3GPP TS 31.102 4.2.8.
+       */
+      let usimService = GECKO_ICC_SERVICES.usim[geckoService];
+      if (!usimService) {
+        return false;
+      }
+      usimService -= 1;
+      index = Math.floor(usimService / 8);
+      bitmask = 1 << ((usimService % 8) << 0);
+    }
+
+    return (serviceTable &&
+           (index < serviceTable.length) &&
+           (serviceTable[index] & bitmask)) != 0;
   },
 };
 
