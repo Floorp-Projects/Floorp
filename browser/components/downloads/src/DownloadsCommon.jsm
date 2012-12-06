@@ -56,10 +56,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource:///modules/RecentWindow.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -177,95 +173,37 @@ this.DownloadsCommon = {
   },
 
   /**
-   * Get access to one of the DownloadsData or PrivateDownloadsData objects,
-   * depending on the privacy status of the window in question.
+   * Returns a reference to the DownloadsData singleton.
    *
-   * @param aWindow
-   *        The browser window which owns the download button.
+   * This does not need to be a lazy getter, since no initialization is required
+   * at present.
    */
-  getData: function DC_getData(aWindow) {
-    if (PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
-      return PrivateDownloadsData;
-    } else {
-      return DownloadsData;
-    }
-  },
+  get data() DownloadsData,
 
   /**
-   * Initializes the data link for both the private and non-private downloads
-   * data objects.
+   * Returns a reference to the DownloadsData singleton.
    *
-   * @param aDownloadManagerService
-   *        Reference to the service implementing nsIDownloadManager.  We need
-   *        this because getService isn't available for us when this method is
-   *        called, and we must ensure to register our listeners before the
-   *        getService call for the Download Manager returns.
+   * This does not need to be a lazy getter, since no initialization is required
+   * at present.
    */
-  initializeAllDataLinks: function DC_initializeAllDataLinks(aDownloadManagerService) {
-    DownloadsData.initializeDataLink(aDownloadManagerService);
-    PrivateDownloadsData.initializeDataLink(aDownloadManagerService);
-  },
-
-  /**
-   * Terminates the data link for both the private and non-private downloads
-   * data objects.
-   */
-  terminateAllDataLinks: function DC_terminateAllDataLinks() {
-    DownloadsData.terminateDataLink();
-    PrivateDownloadsData.terminateDataLink();
-  },
-
-  /**
-   * Reloads the specified kind of downloads from the non-private store.
-   * This method must only be called when Private Browsing Mode is disabled.
-   *
-   * @param aActiveOnly
-   *        True to load only active downloads from the database.
-   */
-  ensureAllPersistentDataLoaded:
-  function DC_ensureAllPersistentDataLoaded(aActiveOnly) {
-    DownloadsData.ensurePersistentDataLoaded(aActiveOnly);
-  },
-
-  /**
-   * Get access to one of the DownloadsIndicatorData or
-   * PrivateDownloadsIndicatorData objects, depending on the privacy status of
-   * the window in question.
-   */
-  getIndicatorData: function DC_getIndicatorData(aWindow) {
-    if (PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
-      return PrivateDownloadsIndicatorData;
-    } else {
-      return DownloadsIndicatorData;
-    }
-  },
+  get indicatorData() DownloadsIndicatorData,
 
   /**
    * Returns a reference to the DownloadsSummaryData singleton - creating one
    * in the process if one hasn't been instantiated yet.
    *
-   * @param aWindow
-   *        The browser window which owns the download button.
    * @param aNumToExclude
    *        The number of items on the top of the downloads list to exclude
    *        from the summary.
    */
-  getSummary: function DC_getSummary(aWindow, aNumToExclude)
-  {
-    if (PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
-      if (this._privateSummary) {
-        return this._privateSummary;
-      }
-      return this._privateSummary = new DownloadsSummaryData(true, aNumToExclude);
-    } else {
-      if (this._summary) {
-        return this._summary;
-      }
-      return this._summary = new DownloadsSummaryData(false, aNumToExclude);
-    }
-  },
   _summary: null,
-  _privateSummary: null,
+  getSummary: function DC_getSummary(aNumToExclude)
+  {
+    if (this._summary) {
+      return this._summary;
+    }
+    return this._summary = new DownloadsSummaryData(aNumToExclude);
+  },
 
   /**
    * Given an iterable collection of DownloadDataItems, generates and returns
@@ -416,33 +354,8 @@ XPCOMUtils.defineLazyGetter(DownloadsCommon, "isWinVistaOrHigher", function () {
  * service.  Consumers will see an empty list of downloads until the service is
  * actually started.  This is useful to display a neutral progress indicator in
  * the main browser window until the autostart timeout elapses.
- *
- * Note that DownloadsData and PrivateDownloadsData are two equivalent singleton
- * objects, one accessing non-private downloads, and the other accessing private
- * ones.
  */
-function DownloadsDataCtor(aPrivate) {
-  this._isPrivate = aPrivate;
-
-  // This Object contains all the available DownloadsDataItem objects, indexed by
-  // their globally unique identifier.  The identifiers of downloads that have
-  // been removed from the Download Manager data are still present, however the
-  // associated objects are replaced with the value "null".  This is required to
-  // prevent race conditions when populating the list asynchronously.
-  this.dataItems = {};
-
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-  // While operating in Private Browsing Mode, persistent data items are parked
-  // here until we return to the normal mode.
-  this._persistentDataItems = {};
-#endif
-
-  // Array of view objects that should be notified when the available download
-  // data changes.
-  this._views = [];
-}
-
-DownloadsDataCtor.prototype = {
+const DownloadsData = {
   /**
    * Starts receiving events for current downloads.
    *
@@ -455,12 +368,10 @@ DownloadsDataCtor.prototype = {
   initializeDataLink: function DD_initializeDataLink(aDownloadManagerService)
   {
     // Start receiving real-time events.
-    aDownloadManagerService.addPrivacyAwareListener(this);
+    aDownloadManagerService.addListener(this);
     Services.obs.addObserver(this, "download-manager-remove-download-guid", false);
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     Services.obs.addObserver(this, "download-manager-database-type-changed",
                              false);
-#endif
   },
 
   /**
@@ -471,15 +382,19 @@ DownloadsDataCtor.prototype = {
     this._terminateDataAccess();
 
     // Stop receiving real-time events.
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     Services.obs.removeObserver(this, "download-manager-database-type-changed");
-#endif
     Services.obs.removeObserver(this, "download-manager-remove-download-guid");
     Services.downloads.removeListener(this);
   },
 
   //////////////////////////////////////////////////////////////////////////////
   //// Registration of views
+
+  /**
+   * Array of view objects that should be notified when the available download
+   * data changes.
+   */
+  _views: [],
 
   /**
    * Adds an object to be notified when the available download data changes.
@@ -538,6 +453,21 @@ DownloadsDataCtor.prototype = {
 
   //////////////////////////////////////////////////////////////////////////////
   //// In-memory downloads data store
+
+  /**
+   * Object containing all the available DownloadsDataItem objects, indexed by
+   * their numeric download identifier.  The identifiers of downloads that have
+   * been removed from the Download Manager data are still present, however the
+   * associated objects are replaced with the value "null".  This is required to
+   * prevent race conditions when populating the list asynchronously.
+   */
+  dataItems: {},
+
+  /**
+   * While operating in Private Browsing Mode, persistent data items are parked
+   * here until we return to the normal mode.
+   */
+  _persistentDataItems: {},
 
   /**
    * Clears the loaded data.
@@ -661,9 +591,7 @@ DownloadsDataCtor.prototype = {
 
         // Reload the list using the Download Manager service.  The list is
         // returned in no particular order.
-        let downloads = this._isPrivate ?
-                          Services.downloads.activePrivateDownloads :
-                          Services.downloads.activeDownloads;
+        let downloads = Services.downloads.activeDownloads;
         while (downloads.hasMoreElements()) {
           let download = downloads.getNext().QueryInterface(Ci.nsIDownload);
           this._getOrAddDataItem(download, true);
@@ -681,10 +609,7 @@ DownloadsDataCtor.prototype = {
         // columns are read in the _initFromDataRow method of DownloadsDataItem.
         // Order by descending download identifier so that the most recent
         // downloads are notified first to the listening views.
-        let dbConnection = this._isPrivate ?
-                             Services.downloads.privateDBConnection :
-                             Services.downloads.DBConnection;
-        let statement = dbConnection.createAsyncStatement(
+        let statement = Services.downloads.DBConnection.createAsyncStatement(
           "SELECT guid, target, name, source, referrer, state, "
         +        "startTime, endTime, currBytes, maxBytes "
         + "FROM moz_downloads "
@@ -789,7 +714,6 @@ DownloadsDataCtor.prototype = {
         }
         break;
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
       case "download-manager-database-type-changed":
         let pbs = Cc["@mozilla.org/privatebrowsing;1"]
                   .getService(Ci.nsIPrivateBrowsingService);
@@ -807,7 +731,6 @@ DownloadsDataCtor.prototype = {
         // already invalidated by the previous calls.
         this._views.forEach(this._updateView, this);
         break;
-#endif
     }
   },
 
@@ -816,12 +739,6 @@ DownloadsDataCtor.prototype = {
 
   onDownloadStateChange: function DD_onDownloadStateChange(aState, aDownload)
   {
-    if (aDownload.isPrivate != this._isPrivate) {
-      // Ignore the downloads with a privacy status other than what we are
-      // tracking.
-      return;
-    }
-
     // When a new download is added, it may have the same identifier of a
     // download that we previously deleted during this session, and we also
     // want to provide a visible indication that the download started.
@@ -867,12 +784,6 @@ DownloadsDataCtor.prototype = {
                                                   aCurTotalProgress,
                                                   aMaxTotalProgress, aDownload)
   {
-    if (aDownload.isPrivate != this._isPrivate) {
-      // Ignore the downloads with a privacy status other than what we are
-      // tracking.
-      return;
-    }
-
     let dataItem = this._getOrAddDataItem(aDownload, false);
     if (!dataItem) {
       return;
@@ -922,7 +833,7 @@ DownloadsDataCtor.prototype = {
     }
 
     // Show the panel in the most recent browser window, if present.
-    let browserWin = RecentWindow.getMostRecentBrowserWindow({ private: this._isPrivate });
+    let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
     if (!browserWin) {
       return;
     }
@@ -938,14 +849,6 @@ DownloadsDataCtor.prototype = {
     browserWin.DownloadsPanel.showPanel();
   }
 };
-
-XPCOMUtils.defineLazyGetter(this, "PrivateDownloadsData", function() {
-  return new DownloadsDataCtor(true);
-});
-
-XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
-  return new DownloadsDataCtor(false);
-});
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsDataItem
@@ -1213,18 +1116,8 @@ const DownloadsViewPrototype = {
   /**
    * Array of view objects that should be notified when the available status
    * data changes.
-   *
-   * SUBCLASSES MUST OVERRIDE THIS PROPERTY.
    */
-  _views: null,
-
-  /**
-   * Determines whether this view object is over the private or non-private
-   * downloads.
-   *
-   * SUBCLASSES MUST OVERRIDE THIS PROPERTY.
-   */
-  _isPrivate: false,
+  _views: [],
 
   /**
    * Adds an object to be notified when the available status data changes.
@@ -1238,11 +1131,7 @@ const DownloadsViewPrototype = {
   {
     // Start receiving events when the first of our views is registered.
     if (this._views.length == 0) {
-      if (this._isPrivate) {
-        PrivateDownloadsData.addView(this);
-      } else {
-        DownloadsData.addView(this);
-      }
+      DownloadsCommon.data.addView(this);
     }
 
     this._views.push(aView);
@@ -1278,11 +1167,7 @@ const DownloadsViewPrototype = {
 
     // Stop receiving events when the last of our views is unregistered.
     if (this._views.length == 0) {
-      if (this._isPrivate) {
-        PrivateDownloadsData.removeView(this);
-      } else {
-        DownloadsData.removeView(this);
-      }
+      DownloadsCommon.data.removeView(this);
     }
   },
 
@@ -1406,10 +1291,7 @@ const DownloadsViewPrototype = {
  * actually started.  This is useful to display a neutral progress indicator in
  * the main browser window until the autostart timeout elapses.
  */
-function DownloadsIndicatorDataCtor(aPrivate) {
-  this._isPrivate = aPrivate;
-}
-DownloadsIndicatorDataCtor.prototype = {
+const DownloadsIndicatorData = {
   __proto__: DownloadsViewPrototype,
 
   /**
@@ -1491,25 +1373,23 @@ DownloadsIndicatorDataCtor.prototype = {
    */
   getViewItem: function DID_getViewItem(aDataItem)
   {
-    let data = this._isPrivate ? PrivateDownloadsIndicatorData
-                               : DownloadsIndicatorData;
     return Object.freeze({
       onStateChange: function DIVI_onStateChange()
       {
         if (aDataItem.state == nsIDM.DOWNLOAD_FINISHED ||
             aDataItem.state == nsIDM.DOWNLOAD_FAILED) {
-          data.attention = true;
+          DownloadsIndicatorData.attention = true;
         }
 
         // Since the state of a download changed, reset the estimated time left.
-        data._lastRawTimeLeft = -1;
-        data._lastTimeLeft = -1;
+        DownloadsIndicatorData._lastRawTimeLeft = -1;
+        DownloadsIndicatorData._lastTimeLeft = -1;
 
-        data._updateViews();
+        DownloadsIndicatorData._updateViews();
       },
       onProgressChange: function DIVI_onProgressChange()
       {
-        data._updateViews();
+        DownloadsIndicatorData._updateViews();
       }
     });
   },
@@ -1609,9 +1489,7 @@ DownloadsIndicatorDataCtor.prototype = {
    */
   _activeDataItems: function DID_activeDataItems()
   {
-    let dataItems = this._isPrivate ? PrivateDownloadsData.dataItems
-                                    : DownloadsData.dataItems;
-    for each (let dataItem in dataItems) {
+    for each (let dataItem in DownloadsCommon.data.dataItems) {
       if (dataItem && dataItem.inProgress) {
         yield dataItem;
       }
@@ -1651,15 +1529,7 @@ DownloadsIndicatorDataCtor.prototype = {
       this._counter = DownloadsCommon.formatTimeLeft(this._lastTimeLeft);
     }
   }
-};
-
-XPCOMUtils.defineLazyGetter(this, "PrivateDownloadsIndicatorData", function() {
-  return new DownloadsIndicatorDataCtor(true);
-});
-
-XPCOMUtils.defineLazyGetter(this, "DownloadsIndicatorData", function() {
-  return new DownloadsIndicatorDataCtor(false);
-});
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsSummaryData
@@ -1671,18 +1541,16 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsIndicatorData", function() {
  * constructed with aNumToExclude equal to 3, then that DownloadsSummaryData
  * would produce a summary of the last 2 downloads.
  *
- * @param aIsPrivate
- *        True if the browser window which owns the download button is a private
- *        window.
  * @param aNumToExclude
  *        The number of items to exclude from the summary, starting from the
  *        top of the list.
  */
-function DownloadsSummaryData(aIsPrivate, aNumToExclude) {
+function DownloadsSummaryData(aNumToExclude) {
   this._numToExclude = aNumToExclude;
   // Since we can have multiple instances of DownloadsSummaryData, we
   // override these values from the prototype so that each instance can be
   // completely separated from one another.
+  this._views = [];
   this._loading = false;
 
   this._dataItems = [];
@@ -1706,9 +1574,6 @@ function DownloadsSummaryData(aIsPrivate, aNumToExclude) {
   this._description = "";
   this._numActive = 0;
   this._percentComplete = -1;
-
-  this._isPrivate = aIsPrivate;
-  this._views = [];
 }
 
 DownloadsSummaryData.prototype = {
