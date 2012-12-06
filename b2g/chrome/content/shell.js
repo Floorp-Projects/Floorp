@@ -407,6 +407,10 @@ var shell = {
           content.removeEventListener('load', shell_homeLoaded);
           shell.isHomeLoaded = true;
 
+#ifdef MOZ_WIDGET_GONK
+          libcutils.property_set('sys.boot_completed', '1');
+#endif
+
           Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
 
           if ('pendingChromeEvents' in shell) {
