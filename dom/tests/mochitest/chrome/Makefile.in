@@ -53,6 +53,7 @@ MOCHITEST_CHROME_FILES = \
 		file_bug800817.xul \
 		test_subscript_bindings.xul \
 		file_subscript_bindings.js \
+		test_sandbox_eventhandler.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))
