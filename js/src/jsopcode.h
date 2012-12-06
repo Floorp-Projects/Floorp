@@ -107,9 +107,6 @@ typedef enum JSOp {
 #define JOF_MODE(fmt)   ((fmt) & JOF_MODEMASK)
 #define JOF_OPMODE(op)  JOF_MODE(js_CodeSpec[op].format)
 
-#define JOF_TYPE_IS_EXTENDED_JUMP(t) \
-    ((unsigned)((t) - JOF_JUMP) <= (unsigned)(JOF_LOOKUPSWITCH - JOF_JUMP))
-
 /*
  * Immediate operand getters, setters, and bounds.
  */
