@@ -1639,7 +1639,11 @@ MOZ_ARG_ENABLE_BOOL(profiling,
 
 # For profiling builds keep the symbol information
 if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
-    STRIP_FLAGS="--strip-debug"
+    case "$OS_TARGET" in
+    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+        STRIP_FLAGS="--strip-debug"
+        ;;
+    esac
 fi
 
 dnl ========================================================
