@@ -11,14 +11,11 @@ include $(DEPTH)/config/autoconf.mk
 
 EXTRA_COMPONENTS = \
   BrowserDownloads.manifest \
+  DownloadsStartup.js \
   DownloadsUI.js \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = \
-  DownloadsStartup.js \
-  $(NULL)
-
-EXTRA_PP_JS_MODULES = \
+EXTRA_JS_MODULES = \
   DownloadsCommon.jsm \
   $(NULL)
 
