@@ -99,10 +99,15 @@ MOCHITEST_CHROME_FILES = \
   utils.js \
   test_clear_site_data.html \
   test_npruntime.xul   \
-  test_privatemode.xul \
   test_wmode.xul \
   test_bug479979.xul \
   $(NULL)
+
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_CHROME_FILES += \
+  test_privatemode.xul \
+  $(NULL)
+endif
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 MOCHITEST_FILES += \
