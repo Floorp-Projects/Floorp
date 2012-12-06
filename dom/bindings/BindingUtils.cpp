@@ -221,12 +221,18 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
                       const char* name)
 {
   JSObject* constructor;
+  bool isCallbackInterface = constructorClass == js::Jsvalify(&js::ObjectClass);
   if (constructorClass) {
-    JSObject* functionProto = JS_GetFunctionPrototype(cx, global);
-    if (!functionProto) {
+    JSObject* constructorProto;
+    if (isCallbackInterface) {
+      constructorProto = JS_GetObjectPrototype(cx, global);
+    } else {
+      constructorProto = JS_GetFunctionPrototype(cx, global);
+    }
+    if (!constructorProto) {
       return NULL;
     }
-    constructor = JS_NewObject(cx, constructorClass, functionProto, global);
+    constructor = JS_NewObject(cx, constructorClass, constructorProto, global);
   } else {
     MOZ_ASSERT(constructorNative);
     JSFunction* fun = js::NewFunctionWithReserved(cx, Constructor, ctorNargs,
@@ -244,7 +250,9 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
     return NULL;
   }
 
-  if (constructorClass) {
+  if (constructorClass && !isCallbackInterface) {
+    // Have to shadow Function.prototype.toString, since that throws
+    // on things that are not js::FunctionClass.
     JSFunction* toString = js::DefineFunctionWithReserved(cx, constructor,
                                                           "toString",
                                                           InterfaceObjectToString,
