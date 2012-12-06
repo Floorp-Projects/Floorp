@@ -237,14 +237,22 @@ var gPluginHandler = {
     }
   },
 
+  isKnownPlugin: function PH_isKnownPlugin(objLoadingContent) {
+    return (objLoadingContent.getContentTypeForMIMEType(objLoadingContent.actualType) ==
+            Ci.nsIObjectLoadingContent.TYPE_PLUGIN);
+  },
+
   canActivatePlugin: function PH_canActivatePlugin(objLoadingContent) {
+    // if this isn't a known plugin, we can't activate it
+    // (this also guards pluginHost.getPermissionStringForType against
+    // unexpected input)
+    if (!gPluginHandler.isKnownPlugin(objLoadingContent))
+      return false;
+
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-    let pluginPermission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
-    if (objLoadingContent.actualType) {
-      let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-      let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
-      pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
-    }
+    let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
+    let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
+    let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
 
     return !objLoadingContent.activated &&
            pluginPermission != Ci.nsIPermissionManager.DENY_ACTION &&
@@ -362,12 +370,14 @@ var gPluginHandler = {
     let doc = aPlugin.ownerDocument;
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-    let pluginPermission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
     let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (objLoadingContent.actualType) {
-      let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-      pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
-    }
+    // guard against giving pluginHost.getPermissionStringForType a type
+    // not associated with any known plugin
+    if (!gPluginHandler.isKnownPlugin(objLoadingContent))
+      return;
+    let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
+    let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
+
     let overlay = doc.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
 
     if (pluginPermission == Ci.nsIPermissionManager.DENY_ACTION) {
@@ -532,8 +542,9 @@ var gPluginHandler = {
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     for (let plugin of aPluginList) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      if (gPluginHandler.canActivatePlugin(objLoadingContent) &&
-          objLoadingContent.actualType) {
+      // canActivatePlugin will return false if this isn't a known plugin type,
+      // so the pluginHost.getPermissionStringForType call is protected
+      if (gPluginHandler.canActivatePlugin(objLoadingContent)) {
         let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
         Services.perms.add(aBrowser.currentURI, permissionString, aPermission);
       }
