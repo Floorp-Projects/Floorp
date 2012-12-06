@@ -607,40 +607,45 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
     return (headers, implheaders, declarations,
             CGList(SortedDictValues(unionStructs), "\n"))
 
-def UnionConversions(descriptors):
+def UnionConversions(descriptors, dictionaries, callbacks, config):
     """
     Returns a CGThing to declare all union argument conversion helper structs.
     """
     # Now find all the things we'll need as arguments because we
     # need to unwrap them.
+    headers = set()
     unionConversions = dict()
-    for d in descriptors:
-        if d.interface.isExternal():
-            continue
 
-        def addUnionTypes(type):
-            if type.isUnion():
-                type = type.unroll()
-                name = str(type)
-                if not name in unionConversions:
-                    unionConversions[name] = CGUnionConversionStruct(type, d)
+    def addInfoForType(t, descriptor=None, dictionary=None):
+        """
+        Add info for the given type.  descriptor and dictionary, if passed, are
+        used to figure out what to do with interface types.
+        """
+        assert not descriptor or not dictionary
+        t = t.unroll()
+        if not t.isUnion():
+            return
+        name = str(t)
+        if not name in unionConversions:
+            providers = getRelevantProviders(descriptor, dictionary,
+                                             config)
+            unionConversions[name] = CGUnionConversionStruct(t, providers[0])
+            for f in t.flatMemberTypes:
+                f = f.unroll()
+                if f.isInterface():
+                    if f.isSpiderMonkeyInterface():
+                        headers.add("jsfriendapi.h")
+                        headers.add("mozilla/dom/TypedArray.h")
+                    elif not f.inner.isExternal():
+                        headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif f.isDictionary():
+                    headers.add(CGHeaders.getDeclarationFilename(f.inner))
 
-        members = [m for m in d.interface.members]
-        if d.interface.ctor():
-            members.append(d.interface.ctor())
-        signatures = [s for m in members if m.isMethod() for s in m.signatures()]
-        for s in signatures:
-            assert len(s) == 2
-            (_, arguments) = s
-            for a in arguments:
-                addUnionTypes(a.type)
+    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
 
-        for m in members:
-            if m.isAttr() and not m.readonly:
-                addUnionTypes(m.type)
-
-    return CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
-                     post="\n\n")
+    return (headers,
+            CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
+                      post="\n\n"))
 
 class Argument():
     """
@@ -7776,14 +7781,18 @@ struct PrototypeIDMap;
     @staticmethod
     def UnionConversions(config):
 
-        unions = UnionConversions(config.getDescriptors())
+        (headers, unions) = UnionConversions(config.getDescriptors(),
+                                             config.getDictionaries(),
+                                             config.getCallbacks(),
+                                             config)
 
         # Wrap all of that in our namespaces.
         curr = CGNamespace.build(['mozilla', 'dom'], unions)
 
         curr = CGWrapper(curr, post='\n')
 
-        curr = CGHeaders([], [], [], ["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"], [], curr)
+        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"])
+        curr = CGHeaders([], [], [], headers, [], curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionConversions', curr)
