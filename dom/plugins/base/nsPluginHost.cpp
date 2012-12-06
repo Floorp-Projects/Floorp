@@ -3347,7 +3347,6 @@ nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance)
 }
 
 nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURI,
-                                                       nsObjectLoadingContent *aContent,
                                                        nsNPAPIPluginInstance* aInstance,
                                                        nsIStreamListener **aStreamListener)
 {
@@ -3355,7 +3354,7 @@ nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURI,
   NS_ENSURE_ARG_POINTER(aStreamListener);
 
   nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
-  nsresult rv = listener->InitializeEmbedded(aURI, aInstance, aContent);
+  nsresult rv = listener->InitializeEmbedded(aURI, aInstance);
   if (NS_FAILED(rv)) {
     return rv;
   }
