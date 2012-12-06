@@ -4,9 +4,9 @@ import sys
 from datetime import datetime, timedelta
 
 if sys.platform.startswith('win'):
-    from lib.terminal_win import Terminal
+    from terminal_win import Terminal
 else:
-    from lib.terminal_unix import Terminal
+    from terminal_unix import Terminal
 
 class NullProgressBar(object):
     def update(self, current, data): pass
@@ -18,7 +18,7 @@ class NullProgressBar(object):
 
 class ProgressBar(object):
     def __init__(self, limit, fmt):
-        assert not self.conservative_isatty()
+        assert self.conservative_isatty()
         assert limit < 9999
 
         self.prior = None
@@ -102,6 +102,7 @@ class ProgressBar(object):
         """
         try:
             import android
-        except ImportError:
             return False
-        return sys.stdout.isatty()
+        except ImportError:
+            return sys.stdout.isatty()
+        return False
