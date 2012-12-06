@@ -250,9 +250,12 @@ let SocialChatBar = {
     if (!SocialUI.haveLoggedInUser())
       return false;
     let docElem = document.documentElement;
-    let chromeless = docElem.getAttribute("disablechrome") ||
-                     docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
+    let chromeless = docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
     return Social.uiVisible && !chromeless;
+  },
+  // Does this chatbar have any chats (whether minimized, collapsed or normal)
+  get hasChats() {
+    return !!this.chatbar.firstElementChild;
   },
   openChat: function(aProvider, aURL, aCallback, aMode) {
     if (this.isAvailable)
