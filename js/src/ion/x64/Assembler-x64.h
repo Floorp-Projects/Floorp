@@ -289,8 +289,14 @@ class Assembler : public AssemblerX86Shared
         push(ScratchReg);
     }
     void push(const ImmWord ptr) {
-        movq(ptr, ScratchReg);
-        push(ScratchReg);
+        // We often end up with ImmWords that actually fit into int32.
+        // Be aware of the sign extension behavior.
+        if (ptr.value <= INT32_MAX) {
+            push(Imm32(ptr.value));
+        } else {
+            movq(ptr, ScratchReg);
+            push(ScratchReg);
+        }
     }
     void push(const FloatRegister &src) {
         subq(Imm32(sizeof(void*)), StackPointer);
