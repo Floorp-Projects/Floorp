@@ -412,6 +412,28 @@ var tests = {
     port.postMessage({topic: "test-init", data: { id: 1 }});
   },
 
+  testSecondTopLevelWindow: function(next) {
+    // Bug 817782 - check chats work in new top-level windows.
+    const chatUrl = "https://example.com/browser/browser/base/content/test/social_chat.html";
+    let port = Social.provider.getWorkerPort();
+    let secondWindow;
+    port.onmessage = function(e) {
+      if (e.data.topic == "test-init-done") {
+        secondWindow = OpenBrowserWindow();
+        secondWindow.addEventListener("load", function loadListener() {
+          secondWindow.removeEventListener("load", loadListener);
+          port.postMessage({topic: "test-worker-chat", data: chatUrl});
+        });
+      } else if (e.data.topic == "got-chatbox-message") {
+        // the chat was created - let's make sure it was created in the second window.
+        is(secondWindow.SocialChatBar.chatbar.childElementCount, 1);
+        secondWindow.close();
+        next();
+      }
+    }
+    port.postMessage({topic: "test-init"});
+  },
+
   // XXX - note this must be the last test until we restore the login state
   // between tests...
   testCloseOnLogout: function(next) {
