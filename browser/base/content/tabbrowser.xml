@@ -3756,6 +3756,8 @@
           if (draggedTab.parentNode != this || event.shiftKey)
             this.selectedItem = newTab;
         } else if (draggedTab && draggedTab.parentNode == this) {
+          this._finishAnimateTabMove();
+
           // actually move the dragged tab
           if ("animDropIndex" in draggedTab._dragData) {
             let newIndex = draggedTab._dragData.animDropIndex;
@@ -3763,7 +3765,6 @@
               newIndex--;
             this.tabbrowser.moveTabTo(draggedTab, newIndex);
           }
-          this._finishAnimateTabMove();
         } else if (draggedTab) {
           // swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
