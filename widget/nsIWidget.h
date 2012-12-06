@@ -689,6 +689,19 @@ class nsIWidget : public nsISupports {
                                  int32_t *aY) = 0;
 
     /**
+     * NOTE:
+     *
+     * For a top-level window widget, the "parent's coordinate system" is the
+     * "global" display pixel coordinate space, *not* device pixels (which
+     * may be inconsistent between multiple screens, at least in the Mac OS
+     * case with mixed hi-dpi and lo-dpi displays). This applies to all the
+     * following Move and Resize widget APIs.
+     *
+     * Currently, only Mac OS X implements a display-/device-pixel distinction;
+     * this may change in future, however.
+     **/
+
+    /**
      * Move this widget.
      *
      * Coordinates refer to the top-left of the widget.  For toplevel windows
