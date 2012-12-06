@@ -269,6 +269,22 @@ class LNewObject : public LInstructionHelper<1, 0, 0>
     }
 };
 
+// Allocates a new DeclEnvObject.
+//
+// This instruction generates two possible instruction sets:
+//   (1) An inline allocation of the call object is attempted.
+//   (2) Otherwise, a callVM create a new object.
+//
+class LNewDeclEnvObject : public LInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(NewDeclEnvObject);
+
+    MNewDeclEnvObject *mir() const {
+        return mir_->toNewDeclEnvObject();
+    }
+};
+
 // Allocates a new CallObject. The inputs are:
 //      slots: either a reg representing a HeapSlot *, or a placeholder
 //             meaning that no slots pointer is needed.

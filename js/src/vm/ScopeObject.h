@@ -218,11 +218,21 @@ class CallObject : public ScopeObject
 
 class DeclEnvObject : public ScopeObject
 {
+    // Pre-allocated slot for the named lambda.
+    static const uint32_t LAMBDA_SLOT = 1;
+
   public:
-    static const uint32_t RESERVED_SLOTS = 1;
+    static const uint32_t RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
+    static DeclEnvObject *
+    createTemplateObject(JSContext *cx, HandleFunction fun);
+
     static DeclEnvObject *create(JSContext *cx, StackFrame *fp);
+
+    static inline size_t lambdaSlot() {
+        return LAMBDA_SLOT;
+    }
 };
 
 class NestedScopeObject : public ScopeObject
