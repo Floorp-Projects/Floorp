@@ -20,6 +20,9 @@
 
 #include "nsThreadUtils.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "nsIAudioManager.h"
+#endif
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -273,3 +276,18 @@ AudioChannelService::ChannelName(AudioChannelType aType)
   NS_NOTREACHED("Execution should not reach here!");
   return nullptr;
 }
+
+#ifdef MOZ_WIDGET_GONK
+void
+AudioChannelService::SetPhoneInCall(bool aActive)
+{
+  //while ring tone and in-call mode, mute media element
+  if (aActive) {
+    mChannelCounters[AUDIO_CHANNEL_TELEPHONY] = 1;
+  } else {
+    mChannelCounters[AUDIO_CHANNEL_TELEPHONY] = 0;
+  }
+  Notify();
+}
+#endif
+
