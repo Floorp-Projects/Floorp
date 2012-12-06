@@ -39,6 +39,7 @@
 #include "vm/StringObject.h"
 
 #include "jsatominlines.h"
+#include "jscompartmentinlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
