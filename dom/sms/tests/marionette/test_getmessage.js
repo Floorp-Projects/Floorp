@@ -45,7 +45,7 @@ function simulateIncomingSms() {
     is(incomingSms.deliveryStatus, "success", "deliveryStatus");
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, null, "receiver");
-    is(incomingSms.sender, remoteNumber, "sender");
+    isIn(incomingSms.sender, remoteNumberFormats, "sender");
     is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
     inSmsTimeStamp = incomingSms.timestamp;
@@ -71,7 +71,7 @@ function sendSms() {
     is(sentSms.delivery, "sent", "delivery");
     is(sentSms.deliveryStatus, "pending", "deliveryStatus");
     is(sentSms.read, true, "read");
-    is(sentSms.receiver, remoteNumber, "receiver");
+    isIn(sentSms.receiver, remoteNumberFormats, "receiver");
     is(sentSms.sender, null, "sender");
     is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is instanceof date");  
@@ -153,7 +153,7 @@ function getSentSms() {
     is(foundSms.delivery, "sent", "delivery");
     is(foundSms.deliveryStatus, "pending", "deliveryStatus");
     is(foundSms.read, true, "read");
-    is(foundSms.receiver, remoteNumber, "receiver");
+    isIn(foundSms.receiver, remoteNumberFormats, "receiver");
     isIn(foundSms.sender, myNumberFormats, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
