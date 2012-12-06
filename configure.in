@@ -4235,7 +4235,7 @@ MOZ_SAMPLE_TYPE_S16=
 MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
-MOZ_DASH=
+MOZ_DASH=1
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -5381,12 +5381,12 @@ if test -n "$MOZ_WEBM"; then
 fi;
 
 dnl ========================================================
-dnl = Enable DASH-WebM support
+dnl = Disable DASH-WebM support
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(dash,
-[  --enable-dash          Enable support for DASH-WebM],
-    MOZ_DASH=1,
-    MOZ_DASH=)
+MOZ_ARG_DISABLE_BOOL(dash,
+[  --disable-dash          Disable support for DASH-WebM],
+    MOZ_DASH=,
+    MOZ_DASH=1)
 
 if test -n "$MOZ_DASH"; then
     if test -n "$MOZ_WEBM"; then
