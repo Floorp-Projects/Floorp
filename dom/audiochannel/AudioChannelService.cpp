@@ -55,6 +55,7 @@ AudioChannelService::Shutdown()
 NS_IMPL_ISUPPORTS0(AudioChannelService)
 
 AudioChannelService::AudioChannelService()
+: mCurrentHigherChannel(AUDIO_CHANNEL_NORMAL)
 {
   mChannelCounters = new int32_t[AUDIO_CHANNEL_PUBLICNOTIFICATION+1];
 
@@ -127,25 +128,51 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
     }
   }
 
+  bool muted = false;
+
   // Priorities:
   switch (aType) {
     case AUDIO_CHANNEL_NORMAL:
     case AUDIO_CHANNEL_CONTENT:
-      return !!mChannelCounters[AUDIO_CHANNEL_NOTIFICATION] ||
-             !!mChannelCounters[AUDIO_CHANNEL_ALARM] ||
-             !!mChannelCounters[AUDIO_CHANNEL_TELEPHONY] ||
-             !!mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION];
+      muted = !!mChannelCounters[AUDIO_CHANNEL_NOTIFICATION] ||
+              !!mChannelCounters[AUDIO_CHANNEL_ALARM] ||
+              !!mChannelCounters[AUDIO_CHANNEL_TELEPHONY] ||
+              !!mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION];
 
     case AUDIO_CHANNEL_NOTIFICATION:
     case AUDIO_CHANNEL_ALARM:
     case AUDIO_CHANNEL_TELEPHONY:
-      return ChannelsActiveWithHigherPriorityThan(aType);
+      muted = ChannelsActiveWithHigherPriorityThan(aType);
 
     case AUDIO_CHANNEL_PUBLICNOTIFICATION:
-      return false;
+      break;
   }
 
-  return false;
+  // Notification if needed.
+  if (!muted) {
+
+    // Calculating the most important unmuted channel:
+    AudioChannelType higher = AUDIO_CHANNEL_NORMAL;
+    for (int32_t type = AUDIO_CHANNEL_NORMAL;
+         type <= AUDIO_CHANNEL_PUBLICNOTIFICATION;
+         ++type) {
+      if (mChannelCounters[type]) {
+        higher = (AudioChannelType)type;
+      }
+    }
+
+    if (higher != mCurrentHigherChannel) {
+      mCurrentHigherChannel = higher;
+
+      nsString channelName;
+      channelName.AssignASCII(ChannelName(mCurrentHigherChannel));
+
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      obs->NotifyObservers(nullptr, "audio-channel-changed", channelName.get());
+    }
+  }
+
+  return muted;
 }
 
 
@@ -183,4 +210,31 @@ AudioChannelService::ChannelsActiveWithHigherPriorityThan(AudioChannelType aType
   }
 
   return false;
+}
+
+const char*
+AudioChannelService::ChannelName(AudioChannelType aType)
+{
+  static struct {
+    int32_t type;
+    const char* value;
+  } ChannelNameTable[] = {
+    { AUDIO_CHANNEL_NORMAL,             "normal" },
+    { AUDIO_CHANNEL_CONTENT,            "normal" },
+    { AUDIO_CHANNEL_NOTIFICATION,       "notification" },
+    { AUDIO_CHANNEL_ALARM,              "alarm" },
+    { AUDIO_CHANNEL_TELEPHONY,          "telephony" },
+    { AUDIO_CHANNEL_PUBLICNOTIFICATION, "publicnotification" },
+    { -1,                               "unknown" }
+  };
+
+  for (int i = AUDIO_CHANNEL_NORMAL; ; ++i) {
+    if (ChannelNameTable[i].type == aType ||
+        ChannelNameTable[i].type == -1) {
+      return ChannelNameTable[i].value;
+    }
+  }
+
+  NS_NOTREACHED("Execution should not reach here!");
+  return nullptr;
 }

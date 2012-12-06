@@ -59,9 +59,13 @@ protected:
 
   bool ChannelsActiveWithHigherPriorityThan(AudioChannelType aType);
 
+  const char* ChannelName(AudioChannelType aType);
+
   nsDataHashtable< nsPtrHashKey<nsHTMLMediaElement>, AudioChannelType > mMediaElements;
 
   int32_t* mChannelCounters;
+
+  AudioChannelType mCurrentHigherChannel;
 };
 
 } // namespace dom
