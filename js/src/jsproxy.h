@@ -107,7 +107,6 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
-    virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
@@ -172,8 +171,6 @@ public:
                                  RegExpGuard *g) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint,
                               Value *vp) MOZ_OVERRIDE;
-    virtual bool iteratorNext(JSContext *cx, JSObject *proxy,
-                              Value *vp) MOZ_OVERRIDE;
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
 };
 
@@ -216,7 +213,6 @@ class Proxy {
     static JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
     static bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     static bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
-    static bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     static bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
 
     static JSObject * const LazyProto;
