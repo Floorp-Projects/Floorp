@@ -37,23 +37,27 @@ public:
    * Any MediaElement that starts playing should register itself to
    * this service, sharing the AudioChannelType.
    */
-  void RegisterMediaElement(nsHTMLMediaElement* aMediaElement,
-                            AudioChannelType aType);
+  virtual void RegisterMediaElement(nsHTMLMediaElement* aMediaElement,
+                                    AudioChannelType aType);
 
   /**
    * Any MediaElement that stops playing should unregister itself to
    * this service.
    */
-  void UnregisterMediaElement(nsHTMLMediaElement* aMediaElement);
+  virtual void UnregisterMediaElement(nsHTMLMediaElement* aMediaElement);
 
   /**
    * Return true if this type should be muted.
    */
   virtual bool GetMuted(AudioChannelType aType, bool aElementHidden);
 
+protected:
   void Notify();
 
-protected:
+  /* Register/Unregister IPC types: */
+  void RegisterType(AudioChannelType aType);
+  void UnregisterType(AudioChannelType aType);
+
   AudioChannelService();
   virtual ~AudioChannelService();
 
@@ -66,6 +70,11 @@ protected:
   int32_t* mChannelCounters;
 
   AudioChannelType mCurrentHigherChannel;
+
+  // This is needed for IPC comunication between
+  // AudioChannelServiceChild and this class.
+  friend class ContentParent;
+  friend class ContentChild;
 };
 
 } // namespace dom

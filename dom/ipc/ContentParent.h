@@ -261,7 +261,7 @@ private:
 
     virtual bool RecvSetURITitle(const URIParams& uri,
                                  const nsString& title);
-    
+
     virtual bool RecvShowFilePicker(const int16_t& mode,
                                     const int16_t& selectedType,
                                     const bool& addToRecentDocs,
@@ -273,7 +273,7 @@ private:
                                     InfallibleTArray<nsString>* files,
                                     int16_t* retValue,
                                     nsresult* result);
- 
+
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                            const nsString& aText, const bool& aTextClickable,
                                            const nsString& aCookie, const nsString& aName);
@@ -301,6 +301,13 @@ private:
     virtual bool RecvPrivateDocShellsExist(const bool& aExist);
 
     virtual bool RecvFirstIdle();
+
+    virtual bool RecvAudioChannelGetMuted(const AudioChannelType& aType,
+                                          const bool& aMozHidden,
+                                          bool* aValue);
+
+    virtual bool RecvAudioChannelRegisterType(const AudioChannelType& aType);
+    virtual bool RecvAudioChannelUnregisterType(const AudioChannelType& aType);
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
