@@ -51,7 +51,20 @@ namespace ion {
     /* Debug info about Pools*/             \
     _(Pools)                                \
     /* Debug info about the I$ */           \
-    _(CacheFlush)
+    _(CacheFlush)                           \
+                                            \
+    /* BASELINE COMPILER SPEW */            \
+                                            \
+    /* Aborting Script Compilation. */      \
+    _(BaselineAbort)                        \
+    /* Script Compilation. */               \
+    _(BaselineScripts)                      \
+    /* Detailed op-specific spew. */        \
+    _(BaselineOp)                           \
+    /* Inline caches. */                    \
+    _(BaselineIC)                           \
+    /* Inline cache fallbacks. */           \
+    _(BaselineICFallback)
 
 
 enum IonSpewChannel {
