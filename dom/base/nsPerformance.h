@@ -20,14 +20,13 @@ class JSObject;
 struct JSContext;
 
 // Script "performance.timing" object
-class nsPerformanceTiming MOZ_FINAL : public nsISupports,
-                                      public nsWrapperCache
+class nsPerformanceTiming MOZ_FINAL : public nsWrapperCache
 {
 public:
   nsPerformanceTiming(nsPerformance* aPerformance,
                       nsITimedChannel* aChannel);
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPerformanceTiming)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsPerformanceTiming)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsPerformanceTiming)
 
   nsDOMNavigationTiming* GetDOMTiming() const;
 
@@ -93,13 +92,12 @@ private:
 };
 
 // Script "performance.navigation" object
-class nsPerformanceNavigation MOZ_FINAL : public nsISupports,
-                                          public nsWrapperCache
+class nsPerformanceNavigation MOZ_FINAL : public nsWrapperCache
 {
 public:
   explicit nsPerformanceNavigation(nsPerformance* aPerformance);
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPerformanceNavigation)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsPerformanceNavigation)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsPerformanceNavigation)
 
   nsDOMNavigationTiming* GetDOMTiming() const;
 
