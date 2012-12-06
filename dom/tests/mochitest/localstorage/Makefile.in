@@ -39,7 +39,6 @@ MOCHITEST_FILES	= \
     test_embededNulls.html \
     test_keySync.html \
     test_localStorageBase.html \
-    test_localStorageBasePrivateBrowsing.html \
     test_localStorageBaseSessionOnly.html \
     test_localStorageCookieSettings.html \
     test_localStorageEnablePref.html \
@@ -56,6 +55,12 @@ MOCHITEST_FILES	= \
     test_localStorageKeyOrder.html \
     test_storageConstructor.html \
     $(NULL)
+
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_FILES += \
+    test_localStorageBasePrivateBrowsing.html \
+    $(NULL)
+endif
 
 MOCHITEST_CHROME_FILES = \
     test_localStorageFromChrome.xhtml \
