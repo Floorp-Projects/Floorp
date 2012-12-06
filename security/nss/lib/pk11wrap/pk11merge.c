@@ -169,15 +169,15 @@ pk11_getPrivateKeyUsage(PK11SlotInfo *slot, CK_OBJECT_HANDLE id)
 {
     unsigned int usage = 0;
 
-    if ((PK11_HasAttributeSet(slot, id, CKA_UNWRAP) || 
-			PK11_HasAttributeSet(slot,id, CKA_DECRYPT))) {
+    if ((PK11_HasAttributeSet(slot, id, CKA_UNWRAP,PR_FALSE) || 
+			PK11_HasAttributeSet(slot,id, CKA_DECRYPT,PR_FALSE))) {
 	usage |= KU_KEY_ENCIPHERMENT;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_DERIVE)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_DERIVE, PR_FALSE)) {
 	usage |= KU_KEY_AGREEMENT;
     }
-    if ((PK11_HasAttributeSet(slot, id, CKA_SIGN_RECOVER) || 
-			PK11_HasAttributeSet(slot, id, CKA_SIGN))) {
+    if ((PK11_HasAttributeSet(slot, id, CKA_SIGN_RECOVER, PR_FALSE) || 
+			PK11_HasAttributeSet(slot, id, CKA_SIGN, PR_FALSE))) {
 	usage |= KU_DIGITAL_SIGNATURE;
     }
     return usage;
@@ -373,31 +373,31 @@ pk11_getSecretKeyFlags(PK11SlotInfo *slot, CK_OBJECT_HANDLE id)
 {
     CK_FLAGS flags = 0;
 
-    if (PK11_HasAttributeSet(slot, id, CKA_UNWRAP)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_UNWRAP, PR_FALSE)) {
 	flags |= CKF_UNWRAP;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_WRAP)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_WRAP, PR_FALSE)) {
 	flags |= CKF_WRAP;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_ENCRYPT)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_ENCRYPT, PR_FALSE)) {
 	flags |= CKF_ENCRYPT;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_DECRYPT)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_DECRYPT, PR_FALSE)) {
 	flags |= CKF_DECRYPT;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_DERIVE)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_DERIVE, PR_FALSE)) {
 	flags |= CKF_DERIVE;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_SIGN)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_SIGN, PR_FALSE)) {
 	flags |= CKF_SIGN;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_SIGN_RECOVER)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_SIGN_RECOVER, PR_FALSE)) {
 	flags |= CKF_SIGN_RECOVER;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_VERIFY)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_VERIFY, PR_FALSE)) {
 	flags |= CKF_VERIFY;
     }
-    if (PK11_HasAttributeSet(slot, id, CKA_VERIFY_RECOVER)) {
+    if (PK11_HasAttributeSet(slot, id, CKA_VERIFY_RECOVER, PR_FALSE)) {
 	flags |= CKF_VERIFY_RECOVER;
     }
     return flags;

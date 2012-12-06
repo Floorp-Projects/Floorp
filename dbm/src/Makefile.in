@@ -53,10 +53,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DMEMMOVE -D__DBINTERFACE_PRIVATE $(SECURITY_FLAG)
 
-ifeq ($(OS_ARCH),WINCE)
-DEFINES     += -D__STDC__ -DDBM_REOPEN_ON_FLUSH
-endif
-
 ifeq ($(OS_ARCH),AIX)
 OS_LIBS		+= -lc_r
 endif

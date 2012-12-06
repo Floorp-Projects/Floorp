@@ -13,4 +13,15 @@ elif [ -d "$topsrcdir/../clang" ]; then
     export CC=$topsrcdir/../clang/bin/clang
     export CXX=$topsrcdir/../clang/bin/clang++
 fi
+
+# If not set use the system default clang
+if [ -z "$CC" ]; then
+    export CC=clang
+fi
+
+# If not set use the system default clang++
+if [ -z "$CXX" ]; then
+    export CXX=clang++
+fi
+
 ac_add_options --with-ccache

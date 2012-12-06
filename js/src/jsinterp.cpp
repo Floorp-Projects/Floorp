@@ -2333,7 +2333,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RawScript funScript = fun->getOrCreateScript(cx).unsafeGet();
+    RawScript funScript = fun->getOrCreateScript(cx);
     if (!funScript)
         goto error;
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))

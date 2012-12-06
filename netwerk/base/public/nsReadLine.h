@@ -14,12 +14,11 @@
  * @file
  * Functions to read complete lines from an input stream.
  *
- * To properly use the helper function in here (NS_ReadLine) the caller
- * needs to declare a pointer to an nsLineBuffer, call
- * NS_InitLineBuffer on it, and pass it to NS_ReadLine every time it
+ * To properly use the helper function in here (NS_ReadLine) the caller should
+ * create a nsLineBuffer<T> with new, and pass it to NS_ReadLine every time it
  * wants a line out.
  *
- * When done, the pointer should be freed using PR_Free.
+ * When done, the object should be deleted.
  */
 
 /**

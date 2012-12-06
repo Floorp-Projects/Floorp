@@ -6,8 +6,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "ApplicationAccessibleWrap.h"
-#include "nsAccUtils.h"
+#include "Platform.h"
 
 #include "nsAppShell.h"
 
@@ -22,6 +21,16 @@ ShouldA11yBeEnabled()
 {
   EPlatformDisabledState disabledState = PlatformDisabledState();
   return (disabledState == ePlatformIsForceEnabled) || ((disabledState == ePlatformIsEnabled) && sA11yShouldBeEnabled);
+}
+
+void
+PlatformInit()
+{
+}
+
+void
+PlatformShutdown()
+{
 }
 
 }

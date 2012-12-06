@@ -29,6 +29,7 @@ class nsHttpRequestHead;
 class nsHttpResponseHead;
 class nsHttpChunkedDecoder;
 class nsIHttpActivityObserver;
+class UpdateSecurityCallbacks;
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction represents a single HTTP transaction.  It is thread-safe,
@@ -142,6 +143,24 @@ private:
     bool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 
 private:
+    class UpdateSecurityCallbacks : public nsRunnable
+    {
+      public:
+        UpdateSecurityCallbacks(nsHttpTransaction* aTrans,
+                                nsIInterfaceRequestor* aCallbacks)
+        : mTrans(aTrans), mCallbacks(aCallbacks) {}
+
+        NS_IMETHOD Run()
+        {
+            if (mTrans->mConnection)
+                mTrans->mConnection->SetSecurityCallbacks(mCallbacks);
+            return NS_OK;
+        }
+      private:
+        nsRefPtr<nsHttpTransaction> mTrans;
+        nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    };
+
     mozilla::Mutex mCallbacksLock;
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;

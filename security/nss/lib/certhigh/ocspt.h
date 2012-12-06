@@ -5,7 +5,7 @@
 /*
  * Public header for exported OCSP types.
  *
- * $Id: ocspt.h,v 1.10 2012/04/25 14:49:27 gerv%gerv.net Exp $
+ * $Id: ocspt.h,v 1.11 2012/11/17 11:52:38 kaie%kuix.de Exp $
  */
 
 #ifndef _OCSPT_H_
@@ -24,7 +24,6 @@ typedef struct CERTOCSPResponseStr CERTOCSPResponse;
  * but until I know for certain I am leaving the rest of these here, too.
  */
 typedef struct CERTOCSPCertIDStr CERTOCSPCertID;
-typedef struct CERTOCSPCertStatusStr CERTOCSPCertStatus;
 typedef struct CERTOCSPSingleResponseStr CERTOCSPSingleResponse;
 
 /*
