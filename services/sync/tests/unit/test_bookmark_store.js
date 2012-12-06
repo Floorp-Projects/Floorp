@@ -9,8 +9,14 @@ Cu.import("resource://services-sync/util.js");
 const PARENT_ANNO = "sync/parent";
 
 Service.engineManager.register(BookmarksEngine);
+
 let engine = Service.engineManager.get("bookmarks");
 let store = engine._store;
+let tracker = engine._tracker;
+
+// Don't write some persistence files asynchronously.
+tracker.persistChangedIDs = false;
+
 let fxuri = Utils.makeURI("http://getfirefox.com/");
 let tburi = Utils.makeURI("http://getthunderbird.com/");
 
@@ -324,9 +330,9 @@ add_test(function test_move_order() {
     toolbar.children = [bmk2_guid, bmk1_guid];
     store.applyIncoming(toolbar);
     // Bookmarks engine does this at the end of _processIncoming
-    engine._tracker.ignoreAll = true;
+    tracker.ignoreAll = true;
     store._orderChildren();
-    engine._tracker.ignoreAll = false;
+    tracker.ignoreAll = false;
     delete store._childrenToOrder;
 
     _("Verify new order.");
@@ -399,11 +405,6 @@ add_test(function test_reparentOrphans() {
   } finally {
     _("Clean up.");
     store.wipe();
-
-    if (engine._tracker._lazySave) {
-      engine._tracker._lazySave.clear();
-    }
-
     run_next_test();
   }
 });

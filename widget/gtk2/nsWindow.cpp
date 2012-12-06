@@ -73,8 +73,9 @@
 #include "nsIPropertyBag2.h"
 
 #ifdef ACCESSIBILITY
+#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/Platform.h"
 #include "nsAccessibilityService.h"
-#include "nsIAccessibleDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

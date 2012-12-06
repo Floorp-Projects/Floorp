@@ -53,7 +53,7 @@ PKIXLIB = \
 	$(DIST)/lib/$(LIB_PREFIX)pkixcertsel.$(LIB_SUFFIX)
 
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
+ifeq ($(OS_ARCH), WINNT)
 
 EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
@@ -139,7 +139,7 @@ endif
 
 else # USE_STATIC_LIBS
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
+ifeq ($(OS_ARCH), WINNT)
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 EXTRA_LIBS += \

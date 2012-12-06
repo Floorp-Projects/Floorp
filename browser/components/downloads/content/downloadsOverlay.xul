@@ -108,7 +108,6 @@
       <vbox id="downloadsFooter"
             onkeypress="DownloadsFooter.onKeyPress(event);">
         <hbox id="downloadsSummary"
-              collapsed="true"
               align="center"
               orient="horizontal"
               onkeypress="DownloadsSummary.onKeyPress(event);"

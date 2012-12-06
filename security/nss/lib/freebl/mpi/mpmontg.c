@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: mpmontg.c,v 1.24 2012/04/25 14:49:50 gerv%gerv.net Exp $ */
+/* $Id: mpmontg.c,v 1.25 2012/11/14 01:14:11 wtc%google.com Exp $ */
 
 /* This file implements moduluar exponentiation using Montgomery's
  * method for modular reduction.  This file implements the method
@@ -34,12 +34,6 @@
 #define STATIC
 
 #define MAX_ODD_INTS    32   /* 2 ** (WINDOW_BITS - 1) */
-
-#if defined(_WIN32_WCE)
-#define ABORT  res = MP_UNDEF; goto CLEANUP
-#else
-#define ABORT abort()
-#endif
 
 /*! computes T = REDC(T), 2^b == R 
     \param T < RN
@@ -257,7 +251,7 @@ mp_err mp_exptmod_f(const mp_int *   montBase,
       } else if (smallExp & 1) {
 	SQR; MUL(0); 
       } else {
-	ABORT;
+	abort();
       }
     } else if (window_bits == 4) {
       if (!smallExp) {
@@ -271,7 +265,7 @@ mp_err mp_exptmod_f(const mp_int *   montBase,
       } else if (smallExp & 8) {
 	SQR; MUL(smallExp/16); SQR; SQR; SQR; 
       } else {
-	ABORT;
+	abort();
       }
     } else if (window_bits == 5) {
       if (!smallExp) {
@@ -287,7 +281,7 @@ mp_err mp_exptmod_f(const mp_int *   montBase,
       } else if (smallExp & 0x10) {
 	SQR; MUL(smallExp/32); SQR; SQR; SQR; SQR;
       } else {
-	ABORT;
+	abort();
       }
     } else if (window_bits == 6) {
       if (!smallExp) {
@@ -305,10 +299,10 @@ mp_err mp_exptmod_f(const mp_int *   montBase,
       } else if (smallExp & 0x20) {
 	SQR; MUL(smallExp/64); SQR; SQR; SQR; SQR; SQR; 
       } else {
-	ABORT;
+	abort();
       }
     } else {
-      ABORT;
+      abort();
     }
   }
 
@@ -405,7 +399,7 @@ mp_err mp_exptmod_i(const mp_int *   montBase,
       } else if (smallExp & 1) {
 	SQR(pa1,pa2); MUL(0,pa2,pa1);
       } else {
-	ABORT;
+	abort();
       }
     } else if (window_bits == 4) {
       if (!smallExp) {
@@ -423,7 +417,7 @@ mp_err mp_exptmod_i(const mp_int *   montBase,
 	SQR(pa1,pa2); MUL(smallExp/16,pa2,pa1); SQR(pa1,pa2); 
 	SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
       } else {
-	ABORT;
+	abort();
       }
     } else if (window_bits == 5) {
       if (!smallExp) {
@@ -445,7 +439,7 @@ mp_err mp_exptmod_i(const mp_int *   montBase,
 	SQR(pa1,pa2); MUL(smallExp/32,pa2,pa1); SQR(pa1,pa2); 
 	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
       } else {
-	ABORT;
+	abort();
       }
     } else if (window_bits == 6) {
       if (!smallExp) {
@@ -471,10 +465,10 @@ mp_err mp_exptmod_i(const mp_int *   montBase,
 	SQR(pa1,pa2); MUL(smallExp/64,pa2,pa1); SQR(pa1,pa2); 
 	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
       } else {
-	ABORT;
+	abort();
       }
     } else {
-      ABORT;
+      abort();
     }
   }
 
@@ -1013,7 +1007,7 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
 	} else if (smallExp & 1) {
 	    SQR(pa1,pa2); MUL_NOWEAVE(montBase,pa2,pa1);
 	} else {
-	    ABORT;
+	    abort();
 	}
 	break;
     case 6:
@@ -1028,7 +1022,7 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
 	SQR(pa1,pa2); MUL(smallExp,pa2,pa1);
 	break;
     default:
-	ABORT; /* could do a loop? */
+	abort(); /* could do a loop? */
     }
   }
 

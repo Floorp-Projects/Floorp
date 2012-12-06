@@ -3,29 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi.h"
 #include "nsDOMParser.h"
-#include "nsIURI.h"
-#include "nsIChannel.h"
-#include "nsILoadGroup.h"
-#include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
-#include "nsIDOMDocument.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIPrincipal.h"
-#include "nsDOMClassInfoID.h"
-#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsStreamUtils.h"
-#include "nsThreadUtils.h"
-#include "nsNetCID.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
 #include "nsError.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/AutoRestore.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -40,15 +27,12 @@ nsDOMParser::~nsDOMParser()
 {
 }
 
-DOMCI_DATA(DOMParser, nsDOMParser)
-
 // QueryInterface implementation for nsDOMParser
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMParser)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMParser)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMParser, mOwner)

@@ -51,6 +51,8 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long PLUGIN_USER_DISABLED        = 7;
   /// ** All values >= PLUGIN_CLICK_TO_PLAY are plugin placeholder types that
   ///    would be replaced by a real plugin if activated (playPlugin())
+  /// ** Furthermore, values >= PLUGIN_CLICK_TO_PLAY and
+  ///    <= PLUGIN_VULNERABLE_NO_UPDATE are click-to-play types.
   // The plugin is disabled until the user clicks on it
   const unsigned long PLUGIN_CLICK_TO_PLAY        = 8;
   // The plugin is vulnerable (update available)

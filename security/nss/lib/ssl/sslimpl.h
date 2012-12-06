@@ -5,7 +5,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: sslimpl.h,v 1.108 2012/09/28 01:46:45 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.109 2012/11/14 01:14:12 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1791,8 +1791,6 @@ SEC_END_PROTOS
 
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 #define SSL_GETPID getpid
-#elif defined(_WIN32_WCE)
-#define SSL_GETPID GetCurrentProcessId
 #elif defined(WIN32)
 extern int __cdecl _getpid(void);
 #define SSL_GETPID _getpid

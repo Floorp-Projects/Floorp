@@ -152,7 +152,7 @@ IonBuilder::getSingleCallTarget(uint32_t argc, jsbytecode *pc)
 {
     AutoAssertNoGC nogc;
 
-    types::StackTypeSet *calleeTypes = oracle->getCallTarget(script().get(nogc), argc, pc);
+    types::StackTypeSet *calleeTypes = oracle->getCallTarget(script(), argc, pc);
     if (!calleeTypes)
         return NULL;
 
@@ -3849,7 +3849,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
     types::TypeObject *type = proto->getNewType(cx, target);
     if (!type)
         return NULL;
-    if (!types::TypeScript::ThisTypes(target->nonLazyScript().unsafeGet())->hasType(types::Type::ObjectType(type)))
+    if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
     RootedObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));

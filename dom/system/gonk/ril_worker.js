@@ -3954,7 +3954,6 @@ let RIL = {
         if (newCall.state != currentCall.state) {
           // State has changed.
           currentCall.state = newCall.state;
-          currentCall.isActive = this._isActiveCall(currentCall.state);
           this._handleChangedCallState(currentCall);
         }
       } else {
@@ -3976,7 +3975,6 @@ let RIL = {
         }
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;
-        newCall.isActive = this._isActiveCall(newCall.state);
         this._handleChangedCallState(newCall);
       }
     }
@@ -3996,19 +3994,6 @@ let RIL = {
     let message = {rilMessageType: "callDisconnected",
                    call: disconnectedCall};
     this.sendDOMMessage(message);
-  },
-
-  _isActiveCall: function _isActiveCall(callState) {
-    switch (callState) {
-      case CALL_STATE_ACTIVE:
-      case CALL_STATE_DIALING:
-      case CALL_STATE_ALERTING:
-        return true;
-      case CALL_STATE_HOLDING:
-      case CALL_STATE_INCOMING:
-      case CALL_STATE_WAITING:
-        return false;
-    }
   },
 
   _sendDataCallError: function _sendDataCallError(message, errorCode) {
@@ -5122,8 +5107,6 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
         userData: null //XXX TODO byte array?!?
       };
     }
-
-    call.isActive = false;
 
     calls[call.callIndex] = call;
   }

@@ -81,12 +81,11 @@ StaticScopeIter::block() const
     return obj->asStaticBlock();
 }
 
-JSScript *
+UnrootedScript
 StaticScopeIter::funScript() const
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT(type() == FUNCTION);
-    return obj->toFunction()->nonLazyScript().get(nogc);
+    return obj->toFunction()->nonLazyScript();
 }
 
 /*****************************************************************************/
@@ -1206,7 +1205,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             if (maybefp) {
-                RawScript script = maybefp->script().get(nogc);
+                UnrootedScript script = maybefp->script();
                 unsigned local = block.slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     *vp = maybefp->unaliasedLocal(local);

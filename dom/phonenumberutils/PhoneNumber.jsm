@@ -104,9 +104,23 @@ this.PhoneNumber = (function (dataBase) {
       // of type object, because they were already resolved (parsed into
       // an object), and their country code should have been in the cache.
       if (Array.isArray(entry)) {
-        for (var n = 0; n < entry.length; ++n) {
-          if (typeof entry[n] == "string" && entry[n].substr(2,2) == region)
-            return entry[n] = ParseMetaData(countryCode, entry[n]);
+        for (var n = 0; n < entry.length; n++) {
+          if (typeof entry[n] == "string" && entry[n].substr(2,2) == region) {
+            if (n > 0) {
+              // Only the first entry has the formats field set.
+              // Parse the main country if we haven't already and use
+              // the formats field from the main country.
+              if (typeof entry[0] == "string" && entry[0].substr(2,2) == region)
+                entry[0] = ParseMetaData(countryCode, entry[0]);
+              let formats = entry[0].formats;
+              let current = ParseMetaData(countryCode, entry[n]);
+              current.formats = formats;
+              return entry[n] = current;
+            }
+            
+            entry[n] = ParseMetaData(countryCode, entry[n]);
+            return entry[n];
+          }
         }
         continue;
       }
