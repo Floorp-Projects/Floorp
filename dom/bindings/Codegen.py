@@ -7378,7 +7378,7 @@ class CGCallbackFunction(CGClass):
             callCallback = CallCallback(callback, descriptorProvider)
             CGClass.__init__(self, name,
                              bases=[ClassBase("CallbackFunction")],
-                             constructors=[self.getConstructor()],
+                             constructors=self.getConstructors(),
                              methods=self.getCallImpls(callCallback))
             self.generatable = True
         except NoSuchDescriptorError, err:
@@ -7396,8 +7396,8 @@ class CGCallbackFunction(CGClass):
             return ""
         return CGClass.declare(self)
 
-    def getConstructor(self):
-        return ClassConstructor(
+    def getConstructors(self):
+        return [ClassConstructor(
             [Argument("JSContext*", "cx"),
              Argument("JSObject*", "aOwner"),
              Argument("JSObject*", "aCallable"),
@@ -7407,7 +7407,15 @@ class CGCallbackFunction(CGClass):
             baseConstructors=[
                 "CallbackFunction(cx, aOwner, aCallable, aInited)"
                 ],
-            body="")
+            body=""),
+            ClassConstructor(
+            [Argument("CallbackFunction*", "aOther")],
+            bodyInHeader=True,
+            visibility="public",
+            baseConstructors=[
+                "CallbackFunction(aOther)"
+                ],
+            body="")]
 
     def getCallImpls(self, callCallback):
         args = list(callCallback.args)
