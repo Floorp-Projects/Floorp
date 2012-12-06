@@ -32,7 +32,11 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
       break;
     case eSpeculativeLoadScript:
       aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSource,
-			       mCrossOrigin);
+                               mCrossOrigin, false);
+      break;
+    case eSpeculativeLoadScriptFromHead:
+      aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSource,
+                               mCrossOrigin, true);
       break;
     case eSpeculativeLoadStyle:
       aExecutor->PreloadStyle(mUrl, mCharset, mCrossOrigin);

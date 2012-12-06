@@ -1285,8 +1285,8 @@ public:
    *                            keep alive
    * @param aTracer the tracer for aScriptObject
    */
-  static nsresult HoldJSObjects(void* aScriptObjectHolder,
-                                nsScriptObjectTracer* aTracer);
+  static void HoldJSObjects(void* aScriptObjectHolder,
+                            nsScriptObjectTracer* aTracer);
 
   /**
    * Drop the JS objects held by aScriptObjectHolder.
@@ -1294,7 +1294,7 @@ public:
    * @param aScriptObjectHolder the object that holds JS objects that we want to
    *                            drop
    */
-  static nsresult DropJSObjects(void* aScriptObjectHolder);
+  static void DropJSObjects(void* aScriptObjectHolder);
 
 #ifdef DEBUG
   static bool AreJSObjectsHeld(void* aScriptObjectHolder); 

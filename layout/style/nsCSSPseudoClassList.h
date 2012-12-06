@@ -53,7 +53,8 @@
 
 // The CSS_PSEUDO_CLASS entries should all come before the
 // CSS_STATE_PSEUDO_CLASS entries.  The CSS_PSEUDO_CLASS entry order
-// must be the same as the order of cases in SelectorMatches.
+// must be the same as the order of cases in SelectorMatches.  :not
+// must be the last CSS_PSEUDO_CLASS.
 
 CSS_PSEUDO_CLASS(empty, ":empty")
 CSS_PSEUDO_CLASS(mozOnlyWhitespace, ":-moz-only-whitespace")
@@ -89,7 +90,7 @@ CSS_PSEUDO_CLASS(mozLocaleDir, ":-moz-locale-dir")
 // -moz-lwtheme may be used to match a document that has a lightweight theme
 CSS_PSEUDO_CLASS(mozLWTheme, ":-moz-lwtheme")
 
-// -moz-lwtheme-brighttext matches a document that has a bright lightweight theme
+// -moz-lwtheme-brighttext matches a document that has a dark lightweight theme
 CSS_PSEUDO_CLASS(mozLWThemeBrightText, ":-moz-lwtheme-brighttext")
 
 // -moz-lwtheme-darktext matches a document that has a bright lightweight theme
@@ -101,6 +102,10 @@ CSS_PSEUDO_CLASS(mozWindowInactive, ":-moz-window-inactive")
 // Matches any table elements that have a nonzero border attribute,
 // according to HTML integer attribute parsing rules.
 CSS_PSEUDO_CLASS(mozTableBorderNonzero, ":-moz-table-border-nonzero")
+
+// Matches whatever the contextual reference elements are for the
+// matching operation.
+CSS_PSEUDO_CLASS(scope, ":-moz-scope")
 
 // :not needs to come at the end of the non-bit pseudo-class list, since
 // it doesn't actually get directly matched on in SelectorMatches.

@@ -60,13 +60,13 @@ static const Register PreBarrierReg = edx;
 
 // GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
 // jitted code.
-static const uint32 StackAlignment = 16;
+static const uint32_t StackAlignment = 16;
 static const bool StackKeptAligned = false;
 
 struct ImmTag : public Imm32
 {
     ImmTag(JSValueTag mask)
-      : Imm32(int32(mask))
+      : Imm32(int32_t(mask))
     { }
 };
 
@@ -91,10 +91,10 @@ class Operand
     };
 
     Kind kind_ : 4;
-    int32 index_ : 5;
+    int32_t index_ : 5;
     Scale scale_ : 3;
-    int32 base_;
-    int32 disp_;
+    int32_t base_;
+    int32_t disp_;
 
   public:
     explicit Operand(Register reg)
@@ -117,25 +117,25 @@ class Operand
         base_(address.base.code()),
         disp_(address.offset)
     { }
-    Operand(Register base, Register index, Scale scale, int32 disp = 0)
+    Operand(Register base, Register index, Scale scale, int32_t disp = 0)
       : kind_(SCALE),
         index_(index.code()),
         scale_(scale),
         base_(base.code()),
         disp_(disp)
     { }
-    Operand(Register reg, int32 disp)
+    Operand(Register reg, int32_t disp)
       : kind_(REG_DISP),
         base_(reg.code()),
         disp_(disp)
     { }
     explicit Operand(const AbsoluteAddress &address)
       : kind_(ADDRESS),
-        base_(reinterpret_cast<int32>(address.addr))
+        base_(reinterpret_cast<int32_t>(address.addr))
     { }
     explicit Operand(const void *address)
       : kind_(ADDRESS),
-        base_(reinterpret_cast<int32>(address))
+        base_(reinterpret_cast<int32_t>(address))
     { }
 
     Kind kind() const {
@@ -161,7 +161,7 @@ class Operand
         JS_ASSERT(kind() == FPREG);
         return (FloatRegisters::Code)base_;
     }
-    int32 disp() const {
+    int32_t disp() const {
         JS_ASSERT(kind() == REG_DISP || kind() == SCALE);
         return disp_;
     }
@@ -225,7 +225,7 @@ class Assembler : public AssemblerX86Shared
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
-    void executableCopy(uint8 *buffer);
+    void executableCopy(uint8_t *buffer);
 
     // Actual assembly emitting functions.
 

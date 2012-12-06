@@ -1941,26 +1941,25 @@ nsXPConnect::OnDispatchedEvent(nsIThreadInternal* aThread)
     return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP
+void
 nsXPConnect::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-    return mRuntime->AddJSHolder(aHolder, aTracer);
+    mRuntime->AddJSHolder(aHolder, aTracer);
 }
 
-NS_IMETHODIMP
+void
 nsXPConnect::RemoveJSHolder(void* aHolder)
 {
-    return mRuntime->RemoveJSHolder(aHolder);
+    mRuntime->RemoveJSHolder(aHolder);
 }
 
-NS_IMETHODIMP
-nsXPConnect::TestJSHolder(void* aHolder, bool* aRetval)
+bool
+nsXPConnect::TestJSHolder(void* aHolder)
 {
 #ifdef DEBUG
-    return mRuntime->TestJSHolder(aHolder, aRetval);
+    return mRuntime->TestJSHolder(aHolder);
 #else
-    MOZ_ASSERT(false);
-    return NS_ERROR_FAILURE;
+    return false;
 #endif
 }
 

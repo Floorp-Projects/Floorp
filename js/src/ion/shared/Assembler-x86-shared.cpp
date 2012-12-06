@@ -14,21 +14,21 @@ using namespace js;
 using namespace js::ion;
 
 void
-AssemblerX86Shared::copyJumpRelocationTable(uint8 *dest)
+AssemblerX86Shared::copyJumpRelocationTable(uint8_t *dest)
 {
     if (jumpRelocations_.length())
         memcpy(dest, jumpRelocations_.buffer(), jumpRelocations_.length());
 }
 
 void
-AssemblerX86Shared::copyDataRelocationTable(uint8 *dest)
+AssemblerX86Shared::copyDataRelocationTable(uint8_t *dest)
 {
     if (dataRelocations_.length())
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
 }
 
 static void
-TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
+TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
@@ -65,9 +65,9 @@ AssemblerX86Shared::trace(JSTracer *trc)
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
         if (rp.kind == Relocation::IONCODE) {
-            IonCode *code = IonCode::FromExecutable((uint8 *)rp.target);
+            IonCode *code = IonCode::FromExecutable((uint8_t *)rp.target);
             MarkIonCodeUnbarriered(trc, &code, "masmrel32");
-            JS_ASSERT(code == IonCode::FromExecutable((uint8 *)rp.target));
+            JS_ASSERT(code == IonCode::FromExecutable((uint8_t *)rp.target));
         }
     }
     if (dataRelocations_.length()) {
@@ -83,7 +83,7 @@ AssemblerX86Shared::executableCopy(void *buffer)
 }
 
 void
-AssemblerX86Shared::processDeferredData(IonCode *code, uint8 *data)
+AssemblerX86Shared::processDeferredData(IonCode *code, uint8_t *data)
 {
     for (size_t i = 0; i < data_.length(); i++) {
         DeferredData *deferred = data_[i];

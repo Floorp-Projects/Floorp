@@ -24,8 +24,6 @@
 #include "nsIComponentManager.h"
 #include "nsIMemory.h"
 #include "nsIObserverService.h"
-#include "pratom.h"
-#include "prmem.h"
 #include "nsCOMArray.h"
 #include "nsTextFormatter.h"
 #include "nsIErrorService.h"

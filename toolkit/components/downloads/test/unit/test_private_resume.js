@@ -2,29 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.__defineGetter__("pb", function () {
-  delete this.pb;
-  try {
-    return this.pb = Cc["@mozilla.org/privatebrowsing;1"].
-                     getService(Ci.nsIPrivateBrowsingService);
-  } catch (e) {}
-  return this.pb = null;
-});
-
 // Public request gets times=0 cookie, completes
 // Private request gets times=1 cookie, canceled
 // Private resumed request sends times=1 cookie, completes
 
 function run_test() {
-  // Don't run the test where the PB service is not available
-  if (!pb) {
-    return;
-  }
-
   do_test_pending();
   let httpserv = new HttpServer();
-
-  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   let times = 0;
   httpserv.registerPathHandler("/head_download_manager.js", function (meta, response) {
@@ -63,11 +47,11 @@ function run_test() {
           state++;
           do_check_true(aDownload.resumable);
 
-          downloadUtils.downloadManager.pauseDownload(aDownload.id);
+          aDownload.pause();
           do_check_eq(aDownload.state, downloadUtils.downloadManager.DOWNLOAD_PAUSED);
 
           do_execute_soon(function() {
-            downloadUtils.downloadManager.resumeDownload(aDownload.id);
+            aDownload.resume();
           });
           break;
 
@@ -80,23 +64,19 @@ function run_test() {
 
               state++;
                               
-              pb.privateBrowsingEnabled = true;
-
               addDownload({
-                isPrivate: pb.privateBrowsingEnabled,
+                isPrivate: true,
                 sourceURI: downloadCSource,
                 downloadName: downloadCName + "!!!",
                 runBeforeStart: function (aDownload) {
                   // Check that dl is retrievable
-                  do_check_eq(downloadUtils.downloadManager.activeDownloadCount, 1);
+                  do_check_eq(downloadUtils.downloadManager.activePrivateDownloadCount, 1);
                 }
               });
             });
           } else if (state == 2) {
             // We're done here.
             do_execute_soon(function() {
-              pb.privateBrowsingEnabled = false;
-              Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
               httpserv.stop(do_test_finished);
             });
           }
@@ -111,14 +91,14 @@ function run_test() {
     onSecurityChange: function(a, b, c, d) { }
   };
 
-  downloadUtils.downloadManager.addListener(listener);
+  downloadUtils.downloadManager.addPrivacyAwareListener(listener);
 
   const downloadCSource = "http://localhost:4444/head_download_manager.js";
   const downloadCName = "download-C";
 
   // First a public download that completes without interruption.
   let dl = addDownload({
-    isPrivate: pb.privateBrowsingEnabled,
+    isPrivate: false,
     sourceURI: downloadCSource,
     downloadName: downloadCName,
     runBeforeStart: function (aDownload) {

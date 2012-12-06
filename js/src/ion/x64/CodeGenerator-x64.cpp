@@ -48,7 +48,7 @@ CodeGeneratorX64::visitDouble(LDouble *ins)
 }
 
 FrameSizeClass
-FrameSizeClass::FromDepth(uint32 frameDepth)
+FrameSizeClass::FromDepth(uint32_t frameDepth)
 {
     return FrameSizeClass::None();
 }
@@ -59,7 +59,7 @@ FrameSizeClass::ClassLimit()
     return FrameSizeClass(0);
 }
 
-uint32
+uint32_t
 FrameSizeClass::frameSize() const
 {
     JS_NOT_REACHED("x64 does not use frame size classes");
@@ -156,7 +156,7 @@ CodeGeneratorX64::visitLoadSlotV(LLoadSlotV *load)
 {
     Register dest = ToRegister(load->outputValue());
     Register base = ToRegister(load->input());
-    int32 offset = load->mir()->slot() * sizeof(js::Value);
+    int32_t offset = load->mir()->slot() * sizeof(js::Value);
 
     masm.movq(Operand(base, offset), dest);
     return true;
@@ -189,7 +189,7 @@ bool
 CodeGeneratorX64::visitLoadSlotT(LLoadSlotT *load)
 {
     Register base = ToRegister(load->input());
-    int32 offset = load->mir()->slot() * sizeof(js::Value);
+    int32_t offset = load->mir()->slot() * sizeof(js::Value);
 
     loadUnboxedValue(Operand(base, offset), load->mir()->type(), load->output());
 
@@ -232,7 +232,7 @@ bool
 CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
 {
     Register base = ToRegister(store->slots());
-    int32 offset = store->mir()->slot() * sizeof(js::Value);
+    int32_t offset = store->mir()->slot() * sizeof(js::Value);
 
     const LAllocation *value = store->value();
     MIRType valueType = store->mir()->value()->type();

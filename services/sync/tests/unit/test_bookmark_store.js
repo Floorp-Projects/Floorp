@@ -14,6 +14,30 @@ let store = engine._store;
 let fxuri = Utils.makeURI("http://getfirefox.com/");
 let tburi = Utils.makeURI("http://getthunderbird.com/");
 
+add_test(function test_ignore_specials() {
+  _("Ensure that we can't delete bookmark roots.");
+
+  // Belt...
+  let record = new BookmarkFolder("bookmarks", "toolbar", "folder");
+  record.deleted = true;
+  do_check_neq(null, store.idForGUID("toolbar"));
+
+  store.applyIncoming(record);
+
+  // Ensure that the toolbar exists.
+  do_check_neq(null, store.idForGUID("toolbar"));
+
+  // This will fail painfully in getItemType if the deletion worked.
+  engine._buildGUIDMap();
+
+  // Braces...
+  store.remove(record);
+  do_check_neq(null, store.idForGUID("toolbar"));
+  engine._buildGUIDMap();
+
+  store.wipe();
+  run_next_test();
+});
 
 add_test(function test_bookmark_create() {
   try {

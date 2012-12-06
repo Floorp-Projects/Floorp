@@ -40,7 +40,7 @@ LIRGeneratorShared::defineTypedPhi(MPhi *phi, size_t lirIndex)
 {
     LPhi *lir = current->getPhi(lirIndex);
 
-    uint32 vreg = getVirtualRegister();
+    uint32_t vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
@@ -51,7 +51,7 @@ LIRGeneratorShared::defineTypedPhi(MPhi *phi, size_t lirIndex)
 }
 
 void
-LIRGeneratorShared::lowerTypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex)
+LIRGeneratorShared::lowerTypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex)
 {
     MDefinition *operand = phi->getOperand(inputPosition);
     LPhi *lir = block->getPhi(lirIndex);

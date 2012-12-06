@@ -42,6 +42,8 @@
 #include "nsStringFwd.h"
 #include "nsSubstringTuple.h"
 #include "nscore.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 class nsISelection;
 
@@ -873,8 +875,8 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     int32_t yThreshold =
       LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 1);
 
-    if (NS_ABS(clientX - mOriginalX ) * 2 >= xThreshold ||
-        NS_ABS(clientY - mOriginalY ) * 2 >= yThreshold) {
+    if (std::abs(clientX - mOriginalX ) * 2 >= xThreshold ||
+        std::abs(clientY - mOriginalY ) * 2 >= yThreshold) {
       mGrabberClicked = false;
       StartMoving(nullptr);
     }

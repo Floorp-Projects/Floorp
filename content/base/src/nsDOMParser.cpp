@@ -61,9 +61,9 @@ nsDOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
                              ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = nsDOMParser::ParseFromString(PromiseFlatString(aStr).get(),
-                                    SupportedTypeValues::strings[aType].value,
-                                    getter_AddRefs(domDocument));
+  rv = ParseFromString(aStr,
+                       SupportedTypeValues::strings[aType].value,
+                       getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   return document.forget();
 }
@@ -74,6 +74,16 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
                              nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG(str);
+  // Converting a string to an enum value manually is a bit of a pain,
+  // so let's just use a helper that takes a content-type string.
+  return ParseFromString(nsDependentString(str), contentType, aResult);
+}
+
+nsresult
+nsDOMParser::ParseFromString(const nsAString& str,
+                             const char *contentType,
+                             nsIDOMDocument **aResult)
+{
   NS_ENSURE_ARG_POINTER(aResult);
 
   nsresult rv;
@@ -96,8 +106,7 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
     // And the right principal
     document->SetPrincipal(mPrincipal);
 
-    nsDependentString sourceBuffer(str);
-    rv = nsContentUtils::ParseDocumentHTML(sourceBuffer, document, false);
+    rv = nsContentUtils::ParseDocumentHTML(str, document, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     domDocument.forget(aResult);

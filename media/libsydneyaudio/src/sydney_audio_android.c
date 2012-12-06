@@ -337,7 +337,6 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
     wrote += r;
   } while (wrote < nbytes);
 
-  ALOG("%p - Wrote %u", s,  nbytes);
   s->amountWritten += nbytes;
 
   (*jenv)->PopLocalFrame(jenv, NULL);

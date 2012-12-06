@@ -22,7 +22,7 @@ var PDFJS = {};
   'use strict';
 
   PDFJS.build =
-'033545c';
+'3c7ef79';
 
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
@@ -517,6 +517,17 @@ var PDFDocument = (function PDFDocumentClosure() {
       if (find(stream, '%PDF-', 1024)) {
         // Found the header, trim off any garbage before it.
         stream.moveStart();
+        // Reading file format version
+        var MAX_VERSION_LENGTH = 12;
+        var version = '', ch;
+        while ((ch = stream.getChar()) > ' ') {
+          if (version.length >= MAX_VERSION_LENGTH) {
+            break;
+          }
+          version += ch;
+        }
+        // removing "%PDF-"-prefix
+        this.pdfFormatVersion = version.substring(5);
         return;
       }
       // May not be a PDF file, continue anyway.
@@ -537,11 +548,12 @@ var PDFDocument = (function PDFDocumentClosure() {
       return shadow(this, 'numPages', num);
     },
     getDocumentInfo: function PDFDocument_getDocumentInfo() {
-      var docInfo;
+      var docInfo = {
+        PDFFormatVersion: this.pdfFormatVersion
+      };
       if (this.xref.trailer.has('Info')) {
         var infoDict = this.xref.trailer.get('Info');
 
-        docInfo = {};
         var validEntries = DocumentInfoValidators.entries;
         // Only fill the document info with valid entries from the spec.
         for (var key in validEntries) {
@@ -658,6 +670,8 @@ function assert(cond, msg) {
 // Combines two URLs. The baseUrl shall be absolute URL. If the url is an
 // absolute URL, it will be returned as is.
 function combineUrl(baseUrl, url) {
+  if (!url)
+    return baseUrl;
   if (url.indexOf(':') >= 0)
     return url;
   if (url.charAt(0) == '/') {
@@ -767,15 +781,17 @@ var IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 var Util = PDFJS.Util = (function UtilClosure() {
   function Util() {}
 
-  Util.makeCssRgb = function Util_makeCssRgb(r, g, b) {
-    var ri = (255 * r) | 0, gi = (255 * g) | 0, bi = (255 * b) | 0;
-    return 'rgb(' + ri + ',' + gi + ',' + bi + ')';
+  Util.makeCssRgb = function Util_makeCssRgb(rgb) {
+    return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
   };
 
-  Util.makeCssCmyk = function Util_makeCssCmyk(c, m, y, k) {
-    c = (new DeviceCmykCS()).getRgb([c, m, y, k]);
-    var ri = (255 * c[0]) | 0, gi = (255 * c[1]) | 0, bi = (255 * c[2]) | 0;
-    return 'rgb(' + ri + ',' + gi + ',' + bi + ')';
+  Util.makeCssCmyk = function Util_makeCssCmyk(cmyk) {
+    var cs = new DeviceCmykCS();
+    Util.makeCssCmyk = function makeCssCmyk(cmyk) {
+      var rgb = cs.getRgb(cmyk, 0);
+      return Util.makeCssRgb(rgb);
+    };
+    return Util.makeCssCmyk(cmyk);
   };
 
   // For 2d affine transforms
@@ -2899,8 +2915,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setStrokeColor: function CanvasGraphics_setStrokeColor(/*...*/) {
       var cs = this.current.strokeColorSpace;
-      var rgbColor = cs.getRgb(arguments);
-      var color = Util.makeCssRgb(rgbColor[0], rgbColor[1], rgbColor[2]);
+      var rgbColor = cs.getRgb(arguments, 0);
+      var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
       this.current.strokeColor = color;
     },
@@ -2912,11 +2928,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         if (base) {
           var baseComps = base.numComps;
 
-          color = [];
-          for (var i = 0; i < baseComps; ++i)
-            color.push(args[i]);
-
-          color = base.getRgb(color);
+          color = base.getRgb(args, 0);
         }
         var pattern = new TilingPattern(IR, color, this.ctx, this.objs);
       } else if (IR[0] == 'RadialAxial' || IR[0] == 'Dummy') {
@@ -2937,8 +2949,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setFillColor: function CanvasGraphics_setFillColor(/*...*/) {
       var cs = this.current.fillColorSpace;
-      var rgbColor = cs.getRgb(arguments);
-      var color = Util.makeCssRgb(rgbColor[0], rgbColor[1], rgbColor[2]);
+      var rgbColor = cs.getRgb(arguments, 0);
+      var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
       this.current.fillColor = color;
     },
@@ -2955,7 +2967,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!(this.current.strokeColorSpace instanceof DeviceGrayCS))
         this.current.strokeColorSpace = new DeviceGrayCS();
 
-      var color = Util.makeCssRgb(gray, gray, gray);
+      var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
+      var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
       this.current.strokeColor = color;
     },
@@ -2963,7 +2976,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!(this.current.fillColorSpace instanceof DeviceGrayCS))
         this.current.fillColorSpace = new DeviceGrayCS();
 
-      var color = Util.makeCssRgb(gray, gray, gray);
+      var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
+      var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
       this.current.fillColor = color;
     },
@@ -2971,7 +2985,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!(this.current.strokeColorSpace instanceof DeviceRgbCS))
         this.current.strokeColorSpace = new DeviceRgbCS();
 
-      var color = Util.makeCssRgb(r, g, b);
+      var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
+      var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
       this.current.strokeColor = color;
     },
@@ -2979,7 +2994,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!(this.current.fillColorSpace instanceof DeviceRgbCS))
         this.current.fillColorSpace = new DeviceRgbCS();
 
-      var color = Util.makeCssRgb(r, g, b);
+      var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
+      var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
       this.current.fillColor = color;
     },
@@ -2987,7 +3003,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!(this.current.strokeColorSpace instanceof DeviceCmykCS))
         this.current.strokeColorSpace = new DeviceCmykCS();
 
-      var color = Util.makeCssCmyk(c, m, y, k);
+      var color = Util.makeCssCmyk(arguments);
       this.ctx.strokeStyle = color;
       this.current.strokeColor = color;
     },
@@ -2995,7 +3011,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!(this.current.fillColorSpace instanceof DeviceCmykCS))
         this.current.fillColorSpace = new DeviceCmykCS();
 
-      var color = Util.makeCssCmyk(c, m, y, k);
+      var color = Util.makeCssCmyk(arguments);
       this.ctx.fillStyle = color;
       this.current.fillColor = color;
     },
@@ -3580,8 +3596,10 @@ var Catalog = (function CatalogClosure() {
             continue;
           }
           var names = obj.get('Names');
-          for (i = 0, n = names.length; i < n; i += 2) {
-            dests[names[i]] = fetchDestination(xref.fetchIfRef(names[i + 1]));
+          if (names) {
+            for (i = 0, n = names.length; i < n; i += 2) {
+              dests[names[i]] = fetchDestination(xref.fetchIfRef(names[i + 1]));
+            }
           }
         }
       }
@@ -12053,15 +12071,58 @@ var ColorSpace = (function ColorSpaceClosure() {
   }
 
   ColorSpace.prototype = {
-    // Input: array of size numComps representing color component values
-    // Output: array of rgb values, each value ranging from [0.1]
-    getRgb: function ColorSpace_getRgb(color) {
-      error('Should not call ColorSpace.getRgb: ' + color);
+    /**
+     * Converts the color value to the RGB color. The color components are
+     * located in the src array starting from the srcOffset. Returns the array
+     * of the rgb components, each value ranging from [0,255].
+     */
+    getRgb: function ColorSpace_getRgb(src, srcOffset) {
+      error('Should not call ColorSpace.getRgb');
     },
-    // Input: Uint8Array of component values, each value scaled to [0,255]
-    // Output: Uint8Array of rgb values, each value scaled to [0,255]
-    getRgbBuffer: function ColorSpace_getRgbBuffer(input) {
-      error('Should not call ColorSpace.getRgbBuffer: ' + input);
+    /**
+     * Converts the color value to the RGB color, similar to the getRgb method.
+     * The result placed into the dest array starting from the destOffset.
+     */
+    getRgbItem: function ColorSpace_getRgb(src, srcOffset, dest, destOffset) {
+      error('Should not call ColorSpace.getRgbItem');
+    },
+    /**
+     * Converts the specified number of the color values to the RGB colors.
+     * The colors are located in the src array starting from the srcOffset.
+     * The result is placed into the dest array starting from the destOffset.
+     * The src array items shall be in [0,2^bits) range, the dest array items
+     * will be in [0,255] range.
+     */
+    getRgbBuffer: function ColorSpace_getRgbBuffer(src, srcOffset, count,
+                                                   dest, destOffset, bits) {
+      error('Should not call ColorSpace.getRgbBuffer');
+    },
+    /**
+     * Determines amount of the bytes is required to store the reslut of the
+     * conversion that done by the getRgbBuffer method.
+     */
+    getOutputLength: function ColorSpace_getOutputLength(inputLength) {
+      error('Should not call ColorSpace.getOutputLength');
+    },
+    /**
+     * Returns true if source data will be equal the result/output data.
+     */
+    isPassthrough: function ColorSpace_isPassthrough(bits) {
+      return false;
+    },
+    /**
+     * Creates the output buffer and converts the specified number of the color
+     * values to the RGB colors, similar to the getRgbBuffer.
+     */
+    createRgbBuffer: function ColorSpace_createRgbBuffer(src, srcOffset,
+                                                         count, bits) {
+      if (this.isPassthrough(bits)) {
+        return src.subarray(srcOffset);
+      }
+      var destLength = this.getOutputLength(count * this.numComps);
+      var dest = new Uint8Array(destLength);
+      this.getRgbBuffer(src, srcOffset, count, dest, 0, bits);
+      return dest;
     }
   };
 
@@ -12245,39 +12306,66 @@ var AlternateCS = (function AlternateCSClosure() {
   function AlternateCS(numComps, base, tintFn) {
     this.name = 'Alternate';
     this.numComps = numComps;
-    this.defaultColor = [];
-    for (var i = 0; i < numComps; ++i)
-      this.defaultColor.push(1);
+    this.defaultColor = new Float32Array(numComps);
+    for (var i = 0; i < numComps; ++i) {
+      this.defaultColor[i] = 1;
+    }
     this.base = base;
     this.tintFn = tintFn;
   }
 
   AlternateCS.prototype = {
-    getRgb: function AlternateCS_getRgb(color) {
-      var tinted = this.tintFn(color);
-      return this.base.getRgb(tinted);
+    getRgb: function AlternateCS_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      this.getRgbItem(src, srcOffset, rgb, 0);
+      return rgb;
     },
-    getRgbBuffer: function AlternateCS_getRgbBuffer(input, bits) {
+    getRgbItem: function AlternateCS_getRgbItem(src, srcOffset,
+                                                dest, destOffset) {
+      var baseNumComps = this.base.numComps;
+      var input = 'subarray' in src ?
+        src.subarray(srcOffset, srcOffset + this.numComps) :
+        Array.prototype.slice.call(src, srcOffset, srcOffset + this.numComps);
+      var tinted = this.tintFn(input);
+      this.base.getRgbItem(tinted, 0, dest, destOffset);
+    },
+    getRgbBuffer: function AlternateCS_getRgbBuffer(src, srcOffset, count,
+                                                    dest, destOffset, bits) {
       var tintFn = this.tintFn;
       var base = this.base;
       var scale = 1 / ((1 << bits) - 1);
-      var length = input.length;
-      var pos = 0;
       var baseNumComps = base.numComps;
-      var baseBuf = new Uint8Array(baseNumComps * length);
+      var isGetRgbBufferSupported = 'getRgbBuffer' in base;
+      var isPassthrough = base.isPassthrough(8) || !isGetRgbBufferSupported;
+      var pos = isPassthrough ? destOffset : 0;
+      var baseBuf = isPassthrough ? dest : new Uint8Array(baseNumComps * count);
       var numComps = this.numComps;
-      var scaled = [];
 
-      for (var i = 0; i < length; i += numComps) {
-        for (var z = 0; z < numComps; ++z)
-          scaled[z] = input[i + z] * scale;
-
+      var scaled = new Float32Array(numComps);
+      for (var i = 0; i < count; i++) {
+        for (var j = 0; j < numComps; j++) {
+          scaled[j] = src[srcOffset++] * scale;
+        }
         var tinted = tintFn(scaled);
-        for (var j = 0; j < baseNumComps; ++j)
-          baseBuf[pos++] = 255 * tinted[j];
+        if (isGetRgbBufferSupported) {
+          for (var j = 0; j < baseNumComps; j++) {
+            baseBuf[pos++] = tinted[j] * 255;
+          }
+        } else {
+          base.getRgbItem(tinted, 0, baseBuf, pos);
+          pos += baseNumComps;
+        }
       }
-      return base.getRgbBuffer(baseBuf, 8);
+      if (!isPassthrough) {
+        base.getRgbBuffer(baseBuf, 0, count, dest, destOffset, 8);
+      }
     },
+    getOutputLength: function AlternateCS_getOutputLength(inputLength) {
+      return this.base.getOutputLength(inputLength *
+                                       this.base.numComps / this.numComps);
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
     isDefaultDecode: function AlternateCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     }
@@ -12300,7 +12388,7 @@ var IndexedCS = (function IndexedCSClosure() {
   function IndexedCS(base, highVal, lookup) {
     this.name = 'Indexed';
     this.numComps = 1;
-    this.defaultColor = [0];
+    this.defaultColor = new Uint8Array([0]);
     this.base = base;
     this.highVal = highVal;
 
@@ -12325,33 +12413,35 @@ var IndexedCS = (function IndexedCSClosure() {
   }
 
   IndexedCS.prototype = {
-    getRgb: function IndexedCS_getRgb(color) {
+    getRgb: function IndexedCS_getRgb(src, srcOffset) {
       var numComps = this.base.numComps;
-      var start = color[0] * numComps;
-      var c = [];
-
-      for (var i = start, ii = start + numComps; i < ii; ++i)
-        c.push(this.lookup[i]);
-
-      return this.base.getRgb(c);
+      var start = src[srcOffset] * numComps;
+      return this.base.getRgb(this.lookup, start);
     },
-    getRgbBuffer: function IndexedCS_getRgbBuffer(input) {
+    getRgbItem: function IndexedCS_getRgbItem(src, srcOffset,
+                                              dest, destOffset) {
+      var numComps = this.base.numComps;
+      var start = src[srcOffset] * numComps;
+      this.base.getRgbItem(this.lookup, start, dest, destOffset);
+    },
+    getRgbBuffer: function IndexedCS_getRgbBuffer(src, srcOffset, count,
+                                                  dest, destOffset) {
       var base = this.base;
       var numComps = base.numComps;
+      var outputDelta = base.getOutputLength(numComps);
       var lookup = this.lookup;
-      var length = input.length;
-      var baseBuf = new Uint8Array(length * numComps);
-      var baseBufPos = 0;
 
-      for (var i = 0; i < length; ++i) {
-        var lookupPos = input[i] * numComps;
-        for (var j = 0; j < numComps; ++j) {
-          baseBuf[baseBufPos++] = lookup[lookupPos + j];
-        }
+      for (var i = 0; i < count; ++i) {
+        var lookupPos = src[srcOffset++] * numComps;
+        base.getRgbBuffer(lookup, lookupPos, 1, dest, destOffset, 8);
+        destOffset += outputDelta;
       }
-
-      return base.getRgbBuffer(baseBuf, 8);
     },
+    getOutputLength: function IndexedCS_getOutputLength(inputLength) {
+      return this.base.getOutputLength(inputLength * this.base.numComps);
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
     isDefaultDecode: function IndexedCS_isDefaultDecode(decodeMap) {
       // indexed color maps shouldn't be changed
       return true;
@@ -12364,26 +12454,37 @@ var DeviceGrayCS = (function DeviceGrayCSClosure() {
   function DeviceGrayCS() {
     this.name = 'DeviceGray';
     this.numComps = 1;
-    this.defaultColor = [0];
+    this.defaultColor = new Float32Array([0]);
   }
 
   DeviceGrayCS.prototype = {
-    getRgb: function DeviceGrayCS_getRgb(color) {
-      var c = color[0];
-      return [c, c, c];
+    getRgb: function DeviceGrayCS_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      this.getRgbItem(src, srcOffset, rgb, 0);
+      return rgb;
     },
-    getRgbBuffer: function DeviceGrayCS_getRgbBuffer(input, bits) {
+    getRgbItem: function DeviceGrayCS_getRgbItem(src, srcOffset,
+                                                 dest, destOffset) {
+      var c = (src[srcOffset] * 255) | 0;
+      c = c < 0 ? 0 : c > 255 ? 255 : c;
+      dest[destOffset] = dest[destOffset + 1] = dest[destOffset + 2] = c;
+    },
+    getRgbBuffer: function DeviceGrayCS_getRgbBuffer(src, srcOffset, count,
+                                                     dest, destOffset, bits) {
       var scale = 255 / ((1 << bits) - 1);
-      var length = input.length;
-      var rgbBuf = new Uint8Array(length * 3);
-      for (var i = 0, j = 0; i < length; ++i) {
-        var c = (scale * input[i]) | 0;
-        rgbBuf[j++] = c;
-        rgbBuf[j++] = c;
-        rgbBuf[j++] = c;
+      var j = srcOffset, q = destOffset;
+      for (var i = 0; i < count; ++i) {
+        var c = (scale * src[j++]) | 0;
+        dest[q++] = c;
+        dest[q++] = c;
+        dest[q++] = c;
       }
-      return rgbBuf;
     },
+    getOutputLength: function DeviceGrayCS_getOutputLength(inputLength) {
+      return inputLength * 3;
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
     isDefaultDecode: function DeviceGrayCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     }
@@ -12395,22 +12496,43 @@ var DeviceRgbCS = (function DeviceRgbCSClosure() {
   function DeviceRgbCS() {
     this.name = 'DeviceRGB';
     this.numComps = 3;
-    this.defaultColor = [0, 0, 0];
+    this.defaultColor = new Float32Array([0, 0, 0]);
   }
   DeviceRgbCS.prototype = {
-    getRgb: function DeviceRgbCS_getRgb(color) {
-      return color;
+    getRgb: function DeviceRgbCS_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      this.getRgbItem(src, srcOffset, rgb, 0);
+      return rgb;
     },
-    getRgbBuffer: function DeviceRgbCS_getRgbBuffer(input, bits) {
-      if (bits == 8)
-        return input;
+    getRgbItem: function DeviceRgbCS_getRgbItem(src, srcOffset,
+                                                dest, destOffset) {
+      var r = src[srcOffset] * 255;
+      var g = src[srcOffset + 1] * 255;
+      var b = src[srcOffset + 2] * 255;
+      dest[destOffset] = r < 0 ? 0 : r > 255 ? 255 : r;
+      dest[destOffset + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+      dest[destOffset + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+    },
+    getRgbBuffer: function DeviceRgbCS_getRgbBuffer(src, srcOffset, count,
+                                                    dest, destOffset, bits) {
+      var length = count * 3;
+      if (bits == 8) {
+        dest.set(src.subarray(srcOffset, srcOffset + length), destOffset);
+        return;
+      }
       var scale = 255 / ((1 << bits) - 1);
-      var i, length = input.length;
-      var rgbBuf = new Uint8Array(length);
-      for (i = 0; i < length; ++i)
-        rgbBuf[i] = (scale * input[i]) | 0;
-      return rgbBuf;
+      var j = srcOffset, q = destOffset;
+      for (var i = 0; i < length; ++i) {
+        dest[q++] = (scale * input[j++]) | 0;
+      }
     },
+    getOutputLength: function DeviceRgbCS_getOutputLength(inputLength) {
+      return inputLength;
+    },
+    isPassthrough: function DeviceRgbCS_isPassthrough(bits) {
+      return bits == 8;
+    },
+    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
     isDefaultDecode: function DeviceRgbCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     }
@@ -13088,72 +13210,78 @@ var DeviceCmykCS = (function DeviceCmykCSClosure() {
     15, 13, 26, 2, 1, 11, 0, 0, 0, 0, 0, 0, 54, 54, 57, 47, 44, 47, 39, 35, 39,
     28, 25, 29, 17, 13, 17, 4, 1, 3, 0, 0, 0, 0, 0, 0]);
 
+  function convertToRgb(src, srcOffset, srcScale, dest, destOffset) {
+    // using lut as in spline interpolation (see function.js)
+    var cubeVertices = 16; // 1 << number of colors
+    var cubeN = new Float32Array(cubeVertices);
+    var cubeVertex = new Uint32Array(cubeVertices);
+    for (var j = 0; j < cubeVertices; j++)
+      cubeN[j] = 1;
+
+    var k = 3, pos = 1;
+    var lutDomain = 7, lutStep = 8;
+    for (var i = 3; i >= 0; i--) {
+      var e = src[srcOffset + i] * srcScale * lutDomain;
+
+      var e0 = e < lutDomain ? Math.floor(e) : e - 1; // e1 = e0 + 1;
+      var n0 = e0 + 1 - e; // (e1 - e) / (e1 - e0);
+      var n1 = e - e0; // (e - e0) / (e1 - e0);
+      var offset0 = e0 * k;
+      var offset1 = offset0 + k; // e1 * k
+      for (var j = 0; j < cubeVertices; j++) {
+        if (j & pos) {
+          cubeN[j] *= n1;
+          cubeVertex[j] += offset1;
+        } else {
+          cubeN[j] *= n0;
+          cubeVertex[j] += offset0;
+        }
+      }
+
+      k *= lutStep;
+      pos <<= 1;
+    }
+    var y0 = 0, y1 = 0, y2 = 0;
+    for (var i = 0; i < cubeVertices; i++)
+      y0 += lut[cubeVertex[i]] * cubeN[i];
+    for (var i = 0; i < cubeVertices; i++)
+      y1 += lut[cubeVertex[i] + 1] * cubeN[i];
+    for (var i = 0; i < cubeVertices; i++)
+      y2 += lut[cubeVertex[i] + 2] * cubeN[i];
+    dest[destOffset] = y0 > 255 ? 255 : y0;
+    dest[destOffset + 1] = y1 > 255 ? 255 : y1;
+    dest[destOffset + 2] = y2 > 255 ? 255 : y2;
+  }
+
   function DeviceCmykCS() {
     this.name = 'DeviceCMYK';
     this.numComps = 4;
-    this.defaultColor = [0, 0, 0, 1];
+    this.defaultColor = new Float32Array([0, 0, 0, 1]);
   }
   DeviceCmykCS.prototype = {
-    getRgb: function DeviceCmykCS_getRgb(color) {
-      // using lut as in spline interpolation (see function.js)
-      var cubeVertices = 16; // 1 << number of colors
-      var cubeN = new Float32Array(cubeVertices);
-      var cubeVertex = new Uint32Array(cubeVertices);
-      for (var j = 0; j < cubeVertices; j++)
-        cubeN[j] = 1;
-
-      var k = 3, pos = 1;
-      var lutDomain = 7, lutStep = 8;
-      for (var i = 3; i >= 0; i--) {
-        var e = color[i] * lutDomain;
-
-        var e0 = e < lutDomain ? Math.floor(e) : e - 1; // e1 = e0 + 1;
-        var n0 = e0 + 1 - e; // (e1 - e) / (e1 - e0);
-        var n1 = e - e0; // (e - e0) / (e1 - e0);
-        var offset0 = e0 * k;
-        var offset1 = offset0 + k; // e1 * k
-        for (var j = 0; j < cubeVertices; j++) {
-          if (j & pos) {
-            cubeN[j] *= n1;
-            cubeVertex[j] += offset1;
-          } else {
-            cubeN[j] *= n0;
-            cubeVertex[j] += offset0;
-          }
-        }
-
-        k *= lutStep;
-        pos <<= 1;
-      }
-      var y = new Float32Array(3);
-      for (var j = 0; j < 3; ++j) {
-        var rj = 0;
-        for (var i = 0; i < cubeVertices; i++)
-          rj += lut[cubeVertex[i] + j] * cubeN[i];
-        y[j] = rj;
-      }
-
-      return [y[0] / 255, y[1] / 255, y[2] / 255];
+    getRgb: function DeviceCmykCS_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      convertToRgb(src, srcOffset, 1, rgb, 0);
+      return rgb;
     },
-    getRgbBuffer: function DeviceCmykCS_getRgbBuffer(colorBuf, bits) {
+    getRgbItem: function DeviceCmykCS_getRgbItem(src, srcOffset,
+                                                 dest, destOffset) {
+      convertToRgb(src, srcOffset, 1, dest, destOffset);
+    },
+    getRgbBuffer: function DeviceCmykCS_getRgbBuffer(src, srcOffset, count,
+                                                     dest, destOffset, bits) {
       var scale = 1 / ((1 << bits) - 1);
-      var length = colorBuf.length / 4;
-      var rgbBuf = new Uint8Array(length * 3);
-      var rgbBufPos = 0;
-      var colorBufPos = 0;
-
-      for (var i = 0; i < length; i++) {
-        var cmyk = [];
-        for (var j = 0; j < 4; ++j)
-          cmyk.push(scale * colorBuf[colorBufPos++]);
-
-        var rgb = this.getRgb(cmyk);
-        for (var j = 0; j < 3; ++j)
-          rgbBuf[rgbBufPos++] = Math.round(rgb[j] * 255);
+      for (var i = 0; i < count; i++) {
+        convertToRgb(src, srcOffset, scale, dest, destOffset);
+        srcOffset += 4;
+        destOffset += 3;
       }
-
-      return rgbBuf;
     },
+    getOutputLength: function DeviceCmykCS_getOutputLength(inputLength) {
+      return (inputLength >> 2) * 3;
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
     isDefaultDecode: function DeviceCmykCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     }
@@ -13169,7 +13297,7 @@ var LabCS = (function LabCSClosure() {
   function LabCS(whitePoint, blackPoint, range) {
     this.name = 'Lab';
     this.numComps = 3;
-    this.defaultColor = [0, 0, 0];
+    this.defaultColor = new Float32Array([0, 0, 0]);
 
     if (!whitePoint)
       error('WhitePoint missing - required for color space Lab');
@@ -13210,58 +13338,66 @@ var LabCS = (function LabCSClosure() {
   };
 
   // Function g(x) from spec
-  function g(x) {
+  function fn_g(x) {
     if (x >= 6 / 29)
       return x * x * x;
     else
       return (108 / 841) * (x - 4 / 29);
   }
 
+  function convertToRgb(cs, src, srcOffset, dest, destOffset) {
+    // Ls,as,bs <---> L*,a*,b* in the spec
+    var Ls = src[srcOffset];
+    var as = src[srcOffset + 1];
+    var bs = src[srcOffset + 2];
+
+    // Adjust limits of 'as' and 'bs'
+    as = as > cs.amax ? cs.amax : as < cs.amin ? cs.amin : as;
+    bs = bs > cs.bmax ? cs.bmax : bs < cs.bmin ? cs.bmin : bs;
+
+    // Computes intermediate variables X,Y,Z as per spec
+    var M = (Ls + 16) / 116;
+    var L = M + (as / 500);
+    var N = M - (bs / 200);
+
+    var X = cs.XW * fn_g(L);
+    var Y = cs.YW * fn_g(M);
+    var Z = cs.ZW * fn_g(N);
+
+    var r, g, b;
+    // Using different conversions for D50 and D65 white points,
+    // per http://www.color.org/srgb.pdf
+    if (cs.ZW < 1) {
+      // Assuming D50 (X=0.9642, Y=1.00, Z=0.8249)
+      r = X * 3.1339 + Y * -1.6170 + Z * -0.4906;
+      g = X * -0.9785 + Y * 1.9160 + Z * 0.0333;
+      b = X * 0.0720 + Y * -0.2290 + Z * 1.4057;
+    } else {
+      // Assuming D65 (X=0.9505, Y=1.00, Z=1.0888)
+      r = X * 3.2406 + Y * -1.5372 + Z * -0.4986;
+      g = X * -0.9689 + Y * 1.8758 + Z * 0.0415;
+      b = X * 0.0557 + Y * -0.2040 + Z * 1.0570;
+    }
+
+    // clamp color values to [0,255] range
+    dest[destOffset] = r < 0 ? 0 : r > 1 ? 255 : r * 255;
+    dest[destOffset + 1] = g < 0 ? 0 : g > 1 ? 255 : g * 255;
+    dest[destOffset + 2] = b < 0 ? 0 : b > 1 ? 255 : b * 255;
+  }
+
   LabCS.prototype = {
-    getRgb: function LabCS_getRgb(color) {
-      // Ls,as,bs <---> L*,a*,b* in the spec
-      var Ls = color[0], as = color[1], bs = color[2];
-
-      // Adjust limits of 'as' and 'bs'
-      as = as > this.amax ? this.amax : as;
-      as = as < this.amin ? this.amin : as;
-      bs = bs > this.bmax ? this.bmax : bs;
-      bs = bs < this.bmin ? this.bmin : bs;
-
-      // Computes intermediate variables X,Y,Z as per spec
-      var M = (Ls + 16) / 116;
-      var L = M + (as / 500);
-      var N = M - (bs / 200);
-      var X = this.XW * g(L);
-      var Y = this.YW * g(M);
-      var Z = this.ZW * g(N);
-
-      // XYZ to RGB 3x3 matrix, from:
-      // http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html#RTFToC18
-      var XYZtoRGB = [3.240479, -1.537150, -0.498535,
-                      -0.969256, 1.875992, 0.041556,
-                      0.055648, -0.204043, 1.057311];
-
-      return Util.apply3dTransform(XYZtoRGB, [X, Y, Z]);
+    getRgb: function LabCS_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      convertToRgb(this, src, srcOffset, rgb, 0);
+      return rgb;
     },
-    getRgbBuffer: function LabCS_getRgbBuffer(input, bits) {
-      if (bits == 8)
-        return input;
-      var scale = 255 / ((1 << bits) - 1);
-      var i, length = input.length / 3;
-      var rgbBuf = new Uint8Array(length);
-
-      var j = 0;
-      for (i = 0; i < length; ++i) {
-        // Convert L*, a*, s* into RGB
-        var rgb = this.getRgb([input[i], input[i + 1], input[i + 2]]);
-        rgbBuf[j++] = rgb[0];
-        rgbBuf[j++] = rgb[1];
-        rgbBuf[j++] = rgb[2];
-      }
-
-      return rgbBuf;
+    getRgbItem: function LabCS_getRgbItem(src, srcOffset, dest, destOffset) {
+      convertToRgb(this, src, srcOffset, dest, destOffset);
     },
+    getOutputLength: function LabCS_getOutputLength(inputLength) {
+      return inputLength;
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
     isDefaultDecode: function LabCS_isDefaultDecode(decodeMap) {
       // From Table 90 in Adobe's:
       // "Document management - Portable document format", 1st ed, 2008
@@ -26097,8 +26233,8 @@ var PDFImage = (function PDFImageClosure() {
       var actualHeight = 0 | (imgArray.length / rowBytes *
                          height / originalHeight);
 
-      var comps = this.colorSpace.getRgbBuffer(
-        this.getComponents(imgArray), bpc);
+      var comps = this.colorSpace.createRgbBuffer(this.getComponents(imgArray),
+        0, originalWidth * originalHeight, bpc);
       if (originalWidth != width || originalHeight != height)
         comps = PDFImage.resize(comps, this.bpc, 3, originalWidth,
                                 originalHeight, width, height);
@@ -29850,11 +29986,29 @@ Shadings.RadialAxial = (function RadialAxialClosure() {
     this.extendEnd = extendEnd;
 
     var fnObj = dict.get('Function');
-    if (isArray(fnObj))
-      error('No support for array of functions');
-    if (!isPDFFunction(fnObj))
-      error('Invalid function');
-    var fn = PDFFunction.parse(xref, fnObj);
+    var fn;
+    if (isArray(fnObj)) {
+      var fnArray = [];
+      for (var j = 0, jj = fnObj.length; j < jj; j++) {
+        var obj = xref.fetchIfRef(fnObj[j]);
+        if (!isPDFFunction(obj)) {
+          error('Invalid function');
+        }
+        fnArray.push(PDFFunction.parse(xref, obj));
+      }
+      fn = function radialAxialColorFunction(arg) {
+        var out = [];
+        for (var i = 0, ii = fnArray.length; i < ii; i++) {
+          out.push(fnArray[i](arg)[0]);
+        }
+        return out;
+      };
+    } else {
+      if (!isPDFFunction(fnObj)) {
+        error('Invalid function');
+      }
+      fn = PDFFunction.parse(xref, fnObj);
+    }
 
     // 10 samples seems good enough for now, but probably won't work
     // if there are sharp color changes. Ideally, we would implement
@@ -29873,15 +30027,15 @@ Shadings.RadialAxial = (function RadialAxialClosure() {
     }
 
     for (var i = t0; i <= t1; i += step) {
-      var rgbColor = cs.getRgb(fn([i]));
-      var cssColor = Util.makeCssRgb(rgbColor[0], rgbColor[1], rgbColor[2]);
+      var rgbColor = cs.getRgb(fn([i]), 0);
+      var cssColor = Util.makeCssRgb(rgbColor);
       colorStops.push([(i - t0) / diff, cssColor]);
     }
 
     var background = 'transparent';
     if (dict.has('Background')) {
-      var rgbColor = cs.getRgb(dict.get('Background'));
-      background = Util.makeCssRgb(rgbColor[0], rgbColor[1], rgbColor[2]);
+      var rgbColor = cs.getRgb(dict.get('Background'), 0);
+      background = Util.makeCssRgb(rgbColor);
     }
 
     if (!extendStart) {
@@ -30029,7 +30183,8 @@ var TilingPattern = (function TilingPatternClosure() {
         tmpCtx.strokeStyle = ctx.strokeStyle;
         break;
       case PaintType.UNCOLORED:
-        var cssColor = Util.makeCssRgb(this, color[0], color[1], color[2]);
+        var rgbColor = new DeviceRgbCS().getRgb(color, 0);
+        var cssColor = Util.makeCssRgb(rgbColor);
         tmpCtx.fillStyle = cssColor;
         tmpCtx.strokeStyle = cssColor;
         break;

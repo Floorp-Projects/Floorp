@@ -440,7 +440,7 @@ NetworkManager.prototype = {
       dns2: network.dns2,
       gateway: network.gateway,
       httpproxy: network.httpProxyHost,
-      mmsproxy: Services.prefs.getCharPref("ril.data.mmsproxy")
+      mmsproxy: Services.prefs.getCharPref("ril.mms.mmsproxy")
     };
     this.worker.postMessage(options);
   },
@@ -454,7 +454,7 @@ NetworkManager.prototype = {
       dns2: network.dns2,
       gateway: network.gateway,
       httpproxy: network.httpProxyHost,
-      mmsproxy: Services.prefs.getCharPref("ril.data.mmsproxy")
+      mmsproxy: Services.prefs.getCharPref("ril.mms.mmsproxy")
     };
     this.worker.postMessage(options);
   },

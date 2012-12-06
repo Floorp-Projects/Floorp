@@ -517,8 +517,8 @@ add_test(function test_spn_display_condition() {
   }
 
   testDisplayConditions(testDisplayCondition, [
-    [1, 123, 456, 123, 456, true, false],
-    [0, 123, 456, 123, 456, false, false],
+    [1, 123, 456, 123, 456, true, true],
+    [0, 123, 456, 123, 456, false, true],
     [2, 123, 456, 123, 457, false, false],
     [0, 123, 456, 123, 457, false, true],
   ], run_next_test);

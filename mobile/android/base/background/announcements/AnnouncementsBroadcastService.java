@@ -156,7 +156,7 @@ public class AnnouncementsBroadcastService extends IntentService {
       final SharedPreferences sharedPreferences = this.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH,
                                                                             BackgroundConstants.SHARED_PREFERENCES_MODE);
       final Editor editor = sharedPreferences.edit();
-      editor.remove(AnnouncementsConstants.PREF_LAST_FETCH);
+      editor.remove(AnnouncementsConstants.PREF_LAST_FETCH_LOCAL_TIME);
       editor.remove(AnnouncementsConstants.PREF_EARLIEST_NEXT_ANNOUNCE_FETCH);
       editor.commit();
     }

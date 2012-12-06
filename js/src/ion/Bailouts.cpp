@@ -99,7 +99,7 @@ void
 StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
 {
     AutoAssertNoGC nogc;
-    uint32 exprStackSlots = iter.slots() - script()->nfixed;
+    uint32_t exprStackSlots = iter.slots() - script()->nfixed;
 
 #ifdef TRACK_SNAPSHOTS
     iter.spewBailingFrom();
@@ -144,21 +144,21 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
         IonSpew(IonSpew_Bailouts, " frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fun()->nargs, script()->nfixed);
 
-        for (uint32 i = 0; i < fun()->nargs; i++) {
+        for (uint32_t i = 0; i < fun()->nargs; i++) {
             Value arg = iter.read();
             formals()[i] = arg;
         }
     }
     exprStackSlots -= CountArgSlots(maybeFun());
 
-    for (uint32 i = 0; i < script()->nfixed; i++) {
+    for (uint32_t i = 0; i < script()->nfixed; i++) {
         Value slot = iter.read();
         slots()[i] = slot;
     }
 
     IonSpew(IonSpew_Bailouts, " pushing %u expression stack slots", exprStackSlots);
     FrameRegs &regs = cx->regs();
-    for (uint32 i = 0; i < exprStackSlots; i++) {
+    for (uint32_t i = 0; i < exprStackSlots; i++) {
         Value v;
 
         // If coming from an invalidation bailout, and this is the topmost
@@ -220,7 +220,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     return fp;
 }
 
-static uint32
+static uint32_t
 ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 {
     AssertCanGC();
@@ -354,7 +354,7 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
     frame->changePrevType(IonFrame_Bailed_JS);
 }
 
-uint32
+uint32_t
 ion::Bailout(BailoutStack *sp)
 {
     AssertCanGC();
@@ -371,13 +371,13 @@ ion::Bailout(BailoutStack *sp)
 
     IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", iter.snapshotOffset());
 
-    uint32 retval = ConvertFrames(cx, activation, iter);
+    uint32_t retval = ConvertFrames(cx, activation, iter);
 
     EnsureExitFrame(iter.jsFrame());
     return retval;
 }
 
-uint32
+uint32_t
 ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
 {
     AssertCanGC();
@@ -396,7 +396,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     // Note: the frame size must be computed before we return from this function.
     *frameSizeOut = iter.topFrameSize();
 
-    uint32 retval = ConvertFrames(cx, activation, iter);
+    uint32_t retval = ConvertFrames(cx, activation, iter);
 
     {
         IonJSFrameLayout *frame = iter.jsFrame();
@@ -464,8 +464,8 @@ ReflowArgTypes(JSContext *cx)
         types::TypeScript::SetArgument(cx, script, i, fp->unaliasedFormal(i, DONT_CHECK_ALIASING));
 }
 
-uint32
-ion::ReflowTypeInfo(uint32 bailoutResult)
+uint32_t
+ion::ReflowTypeInfo(uint32_t bailoutResult)
 {
     JSContext *cx = GetIonContext()->cx;
     IonActivation *activation = cx->runtime->ionActivation;
@@ -499,7 +499,7 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
     return true;
 }
 
-uint32
+uint32_t
 ion::RecompileForInlining()
 {
     JSContext *cx = GetIonContext()->cx;
@@ -530,7 +530,7 @@ ion::EnsureHasCallObject(JSContext *cx, StackFrame *fp)
     return true;
 }
 
-uint32
+uint32_t
 ion::BoundsCheckFailure()
 {
     JSContext *cx = GetIonContext()->cx;
@@ -551,7 +551,7 @@ ion::BoundsCheckFailure()
     return true;
 }
 
-uint32
+uint32_t
 ion::ShapeGuardFailure()
 {
     JSContext *cx = GetIonContext()->cx;
@@ -567,7 +567,7 @@ ion::ShapeGuardFailure()
     return Invalidate(cx, script);
 }
 
-uint32
+uint32_t
 ion::CachedShapeGuardFailure()
 {
     JSContext *cx = GetIonContext()->cx;
@@ -588,7 +588,7 @@ ion::CachedShapeGuardFailure()
     return Invalidate(cx, script);
 }
 
-uint32
+uint32_t
 ion::ThunkToInterpreter(Value *vp)
 {
     JSContext *cx = GetIonContext()->cx;
