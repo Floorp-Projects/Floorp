@@ -32,10 +32,12 @@ EXPORTS_NAMESPACES = \
   $(NULL)
 
 EXPORTS = AudioChannelService.h \
+          AudioChannelServiceChild.h \
           AudioChannelCommon.h
 
 CPPSRCS += \
   AudioChannelService.cpp \
+  AudioChannelServiceChild.cpp \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

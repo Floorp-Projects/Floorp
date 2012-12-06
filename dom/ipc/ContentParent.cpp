@@ -16,6 +16,7 @@
 #include "chrome/common/process_watcher.h"
 
 #include "AppProcessPermissions.h"
+#include "AudioChannelService.h"
 #include "CrashReporterParent.h"
 #include "IHistory.h"
 #include "IDBFactory.h"
@@ -1008,6 +1009,42 @@ ContentParent::RecvFirstIdle()
     // prelaunch any sooner than this, then we'll be competing with the
     // child process and slowing it down.
     ScheduleDelayedPreallocateAppProcess();
+    return true;
+}
+
+bool
+ContentParent::RecvAudioChannelGetMuted(const AudioChannelType& aType,
+                                        const bool& aMozHidden,
+                                        bool* aValue)
+{
+    nsRefPtr<AudioChannelService> service =
+        AudioChannelService::GetAudioChannelService();
+    *aValue = false;
+    if (service) {
+        *aValue = service->GetMuted(aType, aMozHidden);
+    }
+    return true;
+}
+
+bool
+ContentParent::RecvAudioChannelRegisterType(const AudioChannelType& aType)
+{
+    nsRefPtr<AudioChannelService> service =
+        AudioChannelService::GetAudioChannelService();
+    if (service) {
+        service->RegisterType(aType);
+    }
+    return true;
+}
+
+bool
+ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType)
+{
+    nsRefPtr<AudioChannelService> service =
+        AudioChannelService::GetAudioChannelService();
+    if (service) {
+        service->UnregisterType(aType);
+    }
     return true;
 }
 
