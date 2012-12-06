@@ -35,8 +35,12 @@ case "$target" in
     ;;
 *-darwin*)
     # GCC on darwin is based on gcc 4.2 and we don't support it anymore.
-    MOZ_PATH_PROGS(CC, $CC clang)
-    MOZ_PATH_PROGS(CXX, $CXX clang++)
+    if test -z "$CC"; then
+        MOZ_PATH_PROGS(CC, clang)
+    fi
+    if test -z "$CXX"; then
+        MOZ_PATH_PROGS(CXX, clang++)
+    fi
     IS_GCC=$($CC -v 2>&1 | grep gcc)
     if test -n "$IS_GCC"
     then
