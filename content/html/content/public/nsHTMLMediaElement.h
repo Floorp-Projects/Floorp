@@ -36,9 +36,6 @@ typedef uint16_t nsMediaReadyState;
 namespace mozilla {
 class MediaResource;
 class MediaDecoder;
-#ifdef MOZ_DASH
-class DASHDecoder;
-#endif
 }
 
 class nsHTMLMediaElement : public nsGenericHTMLElement,
@@ -55,10 +52,6 @@ public:
   typedef mozilla::MetadataTags MetadataTags;
   typedef mozilla::AudioStream AudioStream;
   typedef mozilla::MediaDecoder MediaDecoder;
-
-#ifdef MOZ_DASH
-  friend class DASHDecoder;
-#endif
 
   mozilla::CORSMode GetCORSMode() {
     return mCORSMode;
