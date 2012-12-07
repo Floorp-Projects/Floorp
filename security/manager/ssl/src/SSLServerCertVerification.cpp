@@ -835,7 +835,8 @@ BlockServerCertChangeForSpdy(nsNSSSocketInfo *infoObject,
 }
 
 SECStatus
-AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
+AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
+                uint32_t providerFlags)
 {
   if (cert->serialNumber.data &&
       cert->issuerName &&
@@ -921,37 +922,41 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
     }
     
     nsCOMPtr<nsINSSComponent> nssComponent;
-      
-    for (CERTCertListNode *node = CERT_LIST_HEAD(certList);
-         !CERT_LIST_END(node, certList);
-         node = CERT_LIST_NEXT(node)) {
 
-      if (node->cert->slot) {
-        // This cert was found on a token, no need to remember it in the temp db.
-        continue;
-      }
+    // We want to avoid storing any intermediate cert information when browsing
+    // in private, transient contexts.
+    if (!(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE)) {
+      for (CERTCertListNode *node = CERT_LIST_HEAD(certList);
+           !CERT_LIST_END(node, certList);
+           node = CERT_LIST_NEXT(node)) {
 
-      if (node->cert->isperm) {
-        // We don't need to remember certs already stored in perm db.
-        continue;
-      }
-        
-      if (node->cert == cert) {
-        // We don't want to remember the server cert, 
-        // the code that cares for displaying page info does this already.
-        continue;
-      }
-
-      // We have found a signer cert that we want to remember.
-      char* nickname = nsNSSCertificate::defaultServerNickname(node->cert);
-      if (nickname && *nickname) {
-        ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
-        if (slot) {
-          PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE, 
-                          nickname, false);
+        if (node->cert->slot) {
+          // This cert was found on a token, no need to remember it in the temp db.
+          continue;
         }
+
+        if (node->cert->isperm) {
+          // We don't need to remember certs already stored in perm db.
+          continue;
+        }
+
+        if (node->cert == cert) {
+          // We don't want to remember the server cert, 
+          // the code that cares for displaying page info does this already.
+          continue;
+        }
+
+        // We have found a signer cert that we want to remember.
+        char* nickname = nsNSSCertificate::defaultServerNickname(node->cert);
+        if (nickname && *nickname) {
+          ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+          if (slot) {
+            PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE, 
+                            nickname, false);
+          }
+        }
+        PR_FREEIF(nickname);
       }
-      PR_FREEIF(nickname);
     }
 
     // The connection may get terminated, for example, if the server requires
@@ -1043,7 +1048,7 @@ SSLServerCertVerificationJob::Run()
     // Reset the error code here so we can detect if AuthCertificate fails to
     // set the error code if/when it fails.
     PR_SetError(0, 0); 
-    SECStatus rv = AuthCertificate(mInfoObject, mCert);
+    SECStatus rv = AuthCertificate(mInfoObject, mCert, mProviderFlags);
     if (rv == SECSuccess) {
       RefPtr<SSLServerCertVerificationResult> restart(
         new SSLServerCertVerificationResult(mInfoObject, 0));
@@ -1168,7 +1173,7 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   // thread doing the network I/O may not interrupt its network I/O on receipt
   // of our SSLServerCertVerificationResult event, and/or it might not even be
   // a non-blocking socket.
-  SECStatus rv = AuthCertificate(socketInfo, serverCert);
+  SECStatus rv = AuthCertificate(socketInfo, serverCert, providerFlags);
   if (rv == SECSuccess) {
     return SECSuccess;
   }
