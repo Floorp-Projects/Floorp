@@ -2448,7 +2448,7 @@ loser:
 static nsresult
 nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS, 
                        const char *proxyHost, const char *host, int32_t port,
-                       bool anonymousLoad, nsNSSSocketInfo *infoObject)
+                       nsNSSSocketInfo *infoObject)
 {
   nsNSSShutDownPreventionLock locker;
   if (forSTARTTLS || proxyHost) {
@@ -2501,20 +2501,23 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS,
     }
   }
 
-  // Set the Peer ID so that SSL proxy connections work properly.
-  char *peerId;
-  if (anonymousLoad) {  // See bug #466080. Separate the caches.
-      peerId = PR_smprintf("anon:%s:%d", host, port);
-  } else {
-      peerId = PR_smprintf("%s:%d", host, port);
+  // Set the Peer ID so that SSL proxy connections work properly and to
+  // separate anonymous and/or private browsing connections.
+  uint32_t flags = infoObject->GetProviderFlags();
+  nsAutoCString peerId;
+  if (flags & nsISocketProvider::ANONYMOUS_CONNECT) { // See bug 466080
+    peerId.Append("anon:");
   }
-  
-  if (SECSuccess != SSL_SetSockPeerID(fd, peerId)) {
-    PR_smprintf_free(peerId);
+  if (flags & nsISocketProvider::NO_PERMANENT_STORAGE) {
+    peerId.Append("private:");
+  }
+  peerId.Append(host);
+  peerId.Append(':');
+  peerId.AppendInt(port);
+  if (SECSuccess != SSL_SetSockPeerID(fd, peerId.get())) {
     return NS_ERROR_FAILURE;
   }
 
-  PR_smprintf_free(peerId);
   return NS_OK;
 }
 
@@ -2544,7 +2547,6 @@ nsSSLIOLayerAddToSocket(int32_t family,
   infoObject->SetHostName(host);
   infoObject->SetPort(port);
 
-  bool anonymousLoad = providerFlags & nsISocketProvider::ANONYMOUS_CONNECT;
   PRFileDesc *sslSock = nsSSLIOLayerImportFD(fd, infoObject, host);
   if (!sslSock) {
     NS_ASSERTION(false, "NSS: Error importing socket");
@@ -2553,8 +2555,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
 
   infoObject->SetFileDescPtr(sslSock);
 
-  rv = nsSSLIOLayerSetOptions(sslSock,
-                              forSTARTTLS, proxyHost, host, port, anonymousLoad,
+  rv = nsSSLIOLayerSetOptions(sslSock, forSTARTTLS, proxyHost, host, port,
                               infoObject);
 
   if (NS_FAILED(rv))
