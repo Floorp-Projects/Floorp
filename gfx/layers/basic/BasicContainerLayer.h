@@ -147,9 +147,9 @@ ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
   }
 
   aContainer->mEffectiveTransform =
-    aContainer->SnapTransformTranslation(idealTransform, &residual);
+    aContainer->SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), &residual);
   // We always pass the ideal matrix down to our children, so there is no
-  // need to apply any compensation using the residual from SnapTransformTranslation.
+  // need to apply any compensation using the residual from SnapTransform.
   aContainer->ComputeEffectiveTransformsForChildren(idealTransform);
 
   aContainer->ComputeEffectiveTransformForMaskLayer(aTransformToSurface);

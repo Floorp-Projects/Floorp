@@ -546,69 +546,38 @@ Layer::GetEffectiveVisibleRegion()
 }
 
 gfx3DMatrix
-Layer::SnapTransformTranslation(const gfx3DMatrix& aTransform,
-                                gfxMatrix* aResidualTransform)
-{
-  gfxMatrix matrix2D;
-  gfx3DMatrix result;
-  if (mManager->IsSnappingEffectiveTransforms() &&
-      aTransform.Is2D(&matrix2D) &&
-      !matrix2D.HasNonTranslation() &&
-      matrix2D.HasNonIntegerTranslation()) {
-    gfxPoint snappedTranslation(matrix2D.GetTranslation());
-    snappedTranslation.Round();
-    gfxMatrix snappedMatrix = gfxMatrix().Translate(snappedTranslation);
-    result = gfx3DMatrix::From2D(snappedMatrix);
-    if (aResidualTransform) {
-      // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
-      // (I.e., appying snappedMatrix after aResidualTransform gives the
-      // ideal transform.)
-      *aResidualTransform =
-        gfxMatrix().Translate(matrix2D.GetTranslation() - snappedTranslation);
-    }
-  } else {
-    result = aTransform;
-    if (aResidualTransform) {
-      *aResidualTransform = gfxMatrix();
-    }
-  }
-  return result;
-}
-
-static bool
-ComputeMatrixForSnappedRect(const gfxMatrix& aMatrix,
-                            const gfxRect& aSnapRect,
-                            gfxMatrix* aResult)
-{
-  if (!aMatrix.PreservesAxisAlignedRectangles())
-    return false;
-
-  gfxPoint transformedTopLeft = aMatrix.Transform(aSnapRect.TopLeft());
-  transformedTopLeft.Round();
-  gfxPoint transformedTopRight = aMatrix.Transform(aSnapRect.TopRight());
-  transformedTopRight.Round();
-  gfxPoint transformedBottomRight = aMatrix.Transform(aSnapRect.BottomRight());
-  transformedBottomRight.Round();
-
-  *aResult = gfxUtils::TransformRectToRect(aSnapRect, transformedTopLeft,
-      transformedTopRight, transformedBottomRight);
-  return true;
-}
-
-gfx3DMatrix
 Layer::SnapTransform(const gfx3DMatrix& aTransform,
                      const gfxRect& aSnapRect,
                      gfxMatrix* aResidualTransform)
 {
+  if (aResidualTransform) {
+    *aResidualTransform = gfxMatrix();
+  }
+
   gfxMatrix matrix2D;
   gfx3DMatrix result;
-  gfxPoint snappedTopLeft;
-  gfxPoint snappedTopRight;
-  gfxPoint snappedBottomRight;
-  gfxMatrix snappedMatrix;
   if (mManager->IsSnappingEffectiveTransforms() &&
       aTransform.Is2D(&matrix2D) &&
-      ComputeMatrixForSnappedRect(matrix2D, aSnapRect, &snappedMatrix)) {
+      matrix2D.HasNonIntegerTranslation() &&
+      !matrix2D.IsSingular() &&
+      !matrix2D.HasNonAxisAlignedTransform()) {
+    gfxMatrix snappedMatrix;
+    gfxPoint topLeft = matrix2D.Transform(aSnapRect.TopLeft());
+    topLeft.Round();
+    // first compute scale factors that scale aSnapRect to the snapped rect
+    if (aSnapRect.IsEmpty()) {
+      snappedMatrix.xx = matrix2D.xx;
+      snappedMatrix.yy = matrix2D.yy;
+    } else {
+      gfxPoint bottomRight = matrix2D.Transform(aSnapRect.BottomRight());
+      bottomRight.Round();
+      snappedMatrix.xx = (bottomRight.x - topLeft.x)/aSnapRect.Width();
+      snappedMatrix.yy = (bottomRight.y - topLeft.y)/aSnapRect.Height();
+    }
+    // compute translation factors that will move aSnapRect to the snapped rect
+    // given those scale factors
+    snappedMatrix.x0 = topLeft.x - aSnapRect.X()*snappedMatrix.xx;
+    snappedMatrix.y0 = topLeft.y - aSnapRect.Y()*snappedMatrix.yy;
     result = gfx3DMatrix::From2D(snappedMatrix);
     if (aResidualTransform && !snappedMatrix.IsSingular()) {
       // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
@@ -620,9 +589,6 @@ Layer::SnapTransform(const gfx3DMatrix& aTransform,
     }
   } else {
     result = aTransform;
-    if (aResidualTransform) {
-      *aResidualTransform = gfxMatrix();
-    }
   }
   return result;
 }
@@ -807,7 +773,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
   gfxMatrix residual;
   gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
   idealTransform.ProjectTo2D();
-  mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
+  mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), &residual);
 
   bool useIntermediateSurface;
   if (GetMaskLayer()) {
