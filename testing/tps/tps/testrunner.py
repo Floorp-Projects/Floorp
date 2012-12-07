@@ -134,7 +134,7 @@ class TPSTestRunner(object):
   def writeToResultFile(self, postdata, body=None,
                         sendTo='crossweave@mozilla.com'):
     """Writes results to test file"""
-    f = open(self.resultfile, 'a')
+    f = open(self.resultfile, 'w')
     if body is not None:
       postdata['body'] = body
     if self.numpassed is not None:
