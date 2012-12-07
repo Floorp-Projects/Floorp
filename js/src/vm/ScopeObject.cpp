@@ -254,6 +254,7 @@ JS_PUBLIC_DATA(Class) js::CallClass = {
 
 Class js::DeclEnvClass = {
     js_Object_str,
+    JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(DeclEnvObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,         /* addProperty */
@@ -265,21 +266,18 @@ Class js::DeclEnvClass = {
     JS_ConvertStub
 };
 
-/*
- * Create a DeclEnvObject for a JSScript that is not initialized to any
- * particular callsite. This object can either be initialized (with an enclosing
- * scope and callee) or used as a template for jit compilation.
- */
 DeclEnvObject *
-DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun)
+DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 {
+    assertSameCompartment(cx, fp);
+
     RootedTypeObject type(cx, cx->compartment->getNewType(cx, NULL));
     if (!type)
         return NULL;
 
     RootedShape emptyDeclEnvShape(cx);
     emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
-                                                    cx->global(), FINALIZE_KIND,
+                                                    &fp->global(), FINALIZE_KIND,
                                                     BaseShape::DELEGATE);
     if (!emptyDeclEnvShape)
         return NULL;
@@ -288,31 +286,15 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun)
     if (!obj)
         return NULL;
 
-    Rooted<jsid> id(cx, AtomToId(fun->atom()));
-    Class *clasp = obj->getClass();
-    unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
-    if (!obj->putProperty(cx, id, clasp->getProperty, clasp->setProperty,
-                          lambdaSlot(), attrs, 0, 0))
-    {
+    obj->asScope().setEnclosingScope(fp->scopeChain());
+    Rooted<jsid> id(cx, AtomToId(fp->fun()->atom()));
+    RootedValue value(cx, ObjectValue(fp->callee()));
+    if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
+                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
+                              0, 0)) {
         return NULL;
     }
 
-    obj->setFixedSlot(lambdaSlot(), ObjectValue(*fun.get()));
-    JS_ASSERT(!obj->hasDynamicSlots());
-    return &obj->asDeclEnv();
-}
-
-DeclEnvObject *
-DeclEnvObject::create(JSContext *cx, StackFrame *fp)
-{
-    assertSameCompartment(cx, fp);
-
-    RootedFunction fun(cx, fp->fun());
-    RootedObject obj(cx, createTemplateObject(cx, fun));
-    if (!obj)
-        return NULL;
-
-    obj->asScope().setEnclosingScope(fp->scopeChain());
     return &obj->asDeclEnv();
 }
 

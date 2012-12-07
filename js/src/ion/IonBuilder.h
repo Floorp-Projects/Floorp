@@ -297,7 +297,6 @@ class IonBuilder : public MIRGenerator
     MDefinition *createThisScripted(MDefinition *callee);
     MDefinition *createThisScriptedSingleton(HandleFunction target, HandleObject proto, MDefinition *callee);
     MDefinition *createThis(HandleFunction target, MDefinition *callee);
-    MInstruction *createDeclEnvObject(MDefinition *scopeObj);
     MInstruction *createCallObject(MDefinition *callee, MDefinition *scopeObj);
 
     bool makeCall(HandleFunction target, uint32_t argc, bool constructing);
