@@ -168,6 +168,7 @@ _BROWSER_FILES += \
                  browser_tabview_bug624265_perwindowpb.js \
                  browser_tabview_bug624727_perwindowpb.js \
                  browser_tabview_bug650280_perwindowpb.js \
+                 browser_tabview_privatebrowsing_perwindowpb.js \
                  $(NULL)
 else
 _BROWSER_FILES += \
