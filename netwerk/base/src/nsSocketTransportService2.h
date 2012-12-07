@@ -190,6 +190,8 @@ private:
 
     void AnalyzeConnection(nsTArray<mozilla::net::SocketInfo> *data,
                            SocketContext *context, bool aActive);
+
+    void ClosePrivateConnections();
 };
 
 extern nsSocketTransportService *gSocketTransportService;

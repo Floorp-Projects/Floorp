@@ -15,6 +15,7 @@ public:
         : mCondition(NS_OK)
         , mPollFlags(0)
         , mPollTimeout(UINT16_MAX)
+        , mIsPrivate(false)
         {}
 
     //
@@ -41,6 +42,8 @@ public:
     // never reached.)
     //
     uint16_t mPollTimeout;
+
+    bool mIsPrivate;
 
     //
     // called to service a socket
