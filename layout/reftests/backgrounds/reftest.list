@@ -139,4 +139,4 @@ random-if(bug685516) == background-repeat-1-ref.html background-repeat-1.html
 
 random-if(bug685516) == multi-background-clip-content-border.html multi-background-clip-content-border-ref.html
 
-fails-if(Android) HTTP == background-referrer.html background-referrer-ref.html
+HTTP == background-referrer.html background-referrer-ref.html
