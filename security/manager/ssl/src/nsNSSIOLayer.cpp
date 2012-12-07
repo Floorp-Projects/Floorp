@@ -2583,6 +2583,8 @@ nsSSLIOLayerAddToSocket(int32_t family,
     infoObject->SetHandshakePending(false);
   }
 
+  infoObject->SharedState().NoteSocketCreated();
+
   return NS_OK;
  loser:
   NS_IF_RELEASE(infoObject);

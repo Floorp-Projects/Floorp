@@ -8,6 +8,7 @@
 #include "nsIX509CertDB.h"
 #include "nsIX509CertDB2.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Mutex.h"
 #include "certt.h"
 
 class nsCString;
@@ -51,6 +52,7 @@ private:
   nsresult handleCACertDownload(nsIArray *x509Certs, 
                                 nsIInterfaceRequestor *ctx);
 
+  mozilla::Mutex mBadCertsLock;
   mozilla::RefPtr<nsRecentBadCerts> mPublicRecentBadCerts;
   mozilla::RefPtr<nsRecentBadCerts> mPrivateRecentBadCerts;
 };
