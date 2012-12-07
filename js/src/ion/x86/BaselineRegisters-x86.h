@@ -29,6 +29,10 @@ static const Register BaselineStubReg     = edi;
 static const Register ExtractTemp0        = InvalidReg;
 static const Register ExtractTemp1        = InvalidReg;
 
+// FloatReg0 must be equal to ReturnFloatReg.
+static const FloatRegister FloatReg0      = xmm0;
+static const FloatRegister FloatReg1      = xmm1;
+
 } // namespace ion
 } // namespace js
 

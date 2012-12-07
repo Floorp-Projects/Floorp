@@ -277,6 +277,7 @@ class ICEntry
                                 \
     _(BinaryArith_Fallback)     \
     _(BinaryArith_Int32)        \
+    _(BinaryArith_Double)       \
                                 \
     _(UnaryArith_Fallback)      \
     _(UnaryArith_Int32)         \
@@ -555,6 +556,7 @@ class ICFallbackStub : public ICStub
 
         return false;
     }
+    void unlinkStubsWithKind(ICStub::Kind kind);
 };
 
 // Monitored stubs are IC stubs that feed a single resulting value out to a
@@ -1226,6 +1228,36 @@ class ICUnaryArith_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICUnaryArith_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+class ICBinaryArith_Double : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICBinaryArith_Double(IonCode *stubCode)
+      : ICStub(BinaryArith_Double, stubCode)
+    {}
+
+  public:
+    static inline ICBinaryArith_Double *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICBinaryArith_Double>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        void ensureDouble(MacroAssembler &masm, const ValueOperand &source, FloatRegister dest,
+                          Label *failure);
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICMultiStubCompiler(cx, ICStub::BinaryArith_Double, op)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_Double::New(space, getStubCode());
         }
     };
 };

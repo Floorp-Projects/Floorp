@@ -48,6 +48,11 @@ class MacroAssemblerARM : public Assembler
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
+    void addDouble(FloatRegister src, FloatRegister dest);
+    void subDouble(FloatRegister src, FloatRegister dest);
+    void mulDouble(FloatRegister src, FloatRegister dest);
+    void divDouble(FloatRegister src, FloatRegister dest);
+
     void inc64(AbsoluteAddress dest);
 
     // somewhat direct wrappers for the low-level assembler funcitons
