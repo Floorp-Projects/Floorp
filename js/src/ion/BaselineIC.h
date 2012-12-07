@@ -294,7 +294,8 @@ class ICEntry
     _(GetName_Fallback)         \
     _(GetName_Global)           \
                                 \
-    _(GetProp_Fallback)
+    _(GetProp_Fallback)         \
+    _(GetProp_DenseLength)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -1557,6 +1558,34 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
             if (!stub || !stub->initMonitoringChain(cx, space))
                 return NULL;
             return stub;
+        }
+    };
+};
+
+// Stub for accessing a dense array's length.
+class ICGetProp_DenseLength : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICGetProp_DenseLength(IonCode *stubCode)
+      : ICStub(GetProp_DenseLength, stubCode)
+    {}
+
+  public:
+    static inline ICGetProp_DenseLength *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetProp_DenseLength>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetProp_DenseLength)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetProp_DenseLength::New(space, getStubCode());
         }
     };
 };
