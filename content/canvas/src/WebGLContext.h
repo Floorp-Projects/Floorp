@@ -11,6 +11,7 @@
 #include "WebGLShader.h"
 #include "WebGLBuffer.h"
 #include "WebGLProgram.h"
+#include "WebGLUniformLocation.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
 #include "WebGLVertexAttribData.h"
@@ -71,7 +72,6 @@ class nsIPropertyBag;
 namespace mozilla {
 
 class WebGLFramebuffer;
-class WebGLUniformLocation;
 class WebGLMemoryPressureObserver;
 class WebGLContextBoundObject;
 class WebGLActiveInfo;
@@ -1651,52 +1651,6 @@ public:
                                mDepthAttachment,
                                mStencilAttachment,
                                mDepthStencilAttachment;
-};
-
-class WebGLUniformLocation MOZ_FINAL
-    : public nsISupports
-    , public WebGLContextBoundObject
-{
-public:
-    WebGLUniformLocation(WebGLContext *context, WebGLProgram *program, GLint location, const WebGLUniformInfo& info)
-        : WebGLContextBoundObject(context)
-        , mProgram(program)
-        , mProgramGeneration(program->Generation())
-        , mLocation(location)
-        , mInfo(info)
-    {
-        mElementSize = info.ElementSize();
-    }
-
-    ~WebGLUniformLocation() {
-    }
-
-    // needed for certain helper functions like ValidateObject.
-    // WebGLUniformLocation's can't be 'Deleted' in the WebGL sense.
-    bool IsDeleted() const { return false; }
-
-    const WebGLUniformInfo &Info() const { return mInfo; }
-
-    WebGLProgram *Program() const { return mProgram; }
-    GLint Location() const { return mLocation; }
-    uint32_t ProgramGeneration() const { return mProgramGeneration; }
-    int ElementSize() const { return mElementSize; }
-
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(WebGLUniformLocation)
-
-protected:
-    // nsRefPtr, not WebGLRefPtr, so that we don't prevent the program from being explicitly deleted.
-    // we just want to avoid having a dangling pointer.
-    nsRefPtr<WebGLProgram> mProgram;
-
-    uint32_t mProgramGeneration;
-    GLint mLocation;
-    WebGLUniformInfo mInfo;
-    int mElementSize;
-    friend class WebGLProgram;
 };
 
 class WebGLActiveInfo MOZ_FINAL
