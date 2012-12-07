@@ -267,7 +267,7 @@ AssertDynamicScopeMatchesStaticScope(JSScript *script, JSObject *scope)
 }
 
 bool
-StackFrame::initFunctionScopeObjects(JSContext *cx)
+StackFrame::initCallObject(JSContext *cx)
 {
     CallObject *callobj = CallObject::createForFunction(cx, this);
     if (!callobj)
@@ -305,7 +305,7 @@ StackFrame::prologue(JSContext *cx, bool newType)
     JS_ASSERT(isNonEvalFunctionFrame());
     AssertDynamicScopeMatchesStaticScope(script, scopeChain());
 
-    if (fun()->isHeavyweight() && !initFunctionScopeObjects(cx))
+    if (fun()->isHeavyweight() && !initCallObject(cx))
         return false;
 
     if (isConstructing()) {

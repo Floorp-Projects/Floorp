@@ -74,7 +74,6 @@ CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
     return outOfLineCode_.append(code);
 }
 
-// see OffsetOfFrameSlot
 static inline int32_t
 ToStackIndex(LAllocation *a)
 {
@@ -82,8 +81,7 @@ ToStackIndex(LAllocation *a)
         JS_ASSERT(a->toStackSlot()->slot() >= 1);
         return a->toStackSlot()->slot();
     }
-    JS_ASSERT(-int32_t(sizeof(IonJSFrameLayout)) <= a->toArgument()->index());
-    return -(sizeof(IonJSFrameLayout) + a->toArgument()->index());
+    return -a->toArgument()->index();
 }
 
 bool
