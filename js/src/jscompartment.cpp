@@ -85,6 +85,10 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     , ionCompartment_(NULL)
 #endif
 {
+    /* Ensure that there are no vtables to mess us up here. */
+    JS_ASSERT(reinterpret_cast<JS::shadow::Compartment *>(this) ==
+              static_cast<JS::shadow::Compartment *>(this));
+
     setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
 
