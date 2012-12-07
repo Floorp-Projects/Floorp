@@ -1393,33 +1393,8 @@ struct JSContext : js::ContextFriendFields,
         return enterCompartmentDepth_ > 0;
     }
 
-    void enterCompartment(JSCompartment *c) {
-        enterCompartmentDepth_++;
-        compartment = c;
-        if (throwing)
-            wrapPendingException();
-    }
-
-    inline void leaveCompartment(JSCompartment *oldCompartment) {
-        JS_ASSERT(hasEnteredCompartment());
-        enterCompartmentDepth_--;
-
-        /*
-         * Before we entered the current compartment, 'compartment' was
-         * 'oldCompartment', so we might want to simply set it back. However, we
-         * currently have this terrible scheme whereby defaultCompartmentObject_
-         * can be updated while enterCompartmentDepth_ > 0. In this case,
-         * oldCompartment != defaultCompartmentObject_->compartment and we must
-         * ignore oldCompartment.
-         */
-        if (hasEnteredCompartment() || !defaultCompartmentObject_)
-            compartment = oldCompartment;
-        else
-            compartment = defaultCompartmentObject_->compartment();
-
-        if (throwing)
-            wrapPendingException();
-    }
+    inline void enterCompartment(JSCompartment *c);
+    inline void leaveCompartment(JSCompartment *oldCompartment);
 
     /* See JS_SaveFrameChain/JS_RestoreFrameChain. */
   private:
@@ -1450,7 +1425,10 @@ struct JSContext : js::ContextFriendFields,
     /* Current execution stack. */
     js::ContextStack    stack;
 
-    /* Current global. */
+    /*
+     * Current global. This is only safe to use within the scope of the
+     * AutoCompartment from which it's called.
+     */
     inline js::Handle<js::GlobalObject*> global() const;
 
     /* ContextStack convenience functions */

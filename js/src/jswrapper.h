@@ -160,7 +160,6 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent) MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
-    virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp);
     virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
 
     static CrossCompartmentWrapper singleton;
@@ -220,7 +219,6 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
-    virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
     virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);

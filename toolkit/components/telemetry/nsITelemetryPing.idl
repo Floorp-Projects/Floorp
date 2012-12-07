@@ -5,7 +5,14 @@
 
 #include "nsIObserver.idl"
 
+interface nsIFile;
+
 [scriptable, uuid(077ee790-3a9d-11e2-81c1-0800200c9a66)]
 interface nsITelemetryPing : nsIObserver {
   jsval getPayload();
+  void saveHistograms(in nsIFile aFile, in boolean aSync);
+  void gatherStartup();
+  void enableLoadSaveNotifications(); /* Used only for testing. */
+  void setAddOns(in AString aAddOns);
+  void testPing(in AString aServer);
 };

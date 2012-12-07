@@ -583,4 +583,39 @@ JSContext::setDefaultCompartmentObjectIfUnset(JSObject *obj)
         setDefaultCompartmentObject(obj);
 }
 
+inline void
+JSContext::enterCompartment(JSCompartment *c)
+{
+    enterCompartmentDepth_++;
+    compartment = c;
+    c->enter();
+    if (throwing)
+        wrapPendingException();
+}
+
+inline void
+JSContext::leaveCompartment(JSCompartment *oldCompartment)
+{
+    JS_ASSERT(hasEnteredCompartment());
+    enterCompartmentDepth_--;
+
+    compartment->leave();
+
+    /*
+     * Before we entered the current compartment, 'compartment' was
+     * 'oldCompartment', so we might want to simply set it back. However, we
+     * currently have this terrible scheme whereby defaultCompartmentObject_ can
+     * be updated while enterCompartmentDepth_ > 0. In this case, oldCompartment
+     * != defaultCompartmentObject_->compartment and we must ignore
+     * oldCompartment.
+     */
+    if (hasEnteredCompartment() || !defaultCompartmentObject_)
+        compartment = oldCompartment;
+    else
+        compartment = defaultCompartmentObject_->compartment();
+
+    if (throwing)
+        wrapPendingException();
+}
+
 #endif /* jscntxtinlines_h___ */

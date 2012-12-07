@@ -108,6 +108,11 @@ this.PermissionSettingsModule = {
     let result;
     switch (aMessage.name) {
       case "PermissionSettings:AddPermission":
+        if (!aMessage.target.assertPermission("permissions")) {
+          Cu.reportError("PermissionSettings message " + msg.name +
+                         " from a content process with no 'permissions' privileges.");
+          return null;
+        }
         this.addPermission(msg);
         break;
     }

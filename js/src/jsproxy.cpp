@@ -326,13 +326,6 @@ BaseProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint,
 }
 
 bool
-BaseProxyHandler::iteratorNext(JSContext *cx, JSObject *proxy, Value *vp)
-{
-    vp->setMagic(JS_NO_ITER_VALUE);
-    return true;
-}
-
-bool
 BaseProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
 {
     ReportIncompatible(cx, args);
@@ -524,23 +517,6 @@ DirectProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint,
     if (hint == JSTYPE_VOID)
         return ToPrimitive(cx, vp);
     return ToPrimitive(cx, hint, vp);
-}
-
-bool
-DirectProxyHandler::iteratorNext(JSContext *cx, JSObject *proxy, Value *vp)
-{
-    Rooted<JSObject*> target(cx, GetProxyTargetObject(proxy));
-    RootedValue value(cx);
-    if (!js_IteratorMore(cx, target, &value))
-        return false;
-    *vp = value;
-    if (vp->toBoolean()) {
-        *vp = cx->iterValue;
-        cx->iterValue = UndefinedValue();
-    } else {
-        *vp = MagicValue(JS_NO_ITER_VALUE);
-    }
-    return true;
 }
 
 JSObject *
@@ -2535,14 +2511,6 @@ Proxy::defaultValue(JSContext *cx, JSObject *proxy_, JSType hint, Value *vp)
     JS_CHECK_RECURSION(cx, return false);
     RootedObject proxy(cx, proxy_);
     return GetProxyHandler(proxy)->defaultValue(cx, proxy, hint, vp);
-}
-
-bool
-Proxy::iteratorNext(JSContext *cx, JSObject *proxy_, Value *vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
-    RootedObject proxy(cx, proxy_);
-    return GetProxyHandler(proxy)->iteratorNext(cx, proxy, vp);
 }
 
 bool

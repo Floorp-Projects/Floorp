@@ -64,19 +64,6 @@ VcmSIPCCBinding * VcmSIPCCBinding::_pSelf = NULL;
 int VcmSIPCCBinding::mAudioCodecMask = 0;
 int VcmSIPCCBinding::mVideoCodecMask = 0;
 
-/**
- * Convert a combined payload type value to a config value
- *
- * @param [in] payload - the combined payload type integer
- * @param [out] config - the returned config value
- *
- * return int
- */
-static int vcmPayloadType2AudioCodec(vcm_media_payload_type_t payload,
-                                     mozilla::AudioCodecConfig **config);
-
-static int vcmPayloadType2VideoCodec(vcm_media_payload_type_t payload,
-                                     mozilla::VideoCodecConfig **config);
 static mozilla::RefPtr<TransportFlow> vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc,
                                                              int level, bool rtcp,
                                                              const char *fingerprint_alg,
@@ -238,39 +225,6 @@ struct h264_video
     int        tias_bw;
 };
 
-#if 0
-static RingMode
-map_ring_mode (vcm_ring_mode_t mode)
-{
-    switch ( mode )
-    {
-    case VCM_INSIDE_RING:
-        return RingMode_INSIDE_RING;
-    case VCM_OUTSIDE_RING:
-        return RingMode_OUTSIDE_RING;
-    case VCM_FEATURE_RING:
-        return RingMode_FEATURE_RING;
-    case VCM_BELLCORE_DR1:
-        return RingMode_BELLCORE_DR1;
-    case VCM_BELLCORE_DR2:
-        return RingMode_BELLCORE_DR2;
-    case VCM_BELLCORE_DR3:
-        return RingMode_BELLCORE_DR3;
-    case VCM_BELLCORE_DR4:
-        return RingMode_BELLCORE_DR4;
-    case VCM_BELLCORE_DR5:
-        return RingMode_BELLCORE_DR5;
-    case VCM_FLASHONLY_RING:
-        return RingMode_FLASHONLY_RING;
-    case VCM_STATION_PRECEDENCE_RING:
-        return RingMode_PRECEDENCE_RING;
-    default:
-        CSFLogDebugS( logTag, "map_ring_mode(): Wrong ringmode passed");
-        return RingMode_INSIDE_RING;
-    }
-}
-#endif
-
 /**
  *  start/stop ringing
  *
@@ -326,93 +280,6 @@ void vcmEnableSidetone(cc_uint16_t side_tone)
 {
     /* NOT REQD for TNP */
     CSFLogDebug( logTag, "vcmEnableSidetone: vcmEnableSidetone(): called");
-}
-
-/*
- *  Function:map_VCM_Media_Payload_type
- *
- *  Parameters:payload
- *
- *  Description: Converts VCM payload type to MediaManager Payload defs.
- *
- *  Returns:payload type corresponding to VCM payload
- *
- */
-
-#define MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCMPayloadItem, CIPPayloadItem)\
-  vcmToCIP_Mappings[VCMPayloadItem] = CIPPayloadItem
-
-static int
-map_VCM_Media_Payload_type( vcm_media_payload_type_t payload )
-{
-    static bool mappingInitialised = false;
-    static int vcmToCIP_Mappings[VCM_Media_Payload_Max] = { };
-
-    if (!mappingInitialised)
-    {
-        int numElements = csf_countof(vcmToCIP_Mappings);
-
-        std::fill_n(vcmToCIP_Mappings, numElements, cip_mmgr_MediaDefinitions_MEDIA_TYPE_NONSTANDARD);
-
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_NonStandard, cip_mmgr_MediaDefinitions_MEDIA_TYPE_NONSTANDARD);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G711Alaw64k, cip_mmgr_MediaDefinitions_MEDIA_TYPE_G711ALAW64K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G711Alaw56k, cip_mmgr_MediaDefinitions_MEDIA_TYPE_G711ALAW56K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G711Ulaw64k, cip_mmgr_MediaDefinitions_MEDIA_TYPE_G711ULAW64K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G711Ulaw56k, cip_mmgr_MediaDefinitions_MEDIA_TYPE_G711ULAW56K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G722_64k,    cip_mmgr_MediaDefinitions_MEDIA_TYPE_G722_64K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G722_56k,    cip_mmgr_MediaDefinitions_MEDIA_TYPE_G722_56K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G722_48k,    cip_mmgr_MediaDefinitions_MEDIA_TYPE_G722_48K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_ILBC20,      cip_mmgr_MediaDefinitions_MEDIA_TYPE_ILBC20 | (VCM_Media_Payload_ILBC20 & 0XFFFF0000));
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_ILBC30,      cip_mmgr_MediaDefinitions_MEDIA_TYPE_ILBC30 | (cip_mmgr_MediaDefinitions_MEDIA_TYPE_ILBC30 & 0XFFFF0000));
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G7231,       cip_mmgr_MediaDefinitions_MEDIA_TYPE_G7231_5P3K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G728,        cip_mmgr_MediaDefinitions_MEDIA_TYPE_G728);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G729,        cip_mmgr_MediaDefinitions_MEDIA_TYPE_G729);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G729AnnexA,  cip_mmgr_MediaDefinitions_MEDIA_TYPE_G729ANNEXA);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_Is11172AudioCap, cip_mmgr_MediaDefinitions_MEDIA_TYPE_IS11172AUDIOCAP);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_Is13818AudioCap, cip_mmgr_MediaDefinitions_MEDIA_TYPE_IS13818AUDIOCAP);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G729AnnexB,             cip_mmgr_MediaDefinitions_MEDIA_TYPE_G729ANNEXB);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_GSM_Full_Rate,          cip_mmgr_MediaDefinitions_MEDIA_TYPE_GSM_FULL_RATE);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_GSM_Half_Rate,          cip_mmgr_MediaDefinitions_MEDIA_TYPE_GSM_HALF_RATE);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_GSM_Enhanced_Full_Rate, cip_mmgr_MediaDefinitions_MEDIA_TYPE_GSM_ENHANCED_FULL_RATE);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_Wide_Band_256k,         cip_mmgr_MediaDefinitions_MEDIA_TYPE_WIDE_BAND_256K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_Data64,                 cip_mmgr_MediaDefinitions_MEDIA_TYPE_DATA64);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_Data56,                 cip_mmgr_MediaDefinitions_MEDIA_TYPE_DATA56);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_GSM,             cip_mmgr_MediaDefinitions_MEDIA_TYPE_GSM);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_ActiveVoice,             cip_mmgr_MediaDefinitions_MEDIA_TYPE_ACTIVEVOICE);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G726_32K,             cip_mmgr_MediaDefinitions_MEDIA_TYPE_G726_32K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G726_24K,             cip_mmgr_MediaDefinitions_MEDIA_TYPE_G726_24K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_G726_16K,             cip_mmgr_MediaDefinitions_MEDIA_TYPE_G726_16K);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_VP8,                  cip_mmgr_MediaDefinitions_MEDIA_TYPE_VP8);
-        MAKE_VCM_MEDIA_PAYLOAD_MAP_ENTRY(VCM_Media_Payload_OPUS,                 cip_mmgr_MediaDefinitions_MEDIA_TYPE_OPUS);
-
-        mappingInitialised = true;
-    }
-
-    int vcmIndex = payload & 0XFFFF;
-
-    switch (vcmIndex)
-    {
-    case VCM_Media_Payload_ILBC20:
-        return ((payload & 0XFFFF0000) | cip_mmgr_MediaDefinitions_MEDIA_TYPE_ILBC20);
-    case VCM_Media_Payload_ILBC30:
-        return ((payload & 0XFFFF0000) | cip_mmgr_MediaDefinitions_MEDIA_TYPE_ILBC30);
-    case VCM_Media_Payload_H263:
-        return ((payload & 0XFFFF0000) | cip_mmgr_MediaDefinitions_MEDIA_TYPE_H263);
-    case VCM_Media_Payload_H264:
-        return ((payload & 0XFFFF0000) | RTP_H264_P0);
-    case VCM_Media_Payload_ISAC:
-        return ((payload & 0XFFFF0000) | cip_mmgr_MediaDefinitions_MEDIA_TYPE_ISAC);
-    case VCM_Media_Payload_VP8:
-        return ((payload & 0XFFFF0000) | cip_mmgr_MediaDefinitions_MEDIA_TYPE_VP8);
-    default:
-        //use the static array
-        if (vcmIndex < VCM_Media_Payload_Max)
-        {
-            return vcmToCIP_Mappings[vcmIndex];
-        }
-
-        return cip_mmgr_MediaDefinitions_MEDIA_TYPE_NONSTANDARD;
-    }
 }
 
 /*
@@ -847,8 +714,7 @@ short vcmSetIceMediaParams(const char *peerconnection, int level, char *ufrag, c
 short vcmCreateRemoteStream(
   cc_mcapid_t mcap_id,
   const char *peerconnection,
-  int *pc_stream_id,
-  vcm_media_payload_type_t payload) {
+  int *pc_stream_id) {
   uint32_t hints = 0;
   nsresult res;
 
@@ -1052,8 +918,8 @@ short vcmRxOpen(cc_mcapid_t mcap_id,
  *  @param[in]    mcap_id     - media type id
  *  @param[in]    group_id    - group identifier associated with the stream
  *  @param[in]    stream_id   - id of the stream one per each media line
- *  @param[in]    call_handle     - call identifier
- *  @param[in]    payload     - payload type
+ *  @param[in]    call_handle - call identifier
+ *  @param[in]    payload     - payload information
  *  @param[in]    local_addr  - local ip address to use.
  *  @param[in]    port        - local port (receive)
  *  @param[in]    algorithmID - crypto alogrithm ID
@@ -1067,22 +933,22 @@ int vcmRxStart(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle,
-        vcm_media_payload_type_t payload,
+        const vcm_payload_info_t *payload,
         cpr_ip_addr_t *local_addr,
         cc_uint16_t port,
         vcm_crypto_algorithmID algorithmID,
         vcm_crypto_key_t *rx_key,
         vcm_mediaAttrs_t *attrs)
 {
-    int         pt;
     uint8_t    *key;
     uint8_t    *salt;
     cc_uint16_t    key_len;
     cc_uint16_t    salt_len;
     char        fname[] = "vcmRxStart";
 
-    CSFLogDebug( logTag, "%s: group_id=%d call_handle=%d payload=%d port=%d algID=%d",
-        fname, group_id, call_handle, payload, port, algorithmID);
+    CSFLogDebug( logTag, "%s: group_id=%d call_handle=%d payload=%d port=%d"
+        " algID=%d", fname, group_id, call_handle, payload->remote_rtp_pt,
+        port, algorithmID);
 
     if (call_handle == CC_NO_CALL_ID) {
         /* no operation when no call ID */
@@ -1116,26 +982,24 @@ int vcmRxStart(cc_mcapid_t mcap_id,
         break;
     }
 
-    pt = map_VCM_Media_Payload_type(payload);
-
     switch ( mcap_id )
     {
     case CC_AUDIO_1:
         if ( VcmSIPCCBinding::getAudioTermination() != NULL )
-            return VcmSIPCCBinding::getAudioTermination()->rxStart( group_id, stream_id, DYNAMIC_PAYLOAD_TYPE(pt),
-                                                                    attrs->audio.packetization_period, port, attrs->audio.avt_payload_type,
-                                                                    map_algorithmID(algorithmID), key, key_len, salt, salt_len,
-                                                                    attrs->audio.mixing_mode, attrs->audio.mixing_party );
+            return VcmSIPCCBinding::getAudioTermination()->rxStart(
+                group_id, stream_id, payload->remote_rtp_pt,
+                attrs->audio.packetization_period, port,
+                attrs->audio.avt_payload_type, map_algorithmID(algorithmID),
+                key, key_len, salt, salt_len, attrs->audio.mixing_mode,
+                attrs->audio.mixing_party );
         break;
 
     case CC_VIDEO_1:
         if ( VcmSIPCCBinding::getVideoTermination() != NULL )
-            return VcmSIPCCBinding::getVideoTermination()->rxStart( group_id, stream_id, DYNAMIC_PAYLOAD_TYPE(pt),
-                                                                    0,
-                                                                    port,
-                                                                    0,
-                                                                    map_algorithmID(algorithmID), key, key_len, salt, salt_len,
-                                                                    0, 0);
+            return VcmSIPCCBinding::getVideoTermination()->rxStart(
+                group_id, stream_id, payload->remote_rtp_pt,
+                0, port, 0, map_algorithmID(algorithmID), key, key_len,
+                salt, salt_len, 0, 0);
         break;
 
     default:
@@ -1156,9 +1020,9 @@ int vcmRxStart(cc_mcapid_t mcap_id,
  *  @param[in]   pc_stream_id - the media stream index (from PC.addStream())
  *  @param[i]n   pc_track_id  - the track within the media stream
  *  @param[in]   call_handle  - call handle
- *  @param[in]  peerconnection - the peerconnection in use
- *  @param[in]  num_payloads   - number of negotiated payloads
- *  @param[in]  payloads       - negotiated codec details list
+ *  @param[in]   peerconnection - the peerconnection in use
+ *  @param[in]   num_payloads   - number of negotiated payloads
+ *  @param[in]   payloads       - negotiated codec details list
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
  *  @param[in]   attrs        - media attributes
@@ -1175,7 +1039,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
         cc_call_handle_t  call_handle,
         const char *peerconnection,
         int num_payloads,
-        const vcm_media_payload_type_t* payloads,
+        const vcm_payload_info_t* payloads,
         const char *fingerprint_alg,
         const char *fingerprint,
         vcm_mediaAttrs_t *attrs)
@@ -1231,11 +1095,13 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
 
     for(int i=0; i <num_payloads ; i++)
     {
-      int ret = vcmPayloadType2AudioCodec(payloads[i], &config_raw);
-      if (ret) {
-       PR_ASSERT(PR_FALSE);
-       return VCM_ERROR;
-      }
+      config_raw = new mozilla::AudioCodecConfig(
+        payloads[i].remote_rtp_pt,
+        ccsdpCodecName(payloads[i].codec_type),
+        payloads[i].audio.frequency,
+        payloads[i].audio.packet_size,
+        payloads[i].audio.channels,
+        payloads[i].audio.bitrate);
       configs.push_back(config_raw);
     }
 
@@ -1263,11 +1129,11 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
 
     for(int i=0; i <num_payloads; i++)
     {
-      int ret = vcmPayloadType2VideoCodec(payloads[i], &config_raw);
-      if (ret) {
-       PR_ASSERT(PR_FALSE);
-       return VCM_ERROR;
-      }
+      config_raw = new mozilla::VideoCodecConfig(
+        payloads[i].remote_rtp_pt,
+        ccsdpCodecName(payloads[i].codec_type),
+        payloads[i].video.width,
+        payloads[i].video.height);
       configs.push_back(config_raw);
     }
 
@@ -1606,7 +1472,7 @@ short vcmTxOpen(cc_mcapid_t mcap_id,
  *  @param[in]   group_id     - group identifier to which the stream belongs
  *  @param[in]   stream_id    - stream id of the given media type.
  *  @param[in]   call_handle      - call identifier
- *  @param[in]   payload      - payload type
+ *  @param[in]   payload      - payload information
  *  @param[in]   tos          - bit marking
  *  @param[in]   local_addr   - local address
  *  @param[in]   local_port   - local port
@@ -1623,7 +1489,7 @@ int vcmTxStart(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle,
-        vcm_media_payload_type_t payload,
+        const vcm_payload_info_t *payload,
         short tos,
         cpr_ip_addr_t *local_addr,
         cc_uint16_t local_port,
@@ -1634,7 +1500,6 @@ int vcmTxStart(cc_mcapid_t mcap_id,
         vcm_mediaAttrs_t *attrs)
 {
     const char fname[] = "vcmTxStart";
-    int         pt;
     uint8_t    *key;
     uint8_t    *salt;
     cc_uint16_t    key_len;
@@ -1646,7 +1511,7 @@ int vcmTxStart(cc_mcapid_t mcap_id,
                 (remote_ip_addr->u.ip4 >> 8) & 0xff, remote_ip_addr->u.ip4 & 0xff );
 
     CSFLogDebug( logTag, "%s: group_id=%d call_handle=%d payload=%d tos=%d local_port=%d remote=%s:%d algID=%d",
-        fname, group_id, call_handle, payload, tos, local_port,
+        fname, group_id, call_handle, payload->remote_rtp_pt, tos, local_port,
         dottedIP, remote_port, algorithmID);
 
     if (call_handle == CC_NO_CALL_ID) {
@@ -1680,24 +1545,25 @@ int vcmTxStart(cc_mcapid_t mcap_id,
         break;
     }
 
-    pt = map_VCM_Media_Payload_type(payload);
-
     switch ( mcap_id )
     {
     case CC_AUDIO_1:
         if ( VcmSIPCCBinding::getAudioTermination() != NULL )
-            return VcmSIPCCBinding::getAudioTermination()->txStart( group_id, stream_id, pt,
-                                            attrs->audio.packetization_period, (attrs->audio.vad != 0),
-                                            tos, dottedIP, remote_port, attrs->audio.avt_payload_type,
-                                            map_algorithmID(algorithmID), key, key_len, salt, salt_len,
-                                            attrs->audio.mixing_mode, attrs->audio.mixing_party );
+            return VcmSIPCCBinding::getAudioTermination()->txStart(
+                group_id, stream_id, payload->remote_rtp_pt,
+                attrs->audio.packetization_period, (attrs->audio.vad != 0),
+                tos, dottedIP, remote_port, attrs->audio.avt_payload_type,
+                map_algorithmID(algorithmID), key, key_len, salt, salt_len,
+                attrs->audio.mixing_mode, attrs->audio.mixing_party );
+
         break;
 
     case CC_VIDEO_1:
         if ( VcmSIPCCBinding::getVideoTermination() != NULL )
-           return VcmSIPCCBinding::getVideoTermination()->txStart( group_id, stream_id, pt,
-                                                                   0, 0, tos, dottedIP, remote_port, 0,
-                                                                   map_algorithmID(algorithmID), key, key_len, salt, salt_len, 0, 0 );
+           return VcmSIPCCBinding::getVideoTermination()->txStart(
+              group_id, stream_id, payload->remote_rtp_pt,
+              0, 0, tos, dottedIP, remote_port, 0,
+              map_algorithmID(algorithmID), key, key_len, salt, salt_len, 0, 0);
         break;
 
     default:
@@ -1718,8 +1584,8 @@ int vcmTxStart(cc_mcapid_t mcap_id,
  *  @param[in]   pc_stream_id - the media stream index (from PC.addStream())
  *  @param[i]n   pc_track_id  - the track within the media stream
  *  @param[in]   call_handle  - call handle
- *  @param[in]  peerconnection - the peerconnection in use
- *  @param[in]   payload      - payload type
+ *  @param[in]   peerconnection - the peerconnection in use
+ *  @param[in]   payload      - payload information
  *  @param[in]   tos          - bit marking
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
@@ -1738,7 +1604,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
         int pc_track_id,
         cc_call_handle_t  call_handle,
         const char *peerconnection,
-        vcm_media_payload_type_t payload,
+        const vcm_payload_info_t *payload,
         short tos,
         const char *fingerprint_alg,
         const char *fingerprint,
@@ -1773,12 +1639,14 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
   }
 
   if (CC_IS_AUDIO(mcap_id)) {
-    // Find the appropriate media conduit config
     mozilla::AudioCodecConfig *config_raw;
-    int ret = vcmPayloadType2AudioCodec(payload, &config_raw);
-    if (ret) {
-      return VCM_ERROR;
-    }
+    config_raw = new mozilla::AudioCodecConfig(
+      payload->remote_rtp_pt,
+      ccsdpCodecName(payload->codec_type),
+      payload->audio.frequency,
+      payload->audio.packet_size,
+      payload->audio.channels,
+      payload->audio.bitrate);
 
     // Take possession of this pointer
     mozilla::ScopedDeletePtr<mozilla::AudioCodecConfig> config(config_raw);
@@ -1805,10 +1673,11 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
 
   } else if (CC_IS_VIDEO(mcap_id)) {
     mozilla::VideoCodecConfig *config_raw;
-    int ret = vcmPayloadType2VideoCodec(payload, &config_raw);
-    if (ret) {
-      return VCM_ERROR;
-    }
+    config_raw = new mozilla::VideoCodecConfig(
+      payload->remote_rtp_pt,
+      ccsdpCodecName(payload->codec_type),
+      payload->video.width,
+      payload->video.height);
 
     // Take possession of this pointer
     mozilla::ScopedDeletePtr<mozilla::VideoCodecConfig> config(config_raw);
@@ -2326,104 +2195,6 @@ int vcmGetILBCMode()
 }
 
 } // extern "C"
-
-
-#define EXTRACT_DYNAMIC_PAYLOAD_TYPE(PTYPE) ((PTYPE)>>16)
-#define CLEAR_DYNAMIC_PAYLOAD_TYPE(PTYPE)   (PTYPE & 0x0000FFFF)
-#define CHECK_DYNAMIC_PAYLOAD_TYPE(PTYPE)   (PTYPE & 0xFFFF0000)
-
-static int vcmPayloadType2AudioCodec(vcm_media_payload_type_t payload_in,
-                                     mozilla::AudioCodecConfig **config) {
-  int wire_payload = -1;
-  // payload_in has the following bit setup
-  // upper 16 bits : Dynamic payload type
-  // lower 16 bits : VCM payload type
-  // Ex: For ISAC Codec: 103:41
-  //     For VP8  Codec: 120:120
-
-  int payload = -1;
-  *config = NULL;
-  if (CHECK_DYNAMIC_PAYLOAD_TYPE(payload_in)) {
-    wire_payload = EXTRACT_DYNAMIC_PAYLOAD_TYPE(payload_in);
-    payload = CLEAR_DYNAMIC_PAYLOAD_TYPE(payload_in);
-  }
-  else {
-    //static payload type
-    wire_payload = payload_in;
-    payload = payload_in;
-  }
-
-  switch(payload) {
-    case VCM_Media_Payload_G711Alaw64k:
-      *config = new mozilla::AudioCodecConfig(wire_payload, "PCMA", 8000, 80, 1, 64000);
-      break;
-    case VCM_Media_Payload_G711Ulaw64k:
-      *config = new mozilla::AudioCodecConfig(wire_payload, "PCMU", 8000, 80, 1, 64000);
-      break;
-    case VCM_Media_Payload_OPUS:
-      *config = new mozilla::AudioCodecConfig(wire_payload, "OPUS", 48000, 480, 1, 64000);
-      break;
-    case VCM_Media_Payload_ISAC:
-      //adaptive rate ISAC,30ms sample
-      *config = new mozilla::AudioCodecConfig(wire_payload, "ISAC", 16000, 480, 1, -1);
-      break;
-    case VCM_Media_Payload_ILBC20:
-      //ilBC 20ms sample
-      *config = new mozilla::AudioCodecConfig(wire_payload, "iLBC", 8000, 160, 1, 15200);
-      break;
-    case VCM_Media_Payload_ILBC30:
-      //ilBC 30ms sample
-      *config = new mozilla::AudioCodecConfig(wire_payload, "iLBC", 8000, 240, 1, 13300);
-      break;
-    case VCM_Media_Payload_G722_64k:
-    case VCM_Media_Payload_G722_56k:
-      //TODO: Check with Ekr, Derf if 64k and 56K are valid frequency rates for G722.1
-      // or G722.2
-      CSFLogError(logTag, "vcmPayloadType2AudioCodec Codec Not Implemented !");
-      PR_ASSERT(PR_FALSE);
-      return VCM_ERROR;
-    default:
-      CSFLogError(logTag, "vcmPayloadType2AudioCodec unknown codec. Apparent internal error");
-      PR_ASSERT(PR_FALSE);
-      return VCM_ERROR;
-  }
-
-  return 0;
-}
-
-static int vcmPayloadType2VideoCodec(vcm_media_payload_type_t payload_in,
-                              mozilla::VideoCodecConfig **config) {
-  int wire_payload = -1;
-  int payload = -1;
-  *config = NULL;
-
-  if (CHECK_DYNAMIC_PAYLOAD_TYPE(payload_in)) {
-    wire_payload = EXTRACT_DYNAMIC_PAYLOAD_TYPE(payload_in);
-    payload = CLEAR_DYNAMIC_PAYLOAD_TYPE(payload_in);
-  }
-  else {
-    //static payload type
-    wire_payload = payload_in;
-    payload = payload_in;
-  }
-
-  switch(payload)
-  {
-    case VCM_Media_Payload_I420:
-      *config = new mozilla::VideoCodecConfig(wire_payload, "I420", 176, 144);
-      break;
-    case VCM_Media_Payload_VP8:
-      *config = new mozilla::VideoCodecConfig(wire_payload, "VP8", 640, 480);
-      break;
-    default:
-      CSFLogError(logTag, "vcmPayloadType2VideoCodec unknown codec. Apparent internal error");
-      PR_ASSERT(PR_FALSE);
-      return VCM_ERROR;
-  }
-  return 0;
-}
-
-
 
 static mozilla::RefPtr<TransportFlow>
 vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
