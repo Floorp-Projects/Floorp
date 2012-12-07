@@ -379,6 +379,11 @@ ic::Equality(VMFrame &f, ic::EqualityICInfo *ic)
     return ic->stub(f);
 }
 
+// Disable PGO as a precaution (see bug 791214).
+#if defined(_MSC_VER)
+# pragma optimize("g", off)
+#endif
+
 static void * JS_FASTCALL
 SlowCallFromIC(VMFrame &f, ic::CallICInfo *ic)
 {
@@ -1422,6 +1427,10 @@ ic::SplatApplyArgs(VMFrame &f)
     f.u.call.dynamicArgc = length;
     return true;
 }
+
+#if defined(_MSC_VER)
+# pragma optimize("", on)
+#endif
 
 void
 ic::GenerateArgumentCheckStub(VMFrame &f)
