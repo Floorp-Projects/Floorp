@@ -8,6 +8,7 @@
 #define mozilla_net_WebSocketChannelParent_h
 
 #include "mozilla/net/PWebSocketParent.h"
+#include "mozilla/net/NeckoParent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebSocketListener.h"
 #include "nsIWebSocketChannel.h"
@@ -29,14 +30,15 @@ class WebSocketChannelParent : public PWebSocketParent,
   NS_DECL_NSIWEBSOCKETLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider);
+  WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider,
+                         nsILoadContext* aLoadContext,
+                         PBOverrideStatus aOverrideStatus);
 
  private:
   bool RecvAsyncOpen(const URIParams& aURI,
                      const nsCString& aOrigin,
                      const nsCString& aProtocol,
-                     const bool& aSecure,
-                     const IPC::SerializedLoadContext& loadContext);
+                     const bool& aSecure);
   bool RecvClose(const uint16_t & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);

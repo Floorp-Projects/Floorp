@@ -5,12 +5,14 @@
 
 #include "OfflineCacheUpdateParent.h"
 
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
 #include "nsNetUtil.h"
 
 using namespace mozilla::ipc;
+using mozilla::dom::TabParent;
 
 #if defined(PR_LOGGING)
 //
@@ -43,8 +45,11 @@ NS_IMPL_ISUPPORTS2(OfflineCacheUpdateParent,
 // OfflineCacheUpdateParent <public>
 //-----------------------------------------------------------------------------
 
-OfflineCacheUpdateParent::OfflineCacheUpdateParent()
+OfflineCacheUpdateParent::OfflineCacheUpdateParent(uint32_t aAppId,
+                                                   bool aIsInBrowser)
     : mIPCClosed(false)
+    , mIsInBrowserElement(aIsInBrowser)
+    , mAppId(aAppId)
 {
     // Make sure the service has been initialized
     nsOfflineCacheUpdateService* service =
@@ -69,8 +74,6 @@ OfflineCacheUpdateParent::ActorDestroy(ActorDestroyReason why)
 nsresult
 OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
                                    const URIParams& aDocumentURI,
-                                   const bool& isInBrowserElement,
-                                   const uint32_t& appId,
                                    const bool& stickDocument)
 {
     LOG(("OfflineCacheUpdateParent::RecvSchedule [%p]", this));
@@ -100,7 +103,7 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
     if (!NS_SecurityCompareURIs(manifestURI, documentURI, false))
         return NS_ERROR_DOM_SECURITY_ERR;
 
-    service->FindUpdate(manifestURI, appId, isInBrowserElement,
+    service->FindUpdate(manifestURI, mAppId, mIsInBrowserElement,
                         getter_AddRefs(update));
     if (!update) {
         update = new nsOfflineCacheUpdate();
@@ -108,7 +111,7 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
         // Leave aDocument argument null. Only glues and children keep 
         // document instances.
         rv = update->Init(manifestURI, documentURI, nullptr, nullptr,
-                          appId, isInBrowserElement);
+                          mAppId, mIsInBrowserElement);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = update->Schedule();
