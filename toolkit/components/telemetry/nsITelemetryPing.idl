@@ -15,4 +15,12 @@ interface nsITelemetryPing : nsIObserver {
   void enableLoadSaveNotifications(); /* Used only for testing. */
   void setAddOns(in AString aAddOns);
   void testPing(in AString aServer);
+
+  /**
+   * Load histograms from a file.
+   *
+   * @param aFile - File to load from.
+   * @param aSync - Use sync reads.
+   */
+  void testLoadHistograms(in nsIFile aFile, in boolean aSync);
 };
