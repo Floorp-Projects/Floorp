@@ -52,7 +52,6 @@
 #include "mozilla/Types.h"
 #include <ctime>
 #include <cstdlib> // for std::abs(int/long)
-#include "gfxUtils.h"
 #include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
@@ -2075,6 +2074,35 @@ FindTileStart(nscoord aDirtyCoord, nscoord aTilePos, nscoord aTileDim)
   return NSToCoordRound(multiples*aTileDim + aTilePos);
 }
 
+/**
+ * Return the transform matrix that maps aFrom to the rectangle defined by
+ * aToTopLeft/aToTopRight/aToBottomRight. The destination rectangle must be
+ * nonempty and must be axis-aligned.
+ */
+static gfxMatrix
+TransformRectToRect(const gfxRect& aFrom, const gfxPoint& aToTopLeft,
+                    const gfxPoint& aToTopRight, const gfxPoint& aToBottomRight)
+{
+  gfxMatrix m;
+  if (aToTopRight.y == aToTopLeft.y && aToTopRight.x == aToBottomRight.x) {
+    // Not a rotation, so xy and yx are zero
+    m.xy = m.yx = 0.0;
+    m.xx = (aToBottomRight.x - aToTopLeft.x)/aFrom.width;
+    m.yy = (aToBottomRight.y - aToTopLeft.y)/aFrom.height;
+    m.x0 = aToTopLeft.x - m.xx*aFrom.x;
+    m.y0 = aToTopLeft.y - m.yy*aFrom.y;
+  } else {
+    NS_ASSERTION(aToTopRight.y == aToBottomRight.y && aToTopRight.x == aToTopLeft.x,
+                 "Destination rectangle not axis-aligned");
+    m.xx = m.yy = 0.0;
+    m.xy = (aToBottomRight.x - aToTopLeft.x)/aFrom.height;
+    m.yx = (aToBottomRight.y - aToTopLeft.y)/aFrom.width;
+    m.x0 = aToTopLeft.x - m.xy*aFrom.y;
+    m.y0 = aToTopLeft.y - m.yx*aFrom.x;
+  }
+  return m;
+}
+
 void
 nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               nsRenderingContext& aRenderingContext,
@@ -2412,7 +2440,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
         // Set the context's transform to the transform that maps fillRect to
         // snappedFillRect. The part of the gradient that was going to
         // exactly fill fillRect will fill snappedFillRect instead.
-        gfxMatrix transform = gfxUtils::TransformRectToRect(fillRect,
+        gfxMatrix transform = TransformRectToRect(fillRect,
             snappedFillRectTopLeft, snappedFillRectTopRight,
             snappedFillRectBottomRight);
         ctx->SetMatrix(transform);
