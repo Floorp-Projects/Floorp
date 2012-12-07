@@ -8,21 +8,17 @@
 
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsEventListenerManager.h"
 #include "nsIScriptContext.h"
-#include "nsWrapperCache.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/EventTarget.h"
 
 class nsDOMEvent;
 
-class nsDOMEventTargetHelper : public nsIDOMEventTarget,
-                               public nsWrapperCache
+class nsDOMEventTargetHelper : public mozilla::dom::EventTarget
 {
 public:
   nsDOMEventTargetHelper() : mOwner(nullptr), mHasOrHasHadOwner(false) {}
@@ -31,27 +27,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
 
   NS_DECL_NSIDOMEVENTTARGET
-  void AddEventListener(const nsAString& aType,
-                        nsIDOMEventListener* aCallback, // XXX nullable
-                        bool aCapture, const Nullable<bool>& aWantsUntrusted,
-                        mozilla::ErrorResult& aRv)
-  {
-    aRv = AddEventListener(aType, aCallback, aCapture,
-                           !aWantsUntrusted.IsNull() && aWantsUntrusted.Value(),
-                           aWantsUntrusted.IsNull() ? 1 : 2);
-  }
-  void RemoveEventListener(const nsAString& aType,
-                           nsIDOMEventListener* aCallback,
-                           bool aCapture, mozilla::ErrorResult& aRv)
-  {
-    aRv = RemoveEventListener(aType, aCallback, aCapture);
-  }
-  bool DispatchEvent(nsIDOMEvent* aEvent, mozilla::ErrorResult& aRv)
-  {
-    bool result = false;
-    aRv = DispatchEvent(aEvent, &result);
-    return result;
-  }
 
   void GetParentObject(nsIScriptGlobalObject **aParentObject)
   {

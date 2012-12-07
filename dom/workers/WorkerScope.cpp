@@ -53,7 +53,7 @@ USING_WORKERS_NAMESPACE
 
 namespace {
 
-class WorkerGlobalScope : public EventTarget
+class WorkerGlobalScope : public workers::EventTarget
 {
   static JSClass sClass;
   static JSPropertySpec sProperties[];
