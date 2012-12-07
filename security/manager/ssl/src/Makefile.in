@@ -74,6 +74,7 @@ CPPSRCS = 				\
   PSMRunnable.cpp \
   nsNSSVersion.cpp \
   nsCertificatePrincipal.cpp \
+  SharedSSLState.cpp \
   $(NULL)
 
 ifdef MOZ_XUL
