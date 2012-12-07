@@ -17,7 +17,6 @@ var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
-var gStartupRan = false;
 
 #ifndef XP_MACOSX
 var gEditUIVisible = true;
@@ -1180,7 +1179,7 @@ var gBrowserInit = {
     this._boundDelayedStartup = this._delayedStartup.bind(this, uriToLoad, mustLoadSidebar);
     window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
 
-    gStartupRan = true;
+    this._loadHandled = true;
   },
 
   _cancelDelayedStartup: function () {
@@ -1500,7 +1499,7 @@ var gBrowserInit = {
     // In certain scenarios it's possible for unload to be fired before onload,
     // (e.g. if the window is being closed after browser.js loads but before the
     // load completes). In that case, there's nothing to do here.
-    if (!gStartupRan)
+    if (!this._loadHandled)
       return;
 
     gDevTools.forgetBrowserWindow(window);
@@ -1661,8 +1660,6 @@ var gBrowserInit = {
     // initialize the sync UI
     gSyncUI.init();
 #endif
-
-    gStartupRan = true;
   },
 
   nonBrowserWindowShutdown: function() {
