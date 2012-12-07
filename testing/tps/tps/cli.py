@@ -91,6 +91,7 @@ def main():
                       config=config,
                       rlock=rlock,
                       mobile=options.mobile,
+                      resultfile=options.resultfile,
                       ignore_unused_engines=options.ignore_unused_engines)
   TPS.run_tests()
 
