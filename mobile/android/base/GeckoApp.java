@@ -163,7 +163,7 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private GeckoProfile mProfile;
     public static int mOrientation;
-    private boolean mIsRestoringActivity;
+    protected boolean mIsRestoringActivity;
     private String mCurrentResponse = "";
     public static boolean sIsUsingCustomProfile = false;
 
@@ -1480,7 +1480,7 @@ abstract public class GeckoApp
         });
     }
 
-    protected void initializeChrome(String uri, Boolean isExternalURL) {
+    protected void initializeChrome(String uri, boolean isExternalURL) {
         mDoorHangerPopup = new DoorHangerPopup(this, null);
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
@@ -1581,7 +1581,7 @@ abstract public class GeckoApp
 
         // If we are doing a restore, read the session data and send it to Gecko
         String restoreMessage = null;
-        if (mRestoreMode != RESTORE_NONE) {
+        if (mRestoreMode != RESTORE_NONE && !mIsRestoringActivity) {
             try {
                 String sessionString = getProfile().readSessionFile(false);
                 if (sessionString == null) {
@@ -1774,7 +1774,7 @@ abstract public class GeckoApp
             setLaunchState(GeckoApp.LaunchState.GeckoRunning);
             Tab selectedTab = Tabs.getInstance().getSelectedTab();
             if (selectedTab != null)
-                Tabs.getInstance().selectTab(selectedTab.getId());
+                Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
             connectGeckoLayerClient();
             GeckoAppShell.setLayerClient(mLayerView.getLayerClient());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
