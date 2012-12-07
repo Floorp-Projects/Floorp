@@ -47,7 +47,7 @@ function telemetry_ping () {
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.gatherStartup();
   TelemetryPing.enableLoadSaveNotifications();
-  TelemetryPing.observe(null, "test-ping", SERVER);
+  TelemetryPing.testPing(SERVER);
 }
 
 // Mostly useful so that you can dump payloads from decodeRequestPayload.
