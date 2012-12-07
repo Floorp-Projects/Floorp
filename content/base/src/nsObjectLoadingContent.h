@@ -437,12 +437,16 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Protects LoadObject from re-entry
     bool                        mIsLoading : 1;
 
+    // For plugin stand-in types (click-to-play, play preview, ...) tracks
+    // whether content js has tried to access the plugin script object.
+    bool                        mScriptRequested : 1;
+
     // Used to track when we might try to instantiate a plugin instance based on
     // a src data stream being delivered to this object. When this is true we
     // don't want plugin instance instantiation code to attempt to load src data
     // again or we'll deliver duplicate streams. Should be cleared when we are
     // not loading src data.
-    bool mSrcStreamLoading;
+    bool                        mSrcStreamLoading : 1;
 
 
     nsWeakFrame                 mPrintFrame;
