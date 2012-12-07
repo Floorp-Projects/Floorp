@@ -386,7 +386,7 @@ class StackFrame
 
     /* Called from IonMonkey to transition from bailouts. */
     void initFromBailout(JSContext *cx, ion::SnapshotIterator &iter);
-    bool initFunctionScopeObjects(JSContext *cx);
+    bool initCallObject(JSContext *cx);
 
     /* Initialize local variables of newly-pushed frame. */
     void initVarsToUndefined();

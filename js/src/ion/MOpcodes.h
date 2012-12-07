@@ -71,7 +71,6 @@ namespace ion {
     _(NewSlots)                                                             \
     _(NewArray)                                                             \
     _(NewObject)                                                            \
-    _(NewDeclEnvObject)                                                     \
     _(NewCallObject)                                                        \
     _(NewStringObject)                                                      \
     _(InitProp)                                                             \
