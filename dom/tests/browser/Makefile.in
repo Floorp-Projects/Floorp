@@ -20,11 +20,18 @@ MOCHITEST_BROWSER_FILES := \
   browser_autofocus_preference.js \
   browser_bug396843.js \
   browser_xhr_sandbox.js \
+  browser_geolocation_privatebrowsing_page.html \
+  network_geolocation.sjs \
   $(NULL)
 
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+  browser_geolocation_privatebrowsing_perwindowpb.js \
+  $(NULL)
+else
 MOCHITEST_BROWSER_FILES += \
   browser_ConsoleStoragePBTest.js \
+  browser_geolocation_privatebrowsing.js \
   $(NULL)
 endif
 
