@@ -29,7 +29,7 @@ const installedPermsToTest = {
   "alarms": "allow",
   "contacts-write": "prompt",
   "contacts-read": "prompt",
-  "device-storage:apps-read": "prompt",
+  "device-storage:apps-read": "deny",
   "device-storage:apps-write": "unknown"
 };
 
