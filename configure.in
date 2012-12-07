@@ -9067,31 +9067,41 @@ fi
 
 # Run jemalloc configure script
 
-if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" -a "$MOZ_JEMALLOC3"; then
+if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -o -n "$MOZ_REPLACE_MALLOC"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_"
   if test -n "$MOZ_REPLACE_MALLOC"; then
     # When using replace_malloc, we always want memalign and valloc exported from jemalloc.
     ac_configure_args="$ac_configure_args ac_cv_func_memalign=yes"
     ac_configure_args="$ac_configure_args ac_cv_func_valloc=yes"
   fi
-  case "${OS_ARCH}" in
-    WINNT|Darwin)
-      # We want jemalloc functions to be kept hidden on both Mac and Windows
-      # See memory/build/mozmemory_wrap.h for details.
-      ac_configure_args="$ac_configure_args --without-export"
-      ;;
-  esac
+  if test -n "$MOZ_JEMALLOC3"; then
+    case "${OS_ARCH}" in
+      WINNT|Darwin)
+        # We want jemalloc functions to be kept hidden on both Mac and Windows
+        # See memory/build/mozmemory_wrap.h for details.
+        ac_configure_args="$ac_configure_args --without-export"
+        ;;
+    esac
+  elif test "${OS_ARCH}" = Darwin; then
+    # When building as a replace-malloc lib, disabling the zone allocator
+    # forces to use pthread_atfork.
+    ac_configure_args="$ac_configure_args --disable-zone-allocator"
+  fi
+  _MANGLE="malloc posix_memalign aligned_alloc calloc realloc free memalign valloc malloc_usable_size"
+  JEMALLOC_WRAPPER=
   if test -z "$MOZ_REPLACE_MALLOC"; then
     case "$OS_ARCH" in
       Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-        MANGLE="malloc posix_memalign aligned_alloc calloc realloc free memalign valloc malloc_usable_size"
+        MANGLE=$_MANGLE
         ;;
     esac
+  elif test -z "$MOZ_JEMALLOC3"; then
+    MANGLE=$_MANGLE
+    JEMALLOC_WRAPPER=replace_
   fi
   if test -n "$MANGLE"; then
     MANGLED=
-    JEMALLOC_WRAPPER=
-    if test -n "$_WRAP_MALLOC"; then
+    if test -n "$_WRAP_MALLOC" -a -z "$JEMALLOC_WRAPPER"; then
       JEMALLOC_WRAPPER=__wrap_
     fi
     for mangle in ${MANGLE}; do

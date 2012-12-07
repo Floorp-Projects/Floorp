@@ -59,7 +59,7 @@ if [ ! "$LIBXUL_SDK" ]; then
     mozglue/Makefile
     mozglue/build/Makefile
   "
-  if [ "$MOZ_JEMALLOC3" -a -z "$MOZ_NATIVE_JEMALLOC" ]; then
+  if [ "$MOZ_JEMALLOC3" -o "$MOZ_REPLACE_MALLOC" ] && [ -z "$MOZ_NATIVE_JEMALLOC" ]; then
     add_makefiles "
       memory/jemalloc/Makefile
     "
@@ -70,6 +70,16 @@ if [ ! "$LIBXUL_SDK" ]; then
       memory/mozjemalloc/Makefile
       memory/build/Makefile
     "
+  fi
+  if [ "$MOZ_REPLACE_MALLOC" ]; then
+    add_makefiles "
+      memory/replace/Makefile
+    "
+    if [ -z "$MOZ_JEMALLOC3" ]; then
+      add_makefiles "
+        memory/replace/jemalloc/Makefile
+      "
+    fi
   fi
   if [ "$MOZ_REPLACE_MALLOC_LINKAGE" = "dummy library" ]; then
     add_makefiles "
