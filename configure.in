@@ -7040,7 +7040,7 @@ else
 fi
 
 if test -z "$MOZ_MEMORY"; then
-  if test -n "$MOZ_JEMALLOC"; then
+  if test -n "$MOZ_JEMALLOC3"; then
     MOZ_NATIVE_JEMALLOC=1
     AC_CHECK_FUNCS(mallctl nallocm,,
       [MOZ_NATIVE_JEMALLOC=
@@ -7048,7 +7048,7 @@ if test -z "$MOZ_MEMORY"; then
     if test -n "$MOZ_NATIVE_JEMALLOC"; then
       MOZ_MEMORY=1
       AC_DEFINE(MOZ_MEMORY)
-      AC_DEFINE(MOZ_JEMALLOC)
+      AC_DEFINE(MOZ_JEMALLOC3)
       AC_DEFINE(MOZ_NATIVE_JEMALLOC)
     fi
   fi
@@ -7083,8 +7083,8 @@ else
   fi
 
   AC_DEFINE(MOZ_MEMORY)
-  if test -n "$MOZ_JEMALLOC"; then
-    AC_DEFINE(MOZ_JEMALLOC)
+  if test -n "$MOZ_JEMALLOC3"; then
+    AC_DEFINE(MOZ_JEMALLOC3)
   fi
   if test "x$MOZ_DEBUG" = "x1"; then
     AC_DEFINE(MOZ_MEMORY_DEBUG)
@@ -7145,7 +7145,7 @@ else
   esac
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_JEMALLOC)
+AC_SUBST(MOZ_JEMALLOC3)
 AC_SUBST(MOZ_NATIVE_JEMALLOC)
 AC_SUBST(MOZ_GLUE_LDFLAGS)
 AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
@@ -8994,19 +8994,18 @@ fi
 
 # Run jemalloc configure script
 
-if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_JEMALLOC" -a "$MOZ_MEMORY" ; then
+if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_JEMALLOC3" -a "$MOZ_MEMORY" ; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_"
+  case "${OS_ARCH}" in
+    WINNT|Darwin)
+      # We want jemalloc functions to be kept hidden on both Mac and Windows
+      # See memory/build/mozmemory_wrap.h for details.
+      ac_configure_args="$ac_configure_args --without-export"
+      ;;
+  esac
   case "$OS_ARCH" in
     Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-      MANGLE="malloc calloc valloc free realloc posix_memalign"
-      case "$OS_ARCH" in
-        Linux)
-          MANGLE="$MANGLE memalign malloc_usable_size"
-          ;;
-        FreeBSD)
-          MANGLE="$MANGLE malloc_usable_size"
-          ;;
-      esac
+      MANGLE="malloc posix_memalign aligned_alloc calloc realloc free memalign valloc malloc_usable_size"
       ;;
   esac
   if test -n "$MANGLE"; then

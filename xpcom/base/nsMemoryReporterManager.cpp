@@ -30,7 +30,7 @@ using namespace mozilla;
 
 #if defined(MOZ_MEMORY)
 #  define HAVE_JEMALLOC_STATS 1
-#  include "jemalloc.h"
+#  include "mozmemory.h"
 #endif  // MOZ_MEMORY
 
 #ifdef XP_UNIX

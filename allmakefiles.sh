@@ -59,13 +59,14 @@ if [ ! "$LIBXUL_SDK" ]; then
     mozglue/Makefile
     mozglue/build/Makefile
   "
-  if [ "$MOZ_JEMALLOC" -a -z "$MOZ_NATIVE_JEMALLOC" ]; then
+  if [ "$MOZ_JEMALLOC3" -a -z "$MOZ_NATIVE_JEMALLOC" ]; then
     add_makefiles "
       memory/jemalloc/Makefile
     "
   fi
   if [ "$MOZ_MEMORY" ]; then
     add_makefiles "
+      memory/Makefile
       memory/mozjemalloc/Makefile
       memory/build/Makefile
     "
