@@ -265,7 +265,7 @@ class MDefinition : public MNode
     void setFlags(uint32_t flags) {
         flags_ |= flags;
     }
-
+    virtual bool neverHoist() const { return false; }
   public:
     MDefinition()
       : id_(0),
@@ -5465,6 +5465,10 @@ class MTypeBarrier : public MUnaryInstruction
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    virtual bool neverHoist() const {
+        return typeSet()->empty();
+    }
+
 };
 
 // Like MTypeBarrier, guard that the value is in the given type set. This is
