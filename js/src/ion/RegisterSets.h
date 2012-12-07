@@ -323,6 +323,9 @@ class TypedRegisterSet
     static inline TypedRegisterSet Volatile() {
         return TypedRegisterSet(T::Codes::AllocatableMask & T::Codes::VolatileMask);
     }
+    static inline TypedRegisterSet NonVolatile() {
+        return TypedRegisterSet(T::Codes::AllocatableMask & T::Codes::NonVolatileMask);
+    }
     void intersect(TypedRegisterSet other) {
         bits_ &= ~other.bits_;
     }
