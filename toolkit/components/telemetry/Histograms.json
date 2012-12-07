@@ -2487,5 +2487,11 @@
     "high": "5000",
     "n_buckets": 15,
     "description": "Time (ms) it takes to figure out extension last modified time"
+  },
+  "TELEMETRY_MEMORY_REPORTER_MS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "Time (ms) it takes to run memory reporters when sending a telemetry ping"
   }
 }
