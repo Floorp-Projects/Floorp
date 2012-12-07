@@ -115,9 +115,6 @@ public:
   // Called on the state machine or decode threads.
   VideoData* FindStartTime(int64_t& aOutStartTime);
 
-  // Call by state machine on multiple threads.
-  bool IsSeekableInBufferedRanges();
-
   // Prepares for an upcoming switch of video readers. Called by
   // |DASHDecoder| when it has switched download streams. Sets the index of
   // the reader to switch TO and the index of the subsegment to switch AT
