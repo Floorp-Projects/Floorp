@@ -31,6 +31,8 @@
 #include "nsIPrompt.h"
 #include "nsThreadUtils.h"
 #include "ScopedNSSTypes.h"
+#include "nsIObserverService.h"
+#include "nsRecentBadCerts.h"
 
 #include "nspr.h"
 #include "certdb.h"
@@ -1642,5 +1644,24 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   *_retval = nssCertList;
   NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateDB::GetRecentBadCerts(bool isPrivate, nsIRecentBadCerts** result)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "RecentBadCerts should only be obtained on the main thread");
+  if (isPrivate) {
+    if (!mPrivateRecentBadCerts) {
+      mPrivateRecentBadCerts = new nsRecentBadCerts;
+      mPrivateRecentBadCerts->InitPrivateBrowsingObserver();
+    }
+    NS_ADDREF(*result = mPrivateRecentBadCerts);
+  } else {
+    if (!mPublicRecentBadCerts) {
+      mPublicRecentBadCerts = new nsRecentBadCerts;
+    }
+    NS_ADDREF(*result = mPublicRecentBadCerts);
+  }
   return NS_OK;
 }
