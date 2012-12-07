@@ -11,8 +11,6 @@
 #include "nsNSSIOLayer.h"
 
 class nsClientAuthRememberService;
-class nsIRecentBadCertsService;
-class nsICertOverrideService;
 class nsIObserver;
 
 namespace mozilla {
@@ -22,6 +20,7 @@ class SharedSSLState {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedSSLState)
   SharedSSLState();
+  ~SharedSSLState();
 
   static void GlobalInit();
   static void GlobalCleanup();
@@ -34,8 +33,17 @@ public:
     return mIOLayerHelpers;
   }
 
+  // Main-thread only
   void ResetStoredData();
   void NotePrivateBrowsingStatus();
+
+  // The following methods may be called from any thread
+  bool SocketCreated();
+  void NoteSocketCreated();
+  static void NoteCertOverrideServiceInstantiated();
+  static void NoteCertDBServiceInstantiated();
+  static bool CertOverrideServiceInstantiated();
+  static bool CertDBServiceInstantiated();
 
 private:
   void Cleanup();
@@ -43,6 +51,16 @@ private:
   nsCOMPtr<nsIObserver> mObserver;
   RefPtr<nsClientAuthRememberService> mClientAuthRemember;
   nsSSLIOLayerHelpers mIOLayerHelpers;
+
+  // Since various NSS-related services can be instantiated on any thread,
+  // these flags all require the following lock for synchronization.
+  static Mutex* sLock;
+  static bool sCertOverrideSvcExists;
+  static bool sCertDBExists;
+  // True if any sockets have been created that use this shared data.
+  // Requires synchronization between the socket and main threads for
+  // reading/writing.
+  bool mSocketCreated;
 };
 
 SharedSSLState* PublicSSLState();
