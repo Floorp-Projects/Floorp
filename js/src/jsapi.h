@@ -5360,13 +5360,6 @@ extern JS_PUBLIC_API(JSString *)
 JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
 /*
- * Convert a dependent string into an independent one.  This function does not
- * change the string's mutability, so the thread safety comments above apply.
- */
-extern JS_PUBLIC_API(const jschar *)
-JS_UndependString(JSContext *cx, JSString *str);
-
-/*
  * For JS_DecodeBytes, set *dstlenp to the size of the destination buffer before
  * the call; on return, *dstlenp contains the number of jschars actually stored.
  * To determine the necessary destination buffer size, make a sizing call that
