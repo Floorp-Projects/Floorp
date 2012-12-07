@@ -94,12 +94,31 @@
  * third-party code, doesn't, but instead has an elaborate way to mangle
  * individual functions. See under "Run jemalloc configure script" in
  * $(topsrcdir)/configure.in.
+ *
+ *
+ * When building with replace-malloc support, the above still holds, but
+ * the malloc implementation and jemalloc specific functions are the
+ * replace-malloc functions from replace_malloc.c.
+ *
+ * The actual jemalloc/mozjemalloc implementation is prefixed with "je_".
+ *
+ * Thus, when MOZ_REPLACE_MALLOC is defined, the "_impl" suffixed macros
+ * expand to "je_" prefixed function when building mozjemalloc or
+ * jemalloc3/mozjemalloc_compat, where MOZ_JEMALLOC_IMPL is defined.
+ *
+ * In other cases, the "_impl" suffixed macros follow the original scheme,
+ * except on Windows and MacOSX, where they would expand to "je_" prefixed
+ * functions. Instead, they are left unmodified (malloc_impl expands to
+ * malloc_impl).
  */
 
 #ifndef MOZ_MEMORY
 #  error Should only include mozmemory_wrap.h when MOZ_MEMORY is set.
 #endif
 
+#if defined(MOZ_JEMALLOC_IMPL) && !defined(MOZ_MEMORY_IMPL)
+#  define MOZ_MEMORY_IMPL
+#endif
 #if defined(MOZ_MEMORY_IMPL) && !defined(IMPL_MFBT)
 #  ifdef MFBT_API /* mozilla/Types.h was already included */
 #    error mozmemory_wrap.h has to be included before mozilla/Types.h when MOZ_MEMORY_IMPL is set and IMPL_MFBT is not.
@@ -111,22 +130,33 @@
 
 #if !defined(MOZ_NATIVE_JEMALLOC)
 #  ifdef MOZ_MEMORY_IMPL
-#    define MOZ_JEMALLOC_API MFBT_API
-#    ifdef XP_WIN
-#      define mozmem_malloc_impl(a)   je_ ## a
-#      define mozmem_dup_impl(a)      wrap_ ## a
-#    elif defined(XP_DARWIN)
-#      define mozmem_malloc_impl(a)   je_ ## a
+#    if defined(MOZ_JEMALLOC_IMPL) && defined(MOZ_REPLACE_MALLOC)
+#      define mozmem_malloc_impl(a)     je_ ## a
+#      define mozmem_jemalloc_impl(a)   je_ ## a
 #    else
-#      define MOZ_MEMORY_API MFBT_API
-#      if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-#        define MOZ_WRAP_NEW_DELETE
+#      define MOZ_JEMALLOC_API MFBT_API
+#      if (defined(XP_WIN) || defined(XP_DARWIN))
+#        if defined(MOZ_REPLACE_MALLOC)
+#          define mozmem_malloc_impl(a)   a ## _impl
+#        else
+#          define mozmem_malloc_impl(a)   je_ ## a
+#        endif
+#      else
+#        define MOZ_MEMORY_API MFBT_API
+#        if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#          define MOZ_WRAP_NEW_DELETE
+#        endif
 #      endif
+#    endif
+#    ifdef XP_WIN
+#      define mozmem_dup_impl(a)      wrap_ ## a
 #    endif
 #  endif
 
 #  if defined(MOZ_WIDGET_ANDROID)
-#    define mozmem_malloc_impl(a)   __wrap_ ## a
+#    ifndef mozmem_malloc_impl
+#      define mozmem_malloc_impl(a)   __wrap_ ## a
+#    endif
 #    define mozmem_dup_impl(a)      __wrap_ ## a
 #  endif
 

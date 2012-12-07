@@ -1472,6 +1472,7 @@ static void	_malloc_postfork(void);
  *   of malloc_zone_t adapted into osx_zone_types.h.
  */
 
+#ifndef MOZ_REPLACE_MALLOC
 #include "osx_zone_types.h"
 
 #define LEOPARD_MALLOC_ZONE_T_VERSION 3
@@ -1489,6 +1490,10 @@ static malloc_introspection_t * const ozone_introspect =
 	(malloc_introspection_t*)(&l_ozone_introspect);
 static void szone2ozone(malloc_zone_t *zone, size_t size);
 static size_t zone_version_size(int version);
+#else
+static const bool osx_use_jemalloc = true;
+#endif
+
 #endif
 
 /*
@@ -6176,7 +6181,7 @@ MALLOC_OUT:
 	}
 #endif
 
-#ifdef MOZ_MEMORY_DARWIN
+#if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
 	/*
 	* Overwrite the default memory allocator to use jemalloc everywhere.
 	*/
@@ -6255,7 +6260,7 @@ malloc_shutdown()
  *
  * This means that NO_MAC_JEMALLOC doesn't work on i386.
  */
-#if defined(MOZ_MEMORY_DARWIN) && !defined(__i386__)
+#if defined(MOZ_MEMORY_DARWIN) && !defined(__i386__) && !defined(MOZ_REPLACE_MALLOC)
 #define DARWIN_ONLY(A) if (!osx_use_jemalloc) { A; }
 #else
 #define DARWIN_ONLY(A)
@@ -6316,6 +6321,7 @@ RETURN:
  * Exported Symbols) in http://www.akkadia.org/drepper/dsohowto.pdf.
  */
 
+#ifndef MOZ_REPLACE_MALLOC
 #if defined(__GNUC__) && !defined(MOZ_MEMORY_DARWIN)
 #define MOZ_MEMORY_ELF
 #endif
@@ -6333,7 +6339,7 @@ __attribute__((noinline))
 __attribute__((visibility ("hidden")))
 #endif
 #endif
-
+#endif /* MOZ_REPLACE_MALLOC */
 
 #ifdef MOZ_MEMORY_ELF
 #define MEMALIGN memalign_internal
@@ -6594,7 +6600,7 @@ free_impl(void *ptr)
  */
 
 /* This was added by Mozilla for use by SQLite. */
-#ifdef MOZ_MEMORY_DARWIN
+#if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
 static
 #else
 MOZ_MEMORY_API
@@ -6935,8 +6941,9 @@ _malloc_postfork(void)
 #  include <dlfcn.h>
 #endif
 
-#ifdef MOZ_MEMORY_DARWIN
+#if defined(MOZ_MEMORY_DARWIN)
 
+#if !defined(MOZ_REPLACE_MALLOC)
 static void *
 zone_malloc(malloc_zone_t *zone, size_t size)
 {
@@ -7156,6 +7163,7 @@ szone2ozone(malloc_zone_t *default_zone, size_t size)
         l_ozone_introspect.m13 = NULL;
     }
 }
+#endif
 
 __attribute__((constructor))
 void
@@ -7165,7 +7173,18 @@ jemalloc_darwin_init(void)
 		abort();
 }
 
-#elif defined(__GLIBC__) && !defined(__UCLIBC__)
+#endif
+
+/*
+ * is_malloc(malloc_impl) is some macro magic to detect if malloc_impl is
+ * defined as "malloc" in mozmemory_wrap.h
+ */
+#define malloc_is_malloc 1
+#define is_malloc_(a) malloc_is_ ## a
+#define is_malloc(a) is_malloc_(a)
+
+#if !defined(MOZ_MEMORY_DARWIN) && (is_malloc(malloc_impl) == 1)
+#  if defined(__GLIBC__) && !defined(__UCLIBC__)
 /*
  * glibc provides the RTLD_DEEPBIND flag for dlopen which can make it possible
  * to inconsistently reference libc's malloc(3)-compatible functions
@@ -7175,18 +7194,19 @@ jemalloc_darwin_init(void)
  * passed an extra argument for the caller return address, which will be
  * ignored.
  */
-MOZ_MEMORY_API void (*__free_hook)(void *ptr) = free;
-MOZ_MEMORY_API void *(*__malloc_hook)(size_t size) = malloc;
-MOZ_MEMORY_API void *(*__realloc_hook)(void *ptr, size_t size) = realloc;
+MOZ_MEMORY_API void (*__free_hook)(void *ptr) = free_impl;
+MOZ_MEMORY_API void *(*__malloc_hook)(size_t size) = malloc_impl;
+MOZ_MEMORY_API void *(*__realloc_hook)(void *ptr, size_t size) = realloc_impl;
 MOZ_MEMORY_API void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
 
-#elif defined(RTLD_DEEPBIND)
+#  elif defined(RTLD_DEEPBIND)
 /*
  * XXX On systems that support RTLD_GROUP or DF_1_GROUP, do their
  * implementations permit similar inconsistencies?  Should STV_SINGLETON
  * visibility be used for interposition where available?
  */
-#  error "Interposing malloc is unsafe on this system without libc malloc hooks."
+#    error "Interposing malloc is unsafe on this system without libc malloc hooks."
+#  endif
 #endif
 
 #ifdef MOZ_MEMORY_WINDOWS
