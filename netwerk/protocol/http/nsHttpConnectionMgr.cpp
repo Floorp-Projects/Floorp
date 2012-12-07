@@ -922,7 +922,6 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
 
     ProcessSpdyPendingQ(ent);
 
-    uint32_t count = ent->mPendingQ.Length();
     nsHttpTransaction *trans;
     nsresult rv;
     bool dispatchedSuccessfully = false;
@@ -930,7 +929,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
     // if !considerAll iterate the pending list until one is dispatched successfully.
     // Keep iterating afterwards only until a transaction fails to dispatch.
     // if considerAll == true then try and dispatch all items.
-    for (uint32_t i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < ent->mPendingQ.Length(); ) {
         trans = ent->mPendingQ[i];
 
         // When this transaction has already established a half-open
@@ -954,22 +953,19 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
                 LOG(("  removing pending transaction based on "
                      "TryDispatchTransaction returning hard error %x\n", rv));
 
-            ent->mPendingQ.RemoveElementAt(i);
-            NS_RELEASE(trans);
+            if (ent->mPendingQ.RemoveElement(trans)) {
+                dispatchedSuccessfully = true;
+                NS_RELEASE(trans);
+                continue; // dont ++i as we just made the array shorter
+            }
 
-            // reset index and array length after RemoveElementAt()
-            dispatchedSuccessfully = true;
-            count = ent->mPendingQ.Length();
-            --i;
-            continue;
+            LOG(("  transaction not found in pending queue\n"));
         }
 
         if (dispatchedSuccessfully && !considerAll)
             break;
-    
-        NS_ABORT_IF_FALSE(count == ent->mPendingQ.Length(),
-                          "something mutated pending queue from "
-                          "GetConnection()");
+
+        ++i;
     }
     return dispatchedSuccessfully;
 }
