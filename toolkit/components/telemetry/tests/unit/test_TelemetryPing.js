@@ -211,9 +211,7 @@ function checkPayload(request, reason, successfulPings) {
     values: {0:1, 1:0},
     sum: 0,
     sum_squares_lo: 0,
-    sum_squares_hi: 0,
-    log_sum: 0,
-    log_sum_squares: 0
+    sum_squares_hi: 0
   };
   let flag = payload.histograms[TELEMETRY_TEST_FLAG];
   do_check_eq(uneval(flag), uneval(expected_flag));
@@ -226,9 +224,7 @@ function checkPayload(request, reason, successfulPings) {
     values: {0:1, 1:successfulPings, 2:0},
     sum: successfulPings,
     sum_squares_lo: successfulPings,
-    sum_squares_hi: 0,
-    log_sum: 0,
-    log_sum_squares: 0
+    sum_squares_hi: 0
   };
   let tc = payload.histograms[TELEMETRY_SUCCESS];
   do_check_eq(uneval(tc), uneval(expected_tc));
