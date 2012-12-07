@@ -66,6 +66,30 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register
 }
 
 void
+MacroAssemblerARM::addDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vadd(dest, src, dest);
+}
+
+void
+MacroAssemblerARM::subDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vsub(dest, src, dest);
+}
+
+void
+MacroAssemblerARM::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vmul(dest, src, dest);
+}
+
+void
+MacroAssemblerARM::divDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vdiv(dest, src, dest);
+}
+
+void
 MacroAssemblerARM::inc64(AbsoluteAddress dest)
 {
 
@@ -2785,7 +2809,15 @@ MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
             ma_vxfer(floatArgsInGPR[i], Register::FromCode(i*2), Register::FromCode(i*2+1));
     }
     checkStackAlignment();
+
+    // Save the lr register if we need to preserve it.
+    if (secondScratchReg_ != lr)
+        ma_mov(lr, secondScratchReg_);
+
     ma_call(fun);
+
+    if (secondScratchReg_ != lr)
+        ma_mov(secondScratchReg_, lr);
 
     if (result == DOUBLE) {
         // Move double from r0/r1 to ReturnFloatReg.

@@ -82,6 +82,36 @@ ICStub::trace(JSTracer *trc)
     }
 }
 
+void
+ICFallbackStub::unlinkStubsWithKind(ICStub::Kind kind)
+{
+    ICStub *stub = icEntry_->firstStub();
+    ICStub *last = NULL;
+    do {
+        if (stub->kind() == kind) {
+            JS_ASSERT(stub->next());
+
+            // If stub is the last optimized stub, update lastStubPtrAddr.
+            if (stub->next() == this) {
+                JS_ASSERT(lastStubPtrAddr_ == stub->addressOfNext());
+                if (last)
+                    lastStubPtrAddr_ = last->addressOfNext();
+                else
+                    lastStubPtrAddr_ = icEntry()->addressOfFirstStub();
+                *lastStubPtrAddr_ = this;
+            }
+
+            JS_ASSERT(numOptimizedStubs_ > 0);
+            numOptimizedStubs_--;
+
+            stub = stub->next();
+            continue;
+        }
+
+        last = stub;
+        stub = stub->next();
+    } while (stub);
+}
 
 ICMonitoredStub::ICMonitoredStub(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub)
   : ICStub(kind, ICStub::Monitored, stubCode),
@@ -684,17 +714,48 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         return true;
     }
 
-    if (!lhs.isInt32() || !rhs.isInt32())
+    // Handle only int32 or double.
+    if (!lhs.isNumber() || !rhs.isNumber())
         return true;
 
-    // Try to generate new stubs.
+    JS_ASSERT(ret.isNumber());
+
+    if (lhs.isDouble() || rhs.isDouble() || ret.isDouble()) {
+        switch (op) {
+          case JSOP_ADD:
+          case JSOP_SUB:
+          case JSOP_MUL:
+          case JSOP_DIV:
+          case JSOP_MOD: {
+            // Unlink int32 stubs, it's faster to always use the double stub.
+            stub->unlinkStubsWithKind(ICStub::BinaryArith_Int32);
+
+            ICBinaryArith_Double::Compiler compiler(cx, op);
+            ICStub *doubleStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+            if (!doubleStub)
+                return false;
+            stub->addNewStub(doubleStub);
+            return true;
+          }
+          case JSOP_URSH:
+            // Fall-through to int32 case.
+            break;
+          default:
+            // TODO: attach double stub for bitwise ops.
+            return true;
+        }
+    }
+
     // TODO: unlink previous !allowDouble stub.
-    bool allowDouble = ret.isDouble();
-    ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
-    ICStub *int32Stub = compilerInt32.getStub(ICStubSpace::StubSpaceFor(script));
-    if (!int32Stub)
-        return false;
-    stub->addNewStub(int32Stub);
+    if (lhs.isInt32() && rhs.isInt32()) {
+        bool allowDouble = ret.isDouble();
+        ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
+        ICStub *int32Stub = compilerInt32.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!int32Stub)
+            return false;
+        stub->addNewStub(int32Stub);
+    }
+
     return true;
 }
 
@@ -716,6 +777,70 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoBinaryArithFallbackInfo, masm);
+}
+
+void
+ICBinaryArith_Double::Compiler::ensureDouble(MacroAssembler &masm, const ValueOperand &source,
+                                             FloatRegister dest, Label *failure)
+{
+    // If source is a double, load it into dest. If source is int32,
+    // convert it to double. Else, branch to failure.
+
+    Label isDouble, done;
+    Register tag = masm.splitTagForTest(source);
+    masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
+    masm.branchTestInt32(Assembler::NotEqual, tag, failure);
+
+    Register payload = masm.extractInt32(source, ExtractTemp0);
+    masm.convertInt32ToDouble(payload, dest);
+    masm.jump(&done);
+
+    masm.bind(&isDouble);
+    masm.unboxDouble(source, dest);
+
+    masm.bind(&done);
+}
+
+bool
+ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    ensureDouble(masm, R0, FloatReg0, &failure);
+    ensureDouble(masm, R1, FloatReg1, &failure);
+
+    switch (op) {
+      case JSOP_ADD:
+        masm.addDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_SUB:
+        masm.subDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_MUL:
+        masm.mulDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_DIV:
+        masm.divDouble(FloatReg1, FloatReg0);
+        break;
+      case JSOP_MOD:
+        masm.setupUnalignedABICall(2, R0.scratchReg());
+        masm.passABIArg(FloatReg0);
+        masm.passABIArg(FloatReg1);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NumberMod), MacroAssembler::DOUBLE);
+        JS_ASSERT(ReturnFloatReg == FloatReg0);
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected op");
+        return false;
+    }
+
+    masm.boxDouble(FloatReg0, R0);
+
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //

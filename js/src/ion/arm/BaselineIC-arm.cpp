@@ -112,15 +112,10 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(R0 == ValueOperand(r3, r2));
         masm.moveValue(R0, savedValue);
 
-        Register savedLr = savedRegs.takeAny();
-        masm.mov(lr, savedLr);
-
         masm.setupAlignedABICall(2);
         masm.passABIArg(R0.payloadReg());
         masm.passABIArg(R1.payloadReg());
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
-
-        masm.mov(savedLr, lr);
 
         // idivmod returns the quotient in r0, and the remainder in r1.
         if (op_ == JSOP_DIV) {
