@@ -411,6 +411,9 @@ SmsDatabaseService.prototype = {
       cursor.continue();
     }
 
+    // We want to avoid walking over entries we just added.
+    // cursor.update doesn't work because we are modifying the primary key.
+    let updateArray = [];
     mostRecentStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
@@ -423,12 +426,16 @@ SmsDatabaseService.prototype = {
         let parsedNumber = PhoneNumberUtils.parse(entry.senderOrReceiver);
         if (parsedNumber && parsedNumber.internationalNumber) {
           entry.senderOrReceiver = parsedNumber.internationalNumber;
-          cursor.update(entry);
+          updateArray.push(entry);
+          cursor.delete();
           if (DEBUG) debug("upgrade mostRecentStore to: " + entry.senderOrReceiver + "\n");
         }
       }
 
       cursor.continue();
+    }
+    for each (entry in updateArray) {
+      mostRecentStore.put(entry);
     }
   },
 
