@@ -188,75 +188,126 @@ ThreadPoolWorker::terminate()
 
 ThreadPool::ThreadPool(JSRuntime *rt)
   : runtime_(rt),
+    numWorkers_(0), // updated during init()
     nextId_(0)
-{ }
-
-ThreadPool::~ThreadPool()
 {
-    terminateWorkers();
-    while (workers_.length() > 0) {
-        ThreadPoolWorker *worker = workers_.popCopy();
-        js_delete(worker);
-    }
 }
 
 bool
 ThreadPool::init()
 {
-#ifdef JS_THREADSAFE
-    // Compute desired number of workers based on env var or # of CPUs.
-    size_t numWorkers = 0;
-    char *pathreads = getenv("PATHREADS");
-    if (pathreads != NULL)
-        numWorkers = strtol(pathreads, NULL, 10);
-    else
-        numWorkers = GetCPUCount() - 1;
+    // Compute the number of worker threads (which may legally
+    // be zero, as described in ThreadPool.h).  This is not
+    // done in the constructor because runtime_->useHelperThreads()
+    // doesn't return the right thing then.
 
-    // Allocate workers array and then start the worker threads.
-    // Ensure that the field numWorkers_ always tracks the number of
-    // *successfully initialized* workers.
-    for (size_t workerId = 0; workerId < numWorkers; workerId++) {
-        ThreadPoolWorker *worker = js_new<ThreadPoolWorker>(workerId, this);
-        if (!worker->init()) {
-            js_delete(worker);
-            return false;
-        }
-        if (!workers_.append(worker)) {
-            js_delete(worker);
-            return false;
-        }
-        if (!worker->start())
-            return false;
-    }
+#ifdef JS_THREADSAFE
+    if (runtime_->useHelperThreads())
+        numWorkers_ = GetCPUCount() - 1;
+    else
+        numWorkers_ = 0;
+
+# ifdef DEBUG
+    if (char *pathreads = getenv("PATHREADS"))
+        numWorkers_ = strtol(pathreads, NULL, 10);
+# endif
 #endif
 
     return true;
 }
 
-void
-ThreadPool::terminateWorkers()
+ThreadPool::~ThreadPool()
 {
-    for (size_t i = 0; i < workers_.length(); i++)
-        workers_[i]->terminate();
+    terminateWorkers();
 }
 
 bool
-ThreadPool::submitOne(TaskExecutor *executor)
+ThreadPool::lazyStartWorkers(JSContext *cx)
 {
+    // Starts the workers if they have not already been started.  If
+    // something goes wrong, reports an error and ensures that all
+    // partially started threads are terminated.  Therefore, upon exit
+    // from this function, the workers array is either full (upon
+    // success) or empty (upon failure).
+
+#ifndef JS_THREADSAFE
+    return true;
+#else
+    if (!workers_.empty()) {
+        JS_ASSERT(workers_.length() == numWorkers());
+        return true;
+    }
+
+    // Allocate workers array and then start the worker threads.
+    // Note that numWorkers_ is the number of *desired* workers,
+    // but workers_.length() is the number of *successfully
+    // initialized* workers.
+    for (size_t workerId = 0; workerId < numWorkers(); workerId++) {
+        ThreadPoolWorker *worker = js_new<ThreadPoolWorker>(workerId, this);
+        if (!worker) {
+            terminateWorkersAndReportOOM(cx);
+            return false;
+        }
+        if (!worker->init() || !workers_.append(worker)) {
+            js_delete(worker);
+            terminateWorkersAndReportOOM(cx);
+            return false;
+        }
+        if (!worker->start()) {
+            // Note: do not delete worker here because it has been
+            // added to the array and hence will be deleted by
+            // |terminateWorkersAndReportOOM()|.
+            terminateWorkersAndReportOOM(cx);
+            return false;
+        }
+    }
+
+    return true;
+#endif
+}
+
+void
+ThreadPool::terminateWorkersAndReportOOM(JSContext *cx)
+{
+    terminateWorkers();
+    JS_ASSERT(workers_.empty());
+    JS_ReportOutOfMemory(cx);
+}
+
+void
+ThreadPool::terminateWorkers()
+{
+    while (workers_.length() > 0) {
+        ThreadPoolWorker *worker = workers_.popCopy();
+        worker->terminate();
+        js_delete(worker);
+    }
+}
+
+bool
+ThreadPool::submitOne(JSContext *cx, TaskExecutor *executor)
+{
+    JS_ASSERT(numWorkers() > 0);
+
     runtime_->assertValidThread();
 
-    if (numWorkers() == 0)
+    if (!lazyStartWorkers(cx))
         return false;
 
     // Find next worker in round-robin fashion.
-    size_t id = JS_ATOMIC_INCREMENT(&nextId_) % workers_.length();
+    size_t id = JS_ATOMIC_INCREMENT(&nextId_) % numWorkers();
     return workers_[id]->submit(executor);
 }
 
 bool
-ThreadPool::submitAll(TaskExecutor *executor)
+ThreadPool::submitAll(JSContext *cx, TaskExecutor *executor)
 {
-    for (size_t id = 0; id < workers_.length(); id++) {
+    runtime_->assertValidThread();
+
+    if (!lazyStartWorkers(cx))
+        return false;
+
+    for (size_t id = 0; id < numWorkers(); id++) {
         if (!workers_[id]->submit(executor))
             return false;
     }
