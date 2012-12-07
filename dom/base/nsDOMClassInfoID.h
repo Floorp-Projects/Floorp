@@ -51,6 +51,9 @@ enum nsDOMClassInfoID {
 DOMCI_CASTABLE_INTERFACE(nsINode, nsINode, 0, _extra)                         \
 DOMCI_CASTABLE_NODECL_INTERFACE(mozilla::dom::Element,  mozilla::dom::Element,\
                                 1, _extra)                                    \
+/* If this is ever removed, the IID for EventTarget can go away */            \
+DOMCI_CASTABLE_NODECL_INTERFACE(mozilla::dom::EventTarget,                    \
+                                mozilla::dom::EventTarget, 2, _extra)         \
 DOMCI_CASTABLE_INTERFACE(nsDocument, nsIDocument, 5, _extra)                  \
 DOMCI_CASTABLE_INTERFACE(nsGenericHTMLElement, nsGenericHTMLElement, 6,       \
                          _extra)                                              \
@@ -68,6 +71,7 @@ DOMCI_CASTABLE_INTERFACES(unused)
 namespace mozilla {
 namespace dom {
 class Element;
+class EventTarget;
 } // namespace dom
 } // namespace mozilla
 
