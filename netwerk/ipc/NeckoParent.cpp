@@ -14,6 +14,7 @@
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
+#include "mozilla/Preferences.h"
 
 #include "nsHTMLDNSPrefetch.h"
 
@@ -24,9 +25,13 @@ using mozilla::dom::TCPSocketParent;
 namespace mozilla {
 namespace net {
 
+static bool gDisableIPCSecurity = false;
+static const char kPrefDisableIPCSecurity[] = "network.disable.ipc.security";
+
 // C++ file contents
 NeckoParent::NeckoParent()
 {
+  Preferences::AddBoolVarCache(&gDisableIPCSecurity, kPrefDisableIPCSecurity);
 }
 
 NeckoParent::~NeckoParent()
