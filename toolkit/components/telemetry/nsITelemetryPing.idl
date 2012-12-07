@@ -14,4 +14,5 @@ interface nsITelemetryPing : nsIObserver {
   void gatherStartup();
   void enableLoadSaveNotifications(); /* Used only for testing. */
   void setAddOns(in AString aAddOns);
+  void testPing(in AString aServer);
 };

@@ -964,13 +964,26 @@ TelemetryPing.prototype = {
     this._addons = aAddOns;
   },
 
+  sendIdlePing: function sendIdlePing(aTest, aServer) {
+    if (this._isIdleObserver) {
+      idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+      this._isIdleObserver = false;
+    }
+    if (aTest) {
+      this.send("test-ping", aServer);
+    } else if (Telemetry.canSend) {
+      this.send("idle-daily", aServer);
+    }
+  },
+
+  testPing: function testPing(server) {
+    this.sendIdlePing(true, server);
+  },
+
   /**
    * This observer drives telemetry.
    */
   observe: function (aSubject, aTopic, aData) {
-    // Allows to change the server for testing
-    var server = this._server;
-
     switch (aTopic) {
     case "profile-after-change":
       this.setup();
@@ -1027,20 +1040,8 @@ TelemetryPing.prototype = {
       this._pingLoadsCompleted = 0;
       this.loadHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
       break;
-    case "test-ping":
-      server = aData;
-      // fall through
     case "idle":
-      if (this._isIdleObserver) {
-        idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-        this._isIdleObserver = false;
-      }
-      if (aTopic == "test-ping") {
-        this.send("test-ping", server);
-      }
-      else if (Telemetry.canSend && aTopic == "idle") {
-        this.send("idle-daily", server);
-      }
+      this.sendIdlePing(false, this._server);
       break;
     case "quit-application-granted":
       if (Telemetry.canSend) {
