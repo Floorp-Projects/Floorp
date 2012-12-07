@@ -956,6 +956,10 @@ TelemetryPing.prototype = {
     this.gatherStartupInformation();
   },
 
+  enableLoadSaveNotifications: function enableLoadSaveNotifications() {
+    this._doLoadSaveNotifications = true;
+  },
+
   /**
    * This observer drives telemetry.
    */
@@ -1021,9 +1025,6 @@ TelemetryPing.prototype = {
       this._pingsLoaded = 0;
       this._pingLoadsCompleted = 0;
       this.loadHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
-      break;
-    case "test-enable-load-save-notifications":
-      this._doLoadSaveNotifications = true;
       break;
     case "test-ping":
       server = aData;
