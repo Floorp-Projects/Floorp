@@ -423,6 +423,8 @@ TelemetryPing.prototype = {
       return;
     }
 
+    let histogram = Telemetry.getHistogramById("TELEMETRY_MEMORY_REPORTER_MS");
+    let startTime = new Date();
     let e = mgr.enumerateReporters();
     while (e.hasMoreElements()) {
       let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
@@ -439,6 +441,7 @@ TelemetryPing.prototype = {
       catch (e) {
       }
     }
+    histogram.add(new Date() - startTime);
   },
 
   handleMemoryReport: function handleMemoryReport(id, path, units, amount) {
