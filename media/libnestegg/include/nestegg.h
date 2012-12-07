@@ -194,6 +194,15 @@ int nestegg_get_cue_point(nestegg * context, unsigned int cluster_num,
                           int64_t max_offset, int64_t * start_pos,
                           int64_t * end_pos);
 
+/** Seek to @a offset.  Stream will seek directly to offset.
+    Should be used to seek to the start of a resync point, i.e. cluster; the
+    parser will not be able to understand other offsets.
+    @param context Stream context initialized by #nestegg_init.
+    @param offset  Absolute offset in bytes.
+    @retval  0 Success.
+    @retval -1 Error. */
+int nestegg_offset_seek(nestegg * context, uint64_t offset);
+
 /** Seek @a track to @a tstamp.  Stream seek will terminate at the earliest
     key point in the stream at or before @a tstamp.  Other tracks in the
     stream will output packets with unspecified but nearby timestamps.

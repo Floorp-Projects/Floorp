@@ -4004,7 +4004,7 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
 @media (min-resolution: 2dppx) {
   panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
   panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
-    list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical@2x.png") !important;
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical@2x.png");
  }
 }
 

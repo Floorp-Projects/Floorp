@@ -307,6 +307,16 @@ this.DOMApplicationRegistry = {
         this.installSystemApps(onAppsLoaded);
       else
         onAppsLoaded();
+
+      // XXX: To be removed as soon as the app:// protocol is remoted.
+      // See Bug 819061
+      let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      dir.initWithPath("/data");
+      dir.permissions = parseInt("755", 8);
+      dir.append("local");
+      dir.permissions = parseInt("755", 8);
+      dir.append("webapps");
+      dir.permissions = parseInt("755", 8);
 #else
       onAppsLoaded();
 #endif

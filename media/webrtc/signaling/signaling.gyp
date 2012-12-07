@@ -333,7 +333,6 @@
         './src/sipcc/core/common/text_strings.c',
         './src/sipcc/core/common/text_strings.h',
         './src/sipcc/core/common/ui.c',
-        './src/sipcc/core/common/vcm_util.c',
         # GSM
         './src/sipcc/core/gsm/ccapi.c',
         './src/sipcc/core/gsm/ccapi_strings.c',
@@ -412,7 +411,6 @@
         './src/sipcc/core/includes/util_ios_queue.h',
         './src/sipcc/core/includes/util_parse.h',
         './src/sipcc/core/includes/util_string.h',
-        './src/sipcc/core/includes/vcm_util.h',
         './src/sipcc/core/includes/www.h',
         './src/sipcc/core/includes/xml_defs.h',
         # SDP

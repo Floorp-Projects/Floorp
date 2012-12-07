@@ -11,4 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS = interfaces src
 
+TEST_DIRS += tests
+
 include $(topsrcdir)/config/rules.mk

@@ -226,7 +226,8 @@ TelemetryPing.prototype = {
    * When reflecting a histogram into JS, Telemetry hands us an object
    * with the following properties:
    * 
-   * - min, max, histogram_type, sum: simple integers;
+   * - min, max, histogram_type, sum, sum_squares_{lo,hi}: simple integers;
+   * - log_sum, log_sum_squares: doubles;
    * - counts: array of counts for histogram buckets;
    * - ranges: array of calculated bucket sizes.
    * 
@@ -236,7 +237,10 @@ TelemetryPing.prototype = {
    *
    * Returns an object:
    * { range: [min, max], bucket_count: <number of buckets>,
-   *   histogram_type: <histogram_type>, sum: <sum>
+   *   histogram_type: <histogram_type>, sum: <sum>,
+   *   sum_squares_lo: <sum_squares_lo>,
+   *   sum_squares_hi: <sum_squares_hi>,
+   *   log_sum: <log_sum>, log_sum_squares: <log_sum_squares>,
    *   values: { bucket1: count1, bucket2: count2, ... } }
    */
   packHistogram: function packHistogram(hgram) {
@@ -247,7 +251,11 @@ TelemetryPing.prototype = {
       bucket_count: r.length,
       histogram_type: hgram.histogram_type,
       values: {},
-      sum: hgram.sum
+      sum: hgram.sum,
+      sum_squares_lo: hgram.sum_squares_lo,
+      sum_squares_hi: hgram.sum_squares_hi,
+      log_sum: hgram.log_sum,
+      log_sum_squares: hgram.log_sum_squares
     };
     let first = true;
     let last = 0;
@@ -939,17 +947,44 @@ TelemetryPing.prototype = {
     return this.getCurrentSessionPayload("gather-payload");
   },
 
+  gatherStartup: function gatherStartup() {
+    let counters = processInfo.getCounters();
+    if (counters) {
+      [this._startupIO.startupSessionRestoreReadBytes,
+        this._startupIO.startupSessionRestoreWriteBytes] = counters;
+    }
+    this.gatherStartupInformation();
+  },
+
+  enableLoadSaveNotifications: function enableLoadSaveNotifications() {
+    this._doLoadSaveNotifications = true;
+  },
+
+  setAddOns: function setAddOns(aAddOns) {
+    this._addons = aAddOns;
+  },
+
+  sendIdlePing: function sendIdlePing(aTest, aServer) {
+    if (this._isIdleObserver) {
+      idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+      this._isIdleObserver = false;
+    }
+    if (aTest) {
+      this.send("test-ping", aServer);
+    } else if (Telemetry.canSend) {
+      this.send("idle-daily", aServer);
+    }
+  },
+
+  testPing: function testPing(server) {
+    this.sendIdlePing(true, server);
+  },
+
   /**
    * This observer drives telemetry.
    */
   observe: function (aSubject, aTopic, aData) {
-    // Allows to change the server for testing
-    var server = this._server;
-
     switch (aTopic) {
-    case "Add-ons":
-      this._addons = aData;
-      break;
     case "profile-after-change":
       this.setup();
       break;
@@ -987,14 +1022,7 @@ TelemetryPing.prototype = {
       // Check whether debugger was attached during startup
       let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
       gWasDebuggerAttached = debugService.isDebuggerAttached;
-      // fall through
-    case "test-gather-startup":
-      var counters = processInfo.getCounters();
-      if (counters) {  
-        [this._startupIO.startupSessionRestoreReadBytes, 
-          this._startupIO.startupSessionRestoreWriteBytes] = counters;
-      }
-      this.gatherStartupInformation();
+      this.gatherStartup();
       break;
     case "idle-daily":
       // Enqueue to main-thread, otherwise components may be inited by the
@@ -1007,31 +1035,13 @@ TelemetryPing.prototype = {
         this._isIdleObserver = true;
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       break;
-    case "test-save-histograms":
-      this.saveHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
-      break;
     case "test-load-histograms":
       this._pingsLoaded = 0;
       this._pingLoadsCompleted = 0;
       this.loadHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
       break;
-    case "test-enable-load-save-notifications":
-      this._doLoadSaveNotifications = true;
-      break;
-    case "test-ping":
-      server = aData;
-      // fall through
     case "idle":
-      if (this._isIdleObserver) {
-        idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-        this._isIdleObserver = false;
-      }
-      if (aTopic == "test-ping") {
-        this.send("test-ping", server);
-      }
-      else if (Telemetry.canSend && aTopic == "idle") {
-        this.send("idle-daily", server);
-      }
+      this.sendIdlePing(false, this._server);
       break;
     case "quit-application-granted":
       if (Telemetry.canSend) {

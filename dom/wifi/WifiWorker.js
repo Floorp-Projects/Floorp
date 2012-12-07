@@ -1941,7 +1941,11 @@ function WifiWorker() {
       self._lastConnectionInfo = null;
       self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
     } else {
-      WifiManager.reassociate(function(){});
+      // NB: We have to call disconnect first. Otherwise, we only reauth with
+      // the existing AP and don't retrigger DHCP.
+      WifiManager.disconnect(function() {
+        WifiManager.reassociate(function(){});
+      });
     }
   };
 
