@@ -7269,7 +7269,7 @@ nsDocument::RefreshLinkHrefs()
   // Reset all of our styled links.
   nsAutoScriptBlocker scriptBlocker;
   for (LinkArray::size_type i = 0; i < linksToNotify.Length(); i++) {
-    linksToNotify[i]->ResetLinkState(true);
+    linksToNotify[i]->ResetLinkState(true, linksToNotify[i]->ElementHasHref());
   }
 }
 
