@@ -2206,6 +2206,7 @@ NS_IMETHODIMP
 nsSocketTransport::SetConnectionFlags(uint32_t value)
 {
     mConnectionFlags = value;
+    mIsPrivate = value & nsISocketTransport::NO_PERMANENT_STORAGE;
     return NS_OK;
 }
 
