@@ -37,19 +37,18 @@ using namespace mozilla;
 
 // Refer AudioService.java from Android
 static int sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
-  10,  // voice call
+  5,   // voice call
   15,  // system
-  7,   // ring
+  15,  // ring
   15,  // music
-  7,   // alarm
-  7,   // notification
+  15,  // alarm
+  15,  // notification
   15,  // BT SCO
-  7,   // enforced audible
+  15,  // enforced audible
   15,  // DTMF
   15,  // TTS
   15,  // FM
 };
-
 // A bitwise variable for recording what kind of headset is attached.
 static int sHeadsetState;
 static int kBtSampleRate = 8000;

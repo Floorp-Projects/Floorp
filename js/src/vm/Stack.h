@@ -9,6 +9,7 @@
 #define Stack_h__
 
 #include "jsfun.h"
+#include "jsscript.h"
 #ifdef JS_ION
 #include "ion/IonFrameIterator.h"
 #endif
@@ -224,7 +225,7 @@ enum ExecuteType {
     EXECUTE_DIRECT_EVAL    =        0x4, /* == StackFrame::EVAL */
     EXECUTE_INDIRECT_EVAL  =        0x5, /* == StackFrame::GLOBAL | EVAL */
     EXECUTE_DEBUG          =        0xc, /* == StackFrame::EVAL | DEBUGGER */
-    EXECUTE_DEBUG_GLOBAL   =        0xd, /* == StackFrame::EVAL | DEBUGGER | GLOBAL */
+    EXECUTE_DEBUG_GLOBAL   =        0xd  /* == StackFrame::EVAL | DEBUGGER | GLOBAL */
 };
 
 /*****************************************************************************/
@@ -609,11 +610,11 @@ class StackFrame
      *   the same VMFrame. Other calls force expansion of the inlined frames.
      */
 
-    js::Return<JSScript*> script() const {
+    UnrootedScript script() const {
         return isFunctionFrame()
                ? isEvalFrame()
                  ? u.evalScript
-                 : (JSScript*)fun()->nonLazyScript().unsafeGet()
+                 : (RawScript)fun()->nonLazyScript()
                : exec.script;
     }
 
@@ -1199,8 +1200,7 @@ class FrameRegs
     }
 
     void setToEndOfScript() {
-        AutoAssertNoGC nogc;
-        RawScript script = fp()->script().get(nogc);
+        UnrootedScript script = fp()->script();
         sp = fp()->base();
         pc = script->code + script->length - JSOP_STOP_LENGTH;
         JS_ASSERT(*pc == JSOP_STOP);
@@ -1801,7 +1801,7 @@ class StackIter
     StackFrame *interpFrame() const { JS_ASSERT(isScript() && !isIon()); return fp_; }
 
     jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
-    js::Return<JSScript*> script() const { JS_ASSERT(isScript()); return script_; }
+    UnrootedScript script() const { JS_ASSERT(isScript()); return script_; }
     JSFunction *callee() const;
     Value       calleev() const;
     unsigned    numActualArgs() const;

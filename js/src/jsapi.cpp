@@ -801,8 +801,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcFoundBlackGrayEdges(false),
     gcSweepingCompartments(NULL),
     gcCompartmentGroupIndex(0),
-    gcRemainingCompartmentGroups(NULL),
-    gcCompartmentGroup(NULL),
+    gcCompartmentGroups(NULL),
+    gcCurrentCompartmentGroup(NULL),
     gcSweepPhase(0),
     gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
@@ -7096,9 +7096,9 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
         return JS_FALSE;
 
     if (script)
-        *script = i.script().get(nogc);
+        *script = i.script();
     if (lineno)
-        *lineno = js::PCToLineNumber(i.script().get(nogc), i.pc());
+        *lineno = js::PCToLineNumber(i.script(), i.pc());
     return JS_TRUE;
 }
 

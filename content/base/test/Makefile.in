@@ -267,6 +267,7 @@ MOCHITEST_FILES_A = \
 		test_bug782342.html \
 		test_bug282547.html \
 		bug282547.sjs \
+		test_domparser_null_char.html \
 		$(NULL)
 
 MOCHITEST_FILES_B = \

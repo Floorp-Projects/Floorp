@@ -167,6 +167,8 @@ protected:
     bool DrawTo(gfxASurface *targetSurface, const nsIntRect &aRect);
     bool IsTopLevel();
     void RemoveIMEComposition();
+    void PostFlushIMEChanges();
+    void FlushIMEChanges();
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
@@ -187,6 +189,33 @@ protected:
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     nsString mIMEComposingText;
     nsAutoTArray<nsTextRange, 4> mIMERanges;
+
+    struct IMEChange {
+        int32_t mStart, mOldEnd, mNewEnd;
+
+        IMEChange() :
+            mStart(-1), mOldEnd(-1), mNewEnd(-1)
+        {
+        }
+        IMEChange(int32_t start, int32_t oldEnd, int32_t newEnd) :
+            mStart(start), mOldEnd(oldEnd), mNewEnd(newEnd)
+        {
+        }
+        IMEChange(int32_t start, int32_t end) :
+            mStart(start), mOldEnd(end), mNewEnd(-1)
+        {
+        }
+        bool IsEmpty()
+        {
+            return mStart < 0;
+        }
+        bool IsTextChange()
+        {
+            return mNewEnd >= 0;
+        }
+    };
+    nsAutoTArray<IMEChange, 4> mIMETextChanges;
+    IMEChange mIMESelectionChange;
 
     InputContext mInputContext;
 

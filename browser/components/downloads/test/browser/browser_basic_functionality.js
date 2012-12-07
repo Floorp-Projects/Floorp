@@ -33,13 +33,13 @@ function gen_test()
 
   try {
     // Ensure that state is reset in case previous tests didn't finish.
-    for (let yy in gen_resetState()) yield;
+    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield;
 
     // Populate the downloads database with the data required by this test.
     for (let yy in gen_addDownloadRows(DownloadData)) yield;
 
     // Open the user interface and wait for data to be fully loaded.
-    for (let yy in gen_openPanel()) yield;
+    for (let yy in gen_openPanel(DownloadsCommon.getData(window))) yield;
 
     // Test item data and count.  This also tests the ordering of the display.
     let richlistbox = document.getElementById("downloadsListBox");
@@ -57,6 +57,6 @@ function gen_test()
     }
   } finally {
     // Clean up when the test finishes.
-    for (let yy in gen_resetState()) yield;
+    for (let yy in gen_resetState(DownloadsCommon.getData(window))) yield;
   }
 }

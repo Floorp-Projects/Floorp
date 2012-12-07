@@ -276,21 +276,6 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
   return pat;
 }
 
-/**
- * Returns true iff the the given operator should affect areas of the
- * destination where the source is transparent. Among other things, this
- * implies that a fully transparent source would still affect the canvas.
- */
-static bool
-OperatorAffectsUncoveredAreas(CompositionOp op)
-{
-  return op == OP_IN ||
-         op == OP_OUT ||
-         op == OP_DEST_IN ||
-         op == OP_DEST_ATOP ||
-         op == OP_DEST_OUT;
-}
-
 static bool
 NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 {
@@ -385,19 +370,18 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
 
   cairo_translate(mContext, aDest.X(), aDest.Y());
 
-  if (OperatorAffectsUncoveredAreas(aOptions.mCompositionOp) ||
-      aOptions.mCompositionOp == OP_SOURCE) {
+  if (IsOperatorBoundByMask(aOptions.mCompositionOp)) {
+    cairo_new_path(mContext);
+    cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
+    cairo_clip(mContext);
+    cairo_set_source(mContext, pat);
+  } else {
     cairo_push_group(mContext);
       cairo_new_path(mContext);
       cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
       cairo_set_source(mContext, pat);
       cairo_fill(mContext);
     cairo_pop_group_to_source(mContext);
-  } else {
-    cairo_new_path(mContext);
-    cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
-    cairo_clip(mContext);
-    cairo_set_source(mContext, pat);
   }
 
   cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
@@ -453,8 +437,16 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   cairo_identity_matrix(mContext);
   cairo_translate(mContext, aDest.x, aDest.y);
 
-  if (OperatorAffectsUncoveredAreas(aOperator) ||
-      aOperator == OP_SOURCE){
+  if (IsOperatorBoundByMask(aOperator)){
+    cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
+    cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
+
+    // Now that the shadow has been drawn, we can draw the surface on top.
+    cairo_set_source_surface(mContext, surf, 0, 0);
+    cairo_new_path(mContext);
+    cairo_rectangle(mContext, 0, 0, width, height);
+    cairo_fill(mContext);
+  } else {
     cairo_push_group(mContext);
       cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
       cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
@@ -466,15 +458,6 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
       cairo_fill(mContext);
     cairo_pop_group_to_source(mContext);
     cairo_paint(mContext);
-  } else {
-    cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
-    cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
-
-    // Now that the shadow has been drawn, we can draw the surface on top.
-    cairo_set_source_surface(mContext, surf, 0, 0);
-    cairo_new_path(mContext);
-    cairo_rectangle(mContext, 0, 0, width, height);
-    cairo_fill(mContext);
   }
 
   cairo_restore(mContext);
@@ -494,7 +477,7 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
   cairo_set_source(mContext, pat);
 
   if (NeedIntermediateSurface(aPattern, aOptions) ||
-      OperatorAffectsUncoveredAreas(aOptions.mCompositionOp)) {
+      !IsOperatorBoundByMask(aOptions.mCompositionOp)) {
     cairo_push_group_with_content(mContext, CAIRO_CONTENT_COLOR_ALPHA);
 
     ClearSurfaceForUnboundedSource(aOptions.mCompositionOp);

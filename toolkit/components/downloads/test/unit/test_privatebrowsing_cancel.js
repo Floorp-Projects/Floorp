@@ -59,33 +59,33 @@ Cm.QueryInterface(Ci.nsIComponentRegistrar)
   .registerFactory(Components.ID(kPromptServiceUUID), "Prompt Service",
                    kPromptServiceContractID, fakePromptServiceFactory);
 
-this.__defineGetter__("pb", function () {
-  delete this.pb;
-  try {
-    return this.pb = Cc["@mozilla.org/privatebrowsing;1"].
-                     getService(Ci.nsIPrivateBrowsingService);
-  } catch (e) {}
-  return this.pb = null;
-});
-
 this.__defineGetter__("dm", function() {
   delete this.dm;
   return this.dm = Cc["@mozilla.org/download-manager;1"].
                    getService(Ci.nsIDownloadManager);
 });
 
-function run_test() {
-  if (!pb) // Private Browsing might not be available
-    return;
+function trigger_pb_cleanup(expected)
+{
+  var obs = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  var cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+  cancel.data = false;
+  obs.notifyObservers(cancel, "last-pb-context-exiting", null);
+  do_check_eq(expected, cancel.data);
+  if (!expected)
+    obs.notifyObservers(cancel, "last-pb-context-exited", null);
+}
 
+function run_test() {
   function finishTest() {
     // Cancel Download-E
-    dm.cancelDownload(dlE.id);
-    dm.removeDownload(dlE.id);
+    dlF.cancel();
+    dlF.remove();
     dm.cleanUp();
+    dm.cleanUpPrivate();
     do_check_eq(dm.activeDownloadCount, 0);
+    do_check_eq(dm.activePrivateDownloadCount, 0);
 
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
     dm.removeListener(listener);
     httpserv.stop(do_test_finished);
 
@@ -99,10 +99,6 @@ function run_test() {
       .registerFactory(Components.ID(kPromptServiceUUID), "Prompt Service",
                        kPromptServiceContractID, kPromptServiceFactory);
   }
-
-  let prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   do_test_pending();
   let httpserv = new HttpServer();
@@ -133,33 +129,19 @@ function run_test() {
 
             // Cancel the transition
             promptService.sayCancel();
-
-            // Enter private browsing mode immediately
-            pb.privateBrowsingEnabled = true;
+            trigger_pb_cleanup(true);
             do_check_true(promptService.wasCalled());
-            do_check_false(pb.privateBrowsingEnabled); // transition was canceled
+            do_check_eq(dm.activePrivateDownloadCount, 1);
 
-            // Check that Download-D status has not changed
-            do_check_neq(dlD.state, dm.DOWNLOAD_PAUSED);
-
-            // proceed with the transition
             promptService.sayProceed();
-
-            // Try to enter the private browsing mode again
-            pb.privateBrowsingEnabled = true;
+            trigger_pb_cleanup(false);
             do_check_true(promptService.wasCalled());
-            do_check_true(pb.privateBrowsingEnabled);
-
-            // Check that Download-D is canceled and not accessible
+            do_check_eq(dm.activePrivateDownloadCount, 0);
             do_check_eq(dlD.state, dm.DOWNLOAD_CANCELED);
-
-            // Exit private browsing mode
-            pb.privateBrowsingEnabled = false;
-            do_check_false(pb.privateBrowsingEnabled);
 
             // Create Download-E
             dlE = addDownload({
-              isPrivate: pb.privateBrowsingEnabled,
+              isPrivate: true,
               targetFile: fileE,
               sourceURI: downloadESource,
               downloadName: downloadEName
@@ -170,14 +152,20 @@ function run_test() {
             // Sanity check: Download-E must be resumable
             do_check_true(dlE.resumable);
 
-            // Enter the private browsing mode
-            pb.privateBrowsingEnabled = true;
-            do_check_false(promptService.wasCalled());
-            do_check_true(pb.privateBrowsingEnabled);
+            promptService.sayCancel();
+            trigger_pb_cleanup(true);
+            do_check_true(promptService.wasCalled());
+            do_check_eq(dm.activePrivateDownloadCount, 1);
+
+            promptService.sayProceed();
+            trigger_pb_cleanup(false);
+            do_check_true(promptService.wasCalled());
+            do_check_eq(dm.activePrivateDownloadCount, 0);
+            do_check_eq(dlE.state, dm.DOWNLOAD_PAUSED);
 
             // Create Download-F
             dlF = addDownload({
-              isPrivate: pb.privateBrowsingEnabled,
+              isPrivate: false,
               targetFile: fileF,
               sourceURI: downloadFSource,
               downloadName: downloadFName
@@ -185,34 +173,14 @@ function run_test() {
 
             // Wait for Download-F to start
           } else if (aDownload.targetFile.equals(dlF.targetFile)) {
-            // Sanity check: Download-F must be resumable
-            do_check_true(dlF.resumable);
+            // Sanity check: Download-F must not be resumable
+            do_check_false(dlF.resumable);
 
-            // Cancel the transition
             promptService.sayCancel();
-
-            // Exit private browsing mode immediately
-            pb.privateBrowsingEnabled = false;
-            do_check_true(promptService.wasCalled());
-            do_check_true(pb.privateBrowsingEnabled); // transition was canceled
-
-            // Check that Download-F status has not changed
-            do_check_neq(dlF.state, dm.DOWNLOAD_PAUSED);
-
-            // proceed with the transition
-            promptService.sayProceed();
-
-            // Try to exit the private browsing mode again
-            pb.privateBrowsingEnabled = false;
-            do_check_true(promptService.wasCalled());
-            do_check_false(pb.privateBrowsingEnabled);
-
-            // Simulate leaving PB mode
-            Services.obs.notifyObservers(null, "last-pb-context-exited", null);
-
-            // Check that Download-F is canceled and not accessible
-            do_check_eq(dlF.state, dm.DOWNLOAD_PAUSED);
-
+            trigger_pb_cleanup(false);
+            do_check_false(promptService.wasCalled());
+            do_check_eq(dm.activeDownloadCount, 1);
+            do_check_eq(dlF.state, dm.DOWNLOAD_DOWNLOADING);
             finishTest();
           }
           break;
@@ -223,7 +191,7 @@ function run_test() {
     onSecurityChange: function(a, b, c, d) { }
   };
 
-  dm.addListener(listener);
+  dm.addPrivacyAwareListener(listener);
 
   // properties of Download-D
   const downloadDSource = "http://localhost:4444/noresume";
@@ -236,7 +204,7 @@ function run_test() {
   const downloadEName = "download-E";
 
   // properties of Download-F
-  const downloadFSource = "http://localhost:4444/file/test_privatebrowsing_cancel.js";
+  const downloadFSource = "http://localhost:4444/noresume";
   const downloadFDest = "download-file-F";
   const downloadFName = "download-F";
 
@@ -253,12 +221,11 @@ function run_test() {
 
   // Create Download-D
   let dlD = addDownload({
-    isPrivate: pb.privateBrowsingEnabled,
+    isPrivate: true,
     targetFile: fileD,
     sourceURI: downloadDSource,
     downloadName: downloadDName
   });
-  downloadD = dlD.id;
 
   let dlE, dlF;
 

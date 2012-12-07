@@ -186,6 +186,23 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   psd->mX = aX;
   psd->mRightEdge = aX + aWidth;
 
+  // If we're in a constrained height frame, then we don't allow a
+  // max line box width to take effect.
+  if (!(GetLineContainerFrame()->GetStateBits() &
+      NS_FRAME_IN_CONSTRAINED_HEIGHT)) {
+
+    // If the available size is greater than the maximum line box width (if
+    // specified), then we need to adjust the line box width to be at the max
+    // possible width.
+    nscoord maxLineBoxWidth =
+      GetLineContainerFrame()->PresContext()->PresShell()->MaxLineBoxWidth();
+
+    if (maxLineBoxWidth > 0 &&
+        psd->mRightEdge - psd->mLeftEdge > maxLineBoxWidth) {
+      psd->mRightEdge = psd->mLeftEdge + maxLineBoxWidth;
+    }
+  }
+
   mTopEdge = aY;
 
   psd->mNoWrap = !mStyleText->WhiteSpaceCanWrap();
@@ -748,15 +765,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // includes room for the side margins.
   // For now, set the available height to unconstrained always.
   nsSize availSize(mBlockReflowState->ComputedWidth(), NS_UNCONSTRAINEDSIZE);
-
-  // If the available size is greater than the maximum line box width (if
-  // specified), then we need to adjust the line box width to be at the max
-  // possible width.
-  nscoord maxLineBoxWidth = aFrame->PresContext()->PresShell()->MaxLineBoxWidth();
-
-  if (maxLineBoxWidth > 0 && psd->mRightEdge - psd->mLeftEdge > maxLineBoxWidth) {
-    psd->mRightEdge = psd->mLeftEdge + maxLineBoxWidth;
-  }
 
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that

@@ -42,7 +42,7 @@ CalleeToToken(JSFunction *fun)
     return CalleeToken(uintptr_t(fun) | uintptr_t(CalleeToken_Function));
 }
 static inline CalleeToken
-CalleeToToken(JSScript *script)
+CalleeToToken(RawScript script)
 {
     return CalleeToken(uintptr_t(script) | uintptr_t(CalleeToken_Script));
 }
@@ -57,14 +57,14 @@ CalleeTokenToFunction(CalleeToken token)
     JS_ASSERT(CalleeTokenIsFunction(token));
     return (JSFunction *)token;
 }
-static inline JSScript *
+static inline UnrootedScript
 CalleeTokenToScript(CalleeToken token)
 {
     JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
-    return (JSScript *)(uintptr_t(token) & ~uintptr_t(0x3));
+    return (RawScript)(uintptr_t(token) & ~uintptr_t(0x3));
 }
 
-static inline JSScript *
+static inline UnrootedScript
 ScriptFromCalleeToken(CalleeToken token)
 {
     AutoAssertNoGC nogc;
@@ -72,10 +72,10 @@ ScriptFromCalleeToken(CalleeToken token)
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
       case CalleeToken_Function:
-        return CalleeTokenToFunction(token)->nonLazyScript().get(nogc);
+        return CalleeTokenToFunction(token)->nonLazyScript();
     }
     JS_NOT_REACHED("invalid callee token tag");
-    return NULL;
+    return UnrootedScript(NULL);
 }
 
 // In between every two frames lies a small header describing both frames. This
@@ -269,7 +269,7 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type)
 namespace js {
 namespace ion {
 
-JSScript *
+UnrootedScript
 GetTopIonJSScript(JSContext *cx,
                   const SafepointIndex **safepointIndexOut = NULL,
                   void **returnAddrOut = NULL);

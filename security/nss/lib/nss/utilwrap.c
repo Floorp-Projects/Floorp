@@ -647,7 +647,7 @@ unsigned char *ATOB_AsciiToData(const char *string, unsigned int *lenp)
     return ATOB_AsciiToData_Util(string, lenp);
 }
  
-SECStatus ATOB_ConvertAsciiToItem(SECItem *binary_item, char *ascii)
+SECStatus ATOB_ConvertAsciiToItem(SECItem *binary_item, const char *ascii)
 {
     return ATOB_ConvertAsciiToItem_Util(binary_item, ascii);
 }

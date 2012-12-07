@@ -11,5 +11,5 @@ include $(CORE_DEPTH)/coreconf/WIN32.mk
 
 DEFINES += -DWIN95
 
-# WINNT uses the lib prefix, Win95 and WinCE don't
+# WINNT uses the lib prefix, Win95 doesn't
 NSPR31_LIB_PREFIX = $(NULL)

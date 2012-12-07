@@ -16,7 +16,9 @@
 #include "nsNSSComponent.h"
 #include "nsSSLStatus.h"
 #include "nsNSSCertificate.h"
-#include "nsNSSCleaner.h"
+#include "ScopedNSSTypes.h"
+
+using namespace mozilla;
 
 #ifdef DEBUG
 #ifndef PSM_ENABLE_TEST_EV_ROOTS
@@ -27,10 +29,6 @@
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
-
-NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
-NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
-NSSCleanupAutoPtrClass_WithParam(SECItem, SECITEM_FreeItem, TrueParam, true)
 
 #define CONST_OID static const unsigned char
 #define OI(x) { siDEROID, (unsigned char *)x, sizeof x }
@@ -1217,8 +1215,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
   if (oid_tag == SEC_OID_UNKNOWN) // not in our list of OIDs accepted for EV
     return NS_OK;
 
-  CERTCertList *rootList = getRootsForOid(oid_tag);
-  CERTCertListCleaner rootListCleaner(rootList);
+  ScopedCERTCertList rootList(getRootsForOid(oid_tag));
 
   CERTRevocationMethodIndex preferedRevMethods[1] = { 
     cert_revocation_method_ocsp
@@ -1277,14 +1274,13 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
   cvout[0].value.pointer.cert = nullptr;
   cvout[1].type = cert_po_end;
 
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("calling CERT_PKIXVerifyCert nss cert %p\n", mCert));
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("calling CERT_PKIXVerifyCert nss cert %p\n", mCert.get()));
   rv = CERT_PKIXVerifyCert(mCert, certificateUsageSSLServer,
                            cvin, cvout, nullptr);
   if (rv != SECSuccess)
     return NS_OK;
 
-  CERTCertificate *issuerCert = cvout[0].value.pointer.cert;
-  CERTCertificateCleaner issuerCleaner(issuerCert);
+  ScopedCERTCertificate issuerCert(cvout[0].value.pointer.cert);
 
 #ifdef PR_LOGGING
   if (PR_LOG_TEST(gPIPNSSLog, PR_LOG_DEBUG)) {

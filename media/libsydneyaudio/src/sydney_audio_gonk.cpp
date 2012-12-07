@@ -262,7 +262,6 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
     wrote += r;
   } while (wrote < nbytes);
 
-  ALOG("%p - Wrote %u", s,  nbytes);
   s->amountWritten += nbytes;
 
   return r < 0 ? SA_ERROR_INVALID : SA_SUCCESS;
@@ -303,8 +302,6 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
-
-  ALOG("%p - get position", s);
 
   uint32_t framePosition;
   if (s->output_unit->getPosition(&framePosition) != NO_ERROR)

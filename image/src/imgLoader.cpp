@@ -1663,8 +1663,12 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
     // Create a loadgroup for this new channel.  This way if the channel
     // is redirected, we'll have a way to cancel the resulting channel.
+    // Inform the new loadgroup of the old one so they can still be correlated
+    // together as a logical group.
     nsCOMPtr<nsILoadGroup> loadGroup =
         do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+    if (loadGroup)
+      loadGroup->SetLoadGroup(aLoadGroup);
     newChannel->SetLoadGroup(loadGroup);
 
     request->Init(aURI, aURI, loadGroup, newChannel, entry, aCX,

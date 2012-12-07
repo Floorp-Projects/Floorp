@@ -49,6 +49,8 @@ HttpBaseChannel::HttpBaseChannel()
   , mTracingEnabled(true)
   , mTimingEnabled(false)
   , mAllowSpdy(true)
+  , mLoadAsBlocking(false)
+  , mLoadUnblocked(false)
   , mSuspendCount(0)
   , mProxyResolveFlags(0)
   , mContentDispositionHint(UINT32_MAX)
@@ -1351,6 +1353,36 @@ NS_IMETHODIMP
 HttpBaseChannel::SetAllowSpdy(bool aAllowSpdy)
 {
   mAllowSpdy = aAllowSpdy;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLoadAsBlocking(bool *aLoadAsBlocking)
+{
+  NS_ENSURE_ARG_POINTER(aLoadAsBlocking);
+  *aLoadAsBlocking = mLoadAsBlocking;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetLoadAsBlocking(bool aLoadAsBlocking)
+{
+  mLoadAsBlocking = aLoadAsBlocking;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLoadUnblocked(bool *aLoadUnblocked)
+{
+  NS_ENSURE_ARG_POINTER(aLoadUnblocked);
+  *aLoadUnblocked = mLoadUnblocked;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetLoadUnblocked(bool aLoadUnblocked)
+{
+  mLoadUnblocked = aLoadUnblocked;
   return NS_OK;
 }
 

@@ -1087,7 +1087,7 @@ nsSVGSVGElement::GetCurrentViewElement() const
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       Element *element = doc->GetElementById(*mCurrentViewID);
-      if (element && element->Tag() == nsGkAtoms::view) {
+      if (element && element->IsSVG(nsGkAtoms::view)) {
         return static_cast<nsSVGViewElement*>(element);
       }
     }
