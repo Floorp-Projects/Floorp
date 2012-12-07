@@ -367,17 +367,6 @@ DASHReader::VideoQueue()
   return mVideoQueue;
 }
 
-bool
-DASHReader::IsSeekableInBufferedRanges()
-{
-  ReentrantMonitorConditionallyEnter mon(!mDecoder->OnDecodeThread(),
-                                         mDecoder->GetReentrantMonitor());
-  // At least one subreader must exist, and all subreaders must return true.
-  return (mVideoReader || mAudioReader) &&
-          !((mVideoReader && !mVideoReader->IsSeekableInBufferedRanges()) ||
-            (mAudioReader && !mAudioReader->IsSeekableInBufferedRanges()));
-}
-
 void
 DASHReader::RequestVideoReaderSwitch(uint32_t aFromReaderIdx,
                                        uint32_t aToReaderIdx,
