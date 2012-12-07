@@ -306,14 +306,6 @@ public:
   static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
   /**
-   * Try to determine whether the ThebesLayer aLayer paints an opaque
-   * single color everywhere it's visible in aRect.
-   * If successful, return that color, otherwise return NS_RGBA(0,0,0,0).
-   */
-  nscolor FindOpaqueColorCovering(nsDisplayListBuilder* aBuilder,
-                                  ThebesLayer* aLayer, const nsRect& aRect);
-
-  /**
    * Destroy any stored LayerManagerDataProperty and the associated data for
    * aFrame.
    */

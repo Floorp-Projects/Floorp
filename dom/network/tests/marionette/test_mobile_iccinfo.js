@@ -78,5 +78,5 @@ function testSPN(mcc, mnc, expectedIsDisplayNetworkNameRequired,
 
 testDisplayConditionChange(testSPN, [
   [123, 456, false, true], // Not in HPLMN.
-  [310, 260, true, false], // inside HPLMN.
+  [310, 260, true, true], // inside HPLMN.
 ], finalize);

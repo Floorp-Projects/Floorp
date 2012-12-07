@@ -592,7 +592,7 @@ SECStatus PK11_DigestBegin(PK11Context *cx)
 }
 
 SECStatus
-PK11_HashBuf(SECOidTag hashAlg, unsigned char *out, unsigned char *in, 
+PK11_HashBuf(SECOidTag hashAlg, unsigned char *out, const unsigned char *in,
 								PRInt32 len) {
     PK11Context *context;
     unsigned int max_length;
@@ -637,7 +637,7 @@ PK11_HashBuf(SECOidTag hashAlg, unsigned char *out, unsigned char *in,
  */
 SECStatus
 PK11_CipherOp(PK11Context *context, unsigned char * out, int *outlen, 
-				int maxout, unsigned char *in, int inlen)
+				int maxout, const unsigned char *in, int inlen)
 {
     CK_RV crv = CKR_OK;
     CK_ULONG length = maxout;
@@ -687,7 +687,7 @@ PK11_CipherOp(PK11Context *context, unsigned char * out, int *outlen,
 	} else if (context->operation == CKA_DECRYPT) {
 	    length = sizeof(random);
 	    crv = PK11_GETTAB(context->slot)->C_DecryptUpdate(context->session,
-		in,sizeof(random),random,&length);
+		(CK_BYTE_PTR)in,sizeof(random),random,&length);
 	    inlen -= length;
 	    in += length;
 	    context->fortezzaHack = PR_FALSE;
@@ -698,13 +698,15 @@ PK11_CipherOp(PK11Context *context, unsigned char * out, int *outlen,
     case CKA_ENCRYPT:
 	length = maxout;
 	crv=PK11_GETTAB(context->slot)->C_EncryptUpdate(context->session,
-						in, inlen, out, &length);
+							(CK_BYTE_PTR)in, inlen,
+							out, &length);
 	length += offset;
 	break;
     case CKA_DECRYPT:
 	length = maxout;
 	crv=PK11_GETTAB(context->slot)->C_DecryptUpdate(context->session,
-						in, inlen, out, &length);
+							(CK_BYTE_PTR)in, inlen,
+							out, &length);
 	break;
     default:
 	crv = CKR_OPERATION_NOT_INITIALIZED;

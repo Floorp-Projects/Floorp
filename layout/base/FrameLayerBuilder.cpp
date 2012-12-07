@@ -1501,11 +1501,42 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aThebesLayerIndex)
 
     // The candidate intersects our target. If any layer has a solid-color
     // area behind our target, this must be it. Scan its display items.
-    nsRect rect =
-      target->mVisibleRegion.GetBounds().ToAppUnits(mAppUnitsPerDevPixel);
-    rect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
-    return mLayerBuilder->
-      FindOpaqueColorCovering(mBuilder, candidate->mLayer, rect);
+    nsIntRect deviceRect = target->mVisibleRegion.GetBounds();
+    nsRect appUnitRect = deviceRect.ToAppUnits(mAppUnitsPerDevPixel);
+    appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
+
+    FrameLayerBuilder::ThebesLayerItemsEntry* entry =
+      mLayerBuilder->GetThebesLayerItemsEntry(candidate->mLayer);
+    NS_ASSERTION(entry, "Must know about this layer!");
+    for (int32_t j = entry->mItems.Length() - 1; j >= 0; --j) {
+      nsDisplayItem* item = entry->mItems[j].mItem;
+      bool snap;
+      nsRect bounds = item->GetBounds(mBuilder, &snap);
+      if (snap && mSnappingEnabled) {
+        nsIntRect snappedBounds = ScaleToNearestPixels(bounds);
+        if (!snappedBounds.Intersects(deviceRect))
+          continue;
+
+        if (!snappedBounds.Contains(deviceRect))
+          break;
+
+      } else {
+        // The layer's visible rect is already (close enough to) pixel
+        // aligned, so no need to round out and in here.
+        if (!bounds.Intersects(appUnitRect))
+          continue;
+
+        if (!bounds.Contains(appUnitRect))
+          break;
+      }
+
+      nscolor color;
+      if (item->IsUniform(mBuilder, &color) && NS_GET_A(color) == 255)
+        return color;
+
+      break;
+    }
+    break;
   }
   return NS_RGBA(0,0,0,0);
 }
@@ -2611,28 +2642,6 @@ FrameLayerBuilder::SaveLastPaintOffset(ThebesLayer* aLayer)
     entry->mLastPaintOffset = GetTranslationForThebesLayer(aLayer);
     entry->mHasExplicitLastPaintOffset = true;
   }
-}
-
-nscolor
-FrameLayerBuilder::FindOpaqueColorCovering(nsDisplayListBuilder* aBuilder,
-                                           ThebesLayer* aLayer,
-                                           const nsRect& aRect)
-{
-  ThebesLayerItemsEntry* entry = mThebesLayerItems.GetEntry(aLayer);
-  NS_ASSERTION(entry, "Must know about this layer!");
-  for (int32_t i = entry->mItems.Length() - 1; i >= 0; --i) {
-    nsDisplayItem* item = entry->mItems[i].mItem;
-    const nsRect& visible = item->GetVisibleRect();
-    if (!visible.Intersects(aRect))
-      continue;
-
-    nscolor color;
-    if (visible.Contains(aRect) && item->IsUniform(aBuilder, &color) &&
-        NS_GET_A(color) == 255)
-      return color;
-    break;
-  }
-  return NS_RGBA(0,0,0,0);
 }
 
 void

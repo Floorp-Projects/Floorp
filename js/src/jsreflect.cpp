@@ -3398,8 +3398,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!src)
         return JS_FALSE;
 
-    char *filename = NULL;
-    AutoReleaseNullablePtr filenamep(filename);
+    js::ScopedFreePtr<char> filename;
     uint32_t lineno = 1;
     bool loc = true;
 
@@ -3446,7 +3445,6 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
                 filename = DeflateString(cx, chars, length);
                 if (!filename)
                     return JS_FALSE;
-                filenamep.reset(filename);
             }
 
             /* config.line */

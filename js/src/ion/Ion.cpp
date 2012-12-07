@@ -1183,7 +1183,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     JS_ASSERT(!builder->script()->ion);
     JSContext *cx = GetIonContext()->cx;
 
-    IonSpewNewFunction(graph, builder->script().unsafeGet());
+    IonSpewNewFunction(graph, builder->script());
 
     if (!builder->build()) {
         IonSpew(IonSpew_Abort, "Builder failed to build.");
@@ -1196,7 +1196,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     // incremental read barriers.
     if (js_IonOptions.parallelCompilation &&
         OffThreadCompilationAvailable(cx) &&
-        !IsIncrementalGCInProgress(cx->runtime))
+        cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL)
     {
         builder->script()->ion = ION_COMPILING_SCRIPT;
 
@@ -1523,7 +1523,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         }
         calleeToken = CalleeToToken(&fp->callee());
     } else {
-        calleeToken = CalleeToToken(fp->script().unsafeGet());
+        calleeToken = CalleeToToken(fp->script());
     }
 
     // Caller must construct |this| before invoking the Ion function.
@@ -1836,6 +1836,7 @@ void
 ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
+    AutoAssertNoGC nogc;
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
     AutoFlushCache afc ("Invalidate");
 
@@ -1874,12 +1875,11 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        ExecutionMode executionMode;
+        ExecutionMode executionMode = SequentialExecution;
         switch (co.kind()) {
           case types::CompilerOutput::MethodJIT:
             continue;
           case types::CompilerOutput::Ion:
-            executionMode = SequentialExecution;
             break;
           case types::CompilerOutput::ParallelIon:
             executionMode = ParallelExecution;

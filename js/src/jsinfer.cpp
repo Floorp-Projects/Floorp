@@ -1423,10 +1423,10 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
         return;
     }
 
-    if (!(callee->getOrCreateScript(cx).unsafeGet() && callee->nonLazyScript()->ensureHasTypes(cx)))
+    if (!(callee->getOrCreateScript(cx) && callee->nonLazyScript()->ensureHasTypes(cx)))
         return;
 
-    TypeSet *thisTypes = TypeScript::ThisTypes(callee->nonLazyScript().unsafeGet());
+    TypeSet *thisTypes = TypeScript::ThisTypes(callee->nonLazyScript());
     if (this->types)
         this->types->addSubset(cx, thisTypes);
     else
@@ -5561,7 +5561,7 @@ JSScript::makeAnalysis(JSContext *cx)
 /* static */ bool
 JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton)
 {
-    JS_ASSERT(fun->nonLazyScript().unsafeGet());
+    JS_ASSERT(fun->nonLazyScript());
     JS_ASSERT(fun->nonLazyScript()->function() == fun);
 
     if (!cx->typeInferenceEnabled())
@@ -5717,7 +5717,7 @@ JSObject::makeLazyType(JSContext *cx)
     RootedObject self(cx, this);
     /* De-lazification of functions can GC, so we need to do it up here. */
     if (self->isFunction() && self->toFunction()->isInterpretedLazy()) {
-        if (!self->toFunction()->getOrCreateScript(cx).unsafeGet())
+        if (!self->toFunction()->getOrCreateScript(cx))
             return NULL;
     }
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
@@ -6149,8 +6149,7 @@ TypeCompartment::sweep(FreeOp *fop)
     if (arrayTypeTable) {
         for (ArrayTypeTable::Enum e(*arrayTypeTable); !e.empty(); e.popFront()) {
             const ArrayTableKey &key = e.front().key;
-            TypeObject *obj = e.front().value;
-            JS_ASSERT(obj->proto == key.proto);
+            JS_ASSERT(e.front().value->proto == key.proto);
             JS_ASSERT(!key.type.isSingleObject());
 
             bool remove = false;

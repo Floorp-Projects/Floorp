@@ -9,8 +9,8 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == continuation-positioned-inline-2.html continuation-positioned-inline-ref.html
 == scrollframe-1.html scrollframe-1-ref.html
 fuzzy-if(Android,9,39) == scrollframe-2.html scrollframe-2-ref.html #bug 756530
-== select-1.html select-1-ref.html
-== select-1-dynamic.html select-1-ref.html
+fuzzy-if(gtk2Widget,1,8) == select-1.html select-1-ref.html
+fuzzy-if(gtk2Widget,1,8) == select-1-dynamic.html select-1-ref.html
 == select-2.html select-2-ref.html
 fuzzy-if(gtk2Widget,1,19) fuzzy-if(Android,17,726) == select-3.html select-3-ref.html
 

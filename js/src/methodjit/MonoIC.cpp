@@ -884,7 +884,7 @@ class CallCompiler : public BaseCompiler
         masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), false)),
                       FrameAddress(offsetof(VMFrame, stubRejoin)));
 
-        masm.bumpStubCount(f.script().get(nogc), f.pc(), Registers::tempCallReg());
+        masm.bumpStubCount(f.script(), f.pc(), Registers::tempCallReg());
 
         /* Try and compile. On success we get back the nmap pointer. */
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
@@ -1001,7 +1001,7 @@ class CallCompiler : public BaseCompiler
         /* Guard that it's the same script. */
         Address scriptAddr(ic.funObjReg, JSFunction::offsetOfNativeOrScript());
         Jump funGuard = masm.branchPtr(Assembler::NotEqual, scriptAddr,
-                                       ImmPtr(obj->toFunction()->nonLazyScript().get(nogc)));
+                                       ImmPtr(obj->toFunction()->nonLazyScript()));
         Jump done = masm.jump();
 
         LinkerHelper linker(masm, JSC::JAEGER_CODE);
@@ -1259,9 +1259,8 @@ class CallCompiler : public BaseCompiler
             return NULL;
         }
 
-        AutoAssertNoGC nogc;
         JS_ASSERT(fun);
-        JSScript *script = fun->nonLazyScript().get(nogc);
+        UnrootedScript script = fun->nonLazyScript();
         JS_ASSERT(script);
 
         uint32_t flags = callingNew ? StackFrame::CONSTRUCTING : 0;
@@ -1433,7 +1432,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
     JITScript *jit = f.jit();
     StackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
-    JSScript *script = fun->nonLazyScript().get(nogc);
+    UnrootedScript script = fun->nonLazyScript();
 
     if (jit->argsCheckPool)
         jit->resetArgsCheck();

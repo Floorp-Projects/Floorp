@@ -1622,12 +1622,12 @@ typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
 typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
 typedef JS::MutableHandle<jsid>        JSMutableHandleId;
 
-typedef JS::RawObject   JSRawObject;
-typedef JS::RawFunction JSRawFunction;
-typedef JS::RawScript   JSRawScript;
-typedef JS::RawString   JSRawString;
-typedef JS::RawId       JSRawId;
-typedef JS::RawValue    JSRawValue;
+typedef js::RawObject   JSRawObject;
+typedef js::RawFunction JSRawFunction;
+typedef js::RawScript   JSRawScript;
+typedef js::RawString   JSRawString;
+typedef js::RawId       JSRawId;
+typedef js::RawValue    JSRawValue;
 
 /* JSClass operation signatures. */
 

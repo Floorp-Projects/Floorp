@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "prlog.h"
-#include "prmem.h"
 #include "prdtoa.h"
 #include "AudioStream.h"
 #include "nsAlgorithm.h"

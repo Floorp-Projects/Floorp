@@ -162,6 +162,7 @@ pref("dom.experimental_forms", true);
 
 /* extension manager and xpinstall */
 pref("xpinstall.whitelist.add", "addons.mozilla.org");
+pref("xpinstall.whitelist.add.180", "marketplace.firefox.com");
 
 pref("extensions.enabledScopes", 1);
 pref("extensions.autoupdate.enabled", true);
@@ -524,6 +525,7 @@ pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);
+pref("layers.low-precision-resolution", 250);
 
 pref("notification.feature.enabled", true);
 

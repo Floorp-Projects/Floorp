@@ -20,17 +20,15 @@
 #include "nsXPCOMCID.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-
+#include "ScopedNSSTypes.h"
+ 
 #include "prlog.h"
-#include "nsNSSCleaner.h"
 
 using namespace mozilla;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
-
-NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 static NS_DEFINE_CID(kCertOverrideCID, NS_CERTOVERRIDE_CID);
@@ -641,12 +639,9 @@ nsCertTree::GetCertsByType(uint32_t           aType,
                            void              *aCertCmpFnArg)
 {
   nsNSSShutDownPreventionLock locker;
-  CERTCertList *certList = nullptr;
   nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
-  certList = PK11_ListCerts(PK11CertListUnique, cxt);
+  ScopedCERTCertList certList(PK11_ListCerts(PK11CertListUnique, cxt));
   nsresult rv = GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg);
-  if (certList)
-    CERT_DestroyCertList(certList);
   return rv;
 }
 
@@ -815,8 +810,7 @@ nsCertTree::DeleteEntryObject(uint32_t index)
             // although there are still overrides stored,
             // so, we keep the cert, but remove the trust
 
-            CERTCertificate *nsscert = nullptr;
-            CERTCertificateCleaner nsscertCleaner(nsscert);
+            ScopedCERTCertificate nsscert;
 
             nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(cert);
             if (cert2) {

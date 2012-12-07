@@ -2316,7 +2316,8 @@ Assembler::nextInstruction(uint8_t *inst_, uint32_t *count)
     return reinterpret_cast<uint8_t*>(inst->next());
 }
 
-bool instIsGuard(Instruction *inst, const PoolHeader **ph)
+static bool
+InstIsGuard(Instruction *inst, const PoolHeader **ph)
 {
     Assembler::Condition c;
     inst->extractCond(&c);
@@ -2329,7 +2330,8 @@ bool instIsGuard(Instruction *inst, const PoolHeader **ph)
     return *ph != NULL;
 }
 
-bool instIsBNop(Instruction *inst) {
+static bool
+InstIsBNop(Instruction *inst) {
     // In some special situations, it is necessary to insert a NOP
     // into the instruction stream that nobody knows about, since nobody should know about
     // it, make sure it gets skipped when Instruction::next() is called.
@@ -2346,9 +2348,10 @@ bool instIsBNop(Instruction *inst) {
     return offset.decode() == 4;
 }
 
-bool instIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
+static bool
+InstIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
 {
-    if (!instIsGuard(inst, ph))
+    if (!InstIsGuard(inst, ph))
         return false;
     return !(*ph)->isNatural();
 }
@@ -2391,11 +2394,11 @@ Instruction::next()
     const PoolHeader *ph;
     // If this is a guard, and the next instruction is a header, always work around the pool
     // If it isn't a guard, then start looking ahead.
-    if (instIsGuard(this, &ph))
+    if (InstIsGuard(this, &ph))
         return ret + ph->size();
-    if (instIsArtificialGuard(ret, &ph))
+    if (InstIsArtificialGuard(ret, &ph))
         return ret + 1 + ph->size();
-    if (instIsBNop(ret))
+    if (InstIsBNop(ret))
         return ret + 1;
     return ret;
 }
@@ -2442,7 +2445,7 @@ AutoFlushCache::update(uintptr_t newStart, size_t len)
 {
     uintptr_t newStop = newStart + len;
     used_ = true;
-    if (start_ == NULL) {
+    if (!start_) {
         IonSpewCont(IonSpew_CacheFlush,  ".");
         start_ = newStart;
         stop_ = newStop;
@@ -2484,7 +2487,7 @@ AutoFlushCache::flushAnyway()
     if (!used_)
         return;
 
-    if (start_ != NULL) {
+    if (start_) {
         JSC::ExecutableAllocator::cacheFlush((void*)start_, (size_t)(stop_ - start_ + sizeof(Instruction)));
     } else {
         JSC::ExecutableAllocator::cacheFlush(NULL, 0xff000000);

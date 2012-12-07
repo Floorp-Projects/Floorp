@@ -118,7 +118,7 @@ class AutoDebugModeGC;
 class DebugScopes;
 }
 
-struct JSCompartment : public js::gc::GraphNodeBase
+struct JSCompartment : public js::gc::GraphNodeBase<JSCompartment>
 {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
@@ -425,7 +425,7 @@ struct JSCompartment : public js::gc::GraphNodeBase
     void sweepCrossCompartmentWrappers();
     void purge();
 
-    virtual void findOutgoingEdges(js::gc::ComponentFinder& finder);
+    void findOutgoingEdges(js::gc::ComponentFinder<JSCompartment> &finder);
 
     void setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
