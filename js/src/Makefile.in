@@ -539,18 +539,6 @@ include $(MFBT_ROOT)/sources.mk
 DEFINES += -DIMPL_MFBT
 endif
 
-# ensure symbol versions of shared library on linux do not conflict with those in libxul
-ifeq (Linux,$(OS_TARGET))
-EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
-
-symverscript: symverscript.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-		-DVERSION="$(subst -,_,$(LIBRARY_NAME))" $< > $@
-
-EXTRA_DEPS += symverscript
-
-endif
-
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 ifndef BUILD_OPT
