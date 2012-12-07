@@ -960,6 +960,10 @@ TelemetryPing.prototype = {
     this._doLoadSaveNotifications = true;
   },
 
+  addOns: function setAddOns(aAddOns) {
+    this._addons = aAddOns;
+  },
+
   /**
    * This observer drives telemetry.
    */
@@ -968,9 +972,6 @@ TelemetryPing.prototype = {
     var server = this._server;
 
     switch (aTopic) {
-    case "Add-ons":
-      this._addons = aData;
-      break;
     case "profile-after-change":
       this.setup();
       break;

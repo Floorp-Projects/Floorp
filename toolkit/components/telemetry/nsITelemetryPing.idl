@@ -13,4 +13,5 @@ interface nsITelemetryPing : nsIObserver {
   void saveHistograms(in nsIFile aFile, in boolean aSync);
   void gatherStartup();
   void enableLoadSaveNotifications(); /* Used only for testing. */
+  void setAddOns(in AString aAddOns);
 };
