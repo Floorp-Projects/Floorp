@@ -487,7 +487,7 @@ TelemetryPing.prototype = {
   /** 
    * Make a copy of interesting histograms at startup.
    */
-  gatherStartupInformation: function gatherStartupInformation() {
+  gatherStartupHistograms: function gatherStartupHistograms() {
     let info = Telemetry.registeredHistograms;
     let snapshots = Telemetry.histogramSnapshots;
     for (let name in info) {
@@ -496,7 +496,6 @@ TelemetryPing.prototype = {
         Telemetry.histogramFrom("STARTUP_" + name, name);
       }
     }
-    this._slowSQLStartup = Telemetry.slowSQL;
   },
 
   getCurrentSessionPayload: function getCurrentSessionPayload(reason) {
@@ -947,8 +946,10 @@ TelemetryPing.prototype = {
   getPayload: function getPayload() {
     // This function returns the current Telemetry payload to the caller.
     // We only gather startup info once.
-    if (Object.keys(this._slowSQLStartup).length == 0)
-      this.gatherStartupInformation();
+    if (Object.keys(this._slowSQLStartup).length == 0) {
+      this.gatherStartupHistograms();
+      this._slowSQLStartup = Telemetry.slowSQL;
+    }
     this.gatherMemory();
     return this.getCurrentSessionPayload("gather-payload");
   },
@@ -959,7 +960,8 @@ TelemetryPing.prototype = {
       [this._startupIO.startupSessionRestoreReadBytes,
         this._startupIO.startupSessionRestoreWriteBytes] = counters;
     }
-    this.gatherStartupInformation();
+    this.gatherStartupHistograms();
+    this._slowSQLStartup = Telemetry.slowSQL;
   },
 
   enableLoadSaveNotifications: function enableLoadSaveNotifications() {
