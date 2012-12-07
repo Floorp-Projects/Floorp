@@ -130,7 +130,7 @@ var testRunner = {
 //   for (let yy in gen_example("Parameter")) yield;
 //
 
-function gen_resetState()
+function gen_resetState(aData)
 {
   let statement = Services.downloads.DBConnection.createAsyncStatement(
                   "DELETE FROM moz_downloads");
@@ -155,8 +155,8 @@ function gen_resetState()
   Services.prefs.clearUserPref("browser.download.panel.shown");
 
   // Ensure that the panel is closed and data is unloaded.
-  DownloadsCommon.data.clear();
-  DownloadsCommon.data._loadState = DownloadsCommon.data.kLoadNone;
+  aData.clear();
+  aData._loadState = aData.kLoadNone;
   DownloadsPanel.hidePanel();
 
   // Wait for focus on the main window.
@@ -224,7 +224,7 @@ function gen_openPanel(aData)
   };
 
   // Start loading all the downloads from the database asynchronously.
-  DownloadsCommon.data.ensurePersistentDataLoaded(false);
+  aData.ensurePersistentDataLoaded(false);
 
   // Wait for focus on the main window.
   waitForFocus(testRunner.continueTest);

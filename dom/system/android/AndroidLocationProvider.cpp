@@ -33,7 +33,7 @@ AndroidLocationProvider::Startup()
 }
 
 NS_IMETHODIMP
-AndroidLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
+AndroidLocationProvider::Watch(nsIGeolocationUpdate* aCallback, bool aRequestPrivate)
 {
     NS_IF_RELEASE(gLocationCallback);
     gLocationCallback = aCallback;
