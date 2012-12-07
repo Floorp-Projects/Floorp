@@ -88,7 +88,7 @@ class Loop
     MInstruction* popFromWorklist();
 
     inline bool isHoistable(const MDefinition *ins) const {
-        return ins->isMovable() && !ins->isEffectful();
+        return ins->isMovable() && !ins->isEffectful() && !ins->neverHoist();
     }
 };
 
