@@ -45,7 +45,7 @@ var gFinished = false;
 
 function telemetry_ping () {
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
-  TelemetryPing.observe(null, "test-gather-startup", null);
+  TelemetryPing.gatherStartup();
   TelemetryPing.observe(null, "test-enable-load-save-notifications", null);
   TelemetryPing.observe(null, "test-ping", SERVER);
 }

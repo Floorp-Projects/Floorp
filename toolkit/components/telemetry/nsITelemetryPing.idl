@@ -11,4 +11,5 @@ interface nsIFile;
 interface nsITelemetryPing : nsIObserver {
   jsval getPayload();
   void saveHistograms(in nsIFile aFile, in boolean aSync);
+  void gatherStartup();
 };

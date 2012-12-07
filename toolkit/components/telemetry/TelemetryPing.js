@@ -947,6 +947,15 @@ TelemetryPing.prototype = {
     return this.getCurrentSessionPayload("gather-payload");
   },
 
+  gatherStartup: function gatherStartup() {
+    let counters = processInfo.getCounters();
+    if (counters) {
+      [this._startupIO.startupSessionRestoreReadBytes,
+        this._startupIO.startupSessionRestoreWriteBytes] = counters;
+    }
+    this.gatherStartupInformation();
+  },
+
   /**
    * This observer drives telemetry.
    */
@@ -995,14 +1004,7 @@ TelemetryPing.prototype = {
       // Check whether debugger was attached during startup
       let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
       gWasDebuggerAttached = debugService.isDebuggerAttached;
-      // fall through
-    case "test-gather-startup":
-      var counters = processInfo.getCounters();
-      if (counters) {  
-        [this._startupIO.startupSessionRestoreReadBytes, 
-          this._startupIO.startupSessionRestoreWriteBytes] = counters;
-      }
-      this.gatherStartupInformation();
+      this.gatherStartup();
       break;
     case "idle-daily":
       // Enqueue to main-thread, otherwise components may be inited by the
