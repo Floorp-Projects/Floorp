@@ -1260,6 +1260,29 @@ ICGetName_Global::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
+TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub, HandleValue val,
+                    HandleValue res)
+{
+    if (!val.isObject())
+        return true;
+
+    RootedObject obj(cx, &val.toObject());
+
+    if (obj->isDenseArray()) {
+        JS_ASSERT(res.isInt32());
+        ICGetProp_DenseLength::Compiler compiler(cx);
+        ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!newStub)
+            return false;
+
+        stub->addNewStub(newStub);
+        return true;
+    }
+
+    return true;
+}
+
+static bool
 DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, MutableHandleValue res)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
@@ -1293,6 +1316,17 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
 #endif
 
     types::TypeScript::Monitor(cx, script, pc, res);
+
+    if (stub->numOptimizedStubs() >= ICGetProp_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with generic getprop stub.
+        return true;
+    }
+
+    if (JSOp(*pc) == JSOP_LENGTH) {
+        if (!TryAttachLengthStub(cx, script, stub, val, res))
+            return false;
+    }
+
     return true;
 }
 
@@ -1312,6 +1346,32 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     return tailCallVM(DoGetPropFallbackInfo, masm);
 }
 
+bool
+ICGetProp_DenseLength::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    RootedShape shape(cx, GetDenseArrayShape(cx, cx->global()));
+    if (!shape)
+        return false;
+
+    // Unbox R0 and guard it's a dense array.
+    Register obj = masm.extractObject(R0, ExtractTemp0);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, shape, &failure);
+
+    // Load obj->elements->length.
+    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), obj);
+    masm.load32(Address(obj, ObjectElements::offsetOfLength()), obj);
+
+    masm.tagValue(JSVAL_TYPE_INT32, obj, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
 //
 // Call_Fallback
 //
