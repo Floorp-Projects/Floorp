@@ -251,16 +251,17 @@ ContactDB.prototype = {
 
               // Chop off the first characters
               let number = aContact.properties[field][i].value;
+              let search = {};
               if (number) {
                 for (let i = 0; i < number.length; i++) {
-                  contact.search[field].push(number.substring(0, number.length - i));
+                  search[number.substring(i, number.length)] = 1;
                 }
                 // Store +1-234-567 as ["1234567", "234567"...]
                 let digits = number.match(/\d/g);
                 if (digits && number.length != digits.length) {
                   digits = digits.join('');
                   for(let i = 0; i < digits.length; i++) {
-                    contact.search[field].push(digits.substring(0, digits.length - i));
+                    search[digits.substring(i, digits.length)] = 1;
                   }
                 }
                 if (DEBUG) debug("lookup: " + JSON.stringify(contact.search[field]));
@@ -271,11 +272,20 @@ ContactDB.prototype = {
                   debug("NationalNumber: " + parsedNumber.nationalNumber);
                   debug("NationalFormat: " + parsedNumber.nationalFormat);
                   if (number.toString() !== parsedNumber.internationalNumber) {
-                    contact.search[field].push(parsedNumber.internationalNumber);
+                    let digits = parsedNumber.internationalNumber.match(/\d/g);
+                    if (digits) {
+                      digits = digits.join('');
+                      for(let i = 0; i < digits.length; i++) {
+                        search[digits.substring(i, digits.length)] = 1;
+                      }
+                    }
                   }
                 } else {
                   dump("Warning: No international number found for " + number + "\n");
                 }
+              }
+              for (let num in search) {
+                contact.search[field].push(num);
               }
             } else if (field == "email") {
               let address = aContact.properties[field][i].value;
@@ -439,6 +449,12 @@ ContactDB.prototype = {
         let tmp = typeof options.filterValue == "string"
                   ? options.filterValue.toLowerCase()
                   : options.filterValue.toString().toLowerCase();
+        if (key === 'tel') {
+          let digits = tmp.match(/\d/g);
+          if (digits) {
+            tmp = digits.join('');
+          }
+        }
         let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
         let index = store.index(key + "LowerCase");
         request = index.mozGetAll(range, limit);
