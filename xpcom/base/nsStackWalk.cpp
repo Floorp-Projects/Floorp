@@ -1211,8 +1211,17 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     info.closure = aClosure;
 
     _Unwind_Reason_Code t = _Unwind_Backtrace(unwind_callback, &info);
+#if defined(ANDROID) && defined(__arm__)
+    // Ignore the _Unwind_Reason_Code on Android + ARM, because bionic's
+    // _Unwind_Backtrace usually (always?) returns _URC_FAILURE.  See
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=717853#c110.
+    //
+    // (Ideally, the #if above would be specifically for bionic, not for
+    // Android + ARM, but we don't have a define specifically for bionic.)
+#else
     if (t != _URC_END_OF_STACK)
         return NS_ERROR_UNEXPECTED;
+#endif
     return NS_OK;
 }
 
