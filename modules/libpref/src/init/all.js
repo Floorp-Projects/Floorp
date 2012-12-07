@@ -1622,7 +1622,7 @@ pref("layout.css.devPixelsPerPx", "-1.0");
 pref("layout.css.supports-rule.enabled", true);
 
 // Is support for CSS Flexbox enabled?
-pref("layout.css.flexbox.enabled", true);
+pref("layout.css.flexbox.enabled", false);
 
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
