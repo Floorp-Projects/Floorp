@@ -358,6 +358,7 @@ for (let permName in PermissionsTable) {
     AllPossiblePermissions =
       AllPossiblePermissions.concat(expandPermissions(permName, READWRITE));
   } else if (PermissionsTable[permName].channels) {
+    AllPossiblePermissions =
       AllPossiblePermissions.concat(expandPermissions(permName, null, PermissionsTable[permName].channels));
   } else {
     AllPossiblePermissions =
