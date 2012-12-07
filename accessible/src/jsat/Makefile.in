@@ -12,9 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 INSTALL_TARGETS += ACCESSFU
 
 ACCESSFU_FILES := \
-  AccessFu.css \
   AccessFu.jsm \
-  content-script.js \
   EventManager.jsm \
   jar.mn \
   Makefile.in \

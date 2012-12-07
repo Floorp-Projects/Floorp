@@ -340,10 +340,6 @@ DOMCI_CLASS(StorageObsolete)
 DOMCI_CLASS(Storage)
 DOMCI_CLASS(StorageItem)
 
-// DOMParser, XMLSerializer
-DOMCI_CLASS(DOMParser)
-DOMCI_CLASS(XMLSerializer)
-
 // XMLHttpRequest
 DOMCI_CLASS(XMLHttpProgressEvent)
 DOMCI_CLASS(XMLHttpRequest)

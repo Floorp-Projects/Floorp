@@ -13,7 +13,6 @@
 #include "pki3hack.h"
 #include "secerr.h"
 #include "dev.h"
-#include "pkcs11ni.h"
 #include "utilpars.h"
 
 /* these are for displaying error messages */

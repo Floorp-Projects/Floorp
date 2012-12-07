@@ -188,3 +188,13 @@ XPC_MSG_DEF(NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED, "Clearing site data by tim
 
 /* character converter related codes (from nsIUnicodeDecoder.h) */
 XPC_MSG_DEF(NS_ERROR_ILLEGAL_INPUT                  , "The input characters have illegal sequences")
+
+/* Codes related to signd jars */
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_NOT_SIGNED          , "The JAR is not signed.")
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY      , "An entry in the JAR has been modified after the JAR was signed.")
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY      , "An entry in the JAR has not been signed.")
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_ENTRY_MISSING       , "An entry is missing from the JAR file.")
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE     , "The JAR's signature is wrong.")
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE     , "An entry in the JAR is too large.")
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_ENTRY_INVALID       , "An entry in the JAR is invalid.")
+XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_MANIFEST_INVALID    , "The JAR's manifest or signature file is invalid.")

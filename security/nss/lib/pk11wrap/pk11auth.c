@@ -45,8 +45,9 @@ static struct PK11GlobalStruct {
  * Check the user's password. Log into the card if it's correct.
  * succeed if the user is already logged in.
  */
-SECStatus
-pk11_CheckPassword(PK11SlotInfo *slot,char *pw,PRBool contextSpecific)
+static SECStatus
+pk11_CheckPassword(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
+			char *pw, PRBool alreadyLocked, PRBool contextSpecific)
 {
     int len = 0;
     CK_RV crv;
@@ -66,13 +67,13 @@ pk11_CheckPassword(PK11SlotInfo *slot,char *pw,PRBool contextSpecific)
     }
 
     do {
-	PK11_EnterSlotMonitor(slot);
-	crv = PK11_GETTAB(slot)->C_Login(slot->session,
+	if (!alreadyLocked) PK11_EnterSlotMonitor(slot);
+	crv = PK11_GETTAB(slot)->C_Login(session,
 		contextSpecific ? CKU_CONTEXT_SPECIFIC : CKU_USER,
 						(unsigned char *)pw,len);
 	slot->lastLoginCheck = 0;
 	mustRetry = PR_FALSE;
-	PK11_ExitSlotMonitor(slot);
+	if (!alreadyLocked) PK11_ExitSlotMonitor(slot);
 	switch (crv) {
 	/* if we're already logged in, we're good to go */
 	case CKR_OK:
@@ -91,10 +92,19 @@ pk11_CheckPassword(PK11SlotInfo *slot,char *pw,PRBool contextSpecific)
 	 * if the token is still there. */
 	case CKR_SESSION_HANDLE_INVALID:
 	case CKR_SESSION_CLOSED:
+	    if (session != slot->session) {
+		/* don't bother retrying, we were in a middle of an operation,
+		 * which is now lost. Just fail. */
+	        PORT_SetError(PK11_MapError(crv));
+	        rv = SECFailure; 
+		break;
+	    }
 	    if (retry++ == 0) {
 		rv = PK11_InitToken(slot,PR_FALSE);
 		if (rv == SECSuccess) {
 		    if (slot->session != CK_INVALID_SESSION) {
+			session = slot->session; /* we should have 
+						  * a new session now */
 			mustRetry = PR_TRUE;
 		    } else {
 			PORT_SetError(PK11_MapError(crv));
@@ -242,7 +252,8 @@ PK11_HandlePasswordCheck(PK11SlotInfo *slot,void *wincx)
 	    NeedAuth = PR_TRUE;
 	}
     }
-    if (NeedAuth) PK11_DoPassword(slot,PR_TRUE,wincx,PR_FALSE);
+    if (NeedAuth) PK11_DoPassword(slot, slot->session, PR_TRUE,
+			wincx, PR_FALSE, PR_FALSE);
 }
 
 void
@@ -301,7 +312,8 @@ pk11_LoginStillRequired(PK11SlotInfo *slot, void *wincx)
 SECStatus
 PK11_Authenticate(PK11SlotInfo *slot, PRBool loadCerts, void *wincx) {
     if (pk11_LoginStillRequired(slot,wincx)) {
-	return PK11_DoPassword(slot,loadCerts,wincx,PR_FALSE);
+	return PK11_DoPassword(slot, slot->session, loadCerts, wincx,
+				PR_FALSE, PR_FALSE);
     }
     return SECSuccess;
 }
@@ -532,7 +544,8 @@ PK11_SetIsLoggedInFunc(PK11IsLoggedInFunc func)
  * of the PKCS 11 module.
  */
 SECStatus
-PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx,
+PK11_DoPassword(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
+			PRBool loadCerts, void *wincx, PRBool alreadyLocked,
 			PRBool contextSpecific)
 {
     SECStatus rv = SECFailure;
@@ -602,7 +615,8 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx,
 		break;
 	    }
 	}
-	rv = pk11_CheckPassword(slot,password,contextSpecific);
+	rv = pk11_CheckPassword(slot, session, password, 
+				alreadyLocked, contextSpecific);
 	PORT_Memset(password, 0, PORT_Strlen(password));
 	PORT_Free(password);
 	if (rv != SECWouldBlock) break;
