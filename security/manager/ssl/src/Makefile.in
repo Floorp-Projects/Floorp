@@ -83,7 +83,6 @@ endif
 
 CSRCS += md4.c
 
-
 EXTRA_DEPS = $(NSS_DEP_LIBS)
 
 DEFINES += \
@@ -96,6 +95,12 @@ EXPORTS += \
   CryptoTask.h \
   nsNSSShutDown.h \
   ScopedNSSTypes.h \
+  $(NULL)
+
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla += \
+  PublicSSL.h \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
