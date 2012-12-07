@@ -4,6 +4,8 @@
 
 #ifdef MOZ_JEMALLOC3
 
+#define MOZ_JEMALLOC_IMPL
+
 #include "mozmemory_wrap.h"
 #include "mozilla/Types.h"
 

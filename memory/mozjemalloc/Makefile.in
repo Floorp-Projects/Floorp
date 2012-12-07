@@ -44,6 +44,10 @@ endif
 
 DEFINES += -Dabort=moz_abort
 
-DEFINES += -DMOZ_MEMORY_IMPL
+ifdef MOZ_REPLACE_MALLOC
+DEFINES += -DMOZ_REPLACE_MALLOC
+endif
+
+DEFINES += -DMOZ_JEMALLOC_IMPL
 
 include $(topsrcdir)/config/rules.mk

@@ -6,6 +6,8 @@
 #  error Should only compile this file when building with jemalloc 3
 #endif
 
+#define MOZ_JEMALLOC_IMPL
+
 #include "mozmemory_wrap.h"
 #include "jemalloc_types.h"
 #include "mozilla/Types.h"

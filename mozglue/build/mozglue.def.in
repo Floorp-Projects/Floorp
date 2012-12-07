@@ -7,6 +7,15 @@ LIBRARY mozglue.dll
 EXPORTS
 #ifdef MOZ_MEMORY
   ; symbols that are actually useful
+#ifdef MOZ_REPLACE_MALLOC
+  malloc=malloc_impl
+  calloc=calloc_impl
+  realloc=realloc_impl
+  free=free_impl
+  posix_memalign=posix_memalign_impl
+  malloc_usable_size=malloc_usable_size_impl
+  malloc_good_size=malloc_good_size_impl
+#else
   malloc=je_malloc
   calloc=je_calloc
   realloc=je_realloc
@@ -14,6 +23,7 @@ EXPORTS
   posix_memalign=je_posix_memalign
   malloc_usable_size=je_malloc_usable_size
   malloc_good_size=je_malloc_good_size
+#endif
   strndup=wrap_strndup
   strdup=wrap_strdup
   _strdup=wrap_strdup

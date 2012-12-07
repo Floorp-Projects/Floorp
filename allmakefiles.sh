@@ -71,6 +71,11 @@ if [ ! "$LIBXUL_SDK" ]; then
       memory/build/Makefile
     "
   fi
+  if [ "$MOZ_REPLACE_MALLOC_LINKAGE" = "dummy library" ]; then
+    add_makefiles "
+      memory/replace/dummy/Makefile
+    "
+  fi
   if [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
     add_makefiles "
       other-licenses/android/Makefile
