@@ -101,7 +101,7 @@ Link::LinkState() const
         self->mRegistered = true;
 
         // And make sure we are in the document's link map.
-        doc->GetCurrentDoc()->AddStyleRelevantLink(self);
+        element->GetCurrentDoc()->AddStyleRelevantLink(self);
       }
     }
   }
