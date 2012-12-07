@@ -761,6 +761,9 @@ Count Histogram::SampleSet::TotalCount() const {
 void Histogram::SampleSet::Add(const SampleSet& other) {
   DCHECK_EQ(counts_.size(), other.counts_.size());
   sum_ += other.sum_;
+  sum_squares_ += other.sum_squares_;
+  log_sum_ += other.log_sum_;
+  log_sum_squares_ += other.log_sum_squares_;
   redundant_count_ += other.redundant_count_;
   for (size_t index = 0; index < counts_.size(); ++index)
     counts_[index] += other.counts_[index];
@@ -772,6 +775,9 @@ void Histogram::SampleSet::Subtract(const SampleSet& other) {
   // negative values when snapshots are later combined (and deltas calculated).
   // As a result, we don't currently CHCEK() for positive values.
   sum_ -= other.sum_;
+  sum_squares_ -= other.sum_squares_;
+  log_sum_ -= other.log_sum_;
+  log_sum_squares_ -= other.log_sum_squares_;
   redundant_count_ -= other.redundant_count_;
   for (size_t index = 0; index < counts_.size(); ++index) {
     counts_[index] -= other.counts_[index];
