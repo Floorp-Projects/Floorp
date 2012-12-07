@@ -44,6 +44,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
                                   "resource:///modules/DownloadsCommon.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsPanel
@@ -107,7 +109,7 @@ const DownloadsPanel = {
     DownloadsOverlayLoader.ensureOverlayLoaded(this.kDownloadsOverlay,
                                                function DP_I_callback() {
       DownloadsViewController.initialize();
-      DownloadsCommon.data.addView(DownloadsView);
+      DownloadsCommon.getData(window).addView(DownloadsView);
       DownloadsPanel._attachEventListeners();
       aCallback();
     });
@@ -130,10 +132,12 @@ const DownloadsPanel = {
     this.hidePanel();
 
     DownloadsViewController.terminate();
-    DownloadsCommon.data.removeView(DownloadsView);
+    DownloadsCommon.getData(window).removeView(DownloadsView);
     this._unattachEventListeners();
 
     this._state = this.kStateUninitialized;
+
+    DownloadsSummary.active = false;
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -230,7 +234,7 @@ const DownloadsPanel = {
     this._state = this.kStateShown;
 
     // Since at most one popup is open at any given time, we can set globally.
-    DownloadsCommon.indicatorData.attentionSuppressed = true;
+    DownloadsCommon.getIndicatorData(window).attentionSuppressed = true;
 
     // Ensure that an item is selected when the panel is focused.
     if (DownloadsView.richListBox.itemCount > 0 &&
@@ -249,7 +253,7 @@ const DownloadsPanel = {
     }
 
     // Since at most one popup is open at any given time, we can set globally.
-    DownloadsCommon.indicatorData.attentionSuppressed = false;
+    DownloadsCommon.getIndicatorData(window).attentionSuppressed = false;
 
     // Allow the anchor to be hidden.
     DownloadsButton.releaseAnchor();
@@ -1110,7 +1114,11 @@ const DownloadsViewController = {
   {
     // Handle commands that are not selection-specific.
     if (aCommand == "downloadsCmd_clearList") {
-      return Services.downloads.canCleanUp;
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        return Services.downloads.canCleanUpPrivate;
+      } else {
+        return Services.downloads.canCleanUp;
+      }
     }
 
     // Other commands are selection-specific.
@@ -1157,7 +1165,11 @@ const DownloadsViewController = {
   commands: {
     downloadsCmd_clearList: function DVC_downloadsCmd_clearList()
     {
-      Services.downloads.cleanUp();
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        Services.downloads.cleanUpPrivate();
+      } else {
+        Services.downloads.cleanUp();
+      }
     }
   }
 };
@@ -1171,7 +1183,7 @@ const DownloadsViewController = {
  */
 function DownloadsViewItemController(aElement) {
   let downloadGuid = aElement.getAttribute("downloadGuid");
-  this.dataItem = DownloadsCommon.data.dataItems[downloadGuid];
+  this.dataItem = DownloadsCommon.getData(window).dataItems[downloadGuid];
 }
 
 DownloadsViewItemController.prototype = {
@@ -1457,10 +1469,10 @@ const DownloadsSummary = {
       return this._active;
     }
     if (aActive) {
-      DownloadsCommon.getSummary(DownloadsView.kItemCountLimit)
+      DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
                      .addView(this);
     } else {
-      DownloadsCommon.getSummary(DownloadsView.kItemCountLimit)
+      DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
                      .removeView(this);
       DownloadsFooter.showingSummary = false;
     }
