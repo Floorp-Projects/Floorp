@@ -133,11 +133,6 @@ public:
     return mHasVideo;
   }
 
-  // Bug 575140, cannot seek in webm if no cue is present.
-  bool IsSeekableInBufferedRanges() {
-    return false;
-  }
-
   virtual nsresult ReadMetadata(VideoInfo* aInfo,
                                 MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
