@@ -152,6 +152,9 @@ this.AccessFu = {
       case 'AccessFu:Present':
       try {
         for each (let presenter in aMessage.json) {
+          if (!presenter)
+            continue;
+
           Output[presenter.type](presenter.details, aMessage.target);
         }
       } catch (x) {

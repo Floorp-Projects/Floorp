@@ -13,12 +13,7 @@ Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/accessibility/UtteranceGenerator.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');
 
-this.EXPORTED_SYMBOLS = ['VisualPresenter',
-                         'AndroidPresenter',
-                         'DummyAndroidPresenter',
-                         'SpeechPresenter',
-                         'HapticPresenter',
-                         'PresenterContext'];
+this.EXPORTED_SYMBOLS = ['Presentation'];
 
 /**
  * The interface for all presenter classes. A presenter could be, for example,
@@ -502,5 +497,58 @@ PresenterContext.prototype = {
     } catch (x) {
       return true;
     }
+  }
+};
+
+
+this.Presentation = {
+  get presenters() {
+    delete this.presenters;
+    this.presenters = [new VisualPresenter()];
+
+    if (Utils.MozBuildApp == 'b2g') {
+      this.presenters.push(new SpeechPresenter());
+      this.presenters.push(new HapticPresenter());
+    } else if (Utils.MozBuildApp == 'mobile/android') {
+      this.presenters.push(new AndroidPresenter());
+    }
+
+    return this.presenters;
+  },
+
+  pivotChanged: function Presentation_pivotChanged(aPosition,
+                                                   aOldPosition,
+                                                   aReason) {
+    let context = new PresenterContext(aPosition, aOldPosition);
+    return [p.pivotChanged(context, aReason)
+              for each (p in this.presenters)];
+  },
+
+  actionInvoked: function Presentation_actionInvoked(aObject, aActionName) {
+    return [p.actionInvoked(aObject, aActionName)
+              for each (p in this.presenters)];
+  },
+
+  textChanged: function Presentation_textChanged(aIsInserted, aStartOffset,
+                                    aLength, aText,
+                                    aModifiedText) {
+    return [p.textChanged(aIsInserted, aStartOffset, aLength,
+                          aText, aModifiedText)
+              for each (p in this.presenters)];
+  },
+
+  tabStateChanged: function Presentation_tabStateChanged(aDocObj, aPageState) {
+    return [p.tabStateChanged(aDocObj, aPageState)
+              for each (p in this.presenters)];
+  },
+
+  viewportChanged: function Presentation_viewportChanged(aWindow) {
+    return [p.viewportChanged(aWindow)
+              for each (p in this.presenters)];
+  },
+
+  editingModeChanged: function Presentation_editingModeChanged(aIsEditing) {
+    return [p.editingModeChanged(aIsEditing)
+              for each (p in this.presenters)];
   }
 };
