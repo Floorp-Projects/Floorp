@@ -2138,6 +2138,7 @@ nsNSSComponent::RandomUpdate(void *entropy, int32_t bufLen)
 #define PROFILE_CHANGE_TEARDOWN_VETO_TOPIC "profile-change-teardown-veto"
 #define PROFILE_BEFORE_CHANGE_TOPIC "profile-before-change"
 #define PROFILE_DO_CHANGE_TOPIC "profile-do-change"
+#define LEAVE_PRIVATE_BROWSING_TOPIC "last-pb-context-exited"
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
@@ -2285,6 +2286,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving network restore topic\n"));
     DoProfileChangeNetRestore();
   }
+  else if (nsCRT::strcmp(aTopic, LEAVE_PRIVATE_BROWSING_TOPIC) == 0) {
+    SSL_ClearSessionCache();
+  }
 
   return NS_OK;
 }
@@ -2384,6 +2388,7 @@ nsNSSComponent::RegisterObservers()
     observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC, false);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, false);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, false);
+    observerService->AddObserver(this, LEAVE_PRIVATE_BROWSING_TOPIC, false);
   }
   return NS_OK;
 }
@@ -2409,6 +2414,7 @@ nsNSSComponent::DeregisterObservers()
     observerService->RemoveObserver(this, PROFILE_DO_CHANGE_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC);
+    observerService->RemoveObserver(this, LEAVE_PRIVATE_BROWSING_TOPIC);
   }
   return NS_OK;
 }
