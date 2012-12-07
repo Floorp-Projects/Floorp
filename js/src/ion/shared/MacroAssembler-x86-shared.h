@@ -253,6 +253,15 @@ class MacroAssemblerX86Shared : public Assembler
     void addDouble(FloatRegister src, FloatRegister dest) {
         addsd(src, dest);
     }
+    void subDouble(FloatRegister src, FloatRegister dest) {
+        subsd(src, dest);
+    }
+    void mulDouble(FloatRegister src, FloatRegister dest) {
+        mulsd(src, dest);
+    }
+    void divDouble(FloatRegister src, FloatRegister dest) {
+        divsd(src, dest);
+    }
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
         cvtsd2ss(src, dest);
     }
