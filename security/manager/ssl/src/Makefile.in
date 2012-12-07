@@ -98,5 +98,11 @@ EXPORTS += \
   ScopedNSSTypes.h \
   $(NULL)
 
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla += \
+  PublicSSL.h \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
