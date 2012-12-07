@@ -371,19 +371,20 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
     case LOCK_ALLOWED:
       return hal::LockScreenOrientation(orientation);
     case FULLSCREEN_LOCK_ALLOWED: {
+      // We need to register a listener so we learn when we leave full-screen
+      // and when we will have to unlock the screen.
+      // This needs to be done before LockScreenOrientation call to make sure
+      // the locking can be unlocked.
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+      if (!target) {
+        return false;
+      }
+
       if (!hal::LockScreenOrientation(orientation)) {
         return false;
       }
 
       // We are fullscreen and lock has been accepted.
-      // Now, we need to register a listener so we learn when we leave
-      // full-screen and when we will have to unlock the screen.
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
-      if (!target) {
-        // XXX: Bug 796873
-        return true;
-      }
-
       if (!mEventListener) {
         mEventListener = new FullScreenEventListener();
       }
