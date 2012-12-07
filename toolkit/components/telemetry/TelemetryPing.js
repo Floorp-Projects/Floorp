@@ -960,7 +960,7 @@ TelemetryPing.prototype = {
     this._doLoadSaveNotifications = true;
   },
 
-  addOns: function setAddOns(aAddOns) {
+  setAddOns: function setAddOns(aAddOns) {
     this._addons = aAddOns;
   },
 
