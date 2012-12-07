@@ -527,20 +527,26 @@ ReflectHistogramAndSamples(JSContext *cx, JSObject *obj, Histogram *h,
   if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), NULL, NULL, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), NULL, NULL, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "histogram_type", INT_TO_JSVAL(h->histogram_type()), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "sum", DOUBLE_TO_JSVAL(ss.sum()), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "log_sum", DOUBLE_TO_JSVAL(ss.log_sum()), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "log_sum_squares", DOUBLE_TO_JSVAL(ss.log_sum_squares()), NULL, NULL, JSPROP_ENUMERATE))) {
+        && JS_DefineProperty(cx, obj, "sum", DOUBLE_TO_JSVAL(ss.sum()), NULL, NULL, JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
   }
 
-  // Export |sum_squares| as two separate 32-bit properties so that we
-  // can accurately reconstruct it on the analysis side.
-  uint64_t sum_squares = ss.sum_squares();
-  uint32_t lo = sum_squares;
-  uint32_t hi = sum_squares >> 32;
-  if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", INT_TO_JSVAL(lo), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "sum_squares_hi", INT_TO_JSVAL(hi), NULL, NULL, JSPROP_ENUMERATE))) {
-    return REFLECT_FAILURE;
+  if (h->histogram_type() == Histogram::HISTOGRAM) {
+    if (!(JS_DefineProperty(cx, obj, "log_sum", DOUBLE_TO_JSVAL(ss.log_sum()), NULL, NULL, JSPROP_ENUMERATE)
+          && JS_DefineProperty(cx, obj, "log_sum_squares", DOUBLE_TO_JSVAL(ss.log_sum_squares()), NULL, NULL, JSPROP_ENUMERATE))) {
+      return REFLECT_FAILURE;
+    }
+  } else {
+    // Export |sum_squares| as two separate 32-bit properties so that we
+    // can accurately reconstruct it on the analysis side.
+    uint64_t sum_squares = ss.sum_squares();
+    // Cast to avoid implicit truncation warnings.
+    uint32_t lo = static_cast<uint32_t>(sum_squares);
+    uint32_t hi = static_cast<uint32_t>(sum_squares >> 32);
+    if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", INT_TO_JSVAL(lo), NULL, NULL, JSPROP_ENUMERATE)
+          && JS_DefineProperty(cx, obj, "sum_squares_hi", INT_TO_JSVAL(hi), NULL, NULL, JSPROP_ENUMERATE))) {
+      return REFLECT_FAILURE;
+    }
   }
 
   const size_t count = h->bucket_count();

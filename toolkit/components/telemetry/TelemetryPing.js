@@ -255,12 +255,17 @@ TelemetryPing.prototype = {
       bucket_count: r.length,
       histogram_type: hgram.histogram_type,
       values: {},
-      sum: hgram.sum,
-      sum_squares_lo: hgram.sum_squares_lo,
-      sum_squares_hi: hgram.sum_squares_hi,
-      log_sum: hgram.log_sum,
-      log_sum_squares: hgram.log_sum_squares
+      sum: hgram.sum
     };
+
+    if (hgram.histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
+      retgram.log_sum = hgram.log_sum;
+      retgram.log_sum_squares = hgram.log_sum_squares;
+    } else {
+      retgram.sum_squares_lo = hgram.sum_squares_lo;
+      retgram.sum_squares_hi = hgram.sum_squares_hi;
+    }
+
     let first = true;
     let last = 0;
 

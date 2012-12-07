@@ -723,25 +723,28 @@ void Histogram::SampleSet::CheckSize(const Histogram& histogram) const {
   DCHECK_EQ(histogram.bucket_count(), counts_.size());
 }
 
-
-void Histogram::SampleSet::AccumulateWithLinearStats(Sample value,
-                                                     Count count,
-                                                     size_t index) {
+void Histogram::SampleSet::Accumulate(Sample value, Count count,
+				      size_t index) {
   DCHECK(count == 1 || count == -1);
   counts_[index] += count;
-  int64_t amount = static_cast<int64_t>(count) * value;
-  sum_ += amount;
-  sum_squares_ += amount * value;
   redundant_count_ += count;
+  sum_ += static_cast<int64_t>(count) * value;
   DCHECK_GE(counts_[index], 0);
   DCHECK_GE(sum_, 0);
   DCHECK_GE(redundant_count_, 0);
 }
 
+void Histogram::SampleSet::AccumulateWithLinearStats(Sample value,
+                                                     Count count,
+                                                     size_t index) {
+  Accumulate(value, count, index);
+  sum_squares_ += static_cast<int64_t>(count) * value * value;
+}
+
 void Histogram::SampleSet::AccumulateWithExponentialStats(Sample value,
                                                           Count count,
                                                           size_t index) {
-  AccumulateWithLinearStats(value, count, index);
+  Accumulate(value, count, index);
   DCHECK_GE(value, 0);
   double value_log = log(static_cast<double>(value) + 1);
   log_sum_ += count * value_log;
