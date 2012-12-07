@@ -46,6 +46,10 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
 // ICBinaryArith_Int32
 
+extern "C" {
+    extern int __aeabi_idivmod(int,int);
+}
+
 bool
 ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -57,7 +61,12 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     // Add R0 and R1.  Don't need to explicitly unbox, just use R2's payloadReg.
     Register scratchReg = R2.payloadReg();
 
-    Label maybeNegZero;
+    // DIV and MOD need an extra non-volatile ValueOperand to hold R0.
+    GeneralRegisterSet savedRegs = availableGeneralRegs(2);
+    savedRegs = GeneralRegisterSet::Intersect(GeneralRegisterSet::NonVolatile(), savedRegs);
+    ValueOperand savedValue = savedRegs.takeAnyValue();
+
+    Label maybeNegZero, revertRegister;
     switch(op_) {
       case JSOP_ADD:
         masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg);
@@ -84,6 +93,48 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.j(Assembler::Equal, &maybeNegZero);
 
         masm.mov(scratchReg, R0.payloadReg());
+        break;
+      }
+      case JSOP_DIV:
+      case JSOP_MOD: {
+        // Check for INT_MIN / -1, it results in a double.
+        masm.ma_cmp(R0.payloadReg(), Imm32(INT_MIN));
+        masm.ma_cmp(R1.payloadReg(), Imm32(-1), Assembler::Equal);
+        masm.j(Assembler::Equal, &failure);
+
+        // Check for both division by zero and 0 / X with X < 0 (results in -0).
+        masm.ma_cmp(R1.payloadReg(), Imm32(0));
+        masm.ma_cmp(R0.payloadReg(), Imm32(0), Assembler::LessThan);
+        masm.j(Assembler::Equal, &failure);
+
+        // The call will preserve registers r4-r11. Save R0 and the link register.
+        JS_ASSERT(R1 == ValueOperand(r5, r4));
+        JS_ASSERT(R0 == ValueOperand(r3, r2));
+        masm.moveValue(R0, savedValue);
+
+        Register savedLr = savedRegs.takeAny();
+        masm.mov(lr, savedLr);
+
+        masm.setupAlignedABICall(2);
+        masm.passABIArg(R0.payloadReg());
+        masm.passABIArg(R1.payloadReg());
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+
+        masm.mov(savedLr, lr);
+
+        // idivmod returns the quotient in r0, and the remainder in r1.
+        if (op_ == JSOP_DIV) {
+            // Result is a double if the remainder != 0.
+            masm.branch32(Assembler::NotEqual, r1, Imm32(0), &revertRegister);
+            masm.tagValue(JSVAL_TYPE_INT32, r0, R0);
+        } else {
+            // If X % Y == 0 and X < 0, the result is -0.
+            Label done;
+            masm.branch32(Assembler::NotEqual, r1, Imm32(0), &done);
+            masm.branch32(Assembler::LessThan, savedValue.payloadReg(), Imm32(0), &revertRegister);
+            masm.bind(&done);
+            masm.tagValue(JSVAL_TYPE_INT32, r1, R0);
+        }
         break;
       }
       case JSOP_BITOR:
@@ -119,7 +170,8 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
     EmitReturnFromIC(masm);
 
-    if (op_ == JSOP_MUL) {
+    switch (op_) {
+      case JSOP_MUL:
         masm.bind(&maybeNegZero);
 
         // Result is -0 if exactly one of lhs or rhs is negative.
@@ -129,6 +181,14 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         // Result is +0.
         masm.ma_mov(Imm32(0), R0.payloadReg());
         EmitReturnFromIC(masm);
+        break;
+      case JSOP_DIV:
+      case JSOP_MOD:
+        masm.bind(&revertRegister);
+        masm.moveValue(savedValue, R0);
+        break;
+      default:
+        break;
     }
 
     // Failure case - jump to next stub
