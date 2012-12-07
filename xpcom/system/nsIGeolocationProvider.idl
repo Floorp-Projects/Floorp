@@ -35,7 +35,7 @@ interface nsIGeolocationUpdate : nsISupports {
  * startup is called, any geo location change should call
  * callback.update().
  */
-[scriptable, uuid(483BE98B-F747-490A-8AF1-53146D2D5373)]
+[scriptable, uuid(d32b87b3-fe96-4f42-81ab-2f39f7ec43ff)]
 interface nsIGeolocationProvider : nsISupports {
 
   /**
@@ -46,9 +46,12 @@ interface nsIGeolocationProvider : nsISupports {
 
   /**
    * watch
-   * When a location change is observed, notify the callback
+   * When a location change is observed, notify the callback. The privacy
+   * argument informs the provider whether the initiating request came from
+   * a private context; it is up to the provider to use that information
+   * in a sensible manner.
    */
-  void watch(in nsIGeolocationUpdate callback);
+  void watch(in nsIGeolocationUpdate callback, in boolean requestPrivate);
 
   /**
    * shutdown
