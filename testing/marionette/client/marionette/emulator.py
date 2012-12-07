@@ -389,18 +389,36 @@ waitFor(
         try:
             # need to remount so we can write to /system/b2g
             self._run_adb(['remount'])
+            self.dm.removeDir('/data/local/b2g')
+            self.dm.mkDir('/data/local/b2g')
             for root, dirs, files in os.walk(gecko_path):
                 for filename in files:
                     rel_path = os.path.relpath(os.path.join(root, filename), gecko_path)
-                    system_b2g_file = os.path.join('/system/b2g', rel_path)
+                    data_local_file = os.path.join('/data/local/b2g', rel_path)
                     for retry in range(1, push_attempts + 1):
-                        print 'pushing', system_b2g_file, '(attempt %s of %s)' % (retry, push_attempts)
+                        print 'pushing', data_local_file, '(attempt %s of %s)' % (retry, push_attempts)
                         try:
-                            self.dm.pushFile(os.path.join(root, filename), system_b2g_file)
+                            self.dm.pushFile(os.path.join(root, filename), data_local_file)
                             break
                         except DMError:
                             if retry == push_attempts:
                                 raise
+
+            self.dm.shellCheckOutput(['stop', 'b2g'])
+
+            for root, dirs, files in os.walk(gecko_path):
+                for filename in files:
+                    rel_path = os.path.relpath(os.path.join(root, filename), gecko_path)
+                    data_local_file = os.path.join('/data/local/b2g', rel_path)
+                    system_b2g_file = os.path.join('/system/b2g', rel_path)
+                    print 'copying', data_local_file, 'to', system_b2g_file
+                    try:
+                        self.dm.shellCheckOutput(['dd',
+                                                  'if=%s' % data_local_file,
+                                                  'of=%s' % system_b2g_file])
+                    except DMError:
+                        if retry == push_attempts:
+                            raise
 
             self.restart_b2g()
 
