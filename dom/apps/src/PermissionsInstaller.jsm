@@ -73,9 +73,9 @@ this.PermissionsTable =  { geolocation: {
                            },
                            "device-storage:apps": {
                              app: DENY_ACTION,
-                             privileged: PROMPT_ACTION,
+                             privileged: DENY_ACTION,
                              certified: ALLOW_ACTION,
-                             access: ["read", "write", "create"]
+                             access: ["read"]
                            },
                            "device-storage:pictures": {
                              app: DENY_ACTION,
