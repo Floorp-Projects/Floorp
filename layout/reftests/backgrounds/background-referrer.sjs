@@ -50,8 +50,14 @@ function handleRequest(request, response)
   var referrer = request.hasHeader("Referer") ?
                    request.getHeader("Referer") : "";
 
-  // Test url looks like http://localhost:port/timestamp/number/background-referrer.html
-  if (/^http:\/\/localhost:[0-9]+\/[0-9]+\/[0-9]+\/background-referrer.html$/.test(referrer))
+  // Test url looks like:
+  //   http://localhost:port/timestamp/number/background-referrer.html
+  // Except in Android, where it looks like:
+  //   http://A.B.C.D:port/timestamp/number/background-referrer.html
+  // where A.B.C.D is the IP address of the box the reftest HTTP server is
+  // running on.  And maybe that will change.  So just test for ending in
+  // "/background-referrer.html".
+  if (/\/background-referrer.html$/.test(referrer))
   {
     response.setHeader("Content-Type", "image/png", false);
 
