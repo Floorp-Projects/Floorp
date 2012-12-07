@@ -1015,9 +1015,6 @@ TelemetryPing.prototype = {
         this._isIdleObserver = true;
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       break;
-    case "test-save-histograms":
-      this.saveHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
-      break;
     case "test-load-histograms":
       this._pingsLoaded = 0;
       this._pingLoadsCompleted = 0;
