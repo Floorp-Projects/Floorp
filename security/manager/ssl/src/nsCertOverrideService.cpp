@@ -124,6 +124,7 @@ nsCertOverrideService::Init()
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", true);
     observerService->AddObserver(this, "profile-do-change", true);
+    observerService->AddObserver(this, "last-pb-context-exited", true);
     // simulate a profile change so we read the current profile's settings file
     Observe(nullptr, "profile-do-change", nullptr);
   }
@@ -168,6 +169,10 @@ nsCertOverrideService::Observe(nsISupports     *,
     }
     Read();
 
+  } else if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
+    ClearValidityOverride(
+        NS_LITERAL_CSTRING("all:temporary-certificates"),
+        0);
   }
 
   return NS_OK;
