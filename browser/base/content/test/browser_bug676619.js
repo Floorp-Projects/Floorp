@@ -1,8 +1,13 @@
 function test () {
   waitForExplicitFinish();
+
+  var isHTTPS = false;
+
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+    if (isHTTPS) {
+      gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+    }
     let doc = gBrowser.contentDocument;
 
 
@@ -34,8 +39,14 @@ function test () {
               testLink.bind(null, "link6", "test.blob",
                 testLocation.bind(null, "link7", "http://example.com/",
                   function () {
-                    gBrowser.removeCurrentTab();
-                    finish();
+                    if (isHTTPS) {
+                      gBrowser.removeCurrentTab();
+                      finish();
+                    } else {
+                      // same test again with https:
+                      isHTTPS = true;
+                      content.location = "https://example.com:443/browser/browser/base/content/test/download_page.html";
+                    }
                   })))))));
 
   }, true);
