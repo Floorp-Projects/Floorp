@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test SharedFrame - Bug 811247"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+    function is(a,b,c) opener.wrappedJSObject.is(a,b,c);
+    function ok(a,b) opener.wrappedJSObject.ok(a,b);
+    function done() opener.wrappedJSObject.done();
+
+    Components.utils.import("resource:///modules/SharedFrame.jsm");
+    ok(SharedFrame, "SharedFrame module exists");
+
+    let box, gGen;
+    function runTest() {
+      box = document.getElementById("frames-container");
+      gGen = test_module();
+      gGen.next();
+    }
+
+    function test_module() {
+      // note: no 'src' attribute means aPreload = false;
+      let frame1 = SharedFrame.createFrame("group1", box, {id: "group1-frame1", type: "content"});
+      let frame2 = SharedFrame.createFrame("group1", box, {id: "group1-frame2", type: "content"});
+      let frame3 = SharedFrame.createFrame("group1", box, {id: "group1-frame3", type: "content"});
+
+      // Check proper attribute assignment
+      is(frame1.id, "group1-frame1", "correct id");
+      is(frame2.id, "group1-frame2", "correct id");
+      is(frame3.id, "group1-frame3", "correct id");
+
+      is(frame1.getAttribute("type"), "content", "correct type");
+      is(frame2.getAttribute("type"), "content", "correct type");
+      is(frame3.getAttribute("type"), "content", "correct type");
+
+      //--------------------------
+      yield waitForLoad([frame1, frame2, frame3]);
+
+      // Check for unloaded in the src URL
+      ok(/Unloaded/.test(frame1.contentDocument.location), "frame 1 is unloaded");
+      ok(/Unloaded/.test(frame2.contentDocument.location), "frame 2 is unloaded");
+      ok(/Unloaded/.test(frame3.contentDocument.location), "frame 3 is unloaded");
+
+      // Check that there is no frame alive in the group
+      ok(!SharedFrame.isGroupAlive("group1"), "group 1 is not alive");
+
+      // Set the URL and load the group
+      SharedFrame.updateURL("group1", "http://www.example.com");
+      SharedFrame.preload("group1", frame1);
+
+      //--------------------------
+      yield waitForLoad([frame1]);
+
+      // Check that frame 1 was properly loaded and the group is alive
+      ok(SharedFrame.isGroupAlive("group1"), "group 1 is now alive");
+      ok(!/Unloaded/.test(frame1.contentDocument.location), "frame 1 is now loaded");
+      ok(/Unloaded/.test(frame2.contentDocument.location), "frame 2 is unloaded");
+      ok(/Unloaded/.test(frame3.contentDocument.location), "frame 3 is unloaded");
+
+      // Move content to frame 2
+      SharedFrame.setOwner("group1", frame2);
+
+      ok(/Unloaded/.test(frame1.contentDocument.location), "frame 1 is unloaded");
+      ok(!/Unloaded/.test(frame2.contentDocument.location), "content was transfered to frame 2");
+      ok(/Unloaded/.test(frame3.contentDocument.location), "frame 3 is unloaded");
+
+      // Update URL and check that new content got loaded
+      SharedFrame.updateURL("group1", "http://www.example.com/new");
+
+      //--------------------------
+      yield waitForLoad([frame2]);
+
+      ok(/new$/.test(frame2.contentDocument.location), "new url loaded");
+
+      // Now remove the loaded content and check if the group is properly reported as unloaded
+      box.removeChild(frame2);
+      ok(!SharedFrame.isGroupAlive("group1"), "group 1 is not alive");
+
+      // And see if setOwnering will reload the group
+      SharedFrame.setOwner("group1", frame3);
+
+      //--------------------------
+      yield waitForLoad([frame3]);
+
+      ok(SharedFrame.isGroupAlive("group1"), "group 1 is alive");
+      ok(/new$/.test(frame3.contentDocument.location), "content was transfered to frame 3");
+
+      // Create a second group to verify it doesn't interact with the first one. Also test
+      // that preloading works
+      let frame4 = SharedFrame.createFrame("group2", box, {src: "http://www.example.com/group2", type: "content"});
+      let frame5 = SharedFrame.createFrame("group2", box, {src: "http://www.example.com/group2", type: "content"});
+
+      //--------------------------
+      yield waitForLoad([frame4, frame5]);
+
+      ok(SharedFrame.isGroupAlive("group2"), "group 2 was preloaded due to the src attribute");
+
+      // Check for unloaded in the src URL
+      ok(/group2$/.test(frame4.contentDocument.location), "frame 4 is loaded");
+      ok(/Unloaded/.test(frame5.contentDocument.location), "frame 5 is unloaded");
+
+      SharedFrame.setOwner("group2", frame5);
+
+      ok(/Unloaded/.test(frame4.contentDocument.location), "frame 4 is unloaded");
+      ok(/group2$/.test(frame5.contentDocument.location), "frame 5 is loaded");
+
+      SharedFrame.updateURL("group2", "http://www.example.com/new2");
+
+      //--------------------------
+      yield waitForLoad([frame5]);
+
+      ok(/new2$/.test(frame5.contentDocument.location), "frame 5 changed");
+      ok(/Unloaded/.test(frame1.contentDocument.location), "frame 1 still has its previous value");
+      ok(/new$/.test(frame3.contentDocument.location), "frame 3 still has its previous value");
+
+      //And now check that aPreload parameter works
+      let frame7 = SharedFrame.createFrame("group3", box, {src: "http://www.example.com/group3", type: "content"}, false);
+
+      //--------------------------
+      yield waitForLoad([frame7]);
+
+      ok(!SharedFrame.isGroupAlive("group3"), "aPreload = false works");
+      ok(/Unloaded/.test(frame7.contentDocument.location), "frame 7 is unloaded");
+
+      let frame8 = SharedFrame.createFrame("group3", box, {src: "http://www.example.com/group3", type: "content"});
+
+      //--------------------------
+      yield waitForLoad([frame8]);
+
+      ok(SharedFrame.isGroupAlive("group3"), "aPreload defauls to true");
+      ok(/group3/.test(frame8.contentDocument.location), "aPreload + src loads/reloads group");
+
+      done();
+    }
+
+
+    function waitForLoad(frames) {
+      let count = frames.length;
+      for (let frame of frames) {
+        let f = frame;
+        f.addEventListener("DOMContentLoaded", function frameloaded(event) {
+          f.removeEventListener("DOMContentLoaded", frameloaded, false);
+          if (--count == 0) {
+            try { gGen.next() } catch (ex if ex instanceof StopIteration) { }
+          }
+        }, false);
+      }
+    }
+  ]]>
+  </script>
+
+  <box id="frames-container"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>
