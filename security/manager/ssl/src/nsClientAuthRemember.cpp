@@ -21,8 +21,10 @@
 #include "pk11pub.h"
 #include "certdb.h"
 #include "sechash.h"
+#include "SharedSSLState.h"
 
 using namespace mozilla;
+using namespace mozilla::psm;
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsClientAuthRememberService, 
                               nsIObserver,
@@ -78,6 +80,16 @@ void nsClientAuthRememberService::ClearRememberedDecisions()
 {
   ReentrantMonitorAutoEnter lock(monitor);
   RemoveAllFromMemory();
+}
+
+void nsClientAuthRememberService::ClearAllRememberedDecisions()
+{
+  RefPtr<nsClientAuthRememberService> svc =
+    PublicSSLState()->GetClientAuthRememberService();
+  svc->ClearRememberedDecisions();
+
+  svc = PrivateSSLState()->GetClientAuthRememberService();
+  svc->ClearRememberedDecisions();
 }
 
 void
