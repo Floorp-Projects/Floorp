@@ -13,7 +13,6 @@ include protocol PBlob; //FIXME: bug #792908
 
 include "SerializedLoadContext.h";
 
-using IPC::SerializedLoadContext;
 using PRTime;
 
 namespace mozilla {
@@ -29,8 +28,7 @@ parent:
   AsyncOpen(URIParams uri,
             uint64_t startPos,
             nsCString entityID,
-            OptionalInputStreamParams uploadStream,
-            SerializedLoadContext loadContext);
+            OptionalInputStreamParams uploadStream);
 
   ConnectChannel(uint32_t channelId);
   Cancel(nsresult status);
