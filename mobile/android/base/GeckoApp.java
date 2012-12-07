@@ -1691,6 +1691,7 @@ abstract public class GeckoApp
         registerEventListener("onCameraCapture");
         registerEventListener("Menu:Add");
         registerEventListener("Menu:Remove");
+        registerEventListener("Menu:Update");
         registerEventListener("Gecko:Ready");
         registerEventListener("Toast:Show");
         registerEventListener("DOMFullScreen:Start");
@@ -2141,6 +2142,7 @@ abstract public class GeckoApp
         unregisterEventListener("onCameraCapture");
         unregisterEventListener("Menu:Add");
         unregisterEventListener("Menu:Remove");
+        unregisterEventListener("Menu:Update");
         unregisterEventListener("Gecko:Ready");
         unregisterEventListener("Toast:Show");
         unregisterEventListener("DOMFullScreen:Start");

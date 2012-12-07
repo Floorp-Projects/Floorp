@@ -101,6 +101,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsHTMLDocument.h"
 #include "nsDOMTouchEvent.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1816,6 +1817,93 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
                                                                   aDefer);
 }
 
+// FIXME (https://bugzilla.mozilla.org/show_bug.cgi?id=431767)
+// nsDocument::GetInnerWindow can return an outer window in some
+// cases.  We don't want to stick an event listener on an outer
+// window, so bail if it does.  See also similar code in
+// nsGenericHTMLElement::GetEventListenerManagerForAttr.
+#define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
+#define FORWARDED_EVENT(name_, id_, type_, struct_)                           \
+EventHandlerNonNull*                                                          \
+nsGenericHTMLElement::GetOn##name_()                                          \
+{                                                                             \
+  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+    /* XXXbz note to self: add tests for this! */                             \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
+    if (win && win->IsInnerWindow()) {                                        \
+      nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                \
+      nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);     \
+      return globalWin->GetOn##name_();                                       \
+    }                                                                         \
+    return nullptr;                                                           \
+  }                                                                           \
+                                                                              \
+  return nsINode::GetOn##name_();                                             \
+}                                                                             \
+void                                                                          \
+nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler,              \
+                                   ErrorResult& error)                        \
+{                                                                             \
+  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
+    if (!win || !win->IsInnerWindow()) {                                      \
+      return;                                                                 \
+    }                                                                         \
+                                                                              \
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                  \
+    nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);       \
+    return globalWin->SetOn##name_(handler, error);                           \
+  }                                                                           \
+                                                                              \
+  return nsINode::SetOn##name_(handler, error);                               \
+}
+#define ERROR_EVENT(name_, id_, type_, struct_)                               \
+already_AddRefed<EventHandlerNonNull>                                         \
+nsGenericHTMLElement::GetOn##name_()                                          \
+{                                                                             \
+  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+    /* XXXbz note to self: add tests for this! */                             \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
+    if (win && win->IsInnerWindow()) {                                        \
+      nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                \
+      nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);     \
+      OnErrorEventHandlerNonNull* errorHandler = globalWin->GetOn##name_();   \
+      if (errorHandler) {                                                     \
+        nsRefPtr<EventHandlerNonNull> handler =                               \
+          new EventHandlerNonNull(errorHandler);                              \
+        return handler.forget();                                              \
+      }                                                                       \
+    }                                                                         \
+    return nullptr;                                                           \
+  }                                                                           \
+                                                                              \
+  nsRefPtr<EventHandlerNonNull> handler = nsINode::GetOn##name_();            \
+  return handler.forget();                                                    \
+}                                                                             \
+void                                                                          \
+nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler,              \
+                                   ErrorResult& error)                        \
+{                                                                             \
+  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
+    if (!win || !win->IsInnerWindow()) {                                      \
+      return;                                                                 \
+    }                                                                         \
+                                                                              \
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                  \
+    nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);       \
+    nsRefPtr<OnErrorEventHandlerNonNull> errorHandler =                       \
+      new OnErrorEventHandlerNonNull(handler);                                \
+    return globalWin->SetOn##name_(errorHandler, error);                      \
+  }                                                                           \
+                                                                              \
+  return nsINode::SetOn##name_(handler, error);                               \
+}
+#include "nsEventNameList.h"
+#undef ERROR_EVENT
+#undef FORWARDED_EVENT
+#undef EVENT
+
 nsresult
 nsGenericHTMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                               nsIAtom* aPrefix, const nsAString& aValue,
@@ -1994,7 +2082,8 @@ nsGenericHTMLElement::ParseBackgroundAttribute(int32_t aNamespaceID,
     }
 
     mozilla::css::URLValue *url =
-      new mozilla::css::URLValue(buffer, baseURI, uri, NodePrincipal());
+      new mozilla::css::URLValue(uri, buffer, doc->GetDocumentURI(),
+                                 NodePrincipal());
     aResult.SetTo(url, &aValue);
     return true;
   }

@@ -1720,6 +1720,50 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
 }
 
 void
+MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
+
+  int32_t blockOffset = int32_t(mChannelOffset%BLOCK_SIZE);
+  if (blockOffset > 0) {
+    LOG(PR_LOG_DEBUG,
+        ("Stream %p writing partial block: [%d] bytes; "
+         "mStreamOffset [%lld] mChannelOffset[%lld] mStreamLength [%lld] "
+         "notifying: [%s]",
+         this, blockOffset, mStreamOffset, mChannelOffset, mStreamLength,
+         aNotifyAll ? "yes" : "no"));
+
+    // Write back the partial block
+    memset(reinterpret_cast<char*>(mPartialBlockBuffer) + blockOffset, 0,
+           BLOCK_SIZE - blockOffset);
+    gMediaCache->AllocateAndWriteBlock(this, mPartialBlockBuffer,
+        mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK);
+    if (aNotifyAll) {
+      // Wake up readers who may be waiting for this data
+      mon.NotifyAll();
+    }
+  }
+}
+
+void
+MediaCacheStream::FlushPartialBlock()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
+
+  // Write the current partial block to memory.
+  // Note: This writes a full block, so if data is not at the end of the
+  // stream, the decoder must subsequently choose correct start and end offsets
+  // for reading/seeking.
+  FlushPartialBlockInternal(false);
+
+  gMediaCache->QueueUpdate();
+}
+
+void
 MediaCacheStream::NotifyDataEnded(nsresult aStatus)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -1733,16 +1777,7 @@ MediaCacheStream::NotifyDataEnded(nsresult aStatus)
     mResourceID = gMediaCache->AllocateResourceID();
   }
 
-  int32_t blockOffset = int32_t(mChannelOffset%BLOCK_SIZE);
-  if (blockOffset > 0) {
-    // Write back the partial block
-    memset(reinterpret_cast<char*>(mPartialBlockBuffer) + blockOffset, 0,
-           BLOCK_SIZE - blockOffset);
-    gMediaCache->AllocateAndWriteBlock(this, mPartialBlockBuffer,
-        mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK);
-    // Wake up readers who may be waiting for this data
-    mon.NotifyAll();
-  }
+  FlushPartialBlockInternal(true);
 
   if (!mDidNotifyDataEnded) {
     MediaCache::ResourceStreamIterator iter(mResourceID);

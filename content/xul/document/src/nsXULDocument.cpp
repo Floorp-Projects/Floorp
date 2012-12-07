@@ -390,16 +390,6 @@ nsXULDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
     NS_NOTREACHED("ResetToURI");
 }
 
-// Override the nsDocument.cpp method to keep from returning the
-// "cached XUL" type which is completely internal and may confuse
-// people
-NS_IMETHODIMP
-nsXULDocument::GetContentType(nsAString& aContentType)
-{
-    aContentType.AssignLiteral("application/vnd.mozilla.xul+xml");
-    return NS_OK;
-}
-
 void
 nsXULDocument::SetContentType(const nsAString& aContentType)
 {
@@ -1882,11 +1872,11 @@ nsXULDocument::RemoveElementFromRefMap(Element* aElement)
 // nsIDOMNode interface
 //
 
-NS_IMETHODIMP
-nsXULDocument::CloneNode(bool aDeep, uint8_t aOptionalArgc, nsIDOMNode** aReturn)
+nsresult
+nsXULDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
-    // We don't allow cloning of a document
-    *aReturn = nullptr;
+    // We don't allow cloning of a XUL document
+    *aResult = nullptr;
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 

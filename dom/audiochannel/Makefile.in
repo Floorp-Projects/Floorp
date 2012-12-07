@@ -33,11 +33,17 @@ EXPORTS_NAMESPACES = \
 
 EXPORTS = AudioChannelService.h \
           AudioChannelServiceChild.h \
-          AudioChannelCommon.h
+          AudioChannelCommon.h \
+          AudioChannelAgent.h
 
 CPPSRCS += \
   AudioChannelService.cpp \
   AudioChannelServiceChild.cpp \
+  AudioChannelAgent.cpp \
+  $(NULL)
+
+XPIDLSRCS = \
+  nsIAudioChannelAgent.idl \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
