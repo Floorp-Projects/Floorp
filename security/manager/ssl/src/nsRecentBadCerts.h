@@ -11,6 +11,7 @@
 #include "mozilla/ReentrantMonitor.h"
 
 #include "nsIRecentBadCertsService.h"
+#include "nsIObserver.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "cert.h"
@@ -54,16 +55,18 @@ private:
   RecentBadCert &operator=(const RecentBadCert &other) MOZ_DELETE;
 };
 
-class nsRecentBadCertsService MOZ_FINAL : public nsIRecentBadCertsService
+class nsRecentBadCerts MOZ_FINAL : public nsIRecentBadCerts
+                                 , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIRECENTBADCERTSSERVICE
+  NS_DECL_NSIRECENTBADCERTS
+  NS_DECL_NSIOBSERVER
 
-  nsRecentBadCertsService();
-  ~nsRecentBadCertsService();
+  nsRecentBadCerts();
+  ~nsRecentBadCerts();
 
-  nsresult Init();
+  void InitPrivateBrowsingObserver();
 
 protected:
     mozilla::ReentrantMonitor monitor;
