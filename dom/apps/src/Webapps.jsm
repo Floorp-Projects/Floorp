@@ -158,7 +158,7 @@ this.DOMApplicationRegistry = {
     // twice
     this._readManifests(ids, (function readCSPs(aResults) {
       aResults.forEach(function registerManifest(aResult) {
-        this.webapps[aResult.id].csp = manifest.csp || "";
+        this.webapps[aResult.id].csp = aResult.manifest.csp || "";
       }, this);
     }).bind(this));
 
