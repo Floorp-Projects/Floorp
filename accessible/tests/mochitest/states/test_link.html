@@ -21,7 +21,7 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    gA11yEventDumpToConsole = true; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
 
     var gLinkWindow = null;
     function closeDocChecker()
@@ -35,7 +35,9 @@
 
       this.match = function closeDocChecker_match(aEvent)
       {
-        return true;
+        // A temporary about:blank document gets loaded before 'example.com'
+        // document.
+        return aEvent.DOMNode.URL == "http://www.example.com/";
       }
     }
 
@@ -86,11 +88,17 @@
       testStates("link_traversed", 0, 0, STATE_TRAVERSED);
 
       // a: traversed state
-      enableLogging("docload"); // debug stuff
+      //enableLogging("docload"); // debug stuff
 
       gQueue = new eventQueue();
       gQueue.push(new clickLink("link_traversed"));
-      gQueue.onFinish = function() { gLinkWindow.close(); disableLogging(); }
+      gQueue.onFinish =
+        function()
+        {
+          gLinkWindow.close();
+          //disableLogging(); // debug stuff
+        }
+
       gQueue.invoke(); // will call SimpleTest.finsih();
     }
 
