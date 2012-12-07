@@ -805,6 +805,12 @@ TelemetryPing.prototype = {
     }
   },
 
+  testLoadHistograms: function testLoadHistograms(file, sync) {
+    this._pingsLoaded = 0;
+    this._pingLoadsCompleted = 0;
+    this.loadHistograms(file, sync);
+  },
+
   loadSavedPings: function loadSavedPings(sync) {
     let directory = this.ensurePingDirectory();
     let entries = directory.directoryEntries
@@ -1034,11 +1040,6 @@ TelemetryPing.prototype = {
         idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
         this._isIdleObserver = true;
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
-      break;
-    case "test-load-histograms":
-      this._pingsLoaded = 0;
-      this._pingLoadsCompleted = 0;
-      this.loadHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
       break;
     case "idle":
       this.sendIdlePing(false, this._server);
