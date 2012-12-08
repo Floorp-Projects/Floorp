@@ -194,7 +194,7 @@
         <button id="social-undoactivation-button"
                 label="&social.activated.undobutton.label;"
                 accesskey="&social.activated.undobutton.accesskey;"
-                onclick="SocialUI.undoActivation();"/>
+                onclick="SocialUI.undoActivation(this);"/>
         <button default="true"
                 autofocus="autofocus"
                 label="&social.ok.label;"
@@ -209,7 +209,7 @@
         <button id="social-undoactivation-button"
                 label="&social.activated.undobutton.label;"
                 accesskey="&social.activated.undobutton.accesskey;"
-                onclick="SocialUI.undoActivation();"/>
+                onclick="SocialUI.undoActivation(this);"/>
 #endif
           </hbox>
         </vbox>
@@ -679,6 +679,7 @@
                       label="&social.toggleNotifications.label;"
                       accesskey="&social.toggleNotifications.accesskey;"/>
             <menuseparator class="social-statusarea-separator"/>
+            <menuseparator class="social-provider-menu" hidden="true"/>
             <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
             <menuitem class="social-remove-menuitem" command="Social:Remove"/>
           </menupopup>

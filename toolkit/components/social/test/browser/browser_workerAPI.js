@@ -16,6 +16,7 @@ function test() {
   ensureSocialEnabled();
 
   SocialService.addProvider(manifest, function (p) {
+    p.enabled = true;
     provider = p;
     runTests(tests, undefined, undefined, function () {
       SocialService.removeProvider(provider.origin, finish);
