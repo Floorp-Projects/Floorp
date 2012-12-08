@@ -24,6 +24,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -1157,19 +1160,20 @@ BrowserGlue.prototype = {
       if (bookmarksURI) {
         // Import from bookmarks.html file.
         try {
-          BookmarkHTMLUtils.importFromURL(bookmarksURI.spec, true, (function (success) {
-            if (success) {
+          BookmarkHTMLUtils.importFromURL(bookmarksURI.spec, true).then(null,
+            function onFailure() {
+              Cu.reportError("Bookmarks.html file could be corrupt.");
+            }
+          ).then(
+            function onComplete() {
               // Now apply distribution customized bookmarks.
               // This should always run after Places initialization.
               this._distributionCustomizer.applyBookmarks();
               // Ensure that smart bookmarks are created once the operation is
               // complete.
               this.ensurePlacesDefaultQueriesInitialized();
-            }
-            else {
-              Cu.reportError("Bookmarks.html file could be corrupt.");
-            }
-          }).bind(this));
+            }.bind(this)
+          );
         } catch (err) {
           Cu.reportError("Bookmarks.html file could be corrupt. " + err);
         }
@@ -1211,16 +1215,31 @@ BrowserGlue.prototype = {
 
     // Backup bookmarks to bookmarks.html to support apps that depend
     // on the legacy format.
-    var autoExportHTML = false;
     try {
-      autoExportHTML = Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML");
+      // If this fails to get the preference value, we don't export.
+      if (Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML")) {
+        // Exceptionally, since this is a non-default setting and HTML format is
+        // discouraged in favor of the JSON backups, we spin the event loop on
+        // shutdown, to wait for the export to finish.  We cannot safely spin
+        // the event loop on shutdown until we include a watchdog to prevent
+        // potential hangs (bug 518683).  The asynchronous shutdown operations
+        // will then be handled by a shutdown service (bug 435058).
+        let shutdownComplete = false;
+        BookmarkHTMLUtils.exportToFile(FileUtils.getFile("BMarks", [])).then(
+          function onSuccess() {
+            shutdownComplete = true;
+          },
+          function onFailure() {
+            // There is no point in reporting errors since we are shutting down.
+            shutdownComplete = true;
+          }
+        );
+        let thread = Services.tm.currentThread;
+        while (!shutdownComplete) {
+          thread.processNextEvent(true);
+        }
+      }
     } catch(ex) { /* Don't export */ }
-
-    if (autoExportHTML) {
-      Cc["@mozilla.org/browser/places/import-export-service;1"].
-        getService(Ci.nsIPlacesImportExportService).
-        backupBookmarksFile();
-    }
   },
 
   /**
