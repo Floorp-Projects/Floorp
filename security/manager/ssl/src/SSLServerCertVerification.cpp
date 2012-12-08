@@ -112,6 +112,7 @@
 #include "nsIConsoleService.h"
 #include "PSMRunnable.h"
 #include "ScopedNSSTypes.h"
+#include "SharedSSLState.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -238,13 +239,15 @@ class CertErrorRunnable : public SyncRunnableBase
                     uint32_t collectedErrors,
                     PRErrorCode errorCodeTrust,
                     PRErrorCode errorCodeMismatch,
-                    PRErrorCode errorCodeExpired)
+                    PRErrorCode errorCodeExpired,
+                    uint32_t providerFlags)
     : mFdForLogging(fdForLogging), mCert(cert), mInfoObject(infoObject),
       mDefaultErrorCodeToReport(defaultErrorCodeToReport),
       mCollectedErrors(collectedErrors),
       mErrorCodeTrust(errorCodeTrust),
       mErrorCodeMismatch(errorCodeMismatch),
-      mErrorCodeExpired(errorCodeExpired)
+      mErrorCodeExpired(errorCodeExpired),
+      mProviderFlags(providerFlags)
   {
   }
 
@@ -261,6 +264,7 @@ private:
   const PRErrorCode mErrorCodeTrust;
   const PRErrorCode mErrorCodeMismatch;
   const PRErrorCode mErrorCodeExpired;
+  const uint32_t mProviderFlags;
 };
 
 SSLServerCertVerificationResult *
@@ -296,12 +300,8 @@ CertErrorRunnable::CheckCertOverrides()
   if (NS_SUCCEEDED(nsrv)) {
     nsCOMPtr<nsISSLSocketControl> sslSocketControl = do_QueryInterface(
       NS_ISUPPORTS_CAST(nsITransportSecurityInfo*, mInfoObject));
-    uint32_t flags = 0;
-    if (sslSocketControl) {
-      sslSocketControl->GetProviderFlags(&flags);
-    }
     nsrv = stss->IsStsHost(mInfoObject->GetHostName(),
-                           flags,
+                           mProviderFlags,
                            &strictTransportSecurityEnabled);
   }
   if (NS_FAILED(nsrv)) {
@@ -371,8 +371,12 @@ CertErrorRunnable::CheckCertOverrides()
     }
   }
 
-  nsCOMPtr<nsIRecentBadCertsService> recentBadCertsService = 
-    do_GetService(NS_RECENTBADCERTS_CONTRACTID);
+  nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+  nsCOMPtr<nsIRecentBadCerts> recentBadCertsService;
+  if (certdb) {
+    bool isPrivate = mProviderFlags & nsISocketProvider::NO_PERMANENT_STORAGE;
+    certdb->GetRecentBadCerts(isPrivate, getter_AddRefs(recentBadCertsService));
+  }
  
   if (recentBadCertsService) {
     NS_ConvertUTF8toUTF16 hostWithPortStringUTF16(hostWithPortString);
@@ -418,7 +422,8 @@ CertErrorRunnable *
 CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
                         TransportSecurityInfo * infoObject,
                         CERTCertificate * cert,
-                        const void * fdForLogging)
+                        const void * fdForLogging,
+                        uint32_t providerFlags)
 {
   MOZ_ASSERT(infoObject);
   MOZ_ASSERT(cert);
@@ -567,7 +572,8 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
                                static_cast<nsIX509Cert*>(nssCert.get()),
                                infoObject, defaultErrorCodeToReport, 
                                collected_errors, errorCodeTrust, 
-                               errorCodeMismatch, errorCodeExpired);
+                               errorCodeMismatch, errorCodeExpired,
+                               providerFlags);
 }
 
 // When doing async cert processing, we dispatch one of these runnables to the
@@ -607,25 +613,29 @@ public:
   // Must be called only on the socket transport thread
   static SECStatus Dispatch(const void * fdForLogging,
                             TransportSecurityInfo * infoObject,
-                            CERTCertificate * serverCert);
+                            CERTCertificate * serverCert,
+                            uint32_t providerFlags);
 private:
   NS_DECL_NSIRUNNABLE
 
   // Must be called only on the socket transport thread
   SSLServerCertVerificationJob(const void * fdForLogging,
                                TransportSecurityInfo * infoObject, 
-                               CERTCertificate * cert);
+                               CERTCertificate * cert,
+                               uint32_t providerFlags);
   const void * const mFdForLogging;
   const RefPtr<TransportSecurityInfo> mInfoObject;
   const ScopedCERTCertificate mCert;
+  const uint32_t mProviderFlags;
 };
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
     const void * fdForLogging, TransportSecurityInfo * infoObject,
-    CERTCertificate * cert)
+    CERTCertificate * cert, uint32_t providerFlags)
   : mFdForLogging(fdForLogging)
   , mInfoObject(infoObject)
   , mCert(CERT_DupCertificate(cert))
+  , mProviderFlags(providerFlags)
 {
 }
 
@@ -977,7 +987,8 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
 /*static*/ SECStatus
 SSLServerCertVerificationJob::Dispatch(const void * fdForLogging,
                                        TransportSecurityInfo * infoObject,
-                                       CERTCertificate * serverCert)
+                                       CERTCertificate * serverCert,
+                                       uint32_t providerFlags)
 {
   // Runs on the socket transport thread
   if (!infoObject || !serverCert) {
@@ -987,7 +998,8 @@ SSLServerCertVerificationJob::Dispatch(const void * fdForLogging,
   }
   
   RefPtr<SSLServerCertVerificationJob> job(
-    new SSLServerCertVerificationJob(fdForLogging, infoObject, serverCert));
+    new SSLServerCertVerificationJob(fdForLogging, infoObject, serverCert,
+                                     providerFlags));
 
   nsresult nrv;
   if (!gCertVerificationThreadPool) {
@@ -1042,7 +1054,7 @@ SSLServerCertVerificationJob::Run()
     error = PR_GetError();
     if (error != 0) {
       RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
-        error, mInfoObject, mCert, mFdForLogging));
+        error, mInfoObject, mCert, mFdForLogging, mProviderFlags));
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError(); 
@@ -1135,15 +1147,20 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
     PR_SetError(PR_UNKNOWN_ERROR, 0);
     return SECFailure;
   }
-  
+
+  uint32_t providerFlags = 0;
+  socketInfo->GetProviderFlags(&providerFlags);
+
   if (onSTSThread) {
+
     // We *must* do certificate verification on a background thread because
     // we need the socket transport thread to be free for our OCSP requests,
     // and we *want* to do certificate verification on a background thread
     // because of the performance benefits of doing so.
     socketInfo->SetCertVerificationWaiting();
     SECStatus rv = SSLServerCertVerificationJob::Dispatch(
-                        static_cast<const void *>(fd), socketInfo, serverCert);
+                           static_cast<const void *>(fd), socketInfo, serverCert,
+                           providerFlags);
     return rv;
   }
   
@@ -1160,7 +1177,7 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   if (error != 0) {
     RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
                     error, socketInfo, serverCert,
-                    static_cast<const void *>(fd)));
+                    static_cast<const void *>(fd), providerFlags));
     if (!runnable) {
       // CreateCertErrorRunnable sets a new error code when it fails
       error = PR_GetError();
