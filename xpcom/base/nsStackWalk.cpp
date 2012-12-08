@@ -102,7 +102,7 @@ my_malloc_logger(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
   // stack shows up as having two pthread_cond_wait$UNIX2003 frames.
   const char *name = OnSnowLeopardOrLater() ? "new_sem_from_pool" :
     "pthread_cond_wait$UNIX2003";
-  NS_StackWalk(stack_callback, 0, const_cast<char*>(name), 0);
+  NS_StackWalk(stack_callback, 0, const_cast<char*>(name), 0, nullptr);
 }
 
 // This is called from NS_LogInit() and from the stack walking functions, but
@@ -219,6 +219,7 @@ struct WalkStackData {
   void **sps;
   uint32_t sp_size;
   uint32_t sp_count;
+  void *platformData;
 };
 
 void PrintError(char *prefix, WalkStackData* data);
@@ -304,13 +305,17 @@ WalkStackMain64(struct WalkStackData* data)
     BOOL ok;
 
     // Get a context for the specified thread.
-    memset(&context, 0, sizeof(CONTEXT));
-    context.ContextFlags = CONTEXT_FULL;
-    if (!GetThreadContext(myThread, &context)) {
-        if (data->walkCallingThread) {
-            PrintError("GetThreadContext");
+    if (!data->platformData) {
+        memset(&context, 0, sizeof(CONTEXT));
+        context.ContextFlags = CONTEXT_FULL;
+        if (!GetThreadContext(myThread, &context)) {
+            if (data->walkCallingThread) {
+                PrintError("GetThreadContext");
+            }
+            return;
         }
-        return;
+    } else {
+        context = *static_cast<CONTEXT*>(data->platformData);
     }
 
     // Setup initial stack frame to walk from
@@ -457,7 +462,7 @@ WalkStackThread(void* aData)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             void *aClosure, uintptr_t aThread)
+             void *aClosure, uintptr_t aThread, void *aPlatformData)
 {
     StackWalkInitCriticalAddress();
     static HANDLE myProcess = NULL;
@@ -516,6 +521,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     data.sps = local_sps;
     data.sp_count = 0;
     data.sp_size = ArrayLength(local_pcs);
+    data.platformData = aPlatformData;
 
     if (aThread) {
         // If we're walking the stack of another thread, we don't need to
@@ -1014,9 +1020,10 @@ cs_operate(int (*operate_func)(void *, void *, void *), void * usrarg)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             void *aClosure, uintptr_t aThread)
+             void *aClosure, uintptr_t aThread, void *aPlatformData)
 {
     MOZ_ASSERT(!aThread);
+    MOZ_ASSERT(!aPlatformData);
     struct my_user_args args;
 
     StackWalkInitCriticalAddress();
@@ -1142,9 +1149,10 @@ FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             void *aClosure, uintptr_t aThread)
+             void *aClosure, uintptr_t aThread, void *aPlatformData)
 {
   MOZ_ASSERT(!aThread);
+  MOZ_ASSERT(!aPlatformData);
   StackWalkInitCriticalAddress();
 
   // Get the frame pointer
@@ -1201,9 +1209,10 @@ unwind_callback (struct _Unwind_Context *context, void *closure)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             void *aClosure, uintptr_t aThread)
+             void *aClosure, uintptr_t aThread, void *aPlatformData)
 {
     MOZ_ASSERT(!aThread);
+    MOZ_ASSERT(!aPlatformData);
     StackWalkInitCriticalAddress();
     unwind_info info;
     info.callback = aCallback;
@@ -1289,9 +1298,10 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             void *aClosure, uintptr_t aThread)
+             void *aClosure, uintptr_t aThread, void *aPlatformData)
 {
     MOZ_ASSERT(!aThread);
+    MOZ_ASSERT(!aPlatformData);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
