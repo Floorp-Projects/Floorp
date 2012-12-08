@@ -53,16 +53,17 @@ add_test(function removed_but_visited_bookmark()
     do_log_info("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-    visit(TEST_URI);
-    PlacesUtils.bookmarks.removeItem(id);
+    addVisits(TEST_URI, function () {
+      PlacesUtils.bookmarks.removeItem(id);
 
-    promiseAsyncUpdates().then(function ()
-    {
-      do_log_info("*Visited* URI no longer bookmarked => frecency should != 0");
-      do_check_neq(frecencyForUrl(TEST_URI), 0);
+      promiseAsyncUpdates().then(function ()
+      {
+        do_log_info("*Visited* URI no longer bookmarked => frecency should != 0");
+        do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-      remove_all_bookmarks();
-      promiseClearHistory().then(run_next_test);
+        remove_all_bookmarks();
+        promiseClearHistory().then(run_next_test);
+      });
     });
   });
 });
@@ -112,16 +113,17 @@ add_test(function cleared_parent_of_visited_bookmark()
     do_log_info("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-    visit(TEST_URI);
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+    addVisits(TEST_URI, function () {
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
 
-    promiseAsyncUpdates().then(function ()
-    {
-      do_log_info("*Visited* URI no longer bookmarked => frecency should != 0");
-      do_check_neq(frecencyForUrl(TEST_URI), 0);
+      promiseAsyncUpdates().then(function ()
+      {
+        do_log_info("*Visited* URI no longer bookmarked => frecency should != 0");
+        do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-      remove_all_bookmarks();
-      promiseClearHistory().then(run_next_test);
+        remove_all_bookmarks();
+        promiseClearHistory().then(run_next_test);
+      });
     });
   });
 });
@@ -158,21 +160,6 @@ add_test(function cleared_parent_of_bookmark_still_bookmarked()
     });
   });
 });
-
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Adds a visit for aURI.
- *
- * @param aURI
- *        the URI of the Place for which to add a visit
- */
-function visit(aURI)
-{
-  PlacesUtils.history.addVisit(aURI, Date.now() * 1000, null,
-                               PlacesUtils.history.TRANSITION_BOOKMARK,
-                               false, 0);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 

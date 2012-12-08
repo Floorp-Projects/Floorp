@@ -7,11 +7,26 @@
 // Cache actual visit_count value, filled by add_visit, used by check_results
 let visit_count = 0;
 
-function add_visit(aURI, aVisitDate, aVisitType) {
-  let isRedirect = aVisitType == TRANSITION_REDIRECT_PERMANENT ||
-                   aVisitType == TRANSITION_REDIRECT_TEMPORARY;
-  let visitId = PlacesUtils.history.addVisit(aURI, aVisitDate, null,
-                                             aVisitType, isRedirect, 0);
+// Returns the Place ID corresponding to an added visit.
+function task_add_visit(aURI, aVisitType)
+{
+  // Add the visit asynchronously, and save its visit ID.
+  let deferUpdatePlaces = Promise.defer();
+  PlacesUtils.asyncHistory.updatePlaces({
+    uri: aURI,
+    visits: [{ transitionType: aVisitType, visitDate: Date.now() * 1000 }]
+  }, {
+    handleError: function TAV_handleError() {
+      deferUpdatePlaces.reject(new Error("Unexpected error in adding visit."));
+    },
+    handleResult: function (aPlaceInfo) {
+      this.visitId = aPlaceInfo.visits[0].visitId;
+    },
+    handleCompletion: function TAV_handleCompletion() {
+      deferUpdatePlaces.resolve(this.visitId);
+    }
+  });
+  let visitId = yield deferUpdatePlaces.promise;
 
   // Increase visit_count if applicable
   if (aVisitType != 0 &&
@@ -30,9 +45,9 @@ function add_visit(aURI, aVisitDate, aVisitType) {
     let placeId = stmt.getInt64(0);
     stmt.finalize();
     do_check_true(placeId > 0);
-    return placeId;
+    throw new Task.Result(placeId);
   }
-  return 0;
+  throw new Task.Result(0);
 }
 
 /**
@@ -42,7 +57,8 @@ function add_visit(aURI, aVisitDate, aVisitType) {
  * @param   aExpectedCountWithHidden
  *          Number of history results we are expecting (included hidden ones)
  */
-function check_results(aExpectedCount, aExpectedCountWithHidden) {
+function check_results(aExpectedCount, aExpectedCountWithHidden)
+{
   let query = PlacesUtils.history.getNewQuery();
   // used to check visit_count
   query.minVisits = visit_count;
@@ -66,25 +82,31 @@ function check_results(aExpectedCount, aExpectedCountWithHidden) {
 }
 
 // main
-function run_test() {
+function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_execute()
+{
   const TEST_URI = uri("http://test.mozilla.org/");
 
   // Add a visit that force hidden
-  add_visit(TEST_URI, Date.now()*1000, TRANSITION_EMBED);
+  yield task_add_visit(TEST_URI, TRANSITION_EMBED);
   check_results(0, 0);
 
-  let placeId = add_visit(TEST_URI, Date.now()*1000, TRANSITION_FRAMED_LINK);
+  let placeId = yield task_add_visit(TEST_URI, TRANSITION_FRAMED_LINK);
   check_results(0, 1);
 
   // Add a visit that force unhide and check the place id.
   // - We expect that the place gets hidden = 0 while retaining the same
   //   place id and a correct visit_count.
-  do_check_eq(add_visit(TEST_URI, Date.now()*1000, TRANSITION_TYPED), placeId);
+  do_check_eq((yield task_add_visit(TEST_URI, TRANSITION_TYPED)), placeId);
   check_results(1, 1);
 
   // Add a visit, check that hidden is not overwritten
   // - We expect that the place has still hidden = 0, while retaining
   //   correct visit_count.
-  add_visit(TEST_URI, Date.now()*1000, TRANSITION_EMBED);
+  yield task_add_visit(TEST_URI, TRANSITION_EMBED);
   check_results(1, 1);
-}
+});
