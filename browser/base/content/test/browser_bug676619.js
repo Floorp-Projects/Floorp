@@ -23,6 +23,7 @@ function test () {
 
     function testLink(link, name, next) {
         addWindowListener("chrome://mozapps/content/downloads/unknownContentType.xul", function (win) {
+            is(doc.getElementById("unload-flag").textContent, "Okay", "beforeunload shouldn't have fired");
             is(win.document.getElementById("location").value, name, "file name should match");
             win.close();
             next();
