@@ -11,6 +11,8 @@
 #include "nsNSSIOLayer.h"
 
 class nsClientAuthRememberService;
+class nsIRecentBadCertsService;
+class nsICertOverrideService;
 class nsIObserver;
 
 namespace mozilla {

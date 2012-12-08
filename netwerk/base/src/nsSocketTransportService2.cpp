@@ -23,7 +23,15 @@
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
-#include "mozilla/PublicSSL.h"
+
+
+// XXX: There is no good header file to put these in. :(
+namespace mozilla { namespace psm {
+
+void InitializeSSLServerCertVerificationThreads();
+void StopSSLServerCertVerificationThreads();
+
+} } // namespace mozilla::psm
 
 using namespace mozilla;
 
@@ -461,7 +469,6 @@ nsSocketTransportService::Init()
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
         obsSvc->AddObserver(this, "profile-initial-state", false);
-        obsSvc->AddObserver(this, "last-pb-context-exited", false);
     }
 
     mInitialized = true;
@@ -509,7 +516,6 @@ nsSocketTransportService::Shutdown()
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
         obsSvc->RemoveObserver(this, "profile-initial-state");
-        obsSvc->RemoveObserver(this, "last-pb-context-exited");
     }
 
     mozilla::net::NetworkActivityMonitor::Shutdown();
@@ -877,33 +883,7 @@ nsSocketTransportService::Observe(nsISupports *subject,
 
         return net::NetworkActivityMonitor::Init(blipInterval);
     }
-
-    if (!strcmp(topic, "last-pb-context-exited")) {
-        nsCOMPtr<nsIRunnable> ev =
-          NS_NewRunnableMethod(this,
-                               &nsSocketTransportService::ClosePrivateConnections);
-        nsresult rv = Dispatch(ev, nsIEventTarget::DISPATCH_NORMAL);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     return NS_OK;
-}
-
-void
-nsSocketTransportService::ClosePrivateConnections()
-{
-    for (int32_t i = mActiveCount - 1; i >= 0; --i) {
-        if (mActiveList[i].mHandler->mIsPrivate) {
-            DetachSocket(mActiveList, &mActiveList[i]);
-        }
-    }
-    for (int32_t i = mIdleCount - 1; i >= 0; --i) {
-        if (mIdleList[i].mHandler->mIsPrivate) {
-            DetachSocket(mIdleList, &mIdleList[i]);
-        }
-    }
-
-    mozilla::ClearPrivateSSLState();
 }
 
 NS_IMETHODIMP
