@@ -677,32 +677,53 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
     Register remainder = ToRegister(ins->remainder());
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
 
     MDiv *mir = ins->mir();
 
     JS_ASSERT(remainder == edx);
     JS_ASSERT(lhs == eax);
+    JS_ASSERT(output == eax);
 
-    // Prevent divide by zero.
+    Label done;
+
+    // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
         masm.testl(rhs, rhs);
-        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-            return false;
+        if (mir->isTruncated()) {
+            // Truncated division by zero is zero (Infinity|0 == 0)
+            Label notzero;
+            masm.j(Assembler::NonZero, &notzero);
+            masm.xorl(output, output);
+            masm.jmp(&done);
+            masm.bind(&notzero);
+        } else {
+            JS_ASSERT(mir->fallible());
+            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                return false;
+        }
     }
 
-    // Prevent an integer overflow exception from -2147483648 / -1.
+    // Handle an integer overflow exception from -2147483648 / -1.
     if (mir->canBeNegativeOverflow()) {
         Label notmin;
-        masm.cmpl(lhs, Imm32(INT_MIN));
+        masm.cmpl(lhs, Imm32(INT32_MIN));
         masm.j(Assembler::NotEqual, &notmin);
         masm.cmpl(rhs, Imm32(-1));
-        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-            return false;
+        if (mir->isTruncated()) {
+            // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in the
+            // output register (lhs == eax).
+            masm.j(Assembler::Equal, &done);
+        } else {
+            JS_ASSERT(mir->fallible());
+            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+                return false;
+        }
         masm.bind(&notmin);
     }
 
-    // Prevent negative 0.
-    if (mir->canBeNegativeZero()) {
+    // Handle negative 0.
+    if (!mir->isTruncated() && mir->canBeNegativeZero()) {
         Label nonzero;
         masm.testl(lhs, lhs);
         masm.j(Assembler::NonZero, &nonzero);
@@ -722,6 +743,8 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
         if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
             return false;
     }
+
+    masm.bind(&done);
 
     return true;
 }

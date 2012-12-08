@@ -837,6 +837,12 @@ MDiv::updateForReplacement(MDefinition *ins_)
     return true;
 }
 
+bool
+MDiv::fallible()
+{
+    return !isTruncated();
+}
+
 static inline MDefinition *
 TryFold(MDefinition *original, MDefinition *replacement)
 {
