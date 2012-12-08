@@ -88,16 +88,21 @@ var testDataBookmark = [3, 8, 11];
  * harness.  It is where you do the work of creating the query, running it, and
  * playing with the result set.
  */
-function run_test() {
+function run_test()
+{
+  run_next_test();
+}
 
+add_task(function test_transitions()
+{
   let timeNow = Date.now();
   for each (let item in testData) {
-    PlacesUtils.history.addVisit(uri(item.uri), timeNow++ * 1000, null,
-      item.transType, false, 0);
-  }
-
-  for (let i in testData) {
-    testData[i].title = null;
+    yield promiseAddVisits({
+      uri: uri(item.uri),
+      transition: item.transType,
+      visitDate: timeNow++ * 1000,
+      title: item.title
+    });
   }
 
   //dump_table("moz_places");
@@ -145,13 +150,13 @@ function run_test() {
   var root = result.root;
   root.containerOpen = true;
   do_check_eq(testDataDownload.length, root.childCount);
-  PlacesUtils.history
-      .addVisit(PlacesUtils._uri("http://getfirefox.com"),
-                Date.now() * 1000, null,
-                Ci.nsINavHistoryService.TRANSITION_DOWNLOAD, false, 0);
+  yield promiseAddVisits({
+    uri: uri("http://getfirefox.com"),
+    transition: TRANSITION_DOWNLOAD
+  });
   do_check_eq(testDataDownload.length + 1, root.childCount);
   root.containerOpen = false;
-}
+});
 
 /*
  * Takes a query and a set of indices. The indices correspond to elements

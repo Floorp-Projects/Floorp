@@ -43,7 +43,7 @@ tests.push({
     this._sortedData = this._unsortedData;
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -116,7 +116,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -124,7 +124,7 @@ tests.push({
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
-    
+
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
@@ -216,7 +216,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -323,14 +323,14 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
-    
+
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
@@ -412,7 +412,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
     // add visits to increase visit count
     yield promiseAddVisits([
       { uri: uri("http://example.com/a"), transition: TRANSITION_TYPED, visitDate: timeInMicroseconds },
@@ -522,7 +522,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -530,7 +530,7 @@ tests.push({
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
-    
+
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
@@ -612,7 +612,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -620,7 +620,7 @@ tests.push({
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
-    
+
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
@@ -703,7 +703,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -711,7 +711,7 @@ tests.push({
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
-    
+
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
@@ -803,7 +803,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -811,7 +811,7 @@ tests.push({
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     query.onlyBookmarked = true;
-    
+
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
@@ -900,7 +900,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);                  
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -982,7 +982,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);                  
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -1064,7 +1064,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);                  
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -1146,7 +1146,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);                  
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -1234,7 +1234,7 @@ tests.push({
     ];
 
     // This function in head_queries.js creates our database with the above data
-    populateDB(this._unsortedData);                  
+    yield task_populateDB(this._unsortedData);
   },
 
   check: function() {
@@ -1257,18 +1257,21 @@ tests.push({
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function run_test() {
-  do_test_pending();
-  Task.spawn(function () {
-    for (let [, test] in Iterator(tests)) {
-      yield test.setup();
-      yield promiseAsyncUpdates();
-      test.check();
-      // sorting reversed, usually SORT_BY have ASC and DESC
-      test.check_reverse();
-      // Execute cleanup tasks
-      remove_all_bookmarks();
-      yield promiseClearHistory();
-    }
-  }).then(do_test_finished);
+function run_test()
+{
+  run_next_test();
 }
+
+add_task(function test_sorting()
+{
+  for (let [, test] in Iterator(tests)) {
+    yield test.setup();
+    yield promiseAsyncUpdates();
+    test.check();
+    // sorting reversed, usually SORT_BY have ASC and DESC
+    test.check_reverse();
+    // Execute cleanup tasks
+    remove_all_bookmarks();
+    yield promiseClearHistory();
+  }
+});
