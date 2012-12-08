@@ -183,6 +183,8 @@ private:
     void ProbeMaxCount();
 #endif
     bool mProbedMaxCount;
+
+    void ClosePrivateConnections();
 };
 
 extern nsSocketTransportService *gSocketTransportService;
