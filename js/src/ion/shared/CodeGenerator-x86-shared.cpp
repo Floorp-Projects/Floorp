@@ -129,7 +129,7 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
 
     // ucomisd flags:
     //             Z  P  C
-    //            --------- 
+    //            ---------
     //      NaN    1  1  1
     //        >    0  0  0
     //        <    0  0  1
@@ -266,7 +266,7 @@ CodeGeneratorX86Shared::generateOutOfLineCode()
     if (deoptLabel_) {
         // All non-table-based bailouts will go here.
         masm.bind(deoptLabel_);
-        
+
         // Push the frame size, so the handler can recover the IonScript.
         masm.push(Imm32(frameSize()));
 
@@ -754,13 +754,14 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI *ins)
 {
     Register lhs = ToRegister(ins->getOperand(0));
     int32_t shift = ins->shift();
-    Label negative, join;
+
+    Label negative, done;
     // Switch based on sign of the lhs.
     // Positive numbers are just a bitmask
     masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
     {
         masm.andl(Imm32((1 << shift) - 1), lhs);
-        masm.jump(&join);
+        masm.jump(&done);
     }
     // Negative numbers need a negate, bitmask, negate
     {
@@ -770,10 +771,10 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI *ins)
         masm.negl(lhs);
         masm.andl(Imm32((1 << shift) - 1), lhs);
         masm.negl(lhs);
-        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+        if (!ins->mir()->isTruncated() && !bailoutIf(Assembler::Zero, ins->snapshot()))
             return false;
     }
-    masm.bind(&join);
+    masm.bind(&done);
     return true;
 
 }
@@ -795,12 +796,22 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
         lhs = temp;
     }
 
+    Label done;
+
     // Prevent divide by zero
     masm.testl(rhs, rhs);
-    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-        return false;
+    if (ins->mir()->isTruncated()) {
+        Label notzero;
+        masm.j(Assembler::NonZero, &notzero);
+        masm.xorl(edx, edx);
+        masm.jmp(&done);
+        masm.bind(&notzero);
+    } else {
+        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+            return false;
+    }
 
-    Label negative, done;
+    Label negative;
 
     // Switch based on sign of the lhs.
     masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
@@ -821,17 +832,25 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
         masm.cmpl(lhs, Imm32(INT32_MIN));
         masm.j(Assembler::NotEqual, &notmin);
         masm.cmpl(rhs, Imm32(-1));
-        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-            return false;
+        if (ins->mir()->isTruncated()) {
+            masm.j(Assembler::NotEqual, &notmin);
+            masm.xorl(edx, edx);
+            masm.jmp(&done);
+        } else {
+            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+                return false;
+        }
         masm.bind(&notmin);
 
         masm.cdq();
         masm.idiv(rhs);
 
-        // A remainder of 0 means that the rval must be -0, which is a double.
-        masm.testl(remainder, remainder);
-        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-            return false;
+        if (!ins->mir()->isTruncated()) {
+            // A remainder of 0 means that the rval must be -0, which is a double.
+            masm.testl(remainder, remainder);
+            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                return false;
+        }
     }
 
     masm.bind(&done);
@@ -1116,7 +1135,7 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
             masm.cmp32(output, Imm32(INT_MIN));
             if (!bailoutIf(Assembler::Equal, lir->snapshot()))
                 return false;
-        
+
             // Test whether the input double was integer-valued.
             masm.cvtsi2sd(output, scratch);
             masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, &end);
