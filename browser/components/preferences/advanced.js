@@ -48,6 +48,9 @@ var gAdvancedPane = {
 #ifdef MOZ_CRASHREPORTER
     this.initSubmitCrashes();
 #endif
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+    this.initTelemetry();
+#endif
     this.updateActualCacheSize("disk");
     this.updateActualCacheSize("offline");
 
@@ -153,6 +156,28 @@ var gAdvancedPane = {
       cr.submitReports = checkbox.checked;
     } catch (e) { }
   },
+
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+  /**
+   * When telemetry is opt-out, verify if the user explicitly rejected the
+   * telemetry prompt, and if so reflect his choice in the current preference
+   * value. This doesn't cover the case where the user refused telemetry in the
+   * prompt but later enabled it in preferences in builds before the fix for
+   * bug 737600.
+   */
+  initTelemetry: function ()
+  {
+    const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabledPreRelease";
+    let enabled = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED);
+    let rejected = false;
+    try {
+      rejected = Services.prefs.getBoolPref("toolkit.telemetry.rejected");
+    } catch (e) {}
+    if (enabled && rejected) {
+      Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, false);
+    }
+  },
+#endif
 
   /**
    * When the user toggles telemetry, update the rejected value as well, so we
