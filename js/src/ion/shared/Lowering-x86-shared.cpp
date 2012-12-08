@@ -80,7 +80,9 @@ bool
 LIRGeneratorX86Shared::lowerDivI(MDiv *div)
 {
     LDivI *lir = new LDivI(useFixed(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
-    return assignSnapshot(lir) && defineFixed(lir, div, LAllocation(AnyRegister(eax)));
+    if (div->fallible() && !assignSnapshot(lir))
+        return false;
+    return defineFixed(lir, div, LAllocation(AnyRegister(eax)));
 }
 
 bool
