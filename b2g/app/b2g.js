@@ -595,7 +595,3 @@ pref("memory.free_dirty_pages", true);
 // UAProfile settings
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
-
-// b2g currently triggers heap-minimize more often than we want to lose WebGL contexts.
-// Until this is resolved, let's not lost WebGL contexts on heap-minimize. See bug 818766.
-pref("webgl.lose-context-on-heap-minimize", false);
