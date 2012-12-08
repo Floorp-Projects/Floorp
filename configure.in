@@ -8644,6 +8644,14 @@ AC_SUBST(MOZ_TELEMETRY_DISPLAY_REV)
 
 if test "$MOZ_TELEMETRY_REPORTING"; then
     AC_DEFINE(MOZ_TELEMETRY_REPORTING)
+    # Those lines will remain commented until we are ready to enable
+    # telemetry by default on Nightly & Aurora channels.
+    #
+    # Enable Telemetry by default for nightly and aurora channels
+    # if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
+    #     "$MOZ_UPDATE_CHANNEL" = "aurora"; then
+    #     AC_DEFINE(MOZ_TELEMETRY_ON_BY_DEFAULT)
+    # fi
 fi
 
 dnl win32 options
