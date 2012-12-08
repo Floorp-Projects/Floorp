@@ -100,7 +100,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
 #include "nsClientRect.h"
-#include "nsIDOMHTMLPropertiesCollection.h"
 
 // DOM core includes
 #include "nsError.h"
@@ -314,8 +313,6 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMMozBrowserFrame.h"
-#include "nsIDOMHTMLPropertiesCollection.h"
-#include "nsIDOMPropertyNodeList.h"
 
 #include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGAElement.h"
@@ -872,12 +869,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLCollection, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLPropertiesCollection, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(PropertyNodeList, 
-                           nsDOMGenericSH, 
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   // HTML element classes
   NS_DEFINE_CLASSINFO_DATA(HTMLElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -2679,16 +2670,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLCollection, nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLPropertiesCollection, nsIDOMHTMLPropertiesCollection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLPropertiesCollection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(PropertyNodeList, nsIDOMPropertyNodeList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPropertyNodeList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLElement, nsIDOMHTMLElement)
