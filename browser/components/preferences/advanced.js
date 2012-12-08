@@ -1,3 +1,4 @@
+#filter substitution
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -151,6 +152,18 @@ var gAdvancedPane = {
                getService(Components.interfaces.nsICrashReporter);
       cr.submitReports = checkbox.checked;
     } catch (e) { }
+  },
+
+  /**
+   * When the user toggles telemetry, update the rejected value as well, so we
+   * know he expressed a choice, and don't re-prompt inadvertently.
+   */
+  telemetryEnabledChanged: function (event)
+  {
+    let rejected = document.getElementById("toolkit.telemetry.rejected");
+    rejected.value = !event.target.value;
+    let displayed = document.getElementById("toolkit.telemetry.prompted");
+    displayed.value = @MOZ_TELEMETRY_DISPLAY_REV@;
   },
 
   /**
