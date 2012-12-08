@@ -22,8 +22,9 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRecentBadCerts,
-                              nsIRecentBadCerts)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsRecentBadCerts,
+                              nsIRecentBadCerts,
+                              nsIObserver)
 
 nsRecentBadCerts::nsRecentBadCerts()
 :monitor("nsRecentBadCerts.monitor")
@@ -33,6 +34,24 @@ nsRecentBadCerts::nsRecentBadCerts()
 
 nsRecentBadCerts::~nsRecentBadCerts()
 {
+}
+
+void
+nsRecentBadCerts::InitPrivateBrowsingObserver()
+{
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  obsSvc->AddObserver(this, "last-pb-context-exited", false);
+}
+
+NS_IMETHODIMP
+nsRecentBadCerts::Observe(nsISupports     *aSubject,
+                          const char      *aTopic,
+                          const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
+    ResetStoredCerts();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
