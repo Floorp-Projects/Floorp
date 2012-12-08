@@ -77,6 +77,13 @@ LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 }
 
 bool
+LIRGeneratorX86Shared::lowerDivI(MDiv *div)
+{
+    LDivI *lir = new LDivI(useFixed(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
+    return assignSnapshot(lir) && defineFixed(lir, div, LAllocation(AnyRegister(eax)));
+}
+
+bool
 LIRGeneratorX86Shared::lowerModI(MMod *mod)
 {
     if (mod->rhs()->isConstant()) {
