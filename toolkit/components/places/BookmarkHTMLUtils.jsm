@@ -66,6 +66,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
 
 const Container_Normal = 0;
@@ -90,6 +91,15 @@ const EXPORT_NEWLINE = "\n";
 #endif
 
 let serialNumber = 0; // for favicons
+
+function base64EncodeString(aString) {
+  let stream = Cc["@mozilla.org/io/string-input-stream;1"]
+                 .createInstance(Ci.nsIStringInputStream);
+  stream.setData(aString, aString.length);
+  let encoder = Cc["@mozilla.org/scriptablebase64encoder;1"]
+                  .createInstance(Ci.nsIScriptableBase64Encoder);
+  return encoder.encodeToString(stream, aString.length);
+}
 
 this.BookmarkHTMLUtils = Object.freeze({
   /**
@@ -740,7 +750,7 @@ BookmarkImporter.prototype = {
     // if the input favicon URI is a chrome: URI, then we just save it and don't
     // worry about data
     if (aIconURI) {
-      if (aIconURI.scheme == "chrome") {
+      if (aIconURI.schemeIs("chrome")) {
         PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, aIconURI,
                                                        false,
                                                        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
@@ -898,14 +908,7 @@ BookmarkExporter.prototype = {
   },
 
   exportToFile: function exportToFile(aLocalFile) {
-    let deferred = Promise.defer();
-    try {
-      this._doExportToFile(aLocalFile);
-      deferred.resolve();
-    } catch (ex) {
-      deferred.reject(ex);
-    }
-    return deferred.promise;
+    return Task.spawn(this._doExportToFile(aLocalFile));
   },
 
   _doExportToFile: function doExportToFile(aLocalFile) {
@@ -927,7 +930,7 @@ BookmarkExporter.prototype = {
                              .createInstance(Ci.nsIConverterOutputStream);
         this._converterOut.init(bufferedOut, "utf-8", 0, 0);
         try {
-          this._doExport();
+          yield this._doExport();
 
           // Flush the buffer and retain the target file on success only.
           bufferedOut.QueryInterface(Ci.nsISafeOutputStream).finish();
@@ -969,7 +972,7 @@ BookmarkExporter.prototype = {
       this._writeLine("<H1>" + this.escapeHtml(root.title) + "</H1>");
       this._writeLine("");
       this._writeLine("<DL><p>");
-      this._writeContainerContents(root, "");
+      yield this._writeContainerContents(root, "");
     } finally {
       root.containerOpen = false;
     }
@@ -978,7 +981,7 @@ BookmarkExporter.prototype = {
     root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
     try {
       if (root.childCount > 0) {
-        this._writeContainer(root, EXPORT_INDENT);
+        yield this._writeContainer(root, EXPORT_INDENT);
       }
     } finally {
       root.containerOpen = false;
@@ -989,7 +992,7 @@ BookmarkExporter.prototype = {
                                 PlacesUtils.unfiledBookmarksFolderId).root;
     try {
       if (root.childCount > 0) {
-        this._writeContainer(root, EXPORT_INDENT);
+        yield this._writeContainer(root, EXPORT_INDENT);
       }
     } finally {
       root.containerOpen = false;
@@ -1000,7 +1003,7 @@ BookmarkExporter.prototype = {
 
   _writeContainer: function writeContainer(aItem, aIndent) {
     this._write(aIndent + "<DT><H3");
-    this._writeDateAttributes(aItem);
+    yield this._writeDateAttributes(aItem);
 
     if (aItem.itemId == PlacesUtils.placesRootId) {
       this._write(" PLACES_ROOT=\"true\"");
@@ -1013,9 +1016,9 @@ BookmarkExporter.prototype = {
     }
 
     this._writeLine(">" + this.escapeHtml(aItem.title) + "</H3>");
-    this._writeDescription(aItem);
+    yield this._writeDescription(aItem);
     this._writeLine(aIndent + "<DL><p>");
-    this._writeContainerContents(aItem, aIndent);
+    yield this._writeContainerContents(aItem, aIndent);
     this._writeLine(aIndent + "</DL><p>");
   },
 
@@ -1030,20 +1033,20 @@ BookmarkExporter.prototype = {
         if (PlacesUtils.annotations
                        .itemHasAnnotation(child.itemId,
                                           PlacesUtils.LMANNO_FEEDURI)) {
-          this._writeLivemark(child, localIndent);
+          yield this._writeLivemark(child, localIndent);
         } else {
           // This is a normal folder, open it.
           PlacesUtils.asContainer(child).containerOpen = true;
           try {
-            this._writeContainer(child, localIndent);
+            yield this._writeContainer(child, localIndent);
           } finally {
             child.containerOpen = false;
           }
         }
       } else if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
-        this._writeSeparator(child, localIndent);
+        yield this._writeSeparator(child, localIndent);
       } else {
-        this._writeItem(child, localIndent);
+        yield this._writeItem(child, localIndent);
       }
     }
   },
@@ -1082,7 +1085,7 @@ BookmarkExporter.prototype = {
     } catch (ex) { }
 
     this._writeLine(">" + this.escapeHtml(aItem.title) + "</A>");
-    this._writeDescription(aItem);
+    yield this._writeDescription(aItem);
   },
 
   _writeItem: function writeItem(aItem, aIndent) {
@@ -1095,8 +1098,8 @@ BookmarkExporter.prototype = {
     }
 
     this._write(aIndent + "<DT><A HREF=\"" + this.escapeUrl(aItem.uri) + "\"");
-    this._writeDateAttributes(aItem);
-    this._writeFaviconAttribute(itemUri);
+    yield this._writeDateAttributes(aItem);
+    yield this._writeFaviconAttribute(itemUri);
 
     let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(aItem.itemId);
     if (keyword) {
@@ -1124,7 +1127,7 @@ BookmarkExporter.prototype = {
     } catch(ex) { }
 
     this._writeLine(">" + this.escapeHtml(aItem.title) + "</A>");
-    this._writeDescription(aItem);
+    yield this._writeDescription(aItem);
   },
 
   _writeDateAttributes: function writeDateAttributes(aItem) {
@@ -1139,22 +1142,29 @@ BookmarkExporter.prototype = {
   },
 
   _writeFaviconAttribute: function writeFaviconAttribute(aItemUri) {
-    let faviconURI = null;
-    try {
-      faviconURI = PlacesUtils.favicons.getFaviconForPage(aItemUri);
-    } catch (ex) {
+    let [faviconURI, dataLen, data] = yield this._promiseFaviconData(aItemUri);
+
+    if (!faviconURI) {
+      // Skip in case of errors.
       return;
     }
 
     this._write(" ICON_URI=\"" + this.escapeUrl(faviconURI.spec) + "\"");
 
-    if (faviconURI.scheme != "chrome") {
-      let faviconContents =
-          PlacesUtils.favicons.getFaviconDataAsDataURL(faviconURI);
-      if (faviconContents) {
-        this._write(" ICON=\"" + faviconContents + "\"");
-      }
+    if (!faviconURI.schemeIs("chrome") && dataLen > 0) {
+      let faviconContents = "data:image/png;base64," +
+        base64EncodeString(String.fromCharCode.apply(String, data));
+      this._write(" ICON=\"" + faviconContents + "\"");
     }
+  },
+
+  _promiseFaviconData: function(aPageURI) {
+    var deferred = Promise.defer();
+    PlacesUtils.favicons.getFaviconDataForPage(aPageURI,
+      function (aURI, aDataLen, aData, aMimeType) {
+        deferred.resolve([aURI, aDataLen, aData, aMimeType]);
+      });
+    return deferred.promise;
   },
 
   _writeDescription: function writeDescription(aItem) {
