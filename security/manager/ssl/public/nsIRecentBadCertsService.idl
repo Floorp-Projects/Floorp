@@ -20,8 +20,9 @@ interface nsISSLStatus;
  * The implementation will decide how many entries it will hold,
  * the number is expected to be small.
  */
-[scriptable, uuid(0fed7784-d152-44d6-95a7-67a59024de0f)]
-interface nsIRecentBadCerts : nsISupports {
+[scriptable, uuid(a5ae8b05-a76e-408f-b0ba-02a831265749)]
+interface nsIRecentBadCertsService : nsISupports {
+
   /**
    *  Retrieve the recently seen bad ssl status for the given hostname:port.
    *  If no SSL cert was recently seen for the given hostname:port, return null.
@@ -42,9 +43,4 @@ interface nsIRecentBadCerts : nsISupports {
    */
   void addBadCert(in AString aHostNameWithPort,
                   in nsISSLStatus aStatus);
-
-  /**
-   * Clear all stored cert data.
-   */
-  void resetStoredCerts();
 };
