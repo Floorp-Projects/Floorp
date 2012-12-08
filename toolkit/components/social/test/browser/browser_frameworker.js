@@ -464,17 +464,17 @@ let tests = {
       ioService.offline = true;
     }
   },
-  
+
   testMissingWorker: function(cbnext) {
-    let worker = getFrameWorkerHandle(url, undefined, "testMissingWorker");
-    Services.obs.addObserver(function handleError() {
-      Services.obs.removeObserver(handleError, "social:frameworker-error");
-        ok(true, "social:frameworker-error was handled");
-        worker.terminate();
-        cbnext();
-    }, 'social:frameworker-error', false);
     // don't ever create this file!  We want a 404.
     let url = "https://example.com/browser/toolkit/components/social/test/browser/worker_is_missing.js";
+    let worker = getFrameWorkerHandle(url, undefined, "testMissingWorker");
+    Services.obs.addObserver(function handleError(subj, topic, data) {
+      Services.obs.removeObserver(handleError, "social:frameworker-error");
+      is(data, worker._worker.origin, "social:frameworker-error was handled");
+      worker.terminate();
+      cbnext();
+    }, 'social:frameworker-error', false);
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
       cbnext();
@@ -484,11 +484,11 @@ let tests = {
   testNoConnectWorker: function(cbnext) {
     let worker = getFrameWorkerHandle(makeWorkerUrl(function () {}),
                                       undefined, "testNoConnectWorker");
-    Services.obs.addObserver(function handleError() {
+    Services.obs.addObserver(function handleError(subj, topic, data) {
       Services.obs.removeObserver(handleError, "social:frameworker-error");
-        ok(true, "social:frameworker-error was handled");
-        worker.terminate();
-        cbnext();
+      is(data, worker._worker.origin, "social:frameworker-error was handled");
+      worker.terminate();
+      cbnext();
     }, 'social:frameworker-error', false);
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
@@ -499,11 +499,11 @@ let tests = {
   testEmptyWorker: function(cbnext) {
     let worker = getFrameWorkerHandle("data:application/javascript;charset=utf-8,",
                                       undefined, "testEmptyWorker");
-    Services.obs.addObserver(function handleError() {
+    Services.obs.addObserver(function handleError(subj, topic, data) {
       Services.obs.removeObserver(handleError, "social:frameworker-error");
-        ok(true, "social:frameworker-error was handled");
-        worker.terminate();
-        cbnext();
+      is(data, worker._worker.origin, "social:frameworker-error was handled");
+      worker.terminate();
+      cbnext();
     }, 'social:frameworker-error', false);
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");
@@ -519,11 +519,11 @@ let tests = {
     }
     let worker = getFrameWorkerHandle(makeWorkerUrl(run),
                                       undefined, "testWorkerConnectError");
-    Services.obs.addObserver(function handleError() {
+    Services.obs.addObserver(function handleError(subj, topic, data) {
       Services.obs.removeObserver(handleError, "social:frameworker-error");
-        ok(true, "social:frameworker-error was handled");
-        worker.terminate();
-        cbnext();
+      is(data, worker._worker.origin, "social:frameworker-error was handled");
+      worker.terminate();
+      cbnext();
     }, 'social:frameworker-error', false);
     worker.port.onmessage = function(e) {
       ok(false, "social:frameworker-error was handled");

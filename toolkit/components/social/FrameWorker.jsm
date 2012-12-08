@@ -14,8 +14,13 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/MessagePortBase.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
+  "resource://gre/modules/SocialService.jsm");
 
 this.EXPORTED_SYMBOLS = ["getFrameWorkerHandle"];
 
@@ -25,7 +30,7 @@ var _nextPortId = 1;
 // Retrieves a reference to a WorkerHandle associated with a FrameWorker and a
 // new ClientPort.
 this.getFrameWorkerHandle =
- function getFrameWorkerHandle(url, clientWindow, name) {
+ function getFrameWorkerHandle(url, clientWindow, name, origin) {
   // first create the client port we are going to use.  Later we will
   // message the worker to create the worker port.
   let portid = _nextPortId++;
@@ -34,7 +39,7 @@ this.getFrameWorkerHandle =
   let existingWorker = workerCache[url];
   if (!existingWorker) {
     // setup the worker and add this connection to the pending queue
-    let worker = new FrameWorker(url, name);
+    let worker = new FrameWorker(url, name, origin);
     worker.pendingPorts.push(clientPort);
     existingWorker = workerCache[url] = worker;
   } else {
@@ -64,13 +69,14 @@ this.getFrameWorkerHandle =
  * the script does not have a full DOM but is instead run in a sandbox
  * that has a select set of methods cloned from the URL's domain.
  */
-function FrameWorker(url, name) {
+function FrameWorker(url, name, origin) {
   this.url = url;
   this.name = name || url;
   this.ports = {};
   this.pendingPorts = [];
   this.loaded = false;
   this.reloading = false;
+  this.origin = origin;
 
   this.frame = makeHiddenFrame();
   this.load();
@@ -192,7 +198,7 @@ FrameWorker.prototype = {
       let scriptText = workerWindow.document.body.textContent.trim();
       if (!scriptText) {
         Cu.reportError("FrameWorker: Empty worker script received");
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         return;
       }
 
@@ -204,7 +210,7 @@ FrameWorker.prototype = {
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error injecting port code into content side of the worker: " + e + "\n" + e.stack);
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         return;
       }
 
@@ -214,7 +220,7 @@ FrameWorker.prototype = {
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error setting up event listener for chrome side of the worker: " + e + "\n" + e.stack);
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError();
         return;
       }
 
@@ -225,7 +231,7 @@ FrameWorker.prototype = {
         Cu.reportError("FrameWorker: Error evaluating worker script for " + worker.name + ": " + e + "; " +
             (e.lineNumber ? ("Line #" + e.lineNumber) : "") +
             (e.stack ? ("\n" + e.stack) : ""));
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         return;
       }
 
@@ -354,7 +360,7 @@ function initClientMessageHandler(worker, workerWindow) {
       case "port-connection-error":
         // onconnect failed, we cannot connect the port, the worker has
         // become invalid
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         break;
       case "port-close":
         // the worker side of the port was closed, so close this side too.
@@ -469,4 +475,14 @@ ClientPort.prototype = {
     // this._pendingMessagesOutgoing should still be drained, as a closed
     // port will still get "entangled" quickly enough to deliver the messages.
   }
+}
+
+function notifyWorkerError(worker) {
+  // Try to retrieve the worker's associated provider, if it has one, to set its
+  // error state.
+  SocialService.getProvider(worker.origin, function (provider) {
+    if (provider)
+      provider.errorState = "frameworker-error";
+    Services.obs.notifyObservers(null, "social:frameworker-error", worker.origin);
+  });
 }
