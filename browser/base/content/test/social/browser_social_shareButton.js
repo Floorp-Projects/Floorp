@@ -27,8 +27,8 @@ function tabLoaded() {
   let manifest = { // normal provider
     name: "provider 1",
     origin: "https://example.com",
-    sidebarURL: "https://example.com/browser/browser/base/content/test/social_sidebar.html",
-    workerURL: "https://example.com/browser/browser/base/content/test/social_worker.js",
+    sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
+    workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
     iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
@@ -68,7 +68,7 @@ function testInitial(finishcb) {
     is(shareButton.getAttribute("tooltiptext"), "Share this page", "check tooltip text is correct");
     is(shareStatusLabel.getAttribute("value"), "", "check status label text is blank");
     // Check the relative URL was resolved correctly (note this image has offsets of zero...)
-    is(shareButton.src, 'https://example.com/browser/browser/base/content/test/social_share_image.png', "check image url is correct");
+    is(shareButton.src, 'https://example.com/browser/browser/base/content/test/social/social_share_image.png', "check image url is correct");
 
     // Test clicking the share button
     shareButton.addEventListener("click", function listener() {
@@ -77,7 +77,7 @@ function testInitial(finishcb) {
       is(shareButton.getAttribute("tooltiptext"), "Unshare this page", "check tooltip text is correct");
       is(shareStatusLabel.getAttribute("value"), "This page has been shared", "check status label text is correct");
       // Check the URL and offsets were applied correctly
-      is(shareButton.src, 'https://example.com/browser/browser/base/content/test/social_share_image.png', "check image url is correct");
+      is(shareButton.src, 'https://example.com/browser/browser/base/content/test/social/social_share_image.png', "check image url is correct");
       executeSoon(testSecondClick.bind(window, testPopupOKButton));
     });
     shareButton.click();

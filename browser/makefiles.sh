@@ -99,6 +99,7 @@ if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
     browser/base/content/test/Makefile
     browser/base/content/test/newtab/Makefile
+    browser/base/content/test/social/Makefile
     browser/components/certerror/test/Makefile
     browser/components/dirprovider/tests/Makefile
     browser/components/downloads/test/Makefile
