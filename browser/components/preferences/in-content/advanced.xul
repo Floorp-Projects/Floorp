@@ -52,9 +52,18 @@
               type="bool"/>
 #endif
 
+#ifdef MOZ_TELEMETRY_REPORTING
   <preference id="toolkit.telemetry.enabled"
               name="toolkit.telemetry.enabled"
+              onchange="gAdvancedPane.telemetryEnabledChanged(event);"
               type="bool"/>
+  <preference id="toolkit.telemetry.prompted"
+              name="toolkit.telemetry.prompted"
+              type="int"/>
+  <preference id="toolkit.telemetry.rejected"
+              name="toolkit.telemetry.rejected"
+              type="bool"/>
+#endif
 
   <!-- Network tab -->
   <preference id="browser.cache.disk.capacity"
@@ -207,9 +216,11 @@
                   label="&submitCrashes.label;" accesskey="&submitCrashes.accesskey;"/>
 #endif
 #endif
+#ifdef MOZ_TELEMETRY_REPORTING
         <checkbox id="submitTelemetryBox" flex="1"
                   preference="toolkit.telemetry.enabled"
                   label="&submitTelemetry.label;" accesskey="&submitTelemetry.accesskey;"/>
+#endif
       </groupbox>
     </tabpanel>
 
