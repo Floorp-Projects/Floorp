@@ -63,7 +63,9 @@ public:
 
   bool GetJoined() { return mJoined; }
   void SetSentClientCert() { mSentClientCert = true; }
-  
+
+  uint32_t GetProviderFlags() const { return mProviderFlags; }
+
   mozilla::psm::SharedSSLState& SharedState();
 
   // XXX: These are only used on for diagnostic purposes
