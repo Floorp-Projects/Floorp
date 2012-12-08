@@ -795,44 +795,46 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
         lhs = temp;
     }
 
-    // If rhs == 0, bailout, since result must be a double (NaN).
+    // Prevent divide by zero
     masm.testl(rhs, rhs);
     if (!bailoutIf(Assembler::Zero, ins->snapshot()))
         return false;
 
-    Label negative, join;
-
-    // Since the lhs will be made positive before reaching an idiv, instead of
-    // sign extending eax into edx to 64-bit (edx:eax), we can simply zero it.
-    masm.xorl(edx, edx);
+    Label negative, done;
 
     // Switch based on sign of the lhs.
     masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
     // If lhs >= 0 then remainder = lhs % rhs. The remainder must be positive.
     {
+        // Since lhs >= 0, the sign-extension will be 0
+        masm.xorl(edx, edx);
         masm.idiv(rhs);
-        masm.jump(&join);
+        masm.jump(&done);
     }
 
-    // If lhs < 0 then remainder = -(-lhs % rhs).
+    // Otherwise, we have to beware of two special cases:
     {
         masm.bind(&negative);
-        masm.negl(lhs);
-        if (!bailoutIf(Assembler::Overflow, ins->snapshot()))
-            return false;
 
+        // Prevent an integer overflow exception from -2147483648 % -1
+        Label notmin;
+        masm.cmpl(lhs, Imm32(INT32_MIN));
+        masm.j(Assembler::NotEqual, &notmin);
+        masm.cmpl(rhs, Imm32(-1));
+        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            return false;
+        masm.bind(&notmin);
+
+        masm.cdq();
         masm.idiv(rhs);
 
         // A remainder of 0 means that the rval must be -0, which is a double.
         masm.testl(remainder, remainder);
         if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-            return false; 
-
-        // Cannot overflow.
-        masm.negl(remainder);
+            return false;
     }
 
-    masm.bind(&join);
+    masm.bind(&done);
     return true;
 }
 
