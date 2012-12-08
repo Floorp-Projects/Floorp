@@ -3665,6 +3665,7 @@ pref("webgl.msaa-force", false);
 pref("webgl.prefer-16bpp", false);
 pref("webgl.default-no-alpha", false);
 pref("webgl.force-layers-readback", false);
+pref("webgl.lose-context-on-heap-minimize", true);
 
 // Stagefright prefs
 pref("stagefright.force-enabled", false);
