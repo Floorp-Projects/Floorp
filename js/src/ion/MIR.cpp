@@ -864,6 +864,31 @@ MMod::foldsTo(bool useValueNumbers)
 }
 
 void
+MMod::analyzeTruncateBackward()
+{
+    if (!isTruncated())
+        setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
+}
+
+bool
+MMod::updateForReplacement(MDefinition *ins_)
+{
+    JS_ASSERT(ins_->isMod());
+    MMod *ins = ins_->toMod();
+    if (isTruncated() && ins->isTruncated())
+        setTruncated(Max(isTruncated(), ins->isTruncated()));
+    else
+        setTruncated(0);
+    return true;
+}
+
+bool
+MMod::fallible()
+{
+    return !isTruncated();
+}
+
+void
 MAdd::analyzeTruncateBackward()
 {
     if (!isTruncated()) {

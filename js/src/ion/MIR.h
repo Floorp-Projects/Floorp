@@ -2814,8 +2814,11 @@ class MDiv : public MBinaryArithInstruction
 
 class MMod : public MBinaryArithInstruction
 {
+    int implicitTruncate_;
+
     MMod(MDefinition *left, MDefinition *right)
-      : MBinaryArithInstruction(left, right)
+      : MBinaryArithInstruction(left, right),
+        implicitTruncate_(0)
     {
         setResultType(MIRType_Value);
     }
@@ -2827,12 +2830,23 @@ class MMod : public MBinaryArithInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
+    void analyzeTruncateBackward();
+
     double getIdentity() {
         JS_NOT_REACHED("not used");
         return 1;
     }
 
+    int isTruncated() const {
+        return implicitTruncate_;
+    }
+    void setTruncated(int truncate) {
+        implicitTruncate_ = truncate;
+    }
+
+    bool updateForReplacement(MDefinition *ins);
     void computeRange();
+    bool fallible();
 };
 
 class MConcat

@@ -123,6 +123,10 @@ class LModI : public LBinaryMath<3>
         setTemp(1, temp2);
         setTemp(2, callTemp);
     }
+
+    MMod *mir() const {
+        return mir_->toMod();
+    }
 };
 
 class LModPowTwoI : public LInstructionHelper<1, 1, 0>
@@ -140,6 +144,10 @@ class LModPowTwoI : public LInstructionHelper<1, 1, 0>
       : shift_(shift)
     {
         setOperand(0, lhs);
+    }
+
+    MMod *mir() const {
+        return mir_->toMod();
     }
 };
 
@@ -159,6 +167,10 @@ class LModMaskI : public LInstructionHelper<1, 1, 1>
 
     int32_t shift() const {
         return shift_;
+    }
+
+    MMod *mir() const {
+        return mir_->toMod();
     }
 };
 
