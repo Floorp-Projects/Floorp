@@ -1445,6 +1445,17 @@ pref("mousewheel.with_meta.action", 1);  // command key on Mac
 pref("mousewheel.with_shift.action", 1);
 pref("mousewheel.with_win.action", 1);
 
+// mousewheel.*.action.override_x will override the action
+// when the mouse wheel is rotated along the x direction.
+// -1: Don't override the action.
+// 0 to 3: Override the action with the specified value.
+pref("mousewheel.default.action.override_x", -1);
+pref("mousewheel.with_alt.action.override_x", -1);
+pref("mousewheel.with_control.action.override_x", -1);
+pref("mousewheel.with_meta.action.override_x", -1);  // command key on Mac
+pref("mousewheel.with_shift.action.override_x", -1);
+pref("mousewheel.with_win.action.override_x", -1);
+
 // mousewheel.*.delta_multiplier_* can specify the value muliplied by the delta
 // value.  The values will be used after divided by 100.  I.e., 100 means 1.0,
 // -100 means -1.0.  If the values were negative, the direction would be
