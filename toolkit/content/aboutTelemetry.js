@@ -22,8 +22,13 @@ const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].
 // Maximum height of a histogram bar (in em)
 const MAX_BAR_HEIGHT = 18;
 const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabledPreRelease";
+const PREF_TELEMETRY_DISPLAYED = "toolkit.telemetry.notifiedOptOut";
+#else
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_TELEMETRY_DISPLAYED = "toolkit.telemetry.prompted";
+#endif
 const PREF_TELEMETRY_REJECTED  = "toolkit.telemetry.rejected";
 const TELEMETRY_DISPLAY_REV = @MOZ_TELEMETRY_DISPLAY_REV@;
 const PREF_DEBUG_SLOW_SQL = "toolkit.telemetry.debugSlowSql";
@@ -674,6 +679,20 @@ function onLoad() {
 
   // Set up event listeners
   setupListeners();
+
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+  /**
+   * When telemetry is opt-out, verify if the user explicitly rejected the
+   * telemetry prompt, and if so reflect his choice in the current preference
+   * value. This doesn't cover the case where the user refused telemetry in the
+   * prompt but later enabled it in preferences in builds before the fix for
+   * bug 737600.
+   */
+  if (getPref(PREF_TELEMETRY_ENABLED, false) &&
+      getPref(PREF_TELEMETRY_REJECTED, false)) {
+    Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, false);
+  }
+#endif
 
   // Show slow SQL stats
   SlowSQL.render();

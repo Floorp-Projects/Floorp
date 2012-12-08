@@ -20,7 +20,11 @@ Cu.import("resource://gre/modules/ctypes.jsm");
 const PAYLOAD_VERSION = 1;
 
 const PREF_SERVER = "toolkit.telemetry.server";
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+const PREF_ENABLED = "toolkit.telemetry.enabledPreRelease";
+#else
 const PREF_ENABLED = "toolkit.telemetry.enabled";
+#endif
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
