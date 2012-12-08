@@ -1,0 +1,36 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= @DEPTH@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = @relativesrcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+_BROWSER_FILES = \
+                 head.js \
+                 browser_social.js \
+                 browser_social_toolbar.js \
+                 browser_social_shareButton.js \
+                 browser_social_sidebar.js \
+                 browser_social_flyout.js \
+                 browser_social_mozSocial_API.js \
+                 browser_social_isVisible.js \
+                 browser_social_chatwindow.js \
+                 browser_social_multiprovider.js \
+                 social_panel.html \
+                 social_share_image.png \
+                 social_sidebar.html \
+                 social_chat.html \
+                 social_flyout.html \
+                 social_window.html \
+                 social_worker.js \
+                 $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+libs::	$(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

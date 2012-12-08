@@ -105,7 +105,7 @@ onconnect = function(e) {
         let icon = {
           name: "testIcon",
           iconURL: "chrome://browser/skin/Info.png",
-          contentPanel: "https://example.com/browser/browser/base/content/test/social_panel.html",
+          contentPanel: "https://example.com/browser/browser/base/content/test/social/social_panel.html",
           counter: 1
         };
         apiPort.postMessage({topic: "social.ambient-notification", data: icon});
@@ -122,9 +122,9 @@ onconnect = function(e) {
           data: {
             images: {
               // this one is relative to test we handle relative ones.
-              share: "browser/browser/base/content/test/social_share_image.png",
+              share: "browser/browser/base/content/test/social/social_share_image.png",
               // absolute to check we handle them too.
-              unshare: "https://example.com/browser/browser/base/content/test/social_share_image.png"
+              unshare: "https://example.com/browser/browser/base/content/test/social/social_share_image.png"
             },
             messages: {
               shareTooltip: "Share this page",
