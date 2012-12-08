@@ -12,50 +12,8 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "nsCRT.h"
-#include "nsServiceManagerUtils.h"
-#include "nsRecentBadCerts.h"
-#include "PSMRunnable.h"
-#include "PublicSSL.h"
-#include "ssl.h"
-
-using mozilla::psm::SyncRunnableBase;
-
-namespace {
-
-class CertOverrideClearer : public SyncRunnableBase
-{
-public:
-  void RunOnTargetThread() {
-    nsCOMPtr<nsICertOverrideService> icos = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
-    if (icos) {
-      icos->ClearValidityOverride(
-        NS_LITERAL_CSTRING("all:temporary-certificates"),
-        0);
-    }
-  }
-};
-
-} // anonymous namespace
 
 namespace mozilla {
-
-void ClearPrivateSSLState()
-{
-  SSL_ClearSessionCache();
-
-  nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-  if (certdb) {
-    nsCOMPtr<nsIRecentBadCerts> badCerts;
-    certdb->GetRecentBadCerts(true, getter_AddRefs(badCerts));
-    if (badCerts) {
-      badCerts->ResetStoredCerts();
-    }
-  }
-
-  RefPtr<CertOverrideClearer> runnable = new CertOverrideClearer;
-  runnable->DispatchToMainThreadAndWait();
-}
-
 namespace psm {
 
 namespace {

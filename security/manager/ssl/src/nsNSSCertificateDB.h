@@ -8,7 +8,6 @@
 #include "nsIX509CertDB.h"
 #include "nsIX509CertDB2.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Mutex.h"
 #include "certt.h"
 
 class nsCString;
@@ -17,7 +16,6 @@ class nsRecentBadCerts;
 
 class nsNSSCertificateDB : public nsIX509CertDB, public nsIX509CertDB2
 {
-  typedef mozilla::Mutex Mutex;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIX509CERTDB
@@ -53,7 +51,6 @@ private:
   nsresult handleCACertDownload(nsIArray *x509Certs, 
                                 nsIInterfaceRequestor *ctx);
 
-  Mutex mBadCertsLock;
   mozilla::RefPtr<nsRecentBadCerts> mPublicRecentBadCerts;
   mozilla::RefPtr<nsRecentBadCerts> mPrivateRecentBadCerts;
 };
