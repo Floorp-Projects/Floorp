@@ -154,6 +154,8 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
   
+  NS_IMETHOD GetClientAuthRememberService(nsClientAuthRememberService **cars) = 0;
+
   NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
 
   NS_IMETHOD IsNSSInitialized(bool *initialized) = 0;
@@ -257,6 +259,7 @@ public:
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module);
   NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token);
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token);
+  NS_IMETHOD GetClientAuthRememberService(nsClientAuthRememberService **cars);
   NS_IMETHOD EnsureIdentityInfoLoaded();
   NS_IMETHOD IsNSSInitialized(bool *initialized);
 
@@ -324,6 +327,7 @@ private:
   nsCertVerificationThread *mCertVerificationThread;
 
   nsNSSHttpInterface mHttpForNSS;
+  mozilla::RefPtr<nsClientAuthRememberService> mClientAuthRememberService;
   mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParam;
   mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParamLocalOnly;
 
