@@ -5,8 +5,6 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Get services.
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
 let os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
 
@@ -40,10 +38,9 @@ function run_test() {
   os.addObserver(observer, "dummy-observer-created", true);
   os.addObserver(observer, "dummy-observer-visited", true);
 
-  // Add a visit
-  hs.addVisit(uri("http://typed.mozilla.org"), Date.now(), null,
-              hs.TRANSITION_TYPED, false, 0);
-
   do_test_pending();
-  do_timeout(1000, verify);
+
+  // Add a visit
+  addVisits(uri("http://typed.mozilla.org"),
+            function () do_timeout(1000, verify));
 }

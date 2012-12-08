@@ -103,7 +103,7 @@ function ensure_results_internal(uris, searchTerm)
       do_check_eq(controller.getValueAt(i), uris[i].spec);
     }
 
-    next_test();
+    deferEnsureResults.resolve();
   };
 
   controller.startSearch(searchTerm);
@@ -122,12 +122,14 @@ try {
   do_throw("Could not get history service\n");
 } 
 
-function setCountDate(aURI, aCount, aDate)
+function task_setCountDate(aURI, aCount, aDate)
 {
   // We need visits so that frecency can be computed over multiple visits
+  let visits = [];
   for (let i = 0; i < aCount; i++) {
-    histsvc.addVisit(aURI, aDate, null, histsvc.TRANSITION_TYPED, false, 0);
+    visits.push({ uri: aURI, visitDate: aDate, transition: TRANSITION_TYPED });
   }
+  yield promiseAddVisits(visits);
 }
 
 function setBookmark(aURI)
@@ -158,29 +160,29 @@ var tests = [
 // test things without a search term
 function() {
   print("TEST-INFO | Test 0: same count, different date");
-  setCountDate(uri1, c1, d1);
-  setCountDate(uri2, c1, d2);
+  yield task_setCountDate(uri1, c1, d1);
+  yield task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
 function() {
   print("TEST-INFO | Test 1: same count, different date");
-  setCountDate(uri1, c1, d2);
-  setCountDate(uri2, c1, d1);
+  yield task_setCountDate(uri1, c1, d2);
+  yield task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
 function() {
   print("TEST-INFO | Test 2: different count, same date");
-  setCountDate(uri1, c1, d1);
-  setCountDate(uri2, c2, d1);
+  yield task_setCountDate(uri1, c1, d1);
+  yield task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
 function() {
   print("TEST-INFO | Test 3: different count, same date");
-  setCountDate(uri1, c2, d1);
-  setCountDate(uri2, c1, d1);
+  yield task_setCountDate(uri1, c2, d1);
+  yield task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
@@ -188,29 +190,29 @@ function() {
 // test things with a search term
 function() {
   print("TEST-INFO | Test 4: same count, different date");
-  setCountDate(uri1, c1, d1);
-  setCountDate(uri2, c1, d2);
+  yield task_setCountDate(uri1, c1, d1);
+  yield task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
 function() {
   print("TEST-INFO | Test 5: same count, different date");
-  setCountDate(uri1, c1, d2);
-  setCountDate(uri2, c1, d1);
+  yield task_setCountDate(uri1, c1, d2);
+  yield task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
 function() {
   print("TEST-INFO | Test 6: different count, same date");
-  setCountDate(uri1, c1, d1);
-  setCountDate(uri2, c2, d1);
+  yield task_setCountDate(uri1, c1, d1);
+  yield task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
 function() {
   print("TEST-INFO | Test 7: different count, same date");
-  setCountDate(uri1, c2, d1);
-  setCountDate(uri2, c1, d1);
+  yield task_setCountDate(uri1, c2, d1);
+  yield task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
@@ -261,25 +263,32 @@ function() {
 ];
 
 /**
+ * This deferred object contains a promise that is resolved when the
+ * ensure_results_internal function has finished its execution.
+ */
+let deferEnsureResults;
+
+/**
  * Test adaptive autocomplete
  */
-function run_test() {
+function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_frecency()
+{
   // always search in history + bookmarks, no matter what the default is
   var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
   prefs.setIntPref("browser.urlbar.search.sources", 3);
   prefs.setIntPref("browser.urlbar.default.behavior", 0);
-
-  do_test_pending();
-  next_test();
-}
-
-function next_test() {
-  if (tests.length) {
+  for (let [, test] in Iterator(tests)) {
     remove_all_bookmarks();
-    let test = tests.shift();
-    promiseClearHistory().then(test);
+    yield promiseClearHistory();
+
+    deferEnsureResults = Promise.defer();
+    yield test();
+    yield deferEnsureResults.promise;
   }
-  else
-    do_test_finished();
-}
+});
