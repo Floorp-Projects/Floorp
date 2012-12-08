@@ -41,7 +41,7 @@ CycleCollectionNoteEdgeName(nsCycleCollectionTraversalCallback& aCallback,
         _cycleCollectorGlobal
 
 #define NS_CYCLE_COLLECTION_PARTICIPANT(_class)                                \
-        _class::NS_CYCLE_COLLECTION_INNERNAME.GetParticipant()
+        _class::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant()
 
 template <typename T>
 nsISupports* ToSupports(T* p, typename T::NS_CYCLE_COLLECTION_INNERCLASS* dummy = 0)
