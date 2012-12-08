@@ -576,6 +576,8 @@ CodeGeneratorARM::visitModI(LModI *ins)
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     Register callTemp = ToRegister(ins->getTemp(2));
+    MMod *mir = ins->mir();
+    Label done;
     // save the lhs in case we end up with a 0 that should be a -0.0 because lhs < 0.
     JS_ASSERT(callTemp.code() > r3.code() && callTemp.code() < r12.code());
     masm.ma_mov(lhs, callTemp);
@@ -583,8 +585,18 @@ CodeGeneratorARM::visitModI(LModI *ins)
     // The integer division will give INT_MIN, but we want -(double)INT_MIN.
     masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
     masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
-    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-        return false;
+    if (mir->isTruncated()) {
+        // (INT_MIN % -1)|0 == 0
+        Label skip;
+        masm.ma_b(&skip, Assembler::NotEqual);
+        masm.ma_mov(Imm32(0), r1);
+        masm.ma_b(&done);
+        masm.bind(&skip);
+    } else {
+        JS_ASSERT(mir->fallible());
+        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            return false;
+    }
     // 0/X (with X < 0) is bad because both of these values *should* be doubles, and
     // the result should be -0.0, which cannot be represented in integers.
     // X/0 is bad because it will give garbage (or abort), when it should give
@@ -600,21 +612,35 @@ CodeGeneratorARM::visitModI(LModI *ins)
     // if (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take the bailout.
     masm.ma_cmp(rhs, Imm32(0));
     masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
-    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-        return false;
+    if (mir->isTruncated()) {
+        // NaN|0 == 0 and (0 % -X)|0 == 0
+        Label skip;
+        masm.ma_b(&skip, Assembler::NotEqual);
+        masm.ma_mov(Imm32(0), r1);
+        masm.ma_b(&done);
+        masm.bind(&skip);
+    } else {
+        JS_ASSERT(mir->fallible());
+        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            return false;
+    }
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
     // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
-    Label join;
     // See if X < 0
     masm.ma_cmp(r1, Imm32(0));
-    masm.ma_b(&join, Assembler::NotEqual);
-    masm.ma_cmp(callTemp, Imm32(0));
-    if (!bailoutIf(Assembler::Signed, ins->snapshot()))
-        return false;
-    masm.bind(&join);
+    if (mir->isTruncated()) {
+        // -0.0|0 == 0
+    } else {
+        JS_ASSERT(mir->fallible());
+        masm.ma_b(&done, Assembler::NotEqual);
+        masm.ma_cmp(callTemp, Imm32(0));
+        if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+            return false;
+    }
+    masm.bind(&done);
     return true;
 }
 
@@ -623,6 +649,7 @@ CodeGeneratorARM::visitModPowTwoI(LModPowTwoI *ins)
 {
     Register in = ToRegister(ins->getOperand(0));
     Register out = ToRegister(ins->getDef(0));
+    MMod *mir = ins->mir();
     Label fin;
     // bug 739870, jbramley has a different sequence that may help with speed here
     masm.ma_mov(in, out, SetCond);
@@ -630,8 +657,13 @@ CodeGeneratorARM::visitModPowTwoI(LModPowTwoI *ins)
     masm.ma_rsb(Imm32(0), out, NoSetCond, Assembler::Signed);
     masm.ma_and(Imm32((1<<ins->shift())-1), out);
     masm.ma_rsb(Imm32(0), out, SetCond, Assembler::Signed);
-    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-        return false;
+    if (!mir->isTruncated()) {
+        JS_ASSERT(mir->fallible());
+        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+            return false;
+    } else {
+        // -0|0 == 0
+    }
     masm.bind(&fin);
     return true;
 }
@@ -642,9 +674,15 @@ CodeGeneratorARM::visitModMaskI(LModMaskI *ins)
     Register src = ToRegister(ins->getOperand(0));
     Register dest = ToRegister(ins->getDef(0));
     Register tmp = ToRegister(ins->getTemp(0));
+    MMod *mir = ins->mir();
     masm.ma_mod_mask(src, dest, tmp, ins->shift());
-    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-        return false;
+    if (!mir->isTruncated()) {
+        JS_ASSERT(mir->fallible());
+        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+            return false;
+    } else {
+        // -0|0 == 0
+    }
     return true;
 }
 bool
