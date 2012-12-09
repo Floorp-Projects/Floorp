@@ -1342,8 +1342,11 @@ NS_METHOD nsWindow::Move(double aX, double aY)
     return NS_OK;
   }
 
-  mBounds.x = NSToIntRound(aX);
-  mBounds.y = NSToIntRound(aY);
+  int32_t x = NSToIntRound(aX * GetDefaultScale());
+  int32_t y = NSToIntRound(aY * GetDefaultScale());
+
+  mBounds.x = x;
+  mBounds.y = y;
 
   if (mWnd) {
 #ifdef DEBUG
@@ -1357,8 +1360,7 @@ NS_METHOD nsWindow::Move(double aX, double aY)
           RECT workArea;
           ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
           // no annoying assertions. just mention the issue.
-          if (mBounds.x < 0 || mBounds.x >= workArea.right ||
-              mBounds.y < 0 || mBounds.y >= workArea.bottom) {
+          if (x < 0 || x >= workArea.right || y < 0 || y >= workArea.bottom) {
             PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
                    ("window moved to offscreen position\n"));
           }
@@ -1379,7 +1381,7 @@ NS_METHOD nsWindow::Move(double aX, double aY)
         (mClipRectCount != 1 || !mClipRects[0].IsEqualInterior(nsIntRect(0, 0, mBounds.width, mBounds.height)))) {
       flags |= SWP_NOCOPYBITS;
     }
-    VERIFY(::SetWindowPos(mWnd, NULL, mBounds.x, mBounds.y, 0, 0, flags));
+    VERIFY(::SetWindowPos(mWnd, NULL, x, y, 0, 0, flags));
 
     SetThemeRegion();
   }
@@ -1390,10 +1392,12 @@ NS_METHOD nsWindow::Move(double aX, double aY)
 // Resize this component
 NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-  NS_ASSERTION((aWidth >=0 ) , "Negative width passed to nsWindow::Resize");
-  NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
-  int32_t width = NSToIntRound(aWidth);
-  int32_t height = NSToIntRound(aHeight);
+  int32_t width = NSToIntRound(aWidth * GetDefaultScale());
+  int32_t height = NSToIntRound(aHeight * GetDefaultScale());
+
+  NS_ASSERTION((width >= 0) , "Negative width passed to nsWindow::Resize");
+  NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
+
   ConstrainSize(&width, &height);
 
   // Avoid unnecessary resizing calls
@@ -1435,12 +1439,15 @@ NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 // Resize this component
 NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint)
 {
-  NS_ASSERTION((aWidth >=0 ),  "Negative width passed to nsWindow::Resize");
-  NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
-  int32_t x = NSToIntRound(aX);
-  int32_t y = NSToIntRound(aY);
-  int32_t width = NSToIntRound(aWidth);
-  int32_t height = NSToIntRound(aHeight);
+  double scale = GetDefaultScale();
+  int32_t x = NSToIntRound(aX * scale);
+  int32_t y = NSToIntRound(aY * scale);
+  int32_t width = NSToIntRound(aWidth * scale);
+  int32_t height = NSToIntRound(aHeight * scale);
+
+  NS_ASSERTION((width >= 0),  "Negative width passed to nsWindow::Resize");
+  NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
+
   ConstrainSize(&width, &height);
 
   // Avoid unnecessary resizing calls
