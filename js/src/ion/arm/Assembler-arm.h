@@ -64,8 +64,8 @@ static const Register JSReturnReg_Data = r2;
 static const Register StackPointer = sp;
 static const Register FramePointer = InvalidReg;
 static const Register ReturnReg = r0;
-static const FloatRegister ReturnFloatReg = { FloatRegisters::d1 };
-static const FloatRegister ScratchFloatReg = { FloatRegisters::d0 };
+static const FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
+static const FloatRegister ScratchFloatReg = { FloatRegisters::d1 };
 
 static const FloatRegister d0  = {FloatRegisters::d0};
 static const FloatRegister d1  = {FloatRegisters::d1};
@@ -1939,9 +1939,56 @@ class InstructionIterator {
     }
 };
 
-static const uint32_t NumArgRegs = 4;
+static const uint32_t NumIntArgRegs = 4;
+static const uint32_t NumFloatArgRegs = 8;
+
+#ifdef JS_CPU_ARM_HARDFP
 static inline bool
-GetArgReg(uint32_t arg, Register *out)
+GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
+{
+   if (usedIntArgs >= NumIntArgRegs)
+        return false;
+    *out = Register::FromCode(usedIntArgs);
+    return true;
+}
+
+static inline bool
+GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
+{
+    if (usedFloatArgs >= NumFloatArgRegs)
+        return false;
+    *out = FloatRegister::FromCode(usedFloatArgs);
+    return true;
+}
+
+static inline uint32_t
+GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+{
+    JS_ASSERT(usedIntArgs >= NumIntArgRegs);
+    uint32_t doubleSlots = Max(0, (int32_t)usedFloatArgs - (int32_t)NumFloatArgRegs);
+    doubleSlots *= 2;
+    int intSlots = usedIntArgs - NumIntArgRegs;
+    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+}
+
+static inline uint32_t
+GetFloatArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+{
+
+    JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
+    uint32_t intSlots = 0;
+    if (usedIntArgs > NumIntArgRegs) {
+        intSlots = usedIntArgs - NumIntArgRegs;
+        // update the amount of padding required.
+        *padding += (*padding + usedIntArgs) % 2;
+    }
+    uint32_t doubleSlots = usedFloatArgs - NumFloatArgRegs;
+    doubleSlots *= 2;
+    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+}
+#else
+static inline bool
+GetIntArgReg(uint32_t arg, uint32_t floatArg, Register *out)
 {
     if (arg < 4) {
         *out = Register::FromCode(arg);
@@ -1953,10 +2000,11 @@ GetArgReg(uint32_t arg, Register *out)
 static inline uint32_t
 GetArgStackDisp(uint32_t arg)
 {
-    JS_ASSERT(arg >= NumArgRegs);
-    return (arg - NumArgRegs) * STACK_SLOT_SIZE;
+    JS_ASSERT(arg >= NumIntArgRegs);
+    return (arg - NumIntArgRegs) * STACK_SLOT_SIZE;
 }
 
+#endif
 class DoubleEncoder {
     uint32_t rep(bool b, uint32_t count) {
         uint32_t ret = 0;

@@ -30,10 +30,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=666041
 
 SimpleTest.waitForExplicitFinish();
 
-ok(!SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
-   "expecting flexbox pref to be disabled by default");
+ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
+   "expecting flexbox pref to be enabled by default");
 
-SpecialPowers.setBoolPref("layout.css.flexbox.enabled", true);
 document.getElementById("iframe").src = "file_flexbox_order.html";
 
 function finish() {

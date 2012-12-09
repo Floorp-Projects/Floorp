@@ -9,10 +9,48 @@ interface nsIFile;
 
 [scriptable, uuid(077ee790-3a9d-11e2-81c1-0800200c9a66)]
 interface nsITelemetryPing : nsIObserver {
+  /**
+   * Return the current telemetry payload.
+   */
   jsval getPayload();
+
+  /**
+   * Save histograms to a file.
+   *
+   * @param aFile - File to load from.
+   * @param aSync - Use sync writes.
+   */
   void saveHistograms(in nsIFile aFile, in boolean aSync);
+
+  /**
+   * Collect and store information about startup.
+   */
   void gatherStartup();
-  void enableLoadSaveNotifications(); /* Used only for testing. */
+
+  /**
+   * Notify observers when loads and saves finish. Used only for testing.
+   */
+  void enableLoadSaveNotifications();
+
+  /**
+   * Inform the ping which AddOns are installed.
+   *
+   * @param aAddOns - The AddOns.
+   */
   void setAddOns(in AString aAddOns);
+
+  /**
+   * Send a ping to a test server. Used only for testing.
+   *
+   * @param aServer - The server.
+   */
   void testPing(in AString aServer);
+
+  /**
+   * Load histograms from a file.
+   *
+   * @param aFile - File to load from.
+   * @param aSync - Use sync reads.
+   */
+  void testLoadHistograms(in nsIFile aFile, in boolean aSync);
 };

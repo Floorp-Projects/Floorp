@@ -210,7 +210,7 @@ this.PhoneNumber = (function (dataBase) {
     get internationalNumber() {
       var value = this.internationalFormat ? this.internationalFormat.replace(NON_DIALABLE_CHARS, "")
                                            : null;
-      Object.defineProperty(this, "nationalNumber", { value: value, enumerable: true });
+      Object.defineProperty(this, "internationalNumber", { value: value, enumerable: true });
       return value;
     }
   };

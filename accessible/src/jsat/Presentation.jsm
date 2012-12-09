@@ -13,12 +13,7 @@ Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/accessibility/UtteranceGenerator.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');
 
-this.EXPORTED_SYMBOLS = ['VisualPresenter',
-                         'AndroidPresenter',
-                         'DummyAndroidPresenter',
-                         'SpeechPresenter',
-                         'HapticPresenter',
-                         'PresenterContext'];
+this.EXPORTED_SYMBOLS = ['Presentation'];
 
 /**
  * The interface for all presenter classes. A presenter could be, for example,
@@ -105,7 +100,12 @@ Presenter.prototype = {
   /**
    * We have entered or left text editing mode.
    */
-  editingModeChanged: function editingModeChanged(aIsEditing) {}
+  editingModeChanged: function editingModeChanged(aIsEditing) {},
+
+  /**
+   * Announce something. Typically an app state change.
+   */
+  announce: function announce(aAnnouncement) {}
 };
 
 /**
@@ -130,7 +130,7 @@ VisualPresenter.prototype = {
       return {
         type: this.type,
         details: {
-          method: 'show',
+          method: 'showBounds',
           bounds: context.bounds,
           padding: this.BORDER_PADDING
         }
@@ -144,7 +144,7 @@ VisualPresenter.prototype = {
     this._currentAccessible = aContext.accessible;
 
     if (!aContext.accessible)
-      return {type: this.type, details: {method: 'hide'}};
+      return {type: this.type, details: {method: 'hideBounds'}};
 
     try {
       aContext.accessible.scrollTo(
@@ -152,7 +152,7 @@ VisualPresenter.prototype = {
       return {
         type: this.type,
         details: {
-          method: 'show',
+          method: 'showBounds',
           bounds: aContext.bounds,
           padding: this.BORDER_PADDING
         }
@@ -170,9 +170,20 @@ VisualPresenter.prototype = {
   tabStateChanged: function VisualPresenter_tabStateChanged(aDocObj,
                                                             aPageState) {
     if (aPageState == 'newdoc')
-      return {type: this.type, details: {method: 'hide'}};
+      return {type: this.type, details: {method: 'hideBounds'}};
 
     return null;
+  },
+
+  announce: function VisualPresenter_announce(aAnnouncement) {
+    return {
+      type: this.type,
+      details: {
+        method: 'showAnnouncement',
+        text: aAnnouncement,
+        duration: 1000
+      }
+    };
   }
 };
 
@@ -262,8 +273,8 @@ AndroidPresenter.prototype = {
 
   tabStateChanged: function AndroidPresenter_tabStateChanged(aDocObj,
                                                              aPageState) {
-    return this._appAnnounce(
-      UtteranceGenerator.genForTabStateChange(aDocObj, aPageState));
+    return this.announce(
+      UtteranceGenerator.genForTabStateChange(aDocObj, aPageState).join(' '));
   },
 
   textChanged: function AndroidPresenter_textChanged(aIsInserted, aStart,
@@ -308,20 +319,18 @@ AndroidPresenter.prototype = {
   },
 
   editingModeChanged: function AndroidPresenter_editingModeChanged(aIsEditing) {
-    return this._appAnnounce(UtteranceGenerator.genForEditingMode(aIsEditing));
+    return this.announce(
+      UtteranceGenerator.genForEditingMode(aIsEditing).join(' '));
   },
 
-  _appAnnounce: function _appAnnounce(aUtterance) {
-    if (!aUtterance.length)
-      return null;
-
+  announce: function AndroidPresenter_announce(aAnnouncement) {
     return {
       type: this.type,
       details: [{
         eventType: (Utils.AndroidSdkVersion >= 16) ?
           this.ANDROID_ANNOUNCEMENT : this.ANDROID_VIEW_TEXT_CHANGED,
-        text: aUtterance,
-        addedCount: aUtterance.join(' ').length,
+        text: [aAnnouncement],
+        addedCount: aAnnouncement.length,
         removedCount: 0,
         fromIndex: 0
       }]
@@ -502,5 +511,64 @@ PresenterContext.prototype = {
     } catch (x) {
       return true;
     }
+  }
+};
+
+this.Presentation = {
+  get presenters() {
+    delete this.presenters;
+    this.presenters = [new VisualPresenter()];
+
+    if (Utils.MozBuildApp == 'b2g') {
+      this.presenters.push(new SpeechPresenter());
+      this.presenters.push(new HapticPresenter());
+    } else if (Utils.MozBuildApp == 'mobile/android') {
+      this.presenters.push(new AndroidPresenter());
+    }
+
+    return this.presenters;
+  },
+
+  pivotChanged: function Presentation_pivotChanged(aPosition,
+                                                   aOldPosition,
+                                                   aReason) {
+    let context = new PresenterContext(aPosition, aOldPosition);
+    return [p.pivotChanged(context, aReason)
+              for each (p in this.presenters)];
+  },
+
+  actionInvoked: function Presentation_actionInvoked(aObject, aActionName) {
+    return [p.actionInvoked(aObject, aActionName)
+              for each (p in this.presenters)];
+  },
+
+  textChanged: function Presentation_textChanged(aIsInserted, aStartOffset,
+                                    aLength, aText,
+                                    aModifiedText) {
+    return [p.textChanged(aIsInserted, aStartOffset, aLength,
+                          aText, aModifiedText)
+              for each (p in this.presenters)];
+  },
+
+  tabStateChanged: function Presentation_tabStateChanged(aDocObj, aPageState) {
+    return [p.tabStateChanged(aDocObj, aPageState)
+              for each (p in this.presenters)];
+  },
+
+  viewportChanged: function Presentation_viewportChanged(aWindow) {
+    return [p.viewportChanged(aWindow)
+              for each (p in this.presenters)];
+  },
+
+  editingModeChanged: function Presentation_editingModeChanged(aIsEditing) {
+    return [p.editingModeChanged(aIsEditing)
+              for each (p in this.presenters)];
+  },
+
+  announce: function Presentation_announce(aAnnouncement) {
+    // XXX: Typically each presenter uses the UtteranceGenerator,
+    // but there really isn't a point here.
+    return [p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement)[0])
+              for each (p in this.presenters)];
   }
 };

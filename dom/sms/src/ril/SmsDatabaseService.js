@@ -363,73 +363,7 @@ SmsDatabaseService.prototype = {
   },
 
   upgradeSchema5: function upgradeSchema5(transaction) {
-    let smsStore = transaction.objectStore(STORE_NAME);
-    let mostRecentStore = transaction.objectStore(MOST_RECENT_STORE_NAME);
-
-    smsStore.openCursor().onsuccess = function(event) {
-      let cursor = event.target.result;
-      if (!cursor) {
-        return;
-      }
-
-      let needsUpdate = false;
-      let message = cursor.value;
-      if (message.receiver) {
-        if (message.receiver !== "undefined") {
-          if (DEBUG) debug("upgrade message.receiver from: " + message.receiver + "\n");
-          let parsedNumber = PhoneNumberUtils.parse(message.receiver.toString());
-          if (parsedNumber && parsedNumber.internationalNumber) {
-            message.receiver = parsedNumber.internationalNumber;
-            needsUpdate = true;
-          }
-
-          if (DEBUG) debug("upgrade message.receiver to: " + message.receiver + "\n");
-        } else {
-          message.receiver = null;
-          needsUpdate = true;
-        }
-      }
-
-      if (message.sender) {
-        if (message.sender !== "undefined") {
-          if (DEBUG) debug("upgrade message.sender from: " + message.sender + "\n");
-          let parsedNumber = PhoneNumberUtils.parse(message.sender.toString());
-          if (parsedNumber && parsedNumber.internationalNumber) {
-            message.sender = parsedNumber.internationalNumber;
-            needsUpdate = true;
-            if (DEBUG) debug("upgrade message.sender to: " + message.sender + "\n");
-          }
-        } else {
-          message.sender = null;
-          needsUpdate = true;
-        }
-      }
-
-      if (needsUpdate) {
-        cursor.update(message);
-      }
-      cursor.continue();
-    }
-
-    mostRecentStore.openCursor().onsuccess = function(event) {
-      let cursor = event.target.result;
-      if (!cursor) {
-        return;
-      }
-
-      let entry = cursor.value;
-      if (entry.senderOrReceiver) {
-        if (DEBUG) debug("upgrade mostRecentStore from: " + entry.senderOrReceiver + "\n");
-        let parsedNumber = PhoneNumberUtils.parse(entry.senderOrReceiver);
-        if (parsedNumber && parsedNumber.internationalNumber) {
-          entry.senderOrReceiver = parsedNumber.internationalNumber;
-          cursor.update(entry);
-          if (DEBUG) debug("upgrade mostRecentStore to: " + entry.senderOrReceiver + "\n");
-        }
-      }
-
-      cursor.continue();
-    }
+    // Don't perform any upgrade. See Bug 819560.
   },
 
   /**

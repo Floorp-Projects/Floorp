@@ -2648,7 +2648,13 @@ MacroAssemblerARMCompat::setupABICall(uint32_t args)
     inCall_ = true;
     args_ = args;
     passedArgs_ = 0;
+#ifdef JS_CPU_ARM_HARDFP
+    usedIntSlots_ = 0;
+    usedFloatSlots_ = 0;
+    padding_ = 0;
+#else
     usedSlots_ = 0;
+#endif
     floatArgsInGPR[0] = VFPRegister();
     floatArgsInGPR[1] = VFPRegister();
 }
@@ -2673,7 +2679,43 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, const Register &sc
     ma_and(Imm32(~(StackAlignment - 1)), sp, sp);
     ma_push(scratch);
 }
+#ifdef JS_CPU_ARM_HARDFP
+void
+MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
+{
+    MoveOperand to;
+    uint32_t increment = 1;
+    bool useResolver = true;
+    ++passedArgs_;
+    Move::Kind kind = Move::GENERAL;
+    if (!enoughMemory_)
+        return;
+    if (from.isDouble()) {
+        FloatRegister fr;
+        if (GetFloatArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
+            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(fr), Move::DOUBLE);
+        } else {
+            // If (and only if) the integer registers have started spilling, do we
+            // need to take the double register's alignment into accoun
+            uint32_t disp = GetFloatArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
+            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), Move::DOUBLE);
+        }
+        usedFloatSlots_++;
+    } else {
+        Register r;
+        if (GetIntArgReg(usedIntSlots_, usedFloatSlots_, &r)) {
+            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(r), Move::GENERAL);
+        } else {
+            uint32_t disp = GetIntArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
+            fprintf(stderr, "Float on the stack! (%d)\n", disp);
+            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), Move::GENERAL);
+        }
+            usedIntSlots_++;
+    }
 
+}
+
+#else
 void
 MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
 {
@@ -2692,7 +2734,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
 
     Register destReg;
     MoveOperand dest;
-    if (GetArgReg(usedSlots_, &destReg)) {
+    if (GetIntArgReg(usedSlots_, 0, &destReg)) {
         if (from.isDouble()) {
             floatArgsInGPR[destReg.code() >> 1] = VFPRegister(from.floatReg());
             useResolver = false;
@@ -2708,6 +2750,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
         enoughMemory_ = enoughMemory_ && moveResolver_.addMove(from, dest, kind);
     usedSlots_ += increment;
 }
+#endif
 
 void
 MacroAssemblerARMCompat::passABIArg(const Register &reg)
@@ -2736,7 +2779,12 @@ void
 MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
 {
     JS_ASSERT(inCall_);
-    uint32_t stackAdjust = ((usedSlots_ > NumArgRegs) ? usedSlots_ - NumArgRegs : 0) * STACK_SLOT_SIZE;
+#ifdef JS_CPU_ARM_HARDFP
+    uint32_t stackAdjust = ((usedIntSlots_ > NumIntArgRegs) ? usedIntSlots_ - NumIntArgRegs : 0) * STACK_SLOT_SIZE;
+    stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * STACK_SLOT_SIZE;
+#else
+    uint32_t stackAdjust = ((usedSlots_ > NumIntArgRegs) ? usedSlots_ - NumIntArgRegs : 0) * STACK_SLOT_SIZE;
+#endif
     if (!dynamicAlignment_)
         stackAdjust +=
             ComputeByteAlignment(framePushed_ + stackAdjust, StackAlignment);
@@ -2763,8 +2811,12 @@ MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
     ma_call(fun);
 
     if (result == DOUBLE) {
+#ifdef JS_CPU_ARM_HARDFP
+        as_vmov(ReturnFloatReg, d0);
+#else
         // Move double from r0/r1 to ReturnFloatReg.
         as_vxfer(r0, r1, ReturnFloatReg, CoreToFloat);
+#endif
     }
 
     freeStack(stackAdjust);

@@ -418,18 +418,6 @@ public class GeckoAppShell
         // profile home path
         GeckoAppShell.putenv("HOME=" + profile.getFilesDir().getPath());
 
-        Intent i = null;
-        i = ((Activity)context).getIntent();
-
-        // if we have an intent (we're being launched by an activity)
-        // read in any environmental variables from it here
-        String env = i.getStringExtra("env0");
-        Log.d(LOGTAG, "Gecko environment env0: "+ env);
-        for (int c = 1; env != null; c++) {
-            GeckoAppShell.putenv(env);
-            env = i.getStringExtra("env" + c);
-            Log.d(LOGTAG, "env" + c + ": " + env);
-        }
         // setup the tmp path
         File f = context.getDir("tmp", Context.MODE_WORLD_READABLE |
                                  Context.MODE_WORLD_WRITEABLE );
@@ -484,7 +472,7 @@ public class GeckoAppShell
         synchronized(sSQLiteLibsLoaded) {
             if (sSQLiteLibsLoaded)
                 return;
-            loadMozGlue();
+            loadMozGlue(context);
             // the extract libs parameter is being removed in bug 732069
             loadLibsSetup(context);
             loadSQLiteLibsNative(apkName, false);
@@ -498,15 +486,33 @@ public class GeckoAppShell
         synchronized(sNSSLibsLoaded) {
             if (sNSSLibsLoaded)
                 return;
-            loadMozGlue();
+            loadMozGlue(context);
             loadLibsSetup(context);
             loadNSSLibsNative(apkName, false);
             sNSSLibsLoaded = true;
         }
     }
 
-    public static void loadMozGlue() {
+    public static void loadMozGlue(Context context) {
         System.loadLibrary("mozglue");
+
+        // When running TestPasswordProvider, we're being called with
+        // a GeckoApplication, which is not an Activity
+        if (!(context instanceof Activity))
+            return;
+
+        Intent i = null;
+        i = ((Activity)context).getIntent();
+
+        // if we have an intent (we're being launched by an activity)
+        // read in any environmental variables from it here
+        String env = i.getStringExtra("env0");
+        Log.d(LOGTAG, "Gecko environment env0: "+ env);
+        for (int c = 1; env != null; c++) {
+            GeckoAppShell.putenv(env);
+            env = i.getStringExtra("env" + c);
+            Log.d(LOGTAG, "env" + c + ": " + env);
+        }
     }
 
     public static void loadGeckoLibs(String apkName) {

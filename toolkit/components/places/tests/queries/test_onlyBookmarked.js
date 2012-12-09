@@ -45,10 +45,15 @@ var testData = [
  * harness.  It is where you do the work of creating the query, running it, and
  * playing with the result set.
  */
-function run_test() {
+function run_test()
+{
+  run_next_test();
+}
 
+add_task(function test_onlyBookmarked()
+{
   // This function in head_queries.js creates our database with the above data
-  populateDB(testData);
+  yield task_populateDB(testData);
 
   // Query
   var query = PlacesUtils.history.getNewQuery();
@@ -93,7 +98,7 @@ function run_test() {
       isInQuery: false }
   ];
   
-  populateDB(liveUpdateTestData); // add to the db
+  yield task_populateDB(liveUpdateTestData); // add to the db
 
   // add to the test data
   testData.push(liveUpdateTestData[0]);
@@ -127,4 +132,4 @@ function run_test() {
 */
   // Close the container when finished
   root.containerOpen = false;
-}
+});
