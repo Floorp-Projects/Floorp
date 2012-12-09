@@ -40,7 +40,7 @@
     _(StackArgT)                    \
     _(StackArgV)                    \
     _(CreateThis)                   \
-    _(CreateThisWithTemplate)       \
+    _(CreateThisVM)                 \
     _(ReturnFromCtor)               \
     _(BitNotI)                      \
     _(BitNotV)                      \

@@ -1570,60 +1570,28 @@ class MGuardString
 };
 
 // Caller-side allocation of |this| for |new|:
-// Given a templateobject, construct |this| for JSOP_NEW
-class MCreateThisWithTemplate
-  : public MNullaryInstruction
-{
-    // Template for |this|, provided by TI
-    CompilerRootObject templateObject_;
-
-    MCreateThisWithTemplate(JSObject *templateObject)
-      : templateObject_(templateObject)
-    {
-        setResultType(MIRType_Object);
-    }
-
-  public:
-    INSTRUCTION_HEADER(CreateThisWithTemplate);
-    static MCreateThisWithTemplate *New(JSObject *templateObject)
-    {
-        return new MCreateThisWithTemplate(templateObject);
-    }
-    JSObject *getTemplateObject() const {
-        return templateObject_;
-    }
-
-    // Although creation of |this| modifies global state, it is safely repeatable.
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
-// Caller-side allocation of |this| for |new|:
 // Given a prototype operand, construct |this| for JSOP_NEW.
 // For native constructors, returns MagicValue(JS_IS_CONSTRUCTING).
 class MCreateThis
   : public MAryInstruction<2>,
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
 {
-    bool needNativeCheck_;
+    // Template for |this|, provided by TI, or NULL.
+    CompilerRootObject templateObject_;
 
-    MCreateThis(MDefinition *callee, MDefinition *prototype)
-      : needNativeCheck_(true)
+    MCreateThis(MDefinition *callee, MDefinition *prototype, JSObject *templateObject)
+      : templateObject_(templateObject)
     {
         initOperand(0, callee);
         initOperand(1, prototype);
-
-        // Type is mostly object, except for native constructors
-        // therefore the need of Value type.
-        setResultType(MIRType_Value);
+        setResultType(MIRType_Object);
     }
 
   public:
     INSTRUCTION_HEADER(CreateThis)
-    static MCreateThis *New(MDefinition *callee, MDefinition *prototype)
+    static MCreateThis *New(MDefinition *callee, MDefinition *prototype, JSObject *templateObject)
     {
-        return new MCreateThis(callee, prototype);
+        return new MCreateThis(callee, prototype, templateObject);
     }
 
     MDefinition *getCallee() const {
@@ -1632,12 +1600,12 @@ class MCreateThis
     MDefinition *getPrototype() const {
         return getOperand(1);
     }
-    void removeNativeCheck() {
-        needNativeCheck_ = false;
-        setResultType(MIRType_Object);
+    bool hasTemplateObject() const {
+        return !!templateObject_;
     }
-    bool needNativeCheck() const {
-        return needNativeCheck_;
+    JSObject *getTemplateObject() const {
+        JS_ASSERT(hasTemplateObject());
+        return templateObject_;
     }
 
     // Although creation of |this| modifies global state, it is safely repeatable.
