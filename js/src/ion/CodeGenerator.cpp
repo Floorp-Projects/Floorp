@@ -1842,8 +1842,10 @@ static const VMFunction NewGCThingInfo =
     FunctionInfo<NewGCThingFn>(js::ion::NewGCThing);
 
 bool
-CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
+CodeGenerator::visitCreateThis(LCreateThis *lir)
 {
+    JS_ASSERT(lir->mir()->hasTemplateObject());
+
     JSObject *templateObject = lir->mir()->getTemplateObject();
     gc::AllocKind allocKind = templateObject->getAllocKind();
     int thingSize = (int)gc::Arena::thingSize(allocKind);
@@ -1870,23 +1872,10 @@ static const VMFunction CreateThisInfo =
     FunctionInfo<CreateThisFn>(js_CreateThisForFunctionWithProto);
 
 bool
-CodeGenerator::visitCreateThis(LCreateThis *lir)
+CodeGenerator::visitCreateThisVM(LCreateThisVM *lir)
 {
-    Label done, vm;
-
     const LAllocation *proto = lir->getPrototype();
     const LAllocation *callee = lir->getCallee();
-
-    // When callee could be a native, put MagicValue in return operand.
-    // Use the VMCall when callee turns out to not be a native.
-    if (lir->mir()->needNativeCheck()) {
-        JS_ASSERT(lir->mir()->type() == MIRType_Value);
-        masm.branchIfInterpreted(ToRegister(callee), &vm);
-        masm.moveValue(MagicValue(JS_IS_CONSTRUCTING), GetValueOutput(lir));
-        masm.jump(&done);
-    }
-
-    masm.bind(&vm);
 
     // Push arguments.
     if (proto->isConstant())
@@ -1901,9 +1890,6 @@ CodeGenerator::visitCreateThis(LCreateThis *lir)
 
     if (!callVM(CreateThisInfo, lir))
         return false;
-
-    masm.bind(&done);
-
     return true;
 }
 
