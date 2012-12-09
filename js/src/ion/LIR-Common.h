@@ -420,26 +420,26 @@ class LToIdV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 
 // Allocate an object for |new| on the caller-side.
 // Always performs object initialization with a fast path.
-class LCreateThis : public LInstructionHelper<1, 0, 0>
+class LCreateThisWithTemplate : public LInstructionHelper<1, 0, 0>
 {
   public:
-    LIR_HEADER(CreateThis)
+    LIR_HEADER(CreateThisWithTemplate)
 
-    LCreateThis()
+    LCreateThisWithTemplate()
     { }
 
-    MCreateThis *mir() const {
-        return mir_->toCreateThis();
+    MCreateThisWithTemplate *mir() const {
+        return mir_->toCreateThisWithTemplate();
     }
 };
 
 // Allocate an object for |new| on the caller-side, when there is no templateObject.
-class LCreateThisVM : public LCallInstructionHelper<1, 2, 0>
+class LCreateThis : public LCallInstructionHelper<1, 2, 0>
 {
   public:
-    LIR_HEADER(CreateThisVM)
+    LIR_HEADER(CreateThis)
 
-    LCreateThisVM(const LAllocation &callee, const LAllocation &prototype)
+    LCreateThis(const LAllocation &callee, const LAllocation &prototype)
     {
         setOperand(0, callee);
         setOperand(1, prototype);
