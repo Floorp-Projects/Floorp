@@ -1842,10 +1842,8 @@ static const VMFunction NewGCThingInfo =
     FunctionInfo<NewGCThingFn>(js::ion::NewGCThing);
 
 bool
-CodeGenerator::visitCreateThis(LCreateThis *lir)
+CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
 {
-    JS_ASSERT(lir->mir()->hasTemplateObject());
-
     JSObject *templateObject = lir->mir()->getTemplateObject();
     gc::AllocKind allocKind = templateObject->getAllocKind();
     int thingSize = (int)gc::Arena::thingSize(allocKind);
@@ -1872,12 +1870,10 @@ static const VMFunction CreateThisInfo =
     FunctionInfo<CreateThisFn>(js_CreateThisForFunctionWithProto);
 
 bool
-CodeGenerator::visitCreateThisVM(LCreateThisVM *lir)
+CodeGenerator::emitCreateThisVM(LInstruction *lir,
+                                const LAllocation *proto,
+                                const LAllocation *callee)
 {
-    const LAllocation *proto = lir->getPrototype();
-    const LAllocation *callee = lir->getCallee();
-
-    // Push arguments.
     if (proto->isConstant())
         pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
     else
@@ -1888,9 +1884,38 @@ CodeGenerator::visitCreateThisVM(LCreateThisVM *lir)
     else
         pushArg(ToRegister(callee));
 
-    if (!callVM(CreateThisInfo, lir))
+    return callVM(CreateThisInfo, lir);
+}
+
+bool
+CodeGenerator::visitCreateThisV(LCreateThisV *lir)
+{
+    Label done, vm;
+
+    const LAllocation *proto = lir->getPrototype();
+    const LAllocation *callee = lir->getCallee();
+
+    // When callee could be a native, put MagicValue in return operand.
+    // Use the VMCall when callee turns out to not be a native.
+    masm.branchIfInterpreted(ToRegister(callee), &vm);
+    masm.moveValue(MagicValue(JS_IS_CONSTRUCTING), GetValueOutput(lir));
+    masm.jump(&done);
+
+    masm.bind(&vm);
+    if (!emitCreateThisVM(lir, proto, callee))
         return false;
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, GetValueOutput(lir));
+
+    masm.bind(&done);
+
     return true;
+}
+
+bool
+CodeGenerator::visitCreateThisO(LCreateThisO *lir)
+{
+    return emitCreateThisVM(lir, lir->getPrototype(), lir->getCallee());
 }
 
 bool
