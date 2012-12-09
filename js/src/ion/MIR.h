@@ -5528,6 +5528,32 @@ class MNewSlots : public MNullaryInstruction
     }
 };
 
+class MNewDeclEnvObject : public MNullaryInstruction
+{
+    CompilerRootObject templateObj_;
+
+    MNewDeclEnvObject(HandleObject templateObj)
+      : MNullaryInstruction(),
+        templateObj_(templateObj)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewDeclEnvObject);
+
+    static MNewDeclEnvObject *New(HandleObject templateObj) {
+        return new MNewDeclEnvObject(templateObj);
+    }
+
+    JSObject *templateObj() {
+        return templateObj_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MNewCallObject : public MUnaryInstruction
 {
     CompilerRootObject templateObj_;
