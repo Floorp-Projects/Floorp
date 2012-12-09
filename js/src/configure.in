@@ -1194,6 +1194,13 @@ if test "$GNU_CC"; then
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
 
+    AC_MSG_CHECKING([for --build-id option to ld])
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS -Wl,--build-id"
+    AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
+                  AC_MSG_RESULT([no])
+                  LDFLAGS=$_SAVE_LDFLAGS)
+
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
     # -pedantic - this is turned on below
