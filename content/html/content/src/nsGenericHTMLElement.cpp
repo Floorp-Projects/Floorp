@@ -4191,9 +4191,9 @@ nsGenericHTMLElement::Properties()
 }
 
 void
-nsGenericHTMLElement::GetProperties(nsIDOMHTMLPropertiesCollection** aProperties)
+nsGenericHTMLElement::GetProperties(nsISupports** aProperties)
 {
-  NS_ADDREF(*aProperties = Properties());
+  NS_ADDREF(*aProperties = static_cast<nsIHTMLCollection*>(Properties()));
 }
 
 nsSize

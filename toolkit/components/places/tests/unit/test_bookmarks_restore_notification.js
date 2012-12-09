@@ -104,18 +104,16 @@ var tests = [
     run:        function () {
       this.file = createFile("bookmarks-test_restoreNotification.html");
       addBookmarks();
-      exporter.exportHTMLToFile(this.file);
-      remove_all_bookmarks();
-      try {
-        BookmarkHTMLUtils.importFromFile(this.file, false, function (success) {
-          if (!success) {
-            do_throw("  Restore should not have failed");
-          }
-        });
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
+      BookmarkHTMLUtils.exportToFile(this.file).then(function () {
+        remove_all_bookmarks();
+        try {
+          BookmarkHTMLUtils.importFromFile(this.file, false)
+                           .then(null, do_report_unexpected_exception);
+        }
+        catch (e) {
+          do_throw("  Restore should not have failed");
+        }
+      }.bind(this), do_report_unexpected_exception);
     }
   },
 
@@ -128,11 +126,8 @@ var tests = [
     run:        function () {
       this.file = createFile("bookmarks-test_restoreNotification.init.html");
       try {
-        BookmarkHTMLUtils.importFromFile(this.file, false, function (success) {
-          if (!success) {
-            do_throw("  Restore should not have failed");            
-          }
-        });
+        BookmarkHTMLUtils.importFromFile(this.file, false)
+                         .then(null, do_report_unexpected_exception);
       }
       catch (e) {
         do_throw("  Restore should not have failed");
@@ -150,12 +145,9 @@ var tests = [
       this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
       try {
-        BookmarkHTMLUtils.importFromFile(this.file, false, function (success) {
-          print("callback");
-          if (success) {
-            do_throw("  Restore should have failed");
-          }
-        });
+        BookmarkHTMLUtils.importFromFile(this.file, false)
+                         .then(function onSuccess() do_throw("Should fail!"),
+                               null);
       }
       catch (e) {}
     }
@@ -170,18 +162,16 @@ var tests = [
     run:        function () {
       this.file = createFile("bookmarks-test_restoreNotification.init.html");
       addBookmarks();
-      exporter.exportHTMLToFile(this.file);
-      remove_all_bookmarks();
-      try {
-        BookmarkHTMLUtils.importFromFile(this.file, true, function (success) {
-          if (!success) {
-            do_throw("  Restore should not have failed");
-          }
-        });
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
+      BookmarkHTMLUtils.exportToFile(this.file).then(function () {
+        remove_all_bookmarks();
+        try {
+          BookmarkHTMLUtils.importFromFile(this.file, true)
+                           .then(null, do_report_unexpected_exception);
+        }
+        catch (e) {
+          do_throw("  Restore should not have failed");
+        }
+      }.bind(this), do_report_unexpected_exception);
     }
   },
 
@@ -194,11 +184,8 @@ var tests = [
     run:        function () {
       this.file = createFile("bookmarks-test_restoreNotification.init.html");
       try {
-        BookmarkHTMLUtils.importFromFile(this.file, true, function (success) {
-          if (!success) {
-            do_throw("  Restore should not have failed");
-          }
-        });
+        BookmarkHTMLUtils.importFromFile(this.file, true)
+                         .then(null, do_report_unexpected_exception);
       }
       catch (e) {
         do_throw("  Restore should not have failed");
@@ -216,11 +203,9 @@ var tests = [
       this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
       try {
-        BookmarkHTMLUtils.importFromFile(this.file, true, function (success) {
-          if (success) {
-            do_throw("  Restore should have failed");
-          }
-        });
+        BookmarkHTMLUtils.importFromFile(this.file, true)
+                         .then(function onSuccess() do_throw("Should fail!"),
+                               null);
       }
       catch (e) {}
     }
@@ -285,9 +270,6 @@ var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
 
 var obssvc = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
-
-var exporter = Cc["@mozilla.org/browser/places/import-export-service;1"].
-               getService(Ci.nsIPlacesImportExportService);
 
 ///////////////////////////////////////////////////////////////////////////////
 

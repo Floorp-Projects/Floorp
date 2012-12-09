@@ -284,6 +284,10 @@ tier_platform_dirs += toolkit/library
 
 tier_platform_dirs += xpcom/stub
 
+ifdef MOZ_REPLACE_MALLOC
+tier_platform_dirs += memory/replace
+endif
+
 ifdef NS_TRACE_MALLOC
 tier_platform_dirs += tools/trace-malloc
 endif

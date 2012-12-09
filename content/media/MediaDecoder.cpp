@@ -1240,13 +1240,8 @@ nsresult MediaDecoder::GetSeekable(nsTimeRanges* aSeekable)
   // server supports range requests, etc.)
   if (!IsMediaSeekable()) {
     return NS_OK;
-  } else if (!IsTransportSeekable()){
-    if (mDecoderStateMachine &&
-        mDecoderStateMachine->IsSeekableInBufferedRanges()) {
-      return GetBuffered(aSeekable);
-    } else {
-      return NS_OK;
-    }
+  } else if (!IsTransportSeekable()) {
+    return GetBuffered(aSeekable);
   } else {
     double end = IsInfinite() ? std::numeric_limits<double>::infinity()
                               : initialTime + GetDuration();

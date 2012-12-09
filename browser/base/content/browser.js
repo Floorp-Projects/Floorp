@@ -17,7 +17,6 @@ var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
-var gStartupRan = false;
 
 #ifndef XP_MACOSX
 var gEditUIVisible = true;
@@ -992,6 +991,7 @@ var gBrowserInit = {
 
     // Note that the XBL binding is untrusted
     gBrowser.addEventListener("PluginBindingAttached", gPluginHandler, true, true);
+    gBrowser.addEventListener("PluginScripted",        gPluginHandler, true);
     gBrowser.addEventListener("PluginCrashed",         gPluginHandler, true);
     gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
 
@@ -1180,7 +1180,7 @@ var gBrowserInit = {
     this._boundDelayedStartup = this._delayedStartup.bind(this, uriToLoad, mustLoadSidebar);
     window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
 
-    gStartupRan = true;
+    this._loadHandled = true;
   },
 
   _cancelDelayedStartup: function () {
@@ -1500,7 +1500,7 @@ var gBrowserInit = {
     // In certain scenarios it's possible for unload to be fired before onload,
     // (e.g. if the window is being closed after browser.js loads but before the
     // load completes). In that case, there's nothing to do here.
-    if (!gStartupRan)
+    if (!this._loadHandled)
       return;
 
     gDevTools.forgetBrowserWindow(window);
@@ -1661,8 +1661,6 @@ var gBrowserInit = {
     // initialize the sync UI
     gSyncUI.init();
 #endif
-
-    gStartupRan = true;
   },
 
   nonBrowserWindowShutdown: function() {
@@ -4520,6 +4518,7 @@ var TabsProgressListener = {
         // Initialize the click-to-play state.
         aBrowser._clickToPlayDoorhangerShown = false;
         aBrowser._clickToPlayPluginsActivated = false;
+        aBrowser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_NONE;
       }
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }

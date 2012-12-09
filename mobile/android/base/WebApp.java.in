@@ -89,7 +89,7 @@ public class WebApp extends GeckoApp {
     }
 
     @Override
-    protected void initializeChrome(String uri, Boolean isExternalURL) {
+    protected void initializeChrome(String uri, boolean isExternalURL) {
         super.initializeChrome(uri, isExternalURL);
         Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_PINNED);
     }

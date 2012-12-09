@@ -431,7 +431,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
     }
 
     BufferOffset insertEntry(uint32_t instSize, uint8_t *inst, Pool *p, uint8_t *data, PoolEntry *pe = NULL) {
-        if (this->oom())
+        if (this->oom() && !this->bail())
             return BufferOffset();
         int token;
         if (p != NULL) {
@@ -451,6 +451,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         // now to get an instruction to write
         PoolEntry retPE;
         if (p != NULL) {
+            if (this->oom())
+                return BufferOffset();
             int poolId = p - pools;
             IonSpew(IonSpew_Pools, "[%d] Entry has token %d, offset ~%d", id, token, size());
             Asm::insertTokenIntoTag(instSize, inst, token);
@@ -496,6 +498,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                     IonSpew(IonSpew_Pools, "[%d]Inserting instruction(%d) caused a spill", id, size());
 
                 this->finishPool();
+                if (this->oom())
+                    return uint32_t(-1);
                 return this->insertEntryForwards(instSize, inst, p, data);
             }
             // when moving back to front, calculating the alignment is hard, just be
@@ -726,9 +730,9 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                     // the last pool, which means it cannot affect the alignment of any other
                     // Sub Pools.
                     IonSpew(IonSpew_Pools, "[%d]***Offset was still out of range!***", id, codeOffset - magicAlign);
-                    outcasts[poolIdx].append(iter->getOffset());
-                    memcpy(&outcastEntries[poolIdx][numSkips * p->immSize], &p->poolData[idx * p->immSize], p->immSize);
-                    numSkips++;
+                    IonSpew(IonSpew_Pools, "[%d] Too complicated; bailingp", id);
+                    this->fail_bail();
+                    return;
                 } else {
                     preservedEntries[idx] = true;
                 }

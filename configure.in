@@ -7046,8 +7046,81 @@ else
   fi
 fi
 
+dnl ========================================================
+dnl = Enable dynamic replacement of malloc implementation
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(replace-malloc,
+[  --enable-replace-malloc   Enable ability to dynamically replace the malloc implementation],
+    MOZ_REPLACE_MALLOC=1,
+    MOZ_REPLACE_MALLOC= )
+
+if test -n "$MOZ_REPLACE_MALLOC" -a -z "$MOZ_MEMORY"; then
+    dnl We don't want to enable jemalloc unconditionally because it may be a
+    dnl deliberate choice not to enable it (bug 702250, for instance)
+    AC_MSG_ERROR([--enable-replace-malloc requires --enable-jemalloc])
+elif test -n "$MOZ_REPLACE_MALLOC"; then
+    MOZ_NATIVE_JEMALLOC=
+
+    dnl Replace-malloc Mac linkage quirks
+    if test -n "$MACOSX_DEPLOYMENT_TARGET"; then
+        AC_CACHE_CHECK([how to do weak dynamic linking],
+            ac_cv_weak_dynamic_linking,
+            [echo 'extern void foo() __attribute__((weak_import));int bar() { if (foo) foo(); return 0; }' > conftest.c
+             if AC_TRY_COMMAND([${CC-cc} -o conftest${DLL_SUFFIX} $CFLAGS -dynamiclib $LDFLAGS -Wl,-U,_foo conftest.c $LIBS 1>&5]) &&
+                test -s conftest${DLL_SUFFIX}; then
+                 dnl There are several ways the linker can put link edit rules in a binary:
+                 dnl - classic info only (for OSX < 10.6)
+                 dnl - dyld info only
+                 dnl - both
+                 if otool -l conftest${DLL_SUFFIX} 2> /dev/null | grep "LC_DYLD_INFO_ONLY" > /dev/null; then
+                     _CLASSIC_INFO=
+                 else
+                     _CLASSIC_INFO=1
+                 fi
+                 if otool -l conftest${DLL_SUFFIX} 2> /dev/null | grep "LC_DYLD_INFO" > /dev/null; then
+                     _DYLD_INFO=1
+                 else
+                     _DYLD_INFO=
+                 fi
+                 dnl With classic info, we need to build with -flat_namespace.
+                 dnl With dyld info, Xcode 4.5 does the right thing without additional flags,
+                 dnl but Xcode < 4.5 requires a dummy library and -flat_namespace because it
+                 dnl forgets to set the weak flag in the dyld info.
+                 dnl See http://glandium.org/blog/?p=2764 for more details.
+                 dnl
+                 dnl Values for ac_cv_weak_dynamic_linking, and subsequently
+                 dnl MOZ_REPLACE_MALLOC_LINKAGE are thus:
+                 dnl - "flat namespace" when -flat_namespace alone is needed
+                 dnl - "dummy library" when a dummy library and -flat_namespace are needed
+                 dnl - "compiler support" when nothing is needed
+                 if test -n "$_DYLD_INFO" && dyldinfo -bind conftest${DLL_SUFFIX} 2> /dev/null | grep "_foo (weak import)" > /dev/null; then
+                     if test -n "$_CLASSIC_INFO"; then
+                         ac_cv_weak_dynamic_linking="flat namespace"
+                     else
+                         ac_cv_weak_dynamic_linking="compiler support"
+                     fi
+                 else
+                     if test -n "$_DYLD_INFO"; then
+                         ac_cv_weak_dynamic_linking="dummy library"
+                     else
+                         ac_cv_weak_dynamic_linking="flat namespace"
+                     fi
+                 fi
+             else
+                 AC_ERROR([couldn't compile a simple C file])
+             fi
+             rm -rf conftest*])
+        MOZ_REPLACE_MALLOC_LINKAGE="$ac_cv_weak_dynamic_linking"
+    fi
+fi
+AC_SUBST(MOZ_REPLACE_MALLOC)
+AC_SUBST(MOZ_REPLACE_MALLOC_LINKAGE)
+
+dnl ========================================================
+dnl = Jemalloc build setup
+dnl ========================================================
 if test -z "$MOZ_MEMORY"; then
-  if test -n "$MOZ_JEMALLOC"; then
+  if test -n "$MOZ_JEMALLOC3" -a -z "$MOZ_REPLACE_MALLOC"; then
     MOZ_NATIVE_JEMALLOC=1
     AC_CHECK_FUNCS(mallctl nallocm,,
       [MOZ_NATIVE_JEMALLOC=
@@ -7055,7 +7128,7 @@ if test -z "$MOZ_MEMORY"; then
     if test -n "$MOZ_NATIVE_JEMALLOC"; then
       MOZ_MEMORY=1
       AC_DEFINE(MOZ_MEMORY)
-      AC_DEFINE(MOZ_JEMALLOC)
+      AC_DEFINE(MOZ_JEMALLOC3)
       AC_DEFINE(MOZ_NATIVE_JEMALLOC)
     fi
   fi
@@ -7090,8 +7163,8 @@ else
   fi
 
   AC_DEFINE(MOZ_MEMORY)
-  if test -n "$MOZ_JEMALLOC"; then
-    AC_DEFINE(MOZ_JEMALLOC)
+  if test -n "$MOZ_JEMALLOC3"; then
+    AC_DEFINE(MOZ_JEMALLOC3)
   fi
   if test "x$MOZ_DEBUG" = "x1"; then
     AC_DEFINE(MOZ_MEMORY_DEBUG)
@@ -7152,7 +7225,7 @@ else
   esac
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_JEMALLOC)
+AC_SUBST(MOZ_JEMALLOC3)
 AC_SUBST(MOZ_NATIVE_JEMALLOC)
 AC_SUBST(MOZ_GLUE_LDFLAGS)
 AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
@@ -8573,8 +8646,19 @@ AC_SUBST(MOZ_PKG_SPECIAL)
 
 AC_SUBST(MOZILLA_OFFICIAL)
 
+AC_DEFINE_UNQUOTED(MOZ_TELEMETRY_DISPLAY_REV, 2)
+AC_SUBST(MOZ_TELEMETRY_DISPLAY_REV)
+
 if test "$MOZ_TELEMETRY_REPORTING"; then
     AC_DEFINE(MOZ_TELEMETRY_REPORTING)
+    # Those lines will remain commented until we are ready to enable
+    # telemetry by default on Nightly & Aurora channels.
+    #
+    # Enable Telemetry by default for nightly and aurora channels
+    # if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
+    #     "$MOZ_UPDATE_CHANNEL" = "aurora"; then
+    #     AC_DEFINE(MOZ_TELEMETRY_ON_BY_DEFAULT)
+    # fi
 fi
 
 dnl win32 options
@@ -9001,25 +9085,41 @@ fi
 
 # Run jemalloc configure script
 
-if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_JEMALLOC" -a "$MOZ_MEMORY" ; then
+if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -o -n "$MOZ_REPLACE_MALLOC"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_"
-  case "$OS_ARCH" in
-    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-      MANGLE="malloc calloc valloc free realloc posix_memalign"
-      case "$OS_ARCH" in
-        Linux)
-          MANGLE="$MANGLE memalign malloc_usable_size"
-          ;;
-        FreeBSD)
-          MANGLE="$MANGLE malloc_usable_size"
-          ;;
-      esac
-      ;;
-  esac
+  if test -n "$MOZ_REPLACE_MALLOC"; then
+    # When using replace_malloc, we always want memalign and valloc exported from jemalloc.
+    ac_configure_args="$ac_configure_args ac_cv_func_memalign=yes"
+    ac_configure_args="$ac_configure_args ac_cv_func_valloc=yes"
+  fi
+  if test -n "$MOZ_JEMALLOC3"; then
+    case "${OS_ARCH}" in
+      WINNT|Darwin)
+        # We want jemalloc functions to be kept hidden on both Mac and Windows
+        # See memory/build/mozmemory_wrap.h for details.
+        ac_configure_args="$ac_configure_args --without-export"
+        ;;
+    esac
+  elif test "${OS_ARCH}" = Darwin; then
+    # When building as a replace-malloc lib, disabling the zone allocator
+    # forces to use pthread_atfork.
+    ac_configure_args="$ac_configure_args --disable-zone-allocator"
+  fi
+  _MANGLE="malloc posix_memalign aligned_alloc calloc realloc free memalign valloc malloc_usable_size"
+  JEMALLOC_WRAPPER=
+  if test -z "$MOZ_REPLACE_MALLOC"; then
+    case "$OS_ARCH" in
+      Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+        MANGLE=$_MANGLE
+        ;;
+    esac
+  elif test -z "$MOZ_JEMALLOC3"; then
+    MANGLE=$_MANGLE
+    JEMALLOC_WRAPPER=replace_
+  fi
   if test -n "$MANGLE"; then
     MANGLED=
-    JEMALLOC_WRAPPER=
-    if test -n "$_WRAP_MALLOC"; then
+    if test -n "$_WRAP_MALLOC" -a -z "$JEMALLOC_WRAPPER"; then
       JEMALLOC_WRAPPER=__wrap_
     fi
     for mangle in ${MANGLE}; do

@@ -406,6 +406,12 @@ nsresult WebMReader::ReadMetadata(VideoInfo* aInfo,
   }
 #endif
 
+  // We can't seek in buffered regions if we have no cues.
+  bool haveCues;
+  int64_t dummy = -1;
+  haveCues = nestegg_get_cue_point(mContext, 0, -1, &dummy, &dummy) == 0;
+  mDecoder->SetMediaSeekable(haveCues);
+
   *aInfo = mInfo;
 
   *aTags = nullptr;

@@ -260,7 +260,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    protected void initializeChrome(String uri, Boolean isExternalURL) {
+    protected void initializeChrome(String uri, boolean isExternalURL) {
         super.initializeChrome(uri, isExternalURL);
 
         mBrowserToolbar.updateBackButton(false);
@@ -268,18 +268,22 @@ abstract public class BrowserApp extends GeckoApp
 
         mDoorHangerPopup.setAnchor(mBrowserToolbar.mFavicon);
 
-        if (!isExternalURL) {
-            // show about:home if we aren't restoring previous session
-            if (mRestoreMode == RESTORE_NONE) {
-                Tab tab = Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
-            } else {
-                hideAboutHome();
-                mAboutHomeStartupTimer.cancel();
-            }
-        } else {
-            int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED;
-            Tabs.getInstance().loadUrl(uri, flags);
+        if (isExternalURL || mRestoreMode != RESTORE_NONE) {
             mAboutHomeStartupTimer.cancel();
+        }
+
+        if (!mIsRestoringActivity) {
+            if (!isExternalURL) {
+                // show about:home if we aren't restoring previous session
+                if (mRestoreMode == RESTORE_NONE) {
+                    Tab tab = Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
+                } else {
+                    hideAboutHome();
+                }
+            } else {
+                int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED;
+                Tabs.getInstance().loadUrl(uri, flags);
+            }
         }
     }
 

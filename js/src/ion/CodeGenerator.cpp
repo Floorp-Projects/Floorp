@@ -1728,6 +1728,30 @@ CodeGenerator::visitOutOfLineNewObject(OutOfLineNewObject *ool)
     return true;
 }
 
+typedef js::DeclEnvObject *(*NewDeclEnvObjectFn)(JSContext *, HandleFunction);
+static const VMFunction NewDeclEnvObjectInfo =
+    FunctionInfo<NewDeclEnvObjectFn>(DeclEnvObject::createTemplateObject);
+
+bool
+CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject *lir)
+{
+    Register obj = ToRegister(lir->output());
+    JSObject *templateObj = lir->mir()->templateObj();
+    CompileInfo &info = lir->mir()->block()->info();
+
+    // If we have a template object, we can inline call object creation.
+    OutOfLineCode *ool = oolCallVM(NewDeclEnvObjectInfo, lir,
+                                   (ArgList(), ImmGCPtr(info.fun())),
+                                   StoreRegisterTo(obj));
+    if (!ool)
+        return false;
+
+    masm.newGCThing(obj, templateObj, ool->entry());
+    masm.initGCThing(obj, templateObj);
+    masm.bind(ool->rejoin());
+    return true;
+}
+
 typedef JSObject *(*NewCallObjectFn)(JSContext *, HandleShape,
                                      HandleTypeObject, HeapSlot *);
 static const VMFunction NewCallObjectInfo =

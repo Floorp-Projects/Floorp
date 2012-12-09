@@ -592,7 +592,7 @@ class Value
 #if !defined(_MSC_VER) && !defined(__sparc)
   /* To make jsval binary compatible when linking across C and C++ with MSVC,
    * JS::Value needs to be POD. Otherwise, jsval will be passed in memory
-   * in C++ but by value in C (bug 645111).
+   * in C++ but by value in C (bug 689101).
    * Same issue for SPARC ABI. (bug 737344).
    */
   private:
@@ -5358,13 +5358,6 @@ JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
  */
 extern JS_PUBLIC_API(JSString *)
 JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
-
-/*
- * Convert a dependent string into an independent one.  This function does not
- * change the string's mutability, so the thread safety comments above apply.
- */
-extern JS_PUBLIC_API(const jschar *)
-JS_UndependString(JSContext *cx, JSString *str);
 
 /*
  * For JS_DecodeBytes, set *dstlenp to the size of the destination buffer before

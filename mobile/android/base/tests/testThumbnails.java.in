@@ -108,15 +108,31 @@ public class testThumbnails extends BaseTest {
 
     private int getTopSiteThumbnailColor(String title) {
         ViewGroup topSites = (ViewGroup) getActivity().findViewById(mTopSitesId);
-        final int childCount = topSites.getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            View child = topSites.getChildAt(i);
-            TextView titleView = (TextView) child.findViewById(mTitleId);
-            if (titleView.getText().equals(title)) {
-                ImageView thumbnailView = (ImageView) child.findViewById(mThumbnailId);
-                Bitmap thumbnail = ((BitmapDrawable) thumbnailView.getDrawable()).getBitmap();
-                return thumbnail.getPixel(0, 0);
+        if (topSites != null) {
+            final int childCount = topSites.getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                View child = topSites.getChildAt(i);
+                if (child != null) {
+                    TextView titleView = (TextView) child.findViewById(mTitleId);
+                    if (titleView != null) {
+                        if (titleView.getText().equals(title)) {
+                            ImageView thumbnailView = (ImageView) child.findViewById(mThumbnailId);
+                            if (thumbnailView != null) {
+                                Bitmap thumbnail = ((BitmapDrawable) thumbnailView.getDrawable()).getBitmap();
+                                return thumbnail.getPixel(0, 0);
+                            } else {
+                                mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mThumbnailId: "+mThumbnailId);
+                            }
+                        }
+                    } else {
+                        mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mTitleId: "+mTitleId);
+                    }
+                } else {
+                    mAsserter.dumpLog("getTopSiteThumbnailColor: skipped null child at index "+i);
+                }
             }
+        } else {
+            mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mTopSitesId: "+mTopSitesId);
         }
         return -1;
     }

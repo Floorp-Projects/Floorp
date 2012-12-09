@@ -122,6 +122,22 @@ AudioChannelService::UnregisterType(AudioChannelType aType)
   mChannelCounters[aType]--;
   MOZ_ASSERT(mChannelCounters[aType] >= 0);
 
+  bool isNoChannelUsed = true;
+  for (int32_t type = AUDIO_CHANNEL_NORMAL;
+         type <= AUDIO_CHANNEL_PUBLICNOTIFICATION;
+         ++type) {
+    if (mChannelCounters[type]) {
+      isNoChannelUsed = false;
+      break;
+    }
+  }
+
+  if (isNoChannelUsed) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    obs->NotifyObservers(nullptr, "audio-channel-changed", NS_LITERAL_STRING("default").get());
+    return;
+  }
+
   // In order to avoid race conditions, it's safer to notify any existing
   // agent any time a new one is registered.
   Notify();

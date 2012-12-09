@@ -795,6 +795,13 @@ MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
     }
 
+    for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+        if (c->lastAnimationTime != 0) {
+            JS_ReportError(cx, "Can't change chunk limit if code may be preserved");
+            return JS_FALSE;
+        }
+    }
+
     double t;
     if (!JS_ValueToNumber(cx, args[0], &t))
         return JS_FALSE;

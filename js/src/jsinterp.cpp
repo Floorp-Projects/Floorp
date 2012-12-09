@@ -95,6 +95,35 @@ CallThisObjectHook(JSContext *cx, HandleObject obj, Value *argv)
     return thisp;
 }
 
+bool
+js::BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified)
+{
+    /*
+     * Check for SynthesizeFrame poisoning and fast constructors which
+     * didn't check their callee properly.
+     */
+    JS_ASSERT(!thisv.isMagic());
+    *modified = false;
+
+    if (thisv.isNullOrUndefined()) {
+        Rooted<GlobalObject*> global(cx, cx->global());
+        JSObject *thisp = JSObject::thisObject(cx, global);
+        if (!thisp)
+            return false;
+        thisv.set(ObjectValue(*thisp));
+        *modified = true;
+        return true;
+    }
+
+    if (!thisv.isObject()) {
+        if (!js_PrimitiveToObject(cx, thisv.address()))
+            return false;
+        *modified = true;
+    }
+
+    return true;
+}
+
 /*
  * ECMA requires "the global object", but in embeddings such as the browser,
  * which have multiple top-level objects (windows, frames, etc. in the DOM),
@@ -117,7 +146,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
      * Check for SynthesizeFrame poisoning and fast constructors which
      * didn't check their callee properly.
      */
-    Value thisv = call.thisv();
+    RootedValue thisv(cx, call.thisv());
     JS_ASSERT(!thisv.isMagic());
 
 #ifdef DEBUG
@@ -125,20 +154,11 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
     JS_ASSERT_IF(fun && fun->isInterpreted(), !fun->inStrictMode());
 #endif
 
-    if (thisv.isNullOrUndefined()) {
-        Rooted<GlobalObject*> global(cx, &call.callee().global());
-        JSObject *thisp = JSObject::thisObject(cx, global);
-        if (!thisp)
-            return false;
-        call.setThis(ObjectValue(*thisp));
-        return true;
-    }
-
-    if (!thisv.isObject()) {
-        if (!js_PrimitiveToObject(cx, &thisv))
-            return false;
+    bool modified;
+    if (!BoxNonStrictThis(cx, &thisv, &modified))
+        return false;
+    if (modified)
         call.setThis(thisv);
-    }
 
     return true;
 }
