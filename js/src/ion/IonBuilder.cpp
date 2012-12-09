@@ -3853,7 +3853,7 @@ IonBuilder::createThisScripted(MDefinition *callee)
     current->add(getProto);
 
     // Create this from prototype
-    MCreateThis *createThis = MCreateThis::New(callee, getProto, NULL);
+    MCreateThis *createThis = MCreateThis::New(callee, getProto);
     current->add(createThis);
 
     return createThis;
@@ -3894,10 +3894,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
     if (templateObject->type()->newScript)
         types::HeapTypeSet::WatchObjectStateChange(cx, templateObject->type());
 
-    MConstant *protoDef = MConstant::New(ObjectValue(*proto));
-    current->add(protoDef);
-
-    MCreateThis *createThis = MCreateThis::New(callee, protoDef, templateObject);
+    MCreateThisWithTemplate *createThis = MCreateThisWithTemplate::New(templateObject);
     current->add(createThis);
 
     return createThis;

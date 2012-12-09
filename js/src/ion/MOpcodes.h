@@ -30,6 +30,7 @@ namespace ion {
     _(RecompileCheck)                                                       \
     _(DefVar)                                                               \
     _(CreateThis)                                                           \
+    _(CreateThisWithTemplate)                                               \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \
