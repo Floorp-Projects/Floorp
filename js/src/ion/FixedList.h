@@ -53,7 +53,7 @@ class FixedList
     const T &operator [](size_t index) const {
         JS_ASSERT(index < length_);
         return list_[index];
-    };
+    }
 };
 
 } // namespace ion

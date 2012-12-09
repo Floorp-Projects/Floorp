@@ -304,8 +304,8 @@ public:
 class nsAccessibleDOMStringList : public nsIDOMDOMStringList
 {
 public:
-  nsAccessibleDOMStringList() {};
-  virtual ~nsAccessibleDOMStringList() {};
+  nsAccessibleDOMStringList() {}
+  virtual ~nsAccessibleDOMStringList() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMSTRINGLIST

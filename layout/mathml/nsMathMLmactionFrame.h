@@ -66,7 +66,7 @@ private:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMEVENTLISTENER
 
-    MouseListener(nsMathMLmactionFrame* aOwner) : mOwner(aOwner) { };
+    MouseListener(nsMathMLmactionFrame* aOwner) : mOwner(aOwner) { }
 
     nsMathMLmactionFrame* mOwner;
   };

@@ -60,7 +60,7 @@ public:
   NS_IMETHOD Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow* window,
                     nsIURI *actionURL, bool* cancelSubmit);
   NS_IMETHOD NotifyInvalidSubmit(nsIDOMHTMLFormElement* formNode,
-                                 nsIArray* invalidElements) { return NS_OK; };
+                                 nsIArray* invalidElements) { return NS_OK; }
   
 protected:
   mozilla::ReentrantMonitor mReentrantMonitor;
