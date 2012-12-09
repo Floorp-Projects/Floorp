@@ -236,17 +236,24 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 }
 
 bool
+LIRGenerator::visitCreateThisWithTemplate(MCreateThisWithTemplate *ins)
+{
+    LCreateThisWithTemplate *lir = new LCreateThisWithTemplate();
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitCreateThis(MCreateThis *ins)
 {
-    // Template objects permit fast initialization.
-    if (ins->hasTemplateObject()) {
-        LCreateThis *lir = new LCreateThis();
-        return define(lir, ins) && assignSafepoint(lir, ins);
+    if (ins->needNativeCheck()) {
+        JS_ASSERT(ins->type() == MIRType_Value);
+        LCreateThisV *lir = new LCreateThisV(useRegisterAtStart(ins->getCallee()),
+                                             useRegisterOrConstantAtStart(ins->getPrototype()));
+        return defineReturn(lir, ins) && assignSafepoint(lir, ins);
     }
 
-    LCreateThisVM *lir = new LCreateThisVM(useRegisterOrConstantAtStart(ins->getCallee()),
-                                           useRegisterOrConstantAtStart(ins->getPrototype()));
-
+    LCreateThisO *lir = new LCreateThisO(useRegisterOrConstantAtStart(ins->getCallee()),
+                                         useRegisterOrConstantAtStart(ins->getPrototype()));
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
