@@ -583,18 +583,6 @@ nsSupportsArray::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData)
   return running;
 }
 
-NS_IMETHODIMP_(bool)
-nsSupportsArray::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData)
-{
-  uint32_t aIndex = mCount;
-  bool    running = true;
-
-  while (running && (0 < aIndex--)) {
-    running = (*aFunc)(mArray[aIndex], aData);
-  }
-  return running;
-}
-
 NS_IMETHODIMP
 nsSupportsArray::Enumerate(nsIEnumerator* *result)
 {
