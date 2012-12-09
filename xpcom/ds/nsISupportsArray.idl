@@ -102,10 +102,4 @@ interface nsISupportsArray : nsICollection {
 extern nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult);
 
-// Construct and return a default implementation of an enumerator for nsISupportsArrays:
-extern nsresult
-NS_NewISupportsArrayEnumerator(nsISupportsArray* array,
-                               nsIBidirectionalEnumerator* *aInstancePtrResult);
-
-
 %}
