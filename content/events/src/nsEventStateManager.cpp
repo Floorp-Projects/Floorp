@@ -5458,7 +5458,7 @@ nsEventStateManager::WheelPrefs::Init(
   nsAutoCString prefNameAction(basePrefName);
   prefNameAction.AppendLiteral("action");
   int32_t action = Preferences::GetInt(prefNameAction.get(), ACTION_SCROLL);
-  if (action < ACTION_NONE || action > ACTION_LAST) {
+  if (action < int32_t(ACTION_NONE) || action > int32_t(ACTION_LAST)) {
     NS_WARNING("Unsupported action pref value, replaced with 'Scroll'.");
     action = ACTION_SCROLL;
   }
@@ -5469,7 +5469,7 @@ nsEventStateManager::WheelPrefs::Init(
   // because this pref is introduced mainly for tilt wheels.
   prefNameAction.AppendLiteral(".override_x");
   int32_t actionOverrideX = Preferences::GetInt(prefNameAction.get(), -1);
-  if (actionOverrideX < -1 || actionOverrideX > ACTION_LAST) {
+  if (actionOverrideX < -1 || actionOverrideX > int32_t(ACTION_LAST)) {
     NS_WARNING("Unsupported action override pref value, didn't override.");
     actionOverrideX = -1;
   }
