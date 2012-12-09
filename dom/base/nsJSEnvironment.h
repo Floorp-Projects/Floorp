@@ -103,7 +103,7 @@ public:
                                    JSObject** aFunctionObject);
 
   virtual nsIScriptGlobalObject *GetGlobalObject();
-  inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; };
+  inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
 
   virtual JSContext* GetNativeContext();
   virtual JSObject* GetNativeGlobal();

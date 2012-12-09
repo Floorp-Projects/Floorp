@@ -53,7 +53,7 @@ public:
         *_retval = true;
         if (aPtr != this) *_retval = false;
         return NS_OK;
-    };
+    }
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(ConsumerContext, nsIEquals)
