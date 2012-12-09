@@ -13,20 +13,16 @@ const TEST_URI = uri(TEST_URL);
 const PLACE_URL = "place:queryType=0&sort=8&maxResults=10";
 const PLACE_URI = uri(PLACE_URL);
 
-var gTests = [
+var tests = [
   {
     desc: "Remove some visits outside valid timeframe from an unbookmarked URI",
     run:   function () {
       print("Add 10 visits for the URI from way in the past.");
+      let visits = [];
       for (let i = 0; i < 10; i++) {
-        histsvc.addVisit(TEST_URI,
-                         NOW - 1000 - i,
-                         null,
-                         histsvc.TRANSITION_TYPED,
-                         false,
-                         0);
+        visits.push({ uri: TEST_URI, visitDate: NOW - 1000 - i });
       }
-      promiseAsyncUpdates().then(this.continue_run, this);
+      addVisits(visits, this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -66,22 +62,19 @@ var gTests = [
     desc: "Remove some visits outside valid timeframe from a bookmarked URI",
     run:   function () {
       print("Add 10 visits for the URI from way in the past.");
+      let visits = [];
       for (let i = 0; i < 10; i++) {
-        histsvc.addVisit(TEST_URI,
-                         NOW - 1000 - i,
-                         null,
-                         histsvc.TRANSITION_TYPED,
-                         false,
-                         0);
+        visits.push({ uri: TEST_URI, visitDate: NOW - 1000 - i });
       }
+      addVisits(visits, function () {
+        print("Bookmark the URI.");
+        bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
+                             TEST_URI,
+                             bmsvc.DEFAULT_INDEX,
+                             "bookmark title");
 
-      print("Bookmark the URI.");
-      bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
-                           TEST_URI,
-                           bmsvc.DEFAULT_INDEX,
-                           "bookmark title");
-
-      promiseAsyncUpdates().then(this.continue_run.bind(this));
+        promiseAsyncUpdates().then(this.continue_run.bind(this));
+      }.bind(this));
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -121,15 +114,11 @@ var gTests = [
     desc: "Remove some visits from an unbookmarked URI",
     run:   function () {
       print("Add 10 visits for the URI from now to 9 usecs in the past.");
+      let visits = [];
       for (let i = 0; i < 10; i++) {
-        histsvc.addVisit(TEST_URI,
-                         NOW - i,
-                         null,
-                         histsvc.TRANSITION_TYPED,
-                         false,
-                         0);
+        visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      promiseAsyncUpdates().then(this.continue_run.bind(this));
+      addVisits(visits, this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -170,21 +159,18 @@ var gTests = [
     desc: "Remove some visits from a bookmarked URI",
     run:   function () {
       print("Add 10 visits for the URI from now to 9 usecs in the past.");
+      let visits = [];
       for (let i = 0; i < 10; i++) {
-        histsvc.addVisit(TEST_URI,
-                         NOW - i,
-                         null,
-                         histsvc.TRANSITION_TYPED,
-                         false,
-                         0);
+        visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-
-      print("Bookmark the URI.");
-      bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
-                           TEST_URI,
-                           bmsvc.DEFAULT_INDEX,
-                           "bookmark title");
-      promiseAsyncUpdates().then(this.continue_run.bind(this));
+      addVisits(visits, function () {
+        print("Bookmark the URI.");
+        bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
+                             TEST_URI,
+                             bmsvc.DEFAULT_INDEX,
+                             "bookmark title");
+        promiseAsyncUpdates().then(this.continue_run.bind(this));
+      }.bind(this));
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -225,15 +211,11 @@ var gTests = [
     desc: "Remove all visits from an unbookmarked URI",
     run:   function () {
       print("Add some visits for the URI.");
+      let visits = [];
       for (let i = 0; i < 10; i++) {
-        histsvc.addVisit(TEST_URI,
-                         NOW - i,
-                         null,
-                         histsvc.TRANSITION_TYPED,
-                         false,
-                         0);
+        visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      promiseAsyncUpdates().then(this.continue_run.bind(this));
+      addVisits(visits, this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -264,15 +246,11 @@ var gTests = [
     desc: "Remove all visits from an unbookmarked place: URI",
     run:   function () {
       print("Add some visits for the URI.");
+      let visits = [];
       for (let i = 0; i < 10; i++) {
-        histsvc.addVisit(PLACE_URI,
-                         NOW - i,
-                         null,
-                         histsvc.TRANSITION_TYPED,
-                         false,
-                         0);
+        visits.push({ uri: PLACE_URI, visitDate: NOW - i });
       }
-      promiseAsyncUpdates().then(this.continue_run.bind(this));
+      addVisits(visits, this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -308,21 +286,18 @@ var gTests = [
     desc: "Remove all visits from a bookmarked URI",
     run:   function () {
       print("Add some visits for the URI.");
+      let visits = [];
       for (let i = 0; i < 10; i++) {
-        histsvc.addVisit(TEST_URI,
-                         NOW - i,
-                         null,
-                         histsvc.TRANSITION_TYPED,
-                         false,
-                         0);
+        visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-
-      print("Bookmark the URI.");
-      bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
-                           TEST_URI,
-                           bmsvc.DEFAULT_INDEX,
-                           "bookmark title");
-      promiseAsyncUpdates().then(this.continue_run.bind(this));
+      addVisits(visits, function () {
+        print("Bookmark the URI.");
+        bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
+                             TEST_URI,
+                             bmsvc.DEFAULT_INDEX,
+                             "bookmark title");
+        promiseAsyncUpdates().then(this.continue_run.bind(this));
+      }.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -392,8 +367,8 @@ function run_test()
 }
 
 function run_next_test() {
-  if (gTests.length) {
-    let test = gTests.shift();
+  if (tests.length) {
+    let test = tests.shift();
     print("\n ***Test: " + test.desc);
     promiseClearHistory().then(function() {
       remove_all_bookmarks();

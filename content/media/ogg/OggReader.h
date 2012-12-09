@@ -51,12 +51,6 @@ public:
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
 
-  // We use bisection to seek in buffered range, but we don't allow seeking in a
-  // chained ogg file.
-  virtual bool IsSeekableInBufferedRanges() {
-    return true;
-  }
-
 private:
   // This monitor should be taken when reading or writing to mIsChained.
   ReentrantMonitor mMonitor;

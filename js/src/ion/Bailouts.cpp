@@ -519,14 +519,15 @@ ion::RecompileForInlining()
     return true;
 }
 
+// Initialize the decl env Object and the call object of the current frame.
 bool
-ion::EnsureHasCallObject(JSContext *cx, StackFrame *fp)
+ion::EnsureHasScopeObjects(JSContext *cx, StackFrame *fp)
 {
     if (fp->isFunctionFrame() &&
         fp->fun()->isHeavyweight() &&
         !fp->hasCallObj())
     {
-        return fp->initCallObject(cx);
+        return fp->initFunctionScopeObjects(cx);
     }
     return true;
 }
@@ -596,7 +597,7 @@ ion::ThunkToInterpreter(Value *vp)
     IonActivation *activation = cx->runtime->ionActivation;
     BailoutClosure *br = activation->takeBailout();
 
-    if (!EnsureHasCallObject(cx, cx->fp()))
+    if (!EnsureHasScopeObjects(cx, cx->fp()))
         return Interpret_Error;
 
     // By default we set the forbidOsr flag on the ion script, but if a GC

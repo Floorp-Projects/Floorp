@@ -79,6 +79,10 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
 }
 
 function run_test() {
+  run_next_test();
+}
+
+add_task(function test_removeAllPages() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -89,7 +93,7 @@ function run_test() {
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // This visit will be expired.
-    hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);
+    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
     let id = bs.insertBookmark(bs.unfiledBookmarksFolder, pageURI,
                                bs.DEFAULT_INDEX, null);
     // Will persist because it's an EXPIRE_NEVER item anno.
@@ -114,7 +118,7 @@ function run_test() {
     // All page annotations related to these expired pages are expected to
     // expire as well.
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
-    hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);
+    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "expire", "test", 0, as.EXPIRE_NEVER);
     as.setPageAnnotation(pageURI, "expire_session", "test", 0, as.EXPIRE_SESSION);
     add_old_anno(pageURI, "expire_days", "test", as.EXPIRE_DAYS, 8);
@@ -122,43 +126,37 @@ function run_test() {
     add_old_anno(pageURI, "expire_months", "test", as.EXPIRE_MONTHS, 181);
   }
 
-  // Observe expirations.
-  observer = {
-    observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-
-      ["expire_days", "expire_weeks", "expire_months", "expire_session",
-       "expire"].forEach(function(aAnno) {
-        let pages = as.getPagesWithAnnotation(aAnno);
-        do_check_eq(pages.length, 0);
-      });
-
-      ["expire_days", "expire_weeks", "expire_months", "expire_session",
-       "expire"].forEach(function(aAnno) {
-        let items = as.getItemsWithAnnotation(aAnno);
-        do_check_eq(items.length, 0);
-      });
-
-      ["persist"].forEach(function(aAnno) {
-        let pages = as.getPagesWithAnnotation(aAnno);
-        do_check_eq(pages.length, 5);
-      });
-
-      ["persist"].forEach(function(aAnno) {
-        let items = as.getItemsWithAnnotation(aAnno);
-        do_check_eq(items.length, 5);
-        items.forEach(function(aItemId) {
-          // Check item exists.
-          bs.getItemIndex(aItemId);
-        });
-      });
-
-      do_test_finished();
-    }
-  };
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-
-  // Expire all visits for the bookmarks.
+  // Expire all visits for the bookmarks.  This does the same thing as the
+  // promiseClearHistory helper, but it is made explicit here because
+  // removeAllPages is the function we are testing.
+  let promise =
+      promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
   hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
-  do_test_pending();
-}
+  yield promise;
+
+  ["expire_days", "expire_weeks", "expire_months", "expire_session",
+   "expire"].forEach(function(aAnno) {
+    let pages = as.getPagesWithAnnotation(aAnno);
+    do_check_eq(pages.length, 0);
+  });
+
+  ["expire_days", "expire_weeks", "expire_months", "expire_session",
+   "expire"].forEach(function(aAnno) {
+    let items = as.getItemsWithAnnotation(aAnno);
+    do_check_eq(items.length, 0);
+  });
+
+  ["persist"].forEach(function(aAnno) {
+    let pages = as.getPagesWithAnnotation(aAnno);
+    do_check_eq(pages.length, 5);
+  });
+
+  ["persist"].forEach(function(aAnno) {
+    let items = as.getItemsWithAnnotation(aAnno);
+    do_check_eq(items.length, 5);
+    items.forEach(function(aItemId) {
+      // Check item exists.
+      bs.getItemIndex(aItemId);
+    });
+  });
+});

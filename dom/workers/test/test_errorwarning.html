@@ -1,0 +1,95 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test javascript.options.strict in Workers
+-->
+<head>
+  <title>Test javascript.options.strict in Workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+  var errors = 0;
+  function errorHandler(e) {
+    ok(true, "An error has been received!");
+    errors++;
+  }
+
+  function test_noErrors() {
+    errors = 0;
+
+    var worker = new Worker('errorwarning_worker.js');
+    worker.onerror = errorHandler;
+    worker.onmessage = function(e) {
+      if (e.data.type == 'ignore')
+        return;
+
+      if (e.data.type == 'error') {
+        errorHandler();
+        return;
+      }
+
+      if (e.data.type == 'finish') {
+        ok(errors == 0, "Here we are with 0 errors!");
+        runTests();
+        return;
+      }
+    }
+
+    onerror = errorHandler;
+    worker.postMessage({ loop: 5, errors: false });
+  }
+
+  function test_errors() {
+    errors = 0;
+
+    var worker = new Worker('errorwarning_worker.js');
+    worker.onerror = errorHandler;
+    worker.onmessage = function(e) {
+      if (e.data.type == 'ignore')
+        return;
+
+      if (e.data.type == 'error') {
+        errorHandler();
+        return;
+      }
+
+      if (e.data.type == 'finish') {
+        ok(errors != 0, "Here we are with errors!");
+        runTests();
+        return;
+      }
+    }
+
+    onerror = errorHandler;
+    worker.postMessage({ loop: 5, errors: true });
+  }
+
+  var tests = [ test_noErrors, test_errors ];
+  function runTests() {
+    var test = tests.shift();
+    if (test) {
+      test();
+    } else {
+      SimpleTest.finish();
+    }
+  }
+
+  runTests();
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

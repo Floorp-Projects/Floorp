@@ -9,19 +9,6 @@ var histsvc = PlacesUtils.history;
 var bhist = PlacesUtils.bhistory;
 var bmsvc = PlacesUtils.bookmarks;
 
-// adds a test URI visit to the database, and checks for a valid place ID
-function add_visit(aURI, aDate) {
-  var date = aDate || Date.now() * 1000;
-  var placeID = histsvc.addVisit(aURI,
-                                 date,
-                                 null, // no referrer
-                                 histsvc.TRANSITION_TYPED, // user typed in URL bar
-                                 false, // not redirect
-                                 0);
-  do_check_true(placeID > 0);
-  return placeID;
-}
-
 var resultObserver = {
   insertedNode: null,
   nodeInserted: function(parent, node, newIndex) {
@@ -71,7 +58,7 @@ var resultObserver = {
     }
   },
   invalidatedContainer: null,
-  invalidateContainer: function(node) {    
+  invalidateContainer: function(node) {
     this.invalidatedContainer = node;
   },
   sortingMode: null,
@@ -119,61 +106,63 @@ add_test(function check_history_query() {
 
   // nsINavHistoryResultObserver.nodeInserted
   // add a visit
-  add_visit(testURI);
-  do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
+  addVisits(testURI, function() {
+    do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
 
-  // nsINavHistoryResultObserver.nodeHistoryDetailsChanged
-  // adding a visit causes nodeHistoryDetailsChanged for the folder
-  do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
+    // nsINavHistoryResultObserver.nodeHistoryDetailsChanged
+    // adding a visit causes nodeHistoryDetailsChanged for the folder
+    do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
-  // nsINavHistoryResultObserver.itemTitleChanged for a leaf node
-  addVisits({ uri: testURI, title: "baz" }, function () {
-    do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
+    // nsINavHistoryResultObserver.itemTitleChanged for a leaf node
+    addVisits({ uri: testURI, title: "baz" }, function () {
+      do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
 
-    // nsINavHistoryResultObserver.nodeRemoved
-    var removedURI = uri("http://google.com");
-    add_visit(removedURI);
-    bhist.removePage(removedURI);
-    do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
+      // nsINavHistoryResultObserver.nodeRemoved
+      var removedURI = uri("http://google.com");
+      addVisits(removedURI, function() {
+        bhist.removePage(removedURI);
+        do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
 
-    // XXX nsINavHistoryResultObserver.nodeReplaced
-    // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
+        // XXX nsINavHistoryResultObserver.nodeReplaced
+        // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
 
-    // nsINavHistoryResultObserver.invalidateContainer
-    bhist.removePagesFromHost("mozilla.com", false);
-    do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
+        // nsINavHistoryResultObserver.invalidateContainer
+        bhist.removePagesFromHost("mozilla.com", false);
+        do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
 
-    // nsINavHistoryResultObserver.sortingChanged
-    resultObserver.invalidatedContainer = null;
-    result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
-    do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
-    do_check_eq(resultObserver.invalidatedContainer, result.root);
+        // nsINavHistoryResultObserver.sortingChanged
+        resultObserver.invalidatedContainer = null;
+        result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
+        do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
+        do_check_eq(resultObserver.invalidatedContainer, result.root);
 
-    // nsINavHistoryResultObserver.invalidateContainer
-    bhist.removeAllPages();
-    do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
+        // nsINavHistoryResultObserver.invalidateContainer
+        bhist.removeAllPages();
+        do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
 
-    // nsINavHistoryResultObserver.batching
-    do_check_false(resultObserver.inBatchMode);
-    histsvc.runInBatchMode({
-      runBatched: function (aUserData) {
-        do_check_true(resultObserver.inBatchMode);
-      }
-    }, null);
-    do_check_false(resultObserver.inBatchMode);
-    bmsvc.runInBatchMode({
-      runBatched: function (aUserData) {
-        do_check_true(resultObserver.inBatchMode);
-      }
-    }, null);
-    do_check_false(resultObserver.inBatchMode);
+        // nsINavHistoryResultObserver.batching
+        do_check_false(resultObserver.inBatchMode);
+        histsvc.runInBatchMode({
+          runBatched: function (aUserData) {
+            do_check_true(resultObserver.inBatchMode);
+          }
+        }, null);
+        do_check_false(resultObserver.inBatchMode);
+        bmsvc.runInBatchMode({
+          runBatched: function (aUserData) {
+            do_check_true(resultObserver.inBatchMode);
+          }
+        }, null);
+        do_check_false(resultObserver.inBatchMode);
 
-    // nsINavHistoryResultObserver.containerClosed
-    root.containerOpen = false;
-    do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
-    result.removeObserver(resultObserver);
-    resultObserver.reset();
-    promiseAsyncUpdates().then(run_next_test);
+        // nsINavHistoryResultObserver.containerClosed
+        root.containerOpen = false;
+        do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
+        result.removeObserver(resultObserver);
+        resultObserver.reset();
+        promiseAsyncUpdates().then(run_next_test);
+      });
+    });
   });
 });
 

@@ -334,6 +334,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // the initial number of arguments declared was correct.
     uint32_t passedArgs_;
 
+#ifdef JS_CPU_ARM_HARDFP
+    uint32_t usedIntSlots_;
+    uint32_t usedFloatSlots_;
+    uint32_t padding_;
+#else
     // ARM treats arguments as a vector in registers/memory, that looks like:
     // { r0, r1, r2, r3, [sp], [sp,+4], [sp,+8] ... }
     // usedSlots_ keeps track of how many of these have been used.
@@ -341,6 +346,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // can effectively use between one and three slots depending on its size and
     // alignment requirements
     uint32_t usedSlots_;
+#endif
     bool dynamicAlignment_;
 
     bool enoughMemory_;

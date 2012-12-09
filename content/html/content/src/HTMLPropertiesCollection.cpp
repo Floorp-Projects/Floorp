@@ -24,7 +24,7 @@ static PLDHashOperator
 TraverseNamedProperties(const nsAString& aKey, PropertyNodeList* aEntry, void* aData)
 {
   nsCycleCollectionTraversalCallback* cb = static_cast<nsCycleCollectionTraversalCallback*>(aData);
-  cb->NoteXPCOMChild(static_cast<nsIDOMPropertyNodeList*>(aEntry));
+  cb->NoteXPCOMChild(static_cast<nsINodeList*>(aEntry));
   return PL_DHASH_NEXT;
 }
 
@@ -72,13 +72,11 @@ HTMLPropertiesCollection::~HTMLPropertiesCollection()
 
 NS_INTERFACE_TABLE_HEAD(HTMLPropertiesCollection)
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-    NS_INTERFACE_TABLE4(HTMLPropertiesCollection,
-                        nsIDOMHTMLPropertiesCollection,
+    NS_INTERFACE_TABLE3(HTMLPropertiesCollection,
                         nsIDOMHTMLCollection,
                         nsIHTMLCollection,
                         nsIMutationObserver)
     NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(HTMLPropertiesCollection)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLPropertiesCollection)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(HTMLPropertiesCollection)
@@ -178,21 +176,6 @@ HTMLPropertiesCollection::NamedItem(const nsAString& aName)
   return propertyList;
 }
 
-NS_IMETHODIMP
-HTMLPropertiesCollection::NamedItem(const nsAString& aName,
-                                    nsIDOMPropertyNodeList** aResult)
-{
-  NS_ADDREF(*aResult = NamedItem(aName));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLPropertiesCollection::GetNames(nsIDOMDOMStringList** aResult)
-{
-  NS_ADDREF(*aResult = Names());
-  return NS_OK;
-}
-
 void
 HTMLPropertiesCollection::AttributeChanged(nsIDocument *aDocument, Element* aElement,
                                            int32_t aNameSpaceID, nsIAtom* aAttribute,
@@ -282,7 +265,7 @@ HTMLPropertiesCollection::EnsureFresh()
     }
   }
 }
-  
+
 static Element*
 GetElementByIdForConnectedSubtree(nsIContent* aContent, const nsIAtom* aId)
 {
@@ -293,7 +276,7 @@ GetElementByIdForConnectedSubtree(nsIContent* aContent, const nsIAtom* aId)
     }
     aContent = aContent->GetNextNode();
   } while(aContent);
-  
+
   return NULL;
 }
 
@@ -301,7 +284,7 @@ void
 HTMLPropertiesCollection::CrawlProperties()
 {
   nsIDocument* doc = mRoot->GetCurrentDoc();
- 
+
   const nsAttrValue* attr = mRoot->GetParsedAttr(nsGkAtoms::itemref);
   if (attr) {
     for (uint32_t i = 0; i < attr->GetAtomCount(); i++) {
@@ -317,7 +300,7 @@ HTMLPropertiesCollection::CrawlProperties()
       }
     }
   }
-  
+
   CrawlSubtree(mRoot);
 }
 
@@ -337,15 +320,15 @@ HTMLPropertiesCollection::CrawlSubtree(Element* aElement)
       if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::itemprop) &&
           !mProperties.Contains(element)) {
         mProperties.AppendElement(static_cast<nsGenericHTMLElement*>(element));
-      }                 
-                     
+      }
+
       if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::itemscope)) {
         aContent = element->GetNextNonChildNode(aElement);
-      } else {          
+      } else {
         aContent = element->GetNextNode(aElement);
-      }                 
-    }                     
-  }                    
+      }
+    }
+  }
 }
 
 void
@@ -460,13 +443,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PropertyNodeList)
 
 NS_INTERFACE_TABLE_HEAD(PropertyNodeList)
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-    NS_INTERFACE_TABLE4(PropertyNodeList,
-                        nsIDOMPropertyNodeList,
+    NS_INTERFACE_TABLE3(PropertyNodeList,
                         nsIDOMNodeList,
                         nsINodeList,
                         nsIMutationObserver)
     NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(PropertyNodeList)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PropertyNodeList)
 NS_INTERFACE_MAP_END
 
 void
@@ -485,40 +466,6 @@ PropertyNodeList::GetValues(JSContext* aCx, nsTArray<JS::Value >& aResult,
     }
     aResult.AppendElement(v);
   }
-}
-
-NS_IMETHODIMP
-PropertyNodeList::GetValues(nsIVariant** aValues)
-{
-  EnsureFresh();
-  nsCOMPtr<nsIWritableVariant> out = new nsVariant();
-
-  // We have to use an nsTArray<nsIVariant*> here and do manual refcounting because 
-  // nsWritableVariant::SetAsArray takes an nsIVariant**.
-  nsTArray<nsIVariant*> values;
-
-  uint32_t length = mElements.Length();
-  if (length == 0) {
-    out->SetAsEmptyArray();
-  } else {
-    for (uint32_t i = 0; i < length; ++i) {
-      nsIVariant* itemValue;
-      mElements.ElementAt(i)->GetItemValue(&itemValue);
-      values.AppendElement(itemValue);
-    }
-    out->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,
-                    &NS_GET_IID(nsIVariant),
-                    values.Length(),
-                    values.Elements());
-  }
-
-  out.forget(aValues);
-
-  for (uint32_t i = 0; i < values.Length(); ++i) {
-    NS_RELEASE(values[i]);
-  }
-
-  return NS_OK;
 }
 
 void

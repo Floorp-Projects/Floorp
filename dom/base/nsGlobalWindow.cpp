@@ -150,6 +150,8 @@
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
 #include "nsIURIFixup.h"
+#include "nsIAppStartup.h"
+#include "nsToolkitCompsCID.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
@@ -6933,9 +6935,19 @@ public:
       }
     }
 
+    bool skipNukeCrossCompartment = false;
+#ifndef DEBUG
+    nsCOMPtr<nsIAppStartup> appStartup =
+      do_GetService(NS_APPSTARTUP_CONTRACTID);
+
+    if (appStartup) {
+      appStartup->GetShuttingDown(&skipNukeCrossCompartment);
+    }
+#endif
+
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-    if (window) {
-      nsGlobalWindow* currentInner = 
+    if (!skipNukeCrossCompartment && window) {
+      nsGlobalWindow* currentInner =
         window->IsInnerWindow() ? static_cast<nsGlobalWindow*>(window.get()) :
                                   static_cast<nsGlobalWindow*>(window->GetCurrentInnerWindow());
       NS_ENSURE_TRUE(currentInner, NS_OK);

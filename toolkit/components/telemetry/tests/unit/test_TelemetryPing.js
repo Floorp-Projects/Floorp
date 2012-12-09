@@ -101,7 +101,7 @@ function telemetryObserver(aSubject, aTopic, aData) {
 
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.saveHistograms(histogramsFile, true);
-  TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
+  TelemetryPing.testLoadHistograms(histogramsFile, true);
   telemetry_ping();
 }
 
@@ -286,7 +286,7 @@ function runAsyncTestObserver(aSubject, aTopic, aData) {
       telemetry_ping();
     }, "telemetry-test-load-complete", false);
 
-    TelemetryPing.observe(histogramsFile, "test-load-histograms", "async");
+    TelemetryPing.testLoadHistograms(histogramsFile, false);
   }, "telemetry-test-save-complete", false);
   TelemetryPing.saveHistograms(histogramsFile, false);
 }
@@ -315,7 +315,7 @@ function runInvalidJSONTest() {
   do_check_true(histogramsFile.exists());
   
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
-  TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
+  TelemetryPing.testLoadHistograms(histogramsFile, true);
   do_check_false(histogramsFile.exists());
 }
 
@@ -327,7 +327,7 @@ function runOldPingFileTest() {
 
   let mtime = histogramsFile.lastModifiedTime;
   histogramsFile.lastModifiedTime = mtime - 8 * 24 * 60 * 60 * 1000; // 8 days.
-  TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
+  TelemetryPing.testLoadHistograms(histogramsFile, true);
   do_check_false(histogramsFile.exists());
 }
 

@@ -19,42 +19,49 @@ let testData = [
     isVisit: true,
     uri: "file:///directory/1",
     lastVisit: today,
+    title: "test visit",
     isInQuery: true
   },
   {
     isVisit: true,
     uri: "http://example.com/1",
     lastVisit: today,
+    title: "test visit",
     isInQuery: true
   },
   {
     isVisit: true,
     uri: "http://example.com/2",
     lastVisit: today,
+    title: "test visit",
     isInQuery: true
   },
   {
     isVisit: true,
     uri: "file:///directory/2",
     lastVisit: olderthansixmonths,
+    title: "test visit",
     isInQuery: true
   },
   {
     isVisit: true,
     uri: "http://example.com/3",
     lastVisit: olderthansixmonths,
+    title: "test visit",
     isInQuery: true
   },
   {
     isVisit: true,
     uri: "http://example.com/4",
     lastVisit: olderthansixmonths,
+    title: "test visit",
     isInQuery: true
   },
   {
     isVisit: true,
     uri: "http://example.net/1",
     lastVisit: olderthansixmonths + 1,
+    title: "test visit",
     isInQuery: true
   }
 ];
@@ -75,6 +82,7 @@ let testDataAddedLater = [
     isVisit: true,
     uri: "http://example.com/5",
     lastVisit: olderthansixmonths,
+    title: "test visit",
     isInQuery: true,
     levels: [1,1]
   },
@@ -82,6 +90,7 @@ let testDataAddedLater = [
     isVisit: true,
     uri: "http://example.com/6",
     lastVisit: olderthansixmonths,
+    title: "test visit",
     isInQuery: true,
     levels: [1,1]
   },
@@ -89,6 +98,7 @@ let testDataAddedLater = [
     isVisit: true,
     uri: "http://example.com/7",
     lastVisit: today,
+    title: "test visit",
     isInQuery: true,
     levels: [0,1]
   },
@@ -96,12 +106,20 @@ let testDataAddedLater = [
     isVisit: true,
     uri: "file:///directory/3",
     lastVisit: today,
+    title: "test visit",
     isInQuery: true,
     levels: [0,0]
   }
 ];
-function run_test() {
-  populateDB(testData);
+
+function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_sort_date_site_grouping()
+{
+  yield task_populateDB(testData);
 
   // On Linux, the (local files) folder is shown after sites unlike Mac/Windows.
   // Thus, we avoid running this test on Linux but this should be re-enabled
@@ -137,7 +155,7 @@ function run_test() {
 
   // Test live updating.
   testDataAddedLater.forEach(function(visit) {
-    populateDB([visit]);
+    yield task_populateDB([visit]);
     let oldLength = testData.length;
     let i = visit.levels[0];
     let j = visit.levels[1];
@@ -153,7 +171,7 @@ function run_test() {
   }
 
   root.containerOpen = false;
-}
+});
 
 function checkFirstLevel(index, node, roots) {
     PlacesUtils.asContainer(node).containerOpen = true;

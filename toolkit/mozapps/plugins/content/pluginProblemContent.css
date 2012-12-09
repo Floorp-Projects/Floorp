@@ -4,12 +4,16 @@
 
 @namespace html url(http://www.w3.org/1999/xhtml);
 
+/* Do not change this without also changing the appropriate line in
+ * browser-plugins.js (near where this file is mentioned). */
 html|object:not([width]), html|object[width=""],
 html|embed:not([width]), html|embed[width=""],
 html|applet:not([width]), html|applet[width=""] {
   width: 240px;
 }
 
+/* Do not change this without also changing the appropriate line in
+ * browser-plugins.js (near where this file is mentioned). */
 html|object:not([height]), html|object[height=""],
 html|embed:not([height]), html|embed[height=""],
 html|applet:not([height]), html|applet[height=""] {

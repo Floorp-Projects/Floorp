@@ -158,7 +158,7 @@ this.DOMApplicationRegistry = {
     // twice
     this._readManifests(ids, (function readCSPs(aResults) {
       aResults.forEach(function registerManifest(aResult) {
-        this.webapps[aResult.id].csp = manifest.csp || "";
+        this.webapps[aResult.id].csp = aResult.manifest.csp || "";
       }, this);
     }).bind(this));
 
@@ -1413,7 +1413,10 @@ this.DOMApplicationRegistry = {
 
       let download = self.downloads[aApp.manifestURL];
       app.downloading = false;
-      app.installState = download.previousState;
+      // If there were not enough storage to download the packaged app we
+      // won't have a record of the download details, so we just set the
+      // installState to 'pending'.
+      app.installState = download ? download.previousState : "pending";
       self.broadcastMessage("Webapps:PackageEvent",
                             { type: "error",
                               manifestURL:  aApp.manifestURL,

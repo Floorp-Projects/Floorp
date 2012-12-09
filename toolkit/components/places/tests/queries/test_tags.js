@@ -8,7 +8,7 @@
  * Tests bookmark and history queries with tags.  See bug 399799.
  */
 
-// Add your tests here.  Each is a function that's called to run the test.
+// Add your tests here.  Each is a task that's called to run the test.
 [
 
   function tags_getter_setter()
@@ -31,7 +31,6 @@
     do_log_info("Setting some dupe tags, tags getter return unique tags");
     [query, dummy] = makeQuery(["foo", "foo", "bar", "foo", "baz", "bar"]);
     setsAreEqual(query.tags, ["bar", "baz", "foo"], true);
-    run_next_test();
   },
 
   function invalid_setter_calls()
@@ -102,21 +101,18 @@
       do_throw("Passing array of nsISupportsStrings to SetTags should fail");
     }
     catch (exc) {}
-    run_next_test();
   },
 
   function not_setting_tags()
   {
     do_log_info("Not setting tags at all should not affect query URI");
     checkQueryURI();
-    run_next_test();
   },
 
   function empty_array_tags()
   {
     do_log_info("Setting tags with an empty array should not affect query URI");
     checkQueryURI([]);
-    run_next_test();
   },
 
   function set_tags()
@@ -133,7 +129,6 @@
       "アスキーでございません",
       "あいうえお",
     ]);
-    run_next_test();
   },
 
   function no_tags_tagsAreNot()
@@ -141,7 +136,6 @@
     do_log_info("Not setting tags at all but setting tagsAreNot should " +
                 "affect query URI");
     checkQueryURI(null, true);
-    run_next_test();
   },
 
   function empty_array_tags_tagsAreNot()
@@ -149,7 +143,6 @@
     do_log_info("Setting tags with an empty array and setting tagsAreNot " +
                 "should affect query URI");
     checkQueryURI([], true);
-    run_next_test();
   },
 
   function ()
@@ -167,14 +160,13 @@
       "アスキーでございません",
       "あいうえお",
     ], true);
-    run_next_test();
   },
 
   function tag_to_uri()
   {
     do_log_info("Querying history on tag associated with a URI should return " +
                 "that URI");
-    doWithVisit(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo"]);
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
       [query, opts] = makeQuery(["bar"]);
@@ -188,7 +180,7 @@
   {
     do_log_info("Querying history on many tags associated with a URI should " +
                 "return that URI");
-    doWithVisit(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bar"]);
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
       [query, opts] = makeQuery(["foo", "baz"]);
@@ -204,7 +196,7 @@
   {
     do_log_info("Specifying the same tag multiple times in a history query " +
                 "should not matter");
-    doWithVisit(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "foo"]);
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
       [query, opts] = makeQuery(["foo", "foo", "foo", "bar", "bar", "baz"]);
@@ -216,7 +208,7 @@
   {
     do_log_info("Querying history on many tags associated with a URI and " +
                 "tags not associated with that URI should not return that URI");
-    doWithVisit(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bogus"]);
       executeAndCheckQueryResults(query, opts, []);
       [query, opts] = makeQuery(["foo", "bar", "bogus"]);
@@ -229,7 +221,7 @@
   function nonexistent_tags()
   {
     do_log_info("Querying history on nonexistent tags should return no results");
-    doWithVisit(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["bogus"]);
       executeAndCheckQueryResults(query, opts, []);
       [query, opts] = makeQuery(["bogus", "gnarly"]);
@@ -241,7 +233,7 @@
   {
     do_log_info("Querying bookmarks on tag associated with a URI should " +
                 "return that URI");
-    doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -258,7 +250,7 @@
   {
     do_log_info("Querying bookmarks on many tags associated with a URI " +
                 "should return that URI");
-    doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bar"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -278,7 +270,7 @@
   {
     do_log_info("Specifying the same tag multiple times in a bookmark query " +
                 "should not matter");
-    doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "foo"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -292,7 +284,7 @@
   {
     do_log_info("Querying bookmarks on many tags associated with a URI and " +
           "tags not associated with that URI should not return that URI");
-    doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bogus"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
       executeAndCheckQueryResults(query, opts, []);
@@ -308,7 +300,7 @@
   function nonexistent_tags_bookmark()
   {
     do_log_info("Querying bookmarks on nonexistent tag should return no results");
-    doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+    yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["bogus"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
       executeAndCheckQueryResults(query, opts, []);
@@ -330,7 +322,7 @@
     do_log_info("Add visits and tag the URIs");
     for (let [pURI, tags] in Iterator(urisAndTags)) {
       let nsiuri = uri(pURI);
-      addVisit(nsiuri);
+      yield promiseAddVisits(nsiuri);
       if (tags)
         PlacesUtils.tagging.tagURI(nsiuri, tags);
     }
@@ -368,7 +360,7 @@
       if (tags)
         PlacesUtils.tagging.untagURI(nsiuri, tags);
     }
-    cleanDatabase(run_next_test);
+    yield task_cleanDatabase();
   },
 
   function tagsAreNot_bookmarks()
@@ -426,7 +418,7 @@
       if (tags)
         PlacesUtils.tagging.untagURI(nsiuri, tags);
     }
-    cleanDatabase(run_next_test);
+    yield task_cleanDatabase();
   },
 
   function duplicate_tags() {
@@ -456,7 +448,7 @@
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
 
     PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
-    cleanDatabase(run_next_test);
+    yield task_cleanDatabase();
   },
 
   function folder_named_as_tag()
@@ -481,7 +473,7 @@
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
 
     PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
-    cleanDatabase(run_next_test);
+    yield task_cleanDatabase();
   },
 
   function ORed_queries() {
@@ -501,7 +493,7 @@
     do_log_info("Add visits and tag the URIs");
     for (let [pURI, tags] in Iterator(urisAndTags)) {
       let nsiuri = uri(pURI);
-      addVisit(nsiuri);
+      yield promiseAddVisits(nsiuri);
       if (tags)
         PlacesUtils.tagging.tagURI(nsiuri, tags);
     }
@@ -551,10 +543,10 @@
       if (tags)
         PlacesUtils.tagging.untagURI(nsiuri, tags);
     }
-    cleanDatabase(run_next_test);
+    yield task_cleanDatabase();
   },
 
-].forEach(add_test);
+].forEach(add_task);
 
 // The tag keys in query URIs, i.e., "place:tag=foo&!tags=1"
 //                                          ---     -----
@@ -581,28 +573,11 @@ function addBookmark(aURI) {
 }
 
 /**
- * Adds a visit to history.
- *
- * @param aURI
- *        URI of the page (an nsIURI)
+ * Asynchronous task that removes all pages from history and bookmarks.
  */
-function addVisit(aURI) {
-  var visitId = PlacesUtils.history.addVisit(aURI,
-                                             Date.now() * 1000,
-                                             null,
-                                             Ci.nsINavHistoryService.TRANSITION_LINK,
-                                             false,
-                                             0);
-  do_log_info("Sanity check: addVisit should not fail");
-  do_check_true(visitId > 0);
-}
-
-/**
- * Removes all pages from history and bookmarks.
- */
-function cleanDatabase(aCallback) {
+function task_cleanDatabase(aCallback) {
   remove_all_bookmarks();
-  promiseClearHistory().then(aCallback);
+  yield promiseClearHistory();
 }
 
 /**
@@ -626,39 +601,39 @@ function checkQueryURI(aTags, aTagsAreNot) {
 }
 
 /**
- * Executes a callback function in a "scoped" database state.  A bookmark
- * is added and tagged before the callback is called, and afterward the
- * database is cleared.
+ * Asynchronous task that executes a callback task in a "scoped" database state.
+ * A bookmark is added and tagged before the callback is called, and afterward
+ * the database is cleared.
  *
  * @param aTags
  *        A bookmark will be added and tagged with this array of tags
  * @param aCallback
- *        A function that will be called after the bookmark has been tagged
+ *        A task function that will be called after the bookmark has been tagged
  */
-function doWithBookmark(aTags, aCallback) {
+function task_doWithBookmark(aTags, aCallback) {
   addBookmark(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, aTags);
-  aCallback(TEST_URI);
+  yield aCallback(TEST_URI);
   PlacesUtils.tagging.untagURI(TEST_URI, aTags);
-  cleanDatabase(run_next_test);
+  yield task_cleanDatabase();
 }
 
 /**
- * Executes a callback function in a "scoped" database state.  A history visit
- * is added and tagged before the callback is called, and afterward the
- * database is cleared.
+ * Asynchronous task that executes a callback function in a "scoped" database
+ * state.  A history visit is added and tagged before the callback is called,
+ * and afterward the database is cleared.
  *
  * @param aTags
  *        A history visit will be added and tagged with this array of tags
  * @param aCallback
  *        A function that will be called after the visit has been tagged
  */
-function doWithVisit(aTags, aCallback) {
-  addVisit(TEST_URI);
+function task_doWithVisit(aTags, aCallback) {
+  yield promiseAddVisits(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, aTags);
-  aCallback(TEST_URI);
+  yield aCallback(TEST_URI);
   PlacesUtils.tagging.untagURI(TEST_URI, aTags);
-  cleanDatabase(run_next_test);
+  yield task_cleanDatabase();
 }
 
 /**
