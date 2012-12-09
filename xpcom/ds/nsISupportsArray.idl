@@ -30,9 +30,6 @@ class nsISupportsArray;
 #define NS_SUPPORTSARRAY_CONTRACTID "@mozilla.org/supports-array;1"
 #define NS_SUPPORTSARRAY_CLASSNAME "Supports Array"
  
-nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
-                      nsISupportsArray* array);
 %}
 
 [scriptable, uuid(241addc8-3608-4e73-8083-2fd6fa09eba2)]
