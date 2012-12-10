@@ -571,18 +571,6 @@ nsSupportsArray::SizeTo(int32_t aSize)
   return true;
 }
 
-NS_IMETHODIMP_(bool)
-nsSupportsArray::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData)
-{
-  int32_t aIndex = -1;
-  bool    running = true;
-
-  while (running && (++aIndex < (int32_t)mCount)) {
-    running = (*aFunc)(mArray[aIndex], aData);
-  }
-  return running;
-}
-
 NS_IMETHODIMP
 nsSupportsArray::Enumerate(nsIEnumerator* *result)
 {
@@ -594,15 +582,6 @@ nsSupportsArray::Enumerate(nsIEnumerator* *result)
   return NS_OK;
 }
 
-static bool
-CopyElement(nsISupports* aElement, void *aData)
-{
-  nsresult rv;
-  nsISupportsArray* newArray = (nsISupportsArray*)aData;
-  rv = newArray->AppendElement(aElement);
-  return NS_SUCCEEDED(rv);
-}
-
 NS_IMETHODIMP
 nsSupportsArray::Clone(nsISupportsArray** aResult)
 {
@@ -610,8 +589,13 @@ nsSupportsArray::Clone(nsISupportsArray** aResult)
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(newArray));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool ok = EnumerateForwards(CopyElement, newArray);
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+  uint32_t count = 0;
+  Count(&count);
+  for (uint32_t i = 0; i < count; i++) {
+    if (!newArray->InsertElementAt(mArray[i], i)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 
   newArray.forget(aResult);
   return NS_OK;
