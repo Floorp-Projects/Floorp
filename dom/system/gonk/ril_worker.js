@@ -5259,12 +5259,17 @@ let RIL = {
            " commandQualifier = " + cmdDetails.commandQualifier);
     }
 
-    let param = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
-    if (param) {
-      cmdDetails.rilMessageType = "stkcommand";
-      cmdDetails.options = param;
-      RIL.sendDOMMessage(cmdDetails);
+    // STK_CMD_MORE_TIME need not to propagate event to DOM.
+    if (cmdDetails.typeOfCommand == STK_CMD_MORE_TIME) {
+      RIL.sendStkTerminalResponse({
+        command: cmdDetails,
+        resultCode: STK_RESULT_OK});
+      return;
     }
+
+    cmdDetails.rilMessageType = "stkcommand";
+    cmdDetails.options = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
+    RIL.sendDOMMessage(cmdDetails);
   },
 
   /**
@@ -8150,9 +8155,6 @@ let StkCommandParamsFactory = {
       case STK_CMD_REFRESH:
         param = this.processRefresh(cmdDetails, ctlvs);
         break;
-      case STK_CMD_MORE_TIME:
-        param = this.processMoreTime(cmdDetails, ctlvs);
-        break;
       case STK_CMD_POLL_INTERVAL:
         param = this.processPollInterval(cmdDetails, ctlvs);
         break;
@@ -8217,7 +8219,7 @@ let StkCommandParamsFactory = {
       case STK_REFRESH_FILE_CHANGE:
       case STK_REFRESH_NAA_INIT_AND_FILE_CHANGE:
         let ctlv = StkProactiveCmdHelper.searchForTag(
-          COMPREHENSIONTLV_FILE_LIST, ctlvs);
+          COMPREHENSIONTLV_TAG_FILE_LIST, ctlvs);
         if (ctlv) {
           let list = ctlv.value.fileList;
           if (DEBUG) {
@@ -8227,21 +8229,6 @@ let StkCommandParamsFactory = {
         }
         break;
     }
-    return {};
-  },
-
-  /**
-   * Construct a param for MORE TIME.
-   *
-   * @param cmdDetails
-   *        The value object of CommandDetails TLV.
-   * @param ctlvs
-   *        The all TLVs in this proactive command.
-   */
-  processMoreTime: function processMoreTime(cmdDetails, ctlvs) {
-    RIL.sendStkTerminalResponse({
-      command: cmdDetails,
-      resultCode: STK_RESULT_OK});
     return null;
   },
 
@@ -8275,7 +8262,7 @@ let StkCommandParamsFactory = {
    *        The all TLVs in this proactive command.
    */
   processPollOff: function processPollOff(cmdDetails, ctlvs) {
-    return {};
+    return null;
   },
 
   /**
