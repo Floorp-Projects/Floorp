@@ -433,6 +433,37 @@ ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 //
+// This_Fallback
+//
+
+static bool
+DoThisFallback(JSContext *cx, ICThis_Fallback *stub, HandleValue thisv, MutableHandleValue ret)
+{
+    ret.set(thisv);
+    bool modified;
+    if (!BoxNonStrictThis(cx, ret, &modified))
+        return false;
+    return true;
+}
+
+typedef bool (*DoThisFallbackFn)(JSContext *, ICThis_Fallback *, HandleValue, MutableHandleValue);
+static const VMFunction DoThisFallbackInfo = FunctionInfo<DoThisFallbackFn>(DoThisFallback);
+
+bool
+ICThis_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoThisFallbackInfo, masm);
+}
+
+//
 // Compare_Fallback
 //
 

@@ -53,7 +53,8 @@ class StackValue
         Register,
         Stack,
         LocalSlot,
-        ArgSlot
+        ArgSlot,
+        ThisSlot
 #ifdef DEBUG
         // In debug builds, assert Kind is initialized.
         , Uninitialized
@@ -123,6 +124,9 @@ class StackValue
     void setArgSlot(uint32_t slot) {
         kind_ = ArgSlot;
         data.arg.slot = slot;
+    }
+    void setThis() {
+        kind_ = ThisSlot;
     }
     void setStack() {
         kind_ = Stack;
@@ -215,6 +219,10 @@ class FrameInfo
         StackValue *sv = rawPush();
         sv->setArgSlot(arg);
     }
+    inline void pushThis() {
+        StackValue *sv = rawPush();
+        sv->setThis();
+    }
     inline void pushScratchValue() {
         masm.pushValue(addressOfScratchValue());
         StackValue *sv = rawPush();
@@ -227,6 +235,12 @@ class FrameInfo
     inline Address addressOfArg(size_t arg) const {
         JS_ASSERT(arg < nargs());
         return Address(BaselineFrameReg, BaselineFrame::offsetOfArg(arg));
+    }
+    inline Address addressOfThis() const {
+        return Address(BaselineFrameReg, BaselineFrame::offsetOfThis());
+    }
+    inline size_t offsetOfCallee() const {
+        return BaselineFrame::offsetOfCalleeToken();
     }
     inline Address addressOfStackValue(const StackValue *value) const {
         JS_ASSERT(value->kind() == StackValue::Stack);

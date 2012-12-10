@@ -267,6 +267,8 @@ class ICEntry
                                 \
     _(TypeUpdate_Fallback)      \
                                 \
+    _(This_Fallback)            \
+                                \
     _(Compare_Fallback)         \
     _(Compare_Int32)            \
                                 \
@@ -975,6 +977,36 @@ class ICTypeUpdate_Fallback : public ICStub
 
         ICTypeUpdate_Fallback *getStub(ICStubSpace *space) {
             return ICTypeUpdate_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// This
+//      JSOP_THIS
+
+class ICThis_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICThis_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::This_Fallback, stubCode) {}
+
+  public:
+    static inline ICThis_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICThis_Fallback>(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::This_Fallback) {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICThis_Fallback::New(space, getStubCode());
         }
     };
 };

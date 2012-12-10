@@ -19,10 +19,10 @@ namespace ion {
 class BaselineCompilerShared
 {
   protected:
-    JSContext *cx;
-    JSScript *script;
-    jsbytecode *pc;
-    MacroAssembler masm;
+    JSContext *             cx;
+    RootedScript            script;
+    jsbytecode *            pc;
+    MacroAssembler          masm;
 
     FrameInfo frame;
 
@@ -56,6 +56,10 @@ class BaselineCompilerShared
 
     bool addICLoadLabel(CodeOffsetLabel offset) {
         return icLoadLabels_.append(offset);
+    }
+
+    JSFunction *function() const {
+        return script->function();
     }
 };
 
