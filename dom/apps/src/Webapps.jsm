@@ -168,6 +168,10 @@ this.DOMApplicationRegistry = {
   },
 
   updatePermissionsForApp: function updatePermissionsForApp(aId) {
+    if (!this.webapps[aId]) {
+      return;
+    }
+
     // Install the permissions for this app, as if we were updating
     // to cleanup the old ones if needed.
     this._readManifests([{ id: aId }], (function(aResult) {
@@ -190,6 +194,71 @@ this.DOMApplicationRegistry = {
       origin: app.origin,
       localId: app.localId
     });
+  },
+
+  // Installs a 3rd party packaged app.
+  installPreinstalledPackage: function installPreinstalledPackage(aId) {
+    let app = this.webapps[aId];
+    let baseDir;
+    try {
+      baseDir = FileUtils.getDir("coreAppsDir", ["webapps", aId], true, true);
+    } catch(e) {
+      // In ENG builds, we don't have apps in coreAppsDir.
+      return;
+    }
+
+    let updateFile = baseDir.clone();
+    updateFile.append("update.webapp");
+    if (!updateFile.exists()) {
+      // The update manifest is missing, bail out.
+      return;
+    }
+
+    debug("Installing 3rd party packaged app : " + aId +
+          " from " + baseDir.path);
+
+    // We copy this app to DIRECTORY_NAME/$aId, and set the base path as needed.
+    let destDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
+    destDir.permissions = FileUtils.PERMS_DIRECTORY;
+
+    ["application.zip", "update.webapp"]
+      .forEach(function(aFile) {
+        let file = baseDir.clone();
+        file.append(aFile);
+        file.copyTo(destDir, aFile);
+        let newFile = destDir.clone();
+        newFile.append(aFile);
+        newFile.permissions = FileUtils.PERMS_FILE;
+      });
+
+    app.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true)
+                            .path;
+    app.origin = "app://" + aId;
+    app.removable = true;
+
+    // Extract the manifest.webapp file from application.zip.
+    let zipFile = baseDir.clone();
+    zipFile.append("application.zip");
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
+                      .createInstance(Ci.nsIZipReader);
+    try {
+      debug("Opening " + zipFile.path);
+      zipReader.open(zipFile);
+      if (!zipReader.hasEntry("manifest.webapp")) {
+        throw "MISSING_MANIFEST";
+      }
+      let manifestFile = destDir.clone();
+      manifestFile.append("manifest.webapp");
+      zipReader.extract("manifest.webapp", manifestFile);
+      manifestFile.permissions = FileUtils.PERMS_FILE;
+    } catch(e) {
+      // If we are unable to extract the manifest, cleanup and remove this app.
+      debug("Cleaning up: " + e);
+      destDir.remove(true);
+      delete this.webapps[aId];
+    } finally {
+      zipReader.close();
+    }
   },
 
   // Implements the core of bug 787439
@@ -291,11 +360,18 @@ this.DOMApplicationRegistry = {
 
     let onAppsLoaded = (function onAppsLoaded() {
       if (runUpdate) {
-        // At first run, set up the permissions
+        // At first run, install preloaded apps and set up their permissions.
         for (let id in this.webapps) {
-          this.updatePermissionsForApp(id);
+          this.installPreinstalledPackage(id);
+          if (!this.webapps[id]) {
+            continue;
+          }
           this.updateOfflineCacheForApp(id);
+          this.updatePermissionsForApp(id);
         }
+        // Need to update the persisted list of apps since
+        // installPreinstalledPackage() removes the ones failing to install.
+        this._saveApps();
       }
       this.registerAppsHandlers(runUpdate);
     }).bind(this);
