@@ -376,6 +376,37 @@ void set_relative_reloc(Elf_Rela *rel, Elf *elf, unsigned int value) {
     rel->r_addend = value;
 }
 
+void maybe_split_segment(Elf *elf, ElfSegment *segment)
+{
+    std::list<ElfSection *>::iterator it = segment->begin();
+    for (ElfSection *last = *(it++); it != segment->end(); last = *(it++)) {
+        // When two consecutive non-SHT_NOBITS sections are apart by more
+        // than the alignment of the section, the second can be moved closer
+        // to the first, but this requires the segment to be split.
+        if (((*it)->getType() != SHT_NOBITS) && (last->getType() != SHT_NOBITS) &&
+            ((*it)->getOffset() - last->getOffset() - last->getSize() > segment->getAlign())) {
+            // Probably very wrong.
+            Elf_Phdr phdr;
+            phdr.p_type = PT_LOAD;
+            phdr.p_vaddr = 0;
+            phdr.p_paddr = phdr.p_vaddr + segment->getVPDiff();
+            phdr.p_flags = segment->getFlags();
+            phdr.p_align = segment->getAlign();
+            phdr.p_filesz = (unsigned int)-1;
+            phdr.p_memsz = (unsigned int)-1;
+            ElfSegment *newSegment = new ElfSegment(&phdr);
+            elf->insertSegmentAfter(segment, newSegment);
+            for (; it != segment->end(); ++it) {
+                newSegment->addSection(*it);
+            }
+            for (it = newSegment->begin(); it != newSegment->end(); it++) {
+                segment->removeSection(*it);
+            }
+            break;
+        }
+    }
+}
+
 template <typename Rel_Type>
 int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type2, bool force)
 {
@@ -523,16 +554,23 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         }
     }
 
+    section->rels.assign(new_rels.begin(), new_rels.end());
+    section->shrink(new_rels.size() * section->getEntSize());
+
     ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, original_init);
     relhackcode->insertBefore(section);
     relhack->insertAfter(relhackcode);
-
-    section->rels.assign(new_rels.begin(), new_rels.end());
-    section->shrink(new_rels.size() * section->getEntSize());
     if (section->getOffset() + section->getSize() >= old_end) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
     }
+
+    // Adjust PT_LOAD segments
+    for (ElfSegment *segment = elf->getSegmentByType(PT_LOAD); segment;
+         segment = elf->getSegmentByType(PT_LOAD, segment)) {
+        maybe_split_segment(elf, segment);
+    }
+
     // Ensure Elf sections will be at their final location.
     elf->normalize();
     ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
