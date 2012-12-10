@@ -13,6 +13,7 @@
 #include "nsIStringStream.h"
 #include "nsCRT.h"
 #include "nsComponentManagerUtils.h"
+#include "nsCharsetAlias.h"
 
 static int32_t          gInstanceCount = 0;
 
@@ -257,22 +258,39 @@ nsScriptableUnicodeConverter::InitConverter()
   mEncoder = nullptr;
 
   nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv) || !ccm) {
+    return rv;
+  }
 
-  if (NS_SUCCEEDED(rv) && ccm) {
-    // get charset atom due to getting unicode converter
-    
-    // get an unicode converter
-    rv = ccm->GetUnicodeEncoder(mCharset.get(), getter_AddRefs(mEncoder));
-    if(NS_SUCCEEDED(rv)) {
-      rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (PRUnichar)'?');
-      if(NS_SUCCEEDED(rv)) {
-        rv = mIsInternal ?
-          ccm->GetUnicodeDecoderInternal(mCharset.get(),
-                                         getter_AddRefs(mDecoder)) :
-          ccm->GetUnicodeDecoder(mCharset.get(),
-                                 getter_AddRefs(mDecoder));
-      }
-    }
+  // get an unicode converter
+  rv = ccm->GetUnicodeEncoder(mCharset.get(), getter_AddRefs(mEncoder));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (PRUnichar)'?');
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoCString charset;
+  rv = mIsInternal ? nsCharsetAlias::GetPreferredInternal(mCharset, charset)
+                   : nsCharsetAlias::GetPreferred(mCharset, charset);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = ccm->GetUnicodeDecoderRaw(charset.get(), getter_AddRefs(mDecoder));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // The UTF-8 decoder used to throw regardless of the error behavior.
+  // Simulating the old behavior for compatibility with legacy callers
+  // (including addons). If callers want a control over the behavior,
+  // they should switch to TextDecoder.
+  if (charset.EqualsLiteral("UTF-8")) {
+    mDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
   }
 
   return rv ;
