@@ -14,6 +14,30 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output" xmlns:html="http://www.w3.org/1999/xhtml">
+    <html:span step="-2" id="http://www.some-fictitious-zoo.com/mammals/lion">Lion</html:span>
+    <html:span id="http://www.some-fictitious-zoo.com/mammals/hippopotamus">HIPPOPOTAMUS</html:span>
+    <vbox>
+      <html:p step="2" id="http://www.some-fictitious-zoo.com/mammals/lion">
+        <html:span title="Lion"/>
+      </html:p>
+      <html:p id="http://www.some-fictitious-zoo.com/mammals/africanelephant">
+        <html:span title="African Elephant"/>
+      </html:p>
+      <html:p step="-1" id="http://www.some-fictitious-zoo.com/mammals/polarbear">
+        <html:span title="Polar Bear"/>
+      </html:p>
+      <html:p id="http://www.some-fictitious-zoo.com/mammals/gorilla">
+        <html:span title="Gorilla"/>
+      </html:p>
+    </vbox>
+    <html:span step="5" id="http://www.some-fictitious-zoo.com/mammals/chimpanzee">Chimpanzee</html:span>
+    <html:span id="http://www.some-fictitious-zoo.com/mammals/llama">LLAMA</html:span>
+    <html:span step="1" id="http://www.some-fictitious-zoo.com/mammals/polarbear">Polar Bear</html:span>
+    <html:span id="http://www.some-fictitious-zoo.com/mammals/aardvark">aardvark</html:span>
+    <html:span step="-3" id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo">Nine-banded Armadillo</html:span>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,30 +50,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = true;
 var notWorkingYetDynamic = true;
-var expectedOutput =
-<output xmlns:html="http://www.w3.org/1999/xhtml">
-  <html:span step="-2" id="http://www.some-fictitious-zoo.com/mammals/lion">Lion</html:span>
-  <html:span id="http://www.some-fictitious-zoo.com/mammals/hippopotamus">HIPPOPOTAMUS</html:span>
-  <vbox>
-    <html:p step="2" id="http://www.some-fictitious-zoo.com/mammals/lion">
-      <html:span title="Lion"/>
-    </html:p>
-    <html:p id="http://www.some-fictitious-zoo.com/mammals/africanelephant">
-      <html:span title="African Elephant"/>
-    </html:p>
-    <html:p step="-1" id="http://www.some-fictitious-zoo.com/mammals/polarbear">
-      <html:span title="Polar Bear"/>
-    </html:p>
-    <html:p id="http://www.some-fictitious-zoo.com/mammals/gorilla">
-      <html:span title="Gorilla"/>
-    </html:p>
-  </vbox>
-  <html:span step="5" id="http://www.some-fictitious-zoo.com/mammals/chimpanzee">Chimpanzee</html:span>
-  <html:span id="http://www.some-fictitious-zoo.com/mammals/llama">LLAMA</html:span>
-  <html:span step="1" id="http://www.some-fictitious-zoo.com/mammals/polarbear">Polar Bear</html:span>
-  <html:span id="http://www.some-fictitious-zoo.com/mammals/aardvark">aardvark</html:span>
-  <html:span step="-3" id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo">Nine-banded Armadillo</html:span>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1
