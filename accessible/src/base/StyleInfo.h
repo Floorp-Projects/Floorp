@@ -17,7 +17,7 @@ class StyleInfo
 {
 public:
   StyleInfo(dom::Element* aElement, nsIPresShell* aPresShell);
-  ~StyleInfo() { };
+  ~StyleInfo() { }
 
   void Display(nsAString& aValue);
   void TextAlign(nsAString& aValue);

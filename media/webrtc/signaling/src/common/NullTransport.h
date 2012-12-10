@@ -32,7 +32,7 @@ public:
 
   NullTransport() {}
 
-  virtual ~NullTransport() {};
+  virtual ~NullTransport() {}
 
 private:
   NullTransport(const NullTransport& other) MOZ_DELETE;

@@ -49,8 +49,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
      * is not safe to unwrap, operations requiring full access to the underlying
      * object (via UnwrapObjectChecked) will throw. Otherwise, they will succeed.
      */
-    void setSafeToUnwrap(bool safe) { mSafeToUnwrap = safe; };
-    bool isSafeToUnwrap() { return mSafeToUnwrap; };
+    void setSafeToUnwrap(bool safe) { mSafeToUnwrap = safe; }
+    bool isSafeToUnwrap() { return mSafeToUnwrap; }
 
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto,
                          JSObject *parent, Wrapper *handler);

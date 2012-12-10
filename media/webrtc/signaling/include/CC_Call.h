@@ -20,7 +20,7 @@ namespace CSF
         CC_Call () { }
 
     public:
-        virtual ~CC_Call () {};
+        virtual ~CC_Call () {}
 
 		virtual void setRemoteWindow (VideoWindowHandle window) = 0;
 

@@ -47,7 +47,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            camera: {
                              app: DENY_ACTION,
-                             privileged: PROMPT_ACTION,
+                             privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            alarms: {
@@ -234,6 +234,11 @@ this.PermissionsTable =  { geolocation: {
                              certified: ALLOW_ACTION,
                              channels: ["normal", "content", "notification",
                                "alarm", "telephony", "ringer", "publicnotification"]
+                           },
+                           "open-remote-window": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
                            },
                          };
 

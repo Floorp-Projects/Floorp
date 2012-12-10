@@ -125,8 +125,8 @@ class LinearScanAllocator : public LiveRangeAllocator<LinearScanVirtualRegister>
     void validateIntervals();
     void validateAllocations();
 #else
-    inline void validateIntervals() { };
-    inline void validateAllocations() { };
+    inline void validateIntervals() { }
+    inline void validateAllocations() { }
 #endif
 
 #ifdef JS_NUNBOX32

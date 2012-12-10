@@ -28,7 +28,7 @@ class DocAccessible;
 class Notification
 {
 public:
-  virtual ~Notification() { };
+  virtual ~Notification() { }
 
   NS_INLINE_DECL_REFCOUNTING(Notification)
 

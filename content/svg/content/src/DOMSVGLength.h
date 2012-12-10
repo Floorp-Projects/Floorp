@@ -95,7 +95,7 @@ public:
     if (mList) {
       mList->mItems[mListIndex] = nullptr;
     }
-  };
+  }
 
   /**
    * Create an unowned copy of an owned length. The caller is responsible for

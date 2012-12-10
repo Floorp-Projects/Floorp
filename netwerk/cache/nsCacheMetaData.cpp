@@ -6,7 +6,6 @@
 
 #include "nsCacheMetaData.h"
 #include "nsICacheEntryDescriptor.h"
-#include "prmem.h"
 
 const char *
 nsCacheMetaData::GetElement(const char * key)
@@ -152,7 +151,7 @@ nsresult
 nsCacheMetaData::EnsureBuffer(uint32_t bufSize)
 {
     if (mBufferSize < bufSize) {
-        char * buf = (char *)PR_REALLOC(mBuffer, bufSize);
+        char * buf = (char *)moz_realloc(mBuffer, bufSize);
         if (!buf) {
             return NS_ERROR_OUT_OF_MEMORY;
         }

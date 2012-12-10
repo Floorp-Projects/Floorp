@@ -114,7 +114,7 @@ public:
   imgStatusTracker& GetStatusTracker();
 
   // Get the current principal of the image. No AddRefing.
-  inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); };
+  inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); }
 
   // Resize the cache entry to 0 if it exists
   void ResetCacheEntry();
