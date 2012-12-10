@@ -47,17 +47,6 @@ function createFavicon(fileName) {
   };
 }
 
-// adds a test URI visit to the database
-function addVisit(aURI) {
-  let time = Date.now() * 1000;
-  histsvc.addVisit(aURI,
-                   time,
-                   null, // no referrer
-                   histsvc.TRANSITION_TYPED, // user typed in URL bar
-                   false, // not redirect
-                   0);
-}
-
 function checkCallbackSucceeded(callbackMimetype, callbackData, sourceMimetype, sourceData) {
   do_check_eq(callbackMimetype, sourceMimetype);
   do_check_true(compareArrays(callbackData, sourceData));
@@ -69,16 +58,18 @@ function run_test() {
   run_next_test();
 };
 
-add_test(function test_replaceFaviconData_validHistoryURI() {
+add_task(function test_replaceFaviconData_validHistoryURI() {
   do_log_info("test replaceFaviconData for valid history uri");
 
   let pageURI = uri("http://test1.bar/");
-  addVisit(pageURI);
+  yield promiseAddVisits(pageURI);
 
   let favicon = createFavicon("favicon1.png");
 
   iconsvc.replaceFaviconData(favicon.uri, favicon.data, favicon.data.length,
     favicon.mimetype);
+
+  let deferSetAndFetchFavicon = Promise.defer();
   iconsvc.setAndFetchFaviconForPage(pageURI, favicon.uri, true,
     PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     function test_replaceFaviconData_validHistoryURI_check(aURI, aDataLen, aData, aMimeType) {
@@ -87,16 +78,19 @@ add_test(function test_replaceFaviconData_validHistoryURI() {
         pageURI, favicon.mimetype, favicon.data,
         function test_replaceFaviconData_validHistoryURI_callback() {
           favicon.file.remove(false);
-          promiseClearHistory().then(run_next_test);
+          deferSetAndFetchFavicon.resolve();
         });
     });
+  yield deferSetAndFetchFavicon.promise;
+
+  yield promiseClearHistory();
 });
 
-add_test(function test_replaceFaviconData_overrideDefaultFavicon() {
+add_task(function test_replaceFaviconData_overrideDefaultFavicon() {
   do_log_info("test replaceFaviconData to override a later setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test2.bar/");
-  addVisit(pageURI);
+  yield promiseAddVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon2.png");
   let secondFavicon = createFavicon("favicon3.png");
@@ -104,6 +98,8 @@ add_test(function test_replaceFaviconData_overrideDefaultFavicon() {
   iconsvc.replaceFaviconData(
     firstFavicon.uri, secondFavicon.data, secondFavicon.data.length,
     secondFavicon.mimetype);
+
+  let deferSetAndFetchFavicon = Promise.defer();
   iconsvc.setAndFetchFaviconForPage(
     pageURI, firstFavicon.uri, true,
     PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
@@ -114,20 +110,24 @@ add_test(function test_replaceFaviconData_overrideDefaultFavicon() {
         function test_replaceFaviconData_overrideDefaultFavicon_callback() {
           firstFavicon.file.remove(false);
           secondFavicon.file.remove(false);
-          promiseClearHistory().then(run_next_test);
+          deferSetAndFetchFavicon.resolve();
         });
     });
+  yield deferSetAndFetchFavicon.promise;
+
+  yield promiseClearHistory();
 });
 
-add_test(function test_replaceFaviconData_replaceExisting() {
+add_task(function test_replaceFaviconData_replaceExisting() {
   do_log_info("test replaceFaviconData to override a previous setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test3.bar");
-  addVisit(pageURI);
+  yield promiseAddVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon4.png");
   let secondFavicon = createFavicon("favicon5.png");
 
+  let deferSetAndFetchFavicon = Promise.defer();
   iconsvc.setAndFetchFaviconForPage(
     pageURI, firstFavicon.uri, true,
     PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
@@ -145,18 +145,21 @@ add_test(function test_replaceFaviconData_replaceExisting() {
               function test_replaceFaviconData_overrideDefaultFavicon_secondCallback() {
                 firstFavicon.file.remove(false);
                 secondFavicon.file.remove(false);
-                promiseClearHistory().then(run_next_test);
+                deferSetAndFetchFavicon.resolve();
               });
           });
         });
     });
+  yield deferSetAndFetchFavicon.promise;
+
+  yield promiseClearHistory();
 });
 
-add_test(function test_replaceFaviconData_unrelatedReplace() {
+add_task(function test_replaceFaviconData_unrelatedReplace() {
   do_log_info("test replaceFaviconData to not make unrelated changes");
 
   let pageURI = uri("http://test4.bar/");
-  addVisit(pageURI);
+  yield promiseAddVisits(pageURI);
 
   let favicon = createFavicon("favicon6.png");
   let unrelatedFavicon = createFavicon("favicon7.png");
@@ -164,6 +167,8 @@ add_test(function test_replaceFaviconData_unrelatedReplace() {
   iconsvc.replaceFaviconData(
     unrelatedFavicon.uri, unrelatedFavicon.data, unrelatedFavicon.data.length,
     unrelatedFavicon.mimetype);
+
+  let deferSetAndFetchFavicon = Promise.defer();
   iconsvc.setAndFetchFaviconForPage(
     pageURI, favicon.uri, true,
     PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
@@ -174,12 +179,15 @@ add_test(function test_replaceFaviconData_unrelatedReplace() {
         function test_replaceFaviconData_unrelatedReplace_callback() {
           favicon.file.remove(false);
           unrelatedFavicon.file.remove(false);
-          promiseClearHistory().then(run_next_test);
+          deferSetAndFetchFavicon.resolve();
         });
     });
+  yield deferSetAndFetchFavicon.promise;
+
+  yield promiseClearHistory();
 });
 
-add_test(function test_replaceFaviconData_badInputs() {
+add_task(function test_replaceFaviconData_badInputs() {
   do_log_info("test replaceFaviconData to throw on bad inputs");
 
   let favicon = createFavicon("favicon8.png");
@@ -215,14 +223,15 @@ add_test(function test_replaceFaviconData_badInputs() {
   }
 
   favicon.file.remove(false);
-  promiseClearHistory().then(run_next_test);
+
+  yield promiseClearHistory();
 });
 
-add_test(function test_replaceFaviconData_twiceReplace() {
+add_task(function test_replaceFaviconData_twiceReplace() {
   do_log_info("test replaceFaviconData on multiple replacements");
 
   let pageURI = uri("http://test5.bar/");
-  addVisit(pageURI);
+  yield promiseAddVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon9.png");
   let secondFavicon = createFavicon("favicon10.png");
@@ -234,6 +243,7 @@ add_test(function test_replaceFaviconData_twiceReplace() {
     firstFavicon.uri, secondFavicon.data, secondFavicon.data.length,
     secondFavicon.mimetype);
 
+  let deferSetAndFetchFavicon = Promise.defer();
   iconsvc.setAndFetchFaviconForPage(
     pageURI, firstFavicon.uri, true,
     PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
@@ -244,7 +254,10 @@ add_test(function test_replaceFaviconData_twiceReplace() {
         function test_replaceFaviconData_twiceReplace_callback() {
           firstFavicon.file.remove(false);
           secondFavicon.file.remove(false);
-          promiseClearHistory().then(run_next_test);
+          deferSetAndFetchFavicon.resolve();
         });
     });
+  yield deferSetAndFetchFavicon.promise;
+
+  yield promiseClearHistory();
 });

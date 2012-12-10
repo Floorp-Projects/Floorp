@@ -20,7 +20,9 @@ DIST_INSTALL = 1
 endif
 
 CSRCS := $(notdir $(wildcard $(srcdir)/src/src/*.c))
-ifneq ($(OS_TARGET),Darwin)
+# Only OSX needs the zone allocation implementation, but only if
+# replace-malloc is not enabled.
+ifneq ($(OS_TARGET)$(MOZ_REPLACE_MALLOC),Darwin)
 CSRCS := $(filter-out zone.c,$(CSRCS))
 endif
 

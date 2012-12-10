@@ -985,11 +985,12 @@ bool
 nsIFrame::IsTransformed() const
 {
   return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-          (GetStyleDisplay()->HasTransform() ||
+          ((GetStyleDisplay()->HasTransform() && IsFrameOfType(eSupportsCSSTransforms)) ||
            IsSVGTransformed() ||
            (mContent &&
             nsLayoutUtils::HasAnimationsForCompositor(mContent,
                                                       eCSSProperty_transform) &&
+            IsFrameOfType(eSupportsCSSTransforms) &&
             mContent->GetPrimaryFrame() == this)));
 }
 
@@ -4744,8 +4745,7 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     gfx3DMatrix result =
-      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0), scaleFactor, nullptr,
-                                                      nullptr, nullptr, nullptr, nullptr, aOutAncestor);
+      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0), scaleFactor, nullptr, aOutAncestor);
     // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */

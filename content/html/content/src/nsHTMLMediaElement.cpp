@@ -1960,6 +1960,7 @@ bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
     { "notification",       AUDIO_CHANNEL_NOTIFICATION },
     { "alarm",              AUDIO_CHANNEL_ALARM },
     { "telephony",          AUDIO_CHANNEL_TELEPHONY },
+    { "ringer",             AUDIO_CHANNEL_RINGER },
     { "publicnotification", AUDIO_CHANNEL_PUBLICNOTIFICATION },
     { 0 }
   };
@@ -3100,8 +3101,13 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
     }
   }
 
-  if (mPlayingThroughTheAudioChannel) {
-    UpdateChannelMuteState();
+  if (mPlayingThroughTheAudioChannel && mAudioChannelAgent) {
+    bool hidden = false;
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(ownerDoc);
+    if (domDoc) {
+      domDoc->GetHidden(&hidden);
+      mAudioChannelAgent->SetVisibilityState(!hidden);
+    }
   }
 
   AddRemoveSelfReference();
@@ -3510,32 +3516,16 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
   return container ? container->GetImageContainer() : nullptr;
 }
 
-nsresult nsHTMLMediaElement::UpdateChannelMuteState()
+nsresult nsHTMLMediaElement::UpdateChannelMuteState(bool aCanPlay)
 {
   // Only on B2G we mute the nsHTMLMediaElement following the rules of
   // AudioChannelService.
 #ifdef MOZ_B2G
-  bool hidden = false;
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-  if (!domDoc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = domDoc->GetHidden(&hidden);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool mute = false;
-
-  nsRefPtr<AudioChannelService> audioChannelService = AudioChannelService::GetAudioChannelService();
-  if (audioChannelService) {
-    mute = audioChannelService->GetMuted(mAudioChannelType, hidden);
-  }
-
   // We have to mute this channel:
-  if (mute && !mChannelMuted) {
+  if (!aCanPlay && !mChannelMuted) {
     mChannelMuted = true;
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptbegin"));
-  } else if (!mute && mChannelMuted) {
+  } else if (aCanPlay && mChannelMuted) {
     mChannelMuted = false;
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptend"));
   }
@@ -3556,22 +3546,30 @@ void nsHTMLMediaElement::UpdateAudioChannelPlayingState()
   if (playingThroughTheAudioChannel != mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
 
-    nsRefPtr<AudioChannelService> audioChannelService = AudioChannelService::GetAudioChannelService();
-    if (!audioChannelService) {
-      return;
+    if (!mAudioChannelAgent) {
+      nsresult rv;
+      mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
+      if (!mAudioChannelAgent) {
+        return;
+      }
+      mAudioChannelAgent->Init( mAudioChannelType, this);
     }
 
     if (mPlayingThroughTheAudioChannel) {
-      audioChannelService->RegisterMediaElement(this, mAudioChannelType);
+      bool canPlay;
+      mAudioChannelAgent->StartPlaying(&canPlay);
     } else {
-      audioChannelService->UnregisterMediaElement(this);
+      mAudioChannelAgent->StopPlaying();
+      mAudioChannelAgent = nullptr;
     }
   }
 #endif
 }
 
-nsresult nsHTMLMediaElement::NotifyAudioChannelStateChanged()
+/* void canPlayChanged (in boolean canPlay); */
+NS_IMETHODIMP nsHTMLMediaElement::CanPlayChanged(bool canPlay)
 {
-  return UpdateChannelMuteState();
+  UpdateChannelMuteState(canPlay);
+  return NS_OK;
 }
 

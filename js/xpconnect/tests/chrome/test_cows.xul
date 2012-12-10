@@ -27,6 +27,8 @@ var test_utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
                  getInterface(Ci.nsIDOMWindowUtils);
 
 function getCOW(x) {
+  if (typeof x != 'object' && typeof x != 'function')
+    return x;
   var rval = {};
   if (typeof x == "function")
     rval = eval(uneval(x));
@@ -34,7 +36,7 @@ function getCOW(x) {
     if (x.__lookupGetter__(i))
       rval.__defineGetter__(i, eval(uneval(x.__lookupGetter__(i))))
     else
-      rval[i] = x[i];
+      rval[i] = getCOW(x[i]);
   }
   return rval;
 }

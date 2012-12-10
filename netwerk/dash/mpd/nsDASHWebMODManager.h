@@ -80,6 +80,14 @@ public:
   double GetStartTime() const;
   double GetDuration() const;
 
+  // Gets index of the |Representation| with next highest bitrate to the
+  // estimated bandwidth passed in. Returns true if there is at least one
+  // |Representation| with a bitrate lower than |aBandwidth|; otherwise returns
+  // false. Depends on |mRepresentations| being an ordered list.
+  bool GetBestRepForBandwidth(uint32_t aAdaptSetIdx,
+                              uint64_t aBandwidth,
+                              uint32_t &aRepIdx) const MOZ_OVERRIDE;
+
 private:
   // Internal helper functions.
   AdaptationSet const * GetAdaptationSet(uint32_t const aAdaptSetIdx) const;

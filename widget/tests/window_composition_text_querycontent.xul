@@ -2771,6 +2771,27 @@ function runForceCommitTest()
   window.removeEventListener("text", eventHandler, true);
 }
 
+function runBug811755Test()
+{
+  iframe2.contentDocument.body.innerHTML = "<div>content<br/></div>";
+  iframe2.contentWindow.focus();
+  // Query everything
+  var textContent = synthesizeQueryTextContent(0, 10);
+  if (!checkQueryContentResult(textContent, "runBug811755Test: synthesizeQueryTextContent #1")) {
+    return false;
+  }
+  // Query everything but specify exact end offset, which should be immediately after the <br> node
+  // If PreContentIterator is used, the next node after <br> is the node after </div>.
+  // If ContentIterator is used, the next node is the <div> node itself. In this case, the end
+  // node ends up being before the start node, and an empty string is returned.
+  var queryContent = synthesizeQueryTextContent(0, textContent.text.length);
+  if (!checkQueryContentResult(queryContent, "runBug811755Test: synthesizeQueryTextContent #2")) {
+    return false;
+  }
+  is(queryContent.text, textContent.text, "runBug811755Test: two queried texts don't match");
+  return queryContent.text == textContent.text;
+}
+
 function runRemoveContentTest(aCallback)
 {
   var events = [];
@@ -3357,6 +3378,7 @@ function runTest()
   runCharAtPointAtOutsideTest();
   runBug722639Test();
   runForceCommitTest();
+  runBug811755Test();
   runRemoveContentTest(function () {
     runFrameTest();
     runPanelTest();

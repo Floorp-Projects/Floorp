@@ -495,7 +495,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // Push VMFunction pointer, to mark arguments.
         Push(ImmWord(f));
     }
-    void enterFakeExitFrame(void *codeVal = NULL) {
+    void enterFakeExitFrame(IonCode *codeVal = NULL) {
         linkExitFrame();
         Push(ImmWord(uintptr_t(codeVal)));
         Push(ImmWord(uintptr_t(NULL)));
@@ -506,7 +506,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void link(IonCode *code) {
-
+        JS_ASSERT(!oom());
         // If this code can transition to C++ code and witness a GC, then we need to store
         // the IonCode onto the stack in order to GC it correctly.  exitCodePatch should
         // be unset if the code never needed to push its IonCode*.

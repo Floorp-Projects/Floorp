@@ -137,7 +137,7 @@ static GSourceFuncs xt_event_funcs = {
   xt_event_prepare,
   xt_event_check,
   xt_event_dispatch,
-  g_free,
+  NULL,
   (GSourceFunc)NULL,
   (GSourceDummyMarshal)NULL
 };
@@ -464,7 +464,8 @@ xt_client_xloop_create(void)
   /* If this is the first running widget, hook this display into the
      mainloop */
   if (0 == num_widgets) {
-    int           cnumber;
+    int cnumber;
+    GSource* gs;
 
     /* Set up xtdisplay in case we're missing one */
     if (!xtdisplay) {
@@ -475,14 +476,15 @@ xt_client_xloop_create(void)
      * hook Xt event loop into the glib event loop.
      */
     /* the assumption is that gtk_init has already been called */
-    GSource* gs = g_source_new(&xt_event_funcs, sizeof(GSource));
-      if (!gs) {
-       return;
-      }
-    
+    gs = g_source_new(&xt_event_funcs, sizeof(GSource));
+    if (!gs) {
+      return;
+    }
+
     g_source_set_priority(gs, GDK_PRIORITY_EVENTS);
     g_source_set_can_recurse(gs, TRUE);
     tag = g_source_attach(gs, (GMainContext*)NULL);
+    g_source_unref(gs);
 #ifdef VMS
     cnumber = XConnectionNumber(xtdisplay);
 #else

@@ -302,7 +302,7 @@ class MochiRemote(Mochitest):
         self.localLog = options.logFile
         options.logFile = self.remoteLog
         options.profilePath = self.localProfile
-        env["MOZ_HIDE_RESULTS_TABLE"] = 1
+        env["MOZ_HIDE_RESULTS_TABLE"] = "1"
         retVal = Mochitest.buildURLOptions(self, options, env)
         #we really need testConfig.js (for browser chrome)
         try:

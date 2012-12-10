@@ -110,7 +110,7 @@ nsSVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                           nsIContent *aBindingParent,
                           bool aCompileEventHandlers)
 {
-  Link::ResetLinkState(false);
+  Link::ResetLinkState(false, Link::ElementHasHref());
 
   nsresult rv = nsSVGAElementBase::BindToTree(aDocument, aParent,
                                               aBindingParent,
@@ -129,7 +129,7 @@ nsSVGAElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
-  Link::ResetLinkState(false);
+  Link::ResetLinkState(false, Link::ElementHasHref());
   
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
@@ -282,7 +282,7 @@ nsSVGAElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // that content states have changed will call IntrinsicState, which will try
   // to get updated information about the visitedness from Link.
   if (aName == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
-    Link::ResetLinkState(!!aNotify);
+    Link::ResetLinkState(!!aNotify, true);
   }
 
   return rv;
@@ -300,7 +300,7 @@ nsSVGAElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
   // that content states have changed will call IntrinsicState, which will try
   // to get updated information about the visitedness from Link.
   if (aAttr == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
-    Link::ResetLinkState(!!aNotify);
+    Link::ResetLinkState(!!aNotify, false);
   }
 
   return rv;

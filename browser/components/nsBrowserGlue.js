@@ -1,3 +1,4 @@
+#filter substitution
 # -*- indent-tabs-mode: nil -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
@@ -863,15 +867,18 @@ BrowserGlue.prototype = {
 
 #ifdef MOZ_TELEMETRY_REPORTING
   _showTelemetryNotification: function BG__showTelemetryNotification() {
-    const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+    const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabledPreRelease";
+    const PREF_TELEMETRY_DISPLAYED = "toolkit.telemetry.notifiedOptOut";
+#else
     const PREF_TELEMETRY_ENABLED  = "toolkit.telemetry.enabled";
+    const PREF_TELEMETRY_DISPLAYED = "toolkit.telemetry.prompted";
+#endif
     const PREF_TELEMETRY_REJECTED  = "toolkit.telemetry.rejected";
     const PREF_TELEMETRY_INFOURL  = "toolkit.telemetry.infoURL";
     const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
-    const PREF_TELEMETRY_ENABLED_BY_DEFAULT = "toolkit.telemetry.enabledByDefault";
-    const PREF_TELEMETRY_NOTIFIED_OPTOUT = "toolkit.telemetry.notifiedOptOut";
-    // This is used to reprompt users when privacy message changes
-    const TELEMETRY_PROMPT_REV = 2;
+    // This is used to reprompt/renotify users when privacy message changes
+    const TELEMETRY_DISPLAY_REV = @MOZ_TELEMETRY_DISPLAY_REV@;
 
     // Stick notifications onto the selected tab of the active browser window.
     var win = this.getMostRecentBrowserWindow();
@@ -903,50 +910,80 @@ BrowserGlue.prototype = {
       return link;
     }
 
-    var telemetryEnabledByDefault = false;
+    /*
+     * Display an opt-out notification when telemetry is enabled by default,
+     * an opt-in prompt otherwise.
+     *
+     * But do not display this prompt/notification if:
+     *
+     * - The last accepted/refused policy (either by accepting the prompt or by
+     *   manually flipping the telemetry preference) is already at version
+     *   TELEMETRY_DISPLAY_REV.
+     */
+    var telemetryDisplayed;
     try {
-      telemetryEnabledByDefault = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED_BY_DEFAULT);
+      telemetryDisplayed = Services.prefs.getIntPref(PREF_TELEMETRY_DISPLAYED);
     } catch(e) {}
-    if (telemetryEnabledByDefault) {
-      var telemetryNotifiedOptOut = false;
-      try {
-        telemetryNotifiedOptOut = Services.prefs.getBoolPref(PREF_TELEMETRY_NOTIFIED_OPTOUT);
-      } catch(e) {}
-      if (telemetryNotifiedOptOut)
-        return;
+    if (telemetryDisplayed === TELEMETRY_DISPLAY_REV)
+      return;
 
-      var telemetryPrompt = browserBundle.formatStringFromName("telemetryOptOutPrompt",
-                                                               [productName, serverOwner, productName], 3);
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+    /*
+     * Additionally, in opt-out builds, don't display the notification if:
+     *
+     * - Telemetry is disabled
+     * - Telemetry was explicitly refused through the UI
+     * - Opt-in telemetry was enabled and this is the first run with opt-out.
+     */
 
-      Services.prefs.setBoolPref(PREF_TELEMETRY_NOTIFIED_OPTOUT, true);
+    var telemetryEnabled = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED);
+    if (!telemetryEnabled)
+      return;
 
-      let notification = appendTelemetryNotification(telemetryPrompt, null, false);
-      let link = appendLearnMoreLink(notification);
-      link.addEventListener('click', function() {
-        // Open the learn more url in a new tab
-        let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
-        url += "how-can-i-help-submitting-performance-data";
-        win.openUILinkIn(url, "tab");
-        // Remove the notification on which the user clicked
-        notification.parentNode.removeNotification(notification, true);
-      }, false);
+    // If telemetry was explicitly refused through the UI,
+    // also disable opt-out telemetry and bail out.
+    var telemetryRejected = false;
+    try {
+      telemetryRejected = Services.prefs.getBoolPref(PREF_TELEMETRY_REJECTED);
+    } catch(e) {}
+    if (telemetryRejected) {
+      Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, false);
+      Services.prefs.setIntPref(PREF_TELEMETRY_DISPLAYED, TELEMETRY_DISPLAY_REV);
       return;
     }
 
-    var telemetryPrompted = null;
+    // If opt-in telemetry was enabled and this is the first run with opt-out,
+    // don't notify the user.
+    var optInTelemetryEnabled = false;
     try {
-      telemetryPrompted = Services.prefs.getIntPref(PREF_TELEMETRY_PROMPTED);
+      optInTelemetryEnabled = Services.prefs.getBoolPref("toolkit.telemetry.enabled");
     } catch(e) {}
-    // If the user has seen the latest telemetry prompt, do not prompt again
-    // else clear old prefs and reprompt
-    if (telemetryPrompted === TELEMETRY_PROMPT_REV)
+    if (optInTelemetryEnabled && telemetryDisplayed === undefined) {
+      Services.prefs.setBoolPref(PREF_TELEMETRY_REJECTED, false);
+      Services.prefs.setIntPref(PREF_TELEMETRY_DISPLAYED, TELEMETRY_DISPLAY_REV);
       return;
-    
-    Services.prefs.clearUserPref(PREF_TELEMETRY_PROMPTED);
-    Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
-    
-    var telemetryPrompt = browserBundle.formatStringFromName("telemetryOptInPrompt", [productName, serverOwner], 2);
+    }
 
+    var telemetryPrompt = browserBundle.formatStringFromName("telemetryOptOutPrompt",
+                                                            [productName, serverOwner, productName], 3);
+    var buttons = null;
+    var hideCloseButton = false;
+    function learnModeClickHandler() {
+      // Open the learn more url in a new tab
+      var url = Services.urlFormatter.formatURLPref("app.support.baseURL");
+      url += "how-can-i-help-submitting-performance-data";
+      tabbrowser.selectedTab = tabbrowser.addTab(url);
+      // Remove the notification on which the user clicked
+      notification.parentNode.removeNotification(notification, true);
+    }
+#else
+
+    // Clear old prefs and reprompt
+    Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
+    Services.prefs.clearUserPref(PREF_TELEMETRY_REJECTED);
+
+    var telemetryPrompt = browserBundle.formatStringFromName("telemetryOptInPrompt",
+                                                            [productName, serverOwner], 2);
     var buttons = [
                     {
                       label:     browserBundle.GetStringFromName("telemetryYesButtonLabel2"),
@@ -954,6 +991,7 @@ BrowserGlue.prototype = {
                       popup:     null,
                       callback:  function(aNotificationBar, aButton) {
                         Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+                        Services.prefs.setBoolPref(PREF_TELEMETRY_REJECTED, false);
                       }
                     },
                     {
@@ -966,12 +1004,8 @@ BrowserGlue.prototype = {
                     }
                   ];
 
-    // Set pref to indicate we've shown the notification.
-    Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
-
-    let notification = appendTelemetryNotification(telemetryPrompt, buttons, true);
-    let link = appendLearnMoreLink(notification);
-    link.addEventListener('click', function() {
+    var hideCloseButton = true;
+    function learnModeClickHandler() {
       // Open the learn more url in a new tab
       win.openUILinkIn(Services.prefs.getCharPref(PREF_TELEMETRY_INFOURL), "tab");
       // Remove the notification on which the user clicked
@@ -979,7 +1013,15 @@ BrowserGlue.prototype = {
       // Add a new notification to that tab, with no "Learn more" link
       notifyBox = tabbrowser.getNotificationBox();
       appendTelemetryNotification(telemetryPrompt, buttons, true);
-    }, false);
+    }
+#endif
+
+    // Set pref to indicate we've shown the notification.
+    Services.prefs.setIntPref(PREF_TELEMETRY_DISPLAYED, TELEMETRY_DISPLAY_REV);
+
+    var notification = appendTelemetryNotification(telemetryPrompt, buttons, hideCloseButton);
+    var link = appendLearnMoreLink(notification);
+    link.addEventListener('click', learnModeClickHandler, false);
   },
 #endif
 
@@ -1118,19 +1160,20 @@ BrowserGlue.prototype = {
       if (bookmarksURI) {
         // Import from bookmarks.html file.
         try {
-          BookmarkHTMLUtils.importFromURL(bookmarksURI.spec, true, (function (success) {
-            if (success) {
+          BookmarkHTMLUtils.importFromURL(bookmarksURI.spec, true).then(null,
+            function onFailure() {
+              Cu.reportError("Bookmarks.html file could be corrupt.");
+            }
+          ).then(
+            function onComplete() {
               // Now apply distribution customized bookmarks.
               // This should always run after Places initialization.
               this._distributionCustomizer.applyBookmarks();
               // Ensure that smart bookmarks are created once the operation is
               // complete.
               this.ensurePlacesDefaultQueriesInitialized();
-            }
-            else {
-              Cu.reportError("Bookmarks.html file could be corrupt.");
-            }
-          }).bind(this));
+            }.bind(this)
+          );
         } catch (err) {
           Cu.reportError("Bookmarks.html file could be corrupt. " + err);
         }
@@ -1172,16 +1215,31 @@ BrowserGlue.prototype = {
 
     // Backup bookmarks to bookmarks.html to support apps that depend
     // on the legacy format.
-    var autoExportHTML = false;
     try {
-      autoExportHTML = Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML");
+      // If this fails to get the preference value, we don't export.
+      if (Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML")) {
+        // Exceptionally, since this is a non-default setting and HTML format is
+        // discouraged in favor of the JSON backups, we spin the event loop on
+        // shutdown, to wait for the export to finish.  We cannot safely spin
+        // the event loop on shutdown until we include a watchdog to prevent
+        // potential hangs (bug 518683).  The asynchronous shutdown operations
+        // will then be handled by a shutdown service (bug 435058).
+        let shutdownComplete = false;
+        BookmarkHTMLUtils.exportToFile(FileUtils.getFile("BMarks", [])).then(
+          function onSuccess() {
+            shutdownComplete = true;
+          },
+          function onFailure() {
+            // There is no point in reporting errors since we are shutting down.
+            shutdownComplete = true;
+          }
+        );
+        let thread = Services.tm.currentThread;
+        while (!shutdownComplete) {
+          thread.processNextEvent(true);
+        }
+      }
     } catch(ex) { /* Don't export */ }
-
-    if (autoExportHTML) {
-      Cc["@mozilla.org/browser/places/import-export-service;1"].
-        getService(Ci.nsIPlacesImportExportService).
-        backupBookmarksFile();
-    }
   },
 
   /**

@@ -601,7 +601,7 @@ NetworkManager.prototype = {
       debug("Invalid security type.");
       return null;
     }
-    if (!securityId) {
+    if (securityType != WIFI_SECURITY_TYPE_NONE && !securityId) {
       debug("Invalid security password.");
       return null;
     }

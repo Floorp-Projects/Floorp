@@ -257,8 +257,6 @@ public:
   static jsid sOpener_id;
   static jsid sAll_id;
   static jsid sTags_id;
-  static jsid sBaseURIObject_id;
-  static jsid sNodePrincipal_id;
   static jsid sDocumentURIObject_id;
   static jsid sJava_id;
   static jsid sPackages_id;
@@ -525,7 +523,6 @@ protected:
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
-  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, bool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -851,6 +848,7 @@ protected:
 
   static nsresult GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *aWrapper,
                                           JSObject *obj,
+                                          JSContext *cx,
                                           nsNPAPIPluginInstance **aResult);
 
   static nsresult GetPluginJSObject(JSContext *cx, JSObject *obj,
