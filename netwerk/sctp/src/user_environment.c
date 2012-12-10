@@ -34,7 +34,9 @@
 #if !defined (__Userspace_os_Windows)
 #include <stdint.h>
 #if !defined(__Userspace_os_FreeBSD)
+#if !defined(ANDROID)
 #include <sys/sysctl.h>
+#endif
 #endif
 #include <netinet/sctp_os_userspace.h>
 #endif
