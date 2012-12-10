@@ -251,6 +251,10 @@ DEFAULT_GMAKE_FLAGS += XCFLAGS="$(CFLAGS)"
 DEFAULT_GMAKE_FLAGS += DARWIN_DYLIB_VERSIONS="-compatibility_version 1 -current_version 1 $(LDFLAGS)"
 endif
 
+ifdef MOZ_B2G_CERTDATA
+include $(srcdir)/b2g-certdata.mk
+endif
+
 ifdef MOZ_NSS_PATCH
 # If we're applying a patch, we'll copy the NSS source to the objdir
 # and build it from there.
