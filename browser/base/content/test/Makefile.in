@@ -123,7 +123,6 @@ _BROWSER_FILES = \
                  browser_bug556061.js \
                  browser_bug559991.js \
                  browser_bug561623.js \
-                 browser_bug561636.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
                  browser_bug565575.js \
@@ -314,10 +313,16 @@ else
 _BROWSER_FILES += \
 		browser_bug565667.js \
 		$(NULL)
-
 # TODO: Activate after carbon test plugin lands, bug 628651
 # 		browser_maconly_carbon_mismatch_plugin.js \
+endif
 
+ifneq ($(OS_ARCH),WINNT)
+_BROWSER_FILES += \
+                 browser_bug561636.js \
+                 $(NULL)
+else
+$(filter disabled-temporarily--bug-766546, browser_bug561636.js)
 endif
 
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
