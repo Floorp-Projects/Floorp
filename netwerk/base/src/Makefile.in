@@ -29,6 +29,7 @@ EXPORTS_mozilla/net = \
 		$(NULL)
 
 CPPSRCS		= \
+		BackgroundFileSaver.cpp \
 		nsTransportUtils.cpp \
 		nsAsyncStreamCopier.cpp \
 		nsAsyncRedirectVerifyHelper.cpp \
