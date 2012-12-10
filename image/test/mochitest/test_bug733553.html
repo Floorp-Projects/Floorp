@@ -69,7 +69,10 @@ function imageLoad(aEvent) {
 
   // Always call readyForNext here, as it's the closest we have to a cleanup
   readyForNext();
-  if ((testParts.length - 1) == testIndex) {
+  if (testParts.length == testIndex) {
+    var firstimg = document.getElementsByTagName('img')[0];
+    firstimg.removeEventListener("load", imageLoad, false);
+    firstimg.removeEventListener("error", imageLoad, false);
     SimpleTest.finish();
   }
 }
