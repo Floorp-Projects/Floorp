@@ -76,6 +76,26 @@ function testRemoveSetupMenu(cmd) {
   runNextTest();
 }
 
+function testPollingOff(cmd) {
+  log("STK CMD " + JSON.stringify(cmd));
+  is(cmd.typeOfCommand, icc.STK_CMD_POLL_OFF);
+  is(cmd.commandNumber, 0x01);
+  is(cmd.commandQualifier, 0x00);
+  is(cmd.options, null);
+
+  runNextTest();
+}
+
+function testRefresh(cmd) {
+  log("STK CMD " + JSON.stringify(cmd));
+  is(cmd.typeOfCommand, icc.STK_CMD_REFRESH);
+  is(cmd.commandNumber, 0x01);
+  is(cmd.commandQualifier, 0x01);
+  is(cmd.options, null);
+
+  runNextTest();
+}
+
 let tests = [
   {command: "d0288103012180820281020d1d00d3309bfc06c95c301aa8e80259c3ec34b9ac07c9602f58ed159bb940",
    func: testDisplayTextGsm7BitEncoding},
@@ -91,6 +111,10 @@ let tests = [
    func: testRemoveSetupMenu},
   {command:"D03B810301250082028182850C546F6F6C6B6974204D656E758F07014974656D20318F07024974656D20328F07034974656D20338F07044974656D2034",
    func: testInitialSetupMenu},
+  {command: "d009810301040082028182",
+   func: testPollingOff},
+  {command: "d0108103010101820281829205013f002fe2",
+   func: testRefresh},
 ];
 
 let pendingEmulatorCmdCount = 0;
