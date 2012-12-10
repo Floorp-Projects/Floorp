@@ -21,6 +21,13 @@ EXPORTS = \
 		nsURLHelper.h \
 		$(NULL)
 
+EXPORTS_NAMESPACES = mozilla/net
+
+EXPORTS_mozilla/net = \
+		Dashboard.h \
+		DashboardTypes.h \
+		$(NULL)
+
 CPPSRCS		= \
 		nsTransportUtils.cpp \
 		nsAsyncStreamCopier.cpp \
@@ -67,6 +74,7 @@ CPPSRCS		= \
 		nsPreloadedStream.cpp \
 		nsStreamListenerWrapper.cpp \
 		ProxyAutoConfig.cpp \
+		Dashboard.cpp \
 		NetworkActivityMonitor.cpp \
 		$(NULL)
 

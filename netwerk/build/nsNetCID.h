@@ -867,6 +867,19 @@
     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "starttls"
 
 
+#define NS_DASHBOARD_CLASSNAME \
+    "Dashboard"
+#define NS_DASHBOARD_CONTRACTID \
+    "@mozilla.org/network/dashboard;1"
+#define NS_DASHBOARD_CID                               \
+{   /*c79eb3c6-091a-45a6-8544-5a8d1ab79537 */          \
+    0xc79eb3c6,                                        \
+    0x091a,                                            \
+    0x45a6,                                            \
+    { 0x85, 0x44, 0x5a, 0x8d, 0x1a, 0xb7, 0x95, 0x37 } \
+}
+
+
 /******************************************************************************
  * netwerk/cookie classes
  */
