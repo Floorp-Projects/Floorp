@@ -13,13 +13,13 @@
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 #include "nsDataHashtable.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsILoginManager.h"
 #include "nsIMutationObserver.h"
+#include "nsTArray.h"
 
 // X.h defines KeyPress
 #ifdef KeyPress
@@ -82,8 +82,8 @@ protected:
   nsINode* mListNode;
   nsCOMPtr<nsIAutoCompletePopup> mFocusedPopup;
 
-  nsCOMPtr<nsISupportsArray> mDocShells;
-  nsCOMPtr<nsISupportsArray> mPopups;
+  nsTArray<nsCOMPtr<nsIDocShell> > mDocShells;
+  nsTArray<nsCOMPtr<nsIAutoCompletePopup> > mPopups;
 
   //these are used to dynamically update the autocomplete
   nsCOMPtr<nsIAutoCompleteResult> mLastSearchResult;
