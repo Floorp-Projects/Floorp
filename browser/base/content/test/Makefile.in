@@ -317,12 +317,11 @@ _BROWSER_FILES += \
 # 		browser_maconly_carbon_mismatch_plugin.js \
 endif
 
+# bug 766546, disable browser_bug561636.js on Windows
 ifneq ($(OS_ARCH),WINNT)
 _BROWSER_FILES += \
                  browser_bug561636.js \
                  $(NULL)
-else
-$(filter disabled-temporarily--bug-766546, browser_bug561636.js)
 endif
 
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
