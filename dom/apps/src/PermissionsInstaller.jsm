@@ -235,6 +235,11 @@ this.PermissionsTable =  { geolocation: {
                              channels: ["normal", "content", "notification",
                                "alarm", "telephony", "ringer", "publicnotification"]
                            },
+                           "open-remote-window": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                          };
 
 /**
