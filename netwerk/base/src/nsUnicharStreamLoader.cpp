@@ -198,42 +198,23 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
   nsUnicharStreamLoader* self = static_cast<nsUnicharStreamLoader*>(aClosure);
 
   uint32_t haveRead = self->mBuffer.Length();
-  uint32_t consumed = 0;
   nsresult rv;
-  do {
-    int32_t srcLen = aCount - consumed;
-    int32_t dstLen;
-    self->mDecoder->GetMaxLength(aSegment + consumed, srcLen, &dstLen);
+  int32_t srcLen = aCount;
+  int32_t dstLen;
+  self->mDecoder->GetMaxLength(aSegment, srcLen, &dstLen);
 
-    uint32_t capacity = haveRead + dstLen;
-    if (!self->mBuffer.SetCapacity(capacity, fallible_t())) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  uint32_t capacity = haveRead + dstLen;
+  if (!self->mBuffer.SetCapacity(capacity, fallible_t())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    rv = self->mDecoder->Convert(aSegment + consumed,
-                                 &srcLen,
-                                 self->mBuffer.BeginWriting() + haveRead,
-                                 &dstLen);
-    haveRead += dstLen;
-    // XXX if srcLen is negative, we want to drop the _first_ byte in
-    // the erroneous byte sequence and try again.  This is not quite
-    // possible right now -- see bug 160784
-    consumed += srcLen;
-    if (NS_FAILED(rv)) {
-      if (haveRead >= capacity) {
-        // Make room for writing the 0xFFFD below (bug 785753).
-        if (!self->mBuffer.SetCapacity(haveRead + 1, fallible_t())) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      self->mBuffer.BeginWriting()[haveRead++] = 0xFFFD;
-      ++consumed;
-      // XXX this is needed to make sure we don't underrun our buffer;
-      // bug 160784 again
-      consumed = NS_MAX<uint32_t>(consumed, 0);
-      self->mDecoder->Reset();
-    }
-  } while (consumed < aCount);
+  rv = self->mDecoder->Convert(aSegment,
+                               &srcLen,
+                               self->mBuffer.BeginWriting() + haveRead,
+                               &dstLen);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_ASSERT(srcLen == static_cast<int32_t>(aCount));
+  haveRead += dstLen;
 
   self->mBuffer.SetLength(haveRead);
   *aWriteCount = aCount;
