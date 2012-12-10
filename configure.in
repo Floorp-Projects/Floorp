@@ -1430,7 +1430,7 @@ if test "$GNU_CC"; then
     _SAVE_LDFLAGS=$LDFLAGS
     LDFLAGS="$LDFLAGS -Wl,--build-id"
     AC_TRY_LINK(,,AC_MSG_RESULT([yes])
-                  NSPR_LDFLAGS="$NSPR_LDFLAGS -Wl,--build-id",
+                  [NSPR_LDFLAGS="$NSPR_LDFLAGS -Wl,--build-id"],
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
