@@ -513,7 +513,7 @@ struct JSRuntime : js::RuntimeFriendFields
 #endif
     js::ion::IonRuntime *ionRuntime_;
 
-    JSObject *selfHostedGlobal_;
+    JSObject *selfHostingGlobal_;
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
@@ -551,9 +551,9 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     bool initSelfHosting(JSContext *cx);
-    void markSelfHostedGlobal(JSTracer *trc);
-    bool isSelfHostedGlobal(js::HandleObject global) {
-        return global == selfHostedGlobal_;
+    void markSelfHostingGlobal(JSTracer *trc);
+    bool isSelfHostingGlobal(js::HandleObject global) {
+        return global == selfHostingGlobal_;
     }
     bool getUnclonedSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                                     js::MutableHandleValue vp);
