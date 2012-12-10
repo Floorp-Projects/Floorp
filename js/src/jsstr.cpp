@@ -17,7 +17,6 @@
  */
 
 #include "mozilla/Attributes.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <stdlib.h>
@@ -63,8 +62,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 using namespace js::unicode;
-
-using mozilla::CheckedInt;
 
 static JSLinearString *
 ArgToRootedString(JSContext *cx, CallArgs &args, unsigned argno)
@@ -2028,7 +2025,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
     }
 
     JSString *repstr = rdata.repstr;
-    CheckedInt<uint32_t> replen = repstr->length();
+    size_t replen = repstr->length();
     for (const jschar *dp = rdata.dollar, *ep = rdata.dollarEnd; dp;
          dp = js_strchr_limit(dp, '$', ep)) {
         JSSubString sub;
@@ -2040,13 +2037,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
             dp++;
         }
     }
-
-    if (!replen.isValid()) {
-        js_ReportAllocationOverflow(cx);
-        return false;
-    }
-
-    *sizep = replen.value();
+    *sizep = replen;
     return true;
 }
 
@@ -2097,14 +2088,8 @@ ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     if (!FindReplaceLength(cx, res, rdata, &replen))
         return false;
 
-    CheckedInt<uint32_t> newlen(rdata.sb.length());
-    newlen += leftlen;
-    newlen += replen;
-    if (!newlen.isValid()) {
-        js_ReportAllocationOverflow(cx);
-        return false;
-    }
-    if (!rdata.sb.reserve(newlen.value()))
+    size_t growth = leftlen + replen;
+    if (!rdata.sb.reserve(rdata.sb.length() + growth))
         return false;
 
     JSLinearString &str = rdata.str->asLinear();  /* flattened for regexp */
