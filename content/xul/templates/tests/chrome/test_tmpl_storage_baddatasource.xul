@@ -14,6 +14,8 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output"/>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,7 +28,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =<output></output>;
+var expectedOutput = document.getElementById("output");
 
 Components.classes["@mozilla.org/consoleservice;1"]
           .getService(Components.interfaces.nsIConsoleService)

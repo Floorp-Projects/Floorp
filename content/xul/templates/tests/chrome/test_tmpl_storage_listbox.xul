@@ -14,6 +14,12 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+      <listitem anyid="true" label="Barn Owl"/>
+      <listitem anyid="true" label="Emu"/>
+      <listitem anyid="true" label="Raven"/>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -28,12 +34,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-    <listitem anyid="true" label="Barn Owl"/>
-    <listitem anyid="true" label="Emu"/>
-    <listitem anyid="true" label="Raven"/>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [];
 ]]>
