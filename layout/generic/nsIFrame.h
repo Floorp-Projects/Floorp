@@ -1315,6 +1315,18 @@ public:
   void RecomputePerspectiveChildrenOverflow(const nsStyleContext* aStartStyle, const nsRect* aBounds);
 
   /**
+   * Returns the number of ancestors between this and the root of our frame tree
+   */
+  uint32_t GetDepthInFrameTree() {
+    uint32_t result = 0;
+    for (nsIFrame* ancestor = GetParent(); ancestor;
+         ancestor = ancestor->GetParent()) {
+      result++;
+    }
+    return result;
+  }
+
+  /**
    * Event handling of GUI events.
    *
    * @param   aEvent event structure describing the type of event and rge widget
