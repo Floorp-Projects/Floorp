@@ -428,10 +428,6 @@ pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
 
 pref("plugins.click_to_play", true);
-// Disabled because of thread safety problem
-// in getting the bits from the surface.
-// Bug 756253
-pref("plugins.use_placeholder", 0);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
