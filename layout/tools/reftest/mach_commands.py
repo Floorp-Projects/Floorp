@@ -125,9 +125,10 @@ class MachCommands(MachCommandBase):
         return self._run_reftest(test_file, suite='crashtest',
             debugger=debugger)
 
-    def _run_reftest(self, test_file, filter, suite, debugger=None):
+    def _run_reftest(self, test_file=None, filter=None, suite=None,
+            debugger=None):
         reftest = self._spawn(ReftestRunner)
-        return reftest.run_reftest_test(test_file, filter, suite,
+        return reftest.run_reftest_test(test_file, filter=filter, suite=suite,
             debugger=debugger)
 
 
