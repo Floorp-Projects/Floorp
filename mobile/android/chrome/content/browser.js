@@ -7142,8 +7142,10 @@ var Telemetry = {
     if (aTopic == "Preferences:Set") {
       // if user changes telemetry pref, treat it like they have been prompted
       let pref = JSON.parse(aData);
-      if (pref.name == this._PREF_TELEMETRY_ENABLED)
+      if (pref.name == this._PREF_TELEMETRY_ENABLED) {
         Services.prefs.setIntPref(this._PREF_TELEMETRY_DISPLAYED, this._TELEMETRY_DISPLAY_REV);
+        Services.prefs.setBoolPref(this._PREF_TELEMETRY_REJECTED, !pref.value);
+      }
     } else if (aTopic == "Telemetry:Add") {
       let json = JSON.parse(aData);
       this.addData(json.name, json.value);
