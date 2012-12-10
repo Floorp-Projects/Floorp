@@ -734,7 +734,8 @@ this.DOMApplicationRegistry = {
     switch (aMessage.name) {
       case "Webapps:Install":
         // always ask for UI to install
-        Services.obs.notifyObservers(mm, "webapps-ask-install", JSON.stringify(msg));
+        this.doInstall(msg, mm);
+        //Services.obs.notifyObservers(mm, "webapps-ask-install", JSON.stringify(msg));
         break;
       case "Webapps:GetSelf":
         this.getSelf(msg, mm);
@@ -761,8 +762,7 @@ this.DOMApplicationRegistry = {
           mm.sendAsyncMessage("Webapps:GetAll:Return:KO", msg);
         break;
       case "Webapps:InstallPackage":
-        // always ask for UI to install
-        Services.obs.notifyObservers(mm, "webapps-ask-install", JSON.stringify(msg));
+        this.doInstallPackage(msg, mm);
         break;
       case "Webapps:GetBasePath":
         return this.webapps[msg.id].basePath;
@@ -1194,6 +1194,120 @@ this.DOMApplicationRegistry = {
         aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
         this._saveApps();
       } else {
+        sendError("MANIFEST_URL_ERROR");
+      }
+    }).bind(this), false);
+
+    xhr.addEventListener("error", (function() {
+      sendError("NETWORK_ERROR");
+    }).bind(this), false);
+
+    xhr.send(null);
+  },
+
+  // Downloads the manifest and run checks, then eventually triggers the
+  // installation UI.
+  doInstall: function doInstall(aData, aMm) {
+    let sendError = function sendError(aError) {
+      aData.error = aError;
+      aMm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
+      Cu.reportError("Error installing app from: " + app.installOrigin +
+                     ": " + aError);
+    }.bind(this);
+
+    // Hosted apps can't be trusted or certified, so just check that the
+    // manifest doesn't ask for those.
+    function checkAppStatus(aManifest) {
+      let manifestStatus = aManifest.type || "web";
+      return (Services.prefs.getBoolPref("dom.mozApps.dev_mode") ||
+              manifestStatus === "web");
+    }
+
+    let app = aData.app;
+
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("GET", app.manifestURL, true);
+    xhr.channel.loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+    xhr.responseType = "json";
+    xhr.addEventListener("load", (function() {
+      if (xhr.status == 200) {
+        if (!AppsUtils.checkManifestContentType(app.installOrigin, app.origin,
+                                                xhr.getResponseHeader("content-type"))) {
+          sendError("INVALID_MANIFEST");
+          return;
+        }
+
+        app.manifest = xhr.response;
+        if (!app.manifest) {
+          sendError("MANIFEST_PARSE_ERROR");
+          return;
+        }
+
+        if (!AppsUtils.checkManifest(app.manifest)) {
+          sendError("INVALID_MANIFEST");
+        } else if (!AppsUtils.checkInstallAllowed(app.manifest, app.installOrigin)) {
+          sendError("INSTALL_FROM_DENIED");
+        } else if (!checkAppStatus(app.manifest)) {
+          sendError("INVALID_SECURITY_LEVEL");
+        } else {
+          app.etag = xhr.getResponseHeader("Etag");
+          Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                       JSON.stringify(aData));
+        }
+      } else {
+        sendError("MANIFEST_URL_ERROR");
+      }
+    }).bind(this), false);
+
+    xhr.addEventListener("error", (function() {
+      sendError("NETWORK_ERROR");
+    }).bind(this), false);
+
+    xhr.send(null);
+  },
+
+  doInstallPackage: function doInstallPackage(aData, aMm) {
+    let sendError = function sendError(aError) {
+      aData.error = aError;
+      aMm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
+      Cu.reportError("Error installing packaged app from: " +
+                     app.installOrigin + ": " + aError);
+    }.bind(this);
+
+    let app = aData.app;
+
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("GET", app.manifestURL, true);
+    xhr.channel.loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+    xhr.responseType = "json";
+
+    xhr.addEventListener("load", (function() {
+      if (xhr.status == 200) {
+        if (!AppsUtils.checkManifestContentType(app.installOrigin, app.origin,
+                                                xhr.getResponseHeader("content-type"))) {
+          sendError("INVALID_MANIFEST");
+          return;
+        }
+
+        let manifest = app.updateManifest = xhr.response;
+        if (!manifest) {
+          sendError("MANIFEST_PARSE_ERROR");
+          return;
+        }
+        if (!(AppsUtils.checkManifest(manifest) &&
+              manifest.package_path)) {
+          sendError("INVALID_MANIFEST");
+        } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
+          sendError("INSTALL_FROM_DENIED");
+        } else {
+          app.etag = xhr.getResponseHeader("Etag");
+          Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                       JSON.stringify(aData));
+        }
+      }
+      else {
         sendError("MANIFEST_URL_ERROR");
       }
     }).bind(this), false);
