@@ -19,20 +19,10 @@ var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
 var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
             getService(Ci.nsINavBookmarksService);
 
-function add_visit(aURI, aVisitDate, aVisitType) {
-  var isRedirect = aVisitType == histsvc.TRANSITION_REDIRECT_PERMANENT ||
-                   aVisitType == histsvc.TRANSITION_REDIRECT_TEMPORARY;
-  var placeID = histsvc.addVisit(aURI, aVisitDate, null,
-                                 aVisitType, isRedirect, 0);
-  do_check_true(placeID > 0);
-  return placeID;
-}
-
 // create test data
 var searchTerm = "ユニコード";
 var decoded = "http://www.foobar.com/" + searchTerm + "/";
 var url = uri(decoded);
-add_visit(url, Date.now(), Ci.nsINavHistoryService.TRANSITION_LINK);
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
@@ -87,7 +77,14 @@ AutoCompleteInput.prototype = {
   }
 }
 
-function run_test() {
+function run_test()
+{
+  do_test_pending();
+  addVisits(url, continue_test);
+}
+
+function continue_test()
+{
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
 
@@ -96,9 +93,6 @@ function run_test() {
   var input = new AutoCompleteInput(["history"]);
 
   controller.input = input;
-
-  // Search is asynchronous, so don't let the test finish immediately
-  do_test_pending();
 
   var numSearchesStarted = 0;
   input.onSearchBegin = function() {

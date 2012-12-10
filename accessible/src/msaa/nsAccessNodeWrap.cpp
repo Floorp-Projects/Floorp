@@ -122,7 +122,8 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
   }
 
   // Can get to IAccessibleApplication from any node via QS
-  if (guidService == IID_IAccessibleApplication) {
+  if (guidService == IID_IAccessibleApplication ||
+      (Compatibility::IsJAWS() && iid == IID_IAccessibleApplication)) {
     ApplicationAccessible* applicationAcc = ApplicationAcc();
     if (!applicationAcc)
       return E_NOINTERFACE;
@@ -155,21 +156,6 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
   return E_INVALIDARG;
 }
  
-void nsAccessNodeWrap::InitAccessibility()
-{
-  Compatibility::Init();
-
-  nsWinUtils::MaybeStartWindowEmulation();
-}
-
-void nsAccessNodeWrap::ShutdownAccessibility()
-{
-  NS_IF_RELEASE(gTextEvent);
-  ::DestroyCaret();
-
-  nsWinUtils::ShutdownWindowEmulation();
-}
-
 int nsAccessNodeWrap::FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTERS *aExceptionInfo)
 {
   if (aCode == EXCEPTION_ACCESS_VIOLATION) {

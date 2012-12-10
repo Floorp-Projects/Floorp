@@ -187,6 +187,7 @@ struct VMFunction
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject *> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<DeclEnvObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSFlatString *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<HandleObject> { static const DataType result = Type_Handle; };
@@ -342,31 +343,31 @@ struct FunctionInfo<R (*)(JSContext *)> : public VMFunction {
 template <class R, class A1>
 struct FunctionInfo<R (*)(JSContext *, A1)> : public VMFunction {
     typedef R (*pf)(JSContext *, A1);
-    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_1);
+    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_1)
 };
 
 template <class R, class A1, class A2>
 struct FunctionInfo<R (*)(JSContext *, A1, A2)> : public VMFunction {
     typedef R (*pf)(JSContext *, A1, A2);
-    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_2);
+    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_2)
 };
 
 template <class R, class A1, class A2, class A3>
 struct FunctionInfo<R (*)(JSContext *, A1, A2, A3)> : public VMFunction {
     typedef R (*pf)(JSContext *, A1, A2, A3);
-    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_3);
+    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_3)
 };
 
 template <class R, class A1, class A2, class A3, class A4>
 struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4)> : public VMFunction {
     typedef R (*pf)(JSContext *, A1, A2, A3, A4);
-    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_4);
+    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_4)
 };
 
 template <class R, class A1, class A2, class A3, class A4, class A5>
     struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4, A5)> : public VMFunction {
     typedef R (*pf)(JSContext *, A1, A2, A3, A4, A5);
-    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_5);
+    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_5)
 };
 
 #undef FUNCTION_INFO_STRUCT_BODY

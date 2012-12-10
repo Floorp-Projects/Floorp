@@ -12,14 +12,14 @@
 class TestObjectBaseA {
     public:
         // Virtual dtor for deleting through base class pointer
-        virtual ~TestObjectBaseA() { };
+        virtual ~TestObjectBaseA() { }
         int fooA;
 };
 
 class TestObjectBaseB {
     public:
         // Virtual dtor for deleting through base class pointer
-        virtual ~TestObjectBaseB() { };
+        virtual ~TestObjectBaseB() { }
         int fooB;
 };
 

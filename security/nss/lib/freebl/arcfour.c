@@ -32,11 +32,6 @@
 #define USE_WORD
 #endif
 
-#if defined(_WIN32_WCE)
-#undef WORD
-#define WORD ARC4WORD
-#endif
-
 #if (defined(IS_64))
 typedef PRUint64 WORD;
 #else

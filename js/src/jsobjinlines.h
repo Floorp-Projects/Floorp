@@ -39,6 +39,7 @@
 #include "vm/StringObject.h"
 
 #include "jsatominlines.h"
+#include "jscompartmentinlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
@@ -815,7 +816,7 @@ inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 inline bool
 JSObject::isDebugScope() const
 {
-    extern bool js_IsDebugScopeSlow(JS::RawObject obj);
+    extern bool js_IsDebugScopeSlow(js::RawObject obj);
     return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
 }
 

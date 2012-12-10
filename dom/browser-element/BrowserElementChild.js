@@ -58,6 +58,8 @@ function BrowserElementChild() {
   this._forcedVisible = true;
   this._ownerVisible = true;
 
+  this._nextPaintHandler = null;
+
   this._init();
 };
 
@@ -109,11 +111,10 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
-    this._afterPaintHandlerClosure = this._afterPaintHandler.bind(this);
-    addEventListener('MozAfterPaint',
-                     this._afterPaintHandlerClosure,
-                     /* useCapture = */ true,
-                     /* wantsUntrusted = */ false);
+    // Registers a MozAfterPaint handler for the very first paint.
+    this._addMozAfterPaintHandler(function () {
+      sendAsyncMsg('firstpaint');
+    });
 
     var self = this;
     function addMsgListener(msg, handler) {
@@ -135,6 +136,8 @@ BrowserElementChild.prototype = {
     addMsgListener("fire-ctx-callback", this._recvFireCtxCallback);
     addMsgListener("owner-visibility-change", this._recvOwnerVisibilityChange);
     addMsgListener("exit-fullscreen", this._recvExitFullscreen.bind(this));
+    addMsgListener("activate-next-paint-listener", this._activateNextPaintListener.bind(this));
+    addMsgListener("deactivate-next-paint-listener", this._deactivateNextPaintListener.bind(this));
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
@@ -361,16 +364,39 @@ BrowserElementChild.prototype = {
     }
   },
 
-  _afterPaintHandler: function(e) {
-    let uri = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
-    debug("Got afterpaint event: " + uri.spec);
-    if (uri.spec != "about:blank") {
-      /* this._afterPaintHandlerClosure == arguments.callee, except we're in
-       * strict mode so we don't have arguments.callee. */
-      removeEventListener('MozAfterPaint', this._afterPaintHandlerClosure,
-                          /* useCapture */ true);
+  _addMozAfterPaintHandler: function(callback) {
+    function onMozAfterPaint() {
+      let uri = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
+      debug("Got afterpaint event: " + uri.spec);
+      if (uri.spec != "about:blank") {
+        removeEventListener('MozAfterPaint', onMozAfterPaint,
+                            /* useCapture = */ true);
+        callback();
+      }
+    }
 
-      sendAsyncMsg('firstpaint');
+    addEventListener('MozAfterPaint', onMozAfterPaint, /* useCapture = */ true);
+    return onMozAfterPaint;
+  },
+
+  _removeMozAfterPaintHandler: function(listener) {
+    removeEventListener('MozAfterPaint', listener,
+                        /* useCapture = */ true);
+  },
+
+  _activateNextPaintListener: function(e) {
+    if (!this._nextPaintHandler) {
+      this._nextPaintHandler = this._addMozAfterPaintHandler(function () {
+        this._nextPaintHandler = null;
+        sendAsyncMsg('nextpaint');
+      }.bind(this));
+    }
+  },
+
+  _deactivateNextPaintListener: function(e) {
+    if (this._nextPaintHandler) {
+      this._removeMozAfterPaintHandler(this._nextPaintHandler);
+      this._nextPaintHandler = null;
     }
   },
 
@@ -724,7 +750,10 @@ BrowserElementChild.prototype = {
       if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         sendAsyncMsg('loadend');
 
-        if (status == Cr.NS_OK) {
+        // Ignoring NS_BINDING_ABORTED, which is set when loading page is
+        // stopped.
+        if (status == Cr.NS_OK ||
+            status == Cr.NS_BINDING_ABORTED) {
           return;
         }
 

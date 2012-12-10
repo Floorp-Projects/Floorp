@@ -2251,7 +2251,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 
     MakeContextCurrent();
 
-    const WebGLFramebufferAttachment& fba = mBoundFramebuffer->GetAttachment(attachment);
+    const WebGLFramebuffer::Attachment& fba = mBoundFramebuffer->GetAttachment(attachment);
 
     if (fba.Renderbuffer()) {
         switch (pname) {

@@ -51,7 +51,7 @@ class TaggedProto
 template <>
 struct RootKind<TaggedProto>
 {
-    static ThingRootKind rootKind() { return THING_ROOT_OBJECT; };
+    static ThingRootKind rootKind() { return THING_ROOT_OBJECT; }
 };
 
 template <> struct RootMethods<const TaggedProto>

@@ -7,7 +7,6 @@
 #include "nsIVariant.idl"
 
 interface nsIDOMHTMLMenuElement;
-interface nsIDOMHTMLPropertiesCollection;
 
 /**
  * The nsIDOMHTMLElement interface is the primary [X]HTML element
@@ -34,7 +33,7 @@ interface nsIDOMHTMLElement : nsIDOMElement
            attribute boolean                        itemScope;
            attribute nsIVariant                     itemType;
            attribute DOMString                      itemId;
-  readonly attribute nsIDOMHTMLPropertiesCollection properties; 
+  readonly attribute nsISupports                    properties;
   // The following attributes are really nsDOMSettableTokenList, which has
   // PutForwards, so we express them as nsIVariants to deal with this.
            attribute nsIVariant                     itemValue;

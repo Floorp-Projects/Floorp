@@ -54,8 +54,6 @@ DOMCI_CLASS(DeviceRotationRate)
 DOMCI_CLASS(HTMLDocument)
 DOMCI_CLASS(HTMLOptionsCollection)
 DOMCI_CLASS(HTMLCollection)
-DOMCI_CLASS(HTMLPropertiesCollection)
-DOMCI_CLASS(PropertyNodeList)
 
 // HTML element classes
 DOMCI_CLASS(HTMLElement)
@@ -339,10 +337,6 @@ DOMCI_CLASS(XPathResult)
 DOMCI_CLASS(StorageObsolete)
 DOMCI_CLASS(Storage)
 DOMCI_CLASS(StorageItem)
-
-// DOMParser, XMLSerializer
-DOMCI_CLASS(DOMParser)
-DOMCI_CLASS(XMLSerializer)
 
 // XMLHttpRequest
 DOMCI_CLASS(XMLHttpProgressEvent)

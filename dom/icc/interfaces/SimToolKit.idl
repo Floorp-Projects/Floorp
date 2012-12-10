@@ -318,6 +318,19 @@ dictionary MozStkPlayTone
   boolean isVibrate;
 };
 
+dictionary MozStkProvideLocalInfo
+{
+  /**
+   * Indicate which local information is required.
+   * It shall be one of following:
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_LOCATION_INFO
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_IMEI
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_DATE_TIME_ZONE
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_LANGUAGE
+   */
+  unsigned short localInfoType;
+};
+
 dictionary MozStkLocationEvent
 {
   /**
@@ -403,6 +416,10 @@ dictionary MozStkCommand
    * options is MozStkDuration.
    *
    * When typeOfCommand is
+   * - STK_CMD_PROVIDE_LOCAL_INFO
+   * options is MozStkProvideLocalInfo.
+   *
+   * When typeOfCommand is
    * - STK_CMD_POLL_OFF
    * options is null.
    *
@@ -458,6 +475,13 @@ dictionary MozStkResponse
    * false: Rejected by User.
    */
   boolean hasConfirmed;
+
+  /**
+   * The response for STK_CMD_PROVIDE_LOCAL_INFO
+   *
+   * @see MozStkLocalInfo
+   */
+  jsval localInfo;
 };
 
 dictionary MozStkCallEvent
@@ -492,4 +516,33 @@ dictionary MozStkCallEvent
    * listener of nsIDOMCallEvent. Null if there's no error.
    */
   DOMString error;
+};
+
+dictionary MozStkLocalInfo
+{
+  /**
+   * IMEI information
+   */
+  DOMString imei;
+
+  /**
+   * Location Information
+   *
+   * @see MozStkLocationInfo.
+   */
+  jsval locationInfo;
+
+  /**
+   * Date information
+   *
+   * @see Date
+   */
+  jsval date;
+
+  /**
+   * Language Information
+   *
+   * @see ISO 639-1, Alpha-2 code
+   */
+  DOMString language;
 };

@@ -36,7 +36,7 @@ interface DOMParser {
   Document parseFromBuffer(Uint8Array buf, unsigned long bufLen,
                            SupportedType type);
   [Creator, Throws, ChromeOnly]
-  Document parseFromStream(InputStream stream, DOMString charset,
+  Document parseFromStream(InputStream stream, DOMString? charset,
                            long contentLength, SupportedType type);
   [Throws, ChromeOnly]
   void init(optional Principal? principal = null,

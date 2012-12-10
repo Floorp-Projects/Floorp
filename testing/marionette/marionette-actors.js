@@ -37,7 +37,7 @@ Services.prefs.setBoolPref("marionette.contentListener", false);
 let appName = Services.appinfo.name;
 
 // import logger
-Cu.import("resource:///modules/services-common/log4moz.js");
+Cu.import("resource://gre/modules/services-common/log4moz.js");
 let logger = Log4Moz.repository.getLogger("Marionette");
 logger.info('marionette-actors.js loaded');
 
@@ -1565,6 +1565,40 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * Add a cookie to the document.
+   */
+  addCookie: function MDA_addCookie(aRequest) {
+    this.command_id = this.getCommandId();
+    this.sendAsync("addCookie", {cookie:aRequest.cookie,
+                                 command_id: this.command_id});
+  },
+
+  /**
+   * Get all visible cookies for a document
+   */
+  getAllCookies: function MDA_getAllCookies() {
+    this.command_id = this.getCommandId();
+    this.sendAsync("getAllCookies", {command_id: this.command_id});
+  },
+
+  /**
+   * Delete all cookies that are visible to a document
+   */
+  deleteAllCookies: function MDA_deleteAllCookies() {
+    this.command_id = this.getCommandId();
+    this.sendAsync("deleteAllCookies", {command_id: this.command_id});
+  },
+
+  /**
+   * Delete a cookie by name
+   */
+  deleteCookie: function MDA_deleteCookie(aRequest) {
+    this.command_id = this.getCommandId();
+    this.sendAsync("deleteCookie", {name:aRequest.name,
+                                    command_id: this.command_id});
+  },
+
+  /**
    * Closes the Browser Window.
    *
    * If it is B2G it returns straight away and does not do anything
@@ -1916,7 +1950,11 @@ MarionetteDriverActor.prototype.requestTypes = {
   "getAppCacheStatus": MarionetteDriverActor.prototype.getAppCacheStatus,
   "closeWindow": MarionetteDriverActor.prototype.closeWindow,
   "setTestName": MarionetteDriverActor.prototype.setTestName,
-  "screenShot": MarionetteDriverActor.prototype.screenShot
+  "screenShot": MarionetteDriverActor.prototype.screenShot,
+  "addCookie": MarionetteDriverActor.prototype.addCookie,
+  "getAllCookies": MarionetteDriverActor.prototype.getAllCookies,
+  "deleteAllCookies": MarionetteDriverActor.prototype.deleteAllCookies,
+  "deleteCookie": MarionetteDriverActor.prototype.deleteCookie
 };
 
 /**

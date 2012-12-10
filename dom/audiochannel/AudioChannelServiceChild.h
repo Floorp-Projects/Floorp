@@ -12,7 +12,6 @@
 
 #include "AudioChannelService.h"
 #include "AudioChannelCommon.h"
-#include "nsHTMLMediaElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -30,9 +29,9 @@ public:
 
   static void Shutdown();
 
-  virtual void RegisterMediaElement(nsHTMLMediaElement* aMediaElement,
-                                    AudioChannelType aType);
-  virtual void UnregisterMediaElement(nsHTMLMediaElement* aMediaElement);
+  virtual void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
+                                         AudioChannelType aType);
+  virtual void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent);
 
   /**
    * Return true if this type + this mozHidden should be muted.

@@ -53,7 +53,7 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32_t argc, Value *argv, Value
     // In order to prevent massive bouncing between Ion and JM, see if we keep
     // hitting functions that are uncompilable.
     if (fun->isInterpreted()) {
-        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx).unsafeGet())
+        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
             return false;
         if (!fun->nonLazyScript()->canIonCompile()) {
             JSScript *script = GetTopIonJSScript(cx);
@@ -103,7 +103,7 @@ InvokeConstructor(JSContext *cx, JSObject *obj, uint32_t argc, Value *argv, Valu
 
     if (obj->isFunction()) {
         if (obj->toFunction()->isInterpretedLazy() &&
-            !obj->toFunction()->getOrCreateScript(cx).unsafeGet())
+            !obj->toFunction()->getOrCreateScript(cx))
         {
             return false;
         }

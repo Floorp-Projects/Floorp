@@ -9,7 +9,10 @@
 #define jsion_architecture_arm_h__
 
 #include <limits.h>
-
+// gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float target.
+#ifdef __ARM_PCS_VFP
+#define JS_CPU_ARM_HARDFP
+#endif
 namespace js {
 namespace ion {
 
@@ -195,8 +198,8 @@ class FloatRegisters
 
     static const uint32_t WrapperMask = VolatileMask;
 
-    // d0 is the ARM scratch float register.
-    static const uint32_t NonAllocatableMask = (1 << d0) | (1 << invalid_freg);
+    // d1 is the ARM scratch float register.
+    static const uint32_t NonAllocatableMask = (1 << d1) | (1 << invalid_freg);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;

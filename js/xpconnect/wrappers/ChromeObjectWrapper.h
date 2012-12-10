@@ -24,7 +24,7 @@ namespace xpc {
 class ChromeObjectWrapper : public ChromeObjectWrapperBase
 {
   public:
-    ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {};
+    ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {}
 
     /* Custom traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper,

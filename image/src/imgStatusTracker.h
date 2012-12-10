@@ -114,7 +114,7 @@ public:
   // with its status. Weak pointers.
   void AddConsumer(imgRequestProxy* aConsumer);
   bool RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus);
-  size_t ConsumerCount() const { return mConsumers.Length(); };
+  size_t ConsumerCount() const { return mConsumers.Length(); }
 
   // This is intentionally non-general because its sole purpose is to support an
   // some obscure network priority logic in imgRequest. That stuff could probably
@@ -190,8 +190,8 @@ public:
   void ClearRequest();
 
   // Weak pointer getters - no AddRefs.
-  inline mozilla::image::Image* GetImage() const { return mImage; };
-  inline imgRequest* GetRequest() const { return mRequest; };
+  inline mozilla::image::Image* GetImage() const { return mImage; }
+  inline imgRequest* GetRequest() const { return mRequest; }
 
   inline imgIDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 

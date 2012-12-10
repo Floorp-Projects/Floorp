@@ -1688,12 +1688,12 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 #endif
 
 static nscolor
-ConvertAndroidColor(uint32_t c)
+ConvertAndroidColor(uint32_t argb)
 {
-    return NS_RGBA((c & 0x000000ff),
-                   (c & 0x0000ff00) >> 8,
-                   (c & 0x00ff0000) >> 16,
-                   (c & 0xff000000) >> 24);
+    return NS_RGBA((argb & 0x00ff0000) >> 16,
+                   (argb & 0x0000ff00) >> 8,
+                   (argb & 0x000000ff),
+                   (argb & 0xff000000) >> 24);
 }
 
 class AutoIMEMask {
@@ -1858,11 +1858,14 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             range.mEndOffset = ae->End();
             range.mRangeType = ae->RangeType();
             range.mRangeStyle.mDefinedStyles = ae->RangeStyles();
-            range.mRangeStyle.mLineStyle = nsTextRangeStyle::LINESTYLE_SOLID;
+            range.mRangeStyle.mLineStyle = ae->RangeLineStyle();
+            range.mRangeStyle.mIsBoldLine = ae->RangeBoldLine();
             range.mRangeStyle.mForegroundColor =
                     ConvertAndroidColor(uint32_t(ae->RangeForeColor()));
             range.mRangeStyle.mBackgroundColor =
                     ConvertAndroidColor(uint32_t(ae->RangeBackColor()));
+            range.mRangeStyle.mUnderlineColor =
+                    ConvertAndroidColor(uint32_t(ae->RangeLineColor()));
             mIMERanges.AppendElement(range);
         }
         break;

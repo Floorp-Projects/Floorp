@@ -74,7 +74,7 @@ class TransportLayerLossy : public TransportLayer {
     SignalPacketReceived(this, data, len);
   }
 
-  TRANSPORT_LAYER_ID("lossy");
+  TRANSPORT_LAYER_ID("lossy")
 
  protected:
   virtual void WasInserted() {

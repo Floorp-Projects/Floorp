@@ -23,6 +23,7 @@ EXPORTS := \
   DASHDecoder.h \
   DASHRepDecoder.h \
   DASHReader.h \
+  DASHRepReader.h \
   $(NULL)
 
 CPPSRCS := \

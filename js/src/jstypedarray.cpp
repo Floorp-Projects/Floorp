@@ -375,6 +375,7 @@ ArrayBufferObject::addView(RawObject view)
         // Move the multiview buffer list link into this view since we're
         // prepending it to the list.
         SetBufferLink(view, BufferLink(*views));
+        SetBufferLink(*views, UNSET_BUFFER_LINK);
         WeakObjectSlotBarrierPost(view, BufferView::NEXT_BUFFER_SLOT, "view.nextbuffer");
     }
 
@@ -467,6 +468,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents,
     JSObject *views = *GetViewList(&buffer);
     js::ObjectElements *header = js::ObjectElements::fromElements((js::HeapSlot*)buffer.dataPointer());
     if (buffer.hasDynamicElements()) {
+        *GetViewList(&buffer) = NULL;
         *contents = header;
         *data = buffer.dataPointer();
 
@@ -543,6 +545,15 @@ ArrayBufferObject::obj_trace(JSTracer *trc, RawObject obj)
                 JSObject **bufList = &obj->compartment()->gcLiveArrayBuffers;
                 SetBufferLink(firstView, *bufList);
                 *bufList = obj;
+            } else {
+#ifdef DEBUG
+                bool found = false;
+                for (JSObject *p = obj->compartment()->gcLiveArrayBuffers; p; p = BufferLink(p)) {
+                    if (p == obj)
+                        found = true;
+                }
+                JS_ASSERT(found);
+#endif
             }
         }
     }
@@ -3643,6 +3654,7 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
         return NULL;
     JSObject *obj = ArrayBufferObject::create(cx, 0);
     obj->setDynamicElements(reinterpret_cast<js::ObjectElements *>(contents));
+    JS_ASSERT(*GetViewList(&obj->asArrayBuffer()) == NULL);
     return obj;
 }
 

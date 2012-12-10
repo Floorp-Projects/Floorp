@@ -601,7 +601,7 @@ js_NewGCShape(JSContext *cx)
     return js::gc::NewGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
 }
 
-inline js::Return<js::BaseShape*>
+inline js::UnrootedBaseShape
 js_NewGCBaseShape(JSContext *cx)
 {
     return js::gc::NewGCThing<js::BaseShape>(cx, js::gc::FINALIZE_BASE_SHAPE, sizeof(js::BaseShape));

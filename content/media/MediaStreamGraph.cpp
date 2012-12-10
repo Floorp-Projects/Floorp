@@ -587,19 +587,22 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
   bool finished;
   {
     MutexAutoLock lock(aStream->mMutex);
-    if (aStream->mPullEnabled && !aStream->mFinished) {
-      for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
-        MediaStreamListener* l = aStream->mListeners[j];
-        {
-          // Compute how much stream time we'll need assuming we don't block
-          // the stream at all between mBlockingDecisionsMadeUntilTime and
-          // aDesiredUpToTime.
-          StreamTime t =
-            GraphTimeToStreamTime(aStream, mStateComputedTime) +
-            (aDesiredUpToTime - mStateComputedTime);
-          MutexAutoUnlock unlock(aStream->mMutex);
-          l->NotifyPull(this, t);
-          *aEnsureNextIteration = true;
+    if (aStream->mPullEnabled && !aStream->mFinished &&
+        !aStream->mListeners.IsEmpty()) {
+      // Compute how much stream time we'll need assuming we don't block
+      // the stream at all between mBlockingDecisionsMadeUntilTime and
+      // aDesiredUpToTime.
+      StreamTime t =
+        GraphTimeToStreamTime(aStream, mStateComputedTime) +
+        (aDesiredUpToTime - mStateComputedTime);
+      if (t > aStream->mBuffer.GetEnd()) {
+        *aEnsureNextIteration = true;
+        for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
+          MediaStreamListener* l = aStream->mListeners[j];
+          {
+            MutexAutoUnlock unlock(aStream->mMutex);
+            l->NotifyPull(this, t);
+          }
         }
       }
     }

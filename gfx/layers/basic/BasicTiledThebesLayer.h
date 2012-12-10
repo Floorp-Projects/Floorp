@@ -12,8 +12,6 @@
 #include "BasicImplData.h"
 #include <algorithm>
 
-#define LOW_PRECISION_RESOLUTION 0.25
-
 namespace mozilla {
 namespace layers {
 
@@ -176,20 +174,8 @@ class BasicTiledThebesLayer : public ThebesLayer,
   typedef ThebesLayer Base;
 
 public:
-  BasicTiledThebesLayer(BasicShadowLayerManager* const aManager)
-    : ThebesLayer(aManager, static_cast<BasicImplData*>(this))
-    , mLastScrollOffset(0, 0)
-    , mFirstPaint(true)
-  {
-    MOZ_COUNT_CTOR(BasicTiledThebesLayer);
-    mLowPrecisionTiledBuffer.SetResolution(LOW_PRECISION_RESOLUTION);
-  }
-
-  ~BasicTiledThebesLayer()
-  {
-    MOZ_COUNT_DTOR(BasicTiledThebesLayer);
-  }
-
+  BasicTiledThebesLayer(BasicShadowLayerManager* const aManager);
+  ~BasicTiledThebesLayer();
 
   // Thebes Layer
   virtual Layer* AsLayer() { return this; }

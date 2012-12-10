@@ -83,6 +83,38 @@ typedef enum rtp_ptype_
     RTP_ISAC         = 124
 } rtp_ptype;
 
+/**
+ * IANA-registered static payload types for the RTP/AVP profile.
+ * See http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xml
+ */
+typedef enum static_rtp_ptype_
+{
+    STATIC_RTP_AVP_PCMU_8000_1          = 0,
+    STATIC_RTP_AVP_GSM_8000_1           = 3,
+    STATIC_RTP_AVP_G723_8000_1          = 4,
+    STATIC_RTP_AVP_DVI4_8000_1          = 5,
+    STATIC_RTP_AVP_DVI4_16000_1         = 6,
+    STATIC_RTP_AVP_LPC_8000_1           = 7,
+    STATIC_RTP_AVP_PCMA_8000_1          = 8,
+    STATIC_RTP_AVP_G722_8000_1          = 9,
+    STATIC_RTP_AVP_L16_44100_2          = 10,
+    STATIC_RTP_AVP_L16_44100_1          = 11,
+    STATIC_RTP_AVP_QCELP_8000_1         = 12,
+    STATIC_RTP_AVP_CN_8000_1            = 13,
+    STATIC_RTP_AVP_MPA_90000_1          = 14,
+    STATIC_RTP_AVP_G728_8000_1          = 15,
+    STATIC_RTP_AVP_DVI4_11025_1         = 16,
+    STATIC_RTP_AVP_DVI4_22050_1         = 17,
+    STATIC_RTP_AVP_G729_8000_1          = 18,
+    STATIC_RTP_AVP_CELB_90000_1         = 25,
+    STATIC_RTP_AVP_JPEG_90000_1         = 26,
+    STATIC_RTP_AVP_NV_90000_1           = 28,
+    STATIC_RTP_AVP_H261_90000_1         = 31,
+    STATIC_RTP_AVP_MPV_90000_1          = 32,
+    STATIC_RTP_AVP_MP2T_90000_1         = 33,
+    STATIC_RTP_AVP_H263_90000_1         = 34
+} static_rtp_ptype;
+
 typedef struct {
     const char *name;
     int         value;
@@ -614,5 +646,14 @@ sdp_result_e ccsdpAddNewBandwidthLine (void *sdp_handle, uint16_t level, sdp_bw_
  */
 sdp_result_e ccsdpSetBandwidth (void *sdp_handle, uint16_t level, uint16_t inst_num,
                          sdp_bw_modifier_e bw_modifier, uint32_t bw_val);
+
+/**
+ * Returns a string representation of a codec's name.
+ *
+ * @param[in]  rtp_ptype      The value taken from the rtp_ptype enumeration
+ *
+ * @return     A string representing the name of the codec
+ */
+const char * ccsdpCodecName(rtp_ptype ptype);
 
 #endif

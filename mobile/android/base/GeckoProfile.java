@@ -35,9 +35,6 @@ public final class GeckoProfile {
     private File mMozDir;
     private File mDir;
 
-    // this short timeout is a temporary fix until bug 735399 is implemented
-    private static final long SESSION_TIMEOUT = 30 * 1000; // 30 seconds
-
     static private INIParser getProfilesINI(Context context) {
       File filesDir = context.getFilesDir();
       File mozillaDir = new File(filesDir, "mozilla");
@@ -185,11 +182,7 @@ public final class GeckoProfile {
      */
     public boolean shouldRestoreSession() {
         File sessionFile = getFile("sessionstore.js");
-        if (sessionFile == null || !sessionFile.exists())
-            return false;
-
-        boolean shouldRestore = (System.currentTimeMillis() - sessionFile.lastModified() < SESSION_TIMEOUT);
-        return shouldRestore;
+        return sessionFile != null && sessionFile.exists();
     }
 
     /**

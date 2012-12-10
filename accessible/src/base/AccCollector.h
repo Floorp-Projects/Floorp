@@ -74,7 +74,7 @@ private:
 class EmbeddedObjCollector : public AccCollector
 {
 public:
-  virtual ~EmbeddedObjCollector() { };
+  virtual ~EmbeddedObjCollector() { }
 
 public:
   virtual int32_t GetIndexAt(Accessible* aAccessible);

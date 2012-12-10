@@ -47,13 +47,6 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 // refresh instead.
 const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
-// The RESTORE_*_NSIOBSERVER_TOPIC constants should match the #defines of the
-// same names in browser/components/places/src/nsPlacesExportService.cpp
-const RESTORE_BEGIN_NSIOBSERVER_TOPIC = "bookmarks-restore-begin";
-const RESTORE_SUCCESS_NSIOBSERVER_TOPIC = "bookmarks-restore-success";
-const RESTORE_FAILED_NSIOBSERVER_TOPIC = "bookmarks-restore-failed";
-const RESTORE_NSIOBSERVER_DATA = "json";
-
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
 // really just want "\n".
@@ -106,6 +99,9 @@ this.PlacesUtils = {
   TOPIC_FEEDBACK_UPDATED: "places-autocomplete-feedback-updated",
   TOPIC_FAVICONS_EXPIRED: "places-favicons-expired",
   TOPIC_VACUUM_STARTING: "places-vacuum-starting",
+  TOPIC_BOOKMARKS_RESTORE_BEGIN: "bookmarks-restore-begin",
+  TOPIC_BOOKMARKS_RESTORE_SUCCESS: "bookmarks-restore-success",
+  TOPIC_BOOKMARKS_RESTORE_FAILED: "bookmarks-restore-failed",
 
   asVisit: function(aNode) asVisit(aNode),
   asFullVisit: function(aNode) asFullVisit(aNode),
@@ -1699,9 +1695,11 @@ this.PlacesUtils = {
    */
   restoreBookmarksFromJSONFile:
   function PU_restoreBookmarksFromJSONFile(aFile) {
+    const RESTORE_NSIOBSERVER_DATA = "json";
+
     let failed = false;
     Services.obs.notifyObservers(null,
-                                 RESTORE_BEGIN_NSIOBSERVER_TOPIC,
+                                 this.TOPIC_BOOKMARKS_RESTORE_BEGIN,
                                  RESTORE_NSIOBSERVER_DATA);
 
     try {
@@ -1729,7 +1727,7 @@ this.PlacesUtils = {
     catch (exc) {
       failed = true;
       Services.obs.notifyObservers(null,
-                                   RESTORE_FAILED_NSIOBSERVER_TOPIC,
+                                   this.TOPIC_BOOKMARKS_RESTORE_FAILED,
                                    RESTORE_NSIOBSERVER_DATA);
       Cu.reportError("Bookmarks JSON restore failed: " + exc);
       throw exc;
@@ -1737,7 +1735,7 @@ this.PlacesUtils = {
     finally {
       if (!failed) {
         Services.obs.notifyObservers(null,
-                                     RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
+                                     this.TOPIC_BOOKMARKS_RESTORE_SUCCESS,
                                      RESTORE_NSIOBSERVER_DATA);
       }
     }

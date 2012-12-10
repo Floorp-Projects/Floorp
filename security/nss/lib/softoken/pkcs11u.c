@@ -511,7 +511,7 @@ sftk_forceTokenAttribute(SFTKObject *object,CK_ATTRIBUTE_TYPE type,
     dbHandle = sftk_getDBForTokenObject(object->slot, object->handle);
 
     attribute.type = type;
-    attribute.pValue = value;
+    attribute.pValue = (void *)value;
     attribute.ulValueLen = len;
 
     crv = sftkdb_SetAttributeValue(dbHandle, object, &attribute, 1);
