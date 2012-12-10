@@ -48,6 +48,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Movable)       /* Allow LICM and GVN to move this instruction */          \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
+    _(Folded)        /* Has constant folded uses not reflected in SSA */        \
                                                                                 \
     /* The instruction has been marked dead for lazy removal from resume
      * points.
@@ -2736,12 +2737,10 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
     uint32_t slot_;
     bool triedToSpecialize_;
-    bool hasBytecodeUses_;
     bool isIterator_;
     MPhi(uint32_t slot)
       : slot_(slot),
         triedToSpecialize_(false),
-        hasBytecodeUses_(false),
         isIterator_(false)
     {
         setResultType(MIRType_Value);
@@ -2778,12 +2777,6 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 
     bool congruentTo(MDefinition * const &ins) const;
 
-    bool hasBytecodeUses() const {
-        return hasBytecodeUses_;
-    }
-    void setHasBytecodeUses() {
-        hasBytecodeUses_ = true;
-    }
     bool isIterator() const {
         return isIterator_;
     }
