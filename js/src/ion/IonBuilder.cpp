@@ -559,7 +559,7 @@ IonBuilder::initParameters()
     current->initSlot(info().thisSlot(), param);
 
     for (uint32_t i = 0; i < info().nargs(); i++) {
-        param = MParameter::New(i, oracle->parameterTypeSet(script_, i));
+        param = MParameter::New(i, cloneTypeSet(oracle->parameterTypeSet(script_, i)));
         current->add(param);
         current->initSlot(info().argSlot(i), param);
     }
