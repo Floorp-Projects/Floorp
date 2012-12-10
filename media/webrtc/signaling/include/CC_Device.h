@@ -20,7 +20,7 @@ namespace CSF
         CC_Device() {}
 
     public:
-        virtual ~CC_Device() {};
+        virtual ~CC_Device() {}
 
         virtual std::string toString() = 0;
 

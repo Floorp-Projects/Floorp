@@ -556,8 +556,10 @@ intel_aes_encrypt_cbc_128:
 	.globl intel_aes_decrypt_cbc_128
 	.align	16
 intel_aes_decrypt_cbc_128:
-	leaq	16(%rdi), %rdx  /* iv */
-	leaq	48(%rdi), %rdi  /* expanded key */
+//	leaq	IV_OFFSET(%rdi), %rdx
+//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
+	leaq	16(%rdi), %rdx
+	leaq	48(%rdi), %rdi
 
 	movdqu	(%rdx), %xmm0   /* iv */
 	movdqu	(%rdi), %xmm2   /* first key block */

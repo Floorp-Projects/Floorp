@@ -386,6 +386,11 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
 
 function run_test()
 {
+  run_next_test();
+}
+
+add_task(function test_containersQueries_sorting()
+{
   // Add visits, bookmarks and tags to our database.
   var timeInMilliseconds = Date.now();
   var visitCount = 0;
@@ -403,7 +408,7 @@ function run_test()
       isTag: true,
       tagArray: tags,
       isInQuery: true }));
-  populateDB(visits);
+  yield task_populateDB(visits);
 
   cartProd([resultTypes, sortingModes], test_query_callback);
-}
+});

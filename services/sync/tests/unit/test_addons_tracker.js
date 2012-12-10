@@ -20,6 +20,9 @@ let reconciler = engine._reconciler;
 let store      = engine._store;
 let tracker    = engine._tracker;
 
+// Don't write out by default.
+tracker.persistChangedIDs = false;
+
 const addon1ID = "addon1@tests.mozilla.org";
 
 function cleanup_and_advance() {
@@ -28,7 +31,6 @@ function cleanup_and_advance() {
 
   tracker.resetScore();
   tracker.clearChangedIDs();
-  tracker._lazySave.clear();
 
   reconciler._addons = {};
   reconciler._changes = [];

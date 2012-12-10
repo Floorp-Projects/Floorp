@@ -49,6 +49,10 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     bool visitReturn(MReturn *ret);
     bool visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
     bool lowerPhi(MPhi *phi);
+
+    static bool allowTypedElementHoleCheck() {
+        return true;
+    }
 };
 
 typedef LIRGeneratorX86 LIRGeneratorSpecific;

@@ -21,6 +21,9 @@ from mach.decorators import (
 )
 
 
+DEBUGGER_HELP = 'Debugger binary to run test in. Program name or path.'
+
+
 class ReftestRunner(MozbuildObject):
     """Easily run reftests.
 
@@ -51,7 +54,8 @@ class ReftestRunner(MozbuildObject):
     def _make_shell_string(self, s):
         return "'%s'" % re.sub("'", r"'\''", s)
 
-    def run_reftest_test(self, test_file=None, filter=None, suite=None):
+    def run_reftest_test(self, test_file=None, filter=None, suite=None,
+            debugger=None):
         """Runs a reftest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -63,27 +67,39 @@ class ReftestRunner(MozbuildObject):
 
         suite is the type of reftest to run. It can be one of ('reftest',
         'crashtest').
+
+        debugger is the program name (in $PATH) or the full path of the
+        debugger to run.
         """
 
         if suite not in ('reftest', 'crashtest'):
             raise Exception('None or unrecognized reftest suite type.')
 
         env = {}
+        extra_args = []
+
         if test_file:
             path = self._find_manifest(suite, test_file)
             if not os.path.exists(path):
                 raise Exception('No manifest file was found at %s.' % path)
             env[b'TEST_PATH'] = path
         if filter:
-            if b'EXTRA_TEST_ARGS' in os.environ:
-                env[b'EXTRA_TEST_ARGS'] = os.environ[b'EXTRA_TEST_ARGS'] + ' '
-            else:
-                env[b'EXTRA_TEST_ARGS'] = ' '
-            env[b'EXTRA_TEST_ARGS'] += ("--filter %s" %
-                                       self._make_shell_string(filter))
+            extra_args.extend(['--filter', self._make_shell_string(filter)])
+
+        pass_thru = False
+
+        if debugger:
+            extra_args.append('--debugger=%s' % debugger)
+            pass_thru = True
+
+        if extra_args:
+            args = [os.environ.get(b'EXTRA_TEST_ARGS', '')]
+            args.extend(extra_args)
+            env[b'EXTRA_TEST_ARGS'] = ' '.join(args)
 
         # TODO hook up harness via native Python
-        self._run_make(directory='.', target=suite, append_env=env)
+        return self._run_make(directory='.', target=suite, append_env=env,
+            pass_thru=pass_thru, ensure_exit_code=False)
 
 
 @CommandProvider
@@ -95,18 +111,24 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--filter', default=None, metavar='REGEX',
         help='A JS regular expression to match test URLs against, to select '
              'a subset of tests to run.')
-    def run_reftest(self, test_file, filter):
-        self._run_reftest(test_file, filter=filter, suite='reftest')
+    @CommandArgument('--debugger', metavar='DEBUGGER', help=DEBUGGER_HELP)
+    def run_reftest(self, test_file, filter, debugger=None):
+        return self._run_reftest(test_file, filter=filter, suite='reftest',
+            debugger=debugger)
 
     @Command('crashtest', help='Run a crashtest.')
     @CommandArgument('test_file', default=None, nargs='?', metavar='MANIFEST',
         help='Crashtest manifest file, or a direction in which to select '
              'crashtests.list.')
-    def run_crashtest(self, test_file):
-        self._run_reftest(test_file, suite='crashtest')
+    @CommandArgument('--debugger', metavar='DEBUGGER', help=DEBUGGER_HELP)
+    def run_crashtest(self, test_file, debugger=None):
+        return self._run_reftest(test_file, suite='crashtest',
+            debugger=debugger)
 
-    def _run_reftest(self, test_file, filter, suite):
+    def _run_reftest(self, test_file=None, filter=None, suite=None,
+            debugger=None):
         reftest = self._spawn(ReftestRunner)
-        reftest.run_reftest_test(test_file, filter, suite)
+        return reftest.run_reftest_test(test_file, filter=filter, suite=suite,
+            debugger=debugger)
 
 

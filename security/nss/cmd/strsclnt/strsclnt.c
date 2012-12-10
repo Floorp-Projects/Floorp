@@ -11,10 +11,8 @@
 #include <unistd.h>
 #endif
 #include <stdlib.h>
-#if !defined(_WIN32_WCE)
 #include <errno.h>
 #include <fcntl.h>
-#endif
 #include <stdarg.h>
 
 #include "plgetopt.h"

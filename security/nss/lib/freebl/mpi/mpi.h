@@ -6,7 +6,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: mpi.h,v 1.25 2012/04/25 14:49:50 gerv%gerv.net Exp $ */
+/* $Id: mpi.h,v 1.26 2012/11/14 01:14:11 wtc%google.com Exp $ */
 
 #ifndef _H_MPI_
 #define _H_MPI_
@@ -29,11 +29,7 @@
 #undef ULLONG_MAX
 #endif
 
-#if defined( _WIN32_WCE)
-/* #include <sys/types.h> What do we need here ?? */
-#else
 #include <sys/types.h>
-#endif
 
 #define  MP_NEG    1
 #define  MP_ZPOS   0

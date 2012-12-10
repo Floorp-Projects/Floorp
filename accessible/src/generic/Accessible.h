@@ -950,7 +950,7 @@ public:
 
   KeyBinding() : mKey(0), mModifierMask(0) {}
   KeyBinding(uint32_t aKey, uint32_t aModifierMask) :
-    mKey(aKey), mModifierMask(aModifierMask) {};
+    mKey(aKey), mModifierMask(aModifierMask) {}
 
   inline bool IsEmpty() const { return !mKey; }
   inline uint32_t Key() const { return mKey; }

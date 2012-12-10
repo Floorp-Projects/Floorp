@@ -26,7 +26,7 @@ public:
                          , mCert(aCert)
     {}
 
-  virtual ~nsCertificatePrincipal() {};
+  virtual ~nsCertificatePrincipal() {}
 
 private:
   nsCString             mFingerprint;

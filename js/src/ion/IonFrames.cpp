@@ -926,7 +926,7 @@ InlineFrameIterator::findNextFrame()
         si_.nextFrame();
 
         callee_ = funval.toObject().toFunction();
-        script_ = callee_->nonLazyScript().get(nogc);
+        script_ = callee_->nonLazyScript();
         pc_ = script_->code + si_.pcOffset();
     }
 

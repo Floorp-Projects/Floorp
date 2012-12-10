@@ -166,6 +166,11 @@ class LIRGeneratorShared : public MInstructionVisitor
 
   public:
     bool visitConstant(MConstant *ins);
+
+    // Whether to generate typed reads for element accesses with hole checks.
+    static bool allowTypedElementHoleCheck() {
+        return false;
+    }
 };
 
 } // namespace ion

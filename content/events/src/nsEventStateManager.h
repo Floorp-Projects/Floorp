@@ -350,7 +350,7 @@ protected:
     /**
      * Computes the default action for the aEvent with the prefs.
      */
-    enum Action
+    enum Action MOZ_ENUM_TYPE(uint8_t)
     {
       ACTION_NONE = 0,
       ACTION_SCROLL,
@@ -428,6 +428,12 @@ protected:
     double mMultiplierY[COUNT_OF_MULTIPLIERS];
     double mMultiplierZ[COUNT_OF_MULTIPLIERS];
     Action mActions[COUNT_OF_MULTIPLIERS];
+    /**
+     * action values overridden by .override_x pref.
+     * If an .override_x value is -1, same as the
+     * corresponding mActions value.
+     */
+    Action mOverriddenActionsX[COUNT_OF_MULTIPLIERS];
 
     static WheelPrefs* sInstance;
   };

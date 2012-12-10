@@ -48,11 +48,17 @@
     {isInQuery: false, isVisit:true, isDetails: true, title: "m,oz",
      uri: "http://foo.com/changeme2.htm", lastVisit: tomorrow}];
 
- /**
-  * This test will test Queries that use relative search terms and URI options
-  */
- function run_test() {
-   populateDB(testData);
+/**
+ * This test will test Queries that use relative search terms and URI options
+ */
+function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_searchterms_uri()
+{
+  yield task_populateDB(testData);
    var query = PlacesUtils.history.getNewQuery();
    query.searchTerms = "moz";
    query.uri = uri("http://foo.com");
@@ -81,41 +87,36 @@
    LOG("Adding item to query")
    var change1 = [{isVisit: true, isDetails: true, uri: "http://foo.com/added.htm",
                    title: "moz", transType: PlacesUtils.history.TRANSITION_LINK}];
-   populateDB(change1);
+   yield task_populateDB(change1);
    do_check_true(isInResult(change1, root));
 
    // Update an existing URI
    LOG("Updating Item");
    var change2 = [{isDetails: true, uri: "http://foo.com/changeme1.htm",
                    title: "moz" }];
-   populateDB(change2);
+   yield task_populateDB(change2);
    do_check_true(isInResult(change2, root));
 
-   // Update some in batch mode - add one and take one out of query set,
-   // and simply change one so that it still applies to the query
-   LOG("Updating Items in batch");
-   var updateBatch = {
-     runBatched: function (aUserData) {
-       var batchchange = [{isDetails: true, uri:"http://foo.com/changeme2.htm",
-                           title: "moz"},
-                          {isDetails: true, uri: "http://foo.com/yiihah",
-                           title: "moz now updated"},
-                          {isDetails: true, uri: "http://foo.com/redirect",
-                           title: "gone"}];
-       populateDB(batchchange);
-     }
-   };
-   PlacesUtils.history.runInBatchMode(updateBatch, null);
+   // Add one and take one out of query set, and simply change one so that it
+   // still applies to the query.
+   LOG("Updating More Items");
+   var change3 = [{isDetails: true, uri:"http://foo.com/changeme2.htm",
+                   title: "moz"},
+                  {isDetails: true, uri: "http://foo.com/yiihah",
+                   title: "moz now updated"},
+                  {isDetails: true, uri: "http://foo.com/redirect",
+                   title: "gone"}];
+   yield task_populateDB(change3);
    do_check_true(isInResult({uri: "http://foo.com/changeme2.htm"}, root));
    do_check_true(isInResult({uri: "http://foo.com/yiihah"}, root));
    do_check_false(isInResult({uri: "http://foo.com/redirect"}, root));
 
    // And now, delete one
-   LOG("Delete item outside of batch");
+   LOG("Deleting items");
    var change4 = [{isDetails: true, uri: "http://foo.com/",
                    title: "mo,z"}];
-   populateDB(change4);
+   yield task_populateDB(change4);
    do_check_false(isInResult(change4, root));
 
    root.containerOpen = false;
-}
+});

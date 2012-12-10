@@ -67,6 +67,9 @@ ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool ok);
 extern bool
 BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
 
+extern bool
+BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified);
+
 /*
  * Ensure that fp->thisValue() is the correct value of |this| for the scripted
  * call represented by |fp|. ComputeThis is necessary because fp->thisValue()

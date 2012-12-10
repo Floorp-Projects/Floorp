@@ -24,6 +24,12 @@ EXPORTS		= \
 		nsVKList.h \
 		$(NULL)
 
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+  EventTarget.h \
+  $(NULL)
+
 XPIDLSRCS	= \
 		nsIEventListenerService.idl \
 		$(NULL)

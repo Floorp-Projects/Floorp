@@ -1262,6 +1262,24 @@ gfxPlatform::UseLowPrecisionBuffer()
     return sUseLowPrecisionBuffer;
 }
 
+float
+gfxPlatform::GetLowPrecisionResolution()
+{
+    static float sLowPrecisionResolution;
+    static bool sLowPrecisionResolutionPrefCached = false;
+
+    if (!sLowPrecisionResolutionPrefCached) {
+        int32_t lowPrecisionResolution = 250;
+        sLowPrecisionResolutionPrefCached = true;
+        mozilla::Preferences::AddIntVarCache(&lowPrecisionResolution,
+                                             "layers.low-precision-resolution",
+                                             250);
+        sLowPrecisionResolution = lowPrecisionResolution / 1000.f;
+    }
+
+    return sLowPrecisionResolution;
+}
+
 bool
 gfxPlatform::UseReusableTileStore()
 {

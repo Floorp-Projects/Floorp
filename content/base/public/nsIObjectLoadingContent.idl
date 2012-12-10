@@ -21,7 +21,7 @@ interface nsIURI;
  * This interface represents a content node that loads objects.
  */
 
-[scriptable, uuid(a812424b-4820-4e28-96c8-dd2b69e36496)]
+[scriptable, uuid(649b8a75-8623-437f-ad30-0ac596c8452e)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -51,6 +51,8 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long PLUGIN_USER_DISABLED        = 7;
   /// ** All values >= PLUGIN_CLICK_TO_PLAY are plugin placeholder types that
   ///    would be replaced by a real plugin if activated (playPlugin())
+  /// ** Furthermore, values >= PLUGIN_CLICK_TO_PLAY and
+  ///    <= PLUGIN_VULNERABLE_NO_UPDATE are click-to-play types.
   // The plugin is disabled until the user clicks on it
   const unsigned long PLUGIN_CLICK_TO_PLAY        = 8;
   // The plugin is vulnerable (update available)
@@ -127,6 +129,16 @@ interface nsIObjectLoadingContent : nsISupports
 
   [noscript] void syncStartPluginInstance();
   [noscript] void asyncStartPluginInstance();
+
+  /**
+   * Requests the plugin instance for scripting, attempting to spawn it if
+   * appropriate.
+   *
+   * The first time content js tries to access a pre-empted plugin
+   * (click-to-play or play preview), an event is dispatched.
+   */
+  [noscript] nsNPAPIPluginInstancePtr
+    scriptRequestPluginInstance(in bool callerIsContentJS);
 
   /**
    * The URL of the data/src loaded in the object. This may be null (i.e.

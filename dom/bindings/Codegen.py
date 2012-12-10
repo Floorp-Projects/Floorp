@@ -607,40 +607,45 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
     return (headers, implheaders, declarations,
             CGList(SortedDictValues(unionStructs), "\n"))
 
-def UnionConversions(descriptors):
+def UnionConversions(descriptors, dictionaries, callbacks, config):
     """
     Returns a CGThing to declare all union argument conversion helper structs.
     """
     # Now find all the things we'll need as arguments because we
     # need to unwrap them.
+    headers = set()
     unionConversions = dict()
-    for d in descriptors:
-        if d.interface.isExternal():
-            continue
 
-        def addUnionTypes(type):
-            if type.isUnion():
-                type = type.unroll()
-                name = str(type)
-                if not name in unionConversions:
-                    unionConversions[name] = CGUnionConversionStruct(type, d)
+    def addInfoForType(t, descriptor=None, dictionary=None):
+        """
+        Add info for the given type.  descriptor and dictionary, if passed, are
+        used to figure out what to do with interface types.
+        """
+        assert not descriptor or not dictionary
+        t = t.unroll()
+        if not t.isUnion():
+            return
+        name = str(t)
+        if not name in unionConversions:
+            providers = getRelevantProviders(descriptor, dictionary,
+                                             config)
+            unionConversions[name] = CGUnionConversionStruct(t, providers[0])
+            for f in t.flatMemberTypes:
+                f = f.unroll()
+                if f.isInterface():
+                    if f.isSpiderMonkeyInterface():
+                        headers.add("jsfriendapi.h")
+                        headers.add("mozilla/dom/TypedArray.h")
+                    elif not f.inner.isExternal():
+                        headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif f.isDictionary():
+                    headers.add(CGHeaders.getDeclarationFilename(f.inner))
 
-        members = [m for m in d.interface.members]
-        if d.interface.ctor():
-            members.append(d.interface.ctor())
-        signatures = [s for m in members if m.isMethod() for s in m.signatures()]
-        for s in signatures:
-            assert len(s) == 2
-            (_, arguments) = s
-            for a in arguments:
-                addUnionTypes(a.type)
+    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
 
-        for m in members:
-            if m.isAttr() and not m.readonly:
-                addUnionTypes(m.type)
-
-    return CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
-                     post="\n\n")
+    return (headers,
+            CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
+                      post="\n\n"))
 
 class Argument():
     """
@@ -744,7 +749,7 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
 
     def definition_body_prologue(self):
         return """
-  %s* self = UnwrapDOMObject<%s>(obj, eRegularDOMObject);
+  %s* self = UnwrapDOMObject<%s>(obj);
 """ % (self.descriptor.nativeType, self.descriptor.nativeType)
 
     def definition_body(self):
@@ -1458,9 +1463,11 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                           "  return;\n" +
                           "}\n") % getParentProto
 
-        needConstructor = (needInterfaceObject and
-                           not self.descriptor.hasInstanceInterface)
-        constructHook = "&" + CONSTRUCT_HOOK_NAME + "_holder"
+        if (needInterfaceObject and
+            self.descriptor.needsConstructHookHolder()):
+            constructHookHolder = "&" + CONSTRUCT_HOOK_NAME + "_holder"
+        else:
+            constructHookHolder = "nullptr"
         if self.descriptor.interface.ctor():
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
@@ -1475,6 +1482,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if needInterfaceObject:
             if self.descriptor.hasInstanceInterface:
                 interfaceClass = "&InterfaceObjectClass.mBase"
+            elif self.descriptor.interface.isCallback():
+                interfaceClass = "js::Jsvalify(&js::ObjectClass)"
             else:
                 interfaceClass = "nullptr"
             interfaceCache = "&protoAndIfaceArray[constructors::id::%s]" % self.descriptor.name
@@ -1507,7 +1516,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 "                            %s,\n"
                 "                            %s);" % (
             protoClass, protoCache,
-            interfaceClass, constructHook if needConstructor else "nullptr",
+            interfaceClass, constructHookHolder,
             constructArgs, interfaceCache,
             domClass,
             properties,
@@ -4997,22 +5006,28 @@ class ClassConstructor(ClassItem):
     visibility determines the visibility of the constructor (public,
     protected, private), defaults to private.
 
+    explicit should be True if the constructor should be marked explicit.
+
     baseConstructors is a list of strings containing calls to base constructors,
     defaults to None.
 
     body contains a string with the code for the constructor, defaults to None.
     """
     def __init__(self, args, inline=False, bodyInHeader=False,
-                 visibility="private", baseConstructors=None, body=None):
+                 visibility="private", explicit=False, baseConstructors=None,
+                 body=None):
         self.args = args
         self.inline = inline or bodyInHeader
         self.bodyInHeader = bodyInHeader
+        self.explicit = explicit
         self.baseConstructors = baseConstructors
         self.body = body
         ClassItem.__init__(self, None, visibility)
 
     def getDecorators(self, declaring):
         decorators = []
+        if self.explicit:
+            decorators.append('explicit')
         if self.inline and declaring:
             decorators.append('inline')
         if decorators:
@@ -6148,7 +6163,8 @@ class CGDescriptor(CGThing):
             cgThings.append(CGClassConstructHook(descriptor))
             cgThings.append(CGClassHasInstanceHook(descriptor))
             cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
-            cgThings.append(CGClassConstructHookHolder(descriptor))
+            if descriptor.needsConstructHookHolder():
+                cgThings.append(CGClassConstructHookHolder(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
@@ -7373,7 +7389,7 @@ class CGCallbackFunction(CGClass):
             callCallback = CallCallback(callback, descriptorProvider)
             CGClass.__init__(self, name,
                              bases=[ClassBase("CallbackFunction")],
-                             constructors=[self.getConstructor()],
+                             constructors=self.getConstructors(),
                              methods=self.getCallImpls(callCallback))
             self.generatable = True
         except NoSuchDescriptorError, err:
@@ -7391,8 +7407,8 @@ class CGCallbackFunction(CGClass):
             return ""
         return CGClass.declare(self)
 
-    def getConstructor(self):
-        return ClassConstructor(
+    def getConstructors(self):
+        return [ClassConstructor(
             [Argument("JSContext*", "cx"),
              Argument("JSObject*", "aOwner"),
              Argument("JSObject*", "aCallable"),
@@ -7402,7 +7418,16 @@ class CGCallbackFunction(CGClass):
             baseConstructors=[
                 "CallbackFunction(cx, aOwner, aCallable, aInited)"
                 ],
-            body="")
+            body=""),
+            ClassConstructor(
+            [Argument("CallbackFunction*", "aOther")],
+            bodyInHeader=True,
+            visibility="public",
+            explicit=True,
+            baseConstructors=[
+                "CallbackFunction(aOther)"
+                ],
+            body="")]
 
     def getCallImpls(self, callCallback):
         args = list(callCallback.args)
@@ -7652,8 +7677,21 @@ class GlobalGenRoots():
         idEnum = CGNamespacedEnum('id', 'ID', ['_ID_Start'] + protos,
                                   [0, '_ID_Start'])
         idEnum = CGList([idEnum])
-        idEnum.append(CGGeneric(declare="const unsigned MaxProtoChainLength = " +
-                                str(config.maxProtoChainLength) + ";\n\n"))
+
+        # This is only used by DOM worker code, once there are no more consumers
+        # of INTERFACE_CHAIN_* this code should be removed.
+        def ifaceChainMacro(ifaceCount):
+            supplied = [CGGeneric(declare="_iface_" + str(i + 1)) for i in range(ifaceCount)]
+            remaining = [CGGeneric(declare="prototypes::id::_ID_Count")] * (config.maxProtoChainLength - ifaceCount)
+            macro = CGWrapper(CGList(supplied, ", "),
+                              pre="#define INTERFACE_CHAIN_" + str(ifaceCount) + "(",
+                              post=") \\\n")
+            macroContent = CGIndenter(CGList(supplied + remaining, ", \\\n"))
+            macroContent = CGIndenter(CGWrapper(macroContent, pre="{ \\\n",
+                                                post=" \\\n}"))
+            return CGWrapper(CGList([macro, macroContent]), post="\n\n")
+
+        idEnum.append(ifaceChainMacro(1))
 
         # Wrap all of that in our namespaces.
         idEnum = CGNamespace.build(['mozilla', 'dom', 'prototypes'],
@@ -7776,14 +7814,18 @@ struct PrototypeIDMap;
     @staticmethod
     def UnionConversions(config):
 
-        unions = UnionConversions(config.getDescriptors())
+        (headers, unions) = UnionConversions(config.getDescriptors(),
+                                             config.getDictionaries(),
+                                             config.getCallbacks(),
+                                             config)
 
         # Wrap all of that in our namespaces.
         curr = CGNamespace.build(['mozilla', 'dom'], unions)
 
         curr = CGWrapper(curr, post='\n')
 
-        curr = CGHeaders([], [], [], ["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"], [], curr)
+        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"])
+        curr = CGHeaders([], [], [], headers, [], curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionConversions', curr)

@@ -7,6 +7,7 @@
 
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
+#include "Lowering.h"
 #include "MIRGraph.h"
 #include "Ion.h"
 #include "IonAnalysis.h"
@@ -152,7 +153,7 @@ IonBuilder::getSingleCallTarget(uint32_t argc, jsbytecode *pc)
 {
     AutoAssertNoGC nogc;
 
-    types::StackTypeSet *calleeTypes = oracle->getCallTarget(script().get(nogc), argc, pc);
+    types::StackTypeSet *calleeTypes = oracle->getCallTarget(script(), argc, pc);
     if (!calleeTypes)
         return NULL;
 
@@ -588,10 +589,13 @@ IonBuilder::initScopeChain()
         scope = MFunctionEnvironment::New(callee);
         current->add(scope);
 
+        // This reproduce what is done in CallObject::createForFunction
         if (fun->isHeavyweight()) {
-            // We don't yet support inlining of DeclEnv objects.
-            if (fun->isNamedLambda())
-                return abort("DeclEnv scope objects are not yet supported");
+            if (fun->isNamedLambda()) {
+                scope = createDeclEnvObject(callee, scope);
+                if (!scope)
+                    return false;
+            }
 
             scope = createCallObject(callee, scope);
             if (!scope)
@@ -1038,6 +1042,14 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_THIS:
         return jsop_this();
+
+      case JSOP_CALLEE:
+      {
+        MCallee *callee = MCallee::New();
+        current->add(callee);
+        current->push(callee);
+        return callee;
+      }
 
       case JSOP_GETPROP:
       case JSOP_CALLPROP:
@@ -3739,6 +3751,40 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32_t argc, bool co
 }
 
 MInstruction *
+IonBuilder::createDeclEnvObject(MDefinition *callee, MDefinition *scope)
+{
+    // Create a template CallObject that we'll use to generate inline object
+    // creation.
+
+    RootedScript script(cx, script_);
+    RootedFunction fun(cx, info().fun());
+    RootedObject templateObj(cx, DeclEnvObject::createTemplateObject(cx, fun));
+    if (!templateObj)
+        return NULL;
+
+    // Add dummy values on the slot of the template object such as we do not try
+    // mark uninitialized values.
+    templateObj->setFixedSlot(DeclEnvObject::enclosingScopeSlot(), MagicValue(JS_GENERIC_MAGIC));
+    templateObj->setFixedSlot(DeclEnvObject::lambdaSlot(), MagicValue(JS_GENERIC_MAGIC));
+
+    // One field is added to the function to handle its name.  This cannot be a
+    // dynamic slot because there is still plenty of room on the DeclEnv object.
+    JS_ASSERT(!templateObj->hasDynamicSlots());
+
+    // Allocate the actual object. It is important that no intervening
+    // instructions could potentially bailout, thus leaking the dynamic slots
+    // pointer.
+    MInstruction *declEnvObj = MNewDeclEnvObject::New(templateObj);
+    current->add(declEnvObj);
+
+    // Initialize the object's reserved slots.
+    current->add(MStoreFixedSlot::New(declEnvObj, DeclEnvObject::enclosingScopeSlot(), scope));
+    current->add(MStoreFixedSlot::New(declEnvObj, DeclEnvObject::lambdaSlot(), callee));
+
+    return declEnvObj;
+}
+
+MInstruction *
 IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
 {
     // Create a template CallObject that we'll use to generate inline object
@@ -3766,8 +3812,8 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     current->add(callObj);
 
     // Initialize the object's reserved slots.
-    current->add(MStoreFixedSlot::New(callObj, CallObject::calleeSlot(), callee));
     current->add(MStoreFixedSlot::New(callObj, CallObject::enclosingScopeSlot(), scope));
+    current->add(MStoreFixedSlot::New(callObj, CallObject::calleeSlot(), callee));
 
     // Initialize argument slots.
     for (AliasedFormalIter i(script_); i; i++) {
@@ -3849,7 +3895,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
     types::TypeObject *type = proto->getNewType(cx, target);
     if (!type)
         return NULL;
-    if (!types::TypeScript::ThisTypes(target->nonLazyScript().unsafeGet())->hasType(types::Type::ObjectType(type)))
+    if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
     RootedObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));
@@ -5198,7 +5244,7 @@ IonBuilder::jsop_getelem_dense()
     MDefinition *obj = current->pop();
 
     JSValueType knownType = JSVAL_TYPE_UNKNOWN;
-    if (!needsHoleCheck && !barrier) {
+    if (!barrier) {
         knownType = types->getKnownTypeTag();
 
         // Null and undefined have no payload so they can't be specialized.
@@ -5207,6 +5253,11 @@ IonBuilder::jsop_getelem_dense()
         // and rely on pushTypeBarrier and DCE to replace it with a null/undefined
         // constant.
         if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
+            knownType = JSVAL_TYPE_UNKNOWN;
+
+        // Different architectures may want typed element reads which require
+        // hole checks to be done as either value or typed reads.
+        if (needsHoleCheck && !LIRGenerator::allowTypedElementHoleCheck())
             knownType = JSVAL_TYPE_UNKNOWN;
     }
 

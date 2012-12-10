@@ -1167,14 +1167,14 @@ $(foreach namespace,$(EXPORTS_NAMESPACES),$(eval $(EXPORT_NAMESPACE_RULE)))
 ################################################################################
 # Copy each element of PREF_JS_EXPORTS
 
-ifdef GRE_MODULE
-PREF_DIR = greprefs
-else
-ifneq (,$(XPI_NAME)$(LIBXUL_SDK)$(MOZ_PHOENIX))
-PREF_DIR = defaults/preferences
-else
+# The default location for PREF_JS_EXPORTS is the gre prefs directory.
 PREF_DIR = defaults/pref
-endif
+
+# If DIST_SUBDIR is defined it indicates that app and gre dirs are
+# different and that we are building app related resources. Hence,
+# PREF_DIR should point to the app prefs location.
+ifneq (,$(DIST_SUBDIR)$(XPI_NAME)$(LIBXUL_SDK))
+PREF_DIR = defaults/preferences
 endif
 
 ifneq ($(PREF_JS_EXPORTS),)

@@ -133,7 +133,7 @@ Open()
 bool
 GetSize(nsIntSize *aScreenSize) {
     // If the framebuffer has been opened, we should always have the size.
-    if (0 <= sFd || sScreenSize) {
+    if (sScreenSize) {
         *aScreenSize = *sScreenSize;
         return true;
     }

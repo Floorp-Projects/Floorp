@@ -72,7 +72,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 {
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));
-  NS_RELEASE(docInfo);
+  xpc::DeferredRelease(static_cast<nsIScriptGlobalObjectOwner*>(docInfo));
   
   nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GetClass(obj));
   c->Drop();
