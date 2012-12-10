@@ -1318,13 +1318,16 @@ var gBrowserInit = {
 #endif
 
     // initialize the session-restore service (in case it's not already running)
-    try {
-      Cc["@mozilla.org/browser/sessionstore;1"]
-        .getService(Ci.nsISessionStore)
-        .init(window);
-    } catch (ex) {
-      dump("nsSessionStore could not be initialized: " + ex + "\n");
-    }
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    ss.init(window);
+
+    // Enable the Restore Last Session command if needed
+    if (ss.canRestoreLastSession
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+        && !PrivateBrowsingUtils.isWindowPrivate(window)
+#endif
+        )
+      goSetCommandEnabled("Browser:RestoreLastSession", true);
 
     PlacesToolbarHelper.init();
 
@@ -2458,7 +2461,11 @@ function BrowserOnAboutPageLoad(document) {
 
     let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
              getService(Components.interfaces.nsISessionStore);
-    if (ss.canRestoreLastSession)
+    if (ss.canRestoreLastSession
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+        && !PrivateBrowsingUtils.isWindowPrivate(window)
+#endif
+        )
       document.getElementById("launcher").setAttribute("session", "true");
 
     // Inject search engine and snippets URL.
