@@ -296,10 +296,6 @@ typedef uint64_t nsFrameState;
 // the frames for future reference.
 #define NS_FRAME_NO_COMPONENT_ALPHA                 NS_FRAME_STATE_BIT(45)
 
-// Frame has a cached rasterization of anV
-// nsDisplayBackground display item
-#define NS_FRAME_HAS_CACHED_BACKGROUND              NS_FRAME_STATE_BIT(46)
-
 // The frame is a descendant of nsSVGTextFrame2 and is thus used for SVG
 // text layout.
 #define NS_FRAME_IS_SVG_TEXT                        NS_FRAME_STATE_BIT(47)

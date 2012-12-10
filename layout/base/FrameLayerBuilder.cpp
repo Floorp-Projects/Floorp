@@ -2348,6 +2348,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
             GetTranslationForThebesLayer(newThebesLayer));
       }
     }
+    aItem->NotifyRenderingChanged();
     return;
   } 
   if (!aNewLayer) {
@@ -2410,6 +2411,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #endif
   }
   if (!combined.IsEmpty()) {
+    aItem->NotifyRenderingChanged();
     InvalidatePostTransformRegion(newThebesLayer,
         combined.ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
         GetTranslationForThebesLayer(newThebesLayer));

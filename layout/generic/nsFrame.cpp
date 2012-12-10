@@ -4867,10 +4867,6 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
     aFrame->Properties().Delete(nsIFrame::InvalidationRect());
     aFrame->RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
   }
-  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_CACHED_BACKGROUND)) {
-    aFrame->Properties().Delete(nsIFrame::CachedBackgroundImage());
-    aFrame->RemoveStateBits(NS_FRAME_HAS_CACHED_BACKGROUND);
-  }
 }
 
 void
