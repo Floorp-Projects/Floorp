@@ -13,7 +13,7 @@ using namespace js::ion;
 
 BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, JSScript *script)
   : cx(cx),
-    script(script),
+    script(cx, script),
     pc(NULL),
     frame(cx, script, masm),
     stubSpace_(),

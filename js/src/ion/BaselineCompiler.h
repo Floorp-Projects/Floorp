@@ -50,6 +50,7 @@ namespace ion {
     _(JSOP_UNDEFINED)          \
     _(JSOP_HOLE)               \
     _(JSOP_NULL)               \
+    _(JSOP_THIS)               \
     _(JSOP_TRUE)               \
     _(JSOP_FALSE)              \
     _(JSOP_ZERO)               \
