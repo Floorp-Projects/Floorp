@@ -3855,6 +3855,7 @@ let RIL = {
           case ICC_EF_MBDN:
           case ICC_EF_PLMNsel:
           case ICC_EF_SPN:
+          case ICC_EF_SPDI:
           case ICC_EF_SST:
           case ICC_EF_CBMI:
           case ICC_EF_CBMIR:
