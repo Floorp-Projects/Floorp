@@ -1,3 +1,4 @@
+#filter substitution
 // -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7106,12 +7107,16 @@ var RemoteDebugger = {
 
 var Telemetry = {
   _PREF_TELEMETRY_PROMPTED: "toolkit.telemetry.prompted",
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+  _PREF_TELEMETRY_ENABLED: "toolkit.telemetry.enabledPreRelease",
+#else
   _PREF_TELEMETRY_ENABLED: "toolkit.telemetry.enabled",
+#endif
   _PREF_TELEMETRY_REJECTED: "toolkit.telemetry.rejected",
   _PREF_TELEMETRY_SERVER_OWNER: "toolkit.telemetry.server_owner",
 
   // This is used to reprompt users when privacy message changes
-  _TELEMETRY_PROMPT_REV: 2,
+  _TELEMETRY_PROMPT_REV: "@MOZ_TELEMETRY_DISPLAY_REV@",
 
   init: function init() {
     Services.obs.addObserver(this, "Preferences:Set", false);
