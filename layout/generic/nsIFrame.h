@@ -253,10 +253,6 @@ typedef uint64_t nsFrameState;
 // This bit acts as a loop flag for recursive paint server drawing.
 #define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
 
-// Marks the frame as having a changed transform between processing
-// nsChangeHint_UpdateTransformLayer and calling FinishAndStoreOverflow.
-#define NS_FRAME_TRANSFORM_CHANGED                  NS_FRAME_STATE_BIT(34)
-
 // Frame is a display root and the retained layer tree needs to be updated
 // at the next paint via display list construction.
 // Only meaningful for display roots, so we don't really need a global state
@@ -299,10 +295,6 @@ typedef uint64_t nsFrameState;
 // alpha children. With BasicLayers we avoid creating these, so we mark
 // the frames for future reference.
 #define NS_FRAME_NO_COMPONENT_ALPHA                 NS_FRAME_STATE_BIT(45)
-
-// Frame has a cached rasterization of anV
-// nsDisplayBackground display item
-#define NS_FRAME_HAS_CACHED_BACKGROUND              NS_FRAME_STATE_BIT(46)
 
 // The frame is a descendant of nsSVGTextFrame2 and is thus used for SVG
 // text layout.
@@ -1313,6 +1305,18 @@ public:
   void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, const nsRect& aBounds);
 
   void RecomputePerspectiveChildrenOverflow(const nsStyleContext* aStartStyle, const nsRect* aBounds);
+
+  /**
+   * Returns the number of ancestors between this and the root of our frame tree
+   */
+  uint32_t GetDepthInFrameTree() {
+    uint32_t result = 0;
+    for (nsIFrame* ancestor = GetParent(); ancestor;
+         ancestor = ancestor->GetParent()) {
+      result++;
+    }
+    return result;
+  }
 
   /**
    * Event handling of GUI events.

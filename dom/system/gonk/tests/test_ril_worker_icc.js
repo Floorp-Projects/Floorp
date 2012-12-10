@@ -122,6 +122,75 @@ add_test(function test_write_dialling_number() {
 });
 
 /**
+ * Verify GsmPDUHelper.writeTimestamp
+ */
+add_test(function test_write_timestamp() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+
+  // current date
+  let dateInput = new Date();
+  let dateOutput = new Date();
+  helper.writeTimestamp(dateInput);
+  dateOutput.setTime(helper.readTimestamp());
+
+  do_check_eq(dateInput.getFullYear(), dateOutput.getFullYear());
+  do_check_eq(dateInput.getMonth(), dateOutput.getMonth());
+  do_check_eq(dateInput.getDate(), dateOutput.getDate());
+  do_check_eq(dateInput.getHours(), dateOutput.getHours());
+  do_check_eq(dateInput.getMinutes(), dateOutput.getMinutes());
+  do_check_eq(dateInput.getSeconds(), dateOutput.getSeconds());
+  do_check_eq(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
+
+  // 2034-01-23 12:34:56 -0800 GMT
+  let time = Date.UTC(2034, 1, 23, 12, 34, 56);
+  time = time - (8 * 60 * 60 * 1000);
+  dateInput.setTime(time);
+  helper.writeTimestamp(dateInput);
+  dateOutput.setTime(helper.readTimestamp());
+
+  do_check_eq(dateInput.getFullYear(), dateOutput.getFullYear());
+  do_check_eq(dateInput.getMonth(), dateOutput.getMonth());
+  do_check_eq(dateInput.getDate(), dateOutput.getDate());
+  do_check_eq(dateInput.getHours(), dateOutput.getHours());
+  do_check_eq(dateInput.getMinutes(), dateOutput.getMinutes());
+  do_check_eq(dateInput.getSeconds(), dateOutput.getSeconds());
+  do_check_eq(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
+
+  run_next_test();
+});
+
+/**
+ * Verify GsmPDUHelper.octectToBCD and GsmPDUHelper.BCDToOctet
+ */
+add_test(function test_octect_BCD() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+
+  // 23
+  let number = 23;
+  let octet = helper.BCDToOctet(number);
+  do_check_eq(helper.octetToBCD(octet), number);
+
+  // 56
+  number = 56;
+  octet = helper.BCDToOctet(number);
+  do_check_eq(helper.octetToBCD(octet), number);
+
+  // 0x23
+  octet = 0x23;
+  number = helper.octetToBCD(octet);
+  do_check_eq(helper.BCDToOctet(number), octet);
+
+  // 0x56
+  octet = 0x56;
+  number = helper.octetToBCD(octet);
+  do_check_eq(helper.BCDToOctet(number), octet);
+
+  run_next_test();
+});
+
+/**
  * Verify RIL.isICCServiceAvailable.
  */
 add_test(function test_is_icc_service_available() {
@@ -579,6 +648,54 @@ add_test(function test_stk_proactive_command_more_time() {
   do_check_eq(tlv.value.commandNumber, 0x01);
   do_check_eq(tlv.value.typeOfCommand, STK_CMD_MORE_TIME);
   do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  run_next_test();
+});
+
+/**
+ * Verify Proactive Command : Provide Local Information
+ */
+add_test(function test_stk_proactive_command_provide_local_information() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  // Verify IMEI
+  let local_info_1 = [
+    0xD0,
+    0x09,
+    0x81, 0x03, 0x01, 0x26, 0x01,
+    0x82, 0x02, 0x81, 0x82];
+
+  for (let i = 0; i < local_info_1.length; i++) {
+    pduHelper.writeHexOctet(local_info_1[i]);
+  }
+
+  let berTlv = berHelper.decode(local_info_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_PROVIDE_LOCAL_INFO);
+  do_check_eq(tlv.value.commandQualifier, STK_LOCAL_INFO_IMEI);
+
+  // Verify Date and Time Zone
+  let local_info_2 = [
+    0xD0,
+    0x09,
+    0x81, 0x03, 0x01, 0x26, 0x03,
+    0x82, 0x02, 0x81, 0x82];
+
+  for (let i = 0; i < local_info_2.length; i++) {
+    pduHelper.writeHexOctet(local_info_2[i]);
+  }
+
+  berTlv = berHelper.decode(local_info_2.length);
+  ctlvs = berTlv.value;
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_PROVIDE_LOCAL_INFO);
+  do_check_eq(tlv.value.commandQualifier, STK_LOCAL_INFO_DATE_TIME_ZONE);
 
   run_next_test();
 });

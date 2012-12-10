@@ -37,7 +37,7 @@ class nsPrefixSetReporter : public nsIMemoryReporter
 {
 public:
   nsPrefixSetReporter(nsUrlClassifierPrefixSet* aParent, const nsACString& aName);
-  virtual ~nsPrefixSetReporter() {};
+  virtual ~nsPrefixSetReporter() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER

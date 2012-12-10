@@ -1488,9 +1488,13 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
         return false;
 
       default:
-        JS_ASSERT(!ins->fallible());
-        return define(new LLoadElementT(useRegister(ins->elements()),
-                                        useRegisterOrConstant(ins->index())), ins);
+      {
+        LLoadElementT *lir = new LLoadElementT(useRegister(ins->elements()),
+                                               useRegisterOrConstant(ins->index()));
+        if (ins->fallible() && !assignSnapshot(lir))
+            return false;
+        return define(lir, ins);
+      }
     }
 }
 

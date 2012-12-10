@@ -39,12 +39,16 @@ public:
   Transaction()
     : mSwapRequired(false)
     , mOpen(false)
+    , mRotationChanged(false)
   {}
 
   void Begin(const nsIntRect& aTargetBounds, ScreenRotation aRotation)
   {
     mOpen = true;
     mTargetBounds = aTargetBounds;
+    if (aRotation != mTargetRotation) {
+        mRotationChanged = true;
+    }
     mTargetRotation = aRotation;
   }
 
@@ -86,10 +90,14 @@ public:
     mMutants.clear();
     mOpen = false;
     mSwapRequired = false;
+    mRotationChanged = false;
   }
 
   bool Empty() const {
     return mCset.empty() && mPaints.empty() && mMutants.empty();
+  }
+  bool RotationChanged() const {
+    return mRotationChanged;
   }
   bool Finished() const { return !mOpen && Empty(); }
 
@@ -103,6 +111,7 @@ public:
 
 private:
   bool mOpen;
+  bool mRotationChanged;
 
   // disabled
   Transaction(const Transaction&);
@@ -285,8 +294,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 
   AutoTxnEnd _(mTxn);
 
-  if (mTxn->Empty()) {
-    MOZ_LAYERS_LOG(("[LayersForwarder] 0-length cset (?), skipping Update()"));
+  if (mTxn->Empty() && !mTxn->RotationChanged()) {
+    MOZ_LAYERS_LOG(("[LayersForwarder] 0-length cset (?) and no rotation event, skipping Update()"));
     return true;
   }
 

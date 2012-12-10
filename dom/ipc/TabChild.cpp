@@ -284,6 +284,9 @@ TabChild::OnLocationChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(window));
+  utils->SetIsFirstPaint(true);
+
   nsCOMPtr<nsIDOMDocument> progressDoc;
   window->GetDocument(getter_AddRefs(progressDoc));
   if (!progressDoc) {
@@ -463,20 +466,27 @@ TabChild::HandlePossibleViewportChange()
   metrics.mScrollableRect = gfx::Rect(0.0f, 0.0f, pageWidth, pageHeight);
   metrics.mCompositionBounds = nsIntRect(0, 0, mInnerSize.width, mInnerSize.height);
 
-  gfxSize intrinsicScale =
-      AsyncPanZoomController::CalculateIntrinsicScale(metrics);
-  // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
-  // 0.0 to mean "did not calculate a zoom".  In that case, we default
-  // it to the intrinsic scale.
-  if (viewportInfo.defaultZoom < 0.01f) {
-    viewportInfo.defaultZoom = intrinsicScale.width;
+  // Changing the zoom when we're not doing a first paint will get ignored
+  // by AsyncPanZoomController and causes a blurry flash.
+  bool isFirstPaint;
+  nsresult rv = utils->GetIsFirstPaint(&isFirstPaint);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_FAILED(rv) || isFirstPaint) {
+    gfxSize intrinsicScale =
+        AsyncPanZoomController::CalculateIntrinsicScale(metrics);
+    // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
+    // 0.0 to mean "did not calculate a zoom".  In that case, we default
+    // it to the intrinsic scale.
+    if (viewportInfo.defaultZoom < 0.01f) {
+      viewportInfo.defaultZoom = intrinsicScale.width;
+    }
+    MOZ_ASSERT(viewportInfo.minZoom <= viewportInfo.defaultZoom &&
+               viewportInfo.defaultZoom <= viewportInfo.maxZoom);
+    // GetViewportInfo() returns a resolution-dependent scale factor.
+    // Convert that to a resolution-indepedent zoom.
+    metrics.mZoom = gfxSize(viewportInfo.defaultZoom / intrinsicScale.width,
+                            viewportInfo.defaultZoom / intrinsicScale.height);
   }
-  MOZ_ASSERT(viewportInfo.minZoom <= viewportInfo.defaultZoom &&
-             viewportInfo.defaultZoom <= viewportInfo.maxZoom);
-  // GetViewportInfo() returns a resolution-dependent scale factor.
-  // Convert that to a resolution-indepedent zoom.
-  metrics.mZoom = gfxSize(viewportInfo.defaultZoom / intrinsicScale.width,
-                          viewportInfo.defaultZoom / intrinsicScale.height);
 
   metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
     // The page must have been refreshed in some way such as a new document or

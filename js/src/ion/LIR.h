@@ -624,7 +624,7 @@ class LInstruction
 
     virtual bool isCall() const {
         return false;
-    };
+    }
     uint32_t id() const {
         return id_;
     }

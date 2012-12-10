@@ -22,7 +22,7 @@ interface nsIDOMSVGTransform;
 #endif
 %}
 
-[scriptable, uuid(BEC06C4F-3EF7-486E-A8F5-F375EE5CB5A8)]
+[scriptable, uuid(4670a204-4ef1-455f-9595-9847b077c624)]
 interface nsIDOMSVGSVGElement
   : nsIDOMSVGElement
 /*
@@ -47,10 +47,6 @@ interface nsIDOMSVGSVGElement
   readonly attribute nsIDOMSVGAnimatedLength y;
   readonly attribute nsIDOMSVGAnimatedLength width;
   readonly attribute nsIDOMSVGAnimatedLength height;
-  attribute DOMString         contentScriptType;
-      // raises DOMException on setting
-  attribute DOMString         contentStyleType;
-      // raises DOMException on setting
   readonly attribute nsIDOMSVGRect     viewport;
   readonly attribute float pixelUnitToMillimeterX;
   readonly attribute float pixelUnitToMillimeterY;
