@@ -602,49 +602,46 @@ static inline int backup_file(const char *name)
 void do_file(const char *name, bool backup = false, bool force = false)
 {
     std::ifstream file(name, std::ios::in|std::ios::binary);
-    Elf *elf = new Elf(file);
-    unsigned int size = elf->getSize();
+    Elf elf(file);
+    unsigned int size = elf.getSize();
     fprintf(stderr, "%s: ", name);
-    if (elf->getType() != ET_DYN) {
+    if (elf.getType() != ET_DYN) {
         fprintf(stderr, "Not a shared object. Skipping\n");
-        delete elf;
         return;
     }
 
-    for (ElfSection *section = elf->getSection(1); section != NULL;
+    for (ElfSection *section = elf.getSection(1); section != NULL;
          section = section->getNext()) {
         if (section->getName() &&
             (strncmp(section->getName(), ".elfhack.", 9) == 0)) {
             fprintf(stderr, "Already elfhacked. Skipping\n");
-            delete elf;
             return;
         }
     }
 
     int exit = -1;
-    switch (elf->getMachine()) {
+    switch (elf.getMachine()) {
     case EM_386:
-        exit = do_relocation_section<Elf_Rel>(elf, R_386_RELATIVE, R_386_32, force);
+        exit = do_relocation_section<Elf_Rel>(&elf, R_386_RELATIVE, R_386_32, force);
         break;
     case EM_X86_64:
-        exit = do_relocation_section<Elf_Rela>(elf, R_X86_64_RELATIVE, R_X86_64_64, force);
+        exit = do_relocation_section<Elf_Rela>(&elf, R_X86_64_RELATIVE, R_X86_64_64, force);
         break;
     case EM_ARM:
-        exit = do_relocation_section<Elf_Rel>(elf, R_ARM_RELATIVE, R_ARM_ABS32, force);
+        exit = do_relocation_section<Elf_Rel>(&elf, R_ARM_RELATIVE, R_ARM_ABS32, force);
         break;
     }
     if (exit == 0) {
-        if (!force && (elf->getSize() >= size)) {
+        if (!force && (elf.getSize() >= size)) {
             fprintf(stderr, "No gain. Skipping\n");
         } else if (backup && backup_file(name) != 0) {
             fprintf(stderr, "Couln't create backup file\n");
         } else {
             std::ofstream ofile(name, std::ios::out|std::ios::binary|std::ios::trunc);
-            elf->write(ofile);
-            fprintf(stderr, "Reduced by %d bytes\n", size - elf->getSize());
+            elf.write(ofile);
+            fprintf(stderr, "Reduced by %d bytes\n", size - elf.getSize());
         }
     }
-    delete elf;
 }
 
 int main(int argc, char *argv[])
