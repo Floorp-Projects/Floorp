@@ -254,13 +254,13 @@ public:
     mSource = aSource;
     mType.Assign(NS_LITERAL_STRING("video"));
     mSource->GetName(mName);
-  };
+  }
   MediaDevice(MediaEngineAudioSource* aSource) {
     mSource = aSource;
     mType.Assign(NS_LITERAL_STRING("audio"));
     mSource->GetName(mName);
-  };
-  virtual ~MediaDevice() {};
+  }
+  virtual ~MediaDevice() {}
 
   MediaEngineSource* GetSource();
 private:
@@ -317,7 +317,7 @@ private:
   WindowTable *GetActiveWindows() {
     NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
     return &mActiveWindows;
-  };
+  }
 
   // Make private because we want only one instance of this class
   MediaManager()
@@ -326,11 +326,11 @@ private:
   , mBackend(nullptr) {
     mActiveWindows.Init();
     mActiveCallbacks.Init();
-  };
+  }
 
   ~MediaManager() {
     delete mBackend;
-  };
+  }
 
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;

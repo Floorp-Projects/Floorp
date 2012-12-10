@@ -1682,13 +1682,6 @@ struct nsStyleDisplay {
            NS_STYLE_POSITION_FIXED == mPosition;
   }
 
-  /* Returns true if we're positioned or there's a transform in effect. */
-  bool IsPositionedStyle() const {
-    return IsAbsolutelyPositionedStyle() ||
-           IsRelativelyPositionedStyle() ||
-           HasTransform();
-  }
-
   bool IsRelativelyPositionedStyle() const {
     return mPosition == NS_STYLE_POSITION_RELATIVE;
   }

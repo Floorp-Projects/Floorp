@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "prlog.h"
-#include "prmem.h"
 #include "prdtoa.h"
 #include "AudioStream.h"
 #include "nsAlgorithm.h"
@@ -167,6 +166,8 @@ static sa_stream_type_t ConvertChannelToSAType(dom::AudioChannelType aType)
       return SA_STREAM_TYPE_ALARM;
     case dom::AUDIO_CHANNEL_TELEPHONY:
       return SA_STREAM_TYPE_VOICE_CALL;
+    case dom::AUDIO_CHANNEL_RINGER:
+      return SA_STREAM_TYPE_RING;
     case dom::AUDIO_CHANNEL_PUBLICNOTIFICATION:
       return SA_STREAM_TYPE_ENFORCED_AUDIBLE;
     default:

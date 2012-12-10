@@ -85,7 +85,11 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define NETWORK_ENABLEIDN       "network.enableIDN"
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+#define TELEMETRY_ENABLED        "toolkit.telemetry.enabledPreRelease"
+#else
 #define TELEMETRY_ENABLED        "toolkit.telemetry.enabled"
+#endif
 #define ALLOW_EXPERIMENTS        "network.allow-experiments"
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref

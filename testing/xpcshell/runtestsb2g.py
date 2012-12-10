@@ -65,14 +65,18 @@ class B2GXPCShellRemote(XPCShellRemote):
             XPCShellRemote.setLD_LIBRARY_PATH(self, env)
 
     # Overridden
-    # This returns 1 even when tests pass - this is why it's switched to 0
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=773703
-    def getReturnCode(self, proc):
-#        if self.shellReturnCode is not None:
-#            return self.shellReturnCode
-#        return -1
-        return 0
-
+    def launchProcess(self, cmd, stdout, stderr, env, cwd):
+        try:
+            # This returns 1 even when tests pass - hardcode returncode to 0 (bug 773703)
+            outputFile = XPCShellRemote.launchProcess(self, cmd, stdout, stderr, env, cwd)
+            self.shellReturnCode = 0
+        except DMError:
+            self.shellReturnCode = -1
+            outputFile = "xpcshelloutput"
+            f = open(outputFile, "a")
+            f.write("\n%s" % traceback.format_exc())
+            f.close()
+        return outputFile
 
 class B2GOptions(RemoteXPCShellOptions):
 

@@ -1,0 +1,6 @@
+{ name: "Simple App"
+, description: "A Simple Open Web App"
+, launch_path: "/index.html"
+, icons: { "128" : "icon-128.png" }
+, installs_allowed_from: [ "https://marketplace.mozilla.com" ]
+}

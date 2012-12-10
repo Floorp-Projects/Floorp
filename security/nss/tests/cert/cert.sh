@@ -129,6 +129,29 @@ crlu()
     return $RET
 }
 
+################################ ocspr ##################################
+# local shell function to call ocsresp, also: writes action and options to
+# stdout, sets variable RET and writes results to the html file results
+#########################################################################
+ocspr()
+{
+    echo "$SCRIPTNAME: ${OR_ACTION} --------------------------"
+
+    OCSPRESP="ocspresp"
+    echo "$OCSPRESP $*"
+    ${PROFTOOL} ${BINDIR}/$OCSPRESP $*
+    RET=$?
+    if [ "$RET" -ne 0 ]; then
+        OCSPFAILED=$RET
+        html_failed "${OR_ACTION} ($RET) "
+        cert_log "ERROR: ${OR_ACTION} failed $RET"
+    else
+        html_passed "${OR_ACTION}"
+    fi
+
+    return $RET
+}
+
 modu()
 {
     echo "$SCRIPTNAME: ${CU_ACTION} --------------------------"
@@ -1435,6 +1458,14 @@ cert_test_distrust()
   RETEXPECTED=0
 }
 
+cert_test_ocspresp()
+{
+  echo "$SCRIPTNAME: OCSP response creation selftest"
+  OR_ACTION="perform selftest"
+  RETEXPECTED=0
+  ocspr ${SERVER_CADIR} "serverCA" "chain-1-serverCA" -f "${R_PWFILE}" 2>&1
+}
+
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -1459,6 +1490,7 @@ cert_eccurves
 cert_extensions
 cert_test_password
 cert_test_distrust
+cert_test_ocspresp
 
 if [ -z "$NSS_TEST_DISABLE_CRL" ] ; then
     cert_crl_ssl

@@ -159,6 +159,13 @@ LIRGenerator::visitNewObject(MNewObject *ins)
 }
 
 bool
+LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject *ins)
+{
+    LNewDeclEnvObject *lir = new LNewDeclEnvObject();
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 {
     LAllocation slots;
@@ -1481,9 +1488,13 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
         return false;
 
       default:
-        JS_ASSERT(!ins->fallible());
-        return define(new LLoadElementT(useRegister(ins->elements()),
-                                        useRegisterOrConstant(ins->index())), ins);
+      {
+        LLoadElementT *lir = new LLoadElementT(useRegister(ins->elements()),
+                                               useRegisterOrConstant(ins->index()));
+        if (ins->fallible() && !assignSnapshot(lir))
+            return false;
+        return define(lir, ins);
+      }
     }
 }
 

@@ -1572,14 +1572,16 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
   const nsStyleTextReset* styleTextReset = GetStyleTextReset();
   // See if we can try and avoid marking all the lines as dirty
   bool tryAndSkipLines =
-      // The text must be left-aligned.
+    // The block must be LTR (bug 806284)
+    GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR &&
+    // The text must be left-aligned.
     IsAlignedLeft(styleText->mTextAlign, 
                   aState.mReflowState.mStyleVisibility->mDirection,
                   styleTextReset->mUnicodeBidi,
                   this) &&
-      // The left content-edge must be a constant distance from the left
-      // border-edge.
-      !GetStylePadding()->mPadding.GetLeft().HasPercent();
+    // The left content-edge must be a constant distance from the left
+    // border-edge.
+    !GetStylePadding()->mPadding.GetLeft().HasPercent();
 
 #ifdef DEBUG
   if (gDisableResizeOpt) {

@@ -33,7 +33,6 @@
 #include "fim.h"
 #include "util_string.h"
 #include "platform_api.h"
-#include "vcm_util.h"
 
 #ifndef NO
 #define NO  (0)
@@ -51,10 +50,6 @@
 static cc_rcs_t lsm_stop_tone (lsm_lcb_t *lcb, cc_action_data_tone_t *data);
 
 extern cc_media_cap_table_t g_media_table;
-vcm_media_payload_type_t vcmRtpToMediaPayload (int32_t ptype,
-                                            int32_t dynamic_ptype_value,
-                                            uint16_t mode);
-
 
 static lsm_lcb_t *lsm_lcbs;
 static uint32_t lsm_call_perline[MAX_REG_LINES];
@@ -994,10 +989,6 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                 }
                 pc_track_id = 0;
                 dcb->cur_video_avail &= ~CC_ATTRIB_CAST;
-                if (media->local_dynamic_payload_type_value == RTP_NONE) {
-                    media->local_dynamic_payload_type_value =
-                      media->num_payloads ? media->payloads[0] : RTP_NONE;
-                }
 
                 config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
                 if (dcb->peerconnection) {
@@ -1013,17 +1004,13 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                     FSM_NEGOTIATED_CRYPTO_DIGEST(media),
                     &attrs);
                 } else if (!sdpmode) {
+                    if (media->payloads == NULL) {
+                        LSM_ERR_MSG(get_debug_string(DEBUG_INPUT_NULL), fname1);
+                        return;
+                    }
                     ret_val =  vcmRxStart(media->cap_index, group_id, media->refid,
                                           lsm_get_ms_ui_call_handle(dcb->line, call_id, CC_NO_CALL_ID),
-                                          /* RTP_NONE is not technically a valid
-                                             value for vcm_media_payload_type_t.
-                                             However, we really should never
-                                             reach this part of the code with
-                                             num_payloads < 1, so the RTP_NONE
-                                             shouldn't ever be used. It's only
-                                             here are extra protection against
-                                             an invalid pointer deref.*/
-                                          media->num_payloads ? media->payloads[0] : RTP_NONE,
+                                          media->payloads,
                                           media->is_multicast ? &media->dest_addr:&media->src_addr,
                                           port,
                                           FSM_NEGOTIATED_CRYPTO_ALGORITHM_ID(media),
@@ -1238,11 +1225,15 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
 
             dcb->cur_video_avail &= ~CC_ATTRIB_CAST;
 
+            if (media->payloads == NULL) {
+                LSM_ERR_MSG(get_debug_string(DEBUG_INPUT_NULL), fname1);
+                return;
+            }
             if (!strlen(dcb->peerconnection)){
               if (vcmTxStart(media->cap_index, group_id,
                   media->refid,
                   lsm_get_ms_ui_call_handle(dcb->line, call_id, CC_NO_CALL_ID),
-                  media->num_payloads ? media->payloads[0] : RTP_NONE,
+                  media->payloads,
                   (short)dscp,
                   &media->src_addr,
                   media->src_port,
@@ -1268,7 +1259,7 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                   dcb->media_cap_tbl->cap[media->cap_index].pc_track,
                   lsm_get_ms_ui_call_handle(dcb->line, call_id, CC_NO_CALL_ID),
                   dcb->peerconnection,
-                  media->num_payloads ? media->payloads[0] : RTP_NONE,
+                  media->payloads,
                   (short)dscp,
                   FSM_NEGOTIATED_CRYPTO_DIGEST_ALGORITHM(media),
                   FSM_NEGOTIATED_CRYPTO_DIGEST(media),
@@ -5298,8 +5289,7 @@ void lsm_add_remote_stream (line_t line, callid_t call_id, fsmdef_media_t *media
         }
 
         vcmCreateRemoteStream(media->cap_index, dcb->peerconnection,
-                pc_stream_id,
-                media->num_payloads ? media->payloads[0] : RTP_NONE);
+                pc_stream_id);
 
     }
 }

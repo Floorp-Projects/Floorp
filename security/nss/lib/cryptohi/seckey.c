@@ -13,7 +13,6 @@
 #include "secerr.h"
 #include "secdig.h"
 #include "prtime.h"
-#include "ec.h"
 #include "keyi.h"
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
@@ -1918,7 +1917,7 @@ loser:
 }
 
 #define SECKEY_CacheAttribute(key, attribute) \
-    if (CK_TRUE == PK11_HasAttributeSet(key->pkcs11Slot, key->pkcs11ID, attribute)) { \
+    if (CK_TRUE == PK11_HasAttributeSet(key->pkcs11Slot, key->pkcs11ID, attribute, PR_FALSE)) { \
         key->staticflags |= SECKEY_##attribute; \
     } else { \
         key->staticflags &= (~SECKEY_##attribute); \

@@ -161,7 +161,6 @@
 #include "nsIJARChannel.h"
 
 #include "prlog.h"
-#include "prmem.h"
 
 #include "nsISelectionDisplay.h"
 
@@ -5212,7 +5211,7 @@ nsDocShell::SetIsActive(bool aIsActive)
       win->SetIsBackground(!aIsActive);
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
       if (doc) {
-          doc->PostVisibilityUpdateEvent();
+          doc->UpdateVisibilityState(false);
       }
   }
 
@@ -8983,12 +8982,13 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (!bIsJavascript) {
         MaybeInitTiming();
     }
-    if (mTiming) {
+    bool timeBeforeUnload = aFileName.IsVoid();
+    if (mTiming && timeBeforeUnload) {
       mTiming->NotifyBeforeUnload();
     }
     // Check if the page doesn't want to be unloaded. The javascript:
     // protocol handler deals with this for javascript: URLs.
-    if (!bIsJavascript && mContentViewer) {
+    if (!bIsJavascript && aFileName.IsVoid() && mContentViewer) {
         bool okToUnload;
         rv = mContentViewer->PermitUnload(false, &okToUnload);
 
@@ -8999,7 +8999,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         }
     }
 
-    if (mTiming) {
+    if (mTiming && timeBeforeUnload) {
       mTiming->NotifyUnloadAccepted(mCurrentURI);
     }
 

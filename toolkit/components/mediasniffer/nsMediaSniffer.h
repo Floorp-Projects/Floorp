@@ -26,7 +26,7 @@ class nsMediaSniffer MOZ_FINAL : public nsIContentSniffer
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTENTSNIFFER
   protected:
-    ~nsMediaSniffer() {};
+    ~nsMediaSniffer() {}
 
 #define PATTERN_ENTRY(mask, pattern, contentType) \
     {(const uint8_t*)mask, (const uint8_t*)pattern, sizeof(mask) - 1, contentType}

@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include <CoreServices/CoreServices.h>
 #include <AudioUnit/AudioUnit.h>
 #include "cubeb/cubeb.h"
 
@@ -64,7 +63,7 @@ audio_unit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
     return noErr;
   }
 
-  if (got < nframes) {
+  if ((UInt32) got < nframes) {
     size_t got_bytes = got * stm->sample_spec.mBytesPerFrame;
     size_t rem_bytes = (nframes - got) * stm->sample_spec.mBytesPerFrame;
 
@@ -106,9 +105,14 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
                   void * user_ptr)
 {
   AudioStreamBasicDescription ss;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   ComponentDescription desc;
-  cubeb_stream * stm;
   Component comp;
+#else
+  AudioComponentDescription desc;
+  AudioComponent comp;
+#endif
+  cubeb_stream * stm;
   AURenderCallbackStruct input;
   unsigned int buffer_size;
   OSStatus r;
@@ -162,7 +166,11 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   desc.componentManufacturer = kAudioUnitManufacturer_Apple;
   desc.componentFlags = 0;
   desc.componentFlagsMask = 0;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   comp = FindNextComponent(NULL, &desc);
+#else
+  comp = AudioComponentFindNext(NULL, &desc);
+#endif
   assert(comp);
 
   stm = calloc(1, sizeof(*stm));
@@ -180,7 +188,11 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   stm->frames_played = 0;
   stm->frames_queued = 0;
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   r = OpenAComponent(comp, &stm->unit);
+#else
+  r = AudioComponentInstanceNew(comp, &stm->unit);
+#endif
   if (r != 0) {
     cubeb_stream_destroy(stm);
     return CUBEB_ERROR;
@@ -229,7 +241,11 @@ cubeb_stream_destroy(cubeb_stream * stm)
   if (stm->unit) {
     AudioOutputUnitStop(stm->unit);
     AudioUnitUninitialize(stm->unit);
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
     CloseComponent(stm->unit);
+#else
+    AudioComponentInstanceDispose(stm->unit);
+#endif
   }
 
   r = pthread_mutex_destroy(&stm->mutex);

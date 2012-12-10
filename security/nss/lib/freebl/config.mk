@@ -53,12 +53,10 @@ SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_
 RES     = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = freebl.rc
 
-ifndef WINCE
 ifdef NS_USE_GCC
 OS_LIBS += -lshell32
 else
 OS_LIBS += shell32.lib
-endif
 endif
 
 ifdef NS_USE_GCC

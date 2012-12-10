@@ -304,7 +304,7 @@ inline bool
 Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
 {
     /* Enforce requirements on size of T. */
-    JS_ASSERT(thingSize % Cell::CellSize == 0);
+    JS_ASSERT(thingSize % CellSize == 0);
     JS_ASSERT(thingSize <= 255);
 
     JS_ASSERT(aheader.allocated());
@@ -3781,7 +3781,6 @@ IncrementalCollectSlice(JSRuntime *rt,
     AutoGCSlice slice(rt);
 
     gc::State initialState = rt->gcIncrementalState;
-    SliceBudget sliceBudget(budget);
 
     int zeal = 0;
 #ifdef JS_GC_ZEAL
@@ -3800,11 +3799,13 @@ IncrementalCollectSlice(JSRuntime *rt,
 
     if (zeal == ZealIncrementalRootsThenFinish || zeal == ZealIncrementalMarkAllThenFinish) {
         /*
-         * Yields between slices occurs at predetermined points in these
-         * modes. sliceBudget is not used.
+         * Yields between slices occurs at predetermined points in these modes;
+         * the budget is not used.
          */
-        sliceBudget.reset();
+        budget = SliceBudget::Unlimited;
     }
+
+    SliceBudget sliceBudget(budget);
 
     if (rt->gcIncrementalState == NO_INCREMENTAL) {
         rt->gcIncrementalState = MARK_ROOTS;
@@ -3870,7 +3871,7 @@ IncrementalCollectSlice(JSRuntime *rt,
          * Always yield here when running in incremental multi-slice zeal
          * mode, so RunDebugGC can reset the slice buget.
          */
-        if (budget != SliceBudget::Unlimited && zeal == ZealIncrementalMultipleSlices)
+        if (zeal == ZealIncrementalMultipleSlices)
             break;
 
         /* fall through */
@@ -4176,7 +4177,7 @@ js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
     AssertCanGC();
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
     PrepareForDebugGC(rt);
-    Collect(rt, true, budget, GC_NORMAL, gcreason::API);
+    Collect(rt, true, budget, GC_NORMAL, gcreason::DEBUG_GC);
 }
 
 /* Schedule a full GC unless a compartment will already be collected. */

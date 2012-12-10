@@ -457,12 +457,6 @@ OVERVIEW of "rules.mk":
 
         MISCELLANEOUS
         -------------
-        $(DIRS)::                         specifies a helper method
-                                          used by $(LOOP_THROUGH_DIRS)
-                                          to recursively change
-                                          directories and invoke
-                                          $(MAKE)
-
         %.i:                              build the preprocessor file
                                           associated with the
                                           makefile rule dependency:

@@ -10,18 +10,16 @@
  * Session annotations should be expired when browsing session ends.
  */
 
-let os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
 let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 let as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 
 function run_test() {
-  do_test_pending();
+  run_next_test();
+}
 
+add_task(function test_annos_expire_session() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -29,7 +27,7 @@ function run_test() {
   let now = Date.now() * 1000;
   for (let i = 0; i < 10; i++) {
     let pageURI = uri("http://session_page_anno." + i + ".mozilla.org/");
-    hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);
+    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "test1", "test", 0, as.EXPIRE_SESSION);
     as.setPageAnnotation(pageURI, "test2", "test", 0, as.EXPIRE_SESSION);
   }
@@ -53,6 +51,7 @@ function run_test() {
   items = as.getItemsWithAnnotation("test2");
   do_check_eq(items.length, 10);
 
+  let deferred = Promise.defer();
   waitForConnectionClosed(function() {
     let stmt = DBConn(true).createAsyncStatement(
       "SELECT id FROM moz_annos "
@@ -71,9 +70,10 @@ function run_test() {
       },
       handleCompletion: function(aReason) {
         do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
-        do_test_finished();
+        deferred.resolve();
       }
     });
     stmt.finalize();
   });
-}
+  yield deferred.promise;
+});

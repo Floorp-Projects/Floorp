@@ -14,6 +14,7 @@
 #define CALL_SAFETY_ON
 #endif
 
+PRIntervalTime NS_NotifyBeginPluginCall();
 void NS_NotifyPluginCall(PRIntervalTime);
 
 #ifdef CALL_SAFETY_ON
@@ -31,7 +32,7 @@ PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst) \
 PR_BEGIN_MACRO                                     \
-  PRIntervalTime startTime = PR_IntervalNow();     \
+  PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
   if(gSkipPluginSafeCalls)                         \
     ret = fun;                                     \
   else                                             \
@@ -40,7 +41,7 @@ PR_BEGIN_MACRO                                     \
     {                                              \
       ret = fun;                                   \
     }                                              \
-    MOZ_SEH_EXCEPT(true)                        \
+    MOZ_SEH_EXCEPT(true)                           \
     {                                              \
       nsresult res;                                \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
@@ -54,7 +55,7 @@ PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_VOID(fun, pluginInst) \
 PR_BEGIN_MACRO                              \
-  PRIntervalTime startTime = PR_IntervalNow();     \
+  PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
   if(gSkipPluginSafeCalls)                  \
     fun;                                    \
   else                                      \
@@ -63,7 +64,7 @@ PR_BEGIN_MACRO                              \
     {                                       \
       fun;                                  \
     }                                       \
-    MOZ_SEH_EXCEPT(true)                 \
+    MOZ_SEH_EXCEPT(true)                    \
     {                                       \
       nsresult res;                         \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
@@ -78,16 +79,16 @@ PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst) \
 PR_BEGIN_MACRO                                     \
-  PRIntervalTime startTime = PR_IntervalNow();     \
+  PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
   ret = fun;                                       \
-  NS_NotifyPluginCall(startTime);		   \
+  NS_NotifyPluginCall(startTime);		               \
 PR_END_MACRO
 
-#define NS_TRY_SAFE_CALL_VOID(fun, pluginInst) \
-PR_BEGIN_MACRO                              \
-  PRIntervalTime startTime = PR_IntervalNow();     \
-  fun;                                      \
-  NS_NotifyPluginCall(startTime);		   \
+#define NS_TRY_SAFE_CALL_VOID(fun, pluginInst)     \
+PR_BEGIN_MACRO                                     \
+  PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
+  fun;                                             \
+  NS_NotifyPluginCall(startTime);		               \
 PR_END_MACRO
 
 #endif // CALL_SAFETY_ON

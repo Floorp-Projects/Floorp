@@ -14,10 +14,6 @@
  * - EXPIRE_MONTHS: annotation would be expired after 180 days
  */
 
-let os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
 let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 let as = Cc["@mozilla.org/browser/annotation-service;1"].
@@ -78,6 +74,10 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
 }
 
 function run_test() {
+  run_next_test();
+}
+
+add_task(function test_annos_expire_policy() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -88,7 +88,7 @@ function run_test() {
   // Add some bookmarked page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
-    hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);
+    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
     let id = bs.insertBookmark(bs.unfiledBookmarksFolder, pageURI,
                                bs.DEFAULT_INDEX, null);
     // Add a 6 days old anno.
@@ -137,7 +137,7 @@ function run_test() {
   // Add some visited page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
-    hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);
+    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
     // Add a 6 days old anno.
     add_old_anno(pageURI, "persist_days", "test", as.EXPIRE_DAYS, 6);
     // Add a 8 days old anno, modified 5 days ago.
@@ -160,39 +160,28 @@ function run_test() {
     add_old_anno(pageURI, "expire_months", "test", as.EXPIRE_MONTHS, 181);
   }
 
-  // Observe expirations.
-  observer = {
-    observe: function(aSubject, aTopic, aData) {
-      os.removeObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-
-      ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
-        let pages = as.getPagesWithAnnotation(aAnno);
-        do_check_eq(pages.length, 0);
-      });
-
-      ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
-        let items = as.getItemsWithAnnotation(aAnno);
-        do_check_eq(items.length, 0);
-      });
-
-      ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
-       "persist_months", "persist_lm_months"].forEach(function(aAnno) {
-        let pages = as.getPagesWithAnnotation(aAnno);
-        do_check_eq(pages.length, 10);
-      });
-
-      ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
-       "persist_months", "persist_lm_months"].forEach(function(aAnno) {
-        let items = as.getItemsWithAnnotation(aAnno);
-        do_check_eq(items.length, 5);
-      });
-
-      do_test_finished();
-    }
-  };
-  os.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-
   // Expire all visits for the bookmarks.
-  force_expiration_step(5);
-  do_test_pending();
-}
+  yield promiseForceExpirationStep(5);
+
+  ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
+    let pages = as.getPagesWithAnnotation(aAnno);
+    do_check_eq(pages.length, 0);
+  });
+
+  ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
+    let items = as.getItemsWithAnnotation(aAnno);
+    do_check_eq(items.length, 0);
+  });
+
+  ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
+   "persist_months", "persist_lm_months"].forEach(function(aAnno) {
+    let pages = as.getPagesWithAnnotation(aAnno);
+    do_check_eq(pages.length, 10);
+  });
+
+  ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
+   "persist_months", "persist_lm_months"].forEach(function(aAnno) {
+    let items = as.getItemsWithAnnotation(aAnno);
+    do_check_eq(items.length, 5);
+  });
+});

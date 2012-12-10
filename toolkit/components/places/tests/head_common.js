@@ -31,6 +31,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/promise/core.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 // This imports various other objects in addition to PlacesUtils.
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -58,6 +60,33 @@ let gProfD = do_get_profile();
 // Remove any old database.
 clearDB();
 
+/**
+ * Adds a task generator function written for Task.jsm to the list of tests that
+ * are to be run asynchronously.
+ *
+ * The next asynchronous test runs automatically when the task terminates.  The
+ * task should not call run_next_test() to continue.  Any exception in the task
+ * function causes the current test to fail immediately, and the next test to be
+ * executed.
+ *
+ * Test files should call run_next_test() inside run_test() to execute all the
+ * asynchronous tests, as usual.  Test files may include both function added
+ * with add_test() as well as function added with add_task().
+ *
+ * Example:
+ *
+ * add_task(function test_promise_resolves_to_true() {
+ *   let result = yield promiseThatResolvesToTrue;
+ *   do_check_true(result);
+ * });
+ */
+function add_task(aTaskFn) {
+  function wrapperFn() {
+    Task.spawn(aTaskFn)
+        .then(run_next_test, do_report_unexpected_exception);
+  }
+  eval("add_test(function " + aTaskFn.name + "() wrapperFn());");
+}
 
 /**
  * Shortcut to create a nsIURI.
@@ -846,7 +875,7 @@ NavHistoryResultObserver.prototype = {
 };
 
 /**
- * Asynchronously adds visits to a page, invoking a callback function when done.
+ * Asynchronously adds visits to a page.
  *
  * @param aPlaceInfo
  *        Can be an nsIURI, in such a case a single LINK visit will be added.
@@ -858,14 +887,14 @@ NavHistoryResultObserver.prototype = {
  *            [optional] visitDate: visit date in microseconds from the epoch
  *            [optional] referrer: nsIURI of the referrer for this visit
  *          }
- * @param [optional] aCallback
- *        Function to be invoked on completion.
- * @param [optional] aStack
- *        The stack frame used to report errors.
+ *
+ * @return {Promise}
+ * @resolves When all visits have been added successfully.
+ * @rejects JavaScript exception.
  */
-function addVisits(aPlaceInfo, aCallback, aStack)
+function promiseAddVisits(aPlaceInfo)
 {
-  let stack = aStack || Components.stack.caller;
+  let deferred = Promise.defer();
   let places = [];
   if (aPlaceInfo instanceof Ci.nsIURI) {
     places.push({ uri: aPlaceInfo });
@@ -893,14 +922,34 @@ function addVisits(aPlaceInfo, aCallback, aStack)
   PlacesUtils.asyncHistory.updatePlaces(
     places,
     {
-      handleError: function AAV_handleError() {
-        do_throw("Unexpected error in adding visit.", stack);
+      handleError: function AAV_handleError(aResultCode, aPlaceInfo) {
+        let ex = new Components.Exception("Unexpected error in adding visits.",
+                                          aResultCode);
+        deferred.reject(ex);
       },
       handleResult: function () {},
       handleCompletion: function UP_handleCompletion() {
-        if (aCallback)
-          aCallback();
+        deferred.resolve();
       }
+    }
+  );
+
+  return deferred.promise;
+}
+
+/**
+ * Asynchronously adds visits to a page, then either invokes a callback function
+ * on success, or reports a test error on failure.
+ *
+ * @deprecated Use promiseAddVisits instead.
+ */
+function addVisits(aPlaceInfo, aCallback, aStack)
+{
+  let stack = aStack || Components.stack.caller;
+  promiseAddVisits(aPlaceInfo).then(
+    aCallback,
+    function addVisits_onFailure(ex) {
+      do_throw(ex, stack);
     }
   );
 }

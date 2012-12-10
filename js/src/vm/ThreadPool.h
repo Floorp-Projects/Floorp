@@ -42,20 +42,20 @@ class TaskExecutor
 // interact with the threadpool directly.  In particular, if you wish
 // to execute JavaScript in parallel, you probably want to look at
 // |js::ForkJoin| in |forkjoin.cpp|.
-
+//
 // The ThreadPool always maintains a fixed pool of worker threads.
 // You can query the number of worker threads via the method
 // |numWorkers()|.  Note that this number may be zero (generally if
 // threads are disabled, or when manually specified for benchmarking
 // purposes).
-
+//
 // You can either submit jobs in one of two ways.  The first is
 // |submitOne()|, which submits a job to be executed by one worker
 // thread (this will fail if there are no worker threads).  The job
 // will be enqueued and executed by some worker (the current scheduler
 // uses round-robin load balancing; something more sophisticated,
 // e.g. a central queue or work stealing, might be better).
-
+//
 // The second way to submit a job is using |submitAll()|---in this
 // case, the job will be executed by all worker threads.  This does
 // not fail if there are no worker threads, it simply does nothing.
@@ -73,10 +73,15 @@ class ThreadPool
     JSRuntime *const runtime_;
     js::Vector<ThreadPoolWorker*, 8, SystemAllocPolicy> workers_;
 
+    // Number of workers we will start, when we actually start them
+    size_t numWorkers_;
+
     // Next worker for |submitOne()|. Atomically modified.
     size_t nextId_;
 
+    bool lazyStartWorkers(JSContext *cx);
     void terminateWorkers();
+    void terminateWorkersAndReportOOM(JSContext *cx);
 
   public:
     ThreadPool(JSRuntime *rt);
@@ -85,11 +90,11 @@ class ThreadPool
     bool init();
 
     // Return number of worker threads in the pool.
-    size_t numWorkers() { return workers_.length(); }
+    size_t numWorkers() { return numWorkers_; }
 
     // See comment on class:
-    bool submitOne(TaskExecutor *executor);
-    bool submitAll(TaskExecutor *executor);
+    bool submitOne(JSContext *cx, TaskExecutor *executor);
+    bool submitAll(JSContext *cx, TaskExecutor *executor);
 
     // Wait until all worker threads have finished their current set
     // of jobs and then return.  You must not submit new jobs after
