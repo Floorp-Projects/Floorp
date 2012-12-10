@@ -855,7 +855,17 @@ public:
       aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
     }
   }
-  
+
+  /**
+   * Called when the area rendered by this display item has changed (been
+   * invalidated or changed geometry) since the last paint. This includes
+   * when the display item was not rendered at all in the last paint.
+   * It does NOT get called when a display item was being rendered and no
+   * longer is, because generally that means there is no display item to
+   * call this method on.
+   */
+  virtual void NotifyRenderingChanged() {}
+
   /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
    * region would be snapped to device pixels when drawing
