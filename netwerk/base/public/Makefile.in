@@ -30,6 +30,8 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIDashboard.idl \
+		nsIDashboardEventNotifier.idl \
 		nsIApplicationCache.idl \
 		nsIApplicationCacheChannel.idl \
 		nsIApplicationCacheContainer.idl \

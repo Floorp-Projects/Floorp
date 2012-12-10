@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIDashboardEventNotifier.idl"
+
+/* A JavaScript callback function that takes a JSON as its parameter.
+ * The returned JSON contains arrays with data
+ */
+[scriptable, function, uuid(19d7f24f-a95a-4fd9-87e2-d96e9e4b1f6d)]
+interface NetDashboardCallback : nsISupports
+{
+    void onDashboardDataAvailable(in jsval data);
+};
+
+/* The dashboard service.
+ * The async API returns JSONs, which hold arrays with the required info.
+ * Only one request of each type may be pending at any time.
+ */
+[scriptable, uuid(c79eb3c6-091a-45a6-8544-5a8d1ab79537)]
+interface nsIDashboard : nsISupports
+{
+    /* Arrays: host, port, tcp, active, socksent, sockreceived
+     * Values: sent, received  */
+    void requestSockets(in NetDashboardCallback cb);
+
+    /* Arrays: host, port, spdy, ssl
+     * Array of arrays: active, idle */
+    void requestHttpConnections(in NetDashboardCallback cb);
+
+    /* Arrays: hostport, encrypted, msgsent, msgreceived, sentsize, receivedsize */
+    void requestWebsocketConnections(in NetDashboardCallback cb);
+
+    /* Arrays: hostname, family, hostaddr, expiration */
+    void requestDNSInfo(in NetDashboardCallback cb);
+
+    /* When true, the service will log websocket events */
+    attribute boolean enableLogging;
+};

@@ -9,10 +9,20 @@ interface nsIEventTarget;
 interface nsIDNSRecord;
 interface nsIDNSListener;
 
+%{C++
+#include "nsTArray.h"
+
+namespace mozilla { namespace net {
+    struct DNSCacheEntries;
+} }
+%}
+
+[ptr] native EntriesArray(nsTArray<mozilla::net::DNSCacheEntries>);
+
 /**
  * nsIDNSService
  */
-[scriptable, uuid(F6E05CC3-8A13-463D-877F-D59B20B59724)]
+[scriptable, uuid(f1971942-19db-44bf-81e8-d15df220a39f)]
 interface nsIDNSService : nsISupports
 {
     /**
@@ -72,6 +82,13 @@ interface nsIDNSService : nsISupports
      */
     nsIDNSRecord resolve(in AUTF8String   aHostName,
                          in unsigned long aFlags);
+
+    /**
+     * The method takes a pointer to an nsTArray
+     * and fills it with cache entry data
+     * Called by the networking dashboard
+     */
+    [noscript] void getDNSCacheEntries(in EntriesArray args);
 
     /**
      * @return the hostname of the operating system.
