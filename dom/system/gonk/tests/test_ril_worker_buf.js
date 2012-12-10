@@ -82,6 +82,81 @@ add_test_incoming_parcel(null,
   }
 );
 
+// Test Bug 814761: buffer overwritten
+add_test(function test_incoming_parcel_buffer_overwritten() {
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+      // do nothing
+    },
+    postMessage: function fakePostMessage(message) {
+      // do nothing
+    }
+  });
+
+  // A convenient alias.
+  let buf = worker.Buf;
+
+  // Allocate an array of specified size and set each of its elements to value.
+  function calloc(length, value) {
+    let array = new Array(length);
+    for (let i = 0; i < length; i++) {
+      array[i] = value;
+    }
+    return array;
+  }
+
+  // Do nothing in handleParcel().
+  let request = worker.REQUEST_REGISTRATION_STATE;
+  worker.RIL[request] = null;
+
+  // Prepare two parcels, whose sizes are both smaller than the incoming buffer
+  // size but larger when combined, to trigger the bug.
+  let pA_dataLength = buf.INCOMING_BUFFER_LENGTH / 2;
+  let pA = newIncomingParcel(-1,
+                             worker.RESPONSE_TYPE_UNSOLICITED,
+                             request,
+                             calloc(pA_dataLength, 1));
+  let pA_parcelSize = pA.length - worker.PARCEL_SIZE_SIZE;
+
+  let pB_dataLength = buf.INCOMING_BUFFER_LENGTH * 3 / 4;
+  let pB = newIncomingParcel(-1,
+                             worker.RESPONSE_TYPE_UNSOLICITED,
+                             request,
+                             calloc(pB_dataLength, 1));
+  let pB_parcelSize = pB.length - worker.PARCEL_SIZE_SIZE;
+
+  // First, send an incomplete pA and verifies related data pointer:
+  let p1 = pA.subarray(0, pA.length - 1);
+  worker.onRILMessage(p1);
+  // The parcel should not have been processed.
+  do_check_eq(buf.readAvailable, 0);
+  // buf.currentParcelSize should have been set because incoming data has more
+  // than 4 octets.
+  do_check_eq(buf.currentParcelSize, pA_parcelSize);
+  // buf.readIncoming should contains remaining unconsumed octets count.
+  do_check_eq(buf.readIncoming, p1.length - worker.PARCEL_SIZE_SIZE);
+  // buf.incomingWriteIndex should be ready to accept the last octet.
+  do_check_eq(buf.incomingWriteIndex, p1.length);
+
+  // Second, send the last octet of pA and whole pB. The Buf should now expand
+  // to cover both pA & pB.
+  let p2 = new Uint8Array(1 + pB.length);
+  p2.set(pA.subarray(pA.length - 1), 0);
+  p2.set(pB, 1);
+  worker.onRILMessage(p2);
+  // The parcels should have been both consumed.
+  do_check_eq(buf.readAvailable, 0);
+  // No parcel data remains.
+  do_check_eq(buf.currentParcelSize, 0);
+  // No parcel data remains.
+  do_check_eq(buf.readIncoming, 0);
+  // The Buf should now expand to cover both pA & pB.
+  do_check_eq(buf.incomingWriteIndex, pA.length + pB.length);
+
+  // end of incoming parcel's trip, let's do next test.
+  run_next_test();
+});
+
 // Test Buf.readUint8Array.
 add_test_incoming_parcel(null,
   function test_buf_readUint8Array(worker) {
