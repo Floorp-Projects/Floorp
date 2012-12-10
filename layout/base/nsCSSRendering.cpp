@@ -4690,26 +4690,19 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 bool
 nsImageRenderer::IsRasterImage()
 {
-  if (mType != eStyleImageType_Image)
+  if (mType != eStyleImageType_Image || !mImageContainer)
     return false;
-  nsCOMPtr<imgIContainer> img;
-  if (NS_FAILED(mImage->GetImageData()->GetImage(getter_AddRefs(img))))
-    return false;
-  return img->GetType() == imgIContainer::TYPE_RASTER;
+  return mImageContainer->GetType() == imgIContainer::TYPE_RASTER;
 }
 
 already_AddRefed<mozilla::layers::ImageContainer>
 nsImageRenderer::GetContainer(LayerManager* aManager)
 {
-  if (mType != eStyleImageType_Image)
-    return nullptr;
-  nsCOMPtr<imgIContainer> img;
-  nsresult rv = mImage->GetImageData()->GetImage(getter_AddRefs(img));
-  if (NS_FAILED(rv))
+  if (mType != eStyleImageType_Image || !mImageContainer)
     return nullptr;
 
   nsRefPtr<ImageContainer> container;
-  rv = img->GetImageContainer(aManager, getter_AddRefs(container));
+  nsresult rv = mImageContainer->GetImageContainer(aManager, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, nullptr);
   return container.forget();
 }
