@@ -63,8 +63,15 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long CHROME_WINDOW_MIN             = 0x00004000;
     const unsigned long CHROME_WINDOW_POPUP           = 0x00008000;
 
-    // private browsing windows
+    // whether to open a new private window.  CHROME_NON_PRIVATE_WINDOW
+    // forces the opened window to be non-private, and overrides
+    // CHROME_PRIVATE_WINDOW if it's set.  CHROME_PRIVATE_WINDOW
+    // forces the opened window to be private.  If neither of these
+    // flags are specified, the opened window will inherit the privacy
+    // status of its opener.  If there is no opener window, the new
+    // window will be non-private.
     const unsigned long CHROME_PRIVATE_WINDOW         = 0x00010000;
+    const unsigned long CHROME_NON_PRIVATE_WINDOW     = 0x00020000;
 
     // Prevents new window animations on Mac OS X Lion.  Ignored on other
     // platforms.
