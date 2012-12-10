@@ -284,6 +284,9 @@ TabChild::OnLocationChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(window));
+  utils->SetIsFirstPaint(true);
+
   nsCOMPtr<nsIDOMDocument> progressDoc;
   window->GetDocument(getter_AddRefs(progressDoc));
   if (!progressDoc) {
