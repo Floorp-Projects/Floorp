@@ -20,7 +20,7 @@ class HTMLHRAccessible : public LeafAccessible
 public:
 
   HTMLHRAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    LeafAccessible(aContent, aDoc) {};
+    LeafAccessible(aContent, aDoc) {}
 
   // Accessible
   virtual a11y::role NativeRole();
@@ -33,7 +33,7 @@ class HTMLBRAccessible : public LeafAccessible
 {
 public:
   HTMLBRAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    LeafAccessible(aContent, aDoc) {};
+    LeafAccessible(aContent, aDoc) {}
 
   // Accessible
   virtual a11y::role NativeRole();
@@ -52,7 +52,7 @@ class HTMLLabelAccessible : public HyperTextAccessibleWrap
 public:
 
   HTMLLabelAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    HyperTextAccessibleWrap(aContent, aDoc) {};
+    HyperTextAccessibleWrap(aContent, aDoc) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -71,7 +71,7 @@ class HTMLOutputAccessible : public HyperTextAccessibleWrap
 public:
 
   HTMLOutputAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    HyperTextAccessibleWrap(aContent, aDoc) {};
+    HyperTextAccessibleWrap(aContent, aDoc) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 

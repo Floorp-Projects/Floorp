@@ -7,6 +7,7 @@
 
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
+#include "Lowering.h"
 #include "MIRGraph.h"
 #include "Ion.h"
 #include "IonAnalysis.h"
@@ -5243,7 +5244,7 @@ IonBuilder::jsop_getelem_dense()
     MDefinition *obj = current->pop();
 
     JSValueType knownType = JSVAL_TYPE_UNKNOWN;
-    if (!needsHoleCheck && !barrier) {
+    if (!barrier) {
         knownType = types->getKnownTypeTag();
 
         // Null and undefined have no payload so they can't be specialized.
@@ -5252,6 +5253,11 @@ IonBuilder::jsop_getelem_dense()
         // and rely on pushTypeBarrier and DCE to replace it with a null/undefined
         // constant.
         if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
+            knownType = JSVAL_TYPE_UNKNOWN;
+
+        // Different architectures may want typed element reads which require
+        // hole checks to be done as either value or typed reads.
+        if (needsHoleCheck && !LIRGenerator::allowTypedElementHoleCheck())
             knownType = JSVAL_TYPE_UNKNOWN;
     }
 

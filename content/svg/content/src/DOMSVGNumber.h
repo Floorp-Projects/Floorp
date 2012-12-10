@@ -70,7 +70,7 @@ public:
     if (mList) {
       mList->mItems[mListIndex] = nullptr;
     }
-  };
+  }
 
   /**
    * Create an unowned copy. The caller is responsible for the first AddRef().

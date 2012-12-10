@@ -131,7 +131,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Used by pluginHost to know if we're loading with a channel, so it
      * will not open its own.
      */
-    bool SrcStreamLoading() { return mSrcStreamLoading; };
+    bool SrcStreamLoading() { return mSrcStreamLoading; }
 
   protected:
     /**

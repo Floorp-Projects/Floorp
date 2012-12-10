@@ -425,15 +425,86 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return mInflater.inflate(R.layout.tabs_counter, null);
     }
 
+    private int prepareAwesomeBarAnimation() {
+        // Keep the entry highlighted during the animation
+        mAwesomeBar.setSelected(true);
+
+        // Expand the entry to fill all the horizontal space available during the
+        // animation. The fake right edge will slide on top of it to give the effect
+        // of expanding the entry.
+        MarginLayoutParams entryParams = (MarginLayoutParams) mAwesomeBarEntry.getLayoutParams();
+        mAwesomeBarEntryRightMargin = entryParams.rightMargin;
+        entryParams.rightMargin = 0;
+        mAwesomeBarEntry.requestLayout();
+
+        // Remove any curves from the toolbar background and expand it to fill all
+        // the horizontal space.
+        MarginLayoutParams barParams = (MarginLayoutParams) mAddressBarBg.getLayoutParams();
+        mAddressBarBgRightMargin = barParams.rightMargin;
+        barParams.rightMargin = 0;
+        mAddressBarBgCurveTowards = mAddressBarBg.getCurveTowards();
+        mAddressBarBg.setCurveTowards(BrowserToolbarBackground.CurveTowards.NONE);
+        mAddressBarBg.requestLayout();
+
+        // If we don't have any menu_items, then we simply slide all elements on the
+        // rigth side of the toolbar out of screen.
+        int translation = mAwesomeBarEntryRightMargin;
+
+        if (mActionItemBar.getVisibility() == View.VISIBLE) {
+            // If the toolbar has action items (e.g. on the tablet UI), the translation will
+            // be in relation to the left side of their container (i.e. mActionItemBar).
+            MarginLayoutParams itemBarParams = (MarginLayoutParams) mActionItemBar.getLayoutParams();
+            translation = itemBarParams.rightMargin + mActionItemBar.getWidth() - entryParams.leftMargin;
+
+            // Expand the whole entry container to fill all the horizontal space available
+            View awesomeBarParent = (View) mAwesomeBar.getParent();
+            mAwesomeBarParams = (LayoutParams) awesomeBarParent.getLayoutParams();
+            awesomeBarParent.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                              ViewGroup.LayoutParams.MATCH_PARENT));
+
+            // Align the fake right edge to the right side of the entry bar
+            MarginLayoutParams rightEdgeParams = (MarginLayoutParams) mAwesomeBarRightEdge.getLayoutParams();
+            rightEdgeParams.rightMargin = itemBarParams.rightMargin + mActionItemBar.getWidth() - 100;
+            mAwesomeBarRightEdge.requestLayout();
+        }
+
+        // Make the right edge visible to start the animation
+        mAwesomeBarRightEdge.setVisibility(View.VISIBLE);
+
+        return translation;
+    }
+
     public void fromAwesomeBarSearch() {
         if (mActivity.hasTabsSideBar() || Build.VERSION.SDK_INT < 11) {
             return;
         }
 
+        AnimatorProxy proxy = null;
+
+        // If the awesomebar entry is not selected at this point, this means that
+        // we had to reinflate the toolbar layout for some reason (device rotation
+        // while in awesome screen, activity was killed in background, etc). In this
+        // case, we have to ensure the toolbar is in the correct initial state to
+        // shrink back.
+        if (!mAwesomeBar.isSelected()) {
+            int translation = prepareAwesomeBarAnimation();
+
+            proxy = AnimatorProxy.create(mAwesomeBarRightEdge);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mTabs);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mTabsCount);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mMenu);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mActionItemBar);
+            proxy.setTranslationX(translation);
+        }
+
         // Restore opacity of content elements in the toolbar immediatelly
         // so that the response is immediate from user interaction in the
         // awesome screen.
-        AnimatorProxy proxy = AnimatorProxy.create(mFavicon);
+        proxy = AnimatorProxy.create(mFavicon);
         proxy.setAlpha(1);
         proxy = AnimatorProxy.create(mSiteSecurity);
         proxy.setAlpha(1);
@@ -489,7 +560,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 // alignment of the entry in relation to them. mAwesomeBarParams might
                 // be null if the activity holding the toolbar is killed before returning
                 // from awesome screen (e.g. "Don't keep activities" is on)
-                if (mActionItemBar.getVisibility() == View.VISIBLE && mAwesomeBarParams != null)
+                if (mActionItemBar.getVisibility() == View.VISIBLE)
                     ((View) mAwesomeBar.getParent()).setLayoutParams(mAwesomeBarParams);
 
                 // Hide fake right edge, we only use for the animation
@@ -526,47 +597,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
 
-        // Keep the entry highlighted during the animation
-        mAwesomeBar.setSelected(true);
-
-        // Expand the entry to fill all the horizontal space available during the
-        // animation. The fake right edge will slide on top of it to give the effect
-        // of expanding the entry.
-        MarginLayoutParams entryParams = (MarginLayoutParams) mAwesomeBarEntry.getLayoutParams();
-        mAwesomeBarEntryRightMargin = entryParams.rightMargin;
-        entryParams.rightMargin = 0;
-        mAwesomeBarEntry.requestLayout();
-
-        // Remove any curves from the toolbar background and expand it to fill all
-        // the horizontal space.
-        MarginLayoutParams barParams = (MarginLayoutParams) mAddressBarBg.getLayoutParams();
-        mAddressBarBgRightMargin = barParams.rightMargin;
-        barParams.rightMargin = 0;
-        mAddressBarBgCurveTowards = mAddressBarBg.getCurveTowards();
-        mAddressBarBg.setCurveTowards(BrowserToolbarBackground.CurveTowards.NONE);
-        mAddressBarBg.requestLayout();
-
-        // If we don't have any menu_items, then we simply slide all elements on the
-        // rigth side of the toolbar out of screen.
-        int translation = mAwesomeBarEntryRightMargin;
+        int translation = prepareAwesomeBarAnimation();
 
         if (mActionItemBar.getVisibility() == View.VISIBLE) {
-            // If the toolbar has action items (e.g. on the tablet UI), the translation will
-            // be in relation to the left side of their container (i.e. mActionItemBar).
-            MarginLayoutParams itemBarParams = (MarginLayoutParams) mActionItemBar.getLayoutParams();
-            translation = itemBarParams.rightMargin + mActionItemBar.getWidth() - entryParams.leftMargin;
-
-            // Expand the whole entry container to fill all the horizontal space available
-            View awesomeBarParent = (View) mAwesomeBar.getParent();
-            mAwesomeBarParams = (LayoutParams) awesomeBarParent.getLayoutParams();
-            awesomeBarParent.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                                              ViewGroup.LayoutParams.MATCH_PARENT));
-
-            // Align the fake right edge to the right side of the entry bar
-            MarginLayoutParams rightEdgeParams = (MarginLayoutParams) mAwesomeBarRightEdge.getLayoutParams();
-            rightEdgeParams.rightMargin = itemBarParams.rightMargin + mActionItemBar.getWidth() - 100;
-            mAwesomeBarRightEdge.requestLayout();
-
             contentAnimator.attach(mFavicon,
                                    PropertyAnimator.Property.ALPHA,
                                    0);
@@ -577,9 +610,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                    PropertyAnimator.Property.ALPHA,
                                    0);
         }
-
-        // Make the right edge visible to start the animation
-        mAwesomeBarRightEdge.setVisibility(View.VISIBLE);
 
         // Fade out all controls inside the toolbar
         contentAnimator.attach(mForward,
