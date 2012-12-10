@@ -123,6 +123,14 @@ this.DOMApplicationRegistry = {
             if (this.webapps[id].appStatus === undefined) {
               this.webapps[id].appStatus = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
             }
+
+            // Default to NO_APP_ID and not in browser.
+            if (this.webapps[id].installerAppId === undefined) {
+              this.webapps[id].installerAppId = Ci.nsIScriptSecurityManager.NO_APP_ID;
+            }
+            if (this.webapps[id].installerIsBrowser === undefined) {
+              this.webapps[id].installerIsBrowser = false;
+            }
           };
         }
         aNext();
@@ -1162,6 +1170,8 @@ this.DOMApplicationRegistry = {
     if (app.etag) {
       xhr.setRequestHeader("If-None-Match", app.etag);
     }
+    xhr.channel.notificationCallbacks =
+      this.createLoadContext(app.installerAppId, app.installerIsBrowser);
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
@@ -1205,6 +1215,31 @@ this.DOMApplicationRegistry = {
     xhr.send(null);
   },
 
+  // Creates a nsILoadContext object with a given appId and isBrowser flag.
+  createLoadContext: function createLoadContext(aAppId, aIsBrowser) {
+    return {
+       associatedWindow: null,
+       topWindow : null,
+       appId: aAppId,
+       isInBrowserElement: aIsBrowser,
+       usePrivateBrowsing: false,
+       isContent: false,
+
+       isAppOfType: function(appType) {
+         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+       },
+
+       QueryInterface: XPCOMUtils.generateQI([Ci.nsILoadContext,
+                                              Ci.nsIInterfaceRequestor,
+                                              Ci.nsISupports]),
+       getInterface: function(iid) {
+         if (iid.equals(Ci.nsILoadContext))
+           return this;
+         throw Cr.NS_ERROR_NO_INTERFACE;
+       }
+     }
+  },
+
   // Downloads the manifest and run checks, then eventually triggers the
   // installation UI.
   doInstall: function doInstall(aData, aMm) {
@@ -1229,7 +1264,10 @@ this.DOMApplicationRegistry = {
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
     xhr.channel.loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+    xhr.channel.notificationCallbacks = this.createLoadContext(aData.appId,
+                                                               aData.isBrowser);
     xhr.responseType = "json";
+
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
         if (!AppsUtils.checkManifestContentType(app.installOrigin, app.origin,
@@ -1281,6 +1319,8 @@ this.DOMApplicationRegistry = {
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
     xhr.channel.loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+    xhr.channel.notificationCallbacks = this.createLoadContext(aData.appId,
+                                                               aData.isBrowser);
     xhr.responseType = "json";
 
     xhr.addEventListener("load", (function() {
@@ -1412,6 +1452,9 @@ this.DOMApplicationRegistry = {
 
     appObject.name = manifest.name;
     appObject.csp = manifest.csp || "";
+
+    appObject.installerAppId = aData.appId;
+    appObject.installerIsBrowser = aData.isBrowser;
 
     this.webapps[id] = appObject;
 
@@ -1649,7 +1692,8 @@ this.DOMApplicationRegistry = {
       requestChannel.notificationCallbacks = {
         QueryInterface: function notifQI(aIID) {
           if (aIID.equals(Ci.nsISupports)          ||
-              aIID.equals(Ci.nsIProgressEventSink))
+              aIID.equals(Ci.nsIProgressEventSink) ||
+              aIID.equals(Ci.nsILoadContext))
             return this;
 
           throw Cr.NS_ERROR_NO_INTERFACE;
@@ -1667,7 +1711,18 @@ this.DOMApplicationRegistry = {
                                   progress: aProgress,
                                   app: app });
         },
-        onStatus: function notifStatus(aRequest, aContext, aStatus, aStatusArg) { }
+        onStatus: function notifStatus(aRequest, aContext, aStatus, aStatusArg) { },
+
+        // nsILoadContext
+        appId: app.installerAppId,
+        isInBrowserElement: app.installerIsBrowser,
+        usePrivateBrowsing: false,
+        isContent: false,
+        associatedWindow: null,
+        topWindow : null,
+        isAppOfType: function(appType) {
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+        }
       }
 
       // We set the 'downloading' flag to true right before starting the fetch.
