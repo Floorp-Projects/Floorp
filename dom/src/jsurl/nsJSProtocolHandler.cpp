@@ -785,13 +785,10 @@ nsJSChannel::EvaluateScript()
     nsLoadFlags loadFlags;
     mStreamChannel->GetLoadFlags(&loadFlags);
 
-    uint32_t disposition;
-    if (NS_FAILED(mStreamChannel->GetContentDisposition(&disposition)))
-        disposition = nsIChannel::DISPOSITION_INLINE;
-    if (loadFlags & LOAD_DOCUMENT_URI && disposition != nsIChannel::DISPOSITION_ATTACHMENT) {
-        // We're loaded as the document channel and not expecting to download
-        // the result. If we go on, we'll blow away the current document. Make
-        // sure that's ok. If so, stop all pending network loads.
+    if (loadFlags & LOAD_DOCUMENT_URI) {
+        // We're loaded as the document channel. If we go on,
+        // we'll blow away the current document. Make sure that's
+        // ok. If so, stop all pending network loads.
 
         nsCOMPtr<nsIDocShell> docShell;
         NS_QueryNotificationCallbacks(mStreamChannel, docShell);
