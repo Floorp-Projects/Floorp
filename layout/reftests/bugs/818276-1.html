@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<iframe id="f" src="data:text/html,<div style='height:1000px; background:yellow'>" style="overflow:hidden"></iframe>
+<script>
+function doTest() {
+  var f = document.getElementById("f");
+  f.style.overflow = "visible";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

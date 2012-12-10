@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body onload="scriptPlugin()">
+<div id="container" style="width: 0px; height: 0px;">
+  <embed id="test" style="width: inherit; height: inherit;" type="application/x-test"/>
+</div>
+<script>
+  function scriptPlugin() {
+    try {
+      document.getElementById("test").getObjectValue();
+    }
+    catch (e) {}
+
+    setTimeout(function() {
+      var container = document.getElementById("container");
+      container.style.width = "200px";
+      container.style.height = "200px";
+    }, 10);
+  }
+</script>
+</body>
+</html>

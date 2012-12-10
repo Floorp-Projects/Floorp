@@ -72,6 +72,7 @@ this.AccessFu = {
 
     Cu.import('resource://gre/modules/accessibility/Utils.jsm');
     Cu.import('resource://gre/modules/accessibility/TouchAdapter.jsm');
+    Cu.import('resource://gre/modules/accessibility/Presentation.jsm');
 
     Logger.info('enable');
 
@@ -145,23 +146,30 @@ this.AccessFu = {
 
     switch (aMessage.name) {
       case 'AccessFu:Ready':
-      let mm = Utils.getMessageManager(aMessage.target);
-      mm.sendAsyncMessage('AccessFu:Start',
-                          {method: 'start', buildApp: Utils.MozBuildApp});
-      break;
+        let mm = Utils.getMessageManager(aMessage.target);
+        mm.sendAsyncMessage('AccessFu:Start',
+                            {method: 'start', buildApp: Utils.MozBuildApp});
+        break;
       case 'AccessFu:Present':
+        this._output(aMessage.json, aMessage.target);
+        break;
+      case 'AccessFu:Input':
+        Input.setEditState(aMessage.json);
+        break;
+    }
+  },
+
+  _output: function _output(aPresentationData, aBrowser) {
       try {
-        for each (let presenter in aMessage.json) {
-          Output[presenter.type](presenter.details, aMessage.target);
+        for each (let presenter in aPresentationData) {
+          if (!presenter)
+            continue;
+
+          Output[presenter.type](presenter.details, aBrowser);
         }
       } catch (x) {
         Logger.logException(x);
       }
-      break;
-      case 'AccessFu:Input':
-      Input.setEditState(aMessage.json);
-      break;
-    }
   },
 
   _loadFrameScript: function _loadFrameScript(aMessageManager) {
@@ -240,6 +248,11 @@ this.AccessFu = {
     }
   },
 
+  announce: function announce(aAnnouncement) {
+    this._output(Presentation.announce(aAnnouncement),
+                 Utils.getCurrentBrowser(this.chromeWin));
+  },
+
   // So we don't enable/disable twice
   _enabled: false,
 
@@ -259,34 +272,71 @@ var Output = {
   },
 
   Visual: function Visual(aDetails, aBrowser) {
-    if (!this.highlightBox) {
-      // Add highlight box
-      this.highlightBox = this.chromeWin.document.
-        createElementNS('http://www.w3.org/1999/xhtml', 'div');
-      this.chromeWin.document.documentElement.appendChild(this.highlightBox);
-      this.highlightBox.id = 'virtual-cursor-box';
+    switch (aDetails.method) {
+      case 'showBounds':
+      {
+        if (!this.highlightBox) {
+          // Add highlight box
+          this.highlightBox = this.chromeWin.document.
+            createElementNS('http://www.w3.org/1999/xhtml', 'div');
+          this.chromeWin.document.documentElement.appendChild(this.highlightBox);
+          this.highlightBox.id = 'virtual-cursor-box';
 
-      // Add highlight inset for inner shadow
-      let inset = this.chromeWin.document.
-        createElementNS('http://www.w3.org/1999/xhtml', 'div');
-      inset.id = 'virtual-cursor-inset';
+          // Add highlight inset for inner shadow
+          let inset = this.chromeWin.document.
+            createElementNS('http://www.w3.org/1999/xhtml', 'div');
+          inset.id = 'virtual-cursor-inset';
 
-      this.highlightBox.appendChild(inset);
-    }
+          this.highlightBox.appendChild(inset);
+        }
 
-    if (aDetails.method == 'show') {
-      let padding = aDetails.padding;
-      let r = this._adjustBounds(aDetails.bounds, aBrowser);
+        let padding = aDetails.padding;
+        let r = this._adjustBounds(aDetails.bounds, aBrowser);
 
-      // First hide it to avoid flickering when changing the style.
-      this.highlightBox.style.display = 'none';
-      this.highlightBox.style.top = (r.top - padding) + 'px';
-      this.highlightBox.style.left = (r.left - padding) + 'px';
-      this.highlightBox.style.width = (r.width + padding*2) + 'px';
-      this.highlightBox.style.height = (r.height + padding*2) + 'px';
-      this.highlightBox.style.display = 'block';
-    } else if (aDetails.method == 'hide') {
-      this.highlightBox.style.display = 'none';
+        // First hide it to avoid flickering when changing the style.
+        this.highlightBox.style.display = 'none';
+        this.highlightBox.style.top = (r.top - padding) + 'px';
+        this.highlightBox.style.left = (r.left - padding) + 'px';
+        this.highlightBox.style.width = (r.width + padding*2) + 'px';
+        this.highlightBox.style.height = (r.height + padding*2) + 'px';
+        this.highlightBox.style.display = 'block';
+
+        break;
+      }
+      case 'hideBounds':
+      {
+        if (this.highlightBox)
+          this.highlightBox.style.display = 'none';
+        break;
+      }
+      case 'showAnnouncement':
+      {
+        if (!this.announceBox) {
+          this.announceBox = this.chromeWin.document.
+            createElementNS('http://www.w3.org/1999/xhtml', 'div');
+          this.announceBox.id = 'announce-box';
+          this.chromeWin.document.documentElement.appendChild(this.announceBox);
+        }
+
+        this.announceBox.innerHTML = '<div>' + aDetails.text + '</div>';
+        this.announceBox.classList.add('showing');
+
+        if (this._announceHideTimeout)
+          this.chromeWin.clearTimeout(this._announceHideTimeout);
+
+        if (aDetails.duration > 0)
+          this._announceHideTimeout = this.chromeWin.setTimeout(
+            function () {
+              this.announceBox.classList.remove('showing');
+              this._announceHideTimeout = 0;
+            }.bind(this), aDetails.duration);
+        break;
+      }
+      case 'hideAnnouncement':
+      {
+        this.announceBox.classList.remove('showing');
+        break;
+      }
     }
   },
 

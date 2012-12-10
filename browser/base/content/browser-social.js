@@ -6,6 +6,9 @@
 const PANEL_MIN_HEIGHT = 100;
 const PANEL_MIN_WIDTH = 330;
 
+XPCOMUtils.defineLazyModuleGetter(this, "SharedFrame",
+  "resource:///modules/SharedFrame.jsm");
+
 let SocialUI = {
   // Called on delayed startup to initialize UI
   init: function SocialUI_init() {
@@ -250,9 +253,12 @@ let SocialChatBar = {
     if (!SocialUI.haveLoggedInUser())
       return false;
     let docElem = document.documentElement;
-    let chromeless = docElem.getAttribute("disablechrome") ||
-                     docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
+    let chromeless = docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
     return Social.uiVisible && !chromeless;
+  },
+  // Does this chatbar have any chats (whether minimized, collapsed or normal)
+  get hasChats() {
+    return !!this.chatbar.firstElementChild;
   },
   openChat: function(aProvider, aURL, aCallback, aMode) {
     if (this.isAvailable)
@@ -675,8 +681,11 @@ var SocialToolbar = {
 
     if (!SocialUI.haveLoggedInUser() || !socialEnabled) {
       let parent = document.getElementById("social-notification-panel");
-      while (parent.hasChildNodes())
-        parent.removeChild(parent.firstChild);
+      while (parent.hasChildNodes()) {
+        let frame = parent.firstChild;
+        SharedFrame.forgetGroup(frame.id);
+        parent.removeChild(frame);
+      }
 
       while (tbi.lastChild != tbi.firstChild)
         tbi.removeChild(tbi.lastChild);
@@ -754,7 +763,6 @@ var SocialToolbar = {
                                      str);
     }
 
-    let notificationFrames = document.createDocumentFragment();
     let iconContainers = document.createDocumentFragment();
 
     let createdFrames = [];
@@ -764,22 +772,32 @@ var SocialToolbar = {
 
       let notificationFrameId = "social-status-" + icon.name;
       let notificationFrame = document.getElementById(notificationFrameId);
+
       if (!notificationFrame) {
-        notificationFrame = document.createElement("iframe");
-        notificationFrame.setAttribute("type", "content");
-        notificationFrame.setAttribute("class", "social-panel-frame");
-        notificationFrame.setAttribute("id", notificationFrameId);
-        notificationFrame.setAttribute("mozbrowser", "true");
-        // work around bug 793057 - by making the panel roughly the final size
-        // we are more likely to have the anchor in the correct position.
-        notificationFrame.style.width = PANEL_MIN_WIDTH + "px";
+
+        notificationFrame = SharedFrame.createFrame(
+          notificationFrameId, /* frame name */
+          panel, /* parent */
+          {
+            "type": "content",
+            "mozbrowser": "true",
+            "class": "social-panel-frame",
+            "id": notificationFrameId,
+
+            // work around bug 793057 - by making the panel roughly the final size
+            // we are more likely to have the anchor in the correct position.
+            "style": "width: " + PANEL_MIN_WIDTH + "px;",
+
+            "origin": provider.origin,
+            "src": icon.contentPanel
+          }
+        );
 
         createdFrames.push(notificationFrame);
-        notificationFrames.appendChild(notificationFrame);
+      } else {
+        notificationFrame.setAttribute("origin", provider.origin);
+        SharedFrame.updateURL(notificationFrameId, icon.contentPanel);
       }
-      notificationFrame.setAttribute("origin", provider.origin);
-      if (notificationFrame.getAttribute("src") != icon.contentPanel)
-        notificationFrame.setAttribute("src", icon.contentPanel);
 
       let iconId = "social-notification-icon-" + icon.name;
       let imageId = iconId + "-image";
@@ -830,7 +848,6 @@ var SocialToolbar = {
 
       image.style.listStyleImage = "url(" + icon.iconURL + ")";
     }
-    panel.appendChild(notificationFrames);
     iconBox.appendChild(iconContainers);
 
     for (let frame of createdFrames) {
@@ -852,6 +869,9 @@ var SocialToolbar = {
     let panel = document.getElementById("social-notification-panel");
     let notificationFrameId = aToolbarButtonBox.getAttribute("notificationFrameId");
     let notificationFrame = document.getElementById(notificationFrameId);
+
+    let wasAlive = SharedFrame.isGroupAlive(notificationFrameId);
+    SharedFrame.setOwner(notificationFrameId, notificationFrame);
 
     // Clear dimensions on all browsers so the panel size will
     // only use the selected browser.
@@ -881,7 +901,7 @@ var SocialToolbar = {
       aToolbarButtonBox.setAttribute("open", "true");
       notificationFrame.docShell.isActive = true;
       notificationFrame.docShell.isAppTab = true;
-      if (notificationFrame.contentDocument.readyState == "complete") {
+      if (notificationFrame.contentDocument.readyState == "complete" && wasAlive) {
         dynamicResizer.start(panel, notificationFrame);
         dispatchPanelEvent("socialFrameShow");
       } else {

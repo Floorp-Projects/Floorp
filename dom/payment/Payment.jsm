@@ -16,6 +16,7 @@ const PAYMENT_IPC_MSG_NAMES = ["Payment:Pay",
                                "Payment:Failed"];
 
 const PREF_PAYMENTPROVIDERS_BRANCH = "dom.payment.provider.";
+const PREF_PAYMENT_BRANCH = "dom.payment.";
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -35,6 +36,17 @@ let PaymentManager =  {
     this.registeredProviders = null;
 
     this.messageManagers = {};
+
+    // The dom.payment.skipHTTPSCheck pref is supposed to be used only during
+    // development process. This preference should not be active for a
+    // production build.
+    let paymentPrefs = prefService.getBranch(PREF_PAYMENT_BRANCH);
+    this.checkHttps = true;
+    try {
+      if (paymentPrefs.getPrefType("skipHTTPSCheck")) {
+        this.checkHttps = !paymentPrefs.getBoolPref("skipHTTPSCheck");
+      }
+    } catch(e) {}
 
     for each (let msgname in PAYMENT_IPC_MSG_NAMES) {
       ppmm.addMessageListener(msgname, this);
@@ -303,7 +315,7 @@ let PaymentManager =  {
     }
 
     // We only allow https for payment providers uris.
-    if (!/^https/.exec(provider.uri.toLowerCase())) {
+    if (this.checkHttps && !/^https/.exec(provider.uri.toLowerCase())) {
       // We should never get this far.
       debug("Payment provider uris must be https: " + provider.uri);
       this.paymentFailed(aRequestId,

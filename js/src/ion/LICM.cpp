@@ -205,8 +205,11 @@ Loop::isLoopInvariant(MInstruction *ins)
 
     // Don't hoist if this instruction depends on a store inside the loop.
     if (ins->dependency() && isInLoop(ins->dependency())) {
-        if (IonSpewEnabled(IonSpew_LICM))
-            fprintf(IonSpewFile, "depends on store inside loop.\n");
+        if (IonSpewEnabled(IonSpew_LICM)) {
+            fprintf(IonSpewFile, "depends on store inside loop: ");
+            ins->dependency()->printName(IonSpewFile);
+            fprintf(IonSpewFile, "\n");
+        }
         return false;
     }
 

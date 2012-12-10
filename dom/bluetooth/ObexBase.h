@@ -140,7 +140,7 @@ public:
     mHeaders.AppendElement(aHeader);
   }
 
-  void GetName(nsString& aRetName)
+  void GetName(nsString& aRetName) const
   {
     aRetName.Truncate();
 
@@ -167,7 +167,7 @@ public:
     }
   }
 
-  void GetContentType(nsString& aRetContentType)
+  void GetContentType(nsString& aRetContentType) const
   {
     aRetContentType.Truncate();
 
@@ -183,7 +183,7 @@ public:
   }
 
   // @return file length, 0 means file length is unknown.
-  void GetLength(uint32_t* aRetLength)
+  void GetLength(uint32_t* aRetLength) const
   {
     int length = mHeaders.Length();
     *aRetLength = 0;
@@ -200,7 +200,7 @@ public:
     }
   }
 
-  void GetBodyLength(int* aRetBodyLength)
+  void GetBodyLength(int* aRetBodyLength) const
   {
     int length = mHeaders.Length();
     *aRetBodyLength = 0;
@@ -214,7 +214,7 @@ public:
     }
   }
 
-  void GetBody(uint8_t** aRetBody)
+  void GetBody(uint8_t** aRetBody) const
   {
     int length = mHeaders.Length();
     *aRetBody = nullptr;
@@ -230,7 +230,7 @@ public:
     }
   }
 
-  bool Has(ObexHeaderId aId)
+  bool Has(ObexHeaderId aId) const
   {
     int length = mHeaders.Length();
     for (int i = 0; i < length; ++i) {

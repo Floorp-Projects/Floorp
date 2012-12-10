@@ -1,14 +1,9 @@
-# Tests for flexbox pref "layout.css.flexbox.enabled"
-# (Note that it defaults to off for now)
-== flexbox-pref-1.xhtml flexbox-pref-1-disabled-ref.xhtml
+# Check that flexbox pref is default-enabled:
+== flexbox-pref-1.xhtml flexbox-pref-1-enabled-ref.xhtml
+
+# Check that manually setting the pref on/off w/ test-pref() works correctly:
 test-pref(layout.css.flexbox.enabled,false) == flexbox-pref-1.xhtml flexbox-pref-1-disabled-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-pref-1.xhtml flexbox-pref-1-enabled-ref.xhtml
-
-# Enable pref for remaining tests
-# (Most tests only need it in the testcase, but a few use it in the
-# reference case, so we'll just enable it using "pref()" to make
-# it available for both.)
-default-preferences pref(layout.css.flexbox.enabled,true)
 
 # Tests for cross-axis alignment (align-self / align-items properties)
 == flexbox-align-self-baseline-horiz-1.xhtml  flexbox-align-self-baseline-horiz-1-ref.xhtml
@@ -16,16 +11,10 @@ fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-
 # This one fails on windows R (but not Ru, strangely). On Windows R, the
 # single-line <label> flex item has a different background size in test vs. ref
 random-if(winWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
-# XXXdholbert This test needs the flexbox pref to be enabled _at startup time_
-# (when we parse ua.css) in order to pass -- so it'll fail until we enable the
-# flexbox pref by default (bug 783409):
-fails == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
+== flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
 == flexbox-align-self-horiz-1-block.xhtml  flexbox-align-self-horiz-1-ref.xhtml
-# XXXdholbert This test needs the flexbox pref to be enabled _at startup time_
-# (when we parse ua.css) in order to pass -- so it'll fail until we enable the
-# flexbox pref by default (bug 783409):
-fails == flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref.xhtml
+== flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref.xhtml
 == flexbox-align-self-horiz-2.xhtml  flexbox-align-self-horiz-2-ref.xhtml
 == flexbox-align-self-horiz-3.xhtml  flexbox-align-self-horiz-3-ref.xhtml
 == flexbox-align-self-horiz-4.xhtml  flexbox-align-self-horiz-4-ref.xhtml

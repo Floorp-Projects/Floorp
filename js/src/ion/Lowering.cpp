@@ -159,6 +159,13 @@ LIRGenerator::visitNewObject(MNewObject *ins)
 }
 
 bool
+LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject *ins)
+{
+    LNewDeclEnvObject *lir = new LNewDeclEnvObject();
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 {
     LAllocation slots;

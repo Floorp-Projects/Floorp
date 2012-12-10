@@ -291,8 +291,7 @@ add_test(function onItemMoved_bookmark() {
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
       ] },
   ];
-  PlacesUtils.history.addVisit(uri, Date.now() * 1000, null,
-                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
+  promiseAddVisits({ uri: uri, transition: TRANSITION_TYPED });
 });
 
 add_test(function onItemRemoved_bookmark() {

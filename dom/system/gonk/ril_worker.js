@@ -8297,7 +8297,7 @@ let StkProactiveCmdHelper = {
     length--; // -1 for the codingScheme.
     switch (text.codingScheme & 0x0f) {
       case STK_TEXT_CODING_GSM_7BIT_PACKED:
-        text.textString = GsmPDUHelper.readSeptetsToString(length / 7, 0, 0, 0);
+        text.textString = GsmPDUHelper.readSeptetsToString(length * 8 / 7, 0, 0, 0);
         break;
       case STK_TEXT_CODING_GSM_8BIT:
         text.textString = GsmPDUHelper.read8BitUnpackedToString(length);
