@@ -364,6 +364,7 @@ public:
             next->previous = this;
         if (dirty)
             markDirty();
+        insertInSegments(section->segments);
     }
 
     void insertBefore(ElfSection *section, bool dirty = true) {
@@ -381,6 +382,7 @@ public:
             previous->next = this;
         if (dirty)
             markDirty();
+        insertInSegments(section->segments);
     }
 
     void markDirty() {
@@ -416,6 +418,9 @@ private:
     }
 
     bool isInSegmentType(unsigned int type);
+
+    void insertInSegments(std::vector<ElfSegment *> &segs);
+
 protected:
     Elf_Shdr shdr;
     char *data;
@@ -648,6 +653,12 @@ inline bool ElfSection::isInSegmentType(unsigned int type) {
         if ((*seg)->getType() == type)
             return true;
     return false;
+}
+
+inline void ElfSection::insertInSegments(std::vector<ElfSegment *> &segs) {
+    for (std::vector<ElfSegment *>::iterator it = segs.begin(); it != segs.end(); ++it) {
+        (*it)->addSection(this);
+    }
 }
 
 inline ElfLocation::ElfLocation(ElfSection *section, unsigned int off, enum position pos)
