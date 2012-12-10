@@ -47,7 +47,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            camera: {
                              app: DENY_ACTION,
-                             privileged: PROMPT_ACTION,
+                             privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            alarms: {
