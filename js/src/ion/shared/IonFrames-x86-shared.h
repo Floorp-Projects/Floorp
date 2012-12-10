@@ -65,6 +65,10 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     static size_t offsetOfNumActualArgs() {
         return offsetof(IonJSFrameLayout, numActualArgs_);
     }
+    static size_t offsetOfThis() {
+        IonJSFrameLayout *base = NULL;
+        return reinterpret_cast<size_t>(&base->argv()[0]);
+    }
     static size_t offsetOfActualArgs() {
         IonJSFrameLayout *base = NULL;
         // +1 to skip |this|.
@@ -461,6 +465,12 @@ class BaselineFrame
     // This is the old frame pointer saved in the prologue.
     static const uint32_t FramePointerOffset = sizeof(void *);
 
+    static size_t offsetOfCalleeToken() {
+        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfCalleeToken();
+    }
+    static inline size_t offsetOfThis() {
+        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfThis();
+    }
     static inline size_t offsetOfArg(size_t index) {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfActualArg(index);
     }
