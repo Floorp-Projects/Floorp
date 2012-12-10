@@ -1740,23 +1740,21 @@ GCMarker::resetBufferedGrayRoots()
 }
 
 void
-GCMarker::markBufferedGrayRoots()
+GCMarker::markBufferedGrayRoots(JSCompartment *comp)
 {
     JS_ASSERT(!grayFailed);
+    JS_ASSERT(comp->isGCMarkingGray());
 
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next()) {
-        JS_ASSERT(c->isGCMarkingGray());
-        for (GrayRoot *elem = c->gcGrayRoots.begin(); elem != c->gcGrayRoots.end(); elem++) {
+    for (GrayRoot *elem = comp->gcGrayRoots.begin(); elem != comp->gcGrayRoots.end(); elem++) {
 #ifdef DEBUG
-            debugPrinter = elem->debugPrinter;
-            debugPrintArg = elem->debugPrintArg;
-            debugPrintIndex = elem->debugPrintIndex;
+        debugPrinter = elem->debugPrinter;
+        debugPrintArg = elem->debugPrintArg;
+        debugPrintIndex = elem->debugPrintIndex;
 #endif
-            void *tmp = elem->thing;
-            JS_SET_TRACING_LOCATION(this, (void *)&elem->thing);
-            MarkKind(this, &tmp, elem->kind);
-            JS_ASSERT(tmp == elem->thing);
-        }
+        void *tmp = elem->thing;
+        JS_SET_TRACING_LOCATION(this, (void *)&elem->thing);
+        MarkKind(this, &tmp, elem->kind);
+        JS_ASSERT(tmp == elem->thing);
     }
 }
 
@@ -2721,14 +2719,7 @@ MarkWeakReferencesInCurrentGroup(JSRuntime *rt, gcstats::Phase phase)
     MarkWeakReferences<GCCompartmentGroupIter>(rt, phase);
 }
 
-#ifdef DEBUG
-static void
-MarkAllWeakReferences(JSRuntime *rt, gcstats::Phase phase)
-{
-    MarkWeakReferences<GCCompartmentsIter>(rt, phase);
-}
-#endif
-
+template <class CompartmentIterT>
 static void
 MarkGrayReferences(JSRuntime *rt)
 {
@@ -2739,8 +2730,10 @@ MarkGrayReferences(JSRuntime *rt)
         gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_MARK_GRAY);
         gcmarker->setMarkColorGray();
         if (gcmarker->hasBufferedGrayRoots()) {
-            gcmarker->markBufferedGrayRoots();
+            for (CompartmentIterT c(rt); !c.done(); c.next())
+                gcmarker->markBufferedGrayRoots(c);
         } else {
+            JS_ASSERT(!rt->gcIsIncremental);
             if (JSTraceDataOp op = rt->gcGrayRootsTraceOp)
                 (*op)(gcmarker, rt->gcGrayRootsData);
         }
@@ -2748,14 +2741,32 @@ MarkGrayReferences(JSRuntime *rt)
         gcmarker->drainMarkStack(budget);
     }
 
-    MarkWeakReferencesInCurrentGroup(rt, gcstats::PHASE_SWEEP_MARK_GRAY_WEAK);
+    MarkWeakReferences<CompartmentIterT>(rt, gcstats::PHASE_SWEEP_MARK_GRAY_WEAK);
 
     JS_ASSERT(gcmarker->isDrained());
 
     gcmarker->setMarkColorBlack();
 }
 
+static void
+MarkGrayReferencesInCurrentGroup(JSRuntime *rt)
+{
+    MarkGrayReferences<GCCompartmentGroupIter>(rt);
+}
+
 #ifdef DEBUG
+
+static void
+MarkAllWeakReferences(JSRuntime *rt, gcstats::Phase phase)
+{
+    MarkWeakReferences<GCCompartmentsIter>(rt, phase);
+}
+
+static void
+MarkAllGrayReferences(JSRuntime *rt)
+{
+    MarkGrayReferences<GCCompartmentsIter>(rt);
+}
 
 class js::gc::MarkingValidator
 {
@@ -2866,6 +2877,20 @@ js::gc::MarkingValidator::nonIncrementalMark()
     {
         gcstats::AutoPhase ap(runtime->gcStats, gcstats::PHASE_SWEEP);
         MarkAllWeakReferences(runtime, gcstats::PHASE_SWEEP_MARK_WEAK);
+
+        /* Update compartment state for gray marking. */
+        for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
+            JS_ASSERT(c->isGCMarkingBlack());
+            c->setGCState(JSCompartment::MarkGray);
+        }
+
+        MarkAllGrayReferences(runtime);
+
+        /* Restore compartment state. */
+        for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
+            JS_ASSERT(c->isGCMarkingGray());
+            c->setGCState(JSCompartment::Mark);
+        }
     }
 
     /* Take a copy of the non-incremental mark state and restore the original. */
@@ -2929,6 +2954,13 @@ js::gc::MarkingValidator::validate()
                  * an incremental GC won't collect it.
                  */
                 JS_ASSERT_IF(bitmap->isMarked(cell, BLACK), incBitmap->isMarked(cell, BLACK));
+
+                /*
+                 * If the cycle collector isn't allowed to collect an object
+                 * after a non-incremental GC has run, then it isn't allowed to
+                 * collected it after an incremental GC.
+                 */
+                JS_ASSERT_IF(!bitmap->isMarked(cell, GRAY), !incBitmap->isMarked(cell, GRAY));
 
                 thing += Arena::thingSize(kind);
             }
@@ -3330,7 +3362,7 @@ EndMarkingCompartmentGroup(JSRuntime *rt)
     rt->gcMarker.setMarkColorBlack();
 
     /* Mark gray roots and mark transitively inside the current compartment group. */
-    MarkGrayReferences(rt);
+    MarkGrayReferencesInCurrentGroup(rt);
 
     /* Restore marking state. */
     for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {

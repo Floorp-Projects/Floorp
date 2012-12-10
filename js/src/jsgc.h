@@ -1024,7 +1024,7 @@ struct GCMarker : public JSTracer {
     void startBufferingGrayRoots();
     void endBufferingGrayRoots();
     void resetBufferedGrayRoots();
-    void markBufferedGrayRoots();
+    void markBufferedGrayRoots(JSCompartment *comp);
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
 
