@@ -14,6 +14,25 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+      <row anyid="true">  <label value="12"/>  <label value="aardvark"/>  </row>
+      <row anyid="true">  <label value="9"/>  <label value="African Elephant"/>  </row>
+      <row anyid="true">  <label value="15"/>  <label value="Anaconda"/>  </row>
+      <row anyid="true">  <label value="3"/>  <label value="Barn Owl"/>  </row>
+      <row anyid="true">  <label value="16"/>  <label value="Chameleon"/>  </row>
+      <row anyid="true">  <label value="5"/>  <label value="Cod"/>  </row>
+    <row anyid="true">  <label value="2"/>  <label value="Emu"/> </row>
+    <row anyid="true">  <label value="14"/>  <label value="Gorilla"/>  </row>
+    <row anyid="true">  <label value="8"/>  <label value="HIPPOPOTAMUS"/>  </row>
+    <row anyid="true">  <label value="10"/>  <label value="LAMA"/>  </row>
+    <row anyid="true">  <label value="7"/>  <label value="Lion"/>  </row>
+    <row anyid="true">  <label value="13"/>  <label value="Nine-banded Armadillo"/>  </row>
+    <row anyid="true">  <label value="11"/>  <label value="Polar Bear"/>  </row>
+    <row anyid="true">  <label value="4"/>  <label value="Raven"/>  </row>
+    <row anyid="true">  <label value="6"/>  <label value="Swordfish"/>  </row>
+    <row anyid="true">  <label value="1"/>  <label value="Tarantula"/> </row>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -28,25 +47,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-    <row anyid="true">  <label value="12"/>  <label value="aardvark"/>  </row>
-    <row anyid="true">  <label value="9"/>  <label value="African Elephant"/>  </row>
-    <row anyid="true">  <label value="15"/>  <label value="Anaconda"/>  </row>
-    <row anyid="true">  <label value="3"/>  <label value="Barn Owl"/>  </row>
-    <row anyid="true">  <label value="16"/>  <label value="Chameleon"/>  </row>
-    <row anyid="true">  <label value="5"/>  <label value="Cod"/>  </row>
-  <row anyid="true">  <label value="2"/>  <label value="Emu"/> </row>
-  <row anyid="true">  <label value="14"/>  <label value="Gorilla"/>  </row>
-  <row anyid="true">  <label value="8"/>  <label value="HIPPOPOTAMUS"/>  </row>
-  <row anyid="true">  <label value="10"/>  <label value="LAMA"/>  </row>
-  <row anyid="true">  <label value="7"/>  <label value="Lion"/>  </row>
-  <row anyid="true">  <label value="13"/>  <label value="Nine-banded Armadillo"/>  </row>
-  <row anyid="true">  <label value="11"/>  <label value="Polar Bear"/>  </row>
-  <row anyid="true">  <label value="4"/>  <label value="Raven"/>  </row>
-  <row anyid="true">  <label value="6"/>  <label value="Swordfish"/>  </row>
-  <row anyid="true">  <label value="1"/>  <label value="Tarantula"/> </row>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [];
 ]]>
