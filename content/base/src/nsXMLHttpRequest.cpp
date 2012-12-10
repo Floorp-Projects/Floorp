@@ -2186,11 +2186,11 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     const nsAString& emptyStr = EmptyString();
     nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(GetOwner());
     nsCOMPtr<nsIDOMDocument> responseDoc;
-    rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nullptr, docURI,
-                                        baseURI, mPrincipal, global,
-                                        mIsHtml ? DocumentFlavorHTML :
-                                                  DocumentFlavorLegacyGuess,
-                                        getter_AddRefs(responseDoc));
+    rv = NS_NewDOMDocument(getter_AddRefs(responseDoc),
+                           emptyStr, emptyStr, nullptr, docURI,
+                           baseURI, mPrincipal, true, global,
+                           mIsHtml ? DocumentFlavorHTML :
+                                     DocumentFlavorLegacyGuess);
     NS_ENSURE_SUCCESS(rv, rv);
     mResponseXML = do_QueryInterface(responseDoc);
     mResponseXML->SetPrincipal(documentPrincipal);
