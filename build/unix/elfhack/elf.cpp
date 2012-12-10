@@ -343,6 +343,18 @@ ElfSegment *Elf::getSegmentByType(unsigned int type, ElfSegment *last)
     return NULL;
 }
 
+void Elf::removeSegment(ElfSegment *segment)
+{
+    if (!segment)
+        return;
+    std::vector<ElfSegment *>::iterator seg;
+    seg = std::find(segments.begin(), segments.end(), segment);
+    if (seg == segments.end())
+        return;
+    segment->clear();
+    segments.erase(seg);
+}
+
 ElfDynamic_Section *Elf::getDynSection()
 {
     for (std::vector<ElfSegment *>::iterator seg = segments.begin(); seg != segments.end(); seg++)
@@ -619,6 +631,13 @@ unsigned int ElfSegment::getAddr()
         throw std::runtime_error("PT_GNU_RELRO segment doesn't start on a section start");
 
     return sections.empty() ? 0 : sections.front()->getAddr();
+}
+
+void ElfSegment::clear()
+{
+    for (std::list<ElfSection *>::iterator i = sections.begin(); i != sections.end(); ++i)
+        (*i)->removeFromSegment(this);
+    sections.clear();
 }
 
 ElfValue *ElfDynamic_Section::getValueForType(unsigned int tag)

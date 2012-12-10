@@ -644,11 +644,66 @@ void do_file(const char *name, bool backup = false, bool force = false)
     }
 }
 
+void undo_file(const char *name, bool backup = false)
+{
+    std::ifstream file(name, std::ios::in|std::ios::binary);
+    Elf elf(file);
+    unsigned int size = elf.getSize();
+    fprintf(stderr, "%s: ", name);
+    if (elf.getType() != ET_DYN) {
+        fprintf(stderr, "Not a shared object. Skipping\n");
+        return;
+    }
+
+    ElfSection *data = NULL, *text = NULL;
+    for (ElfSection *section = elf.getSection(1); section != NULL;
+         section = section->getNext()) {
+        if (section->getName() &&
+            (strcmp(section->getName(), elfhack_data) == 0))
+            data = section;
+        if (section->getName() &&
+            (strcmp(section->getName(), elfhack_text) == 0))
+            text = section;
+    }
+
+    if (!data || !text) {
+        fprintf(stderr, "Not elfhacked. Skipping\n");
+        return;
+    }
+    if (data != text->getNext()) {
+        fprintf(stderr, elfhack_data " section not following " elfhack_text ". Skipping\n");
+        return;
+    }
+
+    ElfSegment *first = elf.getSegmentByType(PT_LOAD);
+    ElfSegment *second = elf.getSegmentByType(PT_LOAD, first);
+    if (second->getFlags() != first->getFlags()) {
+        fprintf(stderr, "First two PT_LOAD segments don't have the same flags. Skipping\n");
+        return;
+    }
+    // Move sections from the second PT_LOAD to the first, and remove the
+    // second PT_LOAD segment.
+    for (std::list<ElfSection *>::iterator section = second->begin();
+         section != second->end(); ++section)
+        first->addSection(*section);
+
+    elf.removeSegment(second);
+
+    if (backup && backup_file(name) != 0) {
+        fprintf(stderr, "Couln't create backup file\n");
+    } else {
+        std::ofstream ofile(name, std::ios::out|std::ios::binary|std::ios::trunc);
+        elf.write(ofile);
+        fprintf(stderr, "Grown by %d bytes\n", elf.getSize() - size);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int arg;
     bool backup = false;
     bool force = false;
+    bool revert = false;
     char *lastSlash = rindex(argv[0], '/');
     if (lastSlash != NULL)
         rundir = strndup(argv[0], lastSlash - argv[0]);
@@ -657,6 +712,10 @@ int main(int argc, char *argv[])
             force = true;
         else if (strcmp(argv[arg], "-b") == 0)
             backup = true;
+        else if (strcmp(argv[arg], "-r") == 0)
+            revert = true;
+        else if (revert)
+            undo_file(argv[arg], backup);
         else
             do_file(argv[arg], backup, force);
     }

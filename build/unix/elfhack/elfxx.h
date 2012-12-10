@@ -288,6 +288,8 @@ public:
         segments.insert(prev + 1, segment);
     }
 
+    void removeSegment(ElfSegment *segment);
+
 private:
     Elf_Ehdr *ehdr;
     ElfLocation eh_entry;
@@ -456,6 +458,8 @@ public:
 
     std::list<ElfSection *>::iterator begin() { return sections.begin(); }
     std::list<ElfSection *>::iterator end() { return sections.end(); }
+
+    void clear();
 private:
     unsigned int type;
     int v_p_diff; // Difference between physical and virtual address
