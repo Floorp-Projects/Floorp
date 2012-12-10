@@ -4274,15 +4274,16 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIPrincipal> principal =
     do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
   nsCOMPtr<nsIDOMDocument> domDocument;
-  nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
-                                               EmptyString(),
-                                               nullptr,
-                                               uri,
-                                               uri,
-                                               principal,
-                                               nullptr,
-                                               DocumentFlavorHTML,
-                                               getter_AddRefs(domDocument));
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
+                                  EmptyString(),
+                                  EmptyString(),
+                                  nullptr,
+                                  uri,
+                                  uri,
+                                  principal,
+                                  true,
+                                  nullptr,
+                                  DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
@@ -4299,22 +4300,6 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   encoder->SetWrapColumn(aWrapCol);
 
   return encoder->EncodeToString(aResultBuffer);
-}
-
-/* static */
-nsresult
-nsContentUtils::CreateDocument(const nsAString& aNamespaceURI, 
-                               const nsAString& aQualifiedName, 
-                               nsIDOMDocumentType* aDoctype,
-                               nsIURI* aDocumentURI, nsIURI* aBaseURI,
-                               nsIPrincipal* aPrincipal,
-                               nsIScriptGlobalObject* aEventObject,
-                               DocumentFlavor aFlavor,
-                               nsIDOMDocument** aResult)
-{
-  return NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
-                           aDoctype, aDocumentURI, aBaseURI, aPrincipal,
-                           true, aEventObject, aFlavor);
 }
 
 /* static */
