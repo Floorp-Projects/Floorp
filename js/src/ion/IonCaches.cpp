@@ -1280,6 +1280,9 @@ IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject hol
     if (shape->hasDefaultSetter())
         return false;
 
+    if (!shape->writable())
+        return false;
+
     // We only handle propertyOps for now, so fail if we have SetterValue
     // (which implies JSNative setter).
     if (shape->hasSetterValue())
