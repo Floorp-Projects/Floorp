@@ -231,29 +231,6 @@ public:
         correctDeltas(4, 4);
     }
 
-    uint32_t *getPoolSpace(uint32_t insn, uint32_t constant, bool isReusable = false)
-    {
-        flushIfNoSpaceFor(4, 4);
-
-        m_loadOffsets.append(AssemblerBuffer::size());
-        if (isReusable)
-            for (int i = 0; i < m_numConsts; ++i) {
-                if (m_mask[i] == ReusableConst && m_pool[i] == constant) {
-                    AssemblerBuffer::putInt(AssemblerType::patchConstantPoolLoad(insn, i));
-                    correctDeltas(4);
-                    return;
-                }
-            }
-
-        m_pool[m_numConsts] = constant;
-        m_mask[m_numConsts] = static_cast<char>(isReusable ? ReusableConst : UniqueConst);
-
-        AssemblerBuffer::putInt(AssemblerType::patchConstantPoolLoad(insn, m_numConsts));
-        ++m_numConsts;
-
-        correctDeltas(4, 4);
-    }
-
     void putIntWithConstantDouble(uint32_t insn, double constant)
     {
         flushIfNoSpaceFor(4, 8);
