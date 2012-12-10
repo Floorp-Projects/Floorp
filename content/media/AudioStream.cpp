@@ -1050,6 +1050,7 @@ AudioClock::AudioClock(AudioStream* aStream)
   mBasePosition(0),
   mBaseOffset(0),
   mOldBaseOffset(0),
+  mOldBasePosition(0),
   mPlaybackRateChangeOffset(0),
   mPreviousPosition(0),
   mWritten(0),
@@ -1065,6 +1066,7 @@ void AudioClock::Init()
   mOutRate = mAudioStream->GetRate();
   mInRate = mAudioStream->GetRate();
   mPlaybackRate = 1.0;
+  mOldOutRate = mOutRate;
 }
 
 void AudioClock::UpdateWritePosition(uint32_t aCount)
