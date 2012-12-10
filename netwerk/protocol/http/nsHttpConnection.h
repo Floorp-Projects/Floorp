@@ -131,6 +131,7 @@ public:
 
     bool UsingSpdy() { return !!mUsingSpdyVersion; }
     bool EverUsedSpdy() { return mEverUsedSpdy; }
+    PRIntervalTime Rtt() { return mRtt; }
 
     // true when connection SSL NPN phase is complete and we know
     // authoritatively whether UsingSpdy() or not.

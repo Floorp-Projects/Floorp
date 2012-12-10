@@ -19,6 +19,7 @@
 #include "nsISocketTransportService.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/net/DashboardTypes.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -223,6 +224,7 @@ public:
     
     bool     SupportsPipelining(nsHttpConnectionInfo *);
 
+    bool GetConnectionData(nsTArray<mozilla::net::HttpRetParams> *);
 private:
     virtual ~nsHttpConnectionMgr();
 
@@ -611,6 +613,11 @@ private:
     nsTHashtable<nsCStringHashKey> mAlternateProtocolHash;
     static PLDHashOperator TrimAlternateProtocolHash(nsCStringHashKey *entry,
                                                      void *closure);
+
+    static PLDHashOperator ReadConnectionEntry(const nsACString &key,
+                                               nsAutoPtr<nsConnectionEntry> &ent,
+                                               void *aArg);
+
     // Read Timeout Tick handlers
     void ActivateTimeoutTick();
     void TimeoutTick();

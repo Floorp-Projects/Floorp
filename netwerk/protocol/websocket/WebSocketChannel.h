@@ -26,6 +26,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIRandomGenerator.h"
 #include "BaseWebSocketChannel.h"
+#include "nsIDashboardEventNotifier.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -242,6 +243,10 @@ private:
   nsWSCompression                *mCompressor;
   uint32_t                        mDynamicOutputSize;
   uint8_t                        *mDynamicOutput;
+
+  nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
+  uint32_t mSerial;
+  static uint32_t sSerialSeed;
 };
 
 class WebSocketSSLChannel : public WebSocketChannel

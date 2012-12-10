@@ -38,6 +38,7 @@
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 //----------------------------------------------------------------------------
 
@@ -1025,4 +1026,56 @@ nsHostResolver::Create(uint32_t         maxCacheEntries,
 
     *result = res;
     return rv;
+}
+
+PLDHashOperator
+CacheEntryEnumerator(PLDHashTable *table, PLDHashEntryHdr *entry,
+                     uint32_t number, void *arg)
+{
+    nsHostDBEnt *ent = static_cast<nsHostDBEnt *> (entry);
+    nsTArray<DNSCacheEntries> *args =
+        static_cast<nsTArray<DNSCacheEntries> *> (arg);
+    nsHostRecord *rec = ent->rec;
+    // Without addr_info, there is no meaning of adding this entry
+    if (rec->addr_info) {
+        DNSCacheEntries info;
+        const char *hostname;
+        PRNetAddr addr;
+
+        if (rec->host)
+            hostname = rec->host;
+        else // No need to add this entry if no host name is there
+            return PL_DHASH_NEXT;
+
+        uint32_t now = NowInMinutes();
+        info.expiration = ((int64_t) rec->expiration - now) * 60;
+
+        // We only need valid DNS cache entries
+        if (info.expiration <= 0)
+            return PL_DHASH_NEXT;
+
+        info.family = rec->af;
+        info.hostname = hostname;
+
+        {
+            MutexAutoLock lock(rec->addr_info_lock);
+            void *ptr = PR_EnumerateAddrInfo(nullptr, rec->addr_info, 0, &addr);
+            while (ptr) {
+                char buf[64];
+                if (PR_NetAddrToString(&addr, buf, sizeof(buf)) == PR_SUCCESS)
+                    info.hostaddr.AppendElement(buf);
+                ptr = PR_EnumerateAddrInfo(ptr, rec->addr_info, 0, &addr);
+            }
+        }
+
+        args->AppendElement(info);
+    }
+
+    return PL_DHASH_NEXT;
+}
+
+void
+nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries> *args)
+{
+    PL_DHashTableEnumerate(&mDB, CacheEntryEnumerator, args);
 }
