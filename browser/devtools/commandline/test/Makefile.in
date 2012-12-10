@@ -12,18 +12,21 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
+  browser_dbg_cmd_break.html \
   browser_dbg_cmd_break.js \
+  browser_dbg_cmd.html \
   browser_dbg_cmd.js \
   browser_cmd_addon.js \
-  browser_cmd_calllog.js \
-  browser_cmd_calllog_chrome.js \
   browser_cmd_commands.js \
   browser_cmd_cookie.js \
   browser_cmd_integrate.js \
   browser_cmd_jsb.js \
+  browser_cmd_jsb_script.jsi \
+  browser_cmd_pagemod_export.html \
   browser_cmd_pagemod_export.js \
   browser_cmd_pref.js \
   browser_cmd_restart.js \
+  browser_cmd_screenshot.html \
   browser_cmd_settings.js \
   browser_gcli_canon.js \
   browser_gcli_cli.js \
@@ -62,12 +65,14 @@ MOCHITEST_BROWSER_FILES += \
  $(NULL)
 endif
 
+ifneq ($(OS_ARCH),WINNT)
 MOCHITEST_BROWSER_FILES += \
-  browser_dbg_cmd_break.html \
-  browser_dbg_cmd.html \
-  browser_cmd_screenshot.html \
-  browser_cmd_pagemod_export.html \
-  browser_cmd_jsb_script.jsi \
+  browser_cmd_calllog.js \
+  browser_cmd_calllog_chrome.js \
   $(NULL)
+else
+$(filter disabled-temporarily--bug-817304, browser_cmd_calllog.js)
+$(filter disabled-temporarily--bug-819017, browser_cmd_calllog_chrome.js)
+endif
 
 include $(topsrcdir)/config/rules.mk
