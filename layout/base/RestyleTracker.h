@@ -238,7 +238,8 @@ private:
    */
   inline void ProcessOneRestyle(Element* aElement,
                                 nsRestyleHint aRestyleHint,
-                                nsChangeHint aChangeHint);
+                                nsChangeHint aChangeHint,
+                                OverflowChangedTracker& aTracker);
 
   /**
    * The guts of our restyle processing.

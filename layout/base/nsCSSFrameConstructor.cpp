@@ -7764,7 +7764,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     }
     if (aChange & nsChangeHint_UpdateTransformLayer) {
       aFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
-      aFrame->AddStateBits(NS_FRAME_TRANSFORM_CHANGED);
       // If we're not already going to do an invalidating paint, see
       // if we can get away with only updating the transform on a
       // layer for this frame, and not scheduling an invalidating
@@ -8057,7 +8056,8 @@ NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
 }
 
 nsresult
-nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
+nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
+                                             OverflowChangedTracker& aTracker)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
@@ -8209,30 +8209,10 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         if (!(frame->GetStateBits() &
               (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
           while (frame) {
-            nsOverflowAreas* pre = static_cast<nsOverflowAreas*>
-              (frame->Properties().Get(frame->PreTransformOverflowAreasProperty()));
-            if (pre) {
-              // FinishAndStoreOverflow will change the overflow areas passed in,
-              // so make a copy.
-              nsOverflowAreas overflowAreas = *pre;
-              frame->FinishAndStoreOverflow(overflowAreas, frame->GetSize());
-            } else {
-              frame->UpdateOverflow();
-            }
+            aTracker.AddFrame(frame);
 
-            nsIFrame* next =
+            frame =
               nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame);
-            // Update the ancestors' overflow after we have updated the overflow
-            // for all the continuations with the same parent.
-            if (!next || frame->GetParent() != next->GetParent()) {
-              for (nsIFrame* ancestor = frame->GetParent(); ancestor;
-                   ancestor = ancestor->GetParent()) {
-                if (!ancestor->UpdateOverflow()) {
-                  break;
-                }
-              }
-            }
-            frame = next;
           }
         }
       }
@@ -8277,7 +8257,8 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
                                       nsIFrame       *aPrimaryFrame,
                                       nsChangeHint   aMinHint,
                                       RestyleTracker& aRestyleTracker,
-                                      bool            aRestyleDescendants)
+                                      bool            aRestyleDescendants,
+                                      OverflowChangedTracker& aTracker)
 {
   NS_ASSERTION(aPrimaryFrame == aElement->GetPrimaryFrame(),
                "frame/content mismatch");
@@ -8314,7 +8295,7 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
     nsStyleChangeList changeList;
     ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint,
                           aRestyleTracker, aRestyleDescendants);
-    ProcessRestyledFrames(changeList);
+    ProcessRestyledFrames(changeList, aTracker);
   } else {
     // no frames, reconstruct for content
     MaybeRecreateFramesForElement(aElement);
@@ -12069,7 +12050,9 @@ nsCSSFrameConstructor::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
                         &changeList, aExtraHint,
                         aRestyleTracker, true);
   // Process the required changes
-  ProcessRestyledFrames(changeList);
+  OverflowChangedTracker tracker;
+  ProcessRestyledFrames(changeList, tracker);
+  tracker.Flush();
 
   // Tell the style set it's safe to destroy the old rule tree.  We
   // must do this after the ProcessRestyledFrames call in case the
