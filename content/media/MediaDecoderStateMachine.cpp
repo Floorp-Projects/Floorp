@@ -793,6 +793,8 @@ void MediaDecoderStateMachine::DecodeLoop()
          !mStopDecodeThread &&
          (videoPlaying || audioPlaying))
   {
+    mReader->PrepareToDecode();
+
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
     // some frames before enabling the keyframe skip logic on video.

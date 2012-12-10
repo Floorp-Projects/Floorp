@@ -77,7 +77,7 @@ struct BufferSlice : public InlineForwardListNode<BufferSlice<SliceSize> > {
 template<int SliceSize, class Inst>
 struct AssemblerBuffer {
   public:
-    AssemblerBuffer() : head(NULL), tail(NULL), m_oom(false), bufferSize(0) {}
+    AssemblerBuffer() : head(NULL), tail(NULL), m_bail(false), m_oom(false), bufferSize(0) {}
   protected:
     typedef BufferSlice<SliceSize> Slice;
     typedef AssemblerBuffer<SliceSize, Inst> AssemblerBuffer_;
@@ -85,6 +85,7 @@ struct AssemblerBuffer {
     Slice *tail;
   public:
     bool m_oom;
+    bool m_bail;
     // How much data has been added to the buffer thusfar.
     uint32_t bufferSize;
     uint32_t lastInstSize;
@@ -148,10 +149,16 @@ struct AssemblerBuffer {
         return size();
     }
     bool oom() const {
-        return m_oom;
+        return m_oom || m_bail;
+    }
+    bool bail() const {
+        return m_bail;
     }
     void fail_oom() {
         m_oom = true;
+    }
+    void fail_bail() {
+        m_bail = true;
     }
     Inst *getInst(BufferOffset off) {
         unsigned int local_off = off.getOffset();

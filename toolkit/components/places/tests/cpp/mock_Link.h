@@ -72,7 +72,7 @@ namespace dom {
 
 Link::Link(Element* aElement)
 : mElement(aElement)
-, mLinkState(mozilla::dom::Link::defaultState)
+, mLinkState(eLinkState_NotLink)
 , mRegistered(false)
 {
 }
@@ -81,11 +81,18 @@ Link::~Link()
 {
 }
 
+bool
+Link::ElementHasHref() const
+{
+  NS_NOTREACHED("Unexpected call to Link::ElementHasHref");
+  return false; // suppress compiler warning
+}
+
 nsLinkState
 Link::GetLinkState() const
 {
   NS_NOTREACHED("Unexpected call to Link::GetLinkState");
-  return eLinkState_Unknown; // suppress compiler warning
+  return eLinkState_NotLink; // suppress compiler warning
 }
 
 void
@@ -95,7 +102,7 @@ Link::SetLinkState(nsLinkState aState)
 }
 
 void
-Link::ResetLinkState(bool aNotify)
+Link::ResetLinkState(bool aNotify, bool aHasHref)
 {
   NS_NOTREACHED("Unexpected call to Link::ResetLinkState");
 }

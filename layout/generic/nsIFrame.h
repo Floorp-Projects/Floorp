@@ -2093,6 +2093,7 @@ public:
     // children. For example, the whitespace between <table>\n<tr>\n<td>
     // will be excluded during the construction of children. 
     eExcludesIgnorableWhitespace =      1 << 13,
+    eSupportsCSSTransforms =            1 << 14,
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
@@ -2111,9 +2112,9 @@ public:
   virtual bool IsFrameOfType(uint32_t aFlags) const
   {
 #ifdef DEBUG
-    return !(aFlags & ~(nsIFrame::eDEBUGAllFrames));
+    return !(aFlags & ~(nsIFrame::eDEBUGAllFrames | nsIFrame::eSupportsCSSTransforms));
 #else
-    return !aFlags;
+    return !(aFlags & ~nsIFrame::eSupportsCSSTransforms);
 #endif
   }
 

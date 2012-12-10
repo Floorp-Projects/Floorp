@@ -88,6 +88,16 @@ public:
   }
 
 protected:
+  explicit CallbackFunction(CallbackFunction* aCallbackFunction)
+    : mCallable(aCallbackFunction->mCallable)
+  {
+    // Set mCallable before we hold, on the off chance that a GC could somehow
+    // happen in there... (which would be pretty odd, granted).
+    // Make sure we'll be able to drop as needed
+    nsLayoutStatics::AddRef();
+    NS_HOLD_JS_OBJECTS(this, CallbackFunction);
+  }
+
   void DropCallback()
   {
     if (mCallable) {

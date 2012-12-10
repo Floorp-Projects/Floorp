@@ -53,7 +53,7 @@ using namespace js::ion;
 IonOptions ion::js_IonOptions;
 
 // Assert that IonCode is gc::Cell aligned.
-JS_STATIC_ASSERT(sizeof(IonCode) % gc::Cell::CellSize == 0);
+JS_STATIC_ASSERT(sizeof(IonCode) % gc::CellSize == 0);
 
 #ifdef JS_THREADSAFE
 static bool IonTLSInitialized = false;
@@ -1540,7 +1540,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     }
 
     if (result.isMagic() && result.whyMagic() == JS_ION_BAILOUT) {
-        if (!EnsureHasCallObject(cx, cx->fp()))
+        if (!EnsureHasScopeObjects(cx, cx->fp()))
             return IonExec_Error;
         return IonExec_Bailout;
     }

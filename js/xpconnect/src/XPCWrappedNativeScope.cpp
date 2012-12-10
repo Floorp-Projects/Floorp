@@ -335,10 +335,9 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
     nsCycleCollectionTraversalCallback *cb =
       static_cast<nsCycleCollectionTraversalCallback *>(arg);
     JSObject* obj = key->GetKey();
-    const dom::DOMClass* clasp;
-    dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
-    MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
-    nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
+    const dom::DOMClass* clasp = dom::GetDOMClass(obj);
+    MOZ_ASSERT(clasp && clasp->mDOMObjectIsISupports);
+    nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj);
     cb->NoteXPCOMRoot(native);
     return PL_DHASH_NEXT;
 }

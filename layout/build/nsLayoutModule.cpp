@@ -127,6 +127,9 @@ using mozilla::system::nsVolumeService;
 using mozilla::dom::fm::FMRadio;
 #endif
 
+#include "AudioChannelAgent.h"
+using mozilla::dom::AudioChannelAgent;
+
 #include "nsDOMMutationObserver.h"
 
 // Editor stuff
@@ -302,6 +305,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsVolumeService)
 #ifdef MOZ_B2G_FM
 NS_GENERIC_FACTORY_CONSTRUCTOR(FMRadio)
 #endif
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(AudioChannelAgent)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceSensors)
 
@@ -791,6 +796,8 @@ NS_DEFINE_NAMED_CID(NS_VOLUMESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FMRADIO_CID);
 #endif
 
+NS_DEFINE_NAMED_CID(NS_AUDIOCHANNELAGENT_CID);
+
 #ifdef ENABLE_EDITOR_API_LOG
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #else
@@ -1071,6 +1078,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef MOZ_B2G_FM
   { &kNS_FMRADIO_CID, true, NULL, FMRadioConstructor },
 #endif
+  { &kNS_AUDIOCHANNELAGENT_CID, true, NULL, AudioChannelAgentConstructor },
 #ifdef ENABLE_EDITOR_API_LOG
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorLogConstructor },
 #else
@@ -1215,6 +1223,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #ifdef MOZ_B2G_FM
   { NS_FMRADIO_CONTRACTID, &kNS_FMRADIO_CID },
 #endif
+  { NS_AUDIOCHANNELAGENT_CONTRACTID, &kNS_AUDIOCHANNELAGENT_CID },
 #ifdef ENABLE_EDITOR_API_LOG
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
 #else

@@ -93,8 +93,8 @@ public:
   // held.
   virtual void UpdatePlaybackPosition(int64_t aTime) = 0;
 
-  // Called when the metadata from the media file has been read by the reader.
-  // Call on the decode thread only.
+  // May be called by the reader to notify this decoder that the metadata from
+  // the media file has been read. Call on the decode thread only.
   virtual void OnReadMetadataCompleted() = 0;
 
   // Stack based class to assist in notifying the frame statistics of

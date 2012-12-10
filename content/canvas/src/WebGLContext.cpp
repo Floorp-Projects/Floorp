@@ -58,9 +58,18 @@ WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
                                      const char* aTopic,
                                      const PRUnichar* aSomeData)
 {
-  if (strcmp(aTopic, "memory-pressure") == 0)
-    mContext->ForceLoseContext();
-  return NS_OK;
+    if (strcmp(aTopic, "memory-pressure"))
+        return NS_OK;
+
+    bool wantToLoseContext = true;
+
+    if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING("heap-minimize").get()))
+        wantToLoseContext = mContext->mLoseContextOnHeapMinimize;
+
+    if (wantToLoseContext)
+        mContext->ForceLoseContext();
+
+    return NS_OK;
 }
 
 
@@ -168,6 +177,7 @@ WebGLContext::WebGLContext()
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
+    mLoseContextOnHeapMinimize = false;
 
     mAlreadyGeneratedWarnings = 0;
     mAlreadyWarnedAboutFakeVertexAttrib0 = false;
