@@ -181,6 +181,10 @@ public:
       mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
       !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
   }
+  virtual void NotifyRenderingChanged() MOZ_OVERRIDE
+  {
+    mFrame->Properties().Delete(nsIFrame::CachedBackgroundImage());
+  }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
