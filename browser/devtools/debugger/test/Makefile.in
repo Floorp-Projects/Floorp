@@ -66,6 +66,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_scripts-searching-06.js \
 	browser_dbg_scripts-searching-07.js \
 	browser_dbg_scripts-searching-08.js \
+	browser_dbg_scripts-searching-files_ui.js \
 	browser_dbg_scripts-searching-popup.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_update-editor-mode.js \
