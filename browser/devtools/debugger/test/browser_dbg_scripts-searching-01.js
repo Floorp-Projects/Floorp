@@ -25,7 +25,6 @@ function test()
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.panelWin;
-    gDebugger.SourceResults.prototype.alwaysExpand = false;
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
@@ -283,7 +282,7 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 19 &&
        gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't remain at the correct token. (19)");
-    is(gScripts.visibleItems, 1,
+    is(gScripts.visibleItems.length, 1,
       "Not all the scripts are shown after the search. (20)");
     isnot(gMenulist.getAttribute("label"), noMatchingScripts,
       "The menulist should not display a notice that matches are found.");
