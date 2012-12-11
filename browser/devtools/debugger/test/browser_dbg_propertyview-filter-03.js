@@ -36,7 +36,7 @@ function testSearchbox()
 {
   ok(!gDebugger.DebuggerView.Variables._searchboxNode,
     "There should not initially be a searchbox available in the variables view.");
-  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
+  ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
     "There searchbox element should not be found.");
 }
 
@@ -53,7 +53,7 @@ function testPref()
   executeSoon(function() {
     ok(gDebugger.DebuggerView.Variables._searchboxNode,
       "There should be a searchbox available in the variables view.");
-    ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
+    ok(gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
       "There searchbox element should be found.");
     is(gDebugger.Prefs.variablesSearchboxVisible, true,
       "The debugger searchbox should now be preffed as visible.");
@@ -66,7 +66,7 @@ function testPref()
     executeSoon(function() {
       ok(!gDebugger.DebuggerView.Variables._searchboxNode,
         "There should not be a searchbox available in the variables view.");
-      ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
+      ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
         "There searchbox element should not be found.");
       is(gDebugger.Prefs.variablesSearchboxVisible, false,
         "The debugger searchbox should now be preffed as hidden.");
