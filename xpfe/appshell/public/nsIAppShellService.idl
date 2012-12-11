@@ -16,7 +16,7 @@ interface nsIAppShell;
 struct JSContext;
 %}
 
-[scriptable, uuid(EBCD34E2-2E43-45C0-AAC8-E6F1C692B371)]
+[scriptable, uuid(76e6364a-5453-47c7-ad83-8c30eff20a75)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -63,6 +63,24 @@ interface nsIAppShellService : nsISupports
    *                Do not taunt hidden window.
    */
   readonly attribute nsIDOMWindow hiddenDOMWindow;
+
+  /**
+   * Return the (singleton) application hidden private window, automatically
+   * created and maintained by this AppShellService.  This window is created
+   * in private browsing mode.
+   * @param aResult the hidden private window.  Do not unhide hidden window.
+   *                Do not taunt hidden window.
+   */
+  readonly attribute nsIXULWindow hiddenPrivateWindow;
+
+  /**
+   * Return the (singleton) application hidden private window, automatically
+   * created and maintained by this AppShellService.  This window is created
+   * in private browsing mode.
+   * @param aResult the hidden private window.  Do not unhide hidden window.
+   *                Do not taunt hidden window.
+   */
+  readonly attribute nsIDOMWindow hiddenPrivateDOMWindow;
 
   /**
    * Return the (singleton) application hidden window as an nsIDOMWindow,

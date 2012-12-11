@@ -319,7 +319,11 @@ nsAppStartup::Quit(uint32_t aMode)
       ferocity = eAttemptQuit;
     }
 #ifdef XP_MACOSX
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    else if (mConsiderQuitStopper == 2) {
+#else
     else if (mConsiderQuitStopper == 1) {
+#endif
       // ... or there is only a hiddenWindow left, and it's useless:
       nsCOMPtr<nsIAppShellService> appShell
         (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
@@ -332,9 +336,17 @@ nsAppStartup::Quit(uint32_t aMode)
       appShell->GetApplicationProvidedHiddenWindow(&usefulHiddenWindow);
       nsCOMPtr<nsIXULWindow> hiddenWindow;
       appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      nsCOMPtr<nsIXULWindow> hiddenPrivateWindow;
+      appShell->GetHiddenPrivateWindow(getter_AddRefs(hiddenPrivateWindow));
+      // If the remaining windows are useful, we won't quit:
+      if ((!hiddenWindow && !hiddenPrivateWindow) || usefulHiddenWindow)
+        return NS_OK;
+#else
       // If the one window is useful, we won't quit:
       if (!hiddenWindow || usefulHiddenWindow)
         return NS_OK;
+#endif
 
       ferocity = eAttemptQuit;
     }
