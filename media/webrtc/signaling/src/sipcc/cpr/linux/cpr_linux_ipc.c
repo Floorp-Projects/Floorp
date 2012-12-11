@@ -597,17 +597,20 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
              */
             if (msgq->extendedQDepth < msgq->maxExtendedQDepth) {
                 rc = cprPostExtendedQMsg(msgq, msg, ppUserData);
-
+                // do under lock to avoid races
+                if (rc == CPR_MSGQ_POST_SUCCESS) {
+                    cprPegSendMessageStats(msgq, numAttempts);
+                } else {
+                    msgq->sendErrors++;
+                }
                 (void) pthread_mutex_unlock(&msgq->mutex);
 
                 if (rc == CPR_MSGQ_POST_SUCCESS) {
-                    cprPegSendMessageStats(msgq, numAttempts);
                     return CPR_SUCCESS;
                 }
                 else
                 {
                     CPR_ERROR(error_str, fname, msgq->name, "no memory");
-                    msgq->sendErrors++;
                     return CPR_FAILURE;
                 }
             }
