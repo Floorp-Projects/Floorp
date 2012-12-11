@@ -377,26 +377,6 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
   return NS_OK;
 }
 
-// Called by NewFullPagePluginStream()
-nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIURI* aURL, nsNPAPIPluginInstance *aInstance)
-{
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-             ("nsPluginStreamListenerPeer::InitializeFullPage instance=%p\n",aInstance));
-  
-  NS_ASSERTION(mPluginInstance == nullptr, "nsPluginStreamListenerPeer::InitializeFullPage mPluginInstance != nullptr");
-  mPluginInstance = aInstance;
-  
-  mURL = aURL;
-  
-  mDataForwardToRequest = new nsHashtable(16, false);
-  if (!mDataForwardToRequest)
-    return NS_ERROR_FAILURE;
-
-  mPendingRequests = 1;
-  
-  return NS_OK;
-}
-
 // SetupPluginCacheFile is called if we have to save the stream to disk.
 // the most likely cause for this is either there is no disk cache available
 // or the stream is coming from a https server.
