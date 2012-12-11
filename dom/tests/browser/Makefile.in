@@ -45,6 +45,16 @@ MOCHITEST_BROWSER_FILES += \
   $(NULL)
 endif
 
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+  browser_ConsoleStoragePBTest_perwindowpb.js \
+  $(NULL)
+else
+MOCHITEST_BROWSER_FILES += \
+  browser_ConsoleStoragePBTest.js \
+  $(NULL)
+endif
+
 
 # TODO: Re-enable permissions tests on Mac and Windows, bug 795334
 # TODO: disabled test browser_webapps_perms_reinstall.js, re-enable when bug 794920 is fixed
