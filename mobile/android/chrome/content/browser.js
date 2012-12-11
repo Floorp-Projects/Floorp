@@ -411,6 +411,12 @@ var BrowserApp = {
         aTarget.pause();
       });
 
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.showControls"),
+      NativeWindow.contextmenus.mediaContext("media-hidingcontrols"),
+      function(aTarget) {
+        aTarget.setAttribute("controls", true);
+      });
+
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareMedia"),
       NativeWindow.contextmenus.SelectorContext("video"),
       function(aTarget) {
@@ -1456,6 +1462,9 @@ var NativeWindow = {
             if (paused && aMode == "media-paused")
               return true;
             if (!paused && aMode == "media-playing")
+              return true;
+            let controls = aElt.controls;
+            if (!controls && aMode == "media-hidingcontrols")
               return true;
           }
           return false;
