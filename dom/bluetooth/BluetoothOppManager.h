@@ -59,8 +59,8 @@ public:
 
   void SendConnectRequest();
   void SendPutHeaderRequest(const nsAString& aFileName, int aFileSize);
-  void SendPutRequest(uint8_t* aFileBody, int aFileBodyLength,
-                      bool aFinal);
+  void SendPutRequest(uint8_t* aFileBody, int aFileBodyLength);
+  void SendPutFinalRequest();
   void SendDisconnectRequest();
   void SendAbortRequest();
 
