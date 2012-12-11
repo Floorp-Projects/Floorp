@@ -483,7 +483,7 @@ CompileError::~CompileError()
     message = NULL;
 
     if (report.messageArgs) {
-        if (hasCharArgs) {
+        if (argumentsType == ArgumentsAreASCII) {
             unsigned i = 0;
             while (report.messageArgs[i])
                 js_free((void*)report.messageArgs[i++]);
@@ -515,10 +515,11 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
     err.report.originPrincipals = originPrincipals;
     err.report.lineno = tp->begin.lineno;
 
-    err.hasCharArgs = !(flags & JSREPORT_UC);
+    err.argumentsType = (flags & JSREPORT_UC) ? ArgumentsAreUnicode : ArgumentsAreASCII;
 
-    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, errorNumber, &err.message, &err.report,
-                                 err.hasCharArgs, args)) {
+    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, errorNumber, &err.message,
+                                 &err.report, err.argumentsType, args))
+    {
         return false;
     }
 
