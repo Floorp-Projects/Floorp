@@ -88,8 +88,7 @@ private:
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     nsRefPtr<nsDOMMultipartFile> file = new nsDOMMultipartFile();
-    nsresult rv = file->InitInternal(aCx, aArgc, JS_ARGV(aCx, aVp),
-                                     Unwrap);
+    nsresult rv = file->InitBlob(aCx, aArgc, JS_ARGV(aCx, aVp), Unwrap);
     if (NS_FAILED(rv)) {
       ThrowDOMExceptionForNSResult(aCx, rv);
       return false;
