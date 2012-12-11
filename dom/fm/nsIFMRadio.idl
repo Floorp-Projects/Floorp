@@ -26,7 +26,7 @@ interface nsIFMRadioSettings : nsISupports
  *
  * If the WebFM API is re-written in c++ some day, this interface will be useless.
  */
-[scriptable, builtinclass, uuid(26288adc-d2c1-4fbc-86b5-ecd8173fbf90)]
+[scriptable, builtinclass, uuid(9586bc9c-738e-4bcd-907c-ad340a6adc8b)]
 interface nsIFMRadio : nsIDOMEventTarget {
     const long SEEK_DIRECTION_UP   = 0;
     const long SEEK_DIRECTION_DOWN = 1;
@@ -78,6 +78,11 @@ interface nsIFMRadio : nsIDOMEventTarget {
      * Set the frequency in KHz
      */
     void setFrequency(in long frequency);
+
+    /**
+     * Update the visibility state of our client.
+     */
+    void updateVisible(in boolean visible);
 
     /**
      * Fired when the antenna state is changed.
