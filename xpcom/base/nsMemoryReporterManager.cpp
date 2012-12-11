@@ -561,6 +561,78 @@ NS_MEMORY_REPORTER_IMPLEMENT(AtomTable,
     GetAtomTableSize,
     "Memory used by the dynamic and static atoms tables.")
 
+#ifdef MOZ_DMD
+
+namespace mozilla {
+namespace dmd {
+
+class MemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter
+{
+public:
+  MemoryReporter()
+  {}
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetName(nsACString &name)
+  {
+    name.Assign("dmd");
+    return NS_OK;
+  }
+
+  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
+                            nsISupports *closure)
+  {
+    dmd::Sizes sizes;
+    dmd::SizeOf(&sizes);
+
+#define REPORT(_path, _amount, _desc)                                         \
+    do {                                                                      \
+      nsresult rv;                                                            \
+      rv = callback->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),      \
+                              nsIMemoryReporter::KIND_HEAP,                   \
+                              nsIMemoryReporter::UNITS_BYTES, _amount,        \
+                              NS_LITERAL_CSTRING(_desc), closure);            \
+      NS_ENSURE_SUCCESS(rv, rv);                                              \
+    } while (0)
+
+    REPORT("explicit/dmd/stack-traces",
+           sizes.mStackTraces,
+           "Memory used by DMD's stack traces.");
+
+    REPORT("explicit/dmd/stack-trace-table",
+           sizes.mStackTraceTable,
+           "Memory used by DMD's stack trace table.");
+
+    REPORT("explicit/dmd/live-block-table",
+           sizes.mLiveBlockTable,
+           "Memory used by DMD's live block table.");
+
+    REPORT("explicit/dmd/double-report-table",
+           sizes.mDoubleReportTable,
+           "Memory used by DMD's double-report table.");
+
+#undef REPORT
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetExplicitNonHeap(int64_t *n)
+  {
+    // No non-heap allocations.
+    *n = 0;
+    return NS_OK;
+  }
+
+};
+
+NS_IMPL_ISUPPORTS1(MemoryReporter, nsIMemoryMultiReporter)
+
+} // namespace dmd
+} // namespace mozilla
+
+#endif  // MOZ_DMD
+
 /**
  ** nsMemoryReporterManager implementation
  **/
@@ -601,8 +673,11 @@ nsMemoryReporterManager::Init()
     REGISTER(Private);
 #endif
 
-
     REGISTER(AtomTable);
+
+#ifdef MOZ_DMD
+    RegisterMultiReporter(new mozilla::dmd::MemoryReporter);
+#endif
 
 #if defined(XP_LINUX)
     nsMemoryInfoDumper::Initialize();
