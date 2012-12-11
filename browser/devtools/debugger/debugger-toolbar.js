@@ -754,6 +754,7 @@ FilterView.prototype = {
           if (!found) {
             found = true;
             view.selectedItem = item;
+            view.refresh();
           }
         }
         // Item not matched, hide the corresponding node.
@@ -778,8 +779,12 @@ FilterView.prototype = {
    */
   _performLineSearch: function DVF__performLineSearch(aLine) {
     // Don't search for lines if the input hasn't changed.
-    if (this._prevSearchedLine != aLine && aLine > 0) {
+    if (this._prevSearchedLine != aLine && aLine) {
       DebuggerView.editor.setCaretPosition(aLine - 1);
+    }
+    // Can't search for lines and tokens at the same time.
+    if (this._prevSearchedToken && !aLine) {
+      this._target.refresh();
     }
     this._prevSearchedLine = aLine;
   },
@@ -793,12 +798,16 @@ FilterView.prototype = {
    */
   _performTokenSearch: function DVF__performTokenSearch(aToken) {
     // Don't search for tokens if the input hasn't changed.
-    if (this._prevSearchedToken != aToken && aToken.length > 0) {
+    if (this._prevSearchedToken != aToken && aToken) {
       let editor = DebuggerView.editor;
       let offset = editor.find(aToken, { ignoreCase: true });
       if (offset > -1) {
         editor.setSelection(offset, offset + aToken.length)
       }
+    }
+    // Can't search for tokens and lines at the same time.
+    if (this._prevSearchedLine && !aToken) {
+      this._target.refresh();
     }
     this._prevSearchedToken = aToken;
   },
