@@ -557,4 +557,79 @@ let tests = {
       }
     }
   },
+
+  // This will create the worker, then send a message to the port, then close
+  // the port - all before the worker has actually initialized.
+  testCloseFirstSend: function(cbnext) {
+    let run = function() {
+      let numPings = 0, numCloses = 0;
+      onconnect = function(e) {
+        let port = e.ports[0];
+        port.onmessage = function(e) {
+          if (e.data.topic == "ping") {
+            numPings += 1;
+          } else if (e.data.topic == "social.port-closing") {
+            numCloses += 1;
+          } else if (e.data.topic == "get-counts") {
+            port.postMessage({topic: "result",
+                             result: {ping: numPings, close: numCloses}});
+          }
+        }
+      }
+    }
+
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testSendAndClose");
+    worker.port.postMessage({topic: "ping"});
+    worker.port.close();
+    let newPort = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testSendAndClose").port;
+    newPort.onmessage = function(e) {
+      if (e.data.topic == "result") {
+        is(e.data.result.ping, 1, "the worker got the ping");
+        is(e.data.result.close, 1, "the worker got 1 close message");
+        worker.terminate();
+        cbnext();
+      }
+    }
+    newPort.postMessage({topic: "get-counts"});
+  },
+
+  // Like testCloseFirstSend, although in this test the worker has already
+  // initialized (so the "connect pending ports" part of the worker isn't
+  // what needs to handle this case.)
+  testCloseAfterInit: function(cbnext) {
+    let run = function() {
+      let numPings = 0, numCloses = 0;
+      onconnect = function(e) {
+        let port = e.ports[0];
+        port.onmessage = function(e) {
+          if (e.data.topic == "ping") {
+            numPings += 1;
+          } else if (e.data.topic == "social.port-closing") {
+            numCloses += 1;
+          } else if (e.data.topic == "get-counts") {
+            port.postMessage({topic: "result",
+                             result: {ping: numPings, close: numCloses}});
+          } else if (e.data.topic == "get-ready") {
+            port.postMessage({topic: "ready"});
+          }
+        }
+      }
+    }
+
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testSendAndClose");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "ready") {
+        let newPort = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testSendAndClose").port;
+        newPort.postMessage({topic: "ping"});
+        newPort.close();
+        worker.port.postMessage({topic: "get-counts"});
+      } else if (e.data.topic == "result") {
+        is(e.data.result.ping, 1, "the worker got the ping");
+        is(e.data.result.close, 1, "the worker got 1 close message");
+        worker.terminate();
+        cbnext();
+      }
+    }
+    worker.port.postMessage({topic: "get-ready"});
+  },
 }
