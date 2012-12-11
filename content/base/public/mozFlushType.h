@@ -27,4 +27,17 @@ enum mozFlushType {
   Flush_Display          = 6  /* As above, plus flush painting */
 };
 
+namespace mozilla {
+
+struct ChangesToFlush {
+  ChangesToFlush(mozFlushType aFlushType, bool aFlushAnimations)
+    : mFlushType(aFlushType)
+    , mFlushAnimations(aFlushAnimations)
+  {}
+
+  mozFlushType mFlushType;
+  bool mFlushAnimations;
+};
+
+}
 #endif /* mozFlushType_h___ */
