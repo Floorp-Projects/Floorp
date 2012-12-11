@@ -139,6 +139,15 @@ implements RecordsChannelDelegate,
     numOutboundRecords.set(-1);
 
     // First thing: decide whether we should.
+    if (sessionA.shouldSkip() ||
+        sessionB.shouldSkip()) {
+      Logger.info(LOG_TAG, "Session requested skip. Short-circuiting sync.");
+      sessionA.abort();
+      sessionB.abort();
+      this.delegate.onSynchronizeSkipped(this);
+      return;
+    }
+
     if (!sessionA.dataAvailable() &&
         !sessionB.dataAvailable()) {
       Logger.info(LOG_TAG, "Neither session reports data available. Short-circuiting sync.");
