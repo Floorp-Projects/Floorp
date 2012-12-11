@@ -67,6 +67,13 @@ public:
     // connections.
     //
     virtual void IsLocal(bool *aIsLocal) = 0;
+
+
+    //
+    // returns the number of bytes sent/transmitted over the socket
+    //
+    virtual uint64_t ByteCountSent() = 0;
+    virtual uint64_t ByteCountReceived() = 0;
 };
 
 #endif // !nsASocketHandler_h__

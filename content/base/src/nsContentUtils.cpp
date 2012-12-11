@@ -3594,27 +3594,10 @@ nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
 
   const char* data = flatInput.get();
   aOutput.Truncate();
-  for (;;) {
-    int32_t srcLen = length;
-    int32_t dstLen = outLen;
-    rv = decoder->Convert(data, &srcLen, ustr, &dstLen);
-    // Convert will convert the input partially even if the status
-    // indicates a failure.
-    ustr[dstLen] = 0;
-    aOutput.Append(ustr, dstLen);
-    if (rv != NS_ERROR_ILLEGAL_INPUT) {
-      break;
-    }
-    // Emit a decode error manually because some decoders
-    // do not support kOnError_Recover (bug 638379)
-    if (srcLen == -1) {
-      decoder->Reset();
-    } else {
-      data += srcLen + 1;
-      length -= srcLen + 1;
-      aOutput.Append(static_cast<PRUnichar>(0xFFFD));
-    }
-  }
+  rv = decoder->Convert(data, &length, ustr, &outLen);
+  MOZ_ASSERT(rv != NS_ERROR_ILLEGAL_INPUT);
+  ustr[outLen] = 0;
+  aOutput.Append(ustr, outLen);
 
   nsMemory::Free(ustr);
   return rv;
@@ -4274,15 +4257,16 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIPrincipal> principal =
     do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
   nsCOMPtr<nsIDOMDocument> domDocument;
-  nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
-                                               EmptyString(),
-                                               nullptr,
-                                               uri,
-                                               uri,
-                                               principal,
-                                               nullptr,
-                                               DocumentFlavorHTML,
-                                               getter_AddRefs(domDocument));
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
+                                  EmptyString(),
+                                  EmptyString(),
+                                  nullptr,
+                                  uri,
+                                  uri,
+                                  principal,
+                                  true,
+                                  nullptr,
+                                  DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
@@ -4299,22 +4283,6 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   encoder->SetWrapColumn(aWrapCol);
 
   return encoder->EncodeToString(aResultBuffer);
-}
-
-/* static */
-nsresult
-nsContentUtils::CreateDocument(const nsAString& aNamespaceURI, 
-                               const nsAString& aQualifiedName, 
-                               nsIDOMDocumentType* aDoctype,
-                               nsIURI* aDocumentURI, nsIURI* aBaseURI,
-                               nsIPrincipal* aPrincipal,
-                               nsIScriptGlobalObject* aEventObject,
-                               DocumentFlavor aFlavor,
-                               nsIDOMDocument** aResult)
-{
-  return NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
-                           aDoctype, aDocumentURI, aBaseURI, aPrincipal,
-                           true, aEventObject, aFlavor);
 }
 
 /* static */

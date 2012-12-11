@@ -19,7 +19,7 @@ const DB_VERSION = 6;
 const STORE_NAME = "sms";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
-const DELIVERY_SENT = "sent";
+const DELIVERY_SENDING = "sending";
 const DELIVERY_RECEIVED = "received";
 
 const DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
@@ -55,7 +55,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
 const GLOBAL_SCOPE = this;
 
 function numberFromMessage(message) {
-  return message.delivery == DELIVERY_SENT ? message.receiver : message.sender;
+  return message.delivery == DELIVERY_RECEIVED ? message.sender : message.receiver;
 }
 
 /**
@@ -101,7 +101,8 @@ function SmsDatabaseService() {
 SmsDatabaseService.prototype = {
 
   classID:   RIL_SMSDATABASESERVICE_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISmsDatabaseService,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRilSmsDatabaseService,
+                                         Ci.nsISmsDatabaseService,
                                          Ci.nsIObserver]),
 
   /**
@@ -499,7 +500,7 @@ SmsDatabaseService.prototype = {
 
 
   /**
-   * nsISmsDatabaseService API
+   * nsIRilSmsDatabaseService API
    */
 
   saveReceivedMessage: function saveReceivedMessage(aSender, aBody, aMessageClass, aDate) {
@@ -537,7 +538,7 @@ SmsDatabaseService.prototype = {
     return this.saveMessage(message);
   },
 
-  saveSentMessage: function saveSentMessage(aReceiver, aBody, aDate) {
+  saveSendingMessage: function saveSendingMessage(aReceiver, aBody, aDate) {
     let sender = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
 
     // Workaround an xpconnect issue with undefined string objects.
@@ -561,7 +562,7 @@ SmsDatabaseService.prototype = {
                : sender;
     }
 
-    let message = {delivery:       DELIVERY_SENT,
+    let message = {delivery:       DELIVERY_SENDING,
                    deliveryStatus: DELIVERY_STATUS_PENDING,
                    sender:         sender,
                    receiver:       receiver,
@@ -572,18 +573,10 @@ SmsDatabaseService.prototype = {
     return this.saveMessage(message);
   },
 
-  setMessageDeliveryStatus: function setMessageDeliveryStatus(messageId, deliveryStatus) {
-    if ((deliveryStatus != DELIVERY_STATUS_SUCCESS)
-        && (deliveryStatus != DELIVERY_STATUS_ERROR)) {
-      if (DEBUG) {
-        debug("Setting message " + messageId + " deliveryStatus to values other"
-              + " than 'success' and 'error'");
-      }
-      return;
-    }
+  setMessageDelivery: function setMessageDelivery(messageId, delivery, deliveryStatus) {
     if (DEBUG) {
-      debug("Setting message " + messageId + " deliveryStatus to "
-            + deliveryStatus);
+      debug("Setting message " + messageId + " delivery to " + delivery
+            + ", and deliveryStatus to " + deliveryStatus);
     }
     this.newTxn(READ_WRITE, function (error, txn, store) {
       if (error) {
@@ -605,20 +598,29 @@ SmsDatabaseService.prototype = {
           }
           return;
         }
-        // Only updates messages that are still waiting for its delivery status.
-        if (message.deliveryStatus != DELIVERY_STATUS_PENDING) {
+        // Only updates messages that have different delivery or deliveryStatus.
+        if ((message.delivery == delivery)
+            && (message.deliveryStatus == deliveryStatus)) {
           if (DEBUG) {
-            debug("The value of message.deliveryStatus is not 'pending' but "
-                  + message.deliveryStatus);
+            debug("The values of attribute delivery and deliveryStatus are the"
+                  + " the same with given parameters.");
           }
           return;
         }
+        message.delivery = delivery;
         message.deliveryStatus = deliveryStatus;
-        if (DEBUG) debug("Message.deliveryStatus set to: " + deliveryStatus);
+        if (DEBUG) {
+          debug("Message.delivery set to: " + delivery
+                + ", and Message.deliveryStatus set to: " + deliveryStatus);
+        }
         store.put(message);
       };
     });
   },
+
+  /**
+   * nsISmsDatabaseService API
+   */
 
   getMessage: function getMessage(messageId, aRequest) {
     if (DEBUG) debug("Retrieving message with ID " + messageId);

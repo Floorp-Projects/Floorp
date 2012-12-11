@@ -10,10 +10,12 @@
 #include "nsStringGlue.h"
 
 class nsCharsetConverterManager;
+class nsScriptableUnicodeConverter;
 
 class nsCharsetAlias
 {
    friend class nsCharsetConverterManager;
+   friend class nsScriptableUnicodeConverter;
    static nsresult GetPreferredInternal(const nsACString& aAlias, nsACString& aResult);
 public:
    static nsresult GetPreferred(const nsACString& aAlias, nsACString& aResult);

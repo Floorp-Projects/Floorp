@@ -164,8 +164,8 @@ this.PermissionsTable =  { geolocation: {
                              certified: ALLOW_ACTION
                            },
                            "desktop-notification": {
-                             app: DENY_ACTION,
-                             privileged: DENY_ACTION,
+                             app: ALLOW_ACTION,
+                             privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "networkstats-manage": {
@@ -228,12 +228,40 @@ this.PermissionsTable =  { geolocation: {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
-                           audio: {
+                           "audio-channel-normal": {
+                             app: ALLOW_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "audio-channel-content": {
+                             app: ALLOW_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "audio-channel-notification": {
                              app: DENY_ACTION,
                              privileged: ALLOW_ACTION,
-                             certified: ALLOW_ACTION,
-                             channels: ["normal", "content", "notification",
-                               "alarm", "telephony", "ringer", "publicnotification"]
+                             certified: ALLOW_ACTION
+                           },
+                           "audio-channel-alarm": {
+                             app: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "audio-channel-telephony": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "audio-channel-ringer": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "audio-channel-publicnotification": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
                            },
                            "open-remote-window": {
                              app: DENY_ACTION,
@@ -264,22 +292,23 @@ this.appendAccessToPermName = function appendAccessToPermName(aPermName, aAccess
  *   e.g: permission name 'contacts' with 'readwrite' =
  *   ['contacts-read', 'contacts-create', 'contacts-write']
  * @param string aPermName
- * @param string aAccess
- * @param string array aChannels
+ * @param string aAccess (optional)
  * @returns array containing expanded permission names.
  **/
-this.expandPermissions = function expandPermissions(aPermName, aAccess, aChannels) {
+this.expandPermissions = function expandPermissions(aPermName, aAccess) {
   if (!PermissionsTable[aPermName]) {
-    Cu.reportError("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
-    dump("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
+    Cu.reportError("PermissionsInstaller.jsm: expandPermissions: Unknown Permission: " + aPermName);
+    dump("PermissionsInstaller.jsm: expandPermissions: Unknown Permission: " + aPermName);
     return [];
   }
 
   const tableEntry = PermissionsTable[aPermName];
 
   if (tableEntry.substitute && tableEntry.additional) {
-    Cu.reportError("PermissionsTable.jsm: expandPermissions: Can't handle both 'substitute' " +
+    Cu.reportError("PermissionsInstaller.jsm: expandPermissions: Can't handle both 'substitute' " +
                    "and 'additional' entries for permission: " + aPermName);
+    dump("PermissionsInstaller.jsm: expandPermissions: Can't handle both 'substitute' " +
+         "and 'additional' entries for permission: " + aPermName);
     return [];
   }
 
@@ -287,9 +316,9 @@ this.expandPermissions = function expandPermissions(aPermName, aAccess, aChannel
       aAccess && !tableEntry.access) {
     Cu.reportError("PermissionsTable.jsm: expandPermissions: Invalid Manifest : " +
                    aPermName + " " + aAccess + "\n");
-    dump("PermissionsTable.jsm: expandPermissions: Invalid Manifest: " +
+    dump("PermissionsInstaller.jsm: expandPermissions: Invalid Manifest: " +
          aPermName + " " + aAccess + "\n");
-    throw new Error("PermissionsTable.jsm: expandPermissions: Invalid Manifest: " +
+    throw new Error("PermissionsInstaller.jsm: expandPermissions: Invalid Manifest: " +
                     aPermName + " " + aAccess + "\n");
   }
 
@@ -332,19 +361,6 @@ this.expandPermissions = function expandPermissions(aPermName, aAccess, aChannel
     }
   } else if (tableEntry.substitute) {
     expandedPermNames = expandedPermNames.concat(tableEntry.substitute);
-  } else if (tableEntry.channels) {
-    if ("audio" == aPermName && aChannels) {
-      let allowChannels = tableEntry.channels;
-
-      for (let idx in aChannels) {
-        let candidate = aChannels[idx];
-        if (allowChannels.indexOf(candidate) == -1) {
-          continue;
-        }
-        let permAttr = aPermName + "-channel-" + candidate;
-        expandedPermNames.push(permAttr);
-      }
-    }
   } else {
     expandedPermNames.push(aPermName);
     // Include each of the additions exactly as they appear in the table.
@@ -359,16 +375,13 @@ this.expandPermissions = function expandPermissions(aPermName, aAccess, aChannel
 // An array carring all the possible (expanded) permission names.
 let AllPossiblePermissions = [];
 for (let permName in PermissionsTable) {
+  let expandedPermNames = [];
   if (PermissionsTable[permName].access) {
-    AllPossiblePermissions =
-      AllPossiblePermissions.concat(expandPermissions(permName, READWRITE));
-  } else if (PermissionsTable[permName].channels) {
-    AllPossiblePermissions =
-      AllPossiblePermissions.concat(expandPermissions(permName, null, PermissionsTable[permName].channels));
+    expandedPermNames = expandPermissions(permName, READWRITE);
   } else {
-    AllPossiblePermissions =
-      AllPossiblePermissions.concat(expandPermissions(permName));
+    expandedPermNames = expandPermissions(permName);
   }
+  AllPossiblePermissions = AllPossiblePermissions.concat(expandedPermNames);
 }
 
 this.PermissionsInstaller = {
@@ -400,8 +413,7 @@ this.PermissionsInstaller = {
           for (let permName in newManifest.permissions) {
             let expandedPermNames =
               expandPermissions(permName,
-                                newManifest.permissions[permName].access,
-                                newManifest.permissions[permName].channels);
+                                newManifest.permissions[permName].access);
             newPermNames = newPermNames.concat(expandedPermNames);
           }
 
@@ -457,8 +469,7 @@ this.PermissionsInstaller = {
 
         let expandedPermNames =
           expandPermissions(permName,
-                            newManifest.permissions[permName].access,
-                            newManifest.permissions[permName].channels);
+                            newManifest.permissions[permName].access);
         for (let idx in expandedPermNames) {
           this._setPermission(expandedPermNames[idx],
                               PERM_TO_STRING[PermissionsTable[permName][appStatus]],

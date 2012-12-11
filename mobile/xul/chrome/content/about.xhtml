@@ -37,7 +37,12 @@
 #endif
 
     <div id="aboutTelemetry" hidden="true">
-      <p id="telemetry">&aboutPage.warningVersion;&aboutPage.telemetryStart;<a href="http://www.mozilla.org/">&aboutPage.telemetryMozillaLink;</a>&aboutPage.telemetryEnd;</p>
+      <p id="telemetry">
+        &aboutPage.warningVersion;
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+        &aboutPage.telemetryStart;<a href="http://www.mozilla.org/">&aboutPage.telemetryMozillaLink;</a>&aboutPage.telemetryEnd;
+#endif
+      </p>
     </div>
 
     <ul id="aboutLinks">

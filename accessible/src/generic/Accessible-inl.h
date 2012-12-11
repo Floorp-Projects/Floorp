@@ -42,7 +42,7 @@ Accessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
 inline bool
 Accessible::HasNumericValue() const
 {
-  if (mFlags & eHasNumericValue)
+  if (mStateFlags & eHasNumericValue)
     return true;
 
   return mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue;

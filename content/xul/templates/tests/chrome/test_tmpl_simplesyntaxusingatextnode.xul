@@ -14,6 +14,15 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <description step="3" id="http://www.some-fictitious-zoo.com/birds/wren">Wren</description>
+    <description id="http://www.some-fictitious-zoo.com/birds/emu">Emu</description>
+    <description step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl">Barn Owl</description>
+    <description id="http://www.some-fictitious-zoo.com/birds/raven">Raven</description>
+    <description step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx">Archaeopteryx</description>
+    <description step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin">Emperor Penguin</description>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,15 +35,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <description step="3" id="http://www.some-fictitious-zoo.com/birds/wren">Wren</description>
-  <description id="http://www.some-fictitious-zoo.com/birds/emu">Emu</description>
-  <description step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl">Barn Owl</description>
-  <description id="http://www.some-fictitious-zoo.com/birds/raven">Raven</description>
-  <description step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx">Archaeopteryx</description>
-  <description step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin">Emperor Penguin</description>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [];
 ]]>

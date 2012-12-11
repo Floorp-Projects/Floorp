@@ -145,7 +145,6 @@ public class GeckoLayerClient
         sendResizeEventIfNecessary(true);
 
         DisplayPortCalculator.initPrefs();
-        PluginLayer.initPrefs();
     }
 
     public void destroy() {

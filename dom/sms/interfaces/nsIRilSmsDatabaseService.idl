@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISmsDatabaseService.idl"
+
+[scriptable, uuid(71d7dd4e-5489-4e58-a489-171200378c3c)]
+interface nsIRilSmsDatabaseService : nsISmsDatabaseService
+{
+  long saveReceivedMessage(in DOMString aSender, in DOMString aBody, in DOMString aMessageClass, in unsigned long long aDate);
+  long saveSendingMessage(in DOMString aReceiver, in DOMString aBody, in unsigned long long aDate);
+  void setMessageDelivery(in long aMessageId, in DOMString aDelivery, in DOMString aDeliveryStatus);
+};

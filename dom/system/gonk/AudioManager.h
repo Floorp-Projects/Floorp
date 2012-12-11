@@ -52,6 +52,7 @@ protected:
 
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;
+  bool mFMChannelIsMuted;
 };
 
 } /* namespace gonk */

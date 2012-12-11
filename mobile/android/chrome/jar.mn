@@ -38,7 +38,7 @@ chrome.jar:
   content/SelectHelper.js              (content/SelectHelper.js)
   content/HelperApps.js                (content/HelperApps.js)
   content/dbg-browser-actors.js        (content/dbg-browser-actors.js)
-  content/WebAppRT.js                  (content/WebAppRT.js)
+* content/WebAppRT.js                  (content/WebAppRT.js)
   content/InputWidgetHelper.js         (content/InputWidgetHelper.js)
 
 % content branding %content/branding/

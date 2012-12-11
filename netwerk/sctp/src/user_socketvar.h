@@ -37,6 +37,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
+#if defined(ANDROID)
+/* Android bionic libc is missing some defines in sys/types.h. Pick them
+ * up elsewhere */
+#include <linux/coda.h>
+#endif
 
 /* #include <sys/selinfo.h> */ /*__Userspace__ alternative?*/	/* for struct selinfo */
 /* #include <sys/_lock.h>  was 0 byte file */

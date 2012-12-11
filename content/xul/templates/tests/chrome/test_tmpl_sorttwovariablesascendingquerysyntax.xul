@@ -14,6 +14,21 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <label id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo" value="Nine-banded Armadillo"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/aardvark" value="aardvark"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/hippopotamus" value="HIPPOPOTAMUS"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/lion" value="Lion"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/llama" value="LLAMA"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/gorilla" value="Gorilla"/>
+    <label step="5" id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
+    <label step="-4" id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/polarbear" value="Polar Bear"/>
+    <label step="1" id="http://www.some-fictitious-zoo.com/mammals/arctichare" value="Arctic Hare"/>
+    <label step="2" id="http://www.some-fictitious-zoo.com/mammals/koala" value="Koala"/>
+    <label step="3" id="http://www.some-fictitious-zoo.com/mammals/zebra" value="Zebra"/>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,21 +41,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = true;
-var expectedOutput =
-<output>
-  <label id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo" value="Nine-banded Armadillo"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/aardvark" value="aardvark"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/hippopotamus" value="HIPPOPOTAMUS"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/lion" value="Lion"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/llama" value="LLAMA"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/gorilla" value="Gorilla"/>
-  <label step="5" id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
-  <label step="-4" id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/polarbear" value="Polar Bear"/>
-  <label step="1" id="http://www.some-fictitious-zoo.com/mammals/arctichare" value="Arctic Hare"/>
-  <label step="2" id="http://www.some-fictitious-zoo.com/mammals/koala" value="Koala"/>
-  <label step="3" id="http://www.some-fictitious-zoo.com/mammals/zebra" value="Zebra"/>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1

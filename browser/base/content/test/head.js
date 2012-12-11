@@ -113,50 +113,60 @@ function getTestPlugin() {
 function runSocialTestWithProvider(manifest, callback) {
   let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
+  let manifests = Array.isArray(manifest) ? manifest : [manifest];
+
   // Check that none of the provider's content ends up in history.
   registerCleanupFunction(function () {
-    for (let what of ['sidebarURL', 'workerURL', 'iconURL']) {
-      if (manifest[what]) {
-        ensureSocialUrlNotRemembered(manifest[what]);
+    manifests.forEach(function (m) {
+      for (let what of ['sidebarURL', 'workerURL', 'iconURL']) {
+        if (m[what]) {
+          ensureSocialUrlNotRemembered(m[what]);
+        }
       }
-    }
+    });
   });
 
-  info("runSocialTestWithProvider: " + manifest.toSource());
+  info("runSocialTestWithProvider: " + manifests.toSource());
 
-  let oldProvider;
-  SocialService.addProvider(manifest, function(provider) {
-    info("runSocialTestWithProvider: provider added");
-    oldProvider = Social.provider;
-    Social.provider = provider;
+  let providersAdded = 0;
+  let firstProvider;
+  manifests.forEach(function (m) {
+    SocialService.addProvider(m, function(provider) {
+      provider.active = true;
 
-    // Now that we've set the UI's provider, enable the social functionality
-    Services.prefs.setBoolPref("social.enabled", true);
-    Services.prefs.setBoolPref("social.active", true);
+      providersAdded++;
+      info("runSocialTestWithProvider: provider added");
 
-    // Need to re-call providerReady since it is actually called before the test
-    // framework is loaded and the provider state won't be set in the browser yet.
-    SocialUI._providerReady();
-
-    registerCleanupFunction(function () {
-      // if one test happens to fail, it is likely finishSocialTest will not
-      // be called, causing most future social tests to also fail as they
-      // attempt to add a provider which already exists - so work
-      // around that by also attempting to remove the test provider.
-      try {
-        SocialService.removeProvider(provider.origin, finish);
-      } catch (ex) {
-        ;
+      // we want to set the first specified provider as the UI's provider
+      if (provider.origin == manifests[0].origin) {
+        firstProvider = provider;
       }
-      Social.provider = oldProvider;
-      Services.prefs.clearUserPref("social.enabled");
-      Services.prefs.clearUserPref("social.active");
-    });
 
-    function finishSocialTest() {
-      SocialService.removeProvider(provider.origin, finish);
-    }
-    callback(finishSocialTest);
+      // If we've added all the providers we need, call the callback to start
+      // the tests (and give it a callback it can call to finish them)
+      if (providersAdded == manifests.length) {
+        // Set the UI's provider and enable the feature
+        Social.provider = firstProvider;
+        Social.enabled = true;
+
+        registerCleanupFunction(function () {
+          // if one test happens to fail, it is likely finishSocialTest will not
+          // be called, causing most future social tests to also fail as they
+          // attempt to add a provider which already exists - so work
+          // around that by also attempting to remove the test provider.
+          manifests.forEach(function (m) {
+            try {
+              SocialService.removeProvider(m.origin, finish);
+            } catch (ex) {}
+          });
+          Services.prefs.clearUserPref("social.enabled");
+        });
+        function finishSocialTest() {
+          SocialService.removeProvider(provider.origin, finish);
+        }
+        callback(finishSocialTest);
+      }
+    });
   });
 }
 

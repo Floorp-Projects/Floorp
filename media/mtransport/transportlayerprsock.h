@@ -82,6 +82,9 @@ class TransportLayerPrsock : public TransportLayer {
         *aIsLocal = false;
       }
 
+      virtual uint64_t ByteCountSent() { return 0; }
+      virtual uint64_t ByteCountReceived() { return 0; }
+
       // nsISupports methods
       NS_DECL_ISUPPORTS
 
