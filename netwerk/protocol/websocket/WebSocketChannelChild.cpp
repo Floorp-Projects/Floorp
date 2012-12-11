@@ -338,9 +338,9 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
-  gNeckoChild->SendPWebSocketConstructor(this, tabChild,
-                                         IPC::SerializedLoadContext(this));
-  if (!SendAsyncOpen(uri, nsCString(aOrigin), mProtocol, mEncrypted))
+  gNeckoChild->SendPWebSocketConstructor(this, tabChild);
+  if (!SendAsyncOpen(uri, nsCString(aOrigin), mProtocol, mEncrypted,
+                     IPC::SerializedLoadContext(this)))
     return NS_ERROR_UNEXPECTED;
 
   mOriginalURI = aURI;
