@@ -14,7 +14,6 @@ this.EXPORTED_SYMBOLS = ['AccessFu'];
 Cu.import('resource://gre/modules/Services.jsm');
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-Cu.import('resource://gre/modules/accessibility/TouchAdapter.jsm');
 
 const ACCESSFU_DISABLE = 0;
 const ACCESSFU_ENABLE = 1;
@@ -76,9 +75,6 @@ this.AccessFu = {
 
     Logger.info('enable');
 
-    this.touchAdapter = (Utils.MozBuildApp == 'mobile/android') ?
-      AndroidTouchAdapter : TouchAdapter;
-
     for each (let mm in Utils.getAllMessageManagers(this.chromeWin))
       this._loadFrameScript(mm);
 
@@ -91,7 +87,7 @@ this.AccessFu = {
 
     Input.attach(this.chromeWin);
     Output.attach(this.chromeWin);
-    this.touchAdapter.attach(this.chromeWin);
+    TouchAdapter.attach(this.chromeWin);
 
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
@@ -117,7 +113,7 @@ this.AccessFu = {
       mm.sendAsyncMessage('AccessFu:Stop');
 
     Input.detach();
-    this.touchAdapter.detach(this.chromeWin);
+    TouchAdapter.detach(this.chromeWin);
 
     this.chromeWin.removeEventListener('TabOpen', this);
     this.chromeWin.removeEventListener('TabSelect', this);
@@ -389,7 +385,7 @@ var Input = {
         this._handleKeypress(aEvent);
         break;
       case 'mozAccessFuGesture':
-        this._handleGesture(aEvent);
+        this._handleGesture(aEvent.detail);
         break;
       }
     } catch (x) {
@@ -397,44 +393,42 @@ var Input = {
     }
   },
 
-  _handleGesture: function _handleGesture(aEvent) {
-    let detail = aEvent.detail;
-    Logger.info('Gesture', detail.type,
-                '(fingers: ' + detail.touches.length + ')');
+  _handleGesture: function _handleGesture(aGesture) {
+    let gestureName = aGesture.type + aGesture.touches.length;
+    Logger.info('Gesture', aGesture.type,
+                '(fingers: ' + aGesture.touches.length + ')');
 
-    if (detail.touches.length == 1) {
-      switch (detail.type) {
-        case 'swiperight':
-          this.moveCursor('moveNext', 'Simple', 'gestures');
-          break;
-        case 'swipeleft':
-          this.moveCursor('movePrevious', 'Simple', 'gesture');
-          break;
-        case 'doubletap':
-          this.activateCurrent();
-          break;
-        case 'explore':
-          this.moveCursor('moveToPoint', 'Simple', 'gesture',
-                          detail.x, detail.y);
-          break;
-      }
-    }
-
-    if (detail.touches.length == 3) {
-      switch (detail.type) {
-        case 'swiperight':
-          this.scroll(-1, true);
-          break;
-        case 'swipedown':
-          this.scroll(-1);
-          break;
-        case 'swipeleft':
-          this.scroll(1, true);
-          break;
-        case 'swipeup':
-          this.scroll(1);
-          break;
-      }
+    switch (gestureName) {
+      case 'dwell1':
+      case 'explore1':
+        this.moveCursor('moveToPoint', 'Simple', 'gesture',
+                        aGesture.x, aGesture.y);
+        break;
+      case 'doubletap1':
+        this.activateCurrent();
+        break;
+      case 'swiperight1':
+        this.moveCursor('moveNext', 'Simple', 'gestures');
+        break;
+      case 'swipeleft1':
+        this.moveCursor('movePrevious', 'Simple', 'gesture');
+        break;
+      case 'swiperight2':
+        this.scroll(-1, true);
+        break;
+      case 'swipedown2':
+        this.scroll(-1);
+        break;
+      case 'swipeleft2':
+        this.scroll(1, true);
+        break;
+      case 'swipeup2':
+        this.scroll(1);
+        break;
+      case 'explore2':
+        Utils.getCurrentBrowser(this.chromeWin).contentWindow.scrollBy(
+          -aGesture.deltaX, -aGesture.deltaY);
+        break;
     }
   },
 
