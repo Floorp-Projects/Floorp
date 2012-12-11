@@ -6,26 +6,29 @@
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
 #include "nsIDOMFile.h"
-#include "nsContentUtils.h"
 #include "nsHTMLFormElement.h"
+#include "mozilla/dom/FormDataBinding.h"
 
-nsFormData::nsFormData()
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsFormData::nsFormData(nsISupports* aOwner)
   : nsFormSubmission(NS_LITERAL_CSTRING("UTF-8"), nullptr)
+  , mOwner(aOwner)
 {
+  SetIsDOMBinding();
 }
 
 // -------------------------------------------------------------------------
 // nsISupports
 
-DOMCI_DATA(FormData, nsFormData)
-
-NS_IMPL_ADDREF(nsFormData)
-NS_IMPL_RELEASE(nsFormData)
-NS_INTERFACE_MAP_BEGIN(nsFormData)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsFormData, mOwner)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFormData)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFormData)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormData)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormData)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(FormData)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormData)
 NS_INTERFACE_MAP_END
 
@@ -39,28 +42,22 @@ nsFormData::GetEncodedSubmission(nsIURI* aURI,
   return NS_OK;
 }
 
-nsresult
-nsFormData::AddNameValuePair(const nsAString& aName,
-                             const nsAString& aValue)
+void
+nsFormData::Append(const nsAString& aName, const nsAString& aValue)
 {
   FormDataTuple* data = mFormData.AppendElement();
   data->name = aName;
   data->stringValue = aValue;
   data->valueIsFile = false;
-
-  return NS_OK;
 }
 
-nsresult
-nsFormData::AddNameFilePair(const nsAString& aName,
-                            nsIDOMBlob* aBlob)
+void
+nsFormData::Append(const nsAString& aName, nsIDOMBlob* aBlob)
 {
   FormDataTuple* data = mFormData.AppendElement();
   data->name = aName;
   data->fileValue = aBlob;
   data->valueIsFile = true;
-
-  return NS_OK;
 }
 
 // -------------------------------------------------------------------------
@@ -84,7 +81,8 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
 
     nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports);
     if (domBlob) {
-      return AddNameFilePair(aName, domBlob);
+      Append(aName, domBlob);
+      return NS_OK;
     }
   }
 
@@ -96,7 +94,27 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
   nsString valAsString;
   valAsString.Adopt(stringData, stringLen);
 
-  return AddNameValuePair(aName, valAsString);
+  Append(aName, valAsString);
+  return NS_OK;
+}
+
+/* virtual */ JSObject*
+nsFormData::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return FormDataBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+/* static */ already_AddRefed<nsFormData>
+nsFormData::Constructor(nsISupports* aGlobal,
+                        const Optional<nsHTMLFormElement*>& aFormElement,
+                        ErrorResult& aRv)
+{
+  nsRefPtr<nsFormData> formData = new nsFormData(aGlobal);
+  if (aFormElement.WasPassed()) {
+    MOZ_ASSERT(aFormElement.Value());
+    aRv = aFormElement.Value()->WalkFormElements(formData);
+  }
+  return formData.forget();
 }
 
 // -------------------------------------------------------------------------
@@ -121,38 +139,6 @@ nsFormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   aCharset.Truncate();
   *aContentLength = 0;
   NS_ADDREF(*aBody = fs.GetSubmissionBody(aContentLength));
-
-  return NS_OK;
-}
-
-
-// -------------------------------------------------------------------------
-// nsIJSNativeInitializer
-
-NS_IMETHODIMP
-nsFormData::Initialize(nsISupports* aOwner,
-                       JSContext* aCx,
-                       JSObject* aObj,
-                       uint32_t aArgc,
-                       jsval* aArgv)
-{
-  if (aArgc > 0) {
-    if (JSVAL_IS_PRIMITIVE(aArgv[0])) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    nsCOMPtr<nsIContent> formCont = do_QueryInterface(
-      nsContentUtils::XPConnect()->
-        GetNativeOfWrapper(aCx, JSVAL_TO_OBJECT(aArgv[0])));
-    
-    if (!formCont || !formCont->IsHTML(nsGkAtoms::form)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    nsresult rv = static_cast<nsHTMLFormElement*>(formCont.get())->
-      WalkFormElements(this);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
 
   return NS_OK;
 }
