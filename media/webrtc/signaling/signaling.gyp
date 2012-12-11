@@ -162,6 +162,7 @@
         'HAVE_UINT16_T=1',
         'HAVE_UINT32_T=1',
         'HAVE_UINT64_T=1',
+        'SIGSLOT_USE_POSIX_THREADS=1',
       ],
 
       'cflags_mozilla': [

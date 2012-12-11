@@ -91,9 +91,6 @@
 #include <set>
 #include <stdlib.h>
 
-// On our copy of sigslot.h, we set single threading as default.
-#define SIGSLOT_DEFAULT_MT_POLICY single_threaded
-
 #if defined(SIGSLOT_PURE_ISO) || (!defined(WIN32) && !defined(__GNUG__) && !defined(SIGSLOT_USE_POSIX_THREADS))
 #	define _SIGSLOT_SINGLE_THREADED
 #elif defined(WIN32)
