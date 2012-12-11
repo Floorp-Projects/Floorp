@@ -366,4 +366,6 @@ nsLayoutStatics::Shutdown()
   AudioChannelService::Shutdown();
 
   ContentParent::ShutDown();
+
+  nsRefreshDriver::Shutdown();
 }
