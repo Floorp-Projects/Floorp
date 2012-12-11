@@ -561,8 +561,8 @@ StackTrace::Print(const Writer& aWriter) const
     void* pc = mPcs[i];
     PcInfo(pc, &details);
     if (details.function[0]) {
-      W("   %14p %s[%s +0x%X]\n", pc, details.function, details.library,
-        details.loffset);
+      W("   %s[%s +0x%X] %p\n", details.function, details.library,
+        details.loffset, pc);
     }
   }
 }
@@ -1264,8 +1264,8 @@ FrameGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
     astr);
 
   W(" PC is\n");
-  W("   %14p %s[%s +0x%X]\n\n", mPc, details.function, details.library,
-    details.loffset);
+  W("   %s[%s +0x%X] %p\n\n", details.function, details.library,
+    details.loffset, mPc);
 }
 
 //---------------------------------------------------------------------------
