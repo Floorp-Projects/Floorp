@@ -739,7 +739,7 @@ LIRGenerator::visitAbs(MAbs *ins)
     if (num->type() == MIRType_Int32) {
         LAbsI *lir = new LAbsI(useRegisterAtStart(num));
         // needed to handle abs(INT32_MIN)
-        if (!ins->range()->isFinite() && !assignSnapshot(lir))
+        if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return defineReuseInput(lir, ins, 0);
     }
