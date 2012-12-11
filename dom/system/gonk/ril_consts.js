@@ -422,6 +422,7 @@ this.ICC_EF_CBMIR  = 0x6f50;
 this.ICC_EF_AD     = 0x6fad;
 this.ICC_EF_PHASE  = 0x6fae;
 this.ICC_EF_PNN    = 0x6fc5;
+this.ICC_EF_OPL    = 0x6fc6;
 this.ICC_EF_MBDN   = 0x6fc7;
 this.ICC_EF_EXT6   = 0x6fc8;   // Ext record for EF[MBDN]
 this.ICC_EF_MBI    = 0x6fc9;
@@ -580,6 +581,11 @@ this.COMPREHENSIONTLV_TAG_BROADCAST_NETWORK_INFO = 0x7a;
 // Tags for Service Provider Display Information TLV
 this.SPDI_TAG_SPDI = 0xa3;
 this.SPDI_TAG_PLMN_LIST = 0x80;
+
+// MM INFORMATION message content IEIs
+// See 3GPP TS 24.008 table 9.2.18
+this.PNN_IEI_FULL_NETWORK_NAME = 0x43;
+this.PNN_IEI_SHORT_NETWORK_NAME = 0x45;
 
 // Device identifiers, see TS 11.14, clause 12.7
 this.STK_DEVICE_ID_KEYPAD = 0x01;
@@ -988,6 +994,8 @@ this.GECKO_ICC_SERVICES = {
     DATA_DOWNLOAD_SMS_PP: 26,
     CBMIR: 30,
     BDN: 31,
+    PNN: 51,
+    OPL: 52,
     SPDI: 56
   },
   usim: {
@@ -998,6 +1006,8 @@ this.GECKO_ICC_SERVICES = {
     CBMIR: 16,
     SPN: 19,
     DATA_DOWNLOAD_SMS_PP: 28,
+    PNN: 45,
+    OPL: 46,
     SPDI: 51
   }
 };
