@@ -97,7 +97,6 @@ WebappsRegistry.prototype = {
                       Array.isArray(aParams.categories)) ? aParams.categories
                                                          : [];
 
-    let principal = this._window.document.nodePrincipal;
     cpmm.sendAsyncMessage("Webapps:Install",
                           { app: {
                               installOrigin: this._getOrigin(installURL),
@@ -108,9 +107,7 @@ WebappsRegistry.prototype = {
                             },
                             from: installURL,
                             oid: this._id,
-                            requestID: requestID,
-                            appId: principal.appId,
-                            isBrowser: principal.isInBrowserElement
+                            requestID: requestID
                           });
     return request;
   },
@@ -171,7 +168,6 @@ WebappsRegistry.prototype = {
                       Array.isArray(aParams.categories)) ? aParams.categories
                                                          : [];
 
-    let principal = this._window.document.nodePrincipal;
     cpmm.sendAsyncMessage("Webapps:InstallPackage",
                           { app: {
                               installOrigin: this._getOrigin(installURL),
@@ -183,9 +179,7 @@ WebappsRegistry.prototype = {
                             from: installURL,
                             oid: this._id,
                             requestID: requestID,
-                            isPackage: true,
-                            appId: principal.appId,
-                            isBrowser: principal.isInBrowserElement
+                            isPackage: true
                           });
     return request;
   },
