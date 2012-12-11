@@ -106,7 +106,7 @@ GenerateRandomBytes(uint32_t aSize,
 
   // On Unix, we'll just read in from /dev/urandom.
 #elif defined(XP_UNIX)
-  NS_ENSURE_ARG_MAX(aSize, PR_INT32_MAX);
+  NS_ENSURE_ARG_MAX(aSize, INT32_MAX);
   PRFileDesc* urandom = PR_Open("/dev/urandom", PR_RDONLY, 0);
   nsresult rv = NS_ERROR_FAILURE;
   if (urandom) {
