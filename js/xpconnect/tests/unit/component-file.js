@@ -35,31 +35,22 @@ FileComponent.prototype =
     // and with nsIFiles
     var f3 = File(file);
     var f4 = new File(file);
-    // and extra args are ignored
-    var f5 = File(file.path, "foopy");
-    var f6 = new File(file, Date(123123154));
 
     // do some tests
     do_check_true(f1 instanceof Ci.nsIDOMFile, "Should be a DOM File");
     do_check_true(f2 instanceof Ci.nsIDOMFile, "Should be a DOM File");
     do_check_true(f3 instanceof Ci.nsIDOMFile, "Should be a DOM File");
     do_check_true(f4 instanceof Ci.nsIDOMFile, "Should be a DOM File");
-    do_check_true(f5 instanceof Ci.nsIDOMFile, "Should be a DOM File");
-    do_check_true(f6 instanceof Ci.nsIDOMFile, "Should be a DOM File");
 
     do_check_true(f1.name == "xpcshell.ini", "Should be the right file");
     do_check_true(f2.name == "xpcshell.ini", "Should be the right file");
     do_check_true(f3.name == "xpcshell.ini", "Should be the right file");
     do_check_true(f4.name == "xpcshell.ini", "Should be the right file");
-    do_check_true(f5.name == "xpcshell.ini", "Should be the right file");
-    do_check_true(f6.name == "xpcshell.ini", "Should be the right file");
 
     do_check_true(f1.type = "text/plain", "Should be the right type");
     do_check_true(f2.type = "text/plain", "Should be the right type");
     do_check_true(f3.type = "text/plain", "Should be the right type");
     do_check_true(f4.type = "text/plain", "Should be the right type");
-    do_check_true(f5.type = "text/plain", "Should be the right type");
-    do_check_true(f6.type = "text/plain", "Should be the right type");
 
     var threw = false;
     try {
