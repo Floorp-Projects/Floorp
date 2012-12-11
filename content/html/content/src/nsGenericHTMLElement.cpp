@@ -379,8 +379,18 @@ static bool
 IsOffsetParent(nsIFrame* aFrame)
 {
   nsIAtom* frameType = aFrame->GetType();
-  return (IS_TABLE_CELL(frameType) ||
-          frameType == nsGkAtoms::tableFrame);
+  
+  if (IS_TABLE_CELL(frameType) || frameType == nsGkAtoms::tableFrame) {
+    // Per the IDL for Element, only td, th, and table are acceptable offsetParents
+    // apart from body or positioned elements; we need to check the content type as
+    // well as the frame type so we ignore anonymous tables created by an element
+    // with display: table-cell with no actual table
+    nsIContent* content = aFrame->GetContent();
+
+    return content->IsHTML(nsGkAtoms::table) || content->IsHTML(nsGkAtoms::td)
+      || content->IsHTML(nsGkAtoms::th);
+  }
+  return false;
 }
 
 Element*
