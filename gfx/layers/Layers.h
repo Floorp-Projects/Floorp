@@ -804,6 +804,9 @@ public:
   AnimationArray& GetAnimations() { return mAnimations; }
   InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
 
+  uint64_t GetAnimationGeneration() { return mAnimationGeneration; }
+  void SetAnimationGeneration(uint64_t aCount) { mAnimationGeneration = aCount; }
+
   /**
    * DRAWING PHASE ONLY
    *
@@ -1108,6 +1111,9 @@ protected:
   bool mIsFixedPosition;
   gfxPoint mAnchor;
   DebugOnly<uint32_t> mDebugColorIndex;
+  // If this layer is used for OMTA, then this counter is used to ensure we
+  // stay in sync with the animation manager
+  uint64_t mAnimationGeneration;
 };
 
 /**

@@ -818,7 +818,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
-  wantNextFrame |= SampleAnimations(root, mLastCompose);
+  wantNextFrame |= SampleAnimations(root, aCurrentFrame);
 
   const FrameMetrics& metrics = container->GetFrameMetrics();
   // We must apply the resolution scale before a pan/zoom transform, so we call
