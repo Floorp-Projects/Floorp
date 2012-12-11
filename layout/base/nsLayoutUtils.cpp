@@ -5216,3 +5216,32 @@ nsLayoutUtils::FontSizeInflationEnabled(nsPresContext *aPresContext)
 
   return true;
 }
+
+/* static */ nsRect
+nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame, 
+                                        const nsSize& aFrameSize)
+{
+  nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
+  if (!boxShadows) {
+    return nsRect();
+  }
+  
+  nsRect shadows;
+  int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
+  for (uint32_t i = 0; i < boxShadows->Length(); ++i) {
+    nsRect tmpRect(nsPoint(0, 0), aFrameSize);
+    nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
+
+    // inset shadows are never painted outside the frame
+    if (shadow->mInset)
+      continue;
+
+    tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
+    tmpRect.Inflate(shadow->mSpread);
+    tmpRect.Inflate(
+      nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
+    shadows.UnionRect(shadows, tmpRect);
+  }
+  return shadows;
+}
+
