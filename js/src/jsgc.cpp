@@ -1558,9 +1558,6 @@ GCMarker::start(JSRuntime *rt)
     JS_ASSERT(!unmarkedArenaStackTop);
     JS_ASSERT(markLaterArenas == 0);
 
-    JS_ASSERT(grayRoots.empty());
-    JS_ASSERT(!grayFailed);
-
     /*
      * The GC is recomputing the liveness of WeakMap entries, so we delay
      * visting entries.
@@ -1579,11 +1576,10 @@ GCMarker::stop()
     JS_ASSERT(!unmarkedArenaStackTop);
     JS_ASSERT(markLaterArenas == 0);
 
-    grayRoots.clearAndFree();
-    grayFailed = false;
-
     /* Free non-ballast stack memory. */
     stack.reset();
+
+    resetBufferedGrayRoots();
 }
 
 void
@@ -1606,9 +1602,6 @@ GCMarker::reset()
     }
     JS_ASSERT(isDrained());
     JS_ASSERT(!markLaterArenas);
-
-    grayRoots.clearAndFree();
-    grayFailed = false;
 }
 
 /*
@@ -1721,6 +1714,10 @@ GCMarker::hasBufferedGrayRoots() const
 void
 GCMarker::startBufferingGrayRoots()
 {
+    JS_ASSERT(!grayFailed);
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
+        JS_ASSERT(c->gcGrayRoots.empty());
+
     JS_ASSERT(!callback);
     callback = GrayCallback;
     JS_ASSERT(IS_GC_MARKING_TRACER(this));
@@ -1735,42 +1732,31 @@ GCMarker::endBufferingGrayRoots()
 }
 
 void
+GCMarker::resetBufferedGrayRoots()
+{
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
+        c->gcGrayRoots.clearAndFree();
+    grayFailed = false;
+}
+
+void
 GCMarker::markBufferedGrayRoots()
 {
     JS_ASSERT(!grayFailed);
 
-    unsigned markCount = 0;
-
-    GrayRoot *elem = grayRoots.begin();
-    GrayRoot *write = elem;
-    for (; elem != grayRoots.end(); elem++) {
+    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next()) {
+        JS_ASSERT(c->isGCMarkingGray());
+        for (GrayRoot *elem = c->gcGrayRoots.begin(); elem != c->gcGrayRoots.end(); elem++) {
 #ifdef DEBUG
-        debugPrinter = elem->debugPrinter;
-        debugPrintArg = elem->debugPrintArg;
-        debugPrintIndex = elem->debugPrintIndex;
+            debugPrinter = elem->debugPrinter;
+            debugPrintArg = elem->debugPrintArg;
+            debugPrintIndex = elem->debugPrintIndex;
 #endif
-        void *tmp = elem->thing;
-        if (static_cast<Cell *>(tmp)->compartment()->isGCMarkingGray()) {
+            void *tmp = elem->thing;
             JS_SET_TRACING_LOCATION(this, (void *)&elem->thing);
             MarkKind(this, &tmp, elem->kind);
             JS_ASSERT(tmp == elem->thing);
-            ++markCount;
-        } else {
-            if (write != elem)
-                *write = *elem;
-            ++write;
         }
-    }
-    JS_ASSERT(markCount == elem - write);
-    grayRoots.shrinkBy(elem - write);
-}
-
-void
-GCMarker::markBufferedGrayRootCompartmentsAlive()
-{
-    for (GrayRoot *elem = grayRoots.begin(); elem != grayRoots.end(); elem++) {
-        Cell *thing = static_cast<Cell *>(elem->thing);
-        thing->compartment()->maybeAlive = true;
     }
 }
 
@@ -1789,9 +1775,13 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
     root.debugPrintIndex = debugPrintIndex;
 #endif
 
-    if (!grayRoots.append(root)) {
-        grayRoots.clearAndFree();
-        grayFailed = true;
+    JSCompartment *comp = static_cast<Cell *>(thing)->compartment();
+    if (comp->isCollecting()) {
+        comp->maybeAlive = true;
+        if (!comp->gcGrayRoots.append(root)) {
+            grayFailed = true;
+            resetBufferedGrayRoots();
+        }
     }
 }
 
@@ -1805,8 +1795,10 @@ GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 size_t
 GCMarker::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
 {
-    return stack.sizeOfExcludingThis(mallocSizeOf) +
-           grayRoots.sizeOfExcludingThis(mallocSizeOf);
+    size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
+    for (CompartmentsIter c(runtime); !c.done(); c.next())
+        size += c->gcGrayRoots.sizeOfExcludingThis(mallocSizeOf);
+    return size;
 }
 
 void
@@ -2641,6 +2633,7 @@ BeginMarkPhase(JSRuntime *rt)
     }
 
     MarkRuntime(gcmarker);
+    BufferGrayRoots(gcmarker);
 
     /*
      * This code ensures that if a compartment is "dead", then it will be
@@ -2681,9 +2674,6 @@ BeginMarkPhase(JSRuntime *rt)
             c->maybeAlive = true;
     }
 
-    /* Set the maybeAlive flag based on gray roots. */
-    rt->gcMarker.markBufferedGrayRootCompartmentsAlive();
-
     /*
      * For black roots, code in gc/Marking.cpp will already have set maybeAlive
      * during MarkRuntime.
@@ -2698,7 +2688,7 @@ BeginMarkPhase(JSRuntime *rt)
     return true;
 }
 
-template <class CompartmentIter>
+template <class CompartmentIterT>
 static void
 MarkWeakReferences(JSRuntime *rt, gcstats::Phase phase)
 {
@@ -2710,7 +2700,7 @@ MarkWeakReferences(JSRuntime *rt, gcstats::Phase phase)
 
     for (;;) {
         bool markedAny = false;
-        for (CompartmentIter c(rt); !c.done(); c.next()) {
+        for (CompartmentIterT c(rt); !c.done(); c.next()) {
             markedAny |= WatchpointMap::markCompartmentIteratively(c, gcmarker);
             markedAny |= WeakMapBase::markCompartmentIteratively(c, gcmarker);
         }
@@ -3776,6 +3766,10 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
       case MARK: {
         /* Cancel any ongoing marking. */
         AutoCopyFreeListToArenas copy(rt);
+
+        rt->gcMarker.reset();
+        rt->gcMarker.stop();
+
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             if (c->isGCMarking()) {
                 c->setNeedsBarrier(false, JSCompartment::UpdateIon);
@@ -3783,9 +3777,6 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
                 ArrayBufferObject::resetArrayBufferList(c);
             }
         }
-
-        rt->gcMarker.reset();
-        rt->gcMarker.stop();
 
         rt->gcIncrementalState = NO_INCREMENTAL;
 

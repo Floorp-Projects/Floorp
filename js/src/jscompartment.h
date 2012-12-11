@@ -375,6 +375,9 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
     /* Linked list of live weakmaps in this compartment. */
     js::WeakMapBase              *gcWeakMapList;
 
+    /* This compartment's gray roots. */
+    js::Vector<js::GrayRoot, 0, js::SystemAllocPolicy> gcGrayRoots;
+
   private:
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs from
