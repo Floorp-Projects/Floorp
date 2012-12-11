@@ -43,7 +43,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsString.h"
 #include "nsIDocument.h"
-#include "nsPrintfCString.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
@@ -56,11 +55,11 @@
 #include "nsXMLContentSink.h"
 #include "nsNetUtil.h"
 #include "nsIInputStream.h"
-#include "nsContentUtils.h"
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
 #include "nsIPrincipal.h"
 #include "Element.h"
+#include "nsSVGUtils.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")
 #define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
@@ -230,7 +229,7 @@ gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
     Element *glyph = mGlyphIdMap.Get(aGlyphId);
     NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
-    return nsContentUtils::PaintSVGGlyph(glyph, aContext, aDrawMode, aObjectPaint);
+    return nsSVGUtils::PaintSVGGlyph(glyph, aContext, aDrawMode, aObjectPaint);
 }
 
 bool
@@ -240,7 +239,7 @@ gfxSVGGlyphs::GetGlyphExtents(uint32_t aGlyphId, const gfxMatrix& aSVGToAppSpace
     Element *glyph = mGlyphIdMap.Get(aGlyphId);
     NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
-    return nsContentUtils::GetSVGGlyphExtents(glyph, aSVGToAppSpace, aResult);
+    return nsSVGUtils::GetSVGGlyphExtents(glyph, aSVGToAppSpace, aResult);
 }
 
 Element *
