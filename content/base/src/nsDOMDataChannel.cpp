@@ -335,7 +335,7 @@ nsDOMDataChannel::GetSendParams(nsIVariant* aData, nsCString& aStringOut,
       uint64_t blobLen;
       rv = blob->GetSize(&blobLen);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (blobLen > PR_UINT32_MAX) {
+      if (blobLen > UINT32_MAX) {
         return NS_ERROR_FILE_TOO_BIG;
       }
       aOutgoingLength = static_cast<uint32_t>(blobLen);
