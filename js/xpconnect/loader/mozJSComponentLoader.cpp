@@ -43,7 +43,7 @@
 #include "nsIFileURL.h"
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
-#include "nsDOMBlobBuilder.h"
+#include "nsDOMFile.h"
 #include "jsprf.h"
 #include "nsJSPrincipals.h"
 // For reporting errors with the console service
@@ -245,7 +245,7 @@ File(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     nsCOMPtr<nsISupports> native;
-    rv = nsDOMMultipartFile::NewFile(getter_AddRefs(native));
+    rv = nsDOMFileFile::NewFile(getter_AddRefs(native));
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
