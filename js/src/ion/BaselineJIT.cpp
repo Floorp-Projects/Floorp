@@ -105,6 +105,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
     int maxArgc = 0;
     Value *maxArgv = NULL;
     int numActualArgs = 0;
+    RootedValue thisv(cx);
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
@@ -133,6 +134,9 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
         calleeToken = CalleeToToken(&fp->callee());
     } else {
         calleeToken = CalleeToToken(fp->script());
+        thisv = fp->thisValue();
+        maxArgc = 1;
+        maxArgv = thisv.address();
     }
 
     // Caller must construct |this| before invoking the Ion function.
