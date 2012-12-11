@@ -420,7 +420,7 @@ nsDOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
 
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aOwner);
-    if (aOwner) {
+    if (window) {
       nsCOMPtr<nsIDOMDocument> domdoc = window->GetExtantDocument();
       doc = do_QueryInterface(domdoc);
     }
