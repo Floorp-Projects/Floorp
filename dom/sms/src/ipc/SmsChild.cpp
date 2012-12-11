@@ -57,9 +57,23 @@ SmsChild::RecvNotifyReceivedMessage(const SmsMessageData& aMessageData)
 }
 
 bool
+SmsChild::RecvNotifySendingMessage(const SmsMessageData& aMessageData)
+{
+  NotifyObserversWithSmsMessage(kSmsSendingObserverTopic, aMessageData);
+  return true;
+}
+
+bool
 SmsChild::RecvNotifySentMessage(const SmsMessageData& aMessageData)
 {
   NotifyObserversWithSmsMessage(kSmsSentObserverTopic, aMessageData);
+  return true;
+}
+
+bool
+SmsChild::RecvNotifyFailedMessage(const SmsMessageData& aMessageData)
+{
+  NotifyObserversWithSmsMessage(kSmsFailedObserverTopic, aMessageData);
   return true;
 }
 
