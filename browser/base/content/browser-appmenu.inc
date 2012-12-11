@@ -309,10 +309,8 @@
                       disabled="true"/>
 #endif
             <menuitem id="appmenu_restoreLastSession"
-                      class="restoreLastSession"
                       label="&historyRestoreLastSession.label;"
-                      oncommand="restoreLastSession();"
-                      disabled="true"/>
+                      command="Browser:RestoreLastSession"/>
             <menu id="appmenu_recentlyClosedTabsMenu"
                   class="recentlyClosedTabsMenu"
                   label="&historyUndoMenu.label;"
