@@ -19,6 +19,71 @@ if sys.platform == "win32":
 SIMPLE_PASSING_TEST = "function run_test() { do_check_true(true); }"
 SIMPLE_FAILING_TEST = "function run_test() { do_check_true(false); }"
 
+ADD_TEST_SIMPLE = '''
+function run_test() { run_next_test(); }
+
+add_test(function test_simple() {
+  do_check_true(true);
+  run_next_test();
+});
+'''
+
+ADD_TEST_FAILING = '''
+function run_test() { run_next_test(); }
+
+add_test(function test_failing() {
+  do_check_true(false);
+  run_next_test();
+});
+'''
+
+ADD_TASK_SINGLE = '''
+Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+
+function run_test() { run_next_test(); }
+
+add_task(function test_task() {
+  yield Promise.resolve(true);
+  yield Promise.resolve(false);
+});
+'''
+
+ADD_TASK_MULTIPLE = '''
+Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+
+function run_test() { run_next_test(); }
+
+add_task(function test_task() {
+  yield Promise.resolve(true);
+});
+
+add_task(function test_2() {
+  yield Promise.resolve(true);
+});
+'''
+
+ADD_TASK_REJECTED = '''
+Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+
+function run_test() { run_next_test(); }
+
+add_task(function test_failing() {
+  yield Promise.reject(new Error("I fail."));
+});
+'''
+
+ADD_TASK_FAILURE_INSIDE = '''
+Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+
+function run_test() { run_next_test(); }
+
+add_task(function test() {
+  let result = yield Promise.resolve(false);
+
+  do_check_true(result);
+});
+'''
+
 class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
@@ -211,6 +276,81 @@ tail =
         self.assertEquals(0, self.x.todoCount)
         self.assertInLog("TEST-UNEXPECTED-FAIL")
         self.assertNotInLog("TEST-PASS")
+
+    def testAddTestSimple(self):
+        """
+        Ensure simple add_test() works.
+        """
+        self.writeFile("test_add_test_simple.js", ADD_TEST_SIMPLE)
+        self.writeManifest(["test_add_test_simple.js"])
+
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+
+    def testAddTestFailing(self):
+        """
+        Ensure add_test() with a failing test is reported.
+        """
+        self.writeFile("test_add_test_failing.js", ADD_TEST_FAILING)
+        self.writeManifest(["test_add_test_failing.js"])
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(1, self.x.failCount)
+
+    def testAddTaskTestSingle(self):
+        """
+        Ensure add_test_task() with a single passing test works.
+        """
+        self.writeFile("test_add_task_simple.js", ADD_TASK_SINGLE)
+        self.writeManifest(["test_add_task_simple.js"])
+
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+
+    def testAddTaskTestMultiple(self):
+        """
+        Ensure multiple calls to add_test_task() work as expected.
+        """
+        self.writeFile("test_add_task_multiple.js",
+            ADD_TASK_MULTIPLE)
+        self.writeManifest(["test_add_task_multiple.js"])
+
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+
+    def testAddTaskTestRejected(self):
+        """
+        Ensure rejected task reports as failure.
+        """
+        self.writeFile("test_add_task_rejected.js",
+            ADD_TASK_REJECTED)
+        self.writeManifest(["test_add_task_rejected.js"])
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(1, self.x.failCount)
+
+    def testAddTaskTestFailureInside(self):
+        """
+        Ensure tests inside task are reported as failures.
+        """
+        self.writeFile("test_add_task_failure_inside.js",
+            ADD_TASK_FAILURE_INSIDE)
+        self.writeManifest(["test_add_task_failure_inside.js"])
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(1, self.x.failCount)
 
     def testMissingHeadFile(self):
         """
