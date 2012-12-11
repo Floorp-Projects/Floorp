@@ -24,8 +24,6 @@ SRCS_IN_OBJDIR	= 1
 
 EXPORTS_NAMESPACES = mtransport
 
-DEFINES += -DSIGSLOT_USE_POSIX_THREADS=1
-
 EXPORTS_mtransport = \
   ../dtlsidentity.h \
   ../nricectx.h \
