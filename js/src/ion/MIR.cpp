@@ -718,6 +718,12 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
     return this;
 }
 
+bool
+MAbs::fallible() const
+{
+    return !range() || !range()->isFinite();
+}
+
 MDefinition *
 MDiv::foldsTo(bool useValueNumbers)
 {
