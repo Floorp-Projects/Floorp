@@ -204,6 +204,11 @@ RilClient::OpenSocket()
         return false;
     }
 
+    // Select non-blocking IO.
+    if (-1 == fcntl(skt.get(), F_SETFL, O_NONBLOCK)) {
+        return false;
+    }
+
     if (connect(skt.get(), (struct sockaddr *) &addr, alen) < 0) {
 #if defined(MOZ_WIDGET_GONK)
         LOG("Cannot open socket for RIL!\n");
@@ -223,10 +228,6 @@ RilClient::OpenSocket()
         return false;
     }
 
-    // Select non-blocking IO.
-    if (-1 == fcntl(skt.get(), F_SETFL, O_NONBLOCK)) {
-        return false;
-    }
     if (!mIOLoop->WatchFileDescriptor(skt.get(),
                                       true,
                                       MessageLoopForIO::WATCH_READ,
