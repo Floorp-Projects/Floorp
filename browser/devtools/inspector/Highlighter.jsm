@@ -139,8 +139,13 @@ Highlighter.prototype = {
 
     this.onToolSelected = function(event, id) {
       if (id != "inspector") {
+        this.chromeWin.clearTimeout(this.pageEventsMuter);
+        this.detachMouseListeners();
         this.hide();
       } else {
+        if (!this.locked) {
+          this.attachMouseListeners();
+        }
         this.show();
       }
     }.bind(this);
