@@ -291,6 +291,8 @@ public:
     /** Return the DPI of the widget this TabChild draws to. */
     void GetDPI(float* aDPI);
 
+    gfxSize GetZoom() { return mLastMetrics.mZoom; }
+
     void SetBackgroundColor(const nscolor& aColor);
 
     void NotifyPainted();
