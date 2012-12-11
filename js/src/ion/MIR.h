@@ -2275,6 +2275,7 @@ class MAbs
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }
+    bool fallible() const;
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
