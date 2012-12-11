@@ -99,7 +99,8 @@ endif
 
 # Put a useful .gdbinit in the bin directory, to be picked up automatically
 # by GDB when we debug executables there.
-GDBINIT_FILES := .gdbinit
+# NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
+GDBINIT_FILES := $(topsrcdir)/.gdbinit
 GDBINIT_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += GDBINIT
 
