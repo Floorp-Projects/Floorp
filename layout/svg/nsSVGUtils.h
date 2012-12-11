@@ -10,6 +10,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "gfxFont.h"
 #include "gfxMatrix.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
@@ -203,6 +204,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterProperty, NS_ISVGFILTERPROPERTY_IID)
 class nsSVGUtils
 {
 public:
+  typedef mozilla::dom::Element Element;
 
   static void Init();
 
@@ -631,6 +633,28 @@ public:
    * property on the element.
    */
   static uint16_t GetGeometryHitTestFlags(nsIFrame* aFrame);
+
+  /**
+   * Render a SVG glyph.
+   * @param aElement the SVG glyph element to render
+   * @param aContext the thebes aContext to draw to
+   * @param aDrawMode fill or stroke or both (see gfxFont::DrawMode)
+   * @return true if rendering succeeded
+   */
+  static bool PaintSVGGlyph(Element* aElement, gfxContext* aContext,
+                            gfxFont::DrawMode aDrawMode,
+                            gfxTextObjectPaint* aObjectPaint);
+  /**
+   * Get the extents of a SVG glyph.
+   * @param aElement the SVG glyph element
+   * @param aSVGToAppSpace the matrix mapping the SVG glyph space to the
+   *   target context space
+   * @param aResult the result (valid when true is returned)
+   * @return true if calculating the extents succeeded
+   */
+  static bool GetSVGGlyphExtents(Element* aElement,
+                                 const gfxMatrix& aSVGToAppSpace,
+                                 gfxRect* aResult);
 };
 
 #endif
