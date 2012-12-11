@@ -365,7 +365,8 @@ ConvertArgsToArray(nsISupports* aArguments)
     NS_ENSURE_TRUE(mutableArray, NULL);
 
     for (uint32_t i = 0; i < argc; i++) {
-      nsCOMPtr<nsISupports> elt = dont_AddRef(supArray->ElementAt(i));
+      nsCOMPtr<nsISupports> elt;
+      supArray->GetElementAt(i, getter_AddRefs(elt));
       nsresult rv = mutableArray->AppendElement(elt, /* aWeak = */ false);
       NS_ENSURE_SUCCESS(rv, NULL);
     }
