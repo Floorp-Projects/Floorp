@@ -59,9 +59,6 @@ public class testBookmarksTab extends BaseTest {
         View child;
         list = getBookmarksList();
 
-        // Clear VKB so that list is not obscured
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-
         mSolo.waitForText(url);
         mAsserter.ok(list != null, "checking that bookmarks list exists", list.toString());
 
@@ -107,8 +104,6 @@ public class testBookmarksTab extends BaseTest {
 
     private void testContextMenu(String url) {
         list = getBookmarksList();
-        // Clear VKB so that list is not obscured
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
         // wait for the bookmarks list to be populated
