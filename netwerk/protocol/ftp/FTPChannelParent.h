@@ -10,7 +10,6 @@
 
 #include "mozilla/net/PFTPChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
-#include "mozilla/net/NeckoParent.h"
 #include "nsIParentChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
@@ -31,14 +30,15 @@ public:
   NS_DECL_NSIPARENTCHANNEL
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus);
+  FTPChannelParent();
   virtual ~FTPChannelParent();
 
 protected:
   virtual bool RecvAsyncOpen(const URIParams& uri,
                              const uint64_t& startPos,
                              const nsCString& entityID,
-                             const OptionalInputStreamParams& uploadStream) MOZ_OVERRIDE;
+                             const OptionalInputStreamParams& uploadStream,
+                             const IPC::SerializedLoadContext& loadContext) MOZ_OVERRIDE;
   virtual bool RecvConnectChannel(const uint32_t& channelId) MOZ_OVERRIDE;
   virtual bool RecvCancel(const nsresult& status) MOZ_OVERRIDE;
   virtual bool RecvSuspend() MOZ_OVERRIDE;
@@ -51,8 +51,6 @@ protected:
   bool mIPCClosed;
 
   nsCOMPtr<nsILoadContext> mLoadContext;
-
-  PBOverrideStatus mPBOverride;
 };
 
 } // namespace net

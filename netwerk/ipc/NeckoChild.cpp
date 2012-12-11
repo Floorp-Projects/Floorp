@@ -14,22 +14,17 @@
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
-#include "mozilla/Preferences.h"
 
 using mozilla::dom::TCPSocketChild;
 
 namespace mozilla {
 namespace net {
 
-static bool gDisableIPCSecurity = false;
-static const char kPrefDisableIPCSecurity[] = "network.disable.ipc.security";
-
 PNeckoChild *gNeckoChild = nullptr;
 
 // C++ file contents
 NeckoChild::NeckoChild()
 {
-  Preferences::AddBoolVarCache(&gDisableIPCSecurity, kPrefDisableIPCSecurity);
 }
 
 NeckoChild::~NeckoChild()
@@ -85,8 +80,7 @@ NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
 }
 
 PFTPChannelChild*
-NeckoChild::AllocPFTPChannel(PBrowserChild* aBrowser,
-                             const SerializedLoadContext& aSerialized)
+NeckoChild::AllocPFTPChannel()
 {
   // We don't allocate here: see FTPChannelChild::AsyncOpen()
   NS_RUNTIMEABORT("AllocPFTPChannel should not be called");
@@ -140,8 +134,7 @@ NeckoChild::DeallocPWyciwygChannel(PWyciwygChannelChild* channel)
 }
 
 PWebSocketChild*
-NeckoChild::AllocPWebSocket(PBrowserChild* browser,
-                            const SerializedLoadContext& aSerialized)
+NeckoChild::AllocPWebSocket(PBrowserChild* browser)
 {
   NS_NOTREACHED("AllocPWebSocket should not be called");
   return nullptr;
