@@ -394,7 +394,7 @@
  * Variables and properties searching
  */
 
-#variables .devtools-searchinput {
+.variables-searchinput.devtools-searchinput {
   min-height: 24px;
 }
 
