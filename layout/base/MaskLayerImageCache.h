@@ -130,16 +130,14 @@ public:
    */
   struct MaskLayerImageKey
   {
-    MaskLayerImageKey(layers::LayersBackend aBackend)
-      : mBackend(aBackend)
-      , mLayerCount(0)
+    MaskLayerImageKey()
+      : mLayerCount(0)
       , mRoundedClipRects()
     {
       MOZ_COUNT_CTOR(MaskLayerImageKey);
     }
     MaskLayerImageKey(const MaskLayerImageKey& aKey)
-      : mBackend(aKey.mBackend)
-      , mLayerCount(aKey.mLayerCount)
+      : mLayerCount(aKey.mLayerCount)
       , mRoundedClipRects(aKey.mRoundedClipRects)
     {
       MOZ_COUNT_CTOR(MaskLayerImageKey);
@@ -164,7 +162,6 @@ public:
       for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
         hash = AddToHash(hash, mRoundedClipRects[i].Hash());
       }
-      hash = AddToHash(hash, mBackend);
 
       return hash;
     }
@@ -174,7 +171,6 @@ public:
       return mRoundedClipRects == aOther.mRoundedClipRects;
     }
 
-    layers::LayersBackend mBackend;
     mutable uint32_t mLayerCount;
     nsTArray<PixelRoundedRect> mRoundedClipRects;
   };

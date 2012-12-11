@@ -3765,7 +3765,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   imageTransform.Scale(mParameters.mXScale, mParameters.mYScale);
 
   nsAutoPtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
-    new MaskLayerImageCache::MaskLayerImageKey(aLayer->Manager()->GetBackendType()));
+    new MaskLayerImageCache::MaskLayerImageKey());
 
   // copy and transform the rounded rects
   for (uint32_t i = 0; i < newData.mRoundedClipRects.Length(); ++i) {
