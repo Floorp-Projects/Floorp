@@ -107,6 +107,9 @@ var shell = {
       return;
     }
 
+    // purge the queue.
+    this.CrashSubmit.pruneSavedDumps();
+
     try {
       // Check if we should automatically submit this crash.
       if (Services.prefs.getBoolPref("app.reportCrashes")) {
@@ -135,7 +138,7 @@ var shell = {
           && network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
         shell.CrashSubmit.submit(aCrashID);
 
-        // purge the queue.
+        // submit the pending queue.
         let pending = shell.CrashSubmit.pendingIDs();
         for (let crashid of pending) {
           shell.CrashSubmit.submit(crashid);
