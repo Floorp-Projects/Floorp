@@ -282,8 +282,8 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
     if (shouldLog) {
       nsCString message;
       message.AppendLiteral("Performance warning: Async animation of geometric property '");
-      message.Append(aProperty);
-      message.AppendLiteral(" is disabled");
+      message.Append(nsCSSProps::GetStringValue(aProperty));
+      message.AppendLiteral("' is disabled");
       LogAsyncAnimationFailure(message, aElement);
     }
     return false;
@@ -350,6 +350,7 @@ CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
     }
     aMessage.AppendLiteral("]");
   }
+  aMessage.AppendLiteral("\n");
   printf_stderr(aMessage.get());
 }
 
