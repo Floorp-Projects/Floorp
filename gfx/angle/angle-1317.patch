@@ -1,0 +1,732 @@
+# HG changeset patch
+# Parent ef5d80327785b28df0bd778acc86f4987ba5a678
+
+diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
+--- a/gfx/angle/Makefile.in
++++ b/gfx/angle/Makefile.in
+@@ -71,16 +71,17 @@ CPPSRCS = \
+         ForLoopUnroll.cpp \
+         MapLongVariableNames.cpp \
+         spooky.cpp \
+         BuiltInFunctionEmulator.cpp \
+         Input.cpp \
+         Lexer.cpp \
+         Preprocessor.cpp \
+         Token.cpp \
++        VariablePacker.cpp \
+         $(NULL)
+ 
+ # flex/yacc generated files
+ CPPSRCS += \
+         glslang_lex.cpp \
+         glslang_tab.cpp \
+         $(NULL)
+ 
+diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
+--- a/gfx/angle/include/GLSLANG/ShaderLang.h
++++ b/gfx/angle/include/GLSLANG/ShaderLang.h
+@@ -137,17 +137,20 @@ typedef enum {
+   SH_TIMING_RESTRICTIONS = 0x0200,
+     
+   // This flag prints the dependency graph that is used to enforce timing
+   // restrictions on fragment shaders.
+   // This flag only has an effect if all of the following are true:
+   // - The shader spec is SH_WEBGL_SPEC.
+   // - The compile options contain the SH_TIMING_RESTRICTIONS flag.
+   // - The shader type is SH_FRAGMENT_SHADER.
+-  SH_DEPENDENCY_GRAPH = 0x0400
++  SH_DEPENDENCY_GRAPH = 0x0400,
++
++  // Enforce the GLSL 1.017 Appendix A section 7 packing restrictions.
++  SH_ENFORCE_PACKING_RESTRICTIONS = 0x0800,
+ } ShCompileOptions;
+ 
+ //
+ // Driver must call this first, once, before doing any other
+ // compiler operations.
+ // If the function succeeds, the return value is nonzero, else zero.
+ //
+ COMPILER_EXPORT int ShInitialize();
+diff --git a/gfx/angle/src/compiler/Compiler.cpp b/gfx/angle/src/compiler/Compiler.cpp
+--- a/gfx/angle/src/compiler/Compiler.cpp
++++ b/gfx/angle/src/compiler/Compiler.cpp
+@@ -9,16 +9,17 @@
+ #include "compiler/ForLoopUnroll.h"
+ #include "compiler/Initialize.h"
+ #include "compiler/InitializeParseContext.h"
+ #include "compiler/MapLongVariableNames.h"
+ #include "compiler/ParseHelper.h"
+ #include "compiler/RenameFunction.h"
+ #include "compiler/ShHandle.h"
+ #include "compiler/ValidateLimitations.h"
++#include "compiler/VariablePacker.h"
+ #include "compiler/depgraph/DependencyGraph.h"
+ #include "compiler/depgraph/DependencyGraphOutput.h"
+ #include "compiler/timing/RestrictFragmentShaderTiming.h"
+ #include "compiler/timing/RestrictVertexShaderTiming.h"
+ 
+ bool isWebGLBasedSpec(ShShaderSpec spec)
+ {
+      return spec == SH_WEBGL_SPEC || spec == SH_CSS_SHADERS_SPEC;
+@@ -108,16 +109,19 @@ TCompiler::TCompiler(ShShaderType type, 
+ TCompiler::~TCompiler()
+ {
+     ASSERT(longNameMap);
+     longNameMap->Release();
+ }
+ 
+ bool TCompiler::Init(const ShBuiltInResources& resources)
+ {
++    maxUniformVectors = (shaderType == SH_VERTEX_SHADER) ?
++        resources.MaxVertexUniformVectors :
++        resources.MaxFragmentUniformVectors;
+     TScopedPoolAllocator scopedAlloc(&allocator, false);
+ 
+     // Generate built-in symbol table.
+     if (!InitBuiltInSymbolTable(resources))
+         return false;
+     InitExtensionBehavior(resources, extensionBehavior);
+ 
+     return true;
+@@ -187,18 +191,25 @@ bool TCompiler::compile(const char* cons
+             builtInFunctionEmulator.MarkBuiltInFunctionsForEmulation(root);
+ 
+         // Call mapLongVariableNames() before collectAttribsUniforms() so in
+         // collectAttribsUniforms() we already have the mapped symbol names and
+         // we could composite mapped and original variable names.
+         if (success && (compileOptions & SH_MAP_LONG_VARIABLE_NAMES))
+             mapLongVariableNames(root);
+ 
+-        if (success && (compileOptions & SH_ATTRIBUTES_UNIFORMS))
++        if (success && (compileOptions & SH_ATTRIBUTES_UNIFORMS)) {
+             collectAttribsUniforms(root);
++            if (compileOptions & SH_ENFORCE_PACKING_RESTRICTIONS) {
++                success = enforcePackingRestrictions();
++                if (!success) {
++                    infoSink.info.message(EPrefixError, "too many uniforms");
++                }
++            }
++        }
+ 
+         if (success && (compileOptions & SH_INTERMEDIATE_TREE))
+             intermediate.outputTree(root);
+ 
+         if (success && (compileOptions & SH_OBJECT_CODE))
+             translate(root);
+     }
+ 
+@@ -305,16 +316,22 @@ bool TCompiler::enforceVertexShaderTimin
+ }
+ 
+ void TCompiler::collectAttribsUniforms(TIntermNode* root)
+ {
+     CollectAttribsUniforms collect(attribs, uniforms);
+     root->traverse(&collect);
+ }
+ 
++bool TCompiler::enforcePackingRestrictions()
++{
++    VariablePacker packer;
++    return packer.CheckVariablesWithinPackingLimits(maxUniformVectors, uniforms);
++}
++
+ void TCompiler::mapLongVariableNames(TIntermNode* root)
+ {
+     ASSERT(longNameMap);
+     MapLongVariableNames map(longNameMap);
+     root->traverse(&map);
+ }
+ 
+ int TCompiler::getMappedNameMaxLength() const
+diff --git a/gfx/angle/src/compiler/ShHandle.h b/gfx/angle/src/compiler/ShHandle.h
+--- a/gfx/angle/src/compiler/ShHandle.h
++++ b/gfx/angle/src/compiler/ShHandle.h
+@@ -83,32 +83,37 @@ protected:
+     // functionality mandated in GLSL 1.0 spec Appendix A.
+     bool validateLimitations(TIntermNode* root);
+     // Collect info for all attribs and uniforms.
+     void collectAttribsUniforms(TIntermNode* root);
+     // Map long variable names into shorter ones.
+     void mapLongVariableNames(TIntermNode* root);
+     // Translate to object code.
+     virtual void translate(TIntermNode* root) = 0;
++    // Returns true if, after applying the packing rules in the GLSL 1.017 spec
++    // Appendix A, section 7, the shader does not use too many uniforms.
++    bool enforcePackingRestrictions();
+     // Returns true if the shader passes the restrictions that aim to prevent timing attacks.
+     bool enforceTimingRestrictions(TIntermNode* root, bool outputGraph);
+     // Returns true if the shader does not use samplers.
+     bool enforceVertexShaderTimingRestrictions(TIntermNode* root);
+     // Returns true if the shader does not use sampler dependent values to affect control 
+     // flow or in operations whose time can depend on the input values.
+     bool enforceFragmentShaderTimingRestrictions(const TDependencyGraph& graph);
+     // Get built-in extensions with default behavior.
+     const TExtensionBehavior& getExtensionBehavior() const;
+ 
+     const BuiltInFunctionEmulator& getBuiltInFunctionEmulator() const;
+ 
+ private:
+     ShShaderType shaderType;
+     ShShaderSpec shaderSpec;
+ 
++    int maxUniformVectors;
++
+     // Built-in symbol table for the given language, spec, and resources.
+     // It is preserved from compile-to-compile.
+     TSymbolTable symbolTable;
+     // Built-in extensions with default behavior.
+     TExtensionBehavior extensionBehavior;
+ 
+     BuiltInFunctionEmulator builtInFunctionEmulator;
+ 
+diff --git a/gfx/angle/src/compiler/VariableInfo.cpp b/gfx/angle/src/compiler/VariableInfo.cpp
+--- a/gfx/angle/src/compiler/VariableInfo.cpp
++++ b/gfx/angle/src/compiler/VariableInfo.cpp
+@@ -133,16 +133,26 @@ void getUserDefinedVariableInfo(const TT
+         const TType* fieldType = (*structure)[i].type;
+         getVariableInfo(*fieldType,
+                         name + "." + fieldType->getFieldName(),
+                         mappedName + "." + fieldType->getFieldName(),
+                         infoList);
+     }
+ }
+ 
++TVariableInfo::TVariableInfo()
++{
++}
++
++TVariableInfo::TVariableInfo(ShDataType type, int size)
++    : type(type),
++      size(size)
++{
++}
++
+ CollectAttribsUniforms::CollectAttribsUniforms(TVariableInfoList& attribs,
+                                                TVariableInfoList& uniforms)
+     : mAttribs(attribs),
+       mUniforms(uniforms)
+ {
+ }
+ 
+ // We are only interested in attribute and uniform variable declaration.
+diff --git a/gfx/angle/src/compiler/VariableInfo.h b/gfx/angle/src/compiler/VariableInfo.h
+--- a/gfx/angle/src/compiler/VariableInfo.h
++++ b/gfx/angle/src/compiler/VariableInfo.h
+@@ -8,16 +8,19 @@
+ #define COMPILER_VARIABLE_INFO_H_
+ 
+ #include "GLSLANG/ShaderLang.h"
+ #include "compiler/intermediate.h"
+ 
+ // Provides information about a variable.
+ // It is currently being used to store info about active attribs and uniforms.
+ struct TVariableInfo {
++    TVariableInfo(ShDataType type, int size);
++    TVariableInfo();
++
+     TPersistString name;
+     TPersistString mappedName;
+     ShDataType type;
+     int size;
+ };
+ typedef std::vector<TVariableInfo> TVariableInfoList;
+ 
+ // Traverses intermediate tree to collect all attributes and uniforms.
+diff --git a/gfx/angle/src/compiler/VariablePacker.cpp b/gfx/angle/src/compiler/VariablePacker.cpp
+new file mode 100644
+--- /dev/null
++++ b/gfx/angle/src/compiler/VariablePacker.cpp
+@@ -0,0 +1,297 @@
++//
++// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++//
++#include "compiler/VariablePacker.h"
++
++#include <algorithm>
++#include "compiler/ShHandle.h"
++
++namespace {
++int GetSortOrder(ShDataType type)
++{
++    switch (type) {
++        case SH_FLOAT_MAT4:
++            return 0;
++        case SH_FLOAT_MAT2:
++            return 1;
++        case SH_FLOAT_VEC4:
++        case SH_INT_VEC4:
++        case SH_BOOL_VEC4:
++            return 2;
++        case SH_FLOAT_MAT3:
++            return 3;
++        case SH_FLOAT_VEC3:
++        case SH_INT_VEC3:
++        case SH_BOOL_VEC3:
++            return 4;
++        case SH_FLOAT_VEC2:
++        case SH_INT_VEC2:
++        case SH_BOOL_VEC2:
++            return 5;
++        case SH_FLOAT:
++        case SH_INT:
++        case SH_BOOL:
++        case SH_SAMPLER_2D:
++        case SH_SAMPLER_CUBE:
++        case SH_SAMPLER_EXTERNAL_OES:
++        case SH_SAMPLER_2D_RECT_ARB:
++            return 6;
++        default:
++            ASSERT(false);
++            return 7;
++    }
++}
++}    // namespace
++
++int VariablePacker::GetNumComponentsPerRow(ShDataType type)
++{
++    switch (type) {
++        case SH_FLOAT_MAT4:
++        case SH_FLOAT_MAT2:
++        case SH_FLOAT_VEC4:
++        case SH_INT_VEC4:
++        case SH_BOOL_VEC4:
++            return 4;
++        case SH_FLOAT_MAT3:
++        case SH_FLOAT_VEC3:
++        case SH_INT_VEC3:
++        case SH_BOOL_VEC3:
++            return 3;
++        case SH_FLOAT_VEC2:
++        case SH_INT_VEC2:
++        case SH_BOOL_VEC2:
++            return 2;
++        case SH_FLOAT:
++        case SH_INT:
++        case SH_BOOL:
++        case SH_SAMPLER_2D:
++        case SH_SAMPLER_CUBE:
++        case SH_SAMPLER_EXTERNAL_OES:
++        case SH_SAMPLER_2D_RECT_ARB:
++            return 1;
++        default:
++            ASSERT(false);
++            return 5;
++    }
++}
++
++int VariablePacker::GetNumRows(ShDataType type)
++{
++    switch (type) {
++        case SH_FLOAT_MAT4:
++            return 4;
++        case SH_FLOAT_MAT3:
++            return 3;
++        case SH_FLOAT_MAT2:
++            return 1;
++        case SH_FLOAT_VEC4:
++        case SH_INT_VEC4:
++        case SH_BOOL_VEC4:
++        case SH_FLOAT_VEC3:
++        case SH_INT_VEC3:
++        case SH_BOOL_VEC3:
++        case SH_FLOAT_VEC2:
++        case SH_INT_VEC2:
++        case SH_BOOL_VEC2:
++        case SH_FLOAT:
++        case SH_INT:
++        case SH_BOOL:
++        case SH_SAMPLER_2D:
++        case SH_SAMPLER_CUBE:
++        case SH_SAMPLER_EXTERNAL_OES:
++        case SH_SAMPLER_2D_RECT_ARB:
++            return 1;
++        default:
++            ASSERT(false);
++            return 100000;
++    }
++}
++
++struct TVariableInfoComparer {
++    bool operator()(const TVariableInfo& lhs, const TVariableInfo& rhs) const
++    {
++        int lhsSortOrder = GetSortOrder(lhs.type);
++        int rhsSortOrder = GetSortOrder(rhs.type);
++        if (lhsSortOrder != rhsSortOrder) {
++            return lhsSortOrder < rhsSortOrder;
++        }
++        // Sort by largest first.
++        return lhs.size > rhs.size;
++    }
++};
++
++unsigned VariablePacker::makeColumnFlags(int column, int numComponentsPerRow)
++{
++    return ((kColumnMask << (kNumColumns - numComponentsPerRow)) &
++                    kColumnMask) >> column;
++}
++
++void VariablePacker::fillColumns(int topRow, int numRows, int column, int numComponentsPerRow)
++{
++    unsigned columnFlags = makeColumnFlags(column, numComponentsPerRow);
++    for (int r = 0; r < numRows; ++r) {
++        int row = topRow + r;
++        ASSERT((rows_[row] & columnFlags) == 0);
++        rows_[row] |= columnFlags;
++    }
++}
++
++bool VariablePacker::searchColumn(int column, int numRows, int* destRow, int* destSize)
++{
++    ASSERT(destRow);
++
++    for (; topNonFullRow_ < maxRows_ && rows_[topNonFullRow_] == kColumnMask;
++         ++topNonFullRow_) {
++    }
++
++    for (; bottomNonFullRow_ >= 0 && rows_[bottomNonFullRow_] == kColumnMask;
++         --bottomNonFullRow_) {
++    }
++
++    if (bottomNonFullRow_ - topNonFullRow_ + 1 < numRows) {
++        return false;
++    }
++
++    unsigned columnFlags = makeColumnFlags(column, 1);
++    int topGoodRow = 0;
++    int smallestGoodTop = -1;
++    int smallestGoodSize = maxRows_ + 1;
++    int bottomRow = bottomNonFullRow_ + 1;
++    bool found = false;
++    for (int row = topNonFullRow_; row <= bottomRow; ++row) {
++        bool rowEmpty = row < bottomRow ? ((rows_[row] & columnFlags) == 0) : false;
++        if (rowEmpty) {
++            if (!found) {
++                topGoodRow = row;
++                found = true;
++            }
++        } else {
++            if (found) {
++                int size = row - topGoodRow;
++                if (size >= numRows && size < smallestGoodSize) {
++                    smallestGoodSize = size;
++                    smallestGoodTop = topGoodRow;
++                }
++            }
++            found = false;
++        }
++    }
++    if (smallestGoodTop < 0) {
++        return false;
++    }
++
++    *destRow = smallestGoodTop;
++    if (destSize) {
++        *destSize = smallestGoodSize;
++    }
++    return true;
++}
++
++bool VariablePacker::CheckVariablesWithinPackingLimits(int maxVectors, const TVariableInfoList& in_variables)
++{
++    ASSERT(maxVectors > 0);
++    maxRows_ = maxVectors;
++    topNonFullRow_ = 0;
++    bottomNonFullRow_ = maxRows_ - 1;
++    TVariableInfoList variables(in_variables);
++
++    // As per GLSL 1.017 Appendix A, Section 7 variables are packed in specific
++    // order by type, then by size of array, largest first.
++    std::sort(variables.begin(), variables.end(), TVariableInfoComparer());
++    rows_.clear();
++    rows_.resize(maxVectors, 0);
++
++    // Packs the 4 column variables.
++    size_t ii = 0;
++    for (; ii < variables.size(); ++ii) {
++        const TVariableInfo& variable = variables[ii];
++        if (GetNumComponentsPerRow(variable.type) != 4) {
++            break;
++        }
++        topNonFullRow_ += GetNumRows(variable.type) * variable.size;
++    }
++
++    if (topNonFullRow_ > maxRows_) {
++        return false;
++    }
++
++    // Packs the 3 column variables.
++    int num3ColumnRows = 0;
++    for (; ii < variables.size(); ++ii) {
++        const TVariableInfo& variable = variables[ii];
++        if (GetNumComponentsPerRow(variable.type) != 3) {
++            break;
++        }
++        num3ColumnRows += GetNumRows(variable.type) * variable.size;
++    }
++
++    if (topNonFullRow_ + num3ColumnRows > maxRows_) {
++        return false;
++    }
++
++    fillColumns(topNonFullRow_, num3ColumnRows, 0, 3);
++
++    // Packs the 2 column variables.
++    int top2ColumnRow = topNonFullRow_ + num3ColumnRows;
++    int twoColumnRowsAvailable = maxRows_ - top2ColumnRow;
++    int rowsAvailableInColumns01 = twoColumnRowsAvailable;
++    int rowsAvailableInColumns23 = twoColumnRowsAvailable;
++    for (; ii < variables.size(); ++ii) {
++        const TVariableInfo& variable = variables[ii];
++        if (GetNumComponentsPerRow(variable.type) != 2) {
++            break;
++        }
++        int numRows = GetNumRows(variable.type) * variable.size;
++        if (numRows <= rowsAvailableInColumns01) {
++            rowsAvailableInColumns01 -= numRows;
++        } else if (numRows <= rowsAvailableInColumns23) {
++            rowsAvailableInColumns23 -= numRows;
++        } else {
++            return false;
++        }
++    }
++
++    int numRowsUsedInColumns01 =
++        twoColumnRowsAvailable - rowsAvailableInColumns01;
++    int numRowsUsedInColumns23 =
++        twoColumnRowsAvailable - rowsAvailableInColumns23;
++    fillColumns(top2ColumnRow, numRowsUsedInColumns01, 0, 2);
++    fillColumns(maxRows_ - numRowsUsedInColumns23, numRowsUsedInColumns23,
++                2, 2);
++
++    // Packs the 1 column variables.
++    for (; ii < variables.size(); ++ii) {
++        const TVariableInfo& variable = variables[ii];
++        ASSERT(1 == GetNumComponentsPerRow(variable.type));
++        int numRows = GetNumRows(variable.type) * variable.size;
++        int smallestColumn = -1;
++        int smallestSize = maxRows_ + 1;
++        int topRow = -1;
++        for (int column = 0; column < kNumColumns; ++column) {
++            int row = 0;
++            int size = 0;
++            if (searchColumn(column, numRows, &row, &size)) {
++                if (size < smallestSize) {
++                    smallestSize = size;
++                    smallestColumn = column;
++                    topRow = row;
++                }
++            }
++        }
++
++        if (smallestColumn < 0) {
++            return false;
++        }
++
++        fillColumns(topRow, numRows, smallestColumn, 1);
++    }
++
++    ASSERT(variables.size() == ii);
++
++    return true;
++}
++
++
++
+diff --git a/gfx/angle/src/compiler/VariablePacker.h b/gfx/angle/src/compiler/VariablePacker.h
+new file mode 100644
+--- /dev/null
++++ b/gfx/angle/src/compiler/VariablePacker.h
+@@ -0,0 +1,41 @@
++//
++// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++//
++
++#ifndef _VARIABLEPACKER_INCLUDED_
++#define _VARIABLEPACKER_INCLUDED_
++
++#include <vector>
++#include "compiler/ShHandle.h"
++
++class VariablePacker {
++ public:
++    // Returns true if the passed in variables pack in maxVectors following
++    // the packing rules from the GLSL 1.017 spec, Appendix A, section 7.
++    bool CheckVariablesWithinPackingLimits(
++        int maxVectors,
++        const TVariableInfoList& in_variables);
++
++    // Gets how many components in a row a data type takes.
++    static int GetNumComponentsPerRow(ShDataType type);
++
++    // Gets how many rows a data type takes.
++    static int GetNumRows(ShDataType type);
++
++ private:
++    static const int kNumColumns = 4;
++    static const unsigned kColumnMask = (1 << kNumColumns) - 1;
++
++    unsigned makeColumnFlags(int column, int numComponentsPerRow);
++    void fillColumns(int topRow, int numRows, int column, int numComponentsPerRow);
++    bool searchColumn(int column, int numRows, int* destRow, int* destSize);
++
++    int topNonFullRow_;
++    int bottomNonFullRow_;
++    int maxRows_;
++    std::vector<unsigned> rows_;
++};
++
++#endif // _VARIABLEPACKER_INCLUDED_
+diff --git a/gfx/angle/src/libGLESv2/Makefile.in b/gfx/angle/src/libGLESv2/Makefile.in
+--- a/gfx/angle/src/libGLESv2/Makefile.in
++++ b/gfx/angle/src/libGLESv2/Makefile.in
+@@ -84,16 +84,17 @@ CPPSRCS = \
+         ForLoopUnroll.cpp \
+         MapLongVariableNames.cpp \
+         spooky.cpp \
+         BuiltInFunctionEmulator.cpp \
+         Input.cpp \
+         Lexer.cpp \
+         Preprocessor.cpp \
+         Token.cpp \
++        VariablePacker.cpp \
+         $(NULL)
+ 
+ # flex/yacc generated files
+ CPPSRCS += \
+         glslang_lex.cpp \
+         glslang_tab.cpp \
+         $(NULL)
+ 
+diff --git a/gfx/angle/tests/build_tests.gyp b/gfx/angle/tests/build_tests.gyp
+--- a/gfx/angle/tests/build_tests.gyp
++++ b/gfx/angle/tests/build_tests.gyp
+@@ -58,16 +58,35 @@
+         'preprocessor_tests/pragma_test.cpp',
+         'preprocessor_tests/PreprocessorTest.cpp',
+         'preprocessor_tests/PreprocessorTest.h',
+         'preprocessor_tests/space_test.cpp',
+         'preprocessor_tests/token_test.cpp',
+         'preprocessor_tests/version_test.cpp',
+       ],
+     },
++    {
++      'target_name': 'compiler_tests',
++      'type': 'executable',
++      'dependencies': [
++        '../src/build_angle.gyp:translator_common',
++        'gtest',
++        'gmock',
++      ],
++      'include_dirs': [
++        '../include',
++        '../src',
++        '../third_party/googletest/include',
++        '../third_party/googlemock/include',
++      ],
++      'sources': [
++        '../third_party/googlemock/src/gmock_main.cc',
++        'compiler_tests/VariablePacker_test.cpp',
++      ],
++    },
+   ],
+ }
+ 
+ # Local Variables:
+ # tab-width:2
+ # indent-tabs-mode:nil
+ # End:
+ # vim: set expandtab tabstop=2 shiftwidth=2:
+diff --git a/gfx/angle/tests/compiler_tests/VariablePacker_test.cpp b/gfx/angle/tests/compiler_tests/VariablePacker_test.cpp
+new file mode 100644
+--- /dev/null
++++ b/gfx/angle/tests/compiler_tests/VariablePacker_test.cpp
+@@ -0,0 +1,85 @@
++//
++// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++//
++#include "compiler/VariablePacker.h"
++#include "gtest/gtest.h"
++
++TEST(VariablePacking, Pack) {
++  VariablePacker packer;
++  TVariableInfoList vars;
++  const int kMaxRows = 16;
++  // test no vars.
++  EXPECT_TRUE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
++
++  ShDataType types[] = {
++    SH_FLOAT_MAT4,            // 0
++    SH_FLOAT_MAT2,            // 1
++    SH_FLOAT_VEC4,            // 2
++    SH_INT_VEC4,              // 3
++    SH_BOOL_VEC4,             // 4
++    SH_FLOAT_MAT3,            // 5
++    SH_FLOAT_VEC3,            // 6
++    SH_INT_VEC3,              // 7
++    SH_BOOL_VEC3,             // 8
++    SH_FLOAT_VEC2,            // 9
++    SH_INT_VEC2,              // 10
++    SH_BOOL_VEC2,             // 11
++    SH_FLOAT,                 // 12
++    SH_INT,                   // 13
++    SH_BOOL,                  // 14
++    SH_SAMPLER_2D,            // 15
++    SH_SAMPLER_CUBE,          // 16
++    SH_SAMPLER_EXTERNAL_OES,  // 17
++    SH_SAMPLER_2D_RECT_ARB,   // 18
++  };
++
++  for (size_t tt = 0; tt < sizeof(types) / sizeof(types[0]); ++tt) {
++    ShDataType type = types[tt];
++    int num_rows = VariablePacker::GetNumRows(type);
++    int num_components_per_row = VariablePacker::GetNumComponentsPerRow(type);
++    // Check 1 of the type.
++    vars.clear();
++    vars.push_back(TVariableInfo(type, 1));
++    EXPECT_TRUE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
++
++    // Check exactly the right amount of 1 type as an array.
++    int num_vars = kMaxRows / num_rows;
++    vars.clear();
++    vars.push_back(TVariableInfo(type, num_vars));
++    EXPECT_TRUE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
++
++    // test too many
++    vars.clear();
++    vars.push_back(TVariableInfo(type, num_vars + 1));
++    EXPECT_FALSE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
++
++    // Check exactly the right amount of 1 type as individual vars.
++    num_vars = kMaxRows / num_rows *
++        ((num_components_per_row > 2) ? 1 : (4 / num_components_per_row));
++    vars.clear();
++    for (int ii = 0; ii < num_vars; ++ii) {
++      vars.push_back(TVariableInfo(type, 1));
++    }
++    EXPECT_TRUE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
++
++    // Check 1 too many.
++    vars.push_back(TVariableInfo( type, 1));
++    EXPECT_FALSE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
++  }
++
++  // Test example from GLSL ES 3.0 spec chapter 11.
++  vars.clear();
++  vars.push_back(TVariableInfo(SH_FLOAT_VEC4, 1));
++  vars.push_back(TVariableInfo(SH_FLOAT_MAT3, 1));
++  vars.push_back(TVariableInfo(SH_FLOAT_MAT3, 1));
++  vars.push_back(TVariableInfo(SH_FLOAT_VEC2, 6));
++  vars.push_back(TVariableInfo(SH_FLOAT_VEC2, 4));
++  vars.push_back(TVariableInfo(SH_FLOAT_VEC2, 1));
++  vars.push_back(TVariableInfo(SH_FLOAT, 3));
++  vars.push_back(TVariableInfo(SH_FLOAT, 2));
++  vars.push_back(TVariableInfo(SH_FLOAT, 1));
++  EXPECT_TRUE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
++}
++
