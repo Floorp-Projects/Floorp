@@ -150,6 +150,9 @@ function runSocialTestWithProvider(manifest, callback) {
         Social.enabled = true;
 
         registerCleanupFunction(function () {
+          // disable social before removing the providers to avoid providers
+          // being activated immediately before we get around to removing it.
+          Services.prefs.clearUserPref("social.enabled");
           // if one test happens to fail, it is likely finishSocialTest will not
           // be called, causing most future social tests to also fail as they
           // attempt to add a provider which already exists - so work
@@ -159,7 +162,6 @@ function runSocialTestWithProvider(manifest, callback) {
               SocialService.removeProvider(m.origin, finish);
             } catch (ex) {}
           });
-          Services.prefs.clearUserPref("social.enabled");
         });
         function finishSocialTest() {
           SocialService.removeProvider(provider.origin, finish);
