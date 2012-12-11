@@ -14,6 +14,13 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <label step="-2" id="http://www.some-fictitious-zoo.com/humans/sarah" value="Sarah "/>
+    <label step="2" id="http://www.some-fictitious-zoo.com/humans/sarah" value="Sarah Yarmouth"/>
+    <label step="-1" id="http://www.some-fictitious-zoo.com/humans/robert" value="Robert Sanderson"/>
+    <label step="1" id="http://www.some-fictitious-zoo.com/humans/robert" value="Robert "/>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,13 +33,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <label step="-2" id="http://www.some-fictitious-zoo.com/humans/sarah" value="Sarah "/>
-  <label step="2" id="http://www.some-fictitious-zoo.com/humans/sarah" value="Sarah Yarmouth"/>
-  <label step="-1" id="http://www.some-fictitious-zoo.com/humans/robert" value="Robert Sanderson"/>
-  <label step="1" id="http://www.some-fictitious-zoo.com/humans/robert" value="Robert "/>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1

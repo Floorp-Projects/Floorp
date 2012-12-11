@@ -540,6 +540,7 @@
                             command="Social:FocusChat"
                             class="show-only-for-keyboard"/>
                   <menuseparator class="social-statusarea-separator"/>
+                  <menuseparator class="social-provider-menu" hidden="true"/>
                   <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
                   <menuitem class="social-remove-menuitem" command="Social:Remove"/>
                 </menupopup>

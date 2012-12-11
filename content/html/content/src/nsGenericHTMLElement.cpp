@@ -1892,8 +1892,10 @@ nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler,              \
                                                                               \
     nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                  \
     nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);       \
-    nsRefPtr<OnErrorEventHandlerNonNull> errorHandler =                       \
-      new OnErrorEventHandlerNonNull(handler);                                \
+    nsRefPtr<OnErrorEventHandlerNonNull> errorHandler;                        \
+    if (handler) {                                                            \
+      errorHandler = new OnErrorEventHandlerNonNull(handler);                 \
+    }                                                                         \
     return globalWin->SetOn##name_(errorHandler, error);                      \
   }                                                                           \
                                                                               \

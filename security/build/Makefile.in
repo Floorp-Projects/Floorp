@@ -285,10 +285,14 @@ NSS_DIRS += \
   $(NULL)
 endif
 
+ifneq (,$(filter %--build-id,$(LDFLAGS)))
+DEFAULT_GMAKE_ENV = LDFLAGS=-Wl,--build-id
+endif
+
 ifndef MOZ_NATIVE_NSS
 define build_rules
 libs::
-	$$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS)
+	$$(DEFAULT_GMAKE_ENV) $$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS)
 
 clean clobber clobber_all realclean distclean depend::
 	$$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS) clean

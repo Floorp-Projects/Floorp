@@ -28,6 +28,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIChannel.h"
 #include "nsITimer.h"
+#include "nsIBackgroundFileSaver.h"
 
 #include "nsIHandlerService.h"
 #include "nsCOMPtr.h"
@@ -203,7 +204,8 @@ protected:
  */
 class nsExternalAppHandler MOZ_FINAL : public nsIStreamListener,
                                        public nsIHelperAppLauncher,
-                                       public nsITimerCallback
+                                       public nsITimerCallback,
+                                       public nsIBackgroundFileSaverObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -212,6 +214,7 @@ public:
   NS_DECL_NSIHELPERAPPLAUNCHER
   NS_DECL_NSICANCELABLE
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSIBACKGROUNDFILESAVEROBSERVER
 
   /**
    * @param aMIMEInfo      MIMEInfo object, representing the type of the
@@ -240,7 +243,6 @@ protected:
    * The MIME Info for this load. Will never be null.
    */
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
-  nsCOMPtr<nsIOutputStream> mOutStream; /**< output stream to the temp file */
   nsCOMPtr<nsIInterfaceRequestor> mWindowContext;
 
   /**
@@ -311,11 +313,17 @@ protected:
   nsCOMPtr<nsIFile> mFinalFileDestination;
 
   uint32_t mBufferSize;
-  char    *mDataBuffer;
+
+  /**
+   * This object handles saving the data received from the network to a
+   * temporary location first, and then move the file to its final location,
+   * doing all the input/output on a background thread.
+   */
+  nsCOMPtr<nsIBackgroundFileSaver> mSaver;
 
   /**
    * Creates the temporary file for the download and an output stream for it.
-   * Upon successful return, both mTempFile and mOutStream will be valid.
+   * Upon successful return, both mTempFile and mSaver will be valid.
    */
   nsresult SetUpTempFile(nsIChannel * aChannel);
   /**

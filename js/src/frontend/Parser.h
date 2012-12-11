@@ -260,8 +260,8 @@ struct Parser : private AutoGCRooter
      * As that object is inaccessible to client code, the lookups are
      * guaranteed to return the original objects, ensuring safe implementation
      * of self-hosted builtins.
-     * Additionally, the special syntax %_CallName(receiver, ...args, fun) is
-     * supported, for which bytecode is emitted that invokes |fun| with
+     * Additionally, the special syntax _CallFunction(receiver, ...args, fun)
+     * is supported, for which bytecode is emitted that invokes |fun| with
      * |receiver| as the this-object and ...args as the arguments..
      */
     const bool          selfHostingMode:1;
@@ -441,7 +441,6 @@ struct Parser : private AutoGCRooter
     bool checkForFunctionNode(PropertyName *name, ParseNode *node);
 
     ParseNode *identifierName(bool afterDoubleDot);
-    ParseNode *intrinsicName();
 
 #if JS_HAS_XML_SUPPORT
     // True if E4X syntax is allowed in the current syntactic context. Note this

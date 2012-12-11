@@ -14,8 +14,13 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/MessagePortBase.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
+  "resource://gre/modules/SocialService.jsm");
 
 this.EXPORTED_SYMBOLS = ["getFrameWorkerHandle"];
 
@@ -25,7 +30,7 @@ var _nextPortId = 1;
 // Retrieves a reference to a WorkerHandle associated with a FrameWorker and a
 // new ClientPort.
 this.getFrameWorkerHandle =
- function getFrameWorkerHandle(url, clientWindow, name) {
+ function getFrameWorkerHandle(url, clientWindow, name, origin) {
   // first create the client port we are going to use.  Later we will
   // message the worker to create the worker port.
   let portid = _nextPortId++;
@@ -34,7 +39,7 @@ this.getFrameWorkerHandle =
   let existingWorker = workerCache[url];
   if (!existingWorker) {
     // setup the worker and add this connection to the pending queue
-    let worker = new FrameWorker(url, name);
+    let worker = new FrameWorker(url, name, origin);
     worker.pendingPorts.push(clientPort);
     existingWorker = workerCache[url] = worker;
   } else {
@@ -64,13 +69,14 @@ this.getFrameWorkerHandle =
  * the script does not have a full DOM but is instead run in a sandbox
  * that has a select set of methods cloned from the URL's domain.
  */
-function FrameWorker(url, name) {
+function FrameWorker(url, name, origin) {
   this.url = url;
   this.name = name || url;
   this.ports = {};
   this.pendingPorts = [];
   this.loaded = false;
   this.reloading = false;
+  this.origin = origin;
 
   this.frame = makeHiddenFrame();
   this.load();
@@ -192,7 +198,7 @@ FrameWorker.prototype = {
       let scriptText = workerWindow.document.body.textContent.trim();
       if (!scriptText) {
         Cu.reportError("FrameWorker: Empty worker script received");
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         return;
       }
 
@@ -204,7 +210,7 @@ FrameWorker.prototype = {
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error injecting port code into content side of the worker: " + e + "\n" + e.stack);
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         return;
       }
 
@@ -214,7 +220,7 @@ FrameWorker.prototype = {
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error setting up event listener for chrome side of the worker: " + e + "\n" + e.stack);
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError();
         return;
       }
 
@@ -225,20 +231,18 @@ FrameWorker.prototype = {
         Cu.reportError("FrameWorker: Error evaluating worker script for " + worker.name + ": " + e + "; " +
             (e.lineNumber ? ("Line #" + e.lineNumber) : "") +
             (e.stack ? ("\n" + e.stack) : ""));
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         return;
       }
 
       // so finally we are ready to roll - dequeue all the pending connects
       worker.loaded = true;
       for (let port of worker.pendingPorts) {
-        if (port._portid) { // may have already been closed!
-          try {
-            port._createWorkerAndEntangle(worker);
-          }
-          catch(e) {
-            Cu.reportError("FrameWorker: Failed to create worker port: " + e + "\n" + e.stack);
-          }
+        try {
+          port._createWorkerAndEntangle(worker);
+        }
+        catch(e) {
+          Cu.reportError("FrameWorker: Failed to create worker port: " + e + "\n" + e.stack);
         }
       }
       worker.pendingPorts = [];
@@ -249,18 +253,16 @@ FrameWorker.prototype = {
     // window unloading as part of shutdown.
     workerWindow.addEventListener("unload", function unloadListener() {
       workerWindow.removeEventListener("unload", unloadListener);
-      // closing the port also removes it from this.ports via port-close
       for (let [portid, port] in Iterator(worker.ports)) {
-        // port may have been closed as a side-effect from closing another port
-        if (!port)
-          continue;
         try {
           port.close();
         } catch (ex) {
           Cu.reportError("FrameWorker: failed to close port. " + ex);
         }
       }
-      // Must reset this to an array incase we are being reloaded.
+      // Closing the ports also removed it from this.ports via port-close,
+      // but be safe incase one failed to close.  This must remain an array
+      // incase we are being reloaded.
       worker.ports = [];
       // The worker window may not have fired a load event yet, so pendingPorts
       // might still have items in it - close them too.
@@ -358,7 +360,7 @@ function initClientMessageHandler(worker, workerWindow) {
       case "port-connection-error":
         // onconnect failed, we cannot connect the port, the worker has
         // become invalid
-        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        notifyWorkerError(worker);
         break;
       case "port-close":
         // the worker side of the port was closed, so close this side too.
@@ -440,6 +442,12 @@ ClientPort.prototype = {
       this._dopost(message);
     }
     this._pendingMessagesOutgoing = [];
+    // The client side of the port might have been closed before it was
+    // "entangled" with the worker, in which case we need to disentangle it
+    if (this._closed) {
+      this._window = null;
+      delete worker.ports[this._portid];
+    }
   },
 
   _dopost: function fw_ClientPort_dopost(data) {
@@ -455,7 +463,7 @@ ClientPort.prototype = {
   },
 
   close: function fw_ClientPort_close() {
-    if (!this._portid) {
+    if (this._closed) {
       return; // already closed.
     }
     // a leaky abstraction due to the worker spec not specifying how the
@@ -464,6 +472,17 @@ ClientPort.prototype = {
     AbstractPort.prototype.close.call(this);
     this._window = null;
     this._clientWindow = null;
-    this._pendingMessagesOutgoing = null;
+    // this._pendingMessagesOutgoing should still be drained, as a closed
+    // port will still get "entangled" quickly enough to deliver the messages.
   }
+}
+
+function notifyWorkerError(worker) {
+  // Try to retrieve the worker's associated provider, if it has one, to set its
+  // error state.
+  SocialService.getProvider(worker.origin, function (provider) {
+    if (provider)
+      provider.errorState = "frameworker-error";
+    Services.obs.notifyObservers(null, "social:frameworker-error", worker.origin);
+  });
 }
