@@ -219,27 +219,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass,
     NS_DispatchToMainThread(runnable);
 }
 
-NS_EXPORT int32_t JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_saveMessageInSentbox(JNIEnv* jenv, jclass,
-                                                          jstring aReceiver,
-                                                          jstring aBody,
-                                                          jlong aTimestamp)
-{
-    nsCOMPtr<nsISmsDatabaseService> smsDBService =
-      do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
-
-    if (!smsDBService) {
-      NS_ERROR("Sms Database Service not available!");
-      return -1;
-    }
-
-    int32_t id;
-    smsDBService->SaveSentMessage(nsJNIString(aReceiver, jenv),
-                                  nsJNIString(aBody, jenv), aTimestamp, &id);
-
-    return id;
-}
-
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass,
                                                    jint aId,

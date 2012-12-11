@@ -31,7 +31,6 @@ interface ISmsManager
 
   public int getNumberOfMessagesForText(String aText);
   public void send(String aNumber, String aMessage, int aRequestId);
-  public int saveSentMessage(String aRecipient, String aBody, long aDate);
   public void getMessage(int aMessageId, int aRequestId);
   public void deleteMessage(int aMessageId, int aRequestId);
   public void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId);
