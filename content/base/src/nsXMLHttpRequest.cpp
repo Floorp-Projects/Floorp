@@ -79,9 +79,10 @@
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsFormData.h"
+#include "nsStreamListenerWrapper.h"
 
 #include "nsWrapperCacheInlines.h"
-#include "nsStreamListenerWrapper.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2666,11 +2667,9 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
     }
     case nsXMLHttpRequest::RequestBody::FormData:
     {
-      nsresult rv;
-      nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(value.mFormData, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      return ::GetRequestBody(sendable, aResult, aContentLength, aContentType, aCharset);
+      MOZ_ASSERT(value.mFormData);
+      return ::GetRequestBody(value.mFormData, aResult, aContentLength,
+                              aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::InputStream:
     {

@@ -12,7 +12,6 @@
 
 interface Document;
 interface Blob;
-interface FormData;
 interface InputStream;
 interface MozChannel;
 interface IID;

@@ -36,6 +36,7 @@ webidl_files = \
   FileHandle.webidl \
   FileList.webidl \
   FileReaderSync.webidl \
+  FormData.webidl \
   Function.webidl \
   GainNode.webidl \
   HTMLCollection.webidl \
