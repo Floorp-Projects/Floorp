@@ -34,6 +34,8 @@
 #include "nsThreadUtils.h"
 #include "nsIContent.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "gfxContext.h"
+#include "gfxFont.h"
 #include "nsContentList.h"
 
 #include "mozilla/AutoRestore.h"
@@ -100,6 +102,7 @@ struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
 class nsIDOMHTMLInputElement;
+class gfxTextObjectPaint;
 
 namespace mozilla {
 
@@ -2118,6 +2121,13 @@ public:
                                         int32_t& aOutEndOffset);
 
   static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext);
+
+  static bool PaintSVGGlyph(Element *aElement, gfxContext *aContext,
+                            gfxFont::DrawMode aDrawMode,
+                            gfxTextObjectPaint *aObjectPaint);
+
+  static bool GetSVGGlyphExtents(Element *aElement, const gfxMatrix& aSVGToAppSpace,
+                                 gfxRect *aResult);
 
   /**
    * Check whether a spec feature/version is supported.
