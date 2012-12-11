@@ -153,7 +153,7 @@ HTMLAreaAccessible::
 {
   // Make HTML area DOM element not accessible. HTML image map accessible
   // manages its tree itself.
-  mFlags |= eNotNodeMapEntry;
+  mStateFlags |= eNotNodeMapEntry;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
