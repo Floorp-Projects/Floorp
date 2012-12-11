@@ -69,8 +69,12 @@ SmsMessage::Create(int32_t aId,
 
   if (aDelivery.Equals(DELIVERY_RECEIVED)) {
     data.delivery() = eDeliveryState_Received;
+  } else if (aDelivery.Equals(DELIVERY_SENDING)) {
+    data.delivery() = eDeliveryState_Sending;
   } else if (aDelivery.Equals(DELIVERY_SENT)) {
     data.delivery() = eDeliveryState_Sent;
+  } else if (aDelivery.Equals(DELIVERY_ERROR)) {
+    data.delivery() = eDeliveryState_Error;
   } else {
     return NS_ERROR_INVALID_ARG;
   }
@@ -144,8 +148,14 @@ SmsMessage::GetDelivery(nsAString& aDelivery)
     case eDeliveryState_Received:
       aDelivery = DELIVERY_RECEIVED;
       break;
+    case eDeliveryState_Sending:
+      aDelivery = DELIVERY_SENDING;
+      break;
     case eDeliveryState_Sent:
       aDelivery = DELIVERY_SENT;
+      break;
+    case eDeliveryState_Error:
+      aDelivery = DELIVERY_ERROR;
       break;
     case eDeliveryState_Unknown:
     case eDeliveryState_EndGuard:
