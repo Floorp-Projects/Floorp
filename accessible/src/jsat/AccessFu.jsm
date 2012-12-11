@@ -57,6 +57,8 @@ this.AccessFu = {
       this._activatePref = ACCESSFU_DISABLE;
     }
 
+    Input.quickNavMode.updateModes(this.prefsBranch);
+
     this._enableOrDisable();
   },
 
@@ -201,6 +203,8 @@ this.AccessFu = {
         if (aData == 'activate') {
           this._activatePref = this.prefsBranch.getIntPref('activate');
           this._enableOrDisable();
+        } else if (aData == 'quicknav_modes') {
+          Input.quickNavMode.updateModes(this.prefsBranch);
         }
         break;
       case 'remote-browser-frame-shown':
@@ -429,6 +433,20 @@ var Input = {
         Utils.getCurrentBrowser(this.chromeWin).contentWindow.scrollBy(
           -aGesture.deltaX, -aGesture.deltaY);
         break;
+      case 'swiperight3':
+        this.moveCursor('moveNext', this.quickNavMode.current, 'gesture');
+        break;
+      case 'swipeleft3':
+        this.moveCursor('movePrevious', this.quickNavMode.current, 'gesture');
+        break;
+      case 'swipedown3':
+        this.quickNavMode.next();
+        AccessFu.announce('quicknav_' + this.quickNavMode.current);
+        break;
+      case 'swipeup3':
+        this.quickNavMode.previous();
+        AccessFu.announce('quicknav_' + this.quickNavMode.current);
+        break;
     }
   },
 
@@ -562,5 +580,34 @@ var Input = {
       x: ['moveNext', 'Checkbox'],
       X: ['movePrevious', 'Checkbox']
     };
+
+    return this.keyMap;
+  },
+
+  quickNavMode: {
+    get current() {
+      return this.modes[this._currentIndex];
+    },
+
+    previous: function quickNavMode_previous() {
+      if (--this._currentIndex < 0)
+        this._currentIndex = this.modes.length - 1;
+    },
+
+    next: function quickNavMode_next() {
+      if (++this._currentIndex >= this.modes.length)
+        this._currentIndex = 0;
+    },
+
+    updateModes: function updateModes(aPrefsBranch) {
+      try {
+        this.modes = aPrefsBranch.getCharPref('quicknav_modes').split(',');
+      } catch (x) {
+        // Fallback
+        this.modes = [];
+      }
+    },
+
+    _currentIndex: -1
   }
 };
