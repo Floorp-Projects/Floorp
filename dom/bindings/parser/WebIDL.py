@@ -2607,24 +2607,32 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         return [overload for overload in self._overloads if
                 len(overload.arguments) == argc or
                 (len(overload.arguments) > argc and
-                 overload.arguments[argc].optional)]
+                 overload.arguments[argc].optional) or
+                (len(overload.arguments) < argc and
+                 len(overload.arguments) > 0 and
+                 overload.arguments[-1].variadic)]
 
     def signaturesForArgCount(self, argc):
         return [(overload.returnType, overload.arguments) for overload
                 in self.overloadsForArgCount(argc)]
 
     def locationsForArgCount(self, argc):
-        return [overload.location for overload in self._overloads if
-                len(overload.arguments) == argc or
-                (len(overload.arguments) > argc and
-                 overload.arguments[argc].optional)]
+        return [overload.location for overload in self.overloadsForArgCount(argc)]
 
     def distinguishingIndexForArgCount(self, argc):
         def isValidDistinguishingIndex(idx, signatures):
             for (firstSigIndex, (firstRetval, firstArgs)) in enumerate(signatures[:-1]):
                 for (secondRetval, secondArgs) in signatures[firstSigIndex+1:]:
-                    firstType = firstArgs[idx].type
-                    secondType = secondArgs[idx].type
+                    if idx < len(firstArgs):
+                        firstType = firstArgs[idx].type
+                    else:
+                        assert(firstArgs[-1].variadic)
+                        firstType = firstArgs[-1].type
+                    if idx < len(secondArgs):
+                        secondType = secondArgs[idx].type
+                    else:
+                        assert(secondArgs[-1].variadic)
+                        secondType = secondArgs[-1].type
                     if not firstType.isDistinguishableFrom(secondType):
                         return False
             return True

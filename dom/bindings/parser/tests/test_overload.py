@@ -8,6 +8,9 @@ def WebIDLTest(parser, harness):
           boolean abitharder(TestOverloads foo);
           boolean abitharder(boolean foo);
           void abitharder(ArrayBuffer? foo);
+          void withVariadics(long... numbers);
+          void withVariadics(TestOverloads iface);
+          void withVariadics(long num, TestOverloads iface);
         };
     """)
 
@@ -20,7 +23,7 @@ def WebIDLTest(parser, harness):
                "Should be an IDLInterface")
     harness.check(iface.identifier.QName(), "::TestOverloads", "Interface has the right QName")
     harness.check(iface.identifier.name, "TestOverloads", "Interface has the right name")
-    harness.check(len(iface.members), 2, "Expect %s members" % 2)
+    harness.check(len(iface.members), 3, "Expect %s members" % 3)
 
     member = iface.members[0]
     harness.check(member.identifier.QName(), "::TestOverloads::basic", "Method has the right QName")
