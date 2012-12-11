@@ -61,8 +61,36 @@ public class testHistoryTab extends PixelTest {
         loadAndPaint(url);
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        mSolo.waitForText("Bookmark");
-        mSolo.clickOnText("Bookmark");
+        mSolo.waitForText("Settings");
+
+        // On ICS+ phones, there is no button labeled "Bookmarks"
+        // instead we have to just dig through every button on the screen
+        ArrayList<View> images = mSolo.getCurrentViews();
+        for (int i = 0; i < images.size(); i++) {
+          final View view = images.get(i);
+          boolean found = false;
+          found = "Bookmark".equals(view.getContentDescription());
+
+          // on older android versions, try looking at the button's text
+          if (!found) {
+              if (view instanceof TextView) {
+                 found = "Bookmark".equals(((TextView)view).getText());
+              }
+          }
+
+          if (found) {
+            int[] xy = new int[2];
+            view.getLocationOnScreen(xy);
+
+            final int viewWidth = view.getWidth();
+            final int viewHeight = view.getHeight();
+            final float x = xy[0] + (viewWidth / 2.0f);
+            float y = xy[1] + (viewHeight / 2.0f);
+
+            mSolo.clickOnScreen(x, y);
+          }
+        }
+        
         mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added successfully");
 
         testList(url);
@@ -132,8 +160,6 @@ public class testHistoryTab extends PixelTest {
 
     private void testContextMenu(String url) {
         listview = getHistoryList();
-        // clear VKB
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
         // wait for the history list to be populated
@@ -186,8 +212,7 @@ public class testHistoryTab extends PixelTest {
 
     private void testClick(String url) {
         listview = getHistoryList();
-        // clear VKB
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
         mSolo.waitForText(url);
 
         View child = listview.getChildAt(0);
