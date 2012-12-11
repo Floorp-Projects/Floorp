@@ -52,7 +52,7 @@ intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
     double result;
     if (!ToInteger(cx, args[0], &result))
         return false;
-    args.rval().setBoolean(result);
+    args.rval().setDouble(result);
     return true;
 }
 
