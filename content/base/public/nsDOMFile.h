@@ -201,8 +201,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMFileCC, nsIDOMFile)
 };
 
-class nsDOMFileFile : public nsDOMFile,
-                      public nsIJSNativeInitializer
+class nsDOMFileFile : public nsDOMFile
 {
 public:
   // Create as a file
@@ -290,15 +289,6 @@ public:
     mName.SetIsVoid(true);
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner,
-                        JSContext* aCx,
-                        JSObject* aObj,
-                        uint32_t aArgc,
-                        jsval* aArgv);
-
   // Overrides
   NS_IMETHOD GetSize(uint64_t* aSize);
   NS_IMETHOD GetType(nsAString& aType);
@@ -306,10 +296,6 @@ public:
   NS_IMETHOD GetMozLastModifiedDate(uint64_t* aLastModifiedDate);
   NS_IMETHOD GetMozFullPathInternal(nsAString& aFullPath);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
-
-  // DOMClassInfo constructor (for File("foo"))
-  static nsresult
-  NewFile(nsISupports* *aNewObject);
 
 protected:
   // Create slice
