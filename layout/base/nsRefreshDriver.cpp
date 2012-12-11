@@ -383,7 +383,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
           NS_ADDREF(shell);
           mStyleFlushObservers.RemoveElement(shell);
           shell->FrameConstructor()->mObservingRefreshDriver = false;
-          shell->FlushPendingNotifications(Flush_Style);
+          shell->FlushPendingNotifications(ChangesToFlush(Flush_Style, false));
           NS_RELEASE(shell);
         }
       }
@@ -403,7 +403,8 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
           mLayoutFlushObservers.RemoveElement(shell);
           shell->mReflowScheduled = false;
           shell->mSuppressInterruptibleReflows = false;
-          shell->FlushPendingNotifications(Flush_InterruptibleLayout);
+          shell->FlushPendingNotifications(ChangesToFlush(Flush_InterruptibleLayout,
+                                                          false));
           NS_RELEASE(shell);
         }
       }
