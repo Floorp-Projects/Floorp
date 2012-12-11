@@ -381,12 +381,6 @@ class GlobalObject : public JSObject
         return &self->getPrototype(JSProto_DataView).toObject();
     }
 
-    bool hasIntrinsicFunction(JSContext *cx, PropertyName *name) {
-        Rooted<GlobalObject *> self(cx, this);
-        Value fun = NullValue();
-        return HasDataProperty(cx, self, NameToId(name), &fun);
-    }
-
     bool getIntrinsicValue(JSContext *cx, PropertyName *name, MutableHandleValue value) {
         RootedObject holder(cx, &getSlotRef(INTRINSICS).toObject());
         RootedId id(cx, NameToId(name));
