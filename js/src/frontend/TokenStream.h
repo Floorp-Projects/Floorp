@@ -420,9 +420,9 @@ struct CompileError {
     JSContext *cx;
     JSErrorReport report;
     char *message;
-    bool hasCharArgs;
+    ErrorArgumentsType argumentsType;
     CompileError(JSContext *cx)
-     : cx(cx), message(NULL), hasCharArgs(false)
+      : cx(cx), message(NULL), argumentsType(ArgumentsAreUnicode)
     {
         PodZero(&report);
     }

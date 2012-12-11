@@ -6538,7 +6538,7 @@ JS_ReportErrorNumberVA(JSContext *cx, JSErrorCallback errorCallback,
 {
     AssertHeapIsIdle(cx);
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
-                           errorNumber, JS_TRUE, ap);
+                           errorNumber, ArgumentsAreASCII, ap);
 }
 
 JS_PUBLIC_API(void)
@@ -6550,7 +6550,7 @@ JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
     AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
-                           errorNumber, JS_FALSE, ap);
+                           errorNumber, ArgumentsAreUnicode, ap);
     va_end(ap);
 }
 
@@ -6588,7 +6588,7 @@ JS_ReportErrorFlagsAndNumber(JSContext *cx, unsigned flags,
     AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
     ok = js_ReportErrorNumberVA(cx, flags, errorCallback, userRef,
-                                errorNumber, JS_TRUE, ap);
+                                errorNumber, ArgumentsAreASCII, ap);
     va_end(ap);
     return ok;
 }
@@ -6604,7 +6604,7 @@ JS_ReportErrorFlagsAndNumberUC(JSContext *cx, unsigned flags,
     AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
     ok = js_ReportErrorNumberVA(cx, flags, errorCallback, userRef,
-                                errorNumber, JS_FALSE, ap);
+                                errorNumber, ArgumentsAreUnicode, ap);
     va_end(ap);
     return ok;
 }
