@@ -2770,7 +2770,8 @@ let RIL = {
    *        String containing the processId for the SmsRequestManager.
    */
   sendSMS: function sendSMS(options) {
-    //TODO: verify values on 'options'
+    options.langIndex = options.langIndex || PDU_NL_IDENTIFIER_DEFAULT;
+    options.langShiftIndex = options.langShiftIndex || PDU_NL_IDENTIFIER_DEFAULT;
 
     if (!options.retryCount) {
       options.retryCount = 0;
@@ -7057,16 +7058,18 @@ let GsmPDUHelper = {
       this.writeHexOctet(options.segmentSeq & 0xFF);
     }
 
-    if (options.langIndex != PDU_NL_IDENTIFIER_DEFAULT) {
-      this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT);
-      this.writeHexOctet(1);
-      this.writeHexOctet(options.langIndex);
-    }
+    if (options.dcs == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      if (options.langIndex != PDU_NL_IDENTIFIER_DEFAULT) {
+        this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT);
+        this.writeHexOctet(1);
+        this.writeHexOctet(options.langIndex);
+      }
 
-    if (options.langShiftIndex != PDU_NL_IDENTIFIER_DEFAULT) {
-      this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT);
-      this.writeHexOctet(1);
-      this.writeHexOctet(options.langShiftIndex);
+      if (options.langShiftIndex != PDU_NL_IDENTIFIER_DEFAULT) {
+        this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT);
+        this.writeHexOctet(1);
+        this.writeHexOctet(options.langShiftIndex);
+      }
     }
   },
 
