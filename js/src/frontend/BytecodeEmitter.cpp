@@ -5353,36 +5353,34 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     ParseNode *pn2 = pn->pn_head;
     switch (pn2->getKind()) {
       case PNK_NAME:
-        if (bce->selfHostingMode && pn2->name() == cx->names()._CallFunction)
+        if (bce->selfHostingMode && pn2->name() == cx->names().callFunction)
         {
             /*
-             * Special-casing of _CallFunction to emit bytecode that directly
+             * Special-casing of callFunction to emit bytecode that directly
              * invokes the callee with the correct |this| object and arguments.
-             * The call _CallFunction(receiver, ...args, fun) thus becomes:
+             * callFunction(fun, thisArg, ...args) thus becomes:
              * - emit lookup for fun
-             * - emit lookup for receiver
+             * - emit lookup for thisArg
              * - emit lookups for ...args
              *
              * argc is set to the amount of actually emitted args and the
              * emitting of args below is disabled by setting emitArgs to false.
              */
             if (pn->pn_count < 3) {
-                bce->reportError(pn, JSMSG_MORE_ARGS_NEEDED, "_CallFunction", "1", "s");
+                bce->reportError(pn, JSMSG_MORE_ARGS_NEEDED, "callFunction", "1", "s");
                 return false;
             }
             ParseNode *funNode = pn2->pn_next;
-            while (funNode->pn_next)
-                funNode = funNode->pn_next;
             if (!EmitTree(cx, bce, funNode))
                 return false;
-            ParseNode *receiver = pn2->pn_next;
-            if (!EmitTree(cx, bce, receiver))
+            ParseNode *thisArg = funNode->pn_next;
+            if (!EmitTree(cx, bce, thisArg))
                 return false;
             if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
                 return false;
             bool oldEmittingForInit = bce->emittingForInit;
             bce->emittingForInit = false;
-            for (ParseNode *argpn = receiver->pn_next; argpn != funNode; argpn = argpn->pn_next) {
+            for (ParseNode *argpn = thisArg->pn_next; argpn; argpn = argpn->pn_next) {
                 if (!EmitTree(cx, bce, argpn))
                     return false;
                 if (Emit1(cx, bce, JSOP_NOTEARG) < 0)

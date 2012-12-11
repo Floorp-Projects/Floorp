@@ -139,8 +139,8 @@ JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToInteger",          intrinsic_ToInteger,            1,0),
     JS_FN("IsCallable",         intrinsic_IsCallable,           1,0),
     JS_FN("ThrowError",         intrinsic_ThrowError,           4,0),
-    JS_FN("_MakeConstructible", intrinsic_MakeConstructible,    1,0),
-    JS_FN("_DecompileArg",      intrinsic_DecompileArg,         2,0),
+    JS_FN("MakeConstructible",  intrinsic_MakeConstructible,    1,0),
+    JS_FN("DecompileArg",       intrinsic_DecompileArg,         2,0),
     JS_FS_END
 };
 bool
