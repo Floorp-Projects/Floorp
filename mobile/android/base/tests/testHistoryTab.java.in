@@ -32,7 +32,7 @@ import java.util.GregorianCalendar;
 public class testHistoryTab extends PixelTest {
     private static final String ABOUT_HOME_URL = "about:home";
     private static final String OPEN_NEW_TAB = "Open in New Tab";
-    private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
+    private static final int WAIT_FOR_CHILD_TIMEOUT = 4000;
     private static ListView listview = null;
     private String[] bookmarks = new String[] {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
@@ -76,7 +76,7 @@ public class testHistoryTab extends PixelTest {
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
-        mAsserter.ok(listview != null, "checking that history list exists", listview.toString());
+        mAsserter.isnot(listview,  null, "checking that history list exists");
 
         mAsserter.is(listview.getChildCount(), 3, "history list has 3 children");
 
@@ -218,11 +218,10 @@ public class testHistoryTab extends PixelTest {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("History");
 
-        final ArrayList<ListView> views = mSolo.getCurrentListViews();
-
         listview = null;
         boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
+               final ArrayList<ListView> views = mSolo.getCurrentListViews();
                for (ListView view : views) {
                    if (view.getTag() == "history") {
                        listview = view;
