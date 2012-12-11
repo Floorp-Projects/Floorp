@@ -4,11 +4,15 @@
 
 package org.mozilla.gecko.sync.delegates;
 
-import org.mozilla.gecko.sync.InfoCollections;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
-public interface InfoCollectionsDelegate {
-  public void handleSuccess(InfoCollections global);
+/**
+ * A fairly generic delegate to handle fetches of single JSON object blobs, as
+ * provided by <code>info/collections</code> and <code>info/collection_counts</code>.
+ */
+public interface JSONRecordFetchDelegate {
+  public void handleSuccess(ExtendedJSONObject body);
   public void handleFailure(SyncStorageResponse response);
   public void handleError(Exception e);
 }
