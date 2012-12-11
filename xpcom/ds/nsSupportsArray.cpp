@@ -275,15 +275,14 @@ nsSupportsArray::Equals(const nsISupportsArray* aOther)
   return false;
 }
 
-NS_IMETHODIMP_(nsISupports*)
-nsSupportsArray::ElementAt(uint32_t aIndex)
+NS_IMETHODIMP
+nsSupportsArray::GetElementAt(uint32_t aIndex, nsISupports **aOutPtr)
 {
+  *aOutPtr = nullptr;
   if (aIndex < mCount) {
-    nsISupports*  element = mArray[aIndex];
-    NS_IF_ADDREF(element);
-    return element;
+    NS_IF_ADDREF(*aOutPtr = mArray[aIndex]);
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(int32_t)

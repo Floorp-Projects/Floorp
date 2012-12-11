@@ -37,8 +37,6 @@ interface nsISupportsArray : nsICollection {
 
   [notxpcom] boolean Equals([const] in nsISupportsArray other);
   
-  [notxpcom] nsISupports ElementAt(in unsigned long aIndex);
-  
   [notxpcom] long IndexOf([const] in nsISupports aPossibleElement);
   [notxpcom] long IndexOfStartingAt([const] in nsISupports aPossibleElement,
                                     in unsigned long aStartIndex);
