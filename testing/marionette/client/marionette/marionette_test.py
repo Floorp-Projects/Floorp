@@ -6,6 +6,7 @@ import imp
 import os
 import re
 import sys
+import time
 import types
 import unittest
 import weakref
@@ -124,11 +125,13 @@ class MarionetteTestCase(CommonTestCase):
 
     def setUp(self):
         CommonTestCase.setUp(self)
+        self.start_time = time.time()
         self.marionette.test_name = self.test_name
         self.marionette.execute_script("log('TEST-START: %s:%s')" % 
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
+        self.duration = time.time() - self.start_time
         self.marionette.set_context("content")
         self.marionette.execute_script("log('TEST-END: %s:%s')" % 
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
