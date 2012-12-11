@@ -620,7 +620,7 @@ HTMLComboboxListAccessible::
                              DocAccessible* aDoc) :
   HTMLSelectListAccessible(aContent, aDoc)
 {
-  mFlags |= eSharedNode;
+  mStateFlags |= eSharedNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
