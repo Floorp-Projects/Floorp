@@ -57,8 +57,7 @@ nsSupportsArrayEnumerator::CurrentItem(nsISupports **aItem)
   nsresult rv = mArray->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   if (mCursor >= 0 && mCursor < (int32_t)cnt) {
-    *aItem = mArray->ElementAt(mCursor);
-    return NS_OK;
+    return mArray->GetElementAt(mCursor, aItem);
   }
   return NS_ERROR_FAILURE;
 }

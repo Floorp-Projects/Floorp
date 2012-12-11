@@ -41,7 +41,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsCOMPtr<nsIAtom> pseudo = getter_AddRefs(static_cast<nsIAtom*>(aInputWord->ElementAt(i)));
+    nsCOMPtr<nsIAtom> pseudo = do_QueryElementAt(aInputWord, i);
     nsTransitionKey key(currState->GetStateID(), pseudo);
     currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
 
