@@ -934,6 +934,10 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     masm.checkStackAlignment();
 
+    // Make sure the function has a JSScript
+    if (target->isInterpretedLazy() && !target->getOrCreateScript(cx))
+        return false;
+
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
     ExecutionMode executionMode = gen->info().executionMode();
     RootedScript targetScript(cx, target->nonLazyScript());
