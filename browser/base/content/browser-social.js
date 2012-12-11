@@ -137,6 +137,11 @@ let SocialUI = {
     }
   },
 
+  nonBrowserWindowInit: function SocialUI_nonBrowserInit() {
+    // Disable the social menu item in non-browser windows
+    document.getElementById("menu_socialAmbientMenu").hidden = true;
+  },
+
   // Miscellaneous helpers
   showProfile: function SocialUI_showProfile() {
     if (Social.haveLoggedInUser())
