@@ -68,15 +68,6 @@ public abstract class Layer {
     }
 
     /**
-     * Returns the region of the layer that is considered valid. The default
-     * implementation of this will return the bounds of the layer, but this
-     * may be overridden.
-     */
-    public Region getValidRegion(RenderContext context) {
-        return new Region(RectUtils.round(getBounds(context)));
-    }
-
-    /**
      * Call this before modifying the layer. Note that, for TileLayers, "modifying the layer"
      * includes altering the underlying CairoImage in any way. Thus you must call this function
      * before modifying the byte buffer associated with this layer.
