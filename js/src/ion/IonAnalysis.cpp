@@ -74,6 +74,12 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isUnbox() || ins->isParameter())
                 continue;
 
+            // If the instruction's behavior has been constant folded into a
+            // separate instruction, we can't determine precisely where the
+            // instruction becomes dead and can't eliminate its uses.
+            if (ins->isFolded())
+                continue;
+
             // Check if this instruction's result is only used within the
             // current block, and keep track of its last use in a definition
             // (not resume point). This requires the instructions in the block
@@ -119,10 +125,6 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                 block->insertBefore(*(block->begin()), constant);
                 uses = mrp->replaceOperand(uses, constant);
             }
-
-            MResumePoint *mrp = ins->resumePoint();
-            if (!mrp)
-                continue;
         }
     }
 
@@ -159,9 +161,9 @@ ion::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
 static inline bool
 IsPhiObservable(MPhi *phi)
 {
-    // If the phi has bytecode uses, there may be no SSA uses but the value
-    // is still observable in the interpreter after a bailout.
-    if (phi->hasBytecodeUses())
+    // If the phi has uses which are not reflected in SSA, then behavior in the
+    // interpreter may be affected by removing the phi.
+    if (phi->isFolded())
         return true;
 
     // Check for any SSA uses. Note that this skips reading resume points,
@@ -203,10 +205,9 @@ IsPhiRedundant(MPhi *phi)
             return NULL;
     }
 
-    // Propagate the HasBytecodeUses flag if |phi| is replaced with
-    // another phi.
-    if (phi->hasBytecodeUses() && first->isPhi())
-        first->toPhi()->setHasBytecodeUses();
+    // Propagate the Folded flag if |phi| is replaced with another phi.
+    if (phi->isFolded())
+        first->setFoldedUnchecked();
 
     return first;
 }

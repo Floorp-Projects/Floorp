@@ -47,7 +47,9 @@ this.AppsUtils = {
       downloadSize: aApp.downloadSize || 0,
       lastUpdateCheck: aApp.lastUpdateCheck,
       updateTime: aApp.updateTime,
-      etag: aApp.etag
+      etag: aApp.etag,
+      installerAppId: aApp.installerAppId || Ci.nsIScriptSecurityManager.NO_APP_ID,
+      installerIsBrowser: !!aApp.installerIsBrowser
     };
   },
 

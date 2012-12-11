@@ -977,6 +977,10 @@ abstract public class BrowserApp extends GeckoApp
         MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
         MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
 
+        // Only show the "Quit" menu item on pre-ICS. In ICS+, it's easy to
+        // kill an app through the task switcher.
+        aMenu.findItem(R.id.quit).setVisible(Build.VERSION.SDK_INT < 14);
+
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
             forward.setEnabled(false);

@@ -40,7 +40,7 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsISupportsArray* array);
 %}
 
-[scriptable, uuid(791eafa0-b9e6-11d1-8031-006008159b5a)]
+[scriptable, uuid(2d375c0f-8a34-4397-bea1-ab4d6beae0ab)]
 interface nsISupportsArray : nsICollection {
 
   [notxpcom] boolean Equals([const] in nsISupportsArray other);
@@ -77,9 +77,6 @@ interface nsISupportsArray : nsICollection {
   [notxpcom, noscript]
       boolean EnumerateForwards(in nsISupportsArrayEnumFunc aFunc,
                                 in voidPtr aData);
-  [notxpcom, noscript]
-      boolean EnumerateBackwards(in nsISupportsArrayEnumFunc aFunc,
-                                 in voidPtr aData);
 
   nsISupportsArray clone();
 
@@ -101,11 +98,5 @@ interface nsISupportsArray : nsICollection {
 // Construct and return a default implementation of nsISupportsArray:
 extern nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult);
-
-// Construct and return a default implementation of an enumerator for nsISupportsArrays:
-extern nsresult
-NS_NewISupportsArrayEnumerator(nsISupportsArray* array,
-                               nsIBidirectionalEnumerator* *aInstancePtrResult);
-
 
 %}

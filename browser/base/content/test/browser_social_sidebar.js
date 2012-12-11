@@ -57,9 +57,14 @@ function doTest(finishcb) {
     Social.toggleSidebar();
   });
 
-  // Now toggle it off
-  info("Toggling sidebar off");
-  Social.toggleSidebar();
+  // Wait until the side bar loads
+  waitForCondition(function () {
+    return document.getElementById("social-sidebar-browser").docShellIsActive;
+  }, function () {
+    // Now toggle it off
+    info("Toggling sidebar off");
+    Social.toggleSidebar();
+  });
 }
 
 // XXX test sidebar in popup

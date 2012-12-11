@@ -286,6 +286,34 @@
     {0xbb, 0x4f, 0x96, 0x5c, 0xff, 0xd2, 0x3e, 0xce} \
 }
 
+// component implementing nsIBackgroundFileSaver and
+// nsIOutputStream.
+#define NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CLASSNAME \
+    "BackgroundFileSaverOutputStream"
+#define NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CONTRACTID \
+    "@mozilla.org/network/background-file-saver;1?mode=outputstream"
+#define NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CID \
+{ /* 62147d1e-ef6a-40e8-aaf8-d039f5caaa81 */         \
+    0x62147d1e,                                      \
+    0xef6a,                                          \
+    0x40e8,                                          \
+    {0xaa, 0xf8, 0xd0, 0x39, 0xf5, 0xca, 0xaa, 0x81} \
+}
+
+// component implementing nsIBackgroundFileSaver and
+// nsIStreamListener.
+#define NS_BACKGROUNDFILESAVERSTREAMLISTENER_CLASSNAME \
+    "BackgroundFileSaverStreamListener"
+#define NS_BACKGROUNDFILESAVERSTREAMLISTENER_CONTRACTID \
+    "@mozilla.org/network/background-file-saver;1?mode=streamlistener"
+#define NS_BACKGROUNDFILESAVERSTREAMLISTENER_CID \
+{ /* 208de7fc-a781-4031-bbae-cc0de539f61a */         \
+    0x208de7fc,                                      \
+    0xa781,                                          \
+    0x4031,                                          \
+    {0xbb, 0xae, 0xcc, 0x0d, 0xe5, 0x39, 0xf6, 0x1a} \
+}
+
 // component implementing nsISyncStreamListener.
 #define NS_SYNCSTREAMLISTENER_CLASSNAME \
     "nsSyncStreamListener"
@@ -865,6 +893,19 @@
  */
 #define NS_STARTTLSSOCKETPROVIDER_CONTRACTID \
     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "starttls"
+
+
+#define NS_DASHBOARD_CLASSNAME \
+    "Dashboard"
+#define NS_DASHBOARD_CONTRACTID \
+    "@mozilla.org/network/dashboard;1"
+#define NS_DASHBOARD_CID                               \
+{   /*c79eb3c6-091a-45a6-8544-5a8d1ab79537 */          \
+    0xc79eb3c6,                                        \
+    0x091a,                                            \
+    0x45a6,                                            \
+    { 0x85, 0x44, 0x5a, 0x8d, 0x1a, 0xb7, 0x95, 0x37 } \
+}
 
 
 /******************************************************************************

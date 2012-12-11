@@ -8481,6 +8481,13 @@ let StkProactiveCmdHelper = {
    * | (Y-1)+X+2    |                        |        |
    */
   retrieveItem: function retrieveItem(length) {
+    // TS 102.223 ,clause 6.6.7 SET-UP MENU
+    // If the "Item data object for item 1" is a null data object
+    // (i.e. length = '00' and no value part), this is an indication to the ME
+    // to remove the existing menu from the menu system in the ME.
+    if (!length) {
+      return null;
+    }
     let item = {
       identifier: GsmPDUHelper.readHexOctet(),
       text: GsmPDUHelper.readAlphaIdentifier(length - 1)

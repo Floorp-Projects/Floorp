@@ -14,6 +14,37 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <listcols>
+      <listcol flex="1"/>
+      <listcol flex="1"/>
+    </listcols>
+    <listitem step="3" id="http://www.some-fictitious-zoo.com/birds/wren">
+      <listcell label="Wren"/>
+      <listcell label=""/>
+    </listitem>
+    <listitem id="http://www.some-fictitious-zoo.com/birds/emu">
+      <listcell label="Emu"/>
+      <listcell label="Dromaius novaehollandiae"/>
+    </listitem>
+    <listitem step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl">
+      <listcell label="Barn Owl"/>
+      <listcell label="Tyto alba"/>
+    </listitem>
+    <listitem id="http://www.some-fictitious-zoo.com/birds/raven">
+      <listcell label="Raven"/>
+      <listcell label="Corvus corax"/>
+    </listitem>
+    <listitem step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx">
+      <listcell label="Archaeopteryx"/>
+      <listcell label=""/>
+    </listitem>
+    <listitem step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin">
+      <listcell label="Emperor Penguin"/>
+      <listcell label=""/>
+    </listitem>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,37 +57,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <listcols>
-    <listcol flex="1"/>
-    <listcol flex="1"/>
-  </listcols>
-  <listitem step="3" id="http://www.some-fictitious-zoo.com/birds/wren">
-    <listcell label="Wren"/>
-    <listcell label=""/>
-  </listitem>
-  <listitem id="http://www.some-fictitious-zoo.com/birds/emu">
-    <listcell label="Emu"/>
-    <listcell label="Dromaius novaehollandiae"/>
-  </listitem>
-  <listitem step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl">
-    <listcell label="Barn Owl"/>
-    <listcell label="Tyto alba"/>
-  </listitem>
-  <listitem id="http://www.some-fictitious-zoo.com/birds/raven">
-    <listcell label="Raven"/>
-    <listcell label="Corvus corax"/>
-  </listitem>
-  <listitem step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx">
-    <listcell label="Archaeopteryx"/>
-    <listcell label=""/>
-  </listitem>
-  <listitem step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin">
-    <listcell label="Emperor Penguin"/>
-    <listcell label=""/>
-  </listitem>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1

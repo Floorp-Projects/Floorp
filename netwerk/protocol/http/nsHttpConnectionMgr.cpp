@@ -3187,6 +3187,40 @@ nsConnectionEntry::MaxPipelineDepth(nsAHttpTransaction::Classifier aClass)
     return mGreenDepth;
 }
 
+PLDHashOperator
+nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
+                nsAutoPtr<nsConnectionEntry> &ent,
+                void *aArg)
+{
+    nsTArray<HttpRetParams> *args = static_cast<nsTArray<HttpRetParams> *> (aArg);
+    HttpRetParams data;
+    data.host = ent->mConnInfo->Host();
+    data.port = ent->mConnInfo->Port();
+    for (uint32_t i = 0; i < ent->mActiveConns.Length(); i++) {
+        HttpConnInfo info;
+        info.ttl = ent->mActiveConns[i]->TimeToLive();
+        info.rtt = ent->mActiveConns[i]->Rtt();
+        data.active.AppendElement(info);
+    }
+    for (uint32_t i = 0; i < ent->mIdleConns.Length(); i++) {
+        HttpConnInfo info;
+        info.ttl = ent->mIdleConns[i]->TimeToLive();
+        info.rtt = ent->mIdleConns[i]->Rtt();
+        data.active.AppendElement(info);
+    }
+    data.spdy = ent->mUsingSpdy;
+    data.ssl = ent->mConnInfo->UsingSSL();
+    args->AppendElement(data);
+    return PL_DHASH_NEXT;
+}
+
+bool
+nsHttpConnectionMgr::GetConnectionData(nsTArray<mozilla::net::HttpRetParams> *aArg)
+{
+    mCT.Enumerate(ReadConnectionEntry, aArg);
+    return true;
+}
+
 uint32_t
 nsHttpConnectionMgr::nsConnectionEntry::UnconnectedHalfOpens()
 {

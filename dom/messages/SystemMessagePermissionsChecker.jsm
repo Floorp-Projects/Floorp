@@ -187,8 +187,7 @@ this.SystemMessagePermissionsChecker = {
       // app's manifest and the ones needed for system message.
       let expandedPermNames =
         expandPermissions(permName,
-                          newManifest.permissions[permName].access,
-                          newManifest.permissions[permName].channels);
+                          newManifest.permissions[permName].access);
 
       let permNamesWithAccess = permNames[permName];
 

@@ -315,7 +315,8 @@ user_pref("browser.firstrun.show.localepicker", false);
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);
 user_pref("reftest.remote", true);
-user_pref("toolkit.telemetry.prompted", true);
+#expand user_pref("toolkit.telemetry.prompted", __MOZ_TELEMETRY_DISPLAY_REV__);
+#expand user_pref("toolkit.telemetry.notifiedOptOut", __MOZ_TELEMETRY_DISPLAY_REV__);
 user_pref("reftest.uri", "%s");
 """ % reftestlist)
 

@@ -4,6 +4,7 @@ mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-b2g
 
 ac_add_options --enable-application=b2g
 ac_add_options --enable-b2g-camera
+ac_add_options --enable-updater
 
 ac_add_options --target=arm-linux-androideabi
 ac_add_options --with-gonk="$topsrcdir/gonk-toolchain"

@@ -89,7 +89,6 @@ class UpvarCookie
     F(OBJECT) \
     F(CALL) \
     F(NAME) \
-    F(INTRINSICNAME) \
     F(NUMBER) \
     F(STRING) \
     F(REGEXP) \

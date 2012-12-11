@@ -41,9 +41,13 @@ let DownloadListener = {
       // pause the download if requested
       if (this.set.doPause) {
         let dl = aSubject.QueryInterface(Ci.nsIDownload);
-        downloadUtils.downloadManager.pauseDownload(dl.id);
-        do_timeout(1000, function() {
-          downloadUtils.downloadManager.resumeDownload(dl.id);
+        // Don't pause immediately, otherwise the external helper app handler
+        // won't be able to assign a permanent file name.
+        do_execute_soon(function() {
+          downloadUtils.downloadManager.pauseDownload(dl.id);
+          do_timeout(1000, function() {
+            downloadUtils.downloadManager.resumeDownload(dl.id);
+          });
         });
       }
     } else if (aTopic == "dl-done") {

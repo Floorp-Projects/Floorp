@@ -1168,7 +1168,6 @@ void
 nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
 {
     uint32_t msg;
-    int16_t buttons = nsMouseEvent::eLeftButtonFlag;
     switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
 #ifndef MOZ_ONLY_TOUCH_EVENTS
         case AndroidMotionEvent::ACTION_DOWN:
@@ -1185,11 +1184,16 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
             break;
 #endif
 
-        case AndroidMotionEvent::ACTION_HOVER_ENTER:
         case AndroidMotionEvent::ACTION_HOVER_MOVE:
-        case AndroidMotionEvent::ACTION_HOVER_EXIT:
             msg = NS_MOUSE_MOVE;
-            buttons = 0;
+            break;
+
+        case AndroidMotionEvent::ACTION_HOVER_ENTER:
+            msg = NS_MOUSEENTER;
+            break;
+
+        case AndroidMotionEvent::ACTION_HOVER_EXIT:
+            msg = NS_MOUSELEAVE;
             break;
 
         default:
