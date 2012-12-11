@@ -4192,7 +4192,8 @@ WebGLContext::CompileShader(WebGLShader *shader)
                                        targetShaderSourceLanguage,
                                        &resources);
 
-        int compileOptions = SH_ATTRIBUTES_UNIFORMS;
+        int compileOptions = SH_ATTRIBUTES_UNIFORMS |
+                             SH_ENFORCE_PACKING_RESTRICTIONS;
         if (useShaderSourceTranslation) {
             compileOptions |= SH_OBJECT_CODE
                             | SH_MAP_LONG_VARIABLE_NAMES;
