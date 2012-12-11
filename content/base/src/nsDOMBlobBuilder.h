@@ -54,13 +54,10 @@ public:
                         jsval* aArgv);
 
   typedef nsIDOMBlob* (*UnwrapFuncPtr)(JSContext*, JSObject*);
-  nsresult InitBlob(JSContext* aCx,
-                    uint32_t aArgc,
-                    jsval* aArgv,
-                    UnwrapFuncPtr aUnwrapFunc);
-  nsresult InitFile(JSContext* aCx,
-                    uint32_t aArgc,
-                    jsval* aArgv);
+  nsresult InitInternal(JSContext* aCx,
+                        uint32_t aArgc,
+                        jsval* aArgv,
+                        UnwrapFuncPtr aUnwrapFunc);
 
   already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType);
@@ -74,16 +71,6 @@ public:
   // DOMClassInfo constructor (for Blob([b1, "foo"], { type: "image/png" }))
   static nsresult
   NewBlob(nsISupports* *aNewObject);
-
-  // DOMClassInfo constructor (for File([b1, "foo"], { type: "image/png",
-  //                                                   name: "foo.png" }))
-  inline static nsresult
-  NewFile(nsISupports* *aNewObject)
-  {
-    // Initialization will set the filename, so we can pass in an empty string
-    // for now.
-    return NewFile(EmptyString(), aNewObject);
-  }
 
   virtual const nsTArray<nsCOMPtr<nsIDOMBlob> >*
   GetSubBlobs() const { return &mBlobs; }
