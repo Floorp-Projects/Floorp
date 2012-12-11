@@ -206,6 +206,7 @@ this.DOMApplicationRegistry = {
 
   // Installs a 3rd party packaged app.
   installPreinstalledPackage: function installPreinstalledPackage(aId) {
+#ifdef MOZ_WIDGET_GONK
     let app = this.webapps[aId];
     let baseDir;
     try {
@@ -267,6 +268,7 @@ this.DOMApplicationRegistry = {
     } finally {
       zipReader.close();
     }
+#endif
   },
 
   // Implements the core of bug 787439
