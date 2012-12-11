@@ -661,6 +661,13 @@ Scope.prototype = {
   set twisty(aFlag) aFlag ? this.showArrow() : this.hideArrow(),
 
   /**
+   * Specifies if the configurable/enumerable/writable tooltip should be shown
+   * whenever a variable or property descriptor is available.
+   * This flag applies non-recursively to the current scope.
+   */
+  showDescriptorTooltip: true,
+
+  /**
    * Specifies if editing variable or property names is allowed.
    * This flag applies non-recursively to the current scope.
    */
@@ -1256,26 +1263,27 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this._target.removeEventListener("mouseover", this._displayTooltip, false);
     let document = this.document;
 
-    let tooltip = document.createElement("tooltip");
-    tooltip.id = "tooltip-" + this.id;
+    if (this.ownerView.showDescriptorTooltip) {
+      let tooltip = document.createElement("tooltip");
+      tooltip.id = "tooltip-" + this.id;
 
-    let configurableLabel = document.createElement("label");
-    configurableLabel.setAttribute("value", "configurable");
+      let configurableLabel = document.createElement("label");
+      configurableLabel.setAttribute("value", "configurable");
 
-    let enumerableLabel = document.createElement("label");
-    enumerableLabel.setAttribute("value", "enumerable");
+      let enumerableLabel = document.createElement("label");
+      enumerableLabel.setAttribute("value", "enumerable");
 
-    let writableLabel = document.createElement("label");
-    writableLabel.setAttribute("value", "writable");
+      let writableLabel = document.createElement("label");
+      writableLabel.setAttribute("value", "writable");
 
-    tooltip.setAttribute("orient", "horizontal")
-    tooltip.appendChild(configurableLabel);
-    tooltip.appendChild(enumerableLabel);
-    tooltip.appendChild(writableLabel);
+      tooltip.setAttribute("orient", "horizontal")
+      tooltip.appendChild(configurableLabel);
+      tooltip.appendChild(enumerableLabel);
+      tooltip.appendChild(writableLabel);
 
-    this._target.appendChild(tooltip);
-    this._target.setAttribute("tooltip", tooltip.id);
-
+      this._target.appendChild(tooltip);
+      this._target.setAttribute("tooltip", tooltip.id);
+    }
     if (this.ownerView.allowNameInput) {
       this._name.setAttribute("tooltiptext", L10N.getStr("variablesEditableNameTooltip"));
     }
