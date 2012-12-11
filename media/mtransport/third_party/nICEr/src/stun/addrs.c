@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static char *RCSSTRING __UNUSED__="$Id: addrs.c,v 1.2 2008/04/28 18:21:30 ekr Exp $";
 
-
 #include <csi_platform.h>
 #include <assert.h>
 #include <string.h>
@@ -43,10 +42,17 @@ static char *RCSSTRING __UNUSED__="$Id: addrs.c,v 1.2 2008/04/28 18:21:30 ekr Ex
 #include <iphlpapi.h>
 #include <tchar.h>
 #else   /* UNIX */
-#include <sys/sysctl.h>
 #include <sys/param.h>
 #include <sys/socket.h>
+#ifndef ANDROID
+#include <sys/sysctl.h>
 #include <sys/syslog.h>
+#else
+#include <syslog.h>
+/* Work around an Android NDK < r8c bug */
+#undef __unused
+#include <linux/sysctl.h>
+#endif
 #include <net/if.h>
 #ifndef LINUX
 #include <net/if_var.h>
