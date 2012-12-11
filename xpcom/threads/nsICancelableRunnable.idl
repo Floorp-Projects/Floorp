@@ -1,0 +1,24 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRunnable.idl"
+
+/**
+ * Represents a task which can be dispatched to a thread for execution and
+ * which can be cancelled if necessary.
+ */
+
+[scriptable, uuid(de93dc4c-5eea-4eb7-b6d1-dbf1e0cef65c)]
+interface nsICancelableRunnable : nsIRunnable
+{
+    /**
+     * Cancels a pending task.  If the task has already been executed this will
+     * be a no-op.  Calling this method twice is considered an error.
+     *
+     * @throws NS_ERROR_UNEXPECTED
+     *   Indicates that the runnable has already been canceled.
+     */
+    void cancel();
+};
