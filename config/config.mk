@@ -76,9 +76,9 @@ LIBXUL_DIST ?= $(DIST)
 # build products (typelibs, components, chrome).
 #
 # If XPI_NAME is set, the files will be shipped to $(DIST)/xpi-stage/$(XPI_NAME)
-# If DIST_SUBDIR is set, the files will be shipped to $(DIST)/$(DIST_SUBDIR)
-# Otherwise, the default $(DIST)/bin will be used.
-FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(if $(DIST_SUBDIR),$(DIST)/bin/$(DIST_SUBDIR),$(DIST)/bin))
+# instead of $(DIST)/bin. In both cases, if DIST_SUBDIR is set, the files will be
+# shipped to a $(DIST_SUBDIR) subdirectory.
+FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)
 
 ifdef XPI_NAME
 DEFINES += -DXPI_NAME=$(XPI_NAME)
