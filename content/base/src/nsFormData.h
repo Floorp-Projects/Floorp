@@ -8,34 +8,72 @@
 #include "nsIDOMFormData.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsFormSubmission.h"
-#include "nsIJSNativeInitializer.h"
+#include "nsWrapperCache.h"
 #include "nsTArray.h"
+#include "mozilla/ErrorResult.h"
 
+class nsHTMLFormElement;
 class nsIDOMFile;
+
+namespace mozilla {
+class ErrorResult;
+
+namespace dom {
+template<class> class Optional;
+} // namespace dom
+} // namespace mozilla
 
 class nsFormData : public nsIDOMFormData,
                    public nsIXHRSendable,
-                   public nsIJSNativeInitializer,
-                   public nsFormSubmission
+                   public nsFormSubmission,
+                   public nsWrapperCache
 {
 public:
-  nsFormData();
+  nsFormData(nsISupports* aOwner = nullptr);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFormData,
+                                                         nsIDOMFormData)
+
   NS_DECL_NSIDOMFORMDATA
   NS_DECL_NSIXHRSENDABLE
+
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+
+  // WebIDL
+  nsISupports*
+  GetParentObject() const
+  {
+    return mOwner;
+  }
+  static already_AddRefed<nsFormData>
+  Constructor(nsISupports* aGlobal,
+              const mozilla::dom::Optional<nsHTMLFormElement*>& aFormElement,
+              mozilla::ErrorResult& aRv);
+  void Append(const nsAString& aName, const nsAString& aValue);
+  void Append(const nsAString& aName, nsIDOMBlob* aBlob);
 
   // nsFormSubmission
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream);
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue);
+                                    const nsAString& aValue)
+  {
+    Append(aName, aValue);
+    return NS_OK;
+  }
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMBlob* aBlob);
+                                   nsIDOMBlob* aBlob)
+  {
+    Append(aName, aBlob);
+    return NS_OK;
+  }
 
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                        uint32_t aArgc, jsval* aArgv);
 private:
+  nsCOMPtr<nsISupports> mOwner;
+
   struct FormDataTuple
   {
     nsString name;
@@ -43,7 +81,7 @@ private:
     nsCOMPtr<nsIDOMBlob> fileValue;
     bool valueIsFile;
   };
-  
+
   nsTArray<FormDataTuple> mFormData;
 };
 
