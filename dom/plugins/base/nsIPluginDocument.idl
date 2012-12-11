@@ -6,24 +6,11 @@
 #include "nsISupports.idl"
 #include "nsIStreamListener.idl"
 
-[uuid(e4be1d0a-9f24-4d69-bec5-245726ab85fb)]
+[uuid(a93a0f0f-24f0-4206-a21b-56a43dcbdd88)]
 interface nsIPluginDocument : nsISupports
 {
- /**
-  * Sets the stream listener for this plugin document 
-  */
-  void setStreamListener(in nsIStreamListener aStreamListener);
-
-  
  /**
   * Causes the plugin to print in full-page mode
   */
   void print();
-
-  /**
-   * Check whether the document is planning to handle plug-in instantiation
-   * itself.  If not, then the plugin content node should do it.
-   */
-  // XXXbz once we move plug-in loading to content, this can go away.
-  readonly attribute boolean willHandleInstantiation;
 };

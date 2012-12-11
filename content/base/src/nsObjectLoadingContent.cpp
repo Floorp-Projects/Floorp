@@ -22,7 +22,6 @@
 #include "nsIExternalProtocolHandler.h"
 #include "nsEventStates.h"
 #include "nsIObjectFrame.h"
-#include "nsIPluginDocument.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
 #include "nsIPresShell.h"
@@ -741,26 +740,9 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
     appShell->SuspendNative();
   }
 
-  nsCOMPtr<nsIPluginDocument> pDoc(do_QueryInterface(doc));
-  bool fullPageMode = false;
-  if (pDoc) {
-    pDoc->GetWillHandleInstantiation(&fullPageMode);
-  }
-
-  if (fullPageMode) {
-    nsCOMPtr<nsIStreamListener> stream;
-    rv = pluginHost->InstantiateFullPagePluginInstance(mContentType.get(),
-                                                       mURI.get(), this,
-                                                       getter_AddRefs(mInstanceOwner),
-                                                       getter_AddRefs(stream));
-    if (NS_SUCCEEDED(rv)) {
-      pDoc->SetStreamListener(stream);
-    }
-  } else {
-    rv = pluginHost->InstantiateEmbeddedPluginInstance(mContentType.get(),
-                                                       mURI.get(), this,
-                                                       getter_AddRefs(mInstanceOwner));
-  }
+  rv = pluginHost->InstantiateEmbeddedPluginInstance(mContentType.get(),
+                                                     mURI.get(), this,
+                                                     getter_AddRefs(mInstanceOwner));
 
   if (appShell) {
     appShell->ResumeNative();
@@ -1573,6 +1555,34 @@ nsObjectLoadingContent::UpdateObjectParameters()
   }
 
   return retval;
+}
+
+// Used by PluginDocument to kick off our initial load from the already-opened
+// channel.
+NS_IMETHODIMP
+nsObjectLoadingContent::InitializeFromChannel(nsIRequest *aChannel)
+{
+  LOG(("OBJLC [%p] InitializeFromChannel: %p", this, aChannel));
+  if (mType != eType_Loading || mChannel) {
+    // We could technically call UnloadObject() here, if consumers have a valid
+    // reason for wanting to call this on an already-loaded tag.
+    NS_NOTREACHED("Should not have begun loading at this point");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Because we didn't open this channel from an initial LoadObject, we'll
+  // update our parameters now, so the OnStartRequest->LoadObject doesn't
+  // believe our src/type suddenly changed.
+  UpdateObjectParameters();
+  // But we always want to load from a channel, in this case.
+  mType = eType_Loading;
+  mChannel = do_QueryInterface(aChannel);
+  NS_ASSERTION(mChannel, "passed a request that is not a channel");
+
+  // OnStartRequest will now see we have a channel in the loading state, and
+  // call into LoadObject. There's a possibility LoadObject will decide not to
+  // load anything from a channel - it will call CloseChannel() in that case.
+  return NS_OK;
 }
 
 // Only OnStartRequest should be passing the channel parameter

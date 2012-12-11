@@ -994,69 +994,6 @@ nsPluginHost::InstantiateEmbeddedPluginInstance(const char *aMimeType, nsIURI* a
   return NS_OK;
 }
 
-nsresult nsPluginHost::InstantiateFullPagePluginInstance(const char *aMimeType,
-                                                         nsIURI* aURI,
-                                                         nsObjectLoadingContent *aContent,
-                                                         nsPluginInstanceOwner **aOwner,
-                                                         nsIStreamListener **aStreamListener)
-{
-#ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec;
-  aURI->GetSpec(urlSpec);
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsPluginHost::InstantiateFullPagePlugin Begin mime=%s, url=%s\n",
-  aMimeType, urlSpec.get()));
-#endif
-
-  nsRefPtr<nsPluginInstanceOwner> instanceOwner = new nsPluginInstanceOwner();
-  if (!instanceOwner) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIContent> ourContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(aContent));
-  nsresult rv = instanceOwner->Init(ourContent);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = SetUpPluginInstance(aMimeType, aURI, instanceOwner);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsRefPtr<nsNPAPIPluginInstance> instance;
-  instanceOwner->GetInstance(getter_AddRefs(instance));
-  if (!instance) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NPWindow* win = nullptr;
-  instanceOwner->GetWindow(win);
-  if (!win) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Set up any widget that might be required.
-  instanceOwner->CreateWidget();
-  instanceOwner->CallSetWindow();
-
-  rv = NewFullPagePluginStreamListener(aURI, instance.get(), aStreamListener);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Call SetWindow again in case something changed.
-  instanceOwner->CallSetWindow();
-
-  instanceOwner.forget(aOwner);
-
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsPluginHost::InstantiateFullPagePlugin End mime=%s, rv=%d, url=%s\n",
-  aMimeType, rv, urlSpec.get()));
-
-  return NS_OK;
-}
-
 nsPluginTag*
 nsPluginHost::FindTagForLibrary(PRLibrary* aLibrary)
 {
@@ -3266,24 +3203,6 @@ nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURI,
 
   nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
   nsresult rv = listener->InitializeEmbedded(aURI, aInstance);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  listener.forget(aStreamListener);
-
-  return NS_OK;
-}
-
-nsresult nsPluginHost::NewFullPagePluginStreamListener(nsIURI* aURI,
-                                                       nsNPAPIPluginInstance *aInstance,
-                                                       nsIStreamListener **aStreamListener)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aStreamListener);
-
-  nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
-  nsresult rv = listener->InitializeFullPage(aURI, aInstance);
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -11,6 +11,7 @@
 #include "nsGkAtoms.h"
 #include "nsError.h"
 #include "nsIDocument.h"
+#include "nsIPluginDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
@@ -269,8 +270,13 @@ nsHTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
                                           aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Don't kick off load from being bound to a plugin document - the plugin
+  // document will call nsObjectLoadingContent::InitializeFromChannel() for the
+  // initial load.
+  nsCOMPtr<nsIPluginDocument> pluginDoc = do_QueryInterface(aDocument);
+
   // If we already have all the children, start the load.
-  if (mIsDoneAddingChildren) {
+  if (mIsDoneAddingChildren && !pluginDoc) {
     void (nsHTMLSharedObjectElement::*start)() =
       &nsHTMLSharedObjectElement::StartObjectLoad;
     nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, start));

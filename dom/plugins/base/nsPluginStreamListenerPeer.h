@@ -64,25 +64,23 @@ public:
   // Called by RequestRead
   void
   MakeByteRangeString(NPByteRange* aRangeList, nsACString &string, int32_t *numRequests);
-  
+
   bool UseExistingPluginCacheFile(nsPluginStreamListenerPeer* psi);
-  
+
   // Called by GetURL and PostURL (via NewStream)
   nsresult Initialize(nsIURI *aURL,
                       nsNPAPIPluginInstance *aInstance,
                       nsNPAPIPluginStreamListener *aListener);
-  
+
   nsresult InitializeEmbedded(nsIURI *aURL,
                               nsNPAPIPluginInstance* aInstance);
-  
-  nsresult InitializeFullPage(nsIURI* aURL, nsNPAPIPluginInstance *aInstance);
 
   nsresult OnFileAvailable(nsIFile* aFile);
-  
+
   nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);
-  
+
   nsNPAPIPluginInstance *GetPluginInstance() { return mPluginInstance; }
-  
+
   nsresult RequestRead(NPByteRange* rangeList);
   nsresult GetLength(uint32_t* result);
   nsresult GetURL(const char** result);
