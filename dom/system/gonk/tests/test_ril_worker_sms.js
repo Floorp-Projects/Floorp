@@ -714,6 +714,52 @@ for (let lst = 0; lst < PDU_NL_LOCKING_SHIFT_TABLES.length; lst++) {
 }
 test_receiving_ucs2_alphabets(ucs2str);
 
+// Bug 820220: B2G SMS: wrong order and truncated content in multi-part messages
+add_test(function test_sendSMS_UCS2_without_langIndex_langShiftIndex_defined() {
+  let worker = newWriteHexOctetAsUint8Worker();
+
+  worker.Buf.sendParcel = function () {
+    // Each sendParcel() call represents one outgoing segment of a multipart
+    // SMS message. Here, we have the first segment send, so it's "Hello "
+    // only.
+    //
+    // 4(parcel size) + 4(request type) + 4(token)
+    // + 4(two messages) + 4(null SMSC) + 4(message string length)
+    // + 1(first octet) + 1(message reference)
+    // + 2(DA len, TOA) + 4(addr)
+    // + 1(pid) + 1(dcs)
+    // + 1(UDL) + 6(UDHL, type, len, ref, max, seq)
+    // + 12(2 * strlen("Hello "))
+    // + 4(two delimitors) = 57
+    //
+    // If we have additional 6(type, len, langIndex, type len, langShiftIndex)
+    // octets here, then bug 809553 is not fixed.
+    do_check_eq(this.outgoingIndex, 57);
+
+    run_next_test();
+  };
+
+  worker.RIL.sendSMS({
+    number: "1",
+    segmentMaxSeq: 2,
+    fullBody: "Hello World!",
+    dcs: PDU_DCS_MSG_CODING_16BITS_ALPHABET,
+    segmentRef16Bit: false,
+    userDataHeaderLength: 5,
+    strict7BitEncoding: false,
+    requestStatusReport: true,
+    segments: [
+      {
+        body: "Hello ",
+        encodedBodyLength: 12,
+      }, {
+        body: "World!",
+        encodedBodyLength: 12,
+      }
+    ],
+  });
+});
+
 /**
  * Verify GsmPDUHelper#readAddress
  */
