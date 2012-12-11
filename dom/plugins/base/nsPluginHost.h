@@ -188,12 +188,6 @@ public:
                                              nsObjectLoadingContent *aContent,
                                              nsPluginInstanceOwner** aOwner);
 
-  nsresult InstantiateFullPagePluginInstance(const char *aMimeType,
-                                             nsIURI* aURI,
-                                             nsObjectLoadingContent *aContent,
-                                             nsPluginInstanceOwner **aOwner,
-                                             nsIStreamListener **aStreamListener);
-
   // Does not accept NULL and should never fail.
   nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
 
@@ -201,10 +195,6 @@ public:
 
   nsresult NewEmbeddedPluginStreamListener(nsIURI* aURL,
                                            nsNPAPIPluginInstance* aInstance,
-                                           nsIStreamListener **aStreamListener);
-
-  nsresult NewFullPagePluginStreamListener(nsIURI* aURI,
-                                           nsNPAPIPluginInstance *aInstance,
                                            nsIStreamListener **aStreamListener);
 
 private:
