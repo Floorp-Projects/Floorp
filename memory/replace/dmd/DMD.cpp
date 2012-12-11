@@ -1311,6 +1311,22 @@ OptionLong(const char* aArg, const char* aOptionName, long aMin, long aMax,
 
 static const size_t gMaxSampleBelowSize = 100 * 1000 * 1000;    // bytes
 
+// Default to sampling with a sample-below size that's a prime number close to
+// 4096.
+//
+// Using a sample-below size ~= 4096 is much faster than using a sample-below
+// size of 1, and it's not much less accurate in practice, so it's a reasonable
+// default.
+//
+// Using a prime sample-below size makes our sampling more random.  If we used
+// instead a sample-below size of 4096, for example, then if all our allocation
+// sizes were even (which they likely are, due to how jemalloc rounds up), our
+// alloc counter would take on only even values.
+//
+// In contrast, using a prime sample-below size lets us explore all possible
+// values of the alloc counter.
+static const size_t gDefaultSampleBelowSize = 4093;
+
 static void
 BadArg(const char* aArg)
 {
@@ -1324,8 +1340,9 @@ BadArg(const char* aArg)
   StatusMsg("  enables it with non-default options.\n");
   StatusMsg("\n");
   StatusMsg("The following options are allowed;  defaults are shown in [].\n");
-  StatusMsg("  --sample-below=<1..%d> Sample blocks smaller than this [1]\n",
-            int(gMaxSampleBelowSize));
+  StatusMsg("  --sample-below=<1..%d> Sample blocks smaller than this [%d]\n"
+            "                         (prime numbers recommended).\n",
+            int(gMaxSampleBelowSize), int(gDefaultSampleBelowSize));
   StatusMsg("  --mode=<normal|test|stress>   Which mode to run in? [normal]\n");
   StatusMsg("\n");
   exit(1);
@@ -1344,7 +1361,7 @@ Init(const malloc_table_t* aMallocTable)
 
   // Set defaults of things that can be affected by the $DMD env var.
   gMode = Normal;
-  gSampleBelowSize = 1;
+  gSampleBelowSize = gDefaultSampleBelowSize;
 
   // DMD is controlled by the |DMD| environment variable.
   // - If it's unset or empty or "0", DMD doesn't run.
@@ -1737,7 +1754,8 @@ Dump(Writer aWriter)
   size_t totalUsableSize = unreportedUsableSize + reportedUsableSize;
 
   WriteTitle("Invocation\n");
-  W("$DMD = '%s'\n\n", gDMDEnvVar);
+  W("$DMD = '%s'\n", gDMDEnvVar);
+  W("Sample-below size = %lld\n\n", (long long)(gSampleBelowSize));
 
   PrintSortedGroups(aWriter, "Double-reported", "double-reported",
                     *gDoubleReportBlockGroupTable, kNoSize, kNoSize);
@@ -1806,6 +1824,9 @@ static void
 RunTestMode(FILE* fp)
 {
   Writer writer(FpWrite, fp);
+
+  // The first part of this test requires sampling to be disabled.
+  gSampleBelowSize = 1;
 
   // 0th Dump.  Zero for everything.
   Dump(writer);
