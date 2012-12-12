@@ -1457,7 +1457,7 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
-    JS_ASSERT(!f.script()->strictModeCode);
+    JS_ASSERT(!f.script()->strict);
 
     /* ECMA says to return true if name is undefined or inherited. */
     f.regs.sp++;

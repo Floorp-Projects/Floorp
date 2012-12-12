@@ -226,7 +226,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     if (length > 2 &&
         ((chars[0] == '[' && chars[length - 1] == ']') ||
         (chars[0] == '(' && chars[length - 1] == ')')) &&
-         (!caller || !caller->script()->strictModeCode))
+         (!caller || !caller->script()->strict))
     {
         // Remarkably, JavaScript syntax is not a superset of JSON syntax:
         // strings in JavaScript cannot contain the Unicode line and paragraph

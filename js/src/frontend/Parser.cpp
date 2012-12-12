@@ -82,7 +82,7 @@ using namespace js::frontend;
 bool
 StrictModeGetter::get() const
 {
-    return parser->pc->sc->strictMode;
+    return parser->pc->sc->strict;
 }
 
 bool
@@ -1586,7 +1586,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
             JS_ASSERT_IF(pc->sc->isFunction, !pn->pn_cookie.isFree());
             JS_ASSERT_IF(!pc->sc->isFunction, pn->pn_cookie.isFree());
         } else {
-            JS_ASSERT(!pc->sc->strictMode);
+            JS_ASSERT(!pc->sc->strict);
             JS_ASSERT(pn->pn_cookie.isFree());
             if (pc->sc->isFunction) {
                 FunctionBox *funbox = pc->sc->asFunbox();
@@ -1625,7 +1625,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
     // mode. Otherwise, we parse it normally. If we see a "use strict"
     // directive, we backup and reparse it as strict.
     pn->pn_body = NULL;
-    bool initiallyStrict = pc->sc->strictMode;
+    bool initiallyStrict = pc->sc->strict;
     bool becameStrict;
     if (!functionArgsAndBody(pn, fun, funName, type, kind, initiallyStrict, &becameStrict)) {
         if (initiallyStrict || !becameStrict || tokenStream.hadError())
@@ -1875,7 +1875,7 @@ Parser::maybeParseDirective(ParseNode *pn, bool *cont)
             // We're going to be in strict mode. Note that this scope explicitly
             // had "use strict";
             pc->sc->setExplicitUseStrict();
-            if (!pc->sc->strictMode) {
+            if (!pc->sc->strict) {
                 if (pc->sc->isFunction) {
                     // Request that this function be reparsed as strict.
                     pc->funBecameStrict = true;
@@ -1888,7 +1888,7 @@ Parser::maybeParseDirective(ParseNode *pn, bool *cont)
                         reportError(NULL, JSMSG_DEPRECATED_OCTAL);
                         return false;
                     }
-                    pc->sc->strictMode = true;
+                    pc->sc->strict = true;
                 }
             }
         }
@@ -3501,7 +3501,7 @@ Parser::withStatement()
     // construct that is forbidden in strict mode code, but doesn't even merit a
     // warning under JSOPTION_STRICT.  See
     // https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
-    if (pc->sc->strictMode && !reportStrictModeError(NULL, JSMSG_STRICT_CODE_WITH))
+    if (pc->sc->strict && !reportStrictModeError(NULL, JSMSG_STRICT_CODE_WITH))
         return NULL;
 
     ParseNode *pn = BinaryNode::create(PNK_WITH, this);
@@ -5322,7 +5322,7 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         /* Create box for fun->object early to protect against last-ditch GC. */
-        FunctionBox *genFunbox = newFunctionBox(fun, outerpc, outerpc->sc->strictMode);
+        FunctionBox *genFunbox = newFunctionBox(fun, outerpc, outerpc->sc->strict);
         if (!genFunbox)
             return NULL;
 
@@ -5664,7 +5664,7 @@ Parser::memberExpr(bool allowCallSyntax)
                      * In non-strict mode code, direct calls to eval can add
                      * variables to the call object.
                      */
-                    if (pc->sc->isFunction && !pc->sc->strictMode)
+                    if (pc->sc->isFunction && !pc->sc->strict)
                         pc->sc->asFunbox()->setHasExtensibleScope();
                 }
             } else if (lhs->isOp(JSOP_GETPROP)) {

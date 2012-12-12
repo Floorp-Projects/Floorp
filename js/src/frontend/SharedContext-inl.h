@@ -19,14 +19,14 @@ SharedContext::SharedContext(JSContext *cx, bool isFun, bool strict)
   : context(cx),
     isFunction(isFun),
     anyCxFlags(),
-    strictMode(strict)
+    strict(strict)
 {
 }
 
 inline bool
 SharedContext::needStrictChecks()
 {
-    return context->hasStrictOption() || strictMode;
+    return context->hasStrictOption() || strict;
 }
 
 inline GlobalSharedContext *

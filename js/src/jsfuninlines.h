@@ -17,9 +17,9 @@
 #include "vm/String-inl.h"
 
 inline bool
-JSFunction::inStrictMode() const
+JSFunction::strict() const
 {
-    return nonLazyScript()->strictModeCode;
+    return nonLazyScript()->strict;
 }
 
 inline void

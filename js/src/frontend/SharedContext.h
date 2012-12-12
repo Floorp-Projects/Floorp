@@ -143,7 +143,7 @@ class SharedContext
                                        global code */
     AnyContextFlags anyCxFlags;
 
-    bool strictMode;
+    bool strict;
 
     // If it's function code, funbox must be non-NULL and scopeChain must be NULL.
     // If it's global code, funbox must be NULL.
