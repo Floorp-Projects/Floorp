@@ -296,7 +296,7 @@ nsTransitionManager::UpdateThrottledStyle(dom::Element* aElement,
     } else {
       curRule->mRule = ruleNode->GetRule();
     }
-  } while (ruleNode = ruleNode->GetParent());
+  } while ((ruleNode = ruleNode->GetParent()));
 
   nsRefPtr<nsStyleContext> newStyle = mPresContext->PresShell()->StyleSet()->
     ResolveStyleForRules(aParentStyle, oldStyle, rules);
@@ -346,7 +346,6 @@ nsTransitionManager::UpdateThrottledStylesForSubtree(nsIContent* aContent,
 
   // walk the children
   if (newStyle) {
-    nsIContent* child = aContent->GetFirstChild();
     for (nsIContent *child = aContent->GetFirstChild(); child;
          child = child->GetNextSibling()) {
       UpdateThrottledStylesForSubtree(child, newStyle);
@@ -391,7 +390,7 @@ nsTransitionManager::UpdateAllThrottledStyles()
     nsTArray<dom::Element*> ancestors;
     do {
       ancestors.AppendElement(element);
-    } while (element = element->GetElementParent());
+    } while ((element = element->GetElementParent()));
 
     // walk down the ancestors until we find one with a throttled transition
     for (int32_t i = ancestors.Length() - 1; i >= 0; --i) {
