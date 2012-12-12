@@ -66,7 +66,6 @@ EXTRA_JS_MODULES = \
   PopupNotifications.jsm \
   PropertyListUtils.jsm \
   Task.jsm \
-  UpdateChannel.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
@@ -74,6 +73,7 @@ EXTRA_PP_JS_MODULES = \
   Services.jsm \
   WindowDraggingUtils.jsm \
   Troubleshoot.jsm \
+  UpdateChannel.jsm \
   $(NULL)
 
 ifneq (Android,$(OS_TARGET))
