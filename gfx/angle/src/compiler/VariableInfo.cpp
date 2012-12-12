@@ -138,6 +138,16 @@ void getUserDefinedVariableInfo(const TType& type,
     }
 }
 
+TVariableInfo::TVariableInfo()
+{
+}
+
+TVariableInfo::TVariableInfo(ShDataType type, int size)
+    : type(type),
+      size(size)
+{
+}
+
 CollectAttribsUniforms::CollectAttribsUniforms(TVariableInfoList& attribs,
                                                TVariableInfoList& uniforms)
     : mAttribs(attribs),

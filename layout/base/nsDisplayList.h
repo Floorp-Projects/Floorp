@@ -1970,6 +1970,7 @@ public:
   nsDisplayBoxShadowOuter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBoxShadowOuter);
+    mBounds = GetBoundsInternal();
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayBoxShadowOuter() {
@@ -1999,8 +2000,11 @@ public:
     }
   }
 
+  nsRect GetBoundsInternal();
+
 private:
   nsRegion mVisibleRegion;
+  nsRect mBounds;
 };
 
 /**

@@ -9,12 +9,12 @@
 #include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsIWindowMediator.h"
-#include "nsISupportsArray.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "nsXPIDLString.h"
 #include "nsWeakReference.h"
 #include "nsCRT.h"
+#include "nsCOMArray.h"
 
 class nsAppShellWindowEnumerator;
 class nsASXULWindowEarlyToLateEnumerator;
@@ -23,6 +23,7 @@ class nsASDOMWindowFrontToBackEnumerator;
 class nsASXULWindowFrontToBackEnumerator;
 class nsASDOMWindowBackToFrontEnumerator;
 class nsASXULWindowBackToFrontEnumerator;
+class nsIWindowMediatorListener;
 struct nsWindowInfo;
 struct PRLock;
 
@@ -68,7 +69,7 @@ private:
   bool          mReady;
   mozilla::Mutex mListLock;
 
-  nsCOMPtr<nsISupportsArray> mListeners;
+  nsCOMArray<nsIWindowMediatorListener> mListeners;
 };
 
 #endif

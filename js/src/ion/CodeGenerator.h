@@ -79,7 +79,6 @@ class CodeGenerator : public CodeGeneratorSpecific
                                 uint32_t argc, uint32_t unusedStack);
     bool visitCallGeneric(LCallGeneric *call);
     bool visitCallKnown(LCallKnown *call);
-    bool visitCallConstructor(LCallConstructor *call);
     bool emitCallInvokeFunction(LApplyArgsGeneric *apply, Register extraStackSize);
     void emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSpace);
     void emitPopArguments(LApplyArgsGeneric *apply, Register extraStackSize);
@@ -96,8 +95,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewCallObject(LNewCallObject *lir);
     bool visitNewStringObject(LNewStringObject *lir);
     bool visitInitProp(LInitProp *lir);
-    bool visitCreateThis(LCreateThis *lir);
-    bool visitCreateThisVM(LCreateThisVM *lir);
+    bool emitCreateThisVM(LInstruction *lir, const LAllocation *proto, const LAllocation *callee);
+    bool visitCreateThisV(LCreateThisV *lir);
+    bool visitCreateThisO(LCreateThisO *lir);
+    bool visitCreateThisWithTemplate(LCreateThisWithTemplate *lir);
     bool visitReturnFromCtor(LReturnFromCtor *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);

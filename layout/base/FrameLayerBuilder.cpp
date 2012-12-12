@@ -275,7 +275,8 @@ public:
    */
   void ProcessDisplayItems(const nsDisplayList& aList,
                            FrameLayerBuilder::Clip& aClip,
-                           uint32_t aFlags);
+                           uint32_t aFlags,
+                           const nsIFrame* aForceActiveScrolledRoot = nullptr);
   /**
    * This finalizes all the open ThebesLayers by popping every element off
    * mThebesLayerDataStack, then sets the children of the container layer
@@ -560,6 +561,9 @@ protected:
    */
   void SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aClip,
                       uint32_t aRoundedRectClipCount = UINT32_MAX);
+
+  bool ChooseActiveScrolledRoot(const nsDisplayList& aList,
+                                const nsIFrame **aActiveScrolledRoot);
 
   nsDisplayListBuilder*            mBuilder;
   LayerManager*                    mManager;
@@ -2024,55 +2028,39 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 }
 
 /**
- * Checks if aAncestor is an ancestor of aFrame
- */
-static bool IsFrameAncestorOf(const nsIFrame *aAncestor, const nsIFrame *aFrame)
-{
-  if (!aFrame) {
-    return false;
-  }
-  for (const nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    if (f == aAncestor) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
  * Chooses a single active scrolled root for the entire display list, used
  * when we are flattening layers.
  */
-static bool ChooseActiveScrolledRoot(nsDisplayListBuilder *aBuilder,
-                                     const nsDisplayList& aList,
-                                     const nsIFrame **aActiveScrolledRoot)
+bool
+ContainerState::ChooseActiveScrolledRoot(const nsDisplayList& aList,
+                                         const nsIFrame **aActiveScrolledRoot)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayItem::Type type = item->GetType();
     if (type == nsDisplayItem::TYPE_CLIP ||
         type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
-      if (!ChooseActiveScrolledRoot(aBuilder,
-                                    *item->GetSameCoordinateSystemChildren(),
-                                    aActiveScrolledRoot)) {
-        return false;
+      if (ChooseActiveScrolledRoot(*item->GetSameCoordinateSystemChildren(),
+                                   aActiveScrolledRoot)) {
+        return true;
       }
       continue;
     }
 
-    if (!*aActiveScrolledRoot) {
-      // Try using the actual active scrolled root of the backmost item, as that
-      // should result in the least invalidation when scrolling.
-      aBuilder->IsFixedItem(item, aActiveScrolledRoot);
-    } else if (!IsFrameAncestorOf(*aActiveScrolledRoot, item->GetUnderlyingFrame())) {
-      // If there are items that aren't descendants of the background's active scrolled
-      // root, then give up and just use the container's reference frame instead.
-      return false;
+    LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
+    // Don't use an item that won't be part of any ThebesLayers to pick the
+    // active scrolled root.
+    if (layerState == LAYER_ACTIVE_FORCE) {
+      continue;
+    }
+
+    // Try using the actual active scrolled root of the backmost item, as that
+    // should result in the least invalidation when scrolling.
+    mBuilder->IsFixedItem(item, aActiveScrolledRoot);
+    if (*aActiveScrolledRoot) {
+      return true;
     }
   }
-  if (!*aActiveScrolledRoot) {
-    return false;
-  }
-  return true;
+  return false;
 }
 
 /*
@@ -2092,7 +2080,8 @@ static bool ChooseActiveScrolledRoot(nsDisplayListBuilder *aBuilder,
 void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                     FrameLayerBuilder::Clip& aClip,
-                                    uint32_t aFlags)
+                                    uint32_t aFlags,
+                                    const nsIFrame* aForceActiveScrolledRoot)
 {
   SAMPLE_LABEL("ContainerState", "ProcessDisplayItems");
 
@@ -2103,7 +2092,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
   // layer, so we need to choose which active scrolled root to use for all
   // items.
   if (aFlags & NO_COMPONENT_ALPHA) {
-    if (!ChooseActiveScrolledRoot(mBuilder, aList, &lastActiveScrolledRoot)) {
+    if (aForceActiveScrolledRoot) {
+      lastActiveScrolledRoot = aForceActiveScrolledRoot;
+    } else if (!ChooseActiveScrolledRoot(aList, &lastActiveScrolledRoot)) {
       lastActiveScrolledRoot = mContainerReferenceFrame;
     }
 
@@ -2115,7 +2106,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     if (type == nsDisplayItem::TYPE_CLIP ||
         type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
       FrameLayerBuilder::Clip childClip(aClip, item);
-      ProcessDisplayItems(*item->GetSameCoordinateSystemChildren(), childClip, aFlags);
+      ProcessDisplayItems(*item->GetSameCoordinateSystemChildren(), childClip, aFlags, lastActiveScrolledRoot);
       continue;
     }
 
@@ -3774,7 +3765,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   imageTransform.Scale(mParameters.mXScale, mParameters.mYScale);
 
   nsAutoPtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
-    new MaskLayerImageCache::MaskLayerImageKey(aLayer->Manager()->GetBackendType()));
+    new MaskLayerImageCache::MaskLayerImageKey());
 
   // copy and transform the rounded rects
   for (uint32_t i = 0; i < newData.mRoundedClipRects.Length(); ++i) {

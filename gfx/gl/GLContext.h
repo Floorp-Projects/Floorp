@@ -165,6 +165,7 @@ public:
         mMaxCubeMapTextureSize(0),
         mMaxTextureImageSize(0),
         mMaxRenderbufferSize(0),
+        mNeedsTextureSizeChecks(false),
         mWorkAroundDriverBugs(true)
 #ifdef DEBUG
         , mGLError(LOCAL_GL_NO_ERROR)
@@ -341,6 +342,7 @@ public:
         VendorATI,
         VendorQualcomm,
         VendorImagination,
+        VendorNouveau,
         VendorOther
     };
 
@@ -1330,7 +1332,6 @@ public:
     static bool ListHasExtension(const GLubyte *extensions,
                                  const char *extension);
 
-    GLint GetMaxTextureSize() { return mMaxTextureSize; }
     GLint GetMaxTextureImageSize() { return mMaxTextureImageSize; }
     void SetFlipped(bool aFlipped) { mFlipped = aFlipped; }
 
@@ -1581,16 +1582,17 @@ protected:
     GLint mMaxCubeMapTextureSize;
     GLint mMaxTextureImageSize;
     GLint mMaxRenderbufferSize;
+    bool mNeedsTextureSizeChecks;
     bool mWorkAroundDriverBugs;
 
     bool IsTextureSizeSafeToPassToDriver(GLenum target, GLsizei width, GLsizei height) const {
-#ifdef XP_MACOSX
-        if (mWorkAroundDriverBugs &&
-            mVendor == VendorIntel) {
-            // see bug 737182 for 2D textures, bug 684822 for cube map textures.
-            // some drivers handle incorrectly some large texture sizes that are below the
+        if (mNeedsTextureSizeChecks) {
+            // some drivers incorrectly handle some large texture sizes that are below the
             // max texture size that they report. So we check ourselves against our own values
             // (mMax[CubeMap]TextureSize).
+            // see bug 737182 for Mac Intel 2D textures
+            // see bug 684882 for Mac Intel cube map textures
+            // see bug 814716 for Mesa Nouveau
             GLsizei maxSize = target == LOCAL_GL_TEXTURE_CUBE_MAP ||
                                 (target >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
                                 target <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
@@ -1598,7 +1600,6 @@ protected:
                               : mMaxTextureSize;
             return width <= maxSize && height <= maxSize;
         }
-#endif
         return true;
     }
 

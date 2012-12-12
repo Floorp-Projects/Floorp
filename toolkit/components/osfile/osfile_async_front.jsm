@@ -34,12 +34,12 @@ const DEBUG = false;
 // The constructor for file errors.
 let OSError;
 if (OS.Constants.Win) {
-  Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm");
-  Components.utils.import("resource://gre/modules/osfile/ospath_win_back.jsm");
+  Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", this);
+  Components.utils.import("resource://gre/modules/osfile/ospath_win_back.jsm", this);
   OSError = OS.Shared.Win.Error;
 } else if (OS.Constants.libc) {
-  Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
-  Components.utils.import("resource://gre/modules/osfile/ospath_unix_back.jsm");
+  Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", this);
+  Components.utils.import("resource://gre/modules/osfile/ospath_unix_back.jsm", this);
   OSError = OS.Shared.Unix.Error;
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
@@ -47,7 +47,24 @@ if (OS.Constants.Win) {
 let Type = OS.Shared.Type;
 
 // The library of promises.
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+Components.utils.import("resource://gre/modules/commonjs/promise/core.js", this);
+
+// If profileDir is not available, osfile.jsm has been imported before the
+// profile is setup. In this case, we need to observe "profile-do-change"
+// and set OS.Constants.Path.profileDir as soon as it becomes available.
+if (!("profileDir" in OS.Constants.Path) || !("localProfileDir" in OS.Constants.Path)) {
+  Components.utils.import("resource://gre/modules/Services.jsm", this);
+  let observer = function observer() {
+    Services.obs.removeObserver(observer, "profile-do-change");
+
+    let profileDir = Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path;
+    OS.Constants.Path.profileDir = profileDir;
+
+    let localProfileDir = Services.dirsvc.get("ProfLD", Components.interfaces.nsIFile).path;
+    OS.Constants.Path.localProfileDir = localProfileDir;
+  };
+  Services.obs.addObserver(observer, "profile-do-change", false);
+}
 
 /**
  * Return a shallow clone of the enumerable properties of an object

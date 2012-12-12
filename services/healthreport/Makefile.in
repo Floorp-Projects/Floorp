@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 modules := \
   healthreporter.jsm \
   policy.jsm \
+  profile.jsm \
   providers.jsm \
   $(NULL)
 
