@@ -475,7 +475,7 @@ MOZ_END_ENUM_CLASS(StrictMode)
 inline StrictMode
 StrictModeFromContext(JSContext *cx)
 {
-    return cx->hasRunOption(JSOPTION_STRICT_MODE) ? StrictMode::STRICT : StrictMode::UNKNOWN;
+    return cx->hasRunOption(JSOPTION_STRICT_MODE) ? StrictMode::STRICT : StrictMode::NOTSTRICT;
 }
 
 // Ideally, tokenizing would be entirely independent of context.  But the

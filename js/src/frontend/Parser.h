@@ -199,6 +199,10 @@ struct ParseContext                 /* tree context for semantic checks */
     // they need to be treated differently.
     bool            inDeclDestructuring:1;
 
+    // True if we are in a function, saw a "use strict" directive, and weren't
+    // strict before.
+    bool            funBecameStrict:1;
+
     inline ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
     inline ~ParseContext();
 
@@ -350,7 +354,12 @@ struct Parser : private AutoGCRooter
 
     /* Public entry points for parsing. */
     ParseNode *statement();
-    bool processDirectives(ParseNode *stringsAtStart);
+    bool maybeParseDirective(ParseNode *pn, bool *cont);
+
+    // Parse a function, given only its body. Used for the Function constructor.
+    ParseNode *standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals, HandleScript script,
+                                      ParseNode *fn, FunctionBox **funbox, bool strict,
+                                      bool *becameStrict = NULL);
 
     /*
      * Parse a function body.  Pass StatementListBody if the body is a list of
@@ -424,7 +433,11 @@ struct Parser : private AutoGCRooter
     enum FunctionType { Getter, Setter, Normal };
     bool functionArguments(ParseNode **list, ParseNode *funcpn, bool &hasRest);
 
-    ParseNode *functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind);
+    ParseNode *functionDef(HandlePropertyName name, const TokenStream::Position &start,
+                           FunctionType type, FunctionSyntaxKind kind);
+    bool functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyName funName,
+                             FunctionType type, FunctionSyntaxKind kind, bool strict,
+                             bool *becameStrict = NULL);
 
     ParseNode *unaryOpExpr(ParseNodeKind kind, JSOp op);
 
@@ -473,7 +486,6 @@ struct Parser : private AutoGCRooter
     ParseNode *propertyQualifiedIdentifier();
 #endif /* JS_HAS_XML_SUPPORT */
 
-    bool setStrictMode(bool strictMode);
     bool setAssignmentLhsOps(ParseNode *pn, JSOp op);
     bool matchInOrOf(bool *isForOfp);
 };
