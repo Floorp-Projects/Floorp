@@ -28,6 +28,7 @@ cp $1/system/core/include/cutils/logd.h ./cutils/logd.h
 cp $1/frameworks/base/include/binder/IBinder.h ./binder/IBinder.h
 cp $1/frameworks/base/include/binder/Binder.h ./binder/Binder.h
 cp $1/frameworks/base/include/binder/IInterface.h ./binder/IInterface.h
+cp $1/frameworks/base/include/media/stagefright/ColorConverter.h ./stagefright/ColorConverter.h
 cp $1/frameworks/base/include/media/stagefright/MediaExtractor.h ./stagefright/MediaExtractor.h
 cp $1/frameworks/base/include/media/stagefright/OMXCodec.h ./stagefright/OMXCodec.h
 cp $1/frameworks/base/include/media/stagefright/OMXClient.h ./stagefright/OMXClient.h
