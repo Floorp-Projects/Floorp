@@ -790,11 +790,11 @@ GetElementOperation(JSContext *cx, JSOp op, HandleValue lref, HandleValue rref,
     AssertCanGC();
     JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
-    if (lref.isString() && rref.isInt32()) {
+    uint32_t index;
+    if (lref.isString() && IsDefinitelyIndex(rref, &index)) {
         JSString *str = lref.toString();
-        int32_t i = rref.toInt32();
-        if (size_t(i) < str->length()) {
-            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(i));
+        if (index < str->length()) {
+            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, index);
             if (!str)
                 return false;
             res.setString(str);
