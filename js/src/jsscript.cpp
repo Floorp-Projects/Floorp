@@ -1770,7 +1770,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         bce->regexpList.finish(script->regexps());
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());
-    script->strictModeCode = bce->sc->inStrictMode();
+    script->strictModeCode = bce->sc->strictMode;
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;

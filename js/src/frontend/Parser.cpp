@@ -79,10 +79,10 @@ using namespace js::frontend;
     JS_END_MACRO
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
-StrictMode
+bool
 StrictModeGetter::get() const
 {
-    return parser->pc->sc->strictModeState;
+    return parser->pc->sc->strictMode;
 }
 
 CompileError *
@@ -383,9 +383,9 @@ Parser::newObjectBox(JSObject *obj)
 }
 
 FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun,
-                         ParseContext *outerpc, StrictMode sms)
+                         ParseContext *outerpc, bool strict)
   : ObjectBox(fun, traceListHead),
-    SharedContext(cx, /* isFunction = */ true, sms),
+    SharedContext(cx, /* isFunction = */ true, strict),
     bindings(),
     bufStart(0),
     bufEnd(0),
@@ -438,7 +438,7 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
 }
 
 FunctionBox *
-Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
+Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, bool strict)
 {
     JS_ASSERT(fun && !IsPoisonedPtr(fun));
 
@@ -450,7 +450,7 @@ Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
      * function.
      */
     FunctionBox *funbox =
-        context->tempLifoAlloc().new_<FunctionBox>(context, traceListHead, fun, outerpc, sms);
+        context->tempLifoAlloc().new_<FunctionBox>(context, traceListHead, fun, outerpc, strict);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
@@ -713,7 +713,7 @@ Parser::standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals
     if (becameStrict)
         *becameStrict = false;
 
-    *funbox = newFunctionBox(fun, /* outerpc = */ NULL, strict ? StrictMode::STRICT : StrictMode::NOTSTRICT);
+    *funbox = newFunctionBox(fun, /* outerpc = */ NULL, strict);
     if (!funbox)
         return NULL;
 
@@ -1598,7 +1598,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
             JS_ASSERT_IF(pc->sc->isFunction, !pn->pn_cookie.isFree());
             JS_ASSERT_IF(!pc->sc->isFunction, pn->pn_cookie.isFree());
         } else {
-            JS_ASSERT(pc->sc->strictModeState != StrictMode::STRICT);
+            JS_ASSERT(!pc->sc->strictMode);
             JS_ASSERT(pn->pn_cookie.isFree());
             if (pc->sc->isFunction) {
                 FunctionBox *funbox = pc->sc->asFunbox();
@@ -1637,7 +1637,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
     // mode. Otherwise, we parse it normally. If we see a "use strict"
     // directive, we backup and reparse it as strict.
     pn->pn_body = NULL;
-    bool initiallyStrict = pc->sc->strictModeState == StrictMode::STRICT;
+    bool initiallyStrict = pc->sc->strictMode;
     bool becameStrict;
     if (!functionArgsAndBody(pn, fun, funName, type, kind, initiallyStrict, &becameStrict)) {
         if (initiallyStrict || !becameStrict || tokenStream.hadError())
@@ -1664,7 +1664,7 @@ Parser::functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyNam
     ParseContext *outerpc = pc;
 
     // Create box for fun->object early to protect against last-ditch GC.
-    FunctionBox *funbox = newFunctionBox(fun, pc, strict ? StrictMode::STRICT : StrictMode::NOTSTRICT);
+    FunctionBox *funbox = newFunctionBox(fun, pc, strict);
     if (!funbox)
         return false;
 
@@ -1887,7 +1887,7 @@ Parser::maybeParseDirective(ParseNode *pn, bool *cont)
             // We're going to be in strict mode. Note that this scope explicitly
             // had "use strict";
             pc->sc->setExplicitUseStrict();
-            if (pc->sc->strictModeState == StrictMode::NOTSTRICT) {
+            if (!pc->sc->strictMode) {
                 if (pc->sc->isFunction) {
                     // Request that this function be reparsed as strict.
                     pc->funBecameStrict = true;
@@ -1900,7 +1900,7 @@ Parser::maybeParseDirective(ParseNode *pn, bool *cont)
                         reportError(NULL, JSMSG_DEPRECATED_OCTAL);
                         return false;
                     }
-                    pc->sc->strictModeState = StrictMode::STRICT;
+                    pc->sc->strictMode = true;
                 }
             }
         }
@@ -5336,7 +5336,7 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         /* Create box for fun->object early to protect against last-ditch GC. */
-        FunctionBox *genFunbox = newFunctionBox(fun, outerpc, outerpc->sc->strictModeState);
+        FunctionBox *genFunbox = newFunctionBox(fun, outerpc, outerpc->sc->strictMode);
         if (!genFunbox)
             return NULL;
 
@@ -5678,7 +5678,7 @@ Parser::memberExpr(bool allowCallSyntax)
                      * In non-strict mode code, direct calls to eval can add
                      * variables to the call object.
                      */
-                    if (pc->sc->isFunction && pc->sc->strictModeState != StrictMode::STRICT)
+                    if (pc->sc->isFunction && !pc->sc->strictMode)
                         pc->sc->asFunbox()->setHasExtensibleScope();
                 }
             } else if (lhs->isOp(JSOP_GETPROP)) {
@@ -6320,7 +6320,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
-    GlobalSharedContext xmlsc(context, chain, StrictMode::NOTSTRICT);
+    GlobalSharedContext xmlsc(context, chain, false);
     ParseContext xmlpc(this, &xmlsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!xmlpc.init())
         return NULL;
