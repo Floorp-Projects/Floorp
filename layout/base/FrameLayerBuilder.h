@@ -668,15 +668,13 @@ public:
     return mThebesLayerItems.GetEntry(aLayer);
   }
 
-  static PLDHashOperator ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* aEntry,
-                                                    void* aUserArg);
 protected:
   void RemoveThebesItemsAndOwnerDataForLayerSubtree(Layer* aLayer,
                                                     bool aRemoveThebesItems,
                                                     bool aRemoveOwnerData);
 
-  static PLDHashOperator UpdateDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData>* aEntry,
-                                                       void* aUserArg);
+  static PLDHashOperator ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* aEntry,
+                                                    void* aUserArg);
   static PLDHashOperator RestoreDisplayItemData(nsRefPtrHashKey<DisplayItemData>* aEntry,
                                                 void *aUserArg);
 
