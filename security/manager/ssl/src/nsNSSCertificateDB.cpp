@@ -33,7 +33,6 @@
 #include "ScopedNSSTypes.h"
 #include "nsIObserverService.h"
 #include "nsRecentBadCerts.h"
-#include "SharedSSLState.h"
 
 #include "nspr.h"
 #include "certdb.h"
@@ -46,7 +45,6 @@
 #include "plbase64.h"
 
 using namespace mozilla;
-using mozilla::psm::SharedSSLState;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -58,9 +56,7 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
-: mBadCertsLock("nsNSSCertificateDB::mBadCertsLock")
 {
-  SharedSSLState::NoteCertDBServiceInstantiated();
 }
 
 nsNSSCertificateDB::~nsNSSCertificateDB()
@@ -1654,10 +1650,11 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 NS_IMETHODIMP
 nsNSSCertificateDB::GetRecentBadCerts(bool isPrivate, nsIRecentBadCerts** result)
 {
-  MutexAutoLock lock(mBadCertsLock);
+  MOZ_ASSERT(NS_IsMainThread(), "RecentBadCerts should only be obtained on the main thread");
   if (isPrivate) {
     if (!mPrivateRecentBadCerts) {
       mPrivateRecentBadCerts = new nsRecentBadCerts;
+      mPrivateRecentBadCerts->InitPrivateBrowsingObserver();
     }
     NS_ADDREF(*result = mPrivateRecentBadCerts);
   } else {
