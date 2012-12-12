@@ -15,20 +15,12 @@
 #include "nsTHashtable.h"
 #include "mozilla/TimeStamp.h"
 
-namespace mozilla {
-namespace psm {
-class SharedSSLState;
-}
-}
-
-class nsIObserver;
-
 class nsNSSSocketInfo : public mozilla::psm::TransportSecurityInfo,
                         public nsISSLSocketControl,
                         public nsIClientAuthUserDecision
 {
 public:
-  nsNSSSocketInfo(mozilla::psm::SharedSSLState& aState, uint32_t providerFlags);
+  nsNSSSocketInfo(uint32_t providerFlags);
   
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISSLSOCKETCONTROL
@@ -63,11 +55,7 @@ public:
 
   bool GetJoined() { return mJoined; }
   void SetSentClientCert() { mSentClientCert = true; }
-
-  uint32_t GetProviderFlags() const { return mProviderFlags; }
-
-  mozilla::psm::SharedSSLState& SharedState();
-
+  
   // XXX: These are only used on for diagnostic purposes
   enum CertVerificationState {
     before_cert_verification,
@@ -95,7 +83,6 @@ private:
 
   CertVerificationState mCertVerificationState;
 
-  mozilla::psm::SharedSSLState& mSharedState;
   bool mForSTARTTLS;
   bool mSSL3Enabled;
   bool mTLSEnabled;
@@ -122,44 +109,37 @@ private:
 class nsSSLIOLayerHelpers
 {
 public:
-  nsSSLIOLayerHelpers();
-  ~nsSSLIOLayerHelpers();
-
-  nsresult Init();
-  void Cleanup();
+  static nsresult Init();
+  static void Cleanup();
 
   static bool nsSSLIOLayerInitialized;
   static PRDescIdentity nsSSLIOLayerIdentity;
   static PRIOMethods nsSSLIOLayerMethods;
 
-  mozilla::Mutex *mutex;
-  nsTHashtable<nsCStringHashKey> *mTLSIntolerantSites;
-  nsTHashtable<nsCStringHashKey> *mTLSTolerantSites;
+  static mozilla::Mutex *mutex;
+  static nsTHashtable<nsCStringHashKey> *mTLSIntolerantSites;
+  static nsTHashtable<nsCStringHashKey> *mTLSTolerantSites;
 
-  nsTHashtable<nsCStringHashKey> *mRenegoUnrestrictedSites;
-  bool mTreatUnsafeNegotiationAsBroken;
-  int32_t mWarnLevelMissingRFC5746;
+  static nsTHashtable<nsCStringHashKey> *mRenegoUnrestrictedSites;
+  static bool mTreatUnsafeNegotiationAsBroken;
+  static int32_t mWarnLevelMissingRFC5746;
 
-  void setTreatUnsafeNegotiationAsBroken(bool broken);
-  bool treatUnsafeNegotiationAsBroken();
+  static void setTreatUnsafeNegotiationAsBroken(bool broken);
+  static bool treatUnsafeNegotiationAsBroken();
 
-  void setWarnLevelMissingRFC5746(int32_t level);
-  int32_t getWarnLevelMissingRFC5746();
+  static void setWarnLevelMissingRFC5746(int32_t level);
+  static int32_t getWarnLevelMissingRFC5746();
 
   static void getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key);
-  bool rememberPossibleTLSProblemSite(nsNSSSocketInfo *socketInfo);
-  void rememberTolerantSite(nsNSSSocketInfo *socketInfo);
+  static bool rememberPossibleTLSProblemSite(nsNSSSocketInfo *socketInfo);
+  static void rememberTolerantSite(nsNSSSocketInfo *socketInfo);
 
-  void addIntolerantSite(const nsCString &str);
-  void removeIntolerantSite(const nsCString &str);
-  bool isKnownAsIntolerantSite(const nsCString &str);
+  static void addIntolerantSite(const nsCString &str);
+  static void removeIntolerantSite(const nsCString &str);
+  static bool isKnownAsIntolerantSite(const nsCString &str);
 
-  void setRenegoUnrestrictedSites(const nsCString &str);
-  bool isRenegoUnrestrictedSite(const nsCString &str);
-
-  void clearStoredData();
-private:
-  nsCOMPtr<nsIObserver> mPrefObserver;
+  static void setRenegoUnrestrictedSites(const nsCString &str);
+  static bool isRenegoUnrestrictedSite(const nsCString &str);
 };
 
 nsresult nsSSLIOLayerNewSocket(int32_t family,

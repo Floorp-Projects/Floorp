@@ -128,7 +128,6 @@ public:
                                  nsACString & aCertDBKey, bool *_retval);
 
   void ClearRememberedDecisions();
-  static void ClearAllRememberedDecisions();
 
 protected:
     mozilla::ReentrantMonitor monitor;
