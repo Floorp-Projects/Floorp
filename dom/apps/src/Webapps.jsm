@@ -206,6 +206,7 @@ this.DOMApplicationRegistry = {
 
   // Installs a 3rd party packaged app.
   installPreinstalledPackage: function installPreinstalledPackage(aId) {
+#ifdef MOZ_WIDGET_GONK
     let app = this.webapps[aId];
     let baseDir;
     try {
@@ -267,6 +268,7 @@ this.DOMApplicationRegistry = {
     } finally {
       zipReader.close();
     }
+#endif
   },
 
   // Implements the core of bug 787439
@@ -937,9 +939,11 @@ this.DOMApplicationRegistry = {
       }
 
       let manifest = new ManifestHelper(aJSON, app.installOrigin);
-      this.downloadPackage(manifest, { manifestURL: aManifestURL,
-                                       origin: app.origin }, isUpdate,
-        function(aId, aManifest) {
+      this.downloadPackage(manifest, {
+          manifestURL: aManifestURL,
+          origin: app.origin,
+          downloadSize: app.downloadSize
+        }, isUpdate, function(aId, aManifest) {
           // Success! Keep the zip in of TmpD, we'll move it out when
           // applyDownload() will be called.
           let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);

@@ -547,7 +547,7 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
   // Note that |mrFilename| is missing the "incomplete-" prefix; we'll tack
   // that on in a moment.
   nsCString mrFilename;
-  MakeFilename("memory-report", aIdentifier, ".json.gz", mrFilename);
+  MakeFilename("memory-report", aIdentifier, "json.gz", mrFilename);
 
   nsCOMPtr<nsIFile> mrTmpFile;
   nsresult rv;
@@ -640,7 +640,7 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
   // if present).
 
   nsCString dmdFilename;
-  MakeFilename("dmd", aIdentifier, ".txt.gz", dmdFilename);
+  MakeFilename("dmd", aIdentifier, "txt.gz", dmdFilename);
 
   nsCOMPtr<nsIFile> dmdFile;
   rv = OpenTempFile(dmdFilename, getter_AddRefs(dmdFile));

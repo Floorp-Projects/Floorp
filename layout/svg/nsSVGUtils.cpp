@@ -1864,3 +1864,41 @@ nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext,
 
   return SetupCairoStrokePaint(aFrame, aContext, aObjectPaint);
 }
+
+bool
+nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
+                          gfxFont::DrawMode aDrawMode,
+                          gfxTextObjectPaint* aObjectPaint)
+{
+  nsIFrame* frame = aElement->GetPrimaryFrame();
+  nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
+  MOZ_ASSERT(!frame || svgFrame, "Non SVG frame for SVG glyph");
+  if (svgFrame) {
+    nsRenderingContext context;
+    context.Init(frame->PresContext()->DeviceContext(), aContext);
+    context.AddUserData(&gfxTextObjectPaint::sUserDataKey, aObjectPaint, nullptr);
+    nsresult rv = svgFrame->PaintSVG(&context, nullptr);
+    if (NS_SUCCEEDED(rv)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+nsSVGUtils::GetSVGGlyphExtents(Element* aElement,
+                               const gfxMatrix& aSVGToAppSpace,
+                               gfxRect* aResult)
+{
+  nsIFrame* frame = aElement->GetPrimaryFrame();
+  nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
+  MOZ_ASSERT(!frame || svgFrame, "Non SVG frame for SVG glyph");
+  if (svgFrame) {
+    *aResult = svgFrame->GetBBoxContribution(aSVGToAppSpace,
+      nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeFillGeometry |
+      nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeStrokeGeometry |
+      nsSVGUtils::eBBoxIncludeMarkers);
+    return true;
+  }
+  return false;
+}

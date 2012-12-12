@@ -5,6 +5,7 @@
 
 #include "TimeChangeObserver.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMEvent.h"
