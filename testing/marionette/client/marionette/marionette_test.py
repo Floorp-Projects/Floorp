@@ -30,6 +30,7 @@ class CommonTestCase(unittest.TestCase):
         unittest.TestCase.__init__(self, methodName)
         self.loglines = None
         self.perfdata = None
+        self.duration = 0
 
     @classmethod
     def match(cls, filename):
@@ -83,11 +84,13 @@ permissions.forEach(function (perm) {
         # duration of the test; this is deleted in tearDown() to prevent
         # a persistent circular reference which in turn would prevent
         # proper garbage collection.
+        self.start_time = time.time()
         self.marionette = self._marionette_weakref()
         if self.marionette.session is None:
             self.marionette.start_session()
 
     def tearDown(self):
+        self.duration = time.time() - self.start_time
         if self.marionette.session is not None:
             self.loglines = self.marionette.get_logs()
             self.perfdata = self.marionette.get_perf_data()
@@ -125,13 +128,11 @@ class MarionetteTestCase(CommonTestCase):
 
     def setUp(self):
         CommonTestCase.setUp(self)
-        self.start_time = time.time()
         self.marionette.test_name = self.test_name
         self.marionette.execute_script("log('TEST-START: %s:%s')" % 
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
-        self.duration = time.time() - self.start_time
         self.marionette.set_context("content")
         self.marionette.execute_script("log('TEST-END: %s:%s')" % 
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
