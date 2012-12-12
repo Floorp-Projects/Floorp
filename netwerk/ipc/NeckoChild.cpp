@@ -86,7 +86,8 @@ NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
 }
 
 PFTPChannelChild*
-NeckoChild::AllocPFTPChannel()
+NeckoChild::AllocPFTPChannel(PBrowserChild* aBrowser,
+                             const SerializedLoadContext& aSerialized)
 {
   // We don't allocate here: see FTPChannelChild::AsyncOpen()
   NS_RUNTIMEABORT("AllocPFTPChannel should not be called");
@@ -140,7 +141,8 @@ NeckoChild::DeallocPWyciwygChannel(PWyciwygChannelChild* channel)
 }
 
 PWebSocketChild*
-NeckoChild::AllocPWebSocket(PBrowserChild* browser)
+NeckoChild::AllocPWebSocket(PBrowserChild* browser,
+                            const SerializedLoadContext& aSerialized)
 {
   NS_NOTREACHED("AllocPWebSocket should not be called");
   return nullptr;
