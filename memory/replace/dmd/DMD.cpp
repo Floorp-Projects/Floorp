@@ -257,16 +257,51 @@ static const size_t kNoSize = size_t(-1);
 // The global lock
 //---------------------------------------------------------------------------
 
+// MutexBase implements the platform-specific parts of a mutex.
 #ifdef XP_WIN
 
-#error "Windows not supported yet, sorry."
+#include <windows.h>
+
+class MutexBase
+{
+  HANDLE mMutex;
+
+  DISALLOW_COPY_AND_ASSIGN(MutexBase);
+
+public:
+  MutexBase()
+    : mMutex(CreateMutexW(nullptr, false, nullptr))
+  {
+    MOZ_ASSERT(mMutex);
+  }
+
+  ~MutexBase()
+  {
+    if (mMutex) {
+      CloseHandle(mMutex);
+    }
+  }
+
+  void Lock()
+  {
+    if (mMutex) {
+      WaitForSingleObject(mMutex, INFINITE);
+    }
+  }
+
+  void Unlock()
+  {
+    if (mMutex) {
+      ReleaseMutex(mMutex);
+    }
+  }
+};
 
 #else
 
 #include <pthread.h>
 #include <sys/types.h>
 
-// MutexBase implements the platform-specific parts of a mutex.
 class MutexBase
 {
   pthread_mutex_t mMutex;
