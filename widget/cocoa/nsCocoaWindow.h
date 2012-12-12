@@ -226,15 +226,15 @@ public:
     NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
                                               int32_t *aX, int32_t *aY);
     virtual void            SetSizeConstraints(const SizeConstraints& aConstraints);
-    NS_IMETHOD              Move(int32_t aX, int32_t aY);
+    NS_IMETHOD              Move(double aX, double aY);
     NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                         nsIWidget *aWidget, bool aActivate);
     NS_IMETHOD              SetSizeMode(int32_t aMode);
     NS_IMETHOD              HideWindowChrome(bool aShouldHide);
     void                    EnteredFullScreen(bool aFullScreen);
     NS_IMETHOD              MakeFullScreen(bool aFullScreen);
-    NS_IMETHOD              Resize(int32_t aWidth,int32_t aHeight, bool aRepaint);
-    NS_IMETHOD              Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool aRepaint);
+    NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint);
+    NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint);
     NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
     void                    ReportMoveEvent();
@@ -325,7 +325,7 @@ protected:
   void                 CleanUpWindowFilter();
   void                 UpdateBounds();
 
-  nsresult             DoResize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
+  nsresult             DoResize(double aX, double aY, double aWidth, double aHeight,
                                 bool aRepaint, bool aConstrainToCurrentScreen);
 
   virtual already_AddRefed<nsIWidget>
