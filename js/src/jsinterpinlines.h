@@ -779,7 +779,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
         }
     }
 
-    assertSameCompartment(cx, res);
+    assertSameCompartmentDebugOnly(cx, res);
     return true;
 }
 
