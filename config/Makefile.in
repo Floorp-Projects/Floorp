@@ -65,6 +65,8 @@ HEADERS_DEST := $(DIST)/include
 HEADERS_TARGET := export
 INSTALL_TARGETS += HEADERS
 
+PYTHON_UNIT_TESTS := $(wildcard $(srcdir)/tests/unit-*.py)
+
 include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
@@ -146,31 +148,12 @@ endif
 
 FORCE:
 
-PYUNITS := \
-  unit-Expression.py \
-  unit-Preprocessor.py \
-  unit-nsinstall.py \
-  unit-printprereleasesuffix.py \
-  unit-JarMaker.py \
-  unit-buildlist.py \
-  unit-expandlibs.py \
-  unit-writemozinfo.py \
-  unit-mozunit.py \
-  $(NULL)
-
 check-preqs = \
-  check-python-modules \
   check-jar-mn \
   check-makefiles \
   $(NULL)
 
 check:: $(check-preqs)
-
-check-python-modules::
-	@$(EXIT_ON_ERROR) \
-	for test in $(PYUNITS); do \
-	  $(PYTHON) $(srcdir)/tests/$$test ; \
-	done
 
 check-jar-mn::
 	$(MAKE) -C tests/src-simple check-jar
