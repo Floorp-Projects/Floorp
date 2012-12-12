@@ -418,7 +418,7 @@ nsVideoFrame::GetType() const
 a11y::AccType
 nsVideoFrame::AccessibleType()
 {
-  return a11y::eHTMLMediaAccessible;
+  return a11y::eHTMLMedia;
 }
 #endif
 

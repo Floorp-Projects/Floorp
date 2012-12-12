@@ -895,13 +895,13 @@ nsInlineFrame::AccessibleType()
   // replaces the image or image control frame with an inline frame
   nsIAtom *tagAtom = mContent->Tag();
   if (tagAtom == nsGkAtoms::input)  // Broken <input type=image ... />
-    return a11y::eHTMLButtonAccessible;
+    return a11y::eHTMLButton;
   if (tagAtom == nsGkAtoms::img)  // Create accessible for broken <img>
-    return a11y::eImageAccessible;
+    return a11y::eImage;
   if (tagAtom == nsGkAtoms::label)  // Creat accessible for <label>
-    return a11y::eHTMLLabelAccessible;
+    return a11y::eHTMLLabel;
 
-  return a11y::eNoAccessible;
+  return a11y::eNoType;
 }
 #endif
 
