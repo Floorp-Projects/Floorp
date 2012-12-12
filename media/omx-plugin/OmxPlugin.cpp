@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include <stagefright/ColorConverter.h>
 #include <stagefright/DataSource.h>
 #include <stagefright/MediaExtractor.h>
 #include <stagefright/MetaData.h>
@@ -130,6 +131,7 @@ class OmxDecoder {
   VideoFrame mVideoFrame;
   MediaBuffer *mAudioBuffer;
   AudioFrame mAudioFrame;
+  ColorConverter *mColorConverter;
 
   // 'true' if a read from the audio stream was done while reading the metadata
   bool mAudioMetadataRead;
@@ -143,6 +145,7 @@ class OmxDecoder {
   void ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void ToVideoFrame_YUV420PackedSemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  bool ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback);
   bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback);
   bool ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, size_t aDataOffset, size_t aSize,
                     int32_t aAudioChannels, int32_t aAudioSampleRate);
@@ -196,6 +199,7 @@ OmxDecoder::OmxDecoder(PluginHost *aPluginHost, Decoder *aDecoder) :
   mDurationUs(-1),
   mVideoBuffer(NULL),
   mAudioBuffer(NULL),
+  mColorConverter(NULL),
   mAudioMetadataRead(false)
 {
 }
@@ -211,6 +215,10 @@ OmxDecoder::~OmxDecoder()
 
   if (mAudioSource.get()) {
     mAudioSource->stop();
+  }
+
+  if (mColorConverter) {
+    delete mColorConverter;
   }
 #ifndef MOZ_WIDGET_GONK
   mClient.disconnect();
@@ -296,6 +304,10 @@ static sp<MediaSource> CreateVideoSource(PluginHost* aPluginHost,
 
         // Use software decoder for color formats we don't know how to convert.
         default:
+          if (ColorConverter((OMX_COLOR_FORMATTYPE)videoColorFormat,
+                             OMX_COLOR_Format16bitRGB565).isValid()) {
+            return videoSource;
+          }
           // We need to implement a ToVideoFrame_*() color conversion
           // function for this video color format.
           LOG("Unknown video color format: %#x", videoColorFormat);
@@ -657,6 +669,34 @@ void OmxDecoder::ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, i
               uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 0, 1);
 }
 
+bool OmxDecoder::ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
+  if (!mColorConverter) {
+    mColorConverter = new ColorConverter((OMX_COLOR_FORMATTYPE)mVideoColorFormat,
+                                         OMX_COLOR_Format16bitRGB565);
+  }
+
+  if (!mColorConverter->isValid()) {
+    return false;
+  }
+
+  aFrame->mTimeUs = aTimeUs;
+
+  void *buffer = (*aBufferCallback)(mVideoWidth, mVideoHeight, MPAPI::RGB565);
+
+  if (!buffer) {
+    return false;
+  }
+
+  mColorConverter->convert(aData, mVideoStride, mVideoSliceHeight,
+                           mVideoCropLeft, mVideoCropTop,
+                           mVideoCropLeft + mVideoWidth - 1,
+                           mVideoCropTop + mVideoHeight - 1,
+                           buffer, mVideoWidth, mVideoHeight,
+                           0, 0, mVideoWidth - 1, mVideoHeight - 1);
+
+  return true;
+}
+
 bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
   switch (mVideoColorFormat) {
   case OMX_COLOR_FormatYUV420Planar: // e.g. Asus Transformer, Stagefright's software decoder
@@ -678,8 +718,10 @@ bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, 
     ToVideoFrame_YUV420PackedSemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
   default:
-    LOG("Unknown video color format: %#x", mVideoColorFormat);
-    return false;
+    if (!ToVideoFrame_ColorConverter(aFrame, aTimeUs, aData, aSize, aKeyFrame, aBufferCallback)) {
+      LOG("Unknown video color format: %#x", mVideoColorFormat);
+      return false;
+    }
   }
   return true;
 }
