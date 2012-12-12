@@ -14,11 +14,9 @@ this.EXPORTED_SYMBOLS = ["ObjectWrapper"];
 
 this.ObjectWrapper = {
   getObjectKind: function objWrapper_getObjectKind(aObject) {
-    if (!aObject) {
-      return "null";
-    }
-
-    if (Array.isArray(aObject)) {
+    if (aObject === null || aObject === undefined) {
+      return "primitive";
+    } else if (Array.isArray(aObject)) {
       return "array";
     } else if (aObject instanceof Ci.nsIDOMFile) {
       return "file";
@@ -34,9 +32,7 @@ this.ObjectWrapper = {
   wrap: function objWrapper_wrap(aObject, aCtxt) {
     // First check wich kind of object we have.
     let kind = this.getObjectKind(aObject);
-    if (kind == "null") {
-      return null;
-    } else if (kind == "array") {
+    if (kind == "array") {
       let res = Cu.createArrayIn(aCtxt);
       aObject.forEach(function(aObj) {
         res.push(this.wrap(aObj, aCtxt));
