@@ -625,7 +625,7 @@ nsFieldSetFrame::RemoveFrame(ChildListID    aListID,
 a11y::AccType
 nsFieldSetFrame::AccessibleType()
 {
-  return a11y::eHTMLGroupboxAccessible;
+  return a11y::eHTMLGroupbox;
 }
 #endif
 

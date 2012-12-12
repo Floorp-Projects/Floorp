@@ -78,7 +78,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 a11y::AccType
 nsHTMLButtonControlFrame::AccessibleType()
 {
-  return a11y::eHTMLButtonAccessible;
+  return a11y::eHTMLButton;
 }
 #endif
 

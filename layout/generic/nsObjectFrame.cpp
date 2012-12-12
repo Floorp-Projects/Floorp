@@ -275,7 +275,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
 a11y::AccType
 nsObjectFrame::AccessibleType()
 {
-  return a11y::eHTMLObjectFrameAccessible;
+  return a11y::ePlugin;
 }
 
 #ifdef XP_WIN

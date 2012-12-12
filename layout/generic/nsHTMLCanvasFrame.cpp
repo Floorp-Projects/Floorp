@@ -336,7 +336,7 @@ nsHTMLCanvasFrame::GetContinuationOffset(nscoord* aWidth) const
 a11y::AccType
 nsHTMLCanvasFrame::AccessibleType()
 {
-  return a11y::eHTMLCanvasAccessible;
+  return a11y::eHTMLCanvas;
 }
 #endif
 
