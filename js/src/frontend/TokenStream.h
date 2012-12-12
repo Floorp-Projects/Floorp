@@ -465,17 +465,10 @@ struct CompileError {
     void throwError();
 };
 
-/* For an explanation of how these are used, see the comment in the FunctionBox definition. */
-MOZ_BEGIN_ENUM_CLASS(StrictMode, uint8_t)
-    NOTSTRICT,
-    UNKNOWN,
-    STRICT
-MOZ_END_ENUM_CLASS(StrictMode)
-
-inline StrictMode
+inline bool
 StrictModeFromContext(JSContext *cx)
 {
-    return cx->hasRunOption(JSOPTION_STRICT_MODE) ? StrictMode::STRICT : StrictMode::NOTSTRICT;
+    return cx->hasRunOption(JSOPTION_STRICT_MODE);
 }
 
 // Ideally, tokenizing would be entirely independent of context.  But the
@@ -493,7 +486,7 @@ class StrictModeGetter {
   public:
     StrictModeGetter(Parser *p) : parser(p) { }
 
-    StrictMode get() const;
+    bool get() const;
     CompileError *queuedStrictModeError() const;
     void setQueuedStrictModeError(CompileError *e);
 };
@@ -538,7 +531,7 @@ class TokenStream
     /* Note that the version and hasMoarXML can get out of sync via setMoarXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    bool allowsXML() const { return banXML == 0 && strictModeState() != StrictMode::STRICT; }
+    bool allowsXML() const { return banXML == 0 && !strictMode(); }
     bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
     void setMoarXML(bool enabled) { moarXML = enabled; }
     void incBanXML() { banXML++; }
@@ -566,10 +559,7 @@ class TokenStream
     void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
 
-    StrictMode strictModeState() const
-    {
-        return strictModeGetter ? strictModeGetter->get() : StrictMode(StrictMode::NOTSTRICT);
-    }
+    bool strictMode() const { return strictModeGetter && strictModeGetter->get(); }
     bool isXMLTagMode() const { return !!(flags & TSF_XMLTAGMODE); }
     bool isXMLOnlyMode() const { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() const { return !!(flags & TSF_UNEXPECTED_EOF); }
