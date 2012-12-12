@@ -111,7 +111,7 @@ struct JSFunction : public JSObject
     }
 
     /* Returns the strictness of this function, which must be interpreted. */
-    inline bool inStrictMode() const;
+    inline bool strict() const;
 
     // Can be called multiple times by the parser.
     void setArgCount(uint16_t nargs) {
