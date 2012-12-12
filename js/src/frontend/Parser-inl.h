@@ -50,7 +50,8 @@ ParseContext::ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel,
     funHasReturnVoid(false),
     parsingForInit(false),
     parsingWith(prs->pc ? prs->pc->parsingWith : false), // inherit from parent context
-    inDeclDestructuring(false)
+    inDeclDestructuring(false),
+    funBecameStrict(false)
 {
     prs->pc = this;
 }
