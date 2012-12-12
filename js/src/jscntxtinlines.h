@@ -184,7 +184,7 @@ class AutoPtr
     T *get() { return value; }
 };
 
-#ifdef DEBUG
+#ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker
 {
     JSContext *context;
@@ -201,7 +201,7 @@ class CompartmentChecker
      */
     static void fail(JSCompartment *c1, JSCompartment *c2) {
         printf("*** Compartment mismatch %p vs. %p\n", (void *) c1, (void *) c2);
-        JS_NOT_REACHED("compartment mismatched");
+        MOZ_CRASH();
     }
 
     /* Note: should only be used when neither c1 nor c2 may be the default compartment. */
@@ -282,8 +282,7 @@ class CompartmentChecker
             check(fp->scopeChain());
     }
 };
-
-#endif
+#endif /* JS_CRASH_DIAGNOSTICS */
 
 /*
  * Don't perform these checks when called from a finalizer. The checking
@@ -297,6 +296,15 @@ class CompartmentChecker
 template <class T1> inline void
 assertSameCompartment(JSContext *cx, const T1 &t1)
 {
+#ifdef JS_CRASH_DIAGNOSTICS
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+#endif
+}
+
+template <class T1> inline void
+assertSameCompartmentDebugOnly(JSContext *cx, const T1 &t1)
+{
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
@@ -306,7 +314,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1)
 template <class T1, class T2> inline void
 assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2)
 {
-#ifdef DEBUG
+#ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
@@ -316,7 +324,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2)
 template <class T1, class T2, class T3> inline void
 assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3)
 {
-#ifdef DEBUG
+#ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
@@ -327,7 +335,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3)
 template <class T1, class T2, class T3, class T4> inline void
 assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4)
 {
-#ifdef DEBUG
+#ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
@@ -339,7 +347,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3, c
 template <class T1, class T2, class T3, class T4, class T5> inline void
 assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4, const T5 &t5)
 {
-#ifdef DEBUG
+#ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
