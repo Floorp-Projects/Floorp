@@ -23,9 +23,11 @@ const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 // a page is torn down. (Maps inner window ID to an array of PC objects).
 function GlobalPCList() {
   this._list = [];
+  this._networkdown = false; // XXX Need to query current state somehow
   Services.obs.addObserver(this, "inner-window-destroyed", true);
   Services.obs.addObserver(this, "profile-change-net-teardown", true);
   Services.obs.addObserver(this, "network:offline-about-to-go-offline", true);
+  Services.obs.addObserver(this, "network:offline-status-changed", true);
 }
 GlobalPCList.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -89,6 +91,15 @@ GlobalPCList.prototype = {
           pc._pc = null;
         });
       };
+      this._networkdown = true;
+    }
+    else if (topic == "network:offline-status-changed") {
+      if (data == "offline") {
+	// this._list shold be empty here
+        this._networkdown = true;
+      } else if (data == "online") {
+        this._networkdown = false;
+      }
     }
   },
 };
@@ -227,6 +238,9 @@ PeerConnection.prototype = {
     }
     if (this._win) {
       throw new Error("Constructor already called");
+    }
+    if (_globalPCList._networkdown) {
+      throw new Error("Can't create RTPPeerConnections when the network is down");
     }
 
     this._pc = Cc["@mozilla.org/peerconnection;1"].

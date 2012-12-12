@@ -14,6 +14,65 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+      <treecols orient="horizontal">
+          <treecol id="species" primary="true" label="Species" flex="2" ordinal="1"/>
+          <treecol id="name" label="Common name" flex="2" ordinal="3"/>
+          <treecol id="specimen" label="Specimen" flex="3" ordinal="5"/>
+          <treecol id="id" label="id" flex="1" ordinal="7"/>
+      </treecols>
+    <treechildren>
+        <treeitem anyid="true"> <treerow>
+                <treecell label="arachnids" /> <treecell label="Tarantula"/>  <treecell label="Avicularia avicularia" /> <treecell label="1"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+            <treecell label="birds" /> <treecell label="Barn Owl"/> <treecell label="Tyto alba" /> <treecell label="3"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+            <treecell label="birds" /> <treecell label="Emu"/> <treecell label="Dromaius novaehollandiae" /> <treecell label="2"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+            <treecell label="birds" /> <treecell label="Raven"/>  <treecell label="Corvus corax" /> <treecell label="4"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+            <treecell label="fish" /> <treecell label="Cod"/> <treecell label="Gadus morhua" /> <treecell label="5"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+                <treecell label="fish" /> <treecell label="Swordfish"/>   <treecell label="Xiphias gladius" /> <treecell label="6"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+            <treecell label="mammals" /> <treecell label="African Elephant"/> <treecell label="Loxodonta africana" /> <treecell label="9"/>
+        </treerow> </treeitem>
+       <treeitem anyid="true"> <treerow>
+            <treecell label="mammals" /> <treecell label="Gorilla"/>  <treecell label="Gorilla gorilla" /> <treecell label="14"/>
+        </treerow> </treeitem>
+       <treeitem anyid="true"> <treerow>
+            <treecell label="mammals" /> <treecell label="HIPPOPOTAMUS"/> <treecell label="Hippopotamus amphibius" /> <treecell label="8"/>
+       </treerow> </treeitem>
+       <treeitem anyid="true"> <treerow>
+            <treecell label="mammals" /> <treecell label="LAMA"/>  <treecell label="Lama glama" /> <treecell label="10"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+                <treecell label="mammals" /> <treecell label="Lion"/>  <treecell label="Panthera leo" /> <treecell label="7"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+            <treecell label="mammals" /> <treecell label="Nine-banded Armadillo"/>  <treecell label="Dasypus novemcinctus" /> <treecell label="13"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+            <treecell label="mammals" /> <treecell label="Polar Bear"/>  <treecell label="Thalarctos maritimus" /> <treecell label="11"/>
+        </treerow> </treeitem>
+       <treeitem anyid="true"> <treerow>
+            <treecell label="mammals" /> <treecell label="aardvark"/> <treecell label="Orycteropus afer" /> <treecell label="12"/>
+        </treerow> </treeitem>
+        <treeitem anyid="true"> <treerow>
+                <treecell label="reptiles" /> <treecell label="Anaconda"/> <treecell label="Eunectes murinus" /> <treecell label="15"/>
+        </treerow> </treeitem>
+       <treeitem anyid="true"> <treerow>
+            <treecell label="reptiles" /> <treecell label="Chameleon"/> <treecell label="Chamaeleo chamaelon" /> <treecell label="16"/>
+        </treerow> </treeitem>
+    </treechildren>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -28,65 +87,7 @@ var isTreeBuilder = true;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-    <treecols orient="horizontal">
-        <treecol id="species" primary="true" label="Species" flex="2" ordinal="1"/>
-        <treecol id="name" label="Common name" flex="2" ordinal="3"/>
-        <treecol id="specimen" label="Specimen" flex="3" ordinal="5"/>
-        <treecol id="id" label="id" flex="1" ordinal="7"/>
-    </treecols>
-  <treechildren>
-      <treeitem anyid="true"> <treerow>
-              <treecell label="arachnids" /> <treecell label="Tarantula"/>  <treecell label="Avicularia avicularia" /> <treecell label="1"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-          <treecell label="birds" /> <treecell label="Barn Owl"/> <treecell label="Tyto alba" /> <treecell label="3"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-          <treecell label="birds" /> <treecell label="Emu"/> <treecell label="Dromaius novaehollandiae" /> <treecell label="2"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-          <treecell label="birds" /> <treecell label="Raven"/>  <treecell label="Corvus corax" /> <treecell label="4"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-          <treecell label="fish" /> <treecell label="Cod"/> <treecell label="Gadus morhua" /> <treecell label="5"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-              <treecell label="fish" /> <treecell label="Swordfish"/>   <treecell label="Xiphias gladius" /> <treecell label="6"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-          <treecell label="mammals" /> <treecell label="African Elephant"/> <treecell label="Loxodonta africana" /> <treecell label="9"/>
-      </treerow> </treeitem>
-     <treeitem anyid="true"> <treerow>
-          <treecell label="mammals" /> <treecell label="Gorilla"/>  <treecell label="Gorilla gorilla" /> <treecell label="14"/>
-      </treerow> </treeitem>
-     <treeitem anyid="true"> <treerow>
-          <treecell label="mammals" /> <treecell label="HIPPOPOTAMUS"/> <treecell label="Hippopotamus amphibius" /> <treecell label="8"/>
-     </treerow> </treeitem>
-     <treeitem anyid="true"> <treerow>
-          <treecell label="mammals" /> <treecell label="LAMA"/>  <treecell label="Lama glama" /> <treecell label="10"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-              <treecell label="mammals" /> <treecell label="Lion"/>  <treecell label="Panthera leo" /> <treecell label="7"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-          <treecell label="mammals" /> <treecell label="Nine-banded Armadillo"/>  <treecell label="Dasypus novemcinctus" /> <treecell label="13"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-          <treecell label="mammals" /> <treecell label="Polar Bear"/>  <treecell label="Thalarctos maritimus" /> <treecell label="11"/>
-      </treerow> </treeitem>
-     <treeitem anyid="true"> <treerow>
-          <treecell label="mammals" /> <treecell label="aardvark"/> <treecell label="Orycteropus afer" /> <treecell label="12"/>
-      </treerow> </treeitem>
-      <treeitem anyid="true"> <treerow>
-              <treecell label="reptiles" /> <treecell label="Anaconda"/> <treecell label="Eunectes murinus" /> <treecell label="15"/>
-      </treerow> </treeitem>
-     <treeitem anyid="true"> <treerow>
-          <treecell label="reptiles" /> <treecell label="Chameleon"/> <treecell label="Chamaeleo chamaelon" /> <treecell label="16"/>
-      </treerow> </treeitem>
-  </treechildren>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [];
 ]]>

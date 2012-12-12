@@ -284,6 +284,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
         return cond;
     }
+    Condition testMagic(Condition cond, const Operand &operand) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToType(operand), ImmTag(JSVAL_TAG_MAGIC));
+        return cond;
+    }
     Condition testPrimitive(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));

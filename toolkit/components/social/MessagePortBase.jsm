@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["AbstractPort"];
 this.AbstractPort = function AbstractPort(portid) {
   this._portid = portid;
   this._handler = undefined;
+  this._closed = false;
   // pending messages sent to this port before it has a message handler.
   this._pendingMessagesIncoming = [];
 };
@@ -24,7 +25,8 @@ AbstractPort.prototype = {
 
   // and concrete methods shared by client and workers.
   toString: function fw_AbstractPort_toString() {
-    return "MessagePort(portType='" + this._portType + "', portId=" + this._portid + ")";
+    return "MessagePort(portType='" + this._portType + "', portId="
+           + this._portid + (this._closed ? ", closed=true" : "") + ")";
   },
   _JSONParse: function fw_AbstractPort_JSONParse(data) JSON.parse(data),
 
@@ -80,7 +82,7 @@ AbstractPort.prototype = {
    * @param {jsobj} data
    */
   postMessage: function fw_AbstractPort_postMessage(data) {
-    if (this._portid === null) {
+    if (this._closed) {
       throw new Error("port is closed");
     }
     // There seems to be an issue with passing objects directly and letting
@@ -94,13 +96,13 @@ AbstractPort.prototype = {
   },
 
   close: function fw_AbstractPort_close() {
-    if (!this._portid) {
+    if (this._closed) {
       return; // already closed.
     }
     this._postControlMessage("port-close");
     // and clean myself up.
     this._handler = null;
     this._pendingMessagesIncoming = [];
-    this._portid = null;
+    this._closed = true;
   }
 };

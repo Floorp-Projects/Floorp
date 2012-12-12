@@ -2630,6 +2630,70 @@ static JSFunctionSpec TraceMallocFunctions[] = {
 
 #endif /* NS_TRACE_MALLOC */
 
+#ifdef MOZ_DMD
+
+#include <errno.h>
+
+namespace mozilla {
+namespace dmd {
+
+// See https://wiki.mozilla.org/Performance/MemShrink/DMD for instructions on
+// how to use DMD.
+
+static JSBool
+MaybeReportAndDump(JSContext *cx, unsigned argc, jsval *vp, bool report)
+{
+  JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
+  if (!str)
+    return JS_FALSE;
+  JSAutoByteString pathname(cx, str);
+  if (!pathname)
+    return JS_FALSE;
+
+  FILE* fp = fopen(pathname.ptr(), "w");
+  if (!fp) {
+    JS_ReportError(cx, "DMD can't open %s: %s",
+                   pathname.ptr(), strerror(errno));
+    return JS_FALSE;
+  }
+
+  if (report) {
+    fprintf(stderr, "DMD: running reporters...\n");
+    dmd::RunReporters();
+  }
+  dmd::Writer writer(FpWrite, fp);
+  dmd::Dump(writer);
+
+  fclose(fp);
+
+  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  return JS_TRUE;
+}
+
+static JSBool
+ReportAndDump(JSContext *cx, unsigned argc, jsval *vp)
+{
+  return MaybeReportAndDump(cx, argc, vp, /* report = */ true);
+}
+
+static JSBool
+Dump(JSContext *cx, unsigned argc, jsval *vp)
+{
+  return MaybeReportAndDump(cx, argc, vp, /* report = */ false);
+}
+
+
+} // namespace dmd
+} // namespace mozilla
+
+static JSFunctionSpec DMDFunctions[] = {
+    JS_FS("DMDReportAndDump", dmd::ReportAndDump, 1, 0),
+    JS_FS("DMDDump",          dmd::Dump,          1, 0),
+    JS_FS_END
+};
+
+#endif  // defined(MOZ_DMD)
+
 #ifdef MOZ_JPROF
 
 #include <signal.h>
@@ -2739,15 +2803,22 @@ static JSFunctionSpec JProfFunctions[] = {
 // See https://wiki.mozilla.org/Performance/MemShrink/DMD for instructions on
 // how to use DMDV.
 
+namespace mozilla {
+namespace dmdv {
+
 static JSBool
-DMDVCheckAndDumpJS(JSContext *cx, unsigned argc, jsval *vp)
+ReportAndDump(JSContext *cx, unsigned argc, jsval *vp)
 {
-  mozilla::DMDVCheckAndDump();
+  mozilla::dmd::RunReporters();
+  mozilla::dmdv::Dump();
   return JS_TRUE;
 }
 
+} // namespace dmdv
+} // namespace mozilla
+
 static JSFunctionSpec DMDVFunctions[] = {
-    JS_FS("DMDV",                       DMDVCheckAndDumpJS,         0, 0),
+    JS_FS("DMDVReportAndDump", dmdv::ReportAndDump, 0, 0),
     JS_FS_END
 };
 
@@ -2769,6 +2840,11 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
   ::JS_DefineFunctions(mContext, aGlobalObj, TraceMallocFunctions);
+#endif
+
+#ifdef MOZ_DMD
+  // Attempt to initialize DMD functions
+  ::JS_DefineFunctions(mContext, aGlobalObj, DMDFunctions);
 #endif
 
 #ifdef MOZ_JPROF

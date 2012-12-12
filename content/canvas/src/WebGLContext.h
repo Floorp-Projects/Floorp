@@ -858,6 +858,7 @@ protected:
     int32_t mGLMaxTextureUnits;
     int32_t mGLMaxTextureSize;
     int32_t mGLMaxCubeMapTextureSize;
+    int32_t mGLMaxRenderbufferSize;
     int32_t mGLMaxTextureImageUnits;
     int32_t mGLMaxVertexTextureImageUnits;
     int32_t mGLMaxVaryingVectors;
@@ -1126,6 +1127,8 @@ protected:
     JS::Value WebGLObjectAsJSValue(JSContext *cx, const WebGLObjectType *, ErrorResult& rv) const;
     template <typename WebGLObjectType>
     JSObject* WebGLObjectAsJSObject(JSContext *cx, const WebGLObjectType *, ErrorResult& rv) const;
+
+    void ReattachTextureToAnyFramebufferToWorkAroundBugs(WebGLTexture *tex, WebGLint level);
 
 #ifdef XP_MACOSX
     // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime

@@ -1301,7 +1301,7 @@ CheckScriptSize(JSScript *script)
     if (!js_IonOptions.limitScriptSize)
         return true;
 
-    static const uint32_t MAX_SCRIPT_SIZE = 1500;
+    static const uint32_t MAX_SCRIPT_SIZE = 2000;
     static const uint32_t MAX_LOCALS_AND_ARGS = 256;
 
     if (script->length > MAX_SCRIPT_SIZE) {

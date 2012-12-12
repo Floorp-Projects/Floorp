@@ -104,7 +104,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_622303_persistent_filters.js \
 	browser_webconsole_bug_770099_bad_policyuri.js \
 	browser_webconsole_bug_770099_violation.js \
-	browser_webconsole_bug_782653_CSS_links_in_Style_Editor.js \
+	$(filter disabled-temporarily--bug-808264, browser_webconsole_bug_782653_CSS_links_in_Style_Editor.js) \
 	browser_cached_messages.js \
 	browser_bug664688_sandbox_update_after_navigation.js \
 	browser_result_format_as_string.js \

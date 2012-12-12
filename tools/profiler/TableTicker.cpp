@@ -52,12 +52,6 @@
  #include "nsStackWalk.h"
 #endif
 
-#if defined(MOZ_PROFILING) && defined(ANDROID)
- #define USE_LIBUNWIND
- #include <libunwind.h>
- #include "android-signal-defs.h"
-#endif
-
 using std::string;
 using namespace mozilla;
 
@@ -876,54 +870,6 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 }
 #endif
 
-#if defined(USE_LIBUNWIND) && defined(ANDROID)
-void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
-{
-  void* pc_array[1000];
-  size_t count = 0;
-
-  unw_cursor_t cursor; unw_context_t uc;
-  unw_word_t ip;
-  unw_getcontext(&uc);
-
-  // Dirty hack: replace the registers with values from the signal handler
-  // We do this in order to avoid the overhead of walking up to reach the
-  // signal handler frame, and the possibility that libunwind fails to
-  // handle it correctly.
-  unw_tdep_context_t *unw_ctx = reinterpret_cast<unw_tdep_context_t*> (&uc);
-  mcontext_t& mcontext = reinterpret_cast<ucontext_t*> (aSample->context)->uc_mcontext;
-#define REPLACE_REG(num) unw_ctx->regs[num] = (&mcontext.arm_r0)[num]
-  REPLACE_REG(0);
-  REPLACE_REG(1);
-  REPLACE_REG(2);
-  REPLACE_REG(3);
-  REPLACE_REG(4);
-  REPLACE_REG(5);
-  REPLACE_REG(6);
-  REPLACE_REG(7);
-  REPLACE_REG(8);
-  REPLACE_REG(9);
-  REPLACE_REG(10);
-  REPLACE_REG(11);
-  REPLACE_REG(12);
-  REPLACE_REG(13);
-  REPLACE_REG(14);
-  REPLACE_REG(15);
-#undef REPLACE_REG
-  unw_init_local(&cursor, &uc);
-  while (count < ArrayLength(pc_array) &&
-         unw_step(&cursor) > 0) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    pc_array[count++] = reinterpret_cast<void*> (ip);
-  }
-
-  aProfile.addTag(ProfileEntry('s', "(root)"));
-  for (size_t i = count; i > 0; --i) {
-    aProfile.addTag(ProfileEntry('l', reinterpret_cast<void*>(pc_array[i - 1])));
-  }
-}
-#endif
-
 static
 void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSample *sample)
 {
@@ -987,7 +933,7 @@ void TableTicker::Tick(TickSample* sample)
     }
   }
 
-#if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK) || defined(USE_LIBUNWIND)
+#if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
   if (mUseStackWalk) {
     doBacktrace(mPrimaryThreadProfile, sample);
   } else {
@@ -1059,20 +1005,8 @@ void mozilla_sampler_init()
   ProfileStack *stack = new ProfileStack();
   tlsStack.set(stack);
 
-#if defined(USE_LIBUNWIND) && defined(ANDROID)
-  // Only try debug_frame and exidx unwinding
-  putenv("UNW_ARM_UNWIND_METHOD=5");
-#endif
-
   // Allow the profiler to be started using signals
   OS::RegisterStartHandler();
-
-#if defined(USE_LIBUNWIND) && defined(__arm__) && defined(MOZ_CRASHREPORTER)
-  // On ARM, libunwind defines a signal handler for segmentation faults.
-  // If SPS is enabled now, the crash reporter will override that signal
-  // handler, and libunwind will likely break.
-  return;
-#endif
 
   // We can't open pref so we use an environment variable
   // to know if we should trigger the profiler on startup
@@ -1157,7 +1091,7 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
 const char** mozilla_sampler_get_features()
 {
   static const char* features[] = {
-#if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK) || defined(USE_LIBUNWIND))
+#if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK))
     "stackwalk",
 #endif
     "jank",

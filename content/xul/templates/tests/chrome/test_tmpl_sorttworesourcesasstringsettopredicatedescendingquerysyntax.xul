@@ -14,6 +14,17 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <label id="http://www.some-fictitious-zoo.com/mammals/gorilla" value="Gorilla"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/llama" value="LLAMA"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/lion" value="Lion"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/polarbear" value="Polar Bear"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/hippopotamus" value="HIPPOPOTAMUS"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/aardvark" value="aardvark"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo" value="Nine-banded Armadillo"/>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,17 +37,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <label id="http://www.some-fictitious-zoo.com/mammals/gorilla" value="Gorilla"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/llama" value="LLAMA"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/lion" value="Lion"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/polarbear" value="Polar Bear"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/hippopotamus" value="HIPPOPOTAMUS"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/aardvark" value="aardvark"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo" value="Nine-banded Armadillo"/>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [];
 ]]>

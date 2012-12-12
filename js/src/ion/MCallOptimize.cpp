@@ -113,7 +113,7 @@ types::StackTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
     types::StackTypeSet *barrier;
-    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script_, pc, &barrier);
+    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script(), pc, &barrier);
 
     JS_ASSERT(returnTypes);
     return returnTypes;
@@ -129,7 +129,7 @@ IonBuilder::getInlineReturnType()
 types::StackTypeSet *
 IonBuilder::getInlineArgTypeSet(uint32_t argc, uint32_t arg)
 {
-    types::StackTypeSet *argTypes = oracle->getCallArg(script_, argc, arg, pc);
+    types::StackTypeSet *argTypes = oracle->getCallArg(script(), argc, arg, pc);
     JS_ASSERT(argTypes);
     return argTypes;
 }
@@ -713,7 +713,8 @@ IonBuilder::inlineStrCharCodeAt(uint32_t argc, bool constructing)
         return InliningStatus_NotInlined;
     if (getInlineArgType(argc, 0) != MIRType_String)
         return InliningStatus_NotInlined;
-    if (getInlineArgType(argc, 1) != MIRType_Int32)
+    MIRType argType = getInlineArgType(argc, 1);
+    if (argType != MIRType_Int32 && argType != MIRType_Double)
         return InliningStatus_NotInlined;
 
     MDefinitionVector argv;
@@ -768,7 +769,8 @@ IonBuilder::inlineStrCharAt(uint32_t argc, bool constructing)
         return InliningStatus_NotInlined;
     if (getInlineArgType(argc, 0) != MIRType_String)
         return InliningStatus_NotInlined;
-    if (getInlineArgType(argc, 1) != MIRType_Int32)
+    MIRType argType = getInlineArgType(argc, 1);
+    if (argType != MIRType_Int32 && argType != MIRType_Double)
         return InliningStatus_NotInlined;
 
     MDefinitionVector argv;

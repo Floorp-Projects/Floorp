@@ -66,6 +66,17 @@ public:
         return 0;
     }
 
+#if defined(MOZ_ANDROID_SONY_WORKAROUND)
+private:
+    // Sony ICS devices have extra virtual methods in DataSource.
+    // The dummy methods below fill these vtable positions.
+    virtual void foo1() { abort(); }
+    virtual void foo2() { abort(); }
+    virtual void foo3() { abort(); }
+    virtual void foo4() { abort(); }
+public:
+#endif
+
     virtual status_t reconnectAtOffset(off64_t offset) {
         return ERROR_UNSUPPORTED;
     }

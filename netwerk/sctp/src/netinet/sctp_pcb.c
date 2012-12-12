@@ -69,7 +69,12 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 240263 2012-09-09 08:14:04Z tuex
 #endif
 #if defined(__Userspace__)
 #if !defined(__Userspace_os_Windows)
+#if defined(ANDROID)
+#include <unistd.h>
+#include <ifaddrs-android-ext.h>
+#else
 #include <sys/unistd.h>
+#endif
 #endif
 #include <user_socketvar.h>
 #endif

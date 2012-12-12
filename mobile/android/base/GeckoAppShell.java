@@ -236,7 +236,6 @@ public class GeckoAppShell
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
     public static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
-    public static native int  saveMessageInSentbox(String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
     public static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSendFailed(int aError, int aRequestId);
@@ -569,10 +568,7 @@ public class GeckoAppShell
 
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
-        LayerView v = GeckoApp.mAppContext.getLayerView();
         GeckoEditable editable = new GeckoEditable();
-        InputConnectionHandler ich = GeckoInputConnection.create(v, editable);
-        v.setInputConnectionHandler(ich);
         // install the gecko => editable listener
         mEditableListener = editable;
     }
@@ -1988,14 +1984,6 @@ public class GeckoAppShell
         }
 
         SmsManager.getInstance().send(aNumber, aMessage, aRequestId);
-    }
-
-    public static int saveSentMessage(String aRecipient, String aBody, long aDate) {
-        if (SmsManager.getInstance() == null) {
-            return -1;
-        }
-
-        return SmsManager.getInstance().saveSentMessage(aRecipient, aBody, aDate);
     }
 
     public static void getMessage(int aMessageId, int aRequestId) {

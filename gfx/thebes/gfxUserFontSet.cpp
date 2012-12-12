@@ -15,6 +15,8 @@
 #include "prlong.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
+#include "nsIPrincipal.h"
+#include "mozilla/Telemetry.h"
 
 #include "woff.h"
 
@@ -406,6 +408,7 @@ StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy,
         userFontData->mLocalName = src.mLocalName;
     } else {
         userFontData->mURI = src.mURI;
+        userFontData->mPrincipal = aProxy->mPrincipal;
     }
     userFontData->mFormat = src.mFormatFlags;
     userFontData->mRealName = aOriginalName;
@@ -559,48 +562,65 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
             if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI,
                     currSrc.mFormatFlags)) {
 
-                nsresult rv;
-                bool loadDoesntSpin = false;
-                rv = NS_URIChainHasFlags(currSrc.mURI,
-                       nsIProtocolHandler::URI_SYNC_LOAD_IS_OK,
-                       &loadDoesntSpin);
+                nsIPrincipal *principal = nullptr;
+                nsresult rv = CheckFontLoad(&currSrc, &principal);
 
-                if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
-                    uint8_t *buffer = nullptr;
-                    uint32_t bufferLength = 0;
-
-                    // sync load font immediately
-                    rv = SyncLoadFontData(aProxyEntry, &currSrc, buffer,
-                                          bufferLength);
-
-                    if (NS_SUCCEEDED(rv) &&
-                        LoadFont(aProxyEntry, buffer, bufferLength)) {
+                if (NS_SUCCEEDED(rv) && principal != nullptr) {
+                    // see if we have an existing entry for this source
+                    gfxFontEntry *fe =
+                        UserFontCache::GetFont(currSrc.mURI, principal,
+                                               aProxyEntry);
+                    if (fe) {
+                        ReplaceFontEntry(aProxyEntry, fe);
                         return STATUS_LOADED;
-                    } else {
-                        LogMessage(aProxyEntry, "font load failed",
-                                   nsIScriptError::errorFlag, rv);
                     }
 
-                } else {
-                    // otherwise load font async
-                    rv = StartLoad(aProxyEntry, &currSrc);
-                    bool loadOK = NS_SUCCEEDED(rv);
+                    // record the principal returned by CheckFontLoad,
+                    // for use when creating a channel
+                    // and when caching the loaded entry
+                    aProxyEntry->mPrincipal = principal;
 
-                    if (loadOK) {
-#ifdef PR_LOGGING
-                        if (LOG_ENABLED()) {
-                            nsAutoCString fontURI;
-                            currSrc.mURI->GetSpec(fontURI);
-                            LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
-                                 this, aProxyEntry->mSrcIndex, fontURI.get(),
-                                 NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get()));
+                    bool loadDoesntSpin = false;
+                    rv = NS_URIChainHasFlags(currSrc.mURI,
+                           nsIProtocolHandler::URI_SYNC_LOAD_IS_OK,
+                           &loadDoesntSpin);
+                    if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
+                        uint8_t *buffer = nullptr;
+                        uint32_t bufferLength = 0;
+
+                        // sync load font immediately
+                        rv = SyncLoadFontData(aProxyEntry, &currSrc,
+                                              buffer, bufferLength);
+                        if (NS_SUCCEEDED(rv) &&
+                            (fe = LoadFont(aProxyEntry, buffer, bufferLength))) {
+                            UserFontCache::CacheFont(fe);
+                            return STATUS_LOADED;
+                        } else {
+                            LogMessage(aProxyEntry, "font load failed",
+                                       nsIScriptError::errorFlag, rv);
                         }
-#endif
-                        return STATUS_LOADING;
                     } else {
-                        LogMessage(aProxyEntry, "download failed",
-                                   nsIScriptError::errorFlag, rv);
+                        // otherwise load font async
+                        rv = StartLoad(aProxyEntry, &currSrc);
+                        if (NS_SUCCEEDED(rv)) {
+#ifdef PR_LOGGING
+                            if (LOG_ENABLED()) {
+                                nsAutoCString fontURI;
+                                currSrc.mURI->GetSpec(fontURI);
+                                LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
+                                     this, aProxyEntry->mSrcIndex, fontURI.get(),
+                                     NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get()));
+                            }
+#endif
+                            return STATUS_LOADING;
+                        } else {
+                            LogMessage(aProxyEntry, "download failed",
+                                       nsIScriptError::errorFlag, rv);
+                        }
                     }
+                } else {
+                    LogMessage(aProxyEntry, "download not allowed",
+                               nsIScriptError::errorFlag, rv);
                 }
             } else {
                 // We don't log a warning to the web console yet,
@@ -752,6 +772,7 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
                  uint32_t(mGeneration)));
         }
 #endif
+        UserFontCache::CacheFont(fe);
         ReplaceFontEntry(aProxy, fe);
     } else {
 #ifdef PR_LOGGING
@@ -778,3 +799,94 @@ gfxUserFontSet::GetFamily(const nsAString& aFamilyName) const
     return mFontFamilies.GetWeak(key);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// gfxUserFontSet::UserFontCache - re-use platform font entries for user fonts
+// across pages/fontsets rather than instantiating new platform fonts.
+//
+// Entries are added to this cache when a platform font is instantiated from
+// downloaded data, and removed when the platform font entry is destroyed.
+// We don't need to use a timed expiration scheme here because the gfxFontEntry
+// for a downloaded font will be kept alive by its corresponding gfxFont
+// instance(s) until they are deleted, and *that* happens using an expiration
+// tracker (gfxFontCache). The result is that the downloaded font instances
+// recorded here will persist between pages and can get reused (provided the
+// source URI and principal match, of course).
+///////////////////////////////////////////////////////////////////////////////
+
+nsTHashtable<gfxUserFontSet::UserFontCache::Entry>*
+    gfxUserFontSet::UserFontCache::sUserFonts = nullptr;
+
+bool
+gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
+{
+    bool equal;
+    if (NS_FAILED(mURI->Equals(aKey->mURI, &equal)) || !equal) {
+        return false;
+    }
+
+    if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &equal)) || !equal) {
+        return false;
+    }
+
+    const gfxFontEntry *fe = aKey->mFontEntry;
+    if (mFontEntry->mItalic           != fe->mItalic          ||
+        mFontEntry->mWeight           != fe->mWeight          ||
+        mFontEntry->mStretch          != fe->mStretch         ||
+        mFontEntry->mFeatureSettings  != fe->mFeatureSettings ||
+        mFontEntry->mLanguageOverride != fe->mLanguageOverride) {
+        return false;
+    }
+
+    return true;
+}
+
+void
+gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
+{
+    if (!sUserFonts) {
+        sUserFonts = new nsTHashtable<Entry>;
+        sUserFonts->Init();
+    }
+
+    gfxUserFontData *data = aFontEntry->mUserFontData;
+    sUserFonts->PutEntry(Key(data->mURI, data->mPrincipal, aFontEntry));
+}
+
+void
+gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry *aFontEntry)
+{
+    if (!sUserFonts) {
+        // if we've already deleted the cache (i.e. during shutdown),
+        // just ignore this
+        return;
+    }
+
+    gfxUserFontData *data = aFontEntry->mUserFontData;
+    sUserFonts->RemoveEntry(Key(data->mURI, data->mPrincipal, aFontEntry));
+}
+
+gfxFontEntry*
+gfxUserFontSet::UserFontCache::GetFont(nsIURI            *aSrcURI,
+                                       nsIPrincipal      *aPrincipal,
+                                       gfxProxyFontEntry *aProxy)
+{
+    if (!sUserFonts) {
+        return nullptr;
+    }
+
+    Entry* entry = sUserFonts->GetEntry(Key(aSrcURI, aPrincipal, aProxy));
+    if (entry) {
+        return entry->GetFontEntry();
+    }
+
+    return nullptr;
+}
+
+void
+gfxUserFontSet::UserFontCache::Shutdown()
+{
+    if (sUserFonts) {
+        delete sUserFonts;
+        sUserFonts = nullptr;
+    }
+}

@@ -196,6 +196,7 @@ FT2FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
         fe->mItalic = aProxyEntry.mItalic;
         fe->mWeight = aProxyEntry.mWeight;
         fe->mStretch = aProxyEntry.mStretch;
+        fe->mIsUserFont = true;
     }
     return fe;
 }

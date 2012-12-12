@@ -746,7 +746,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     jaegerRuntime_(NULL),
 #endif
     ionRuntime_(NULL),
-    selfHostedGlobal_(NULL),
+    selfHostingGlobal_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -807,6 +807,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
     gcArenasAllocatedDuringSweep(NULL),
+#ifdef DEBUG
+    gcMarkingValidator(NULL),
+#endif
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
@@ -5025,7 +5028,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
          * in. Self-hosted functions can access each other via their names,
          * but not via the builtin classes they get installed into.
          */
-        if (fs->selfHostedName && cx->runtime->isSelfHostedGlobal(cx->global()))
+        if (fs->selfHostedName && cx->runtime->isSelfHostingGlobal(cx->global()))
             return JS_TRUE;
 
         /*

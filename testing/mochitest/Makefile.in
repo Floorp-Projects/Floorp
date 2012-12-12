@@ -49,6 +49,7 @@ _SERV_FILES = 	\
 		runtestsb2g.py \
 		runtestsremote.py \
 		runtestsvmware.py \
+		manifest.webapp \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerSUT.py \
