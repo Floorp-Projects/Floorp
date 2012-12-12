@@ -141,6 +141,9 @@ PowerManagerService::Restart()
   StartForceQuitWatchdog(eHalShutdownMode_Restart, mWatchdogTimeoutSecs);
   // To synchronize any unsaved user data before restarting.
   SyncProfile();
+#ifdef XP_UNIX
+  sync();
+#endif
   _exit(0);
   MOZ_NOT_REACHED();
   return NS_OK;
