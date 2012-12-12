@@ -1026,7 +1026,7 @@ void mozilla_sampler_init()
     return;
   }
 
-  const char* features[] = {"js", "leaf",
+  const char* features[] = {"js", "leaf"
 #if defined(XP_WIN) || defined(XP_MACOSX)
                          , "stackwalk"
 #endif
