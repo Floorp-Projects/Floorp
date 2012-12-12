@@ -172,7 +172,8 @@ enum InterpMode
     JSINTERP_NORMAL    = 0, /* interpreter is running normally */
     JSINTERP_REJOIN    = 1, /* as normal, but the frame has already started */
     JSINTERP_SKIP_TRAP = 2, /* as REJOIN, but skip trap at first opcode */
-    JSINTERP_BAILOUT   = 3  /* interpreter is running from an Ion bailout */
+    JSINTERP_BAILOUT   = 3, /* interpreter is running from an Ion bailout */
+    JSINTERP_RETHROW   = 4  /* as BAILOUT, but unwind all frames */
 };
 
 enum InterpretStatus

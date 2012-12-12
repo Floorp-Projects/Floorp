@@ -807,6 +807,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
     gcArenasAllocatedDuringSweep(NULL),
+#ifdef DEBUG
+    gcMarkingValidator(NULL),
+#endif
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),

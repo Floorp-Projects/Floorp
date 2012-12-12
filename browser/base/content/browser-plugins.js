@@ -251,6 +251,7 @@ var gPluginHandler = {
     }
   },
 
+  _notificationDisplayedOnce: false,
   handlePluginScripted: function PH_handlePluginScripted(aBrowser) {
     let contentWindow = aBrowser.contentWindow;
     if (!contentWindow)
@@ -278,9 +279,10 @@ var gPluginHandler = {
     });
 
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
-    if (notification && !haveVisibleCTPPlugin) {
+    if (notification && !haveVisibleCTPPlugin && !this._notificationDisplayedOnce) {
       notification.dismissed = false;
       PopupNotifications._update(notification.anchorElement);
+      this._notificationDisplayedOnce = true;
     }
 
     aBrowser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_DONE;
@@ -643,8 +645,9 @@ var gPluginHandler = {
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
     let dismissed = notification ? notification.dismissed : true;
     let options = { dismissed: dismissed, centerActions: centerActions };
+    let icon = haveVulnerablePlugin ? "blocked-plugins-notification-icon" : "plugins-notification-icon"
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
-                            messageString, "plugins-notification-icon",
+                            messageString, icon,
                             mainAction, secondaryActions, options);
   },
 

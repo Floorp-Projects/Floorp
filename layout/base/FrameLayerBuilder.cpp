@@ -2783,10 +2783,11 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       // or it was previously unscaled.
       bool clamp = true;
       gfxMatrix oldFrameTransform2d;
-      if (aLayer->GetTransform().Is2D(&oldFrameTransform2d)) {
+      if (aLayer->GetBaseTransform().Is2D(&oldFrameTransform2d)) {
         gfxSize oldScale = oldFrameTransform2d.ScaleFactors(true);
-        if (oldScale == scale || oldScale == gfxSize(1.0, 1.0))
+        if (oldScale == scale || oldScale == gfxSize(1.0, 1.0)) {
           clamp = false;
+        }
       }
       if (clamp) {
         scale.width = gfxUtils::ClampToScaleFactor(scale.width);
