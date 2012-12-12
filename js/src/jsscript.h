@@ -379,6 +379,8 @@ struct JSScript : public js::gc::Cell
     js::ScriptSource *scriptSource_; /* source code */
 #ifdef JS_METHODJIT
     JITScriptSet *mJITInfo;
+#else
+    void         *mJITInfoPad;
 #endif
     js::HeapPtrFunction function_;
     js::HeapPtrObject   enclosingScope_;
@@ -479,9 +481,14 @@ struct JSScript : public js::gc::Cell
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
+#else
+    bool            debugModePad:1;
+    bool            failedBoundsCheckPad:1;
 #endif
 #ifdef JS_ION
     bool            failedShapeGuard:1; /* script has had hoisted shape guard fail */
+#else
+    bool            failedShapeGuardPad:1;
 #endif
     bool            invalidatedIdempotentCache:1; /* idempotent cache has triggered invalidation */
     bool            isGenerator:1;    /* is a generator */

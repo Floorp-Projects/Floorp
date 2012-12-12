@@ -162,6 +162,7 @@ fails-if(!cocoaWidget) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notr
 == 726392-3.html 726392-3-ref.html
 == 745555-1.html 745555-1-ref.html
 == 745555-2.html 745555-2-ref.html
+== 820255.html 820255-ref.html
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support

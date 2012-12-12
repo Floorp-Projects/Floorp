@@ -142,7 +142,12 @@ endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
 endif
-ABS_topsrcdir   := $(call core_abspath,$(topsrcdir))
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+ifeq ($(HOST_OS_ARCH),WINNT)
+ifdef .PYMAKE
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd -W)
+endif
+endif
 # Hack to force NSS build system to use "normal" object directories
 DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $(ABS_topsrcdir)/security/,,$$(CURDIR))'
 DEFAULT_GMAKE_FLAGS += BUILD_TREE='$$(BUILD)' OBJDIR='$$(BUILD)' DEPENDENCIES='$$(BUILD)/.deps' SINGLE_SHLIB_DIR='$$(BUILD)'

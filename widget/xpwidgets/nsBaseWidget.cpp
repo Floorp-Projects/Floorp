@@ -990,7 +990,7 @@ NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsBaseWidget::MoveClient(int32_t aX, int32_t aY)
+NS_METHOD nsBaseWidget::MoveClient(double aX, double aY)
 {
   nsIntPoint clientOffset(GetClientOffset());
   aX -= clientOffset.x;
@@ -998,8 +998,8 @@ NS_METHOD nsBaseWidget::MoveClient(int32_t aX, int32_t aY)
   return Move(aX, aY);
 }
 
-NS_METHOD nsBaseWidget::ResizeClient(int32_t aWidth,
-                                     int32_t aHeight,
+NS_METHOD nsBaseWidget::ResizeClient(double aWidth,
+                                     double aHeight,
                                      bool aRepaint)
 {
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
@@ -1013,10 +1013,10 @@ NS_METHOD nsBaseWidget::ResizeClient(int32_t aWidth,
   return Resize(aWidth, aHeight, aRepaint);
 }
 
-NS_METHOD nsBaseWidget::ResizeClient(int32_t aX,
-                                     int32_t aY,
-                                     int32_t aWidth,
-                                     int32_t aHeight,
+NS_METHOD nsBaseWidget::ResizeClient(double aX,
+                                     double aY,
+                                     double aWidth,
+                                     double aHeight,
                                      bool aRepaint)
 {
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");

@@ -46,9 +46,9 @@ public:
   bool Init()
   {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (NS_FAILED(obs->AddObserver(this,
-                                   NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                   false))) {
+    if (!obs || NS_FAILED(obs->AddObserver(this,
+                                           NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                           false))) {
       NS_WARNING("Failed to add shutdown observer!");
       return false;
     }
@@ -481,6 +481,26 @@ BluetoothOppManager::CreateFile()
    * the file name again.
    */
   f->GetLeafName(sFileName);
+
+  mDsFile = nullptr;
+
+  nsCOMPtr<nsIMIMEService> mimeSvc = do_GetService(NS_MIMESERVICE_CONTRACTID);
+  if (mimeSvc) {
+    nsCString mimeType;
+    nsresult rv = mimeSvc->GetTypeFromFile(f, mimeType);
+
+    if (NS_SUCCEEDED(rv)) {
+      if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("image/"))) {
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("pictures"), f);
+      } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("video/"))) {
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("movies"), f);
+      } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("audio/"))) {
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("music"), f);
+      } else {
+        NS_WARNING("Couldn't recognize the mimetype of received file.");
+      }
+    }
+  }
 
   NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), f);
   if (!mOutputStream) {
@@ -1240,12 +1260,24 @@ BluetoothOppManager::OnDisconnect()
    * AfterOppDisconnected here to ensure all variables will be cleaned.
    */
   if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
-    if (!mSuccessFlag) {
-      if (mTransferMode) {
+    if (mTransferMode) {
+      if (!mSuccessFlag) {
         DeleteReceivedFile();
+      } else if (mDsFile) {
+        nsString data;
+        CopyASCIItoUTF16("modified", data);
+
+        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+        if (obs) {
+          obs->NotifyObservers(mDsFile, "file-watcher-update", data.get());
+        }
       }
+    }
+
+    if (!mSuccessFlag) {
       FileTransferComplete();
     }
+
     Listen();
   } else if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
     NS_WARNING("BluetoothOppManager got unexpected socket status!");

@@ -14,15 +14,15 @@ let gProviders = [
   {
     name: "provider 1",
     origin: "https://example.com",
-    sidebarURL: "https://example.com/browser/browser/base/content/test/social_sidebar.html?provider1",
-    workerURL: "https://example.com/browser/browser/base/content/test/social_worker.js",
+    sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html?provider1",
+    workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
     iconURL: "chrome://branding/content/icon48.png"
   },
   {
     name: "provider 2",
     origin: "https://test1.example.com",
-    sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social_sidebar.html?provider2",
-    workerURL: "https://test1.example.com/browser/browser/base/content/test/social_worker.js",
+    sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html?provider2",
+    workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
     iconURL: "chrome://branding/content/icon48.png"
   }
 ];

@@ -1322,7 +1322,7 @@ nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
 }
 
 // Move this component
-NS_METHOD nsWindow::Move(int32_t aX, int32_t aY)
+NS_METHOD nsWindow::Move(double aX, double aY)
 {
   if (mWindowType == eWindowType_toplevel ||
       mWindowType == eWindowType_dialog) {
@@ -1342,8 +1342,11 @@ NS_METHOD nsWindow::Move(int32_t aX, int32_t aY)
     return NS_OK;
   }
 
-  mBounds.x = aX;
-  mBounds.y = aY;
+  int32_t x = NSToIntRound(aX * GetDefaultScale());
+  int32_t y = NSToIntRound(aY * GetDefaultScale());
+
+  mBounds.x = x;
+  mBounds.y = y;
 
   if (mWnd) {
 #ifdef DEBUG
@@ -1357,7 +1360,7 @@ NS_METHOD nsWindow::Move(int32_t aX, int32_t aY)
           RECT workArea;
           ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
           // no annoying assertions. just mention the issue.
-          if (aX < 0 || aX >= workArea.right || aY < 0 || aY >= workArea.bottom) {
+          if (x < 0 || x >= workArea.right || y < 0 || y >= workArea.bottom) {
             PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
                    ("window moved to offscreen position\n"));
           }
@@ -1378,7 +1381,7 @@ NS_METHOD nsWindow::Move(int32_t aX, int32_t aY)
         (mClipRectCount != 1 || !mClipRects[0].IsEqualInterior(nsIntRect(0, 0, mBounds.width, mBounds.height)))) {
       flags |= SWP_NOCOPYBITS;
     }
-    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0, flags));
+    VERIFY(::SetWindowPos(mWnd, NULL, x, y, 0, 0, flags));
 
     SetThemeRegion();
   }
@@ -1387,14 +1390,18 @@ NS_METHOD nsWindow::Move(int32_t aX, int32_t aY)
 }
 
 // Resize this component
-NS_METHOD nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
+NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-  NS_ASSERTION((aWidth >=0 ) , "Negative width passed to nsWindow::Resize");
-  NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
-  ConstrainSize(&aWidth, &aHeight);
+  int32_t width = NSToIntRound(aWidth * GetDefaultScale());
+  int32_t height = NSToIntRound(aHeight * GetDefaultScale());
+
+  NS_ASSERTION((width >= 0) , "Negative width passed to nsWindow::Resize");
+  NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
+
+  ConstrainSize(&width, &height);
 
   // Avoid unnecessary resizing calls
-  if (mBounds.width == aWidth && mBounds.height == aHeight) {
+  if (mBounds.width == width && mBounds.height == height) {
     if (aRepaint) {
       Invalidate();
     }
@@ -1403,12 +1410,12 @@ NS_METHOD nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 
 #ifdef MOZ_XUL
   if (eTransparencyTransparent == mTransparencyMode)
-    ResizeTranslucentWindow(aWidth, aHeight);
+    ResizeTranslucentWindow(width, height);
 #endif
 
   // Set cached value for lightweight and printing
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
+  mBounds.width  = width;
+  mBounds.height = height;
 
   if (mWnd) {
     UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE;
@@ -1418,7 +1425,7 @@ NS_METHOD nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
     }
 
     ClearThemeRegion();
-    VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), flags));
+    VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, width, GetHeight(height), flags));
     SetThemeRegion();
   }
 
@@ -1430,15 +1437,22 @@ NS_METHOD nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 }
 
 // Resize this component
-NS_METHOD nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool aRepaint)
+NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint)
 {
-  NS_ASSERTION((aWidth >=0 ),  "Negative width passed to nsWindow::Resize");
-  NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
-  ConstrainSize(&aWidth, &aHeight);
+  double scale = GetDefaultScale();
+  int32_t x = NSToIntRound(aX * scale);
+  int32_t y = NSToIntRound(aY * scale);
+  int32_t width = NSToIntRound(aWidth * scale);
+  int32_t height = NSToIntRound(aHeight * scale);
+
+  NS_ASSERTION((width >= 0),  "Negative width passed to nsWindow::Resize");
+  NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
+
+  ConstrainSize(&width, &height);
 
   // Avoid unnecessary resizing calls
-  if (mBounds.x == aX && mBounds.y == aY &&
-      mBounds.width == aWidth && mBounds.height == aHeight) {
+  if (mBounds.x == x && mBounds.y == y &&
+      mBounds.width == width && mBounds.height == height) {
     if (aRepaint) {
       Invalidate();
     }
@@ -1447,14 +1461,14 @@ NS_METHOD nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeig
 
 #ifdef MOZ_XUL
   if (eTransparencyTransparent == mTransparencyMode)
-    ResizeTranslucentWindow(aWidth, aHeight);
+    ResizeTranslucentWindow(width, height);
 #endif
 
   // Set cached value for lightweight and printing
-  mBounds.x      = aX;
-  mBounds.y      = aY;
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
+  mBounds.x      = x;
+  mBounds.y      = y;
+  mBounds.width  = width;
+  mBounds.height = height;
 
   if (mWnd) {
     UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE;
@@ -1463,7 +1477,7 @@ NS_METHOD nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeig
     }
 
     ClearThemeRegion();
-    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), flags));
+    VERIFY(::SetWindowPos(mWnd, NULL, x, y, width, GetHeight(height), flags));
     SetThemeRegion();
   }
 
