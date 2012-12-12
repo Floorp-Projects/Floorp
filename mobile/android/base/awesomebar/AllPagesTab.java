@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -446,14 +447,23 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             return convertView;
         }
 
-        private void bindSearchEngineView(final SearchEngine engine, SearchEntryViewHolder viewHolder) {
+        private void bindSearchEngineView(final SearchEngine engine, final SearchEntryViewHolder viewHolder) {
             // when a suggestion is clicked, do a search
             OnClickListener clickListener = new OnClickListener() {
                 public void onClick(View v) {
                     AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
                     if (listener != null) {
                         String suggestion = ((TextView) v.findViewById(R.id.suggestion_text)).getText().toString();
-                        listener.onSearch(engine.name, suggestion);
+
+                        // If we're not clicking the user-entered view (the
+                        // first suggestion item) and the search matches a URL
+                        // pattern, go to that URL. Otherwise, do a search for
+                        // the term.
+                        if (v != viewHolder.userEnteredView && !StringUtils.isSearchQuery(suggestion)) {
+                            listener.onUrlOpen(suggestion);
+                        } else {
+                            listener.onSearch(engine.name, suggestion);
+                        }
                     }
                 }
             };
