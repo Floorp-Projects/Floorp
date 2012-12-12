@@ -574,6 +574,7 @@ class TokenStream
     bool isXMLOnlyMode() const { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() const { return !!(flags & TSF_UNEXPECTED_EOF); }
     bool isEOF() const { return !!(flags & TSF_EOF); }
+    bool sawOctalEscape() const { return !!(flags & TSF_OCTAL_CHAR); }
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
