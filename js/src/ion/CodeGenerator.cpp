@@ -2709,7 +2709,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
     masm.bind(&callStub);
     saveLive(ins);
 
-    pushArg(Imm32(current->mir()->strictModeCode()));
+    pushArg(Imm32(current->mir()->strict()));
     pushArg(value);
     if (index->isConstant())
         pushArg(*index->toConstant());
@@ -3350,7 +3350,7 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 bool
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)
 {
-    pushArg(Imm32(current->mir()->strictModeCode()));
+    pushArg(Imm32(current->mir()->strict()));
     pushArg(ToValue(lir, LCallSetElement::Value));
     pushArg(ToValue(lir, LCallSetElement::Index));
     pushArg(ToRegister(lir->getOperand(0)));
@@ -3733,7 +3733,7 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
     pushArg(ImmGCPtr(lir->mir()->name()));
     pushArg(ToValue(lir, LCallDeleteProperty::Value));
 
-    if (lir->mir()->block()->info().script()->strictModeCode)
+    if (lir->mir()->block()->info().script()->strict)
         return callVM(DeletePropertyStrictInfo, lir);
     else
         return callVM(DeletePropertyNonStrictInfo, lir);

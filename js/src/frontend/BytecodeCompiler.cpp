@@ -129,8 +129,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         return NULL;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
-    if (callerFrame && callerFrame->script()->strictModeCode)
-        globalsc.strictMode = true;
+    if (callerFrame && callerFrame->script()->strict)
+        globalsc.strict = true;
 
     if (options.compileAndGo) {
         if (source) {
@@ -151,7 +151,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
              * wishes to decompile it while it's running.
              */
             JSFunction *fun = callerFrame->fun();
-            ObjectBox *funbox = parser.newFunctionBox(fun, &pc, fun->inStrictMode());
+            ObjectBox *funbox = parser.newFunctionBox(fun, &pc, fun->strict());
             if (!funbox)
                 return NULL;
             bce.objectList.add(funbox);
