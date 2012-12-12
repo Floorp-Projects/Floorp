@@ -482,7 +482,11 @@ struct JSRuntime : js::RuntimeFriendFields
     void clearOwnerThread();
     void setOwnerThread();
     JS_FRIEND_API(void) abortIfWrongThread() const;
+#ifdef DEBUG
     JS_FRIEND_API(void) assertValidThread() const;
+#else
+    void assertValidThread() const {}
+#endif
   private:
     void                *ownerThread_;
   public:
