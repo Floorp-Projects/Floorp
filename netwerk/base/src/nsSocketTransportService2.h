@@ -188,8 +188,6 @@ private:
 #endif
     bool mProbedMaxCount;
 
-    void ClosePrivateConnections();
-
     void AnalyzeConnection(nsTArray<mozilla::net::SocketInfo> *data,
                            SocketContext *context, bool aActive);
 };
