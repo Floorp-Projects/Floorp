@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.composite.uncovered.fill.source-out</title>
+<!-- Testing: fill() draws pixels not covered by the source object as (0,0,0,0), and does not leave the pixels unchanged. -->
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+function isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+function todo_isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    todo(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+
+ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+ctx.fillRect(0, 0, 100, 50);
+ctx.globalCompositeOperation = 'color-burn';
+ctx.fillStyle = 'rgba(0, 0, 255, 0.75)';
+ctx.translate(0, 25);
+ctx.fillRect(0, 50, 100, 50);
+isPixel(ctx, 50,25, 0,255,0,128, "50,25", "0,255,0,128", 5);
+
+SimpleTest.finish();
+
+});
+</script>
+
