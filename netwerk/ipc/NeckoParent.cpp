@@ -17,7 +17,8 @@
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Preferences.h"
-
+#include "mozilla/LoadContext.h"
+#include "nsPrintfCString.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsIAppsService.h"
 #include "nsEscape.h"
@@ -25,6 +26,7 @@
 using mozilla::dom::TabParent;
 using mozilla::net::PTCPSocketParent;
 using mozilla::dom::TCPSocketParent;
+using IPC::SerializedLoadContext;
 
 namespace mozilla {
 namespace net {
@@ -57,11 +59,116 @@ NeckoParent::~NeckoParent()
 {
 }
 
-PHttpChannelParent*
-NeckoParent::AllocPHttpChannel(PBrowserParent* browser,
-                               const SerializedLoadContext& loadContext)
+static PBOverrideStatus
+PBOverrideStatusFromLoadContext(const SerializedLoadContext& aSerialized)
 {
-  HttpChannelParent *p = new HttpChannelParent(browser, loadContext);
+  if (!aSerialized.IsNotNull() && aSerialized.IsPrivateBitValid()) {
+    return aSerialized.mUsePrivateBrowsing ?
+      kPBOverride_Private :
+      kPBOverride_NotPrivate;
+  }
+  return kPBOverride_Unset;
+}
+
+const char*
+NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
+                                 PBrowserParent* aBrowser,
+                                 uint32_t* aAppId,
+                                 bool* aInBrowserElement)
+{
+  if (!gDisableIPCSecurity) {
+    if (!aBrowser) {
+      return "missing required PBrowser argument";
+    }
+    if (!aSerialized.IsNotNull()) {
+      return "SerializedLoadContext from child is null";
+    }
+  }
+
+  *aAppId = NECKO_UNKNOWN_APP_ID;
+  *aInBrowserElement = false;
+
+  if (aBrowser) {
+    nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(aBrowser);
+
+    *aAppId = tabParent->OwnOrContainingAppId();
+    *aInBrowserElement = tabParent->IsBrowserElement();
+
+    if (*aAppId == NECKO_UNKNOWN_APP_ID) {
+      return "TabParent reports appId=NECKO_UNKNOWN_APP_ID!";
+    }
+    // We may get appID=NO_APP if child frame is neither a browser nor an app
+    if (*aAppId == NECKO_NO_APP_ID) {
+      if (tabParent->HasOwnApp()) {
+        return "TabParent reports NECKO_NO_APP_ID but also is an app";
+      }
+      if (!gDisableIPCSecurity && tabParent->IsBrowserElement()) {
+        // <iframe mozbrowser> which doesn't have an <iframe mozapp> above it.
+        // This is not supported now, and we'll need to do a code audit to make
+        // sure we can handle it (i.e don't short-circuit using separate
+        // namespace if just appID==0)
+        return "TabParent reports appId=NECKO_NO_APP_ID but is a mozbrowser";
+      }
+    }
+  } else {
+    // Only trust appId/inBrowser from child-side loadcontext if we're in
+    // testing mode: allows xpcshell tests to masquerade as apps
+    MOZ_ASSERT(gDisableIPCSecurity);
+    if (!gDisableIPCSecurity) {
+      return "internal error";
+    }
+    if (aSerialized.IsNotNull()) {
+      *aAppId = aSerialized.mAppId;
+      *aInBrowserElement = aSerialized.mIsInBrowserElement;
+    } else {
+      *aAppId = NECKO_NO_APP_ID;
+    }
+  }
+  return nullptr;
+}
+
+const char *
+NeckoParent::CreateChannelLoadContext(PBrowserParent* aBrowser,
+                                      const SerializedLoadContext& aSerialized,
+                                      nsCOMPtr<nsILoadContext> &aResult)
+{
+  uint32_t appId = NECKO_UNKNOWN_APP_ID;
+  bool inBrowser = false;
+  nsIDOMElement* topFrameElement = nullptr;
+  const char* error = GetValidatedAppInfo(aSerialized, aBrowser, &appId, &inBrowser);
+  if (error) {
+    return error;
+  }
+
+  if (aBrowser) {
+    nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(aBrowser);
+    topFrameElement = tabParent->GetOwnerElement();
+  }
+
+  // if gDisableIPCSecurity, we may not have a LoadContext to set. This is
+  // the common case for most xpcshell tests.
+  if (aSerialized.IsNotNull()) {
+    aResult = new LoadContext(aSerialized, topFrameElement, appId, inBrowser);
+  }
+
+  return nullptr;
+}
+
+PHttpChannelParent*
+NeckoParent::AllocPHttpChannel(PBrowserParent* aBrowser,
+                               const SerializedLoadContext& aSerialized)
+{
+  nsCOMPtr<nsILoadContext> loadContext;
+  const char *error = CreateChannelLoadContext(aBrowser, aSerialized,
+                                               loadContext);
+  if (error) {
+    NS_WARNING(nsPrintfCString("NeckoParent::AllocPHttpChannel: "
+                               "FATAL error: %s: KILLING CHILD PROCESS\n",
+                               error).get());
+    return nullptr;
+  }
+  PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(aSerialized);
+  HttpChannelParent *p = new HttpChannelParent(aBrowser, loadContext, overrideStatus);
   p->AddRef();
   return p;
 }
@@ -75,9 +182,20 @@ NeckoParent::DeallocPHttpChannel(PHttpChannelParent* channel)
 }
 
 PFTPChannelParent*
-NeckoParent::AllocPFTPChannel()
+NeckoParent::AllocPFTPChannel(PBrowserParent* aBrowser,
+                              const SerializedLoadContext& aSerialized)
 {
-  FTPChannelParent *p = new FTPChannelParent();
+  nsCOMPtr<nsILoadContext> loadContext;
+  const char *error = CreateChannelLoadContext(aBrowser, aSerialized,
+                                               loadContext);
+  if (error) {
+    NS_WARNING(nsPrintfCString("NeckoParent::AllocPFTPChannel: "
+                               "FATAL error: %s: KILLING CHILD PROCESS\n",
+                               error).get());
+    return nullptr;
+  }
+  PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(aSerialized);
+  FTPChannelParent *p = new FTPChannelParent(loadContext, overrideStatus);
   p->AddRef();
   return p;
 }
@@ -120,10 +238,23 @@ NeckoParent::DeallocPWyciwygChannel(PWyciwygChannelParent* channel)
 }
 
 PWebSocketParent*
-NeckoParent::AllocPWebSocket(PBrowserParent* browser)
+NeckoParent::AllocPWebSocket(PBrowserParent* browser,
+                             const SerializedLoadContext& serialized)
 {
+  nsCOMPtr<nsILoadContext> loadContext;
+  const char *error = CreateChannelLoadContext(browser, serialized,
+                                               loadContext);
+  if (error) {
+    NS_WARNING(nsPrintfCString("NeckoParent::AllocPWebSocket: "
+                               "FATAL error: %s: KILLING CHILD PROCESS\n",
+                               error).get());
+    return nullptr;
+  }
+
   TabParent* tabParent = static_cast<TabParent*>(browser);
-  WebSocketChannelParent* p = new WebSocketChannelParent(tabParent);
+  PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(serialized);
+  WebSocketChannelParent* p = new WebSocketChannelParent(tabParent, loadContext,
+                                                         overrideStatus);
   p->AddRef();
   return p;
 }
