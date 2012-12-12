@@ -249,6 +249,36 @@ ICStackCheck_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 //
+// UseCount_Fallback
+//
+
+static bool
+DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, size_t count)
+{
+    // TODO:
+    //  Bail out from this script and attempt an Ion compilation.
+    return true;
+}
+
+typedef bool (*DoUseCountFallbackFn)(JSContext *, ICUseCount_Fallback *, size_t count);
+static const VMFunction DoUseCountFallbackInfo =
+    FunctionInfo<DoUseCountFallbackFn>(DoUseCountFallback);
+
+bool
+ICUseCount_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(R0.scratchReg());
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoUseCountFallbackInfo, masm);
+}
+
+//
 // TypeMonitor_Fallback
 //
 
