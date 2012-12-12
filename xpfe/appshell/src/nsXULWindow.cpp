@@ -535,8 +535,7 @@ NS_IMETHODIMP nsXULWindow::SetPosition(int32_t aX, int32_t aY)
   // Don't reset the window's size mode here - platforms that don't want to move
   // maximized windows should reset it in their respective Move implementation.
   double invScale = 1.0 / mWindow->GetDefaultScale();
-  nsresult rv = mWindow->Move(NSToIntRound(aX * invScale),
-                              NSToIntRound(aY * invScale));
+  nsresult rv = mWindow->Move(aX * invScale, aY * invScale);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
@@ -564,9 +563,7 @@ NS_IMETHODIMP nsXULWindow::SetSize(int32_t aCX, int32_t aCY, bool aRepaint)
   mIntrinsicallySized = false;
 
   double invScale = 1.0 / mWindow->GetDefaultScale();
-  nsresult rv = mWindow->Resize(NSToIntRound(aCX * invScale),
-                                NSToIntRound(aCY * invScale),
-                                aRepaint);
+  nsresult rv = mWindow->Resize(aCX * invScale, aCY * invScale, aRepaint);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
@@ -598,10 +595,8 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(int32_t aX, int32_t aY,
   mIntrinsicallySized = false;
 
   double invScale = 1.0 / mWindow->GetDefaultScale();
-  nsresult rv = mWindow->Resize(NSToIntRound(aX * invScale),
-                                NSToIntRound(aY * invScale),
-                                NSToIntRound(aCX * invScale),
-                                NSToIntRound(aCY * invScale),
+  nsresult rv = mWindow->Resize(aX * invScale, aY * invScale,
+                                aCX * invScale, aCY * invScale,
                                 aRepaint);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
