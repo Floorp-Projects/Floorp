@@ -190,18 +190,18 @@ function testFrameParameters()
              .getAttribute("value"), '""',
             "'formMethod' in buttonProtoNode should have the right value.");
 
-          is(documentProtoNode.get("baseURI").target.querySelector(".name")
-             .getAttribute("value"), "baseURI",
-            "Should have the right property name for 'baseURI' in documentProtoNode.");
-          is(documentProtoNode.get("baseURI").target.querySelector(".value")
-             .getAttribute("value"), '"' + TAB_URL + '"',
-            "'baseURI' in documentProtoNode should have the right value.");
-          is(documentProtoNode.get("URL").target.querySelector(".name")
-             .getAttribute("value"), "URL",
-            "Should have the right property name for 'URL' in documentProtoNode.");
-          is(documentProtoNode.get("URL").target.querySelector(".value")
-             .getAttribute("value"), '"' + TAB_URL + '"',
-            "'URL' in documentProtoNode should have the right value.");
+          is(documentProtoNode.get("domain").target.querySelector(".name")
+             .getAttribute("value"), "domain",
+            "Should have the right property name for 'domain' in documentProtoNode.");
+          is(documentProtoNode.get("domain").target.querySelector(".value")
+             .getAttribute("value"), '"example.com"',
+            "'domain' in documentProtoNode should have the right value.");
+          is(documentProtoNode.get("cookie").target.querySelector(".name")
+             .getAttribute("value"), "cookie",
+            "Should have the right property name for 'cookie' in documentProtoNode.");
+          is(documentProtoNode.get("cookie").target.querySelector(".value")
+             .getAttribute("value"), '""',
+            "'cookie' in documentProtoNode should have the right value.");
 
           let buttonAsProtoProtoProtoNode = buttonAsProtoProtoNode.get("__proto__");
 
