@@ -498,34 +498,27 @@ bool
 TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned errorNumber,
                                         va_list args)
 {
-    bool strict = JSREPORT_IS_STRICT(flags);
     bool warning = JSREPORT_IS_WARNING(flags);
-
-    // Avoid reporting JSMSG_STRICT_CODE_WITH as a warning. See the comment in
-    // Parser::withStatement.
-    if (strict && warning && (!cx->hasStrictOption() || errorNumber == JSMSG_STRICT_CODE_WITH))
-        return true;
 
     if (warning && cx->hasWErrorOption()) {
         flags &= ~JSREPORT_WARNING;
         warning = false;
     }
 
-    CompileError normalError(cx);
-    CompileError *err = &normalError;
+    CompileError err(cx);
 
     const TokenPos *const tp = pn ? &pn->pn_pos : &currentToken().pos;
 
-    err->report.flags = flags;
-    err->report.errorNumber = errorNumber;
-    err->report.filename = filename;
-    err->report.originPrincipals = originPrincipals;
-    err->report.lineno = tp->begin.lineno;
+    err.report.flags = flags;
+    err.report.errorNumber = errorNumber;
+    err.report.filename = filename;
+    err.report.originPrincipals = originPrincipals;
+    err.report.lineno = tp->begin.lineno;
 
-    err->hasCharArgs = !(flags & JSREPORT_UC);
+    err.hasCharArgs = !(flags & JSREPORT_UC);
 
-    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, errorNumber, &err->message, &err->report,
-                                 err->hasCharArgs, args)) {
+    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, errorNumber, &err.message, &err.report,
+                                 err.hasCharArgs, args)) {
         return false;
     }
 
@@ -539,7 +532,7 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
      * means that any error involving a multi-line token (eg. an unterminated
      * multi-line string literal) won't have a context printed.
      */
-    if (err->report.lineno == lineno) {
+    if (err.report.lineno == lineno) {
         const jschar *tokptr = linebase + tp->begin.index;
 
         // We show only a portion (a "window") of the line around the erroneous
@@ -568,23 +561,20 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
 
         // Unicode and char versions of the window into the offending source
         // line, without final \n.
-        err->report.uclinebuf = windowBuf.extractWellSized();
-        if (!err->report.uclinebuf)
+        err.report.uclinebuf = windowBuf.extractWellSized();
+        if (!err.report.uclinebuf)
             return false;
-        err->report.linebuf = DeflateString(cx, err->report.uclinebuf, windowLength);
-        if (!err->report.linebuf)
+        err.report.linebuf = DeflateString(cx, err.report.uclinebuf, windowLength);
+        if (!err.report.linebuf)
             return false;
 
         // The lineno check above means we should only see single-line tokens here.
         JS_ASSERT(tp->begin.lineno == tp->end.lineno);
-        err->report.tokenptr = err->report.linebuf + windowIndex;
-        err->report.uctokenptr = err->report.uclinebuf + windowIndex;
+        err.report.tokenptr = err.report.linebuf + windowIndex;
+        err.report.uctokenptr = err.report.uclinebuf + windowIndex;
     }
 
-    if (err == &normalError)
-        err->throwError();
-    else
-        return true;
+    err.throwError();
 
     return warning;
 }

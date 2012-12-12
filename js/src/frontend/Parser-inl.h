@@ -41,7 +41,6 @@ ParseContext::ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel,
     args_(prs->context),
     vars_(prs->context),
     yieldNode(NULL),
-    queuedStrictModeError(NULL),
     parserPC(&prs->pc),
     lexdeps(prs->context),
     parent(prs->pc),
@@ -63,13 +62,6 @@ ParseContext::init()
         return false;
 
     return decls_.init() && lexdeps.ensureMap(sc->context);
-}
-
-inline void
-ParseContext::setQueuedStrictModeError(CompileError *e)
-{
-    JS_ASSERT(!queuedStrictModeError);
-    queuedStrictModeError = e;
 }
 
 inline
