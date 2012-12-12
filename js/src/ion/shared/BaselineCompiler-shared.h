@@ -23,6 +23,7 @@ class BaselineCompilerShared
     RootedScript script;
     jsbytecode *pc;
     MacroAssembler masm;
+    bool ionCompileable_;
 
     FrameInfo frame;
 

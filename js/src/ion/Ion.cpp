@@ -1318,6 +1318,12 @@ CheckScriptSize(JSScript *script)
     return true;
 }
 
+bool
+CanIonCompileScript(JSScript *script)
+{
+    return CheckScript(script) && CheckScriptSize(script);
+}
+
 static MethodStatus
 Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
@@ -1329,7 +1335,7 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
         return Method_CantCompile;
     }
 
-    if (!CheckScript(script) || !CheckScriptSize(script)) {
+    if (!CanIonCompileScript(script)) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename, script->lineno);
         return Method_CantCompile;
     }

@@ -256,6 +256,8 @@ class ICEntry
 #define IC_STUB_KIND_LIST(_)    \
     _(StackCheck_Fallback)      \
                                 \
+    _(UseCount_Fallback)        \
+                                \
     _(TypeMonitor_Fallback)     \
     _(TypeMonitor_Int32)        \
     _(TypeMonitor_Double)       \
@@ -764,6 +766,38 @@ class ICStackCheck_Fallback : public ICFallbackStub
 
         ICStackCheck_Fallback *getStub(ICStubSpace *space) {
             return ICStackCheck_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// UseCount_Fallback
+
+// A UseCount IC chain has only the fallback stub.
+class ICUseCount_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICUseCount_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::UseCount_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICUseCount_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICUseCount_Fallback>(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::UseCount_Fallback)
+        { }
+
+        ICUseCount_Fallback *getStub(ICStubSpace *space) {
+            return ICUseCount_Fallback::New(space, getStubCode());
         }
     };
 };
