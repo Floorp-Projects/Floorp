@@ -65,6 +65,51 @@ CGBlendMode ToBlendMode(CompositionOp op)
     case OP_XOR:
       mode = kCGBlendModeXOR;
       break;
+    case OP_MULTIPLY:
+      mode = kCGBlendModeMultiply;
+      break;
+    case OP_SCREEN:
+      mode = kCGBlendModeScreen;
+      break;
+    case OP_OVERLAY:
+      mode = kCGBlendModeOverlay;
+      break;
+    case OP_DARKEN:
+      mode = kCGBlendModeDarken;
+      break;
+    case OP_LIGHTEN:
+      mode = kCGBlendModeLighten;
+      break;
+    case OP_COLOR_DODGE:
+      mode = kCGBlendModeColorDodge;
+      break;
+    case OP_COLOR_BURN:
+      mode = kCGBlendModeColorBurn;
+      break;
+    case OP_HARD_LIGHT:
+      mode = kCGBlendModeHardLight;
+      break;
+    case OP_SOFT_LIGHT:
+      mode = kCGBlendModeSoftLight;
+      break;
+    case OP_DIFFERENCE:
+      mode = kCGBlendModeDifference;
+      break;
+    case OP_EXCLUSION:
+      mode = kCGBlendModeExclusion;
+      break;
+    case OP_HUE:
+      mode = kCGBlendModeHue;
+      break;
+    case OP_SATURATION:
+      mode = kCGBlendModeSaturation;
+      break;
+    case OP_COLOR:
+      mode = kCGBlendModeColor;
+      break;
+    case OP_LUMINOSITY:
+      mode = kCGBlendModeLuminosity;
+      break;
       /*
     case OP_CLEAR:
       mode = kCGBlendModeClear;
