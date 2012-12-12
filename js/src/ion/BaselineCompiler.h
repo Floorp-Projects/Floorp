@@ -102,8 +102,8 @@ namespace ion {
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
-    FixedList<Label> labels_;
-    HeapLabel *return_;
+    FixedList<Label>            labels_;
+    HeapLabel *                 return_;
 
     Label *labelOf(jsbytecode *pc) {
         return &labels_[pc - script->code];
@@ -141,6 +141,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitEpilogue();
     bool emitIC(ICStub *stub);
     bool emitStackCheck();
+    bool emitUseCountIncrement();
 
     void storeValue(const StackValue *source, const Address &dest,
                     const ValueOperand &scratch);
