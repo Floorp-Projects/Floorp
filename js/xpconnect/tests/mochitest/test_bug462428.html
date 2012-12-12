@@ -33,7 +33,7 @@ ok(sawProp, "property should be enumerable");
 
 is(getter.call(document), document.documentElement, "the getter actually works");
 
-Object.getPrototypeOf(document).__defineSetter__('documentElement', function() {});
+Document.prototype.__defineSetter__('documentElement', function() {});
 is(getter.call(document), document.documentElement, "the getter works after defineSetter");
 
 var oldTitle = document.title;
