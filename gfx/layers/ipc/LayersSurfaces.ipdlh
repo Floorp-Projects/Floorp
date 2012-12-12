@@ -74,6 +74,12 @@ struct YCbCrImage {
   nsIntRect picture;
 };
 
+struct RGBImage {
+  Shmem data;
+  nsIntRect picture;
+  uint32_t rgbFormat;
+};
+
 // Will be removed in the near future
 struct YUVImage {
   Shmem Ydata;
@@ -84,6 +90,7 @@ struct YUVImage {
 
 union SharedImage {
   SurfaceDescriptor;
+  RGBImage;
   YCbCrImage;
   YUVImage;
   SharedImageID;

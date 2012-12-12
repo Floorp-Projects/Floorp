@@ -284,6 +284,8 @@ public:
     void SetAllowUseAsSource(bool aAllow) { mAllowUseAsSource = aAllow; }
     bool GetAllowUseAsSource() { return mAllowUseAsSource; }
 
+    static uint8_t BytesPerPixel(gfxImageFormat aImageFormat);
+
 protected:
     gfxASurface() : mSurface(nullptr), mFloatingRefs(0), mBytesRecorded(0),
                     mSurfaceValid(false), mAllowUseAsSource(true)
