@@ -1028,7 +1028,8 @@ PeerConnectionImpl::ChangeReadyState(PeerConnectionImpl::ReadyState aReadyState)
   // keeps the observer live.
   RUN_ON_THREAD(mThread, WrapRunnable(mPCObserver,
                                       &IPeerConnectionObserver::OnStateChange,
-                                      IPeerConnectionObserver::kReadyState),
+                                      // static_cast needed to work around old Android NDK r5c compiler
+                                      static_cast<int>(IPeerConnectionObserver::kReadyState)),
     NS_DISPATCH_NORMAL);
 }
 
@@ -1076,7 +1077,8 @@ PeerConnectionImpl::IceGatheringCompleted_m(NrIceCtx *aCtx)
     RUN_ON_THREAD(mThread,
                   WrapRunnable(mPCObserver,
                                &IPeerConnectionObserver::OnStateChange,
-                               IPeerConnectionObserver::kIceState),
+                               // static_cast required to work around old C++ compiler on Android NDK r5c
+                               static_cast<int>(IPeerConnectionObserver::kIceState)),
                   NS_DISPATCH_NORMAL);
   }
 #endif
@@ -1107,7 +1109,8 @@ PeerConnectionImpl::IceCompleted_m(NrIceCtx *aCtx)
     RUN_ON_THREAD(mThread,
                   WrapRunnable(mPCObserver,
                                &IPeerConnectionObserver::OnStateChange,
-                               IPeerConnectionObserver::kIceState),
+                               // static_cast required to work around old C++ compiler on Android NDK r5c
+			       static_cast<int>(IPeerConnectionObserver::kIceState)),
                   NS_DISPATCH_NORMAL);
   }
 #endif
