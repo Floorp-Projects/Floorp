@@ -168,6 +168,9 @@
       SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({
         "set": [
+          // TODO: remove this as part of bug 820712
+          ["network.disable.ipc.security", true],
+
           ["dom.ipc.browser_frames.oop_by_default", true],
           ["dom.mozBrowserFramesEnabled", true]
         ]
