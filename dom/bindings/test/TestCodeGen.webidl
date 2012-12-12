@@ -507,6 +507,7 @@ dictionary Dict : ParentDict {
   TestEnum otherEnum = "b";
   DOMString otherStr = "def";
   DOMString? yetAnotherStr = null;
+  DOMString template;
 };
 
 dictionary ParentDict : GrandparentDict {
