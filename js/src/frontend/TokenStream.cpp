@@ -1693,6 +1693,7 @@ TokenStream::getTokenInternal()
                             if (val != 0 || JS7_ISDEC(c)) {
                                 if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
                                     goto error;
+                                flags |= TSF_OCTAL_CHAR;
                             }
                             if ('0' <= c && c < '8') {
                                 val = 8 * val + JS7_UNDEC(c);
