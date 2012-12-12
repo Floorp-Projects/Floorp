@@ -538,11 +538,11 @@ class TokenStream
     /* Note that the version and hasMoarXML can get out of sync via setMoarXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    // TokenStream::allowsXML() can be true even if Parser::allowsXML() is
-    // false. Read the comment at Parser::allowsXML() to find out why.
-    bool allowsXML() const { return allowXML && strictModeState() != StrictMode::STRICT; }
+    bool allowsXML() const { return banXML == 0 && strictModeState() != StrictMode::STRICT; }
     bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
     void setMoarXML(bool enabled) { moarXML = enabled; }
+    void incBanXML() { banXML++; }
+    void decBanXML() { JS_ASSERT(banXML); banXML--; }
     bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
 
     bool isCurrentTokenEquality() const {
@@ -911,7 +911,7 @@ class TokenStream
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
-    bool                allowXML;       /* see JSOPTION_ALLOW_XML */
+    unsigned            banXML;         /* see JSOPTION_ALLOW_XML */
     bool                moarXML;        /* see JSOPTION_MOAR_XML */
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;
