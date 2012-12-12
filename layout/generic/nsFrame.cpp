@@ -6783,7 +6783,7 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 a11y::AccType
 nsFrame::AccessibleType()
 {
-  return a11y::eNoAccessible;
+  return a11y::eNoType;
 }
 #endif
 

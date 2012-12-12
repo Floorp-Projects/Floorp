@@ -3898,11 +3898,11 @@ nsTextFrame::AccessibleType()
     nsAutoString renderedWhitespace;
     GetRenderedText(&renderedWhitespace, nullptr, nullptr, 0, 1);
     if (renderedWhitespace.IsEmpty()) {
-      return a11y::eNoAccessible;
+      return a11y::eNoType;
     }
   }
 
-  return a11y::eTextLeafAccessible;
+  return a11y::eTextLeaf;
 }
 #endif
 
