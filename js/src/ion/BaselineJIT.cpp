@@ -326,9 +326,6 @@ BaselineScript::copyICEntries(const ICEntry *entries, MacroAssembler &masm)
 
         // If the attached stub is a fallback stub, then fix it up with
         // a pointer to the (now available) realEntry.
-        // We use a slightly hackish measure here: since we don't have a
-        // static KIND to use as the template argument for BaselineICFallbackStub,
-        // we just use a bogus one (0).
         if (realEntry.firstStub()->isFallback())
             realEntry.firstStub()->toFallbackStub()->fixupICEntry(&realEntry);
     }
