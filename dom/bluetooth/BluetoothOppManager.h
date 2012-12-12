@@ -10,6 +10,7 @@
 #include "BluetoothCommon.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/ipc/UnixSocket.h"
+#include "DeviceStorage.h"
 
 class nsIOutputStream;
 class nsIInputStream;
@@ -165,6 +166,7 @@ private:
   nsCOMPtr<nsIInputStream> mInputStream;
 
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
+  nsRefPtr<DeviceStorageFile> mDsFile;
 };
 
 END_BLUETOOTH_NAMESPACE
