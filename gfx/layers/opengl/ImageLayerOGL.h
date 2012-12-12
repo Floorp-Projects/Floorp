@@ -16,6 +16,9 @@
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
+namespace ipc {
+class Shmem;
+}
 namespace layers {
 
 class CairoImage;
@@ -189,6 +192,10 @@ private:
   void UploadSharedYCbCrToTexture(ShmemYCbCrImage& aImage,
                                   nsIntRect aPictureRect);
 
+  void UploadSharedRGBToTexture(ipc::Shmem *aShmem,
+                                nsIntRect aPictureRect,
+                                uint32_t aRgbFormat);
+
 
   nsRefPtr<TextureImage> mTexImage;
 
@@ -204,6 +211,7 @@ private:
   GLTexture mExternalBufferTexture;
 
   GLTexture mYUVTexture[3];
+  GLTexture mRGBTexture;
   gfxIntSize mSize;
   gfxIntSize mCbCrSize;
   nsIntRect mPictureRect;

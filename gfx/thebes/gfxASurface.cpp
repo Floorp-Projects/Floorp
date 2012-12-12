@@ -661,6 +661,27 @@ gfxASurface::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
+/* static */ uint8_t
+gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat)
+{
+  switch (aImageFormat) {
+    case ImageFormatARGB32:
+      return 4;
+    case ImageFormatRGB24:
+      return 4;
+    case ImageFormatRGB16_565:
+      return 2;
+    case ImageFormatA8:
+      return 1;
+    case ImageFormatA1:
+      return 1; // Close enough
+    case ImageFormatUnknown:
+    default:
+      NS_NOTREACHED("Not really sure what you want me to say here");
+      return 0;
+  }
+}
+
 #ifdef MOZ_DUMP_IMAGES
 void
 gfxASurface::WriteAsPNG(const char* aFile)
