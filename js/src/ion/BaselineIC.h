@@ -198,13 +198,13 @@ class ICEntry
   private:
     // Offset from the start of the JIT code where the IC
     // load and call instructions are.
-    uint32_t            returnOffset_;
+    uint32_t returnOffset_;
 
     // The PC of this IC's bytecode op within the JSScript.
-    uint32_t            pcOffset_;
+    uint32_t pcOffset_;
 
     // A pointer to the baseline IC stub for this instruction.
-    ICStub *            firstStub_;
+    ICStub *firstStub_;
 
   public:
     ICEntry(uint32_t pcOffset)
@@ -352,8 +352,8 @@ class ICStub
     // The kind of the stub.
     //  High bit is 'isFallback' flag.
     //  Second high bit is 'isMonitored' flag.
-    Trait   trait_ : 3;
-    Kind    kind_  : 13;
+    Trait trait_ : 3;
+    Kind kind_ : 13;
 
     // The raw jitcode to call for this stub.
     uint8_t *stubCode_;
@@ -491,17 +491,17 @@ class ICFallbackStub : public ICStub
     // the linked list of stubs for an IC.
 
     // The IC entry for this linked list of stubs.
-    ICEntry *           icEntry_;
+    ICEntry *icEntry_;
 
     // The number of stubs kept in the IC entry.
-    uint32_t            numOptimizedStubs_;
+    uint32_t numOptimizedStubs_;
 
     // A pointer to the location stub pointer that needs to be
     // changed to add a new "last" stub immediately before the fallback
     // stub.  This'll start out pointing to the icEntry's "firstStub_"
     // field, and as new stubs are addd, it'll point to the current
     // last stub's "next_" field.
-    ICStub **           lastStubPtrAddr_;
+    ICStub **lastStubPtrAddr_;
 
     ICFallbackStub(Kind kind, IonCode *stubCode)
       : ICStub(kind, ICStub::Fallback, stubCode),
@@ -568,7 +568,7 @@ class ICMonitoredStub : public ICStub
 {
   protected:
     // Pointer to the start of the type monitoring stub chain.
-    ICStub *            firstMonitorStub_;
+    ICStub *firstMonitorStub_;
 
     ICMonitoredStub(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub);
 
@@ -594,7 +594,7 @@ class ICMonitoredFallbackStub : public ICFallbackStub
 {
   protected:
     // Pointer to the fallback monitor stub.
-    ICTypeMonitor_Fallback *    fallbackMonitorStub_;
+    ICTypeMonitor_Fallback *fallbackMonitorStub_;
 
     ICMonitoredFallbackStub(Kind kind, IonCode *stubCode)
       : ICFallbackStub(kind, ICStub::MonitoredFallback, stubCode),
@@ -614,9 +614,9 @@ class ICUpdatedStub : public ICStub
 {
   protected:
     // Pointer to the start of the type updating stub chain.
-    ICStub *            firstUpdateStub_;
+    ICStub *firstUpdateStub_;
 
-    uint32_t            numOptimizedStubs_;
+    uint32_t numOptimizedStubs_;
 
     ICUpdatedStub(Kind kind, IonCode *stubCode)
       : ICStub(kind, ICStub::Updated, stubCode),
@@ -661,8 +661,8 @@ class ICUpdatedStub : public ICStub
 class ICStubCompiler
 {
   protected:
-    JSContext *     cx;
-    ICStub::Kind    kind;
+    JSContext *cx;
+    ICStub::Kind kind;
 
     // By default the stubcode key is just the kind.
     virtual int32_t getKey() const {
@@ -724,7 +724,7 @@ class ICStubCompiler
 class ICMultiStubCompiler : public ICStubCompiler
 {
   protected:
-    JSOp            op;
+    JSOp op;
 
     // Stub keys for multi-stub kinds are composed of both the kind
     // and the op they are compiled for.
@@ -781,18 +781,18 @@ class ICTypeMonitor_Fallback : public ICStub
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
     // Pointer to the main fallback stub for the IC.
-    ICMonitoredFallbackStub *   mainFallbackStub_;
+    ICMonitoredFallbackStub *mainFallbackStub_;
 
     // Pointer to the first monitor stub.
-    ICStub *                    firstMonitorStub_;
+    ICStub *firstMonitorStub_;
 
     // Address of the last monitor stub's field pointing to this
     // fallback monitor stub.  This will get updated when new
     // monitor stubs are created and added.
-    ICStub **                   lastMonitorStubPtrAddr_;
+    ICStub **lastMonitorStubPtrAddr_;
 
     // Count of optimized type monitor stubs in this chain.
-    uint32_t                    numOptimizedMonitorStubs_;
+    uint32_t numOptimizedMonitorStubs_;
 
     ICTypeMonitor_Fallback(IonCode *stubCode, ICMonitoredFallbackStub *mainFallbackStub)
       : ICStub(ICStub::TypeMonitor_Fallback, stubCode),

@@ -19,10 +19,10 @@ namespace ion {
 class BaselineCompilerShared
 {
   protected:
-    JSContext *             cx;
-    RootedScript            script;
-    jsbytecode *            pc;
-    MacroAssembler          masm;
+    JSContext *cx;
+    RootedScript script;
+    jsbytecode *pc;
+    MacroAssembler masm;
 
     FrameInfo frame;
 
