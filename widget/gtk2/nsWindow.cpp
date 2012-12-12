@@ -2034,6 +2034,13 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         // there is nothing left to do.
         if (!mGdkWindow)
             return TRUE;
+
+        // Re-get the listener since the will paint notification might have
+        // killed it.
+        listener =
+            mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
+        if (!listener)
+            return FALSE;
     }
 
 #if defined(MOZ_WIDGET_GTK2)
