@@ -14,6 +14,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class TabParent;
+}
+
 namespace ipc {
 class URIParams;
 } // namespace ipc
@@ -34,11 +38,9 @@ public:
     nsresult
     Schedule(const URIParams& manifestURI,
              const URIParams& documentURI,
-             const bool& isInBrowserElement,
-             const uint32_t& appId,
              const bool& stickDocument);
 
-    OfflineCacheUpdateParent();
+    OfflineCacheUpdateParent(uint32_t aAppId, bool aIsInBrowser);
     ~OfflineCacheUpdateParent();
 
     virtual void ActorDestroy(ActorDestroyReason why);
