@@ -4285,8 +4285,9 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
 bool
 IonBuilder::jsop_initelem()
 {
-    if (oracle->propertyWriteCanSpecialize(script(), pc)) {
-        if (oracle->elementWriteIsDenseArray(script(), pc))
+    RootedScript scriptRoot(cx, script());
+    if (oracle->propertyWriteCanSpecialize(scriptRoot, pc)) {
+        if (oracle->elementWriteIsDenseArray(scriptRoot, pc))
             return jsop_initelem_dense();
     }
 
