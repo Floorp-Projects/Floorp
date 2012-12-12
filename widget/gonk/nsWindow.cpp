@@ -373,30 +373,31 @@ nsWindow::ConstrainPosition(bool aAllowSlop,
 }
 
 NS_IMETHODIMP
-nsWindow::Move(int32_t aX,
-               int32_t aY)
+nsWindow::Move(double aX,
+               double aY)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(int32_t aWidth,
-                 int32_t aHeight,
-                 bool    aRepaint)
+nsWindow::Resize(double aWidth,
+                 double aHeight,
+                 bool   aRepaint)
 {
     return Resize(0, 0, aWidth, aHeight, aRepaint);
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(int32_t aX,
-                 int32_t aY,
-                 int32_t aWidth,
-                 int32_t aHeight,
-                 bool    aRepaint)
+nsWindow::Resize(double aX,
+                 double aY,
+                 double aWidth,
+                 double aHeight,
+                 bool   aRepaint)
 {
-    mBounds = nsIntRect(aX, aY, aWidth, aHeight);
+    mBounds = nsIntRect(NSToIntRound(aX), NSToIntRound(aY),
+                        NSToIntRound(aWidth), NSToIntRound(aHeight));
     if (mWidgetListener)
-        mWidgetListener->WindowResized(this, aWidth, aHeight);
+        mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
 
     if (aRepaint && gWindowToRedraw)
         gWindowToRedraw->Invalidate(sVirtualBounds);

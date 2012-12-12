@@ -95,9 +95,9 @@ public:
   virtual bool            IsVisible() const;
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY);
   virtual void            SetSizeConstraints(const SizeConstraints& aConstraints);
-  NS_IMETHOD              Move(int32_t aX, int32_t aY);
-  NS_IMETHOD              Resize(int32_t aWidth, int32_t aHeight, bool aRepaint);
-  NS_IMETHOD              Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool aRepaint);
+  NS_IMETHOD              Move(double aX, double aY);
+  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint);
+  NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint);
   NS_IMETHOD              BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical);
   NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate);
   NS_IMETHOD              SetSizeMode(int32_t aMode);

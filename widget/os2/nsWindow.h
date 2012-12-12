@@ -151,11 +151,11 @@ public:
   NS_IMETHOD            GetBounds(nsIntRect& aRect);
   NS_IMETHOD            GetClientBounds(nsIntRect& aRect);
   virtual nsIntPoint    WidgetToScreenOffset();
-  NS_IMETHOD            Move(int32_t aX, int32_t aY);
-  NS_IMETHOD            Resize(int32_t aWidth, int32_t aHeight,
+  NS_IMETHOD            Move(double aX, double aY);
+  NS_IMETHOD            Resize(double aWidth, double aHeight,
                                bool    aRepaint);
-  NS_IMETHOD            Resize(int32_t aX, int32_t aY,
-                               int32_t aWidth, int32_t aHeight,
+  NS_IMETHOD            Resize(double aX, double aY,
+                               double aWidth, double aHeight,
                                bool    aRepaint);
   NS_IMETHOD            PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                     nsIWidget* aWidget, bool aActivate);

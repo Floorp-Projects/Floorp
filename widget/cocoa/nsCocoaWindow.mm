@@ -1125,7 +1125,7 @@ void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
 }
 
 // Coordinates are global display pixels
-NS_IMETHODIMP nsCocoaWindow::Move(int32_t aX, int32_t aY)
+NS_IMETHODIMP nsCocoaWindow::Move(double aX, double aY)
 {
   if (!mWindow) {
     return NS_OK;
@@ -1135,7 +1135,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(int32_t aX, int32_t aY)
   // it to Cocoa ones (origin bottom-left).
   NSPoint coord = {
     static_cast<float>(aX),
-    static_cast<float>(nsCocoaUtils::FlippedScreenY(aY))
+    static_cast<float>(nsCocoaUtils::FlippedScreenY(NSToIntRound(aY)))
   };
 
   NSRect frame = [mWindow frame];
@@ -1308,8 +1308,8 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
 }
 
 // Coordinates are global display pixels
-nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
-                                 int32_t aWidth, int32_t aHeight,
+nsresult nsCocoaWindow::DoResize(double aX, double aY,
+                                 double aWidth, double aHeight,
                                  bool aRepaint,
                                  bool aConstrainToCurrentScreen)
 {
@@ -1322,13 +1322,13 @@ nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
   // ConstrainSize operates in device pixels, so we need to convert using
   // the backing scale factor here
   CGFloat scale = BackingScaleFactor();
-  aWidth *= scale;
-  aHeight *= scale;
-  ConstrainSize(&aWidth, &aHeight);
-  aWidth = NSToIntRound(aWidth / scale);
-  aHeight = NSToIntRound(aHeight / scale);
+  int32_t width = NSToIntRound(aWidth * scale);
+  int32_t height = NSToIntRound(aHeight * scale);
+  ConstrainSize(&width, &height);
 
-  nsIntRect newBounds(aX, aY, aWidth, aHeight);
+  nsIntRect newBounds(aX, aY,
+                      NSToIntRound(width / scale),
+                      NSToIntRound(height / scale));
 
   // constrain to the screen that contains the largest area of the new rect
   FitRectToVisibleAreaForScreen(newBounds, aConstrainToCurrentScreen ?
@@ -1358,19 +1358,18 @@ nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
 }
 
 // Coordinates are global display pixels
-NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY,
-                                    int32_t aWidth, int32_t aHeight,
+NS_IMETHODIMP nsCocoaWindow::Resize(double aX, double aY,
+                                    double aWidth, double aHeight,
                                     bool aRepaint)
 {
   return DoResize(aX, aY, aWidth, aHeight, aRepaint, false);
 }
 
 // Coordinates are global display pixels
-NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
+NS_IMETHODIMP nsCocoaWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
   double invScale = 1.0 / GetDefaultScale();
-  return DoResize(NSToIntRound(mBounds.x * invScale),
-                  NSToIntRound(mBounds.y * invScale),
+  return DoResize(mBounds.x * invScale, mBounds.y * invScale,
                   aWidth, aHeight, aRepaint, true);
 }
 
