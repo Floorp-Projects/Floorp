@@ -285,12 +285,11 @@ gfxGDIFont::Initialize()
     // GDI to italicize, because that would use a different face and result
     // in a possible glyph ID mismatch between shaping and rendering.
     //
-    // The font entry's mFamilyHasItalicFace flag is needed for user fonts
+    // We use the mFamilyHasItalicFace flag in the entry in case of user fonts,
     // where the *CSS* family may not know about italic faces that are present
     // in the *GDI* family, and which GDI would use if we asked it to perform
     // the "italicization".
-    bool useCairoFakeItalic = wantFakeItalic &&
-        (fe->Family()->HasItalicFace() || fe->mFamilyHasItalicFace);
+    bool useCairoFakeItalic = wantFakeItalic && fe->mFamilyHasItalicFace;
 
     if (mAdjustedSize == 0.0) {
         mAdjustedSize = mStyle.size;
