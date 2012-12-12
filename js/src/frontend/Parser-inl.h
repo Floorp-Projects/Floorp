@@ -80,15 +80,6 @@ ParseContext::~ParseContext()
     JS_ASSERT(*parserPC == this);
     *parserPC = this->parent;
     js_delete(funcStmts);
-    if (queuedStrictModeError) {
-        // If the parent context is looking for strict mode violations, pass
-        // ours up. Otherwise, free it.
-        if (parent && parent->sc->strictModeState == StrictMode::UNKNOWN &&
-            !parent->queuedStrictModeError)
-            parent->queuedStrictModeError = queuedStrictModeError;
-        else
-            js_delete(queuedStrictModeError);
-    }
 }
 
 } // namespace frontend

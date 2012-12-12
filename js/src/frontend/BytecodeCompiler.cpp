@@ -130,7 +130,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame && callerFrame->script()->strictModeCode)
-        globalsc.strictModeState = StrictMode::STRICT;
+        globalsc.strictMode = true;
 
     if (options.compileAndGo) {
         if (source) {
@@ -151,9 +151,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
              * wishes to decompile it while it's running.
              */
             JSFunction *fun = callerFrame->fun();
-            ObjectBox *funbox = parser.newFunctionBox(fun, &pc, 
-                                                      fun->inStrictMode() ? StrictMode::STRICT 
-                                                                          : StrictMode::NOTSTRICT);
+            ObjectBox *funbox = parser.newFunctionBox(fun, &pc, fun->inStrictMode());
             if (!funbox)
                 return NULL;
             bce.objectList.add(funbox);
@@ -302,7 +300,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     // directive, we backup and reparse it as strict.
     TokenStream::Position start;
     parser.tokenStream.tell(&start);
-    bool initiallyStrict = StrictModeFromContext(cx) == StrictMode::STRICT;
+    bool initiallyStrict = StrictModeFromContext(cx);
     bool becameStrict;
     FunctionBox *funbox;
     ParseNode *pn = parser.standaloneFunctionBody(fun, formals, script, fn, &funbox,

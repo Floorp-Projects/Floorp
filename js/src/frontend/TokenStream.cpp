@@ -432,7 +432,7 @@ TokenStream::reportStrictModeErrorNumberVA(ParseNode *pn, unsigned errorNumber, 
 {
     /* In strict mode code, this is an error, not merely a warning. */
     unsigned flags = JSREPORT_STRICT;
-    if (strictModeState() != StrictMode::NOTSTRICT)
+    if (strictMode())
         flags |= JSREPORT_ERROR;
     else if (cx->hasStrictOption())
         flags |= JSREPORT_WARNING;
@@ -513,23 +513,6 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
 
     CompileError normalError(cx);
     CompileError *err = &normalError;
-    if (strict && !warning && strictModeState() == StrictMode::UNKNOWN) {
-        if (strictModeGetter->queuedStrictModeError()) {
-            // Avoid reporting JSMSG_STRICT_CODE_WITH as a warning. See the
-            // comment in Parser::withStatement.
-            if (cx->hasStrictOption() && errorNumber != JSMSG_STRICT_CODE_WITH) {
-                flags |= JSREPORT_WARNING;
-                warning = true;
-            } else {
-                return true;
-            }
-        } else {
-            err = cx->new_<CompileError, JSContext *>(cx);
-            if (!err)
-                return false;
-            strictModeGetter->setQueuedStrictModeError(err);
-        }
-    }
 
     const TokenPos *const tp = pn ? &pn->pn_pos : &currentToken().pos;
 
