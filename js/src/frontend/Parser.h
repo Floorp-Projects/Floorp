@@ -155,11 +155,6 @@ struct ParseContext                 /* tree context for semantic checks */
                                        be an error if we turn out to be inside a
                                        generator expression */
 
-    // A strict mode error found in this scope or one of its children. It is
-    // used only when strictModeState is UNKNOWN. If the scope turns out to be
-    // strict and this is non-null, it is thrown.
-    CompileError    *queuedStrictModeError;
-
   private:
     ParseContext    **parserPC;     /* this points to the Parser's active pc
                                        and holds either |this| or one of
@@ -207,8 +202,6 @@ struct ParseContext                 /* tree context for semantic checks */
     inline ~ParseContext();
 
     inline bool init();
-
-    inline void setQueuedStrictModeError(CompileError *e);
 
     unsigned blockid();
 

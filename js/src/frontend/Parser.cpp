@@ -85,18 +85,6 @@ StrictModeGetter::get() const
     return parser->pc->sc->strictMode;
 }
 
-CompileError *
-StrictModeGetter::queuedStrictModeError() const
-{
-    return parser->pc->queuedStrictModeError;
-}
-
-void
-StrictModeGetter::setQueuedStrictModeError(CompileError *e)
-{
-    parser->pc->setQueuedStrictModeError(e);
-}
-
 bool
 frontend::GenerateBlockId(ParseContext *pc, uint32_t &blockid)
 {
@@ -3512,10 +3500,8 @@ Parser::withStatement()
     // reportStrictModeError.  However, 'with' is the sole instance of a
     // construct that is forbidden in strict mode code, but doesn't even merit a
     // warning under JSOPTION_STRICT.  See
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1. The actual
-    // supression of the with code warning is in
-    // TokenStream::reportCompileErrorNumberVA.
-    if (!reportStrictModeError(NULL, JSMSG_STRICT_CODE_WITH))
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
+    if (pc->sc->strictMode && !reportStrictModeError(NULL, JSMSG_STRICT_CODE_WITH))
         return NULL;
 
     ParseNode *pn = BinaryNode::create(PNK_WITH, this);
