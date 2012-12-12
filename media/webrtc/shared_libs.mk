@@ -51,6 +51,12 @@ WEBRTC_LIBS += \
   $(NULL)
 endif
 
+# neon for ARM
+ifeq ($(HAVE_ARM_NEON),1)
+WEBRTC_LIBS += \
+  $(call EXPAND_LIBNAME_PATH,aecm_neon,$(DEPTH)/media/webrtc/trunk/src/modules/modules_aecm_neon) \
+  $(NULL)
+endif
 
 
 # If you enable one of these codecs in webrtc_config.gypi, you'll need to re-add the
