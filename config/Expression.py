@@ -8,11 +8,16 @@ Parses and evaluates simple statements for Preprocessor:
 Expression currently supports the following grammar, whitespace is ignored:
 
 expression :
+  and_cond ( '||' expression ) ? ;
+and_cond:
+  test ( '&&' and_cond ) ? ;
+test:
   unary ( ( '==' | '!=' ) unary ) ? ;
 unary :
   '!'? value ;
 value :
   [0-9]+ # integer
+  | 'defined(' \w+ ')'
   | \w+  # string identifier or value;
 """
 
@@ -27,9 +32,51 @@ class Expression:
     self.content = expression_string
     self.offset = 0
     self.__ignore_whitespace()
-    self.e = self.__get_equality()
+    self.e = self.__get_logical_or()
     if self.content:
       raise Expression.ParseError, self
+
+  def __get_logical_or(self):
+    """
+    Production: and_cond ( '||' expression ) ?
+    """
+    if not len(self.content):
+      return None
+    rv = Expression.__AST("logical_op")
+    # test
+    rv.append(self.__get_logical_and())
+    self.__ignore_whitespace()
+    if self.content[:2] != '||':
+      # no logical op needed, short cut to our prime element
+      return rv[0]
+    # append operator
+    rv.append(Expression.__ASTLeaf('op', self.content[:2]))
+    self.__strip(2)
+    self.__ignore_whitespace()
+    rv.append(self.__get_logical_or())
+    self.__ignore_whitespace()
+    return rv
+
+  def __get_logical_and(self):
+    """
+    Production: test ( '&&' and_cond ) ?
+    """
+    if not len(self.content):
+      return None
+    rv = Expression.__AST("logical_op")
+    # test
+    rv.append(self.__get_equality())
+    self.__ignore_whitespace()
+    if self.content[:2] != '&&':
+      # no logical op needed, short cut to our prime element
+      return rv[0]
+    # append operator
+    rv.append(Expression.__ASTLeaf('op', self.content[:2]))
+    self.__strip(2)
+    self.__ignore_whitespace()
+    rv.append(self.__get_logical_and())
+    self.__ignore_whitespace()
+    return rv
 
   def __get_equality(self):
     """
@@ -68,22 +115,27 @@ class Expression:
 
   def __get_value(self):
     """
-    Production: ( [0-9]+ | \w+)
+    Production: ( [0-9]+ | 'defined(' \w+ ')' | \w+ )
     Note that the order is important, and the expression is kind-of
     ambiguous as \w includes 0-9. One could make it unambiguous by
     removing 0-9 from the first char of a string literal.
     """
     rv = None
-    word_len = re.match('[0-9]*', self.content).end()
-    if word_len:
-      value = int(self.content[:word_len])
-      rv = Expression.__ASTLeaf('int', value)
+    m = re.match('defined\s*\(\s*(\w+)\s*\)', self.content)
+    if m:
+      word_len = m.end()
+      rv = Expression.__ASTLeaf('defined', m.group(1))
     else:
-      word_len = re.match('\w*', self.content).end()
+      word_len = re.match('[0-9]*', self.content).end()
       if word_len:
-        rv = Expression.__ASTLeaf('string', self.content[:word_len])
+        value = int(self.content[:word_len])
+        rv = Expression.__ASTLeaf('int', value)
       else:
-        raise Expression.ParseError, self
+        word_len = re.match('\w*', self.content).end()
+        if word_len:
+          rv = Expression.__ASTLeaf('string', self.content[:word_len])
+        else:
+          raise Expression.ParseError, self
     self.__strip(word_len)
     self.__ignore_whitespace()
     return rv
@@ -114,12 +166,24 @@ class Expression:
       if tok[1].value == '!=':
         rv = not rv
       return rv
+    # Helper function to evaluate __get_logical_and and __get_logical_or results
+    def eval_logical_op(tok):
+      left = opmap[tok[0].type](tok[0])
+      right = opmap[tok[2].type](tok[2])
+      if tok[1].value == '&&':
+        return left and right
+      elif tok[1].value == '||':
+        return left or right
+      raise Expression.ParseError, self
+
     # Mapping from token types to evaluator functions
     # Apart from (non-)equality, all these can be simple lambda forms.
     opmap = {
+      'logical_op': eval_logical_op,
       'equality': eval_equality,
       'not': lambda tok: not opmap[tok[0].type](tok[0]),
       'string': lambda tok: context[tok.value],
+      'defined': lambda tok: tok.value in context,
       'int': lambda tok: tok.value}
 
     return opmap[self.e.type](self.e);
