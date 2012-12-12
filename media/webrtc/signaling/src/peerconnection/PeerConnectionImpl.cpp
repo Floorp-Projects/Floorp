@@ -1040,7 +1040,12 @@ PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     return;
   }
 
-  impl_ = PeerConnectionCtx::GetInstance()->mPeerConnections[handle];
+  PeerConnectionImpl *impl = PeerConnectionCtx::GetInstance()->mPeerConnections[handle];
+
+  if (!impl->media())
+    return;
+
+  impl_ = impl;
 }
 
 const std::string&
