@@ -1556,7 +1556,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetMuted(bool *aMuted)
 
 void nsHTMLMediaElement::SetMutedInternal(bool aMuted)
 {
-  float effectiveVolume = aMuted || mChannelMuted ? 0.0f : float(mVolume);
+  float effectiveVolume = aMuted ? 0.0f : float(mVolume);
 
   if (mDecoder) {
     mDecoder->SetVolume(effectiveVolume);
@@ -1753,7 +1753,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mMuted(false),
     mAudioCaptured(false),
     mPlayingBeforeSeek(false),
-    mPausedForInactiveDocument(false),
+    mPausedForInactiveDocumentOrChannel(false),
+    mEventDeliveryPaused(false),
     mWaitingFired(false),
     mIsRunningLoadMethod(false),
     mIsLoadingFromSourceChildren(false),
@@ -1771,7 +1772,7 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mHasAudio(false),
     mDownloadSuspendedByCache(false),
     mAudioChannelType(AUDIO_CHANNEL_NORMAL),
-    mChannelMuted(false),
+    mChannelSuspended(false),
     mPlayingThroughTheAudioChannel(false)
 {
 #ifdef PR_LOGGING
@@ -1877,7 +1878,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
     if (mDecoder->IsEnded()) {
       SetCurrentTime(0);
     }
-    if (!mPausedForInactiveDocument) {
+    if (!mPausedForInactiveDocumentOrChannel) {
       nsresult rv = mDecoder->Play();
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2303,7 +2304,9 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   mMediaSecurityVerified = false;
 
   // The new stream has not been suspended by us.
-  mPausedForInactiveDocument = false;
+  mPausedForInactiveDocumentOrChannel = false;
+  mPendingEvents.Clear();
+  mEventDeliveryPaused = false;
 
   aDecoder->SetAudioChannelType(mAudioChannelType);
   aDecoder->SetAudioCaptured(mAudioCaptured);
@@ -2334,7 +2337,7 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
 
   if (!mPaused) {
     SetPlayedOrSeeked(true);
-    if (!mPausedForInactiveDocument) {
+    if (!mPausedForInactiveDocumentOrChannel) {
       rv = mDecoder->Play();
     }
   }
@@ -2480,7 +2483,7 @@ void nsHTMLMediaElement::SetupSrcMediaStreamPlayback(nsDOMMediaStream* aStream)
   if (mPaused) {
     GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
   }
-  if (mPausedForInactiveDocument) {
+  if (mPausedForInactiveDocumentOrChannel) {
     GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
   }
   ChangeDelayLoadStatus(false);
@@ -2515,7 +2518,7 @@ void nsHTMLMediaElement::EndSrcMediaStreamPlayback()
   if (mPaused) {
     GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
   }
-  if (mPausedForInactiveDocument) {
+  if (mPausedForInactiveDocumentOrChannel) {
     GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
   }
   mSrcStream = nullptr;
@@ -2855,14 +2858,14 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   nsMediaReadyState oldState = mReadyState;
   mReadyState = aState;
 
-  UpdateAudioChannelPlayingState();
-
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY ||
       oldState == mReadyState) {
     return;
   }
 
   LOG(PR_LOG_DEBUG, ("%p Ready state changed to %s", this, gReadyStateToString[aState]));
+
+  UpdateAudioChannelPlayingState();
 
   // Handle raising of "waiting" event during seek (see 4.8.10.9)
   if (mPlayingBeforeSeek &&
@@ -2990,7 +2993,7 @@ nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
 
   // Save events that occur while in the bfcache. These will be dispatched
   // if the page comes out of the bfcache.
-  if (mPausedForInactiveDocument) {
+  if (mEventDeliveryPaused) {
     mPendingEvents.AppendElement(aName);
     return NS_OK;
   }
@@ -3014,7 +3017,7 @@ nsresult nsHTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
 
 nsresult nsHTMLMediaElement::DispatchPendingMediaEvents()
 {
-  NS_ASSERTION(!mPausedForInactiveDocument,
+  NS_ASSERTION(!mEventDeliveryPaused,
                "Must not be in bfcache when dispatching pending media events");
 
   uint32_t count = mPendingEvents.Length();
@@ -3073,21 +3076,18 @@ void nsHTMLMediaElement::UpdateMediaSize(nsIntSize size)
   mMediaSize = size;
 }
 
-void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
+void nsHTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendEvents)
 {
-  nsIDocument* ownerDoc = OwnerDoc();
-  bool pauseForInactiveDocument =
-    !ownerDoc->IsActive() || !ownerDoc->IsVisible();
-
-  if (pauseForInactiveDocument != mPausedForInactiveDocument) {
-    mPausedForInactiveDocument = pauseForInactiveDocument;
-    if (pauseForInactiveDocument) {
+  if (aPauseElement != mPausedForInactiveDocumentOrChannel) {
+    mPausedForInactiveDocumentOrChannel = aPauseElement;
+    if (aPauseElement) {
       if (mDecoder) {
         mDecoder->Pause();
         mDecoder->Suspend();
       } else if (mSrcStream) {
         GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
       }
+      mEventDeliveryPaused = aSuspendEvents;
     } else {
       if (mDecoder) {
         mDecoder->Resume(false);
@@ -3097,18 +3097,32 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
       } else if (mSrcStream) {
         GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
       }
-      DispatchPendingMediaEvents();
+      if (mEventDeliveryPaused) {
+        DispatchPendingMediaEvents();
+        mEventDeliveryPaused = false;
+      }
     }
   }
+}
 
-  if (mPlayingThroughTheAudioChannel && mAudioChannelAgent) {
+void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
+{
+  nsIDocument* ownerDoc = OwnerDoc();
+#ifdef MOZ_B2G
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
+  if (domDoc) {
     bool hidden = false;
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(ownerDoc);
-    if (domDoc) {
-      domDoc->GetHidden(&hidden);
+    domDoc->GetHidden(&hidden);
+    // SetVisibilityState will update mChannelSuspended via the CanPlayChanged callback.
+    if (mPlayingThroughTheAudioChannel && mAudioChannelAgent) {
       mAudioChannelAgent->SetVisibilityState(!hidden);
     }
   }
+#endif
+  bool suspendEvents = !ownerDoc->IsActive() || !ownerDoc->IsVisible();
+  bool pauseElement = suspendEvents || mChannelSuspended;
+
+  SuspendOrResumeElement(pauseElement, suspendEvents);
 
   AddRemoveSelfReference();
 }
@@ -3522,15 +3536,15 @@ nsresult nsHTMLMediaElement::UpdateChannelMuteState(bool aCanPlay)
   // AudioChannelService.
 #ifdef MOZ_B2G
   // We have to mute this channel:
-  if (!aCanPlay && !mChannelMuted) {
-    mChannelMuted = true;
+  if (!aCanPlay && !mChannelSuspended) {
+    mChannelSuspended = true;
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptbegin"));
-  } else if (aCanPlay && mChannelMuted) {
-    mChannelMuted = false;
+  } else if (aCanPlay && mChannelSuspended) {
+    mChannelSuspended = false;
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptend"));
   }
 
-  SetMutedInternal(mMuted);
+  SuspendOrResumeElement(mChannelSuspended, false);
 #endif
 
   return NS_OK;
@@ -3552,7 +3566,7 @@ void nsHTMLMediaElement::UpdateAudioChannelPlayingState()
       if (!mAudioChannelAgent) {
         return;
       }
-      mAudioChannelAgent->Init( mAudioChannelType, this);
+      mAudioChannelAgent->Init(mAudioChannelType, this);
     }
 
     if (mPlayingThroughTheAudioChannel) {
@@ -3572,4 +3586,3 @@ NS_IMETHODIMP nsHTMLMediaElement::CanPlayChanged(bool canPlay)
   UpdateChannelMuteState(canPlay);
   return NS_OK;
 }
-
