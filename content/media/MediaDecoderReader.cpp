@@ -240,6 +240,26 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   return v.forget();
 }
 
+VideoData* VideoData::CreateFromImage(VideoInfo& aInfo,
+                                      ImageContainer* aContainer,
+                                      int64_t aOffset,
+                                      int64_t aTime,
+                                      int64_t aEndTime,
+                                      const nsRefPtr<Image>& aImage,
+                                      bool aKeyframe,
+                                      int64_t aTimecode,
+                                      nsIntRect aPicture)
+{
+  nsAutoPtr<VideoData> v(new VideoData(aOffset,
+                                       aTime,
+                                       aEndTime,
+                                       aKeyframe,
+                                       aTimecode,
+                                       aInfo.mDisplay));
+  v->mImage = aImage;
+  return v.forget();
+}
+
 #ifdef MOZ_WIDGET_GONK
 VideoData* VideoData::Create(VideoInfo& aInfo,
                              ImageContainer* aContainer,
