@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm")
 Cu.import("resource://services-common/log4moz.js");
 
 this.CommonUtils = {
@@ -327,6 +328,33 @@ this.CommonUtils = {
     let len = b64.length;
     let over = len % 4;
     return over ? atob(b64.substr(0, len - over)) : atob(b64);
+  },
+
+  /**
+   * Parses a JSON file from disk using OS.File and promises.
+   *
+   * @param path the file to read. Will be passed to `OS.File.read()`.
+   * @return a promise that resolves to the JSON contents of the named file.
+   */
+  readJSON: function(path) {
+    let decoder = new TextDecoder();
+    let promise = OS.File.read(path);
+    return promise.then(function onSuccess(array) {
+      return JSON.parse(decoder.decode(array));
+    });
+  },
+
+  /**
+   * Write a JSON object to the named file using OS.File and promises.
+   *
+   * @param contents a JS object. Will be serialized.
+   * @param path the path of the file to write.
+   * @return a promise, as produced by OS.File.writeAtomic.
+   */
+  writeJSON: function(contents, path) {
+    let encoder = new TextEncoder();
+    let array = encoder.encode(JSON.stringify(contents));
+    return OS.File.writeAtomic(path, array, {tmpPath: path + ".tmp"});
   },
 
   /**

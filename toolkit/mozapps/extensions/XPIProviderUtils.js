@@ -78,10 +78,6 @@ const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 const RDFURI_ITEM_ROOT                = "urn:mozilla:item:root"
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
-
-var XPIProvider;
-
-
 this.__defineGetter__("gRDF", function gRDFGetter() {
   delete this.gRDF;
   return this.gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
@@ -297,7 +293,7 @@ function copyRowProperties(aRow, aProperties, aTarget) {
   return aTarget;
 }
 
-var XPIDatabase = {
+this.XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
   // A cache of statements that are used and need to be finalized on shutdown

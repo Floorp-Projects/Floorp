@@ -247,6 +247,18 @@ static void AddTransformFunctions(nsCSSValueList* aList,
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
+      case eCSSKeyword_interpolatematrix:
+      {
+        gfx3DMatrix matrix;
+        nsStyleTransformMatrix::ProcessInterpolateMatrix(matrix, array,
+                                                         aContext,
+                                                         aPresContext,
+                                                         canStoreInRuleTree,
+                                                         aBounds,
+                                                         aAppUnitsPerPixel);
+        aFunctions.AppendElement(TransformMatrix(matrix));
+        break;
+      }
       case eCSSKeyword_perspective:
       {
         aFunctions.AppendElement(Perspective(array->Item(1).GetFloatValue()));
@@ -407,6 +419,7 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
       AddAnimationsForProperty(frame, aProperty, &anim,
                                aLayer, data);
     }
+    aLayer->SetAnimationGeneration(et->mAnimationGeneration);
   }
 
   if (ea) {
@@ -419,6 +432,7 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
       AddAnimationsForProperty(frame, aProperty, anim,
                                aLayer, data);
     }
+    aLayer->SetAnimationGeneration(ea->mAnimationGeneration);
   }
 }
 
@@ -2384,7 +2398,13 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   *aSnap = false;
-  return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  return mBounds;
+}
+
+nsRect
+nsDisplayBoxShadowOuter::GetBoundsInternal() {
+  return nsLayoutUtils::GetBoxShadowRectForFrame(mFrame, mFrame->GetSize()) +
+         ToReferenceFrame();
 }
 
 bool

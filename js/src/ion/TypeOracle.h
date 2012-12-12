@@ -208,6 +208,8 @@ class TypeInferenceOracle : public TypeOracle
 
     bool init(JSContext *cx, JSScript *script);
 
+    UnrootedScript script() { return script_.get(); }
+
     UnaryTypes unaryTypes(JSScript *script, jsbytecode *pc);
     BinaryTypes binaryTypes(JSScript *script, jsbytecode *pc);
     Unary unaryOp(JSScript *script, jsbytecode *pc);

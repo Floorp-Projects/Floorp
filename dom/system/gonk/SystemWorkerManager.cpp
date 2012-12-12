@@ -31,6 +31,7 @@
 #include "TimeZoneSettingObserver.h"
 #endif
 #include "mozilla/ipc/Ril.h"
+#include "nsIObserverService.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
