@@ -308,11 +308,6 @@ endif
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 	chmod +x $@
-ifeq ($(OS_TARGET),Darwin)
-ifdef MAPFILE
-	nmedit -s $(MAPFILE) $@
-endif
-endif
 endif
 endif
 
