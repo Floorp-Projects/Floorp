@@ -450,6 +450,10 @@ class PerThreadData : public js::PerThreadDataFriendFields
     bool associatedWith(const JSRuntime *rt) { return runtime_ == rt; }
 };
 
+namespace gc {
+class MarkingValidator;
+} // namespace gc
+
 } // namespace js
 
 struct JSRuntime : js::RuntimeFriendFields
@@ -513,7 +517,7 @@ struct JSRuntime : js::RuntimeFriendFields
 #endif
     js::ion::IonRuntime *ionRuntime_;
 
-    JSObject *selfHostedGlobal_;
+    JSObject *selfHostingGlobal_;
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
@@ -551,9 +555,9 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     bool initSelfHosting(JSContext *cx);
-    void markSelfHostedGlobal(JSTracer *trc);
-    bool isSelfHostedGlobal(js::HandleObject global) {
-        return global == selfHostedGlobal_;
+    void markSelfHostingGlobal(JSTracer *trc);
+    bool isSelfHostingGlobal(js::HandleObject global) {
+        return global == selfHostingGlobal_;
     }
     bool getUnclonedSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                                     js::MutableHandleValue vp);
@@ -728,6 +732,10 @@ struct JSRuntime : js::RuntimeFriendFields
      * List head of arenas allocated during the sweep phase.
      */
     js::gc::ArenaHeader *gcArenasAllocatedDuringSweep;
+
+#ifdef DEBUG
+    js::gc::MarkingValidator *gcMarkingValidator;
+#endif
 
     /*
      * Indicates that a GC slice has taken place in the middle of an animation

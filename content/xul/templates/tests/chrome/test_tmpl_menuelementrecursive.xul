@@ -14,6 +14,27 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <menupopup>
+      <menuitem id="http://www.some-fictitious-zoo.com/arachnids" label="Arachnids" container="true" empty="false"/>
+      <menu step="-2" id="http://www.some-fictitious-zoo.com/birds" label="Birds" container="true" empty="false"/>
+      <menu step="2" id="http://www.some-fictitious-zoo.com/birds" label="Birds" container="true" empty="false" open="true">
+        <menupopup>
+          <menuitem step="4" id="http://www.some-fictitious-zoo.com/birds/wren" label="Wren"/>
+          <menuitem id="http://www.some-fictitious-zoo.com/birds/emu" label="Emu"/>
+          <menuitem step="-5" id="http://www.some-fictitious-zoo.com/birds/barnowl" label="Barn Owl"/>
+          <menuitem id="http://www.some-fictitious-zoo.com/birds/raven" label="Raven"/>
+          <menuitem step="3" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx" label="Archaeopteryx"/>
+          <menuitem id="http://www.some-fictitious-zoo.com/birds/emperorpenguin" label="Emperor Penguin"/>
+        </menupopup>
+      </menu>
+      <menuitem id="http://www.some-fictitious-zoo.com/crustaceans" label="Crustaceans" container="true" empty="true"/>
+      <menuitem id="http://www.some-fictitious-zoo.com/fish" label="Fish" container="true" empty="false"/>
+      <menuitem id="http://www.some-fictitious-zoo.com/mammals" label="Mammals" container="true" empty="false"/>
+      <menuitem id="http://www.some-fictitious-zoo.com/reptiles" label="Reptiles" container="true" empty="false"/>
+    </menupopup>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,25 +47,7 @@ var isTreeBuilder = false;
 var needsOpen = true;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<menupopup>
-  <menuitem id="http://www.some-fictitious-zoo.com/arachnids" label="Arachnids" container="true" empty="false"/>
-  <menu step="-2" id="http://www.some-fictitious-zoo.com/birds" label="Birds" container="true" empty="false"/>
-  <menu step="2" id="http://www.some-fictitious-zoo.com/birds" label="Birds" container="true" empty="false" open="true">
-    <menupopup>
-      <menuitem step="4" id="http://www.some-fictitious-zoo.com/birds/wren" label="Wren"/>
-      <menuitem id="http://www.some-fictitious-zoo.com/birds/emu" label="Emu"/>
-      <menuitem step="-5" id="http://www.some-fictitious-zoo.com/birds/barnowl" label="Barn Owl"/>
-      <menuitem id="http://www.some-fictitious-zoo.com/birds/raven" label="Raven"/>
-      <menuitem step="3" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx" label="Archaeopteryx"/>
-      <menuitem id="http://www.some-fictitious-zoo.com/birds/emperorpenguin" label="Emperor Penguin"/>
-    </menupopup>
-  </menu>
-  <menuitem id="http://www.some-fictitious-zoo.com/crustaceans" label="Crustaceans" container="true" empty="true"/>
-  <menuitem id="http://www.some-fictitious-zoo.com/fish" label="Fish" container="true" empty="false"/>
-  <menuitem id="http://www.some-fictitious-zoo.com/mammals" label="Mammals" container="true" empty="false"/>
-  <menuitem id="http://www.some-fictitious-zoo.com/reptiles" label="Reptiles" container="true" empty="false"/>
-</menupopup>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1

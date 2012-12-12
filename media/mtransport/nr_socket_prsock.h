@@ -75,6 +75,8 @@ public:
   virtual void OnSocketReady(PRFileDesc *fd, int16_t outflags);
   virtual void OnSocketDetached(PRFileDesc *fd);
   virtual void IsLocal(bool *aIsLocal);
+  virtual uint64_t ByteCountSent() { return 0; }
+  virtual uint64_t ByteCountReceived() { return 0; }
 
   // nsISupports methods
   NS_DECL_ISUPPORTS

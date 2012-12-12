@@ -518,14 +518,57 @@ namespace {
 // from the standard ones -- they use int instead of size_t.  But we don't need
 // a wrapper for moz_free.
 
+#ifdef MOZ_DMD
+
+#include "DMD.h"
+
+// sqlite does its own memory accounting, and we use its numbers in our memory
+// reporters.  But we don't want sqlite's heap blocks to show up in DMD's
+// output as unreported, so we mark them as reported when they're allocated and
+// mark them as unreported when they are freed.
+//
+// In other words, we are marking all sqlite heap blocks as reported even
+// though we're not reporting them ourselves.  Instead we're trusting that
+// sqlite is fully and correctly accounting for all of its heap blocks via its
+// own memory accounting.
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(sqliteMallocSizeOfOnAlloc, "sqlite")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(sqliteMallocSizeOfOnFree)
+
+#endif
+
 static void *sqliteMemMalloc(int n)
 {
-  return ::moz_malloc(n);
+  void* p = ::moz_malloc(n);
+#ifdef MOZ_DMD
+  sqliteMallocSizeOfOnAlloc(p);
+#endif
+  return p;
+}
+
+static void sqliteMemFree(void *p)
+{
+#ifdef MOZ_DMD
+  sqliteMallocSizeOfOnFree(p);
+#endif
+  ::moz_free(p);
 }
 
 static void *sqliteMemRealloc(void *p, int n)
 {
+#ifdef MOZ_DMD
+  sqliteMallocSizeOfOnFree(p);
+  void *pnew = ::moz_realloc(p, n);
+  if (pnew) {
+    sqliteMallocSizeOfOnAlloc(pnew);
+  } else {
+    // realloc failed;  undo the sqliteMallocSizeOfOnFree from above
+    sqliteMallocSizeOfOnAlloc(p);
+  }
+  return pnew;
+#else
   return ::moz_realloc(p, n);
+#endif
 }
 
 static int sqliteMemSize(void *p)
@@ -554,14 +597,14 @@ static void sqliteMemShutdown(void *p)
 
 const sqlite3_mem_methods memMethods = {
   &sqliteMemMalloc,
-  &moz_free,
+  &sqliteMemFree,
   &sqliteMemRealloc,
   &sqliteMemSize,
   &sqliteMemRoundup,
   &sqliteMemInit,
   &sqliteMemShutdown,
   NULL
-}; 
+};
 
 } // anonymous namespace
 

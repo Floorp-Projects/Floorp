@@ -407,7 +407,8 @@ user_pref("app.update.enabled", false);
 user_pref("app.update.staging.enabled", false);
 user_pref("browser.panorama.experienced_first_run", true); // Assume experienced
 user_pref("dom.w3c_touch_events.enabled", 1);
-user_pref("toolkit.telemetry.prompted", 2);
+#expand user_pref("toolkit.telemetry.prompted", __MOZ_TELEMETRY_DISPLAY_REV__);
+#expand user_pref("toolkit.telemetry.notifiedOptOut", __MOZ_TELEMETRY_DISPLAY_REV__);
 // Existing tests assume there is no font size inflation.
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);

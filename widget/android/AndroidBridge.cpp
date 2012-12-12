@@ -159,7 +159,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     jNumberOfMessages = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNumberOfMessagesForText", "(Ljava/lang/String;)I");
     jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
-    jSaveSentMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "saveSentMessage", "(Ljava/lang/String;Ljava/lang/String;J)I");
     jGetMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMessage", "(II)V");
     jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(II)V");
     jCreateMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createMessageList", "(JJ[Ljava/lang/String;IIZI)V");
@@ -1714,26 +1713,6 @@ AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage, 
     jstring jMessage = NewJavaString(&jniFrame, PromiseFlatString(aMessage).get(), aMessage.Length());
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage, requestId);
-}
-
-int32_t
-AndroidBridge::SaveSentMessage(const nsAString& aRecipient,
-                               const nsAString& aBody, uint64_t aDate)
-{
-    ALOG_BRIDGE("AndroidBridge::SaveSentMessage");
-
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return 0;
-
-    AutoLocalJNIFrame jniFrame(env);
-    jstring jRecipient = NewJavaString(&jniFrame, PromiseFlatString(aRecipient).get(), aRecipient.Length());
-    jstring jBody = NewJavaString(&jniFrame, PromiseFlatString(aBody).get(), aBody.Length());
-    int32_t ret = env->CallStaticIntMethod(mGeckoAppShellClass, jSaveSentMessage, jRecipient, jBody, aDate);
-    if (jniFrame.CheckForException())
-        return 0;
-
-    return ret;
 }
 
 void

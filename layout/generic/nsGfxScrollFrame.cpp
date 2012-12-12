@@ -861,10 +861,10 @@ nsHTMLScrollFrame::AccessibleType()
   if (mContent->IsRootOfNativeAnonymousSubtree() ||
       GetScrollbarStyles() == nsIScrollableFrame::
         ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN) ) {
-    return a11y::eNoAccessible;
+    return a11y::eNoType;
   }
 
-  return a11y::eHyperTextAccessible;
+  return a11y::eHyperText;
 }
 #endif
 

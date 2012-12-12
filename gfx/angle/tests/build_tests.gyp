@@ -63,6 +63,25 @@
         'preprocessor_tests/version_test.cpp',
       ],
     },
+    {
+      'target_name': 'compiler_tests',
+      'type': 'executable',
+      'dependencies': [
+        '../src/build_angle.gyp:translator_common',
+        'gtest',
+        'gmock',
+      ],
+      'include_dirs': [
+        '../include',
+        '../src',
+        '../third_party/googletest/include',
+        '../third_party/googlemock/include',
+      ],
+      'sources': [
+        '../third_party/googlemock/src/gmock_main.cc',
+        'compiler_tests/VariablePacker_test.cpp',
+      ],
+    },
   ],
 }
 

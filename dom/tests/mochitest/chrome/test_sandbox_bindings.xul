@@ -192,6 +192,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "URL interface object manipulation via an Xray shouldn't throw" + e);
       }
 
+      // And now tests that don't use a window-associated sandbox
+      sandbox = Components.utils.Sandbox(win.document.nodePrincipal,
+                                         { sandboxPrototype: win });
+      try {
+        var ws = Components.utils.evalInSandbox('var ws = new WebSocket("ws://example.org"); ws', sandbox);
+        // Test that we actually got a WebSocket object, probably
+        ok("bufferedAmount" in ws, "What is this object?");
+      } catch (e) {
+        ok(false, "Should be able to create a WebSocket in a sandbox " + e);
+      }
+
       SimpleTest.finish();
     }
 

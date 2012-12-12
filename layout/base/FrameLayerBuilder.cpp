@@ -49,6 +49,7 @@ FrameLayerBuilder::DisplayItemData::DisplayItemData(LayerManagerData* aParent, u
   , mLayerState(aLayerState)
   , mUsed(true)
   , mIsInvalid(false)
+  , mIsVisible(true)
 {
 }
 
@@ -66,6 +67,7 @@ FrameLayerBuilder::DisplayItemData::DisplayItemData(DisplayItemData &toCopy)
   mContainerLayerGeneration = toCopy.mContainerLayerGeneration;
   mLayerState = toCopy.mLayerState;
   mUsed = toCopy.mUsed;
+  mIsVisible = toCopy.mIsVisible;
 }
 
 void
@@ -273,7 +275,8 @@ public:
    */
   void ProcessDisplayItems(const nsDisplayList& aList,
                            FrameLayerBuilder::Clip& aClip,
-                           uint32_t aFlags);
+                           uint32_t aFlags,
+                           const nsIFrame* aForceActiveScrolledRoot = nullptr);
   /**
    * This finalizes all the open ThebesLayers by popping every element off
    * mThebesLayerDataStack, then sets the children of the container layer
@@ -558,6 +561,9 @@ protected:
    */
   void SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aClip,
                       uint32_t aRoundedRectClipCount = UINT32_MAX);
+
+  bool ChooseActiveScrolledRoot(const nsDisplayList& aList,
+                                const nsIFrame **aActiveScrolledRoot);
 
   nsDisplayListBuilder*            mBuilder;
   LayerManager*                    mManager;
@@ -1100,13 +1106,15 @@ FrameLayerBuilder::GetDisplayItemDataForManager(nsDisplayItem* aItem,
 }
 
 bool
-FrameLayerBuilder::HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+FrameLayerBuilder::HasVisibleRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 {
   nsTArray<DisplayItemData*> *array = 
     reinterpret_cast<nsTArray<DisplayItemData*>*>(aFrame->Properties().Get(LayerManagerDataProperty()));
   if (array) {
     for (uint32_t i = 0; i < array->Length(); i++) {
-      if (array->ElementAt(i)->mDisplayItemKey == aDisplayItemKey) {
+      DisplayItemData* data = array->ElementAt(i);
+      if (data->mDisplayItemKey == aDisplayItemKey &&
+          data->IsVisibleInLayer()) {
         return true;
       }
     }
@@ -1115,7 +1123,7 @@ FrameLayerBuilder::HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey
 }
 
 void
-FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback)
+FrameLayerBuilder::IterateVisibleRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback)
 {
   nsTArray<DisplayItemData*> *array = 
     reinterpret_cast<nsTArray<DisplayItemData*>*>(aFrame->Properties().Get(LayerManagerDataProperty()));
@@ -1125,7 +1133,8 @@ FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallb
   
   for (uint32_t i = 0; i < array->Length(); i++) {
     DisplayItemData* data = array->ElementAt(i);
-    if (data->mDisplayItemKey != nsDisplayItem::TYPE_ZERO) {
+    if (data->mDisplayItemKey != nsDisplayItem::TYPE_ZERO &&
+        data->IsVisibleInLayer()) {
       aCallback(aFrame, data);
     }
   }
@@ -1841,7 +1850,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
     nsRegion opaqueClipped;
     nsRegionRectIterator iter(opaque);
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-      opaqueClipped.Or(opaqueClipped, aClip.ApproximateIntersect(*r));
+      opaqueClipped.Or(opaqueClipped, aClip.ApproximateIntersectInner(*r));
     }
 
     nsIntRegion opaquePixels = aState->ScaleRegionToInsidePixels(opaqueClipped, snap);
@@ -2019,55 +2028,39 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 }
 
 /**
- * Checks if aAncestor is an ancestor of aFrame
- */
-static bool IsFrameAncestorOf(const nsIFrame *aAncestor, const nsIFrame *aFrame)
-{
-  if (!aFrame) {
-    return false;
-  }
-  for (const nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    if (f == aAncestor) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
  * Chooses a single active scrolled root for the entire display list, used
  * when we are flattening layers.
  */
-static bool ChooseActiveScrolledRoot(nsDisplayListBuilder *aBuilder,
-                                     const nsDisplayList& aList,
-                                     const nsIFrame **aActiveScrolledRoot)
+bool
+ContainerState::ChooseActiveScrolledRoot(const nsDisplayList& aList,
+                                         const nsIFrame **aActiveScrolledRoot)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayItem::Type type = item->GetType();
     if (type == nsDisplayItem::TYPE_CLIP ||
         type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
-      if (!ChooseActiveScrolledRoot(aBuilder,
-                                    *item->GetSameCoordinateSystemChildren(),
-                                    aActiveScrolledRoot)) {
-        return false;
+      if (ChooseActiveScrolledRoot(*item->GetSameCoordinateSystemChildren(),
+                                   aActiveScrolledRoot)) {
+        return true;
       }
       continue;
     }
 
-    if (!*aActiveScrolledRoot) {
-      // Try using the actual active scrolled root of the backmost item, as that
-      // should result in the least invalidation when scrolling.
-      aBuilder->IsFixedItem(item, aActiveScrolledRoot);
-    } else if (!IsFrameAncestorOf(*aActiveScrolledRoot, item->GetUnderlyingFrame())) {
-      // If there are items that aren't descendants of the background's active scrolled
-      // root, then give up and just use the container's reference frame instead.
-      return false;
+    LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
+    // Don't use an item that won't be part of any ThebesLayers to pick the
+    // active scrolled root.
+    if (layerState == LAYER_ACTIVE_FORCE) {
+      continue;
+    }
+
+    // Try using the actual active scrolled root of the backmost item, as that
+    // should result in the least invalidation when scrolling.
+    mBuilder->IsFixedItem(item, aActiveScrolledRoot);
+    if (*aActiveScrolledRoot) {
+      return true;
     }
   }
-  if (!*aActiveScrolledRoot) {
-    return false;
-  }
-  return true;
+  return false;
 }
 
 /*
@@ -2087,7 +2080,8 @@ static bool ChooseActiveScrolledRoot(nsDisplayListBuilder *aBuilder,
 void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                     FrameLayerBuilder::Clip& aClip,
-                                    uint32_t aFlags)
+                                    uint32_t aFlags,
+                                    const nsIFrame* aForceActiveScrolledRoot)
 {
   SAMPLE_LABEL("ContainerState", "ProcessDisplayItems");
 
@@ -2098,7 +2092,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
   // layer, so we need to choose which active scrolled root to use for all
   // items.
   if (aFlags & NO_COMPONENT_ALPHA) {
-    if (!ChooseActiveScrolledRoot(mBuilder, aList, &lastActiveScrolledRoot)) {
+    if (aForceActiveScrolledRoot) {
+      lastActiveScrolledRoot = aForceActiveScrolledRoot;
+    } else if (!ChooseActiveScrolledRoot(aList, &lastActiveScrolledRoot)) {
       lastActiveScrolledRoot = mContainerReferenceFrame;
     }
 
@@ -2110,7 +2106,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     if (type == nsDisplayItem::TYPE_CLIP ||
         type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
       FrameLayerBuilder::Clip childClip(aClip, item);
-      ProcessDisplayItems(*item->GetSameCoordinateSystemChildren(), childClip, aFlags);
+      ProcessDisplayItems(*item->GetSameCoordinateSystemChildren(), childClip, aFlags, lastActiveScrolledRoot);
       continue;
     }
 
@@ -2348,6 +2344,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
             GetTranslationForThebesLayer(newThebesLayer));
       }
     }
+    aItem->NotifyRenderingChanged();
     return;
   } 
   if (!aNewLayer) {
@@ -2410,6 +2407,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #endif
   }
   if (!combined.IsEmpty()) {
+    aItem->NotifyRenderingChanged();
     InvalidatePostTransformRegion(newThebesLayer,
         combined.ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
         GetTranslationForThebesLayer(newThebesLayer));
@@ -2454,7 +2452,8 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     }
   }
 
-  AddLayerDisplayItem(aLayer, aItem, aClip, aLayerState, aTopLeft, tempManager, aGeometry);
+  DisplayItemData* displayItemData =
+    AddLayerDisplayItem(aLayer, aItem, aClip, aLayerState, aTopLeft, tempManager, aGeometry);
 
   ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
   if (entry) {
@@ -2521,7 +2520,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       }
     }
     ClippedDisplayItem* cdi =
-      entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip,
+      entry->mItems.AppendElement(ClippedDisplayItem(aItem, displayItemData, aClip,
                                                      mContainerLayerGeneration));
     cdi->mInactiveLayerManager = tempManager;
   }
@@ -2596,7 +2595,7 @@ FrameLayerBuilder::ClippedDisplayItem::~ClippedDisplayItem()
   }
 }
 
-void
+FrameLayerBuilder::DisplayItemData*
 FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
                                        nsDisplayItem* aItem,
                                        const Clip& aClip,
@@ -2606,7 +2605,7 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
                                        nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 {
   if (aLayer->Manager() != mRetainingManager)
-    return;
+    return nullptr;
 
   DisplayItemData *data = StoreDataForFrame(aItem, aLayer, aLayerState);
   ThebesLayer *t = aLayer->AsThebesLayer();
@@ -2615,6 +2614,7 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
     data->mClip = aClip;
   }
   data->mInactiveManager = aManager;
+  return data;
 }
 
 nsIntPoint
@@ -2783,10 +2783,11 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       // or it was previously unscaled.
       bool clamp = true;
       gfxMatrix oldFrameTransform2d;
-      if (aLayer->GetTransform().Is2D(&oldFrameTransform2d)) {
+      if (aLayer->GetBaseTransform().Is2D(&oldFrameTransform2d)) {
         gfxSize oldScale = oldFrameTransform2d.ScaleFactors(true);
-        if (oldScale == scale || oldScale == gfxSize(1.0, 1.0))
+        if (oldScale == scale || oldScale == gfxSize(1.0, 1.0)) {
           clamp = false;
+        }
       }
       if (clamp) {
         scale.width = gfxUtils::ClampToScaleFactor(scale.width);
@@ -3263,15 +3264,29 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
 
   uint32_t i;
-  // Update visible regions. We need perform visibility analysis again
-  // because we may be asked to draw into part of a ThebesLayer that
-  // isn't actually visible in the window (e.g., because a ThebesLayer
-  // expanded its visible region to a rectangle internally), in which
-  // case the mVisibleRect stored in the display item may be wrong.
-  nsRegion visible = aRegionToDraw.ToAppUnits(appUnitsPerDevPixel);
+  // Update visible rects in display items to reflect visibility
+  // just considering items in this ThebesLayer. This is different from the
+  // original visible rects, which describe which part of each item
+  // is visible in the window. These can be larger than the original
+  // visible rect, because we may be asked to draw into part of a
+  // ThebesLayer that isn't actually visible in the window (e.g.,
+  // because a ThebesLayer expanded its visible region to a rectangle
+  // internally, or because we're caching prerendered content).
+  // We also compute the intersection of those visible rects with
+  // aRegionToDraw. These are the rectangles of each display item
+  // that actually need to be drawn now.
+  // Treat as visible everything this layer already contains or will
+  // contain.
+  nsIntRegion layerRegion;
+  layerRegion.Or(aLayer->GetValidRegion(), aRegionToDraw);
+  nsRegion visible = layerRegion.ToAppUnits(appUnitsPerDevPixel);
   visible.MoveBy(NSIntPixelsToAppUnits(offset.x, appUnitsPerDevPixel),
                  NSIntPixelsToAppUnits(offset.y, appUnitsPerDevPixel));
   visible.ScaleInverseRoundOut(userData->mXScale, userData->mYScale);
+  nsRegion toDraw = aRegionToDraw.ToAppUnits(appUnitsPerDevPixel);
+  toDraw.MoveBy(NSIntPixelsToAppUnits(offset.x, appUnitsPerDevPixel),
+                NSIntPixelsToAppUnits(offset.y, appUnitsPerDevPixel));
+  toDraw.ScaleInverseRoundOut(userData->mXScale, userData->mYScale);
 
   for (i = items.Length(); i > 0; --i) {
     ClippedDisplayItem* cdi = &items[i - 1];
@@ -3287,29 +3302,28 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
         (cdi->mClip.mRoundedClipRects.IsEmpty() &&
          cdi->mClip.mClipRect.Contains(visible.GetBounds()))) {
       cdi->mItem->RecomputeVisibility(builder, &visible);
-      continue;
-    }
-
-    // Do a little dance to account for the fact that we're clipping
-    // to cdi->mClipRect
-    nsRegion clipped;
-    clipped.And(visible, cdi->mClip.mClipRect);
-    nsRegion finalClipped = clipped;
-    cdi->mItem->RecomputeVisibility(builder, &finalClipped);
-    // If we have rounded clip rects, don't subtract from the visible
-    // region since we aren't displaying everything inside the rect.
-    if (cdi->mClip.mRoundedClipRects.IsEmpty()) {
-      nsRegion removed;
-      removed.Sub(clipped, finalClipped);
-      nsRegion newVisible;
-      newVisible.Sub(visible, removed);
-      // Don't let the visible region get too complex.
-      if (newVisible.GetNumRects() <= 15) {
-        visible = newVisible;
+    } else {
+      // Do a little dance to account for the fact that we're clipping
+      // to cdi->mClipRect
+      nsRegion clipped;
+      clipped.And(visible, cdi->mClip.mClipRect);
+      nsRegion finalClipped = clipped;
+      cdi->mItem->RecomputeVisibility(builder, &finalClipped);
+      // If we have rounded clip rects, don't subtract from the visible
+      // region since we aren't displaying everything inside the rect.
+      if (cdi->mClip.mRoundedClipRects.IsEmpty()) {
+        nsRegion removed;
+        removed.Sub(clipped, finalClipped);
+        nsRegion newVisible;
+        newVisible.Sub(visible, removed);
+        // Don't let the visible region get too complex.
+        if (newVisible.GetNumRects() <= 15) {
+          visible = newVisible;
+        }
       }
-    }
-    if (!cdi->mClip.IsRectClippedByRoundedCorner(cdi->mItem->GetVisibleRect())) {
-      cdi->mClip.RemoveRoundedCorners();
+      if (!cdi->mClip.IsRectClippedByRoundedCorner(cdi->mItem->GetVisibleRect())) {
+        cdi->mClip.RemoveRoundedCorners();
+      }
     }
   }
 
@@ -3322,8 +3336,13 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   for (i = 0; i < items.Length(); ++i) {
     ClippedDisplayItem* cdi = &items[i];
 
-    if (cdi->mItem->GetVisibleRect().IsEmpty())
+    if (cdi->mData) {
+      cdi->mData->SetIsVisibleInLayer(!cdi->mItem->GetVisibleRect().IsEmpty());
+    }
+
+    if (!toDraw.Intersects(cdi->mItem->GetVisibleRect())) {
       continue;
+    }
 
     // If the new desired clip state is different from the current state,
     // update the clip.
@@ -3501,7 +3520,7 @@ FrameLayerBuilder::Clip::AddRoundedRectPathTo(gfxContext* aContext,
 }
 
 nsRect
-FrameLayerBuilder::Clip::ApproximateIntersect(const nsRect& aRect) const
+FrameLayerBuilder::Clip::ApproximateIntersectInner(const nsRect& aRect) const
 {
   nsRect r = aRect;
   if (mHaveClipRect) {
@@ -3747,7 +3766,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   imageTransform.Scale(mParameters.mXScale, mParameters.mYScale);
 
   nsAutoPtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
-    new MaskLayerImageCache::MaskLayerImageKey(aLayer->Manager()->GetBackendType()));
+    new MaskLayerImageCache::MaskLayerImageKey());
 
   // copy and transform the rounded rects
   for (uint32_t i = 0; i < newData.mRoundedClipRects.Length(); ++i) {

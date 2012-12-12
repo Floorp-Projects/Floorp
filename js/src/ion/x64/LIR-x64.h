@@ -19,7 +19,7 @@ class LBox : public LInstructionHelper<1, 1, 0>
     MIRType type_;
 
   public:
-    LIR_HEADER(Box);
+    LIR_HEADER(Box)
 
     LBox(MIRType type, const LAllocation &payload)
       : type_(type)
@@ -50,7 +50,7 @@ class LUnboxBase : public LInstructionHelper<1, 1, 0>
 
 class LUnbox : public LUnboxBase {
   public:
-    LIR_HEADER(Unbox);
+    LIR_HEADER(Unbox)
 
     LUnbox(const LAllocation &input)
       : LUnboxBase(input)
@@ -59,7 +59,7 @@ class LUnbox : public LUnboxBase {
 
 class LUnboxDouble : public LUnboxBase {
   public:
-    LIR_HEADER(UnboxDouble);
+    LIR_HEADER(UnboxDouble)
 
     LUnboxDouble(const LAllocation &input)
       : LUnboxBase(input)
@@ -72,7 +72,7 @@ class LDouble : public LInstructionHelper<1, 0, 0>
     double d_;
 
   public:
-    LIR_HEADER(Double);
+    LIR_HEADER(Double)
 
     LDouble(double d)
       : d_(d)

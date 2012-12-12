@@ -322,7 +322,6 @@ public:
 
     uint16_t GetNumberOfMessagesForText(const nsAString& aText);
     void SendMessage(const nsAString& aNumber, const nsAString& aText, nsISmsRequest* aRequest);
-    int32_t SaveSentMessage(const nsAString& aRecipient, const nsAString& aBody, uint64_t aDate);
     void GetMessage(int32_t aMessageId, nsISmsRequest* aRequest);
     void DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest);
     void CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse, nsISmsRequest* aRequest);
@@ -474,7 +473,6 @@ protected:
 
     jmethodID jNumberOfMessages;
     jmethodID jSendMessage;
-    jmethodID jSaveSentMessage;
     jmethodID jGetMessage;
     jmethodID jDeleteMessage;
     jmethodID jCreateMessageList;

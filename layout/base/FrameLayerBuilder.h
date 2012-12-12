@@ -96,6 +96,7 @@ public:
   typedef layers::ThebesLayer ThebesLayer;
   typedef layers::ImageLayer ImageLayer;
   typedef layers::LayerManager LayerManager;
+  class DisplayItemData;
 
   FrameLayerBuilder() :
     mRetainingManager(nullptr),
@@ -263,13 +264,13 @@ public:
    * then this is the temporary layer manager to draw with.
    */
   struct Clip;
-  void AddLayerDisplayItem(Layer* aLayer,
-                           nsDisplayItem* aItem,
-                           const Clip& aClip,
-                           LayerState aLayerState,
-                           const nsPoint& aTopLeft,
-                           LayerManager* aManager,
-                           nsAutoPtr<nsDisplayItemGeometry> aGeometry);
+  DisplayItemData* AddLayerDisplayItem(Layer* aLayer,
+                                       nsDisplayItem* aItem,
+                                       const Clip& aClip,
+                                       LayerState aLayerState,
+                                       const nsPoint& aTopLeft,
+                                       LayerManager* aManager,
+                                       nsAutoPtr<nsDisplayItemGeometry> aGeometry);
 
   /**
    * Record aItem as a display item that is rendered by the ThebesLayer
@@ -314,15 +315,14 @@ public:
   LayerManager* GetRetainingLayerManager() { return mRetainingManager; }
 
   /**
-   * Returns true if the given display item was rendered during the previous
-   * paint. Returns false otherwise.
+   * Returns true if the given display item was visible in its layer during
+   * the previous paint. Returns false otherwise.
    */
-  static bool HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+  static bool HasVisibleRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
-  class DisplayItemData;
   typedef void (*DisplayItemDataCallback)(nsIFrame *aFrame, DisplayItemData* aItem);
 
-  static void IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback);
+  static void IterateVisibleRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback);
 
   /**
    * Save transform that was in aLayer when we last painted, and the position
@@ -417,7 +417,7 @@ public:
     // Return a rectangle contained in the intersection of aRect with this
     // clip region. Tries to return the largest possible rectangle, but may
     // not succeed.
-    nsRect ApproximateIntersect(const nsRect& aRect) const;
+    nsRect ApproximateIntersectInner(const nsRect& aRect) const;
 
     // Returns false if aRect is definitely not clipped by a rounded corner in
     // this clip. Returns true if aRect is clipped by a rounded corner in this
@@ -477,6 +477,9 @@ public:
     uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
     Layer* GetLayer() { return mLayer; }
     void Invalidate() { mIsInvalid = true; }
+    bool IsVisibleInLayer() { return mIsVisible; }
+    void SetIsVisibleInLayer(bool aIsVisible) { mIsVisible = aIsVisible; }
+
   protected:
 
     DisplayItemData(LayerManagerData* aParent, uint32_t aKey, Layer* aLayer, LayerState aLayerState, uint32_t aGeneration);
@@ -525,7 +528,15 @@ public:
      * paint) has been updated in the current paint.
      */
     bool            mUsed;
+    /**
+     * True if the entire display item needs to be invalidated.
+     */
     bool            mIsInvalid;
+    /**
+     * True if the display item is visible in its layer, otherwise
+     * it's completely covered by opaque content in its ThebesLayer.
+     */
+    bool            mIsVisible;
   };
 
 protected:
@@ -592,14 +603,17 @@ protected:
    * mItem always has an underlying frame.
    */
   struct ClippedDisplayItem {
-    ClippedDisplayItem(nsDisplayItem* aItem, const Clip& aClip, uint32_t aGeneration)
-      : mItem(aItem), mClip(aClip), mContainerLayerGeneration(aGeneration)
+    ClippedDisplayItem(nsDisplayItem* aItem, DisplayItemData* aData,
+                       const Clip& aClip, uint32_t aGeneration)
+      : mItem(aItem), mData(aData), mClip(aClip),
+        mContainerLayerGeneration(aGeneration)
     {
     }
 
     ~ClippedDisplayItem();
 
     nsDisplayItem* mItem;
+    DisplayItemData* mData;
 
     /**
      * If the display item is being rendered as an inactive

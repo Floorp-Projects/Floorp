@@ -30,7 +30,14 @@
             </setting>
           </settings>
           <settings id="feedback-tools" label="&feedback.tools.title;">
-            <setting pref="toolkit.telemetry.enabled" title="&feedback.allowTelemetry.title;" type="bool"/>
+            <setting
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+                     pref="toolkit.telemetry.enabledPreRelease"
+#else
+                     pref="toolkit.telemetry.enabled"
+#endif
+                     title="&feedback.allowTelemetry.title;"
+                     type="bool"/>
             <setting id="feedback-checkCompatibility" title="&feedback.forceCompat.title;" type="bool" inverted="true" oninputchanged="Feedback.updateRestart();"/>
             <setting pref="devtools.errorconsole.enabled" title="&feedback.errorConsole.title;" type="bool"/>
           </settings>

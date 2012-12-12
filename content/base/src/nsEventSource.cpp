@@ -301,7 +301,6 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
 
   rv = convManager->GetUnicodeDecoder("UTF-8", getter_AddRefs(mUnicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
-  mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
 
   // the constructor should throw a SYNTAX_ERROR only if it fails resolving the
   // url parameter, so we don't care about the InitChannelAndRequestEventSource
@@ -503,31 +502,16 @@ nsEventSource::StreamReaderFunc(nsIInputStream *aInputStream,
 
     thisObject->mLastConvertionResult =
       thisObject->mUnicodeDecoder->Convert(p, &srcCount, out, &outCount);
+    MOZ_ASSERT(thisObject->mLastConvertionResult != NS_ERROR_ILLEGAL_INPUT);
 
-    if (thisObject->mLastConvertionResult == NS_ERROR_ILLEGAL_INPUT) {
-      // There's an illegal byte in the input. It's now the responsibility
-      // of this calling code to output a U+FFFD REPLACEMENT CHARACTER, advance
-      // over the bad byte and reset the decoder.
-      rv = thisObject->ParseCharacter(REPLACEMENT_CHAR);
+    for (int32_t i = 0; i < outCount; ++i) {
+      rv = thisObject->ParseCharacter(out[i]);
       NS_ENSURE_SUCCESS(rv, rv);
-      p = p + srcCount + 1;
-      thisObject->mUnicodeDecoder->Reset();
-    } else {
-      for (int32_t i = 0; i < outCount; ++i) {
-        rv = thisObject->ParseCharacter(out[i]);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      p = p + srcCount;
     }
+    p = p + srcCount;
   } while (p < end &&
            thisObject->mLastConvertionResult != NS_PARTIAL_MORE_INPUT &&
            thisObject->mLastConvertionResult != NS_OK);
-
-  // check if the last byte was a bad one and
-  // clear the state since it was handled above.
-  if (thisObject->mLastConvertionResult == NS_ERROR_ILLEGAL_INPUT) {
-    thisObject->mLastConvertionResult = NS_OK;
-  }
 
   *aWriteCount = aCount;
   return NS_OK;

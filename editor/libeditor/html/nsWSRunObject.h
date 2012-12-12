@@ -84,7 +84,7 @@ public:
   }
 private:
   uint16_t mEnum;
-  void bool_conversion_helper() {};
+  void bool_conversion_helper() {}
 public:
   // Allow boolean conversion with no numeric conversion
   typedef void (WSType::*bool_type)();

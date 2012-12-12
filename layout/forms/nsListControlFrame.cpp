@@ -267,7 +267,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsHTMLScrollFrame)
 a11y::AccType
 nsListControlFrame::AccessibleType()
 {
-  return a11y::eHTMLSelectListAccessible;
+  return a11y::eHTMLSelectList;
 }
 #endif
 

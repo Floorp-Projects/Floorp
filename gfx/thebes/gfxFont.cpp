@@ -82,8 +82,14 @@ gfxCharacterMap::NotifyReleased()
     delete this;
 }
 
-gfxFontEntry::~gfxFontEntry() 
+gfxFontEntry::~gfxFontEntry()
 {
+    // For downloaded fonts, we need to tell the user font cache that this
+    // entry is being deleted.
+    if (!mIsProxy && IsUserFont() && !IsLocalUserFont()) {
+        gfxUserFontSet::UserFontCache::ForgetFont(this);
+    }
+
     if (mSVGGlyphs) {
         delete mSVGGlyphs;
     }
@@ -1238,6 +1244,11 @@ gfxFontCache::gfxFontCache()
 
 gfxFontCache::~gfxFontCache()
 {
+    // Ensure the user font cache releases its references to font entries,
+    // so they aren't kept alive after the font instances and font-list
+    // have been shut down.
+    gfxUserFontSet::UserFontCache::Shutdown();
+
     if (mWordCacheExpirationTimer) {
         mWordCacheExpirationTimer->Cancel();
         mWordCacheExpirationTimer = nullptr;

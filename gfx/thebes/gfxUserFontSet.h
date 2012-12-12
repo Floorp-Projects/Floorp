@@ -14,10 +14,11 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsIFile.h"
+#include "nsIPrincipal.h"
 #include "nsISupportsImpl.h"
 #include "nsIScriptError.h"
+#include "nsURIHashKey.h"
 
-class nsIURI;
 class gfxMixedFontFamily;
 class nsFontFaceLoader;
 
@@ -35,10 +36,9 @@ struct gfxFontFaceSrc {
     uint32_t               mFormatFlags;
 
     nsString               mLocalName;     // full font name if local
-    nsCOMPtr<nsIURI>       mURI;           // uri if url 
+    nsCOMPtr<nsIURI>       mURI;           // uri if url
     nsCOMPtr<nsIURI>       mReferrer;      // referrer url if url
-    nsCOMPtr<nsISupports>  mOriginPrincipal; // principal if url 
-    
+    nsCOMPtr<nsIPrincipal> mOriginPrincipal; // principal if url
 };
 
 // Subclassed to store platform-specific code cleaned out when font entry is
@@ -56,6 +56,7 @@ public:
 
     nsTArray<uint8_t> mMetadata;  // woff metadata block (compressed), if any
     nsCOMPtr<nsIURI>  mURI;       // URI of the source, if it was url()
+    nsCOMPtr<nsIPrincipal> mPrincipal; // principal for the download, if url()
     nsString          mLocalName; // font name used for the source, if local()
     nsString          mRealName;  // original fullname from the font resource
     uint32_t          mSrcIndex;  // index in the rule's source list
@@ -202,10 +203,14 @@ public:
                                 bool& aFoundFamily,
                                 bool& aNeedsBold,
                                 bool& aWaitForUserFont);
-                                
+
+    // check whether the given source is allowed to be loaded
+    virtual nsresult CheckFontLoad(const gfxFontFaceSrc *aFontFaceSrc,
+                                   nsIPrincipal **aPrincipal) = 0;
+
     // initialize the process that loads external font data, which upon 
     // completion will call OnLoadComplete method
-    virtual nsresult StartLoad(gfxProxyFontEntry *aProxy, 
+    virtual nsresult StartLoad(gfxProxyFontEntry *aProxy,
                                const gfxFontFaceSrc *aFontFaceSrc) = 0;
 
     // when download has been completed, pass back data here
@@ -231,6 +236,104 @@ public:
     // increment the generation on font load
     void IncrementGeneration();
 
+    class UserFontCache {
+    public:
+        // Record a loaded user-font in the cache. This requires that the
+        // font-entry's userFontData has been set up already, as it relies
+        // on the URI and Principal recorded there.
+        static void CacheFont(gfxFontEntry *aFontEntry);
+
+        // The given gfxFontEntry is being destroyed, so remove any record that
+        // refers to it.
+        static void ForgetFont(gfxFontEntry *aFontEntry);
+
+        // Return the gfxFontEntry corresponding to a given URI and principal,
+        // and the features of the given proxy, or nullptr if none is available
+        static gfxFontEntry* GetFont(nsIURI            *aSrcURI,
+                                     nsIPrincipal      *aPrincipal,
+                                     gfxProxyFontEntry *aProxy);
+
+        // Clear everything so that we don't leak URIs and Principals.
+        static void Shutdown();
+
+    private:
+        // Key used to look up entries in the user-font cache.
+        // Note that key comparison does *not* use the mFontEntry field
+        // as a whole; it only compares specific fields within the entry
+        // (weight/width/style/features) that could affect font selection
+        // or rendering, and that must match between a font-set's proxy
+        // entry and the corresponding "real" font entry.
+        struct Key {
+            nsCOMPtr<nsIURI>        mURI;
+            nsCOMPtr<nsIPrincipal>  mPrincipal;
+            gfxFontEntry           *mFontEntry;
+
+            Key(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                gfxFontEntry* aFontEntry)
+                : mURI(aURI),
+                  mPrincipal(aPrincipal),
+                  mFontEntry(aFontEntry)
+            { }
+        };
+
+        class Entry : public PLDHashEntryHdr {
+        public:
+            typedef const Key& KeyType;
+            typedef const Key* KeyTypePointer;
+
+            Entry(KeyTypePointer aKey)
+                : mURI(aKey->mURI),
+                  mPrincipal(aKey->mPrincipal),
+                  mFontEntry(aKey->mFontEntry)
+            { }
+
+            Entry(const Entry& aOther)
+                : mURI(aOther.mURI),
+                  mPrincipal(aOther.mPrincipal),
+                  mFontEntry(aOther.mFontEntry)
+            { }
+
+            ~Entry() { }
+
+            bool KeyEquals(const KeyTypePointer aKey) const;
+
+            static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+
+            static PLDHashNumber HashKey(const KeyTypePointer aKey) {
+                uint32_t principalHash;
+                aKey->mPrincipal->GetHashValue(&principalHash);
+                return mozilla::HashGeneric(principalHash,
+                                            nsURIHashKey::HashKey(aKey->mURI),
+                                            HashFeatures(aKey->mFontEntry->mFeatureSettings),
+                                            ( aKey->mFontEntry->mItalic |
+                                             (aKey->mFontEntry->mWeight << 1) |
+                                             (aKey->mFontEntry->mStretch << 10) ) ^
+                                             aKey->mFontEntry->mLanguageOverride);
+            }
+
+            enum { ALLOW_MEMMOVE = false };
+
+            gfxFontEntry* GetFontEntry() const { return mFontEntry; }
+
+        private:
+            static uint32_t
+            HashFeatures(const nsTArray<gfxFontFeature>& aFeatures) {
+                return mozilla::HashBytes(aFeatures.Elements(),
+                                          aFeatures.Length() * sizeof(gfxFontFeature));
+            }
+
+            nsCOMPtr<nsIURI>       mURI;
+            nsCOMPtr<nsIPrincipal> mPrincipal;
+
+            // The "real" font entry corresponding to this downloaded font.
+            // The font entry MUST notify the cache when it is destroyed
+            // (by calling Forget()).
+            gfxFontEntry          *mFontEntry;
+        };
+
+        static nsTHashtable<Entry> *sUserFonts;
+    };
+
 protected:
     // for a given proxy font entry, attempt to load the next resource
     // in the src list
@@ -247,11 +350,7 @@ protected:
     virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
                                       const gfxFontFaceSrc *aFontFaceSrc,
                                       uint8_t* &aBuffer,
-                                      uint32_t &aBufferLength)
-    {
-        // implemented in nsUserFontSet
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
+                                      uint32_t &aBufferLength) = 0;
 
     gfxMixedFontFamily *GetFamily(const nsAString& aName) const;
 
@@ -320,6 +419,7 @@ public:
     nsTArray<gfxFontFaceSrc> mSrcList;
     uint32_t                 mSrcIndex; // index of loading src item
     nsFontFaceLoader        *mLoader; // current loader for this entry, if any
+    nsCOMPtr<nsIPrincipal>   mPrincipal;
 };
 
 

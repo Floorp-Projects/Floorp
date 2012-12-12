@@ -5,7 +5,7 @@
  /* ES5 15.4.4.14. */
 function ArrayIndexOf(searchElement/*, fromIndex*/) {
     /* Step 1. */
-    var O = %ToObject(this);
+    var O = ToObject(this);
 
     /* Steps 2-3. */
     var len = TO_UINT32(O.length);
@@ -15,7 +15,7 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
         return -1;
 
     /* Step 5. */
-    var n = arguments.length > 1 ? %ToInteger(arguments[1]) : 0;
+    var n = arguments.length > 1 ? ToInteger(arguments[1]) : 0;
 
     /* Step 6. */
     if (n >= len)
@@ -46,15 +46,15 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
 
 function ArrayStaticIndexOf(list, searchElement/*, fromIndex*/) {
     if (arguments.length < 1)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.indexOf');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.indexOf');
     var fromIndex = arguments.length > 2 ? arguments[2] : 0;
-    return %_CallFunction(list, searchElement, fromIndex, ArrayIndexOf);
+    return callFunction(ArrayIndexOf, list, searchElement, fromIndex);
 }
 
 /* ES5 15.4.4.15. */
 function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
     /* Step 1. */
-    var O = %ToObject(this);
+    var O = ToObject(this);
 
     /* Steps 2-3. */
     var len = TO_UINT32(O.length);
@@ -64,7 +64,7 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
         return -1;
 
     /* Step 5. */
-    var n = arguments.length > 1 ? %ToInteger(arguments[1]) : len - 1;
+    var n = arguments.length > 1 ? ToInteger(arguments[1]) : len - 1;
 
     /* Steps 6-7. */
     var k;
@@ -87,31 +87,31 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
 
 function ArrayStaticLastIndexOf(list, searchElement/*, fromIndex*/) {
     if (arguments.length < 1)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.lastIndexOf');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.lastIndexOf');
     var fromIndex;
     if (arguments.length > 2) {
         fromIndex = arguments[2];
     } else {
-        var O = %ToObject(list);
+        var O = ToObject(list);
         var len = TO_UINT32(O.length);
         fromIndex = len - 1;
     }
-    return %_CallFunction(list, searchElement, fromIndex, ArrayLastIndexOf);
+    return callFunction(ArrayLastIndexOf, list, searchElement, fromIndex);
 }
 
 /* ES5 15.4.4.16. */
 function ArrayEvery(callbackfn/*, thisArg*/) {
     /* Step 1. */
-    var O = %ToObject(this);
+    var O = ToObject(this);
 
     /* Steps 2-3. */
     var len = TO_UINT32(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.every');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.every');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(0, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
@@ -122,7 +122,7 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            if (!%_CallFunction(T, O[k], k, O, callbackfn))
+            if (!callFunction(callbackfn, T, O[k], k, O))
                 return false;
         }
     }
@@ -133,26 +133,26 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
 
 function ArrayStaticEvery(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.every');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.every');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(1, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
-    return %_CallFunction(list, callbackfn, T, ArrayEvery);
+    return callFunction(ArrayEvery, list, callbackfn, T);
 }
 
 /* ES5 15.4.4.17. */
 function ArraySome(callbackfn/*, thisArg*/) {
     /* Step 1. */
-    var O = %ToObject(this);
+    var O = ToObject(this);
 
     /* Steps 2-3. */
     var len = TO_UINT32(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.some');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.some');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(0, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
@@ -163,7 +163,7 @@ function ArraySome(callbackfn/*, thisArg*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            if (%_CallFunction(T, O[k], k, O, callbackfn))
+            if (callFunction(callbackfn, T, O[k], k, O))
                 return true;
         }
     }
@@ -174,26 +174,26 @@ function ArraySome(callbackfn/*, thisArg*/) {
 
 function ArrayStaticSome(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.some');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.some');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(1, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
-    return %_CallFunction(list, callbackfn, T, ArraySome);
+    return callFunction(ArraySome, list, callbackfn, T);
 }
 
 /* ES5 15.4.4.18. */
 function ArrayForEach(callbackfn/*, thisArg*/) {
     /* Step 1. */
-    var O = %ToObject(this);
+    var O = ToObject(this);
 
     /* Steps 2-3. */
     var len = TO_UINT32(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.forEach');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.forEach');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(0, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
@@ -204,7 +204,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            %_CallFunction(T, O[k], k, O, callbackfn);
+            callFunction(callbackfn, T, O[k], k, O);
         }
     }
 
@@ -214,26 +214,26 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
 
 function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(1, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
-    %_CallFunction(list, callbackfn, T, ArrayForEach);
+    callFunction(ArrayForEach, list, callbackfn, T);
 }
 
 /* ES5 15.4.4.21. */
 function ArrayReduce(callbackfn/*, initialValue*/) {
     /* Step 1. */
-    var O = %ToObject(this);
+    var O = ToObject(this);
 
     /* Steps 2-3. */
     var len = TO_UINT32(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(0, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 6. */
     var k = 0;
@@ -245,7 +245,7 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
     } else {
         /* Step 5. */
         if (len === 0)
-            %ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
         var kPresent = false;
         for (; k < len; k++) {
             if (k in O) {
@@ -256,7 +256,7 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
             }
         }
         if (!kPresent)
-            %ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
     }
 
     /* Step 9. */
@@ -275,28 +275,28 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
 
 function ArrayStaticReduce(list, callbackfn) {
     if (arguments.length < 2)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduce');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduce');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(1, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     if (arguments.length > 2)
-        return %_CallFunction(list, callbackfn, arguments[2], ArrayReduce);
+        return callFunction(ArrayReduce, list, callbackfn, arguments[2]);
     else
-        return %_CallFunction(list, callbackfn, ArrayReduce);
+        return callFunction(ArrayReduce, list, callbackfn);
 }
 
 /* ES5 15.4.4.22. */
 function ArrayReduceRight(callbackfn/*, initialValue*/) {
     /* Step 1. */
-    var O = %ToObject(this);
+    var O = ToObject(this);
 
     /* Steps 2-3. */
     var len = TO_UINT32(O.length);
 
     /* Step 4. */
     if (arguments.length === 0)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(0, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 6. */
     var k = len - 1;
@@ -308,7 +308,7 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
     } else {
         /* Step 5. */
         if (len === 0)
-            %ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
         var kPresent = false;
         for (; k >= 0; k--) {
             if (k in O) {
@@ -319,7 +319,7 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
             }
         }
         if (!kPresent)
-            %ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
     }
 
     /* Step 9. */
@@ -338,11 +338,11 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
 
 function ArrayStaticReduceRight(list, callbackfn) {
     if (arguments.length < 2)
-        %ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduceRight');
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduceRight');
     if (!IsCallable(callbackfn))
-        %ThrowError(JSMSG_NOT_FUNCTION, %_DecompileArg(1, callbackfn));
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     if (arguments.length > 2)
-        return %_CallFunction(list, callbackfn, arguments[2], ArrayReduceRight);
+        return callFunction(ArrayReduceRight, list, callbackfn, arguments[2]);
     else
-        return %_CallFunction(list, callbackfn, ArrayReduceRight);
+        return callFunction(ArrayReduceRight, list, callbackfn);
 }

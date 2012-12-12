@@ -1,0 +1,359 @@
+------------------------------------------------------------------
+Invocation
+------------------------------------------------------------------
+
+$DMD = '--mode=test'
+Sample-below size = 1
+
+------------------------------------------------------------------
+Double-reported blocks
+------------------------------------------------------------------
+
+(none)
+
+------------------------------------------------------------------
+Unreported blocks
+------------------------------------------------------------------
+
+(none)
+
+------------------------------------------------------------------
+Reported blocks
+------------------------------------------------------------------
+
+(none)
+
+------------------------------------------------------------------
+Summary
+------------------------------------------------------------------
+
+Total:      0 bytes
+Reported:   0 bytes ( 0.00%)
+Unreported: 0 bytes ( 0.00%)
+
+------------------------------------------------------------------
+Invocation
+------------------------------------------------------------------
+
+$DMD = '--mode=test'
+Sample-below size = 1
+
+------------------------------------------------------------------
+Double-reported blocks
+------------------------------------------------------------------
+
+Double-reported: 3 blocks in block group 1 of 1
+ 96 bytes (90 requested / 6 slop)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Previously reported by 'c' at
+   (stack omitted due to test mode)
+
+ Now reported by 'c' at
+   (stack omitted due to test mode)
+
+------------------------------------------------------------------
+Unreported blocks
+------------------------------------------------------------------
+
+Unreported: 1 block in block group 1 of 4
+ 4,096 bytes (1 requested / 4,095 slop)
+ 27.44% of the heap (27.44% cumulative);  76.88% of unreported (76.88% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 9 blocks in block group 2 of 4
+ 1,008 bytes (900 requested / 108 slop)
+ 6.75% of the heap (34.19% cumulative);  18.92% of unreported (95.80% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 2 blocks in block group 3 of 4
+ 112 bytes (112 requested / 0 slop)
+ 0.75% of the heap (34.94% cumulative);  2.10% of unreported (97.90% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 2 blocks in block group 4 of 4
+ 112 bytes (112 requested / 0 slop)
+ 0.75% of the heap (35.69% cumulative);  2.10% of unreported (100.00% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+------------------------------------------------------------------
+Reported blocks
+------------------------------------------------------------------
+
+Reported: 1 block in block group 1 of 12
+ 8,192 bytes (4,097 requested / 4,095 slop)
+ 54.88% of the heap (54.88% cumulative);  85.33% of reported (85.33% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'e' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 2 of 12
+ 512 bytes (512 requested / 0 slop)
+ 3.43% of the heap (58.31% cumulative);  5.33% of reported (90.67% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'e2' at
+   (stack omitted due to test mode)
+
+Reported: 2 blocks in block group 3 of 12
+ 240 bytes (240 requested / 0 slop)
+ 1.61% of the heap (59.91% cumulative);  2.50% of reported (93.17% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a01' at
+   (stack omitted due to test mode)
+
+Reported: 2 blocks in block group 4 of 12
+ 240 bytes (240 requested / 0 slop)
+ 1.61% of the heap (61.52% cumulative);  2.50% of reported (95.67% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a01' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 5 of 12
+ 96 bytes (96 requested / 0 slop)
+ 0.64% of the heap (62.17% cumulative);  1.00% of reported (96.67% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a23' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 6 of 12
+ 96 bytes (96 requested / 0 slop)
+ 0.64% of the heap (62.81% cumulative);  1.00% of reported (97.67% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a23' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 7 of 12
+ 80 bytes (80 requested / 0 slop)
+ 0.54% of the heap (63.34% cumulative);  0.83% of reported (98.50% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a23' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 8 of 12
+ 80 bytes (80 requested / 0 slop)
+ 0.54% of the heap (63.88% cumulative);  0.83% of reported (99.33% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a23' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 9 of 12
+ 32 bytes (30 requested / 2 slop)
+ 0.21% of the heap (64.09% cumulative);  0.33% of reported (99.67% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'c' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 10 of 12
+ 16 bytes (10 requested / 6 slop)
+ 0.11% of the heap (64.20% cumulative);  0.17% of reported (99.83% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'b' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 11 of 12
+ 8 bytes (0 requested / 8 slop)
+ 0.05% of the heap (64.26% cumulative);  0.08% of reported (99.92% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a2' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 12 of 12
+ 8 bytes (0 requested / 8 slop)
+ 0.05% of the heap (64.31% cumulative);  0.08% of reported (100.00% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a2' at
+   (stack omitted due to test mode)
+
+------------------------------------------------------------------
+Summary
+------------------------------------------------------------------
+
+Total:      14,928 bytes
+Reported:   9,600 bytes (64.31%)
+Unreported: 5,328 bytes (35.69%)
+
+------------------------------------------------------------------
+Invocation
+------------------------------------------------------------------
+
+$DMD = '--mode=test'
+Sample-below size = 1
+
+------------------------------------------------------------------
+Double-reported blocks
+------------------------------------------------------------------
+
+Double-reported: 1 block in block group 1 of 1
+ 8 bytes (0 requested / 8 slop)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Previously reported by 'a2b' at
+   (stack omitted due to test mode)
+
+ Now reported by 'a2b' at
+   (stack omitted due to test mode)
+
+------------------------------------------------------------------
+Unreported blocks
+------------------------------------------------------------------
+
+Unreported: 9 blocks in block group 1 of 3
+ 1,008 bytes (900 requested / 108 slop)
+ 38.77% of the heap (38.77% cumulative);  48.84% of unreported (48.84% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 6 blocks in block group 2 of 3
+ 528 bytes (528 requested / 0 slop)
+ 20.31% of the heap (59.08% cumulative);  25.58% of unreported (74.42% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 6 blocks in block group 3 of 3
+ 528 bytes (528 requested / 0 slop)
+ 20.31% of the heap (79.38% cumulative);  25.58% of unreported (100.00% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+------------------------------------------------------------------
+Reported blocks
+------------------------------------------------------------------
+
+Reported: 1 block in block group 1 of 3
+ 512 bytes (512 requested / 0 slop)
+ 19.69% of the heap (19.69% cumulative);  95.52% of reported (95.52% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'e2b' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 2 of 3
+ 16 bytes (10 requested / 6 slop)
+ 0.62% of the heap (20.31% cumulative);  2.99% of reported (98.51% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'b' at
+   (stack omitted due to test mode)
+
+Reported: 1 block in block group 3 of 3
+ 8 bytes (0 requested / 8 slop)
+ 0.31% of the heap (20.62% cumulative);  1.49% of reported (100.00% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+ Reported by 'a2b' at
+   (stack omitted due to test mode)
+
+------------------------------------------------------------------
+Summary
+------------------------------------------------------------------
+
+Total:      2,600 bytes
+Reported:   536 bytes (20.62%)
+Unreported: 2,064 bytes (79.38%)
+
+------------------------------------------------------------------
+Invocation
+------------------------------------------------------------------
+
+$DMD = '--mode=test'
+Sample-below size = 128
+
+------------------------------------------------------------------
+Double-reported blocks
+------------------------------------------------------------------
+
+(none)
+
+------------------------------------------------------------------
+Unreported blocks
+------------------------------------------------------------------
+
+Unreported: ~4 blocks in block group 1 of 7
+ ~512 bytes (~512 requested / ~0 slop)
+ 35.96% of the heap (35.96% cumulative);  35.96% of unreported (35.96% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 1 block in block group 2 of 7
+ 256 bytes (256 requested / 0 slop)
+ 17.98% of the heap (53.93% cumulative);  17.98% of unreported (53.93% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 1 block in block group 3 of 7
+ 144 bytes (144 requested / 0 slop)
+ 10.11% of the heap (64.04% cumulative);  10.11% of unreported (64.04% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: 1 block in block group 4 of 7
+ 128 bytes (128 requested / 0 slop)
+ 8.99% of the heap (73.03% cumulative);  8.99% of unreported (73.03% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: ~1 block in block group 5 of 7
+ ~128 bytes (~128 requested / ~0 slop)
+ 8.99% of the heap (82.02% cumulative);  8.99% of unreported (82.02% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: ~1 block in block group 6 of 7
+ ~128 bytes (~128 requested / ~0 slop)
+ 8.99% of the heap (91.01% cumulative);  8.99% of unreported (91.01% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+Unreported: ~1 block in block group 7 of 7
+ ~128 bytes (~128 requested / ~0 slop)
+ 8.99% of the heap (100.00% cumulative);  8.99% of unreported (100.00% cumulative)
+ Allocated at
+   (stack omitted due to test mode)
+
+------------------------------------------------------------------
+Reported blocks
+------------------------------------------------------------------
+
+(none)
+
+------------------------------------------------------------------
+Summary
+------------------------------------------------------------------
+
+Total:      ~1,424 bytes
+Reported:   ~0 bytes ( 0.00%)
+Unreported: ~1,424 bytes (100.00%)
+

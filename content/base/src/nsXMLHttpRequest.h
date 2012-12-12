@@ -52,7 +52,7 @@
 class nsILoadGroup;
 class AsyncVerifyRedirectCallbackForwarder;
 class nsIUnicodeDecoder;
-class nsIDOMFormData;
+class nsFormData;
 
 class nsXHREventTarget : public nsDOMEventTargetHelper,
                          public nsIXMLHttpRequestEventTarget
@@ -288,9 +288,9 @@ private:
     {
       mValue.mString = &aString;
     }
-    RequestBody(nsIDOMFormData* aFormData) : mType(FormData)
+    RequestBody(nsFormData& aFormData) : mType(FormData)
     {
-      mValue.mFormData = aFormData;
+      mValue.mFormData = &aFormData;
     }
     RequestBody(nsIInputStream* aStream) : mType(InputStream)
     {
@@ -311,7 +311,7 @@ private:
       nsIDOMBlob* mBlob;
       nsIDocument* mDocument;
       const nsAString* mString;
-      nsIDOMFormData* mFormData;
+      nsFormData* mFormData;
       nsIInputStream* mStream;
     };
 
@@ -376,9 +376,8 @@ public:
       aRv = Send(RequestBody(aString));
     }
   }
-  void Send(nsIDOMFormData* aFormData, ErrorResult& aRv)
+  void Send(nsFormData& aFormData, ErrorResult& aRv)
   {
-    NS_ASSERTION(aFormData, "Null should go to string version");
     aRv = Send(RequestBody(aFormData));
   }
   void Send(nsIInputStream* aStream, ErrorResult& aRv)

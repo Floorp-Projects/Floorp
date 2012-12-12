@@ -29,6 +29,7 @@
 #include "nsThread.h"
 #include <media/MediaProfiles.h>
 #include "mozilla/FileUtils.h"
+#include "mozilla/Services.h"
 #include "nsAlgorithm.h"
 #include <media/mediaplayer.h>
 #include "nsPrintfCString.h"

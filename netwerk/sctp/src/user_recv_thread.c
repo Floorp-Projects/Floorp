@@ -28,14 +28,14 @@
  *
  */
 
+/*  to make sure some OSs define in6_pktinfo */
+#define _GNU_SOURCE
+
 #if defined(INET) || defined(INET6)
 #include <sys/types.h>
 #if !defined(__Userspace_os_Windows)
 #include <sys/socket.h>
-/*  to make sure some OSs define in6_pktinfo */
-#define __USE_GNU
 #include <netinet/in.h>
-#undef __USE_GNU
 #include <unistd.h>
 #include <pthread.h>
 #if !defined(__Userspace_os_FreeBSD)
@@ -445,6 +445,7 @@ recv_function_raw(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 
@@ -628,6 +629,7 @@ recv_function_raw6(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 
@@ -832,6 +834,7 @@ recv_function_udp(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 
@@ -1018,6 +1021,7 @@ recv_function_udp6(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 

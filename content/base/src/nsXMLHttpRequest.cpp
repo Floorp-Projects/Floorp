@@ -79,9 +79,10 @@
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsFormData.h"
+#include "nsStreamListenerWrapper.h"
 
 #include "nsWrapperCacheInlines.h"
-#include "nsStreamListenerWrapper.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -788,36 +789,15 @@ nsXMLHttpRequest::AppendToResponseText(const char * aSrcBuffer,
 
   // This code here is basically a copy of a similar thing in
   // nsScanner::Append(const char* aBuffer, uint32_t aLen).
-  // If we get illegal characters in the input we replace
-  // them and don't just fail.
-  do {
-    int32_t srclen = (int32_t)aSrcBufferLen;
-    int32_t destlen = (int32_t)destBufferLen;
-    rv = mDecoder->Convert(aSrcBuffer,
-                           &srclen,
-                           destBuffer,
-                           &destlen);
-    if (NS_FAILED(rv)) {
-      // We consume one byte, replace it with U+FFFD
-      // and try the conversion again.
+  int32_t srclen = (int32_t)aSrcBufferLen;
+  int32_t destlen = (int32_t)destBufferLen;
+  rv = mDecoder->Convert(aSrcBuffer,
+                         &srclen,
+                         destBuffer,
+                         &destlen);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-      destBuffer[destlen] = (PRUnichar)0xFFFD; // add replacement character
-      destlen++; // skip written replacement character
-      destBuffer += destlen;
-      destBufferLen -= destlen;
-
-      if (srclen < (int32_t)aSrcBufferLen) {
-        srclen++; // Consume the invalid character
-      }
-      aSrcBuffer += srclen;
-      aSrcBufferLen -= srclen;
-
-      mDecoder->Reset();
-    }
-
-    totalChars += destlen;
-
-  } while (NS_FAILED(rv) && aSrcBufferLen > 0);
+  totalChars += destlen;
 
   mResponseText.SetLength(totalChars);
 
@@ -2186,11 +2166,11 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     const nsAString& emptyStr = EmptyString();
     nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(GetOwner());
     nsCOMPtr<nsIDOMDocument> responseDoc;
-    rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nullptr, docURI,
-                                        baseURI, mPrincipal, global,
-                                        mIsHtml ? DocumentFlavorHTML :
-                                                  DocumentFlavorLegacyGuess,
-                                        getter_AddRefs(responseDoc));
+    rv = NS_NewDOMDocument(getter_AddRefs(responseDoc),
+                           emptyStr, emptyStr, nullptr, docURI,
+                           baseURI, mPrincipal, true, global,
+                           mIsHtml ? DocumentFlavorHTML :
+                                     DocumentFlavorLegacyGuess);
     NS_ENSURE_SUCCESS(rv, rv);
     mResponseXML = do_QueryInterface(responseDoc);
     mResponseXML->SetPrincipal(documentPrincipal);
@@ -2494,8 +2474,12 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure to use the encoding we'll send
-  rv = serializer->SerializeToStream(aDoc, output, aCharset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    nsCxPusher pusher;
+    pusher.PushNull();
+    rv = serializer->SerializeToStream(aDoc, output, aCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   output->Close();
 
@@ -2683,11 +2667,9 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
     }
     case nsXMLHttpRequest::RequestBody::FormData:
     {
-      nsresult rv;
-      nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(value.mFormData, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      return ::GetRequestBody(sendable, aResult, aContentLength, aContentType, aCharset);
+      MOZ_ASSERT(value.mFormData);
+      return ::GetRequestBody(value.mFormData, aResult, aContentLength,
+                              aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::InputStream:
     {

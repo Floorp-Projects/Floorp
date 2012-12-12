@@ -8982,8 +8982,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (!bIsJavascript) {
         MaybeInitTiming();
     }
-    bool timeBeforeUnload = mTiming && aFileName.IsVoid();
-    if (timeBeforeUnload) {
+    bool timeBeforeUnload = aFileName.IsVoid();
+    if (mTiming && timeBeforeUnload) {
       mTiming->NotifyBeforeUnload();
     }
     // Check if the page doesn't want to be unloaded. The javascript:
@@ -8999,7 +8999,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         }
     }
 
-    if (timeBeforeUnload) {
+    if (mTiming && timeBeforeUnload) {
       mTiming->NotifyUnloadAccepted(mCurrentURI);
     }
 

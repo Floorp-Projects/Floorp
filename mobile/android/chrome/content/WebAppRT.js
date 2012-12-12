@@ -27,7 +27,8 @@ var WebAppRT = {
     // Disable add-on installation via the web-exposed APIs
     pref("xpinstall.enabled", false),
     // Disable the telemetry prompt in webapps
-    pref("toolkit.telemetry.prompted", 2)
+#expand user_pref("toolkit.telemetry.prompted", __MOZ_TELEMETRY_DISPLAY_REV__),
+#expand user_pref("toolkit.telemetry.notifiedOptOut", __MOZ_TELEMETRY_DISPLAY_REV__)
   ],
 
   init: function(isUpdate, url) {

@@ -46,9 +46,9 @@ public:
   bool Init()
   {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (NS_FAILED(obs->AddObserver(this,
-                                   NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                   false))) {
+    if (!obs || NS_FAILED(obs->AddObserver(this,
+                                           NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                           false))) {
       NS_WARNING("Failed to add shutdown observer!");
       return false;
     }
@@ -93,6 +93,7 @@ static nsString sFileName;
 static uint32_t sFileLength = 0;
 static nsString sContentType;
 static bool sInShutdown = false;
+static bool sWaitingToSendPutFinal = false;
 }
 
 NS_IMETHODIMP
@@ -138,11 +139,9 @@ public:
 
     if (numRead > 0) {
       if (sSentFileLength + numRead >= sFileLength) {
-        sInstance->SendPutRequest((uint8_t*)buf, numRead, true);
-      } else {
-        sInstance->SendPutRequest((uint8_t*)buf, numRead, false);
+        sWaitingToSendPutFinal = true;
       }
-
+      sInstance->SendPutRequest((uint8_t*)buf, numRead);
       sSentFileLength += numRead;
     }
 
@@ -389,6 +388,7 @@ BluetoothOppManager::AfterFirstPut()
   mReceivedDataBufferOffset = 0;
   mSendTransferCompleteFlag = false;
   sSentFileLength = 0;
+  sWaitingToSendPutFinal = false;
   mSuccessFlag = false;
 }
 
@@ -481,6 +481,26 @@ BluetoothOppManager::CreateFile()
    * the file name again.
    */
   f->GetLeafName(sFileName);
+
+  mDsFile = nullptr;
+
+  nsCOMPtr<nsIMIMEService> mimeSvc = do_GetService(NS_MIMESERVICE_CONTRACTID);
+  if (mimeSvc) {
+    nsCString mimeType;
+    nsresult rv = mimeSvc->GetTypeFromFile(f, mimeType);
+
+    if (NS_SUCCEEDED(rv)) {
+      if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("image/"))) {
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("pictures"), f);
+      } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("video/"))) {
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("movies"), f);
+      } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("audio/"))) {
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("music"), f);
+      } else {
+        NS_WARNING("Couldn't recognize the mimetype of received file.");
+      }
+    }
+  }
 
   NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), f);
   if (!mOutputStream) {
@@ -720,7 +740,6 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
 {
   uint8_t opCode;
   int packetLength;
-  int receivedLength = aMessage->mSize;
 
   if (mPacketLeftLength > 0) {
     opCode = mPutFinalFlag ? ObexRequestCode::PutFinal : ObexRequestCode::Put;
@@ -759,7 +778,9 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
     FileTransferComplete();
   } else if (mLastCommand == ObexRequestCode::Disconnect) {
     AfterOppDisconnected();
-    CloseSocket();
+    // Most devices will directly terminate connection after receiving
+    // Disconnect request.
+    // CloseSocket();
   } else if (mLastCommand == ObexRequestCode::Connect) {
     MOZ_ASSERT(!sFileName.IsEmpty());
     MOZ_ASSERT(mBlob);
@@ -781,6 +802,13 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
       StartFileTransfer();
     }
   } else if (mLastCommand == ObexRequestCode::Put) {
+
+    // Send PutFinal packet when we get response
+    if (sWaitingToSendPutFinal) {
+      SendPutFinalRequest();
+      return;
+    }
+
     if (mAbortFlag) {
       SendAbortRequest();
       return;
@@ -885,8 +913,7 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
 
 void
 BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
-                                    int aFileBodyLength,
-                                    bool aFinal)
+                                    int aFileBodyLength)
 {
   int index = 3;
   int packetLeftSpace = mRemoteMaxPacketLength - index - 3;
@@ -903,17 +930,40 @@ BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
 
   index += AppendHeaderBody(&req[index], aFileBody, aFileBodyLength);
 
-  if (aFinal) {
-    SetObexPacketInfo(req, ObexRequestCode::PutFinal, index);
-    mLastCommand = ObexRequestCode::PutFinal;
-  } else {
-    SetObexPacketInfo(req, ObexRequestCode::Put, index);
-    mLastCommand = ObexRequestCode::Put;
-  }
+  SetObexPacketInfo(req, ObexRequestCode::Put, index);
+  mLastCommand = ObexRequestCode::Put;
 
   UnixSocketRawData* s = new UnixSocketRawData(index);
   memcpy(s->mData, req, s->mSize);
   SendSocketData(s);
+
+  delete [] req;
+}
+
+void
+BluetoothOppManager::SendPutFinalRequest()
+{
+  if (!mConnected) return;
+
+  /**
+   * Section 2.2.9, "End-of-Body", IrObex 1.2
+   * End-of-Body is used to identify the last chunk of the object body.
+   * For most platforms, a PutFinal packet is sent with an zero length
+   * End-of-Body header.
+   */
+
+  // [opcode:1][length:2]
+  int index = 3;
+  uint8_t* req = new uint8_t[mRemoteMaxPacketLength];
+  index += AppendHeaderEndOfBody(&req[index]);
+  SetObexPacketInfo(req, ObexRequestCode::PutFinal, index);
+  mLastCommand = ObexRequestCode::PutFinal;
+
+  UnixSocketRawData* s = new UnixSocketRawData(index);
+  memcpy(s->mData, req, s->mSize);
+  SendSocketData(s);
+
+  sWaitingToSendPutFinal = false;
 
   delete [] req;
 }
@@ -1210,12 +1260,24 @@ BluetoothOppManager::OnDisconnect()
    * AfterOppDisconnected here to ensure all variables will be cleaned.
    */
   if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
-    if (!mSuccessFlag) {
-      if (mTransferMode) {
+    if (mTransferMode) {
+      if (!mSuccessFlag) {
         DeleteReceivedFile();
+      } else if (mDsFile) {
+        nsString data;
+        CopyASCIItoUTF16("modified", data);
+
+        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+        if (obs) {
+          obs->NotifyObservers(mDsFile, "file-watcher-update", data.get());
+        }
       }
+    }
+
+    if (!mSuccessFlag) {
       FileTransferComplete();
     }
+
     Listen();
   } else if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
     NS_WARNING("BluetoothOppManager got unexpected socket status!");

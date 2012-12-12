@@ -270,7 +270,7 @@ public:
 
     ElfSection *getSectionAt(unsigned int offset);
 
-    ElfSegment *getSegmentByType(unsigned int type);
+    ElfSegment *getSegmentByType(unsigned int type, ElfSegment *last = NULL);
 
     ElfDynamic_Section *getDynSection();
 
@@ -282,6 +282,14 @@ public:
     char getType();
     char getMachine();
     unsigned int getSize();
+
+    void insertSegmentAfter(ElfSegment *previous, ElfSegment *segment) {
+        std::vector<ElfSegment *>::iterator prev = std::find(segments.begin(), segments.end(), previous);
+        segments.insert(prev + 1, segment);
+    }
+
+    void removeSegment(ElfSegment *segment);
+
 private:
     Elf_Ehdr *ehdr;
     ElfLocation eh_entry;
@@ -319,11 +327,8 @@ public:
     SectionInfo getInfo() { return info; }
 
     void shrink(unsigned int newsize) {
-        if (newsize < shdr.sh_size) {
+        if (newsize < shdr.sh_size)
             shdr.sh_size = newsize;
-            if (next)
-                next->markDirty();
-        }
     }
 
     unsigned int getOffset();
@@ -345,7 +350,7 @@ public:
                 (getType() == SHT_GNU_verdef) ||
                 (getType() == SHT_GNU_verneed) ||
                 (getType() == SHT_GNU_versym) ||
-                isInSegmentType(PT_INTERP)) &&
+                getSegmentByType(PT_INTERP)) &&
                 (getFlags() & SHF_ALLOC);
     }
 
@@ -364,6 +369,7 @@ public:
             next->previous = this;
         if (dirty)
             markDirty();
+        insertInSegments(section->segments);
     }
 
     void insertBefore(ElfSection *section, bool dirty = true) {
@@ -381,6 +387,7 @@ public:
             previous->next = this;
         if (dirty)
             markDirty();
+        insertInSegments(section->segments);
     }
 
     void markDirty() {
@@ -415,7 +422,10 @@ private:
         segments.erase(i, i + 1);
     }
 
-    bool isInSegmentType(unsigned int type);
+    ElfSegment *getSegmentByType(unsigned int type);
+
+    void insertInSegments(std::vector<ElfSegment *> &segs);
+
 protected:
     Elf_Shdr shdr;
     char *data;
@@ -444,11 +454,12 @@ public:
     unsigned int getAddr();
 
     void addSection(ElfSection *section);
+    void removeSection(ElfSection *section);
 
     std::list<ElfSection *>::iterator begin() { return sections.begin(); }
     std::list<ElfSection *>::iterator end() { return sections.end(); }
 
-    ElfSegment *splitBefore(ElfSection *section);
+    void clear();
 private:
     unsigned int type;
     int v_p_diff; // Difference between physical and virtual address
@@ -643,11 +654,17 @@ inline unsigned int Elf::getSize() {
     return section->getOffset() + section->getSize();
 }
 
-inline bool ElfSection::isInSegmentType(unsigned int type) {
+inline ElfSegment *ElfSection::getSegmentByType(unsigned int type) {
     for (std::vector<ElfSegment *>::iterator seg = segments.begin(); seg != segments.end(); seg++)
         if ((*seg)->getType() == type)
-            return true;
-    return false;
+            return *seg;
+    return NULL;
+}
+
+inline void ElfSection::insertInSegments(std::vector<ElfSegment *> &segs) {
+    for (std::vector<ElfSegment *>::iterator it = segs.begin(); it != segs.end(); ++it) {
+        (*it)->addSection(this);
+    }
 }
 
 inline ElfLocation::ElfLocation(ElfSection *section, unsigned int off, enum position pos)
