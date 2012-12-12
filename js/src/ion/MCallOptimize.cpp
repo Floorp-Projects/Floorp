@@ -713,7 +713,8 @@ IonBuilder::inlineStrCharCodeAt(uint32_t argc, bool constructing)
         return InliningStatus_NotInlined;
     if (getInlineArgType(argc, 0) != MIRType_String)
         return InliningStatus_NotInlined;
-    if (getInlineArgType(argc, 1) != MIRType_Int32)
+    MIRType argType = getInlineArgType(argc, 1);
+    if (argType != MIRType_Int32 && argType != MIRType_Double)
         return InliningStatus_NotInlined;
 
     MDefinitionVector argv;
@@ -768,7 +769,8 @@ IonBuilder::inlineStrCharAt(uint32_t argc, bool constructing)
         return InliningStatus_NotInlined;
     if (getInlineArgType(argc, 0) != MIRType_String)
         return InliningStatus_NotInlined;
-    if (getInlineArgType(argc, 1) != MIRType_Int32)
+    MIRType argType = getInlineArgType(argc, 1);
+    if (argType != MIRType_Int32 && argType != MIRType_Double)
         return InliningStatus_NotInlined;
 
     MDefinitionVector argv;
