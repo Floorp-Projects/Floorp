@@ -139,6 +139,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool emitPrologue();
     bool emitEpilogue();
+    bool emitIC(ICStub *stub);
     bool emitStackCheck();
 
     void storeValue(const StackValue *source, const Address &dest,

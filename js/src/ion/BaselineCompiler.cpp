@@ -167,24 +167,31 @@ BaselineCompiler::emitEpilogue()
 }
 
 bool
-BaselineCompiler::emitStackCheck()
+BaselineCompiler::emitIC(ICStub *stub)
 {
-    // Allocate IC entry and stub.
-    ICStackCheck_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
+    ICEntry *entry = allocateICEntry(stub);
     if (!entry)
         return false;
 
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    return true;
+}
+
+bool
+BaselineCompiler::emitStackCheck()
+{
     Label skipIC;
     uintptr_t *limitAddr = &cx->runtime->ionStackLimit;
     masm.loadPtr(AbsoluteAddress(limitAddr), R0.scratchReg());
     masm.branchPtr(Assembler::AboveOrEqual, BaselineStackReg, R0.scratchReg(), &skipIC);
 
-    // Call IC
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICStackCheck_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.bind(&skipIC);
@@ -321,19 +328,12 @@ bool
 BaselineCompiler::emitToBoolean()
 {
     // Allocate IC entry and stub.
-    ICToBool_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     Label skipIC;
     masm.branchTestBoolean(Assembler::Equal, R0, &skipIC);
 
     // Call IC
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICToBool_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.bind(&skipIC);
@@ -410,12 +410,6 @@ BaselineCompiler::emit_JSOP_NOT()
 bool
 BaselineCompiler::emit_JSOP_POS()
 {
-    // Allocate IC entry and stub.
-    ICToNumber_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
 
@@ -424,10 +418,8 @@ BaselineCompiler::emit_JSOP_POS()
     masm.branchTestNumber(Assembler::Equal, R0, &done);
 
     // Call IC.
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICToNumber_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.bind(&done);
@@ -486,12 +478,6 @@ BaselineCompiler::emit_JSOP_THIS()
     if (!function() || function()->inStrictMode() || function()->isSelfHostedBuiltin())
         return true;
 
-    // Allocate IC entry and stub.
-    ICThis_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     Label skipIC;
     // Keep |thisv| in R0
     frame.popRegsAndSync(1);
@@ -499,10 +485,8 @@ BaselineCompiler::emit_JSOP_THIS()
     masm.branchTestObject(Assembler::Equal, R0, &skipIC);
 
     // Call IC
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICThis_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.storeValue(R0, frame.addressOfThis());
@@ -685,20 +669,12 @@ BaselineCompiler::emit_JSOP_MOD()
 bool
 BaselineCompiler::emitBinaryArith()
 {
-    // Allocate IC entry and stub.
-    ICBinaryArith_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     // Keep top JSStack value in R0 and R2
     frame.popRegsAndSync(2);
 
     // Call IC
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICBinaryArith_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -709,20 +685,12 @@ BaselineCompiler::emitBinaryArith()
 bool
 BaselineCompiler::emitUnaryArith()
 {
-    // Allocate IC entry and stub.
-    ICUnaryArith_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
 
     // Call IC
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICUnaryArith_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -781,22 +749,14 @@ BaselineCompiler::emit_JSOP_NE()
 bool
 BaselineCompiler::emitCompare()
 {
-    // Allocate IC entry and stub.
-    ICCompare_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     // CODEGEN
 
     // Keep top JSStack value in R0 and R2.
     frame.popRegsAndSync(2);
 
     // Call IC.
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICCompare_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -807,20 +767,12 @@ BaselineCompiler::emitCompare()
 bool
 BaselineCompiler::emit_JSOP_GETELEM()
 {
-    // Allocate IC entry and stub.
-    ICGetElem_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     // Keep top two stack values in R0 and R1.
     frame.popRegsAndSync(2);
 
     // Call IC.
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICGetElem_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -831,12 +783,6 @@ BaselineCompiler::emit_JSOP_GETELEM()
 bool
 BaselineCompiler::emit_JSOP_SETELEM()
 {
-    // Allocate IC entry and stub.
-    ICSetElem_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     // Store RHS in the scratch slot.
     storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
     frame.pop();
@@ -848,10 +794,8 @@ BaselineCompiler::emit_JSOP_SETELEM()
     frame.pushScratchValue();
 
     // Call IC.
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICSetElem_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     return true;
@@ -877,19 +821,11 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 
     frame.syncStack(0);
 
-    // Allocate IC entry and stub.
-    ICGetName_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     masm.movePtr(ImmGCPtr(&script->global()), R0.scratchReg());
 
     // Call IC.
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICGetName_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -906,20 +842,12 @@ BaselineCompiler::emit_JSOP_CALLGNAME()
 bool
 BaselineCompiler::emit_JSOP_GETPROP()
 {
-    // Allocate IC entry and stub.
-    ICGetProp_Fallback::Compiler compiler(cx);
-    ICEntry *entry = allocateICEntry(compiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
     // Keep object in R0.
     frame.popRegsAndSync(1);
 
     // Call IC.
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    ICGetProp_Fallback::Compiler compiler(cx);
+    if (!emitIC(compiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1015,17 +943,10 @@ BaselineCompiler::emitCall()
     frame.syncStack(0);
     masm.mov(Imm32(argc), R0.scratchReg());
 
+    // Call IC
     // Allocate IC entry and stub.
     ICCall_Fallback::Compiler stubCompiler(cx);
-    ICEntry *entry = allocateICEntry(stubCompiler.getStub(&stubSpace_));
-    if (!entry)
-        return false;
-
-    // Call IC
-    CodeOffsetLabel patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
-    if (!addICLoadLabel(patchOffset))
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Update FrameInfo.
