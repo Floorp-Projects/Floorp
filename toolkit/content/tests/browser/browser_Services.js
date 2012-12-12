@@ -53,4 +53,5 @@ function checkServices() {
   checkService("DOMRequest", Ci.nsIDOMRequestService);
   checkService("downloads", Ci.nsIDownloadManager);
   checkService("focus", Ci.nsIFocusManager);
+  checkService("uriFixup", Ci.nsIURIFixup);
 }

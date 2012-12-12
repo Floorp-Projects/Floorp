@@ -289,6 +289,7 @@ _BROWSER_FILES = \
                  browser_utilityOverlay.js \
                  browser_bug676619.js \
                  download_page.html \
+                 browser_URLBarSetURI.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
