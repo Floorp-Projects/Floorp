@@ -225,6 +225,9 @@ JSObject::finalize(js::FreeOp *fop)
     js::Probes::finalizeObject(this);
 
     if (!IsBackgroundFinalized(getAllocKind())) {
+        /* Assert we're on the main thread. */
+        fop->runtime()->assertValidThread();
+
         /*
          * Finalize obj first, in case it needs map and slots. Objects with
          * finalize hooks are not finalized in the background, as the class is
