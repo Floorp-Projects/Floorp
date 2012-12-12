@@ -456,6 +456,7 @@ class TableTicker: public Sampler {
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
+    mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
     mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
   }
 
@@ -495,6 +496,7 @@ private:
   ThreadProfile mPrimaryThreadProfile;
   TimeStamp mStartTime;
   bool mSaveRequested;
+  bool mAddLeafAddresses;
   bool mUseStackWalk;
   bool mJankOnly;
   bool mProfileJS;
@@ -945,10 +947,10 @@ void TableTicker::Tick(TickSample* sample)
   if (mUseStackWalk) {
     doBacktrace(mPrimaryThreadProfile, sample);
   } else {
-    doSampleStackTrace(stack, mPrimaryThreadProfile, sample);
+    doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
   }
 #else
-  doSampleStackTrace(stack, mPrimaryThreadProfile, sample);
+  doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
 #endif
 
   if (recordSample)
@@ -1024,7 +1026,7 @@ void mozilla_sampler_init()
     return;
   }
 
-  const char* features[] = {"js"
+  const char* features[] = {"js", "leaf",
 #if defined(XP_WIN) || defined(XP_MACOSX)
                          , "stackwalk"
 #endif
@@ -1101,6 +1103,9 @@ const char** mozilla_sampler_get_features()
   static const char* features[] = {
 #if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK))
     "stackwalk",
+#endif
+#if defined(ENABLE_SPS_LEAF_DATA)
+    "leaf",
 #endif
     "jank",
     "js",
