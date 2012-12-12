@@ -19,7 +19,6 @@
 #include "nsThreadUtils.h"
 #include "nsStringBuffer.h"
 #include "ScopedNSSTypes.h"
-#include "SharedSSLState.h"
 
 #include "nspr.h"
 #include "pk11pub.h"
@@ -28,7 +27,6 @@
 #include "ssl.h" // For SSL_ClearSessionCache
 
 using namespace mozilla;
-using mozilla::psm::SharedSSLState;
 
 static const char kCertOverrideFileName[] = "cert_override.txt";
 
@@ -126,11 +124,11 @@ nsCertOverrideService::Init()
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", true);
     observerService->AddObserver(this, "profile-do-change", true);
+    observerService->AddObserver(this, "last-pb-context-exited", true);
     // simulate a profile change so we read the current profile's settings file
     Observe(nullptr, "profile-do-change", nullptr);
   }
 
-  SharedSSLState::NoteCertOverrideServiceInstantiated();
   return NS_OK;
 }
 
@@ -171,6 +169,10 @@ nsCertOverrideService::Observe(nsISupports     *,
     }
     Read();
 
+  } else if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
+    ClearValidityOverride(
+        NS_LITERAL_CSTRING("all:temporary-certificates"),
+        0);
   }
 
   return NS_OK;
