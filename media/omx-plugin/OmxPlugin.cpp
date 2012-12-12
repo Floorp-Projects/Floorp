@@ -143,7 +143,7 @@ class OmxDecoder {
   void ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void ToVideoFrame_YUV420PackedSemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback);
   bool ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, size_t aDataOffset, size_t aSize,
                     int32_t aAudioChannels, int32_t aAudioSampleRate);
 public:
@@ -176,7 +176,7 @@ public:
     return mAudioSource != NULL;
   }
 
-  bool ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs);
+  bool ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs, BufferCallback *aBufferCallback);
   bool ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs);
 };
 
@@ -657,7 +657,7 @@ void OmxDecoder::ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, i
               uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 0, 1);
 }
 
-bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
   switch (mVideoColorFormat) {
   case OMX_COLOR_FormatYUV420Planar: // e.g. Asus Transformer, Stagefright's software decoder
     ToVideoFrame_YUV420Planar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
@@ -690,7 +690,8 @@ bool OmxDecoder::ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, 
   return true;
 }
 
-bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
+bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs,
+                           BufferCallback *aBufferCallback)
 {
   MOZ_ASSERT(aSeekTimeUs >= -1);
 
@@ -730,7 +731,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
     char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
     size_t length = mVideoBuffer->range_length();
 
-    if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
+    if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame, aBufferCallback)) {
       return false;
     }
   }
@@ -740,7 +741,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
     if (!SetVideoFormat())
       return false;
     else
-      return ReadVideo(aFrame, aSeekTimeUs);
+      return ReadVideo(aFrame, aSeekTimeUs, aBufferCallback);
   }
   else if (err == ERROR_END_OF_STREAM) {
     LOG("mVideoSource END_OF_STREAM");
@@ -835,9 +836,9 @@ static bool HasAudio(Decoder *aDecoder) {
   return cast(aDecoder)->HasAudio();
 }
 
-static bool ReadVideo(Decoder *aDecoder, VideoFrame *aFrame, int64_t aSeekTimeUs)
+static bool ReadVideo(Decoder *aDecoder, VideoFrame *aFrame, int64_t aSeekTimeUs, BufferCallback *aBufferCallback)
 {
-  return cast(aDecoder)->ReadVideo(aFrame, aSeekTimeUs);
+  return cast(aDecoder)->ReadVideo(aFrame, aSeekTimeUs, aBufferCallback);
 }
 
 static bool ReadAudio(Decoder *aDecoder, AudioFrame *aFrame, int64_t aSeekTimeUs)
