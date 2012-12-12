@@ -278,7 +278,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(uint32_t aHint, RemoteSourceStr
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   nsIDOMMediaStream* stream;
-  
+
   nsresult res = MakeMediaStream(aHint, &stream);
   if (NS_FAILED(res)) {
     return res;
@@ -929,7 +929,7 @@ PeerConnectionImpl::Close(bool aIsSynchronous)
 nsresult
 PeerConnectionImpl::CloseInt(bool aIsSynchronous)
 {
-  PC_AUTO_ENTER_API_CALL(true);
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   if (mCall != nullptr)
     mCall->endCall();
