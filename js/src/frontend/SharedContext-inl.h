@@ -33,7 +33,7 @@ SharedContext::inStrictMode()
 inline bool
 SharedContext::needStrictChecks()
 {
-    return context->hasStrictOption() || strictModeState != StrictMode::NOTSTRICT;
+    return context->hasStrictOption() || strictModeState == StrictMode::STRICT;
 }
 
 inline GlobalSharedContext *
