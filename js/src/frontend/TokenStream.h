@@ -707,6 +707,18 @@ class TokenStream
         JS_ALWAYS_TRUE(matchToken(tt));
     }
 
+    class Position {
+        friend class TokenStream;
+        const jschar *buf;
+        unsigned flags;
+        unsigned lineno;
+        const jschar *linebase;
+        const jschar *prevLinebase;
+    };
+
+    void tell(Position *);
+    void seek(const Position &pos);
+    void positionAfterLastFunctionKeyword(Position &pos);
 
     /*
      * Return the offset into the source buffer of the end of the token.
@@ -903,6 +915,7 @@ class TokenStream
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter; /* used to test for strict mode */
+    Position            lastFunctionKeyword; /* used as a starting point for reparsing strict functions */
 };
 
 struct KeywordInfo {

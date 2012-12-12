@@ -387,6 +387,46 @@ TokenStream::TokenBuf::findEOLMax(const jschar *p, size_t max)
     return p;
 }
 
+void
+TokenStream::tell(Position *pos)
+{
+    // We don't support saving and restoring state when lookahead is present.
+    JS_ASSERT(lookahead == 0);
+    pos->buf = userbuf.addressOfNextRawChar();
+    pos->flags = flags;
+    pos->lineno = lineno;
+    pos->linebase = linebase;
+    pos->prevLinebase = prevLinebase;
+}
+
+void
+TokenStream::seek(const Position &pos)
+{
+    userbuf.setAddressOfNextRawChar(pos.buf);
+    flags = pos.flags;
+    lineno = pos.lineno;
+    linebase = pos.linebase;
+    prevLinebase = pos.prevLinebase;
+    lookahead = 0;
+
+    // Make the last token look like it it came from here. The parser looks at
+    // the position of currentToken() to calculate line numbers.
+    Token *cur = &tokens[cursor];
+    cur->pos.begin.lineno = lineno;
+    cur->pos.begin.index = pos.buf - linebase;
+
+    // Poison other members.
+    cur->type = TOK_ERROR;
+    cur->ptr = NULL;
+}
+
+void
+TokenStream::positionAfterLastFunctionKeyword(Position &pos)
+{
+    JS_ASSERT(lastFunctionKeyword.buf > userbuf.base());
+    PodAssign(&pos, &lastFunctionKeyword);
+}
+
 bool
 TokenStream::reportStrictModeErrorNumberVA(ParseNode *pn, unsigned errorNumber, va_list args)
 {
@@ -1554,8 +1594,11 @@ TokenStream::getTokenInternal()
             tt = TOK_NAME;
             if (!checkForKeyword(chars, length, &tt, &tp->t_op))
                 goto error;
-            if (tt != TOK_NAME)
+            if (tt != TOK_NAME) {
+                if (tt == TOK_FUNCTION)
+                    tell(&lastFunctionKeyword);
                 goto out;
+            }
         }
 
         /*
