@@ -85,7 +85,7 @@ nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
 a11y::AccType
 nsSubDocumentFrame::AccessibleType()
 {
-  return a11y::eOuterDocAccessible;
+  return a11y::eOuterDoc;
 }
 #endif
 

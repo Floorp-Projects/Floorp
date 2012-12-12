@@ -70,19 +70,25 @@ struct ElementPropertyTransition
   bool IsRunningAt(mozilla::TimeStamp aTime) const;
 };
 
-struct ElementTransitions : public mozilla::css::CommonElementAnimationData
+struct ElementTransitions MOZ_FINAL
+  : public mozilla::css::CommonElementAnimationData 
 {
   ElementTransitions(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
-                     nsTransitionManager *aTransitionManager);
+                     nsTransitionManager *aTransitionManager,
+                     mozilla::TimeStamp aNow);
 
   void EnsureStyleRuleFor(mozilla::TimeStamp aRefreshTime);
 
+  virtual bool HasAnimationOfProperty(nsCSSProperty aProperty) const MOZ_OVERRIDE;
+  virtual bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const MOZ_OVERRIDE;
 
-  bool HasTransitionOfProperty(nsCSSProperty aProperty) const;
-  // True if this animation can be performed on the compositor thread.
-  bool CanPerformOnCompositorThread() const;
   // Either zero or one for each CSS property:
   nsTArray<ElementPropertyTransition> mPropertyTransitions;
+
+  // Generation counter for flushes of throttled transitions.
+  // Used to prevent updating the styles twice for a given element during
+  // UpdateAllThrottledStyles.
+  mozilla::TimeStamp mFlushGeneration;
 };
 
 
@@ -100,16 +106,31 @@ public:
       (aContent->GetProperty(nsGkAtoms::transitionsProperty));
   }
 
+  // Returns true if aContent or any of its ancestors has a transition.
+  static bool ContentOrAncestorHasTransition(nsIContent* aContent) {
+    do {
+      if (GetTransitions(aContent)) {
+        return true;
+      }
+    } while ((aContent = aContent->GetParent()));
+
+    return false;
+  }
+
+  typedef mozilla::css::CommonElementAnimationData CommonElementAnimationData;
+
   static ElementTransitions*
     GetTransitionsForCompositor(nsIContent* aContent,
                                 nsCSSProperty aProperty)
   {
-    if (!aContent->MayHaveAnimations())
+    if (!aContent->MayHaveAnimations()) {
       return nullptr;
+    }
     ElementTransitions* transitions = GetTransitions(aContent);
     if (!transitions ||
-        !transitions->HasTransitionOfProperty(aProperty) ||
-        !transitions->CanPerformOnCompositorThread()) {
+        !transitions->HasAnimationOfProperty(aProperty) ||
+        !transitions->CanPerformOnCompositorThread(
+          CommonElementAnimationData::CanAnimate_AllowPartial)) {
       return nullptr;
     }
     return transitions;
@@ -151,6 +172,29 @@ public:
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE;
 
+  void FlushTransitions(FlushFlags aFlags);
+
+  // Performs a 'mini-flush' to make styles from throttled transitions
+  // up-to-date prior to processing an unrelated style change, so that
+  // any transitions triggered by that style change produce correct
+  // results.
+  //
+  // In more detail:  when we're able to run animations on the
+  // compositor, we sometimes "throttle" these animations by skipping
+  // updating style data on the main thread.  However, whenever we
+  // process a normal (non-animation) style change, any changes in
+  // computed style on elements that have transition-* properties set
+  // may need to trigger new transitions; this process requires knowing
+  // both the old and new values of the property.  To do this correctly,
+  // we need to have an up-to-date *old* value of the property on the
+  // primary frame.  So the purpose of the mini-flush is to update the
+  // style for all throttled transitions and animations to the current
+  // animation state without making any other updates, so that when we
+  // process the queued style updates we'll have correct old data to
+  // compare against.  When we do this, we don't bother touching frames
+  // other than primary frames.
+  void UpdateAllThrottledStyles();
+
 private:
   void ConsiderStartingTransition(nsCSSProperty aProperty,
                                   const nsTransition& aTransition,
@@ -165,6 +209,17 @@ private:
                                             bool aCreateIfNeeded);
   void WalkTransitionRule(ElementDependentRuleProcessorData* aData,
                           nsCSSPseudoElements::Type aPseudoType);
+
+  // Update the animated styles of an element and its descendants.
+  // If the element has a transition, it is flushed back to its primary frame.
+  // If the element does not have a transition, then its style is reparented.
+  void UpdateThrottledStylesForSubtree(nsIContent* aContent,
+                                       nsStyleContext* aParentStyle);
+  // Update the style on aElement from the transition stored in this manager and
+  // the new parent style - aParentStyle. aElement must be transitioning or
+  // animated. Returns the updated style.
+  nsStyleContext* UpdateThrottledStyle(mozilla::dom::Element* aElement,
+                                       nsStyleContext* aParentStyle);
 };
 
 #endif /* !defined(nsTransitionManager_h_) */

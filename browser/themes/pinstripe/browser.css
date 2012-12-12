@@ -3049,6 +3049,30 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #plugins-notification-icon {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
 }
+
+#blocked-plugins-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/plugins/notifyPluginBlocked.png);
+}
+
+@media (min-resolution: 2dppx) {
+  #blocked-plugins-notification-icon {
+    list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked.png);
+  }
+}
+
+#blocked-plugins-notification-icon[showing] {
+  animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
+}
+
+@keyframes pluginBlockedNotification {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (min-resolution: 2dppx) {
   #plugins-notification-icon {
     list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);

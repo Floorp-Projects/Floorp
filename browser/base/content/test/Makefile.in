@@ -10,6 +10,7 @@ relativesrcdir  = @relativesrcdir@
 
 DIRS += \
 		newtab \
+		social \
 		$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -123,7 +124,6 @@ _BROWSER_FILES = \
                  browser_bug556061.js \
                  browser_bug559991.js \
                  browser_bug561623.js \
-                 browser_bug561636.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
                  browser_bug565575.js \
@@ -287,21 +287,6 @@ _BROWSER_FILES = \
                  blockPluginVulnerableNoUpdate.xml \
                  blockNoPlugins.xml \
                  browser_utilityOverlay.js \
-                 browser_social.js \
-                 browser_social_toolbar.js \
-                 browser_social_shareButton.js \
-                 browser_social_sidebar.js \
-                 browser_social_flyout.js \
-                 browser_social_mozSocial_API.js \
-                 browser_social_isVisible.js \
-                 browser_social_chatwindow.js \
-                 social_panel.html \
-                 social_share_image.png \
-                 social_sidebar.html \
-                 social_chat.html \
-                 social_flyout.html \
-                 social_window.html \
-                 social_worker.js \
                  browser_bug676619.js \
                  download_page.html \
                  $(NULL)
@@ -314,10 +299,15 @@ else
 _BROWSER_FILES += \
 		browser_bug565667.js \
 		$(NULL)
-
 # TODO: Activate after carbon test plugin lands, bug 628651
-# 		browser_maconly_carbon_mismatch_plugin.js \
+# 		browser_maconly_carbon_mismatch_plugin.js
+endif
 
+# bug 766546, disable browser_bug561636.js on Windows
+ifneq ($(OS_ARCH),WINNT)
+_BROWSER_FILES += \
+                 browser_bug561636.js \
+                 $(NULL)
 endif
 
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING

@@ -1357,7 +1357,7 @@ void nsTableRowFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
 a11y::AccType
 nsTableRowFrame::AccessibleType()
 {
-  return a11y::eHTMLTableRowAccessible;
+  return a11y::eHTMLTableRow;
 }
 #endif
 /**

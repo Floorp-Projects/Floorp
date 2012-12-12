@@ -48,6 +48,14 @@ LIBS += \
   $(NULL)
 endif
 
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+LIBS += \
+  $(XLIBS) \
+  $(TK_LIBS) \
+  $(MOZ_PANGO_LIBS) \
+  $(NULL)
+endif
+
 ifeq ($(OS_ARCH),Linux)
 LIBS += \
   $(MOZ_CAIRO_OSLIBS) \

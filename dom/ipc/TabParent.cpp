@@ -481,6 +481,13 @@ TabParent::TryCapture(const nsGUIEvent& aEvent)
 
   // Adjust the widget coordinates to be relative to our frame.
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+
+  if (!frameLoader) {
+    // No frame anymore?
+    sEventCapturer = nullptr;
+    return false;
+  }
+
   nsEventStateManager::MapEventCoordinatesForChildProcess(frameLoader, &event);
 
   SendRealTouchEvent(event);

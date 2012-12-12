@@ -487,6 +487,7 @@ public:
         if (vSource->IsAvailable()) {
           found = true;
           mVideoDevice = new MediaDevice(videoSources[i]);
+          break;
         }
       }
 
@@ -517,6 +518,7 @@ public:
         if (aSource->IsAvailable()) {
           found = true;
           mAudioDevice = new MediaDevice(audioSources[i]);
+          break;
         }
       }
 

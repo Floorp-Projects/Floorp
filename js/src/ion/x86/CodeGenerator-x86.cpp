@@ -230,12 +230,17 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
 {
     Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
 
+    if (load->mir()->needsHoleCheck()) {
+        Assembler::Condition cond = masm.testMagic(Assembler::Equal, source);
+        if (!bailoutIf(cond, load->snapshot()))
+            return false;
+    }
+
     if (load->mir()->type() == MIRType_Double)
         masm.loadInt32OrDouble(source, ToFloatRegister(load->output()));
     else
         masm.movl(masm.ToPayload(source), ToRegister(load->output()));
 
-    JS_ASSERT(!load->mir()->needsHoleCheck());
     return true;
 }
 

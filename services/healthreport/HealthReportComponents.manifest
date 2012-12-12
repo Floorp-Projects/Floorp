@@ -11,4 +11,5 @@ category app-startup HealthReportService service,@mozilla.org/healthreport/servi
 
 category healthreport-js-provider AppInfoProvider resource://gre/modules/services/healthreport/providers.jsm
 category healthreport-js-provider SysInfoProvider resource://gre/modules/services/healthreport/providers.jsm
+category healthreport-js-provider ProfileMetadataProvider resource://gre/modules/services/healthreport/profile.jsm
 

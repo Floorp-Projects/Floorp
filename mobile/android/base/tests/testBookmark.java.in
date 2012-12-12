@@ -88,17 +88,8 @@ public class testBookmark extends PixelTest  {
 
         mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
-        if (bookmarksList.getChildCount() != 4) {
-            mAsserter.dumpLog("Unexpected child count; dumping bookmarks...");
-            for (int i = 0; i < bookmarksList.getChildCount(); i++) {
-                Cursor c = (Cursor)bookmarksList.getItemAtPosition(i);
-                String url = c.getString(c.getColumnIndexOrThrow("url"));
-                mAsserter.dumpLog(url);
-            }
-        }
-
         // No folders should be visible if no desktop bookmarks exist
-        mAsserter.is(bookmarksList.getChildCount(), 4,
+        mAsserter.is(bookmarksList.getAdapter().getCount(), 4,
             "bookmarks list has 4 children (the default bookmarks)");
 
         for (int i = 0; i < bookmarksList.getChildCount(); i++) {
@@ -111,7 +102,7 @@ public class testBookmark extends PixelTest  {
         insertOneBookmark();
         mSolo.waitForText(BOOKMARK_TITLE);
 
-        mAsserter.is(bookmarksList.getChildCount(), 5,
+        mAsserter.is(bookmarksList.getAdapter().getCount(), 5,
             "bookmarks list has 5 children (the default bookmarks and the new one)");
  
         // Click on the bookmark we created and wait for the bookmarked page to load

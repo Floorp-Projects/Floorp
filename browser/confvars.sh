@@ -12,10 +12,17 @@ if test "$OS_ARCH" = "WINNT"; then
   if ! test "$HAVE_64BIT_OS"; then
     MOZ_VERIFY_MAR_SIGNATURE=1
     MOZ_MAINTENANCE_SERVICE=1
+    if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
+            "$MOZ_UPDATE_CHANNEL" = "aurora" -o \
+            "$MOZ_UPDATE_CHANNEL" = "beta" -o \
+            "$MOZ_UPDATE_CHANNEL" = "release"; then
+      if ! test "$MOZ_DEBUG"; then
+        MOZ_STUB_INSTALLER=1
+      fi
+    fi
   fi
 fi
 
-MOZ_STUB_INSTALLER=1
 MOZ_CHROME_FILE_FORMAT=omni
 MOZ_SAFE_BROWSING=1
 MOZ_SERVICES_AITC=1

@@ -283,19 +283,19 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
 
   if (changedPos) {
     if (changedSize && !aMoveOnly) {
-      mWindow->ResizeClient(NSToIntRound(newBounds.x * invScale),
-                            NSToIntRound(newBounds.y * invScale),
-                            NSToIntRound(newBounds.width * invScale),
-                            NSToIntRound(newBounds.height * invScale),
+      mWindow->ResizeClient(newBounds.x * invScale,
+                            newBounds.y * invScale,
+                            newBounds.width * invScale,
+                            newBounds.height * invScale,
                             aInvalidateChangedSize);
     } else {
-      mWindow->MoveClient(NSToIntRound(newBounds.x * invScale),
-                          NSToIntRound(newBounds.y * invScale));
+      mWindow->MoveClient(newBounds.x * invScale,
+                          newBounds.y * invScale);
     }
   } else {
     if (changedSize && !aMoveOnly) {
-      mWindow->ResizeClient(NSToIntRound(newBounds.width * invScale),
-                            NSToIntRound(newBounds.height * invScale),
+      mWindow->ResizeClient(newBounds.width * invScale,
+                            newBounds.height * invScale,
                             aInvalidateChangedSize);
     } // else do nothing!
   }

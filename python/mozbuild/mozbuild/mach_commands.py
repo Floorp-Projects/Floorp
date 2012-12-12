@@ -129,3 +129,10 @@ class Warnings(MachCommandBase):
                 print('%s:%d [%s] %s' % (filename, warning['line'],
                     warning['flag'], warning['message']))
 
+@CommandProvider
+class Package(MachCommandBase):
+    """Package the built product for distribution."""
+
+    @Command('package', help='Package the built product for distribution as an APK, DMG, etc.')
+    def package(self):
+        return self._run_make(directory=".", target='package', ensure_exit_code=False)

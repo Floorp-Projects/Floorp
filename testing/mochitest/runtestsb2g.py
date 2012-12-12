@@ -397,6 +397,7 @@ const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
 
 let homescreen = document.getElementById('homescreen');
 let container = homescreen.contentWindow.document.getElementById('test-container');
+container.setAttribute('mozapp', 'http://mochi.test:8888/manifest.webapp');
 
 let specialpowers = {};
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
@@ -428,7 +429,6 @@ user_pref("dom.mozBrowserFramesEnabled", true);
 user_pref("dom.ipc.tabs.disabled", false);
 user_pref("dom.ipc.browser_frames.oop_by_default", false);
 user_pref("dom.mozBrowserFramesWhitelist","app://test-container.gaiamobile.org,http://mochi.test:8888");
-user_pref("network.dns.localDomains","app://test-container.gaiamobile.org");
 user_pref("marionette.loadearly", true);
 """)
         f.close()

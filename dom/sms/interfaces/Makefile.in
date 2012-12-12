@@ -26,6 +26,12 @@ XPIDLSRCS = \
   nsISmsService.idl \
   $(NULL)
 
+ifdef MOZ_B2G_RIL
+XPIDLSRCS += \
+  nsIRilSmsDatabaseService.idl \
+  $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

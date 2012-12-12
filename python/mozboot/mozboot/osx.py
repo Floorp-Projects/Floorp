@@ -64,15 +64,6 @@ would prefer to do this manually, hit CTRL+c, install Homebrew yourself, ensure
 "brew" is in your $PATH, and relaunch bootstrap.
 '''
 
-HOMEBREW_XQUARTZ = '''
-Homebrew needs XQuartz installed in order to build some dependencies. Please
-download and install XQuartz from the following URL:
-
-    http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.3.dmg\
-
-When that has finished, please relaunch bootstrap.
-'''
-
 HOMEBREW_PACKAGES = '''
 We are now installing all required packages via Homebrew. You will see a lot of
 output as packages are built.
@@ -159,21 +150,11 @@ class OSXBootstrapper(BaseBootstrapper):
 
             subprocess.check_call(['ruby', tf.name])
 
-    def ensure_xquartz(self):
-        if os.path.exists('/Applications/Utilities/XQuartz.app'):
-            return
-
-        print(HOMEBREW_XQUARTZ)
-        sys.exit(1)
-
     def ensure_homebrew_packages(self):
         brew = self.which('brew')
         assert brew is not None
 
         installed = self.check_output([brew, 'list']).split()
-
-        if 'python' not in installed:
-            self.ensure_xquartz()
 
         packages = [
             # We need to install Python because Mercurial requires the Python

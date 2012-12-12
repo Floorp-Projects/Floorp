@@ -37,3 +37,16 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should have thrown.")
+
+    threw = False
+    try:
+        results = parser.parse("""
+            interface VariadicConstraints4 {
+              void foo(byte... arg1 = 0);
+            };
+        """)
+
+    except:
+        threw = True
+
+    harness.ok(threw, "Should have thrown on variadic argument with default value.")

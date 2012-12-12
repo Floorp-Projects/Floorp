@@ -1247,6 +1247,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         interpMode = JSINTERP_NORMAL;
 
     /*
+     * The RETHROW mode acts like a bailout mode, except that it resume an
+     * exception instead of resuming the script.
+     */
+    if (interpMode == JSINTERP_RETHROW)
+        goto error;
+
+    /*
      * It is important that "op" be initialized before calling DO_OP because
      * it is possible for "op" to be specially assigned during the normal
      * processing of an opcode while looping. We rely on DO_NEXT_OP to manage

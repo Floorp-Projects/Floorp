@@ -135,7 +135,7 @@ class BailoutClosure
 
     void constructFrame() {
         guards_.construct();
-    };
+    }
     InvokeArgsGuard *argsGuard() {
         return &guards_.ref().iag;
     }

@@ -16,6 +16,7 @@ function test() {
   ensureSocialEnabled();
 
   SocialService.addProvider(manifest, function (p) {
+    p.enabled = true;
     provider = p;
     runTests(tests, undefined, undefined, function () {
       SocialService.removeProvider(provider.origin, finish);
@@ -39,16 +40,12 @@ let tests = {
       is(profile.userName, expect.userName, "userName is set");
       is(profile.displayName, expect.displayName, "displayName is set");
       is(profile.profileURL, expect.profileURL, "profileURL is set");
-
-      // see below - if not for bug 788368 we could close this earlier.
-      port.close();
       next();
     }
     Services.obs.addObserver(ob, "social:profile-changed", false);
     let port = provider.getWorkerPort();
     port.postMessage({topic: "test-profile", data: expect});
-    // theoretically we should be able to close the port here, but bug 788368
-    // means that if we do, the worker never sees the test-profile message.
+    port.close();
   },
 
   testAmbientNotification: function(next) {

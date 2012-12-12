@@ -38,6 +38,7 @@ nsresult Fake_SourceMediaStream::Start() {
 }
 
 nsresult Fake_SourceMediaStream::Stop() {
+  mozilla::MutexAutoLock lock(mMutex);
   if (mTimer)
     mTimer->Cancel();
   mPeriodic->Detach();
@@ -45,6 +46,7 @@ nsresult Fake_SourceMediaStream::Stop() {
 }
 
 void Fake_SourceMediaStream::Periodic() {
+  mozilla::MutexAutoLock lock(mMutex);
   // Pull more audio-samples iff pulling is enabled
   // and we are not asked by the signaling agent to stop
   //pulling data.
@@ -69,6 +71,10 @@ nsresult Fake_MediaStreamBase::Start() {
 }
 
 nsresult Fake_MediaStreamBase::Stop() {
+  // Lock the mutex so that we know that after this
+  // has returned, periodic will not be firing again
+  // and so it's safe to destruct.
+  mozilla::MutexAutoLock lock(mMutex);
   mTimer->Cancel();
 
   return NS_OK;
@@ -76,6 +82,7 @@ nsresult Fake_MediaStreamBase::Stop() {
 
 // Fake_AudioStreamSource
 void Fake_AudioStreamSource::Periodic() {
+  mozilla::MutexAutoLock lock(mMutex);
   //Are we asked to stop pumping audio samples ?
   if(mStop) {
     return;

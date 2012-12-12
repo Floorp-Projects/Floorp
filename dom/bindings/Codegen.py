@@ -2196,6 +2196,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         if not isOptional:
             typeName = CGWrapper(typeName, pre="const ")
 
+        # NOTE: Keep this in sync with variadic conversions as needed
         templateBody = ("""JSObject* seq = &${val}.toObject();\n
 if (!IsArrayLike(cx, seq)) {
 %s
@@ -3042,9 +3043,6 @@ class CGArgumentConverter(CGThing):
                  invalidEnumValueFatal=True, lenientFloatCode=None):
         CGThing.__init__(self)
         self.argument = argument
-        if argument.variadic:
-            raise TypeError("We don't support variadic arguments yet " +
-                            str(argument.location))
         assert(not argument.defaultValue or argument.optional)
 
         replacer = {
@@ -3074,19 +3072,70 @@ class CGArgumentConverter(CGThing):
         self.lenientFloatCode = lenientFloatCode
 
     def define(self):
-        return instantiateJSToNativeConversionTemplate(
-            getJSToNativeConversionTemplate(self.argument.type,
-                                            self.descriptorProvider,
-                                            isOptional=(self.argcAndIndex is not None),
-                                            invalidEnumValueFatal=self.invalidEnumValueFatal,
-                                            defaultValue=self.argument.defaultValue,
-                                            treatNullAs=self.argument.treatNullAs,
-                                            treatUndefinedAs=self.argument.treatUndefinedAs,
-                                            isEnforceRange=self.argument.enforceRange,
-                                            isClamp=self.argument.clamp,
-                                            lenientFloatCode=self.lenientFloatCode),
-            self.replacementVariables,
-            self.argcAndIndex).define()
+        typeConversion = getJSToNativeConversionTemplate(
+            self.argument.type,
+            self.descriptorProvider,
+            isOptional=(self.argcAndIndex is not None and
+                        not self.argument.variadic),
+            invalidEnumValueFatal=self.invalidEnumValueFatal,
+            defaultValue=self.argument.defaultValue,
+            treatNullAs=self.argument.treatNullAs,
+            treatUndefinedAs=self.argument.treatUndefinedAs,
+            isEnforceRange=self.argument.enforceRange,
+            isClamp=self.argument.clamp,
+            lenientFloatCode=self.lenientFloatCode,
+            isMember=self.argument.variadic)
+
+        if not self.argument.variadic:
+            return instantiateJSToNativeConversionTemplate(
+                typeConversion,
+                self.replacementVariables,
+                self.argcAndIndex).define()
+
+        # Variadic arguments get turned into a sequence.
+        (elementTemplate, elementDeclType,
+         elementHolderType, dealWithOptional) = typeConversion
+        if dealWithOptional:
+            raise TypeError("Shouldn't have optional things in variadics")
+        if elementHolderType is not None:
+            raise TypeError("Shouldn't need holders for variadics")
+
+        replacer = dict(self.argcAndIndex, **self.replacementVariables)
+        replacer["seqType"] = CGWrapper(elementDeclType, pre="Sequence< ", post=" >").define()
+        replacer["elemType"] = elementDeclType.define()
+
+        # NOTE: Keep this in sync with sequence conversions as needed
+        variadicConversion = string.Template("""const ${seqType} ${declName};
+if (${argc} > ${index}) {
+  ${seqType}& arr = const_cast< ${seqType}& >(${declName});
+  if (!arr.SetCapacity(${argc} - ${index})) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+  for (uint32_t variadicArg = ${index}; variadicArg < ${argc}; ++variadicArg) {
+    ${elemType}& slot = *arr.AppendElement();
+""").substitute(replacer)
+
+        val = string.Template("${argv}[variadicArg]").substitute(replacer)
+        variadicConversion += CGIndenter(CGGeneric(
+                string.Template(elementTemplate).substitute(
+                    {
+                        "val" : val,
+                        "valPtr": "&" + val,
+                        "declName" : "slot",
+                        # We only need holderName here to handle isExternal()
+                        # interfaces, which use an internal holder for the
+                        # conversion even when forceOwningType ends up true.
+                        "holderName": "tempHolder",
+                        # Use the same ${obj} as for the variadic arg itself
+                        "obj": replacer["obj"]
+                        }
+                    )), 4).define()
+
+        variadicConversion += ("\n"
+                               "  }\n"
+                               "}")
+        return variadicConversion
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                            isCreator, exceptionCode):
@@ -3777,16 +3826,44 @@ class CGMethodCall(CGThing):
 
             distinguishingIndex = method.distinguishingIndexForArgCount(argCount)
 
-            for (_, args) in possibleSignatures:
+            def distinguishingArgument(signature):
+                args = signature[1]
+                if distinguishingIndex < len(args):
+                    return args[distinguishingIndex]
+                assert args[-1].variadic
+                return args[-1]
+
+            def distinguishingType(signature):
+                return distinguishingArgument(signature).type
+
+            for sig in possibleSignatures:
                 # We should not have "any" args at distinguishingIndex,
                 # since we have multiple possible signatures remaining,
                 # but "any" is never distinguishable from anything else.
-                assert not args[distinguishingIndex].type.isAny()
+                assert not distinguishingType(sig).isAny()
                 # We can't handle unions at the distinguishing index.
-                if args[distinguishingIndex].type.isUnion():
+                if distinguishingType(sig).isUnion():
                     raise TypeError("No support for unions as distinguishing "
                                     "arguments yet: %s",
-                                    args[distinguishingIndex].location)
+                                    distinguishingArgument(sig).location)
+                # We don't support variadics as the distinguishingArgument yet.
+                # If you want to add support, consider this case:
+                #
+                #   void(long... foo);
+                #   void(long bar, Int32Array baz);
+                #
+                # in which we have to convert argument 0 to long before picking
+                # an overload... but all the variadic stuff needs to go into a
+                # single array in case we pick that overload, so we have to have
+                # machinery for converting argument 0 to long and then either
+                # placing it in the variadic bit or not.  Or something.  We may
+                # be able to loosen this restriction if the variadic arg is in
+                # fact at distinguishingIndex, perhaps.  Would need to
+                # double-check.
+                if distinguishingArgument(sig).variadic:
+                    raise TypeError("No support for variadics as distinguishing "
+                                    "arguments yet: %s",
+                                    distinguishingArgument(sig).location)
 
             # Convert all our arguments up to the distinguishing index.
             # Doesn't matter which of the possible signatures we use, since
@@ -3815,9 +3892,6 @@ class CGMethodCall(CGThing):
                         caseBody.append(CGGeneric("}"))
                     return True
                 return False
-
-            def distinguishingType(signature):
-                return signature[1][distinguishingIndex].type
 
             def tryCall(signature, indent, isDefinitelyObject=False,
                         isNullOrUndefined=False):
@@ -6818,7 +6892,7 @@ class CGBindingRoot(CGThing):
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptor, member, name, signature, extendedAttrs,
                  breakAfter=True, passCxAsNeeded=True, visibility="public",
-                 jsObjectsArePtr=False):
+                 jsObjectsArePtr=False, variadicIsSequence=False):
         """
         If jsObjectsArePtr is true, typed arrays and "object" will be
         passed as JSObject*
@@ -6830,6 +6904,7 @@ class CGNativeMember(ClassMethod):
                                                              self.extendedAttrs)
         self.passCxAsNeeded = passCxAsNeeded
         self.jsObjectsArePtr = jsObjectsArePtr
+        self.variadicIsSequence = variadicIsSequence
         breakAfterSelf = "\n" if breakAfter else ""
         ClassMethod.__init__(self, name,
                              self.getReturnType(signature[0], False),
@@ -7110,7 +7185,8 @@ class CGNativeMember(ClassMethod):
             decl = CGWrapper(decl, pre="Nullable< ", post=" >")
             ref = True
         if variadic:
-            decl = CGWrapper(decl, pre="nsTArray< ", post=" >")
+            arrayType = "Sequence" if self.variadicIsSequence else "nsTArray"
+            decl = CGWrapper(decl, pre="%s< " % arrayType, post=" >")
             ref = True
         elif optional:
             # Note: All variadic args claim to be optional, but we can just use
@@ -7140,7 +7216,8 @@ class CGExampleMethod(CGNativeMember):
                                                                    method),
                                 signature,
                                 descriptor.getExtendedAttributes(method),
-                                breakAfter)
+                                breakAfter=breakAfter,
+                                variadicIsSequence=True)
     def define(self, cgClass):
         return ''
 

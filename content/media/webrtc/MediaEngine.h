@@ -31,7 +31,7 @@ enum MediaEngineState {
 class MediaEngine
 {
 public:
-  virtual ~MediaEngine() {};
+  virtual ~MediaEngine() {}
 
   /* Populate an array of video sources in the nsTArray. Also include devices
    * that are currently unavailable. */
@@ -48,7 +48,7 @@ public:
 class MediaEngineSource : public nsISupports
 {
 public:
-  virtual ~MediaEngineSource() {};
+  virtual ~MediaEngineSource() {}
 
   /* Populate the human readable name of this device in the nsAString */
   virtual void GetName(nsAString&) = 0;
@@ -114,7 +114,7 @@ struct MediaEngineVideoOptions {
 class MediaEngineVideoSource : public MediaEngineSource
 {
 public:
-  virtual ~MediaEngineVideoSource() {};
+  virtual ~MediaEngineVideoSource() {}
 
   /* Return a MediaEngineVideoOptions struct with appropriate values for all
    * fields. */
@@ -127,7 +127,7 @@ public:
 class MediaEngineAudioSource : public MediaEngineSource
 {
 public:
-  virtual ~MediaEngineAudioSource() {};
+  virtual ~MediaEngineAudioSource() {}
 };
 
 }

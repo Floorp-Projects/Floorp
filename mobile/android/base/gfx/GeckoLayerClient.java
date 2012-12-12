@@ -17,7 +17,7 @@ import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
-import org.mozilla.gecko.util.GeckoEventResponder;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GeckoLayerClient
-        implements GeckoEventResponder, LayerView.Listener, PanZoomTarget
+        implements GeckoEventListener, LayerView.Listener, PanZoomTarget
 {
     private static final String LOGTAG = "GeckoLayerClient";
 
@@ -45,7 +45,6 @@ public class GeckoLayerClient
     private IntSize mScreenSize;
     private IntSize mWindowSize;
     private DisplayPortMetrics mDisplayPort;
-    private DisplayPortMetrics mReturnDisplayPort;
 
     private boolean mRecordDrawTimes;
     private final DrawTimingQueue mDrawTimingQueue;
@@ -145,7 +144,6 @@ public class GeckoLayerClient
         sendResizeEventIfNecessary(true);
 
         DisplayPortCalculator.initPrefs();
-        PluginLayer.initPrefs();
     }
 
     public void destroy() {
@@ -463,23 +461,6 @@ public class GeckoLayerClient
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error decoding JSON in " + event + " handler", e);
-        }
-    }
-
-    /** Implementation of GeckoEventResponder. */
-    public String getResponse() {
-        // We are responding to the events handled in handleMessage() above with the
-        // display port we calculated. Different messages will generate different
-        // display ports and put them in mReturnDisplayPort, so we just return that.
-        // Note that mReturnDisplayPort is always touched on the Gecko thread, so
-        // no synchronization is needed for it.
-        if (mReturnDisplayPort == null) {
-            return "";
-        }
-        try {
-            return mReturnDisplayPort.toJSON();
-        } finally {
-            mReturnDisplayPort = null;
         }
     }
 
