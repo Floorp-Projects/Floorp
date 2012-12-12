@@ -348,14 +348,15 @@ TypeInferenceOracle::elementReadIsTypedArray(JSScript *script, jsbytecode *pc, i
 bool
 TypeInferenceOracle::elementReadIsString(JSScript *script, jsbytecode *pc)
 {
-    // Check for string[int32].
+    // Check for string[index].
     StackTypeSet *value = script->analysis()->poppedTypes(pc, 1);
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 0);
 
     if (value->getKnownTypeTag() != JSVAL_TYPE_STRING)
         return false;
 
-    if (id->getKnownTypeTag() != JSVAL_TYPE_INT32)
+    JSValueType idType = id->getKnownTypeTag();
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
     // This function is used for jsop_getelem_string which should return

@@ -28,7 +28,7 @@ _BROWSER_FILES = \
 		browser_inspector_bug_699308_iframe_navigation.js \
 		browser_inspector_bug_672902_keyboard_shortcuts.js \
 		browser_inspector_bug_566084_location_changed.js \
-		browser_inspector_sidebarstate.js \
+		$(filter disabled-temporarily--bug-816990, browser_inspector_sidebarstate.js) \
 		browser_inspector_pseudoclass_lock.js \
 		browser_inspector_cmd_inspect.js \
 		browser_inspector_cmd_inspect.html \
