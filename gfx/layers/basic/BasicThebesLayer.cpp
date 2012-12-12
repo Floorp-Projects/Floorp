@@ -160,9 +160,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
     }
     if (!(flags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE)) {
-      gfxMatrix transform;
-      if (!GetEffectiveTransform().CanDraw2D(&transform) ||
-          transform.HasNonIntegerTranslation()) {
+      if (MayResample()) {
         flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
       }
     }
