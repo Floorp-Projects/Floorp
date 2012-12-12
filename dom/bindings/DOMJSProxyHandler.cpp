@@ -83,16 +83,18 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
 
   if (v.isObject()) {
     js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, UndefinedValue());
-    return &v.toObject();
+  } else {
+    js::ExpandoAndGeneration* expandoAndGeneration =
+      static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
+    v = expandoAndGeneration->expando;
+    if (v.isUndefined()) {
+      return nullptr;
+    }
+    expandoAndGeneration->expando = UndefinedValue();
   }
 
-  js::ExpandoAndGeneration* expandoAndGeneration =
-    static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
-  v = expandoAndGeneration->expando;
-  if (v.isUndefined()) {
-    return nullptr;
-  }
-  expandoAndGeneration->expando = UndefinedValue();
+  xpc::GetObjectScope(obj)->RemoveDOMExpandoObject(obj);
+
   return &v.toObject();
 }
 
