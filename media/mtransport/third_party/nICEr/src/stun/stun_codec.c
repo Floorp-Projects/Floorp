@@ -397,7 +397,8 @@ nr_stun_attr_codec_addr_encode(nr_stun_attr_info *attr_info, void *data, int off
         break;
 
     case NR_IPV6:
-        UNIMPLEMENTED;
+        assert(0);
+        ABORT(R_INTERNAL);
         break;
     default:
         assert(0);
