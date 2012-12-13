@@ -1753,6 +1753,17 @@ nsContentUtils::IsCallerChrome()
 }
 
 bool
+nsContentUtils::IsCallerXBL()
+{
+    JSScript *script;
+    JSContext *cx = GetCurrentJSContext();
+    if (!cx || !JS_DescribeScriptedCaller(cx, &script, nullptr) || !script)
+        return false;
+    return JS_GetScriptUserBit(script);
+}
+
+
+bool
 nsContentUtils::IsImageSrcSetDisabled()
 {
   return Preferences::GetBool("dom.disable_image_src_set") &&
@@ -5972,35 +5983,10 @@ nsContentTypeParser::GetParameter(const char* aParameterName, nsAString& aResult
 
 /* static */
 
-// If you change this code, change also AllowedToAct() in
-// XPCSystemOnlyWrapper.cpp!
 bool
 nsContentUtils::CanAccessNativeAnon()
 {
-  JSContext* cx = GetCurrentJSContext();
-  if (!cx) {
-    return true;
-  }
-
-  if (IsCallerChrome()) {
-    return true;
-  }
-
-  // Allow any code loaded from chrome://global/ to touch us, even if it was
-  // cloned into a less privileged context.
-  JSScript *script;
-  if (!JS_DescribeScriptedCaller(cx, &script, nullptr) || !script) {
-    return false;
-  }
-  static const char prefix[] = "chrome://global/";
-  const char *filename;
-  if ((filename = JS_GetScriptFilename(cx, script)) &&
-      !strncmp(filename, prefix, ArrayLength(prefix) - 1))
-  {
-    return true;
-  }
-
-  return false;
+  return IsCallerChrome() || IsCallerXBL();
 }
 
 /* static */ nsresult

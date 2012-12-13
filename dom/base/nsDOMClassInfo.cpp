@@ -9537,8 +9537,16 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
   NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
 
-  bool callerIsContentJS = (!xpc::AccessCheck::callerIsChrome() &&
-                            !xpc::AccessCheck::callerIsXBL(cx) &&
+  // The below methods pull the cx off the stack, so make sure they match.
+  //
+  // NB: Sometimes there's a null cx on the stack, in which case |cx| is the
+  // safe JS context. But in that case, IsCallerChrome() will return true,
+  // so the ensuing expression is short-circuited.
+  MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContext(),
+                cx == nsContentUtils::GetCurrentJSContext());
+
+  bool callerIsContentJS = (!nsContentUtils::IsCallerChrome() &&
+                            !nsContentUtils::IsCallerXBL() &&
                             js::IsContextRunningJS(cx));
   return objlc->ScriptRequestPluginInstance(callerIsContentJS,
                                             _result);
