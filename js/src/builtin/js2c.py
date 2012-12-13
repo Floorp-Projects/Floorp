@@ -337,6 +337,7 @@ def JS2C(source, target, env):
     'type': env['TYPE']
   })
   output.close()
+  return "".join(all_sources)
 
 def main():
   natives = sys.argv[1]
