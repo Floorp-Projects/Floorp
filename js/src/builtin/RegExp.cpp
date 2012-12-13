@@ -284,7 +284,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     if (!escapedSourceStr)
         return false;
 
-    if (!js::detail::RegExpCode::checkSyntax(cx, NULL, escapedSourceStr))
+    if (!js::RegExpShared::checkSyntax(cx, NULL, escapedSourceStr))
         return false;
 
     RegExpStatics *res = cx->regExpStatics();
