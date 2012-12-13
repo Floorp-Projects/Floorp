@@ -20,7 +20,7 @@ using mozilla::DebugOnly;
 bool
 js::OffThreadCompilationAvailable(JSContext *cx)
 {
-    return cx->runtime->useHelperThreads();
+    return cx->runtime->useHelperThreads() && cx->runtime->helperThreadCount() > 0;
 }
 
 bool
