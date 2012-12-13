@@ -4862,7 +4862,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                .setOriginPrincipals(parent->originPrincipals)
                .setCompileAndGo(parent->compileAndGo)
                .setNoScriptRval(false)
-               .setVersion(parent->getVersion());
+               .setVersion(parent->getVersion())
+               .setUserBit(parent->userBit);
         Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
                                                       parent->staticLevel + 1,
                                                       bce->script->scriptSource(),
