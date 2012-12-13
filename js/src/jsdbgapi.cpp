@@ -448,13 +448,7 @@ JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark)
 JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
-    if (fun->isNative())
-        return NULL;
-    assertSameCompartment(cx, fun);
-    RawScript script = fun->getOrCreateScript(cx);
-    if (!script)
-        MOZ_CRASH();
-    return script;
+    return fun->maybeNonLazyScript();
 }
 
 JS_PUBLIC_API(JSNative)
