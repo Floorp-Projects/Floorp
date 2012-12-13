@@ -15,7 +15,9 @@
 #include "jsobj.h"
 
 #include "js/TemplateLib.h"
+#include "vm/MatchPairs.h"
 
+#include "yarr/MatchResult.h"
 #include "yarr/Yarr.h"
 #if ENABLE_YARR_JIT
 #include "yarr/YarrJIT.h"
@@ -156,7 +158,7 @@ class RegExpShared
 
     /* Primary interface: run this regular expression on the given string. */
     RegExpRunStatus execute(JSContext *cx, StableCharPtr chars, size_t length,
-                            size_t *lastIndex, MatchPairs **matches);
+                            size_t *lastIndex, MatchPairs &matches);
 
     /* Accessors */
 
@@ -286,21 +288,6 @@ class RegExpObject : public JSObject
 
     static RegExpObject *
     createNoStatics(JSContext *cx, HandleAtom atom, RegExpFlag flags, frontend::TokenStream *ts);
-
-    /*
-     * Run the regular expression over the input text.
-     *
-     * Results are placed in |output| as integer pairs. For eaxmple,
-     * |output[0]| and |output[1]| represent the text indices that make
-     * up the "0" (whole match) pair. Capturing parens will result in
-     * more output.
-     *
-     * N.B. it's the responsibility of the caller to hook the |output|
-     * into the |RegExpStatics| appropriately, if necessary.
-     */
-    RegExpRunStatus
-    execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
-            MatchPairs **output);
 
     /* Accessors. */
 

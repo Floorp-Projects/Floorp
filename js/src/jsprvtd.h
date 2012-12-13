@@ -105,12 +105,6 @@ enum RegExpFlag
     AllFlags        = 0x0f
 };
 
-enum RegExpExecType
-{
-    RegExpExec,
-    RegExpTest
-};
-
 class ExecuteArgsGuard;
 class InvokeFrameGuard;
 class InvokeArgsGuard;
