@@ -6,7 +6,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.74 2012/11/17 11:52:38 kaie%kuix.de Exp $
+ * $Id: ocsp.c,v 1.74.2.1 2012/12/12 16:38:39 wtc%google.com Exp $
  */
 
 #include "prerror.h"
@@ -2226,7 +2226,7 @@ CERT_DestroyOCSPRequest(CERTOCSPRequest *request)
  * given type, return the associated template for that choice.
  */
 static const SEC_ASN1Template *
-ocsp_ResponderIDTemplateByType(ocspResponderIDType responderIDType)
+ocsp_ResponderIDTemplateByType(CERTOCSPResponderIDType responderIDType)
 {
     const SEC_ASN1Template *responderIDTemplate;
 
@@ -2371,10 +2371,10 @@ loser:
  * Helper function for decoding a responderID -- turn the actual DER tag
  * into our local translation.
  */
-static ocspResponderIDType
+static CERTOCSPResponderIDType
 ocsp_ResponderIDTypeByTag(int derTag)
 {
-    ocspResponderIDType responderIDType;
+    CERTOCSPResponderIDType responderIDType;
 
     switch (derTag) {
 	case 1:
@@ -2401,7 +2401,7 @@ ocsp_DecodeBasicOCSPResponse(PRArenaPool *arena, SECItem *src)
     ocspBasicOCSPResponse *basicResponse;
     ocspResponseData *responseData;
     ocspResponderID *responderID;
-    ocspResponderIDType responderIDType;
+    CERTOCSPResponderIDType responderIDType;
     const SEC_ASN1Template *responderIDTemplate;
     int derTag;
     SECStatus rv;

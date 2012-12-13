@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include <stagefright/ColorConverter.h>
 #include <stagefright/DataSource.h>
 #include <stagefright/MediaExtractor.h>
 #include <stagefright/MetaData.h>
@@ -130,6 +131,7 @@ class OmxDecoder {
   VideoFrame mVideoFrame;
   MediaBuffer *mAudioBuffer;
   AudioFrame mAudioFrame;
+  ColorConverter *mColorConverter;
 
   // 'true' if a read from the audio stream was done while reading the metadata
   bool mAudioMetadataRead;
@@ -143,7 +145,9 @@ class OmxDecoder {
   void ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void ToVideoFrame_YUV420PackedSemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
-  bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  bool ToVideoFrame_RGB565(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback);
+  bool ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback);
+  bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback);
   bool ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, size_t aDataOffset, size_t aSize,
                     int32_t aAudioChannels, int32_t aAudioSampleRate);
 public:
@@ -176,7 +180,7 @@ public:
     return mAudioSource != NULL;
   }
 
-  bool ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs);
+  bool ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs, BufferCallback *aBufferCallback);
   bool ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs);
 };
 
@@ -196,6 +200,7 @@ OmxDecoder::OmxDecoder(PluginHost *aPluginHost, Decoder *aDecoder) :
   mDurationUs(-1),
   mVideoBuffer(NULL),
   mAudioBuffer(NULL),
+  mColorConverter(NULL),
   mAudioMetadataRead(false)
 {
 }
@@ -212,6 +217,12 @@ OmxDecoder::~OmxDecoder()
   if (mAudioSource.get()) {
     mAudioSource->stop();
   }
+
+#ifndef MOZ_ANDROID_HC
+  if (mColorConverter) {
+    delete mColorConverter;
+  }
+#endif
 #ifndef MOZ_WIDGET_GONK
   mClient.disconnect();
 #endif
@@ -296,6 +307,12 @@ static sp<MediaSource> CreateVideoSource(PluginHost* aPluginHost,
 
         // Use software decoder for color formats we don't know how to convert.
         default:
+#ifndef MOZ_ANDROID_HC
+          if (ColorConverter((OMX_COLOR_FORMATTYPE)videoColorFormat,
+                             OMX_COLOR_Format16bitRGB565).isValid()) {
+            return videoSource;
+          }
+#endif
           // We need to implement a ToVideoFrame_*() color conversion
           // function for this video color format.
           LOG("Unknown video color format: %#x", videoColorFormat);
@@ -657,7 +674,63 @@ void OmxDecoder::ToVideoFrame_YVU420PackedSemiPlanar32m4ka(VideoFrame *aFrame, i
               uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 0, 1);
 }
 
-bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+bool OmxDecoder::ToVideoFrame_RGB565(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
+  void *buffer = (*aBufferCallback)(mVideoWidth, mVideoHeight, MPAPI::RGB565);
+
+  if (!buffer) {
+    return false;
+  }
+
+  aFrame->mTimeUs = aTimeUs;
+
+  memcpy(buffer, aData, mVideoWidth * mVideoHeight * 2);
+
+  aFrame->mSize = mVideoWidth * mVideoHeight * 2;
+
+  return true;
+}
+
+bool OmxDecoder::ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
+#ifdef MOZ_ANDROID_HC
+  return false;
+#else
+  if (!mColorConverter) {
+    mColorConverter = new ColorConverter((OMX_COLOR_FORMATTYPE)mVideoColorFormat,
+                                         OMX_COLOR_Format16bitRGB565);
+  }
+
+  if (!mColorConverter->isValid()) {
+    return false;
+  }
+
+  aFrame->mTimeUs = aTimeUs;
+
+  void *buffer = (*aBufferCallback)(mVideoWidth, mVideoHeight, MPAPI::RGB565);
+
+  if (!buffer) {
+    return false;
+  }
+
+  aFrame->mSize = mVideoWidth * mVideoHeight * 2;
+
+#ifdef MOZ_ANDROID_GB
+  mColorConverter->convert(mVideoWidth, mVideoHeight,
+                           aData, 0 /* srcSkip */,
+                           buffer, mVideoWidth * 2);
+#else
+  mColorConverter->convert(aData, mVideoStride, mVideoSliceHeight,
+                           mVideoCropLeft, mVideoCropTop,
+                           mVideoCropLeft + mVideoWidth - 1,
+                           mVideoCropTop + mVideoHeight - 1,
+                           buffer, mVideoWidth, mVideoHeight,
+                           0, 0, mVideoWidth - 1, mVideoHeight - 1);
+#endif
+
+  return true;
+#endif
+}
+
+bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
   switch (mVideoColorFormat) {
   case OMX_COLOR_FormatYUV420Planar: // e.g. Asus Transformer, Stagefright's software decoder
     ToVideoFrame_YUV420Planar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
@@ -677,9 +750,14 @@ bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, 
   case OMX_TI_COLOR_FormatYUV420PackedSemiPlanar: // e.g. Galaxy Nexus
     ToVideoFrame_YUV420PackedSemiPlanar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
+  case OMX_COLOR_Format16bitRGB565:
+    return ToVideoFrame_RGB565(aFrame, aTimeUs, aData, aSize, aKeyFrame, aBufferCallback);
+    break;
   default:
-    LOG("Unknown video color format: %#x", mVideoColorFormat);
-    return false;
+    if (!ToVideoFrame_ColorConverter(aFrame, aTimeUs, aData, aSize, aKeyFrame, aBufferCallback)) {
+      LOG("Unknown video color format: %#x", mVideoColorFormat);
+      return false;
+    }
   }
   return true;
 }
@@ -690,7 +768,8 @@ bool OmxDecoder::ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, 
   return true;
 }
 
-bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
+bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs,
+                           BufferCallback *aBufferCallback)
 {
   MOZ_ASSERT(aSeekTimeUs >= -1);
 
@@ -708,6 +787,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
   } else {
     err = mVideoSource->read(&mVideoBuffer);
   }
+
+  aFrame->mSize = 0;
 
   if (err == OK && mVideoBuffer->range_length() > 0) {
     int64_t timeUs;
@@ -730,7 +811,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
     char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
     size_t length = mVideoBuffer->range_length();
 
-    if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
+    if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame, aBufferCallback)) {
       return false;
     }
   }
@@ -740,7 +821,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
     if (!SetVideoFormat())
       return false;
     else
-      return ReadVideo(aFrame, aSeekTimeUs);
+      return ReadVideo(aFrame, aSeekTimeUs, aBufferCallback);
   }
   else if (err == ERROR_END_OF_STREAM) {
     LOG("mVideoSource END_OF_STREAM");
@@ -835,9 +916,9 @@ static bool HasAudio(Decoder *aDecoder) {
   return cast(aDecoder)->HasAudio();
 }
 
-static bool ReadVideo(Decoder *aDecoder, VideoFrame *aFrame, int64_t aSeekTimeUs)
+static bool ReadVideo(Decoder *aDecoder, VideoFrame *aFrame, int64_t aSeekTimeUs, BufferCallback *aBufferCallback)
 {
-  return cast(aDecoder)->ReadVideo(aFrame, aSeekTimeUs);
+  return cast(aDecoder)->ReadVideo(aFrame, aSeekTimeUs, aBufferCallback);
 }
 
 static bool ReadAudio(Decoder *aDecoder, AudioFrame *aFrame, int64_t aSeekTimeUs)

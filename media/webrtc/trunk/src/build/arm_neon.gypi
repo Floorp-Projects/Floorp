@@ -25,11 +25,19 @@
       'cflags!': [
         '-mfpu=vfpv3-d16',
       ],
+      'cflags_mozilla!': [
+        '-mfpu=vfpv3-d16',
+      ],
       'cflags': [
         '-mfpu=neon',
         '-mfloat-abi=softfp',
         '-flax-vector-conversions',
       ],
+      'cflags_mozilla': [
+        '-mfpu=neon',
+        '-mfloat-abi=softfp',
+        '-flax-vector-conversions',
+      ]
     }],
   ],
 }
