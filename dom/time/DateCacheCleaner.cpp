@@ -39,6 +39,7 @@ public:
     if (!cx) {
       NS_WARNING("Failed to GetSafeJSContext");
     }
+    JSAutoRequest ar(cx);
     JS_ClearDateCaches(cx);
   }
 
