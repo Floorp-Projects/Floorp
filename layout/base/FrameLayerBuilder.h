@@ -314,10 +314,10 @@ public:
   LayerManager* GetRetainingLayerManager() { return mRetainingManager; }
 
   /**
-   * Returns true if the given display item was visible in its layer during
-   * the previous paint. Returns false otherwise.
+   * Returns true if the given display item was rendered during the previous
+   * paint. Returns false otherwise.
    */
-  static bool HasVisibleRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+  static bool HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
   class DisplayItemData;
   typedef void (*DisplayItemDataCallback)(nsIFrame *aFrame, DisplayItemData* aItem);

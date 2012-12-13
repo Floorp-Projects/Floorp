@@ -1081,15 +1081,13 @@ FrameLayerBuilder::GetDisplayItemDataForManager(nsDisplayItem* aItem,
 }
 
 bool
-FrameLayerBuilder::HasVisibleRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+FrameLayerBuilder::HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 {
   nsTArray<DisplayItemData*> *array = 
     reinterpret_cast<nsTArray<DisplayItemData*>*>(aFrame->Properties().Get(LayerManagerDataProperty()));
   if (array) {
     for (uint32_t i = 0; i < array->Length(); i++) {
-      DisplayItemData* data = array->ElementAt(i);
-      if (data->mDisplayItemKey == aDisplayItemKey &&
-          data->IsVisibleInLayer()) {
+      if (array->ElementAt(i)->mDisplayItemKey == aDisplayItemKey) {
         return true;
       }
     }
