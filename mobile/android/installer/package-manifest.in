@@ -190,6 +190,9 @@
 @BINPATH@/components/necko.xpt
 @BINPATH@/components/loginmgr.xpt
 @BINPATH@/components/parentalcontrols.xpt
+#ifdef MOZ_WEBRTC
+@BINPATH@/components/peerconnection.xpt
+#endif
 @BINPATH@/components/plugin.xpt
 @BINPATH@/components/pref.xpt
 @BINPATH@/components/prefetch.xpt
@@ -359,6 +362,11 @@
 @BINPATH@/components/TCPSocket.js
 @BINPATH@/components/TCPSocketParentIntermediary.js
 @BINPATH@/components/TCPSocket.manifest
+
+#ifdef MOZ_WEBRTC
+@BINPATH@/components/PeerConnection.js
+@BINPATH@/components/PeerConnection.manifest
+#endif
 
 #ifdef MOZ_SERVICES_HEALTHREPORT
 @BINPATH@/components/HealthReportComponents.manifest
