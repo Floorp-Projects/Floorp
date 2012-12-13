@@ -530,39 +530,6 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
     return proto;
 }
 
-
-static const jschar GreedyStarChars[] = {'.', '*'};
-
-static inline bool
-StartsWithGreedyStar(JSAtom *source)
-{
-    return false;
-
-#if 0
-    if (source->length() < 3)
-        return false;
-
-    const jschar *chars = source->chars();
-    return chars[0] == GreedyStarChars[0] &&
-           chars[1] == GreedyStarChars[1] &&
-           chars[2] != '?';
-#endif
-}
-
-static inline bool
-GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g)
-{
-    if (cx->compartment->regExps.lookupHack(source, flags, cx, g))
-        return true;
-
-    JSAtom *hackedSource = AtomizeChars(cx, source->chars() + ArrayLength(GreedyStarChars),
-                                        source->length() - ArrayLength(GreedyStarChars));
-    if (!hackedSource)
-        return false;
-
-    return cx->compartment->regExps.getHack(cx, source, hackedSource, flags, g);
-}
-
 bool
 js::ExecuteRegExp(JSContext *cx, RegExpExecType execType, HandleObject regexp,
                   HandleString string, MutableHandleValue rval)
@@ -571,13 +538,8 @@ js::ExecuteRegExp(JSContext *cx, RegExpExecType execType, HandleObject regexp,
     Rooted<RegExpObject*> reobj(cx, &regexp->asRegExp());
 
     RegExpGuard re;
-    if (StartsWithGreedyStar(reobj->getSource())) {
-        if (!GetSharedForGreedyStar(cx, reobj->getSource(), reobj->getFlags(), &re))
-            return false;
-    } else {
-        if (!reobj->getShared(cx, &re))
-            return false;
-    }
+    if (!reobj->getShared(cx, &re))
+        return false;
 
     RegExpStatics *res = cx->regExpStatics();
 
