@@ -122,11 +122,13 @@ protected:
  * We can also paint an "extra background color" behind the normal
  * background.
  */
-class nsDisplayCanvasBackgroundColor : public nsDisplayItem {
+class nsDisplayCanvasBackground : public nsDisplayBackgroundImage {
 public:
-  nsDisplayCanvasBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame)
-    : nsDisplayItem(aBuilder, aFrame)
-    , mColor(NS_RGBA(0,0,0,0))
+  nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
+                            uint32_t aLayer, bool aIsThemed,
+                            const nsStyleBackground* aBackgroundStyle)
+    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aIsThemed, aBackgroundStyle),
+      mExtraBackgroundColor(NS_RGBA(0,0,0,0))
   {
   }
 
@@ -134,19 +136,27 @@ public:
                                  nsRegion* aVisibleRegion,
                                  const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE
   {
-    return NS_GET_A(mColor) > 0;
+    return NS_GET_A(mExtraBackgroundColor) > 0 ||
+      nsDisplayBackgroundImage::ComputeVisibility(aBuilder, aVisibleRegion,
+                                             aAllowVisibleRegionExpansion);
   }
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) MOZ_OVERRIDE
   {
-    if (NS_GET_A(mColor) == 255) {
+    if (NS_GET_A(mExtraBackgroundColor) == 255) {
       return nsRegion(GetBounds(aBuilder, aSnap));
     }
-    return nsRegion();
+    return nsDisplayBackgroundImage::GetOpaqueRegion(aBuilder, aSnap);
   }
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE
   {
-    *aColor = mColor;
+    nscolor background;
+    if (!nsDisplayBackgroundImage::IsUniform(aBuilder, &background))
+      return false;
+    NS_ASSERTION(background == NS_RGBA(0,0,0,0),
+                 "The nsDisplayBackground for a canvas frame doesn't paint "
+                 "its background color normally");
+    *aColor = mExtraBackgroundColor;
     return true;
   }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE
@@ -161,6 +171,16 @@ public:
     // We need to override so we don't consider border-radius.
     aOutFrames->AppendElement(mFrame);
   }
+  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
+  {
+    // Put background-attachment:fixed canvas background images in their own
+    // compositing layer. Since we know their background painting area can't
+    // change (unless the viewport size itself changes), async scrolling
+    // will work well.
+    return mBackgroundStyle &&
+      mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+      !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
+  }
   virtual void NotifyRenderingChanged() MOZ_OVERRIDE
   {
     mFrame->Properties().Delete(nsIFrame::CachedBackgroundImage());
@@ -168,43 +188,20 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
-
-  void SetExtraBackgroundColor(nscolor aColor)
-  {
-    mColor = aColor;
-  }
-
-  NS_DISPLAY_DECL_NAME("CanvasBackgroundColor", TYPE_CANVAS_BACKGROUND_COLOR)
-
-private:
-  nscolor mColor;
-};
-
-class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
-public:
-  nsDisplayCanvasBackgroundImage(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                                 uint32_t aLayer, bool aIsThemed, const nsStyleBackground* aBg)
-    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aIsThemed, aBg)
-  {}
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
-
-  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
-  {
-    // Put background-attachment:fixed canvas background images in their own
-    // compositing layer. Since we know their background painting area can't
-    // change (unless the viewport size itself changes), async scrolling
-    // will work well.
-    return mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-           !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
-  }
  
   // We still need to paint a background color as well as an image for this item, 
   // so we can't support this yet.
-  virtual bool SupportsOptimizingToImage() MOZ_OVERRIDE { return false; }
-  
-  
-  NS_DISPLAY_DECL_NAME("CanvasBackgroundImage", TYPE_CANVAS_BACKGROUND_IMAGE)
+  virtual bool SupportsOptimizingToImage() { return false; }
+
+  void SetExtraBackgroundColor(nscolor aColor)
+  {
+    mExtraBackgroundColor = aColor;
+  }
+
+  NS_DISPLAY_DECL_NAME("CanvasBackground", TYPE_CANVAS_BACKGROUND)
+
+private:
+  nscolor mExtraBackgroundColor;
 };
 
 #endif /* nsCanvasFrame_h___ */
