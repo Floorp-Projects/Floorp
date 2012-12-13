@@ -9,12 +9,11 @@ function test() {
     gBrowser.selectedTab = tab1;
     let target1 = TargetFactory.forTab(tab1);
 
-    ok(!gDevTools.getPanelForTarget("jsdebugger", target1),
+    ok(!gDevTools.getToolbox(target1),
       "Shouldn't have a debugger panel for this tab yet.");
 
-    let toolbox = gDevTools.openToolboxForTab(target1, "jsdebugger");
-    toolbox.once("jsdebugger-ready", function dbgReady() {
-      let dbg = gDevTools.getPanelForTarget("jsdebugger", target1);
+    gDevTools.showToolbox(target1, "jsdebugger").then(function(toolbox) {
+      let dbg = toolbox.getCurrentPanel();
       ok(dbg, "We should have a debugger panel.");
 
       let preferredSfw = Services.prefs.getIntPref("devtools.debugger.ui.stackframes-width");

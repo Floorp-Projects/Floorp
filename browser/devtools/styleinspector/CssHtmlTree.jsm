@@ -1257,12 +1257,9 @@ SelectorView.prototype = {
       let target = inspector.target;
 
       if (styleEditorDefinition.isTargetSupported(target)) {
-        let toolbox = gDevTools.getToolboxForTarget(target);
-
-        toolbox.once("styleeditor-selected", function SE_selected(id, styleEditor) {
-          styleEditor.selectStyleSheet(styleSheet, line);
+        gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
+          toolbox.getCurrentPanel().selectStyleSheet(styleSheet, line);
         });
-        toolbox.selectTool("styleeditor");
       }
     } else {
       let href = styleSheet ? styleSheet.href : "";
