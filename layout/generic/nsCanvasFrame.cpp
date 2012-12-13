@@ -178,19 +178,6 @@ nsRect nsCanvasFrame::CanvasArea() const
   return result;
 }
 
-void
-nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
-                                      nsRenderingContext* aCtx)
-{
-  nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-  nsPoint offset = ToReferenceFrame();
-  nsRect bgClipRect = frame->CanvasArea() + offset;
-  if (NS_GET_A(mColor) > 0) {
-    aCtx->SetColor(mColor);
-    aCtx->FillRect(bgClipRect);
-  }
-}
-
 static void BlitSurface(gfxContext* aDest, const gfxRect& aRect, gfxASurface* aSource)
 {
   aDest->Translate(gfxPoint(aRect.x, aRect.y));
@@ -202,13 +189,19 @@ static void BlitSurface(gfxContext* aDest, const gfxRect& aRect, gfxASurface* aS
 }
 
 void
-nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
-                                      nsRenderingContext* aCtx)
+nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
+                                 nsRenderingContext* aCtx)
 {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
+  if (mIsBottommostLayer && NS_GET_A(mExtraBackgroundColor) > 0) {
+    aCtx->SetColor(mExtraBackgroundColor);
+    aCtx->FillRect(bgClipRect);
+  }
 
+  bool snap;
+  nsRect bounds = GetBounds(aBuilder, &snap);
   nsRenderingContext context;
   nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
   nsRefPtr<gfxASurface> surf;
@@ -237,14 +230,15 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   }
 #endif
 
-  PaintInternal(aBuilder,
-                surf ? &context : aCtx,
-                surf ? bgClipRect: mVisibleRect,
-                &bgClipRect);
-
+  nsCSSRendering::PaintBackground(mFrame->PresContext(), surf ? context : *aCtx, mFrame,
+                                  surf ? bounds : mVisibleRect,
+                                  nsRect(offset, mFrame->GetSize()),
+                                  aBuilder->GetBackgroundPaintFlags(),
+                                  &bgClipRect, mLayer);
   if (surf) {
     BlitSurface(dest, destRect, surf);
-    frame->Properties().Set(nsIFrame::CachedBackgroundImage(), surf.forget().get());
+
+    GetUnderlyingFrame()->Properties().Set(nsIFrame::CachedBackgroundImage(), surf.forget().get());
   }
 }
 
@@ -308,14 +302,11 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsCSSRendering::FindBackground(PresContext(), this, &bgSC)) {
       bg = bgSC->GetStyleBackground();
     }
-    aLists.BorderBackground()->AppendNewToTop(
-        new (aBuilder) nsDisplayCanvasBackgroundColor(aBuilder, this));
-
     // Create separate items for each background layer.
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
       rv = aLists.BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i,
-                                                        isThemed, bg));
+          new (aBuilder) nsDisplayCanvasBackground(aBuilder, this, i,
+                                                   isThemed, bg));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
