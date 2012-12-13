@@ -19,9 +19,9 @@ function runTest(aCallback, desktopSupportedOnly) {
 
   // If this is a desktop supported test and we're on android or b2g,
   // indicate that the test is not supported and skip the test
-  if(desktopSupportedOnly && (navigator.platform === 'Android' ||
+  if(desktopSupportedOnly && (navigator.userAgent.indexOf('Android') > -1 ||
      navigator.platform === '')) {
-    ok(true, navigator.platform + ' currently not supported');
+    ok(true, navigator.userAgent + ' currently not supported');
     SimpleTest.finish();
   } else {
     SpecialPowers.pushPrefEnv({'set': [['media.peerconnection.enabled', true]]},
