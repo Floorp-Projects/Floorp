@@ -941,13 +941,13 @@ struct GCMarker : public JSTracer {
     }
 
   public:
-    explicit GCMarker();
+    explicit GCMarker(JSRuntime *rt);
     bool init();
 
     void setSizeLimit(size_t size) { stack.setSizeLimit(size); }
     size_t sizeLimit() const { return stack.sizeLimit; }
 
-    void start(JSRuntime *rt);
+    void start();
     void stop();
     void reset();
 
