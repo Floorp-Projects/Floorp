@@ -101,7 +101,8 @@ nr_turn_client_next_action(nr_turn_client_ctx *ctx, int stun_ctx_state)
 #if 0
             ctx->state = NR_TURN_CLIENT_STATE_ACTIVE;
 #else
-            UNIMPLEMENTED;
+            assert(0);
+            ABORT(R_INTERNAL);
 #endif
             r_log(NR_LOG_TURN,LOG_DEBUG,"TURN-CLIENT(%s): Active", ctx->label);
         }
@@ -112,6 +113,9 @@ nr_turn_client_next_action(nr_turn_client_ctx *ctx, int stun_ctx_state)
         }
         else {
             ++(ctx->phase);
+            if (ctx->phase > NUMBER_OF_STUN_CTX) {
+                ABORT(R_INTERNAL);
+            }
 
             ctx->state=NR_TURN_CLIENT_STATE_RUNNING;
 

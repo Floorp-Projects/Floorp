@@ -117,7 +117,7 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
     t_priority = tmpcand.priority;
 
     /* Our sending context */
-    if(r=nr_concat_strings(&l2ruser,lufrag,":",rufrag,NULL))
+    if(r=nr_concat_strings(&l2ruser,rufrag,":",lufrag,NULL))
       ABORT(r);
     if(r=nr_stun_client_ctx_create(pair->as_string,
       lcand->osock,
@@ -125,7 +125,7 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
       ABORT(r);
     if(!(pair->stun_client->params.ice_binding_request.username=r_strdup(l2ruser)))
       ABORT(R_NO_MEMORY);
-    if(r=r_data_make(&pair->stun_client->params.ice_binding_request.password,(UCHAR *)lpwd,strlen(lpwd)))
+    if(r=r_data_make(&pair->stun_client->params.ice_binding_request.password,(UCHAR *)rpwd,strlen(rpwd)))
       ABORT(r);
     pair->stun_client->params.ice_binding_request.priority=t_priority;
     pair->stun_client->params.ice_binding_request.control = pctx->controlling?
@@ -135,9 +135,9 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
 
     /* Our receiving username/passwords. Stash these for later 
        injection into the stun server ctx*/
-    if(r=nr_concat_strings(&pair->r2l_user,rufrag,":",lufrag,NULL))
+    if(r=nr_concat_strings(&pair->r2l_user,lufrag,":",rufrag,NULL))
       ABORT(r);
-    if(!(r2lpass=r_strdup(rpwd)))
+    if(!(r2lpass=r_strdup(lpwd)))
       ABORT(R_NO_MEMORY);
     INIT_DATA(pair->r2l_pwd,(UCHAR *)r2lpass,strlen(r2lpass));
     
