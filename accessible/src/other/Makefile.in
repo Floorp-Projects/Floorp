@@ -16,8 +16,8 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
-  nsAccessNodeWrap.cpp \
   AccessibleWrap.cpp \
+  Platform.cpp \
   $(NULL)
 
 EXPORTS = \

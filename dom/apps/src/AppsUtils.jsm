@@ -12,6 +12,11 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
+  return Cc["@mozilla.org/network/util;1"]
+           .getService(Ci.nsINetUtil);
+});
+
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
 this.EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper"];
@@ -42,7 +47,9 @@ this.AppsUtils = {
       downloadSize: aApp.downloadSize || 0,
       lastUpdateCheck: aApp.lastUpdateCheck,
       updateTime: aApp.updateTime,
-      etag: aApp.etag
+      etag: aApp.etag,
+      installerAppId: aApp.installerAppId || Ci.nsIScriptSecurityManager.NO_APP_ID,
+      installerIsBrowser: !!aApp.installerIsBrowser
     };
   },
 
@@ -181,6 +188,18 @@ this.AppsUtils = {
       }
     }
 
+    return true;
+  },
+
+  checkManifestContentType: function
+     checkManifestContentType(aInstallOrigin, aWebappOrigin, aContentType) {
+    let hadCharset = { };
+    let charset = { };
+    let contentType = NetUtil.parseContentType(aContentType, charset, hadCharset);
+    if (aInstallOrigin != aWebappOrigin &&
+        contentType != "application/x-web-app-manifest+json") {
+      return false;
+    }
     return true;
   },
 

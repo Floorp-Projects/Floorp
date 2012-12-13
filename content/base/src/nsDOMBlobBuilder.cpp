@@ -6,6 +6,7 @@
 #include "nsDOMBlobBuilder.h"
 #include "jsfriendapi.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/FileBinding.h"
 #include "nsAutoPtr.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIMultiplexInputStream.h"
@@ -171,14 +172,17 @@ nsDOMMultipartFile::Initialize(nsISupports* aOwner,
                                uint32_t aArgc,
                                jsval* aArgv)
 {
-  return InitInternal(aCx, aArgc, aArgv, GetXPConnectNative);
+  if (!mIsFile) {
+    return InitBlob(aCx, aArgc, aArgv, GetXPConnectNative);
+  }
+  return InitFile(aCx, aArgc, aArgv);
 }
 
 nsresult
-nsDOMMultipartFile::InitInternal(JSContext* aCx,
-                                 uint32_t aArgc,
-                                 jsval* aArgv,
-                                 UnwrapFuncPtr aUnwrapFunc)
+nsDOMMultipartFile::InitBlob(JSContext* aCx,
+                             uint32_t aArgc,
+                             jsval* aArgv,
+                             UnwrapFuncPtr aUnwrapFunc)
 {
   bool nativeEOL = false;
   if (aArgc > 1) {
@@ -256,6 +260,100 @@ nsDOMMultipartFile::InitInternal(JSContext* aCx,
 
     mBlobs = blobSet.GetBlobs();
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMMultipartFile::InitFile(JSContext* aCx,
+                             uint32_t aArgc,
+                             jsval* aArgv)
+{
+  nsresult rv;
+
+  NS_ASSERTION(!mImmutable, "Something went wrong ...");
+  NS_ENSURE_TRUE(!mImmutable, NS_ERROR_UNEXPECTED);
+
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR; // Real short trip
+  }
+
+  NS_ENSURE_TRUE(aArgc > 0, NS_ERROR_UNEXPECTED);
+
+  bool nativeEOL = false;
+  if (aArgc > 1) {
+    FilePropertyBag d;
+    if (!d.Init(aCx, nullptr, aArgv[1])) {
+      return NS_ERROR_TYPE_ERR;
+    }
+    mName = d.name;
+    mContentType = d.type;
+    nativeEOL = d.endings == EndingTypesValues::Native;
+  }
+
+  // We expect to get a path to represent as a File object,
+  // an nsIFile, or an nsIDOMFile.
+  nsCOMPtr<nsIFile> file;
+  nsCOMPtr<nsIDOMFile> domFile;
+  if (!aArgv[0].isString()) {
+    // Lets see if it's an nsIFile
+    if (!aArgv[0].isObject()) {
+      return NS_ERROR_UNEXPECTED; // We're not interested
+    }
+
+    JSObject* obj = &aArgv[0].toObject();
+
+    nsISupports* supports =
+      nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj);
+    if (!supports) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    domFile = do_QueryInterface(supports);
+    file = do_QueryInterface(supports);
+    if (!domFile && !file) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  } else {
+    // It's a string
+    JSString* str = JS_ValueToString(aCx, aArgv[0]);
+    NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
+
+    nsDependentJSString xpcomStr;
+    if (!xpcomStr.init(aCx, str)) {
+      return NS_ERROR_XPC_BAD_CONVERT_JS;
+    }
+
+    rv = NS_NewLocalFile(xpcomStr, false, getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (file) {
+    bool exists;
+    rv = file->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(exists, NS_ERROR_FILE_NOT_FOUND);
+
+    bool isDir;
+    rv = file->IsDirectory(&isDir);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_FALSE(isDir, NS_ERROR_FILE_IS_DIRECTORY);
+
+    if (mName.IsEmpty()) {
+      file->GetLeafName(mName);
+    }
+
+    domFile = new nsDOMFileFile(file);
+  }
+  
+  // XXXkhuey this is terrible
+  if (mContentType.IsEmpty()) {
+    domFile->GetType(mContentType);
+  }
+
+  BlobSet blobSet;
+  blobSet.AppendBlob(domFile);
+  mBlobs = blobSet.GetBlobs();
 
   return NS_OK;
 }

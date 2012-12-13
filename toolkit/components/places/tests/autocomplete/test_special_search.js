@@ -52,7 +52,8 @@ addPageBook(11, 1, 1, [1]); // title and url
 // visits are 0,1,2,3,5,10
 removePages([4,6,7,8,9,11]);
 // Set some pages as typed
-markTyped([0,3,10]);
+markTyped([0,10], 0);
+markTyped([3], 1);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test

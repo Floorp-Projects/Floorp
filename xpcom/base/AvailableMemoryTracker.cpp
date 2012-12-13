@@ -27,7 +27,7 @@
 #endif
 
 #if defined(MOZ_MEMORY)
-#   include "jemalloc.h"
+#   include "mozmemory.h"
 #endif  // MOZ_MEMORY
 
 using namespace mozilla;
@@ -498,9 +498,7 @@ nsJemallocFreeDirtyPagesRunnable::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#if defined(MOZ_JEMALLOC)
-  mallctl("arenas.purge", nullptr, 0, nullptr, 0);
-#elif defined(MOZ_MEMORY)
+#if defined(MOZ_MEMORY)
   jemalloc_free_dirty_pages();
 #endif
 

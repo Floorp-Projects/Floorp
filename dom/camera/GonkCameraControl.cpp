@@ -29,10 +29,11 @@
 #include "nsThread.h"
 #include <media/MediaProfiles.h>
 #include "mozilla/FileUtils.h"
+#include "mozilla/Services.h"
 #include "nsAlgorithm.h"
 #include <media/mediaplayer.h>
-#include "nsDirectoryServiceDefs.h" // for NS_GetSpecialDirectory
 #include "nsPrintfCString.h"
+#include "nsIObserverService.h"
 #include "DOMCameraManager.h"
 #include "GonkCameraHwMgr.h"
 #include "DOMCameraCapabilities.h"
@@ -193,9 +194,9 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraT
   , mDiscardedFrameCount(0)
   , mMediaProfiles(nullptr)
   , mRecorder(nullptr)
-  , mVideoFile()
   , mProfileManager(nullptr)
   , mRecorderProfile(nullptr)
+  , mVideoFile(nullptr)
 {
   // Constructor runs on the main thread...
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -842,10 +843,16 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
    */
   nsCOMPtr<nsIFile> filename = aStartRecording->mFolder;
   filename->AppendRelativePath(aStartRecording->mFilename);
+  mVideoFile = new DeviceStorageFile(NS_LITERAL_STRING("videos"), filename);
 
   nsAutoCString nativeFilename;
   filename->GetNativePath(nativeFilename);
   DOM_CAMERA_LOGI("Video filename is '%s'\n", nativeFilename.get());
+
+  if (!mVideoFile->IsSafePath()) {
+    DOM_CAMERA_LOGE("Invalid video file name\n");
+    return NS_ERROR_INVALID_ARG;
+  }
 
   ScopedClose fd(open(nativeFilename.get(), O_RDWR | O_CREAT, 0644));
   if (fd < 0) {
@@ -864,13 +871,43 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
   return NS_OK;
 }
 
+class RecordingComplete : public nsRunnable
+{
+public:
+  RecordingComplete(DeviceStorageFile* aFile, nsACString& aType)
+    : mFile(aFile)
+    , mType(aType)
+  { }
+
+  ~RecordingComplete() { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsString data;
+    CopyASCIItoUTF16(mType, data);
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    obs->NotifyObservers(mFile, "file-watcher-update", data.get());
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<DeviceStorageFile> mFile;
+  nsCString mType;
+};
+
 nsresult
 nsGonkCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
 {
   mRecorder->stop();
   delete mRecorder;
   mRecorder = nullptr;
-  return NS_OK;
+
+  // notify DeviceStorage that the new video file is closed and ready
+  nsCString type(mRecorderProfile->GetFileMimeType());
+  nsCOMPtr<nsIRunnable> recordingComplete = new RecordingComplete(mVideoFile, type);
+  return NS_DispatchToMainThread(recordingComplete, NS_DISPATCH_NORMAL);
 }
 
 void

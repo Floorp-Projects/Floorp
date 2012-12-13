@@ -22,9 +22,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
     // not be nested.
     bool inCall_;
-    uint32 args_;
-    uint32 passedArgs_;
-    uint32 stackForCall_;
+    uint32_t args_;
+    uint32_t passedArgs_;
+    uint32_t stackForCall_;
     bool dynamicAlignment_;
     bool enoughMemory_;
 
@@ -42,7 +42,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return Operand(address.base, address.index, address.scale, address.offset + 4);
     }
 
-    void setupABICall(uint32 args);
+    void setupABICall(uint32_t args);
 
   public:
     using MacroAssemblerX86Shared::Push;
@@ -272,6 +272,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
         return cond;
     }
+    Condition testMagic(Condition cond, const Operand &operand) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToType(operand), ImmTag(JSVAL_TAG_MAGIC));
+        return cond;
+    }
     Condition testPrimitive(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));
@@ -354,12 +359,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////
-    void reserveStack(uint32 amount) {
+    void reserveStack(uint32_t amount) {
         if (amount)
             subl(Imm32(amount), StackPointer);
         framePushed_ += amount;
     }
-    void freeStack(uint32 amount) {
+    void freeStack(uint32_t amount) {
         JS_ASSERT(amount <= framePushed_);
         if (amount)
             addl(Imm32(amount), StackPointer);
@@ -459,7 +464,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(src, Operand(address));
     }
 
-    void setStackArg(const Register &reg, uint32 arg) {
+    void setStackArg(const Register &reg, uint32_t arg) {
         movl(reg, Operand(esp, arg * STACK_SLOT_SIZE));
     }
 
@@ -698,11 +703,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // consistent view of the stack displacement. It is okay to call "push"
     // manually, however, if the stack alignment were to change, the macro
     // assembler should be notified before starting a call.
-    void setupAlignedABICall(uint32 args);
+    void setupAlignedABICall(uint32_t args);
 
     // Sets up an ABI call for when the alignment is not known. This may need a
     // scratch register.
-    void setupUnalignedABICall(uint32 args, const Register &scratch);
+    void setupUnalignedABICall(uint32_t args, const Register &scratch);
 
     // Arguments must be assigned to a C/C++ call in order. They are moved
     // in parallel immediately before performing the call. This process may

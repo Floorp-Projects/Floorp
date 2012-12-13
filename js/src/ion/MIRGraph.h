@@ -44,7 +44,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind);
     bool init();
     void copySlots(MBasicBlock *from);
-    bool inherit(MBasicBlock *pred);
+    bool inherit(MBasicBlock *pred, uint32_t popped);
     bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
@@ -53,14 +53,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
 
     // Sets a slot, taking care to rewrite copies.
-    void setSlot(uint32 slot, MDefinition *ins);
+    void setSlot(uint32_t slot, MDefinition *ins);
 
     // Pushes a copy of a local variable or argument.
-    void pushVariable(uint32 slot);
+    void pushVariable(uint32_t slot);
 
     // Sets a variable slot to the top of the stack, correctly creating copies
     // as needed.
-    void setVariable(uint32 slot);
+    void setVariable(uint32_t slot);
 
   public:
     ///////////////////////////////////////////////////////
@@ -71,6 +71,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock *New(MIRGraph &graph, CompileInfo &info,
                             MBasicBlock *pred, jsbytecode *entryPc, Kind kind);
+    static MBasicBlock *NewPopN(MIRGraph &graph, CompileInfo &info,
+                                MBasicBlock *pred, jsbytecode *entryPc, Kind kind, uint32_t popn);
     static MBasicBlock *NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
                                            MBasicBlock *pred, jsbytecode *entryPc,
                                            MResumePoint *resumePoint);
@@ -80,7 +82,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     bool dominates(MBasicBlock *other);
 
-    void setId(uint32 id) {
+    void setId(uint32_t id) {
         id_ = id;
     }
     void setEarlyAbort() {
@@ -93,19 +95,19 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return earlyAbort_;
     }
     // Move the definition to the top of the stack.
-    void pick(int32 depth);
+    void pick(int32_t depth);
 
     // Exchange 2 stack slots at the defined depth
-    void swapAt(int32 depth);
+    void swapAt(int32_t depth);
 
     // Gets the instruction associated with various slot types.
-    MDefinition *peek(int32 depth);
+    MDefinition *peek(int32_t depth);
 
     MDefinition *scopeChain();
 
     // Initializes a slot value; must not be called for normal stack
     // operations, as it will not create new SSA names for copies.
-    void initSlot(uint32 index, MDefinition *ins);
+    void initSlot(uint32_t index, MDefinition *ins);
 
     // Discard the slot at the given depth, lowering all slots above.
     void shimmySlots(int discardDepth);
@@ -116,22 +118,22 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Sets the instruction associated with various slot types. The
     // instruction must lie at the top of the stack.
-    void setLocal(uint32 local);
-    void setArg(uint32 arg);
-    void setSlot(uint32 slot);
+    void setLocal(uint32_t local);
+    void setArg(uint32_t arg);
+    void setSlot(uint32_t slot);
 
     // Rewrites a slot directly, bypassing the stack transition. This should
     // not be used under most circumstances.
-    void rewriteSlot(uint32 slot, MDefinition *ins);
+    void rewriteSlot(uint32_t slot, MDefinition *ins);
 
     // Rewrites a slot based on its depth (same as argument to peek()).
-    void rewriteAtDepth(int32 depth, MDefinition *ins);
+    void rewriteAtDepth(int32_t depth, MDefinition *ins);
 
     // Tracks an instruction as being pushed onto the operand stack.
     void push(MDefinition *ins);
-    void pushArg(uint32 arg);
-    void pushLocal(uint32 local);
-    void pushSlot(uint32 slot);
+    void pushArg(uint32_t arg);
+    void pushLocal(uint32_t local);
+    void pushSlot(uint32_t slot);
     void setScopeChain(MDefinition *ins);
 
     // Returns the top of the stack, then decrements the virtual stack pointer.
@@ -152,6 +154,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // depth as the entry state to this block. Adding a predecessor
     // automatically creates phi nodes and rewrites uses as needed.
     bool addPredecessor(MBasicBlock *pred);
+    bool addPredecessorPopN(MBasicBlock *pred, uint32_t popped);
 
     // Stranger utilities used for inlining.
     bool addPredecessorWithoutPhis(MBasicBlock *pred);
@@ -202,21 +205,21 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     jsbytecode *pc() const {
         return pc_;
     }
-    uint32 id() const {
+    uint32_t id() const {
         return id_;
     }
-    uint32 numPredecessors() const {
+    uint32_t numPredecessors() const {
         return predecessors_.length();
     }
 
-    uint32 domIndex() const {
+    uint32_t domIndex() const {
         return domIndex_;
     }
-    void setDomIndex(uint32 d) {
+    void setDomIndex(uint32_t d) {
         domIndex_ = d;
     }
 
-    MBasicBlock *getPredecessor(uint32 i) const {
+    MBasicBlock *getPredecessor(uint32_t i) const {
         return predecessors_[i];
     }
     MControlInstruction *lastIns() const {
@@ -277,10 +280,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return kind_ == SPLIT_EDGE;
     }
 
-    uint32 stackDepth() const {
+    uint32_t stackDepth() const {
         return stackPosition_;
     }
-    void setStackDepth(uint32 depth) {
+    void setStackDepth(uint32_t depth) {
         stackPosition_ = depth;
     }
     bool isMarked() const {
@@ -331,7 +334,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // This function retrieves the internal instruction associated with a
     // slot, and should not be used for normal stack operations. It is an
     // internal helper that is also used to enhance spew.
-    MDefinition *getSlot(uint32 index);
+    MDefinition *getSlot(uint32_t index);
 
     MResumePoint *entryResumePoint() const {
         return entryResumePoint_;
@@ -361,10 +364,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock *successorWithPhis() const {
         return successorWithPhis_;
     }
-    uint32 positionInPhiSuccessor() const {
+    uint32_t positionInPhiSuccessor() const {
         return positionInPhiSuccessor_;
     }
-    void setSuccessorWithPhis(MBasicBlock *successor, uint32 id) {
+    void setSuccessorWithPhis(MBasicBlock *successor, uint32_t id) {
         successorWithPhis_ = successor;
         positionInPhiSuccessor_ = id;
     }
@@ -380,10 +383,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return loopHeader_;
     }
 
-    void setLoopDepth(uint32 loopDepth) {
+    void setLoopDepth(uint32_t loopDepth) {
         loopDepth_ = loopDepth;
     }
-    uint32 loopDepth() const {
+    uint32_t loopDepth() const {
         return loopDepth_;
     }
 
@@ -410,18 +413,18 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
     InlineForwardList<MPhi> phis_;
     FixedList<MDefinition *> slots_;
-    uint32 stackPosition_;
+    uint32_t stackPosition_;
     MControlInstruction *lastIns_;
     jsbytecode *pc_;
-    uint32 id_;
-    uint32 domIndex_; // Index in the dominator tree.
+    uint32_t id_;
+    uint32_t domIndex_; // Index in the dominator tree.
     LBlock *lir_;
     MStart *start_;
     MResumePoint *entryResumePoint_;
     MBasicBlock *successorWithPhis_;
-    uint32 positionInPhiSuccessor_;
+    uint32_t positionInPhiSuccessor_;
     Kind kind_;
-    uint32 loopDepth_;
+    uint32_t loopDepth_;
 
     // Utility mark for traversal algorithms.
     bool mark_;
@@ -445,8 +448,8 @@ class MIRGraph
     InlineList<MBasicBlock> blocks_;
     TempAllocator *alloc_;
     MIRGraphExits *exitAccumulator_;
-    uint32 blockIdGen_;
-    uint32 idGen_;
+    uint32_t blockIdGen_;
+    uint32_t idGen_;
     MBasicBlock *osrBlock_;
     MStart *osrStart_;
 
@@ -545,7 +548,7 @@ class MIRGraph
         return numBlocks_;
     }
 #endif
-    uint32 numBlockIds() const {
+    uint32_t numBlockIds() const {
         return blockIdGen_;
     }
     void allocDefinitionId(MDefinition *ins) {
@@ -554,7 +557,7 @@ class MIRGraph
         idGen_ += 2;
         ins->setId(idGen_);
     }
-    uint32 getMaxInstructionId() {
+    uint32_t getMaxInstructionId() {
         return idGen_;
     }
     MResumePoint *entryResumePoint() {

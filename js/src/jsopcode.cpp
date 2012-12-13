@@ -1192,7 +1192,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
     if (fun && fun->hasScript()) {
-        if (!SetPrinterLocalNames(cx, fun->nonLazyScript().unsafeGet(), jp)) {
+        if (!SetPrinterLocalNames(cx, fun->nonLazyScript(), jp)) {
             js_DestroyPrinter(jp);
             return NULL;
         }
@@ -1853,7 +1853,7 @@ GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
     LOCAL_ASSERT_RV(slot < jp->script->bindings.count(), NULL);
-    LOCAL_ASSERT_RV(jp->script == jp->fun->nonLazyScript().unsafeGet(), NULL);
+    LOCAL_ASSERT_RV(jp->script == jp->fun->nonLazyScript(), NULL);
     JSAtom *name = (*jp->localNames)[slot].name();
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -4812,10 +4812,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
                     outerLocalNames = jp->localNames;
-                    if (!SetPrinterLocalNames(cx, fun->nonLazyScript().unsafeGet(), jp))
+                    if (!SetPrinterLocalNames(cx, fun->nonLazyScript(), jp))
                         return NULL;
 
-                    inner = fun->nonLazyScript().unsafeGet();
+                    inner = fun->nonLazyScript();
                     if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
                         js_delete(jp->localNames);
                         jp->localNames = outerLocalNames;
@@ -6224,7 +6224,7 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
     *valuepc = NULL;
 
     PCStack pcstack;
-    if (!pcstack.init(cx, iter.script().unsafeGet(), current))
+    if (!pcstack.init(cx, iter.script(), current))
         return false;
 
     if (spindex == JSDVG_SEARCH_STACK) {

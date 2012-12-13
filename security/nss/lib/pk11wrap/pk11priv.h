@@ -28,7 +28,7 @@ SEC_BEGIN_PROTOS
 PK11SlotList * PK11_NewSlotList(void);
 PK11SlotList * PK11_GetPrivateKeyTokens(CK_MECHANISM_TYPE type,
 						PRBool needRW,void *wincx);
-SECStatus PK11_AddSlotToList(PK11SlotList *list,PK11SlotInfo *slot);
+SECStatus PK11_AddSlotToList(PK11SlotList *list,PK11SlotInfo *slot, PRBool sorted);
 SECStatus PK11_DeleteSlotFromList(PK11SlotList *list,PK11SlotListElement *le);
 PK11SlotListElement *PK11_FindSlotElement(PK11SlotList *list,
 							PK11SlotInfo *slot);
@@ -59,8 +59,9 @@ void PK11_CleanKeyList(PK11SlotInfo *slot);
 /************************************************************
  *  Slot Password Management
  ************************************************************/
-SECStatus PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx,
-				PRBool contextSpecific);
+SECStatus PK11_DoPassword(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
+			PRBool loadCerts, void *wincx, PRBool alreadyLocked,
+			PRBool contextSpecific);
 SECStatus PK11_VerifyPW(PK11SlotInfo *slot,char *pw);
 void PK11_HandlePasswordCheck(PK11SlotInfo *slot,void *wincx);
 void PK11_SetVerifyPasswordFunc(PK11VerifyPasswordFunc func);
@@ -121,7 +122,8 @@ CK_OBJECT_HANDLE PK11_MatchItem(PK11SlotInfo *slot,CK_OBJECT_HANDLE peer,
 						CK_OBJECT_CLASS o_class); 
 CK_BBOOL PK11_HasAttributeSet( PK11SlotInfo *slot,
 			       CK_OBJECT_HANDLE id,
-			       CK_ATTRIBUTE_TYPE type );
+			       CK_ATTRIBUTE_TYPE type,
+			       PRBool haslock );
 CK_RV PK11_GetAttributes(PLArenaPool *arena,PK11SlotInfo *slot,
 			 CK_OBJECT_HANDLE obj,CK_ATTRIBUTE *attr, int count);
 int PK11_NumberCertsForCertSubject(CERTCertificate *cert);

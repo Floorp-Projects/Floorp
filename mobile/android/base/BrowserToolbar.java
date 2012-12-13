@@ -6,10 +6,8 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.graphics.Rect;
@@ -22,8 +20,6 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
-import android.view.MotionEvent;
-import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
@@ -39,7 +35,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
@@ -430,15 +425,86 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return mInflater.inflate(R.layout.tabs_counter, null);
     }
 
+    private int prepareAwesomeBarAnimation() {
+        // Keep the entry highlighted during the animation
+        mAwesomeBar.setSelected(true);
+
+        // Expand the entry to fill all the horizontal space available during the
+        // animation. The fake right edge will slide on top of it to give the effect
+        // of expanding the entry.
+        MarginLayoutParams entryParams = (MarginLayoutParams) mAwesomeBarEntry.getLayoutParams();
+        mAwesomeBarEntryRightMargin = entryParams.rightMargin;
+        entryParams.rightMargin = 0;
+        mAwesomeBarEntry.requestLayout();
+
+        // Remove any curves from the toolbar background and expand it to fill all
+        // the horizontal space.
+        MarginLayoutParams barParams = (MarginLayoutParams) mAddressBarBg.getLayoutParams();
+        mAddressBarBgRightMargin = barParams.rightMargin;
+        barParams.rightMargin = 0;
+        mAddressBarBgCurveTowards = mAddressBarBg.getCurveTowards();
+        mAddressBarBg.setCurveTowards(BrowserToolbarBackground.CurveTowards.NONE);
+        mAddressBarBg.requestLayout();
+
+        // If we don't have any menu_items, then we simply slide all elements on the
+        // rigth side of the toolbar out of screen.
+        int translation = mAwesomeBarEntryRightMargin;
+
+        if (mActionItemBar.getVisibility() == View.VISIBLE) {
+            // If the toolbar has action items (e.g. on the tablet UI), the translation will
+            // be in relation to the left side of their container (i.e. mActionItemBar).
+            MarginLayoutParams itemBarParams = (MarginLayoutParams) mActionItemBar.getLayoutParams();
+            translation = itemBarParams.rightMargin + mActionItemBar.getWidth() - entryParams.leftMargin;
+
+            // Expand the whole entry container to fill all the horizontal space available
+            View awesomeBarParent = (View) mAwesomeBar.getParent();
+            mAwesomeBarParams = (LayoutParams) awesomeBarParent.getLayoutParams();
+            awesomeBarParent.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                              ViewGroup.LayoutParams.MATCH_PARENT));
+
+            // Align the fake right edge to the right side of the entry bar
+            MarginLayoutParams rightEdgeParams = (MarginLayoutParams) mAwesomeBarRightEdge.getLayoutParams();
+            rightEdgeParams.rightMargin = itemBarParams.rightMargin + mActionItemBar.getWidth() - 100;
+            mAwesomeBarRightEdge.requestLayout();
+        }
+
+        // Make the right edge visible to start the animation
+        mAwesomeBarRightEdge.setVisibility(View.VISIBLE);
+
+        return translation;
+    }
+
     public void fromAwesomeBarSearch() {
         if (mActivity.hasTabsSideBar() || Build.VERSION.SDK_INT < 11) {
             return;
         }
 
+        AnimatorProxy proxy = null;
+
+        // If the awesomebar entry is not selected at this point, this means that
+        // we had to reinflate the toolbar layout for some reason (device rotation
+        // while in awesome screen, activity was killed in background, etc). In this
+        // case, we have to ensure the toolbar is in the correct initial state to
+        // shrink back.
+        if (!mAwesomeBar.isSelected()) {
+            int translation = prepareAwesomeBarAnimation();
+
+            proxy = AnimatorProxy.create(mAwesomeBarRightEdge);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mTabs);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mTabsCount);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mMenu);
+            proxy.setTranslationX(translation);
+            proxy = AnimatorProxy.create(mActionItemBar);
+            proxy.setTranslationX(translation);
+        }
+
         // Restore opacity of content elements in the toolbar immediatelly
         // so that the response is immediate from user interaction in the
         // awesome screen.
-        AnimatorProxy proxy = AnimatorProxy.create(mFavicon);
+        proxy = AnimatorProxy.create(mFavicon);
         proxy.setAlpha(1);
         proxy = AnimatorProxy.create(mSiteSecurity);
         proxy.setAlpha(1);
@@ -491,7 +557,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 mAddressBarBg.requestLayout();
 
                 // If there are action bar items in the toolbar, we have to restore the
-                // alignment of the entry in relation to them.
+                // alignment of the entry in relation to them. mAwesomeBarParams might
+                // be null if the activity holding the toolbar is killed before returning
+                // from awesome screen (e.g. "Don't keep activities" is on)
                 if (mActionItemBar.getVisibility() == View.VISIBLE)
                     ((View) mAwesomeBar.getParent()).setLayoutParams(mAwesomeBarParams);
 
@@ -529,47 +597,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
 
-        // Keep the entry highlighted during the animation
-        mAwesomeBar.setSelected(true);
-
-        // Expand the entry to fill all the horizontal space available during the
-        // animation. The fake right edge will slide on top of it to give the effect
-        // of expanding the entry.
-        MarginLayoutParams entryParams = (MarginLayoutParams) mAwesomeBarEntry.getLayoutParams();
-        mAwesomeBarEntryRightMargin = entryParams.rightMargin;
-        entryParams.rightMargin = 0;
-        mAwesomeBarEntry.requestLayout();
-
-        // Remove any curves from the toolbar background and expand it to fill all
-        // the horizontal space.
-        MarginLayoutParams barParams = (MarginLayoutParams) mAddressBarBg.getLayoutParams();
-        mAddressBarBgRightMargin = barParams.rightMargin;
-        barParams.rightMargin = 0;
-        mAddressBarBgCurveTowards = mAddressBarBg.getCurveTowards();
-        mAddressBarBg.setCurveTowards(BrowserToolbarBackground.CurveTowards.NONE);
-        mAddressBarBg.requestLayout();
-
-        // If we don't have any menu_items, then we simply slide all elements on the
-        // rigth side of the toolbar out of screen.
-        int translation = mAwesomeBarEntryRightMargin;
+        int translation = prepareAwesomeBarAnimation();
 
         if (mActionItemBar.getVisibility() == View.VISIBLE) {
-            // If the toolbar has action items (e.g. on the tablet UI), the translation will
-            // be in relation to the left side of their container (i.e. mActionItemBar).
-            MarginLayoutParams itemBarParams = (MarginLayoutParams) mActionItemBar.getLayoutParams();
-            translation = itemBarParams.rightMargin + mActionItemBar.getWidth() - entryParams.leftMargin;
-
-            // Expand the whole entry container to fill all the horizontal space available
-            View awesomeBarParent = (View) mAwesomeBar.getParent();
-            mAwesomeBarParams = (LayoutParams) awesomeBarParent.getLayoutParams();
-            awesomeBarParent.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                                              ViewGroup.LayoutParams.MATCH_PARENT));
-
-            // Align the fake right edge to the right side of the entry bar
-            MarginLayoutParams rightEdgeParams = (MarginLayoutParams) mAwesomeBarRightEdge.getLayoutParams();
-            rightEdgeParams.rightMargin = itemBarParams.rightMargin + mActionItemBar.getWidth() - 100;
-            mAwesomeBarRightEdge.requestLayout();
-
             contentAnimator.attach(mFavicon,
                                    PropertyAnimator.Property.ALPHA,
                                    0);
@@ -580,9 +610,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                    PropertyAnimator.Property.ALPHA,
                                    0);
         }
-
-        // Make the right edge visible to start the animation
-        mAwesomeBarRightEdge.setVisibility(View.VISIBLE);
 
         // Fade out all controls inside the toolbar
         contentAnimator.attach(mForward,
@@ -1087,65 +1114,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
             onLightweightThemeChanged();
-        }
-    }
-
-    // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
-    public static class MenuPopup extends PopupWindow {
-        private RelativeLayout mPanel;
-        private int mYOffset;
-
-        public MenuPopup(Context context) {
-            super(context);
-            setFocusable(true);
-
-            // The arrow height is constant for both orientations.
-            mYOffset = (int) (context.getResources().getDimension(R.dimen.menu_popup_offset));
-
-            // Setting a null background makes the popup to not close on touching outside.
-            setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            setWindowLayoutMode(View.MeasureSpec.makeMeasureSpec(context.getResources().getDimensionPixelSize(R.dimen.menu_popup_width), View.MeasureSpec.AT_MOST),
-                                ViewGroup.LayoutParams.WRAP_CONTENT);
-
-            LayoutInflater inflater = LayoutInflater.from(context);
-            RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.menu_popup, null);
-            setContentView(layout);
-
-            mPanel = (RelativeLayout) layout.findViewById(R.id.menu_panel);
-        }
-
-        public void setPanelView(View view) {
-            mPanel.removeAllViews();
-            mPanel.addView(view);
-        }
-
-        @Override
-        public void showAsDropDown(View anchor) {
-            showAsDropDown(anchor, 0, -mYOffset);
-        }
-    }
-
-    private class TailTouchDelegate extends TouchDelegate {
-        public TailTouchDelegate(Rect bounds, View delegateView) {
-            super(bounds, delegateView);
-        }
-
-        @Override 
-        public boolean onTouchEvent(MotionEvent event) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    // Android bug 36445: Touch Delegation not reset on ACTION_DOWN.
-                    if (!super.onTouchEvent(event)) {
-                        MotionEvent cancelEvent = MotionEvent.obtain(event);
-                        cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
-                        super.onTouchEvent(cancelEvent);
-                        return false;
-                     } else {
-                        return true;
-                     }
-                default:
-                    return super.onTouchEvent(event);
-            }
         }
     }
 }

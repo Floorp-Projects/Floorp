@@ -7,6 +7,7 @@
 #define JSCUSTOMOBJECTBUILDER_H
 
 #include <ostream>
+#include <stdlib.h>
 #include "JSAObjectBuilder.h"
 
 class JSCustomObject;

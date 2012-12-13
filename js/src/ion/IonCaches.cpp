@@ -470,7 +470,7 @@ struct GetNativePropertyStub
         JS_ASSERT_IF(!callNative, IsCacheableGetPropCallPropertyOp(obj, holder, shape));
 
         // TODO: ensure stack is aligned?
-        DebugOnly<uint32> initialStack = masm.framePushed();
+        DebugOnly<uint32_t> initialStack = masm.framePushed();
 
         Label success, exception;
 
@@ -1019,7 +1019,7 @@ IonCacheSetProperty::attachSetterCall(JSContext *cx, IonScript *ion,
     Register argVpReg        = regSet.takeGeneral();
 
     // Ensure stack is aligned.
-    DebugOnly<uint32> initialStack = masm.framePushed();
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
 
     Label success, exception;
 
@@ -1278,6 +1278,9 @@ IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject hol
         return false;
 
     if (shape->hasDefaultSetter())
+        return false;
+
+    if (!shape->writable())
         return false;
 
     // We only handle propertyOps for now, so fail if we have SetterValue
@@ -1626,7 +1629,7 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         CallObject *callObj = &scopeObj->asCall();
         if (!callObj->isForEval()) {
             RawFunction fun = &callObj->callee();
-            RawScript script = fun->nonLazyScript().get(nogc);
+            UnrootedScript script = fun->nonLazyScript();
             if (!script->funHasExtensibleScope)
                 return;
         }

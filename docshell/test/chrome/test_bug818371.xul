@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=818371
+-->
+<window title="Mozilla Bug 818371"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=818371"
+     target="_blank">Mozilla Bug 818371</a>
+  </body>
+
+  <browser id="b" src="data:text/html,&lt;iframe&gt;&lt;/iframe&gt;"></browser>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 818371 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    function listener(e) {
+      ok(e.target.hidden, "Document should now be hidden");
+      ok(e.target.defaultView.frames[0].document.hidden,
+         "Subdocument should now be hidden");
+      e.target.removeEventListener("visibilitychange", listener);
+      SimpleTest.finish();
+    }
+
+    var doc = frames[0].document;
+    ok(!doc.hidden, "Document should be visible");
+    ok(!frames[0].frames[0].document.hidden,
+       "Subdocument should now be hidden");
+    doc.addEventListener("visibilitychange", listener);
+    $("b").docShell.isActive = false;
+  });
+
+  ]]>
+  </script>
+</window>

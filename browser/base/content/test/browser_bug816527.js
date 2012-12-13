@@ -18,19 +18,19 @@ function test() {
 
   testOnWindow({}, function(aNormalWindow) {
     testOnWindow({private: true}, function(aPrivateWindow) {
-      runTest(aNormalWindow, aPrivateWindow, function() {
+      runTest(aNormalWindow, aPrivateWindow, false, function() {
         aNormalWindow.close();
         aPrivateWindow.close();
         testOnWindow({}, function(aNormalWindow) {
           testOnWindow({private: true}, function(aPrivateWindow) {
-            runTest(aPrivateWindow, aNormalWindow, function() {
+            runTest(aPrivateWindow, aNormalWindow, false, function() {
               aNormalWindow.close();
               aPrivateWindow.close();
               testOnWindow({private: true}, function(aPrivateWindow) {
-                runTest(aPrivateWindow, aPrivateWindow, function() {
+                runTest(aPrivateWindow, aPrivateWindow, false, function() {
                   aPrivateWindow.close();
                   testOnWindow({}, function(aNormalWindow) {
-                    runTest(aNormalWindow, aNormalWindow, function() {
+                    runTest(aNormalWindow, aNormalWindow, true, function() {
                       aNormalWindow.close();
                       finish();
                     });
@@ -44,7 +44,7 @@ function test() {
     });
   });
 
-  function runTest(aSourceWindow, aDestWindow, aCallback) {
+  function runTest(aSourceWindow, aDestWindow, aExpectSuccess, aCallback) {
     // Open the base tab
     let baseTab = aSourceWindow.gBrowser.addTab(testURL);
     baseTab.linkedBrowser.addEventListener("load", function() {
@@ -91,21 +91,25 @@ function test() {
         function onTabClose(aEvent) {
           aDestWindow.gBrowser.tabContainer.removeEventListener("TabClose", onTabClose, false);
           aDestWindow.gBrowser.removeEventListener("load", onLoad, false);
+          clearTimeout(timeout);
           // Should only happen when we expect success
-          ok(false, "Tab closed as expected");
+          ok(aExpectSuccess, "Tab closed as expected");
           aCallback();
         }
         function onLoad(aEvent) {
           aDestWindow.gBrowser.tabContainer.removeEventListener("TabClose", onTabClose, false);
           aDestWindow.gBrowser.removeEventListener("load", onLoad, false);
+          clearTimeout(timeout);
           // Should only happen when we expect success
-          ok(false, "Tab loaded as expected");
+          ok(aExpectSuccess, "Tab loaded as expected");
           aCallback();
         }
 
         aDestWindow.gBrowser.tabContainer.addEventListener("TabClose", onTabClose, false);
         aDestWindow.gBrowser.addEventListener("load", onLoad, false);
-        setTimeout(function() {
+        let timeout = setTimeout(function() {
+          aDestWindow.gBrowser.tabContainer.removeEventListener("TabClose", onTabClose, false);
+          aDestWindow.gBrowser.removeEventListener("load", onLoad, false);
           aCallback();
         }, 500);
 

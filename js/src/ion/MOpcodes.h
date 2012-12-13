@@ -30,6 +30,7 @@ namespace ion {
     _(RecompileCheck)                                                       \
     _(DefVar)                                                               \
     _(CreateThis)                                                           \
+    _(CreateThisWithTemplate)                                               \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \
@@ -71,6 +72,7 @@ namespace ion {
     _(NewSlots)                                                             \
     _(NewArray)                                                             \
     _(NewObject)                                                            \
+    _(NewDeclEnvObject)                                                     \
     _(NewCallObject)                                                        \
     _(NewStringObject)                                                      \
     _(InitProp)                                                             \

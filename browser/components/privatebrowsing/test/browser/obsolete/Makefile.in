@@ -24,10 +24,8 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_searchbar.js \
 		browser_privatebrowsing_sslsite_transition.js \
 		$(filter disabled-since-it-no-longer-makes-sense, browser_privatebrowsing_transition.js) \
-		$(filter disabled--bug-564934, browser_privatebrowsing_downloadmonitor.js) \
 		browser_privatebrowsing_urlbarundo.js \
 		browser_privatebrowsing_viewsource.js \
-		staller.sjs \
 		$(NULL)
 
 # Turn off private browsing tests that perma-timeout on Linux.

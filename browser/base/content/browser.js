@@ -16,9 +16,7 @@ var gPrevCharset = null;
 var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
-var gDownloadMgr = null;
 var gContextMenu = null; // nsContextMenu instance
-var gStartupRan = false;
 
 #ifndef XP_MACOSX
 var gEditUIVisible = true;
@@ -993,6 +991,7 @@ var gBrowserInit = {
 
     // Note that the XBL binding is untrusted
     gBrowser.addEventListener("PluginBindingAttached", gPluginHandler, true, true);
+    gBrowser.addEventListener("PluginScripted",        gPluginHandler, true);
     gBrowser.addEventListener("PluginCrashed",         gPluginHandler, true);
     gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
 
@@ -1181,7 +1180,7 @@ var gBrowserInit = {
     this._boundDelayedStartup = this._delayedStartup.bind(this, uriToLoad, mustLoadSidebar);
     window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
 
-    gStartupRan = true;
+    this._loadHandled = true;
   },
 
   _cancelDelayedStartup: function () {
@@ -1319,13 +1318,16 @@ var gBrowserInit = {
 #endif
 
     // initialize the session-restore service (in case it's not already running)
-    try {
-      Cc["@mozilla.org/browser/sessionstore;1"]
-        .getService(Ci.nsISessionStore)
-        .init(window);
-    } catch (ex) {
-      dump("nsSessionStore could not be initialized: " + ex + "\n");
-    }
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    ss.init(window);
+
+    // Enable the Restore Last Session command if needed
+    if (ss.canRestoreLastSession
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+        && !PrivateBrowsingUtils.isWindowPrivate(window)
+#endif
+        )
+      goSetCommandEnabled("Browser:RestoreLastSession", true);
 
     PlacesToolbarHelper.init();
 
@@ -1339,8 +1341,7 @@ var gBrowserInit = {
     // If the user manually opens the download manager before the timeout, the
     // downloads will start right away, and getting the service again won't hurt.
     setTimeout(function() {
-      gDownloadMgr = Cc["@mozilla.org/download-manager;1"].
-                     getService(Ci.nsIDownloadManager);
+      Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
 
 #ifdef XP_WIN
       if (Win7Features) {
@@ -1502,7 +1503,7 @@ var gBrowserInit = {
     // In certain scenarios it's possible for unload to be fired before onload,
     // (e.g. if the window is being closed after browser.js loads but before the
     // load completes). In that case, there's nothing to do here.
-    if (!gStartupRan)
+    if (!this._loadHandled)
       return;
 
     gDevToolsBrowser.forgetBrowserWindow(window);
@@ -1663,8 +1664,6 @@ var gBrowserInit = {
     // initialize the sync UI
     gSyncUI.init();
 #endif
-
-    gStartupRan = true;
   },
 
   nonBrowserWindowShutdown: function() {
@@ -2462,7 +2461,11 @@ function BrowserOnAboutPageLoad(document) {
 
     let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
              getService(Components.interfaces.nsISessionStore);
-    if (ss.canRestoreLastSession)
+    if (ss.canRestoreLastSession
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+        && !PrivateBrowsingUtils.isWindowPrivate(window)
+#endif
+        )
       document.getElementById("launcher").setAttribute("session", "true");
 
     // Inject search engine and snippets URL.
@@ -4522,6 +4525,7 @@ var TabsProgressListener = {
         // Initialize the click-to-play state.
         aBrowser._clickToPlayDoorhangerShown = false;
         aBrowser._clickToPlayPluginsActivated = false;
+        aBrowser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_NONE;
       }
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }
@@ -6869,140 +6873,6 @@ var gIdentityHandler = {
     dt.setData("text/html", htmlString);
     dt.setDragImage(gProxyFavIcon, 16, 16);
   }
-};
-
-let DownloadMonitorPanel = {
-  //////////////////////////////////////////////////////////////////////////////
-  //// DownloadMonitorPanel Member Variables
-
-  _panel: null,
-  _activeStr: null,
-  _pausedStr: null,
-  _lastTime: Infinity,
-  _listening: false,
-
-  get DownloadUtils() {
-    delete this.DownloadUtils;
-    Cu.import("resource://gre/modules/DownloadUtils.jsm", this);
-    return this.DownloadUtils;
-  },
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// DownloadMonitorPanel Public Methods
-
-  /**
-   * Initialize the status panel and member variables
-   */
-  init: function DMP_init() {
-    // Initialize "private" member variables
-    this._panel = document.getElementById("download-monitor");
-
-    // Cache the status strings
-    this._activeStr = gNavigatorBundle.getString("activeDownloads1");
-    this._pausedStr = gNavigatorBundle.getString("pausedDownloads1");
-
-    gDownloadMgr.addListener(this);
-    this._listening = true;
-
-    this.updateStatus();
-  },
-
-  uninit: function DMP_uninit() {
-    if (this._listening)
-      gDownloadMgr.removeListener(this);
-  },
-
-  inited: function DMP_inited() {
-    return this._panel != null;
-  },
-
-  /**
-   * Update status based on the number of active and paused downloads
-   */
-  updateStatus: function DMP_updateStatus() {
-    if (!this.inited())
-      return;
-
-    let numActive = gDownloadMgr.activeDownloadCount;
-
-    // Hide the panel and reset the "last time" if there's no downloads
-    if (numActive == 0) {
-      this._panel.hidden = true;
-      this._lastTime = Infinity;
-
-      return;
-    }
-
-    // Find the download with the longest remaining time
-    let numPaused = 0;
-    let maxTime = -Infinity;
-    let dls = gDownloadMgr.activeDownloads;
-    while (dls.hasMoreElements()) {
-      let dl = dls.getNext();
-      if (dl.state == gDownloadMgr.DOWNLOAD_DOWNLOADING) {
-        // Figure out if this download takes longer
-        if (dl.speed > 0 && dl.size > 0)
-          maxTime = Math.max(maxTime, (dl.size - dl.amountTransferred) / dl.speed);
-        else
-          maxTime = -1;
-      }
-      else if (dl.state == gDownloadMgr.DOWNLOAD_PAUSED)
-        numPaused++;
-    }
-
-    // Get the remaining time string and last sec for time estimation
-    let timeLeft;
-    [timeLeft, this._lastTime] =
-      this.DownloadUtils.getTimeLeft(maxTime, this._lastTime);
-
-    // Figure out how many downloads are currently downloading
-    let numDls = numActive - numPaused;
-    let status = this._activeStr;
-
-    // If all downloads are paused, show the paused message instead
-    if (numDls == 0) {
-      numDls = numPaused;
-      status = this._pausedStr;
-    }
-
-    // Get the correct plural form and insert the number of downloads and time
-    // left message if necessary
-    status = PluralForm.get(numDls, status);
-    status = status.replace("#1", numDls);
-    status = status.replace("#2", timeLeft);
-
-    // Update the panel and show it
-    this._panel.label = status;
-    this._panel.hidden = false;
-  },
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIDownloadProgressListener
-
-  /**
-   * Update status for download progress changes
-   */
-  onProgressChange: function() {
-    this.updateStatus();
-  },
-
-  /**
-   * Update status for download state changes
-   */
-  onDownloadStateChange: function() {
-    this.updateStatus();
-  },
-
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownload) {
-  },
-
-  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) {
-  },
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadProgressListener]),
 };
 
 function getNotificationBox(aWindow) {

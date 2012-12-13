@@ -191,7 +191,7 @@ ArchiveReaderZipEvent::Exec()
     }
 
     // Read the name:
-    char* filename = (char*)PR_Malloc(filenameLen + 1);
+    nsAutoArrayPtr<char> filename(new char[filenameLen + 1]);
     rv = inputStream->Read(filename, filenameLen, &ret);
     if (NS_FAILED(rv) || ret != filenameLen) {
       return RunShare(NS_ERROR_UNEXPECTED);
@@ -203,8 +203,6 @@ ArchiveReaderZipEvent::Exec()
     if (filename[filenameLen - 1] != '/') {
       mFileList.AppendElement(new ArchiveZipItem(filename, centralStruct, mOptions));
     }
-
-    PR_Free(filename);
 
     // Ignore the rest
     seekableStream->Seek(nsISeekableStream::NS_SEEK_CUR, extraLen + commentLen);

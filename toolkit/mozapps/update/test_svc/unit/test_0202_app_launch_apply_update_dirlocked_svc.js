@@ -130,7 +130,7 @@ function run_test() {
 
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
-                                    STATE_PENDING);
+                                    STATE_PENDING_SVC);
   let updates = getLocalUpdateString(patches, null, null, null, null, null,
                                      null, null, null, null, null, null,
                                      null, "true", channel);

@@ -39,6 +39,8 @@
 #include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
 #include "mozilla/Likely.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -178,9 +180,6 @@ nsTableFrame::Init(nsIContent*      aContent,
   const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
   bool borderCollapse = (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);
   SetBorderCollapse(borderCollapse);
-
-  // Transforms need to affect the outer frame, not the inner frame (bug 722777)
-  mState &= ~NS_FRAME_MAY_BE_TRANSFORMED;
 
   // Create the cell map if this frame is the first-in-flow.
   if (!aPrevInFlow) {
@@ -6362,7 +6361,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   if (!haveIntersect)
     return false;
   mDamageArea = nsIntRect(startColIndex, startRowIndex,
-                          1 + NS_ABS(int32_t(endColIndex - startColIndex)),
+                          1 + std::abs(int32_t(endColIndex - startColIndex)),
                           1 + endRowIndex - startRowIndex);
 
   Reset();
@@ -7298,8 +7297,9 @@ nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
     // XXXbz this doesn't handle outlines, does it?
     aFrame->InvalidateFrame();
     parent->InvalidateFrameWithRect(aOrigVisualOverflow + aOrigRect.TopLeft());
-  } else {
-    aFrame->InvalidateFrameWithRect(aOrigVisualOverflow);;
+  } else if (aOrigRect.Size() != aFrame->GetSize() ||
+             aOrigVisualOverflow.Size() != visualOverflow.Size()){
+    aFrame->InvalidateFrameWithRect(aOrigVisualOverflow);
     aFrame->InvalidateFrame();
     parent->InvalidateFrameWithRect(aOrigRect);;
     parent->InvalidateFrame();

@@ -2108,7 +2108,7 @@ AppendAuthorSheet(nsIStyleSheet *aSheet, void *aData)
 static void
 AppendSheetsToStyleSet(nsStyleSet* aStyleSet,
                        const nsCOMArray<nsIStyleSheet>& aSheets,
-                       nsStyleSet::sheetType aType) 
+                       nsStyleSet::sheetType aType)
 {
   for (int32_t i = aSheets.Count() - 1; i >= 0; --i) {
     aStyleSet->AppendStyleSheet(aType, aSheets[i]);
@@ -7063,7 +7063,7 @@ nsDocument::OnPageShow(bool aPersisted,
     SetImagesNeedAnimating(true);
   }
 
-  UpdateVisibilityState();
+  UpdateVisibilityState(true);
 
   nsCOMPtr<nsIDOMEventTarget> target = aDispatchStartTarget;
   if (!target) {
@@ -7125,7 +7125,7 @@ nsDocument::OnPageHide(bool aPersisted,
 
   mVisible = false;
 
-  UpdateVisibilityState();
+  UpdateVisibilityState(true);
 
   EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateFreezableElements(NotifyActivityChanged, nullptr);
@@ -7269,7 +7269,7 @@ nsDocument::RefreshLinkHrefs()
   // Reset all of our styled links.
   nsAutoScriptBlocker scriptBlocker;
   for (LinkArray::size_type i = 0; i < linksToNotify.Length(); i++) {
-    linksToNotify[i]->ResetLinkState(true);
+    linksToNotify[i]->ResetLinkState(true, linksToNotify[i]->ElementHasHref());
   }
 }
 
@@ -7290,7 +7290,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
 
   if (mCreatingStaticClone) {
     nsCOMPtr<nsILoadGroup> loadGroup;
-    
+
     // |mDocumentContainer| is the container of the document that is being
     // created and not the original container. See CreateStaticClone function().
     nsCOMPtr<nsIDocumentLoader> docLoader = do_QueryReferent(mDocumentContainer);
@@ -9482,21 +9482,35 @@ nsDocument::GetMozPointerLockElement(nsIDOMElement** aPointerLockedElement)
 #undef TOUCH_EVENT
 #undef EVENT
 
-void
-nsDocument::UpdateVisibilityState()
+/* virtual */ void
+nsDocument::UpdateVisibilityState(bool aFireEventSync)
 {
   VisibilityState oldState = mVisibilityState;
   mVisibilityState = GetVisibilityState();
   if (oldState != mVisibilityState) {
-    nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
-                                         NS_LITERAL_STRING("visibilitychange"),
-                                         /* bubbles = */ true,
-                                         /* cancelable = */ false);
-    nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
-                                         NS_LITERAL_STRING("mozvisibilitychange"),
-                                         /* bubbles = */ true,
-                                         /* cancelable = */ false);
+    if (aFireEventSync) {
+      FireVisibilityChangeEvent();
+    } else {
+      nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethod(this, &nsDocument::FireVisibilityChangeEvent);
+      NS_DispatchToMainThread(event);
+    }
+
+    EnumerateFreezableElements(NotifyActivityChanged, nullptr);
   }
+}
+
+void
+nsDocument::FireVisibilityChangeEvent()
+{
+  nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
+                                       NS_LITERAL_STRING("visibilitychange"),
+                                       /* bubbles = */ true,
+                                       /* cancelable = */ false);
+  nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
+                                       NS_LITERAL_STRING("mozvisibilitychange"),
+                                       /* bubbles = */ true,
+                                       /* cancelable = */ false);
 }
 
 nsDocument::VisibilityState
@@ -9515,14 +9529,6 @@ nsDocument::GetVisibilityState() const
   }
 
   return eVisible;
-}
-
-/* virtual */ void
-nsDocument::PostVisibilityUpdateEvent()
-{
-  nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &nsDocument::UpdateVisibilityState);
-  NS_DispatchToMainThread(event);
 }
 
 NS_IMETHODIMP

@@ -17,6 +17,8 @@ class AccessibleWrap;
 } // namespace a11y
 } // namespace mozilla
 
+struct MaiUtilClass;
+
 extern "C" {
 void actionInterfaceInitCB(AtkActionIface* aIface);
 void componentInterfaceInitCB(AtkComponentIface* aIface);

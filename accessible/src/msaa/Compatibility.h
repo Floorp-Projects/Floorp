@@ -51,7 +51,7 @@ private:
    * accessibility initialization.
    */
   static void Init();
-  friend class nsAccessNodeWrap;
+  friend void PlatformInit();
 
   /**
    * List of detected consumers of a11y (used for statistics/telemetry and compat)

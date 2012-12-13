@@ -190,7 +190,7 @@ PLDHashOperator HashTableOutput(const nsACString& aKey, PropertyValue* aValue, v
   EscapeToStream(streamClosure.mStream, (const char*)aKey.BeginReading());
   streamClosure.mStream << ":";
   aValue->SendToStream(streamClosure.mStream);
-  return PLDHashOperator::PL_DHASH_NEXT;
+  return PL_DHASH_NEXT;
 }
 
 std::ostream&
@@ -222,7 +222,7 @@ operator<<(std::ostream& stream, JSCustomArray* entry)
 PLDHashOperator HashTableFree(const nsACString& aKey, PropertyValue* aValue, void* stream)
 {
   delete aValue;
-  return PLDHashOperator::PL_DHASH_NEXT;
+  return PL_DHASH_NEXT;
 }
 
 JSCustomObject::~JSCustomObject()

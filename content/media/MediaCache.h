@@ -273,6 +273,9 @@ public:
   // We pass in the principal that was used to load this data.
   void NotifyDataReceived(int64_t aSize, const char* aData,
                           nsIPrincipal* aPrincipal);
+  // Notifies the cache that the current bytes should be written to disk.
+  // Called on the main thread.
+  void FlushPartialBlock();
   // Notifies the cache that the channel has closed with the given status.
   void NotifyDataEnded(nsresult aStatus);
 
@@ -415,6 +418,11 @@ private:
   // This method assumes that the cache monitor is held and can be called on
   // any thread.
   int64_t GetNextCachedDataInternal(int64_t aOffset);
+  // Writes |mPartialBlock| to disk.
+  // Used by |NotifyDataEnded| and |FlushPartialBlock|.
+  // If |aNotifyAll| is true, this function will wake up readers who may be
+  // waiting on the media cache monitor. Called on the main thread only.
+  void FlushPartialBlockInternal(bool aNotify);
   // A helper function to do the work of closing the stream. Assumes
   // that the cache monitor is held. Main thread only.
   // aReentrantMonitor is the nsAutoReentrantMonitor wrapper holding the cache monitor.

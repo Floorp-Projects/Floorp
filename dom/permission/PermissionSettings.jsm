@@ -37,13 +37,13 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "nsIAppsService");
 
 this.PermissionSettingsModule = {
-  init: function() {
+  init: function init() {
     debug("Init");
     ppmm.addMessageListener("PermissionSettings:AddPermission", this);
     Services.obs.addObserver(this, "profile-before-change", false);
   },
 
-  addPermission: function(aData, aCallbacks) {
+  addPermission: function addPermission(aData, aCallbacks) {
     let uri = Services.io.newURI(aData.origin, null, null);
     let appID = appsService.getAppLocalIdByManifestURL(aData.manifestURL);
     let principal = secMan.getAppCodebasePrincipal(uri, appID, aData.browserFlag);
@@ -71,12 +71,12 @@ this.PermissionSettingsModule = {
     permissionManager.addFromPrincipal(principal, aData.type, action);
   },
 
-  getPermission: function getPermission(aPermission, aManifestURL, aOrigin, aBrowserFlag) {
-    debug("getPermission: " + aPermission + ", " + aManifestURL + ", " + aOrigin);
+  getPermission: function getPermission(aPermName, aManifestURL, aOrigin, aBrowserFlag) {
+    debug("getPermission: " + aPermName + ", " + aManifestURL + ", " + aOrigin);
     let uri = Services.io.newURI(aOrigin, null, null);
     let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
     let principal = secMan.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
-    let result = permissionManager.testExactPermissionFromPrincipal(principal, aPermission);
+    let result = permissionManager.testExactPermissionFromPrincipal(principal, aPermName);
 
     switch (result)
     {
@@ -94,13 +94,13 @@ this.PermissionSettingsModule = {
     }
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe: function observe(aSubject, aTopic, aData) {
     ppmm.removeMessageListener("PermissionSettings:AddPermission", this);
     Services.obs.removeObserver(this, "profile-before-change");
     ppmm = null;
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage: function receiveMessage(aMessage) {
     debug("PermissionSettings::receiveMessage " + aMessage.name);
     let mm = aMessage.target;
     let msg = aMessage.data;
@@ -108,6 +108,11 @@ this.PermissionSettingsModule = {
     let result;
     switch (aMessage.name) {
       case "PermissionSettings:AddPermission":
+        if (!aMessage.target.assertPermission("permissions")) {
+          Cu.reportError("PermissionSettings message " + msg.name +
+                         " from a content process with no 'permissions' privileges.");
+          return null;
+        }
         this.addPermission(msg);
         break;
     }

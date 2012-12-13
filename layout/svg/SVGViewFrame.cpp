@@ -107,7 +107,7 @@ SVGViewFrame::AttributeChanged(int32_t  aNameSpaceID,
        aAttribute == nsGkAtoms::viewTarget)) {
 
     nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    NS_ASSERTION(outerSVGFrame->GetContent()->Tag() == nsGkAtoms::svg,
+    NS_ASSERTION(outerSVGFrame->GetContent()->IsSVG(nsGkAtoms::svg),
                  "Expecting an <svg> element");
 
     nsSVGSVGElement* svgElement =

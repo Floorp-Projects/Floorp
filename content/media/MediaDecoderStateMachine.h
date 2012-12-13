@@ -273,14 +273,6 @@ public:
     return mMediaSeekable;
   }
 
-  // Return true if the media is seekable using only buffered ranges.
-  bool IsSeekableInBufferedRanges() {
-    if (mReader) {
-      return mReader->IsSeekableInBufferedRanges();
-    }
-    return false;
-  }
-
   // Sets the current frame buffer length for the MozAudioAvailable event.
   // Accessed on the main and state machine threads.
   void SetFrameBufferLength(uint32_t aLength);

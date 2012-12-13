@@ -52,7 +52,7 @@ IonFrameIterator::current() const
     return (IonCommonFrameLayout *)current_;
 }
 
-inline uint8 *
+inline uint8_t *
 IonFrameIterator::returnAddress() const
 {
     IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
@@ -81,7 +81,7 @@ IonFrameIterator::frameSize() const
 }
 
 // Returns the JSScript associated with the topmost Ion frame.
-inline JSScript *
+inline UnrootedScript
 GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
 {
     AutoAssertNoGC nogc;

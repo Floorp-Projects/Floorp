@@ -29,6 +29,7 @@ DIRS = lib  \
  makepqg  \
  multinit \
  ocspclnt  \
+ ocspresp \
  oidcalc  \
  p7content  \
  p7env  \

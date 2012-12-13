@@ -102,7 +102,7 @@ class LinearScanAllocator : public LiveRangeAllocator<LinearScanVirtualRegister>
     // Optimization for the UnsortedQueue.
     void enqueueVirtualRegisterIntervals();
 
-    uint32 allocateSlotFor(const LiveInterval *interval);
+    uint32_t allocateSlotFor(const LiveInterval *interval);
     bool splitInterval(LiveInterval *interval, CodePosition pos);
     bool splitBlockingIntervals(LAllocation allocation);
     bool assign(LAllocation allocation);
@@ -125,8 +125,8 @@ class LinearScanAllocator : public LiveRangeAllocator<LinearScanVirtualRegister>
     void validateIntervals();
     void validateAllocations();
 #else
-    inline void validateIntervals() { };
-    inline void validateAllocations() { };
+    inline void validateIntervals() { }
+    inline void validateAllocations() { }
 #endif
 
 #ifdef JS_NUNBOX32

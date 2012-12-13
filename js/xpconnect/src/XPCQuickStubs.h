@@ -452,10 +452,9 @@ castNativeFromWrapper(JSContext *cx,
             lccx->SetWrapper(cur);
         }
     } else if (cur && protoDepth >= 0) {
-        const mozilla::dom::DOMClass* domClass;
-        mozilla::dom::DOMObjectSlot slot =
-            mozilla::dom::GetDOMClass(cur, domClass);
-        native = mozilla::dom::UnwrapDOMObject<nsISupports>(cur, slot);
+        const mozilla::dom::DOMClass* domClass =
+            mozilla::dom::GetDOMClass(cur);
+        native = mozilla::dom::UnwrapDOMObject<nsISupports>(cur);
         if (native &&
             (uint32_t)domClass->mInterfaceChain[protoDepth] != protoID) {
             native = nullptr;

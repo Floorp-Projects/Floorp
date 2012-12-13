@@ -364,13 +364,13 @@ public class AwesomeBar extends GeckoActivity {
     private void cancelAndFinish() {
         setResult(Activity.RESULT_CANCELED);
         finish();
-        overridePendingTransition(0, 0);
+        overridePendingTransition(R.anim.awesomebar_hold_still, R.anim.awesomebar_fade_out);
     }
 
     private void finishWithResult(Intent intent) {
         setResult(Activity.RESULT_OK, intent);
         finish();
-        overridePendingTransition(0, 0);
+        overridePendingTransition(R.anim.awesomebar_hold_still, R.anim.awesomebar_fade_out);
     }
 
     private void openUrlAndFinish(String url) {

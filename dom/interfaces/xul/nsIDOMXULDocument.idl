@@ -4,13 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
+#include "nsIDOMDocument.idl"
 
 interface nsIDOMXULCommandDispatcher;
 interface nsIObserver;
 interface nsIBoxObject;
 
-[scriptable, uuid(b16d13c3-837d-445d-8f56-05d83d9b9eae)]
-interface nsIDOMXULDocument : nsISupports
+[scriptable, uuid(9230f88f-a61f-4fc2-b0a3-79e65d58f94f)]
+interface nsIDOMXULDocument : nsIDOMDocument
 {
   attribute nsIDOMNode                          popupNode;
 

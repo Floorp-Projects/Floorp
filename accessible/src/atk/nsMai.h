@@ -13,25 +13,6 @@
 
 #include "AccessibleWrap.h"
 
-extern PRLogModuleInfo *gMaiLog;
-
-#ifdef MAI_LOGGING
-#define MAI_LOG(level, args) \
-PR_BEGIN_MACRO \
-    if (!gMaiLog) { \
-        gMaiLog = PR_NewLogModule("Mai"); \
-        PR_ASSERT(gMaiLog); \
-    } \
-    PR_LOG(gMaiLog, (level), args); \
-PR_END_MACRO
-#else
-#define MAI_LOG(level, args) 
-#endif
-
-#define MAI_LOG_DEBUG(args) MAI_LOG(PR_LOG_DEBUG, args)
-#define MAI_LOG_WARNING(args) MAI_LOG(PR_LOG_WARNING, args)
-#define MAI_LOG_ERROR(args) MAI_LOG(PR_LOG_ERROR, args)
-
 #define MAI_TYPE_ATK_OBJECT             (mai_atk_object_get_type ())
 #define MAI_ATK_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                                          MAI_TYPE_ATK_OBJECT, MaiAtkObject))
@@ -46,6 +27,7 @@ PR_END_MACRO
                                          MAI_TYPE_ATK_OBJECT, \
                                          MaiAtkObjectClass))
 GType mai_atk_object_get_type(void);
+GType mai_util_get_type();
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 
 #endif /* __NS_MAI_H__ */

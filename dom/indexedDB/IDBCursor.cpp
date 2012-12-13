@@ -321,10 +321,7 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
   cursor->mScriptOwner = database->GetScriptOwner();
 
   if (cursor->mScriptOwner) {
-    if (NS_FAILED(NS_HOLD_JS_OBJECTS(cursor, IDBCursor))) {
-      return nullptr;
-    }
-
+    NS_HOLD_JS_OBJECTS(cursor, IDBCursor);
     cursor->mRooted = true;
   }
 

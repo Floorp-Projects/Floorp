@@ -11,15 +11,14 @@
 #include "nsNSSComponent.h"
 #include "nsNSSCertificate.h"
 #include "nsReadableUtils.h"
-#include "nsNSSCleaner.h"
 #include "nsICertPickDialogs.h"
 #include "nsNSSShutDown.h"
 #include "nsNSSCertHelper.h"
-
-NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
-NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
+#include "ScopedNSSTypes.h"
 
 #include "cert.h"
+
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS1(nsCertPicker, nsIUserCertPicker)
 
@@ -49,31 +48,24 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
 
   {
     // Iterate over all certs. This assures that user is logged in to all hardware tokens.
-    CERTCertList *allcerts = nullptr;
     nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-    allcerts = PK11_ListCerts(PK11CertListUnique, ctx);
-    CERT_DestroyCertList(allcerts);
+    ScopedCERTCertList allcerts(PK11_ListCerts(PK11CertListUnique, ctx));
   }
 
   /* find all user certs that are valid and for SSL */
   /* note that we are allowing expired certs in this list */
 
-  CERTCertList *certList = 
+  ScopedCERTCertList certList( 
     CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
                               (SECCertUsage)certUsage,
                               !allowDuplicateNicknames,
                               !allowInvalid,
-                              ctx);
-  CERTCertListCleaner clc(certList);
-
+                              ctx));
   if (!certList) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  CERTCertNicknames *nicknames = getNSSCertNicknamesFromCertList(certList);
-
-  CERTCertNicknamesCleaner cnc(nicknames);
-
+  ScopedCERTCertNicknames nicknames(getNSSCertNicknamesFromCertList(certList));
   if (!nicknames) {
     return NS_ERROR_NOT_AVAILABLE;
   }

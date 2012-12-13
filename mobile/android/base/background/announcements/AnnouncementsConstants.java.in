@@ -17,7 +17,8 @@ public class AnnouncementsConstants {
   public static final String ACTION_ANNOUNCEMENTS_PREF = "@ANDROID_PACKAGE_NAME@.ANNOUNCEMENTS_PREF";
 
   static final String PREFS_BRANCH = "background";
-  static final String PREF_LAST_FETCH  = "last_fetch";
+  static final String PREF_LAST_FETCH_LOCAL_TIME  = "last_fetch";
+  static final String PREF_LAST_FETCH_SERVER_DATE = "last_announce_date";
   static final String PREF_LAST_LAUNCH = "last_firefox_launch";
   static final String PREF_ANNOUNCE_SERVER_BASE_URL  = "announce_server_base_url";
   static final String PREF_EARLIEST_NEXT_ANNOUNCE_FETCH = "earliest_next_announce_fetch";

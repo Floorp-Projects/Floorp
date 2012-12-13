@@ -284,6 +284,16 @@ class MacroAssembler : public MacroAssemblerSpecific
         uint32_t bit = JSFunction::INTERPRETED << 16;
         branchTest32(Assembler::Zero, address, Imm32(bit), label);
     }
+    void branchIfInterpreted(Register fun, Label *label) {
+        // 16-bit loads are slow and unaligned 32-bit loads may be too so
+        // perform an aligned 32-bit load and adjust the bitmask accordingly.
+        JS_STATIC_ASSERT(offsetof(JSFunction, nargs) % sizeof(uint32_t) == 0);
+        JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
+        JS_STATIC_ASSERT(IS_LITTLE_ENDIAN);
+        Address address(fun, offsetof(JSFunction, nargs));
+        uint32_t bit = JSFunction::INTERPRETED << 16;
+        branchTest32(Assembler::NonZero, address, Imm32(bit), label);
+    }
 
     using MacroAssemblerSpecific::Push;
 
@@ -492,7 +502,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // Push VMFunction pointer, to mark arguments.
         Push(ImmWord(f));
     }
-    void enterFakeExitFrame(void *codeVal = NULL) {
+    void enterFakeExitFrame(IonCode *codeVal = NULL) {
         linkExitFrame();
         Push(ImmWord(uintptr_t(codeVal)));
         Push(ImmWord(uintptr_t(NULL)));
@@ -503,7 +513,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void link(IonCode *code) {
-
+        JS_ASSERT(!oom());
         // If this code can transition to C++ code and witness a GC, then we need to store
         // the IonCode onto the stack in order to GC it correctly.  exitCodePatch should
         // be unset if the code never needed to push its IonCode*.
@@ -551,28 +561,28 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     // see above comment for what is returned
-    uint32 callIon(const Register &callee) {
+    uint32_t callIon(const Register &callee) {
         leaveSPSFrame();
         MacroAssemblerSpecific::callIon(callee);
-        uint32 ret = currentOffset();
+        uint32_t ret = currentOffset();
         reenterSPSFrame();
         return ret;
     }
 
     // see above comment for what is returned
-    uint32 callWithExitFrame(IonCode *target) {
+    uint32_t callWithExitFrame(IonCode *target) {
         leaveSPSFrame();
         MacroAssemblerSpecific::callWithExitFrame(target);
-        uint32 ret = currentOffset();
+        uint32_t ret = currentOffset();
         reenterSPSFrame();
         return ret;
     }
 
     // see above comment for what is returned
-    uint32 callWithExitFrame(IonCode *target, Register dynStack) {
+    uint32_t callWithExitFrame(IonCode *target, Register dynStack) {
         leaveSPSFrame();
         MacroAssemblerSpecific::callWithExitFrame(target, dynStack);
-        uint32 ret = currentOffset();
+        uint32_t ret = currentOffset();
         reenterSPSFrame();
         return ret;
     }

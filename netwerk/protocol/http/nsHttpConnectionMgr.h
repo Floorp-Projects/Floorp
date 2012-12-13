@@ -19,6 +19,7 @@
 #include "nsISocketTransportService.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/net/DashboardTypes.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -207,6 +208,9 @@ public:
     nsresult ProcessPendingQ(nsHttpConnectionInfo *);
     bool     ProcessPendingQForEntry(nsHttpConnectionInfo *);
 
+    // Try and process all pending transactions
+    nsresult ProcessPendingQ();
+
     // This is used to force an idle connection to be closed and removed from
     // the idle connection list. It is called when the idle connection detects
     // that the network peer has closed the transport.
@@ -220,6 +224,7 @@ public:
     
     bool     SupportsPipelining(nsHttpConnectionInfo *);
 
+    bool GetConnectionData(nsTArray<mozilla::net::HttpRetParams> *);
 private:
     virtual ~nsHttpConnectionMgr();
 
@@ -453,12 +458,13 @@ private:
     //-------------------------------------------------------------------------
 
     static PLDHashOperator ProcessOneTransactionCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
+    static PLDHashOperator ProcessAllTransactionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
 
     static PLDHashOperator PruneDeadConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator ShutdownPassCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator PurgeExcessIdleConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator ClosePersistentConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
-    bool     ProcessPendingQForEntry(nsConnectionEntry *);
+    bool     ProcessPendingQForEntry(nsConnectionEntry *, bool considerAll);
     bool     IsUnderPressure(nsConnectionEntry *ent,
                              nsHttpTransaction::Classifier classification);
     bool     AtActiveConnectionLimit(nsConnectionEntry *, uint32_t caps);
@@ -579,6 +585,9 @@ private:
     // Total number of idle connections in all of the ConnectionEntry objects
     // that are accessed from mCT connection table.
     uint16_t mNumIdleConns;
+    // Total number of connections in mHalfOpens ConnectionEntry objects
+    // that are accessed from mCT connection table
+    uint32_t mNumHalfOpenConns;
 
     // Holds time in seconds for next wake-up to prune dead connections. 
     uint64_t mTimeOfNextWakeUp;
@@ -604,6 +613,11 @@ private:
     nsTHashtable<nsCStringHashKey> mAlternateProtocolHash;
     static PLDHashOperator TrimAlternateProtocolHash(nsCStringHashKey *entry,
                                                      void *closure);
+
+    static PLDHashOperator ReadConnectionEntry(const nsACString &key,
+                                               nsAutoPtr<nsConnectionEntry> &ent,
+                                               void *aArg);
+
     // Read Timeout Tick handlers
     void ActivateTimeoutTick();
     void TimeoutTick();

@@ -304,7 +304,7 @@ struct ClosureInfo
       ffi_closure_free(closure);
     if (errResult)
       js_free(errResult);
-  };
+  }
 };
 
 bool IsCTypesGlobal(JSObject* obj);

@@ -408,11 +408,13 @@ StoreTypedArrayPolicy::adjustInputs(MInstruction *ins)
       case MIRType_Value:
         break;
       case MIRType_Null:
+        value->setFoldedUnchecked();
         value = MConstant::New(Int32Value(0));
         ins->block()->insertBefore(ins, value->toInstruction());
         break;
       case MIRType_Object:
       case MIRType_Undefined:
+        value->setFoldedUnchecked();
         value = MConstant::New(DoubleValue(js_NaN));
         ins->block()->insertBefore(ins, value->toInstruction());
         break;

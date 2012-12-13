@@ -74,7 +74,7 @@ ArgumentsObject::element(uint32_t i) const
     const Value &v = data()->args[i];
     if (v.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
         CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall();
-        for (AliasedFormalIter fi(callobj.callee().nonLazyScript().get(nogc)); ; fi++) {
+        for (AliasedFormalIter fi(callobj.callee().nonLazyScript()); ; fi++) {
             if (fi.frameIndex() == i)
                 return callobj.aliasedVar(fi);
         }
@@ -90,7 +90,7 @@ ArgumentsObject::setElement(uint32_t i, const Value &v)
     HeapValue &lhs = data()->args[i];
     if (lhs.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
         CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall();
-        for (AliasedFormalIter fi(callobj.callee().nonLazyScript().get(nogc)); ; fi++) {
+        for (AliasedFormalIter fi(callobj.callee().nonLazyScript()); ; fi++) {
             if (fi.frameIndex() == i) {
                 callobj.setAliasedVar(fi, v);
                 return;

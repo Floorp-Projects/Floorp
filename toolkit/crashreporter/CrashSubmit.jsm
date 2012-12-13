@@ -71,17 +71,43 @@ function getL10nStrings() {
   }
 }
 
-function getPendingMinidump(id) {
+function getPendingDir() {
   let directoryService = Cc["@mozilla.org/file/directory_service;1"].
                          getService(Ci.nsIProperties);
   let pendingDir = directoryService.get("UAppData", Ci.nsIFile);
   pendingDir.append("Crash Reports");
   pendingDir.append("pending");
+  return pendingDir;
+}
+
+function getPendingMinidump(id) {
+  let pendingDir = getPendingDir();
   let dump = pendingDir.clone();
   let extra = pendingDir.clone();
   dump.append(id + ".dmp");
   extra.append(id + ".extra");
   return [dump, extra];
+}
+
+function getAllPendingMinidumpsIDs() {
+  let minidumps = [];
+  let pendingDir = getPendingDir();
+
+  if (!(pendingDir.exists() && pendingDir.isDirectory()))
+    return [];
+  let entries = pendingDir.directoryEntries;
+
+  while (entries.hasMoreElements()) {
+    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+    if (entry.isFile()) {
+      entry.leafName
+      let matches = entry.leafName.match(/(.+)\.extra$/);
+      if (matches)
+        minidumps.push(matches[1]);
+    }
+  }
+
+  return minidumps;
 }
 
 function addFormEntry(doc, form, name, value) {
@@ -349,6 +375,16 @@ this.CrashSubmit = {
                                   noThrottle);
     CrashSubmit._activeSubmissions.push(submitter);
     return submitter.submit();
+  },
+
+  /**
+   * Get the list of pending crash IDs.
+   *
+   * @return an array of string, each being an ID as
+   *         expected to be passed to submit()
+   */
+  pendingIDs: function CrashSubmit_pendingIDs() {
+    return getAllPendingMinidumpsIDs();
   },
 
   // List of currently active submit objects

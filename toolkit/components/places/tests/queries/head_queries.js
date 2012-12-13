@@ -34,10 +34,80 @@ const olderthansixmonths = today - (DAY_MICROSEC * 31 * 7);
 
 /**
  * Generalized function to pull in an array of objects of data and push it into
- * the database. It does NOT do any checking to see that the input is
- * appropriate.
+ * the database.  It does NOT do any checking to see that the input is
+ * appropriate.  This function is an asynchronous task, it can be called using
+ * "Task.spawn" or using the "yield" function inside another task.
  */
-function populateDB(aArray) {
+function task_populateDB(aArray)
+{
+  // Iterate over aArray and execute all the instructions that can be done with
+  // asynchronous APIs, excluding those that will be done in batch mode later.
+  for ([, data] in Iterator(aArray)) {
+    try {
+      // make the data object into a query data object in order to create proper
+      // default values for anything left unspecified
+      var qdata = new queryData(data);
+      if (qdata.isVisit) {
+        // Then we should add a visit for this node
+        yield promiseAddVisits({
+          uri: uri(qdata.uri),
+          transition: qdata.transType,
+          visitDate: qdata.lastVisit,
+          referrer: qdata.referrer ? uri(qdata.referrer) : null,
+          title: qdata.title
+        });
+        if (qdata.visitCount && !qdata.isDetails) {
+          // Set a fake visit_count, this is not a real count but can be used
+          // to test sorting by visit_count.
+          let stmt = DBConn().createAsyncStatement(
+            "UPDATE moz_places SET visit_count = :vc WHERE url = :url");
+          stmt.params.vc = qdata.visitCount;
+          stmt.params.url = qdata.uri;
+          try {
+            stmt.executeAsync();
+          }
+          catch (ex) {
+            print("Error while setting visit_count.");
+          }
+          finally {
+            stmt.finalize();
+          }
+        }
+      }
+
+      if (qdata.isRedirect) {
+        // This must be async to properly enqueue after the updateFrecency call
+        // done by the visit addition.
+        let stmt = DBConn().createAsyncStatement(
+          "UPDATE moz_places SET hidden = 1 WHERE url = :url");
+        stmt.params.url = qdata.uri;
+        try {
+          stmt.executeAsync();
+        }
+        catch (ex) {
+          print("Error while setting hidden.");
+        }
+        finally {
+          stmt.finalize();
+        }
+      }
+
+      if (qdata.isDetails) {
+        // Then we add extraneous page details for testing
+        yield promiseAddVisits({
+          uri: uri(qdata.uri),
+          visitDate: qdata.lastVisit,
+          title: qdata.title
+        });
+      }
+    } catch (ex) {
+      // use the data object here in case instantiation of qdata failed
+      LOG("Problem with this URI: " + data.uri);
+      do_throw("Error creating database: " + ex + "\n");
+    }
+  }
+
+  // Now execute the part of the instructions made with synchronous APIs.
   PlacesUtils.history.runInBatchMode({
     runBatched: function (aUserData)
     {
@@ -47,74 +117,13 @@ function populateDB(aArray) {
           // make the data object into a query data object in order to create proper
           // default values for anything left unspecified
           var qdata = new queryData(data);
-          if (qdata.isVisit) {
-            // Then we should add a visit for this node
-            var referrer = qdata.referrer ? uri(qdata.referrer) : null;
-            var visitId = PlacesUtils.history.addVisit(uri(qdata.uri), qdata.lastVisit,
-                                                       referrer, qdata.transType,
-                                                       qdata.isRedirect, qdata.sessionID);
-            if (qdata.title && !qdata.isDetails) {
-              PlacesUtils.history.setPageTitle(uri(qdata.uri), qdata.title);
-            }
-            if (qdata.visitCount && !qdata.isDetails) {
-              // Set a fake visit_count, this is not a real count but can be used
-              // to test sorting by visit_count.
-              let stmt = DBConn().createStatement(
-                "UPDATE moz_places SET visit_count = :vc WHERE url = :url");
-              stmt.params.vc = qdata.visitCount;
-              stmt.params.url = qdata.uri;
-              try {
-                stmt.execute();
-              }
-              catch (ex) {
-                print("Error while setting visit_count.");
-              }
-              finally {
-                stmt.finalize();
-              }
-            }
-          }
 
-          if (qdata.isRedirect) {
-            // Redirect sources added through the docshell are properly marked
-            // as redirects and get hidden state, the API doesn't have that
-            // power (And actually doesn't make much sense to add redirects
-            // through the API).
-            // This must be async cause otherwise the updateFrecency call
-            // done by addVisits may randomly happen after it, overwriting the
-            // value.
-            let stmt = DBConn().createAsyncStatement(
-              "UPDATE moz_places SET hidden = 1 WHERE url = :url");
-            stmt.params.url = qdata.uri;
-            try {
-              stmt.executeAsync();
-            }
-            catch (ex) {
-              print("Error while setting hidden.");
-            }
-            finally {
-              stmt.finalize();
-            }
-          }
-
-          if (qdata.isDetails) {
-            // Then we add extraneous page details for testing
-            PlacesUtils.history.addVisit(uri(qdata.uri),
-                                         qdata.lastVisit,
-                                         null,
-                                         TRANSITION_LINK,
-                                         false,
-                                         0);
-            PlacesUtils.ghistory2.setPageTitle(uri(qdata.uri),
-                                               qdata.title);
-          }
-
-          if (qdata.markPageAsTyped){
+          if (qdata.markPageAsTyped) {
             PlacesUtils.bhistory.markPageAsTyped(uri(qdata.uri));
           }
 
           if (qdata.isPageAnnotation) {
-            if (qdata.removeAnnotation) 
+            if (qdata.removeAnnotation)
               PlacesUtils.annotations.removePageAnnotation(uri(qdata.uri),
                                                            qdata.annoName);
             else {
@@ -242,7 +251,6 @@ function queryData(obj) {
   this.referrer = obj.referrer ? obj.referrer : null;
   this.transType = obj.transType ? obj.transType : Ci.nsINavHistoryService.TRANSITION_TYPED;
   this.isRedirect = obj.isRedirect ? obj.isRedirect : false;
-  this.sessionID = obj.sessionID ? obj.sessionID : 0;
   this.isDetails = obj.isDetails ? obj.isDetails : false;
   this.title = obj.title ? obj.title : "";
   this.markPageAsTyped = obj.markPageAsTyped ? obj.markPageAsTyped : false;

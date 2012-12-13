@@ -25,6 +25,7 @@
 #include "nsEventShell.h"
 #include "nsIAccessibleProvider.h"
 #include "OuterDocAccessible.h"
+#include "Platform.h"
 #include "Role.h"
 #include "RootAccessibleWrap.h"
 #include "States.h"
@@ -206,9 +207,9 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
 }
 
 already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
-                                                        nsIContent* aContent,
-                                                        Accessible* aContext)
+nsAccessibilityService::CreatePluginAccessible(nsObjectFrame* aFrame,
+                                               nsIContent* aContent,
+                                               Accessible* aContext)
 {
   // nsObjectFrame means a plugin, so we need to use the accessibility support
   // of the plugin.
@@ -798,13 +799,13 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       // on accessible HTML table elements.
       if ((roleMapEntry->accTypes & Accessible::eTableCellAccessible)) {
         if (aContext->IsOfType(Accessible::eTableRowAccessible) &&
-            (frame->AccessibleType() != eHTMLTableCellAccessible ||
+            (frame->AccessibleType() != eHTMLTableCell ||
              aContext->GetContent() != content->GetParent())) {
           newAcc = new ARIAGridCellAccessibleWrap(content, document);
         }
 
       } else if ((roleMapEntry->accTypes & Accessible::eTableAccessible) &&
-                 frame->AccessibleType() != eHTMLTableAccessible) {
+                 frame->AccessibleType() != eHTMLTable) {
         newAcc = new ARIAGridAccessibleWrap(content, document);
       }
     }
@@ -821,20 +822,20 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       // If table has strong ARIA role then all table descendants shouldn't
       // expose their native roles.
       if (!roleMapEntry && newAcc) {
-        if (frame->AccessibleType() == eHTMLTableRowAccessible) {
+        if (frame->AccessibleType() == eHTMLTableRow) {
           nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
           if (contextRoleMap &&
               !(contextRoleMap->accTypes & Accessible::eTableAccessible))
             roleMapEntry = &nsARIAMap::gEmptyRoleMap;
 
-        } else if (frame->AccessibleType() == eHTMLTableCellAccessible &&
+        } else if (frame->AccessibleType() == eHTMLTableCell &&
                    aContext->ARIARoleMap() == &nsARIAMap::gEmptyRoleMap) {
           roleMapEntry = &nsARIAMap::gEmptyRoleMap;
 
         } else if (content->Tag() == nsGkAtoms::dt ||
                    content->Tag() == nsGkAtoms::li ||
                    content->Tag() == nsGkAtoms::dd ||
-                   frame->AccessibleType() == eHTMLLiAccessible) {
+                   frame->AccessibleType() == eHTMLLi) {
           nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
           if (contextRoleMap &&
               !(contextRoleMap->accTypes & Accessible::eListAccessible))
@@ -913,13 +914,8 @@ nsAccessibilityService::Init()
   logging::CheckEnv();
 #endif
 
-  // Create and initialize the application accessible.
-  ApplicationAccessibleWrap::PreCreate();
   gApplicationAccessible = new ApplicationAccessibleWrap();
   NS_ADDREF(gApplicationAccessible); // will release in Shutdown()
-
-  // Initialize accessibility.
-  nsAccessNodeWrap::InitAccessibility();
 
 #ifdef MOZ_CRASHREPORTER
   CrashReporter::
@@ -928,6 +924,10 @@ nsAccessibilityService::Init()
 #endif
 
   gIsShutdown = false;
+
+  // Now its safe to start platform accessibility.
+  PlatformInit();
+
   return true;
 }
 
@@ -956,9 +956,7 @@ nsAccessibilityService::Shutdown()
 
   gIsShutdown = true;
 
-  nsAccessNodeWrap::ShutdownAccessibility();
-
-  ApplicationAccessibleWrap::Unload();
+  PlatformShutdown();
   gApplicationAccessible->Shutdown();
   NS_RELEASE(gApplicationAccessible);
   gApplicationAccessible = nullptr;
@@ -1308,75 +1306,69 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 
   nsRefPtr<Accessible> newAcc;
   switch (aFrame->AccessibleType()) {
-    case eNoAccessible:
+    case eNoType:
       return nullptr;
-    case eHTMLBRAccessible:
+    case eHTMLBR:
       newAcc = new HTMLBRAccessible(aContent, document);
       break;
-    case eHTMLButtonAccessible:
+    case eHTMLButton:
       newAcc = new HTMLButtonAccessible(aContent, document);
       break;
-    case eHTMLCanvasAccessible:
+    case eHTMLCanvas:
       newAcc = new HTMLCanvasAccessible(aContent, document);
       break;
-    case eHTMLCaptionAccessible:
+    case eHTMLCaption:
       if (aContext->IsOfType(Accessible::eTableAccessible) &&
           aContext->GetContent() == aContent->GetParent()) {
         newAcc = new HTMLCaptionAccessible(aContent, document);
       }
       break;
-    case eHTMLCheckboxAccessible:
+    case eHTMLCheckbox:
       newAcc = new HTMLCheckboxAccessible(aContent, document);
       break;
-    case eHTMLComboboxAccessible:
+    case eHTMLCombobox:
       newAcc = new HTMLComboboxAccessible(aContent, document);
       break;
-    case eHTMLFileInputAccessible:
+    case eHTMLFileInput:
       newAcc = new HTMLFileInputAccessible(aContent, document);
       break;
-    case eHTMLGroupboxAccessible:
+    case eHTMLGroupbox:
       newAcc = new HTMLGroupboxAccessible(aContent, document);
       break;
-    case eHTMLHRAccessible:
+    case eHTMLHR:
       newAcc = new HTMLHRAccessible(aContent, document);
       break;
-    case eHTMLImageMapAccessible:
+    case eHTMLImageMap:
       newAcc = new HTMLImageMapAccessible(aContent, document);
       break;
-    case eHTMLLabelAccessible:
+    case eHTMLLabel:
       newAcc = new HTMLLabelAccessible(aContent, document);
       break;
-    case eHTMLLiAccessible:
+    case eHTMLLi:
       if (aContext->IsOfType(Accessible::eListAccessible) &&
           aContext->GetContent() == aContent->GetParent()) {
         newAcc = new HTMLLIAccessible(aContent, document);
       }
       break;
-    case eHTMLSelectListAccessible:
+    case eHTMLSelectList:
       newAcc = new HTMLSelectListAccessible(aContent, document);
       break;
-    case eHTMLMediaAccessible:
+    case eHTMLMedia:
       newAcc = new EnumRoleAccessible(aContent, document, roles::GROUPING);
       break;
-    case eHTMLObjectFrameAccessible: {
-      nsObjectFrame* objectFrame = do_QueryFrame(aFrame);
-      newAcc = CreateHTMLObjectFrameAccessible(objectFrame, aContent, aContext);
-      break;
-    }
-
-    case eHTMLRadioButtonAccessible:
+    case eHTMLRadioButton:
       newAcc = new HTMLRadioButtonAccessible(aContent, document);
       break;
-    case eHTMLTableAccessible:
+    case eHTMLTable:
       newAcc = new HTMLTableAccessibleWrap(aContent, document);
       break;
-    case eHTMLTableCellAccessible:
+    case eHTMLTableCell:
       // Accessible HTML table cell must be a child of accessible HTML table row.
       if (aContext->IsOfType(Accessible::eHTMLTableRowAccessible))
         newAcc = new HTMLTableCellAccessibleWrap(aContent, document);
       break;
 
-    case eHTMLTableRowAccessible: {
+    case eHTMLTableRow: {
       // Accessible HTML table row must be a child of tbody/tfoot/thead of
       // accessible HTML table or must be a child of accessible of HTML table.
       if (aContext->IsOfType(Accessible::eTableAccessible)) {
@@ -1394,21 +1386,26 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       }
       break;
     }
-    case eHTMLTextFieldAccessible:
+    case eHTMLTextField:
       newAcc = new HTMLTextFieldAccessible(aContent, document);
       break;
-    case eHyperTextAccessible:
+    case eHyperText:
       if (aContent->Tag() != nsGkAtoms::dt && aContent->Tag() != nsGkAtoms::dd)
         newAcc = new HyperTextAccessibleWrap(aContent, document);
       break;
 
-    case eImageAccessible:
+    case eImage:
       newAcc = new ImageAccessibleWrap(aContent, document);
       break;
-    case eOuterDocAccessible:
+    case eOuterDoc:
       newAcc = new OuterDocAccessible(aContent, document);
       break;
-    case eTextLeafAccessible:
+    case ePlugin: {
+      nsObjectFrame* objectFrame = do_QueryFrame(aFrame);
+      newAcc = CreatePluginAccessible(objectFrame, aContent, aContext);
+      break;
+    }
+    case eTextLeaf:
       newAcc = new TextLeafAccessibleWrap(aContent, document);
       break;
   }

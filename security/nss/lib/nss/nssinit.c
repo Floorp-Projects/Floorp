@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: nssinit.c,v 1.119 2012/10/09 18:22:46 emaldona%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.120 2012/11/17 01:45:33 wtc%google.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -637,9 +637,8 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     }
 
     /* Skip the module init if we are already initted and we are trying
-     * to init with not noCertDB and noModDB */
+     * to init with noCertDB and noModDB */
     if (!(isReallyInitted && noCertDB && noModDB)) {
-	/* we always try to initialize the modules */
 	rv = nss_InitModules(configdir, certPrefix, keyPrefix, secmodName, 
 		updateDir, updCertPrefix, updKeyPrefix, updateID, 
 		updateName, configName, configStrings, passwordRequired,

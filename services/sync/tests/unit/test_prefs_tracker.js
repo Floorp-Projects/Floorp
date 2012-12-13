@@ -11,6 +11,10 @@ Cu.import("resource://services-sync/util.js");
 function run_test() {
   let engine = Service.engineManager.get("prefs");
   let tracker = engine._tracker;
+
+  // Don't write out by default.
+  tracker.persistChangedIDs = false;
+
   let prefs = new Preferences();
 
   try {
@@ -80,8 +84,5 @@ function run_test() {
   } finally {
     Svc.Obs.notify("weave:engine:stop-tracking");
     prefs.resetBranch("");
-    if (tracker._lazySave) {
-      tracker._lazySave.clear();
-    }
   }
 }

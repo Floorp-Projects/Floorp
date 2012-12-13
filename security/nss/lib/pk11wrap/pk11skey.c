@@ -905,13 +905,10 @@ pk11_TokenKeyGenWithFlagsAndKeyType(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     CK_ATTRIBUTE genTemplate[MAX_TEMPL_ATTRS];
     CK_ATTRIBUTE *attrs = genTemplate;
     int count = sizeof(genTemplate)/sizeof(genTemplate[0]);
-    CK_SESSION_HANDLE session;
     CK_MECHANISM_TYPE keyGenType;
-    CK_RV crv;
     CK_BBOOL cktrue = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
     CK_ULONG ck_key_size;       /* only used for variable-length keys */
-    PRBool isToken = ((attrFlags & PK11_ATTR_TOKEN) != 0);
 
     if (pk11_BadAttrFlags(attrFlags)) {
 	PORT_SetError( SEC_ERROR_INVALID_ARGS );

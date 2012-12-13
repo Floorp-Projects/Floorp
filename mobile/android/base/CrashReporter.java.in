@@ -133,6 +133,7 @@ public class CrashReporter extends Activity
             getSharedPreferences(GeckoApp.PREFS_NAME, 0);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
+        editor.putBoolean(GeckoApp.PREFS_CRASHED, true);
         editor.commit();
     }
 

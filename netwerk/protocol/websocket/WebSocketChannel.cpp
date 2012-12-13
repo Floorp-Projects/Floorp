@@ -912,6 +912,8 @@ private:
 // WebSocketChannel
 //-----------------------------------------------------------------------------
 
+uint32_t WebSocketChannel::sSerialSeed = 0;
+
 WebSocketChannel::WebSocketChannel() :
   mPort(0),
   mCloseTimeout(20000),
@@ -949,7 +951,8 @@ WebSocketChannel::WebSocketChannel() :
   mCurrentOutSent(0),
   mCompressor(nullptr),
   mDynamicOutputSize(0),
-  mDynamicOutput(nullptr)
+  mDynamicOutput(nullptr),
+  mConnectionLogService(nullptr)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
@@ -959,6 +962,13 @@ WebSocketChannel::WebSocketChannel() :
     sWebSocketAdmissions = new nsWSAdmissionManager();
 
   mFramePtr = mBuffer = static_cast<uint8_t *>(moz_xmalloc(mBufferSize));
+
+  nsresult rv;
+  mConnectionLogService = do_GetService("@mozilla.org/network/dashboard;1",&rv);
+  if (NS_FAILED(rv))
+    LOG(("Failed to initiate dashboard service."));
+
+  mSerial = sSerialSeed++;
 }
 
 WebSocketChannel::~WebSocketChannel()
@@ -1320,6 +1330,15 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         }
 
         NS_DispatchToMainThread(new CallOnMessageAvailable(this, utf8Data, -1));
+        nsresult rv;
+        if (mConnectionLogService) {
+          nsAutoCString host;
+          rv = mURI->GetHostPort(host);
+          if (NS_SUCCEEDED(rv)) {
+            mConnectionLogService->NewMsgReceived(host, mSerial, count);
+            LOG(("Added new msg received for %s",host.get()));
+          }
+        }
       }
     } else if (opcode & kControlFrameMask) {
       // control frames
@@ -1401,6 +1420,16 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         nsCString binaryData((const char *)payload, payloadLength);
         NS_DispatchToMainThread(new CallOnMessageAvailable(this, binaryData,
                                                            payloadLength));
+        // To add the header to 'Networking Dashboard' log
+        nsresult rv;
+        if (mConnectionLogService) {
+          nsAutoCString host;
+          rv = mURI->GetHostPort(host);
+          if (NS_SUCCEEDED(rv)) {
+            mConnectionLogService->NewMsgReceived(host, mSerial, count);
+            LOG(("Added new received msg for %s",host.get()));
+          }
+        }
       }
     } else if (opcode != kContinuation) {
       /* unknown opcode */
@@ -1814,6 +1843,14 @@ WebSocketChannel::CleanupConnection()
     mTransport = nullptr;
   }
 
+  nsresult rv;
+  if (mConnectionLogService) {
+    nsAutoCString host;
+    rv = mURI->GetHostPort(host);
+    if (NS_SUCCEEDED(rv))
+      mConnectionLogService->RemoveHost(host, mSerial);
+  }
+
   DecrementSessionCount();
 }
 
@@ -2077,6 +2114,12 @@ WebSocketChannel::SetupRequest()
   rv = mHttpChannel->SetLoadFlags(nsIRequest::LOAD_BACKGROUND |
                                   nsIRequest::INHIBIT_CACHING |
                                   nsIRequest::LOAD_BYPASS_CACHE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we never let websockets be blocked by head CSS/JS loads to avoid
+  // potential deadlock where server generation of CSS/JS requires
+  // an XHR signal.
+  rv = mChannel->SetLoadUnblocked(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // draft-ietf-hybi-thewebsocketprotocol-07 illustrates Upgrade: websocket
@@ -2632,6 +2675,14 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
   if (NS_FAILED(rv))
     return rv;
 
+  if (mConnectionLogService) {
+    nsAutoCString host;
+    rv = mURI->GetHostPort(host);
+    if (NS_SUCCEEDED(rv)) {
+      mConnectionLogService->AddHost(host, mSerial, BaseWebSocketChannel::mEncrypted);
+    }
+  }
+
   rv = ApplyForAdmission();
   if (NS_FAILED(rv))
     return rv;
@@ -2726,6 +2777,16 @@ WebSocketChannel::SendMsgCommon(const nsACString *aMsg, bool aIsBinary,
   if (aLength > static_cast<uint32_t>(mMaxMessageSize)) {
     LOG(("WebSocketChannel:: Error: message too big\n"));
     return NS_ERROR_FILE_TOO_BIG;
+  }
+
+  nsresult rv;
+  if (mConnectionLogService) {
+    nsAutoCString host;
+    rv = mURI->GetHostPort(host);
+    if (NS_SUCCEEDED(rv)) {
+      mConnectionLogService->NewMsgSent(host, mSerial, aLength);
+      LOG(("Added new msg sent for %s",host.get()));
+    }
   }
 
   return mSocketThread->Dispatch(

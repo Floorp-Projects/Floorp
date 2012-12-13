@@ -2560,6 +2560,8 @@ Element::MozMatchesSelector(const nsAString& aSelector,
                                    nsRuleWalker::eRelevantLinkUnvisited,
                                    OwnerDoc(),
                                    TreeMatchContext::eNeverMatchVisited);
+  matchingContext.SetHasSpecifiedScope();
+  matchingContext.AddScopeElement(this);
   return nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
                                                  selectorList);
 }

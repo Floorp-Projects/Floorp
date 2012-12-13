@@ -82,29 +82,29 @@ struct IonOptions
     // are compiled.
     //
     // Default: 10,240
-    uint32 usesBeforeCompile;
+    uint32_t usesBeforeCompile;
 
     // How many invocations or loop iterations are needed before functions
     // are compiled when JM is disabled.
     //
     // Default: 40
-    uint32 usesBeforeCompileNoJaeger;
+    uint32_t usesBeforeCompileNoJaeger;
 
     // How many invocations or loop iterations are needed before calls
     // are inlined.
     //
     // Default: 10,240
-    uint32 usesBeforeInlining;
+    uint32_t usesBeforeInlining;
 
     // How many actual arguments are accepted on the C stack.
     //
     // Default: 4,096
-    uint32 maxStackArgs;
+    uint32_t maxStackArgs;
 
     // The maximum inlining depth.
     //
     // Default: 3
-    uint32 maxInlineDepth;
+    uint32_t maxInlineDepth;
 
     // The bytecode length limit for small function.
     //
@@ -113,7 +113,7 @@ struct IonOptions
     // in.
     //
     // Default: 100
-    uint32 smallFunctionMaxBytecodeLength;
+    uint32_t smallFunctionMaxBytecodeLength;
 
     // The inlining limit for small functions.
     //
@@ -122,23 +122,23 @@ struct IonOptions
     // gone in.
     //
     // Default: usesBeforeInlining / 4
-    uint32 smallFunctionUsesBeforeInlining;
+    uint32_t smallFunctionUsesBeforeInlining;
 
     // The maximum number of functions to polymorphically inline at a call site.
     //
     // Default: 4
-    uint32 polyInlineMax;
+    uint32_t polyInlineMax;
 
     // The maximum total bytecode size of an inline call site.
     //
     // Default: 800
-    uint32 inlineMaxTotalBytecodeLength;
+    uint32_t inlineMaxTotalBytecodeLength;
 
     // Minimal ratio between the use counts of the caller and the callee to
     // enable inlining of functions.
     //
     // Default: 128
-    uint32 inlineUseCountRatio;
+    uint32_t inlineUseCountRatio;
 
     // Whether functions are compiled immediately.
     //
@@ -148,14 +148,14 @@ struct IonOptions
     // If a function has attempted to make this many calls to
     // functions that are marked "uncompileable", then
     // stop running this function in IonMonkey. (default 512)
-    uint32 slowCallLimit;
+    uint32_t slowCallLimit;
 
     // When caller runs in IM, but callee not, we take a slow path to the interpreter.
     // This has a significant overhead. In order to decrease the number of times this happens,
     // the useCount gets incremented faster to compile this function in IM and use the fastpath.
     //
     // Default: 5
-    uint32 slowCallIncUseCount;
+    uint32_t slowCallIncUseCount;
 
     void setEagerCompilation() {
         eagerCompilation = true;

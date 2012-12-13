@@ -249,12 +249,51 @@ function ensureProviderOrigin(provider, url) {
   return fullURL;
 }
 
+function isWindowGoodForChats(win) {
+  return win.SocialChatBar && win.SocialChatBar.isAvailable;
+}
+
+function findChromeWindowForChats(preferredWindow) {
+  if (preferredWindow && isWindowGoodForChats(preferredWindow))
+    return preferredWindow;
+  // no good - so let's go hunting.  We are now looking for a navigator:browser
+  // window that is suitable and already has chats open, or failing that,
+  // any suitable navigator:browser window.
+  let first, best, enumerator;
+  // *sigh* - getZOrderDOMWindowEnumerator is broken everywhere other than
+  // Windows.  We use BROKEN_WM_Z_ORDER as that is what the c++ code uses
+  // and a few bugs recommend searching mxr for this symbol to identify the
+  // workarounds - we want this code to be hit in such searches.
+  const BROKEN_WM_Z_ORDER = Services.appinfo.OS != "WINNT";
+  if (BROKEN_WM_Z_ORDER) {
+    // this is oldest to newest and no way to change the order.
+    enumerator = Services.wm.getEnumerator("navigator:browser");
+  } else {
+    // here we explicitly ask for bottom-to-top so we can use the same logic
+    // where BROKEN_WM_Z_ORDER is true.
+    enumerator = Services.wm.getZOrderDOMWindowEnumerator("navigator:browser", false);
+  }
+  while (enumerator.hasMoreElements()) {
+    let win = enumerator.getNext();
+    if (win && isWindowGoodForChats(win)) {
+      first = win;
+      if (win.SocialChatBar.hasChats)
+        best = win;
+    }
+  }
+  return best || first;
+}
+
 this.openChatWindow =
  function openChatWindow(chromeWindow, provider, url, callback, mode) {
-  if (!chromeWindow.SocialChatBar)
+  chromeWindow = findChromeWindowForChats(chromeWindow);
+  if (!chromeWindow)
     return;
   let fullURL = ensureProviderOrigin(provider, url);
   if (!fullURL)
     return;
   chromeWindow.SocialChatBar.openChat(provider, fullURL, callback, mode);
+  // getAttention is ignored if the target window is already foreground, so
+  // we can call it unconditionally.
+  chromeWindow.getAttention();
 }

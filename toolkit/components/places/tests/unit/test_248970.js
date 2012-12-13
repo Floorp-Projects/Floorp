@@ -25,19 +25,6 @@ function get_PBSvc() {
   return null;
 }
 
-/**
- * Adds a test URI visit to the database
- *
- * @param aURI
- *        The URI to add a visit for.
- * @param aType
- *        Transition type for the URI.
- */
-function add_visit(aURI, aType) {
-  PlacesUtils.history.addVisit(uri(aURI), Date.now() * 1000, null, aType,
-                               false, 0);
-}
-
 let visited_URIs = ["http://www.test-link.com/",
                     "http://www.test-typed.com/",
                     "http://www.test-bookmark.com/",
@@ -59,19 +46,17 @@ let nonvisited_URIs = ["http://www.google.ca/typed/",
 /**
  * Function fills history, one for each transition type.
  */
-function fill_history_visitedURI() {
-  PlacesUtils.history.runInBatchMode({
-    runBatched: function (aUserData) {
-      add_visit(visited_URIs[0], PlacesUtils.history.TRANSITION_LINK);
-      add_visit(visited_URIs[1], PlacesUtils.history.TRANSITION_TYPED);
-      add_visit(visited_URIs[2], PlacesUtils.history.TRANSITION_BOOKMARK);
-      add_visit(visited_URIs[3], PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT);
-      add_visit(visited_URIs[4], PlacesUtils.history.TRANSITION_REDIRECT_TEMPORARY);
-      add_visit(visited_URIs[5], PlacesUtils.history.TRANSITION_EMBED);
-      add_visit(visited_URIs[6], PlacesUtils.history.TRANSITION_FRAMED_LINK);
-      add_visit(visited_URIs[7], PlacesUtils.history.TRANSITION_DOWNLOAD);
-    }
-  }, null);
+function task_fill_history_visitedURI() {
+  yield promiseAddVisits([
+    { uri: uri(visited_URIs[0]), transition: TRANSITION_LINK },
+    { uri: uri(visited_URIs[1]), transition: TRANSITION_TYPED },
+    { uri: uri(visited_URIs[2]), transition: TRANSITION_BOOKMARK },
+    { uri: uri(visited_URIs[3]), transition: TRANSITION_REDIRECT_PERMANENT },
+    { uri: uri(visited_URIs[4]), transition: TRANSITION_REDIRECT_TEMPORARY },
+    { uri: uri(visited_URIs[5]), transition: TRANSITION_EMBED },
+    { uri: uri(visited_URIs[6]), transition: TRANSITION_FRAMED_LINK },
+    { uri: uri(visited_URIs[7]), transition: TRANSITION_DOWNLOAD },
+  ]);
 }
 
 // Initial batch of history items (7) + Bookmark_A (1)
@@ -155,82 +140,29 @@ function is_bookmark_A_altered(){
   return (node.accessCount!=0);
 }
 
-function run_test() {
+function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_execute()
+{
   // Private Browsing might not be available.
   let pb = get_PBSvc();
   if (!pb) {
     return;
   }
 
-  do_test_pending();
-
   Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   let bookmark_A_URI = NetUtil.newURI("http://google.com/");
   let bookmark_B_URI = NetUtil.newURI("http://bugzilla.mozilla.org/");
 
-  let onBookmarkAAdded = function() {
-    check_placesItem_Count();
-
-    // Bookmark-A should be bookmarked, data should be retrievable
-    do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_A_URI));
-    do_check_eq("google", PlacesUtils.bookmarks.getKeywordForURI(bookmark_A_URI));
-
-    // Enter Private Browsing Mode
-    pb.privateBrowsingEnabled = true;
-
-    // Check if Bookmark-A has been visited, should be false
-    do_check_false(is_bookmark_A_altered());
-
-    // We still have 7 history entries and 1 history entry, Bookmark-A.
-    check_placesItem_Count();
-
-    // Check if Bookmark-A is still accessible
-    do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_A_URI));
-    do_check_eq("google",PlacesUtils.bookmarks.getKeywordForURI(bookmark_A_URI));
-
-    // Create Bookmark-B
-    myBookmarks[1] = create_bookmark(bookmark_B_URI,"title 2", "bugzilla");
-    onBookmarkBAdded();
-  };
-
-  let onBookmarkBAdded = function() {
-    // A check on the history count should be same as before, 7 history entries with
-    // now 2 bookmark items (A) and bookmark (B), so we increase num_places_entries.
-    num_places_entries++; // Bookmark-B successfully added but not the history entries.
-    check_placesItem_Count();
-
-    // Exit Private Browsing Mode
-    pb.privateBrowsingEnabled = false;
-
-    // Check if Bookmark-B is still accessible
-    do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_B_URI));
-    do_check_eq("bugzilla",PlacesUtils.bookmarks.getKeywordForURI(bookmark_B_URI));
-
-    // Check if Bookmark-A is still accessible
-    do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_A_URI));
-    do_check_eq("google",PlacesUtils.bookmarks.getKeywordForURI(bookmark_A_URI));
-
-    // Check that the original set of history items are still accessible via isVisited
-    visited_URIs.forEach(function (visited_uri) {
-      do_check_true(PlacesUtils.bhistory.isVisited(uri(visited_uri)));
-      if (/embed/.test(visited_uri)) {
-        do_check_false(!!page_in_database(visited_uri));
-      }
-      else {
-        do_check_true(!!page_in_database(visited_uri));
-      }
-    });
-
-    Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
-    do_test_finished();
-  };
-
   // History database should be empty
   do_check_false(PlacesUtils.history.hasHistoryEntries);
 
   // Create a handful of history items with various visit types
-  fill_history_visitedURI();
+  yield task_fill_history_visitedURI();
 
   // History database should have entries
   do_check_true(PlacesUtils.history.hasHistoryEntries);
@@ -249,5 +181,54 @@ function run_test() {
     }
   });
 
-  onBookmarkAAdded();
-}
+  check_placesItem_Count();
+
+  // Bookmark-A should be bookmarked, data should be retrievable
+  do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_A_URI));
+  do_check_eq("google", PlacesUtils.bookmarks.getKeywordForURI(bookmark_A_URI));
+
+  // Enter Private Browsing Mode
+  pb.privateBrowsingEnabled = true;
+
+  // Check if Bookmark-A has been visited, should be false
+  do_check_false(is_bookmark_A_altered());
+
+  // We still have 7 history entries and 1 history entry, Bookmark-A.
+  check_placesItem_Count();
+
+  // Check if Bookmark-A is still accessible
+  do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_A_URI));
+  do_check_eq("google",PlacesUtils.bookmarks.getKeywordForURI(bookmark_A_URI));
+
+  // Create Bookmark-B
+  myBookmarks[1] = create_bookmark(bookmark_B_URI,"title 2", "bugzilla");
+
+  // A check on the history count should be same as before, 7 history entries with
+  // now 2 bookmark items (A) and bookmark (B), so we increase num_places_entries.
+  num_places_entries++; // Bookmark-B successfully added but not the history entries.
+  check_placesItem_Count();
+
+  // Exit Private Browsing Mode
+  pb.privateBrowsingEnabled = false;
+
+  // Check if Bookmark-B is still accessible
+  do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_B_URI));
+  do_check_eq("bugzilla",PlacesUtils.bookmarks.getKeywordForURI(bookmark_B_URI));
+
+  // Check if Bookmark-A is still accessible
+  do_check_true(PlacesUtils.bookmarks.isBookmarked(bookmark_A_URI));
+  do_check_eq("google",PlacesUtils.bookmarks.getKeywordForURI(bookmark_A_URI));
+
+  // Check that the original set of history items are still accessible via isVisited
+  visited_URIs.forEach(function (visited_uri) {
+    do_check_true(PlacesUtils.bhistory.isVisited(uri(visited_uri)));
+    if (/embed/.test(visited_uri)) {
+      do_check_false(!!page_in_database(visited_uri));
+    }
+    else {
+      do_check_true(!!page_in_database(visited_uri));
+    }
+  });
+
+  Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
+});

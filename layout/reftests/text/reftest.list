@@ -98,6 +98,7 @@ HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 != text-align-justify-last-end.html text-align-justify-last-center.html
 != text-align-justify-last-end.html text-align-justify-last-justify.html
 != text-align-justify-last-center.html text-align-justify-last-justify.html
+== text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
 == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
@@ -161,6 +162,7 @@ fails-if(!cocoaWidget) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notr
 == 726392-3.html 726392-3-ref.html
 == 745555-1.html 745555-1-ref.html
 == 745555-2.html 745555-2-ref.html
+== 820255.html 820255-ref.html
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support

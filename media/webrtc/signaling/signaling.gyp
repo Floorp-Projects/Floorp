@@ -187,7 +187,7 @@
             'USE_FAKE_MEDIA_STREAMS'
           ],
         }], 
-        ['OS=="linux"', {
+        ['(OS=="linux") or (OS=="android")', {
           'include_dirs': [
           ],
 
@@ -333,7 +333,6 @@
         './src/sipcc/core/common/text_strings.c',
         './src/sipcc/core/common/text_strings.h',
         './src/sipcc/core/common/ui.c',
-        './src/sipcc/core/common/vcm_util.c',
         # GSM
         './src/sipcc/core/gsm/ccapi.c',
         './src/sipcc/core/gsm/ccapi_strings.c',
@@ -412,7 +411,6 @@
         './src/sipcc/core/includes/util_ios_queue.h',
         './src/sipcc/core/includes/util_parse.h',
         './src/sipcc/core/includes/util_string.h',
-        './src/sipcc/core/includes/vcm_util.h',
         './src/sipcc/core/includes/www.h',
         './src/sipcc/core/includes/xml_defs.h',
         # SDP
@@ -592,12 +590,66 @@
 
       #
       # OS SPECIFIC
-      #      
+      #
       'conditions': [
-        ['OS=="linux"', {
+        ['(OS=="android") or (OS=="linux")', {
           'include_dirs': [
           ],
 
+          'defines' : [
+            'SIP_OS_LINUX',
+            '_GNU_SOURCE',
+            'CPR_MEMORY_LITTLE_ENDIAN',
+            'NO_SOCKET_POLLING',
+            'USE_TIMER_SELECT_BASED',
+            'FULL_BUILD',
+            'STUBBED_OUT',
+            'USE_PRINTF'
+            'LINUX',
+          ],
+
+          'cflags_mozilla': [
+          ],
+        }],
+        ['OS=="android"', {
+          'sources': [
+            # SIPSTACK
+            './src/sipcc/core/sipstack/sip_platform_task.c',
+
+            # PLAT
+            './src/sipcc/plat/common/dns_utils.c',
+
+            # CPR
+            './src/sipcc/cpr/android/cpr_android_errno.c',
+            './src/sipcc/cpr/android/cpr_android_init.c',
+            './src/sipcc/cpr/android/cpr_android_ipc.c',
+            './src/sipcc/cpr/android/cpr_android_locks.c',
+            './src/sipcc/cpr/android/cpr_android_socket.c',
+            './src/sipcc/cpr/android/cpr_android_stdio.c',
+            './src/sipcc/cpr/android/cpr_android_string.c',
+            './src/sipcc/cpr/android/cpr_android_threads.c',
+            './src/sipcc/cpr/android/cpr_android_timers_using_select.c',
+
+            './src/sipcc/cpr/android/cpr_assert.h',
+            './src/sipcc/cpr/android/cpr_android_align.h',
+            './src/sipcc/cpr/android/cpr_android_assert.h',
+            './src/sipcc/cpr/android/cpr_android_errno.h',
+            './src/sipcc/cpr/android/cpr_android_in.h',
+            './src/sipcc/cpr/android/cpr_darwin_ipc.h',
+            './src/sipcc/cpr/android/cpr_android_locks.h',
+            './src/sipcc/cpr/android/cpr_android_private.h',
+            './src/sipcc/cpr/android/cpr_android_rand.h',
+            './src/sipcc/cpr/android/cpr_android_socket.h',
+            './src/sipcc/cpr/android/cpr_android_stdio.h',
+            './src/sipcc/cpr/android/cpr_android_string.h',
+            './src/sipcc/cpr/android/cpr_android_strings.h',
+            './src/sipcc/cpr/android/cpr_android_time.h',
+            './src/sipcc/cpr/android/cpr_android_timers.h',
+            './src/sipcc/cpr/android/cpr_android_tst.h',
+            './src/sipcc/cpr/android/cpr_android_types.h',
+          ],
+        }],
+        ['OS=="linux"', {
           'sources': [
             # SIPSTACK
             './src/sipcc/core/sipstack/sip_platform_task.c',
@@ -614,8 +666,8 @@
             './src/sipcc/cpr/linux/cpr_linux_stdio.c',
             './src/sipcc/cpr/linux/cpr_linux_string.c',
             './src/sipcc/cpr/linux/cpr_linux_threads.c',
-            './src/sipcc/cpr/linux/cpr_linux_timers_using_select.c', 
-        
+            './src/sipcc/cpr/linux/cpr_linux_timers_using_select.c',
+
             './src/sipcc/cpr/linux/cpr_assert.h',
             './src/sipcc/cpr/linux/cpr_linux_align.h',
             './src/sipcc/cpr/linux/cpr_linux_assert.h',
@@ -633,22 +685,7 @@
             './src/sipcc/cpr/linux/cpr_linux_timers.h',
             './src/sipcc/cpr/linux/cpr_linux_tst.h',
             './src/sipcc/cpr/linux/cpr_linux_types.h',
-        
-          ],
 
-          'defines' : [
-            'SIP_OS_LINUX',
-            '_GNU_SOURCE',
-            'CPR_MEMORY_LITTLE_ENDIAN',
-            'NO_SOCKET_POLLING',
-            'USE_TIMER_SELECT_BASED',
-            'FULL_BUILD',
-            'STUBBED_OUT',
-            'USE_PRINTF'
-            'LINUX',
-          ],
-
-          'cflags_mozilla': [
           ],
         }],
         ['OS=="win"', {

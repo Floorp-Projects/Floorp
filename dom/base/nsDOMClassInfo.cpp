@@ -100,7 +100,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
 #include "nsClientRect.h"
-#include "nsIDOMHTMLPropertiesCollection.h"
 
 // DOM core includes
 #include "nsError.h"
@@ -163,8 +162,6 @@
 #include "nsIXSLTProcessorPrivate.h"
 
 #include "nsIDOMLSProgressEvent.h"
-#include "nsIDOMParser.h"
-#include "nsIDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsEventSource.h"
 #include "nsIDOMSettingsManager.h"
@@ -316,8 +313,6 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMMozBrowserFrame.h"
-#include "nsIDOMHTMLPropertiesCollection.h"
-#include "nsIDOMPropertyNodeList.h"
 
 #include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGAElement.h"
@@ -432,7 +427,6 @@
 
 #include "nsDOMFile.h"
 #include "nsDOMFileReader.h"
-#include "nsIDOMFormData.h"
 #include "ArchiveReader.h"
 #include "ArchiveRequest.h"
 
@@ -874,12 +868,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLCollection, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLPropertiesCollection, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(PropertyNodeList, 
-                           nsDOMGenericSH, 
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   // HTML element classes
   NS_DEFINE_CLASSINFO_DATA(HTMLElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -1401,11 +1389,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(StorageItem, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(DOMParser, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XMLSerializer, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsEventTargetSH,
@@ -1582,9 +1565,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageSender, nsDOMGenericSH,
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(FormData, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(DesktopNotification, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DesktopNotificationCenter, nsDOMGenericSH,
@@ -1725,7 +1705,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
 NS_DEFINE_CONTRACT_CTOR(FileReader, NS_FILEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(ArchiveReader, NS_ARCHIVEREADER_CONTRACTID)
-NS_DEFINE_CONTRACT_CTOR(FormData, NS_FORMDATA_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
                         "@mozilla.org/document-transformer;1?type=xslt")
@@ -1758,13 +1737,6 @@ NS_DEFINE_EVENT_CTOR(WheelEvent)
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
 
-static nsresult
-NS_XMLHttpRequestCtor(nsISupports** aInstancePtrResult)
-{
-  nsXMLHttpRequest* xhr = new nsXMLHttpRequest();
-  return CallQueryInterface(xhr, aInstancePtrResult);
-}
-
 struct nsConstructorFuncMapData
 {
   int32_t mDOMClassInfoID;
@@ -1780,7 +1752,7 @@ struct nsConstructorFuncMapData
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Blob, nsDOMMultipartFile::NewBlob)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMMultipartFile::NewFile)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
@@ -1795,10 +1767,8 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, sms::SmsFilter::NewSmsFilter)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XMLHttpRequest, NS_XMLHttpRequestCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FileReader, FileReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ArchiveReader, ArchiveReaderCtor)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FormData, FormDataCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XPathEvaluator, XPathEvaluatorCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(EventSource, EventSourceCtor)
@@ -1854,8 +1824,6 @@ jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
 jsid nsDOMClassInfo::sOpener_id          = JSID_VOID;
 jsid nsDOMClassInfo::sAll_id             = JSID_VOID;
 jsid nsDOMClassInfo::sTags_id            = JSID_VOID;
-jsid nsDOMClassInfo::sBaseURIObject_id   = JSID_VOID;
-jsid nsDOMClassInfo::sNodePrincipal_id   = JSID_VOID;
 jsid nsDOMClassInfo::sDocumentURIObject_id=JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
@@ -2126,8 +2094,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOpener_id,          cx, "opener");
   SET_JSID_TO_STRING(sAll_id,             cx, "all");
   SET_JSID_TO_STRING(sTags_id,            cx, "tags");
-  SET_JSID_TO_STRING(sBaseURIObject_id,   cx, "baseURIObject");
-  SET_JSID_TO_STRING(sNodePrincipal_id,   cx, "nodePrincipal");
   SET_JSID_TO_STRING(sDocumentURIObject_id,cx,"documentURIObject");
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
   SET_JSID_TO_STRING(sURL_id,             cx, "URL");
@@ -2690,16 +2656,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLCollection, nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLPropertiesCollection, nsIDOMHTMLPropertiesCollection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLPropertiesCollection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(PropertyNodeList, nsIDOMPropertyNodeList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPropertyNodeList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLElement, nsIDOMHTMLElement)
@@ -3933,14 +3889,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMToString)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMParser, nsIDOMParser)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMParser)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLSerializer, nsIDOMSerializer)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSerializer)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(XMLHttpRequest, nsIXMLHttpRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIJSXMLHttpRequest)
@@ -4245,10 +4193,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(FormData, nsIDOMFormData)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFormData)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DesktopNotification, nsIDOMDesktopNotification)
@@ -5224,8 +5168,6 @@ nsDOMClassInfo::ShutDown()
   sOpener_id          = JSID_VOID;
   sAll_id             = JSID_VOID;
   sTags_id            = JSID_VOID;
-  sBaseURIObject_id   = JSID_VOID;
-  sNodePrincipal_id   = JSID_VOID;
   sDocumentURIObject_id=JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
   sOnload_id          = JSID_VOID;
@@ -7754,64 +7696,6 @@ GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, JSMutable
   return JS_TRUE;  
 }
 
-// Can't be static so GetterShim will compile
-nsresult
-BaseURIObjectGetter(JSContext *cx, JSObject *obj, jsval *vp)
-{
-  // This function duplicates some of the logic in XPC_WN_HelperGetProperty
-  XPCWrappedNative *wrapper =
-    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-
-  // The error checks duplicate code in THROW_AND_RETURN_IF_BAD_WRAPPER
-  NS_ENSURE_TRUE(!wrapper || wrapper->IsValid(), NS_ERROR_XPC_HAS_BEEN_SHUTDOWN);
-
-  nsCOMPtr<nsINode> node = do_QueryWrappedNative(wrapper, obj);
-  NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIURI> uri = node->GetBaseURI();
-  return WrapNative(cx, JS_GetGlobalForScopeChain(cx), uri,
-                    &NS_GET_IID(nsIURI), true, vp);
-}
-
-// Can't be static so GetterShim will compile
-nsresult
-NodePrincipalGetter(JSContext *cx, JSObject *obj, jsval *vp)
-{
-  // This function duplicates some of the logic in XPC_WN_HelperGetProperty
-  XPCWrappedNative *wrapper =
-    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-
-  // The error checks duplicate code in THROW_AND_RETURN_IF_BAD_WRAPPER
-  NS_ENSURE_TRUE(!wrapper || wrapper->IsValid(), NS_ERROR_XPC_HAS_BEEN_SHUTDOWN);
-
-  nsCOMPtr<nsINode> node = do_QueryWrappedNative(wrapper, obj);
-  NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
-
-  return WrapNative(cx, JS_GetGlobalForScopeChain(cx), node->NodePrincipal(),
-                    &NS_GET_IID(nsIPrincipal), true, vp);
-}
-
-NS_IMETHODIMP
-nsNodeSH::PostCreatePrototype(JSContext * cx, JSObject * proto)
-{
-  // set up our proto first
-  nsresult rv = nsDOMGenericSH::PostCreatePrototype(cx, proto);
-
-  if (xpc::AccessCheck::isChrome(js::GetObjectCompartment(proto))) {
-    // Stick nodePrincipal and baseURIObject  properties on there
-    JS_DefinePropertyById(cx, proto, sNodePrincipal_id,
-                          JSVAL_VOID, GetterShim<NodePrincipalGetter>,
-                          nullptr,
-                          JSPROP_READONLY | JSPROP_SHARED);
-    JS_DefinePropertyById(cx, proto, sBaseURIObject_id,
-                          JSVAL_VOID, GetterShim<BaseURIObjectGetter>,
-                          nullptr,
-                          JSPROP_READONLY | JSPROP_SHARED);
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
                     JSObject **parentObj)
@@ -8577,6 +8461,7 @@ DocumentURIObjectGetter(JSContext *cx, JSObject *obj, jsval *vp)
 NS_IMETHODIMP
 nsDocumentSH::PostCreatePrototype(JSContext * cx, JSObject * proto)
 {
+  // XXXbz when this goes away, kill GetterShim as well.
   // set up our proto first
   nsresult rv = nsNodeSH::PostCreatePrototype(cx, proto);
 
@@ -9641,6 +9526,7 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 nsresult
 nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wrapper,
                                                   JSObject *obj,
+                                                  JSContext *cx,
                                                   nsNPAPIPluginInstance **_result)
 {
   *_result = nullptr;
@@ -9651,22 +9537,11 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
   NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
 
-  nsresult rv = objlc->GetPluginInstance(_result);
-  if (NS_SUCCEEDED(rv) && *_result) {
-    return rv;
-  }
-
-  // If it's not safe to run script we'll only return the instance if it exists.
-  // Ditto if the document is inactive.
-  if (!nsContentUtils::IsSafeToRunScript() || !content->OwnerDoc()->IsActive()) {
-    return rv;
-  }
-
-  // We don't care if this actually starts the plugin or not, we just want to
-  // try to start it now if possible.
-  objlc->SyncStartPluginInstance();
-
-  return objlc->GetPluginInstance(_result);
+  bool callerIsContentJS = (!xpc::AccessCheck::callerIsChrome() &&
+                            !xpc::AccessCheck::callerIsXBL(cx) &&
+                            js::IsContextRunningJS(cx));
+  return objlc->ScriptRequestPluginInstance(callerIsContentJS,
+                                            _result);
 }
 
 class nsPluginProtoChainInstallRunner MOZ_FINAL : public nsIRunnable
@@ -9727,7 +9602,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
   JSAutoCompartment ac(cx, obj);
 
   nsRefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, getter_AddRefs(pi));
+  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, cx, getter_AddRefs(pi));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!pi) {
@@ -9933,7 +9808,7 @@ nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
                                jsval *argv, jsval *vp, bool *_retval)
 {
   nsRefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, getter_AddRefs(pi));
+  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, cx, getter_AddRefs(pi));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If obj is a native wrapper, or if there's no plugin around for
@@ -10000,7 +9875,7 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   // possible.
 
   nsRefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, getter_AddRefs(pi));
+  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, cx, getter_AddRefs(pi));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,

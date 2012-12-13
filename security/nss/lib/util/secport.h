@@ -5,7 +5,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.28 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id: secport.h,v 1.29 2012/11/14 01:14:12 wtc%google.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -41,20 +41,11 @@
 # endif
 #endif
 
-#if defined(_WIN32_WCE)
-#include <windef.h>
-#include <types.h>
-#else
 #include <sys/types.h>
-#endif
 
 #include <ctype.h>
 #include <string.h>
-#if defined(_WIN32_WCE)
-#include <stdlib.h>	/* WinCE puts some stddef symbols here. */
-#else
 #include <stddef.h>
-#endif
 #include <stdlib.h>
 #include "prtypes.h"
 #include "prlog.h"	/* for PR_ASSERT */

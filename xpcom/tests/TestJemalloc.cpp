@@ -10,17 +10,17 @@
  */
 
 #include "TestHarness.h"
-#include "jemalloc.h"
+#include "mozmemory.h"
 
 static inline bool
 TestOne(size_t size)
 {
     size_t req = size;
-    size_t adv = je_malloc_usable_size_in_advance(req);
+    size_t adv = malloc_good_size(req);
     char* p = (char*)malloc(req);
     size_t usable = moz_malloc_usable_size(p);
     if (adv != usable) {
-      fail("je_malloc_usable_size_in_advance(%d) --> %d; "
+      fail("malloc_good_size(%d) --> %d; "
            "malloc_usable_size(%d) --> %d",
            req, adv, req, usable);
       return false;
@@ -58,7 +58,7 @@ TestJemallocUsableSizeInAdvance()
     if (!TestThree(n))
       return NS_ERROR_UNEXPECTED;
 
-  passed("je_malloc_usable_size_in_advance");
+  passed("malloc_good_size");
 
   return NS_OK;
 }

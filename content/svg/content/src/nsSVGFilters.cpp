@@ -5123,8 +5123,8 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
         S[2] = pointsAt[2] - lightPos[2];
         NORMALIZE(S);
         float dot = -DOT(L, S);
-        if (dot < cosConeAngle) dot = 0;
         float tmp = pow(dot, specularExponent);
+        if (dot < cosConeAngle) tmp = 0;
         color = NS_RGB(uint8_t(NS_GET_R(lightColor) * tmp),
                        uint8_t(NS_GET_G(lightColor) * tmp),
                        uint8_t(NS_GET_B(lightColor) * tmp));
@@ -5983,7 +5983,7 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
   uint8_t* targetData = aTarget->mImage->Data();
   uint32_t stride = aTarget->mImage->Stride();
 
-  static uint8_t dummyData[4] = { 0, 0, 0, 0 };
+  static const uint8_t dummyData[4] = { 0, 0, 0, 0 };
 
   static const uint16_t channelMap[5] = {
                              0,
@@ -6010,7 +6010,7 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
 
       bool outOfBounds = sourceX < 0 || sourceX >= width ||
                          sourceY < 0 || sourceY >= height;
-      uint8_t* data;
+      const uint8_t* data;
       int32_t multiplier;
       if (outOfBounds) {
         data = dummyData;

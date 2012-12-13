@@ -1782,8 +1782,7 @@ static bool SelectorMatches(Element* aElement,
         break;
 
       case nsCSSPseudoClasses::ePseudoClass_root:
-        if (aElement->GetParent() ||
-            aElement != aElement->OwnerDoc()->GetRootElement()) {
+        if (aElement != aElement->OwnerDoc()->GetRootElement()) {
           return false;
         }
         break;
@@ -2019,6 +2018,18 @@ static bool SelectorMatches(Element* aElement,
 
           if ((dirString.EqualsLiteral("rtl") && !elementIsRTL) ||
               (dirString.EqualsLiteral("ltr") && !elementIsLTR)) {
+            return false;
+          }
+        }
+        break;
+
+      case nsCSSPseudoClasses::ePseudoClass_scope:
+        if (aTreeMatchContext.HasSpecifiedScope()) {
+          if (!aTreeMatchContext.IsScopeElement(aElement)) {
+            return false;
+          }
+        } else {
+          if (aElement != aElement->OwnerDoc()->GetRootElement()) {
             return false;
           }
         }

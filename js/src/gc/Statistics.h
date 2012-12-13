@@ -10,6 +10,8 @@
 
 #include <string.h>
 
+#include "mozilla/Util.h"
+
 #include "jsfriendapi.h"
 #include "jspubtd.h"
 #include "jsutil.h"
@@ -22,21 +24,24 @@ namespace gcstats {
 enum Phase {
     PHASE_GC_BEGIN,
     PHASE_WAIT_BACKGROUND_THREAD,
+    PHASE_MARK_DISCARD_CODE,
     PHASE_PURGE,
     PHASE_MARK,
-    PHASE_MARK_DISCARD_CODE,
     PHASE_MARK_ROOTS,
     PHASE_MARK_TYPES,
     PHASE_MARK_DELAYED,
-    PHASE_FINALIZE_START,
     PHASE_SWEEP,
+    PHASE_SWEEP_MARK,
+    PHASE_SWEEP_MARK_DELAYED,
     PHASE_SWEEP_MARK_INCOMING_BLACK,
     PHASE_SWEEP_MARK_WEAK,
     PHASE_SWEEP_MARK_INCOMING_GRAY,
     PHASE_SWEEP_MARK_GRAY,
     PHASE_SWEEP_MARK_GRAY_WEAK,
+    PHASE_FINALIZE_START,
     PHASE_SWEEP_ATOMS,
     PHASE_SWEEP_COMPARTMENTS,
+    PHASE_SWEEP_DISCARD_CODE,
     PHASE_SWEEP_TABLES,
     PHASE_SWEEP_TABLES_WRAPPER,
     PHASE_SWEEP_TABLES_BASE_SHAPE,
@@ -44,17 +49,16 @@ enum Phase {
     PHASE_SWEEP_TABLES_TYPE_OBJECT,
     PHASE_SWEEP_TABLES_BREAKPOINT,
     PHASE_SWEEP_TABLES_REGEXP,
-    PHASE_SWEEP_OBJECT,
-    PHASE_SWEEP_STRING,
-    PHASE_SWEEP_SCRIPT,
-    PHASE_SWEEP_SHAPE,
-    PHASE_SWEEP_IONCODE,
-    PHASE_SWEEP_DISCARD_CODE,
     PHASE_DISCARD_ANALYSIS,
     PHASE_DISCARD_TI,
     PHASE_FREE_TI_ARENA,
     PHASE_SWEEP_TYPES,
     PHASE_CLEAR_SCRIPT_ANALYSIS,
+    PHASE_SWEEP_OBJECT,
+    PHASE_SWEEP_STRING,
+    PHASE_SWEEP_SCRIPT,
+    PHASE_SWEEP_SHAPE,
+    PHASE_SWEEP_IONCODE,
     PHASE_FINALIZE_END,
     PHASE_DESTROY,
     PHASE_GC_END,
@@ -145,6 +149,13 @@ struct Statistics {
 
     /* Allocated space before the GC started. */
     size_t preBytes;
+
+#ifdef DEBUG
+    /* Phases that are currently on stack. */
+    static const size_t MAX_NESTING = 8;
+    Phase phaseNesting[MAX_NESTING];
+#endif
+    mozilla::DebugOnly<size_t> phaseNestingDepth;
 
     /* Sweep times for SCCs of compartments. */
     Vector<int64_t, 0, SystemAllocPolicy> sccTimes;

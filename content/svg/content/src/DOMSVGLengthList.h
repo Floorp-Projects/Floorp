@@ -71,7 +71,7 @@ public:
     if (mAList) {
       ( IsAnimValList() ? mAList->mAnimVal : mAList->mBaseVal ) = nullptr;
     }
-  };
+  }
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);

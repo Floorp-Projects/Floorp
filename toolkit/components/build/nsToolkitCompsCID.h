@@ -87,9 +87,6 @@
 #define NS_FAVICONSERVICE_CONTRACTID \
   "@mozilla.org/browser/favicon-service;1"
 
-#define NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID \
-  "@mozilla.org/browser/places/import-export-service;1"
-
 #define NS_APPSTARTUP_CONTRACTID \
   "@mozilla.org/toolkit/app-startup;1"
 
@@ -169,10 +166,6 @@
 
 #define NS_FAVICONSERVICE_CID \
 { 0x984e3259, 0x9266, 0x49cf, { 0xb6, 0x05, 0x60, 0xb0, 0x22, 0xa0, 0x07, 0x56 } }
-
-// {6fb0c970-e1b1-11db-8314-0800200c9a66}
-#define NS_PLACESIMPORTEXPORTSERVICE_CID \
-{ 0x6fb0c970, 0xe1b1, 0x11db, { 0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
 #if defined(USE_MOZ_UPDATER)
 #define NS_UPDATEPROCESSOR_CID \

@@ -334,12 +334,17 @@ class Histogram {
     void CheckSize(const Histogram& histogram) const;
 
     // Accessor for histogram to make routine additions.
-    void Accumulate(Sample value, Count count, size_t index);
+    void AccumulateWithLinearStats(Sample value, Count count, size_t index);
+    // Alternate routine for exponential histograms.
+    void AccumulateWithExponentialStats(Sample value, Count count, size_t index);
 
     // Accessor methods.
     Count counts(size_t i) const { return counts_[i]; }
     Count TotalCount() const;
     int64_t sum() const { return sum_; }
+    uint64_t sum_squares() const { return sum_squares_; }
+    double log_sum() const { return log_sum_; }
+    double log_sum_squares() const { return log_sum_squares_; }
     int64_t redundant_count() const { return redundant_count_; }
     size_t size() const { return counts_.size(); }
 
@@ -360,6 +365,13 @@ class Histogram {
     // Save simple stats locally.  Note that this MIGHT get done in base class
     // without shared memory at some point.
     int64_t sum_;         // sum of samples.
+    uint64_t sum_squares_; // sum of squares of samples.
+
+    // These fields may or may not be updated at the discretion of the
+    // histogram.  We use the natural log and compute ln(sample+1) so that
+    // zeros are handled sanely.
+    double log_sum_;      // sum of logs of samples.
+    double log_sum_squares_; // sum of squares of logs of samples
 
    private:
     // Allow tests to corrupt our innards for testing purposes.
@@ -511,6 +523,10 @@ class Histogram {
 
   virtual uint32_t CalculateRangeChecksum() const;
 
+  // Finally, provide the state that changes with the addition of each new
+  // sample.
+  SampleSet sample_;
+
  private:
   // Allow tests to corrupt our innards for testing purposes.
   FRIEND_TEST(HistogramTest, CorruptBucketBounds);
@@ -578,10 +594,6 @@ class Histogram {
   // have been corrupted.
   uint32_t range_checksum_;
 
-  // Finally, provide the state that changes with the addition of each new
-  // sample.
-  SampleSet sample_;
-
   DISALLOW_COPY_AND_ASSIGN(Histogram);
 };
 
@@ -608,6 +620,8 @@ class LinearHistogram : public Histogram {
 
   // Overridden from Histogram:
   virtual ClassType histogram_type() const;
+
+  virtual void Accumulate(Sample value, Count count, size_t index);
 
   // Store a list of number/text values for use in rendering the histogram.
   // The last element in the array has a null in its "description" slot.

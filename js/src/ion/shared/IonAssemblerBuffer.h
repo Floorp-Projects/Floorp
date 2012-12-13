@@ -55,19 +55,19 @@ template<int SliceSize>
 struct BufferSlice : public InlineForwardListNode<BufferSlice<SliceSize> > {
   protected:
     // How much data has been added to the current node.
-    uint32 nodeSize;
+    uint32_t nodeSize;
   public:
     BufferSlice *getNext() { return static_cast<BufferSlice *>(this->next); }
     void setNext(BufferSlice<SliceSize> *next_) {
         JS_ASSERT(this->next == NULL);
         this->next = next_;
     }
-    uint8 instructions [SliceSize];
+    uint8_t instructions [SliceSize];
     unsigned int size() {
         return nodeSize;
     }
     BufferSlice() : InlineForwardListNode<BufferSlice<SliceSize> >(NULL), nodeSize(0) {}
-    void putBlob(uint32 instSize, uint8* inst) {
+    void putBlob(uint32_t instSize, uint8_t* inst) {
         if (inst != NULL)
             memcpy(&instructions[size()], inst, instSize);
         nodeSize += instSize;
@@ -77,7 +77,7 @@ struct BufferSlice : public InlineForwardListNode<BufferSlice<SliceSize> > {
 template<int SliceSize, class Inst>
 struct AssemblerBuffer {
   public:
-    AssemblerBuffer() : head(NULL), tail(NULL), m_oom(false), bufferSize(0) {}
+    AssemblerBuffer() : head(NULL), tail(NULL), m_bail(false), m_oom(false), bufferSize(0) {}
   protected:
     typedef BufferSlice<SliceSize> Slice;
     typedef AssemblerBuffer<SliceSize, Inst> AssemblerBuffer_;
@@ -85,9 +85,10 @@ struct AssemblerBuffer {
     Slice *tail;
   public:
     bool m_oom;
+    bool m_bail;
     // How much data has been added to the buffer thusfar.
-    uint32 bufferSize;
-    uint32 lastInstSize;
+    uint32_t bufferSize;
+    uint32_t lastInstSize;
     bool isAligned(int alignment) const {
         // make sure the requested alignment is a power of two.
         JS_ASSERT((alignment & (alignment-1)) == 0);
@@ -118,18 +119,18 @@ struct AssemblerBuffer {
         return true;
     }
 
-    BufferOffset putByte(uint8 value) {
-        return putBlob(sizeof(value), (uint8*)&value);
+    BufferOffset putByte(uint8_t value) {
+        return putBlob(sizeof(value), (uint8_t*)&value);
     }
 
-    BufferOffset putShort(uint16 value) {
-        return putBlob(sizeof(value), (uint8*)&value);
+    BufferOffset putShort(uint16_t value) {
+        return putBlob(sizeof(value), (uint8_t*)&value);
     }
 
-    BufferOffset putInt(uint32 value) {
-        return putBlob(sizeof(value), (uint8*)&value);
+    BufferOffset putInt(uint32_t value) {
+        return putBlob(sizeof(value), (uint8_t*)&value);
     }
-    BufferOffset putBlob(uint32 instSize, uint8 *inst) {
+    BufferOffset putBlob(uint32_t instSize, uint8_t *inst) {
         if (!ensureSpace(instSize))
             return BufferOffset();
         BufferOffset ret = nextOffset();
@@ -148,10 +149,16 @@ struct AssemblerBuffer {
         return size();
     }
     bool oom() const {
-        return m_oom;
+        return m_oom || m_bail;
+    }
+    bool bail() const {
+        return m_bail;
     }
     void fail_oom() {
         m_oom = true;
+    }
+    void fail_bail() {
+        m_bail = true;
     }
     Inst *getInst(BufferOffset off) {
         unsigned int local_off = off.getOffset();

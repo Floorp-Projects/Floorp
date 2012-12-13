@@ -2981,15 +2981,20 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #default-notification-icon {
   list-style-image: url(chrome://global/skin/icons/information-16.png);
 }
+@media (min-resolution: 2dppx) {
+  #default-notification-icon {
+    list-style-image: url(chrome://global/skin/icons/information-32.png);
+  }
+}
 
 #identity-notification-icon {
   list-style-image: url(chrome://mozapps/skin/profile/profileicon.png);
 }
+/* XXX: need HiDPI version */
 
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
-
 @media (min-resolution: 2dppx) {
   #geo-notification-icon {
     list-style-image: url(chrome://browser/skin/Geolocation-16@2x.png);
@@ -3005,18 +3010,36 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
+#indexedDB-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/question-16.png);
+}
+@media (min-resolution: 2dppx) {
+  #indexedDB-notification-icon {
+    list-style-image: url(chrome://global/skin/icons/question-32.png);
+  }
+}
+
 #addons-notification-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
+}
+@media (min-resolution: 2dppx) {
+  #addons-notification-icon {
+    list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+  }
 }
 
 #password-notification-icon {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
 }
+@media (min-resolution: 2dppx) {
+  #password-notification-icon {
+    list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16@2x.png);
+  }
+}
 
 #webapps-notification-icon {
   list-style-image: url(chrome://browser/skin/webapps-16.png);
 }
-
 @media (min-resolution: 2dppx) {
   #webapps-notification-icon {
     list-style-image: url(chrome://browser/skin/webapps-16@2x.png);
@@ -3027,8 +3050,42 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
 }
 
+#blocked-plugins-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/plugins/notifyPluginBlocked.png);
+}
+
+@media (min-resolution: 2dppx) {
+  #blocked-plugins-notification-icon {
+    list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked.png);
+  }
+}
+
+#blocked-plugins-notification-icon[showing] {
+  animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
+}
+
+@keyframes pluginBlockedNotification {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (min-resolution: 2dppx) {
+  #plugins-notification-icon {
+    list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
+  }
+}
+
 #webRTC-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
+}
+@media (min-resolution: 2dppx) {
+  #webRTC-notification-icon {
+    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
+  }
 }
 
 .popup-notification-icon {
@@ -3093,10 +3150,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
-#indexedDB-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/question-16.png);
-}
-
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .popup-notification-icon[popupid="indexedDB-quota-prompt"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
@@ -3128,10 +3181,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #identity-popup-more-info-button:hover:active {
   @hudButtonPressed@
-}
-
-#download-monitor {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadStatusIcon.png");
 }
 
 /* ::::: Keyboard UI Panel ::::: */
@@ -3975,6 +4024,12 @@ chatbox[minimized="true"] {
 panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
 panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical.png");
+}
+@media (min-resolution: 2dppx) {
+  panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
+  panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical@2x.png");
+ }
 }
 
 .click-to-play-plugins-notification-content {

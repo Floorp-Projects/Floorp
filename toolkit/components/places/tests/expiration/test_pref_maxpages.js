@@ -14,12 +14,10 @@
  * If the pref is set to a number < 0 we will use the default value.
  */
 
-let os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
 let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
 
-let gTests = [
+let tests = [
 
   { desc: "Set max_pages to a negative value, with 1 page.",
     maxPages: -1,
@@ -62,10 +60,11 @@ let gTests = [
   },
 ];
 
-let gCurrentTest;
-let gTestIndex = 0;
-
 function run_test() {
+  run_next_test();
+}
+
+add_task(function test_pref_maxpages() {
   // The pref should not exist by default.
   try {
     getMaxPages();
@@ -76,22 +75,16 @@ function run_test() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
-  do_test_pending();
-  run_next_test();
-}
-
-function run_next_test() {
-  if (gTests.length) {
-    gCurrentTest = gTests.shift();
-    gTestIndex++;
-    print("\nTEST " + gTestIndex + ": " + gCurrentTest.desc);
-    gCurrentTest.receivedNotifications = 0;
+  for (let testIndex = 1; testIndex <= tests.length; testIndex++) {
+    let currentTest = tests[testIndex -1];
+    print("\nTEST " + testIndex + ": " + currentTest.desc);
+    currentTest.receivedNotifications = 0;
 
     // Setup visits.
     let now = getExpirablePRTime();
-    for (let i = 0; i < gCurrentTest.addPages; i++) {
-      hs.addVisit(uri("http://" + gTestIndex + "." + i + ".mozilla.org/"), now++, null,
-                  hs.TRANSITION_TYPED, false, 0);
+    for (let i = 0; i < currentTest.addPages; i++) {
+      let page = "http://" + testIndex + "." + i + ".mozilla.org/";
+      yield promiseAddVisits({ uri: uri(page), visitDate: now++ });
     }
 
     // Observe history.
@@ -104,7 +97,7 @@ function run_next_test() {
       onBeforeDeleteURI: function() {},
       onDeleteURI: function(aURI) {
         print("onDeleteURI " + aURI.spec);
-        gCurrentTest.receivedNotifications++;
+        currentTest.receivedNotifications++;
       },
       onPageChanged: function() {},
       onDeleteVisits: function(aURI, aTime) {
@@ -113,33 +106,20 @@ function run_next_test() {
     };
     hs.addObserver(historyObserver, false);
 
-    // Observe expirations.
-    observer = {
-      observe: function(aSubject, aTopic, aData) {
-        os.removeObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-        hs.removeObserver(historyObserver, false);
+    setMaxPages(currentTest.maxPages);
 
-        // This test finished.
-        check_result();
-      }
-    };
-    os.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+    // Expire now.
+    yield promiseForceExpirationStep(-1);
 
-    setMaxPages(gCurrentTest.maxPages);
-    // Expire now, observers will check results.
-    force_expiration_step(-1);
+    hs.removeObserver(historyObserver, false);
+
+    do_check_eq(currentTest.receivedNotifications,
+                currentTest.expectedNotifications);
+
+    // Clean up.
+    yield promiseClearHistory();
   }
-  else {
-    clearMaxPages();
-    promiseClearHistory().then(do_test_finished);
-  }
-}
 
-function check_result() {
-
-  do_check_eq(gCurrentTest.receivedNotifications,
-              gCurrentTest.expectedNotifications);
-
-  // Clean up.
-  promiseClearHistory().then(run_next_test);
-}
+  clearMaxPages();
+  yield promiseClearHistory();
+});

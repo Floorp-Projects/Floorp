@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "MarkupView",
-  "resource://gre/modules/devtools/MarkupView.jsm");
+  "resource:///modules/devtools/MarkupView.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Selection",
   "resource:///modules/devtools/Selection.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "HTMLBreadcrumbs",

@@ -1234,7 +1234,7 @@ GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t ad
     if (tag == TypeTag) {
         ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
     } else if (tag == SavedValueArrayTag) {
-        JS_ASSERT(!(addr & Cell::CellMask));
+        JS_ASSERT(!(addr & CellMask));
         JSObject *obj = reinterpret_cast<JSObject *>(addr);
         HeapValue *vp, *end;
         if (restoreValueArray(obj, (void **)&vp, (void **)&end))
@@ -1299,7 +1299,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
 
     if (tag == ValueArrayTag) {
         JS_STATIC_ASSERT(ValueArrayTag == 0);
-        JS_ASSERT(!(addr & Cell::CellMask));
+        JS_ASSERT(!(addr & CellMask));
         obj = reinterpret_cast<JSObject *>(addr);
         uintptr_t addr2 = stack.pop();
         uintptr_t addr3 = stack.pop();

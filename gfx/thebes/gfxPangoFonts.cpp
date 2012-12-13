@@ -1504,6 +1504,15 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
         for (uint32_t f = 0; f < familyFonts->Length(); ++f) {
             FcPattern *font = familyFonts->ElementAt(f);
 
+            // Fix up the family name of user-font patterns, as the same
+            // font entry may be used (via the UserFontCache) for multiple
+            // CSS family names
+            if (isUserFont) {
+                font = FcPatternDuplicate(font);
+                FcPatternDel(font, FC_FAMILY);
+                FcPatternAddString(font, FC_FAMILY, family);
+            }
+
             // User fonts are already filtered by slant (but not size) in
             // mUserFontSet->FindFontEntry().
             if (!isUserFont && !SlantIsAcceptable(font, requestedSlant))
@@ -1524,7 +1533,12 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
             // FcFontSetDestroy will remove a reference but FcFontSetAdd
             // does _not_ take a reference!
             if (FcFontSetAdd(fontSet, font)) {
-                FcPatternReference(font);
+                // We don't add a reference here for user fonts, because we're
+                // using a local clone of the pattern (see above) in order to
+                // override the family name
+                if (!isUserFont) {
+                    FcPatternReference(font);
+                }
             }
         }
     }

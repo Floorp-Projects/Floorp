@@ -243,6 +243,12 @@ Base64Encode(const nsACString &aBinaryData, nsACString &aString)
     return NS_ERROR_FAILURE;
   }
 
+  // Don't ask PR_Base64Encode to encode empty strings
+  if (aBinaryData.IsEmpty()) {
+    aString.Truncate();
+    return NS_OK;
+  }
+
   uint32_t stringLen = ((aBinaryData.Length() + 2) / 3) * 4;
 
   char *buffer;
@@ -285,6 +291,12 @@ Base64Decode(const nsACString &aString, nsACString &aBinaryData)
   // Check for overflow.
   if (aString.Length() > UINT32_MAX / 3) {
     return NS_ERROR_FAILURE;
+  }
+
+  // Don't ask PR_Base64Decode to decode the empty string
+  if (aString.IsEmpty()) {
+    aBinaryData.Truncate();
+    return NS_OK;
   }
 
   uint32_t binaryDataLen = ((aString.Length() * 3) / 4);

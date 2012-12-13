@@ -1648,6 +1648,27 @@ nestegg_get_cue_point(nestegg * ctx, unsigned int cluster_num, int64_t max_offse
 }
 
 int
+nestegg_offset_seek(nestegg * ctx, uint64_t offset)
+{
+  int r;
+
+  /* Seek and set up parser state for segment-level element (Cluster). */
+  r = ne_io_seek(ctx->io, offset, NESTEGG_SEEK_SET);
+  if (r != 0)
+    return -1;
+  ctx->last_id = 0;
+  ctx->last_size = 0;
+
+  while (ctx->ancestor)
+    ne_ctx_pop(ctx);
+
+  ne_ctx_push(ctx, ne_top_level_elements, ctx);
+  ne_ctx_push(ctx, ne_segment_elements, &ctx->segment);
+
+  return 0;
+}
+
+int
 nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
 {
   int r;
@@ -1691,17 +1712,7 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
   }
 
   /* Seek and set up parser state for segment-level element (Cluster). */
-  r = ne_io_seek(ctx->io, ctx->segment_offset + seek_pos, NESTEGG_SEEK_SET);
-  if (r != 0)
-    return -1;
-  ctx->last_id = 0;
-  ctx->last_size = 0;
-
-  while (ctx->ancestor)
-    ne_ctx_pop(ctx);
-
-  ne_ctx_push(ctx, ne_top_level_elements, ctx);
-  ne_ctx_push(ctx, ne_segment_elements, &ctx->segment);
+  r = nestegg_offset_seek(ctx, ctx->segment_offset + seek_pos);
   ctx->log(ctx, NESTEGG_LOG_DEBUG, "seek: parsing cluster elements");
   r = ne_parse(ctx, NULL, -1);
   if (r != 1)

@@ -37,10 +37,10 @@ class nsHTMLFormElement;
 class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
-class nsIDOMHTMLPropertiesCollection;
 class nsIDOMDOMStringMap;
+
 namespace mozilla {
-namespace dom {
+namespace dom{
 class HTMLPropertiesCollection;
 }
 }
@@ -239,6 +239,25 @@ public:
     }
     return style;
   }
+#define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
+// The using nsINode::Get/SetOn* are to avoid warnings about shadowing the XPCOM
+// getter and setter on nsINode.
+#define FORWARDED_EVENT(name_, id_, type_, struct_)                           \
+  using nsINode::GetOn##name_;                                                \
+  using nsINode::SetOn##name_;                                                \
+  mozilla::dom::EventHandlerNonNull* GetOn##name_();                          \
+  void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler,               \
+                    mozilla::ErrorResult& error);
+#define ERROR_EVENT(name_, id_, type_, struct_)                               \
+  using nsINode::GetOn##name_;                                                \
+  using nsINode::SetOn##name_;                                                \
+  already_AddRefed<mozilla::dom::EventHandlerNonNull> GetOn##name_();         \
+  void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler,               \
+                    mozilla::ErrorResult& error);
+#include "nsEventNameList.h"
+#undef ERROR_EVENT
+#undef FORWARDED_EVENT
+#undef EVENT
   void GetClassName(nsAString& aClassName)
   {
     GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
@@ -297,7 +316,7 @@ public:
   NS_IMETHOD GetItemValue(nsIVariant** aValue);
   NS_IMETHOD SetItemValue(nsIVariant* aValue);
 protected:
-  void GetProperties(nsIDOMHTMLPropertiesCollection** aProperties);
+  void GetProperties(nsISupports** aProperties);
   void GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu) const;
 
   // These methods are used to implement element-specific behavior of Get/SetItemValue
@@ -1642,7 +1661,7 @@ protected:
     nsGenericHTMLElement::SetItemId(aId, rv);                                  \
     return rv.ErrorCode();                                                     \
   }                                                                            \
-  NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn)           \
+  NS_IMETHOD GetProperties(nsISupports** aReturn)                              \
       MOZ_FINAL {                                                              \
     nsGenericHTMLElement::GetProperties(aReturn);                              \
     return NS_OK;                                                              \

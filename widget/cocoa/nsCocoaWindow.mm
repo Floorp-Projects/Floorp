@@ -1124,19 +1124,25 @@ void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Move(int32_t aX, int32_t aY)
+// Coordinates are global display pixels
+NS_IMETHODIMP nsCocoaWindow::Move(double aX, double aY)
 {
-  if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
+  if (!mWindow) {
     return NS_OK;
+  }
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
-  CGFloat scaleFactor = BackingScaleFactor();
   NSPoint coord = {
-    nsCocoaUtils::DevPixelsToCocoaPoints(aX, scaleFactor),
-    nsCocoaUtils::FlippedScreenY(nsCocoaUtils::DevPixelsToCocoaPoints(aY, scaleFactor))
+    static_cast<float>(aX),
+    static_cast<float>(nsCocoaUtils::FlippedScreenY(NSToIntRound(aY)))
   };
-  [mWindow setFrameTopLeftPoint:coord];
+
+  NSRect frame = [mWindow frame];
+  if (frame.origin.x != coord.x ||
+      frame.origin.y + frame.size.height != coord.y) {
+    [mWindow setFrameTopLeftPoint:coord];
+  }
 
   return NS_OK;
 }
@@ -1301,38 +1307,45 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
-                                 int32_t aWidth, int32_t aHeight,
-                                 bool aRepaint, bool aConstrainToCurrentScreen)
+// Coordinates are global display pixels
+nsresult nsCocoaWindow::DoResize(double aX, double aY,
+                                 double aWidth, double aHeight,
+                                 bool aRepaint,
+                                 bool aConstrainToCurrentScreen)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  ConstrainSize(&aWidth, &aHeight);
-
-  nsIntRect newBounds(aX, aY, aWidth, aHeight);
-
-  // convert requested size into Cocoa points
-  CGFloat scaleFactor = BackingScaleFactor();
-  NSRect cocoaBounds = nsCocoaUtils::DevPixelsToCocoaPoints(newBounds, scaleFactor);
-
-  // constrain to the visible area of the window's current screen if requested,
-  // or to the screen that contains the largest area of the new rect
-  nsCocoaUtils::NSRectToGeckoRect(cocoaBounds, newBounds);
-  FitRectToVisibleAreaForScreen(newBounds,
-                                aConstrainToCurrentScreen ?
-                                    [mWindow screen] : nullptr);
-
-  // then convert back to device pixels
-  nsCocoaUtils::GeckoRectToNSRect(newBounds, cocoaBounds);
-  newBounds = nsCocoaUtils::CocoaPointsToDevPixels(cocoaBounds, scaleFactor);
-
-  BOOL isMoving = (mBounds.x != newBounds.x || mBounds.y != newBounds.y);
-  BOOL isResizing = (mBounds.width != newBounds.width || mBounds.height != newBounds.height);
-
-  if (!mWindow || (!isMoving && !isResizing))
+  if (!mWindow) {
     return NS_OK;
+  }
 
-  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRectDevPix(newBounds, scaleFactor);
+  // ConstrainSize operates in device pixels, so we need to convert using
+  // the backing scale factor here
+  CGFloat scale = BackingScaleFactor();
+  int32_t width = NSToIntRound(aWidth * scale);
+  int32_t height = NSToIntRound(aHeight * scale);
+  ConstrainSize(&width, &height);
+
+  nsIntRect newBounds(aX, aY,
+                      NSToIntRound(width / scale),
+                      NSToIntRound(height / scale));
+
+  // constrain to the screen that contains the largest area of the new rect
+  FitRectToVisibleAreaForScreen(newBounds, aConstrainToCurrentScreen ?
+                                           [mWindow screen] : nullptr);
+
+  // convert requested bounds into Cocoa coordinate system
+  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);
+
+  NSRect frame = [mWindow frame];
+  BOOL isMoving = newFrame.origin.x != frame.origin.x ||
+                  newFrame.origin.y != frame.origin.y;
+  BOOL isResizing = newFrame.size.width != frame.size.width ||
+                    newFrame.size.height != frame.size.height;
+
+  if (!isMoving && !isResizing) {
+    return NS_OK;
+  }
 
   // We ignore aRepaint -- we have to call display:YES, otherwise the
   // title bar doesn't immediately get repainted and is displayed in
@@ -1344,16 +1357,20 @@ nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY,
-                                    int32_t aWidth, int32_t aHeight,
+// Coordinates are global display pixels
+NS_IMETHODIMP nsCocoaWindow::Resize(double aX, double aY,
+                                    double aWidth, double aHeight,
                                     bool aRepaint)
 {
   return DoResize(aX, aY, aWidth, aHeight, aRepaint, false);
 }
 
-NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
+// Coordinates are global display pixels
+NS_IMETHODIMP nsCocoaWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-  return DoResize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint, true);
+  double invScale = 1.0 / GetDefaultScale();
+  return DoResize(mBounds.x * invScale, mBounds.y * invScale,
+                  aWidth, aHeight, aRepaint, true);
 }
 
 NS_IMETHODIMP nsCocoaWindow::GetClientBounds(nsIntRect &aRect)

@@ -135,9 +135,11 @@ bool ImageContainerChild::CopyDataIntoSharedImage(Image* src, SharedImage* dest)
 
     ShmemYCbCrImage shmemImage(yuv.data(), yuv.offset());
 
+    MOZ_ASSERT(data->mCbSkip == data->mCrSkip);
     if (!shmemImage.CopyData(data->mYChannel, data->mCbChannel, data->mCrChannel,
                              data->mYSize, data->mYStride,
-                             data->mCbCrSize, data->mCbCrStride)) {
+                             data->mCbCrSize, data->mCbCrStride,
+                             data->mYSkip, data->mCbSkip)) {
       NS_WARNING("Failed to copy image data!");
       return false;
     }
@@ -515,10 +517,11 @@ public:
     mSize = mData.mPicSize;
 
     ShmemYCbCrImage shmImg(mShmem);
-
+    MOZ_ASSERT(aData.mCbSkip == aData.mCrSkip);
     if (!shmImg.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
                          aData.mYSize, aData.mYStride,
-                         aData.mCbCrSize, aData.mCbCrStride)) {
+                         aData.mCbCrSize, aData.mCbCrStride,
+                         aData.mYSkip, aData.mCbSkip)) {
       NS_WARNING("Failed to copy image data!");
     }
     mData.mYChannel = shmImg.GetYData();

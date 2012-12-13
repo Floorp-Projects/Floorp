@@ -683,11 +683,14 @@ SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aSta
   TransformData& data = aAnimation.data().get_TransformData();
   nsPoint origin = data.origin();
   int32_t auPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
+  nsDisplayTransform::FrameTransformProperties props(interpolatedList,
+                                                     data.mozOrigin(),
+                                                     data.perspectiveOrigin(),
+                                                     data.perspective());
   gfx3DMatrix transform =
-    nsDisplayTransform::GetResultingTransformMatrix(
-      nullptr, origin, auPerCSSPixel,
-      &data.bounds(), interpolatedList, &data.mozOrigin(),
-      &data.perspectiveOrigin(), &data.perspective());
+    nsDisplayTransform::GetResultingTransformMatrix(props, data.origin(),
+                                                    nsDeviceContext::AppUnitsPerCSSPixel(),
+                                                    &data.bounds());
   // NB: See nsDisplayTransform::GetTransform().
   gfxPoint3D newOrigin =
     gfxPoint3D(NS_round(NSAppUnitsToFloatPixels(origin.x, auPerCSSPixel)),
@@ -815,7 +818,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
-  wantNextFrame |= SampleAnimations(root, mLastCompose);
+  wantNextFrame |= SampleAnimations(root, aCurrentFrame);
 
   const FrameMetrics& metrics = container->GetFrameMetrics();
   // We must apply the resolution scale before a pan/zoom transform, so we call

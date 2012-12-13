@@ -45,11 +45,22 @@ self.onmessage = function(e) {
     var ret = libhardware_legacy.command(data.request, cbuf, len.address());
     var reply = "";
     if (!ret) {
+      // The return value from libhardware_legacy.command is not guaranteed to
+      // be null-terminated. At the same time we want to make sure that we
+      // don't return a response with a trailing newline, so handle both cases
+      // here. Note that if we wrote 4096 characters to cbuf, we don't have to
+      // null-terminate the buffer, as ctypes has the maximum size already.
       var reply_len = len.value;
-      var str = cbuf.readString();
-      if (str[reply_len-1] == "\n")
-        --reply_len;
-      reply = str.substr(0, reply_len);
+      if (reply_len !== 0) {
+        if (cbuf[reply_len - 1] === 10)
+          cbuf[--reply_len] = 0;
+        else if (reply_len !== 4096)
+          cbuf[reply_len] = 0;
+
+        reply = cbuf.readString();
+      }
+
+      // Else if reply_len was 0, use the empty reply, set above.
     }
     postMessage({ id: id, status: ret, reply: reply });
     break;

@@ -28,3 +28,35 @@
   top: 0px;
   left: 0px;
 }
+
+#announce-box {
+  position: fixed;
+  width: 7.5em;
+  height: 5em;
+  top: calc(100% - 50% - 2.5em);
+  left: calc(100% - 50% - 3.75em);
+  pointer-events: none;
+  display: table;
+  font-size: 28pt;
+  font-weight: 700;
+  color: orange;
+  background-color: black;
+  border-radius: 0.25em;
+}
+
+#announce-box:not(.showing) {
+  opacity: 0.0;
+  margin: 0.1em;
+  -moz-transition: opacity 0.4s linear;
+}
+
+#announce-box.showing {
+  opacity: 1.0;
+  -moz-transition: opacity 0.2s linear;
+}
+
+#announce-box * {
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+}

@@ -19,7 +19,12 @@ MOCHITEST_FILES = \
 	nosts_bootstrap.html^headers^ \
 	verify.sjs \
 	test_stricttransportsecurity.html \
-	test_sts_privatebrowsing.html \
 	$(NULL)
+
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_FILES += \
+        test_sts_privatebrowsing.html \
+        $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk

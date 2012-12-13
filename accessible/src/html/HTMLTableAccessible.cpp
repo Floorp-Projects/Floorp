@@ -121,9 +121,11 @@ HTMLTableCellAccessible::NativeAttributes()
   if (ChildCount() == 1) {
     Accessible* abbr = FirstChild();
     if (abbr->IsAbbreviation()) {
-      nsTextEquivUtils::
-        AppendTextEquivFromTextContent(abbr->GetContent()->GetFirstChild(),
-                                       &abbrText);
+      nsIContent* firstChildNode = abbr->GetContent()->GetFirstChild();
+      if (firstChildNode) {
+        nsTextEquivUtils::
+          AppendTextEquivFromTextContent(firstChildNode, &abbrText);
+      }
     }
   }
   if (abbrText.IsEmpty())

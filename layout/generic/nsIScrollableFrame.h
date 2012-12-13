@@ -94,6 +94,10 @@ public:
    */
   virtual nsPoint GetScrollPosition() const = 0;
   /**
+   * As GetScrollPosition(), but uses the top-right as origin for RTL frames. 
+   */
+  virtual nsPoint GetLogicalScrollPosition() const = 0;
+  /**
    * Get the area that must contain the scroll position. Typically
    * (but not always, e.g. for RTL content) x and y will be 0, and
    * width or height will be nonzero if the content can be scrolled in

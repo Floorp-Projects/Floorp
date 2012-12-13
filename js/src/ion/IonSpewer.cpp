@@ -25,7 +25,7 @@ using namespace js::ion;
 static IonSpewer ionspewer;
 
 static bool LoggingChecked = false;
-static uint32 LoggingBits = 0;
+static uint32_t LoggingBits = 0;
 
 static const char *ChannelNames[] =
 {
@@ -235,7 +235,7 @@ ion::CheckLogging()
     if (ContainsFlag(env, "logs"))
         EnableIonDebugLogging();
     if (ContainsFlag(env, "all"))
-        LoggingBits = uint32(-1);
+        LoggingBits = uint32_t(-1);
 
     if (LoggingBits != 0)
         EnableIonDebugLogging();
@@ -318,21 +318,21 @@ bool
 ion::IonSpewEnabled(IonSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
-    return LoggingBits & (1 << uint32(channel));
+    return LoggingBits & (1 << uint32_t(channel));
 }
 
 void
 ion::EnableChannel(IonSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
-    LoggingBits |= (1 << uint32(channel));
+    LoggingBits |= (1 << uint32_t(channel));
 }
 
 void
 ion::DisableChannel(IonSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
-    LoggingBits &= ~(1 << uint32(channel));
+    LoggingBits &= ~(1 << uint32_t(channel));
 }
 
 #endif /* DEBUG */

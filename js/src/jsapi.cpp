@@ -746,7 +746,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     jaegerRuntime_(NULL),
 #endif
     ionRuntime_(NULL),
-    selfHostedGlobal_(NULL),
+    selfHostingGlobal_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -801,12 +801,15 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcFoundBlackGrayEdges(false),
     gcSweepingCompartments(NULL),
     gcCompartmentGroupIndex(0),
-    gcRemainingCompartmentGroups(NULL),
-    gcCompartmentGroup(NULL),
+    gcCompartmentGroups(NULL),
+    gcCurrentCompartmentGroup(NULL),
     gcSweepPhase(0),
     gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
     gcArenasAllocatedDuringSweep(NULL),
+#ifdef DEBUG
+    gcMarkingValidator(NULL),
+#endif
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
@@ -5025,7 +5028,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
          * in. Self-hosted functions can access each other via their names,
          * but not via the builtin classes they get installed into.
          */
-        if (fs->selfHostedName && cx->runtime->isSelfHostedGlobal(cx->global()))
+        if (fs->selfHostedName && cx->runtime->isSelfHostingGlobal(cx->global()))
             return JS_TRUE;
 
         /*
@@ -6178,14 +6181,6 @@ JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     return js_ConcatStrings(cx, lstr, rstr);
 }
 
-JS_PUBLIC_API(const jschar *)
-JS_UndependString(JSContext *cx, JSString *str)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return str->getCharsZ(cx);
-}
-
 JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_t *dstlenp)
 {
@@ -7096,9 +7091,9 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
         return JS_FALSE;
 
     if (script)
-        *script = i.script().get(nogc);
+        *script = i.script();
     if (lineno)
-        *lineno = js::PCToLineNumber(i.script().get(nogc), i.pc());
+        *lineno = js::PCToLineNumber(i.script(), i.pc());
     return JS_TRUE;
 }
 

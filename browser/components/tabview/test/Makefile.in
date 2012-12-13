@@ -69,7 +69,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug622835.js \
                  browser_tabview_bug623768.js \
                  browser_tabview_bug624692.js \
-                 browser_tabview_bug624727.js \
                  browser_tabview_bug624847.js \
                  browser_tabview_bug624931.js \
                  browser_tabview_bug624953.js \
@@ -107,7 +106,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug649006.js \
                  browser_tabview_bug649307.js \
                  browser_tabview_bug649319.js \
-                 browser_tabview_bug650280.js \
                  browser_tabview_bug650573.js \
                  browser_tabview_bug651311.js \
                  browser_tabview_bug654295.js \
@@ -150,7 +148,6 @@ _BROWSER_FILES = \
                  browser_tabview_group.js \
                  browser_tabview_launch.js \
                  browser_tabview_multiwindow_search.js \
-                 browser_tabview_privatebrowsing.js \
                  browser_tabview_rtl.js \
                  browser_tabview_search.js \
                  browser_tabview_snapping.js \
@@ -168,12 +165,18 @@ _BROWSER_FILES = \
 
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 _BROWSER_FILES += \
-                browser_tabview_bug624265_perwindowpb.js \
-                $(NULL)
+                 browser_tabview_bug624265_perwindowpb.js \
+                 browser_tabview_bug624727_perwindowpb.js \
+                 browser_tabview_bug650280_perwindowpb.js \
+                 browser_tabview_privatebrowsing_perwindowpb.js \
+                 $(NULL)
 else
 _BROWSER_FILES += \
-                browser_tabview_bug624265.js \
-                $(NULL)
+                 browser_tabview_bug624265.js \
+                 browser_tabview_bug624727.js \
+                 browser_tabview_bug650280.js \
+                 browser_tabview_privatebrowsing.js \
+                 $(NULL)
 endif
 
 

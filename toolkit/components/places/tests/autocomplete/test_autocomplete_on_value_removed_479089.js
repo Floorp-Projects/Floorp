@@ -12,29 +12,32 @@
  * Bug 479089
  */
 
-var ios = Cc["@mozilla.org/network/io-service;1"].
-getService(Components.interfaces.nsIIOService);
-
 var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
 getService(Ci.nsINavHistoryService);
 
 function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_autocomplete_on_value_removed()
 {
   // QI to nsIAutoCompleteSimpleResultListener
   var listener = Cc["@mozilla.org/autocomplete/search;1?name=history"].
                  getService(Components.interfaces.nsIAutoCompleteSimpleResultListener);
 
   // add history visit
-  var now = Date.now() * 1000;
-  var uri = ios.newURI("http://foo.mozilla.com/", null, null);
-  var ref = ios.newURI("http://mozilla.com/", null, null);
-  var visit = histsvc.addVisit(uri, now, ref, 1, false, 0);
+  var testUri = uri("http://foo.mozilla.com/");
+  yield promiseAddVisits({
+    uri: testUri,
+    referrer: uri("http://mozilla.com/")
+  });
   // create a query object
   var query = histsvc.getNewQuery();
   // create the options object we will never use
   var options = histsvc.getNewQueryOptions();
   // look for this uri only
-  query.uri = uri;
+  query.uri = testUri;
   // execute
   var queryRes = histsvc.executeQuery(query, options);
   // open the result container
@@ -43,10 +46,9 @@ function run_test()
   // dump_table("moz_places");
   do_check_eq(queryRes.root.childCount, 1);  
   // call the untested code path
-  listener.onValueRemoved(null, uri.spec, true);
+  listener.onValueRemoved(null, testUri.spec, true);
   // make sure it is GONE from the DB
   do_check_eq(queryRes.root.childCount, 0);
   // close the container
   queryRes.root.containerOpen = false;
-}
-
+});

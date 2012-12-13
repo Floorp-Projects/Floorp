@@ -13,9 +13,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
     <ul>
         <li><a href="data:text/plain,Hey What are you looking for?"
                 download="test.txt" id="link1">Download "test.txt"</a></li>
-        <li><a href="http://mochi.test:8888/browser/browser/base/content/test/video.ogg"
+        <li><a href="video.ogg"
                 download id="link2">Download "video.ogg"</a></li>
-        <li><a href="http://mochi.test:8888/browser/browser/base/content/test/video.ogg"
+        <li><a href="video.ogg"
                 download="just some video" id="link3">Download "just some video"</a></li>
         <li><a href="data:text/plain,test"
                 download="with-target.txt" id="link4">Download "with-target.txt"</a></li>
@@ -33,10 +33,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
 
         li.appendChild(a);
         document.getElementsByTagName('ul')[0].appendChild(li);
+
+        window.addEventListener("beforeunload", function (evt) {
+            document.getElementById("unload-flag").textContent = "Fail";
+        });
     </script>
     <ul>
         <li><a href="http://example.com/"
                 download="example.com" id="link7" target="_blank">Download "example.com"</a></li>
     <ul>
+    <div id="unload-flag">Okay</div>
   </body>
 </html>

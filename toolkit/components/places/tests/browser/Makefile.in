@@ -22,7 +22,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_redirect.js \
 	browser_visituri.js \
 	browser_visituri_nohistory.js \
-	browser_visituri_privatebrowsing.js \
 	browser_settitle.js \
 	colorAnalyzer/category-discover.png \
 	colorAnalyzer/dictionaryGeneric-16.png \
@@ -33,6 +32,13 @@ MOCHITEST_BROWSER_FILES = \
 ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
 	browser_bug248970.js \
+	browser_favicon_setAndFetchFaviconForPage.js \
+	browser_favicon_setAndFetchFaviconForPage_failures.js \
+	browser_visituri_privatebrowsing_perwindowpb.js \
+	$(NULL)
+else
+MOCHITEST_BROWSER_FILES += \
+	browser_visituri_privatebrowsing.js \
 	$(NULL)
 endif
 
@@ -53,6 +59,7 @@ MOCHITEST_FILES = \
 	visituri/redirect_twice.sjs \
 	visituri/redirect_once.sjs \
 	visituri/final.html \
+	favicon-normal16.png \
 	favicon-normal32.png \
 	favicon.html \
 	$(NULL)

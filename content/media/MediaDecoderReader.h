@@ -373,6 +373,9 @@ public:
   // or an un-recoverable read error has occured.
   virtual bool DecodeAudioData() = 0;
 
+  // Steps to carry out at the start of the |DecodeLoop|.
+  virtual void PrepareToDecode() { }
+
   // Reads and decodes one video frame. Packets with a timestamp less
   // than aTimeThreshold will be decoded (unless they're not keyframes
   // and aKeyframeSkip is true), but will not be added to the queue.
@@ -418,9 +421,6 @@ public:
   // should only be called on the main thread.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered,
                                int64_t aStartTime) = 0;
-
-  // True if we can seek using only buffered ranges. This is backend dependant.
-  virtual bool IsSeekableInBufferedRanges() = 0;
 
   class VideoQueueMemoryFunctor : public nsDequeFunctor {
   public:
@@ -470,17 +470,6 @@ public:
 
   AudioData* DecodeToFirstAudioData();
   VideoData* DecodeToFirstVideoData();
-
-  // Sets range for initialization bytes; used by DASH.
-  virtual void SetInitByteRange(MediaByteRange &aByteRange) { }
-
-  // Sets range for index frame bytes; used by DASH.
-  virtual void SetIndexByteRange(MediaByteRange &aByteRange) { }
-
-  // Returns list of ranges for index frame start/end offsets. Used by DASH.
-  virtual nsresult GetIndexByteRanges(nsTArray<MediaByteRange>& aByteRanges) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
 protected:
   // Pumps the decode until we reach frames required to play at time aTarget

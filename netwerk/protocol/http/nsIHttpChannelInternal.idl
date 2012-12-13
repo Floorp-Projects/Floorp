@@ -34,7 +34,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(9363fd96-af59-47e8-bddf-1d5e91acd336)]
+[scriptable, uuid(74d13d41-85cd-490f-9942-300d0c01c726)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -156,4 +156,19 @@ interface nsIHttpChannelInternal : nsISupports
      */
     attribute boolean allowSpdy;
 
+    /**
+     * Set (e.g., by the docshell) to indicate whether or not the channel
+     * corresponds to content that should be given a degree of network exclusivity
+     * with respect to other members of its load group.
+     * Examples are js from the HTML head and css which are latency
+     * sensitive and should not compete with images for bandwidth. Default false.
+     */
+    attribute boolean loadAsBlocking;
+
+    /**
+     * If set, this channel will load in parallel with the rest of the load
+     * group even if a blocking subset of the group would normally be given
+     * exclusivity. Default false.
+     */
+    attribute boolean loadUnblocked;
 };

@@ -218,7 +218,7 @@ struct VMFrame
     inline unsigned chunkIndex();
 
     /* Get the inner script/PC in case of inlining. */
-    inline Return<JSScript*> script();
+    inline UnrootedScript script();
     inline jsbytecode *pc();
 
 #if defined(JS_CPU_SPARC)
@@ -1064,7 +1064,7 @@ VMFrame::chunkIndex()
     return jit()->chunkIndex(regs.pc);
 }
 
-inline Return<JSScript*>
+inline UnrootedScript
 VMFrame::script()
 {
     AutoAssertNoGC nogc;

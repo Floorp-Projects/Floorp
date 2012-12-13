@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=803677
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 803677</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+	.base { border:1px solid gray; }
+	.bad-table { display:table-cell; border:1px solid red; }
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=803677">Mozilla Bug 803677</a>
+<p id="display"></p>
+<div id="content">
+	<p class="base">1</p>
+	<p class="base">2</p>
+	<p class="base">3</p>
+	<p class="base bad-table">4</p>
+	<p class="base">7</p>
+	<p class="base">8</p>
+	<p class="base">9</p>
+</div>
+<pre id="test">
+<script type="application/javascript">
+    var p = document.querySelectorAll(".base");
+    var parent = document.querySelector("body");
+    var prevOffset = 0;
+    for (var i = 0; i < p.length; i++) {
+        var t = 0, e = p[i];
+        is(e.offsetParent, parent, "Offset parent of all paragraphs should be the body.");
+        while (e) {
+            t += e.offsetTop;
+            e = e.offsetParent;
+        }
+        p[i].innerHTML = t;
+
+        ok(t > prevOffset, "Offset should increase down the page");
+        prevOffset = t;
+    }
+</script>
+</pre>
+</body>
+</html>

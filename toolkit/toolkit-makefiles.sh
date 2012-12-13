@@ -1597,6 +1597,12 @@ if [ "$NS_TRACE_MALLOC" ]; then
   "
 fi
 
+if [ "$MOZ_DMD" ]; then
+  add_makefiles "
+    memory/replace/dmd/Makefile
+  "
+fi
+
 if [ "$MOZ_MAPINFO" ]; then
   add_makefiles "
     tools/codesighs/Makefile

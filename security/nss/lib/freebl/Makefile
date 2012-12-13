@@ -115,7 +115,7 @@ ifeq (OS2,$(OS_TARGET))
     DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
 endif
 
-ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))  #omits WINCE
+ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
 ifndef USE_64
 # 32-bit Windows
 ifdef NS_USE_GCC
@@ -153,11 +153,6 @@ else
     MPI_SRCS += mpi_amd64.c
 endif
 endif
-endif
-
-ifeq ($(OS_TARGET),WINCE)
-    DEFINES += -DMP_ARGCHK=0	# no assert in WinCE
-    DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
 endif
 
 ifeq ($(OS_TARGET),IRIX)
