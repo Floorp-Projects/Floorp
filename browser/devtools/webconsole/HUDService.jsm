@@ -535,12 +535,9 @@ WebConsole.prototype = {
       if (style.href == aSourceURL) {
         let target = TargetFactory.forTab(this.tab);
         let gDevTools = this.chromeWindow.gDevTools;
-        let toolbox = gDevTools.getToolboxForTarget(target);
-        toolbox.once("styleeditor-selected",
-          function _onStyleEditorReady(aEvent, aPanel) {
-            aPanel.selectStyleSheet(style, aSourceLine);
-          });
-        toolbox.selectTool("styleeditor");
+        gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
+          toolbox.getCurrentPanel().selectStyleSheet(style, aSourceLine);
+        });
         return;
       }
     }
@@ -602,7 +599,11 @@ var HeadsUpDisplayUICommands = {
   {
     var window = HUDService.currentContext();
     let target = TargetFactory.forTab(window.gBrowser.selectedTab);
-    gDevTools.toggleToolboxForTarget(target, "webconsole");
+    let toolbox = gDevTools.getToolbox(target);
+
+    return toolbox && toolbox.currentToolId == "webconsole" ?
+        toolbox.destroy() :
+        gDevTools.showToolbox(target, "webconsole");
   },
 
   toggleRemoteHUD: function UIC_toggleRemoteHUD()

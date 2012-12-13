@@ -164,7 +164,7 @@ function ResponsiveUI(aWindow, aTab)
   this.checkMenus();
 
   let target = TargetFactory.forTab(this.tab);
-  this.toolboxWasOpen = !!gDevTools.getToolboxForTarget(target);
+  this.toolboxWasOpen = !!gDevTools.getToolbox(target);
 
   try {
     if (Services.prefs.getBoolPref("devtools.responsiveUI.rotate")) {
@@ -249,7 +249,7 @@ ResponsiveUI.prototype = {
       // We let the toolbox close first.
 
       let target = TargetFactory.forTab(this.tab);
-      let isToolboxOpen =  !!gDevTools.getToolboxForTarget(target);
+      let isToolboxOpen =  !!gDevTools.getToolbox(target);
       if (this.toolboxWasOpen || !isToolboxOpen) {
         aEvent.preventDefault();
         aEvent.stopPropagation();
