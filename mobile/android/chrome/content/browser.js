@@ -5983,7 +5983,7 @@ var PluginHelper = {
   // Helper to get the binding handler type from a plugin object
   _getBindingType: function(plugin) {
     if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-      return;
+      return null;
 
     switch (plugin.pluginFallbackType) {
       case Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED:
@@ -5994,7 +5994,7 @@ var PluginHelper = {
         return "PluginPlayPreview";
       default:
         // Not all states map to a handler
-        return;
+        return null;
     }
   },
 
