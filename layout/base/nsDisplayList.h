@@ -1913,6 +1913,9 @@ protected:
                                   gfxRect* aDestRect);
   nsRect GetBoundsInternal();
 
+  void PaintInternal(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
+                     const nsRect& aBounds, nsRect* aClipRect);
+
   // Cache the result of nsCSSRendering::FindBackground. Always null if
   // mIsThemed is true or if FindBackground returned false.
   const nsStyleBackground* mBackgroundStyle;
