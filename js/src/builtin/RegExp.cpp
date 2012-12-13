@@ -119,14 +119,20 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re, RegExpObj
                   size_t *lastIndex, MatchConduit &matches)
 {
     RegExpRunStatus status;
-    
-    /* Ahem, not handled in this patch. But it was a pain to rip out. */
-    JS_ASSERT(!matches.isPair);
 
-    /* Vector of MatchPairs provided: execute full regexp. */
-    status = re.execute(cx, chars, length, lastIndex, *matches.u.pairs);
-    if (status == RegExpRunStatus_Success && res)
-        res->updateFromMatchPairs(cx, input, *matches.u.pairs);
+    /* Switch between MatchOnly and IncludeSubpatterns modes. */
+    if (matches.isPair) {
+        size_t lastIndex_orig = *lastIndex;
+        /* Only one MatchPair slot provided: execute short-circuiting regexp. */
+        status = re.executeMatchOnly(cx, chars, length, lastIndex, *matches.u.pair);
+        if (status == RegExpRunStatus_Success && res)
+            res->updateLazily(cx, input, &regexp, lastIndex_orig);
+    } else {
+        /* Vector of MatchPairs provided: execute full regexp. */
+        status = re.execute(cx, chars, length, lastIndex, *matches.u.pairs);
+        if (status == RegExpRunStatus_Success && res)
+            res->updateFromMatchPairs(cx, input, *matches.u.pairs);
+    }
 
     return status;
 }
