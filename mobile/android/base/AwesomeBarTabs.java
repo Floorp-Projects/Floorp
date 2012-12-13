@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.support.v4.view.ViewPager;
@@ -322,13 +321,15 @@ public class AwesomeBarTabs extends TabHost {
 
         @Override
         public void onLightweightThemeChanged() {
-            Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 255, 0);
+            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getColorDrawable(this);
             if (drawable == null)
                 return;
 
-        StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.address_bar_bg_private));
-        stateList.addState(new int[] {}, drawable);
+            drawable.setAlpha(255, 0);
+
+            StateListDrawable stateList = new StateListDrawable();
+            stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.address_bar_bg_private));
+            stateList.addState(new int[] {}, drawable);
 
             int[] padding =  new int[] { getPaddingLeft(),
                                          getPaddingTop(),
