@@ -985,11 +985,12 @@ bool
 nsIFrame::IsTransformed() const
 {
   return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-          (GetStyleDisplay()->HasTransform() ||
+          ((GetStyleDisplay()->HasTransform() && IsFrameOfType(eSupportsCSSTransforms)) ||
            IsSVGTransformed() ||
            (mContent &&
             nsLayoutUtils::HasAnimationsForCompositor(mContent,
                                                       eCSSProperty_transform) &&
+            IsFrameOfType(eSupportsCSSTransforms) &&
             mContent->GetPrimaryFrame() == this)));
 }
 
@@ -3031,6 +3032,14 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
 
   frameselection->StopAutoScrollTimer();
 
+#ifdef MOZ_B2G
+  // We only check touch move event since mouse move event is not cancelable.
+  if (aEvent->message == NS_TOUCH_MOVE &&
+      nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+#endif // MOZ_B2G
+
   // Check if we are dragging in a table cell
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffset;
@@ -4744,8 +4753,7 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     gfx3DMatrix result =
-      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0), scaleFactor, nullptr,
-                                                      nullptr, nullptr, nullptr, nullptr, aOutAncestor);
+      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0), scaleFactor, nullptr, aOutAncestor);
     // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
@@ -4867,17 +4875,13 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
     aFrame->Properties().Delete(nsIFrame::InvalidationRect());
     aFrame->RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
   }
-  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_CACHED_BACKGROUND)) {
-    aFrame->Properties().Delete(nsIFrame::CachedBackgroundImage());
-    aFrame->RemoveStateBits(NS_FRAME_HAS_CACHED_BACKGROUND);
-  }
 }
 
 void
 nsIFrame::InvalidateFrameSubtree(uint32_t aDisplayItemKey)
 {
   bool hasDisplayItem = 
-    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
+    !aDisplayItemKey || FrameLayerBuilder::HasVisibleRetainedDataFor(this, aDisplayItemKey);
   InvalidateFrame(aDisplayItemKey);
 
   if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT) || !hasDisplayItem) {
@@ -4923,7 +4927,7 @@ void
 nsIFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
   bool hasDisplayItem = 
-    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
+    !aDisplayItemKey || FrameLayerBuilder::HasVisibleRetainedDataFor(this, aDisplayItemKey);
   InvalidateFrameInternal(this, hasDisplayItem);
 }
 
@@ -4931,7 +4935,7 @@ void
 nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 {
   bool hasDisplayItem = 
-    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
+    !aDisplayItemKey || FrameLayerBuilder::HasVisibleRetainedDataFor(this, aDisplayItemKey);
   bool alreadyInvalid = false;
   if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
     InvalidateFrameInternal(this, hasDisplayItem);
@@ -5114,27 +5118,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
   }
 
   // box-shadow
-  nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
-  if (boxShadows) {
-    nsRect shadows;
-    int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
-    for (uint32_t i = 0; i < boxShadows->Length(); ++i) {
-      nsRect tmpRect(nsPoint(0, 0), aNewSize);
-      nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
-
-      // inset shadows are never painted outside the frame
-      if (shadow->mInset)
-        continue;
-
-      tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
-      tmpRect.Inflate(shadow->mSpread, shadow->mSpread);
-      tmpRect.Inflate(
-        nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
-
-      shadows.UnionRect(shadows, tmpRect);
-    }
-    r.UnionRect(r, shadows);
-  }
+  r.UnionRect(r, nsLayoutUtils::GetBoxShadowRectForFrame(aFrame, aNewSize));
 
   const nsStyleOutline* outline = aFrame->GetStyleOutline();
   uint8_t outlineStyle = outline->GetOutlineStyle();
@@ -6799,7 +6783,7 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 a11y::AccType
 nsFrame::AccessibleType()
 {
-  return a11y::eNoAccessible;
+  return a11y::eNoType;
 }
 #endif
 
@@ -7020,7 +7004,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsRect& o = aOverflowAreas.Overflow(otype);
       o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
     }
-    if ((sizeChanged || HasAnyStateBits(NS_FRAME_TRANSFORM_CHANGED)) && Preserves3DChildren()) {
+    if (Preserves3DChildren()) {
       ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
     } else if (sizeChanged && ChildrenHavePerspective()) {
       RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
@@ -7032,8 +7016,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
     }
   }
-  RemoveStateBits(NS_FRAME_TRANSFORM_CHANGED);
-    
 
   bool anyOverflowChanged;
   if (aOverflowAreas != nsOverflowAreas(bounds, bounds)) {

@@ -17,7 +17,17 @@ let testData = [
   }
 ];
 
-add_test(function test_seach_by_title()
+function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_initalize()
+{
+  yield task_populateDB(testData);
+});
+
+add_test(function test_search_by_title()
 {
   let query = PlacesUtils.history.getNewQuery();
   query.searchTerms = "bookmark";
@@ -31,7 +41,7 @@ add_test(function test_seach_by_title()
   run_next_test();
 });
 
-add_test(function test_seach_by_schemeToken()
+add_test(function test_search_by_schemeToken()
 {
   let query = PlacesUtils.history.getNewQuery();
   query.searchTerms = "script";
@@ -45,7 +55,7 @@ add_test(function test_seach_by_schemeToken()
   run_next_test();
 });
 
-add_test(function test_seach_by_uriAndTitle()
+add_test(function test_search_by_uriAndTitle()
 {
   let query = PlacesUtils.history.getNewQuery();
   query.searchTerms = "moz";
@@ -58,10 +68,3 @@ add_test(function test_seach_by_uriAndTitle()
 
   run_next_test();
 });
-
-function run_test()
-{
-  populateDB(testData);
-
-  run_next_test();
-}

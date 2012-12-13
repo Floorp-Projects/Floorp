@@ -154,10 +154,10 @@ typedef CodeGeneratorARM CodeGeneratorSpecific;
 class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM>
 {
     LSnapshot *snapshot_;
-    uint32 frameSize_;
+    uint32_t frameSize_;
 
   public:
-    OutOfLineBailout(LSnapshot *snapshot, uint32 frameSize)
+    OutOfLineBailout(LSnapshot *snapshot, uint32_t frameSize)
       : snapshot_(snapshot),
         frameSize_(frameSize)
     { }

@@ -60,6 +60,9 @@ const TLV_EVENT_LIST_SIZE = 3;
 const TLV_LOCATION_STATUS_SIZE = 3;
 const TLV_LOCATION_INFO_GSM_SIZE = 9;
 const TLV_LOCATION_INFO_UMTS_SIZE = 11;
+const TLV_IMEI_SIZE = 10;
+const TLV_DATE_TIME_ZONE_SIZE = 9;
+const TLV_LANGUAGE_SIZE = 4;
 
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
@@ -475,8 +478,9 @@ let Buf = {
     // we process any backlog in parcels immediately, before writing
     // new data to the buffer. So the only edge case we need to handle
     // is when the incoming data is larger than the buffer size.
-    if (incoming.length > this.INCOMING_BUFFER_LENGTH) {
-      this.growIncomingBuffer(incoming.length);
+    let minMustAvailableSize = incoming.length + this.readIncoming;
+    if (minMustAvailableSize > this.INCOMING_BUFFER_LENGTH) {
+      this.growIncomingBuffer(minMustAvailableSize);
     }
 
     // We can let the typed arrays do the copying if the incoming data won't
@@ -585,6 +589,13 @@ let Buf = {
       let error = this.readUint32();
 
       options = this.tokenRequestMap[token];
+      if (!options) {
+        if (DEBUG) {
+          debug("Suspicious uninvited request found: " + token + ". Ignored!");
+        }
+        return;
+      }
+
       delete this.tokenRequestMap[token];
       request_type = options.rilRequestType;
 
@@ -1254,11 +1265,11 @@ let RIL = {
       }
 
       // Test to see if operator's mcc/mnc match mcc/mnc of PLMN.
-      if (!isOnMatchingPlmn && iccInfoPriv.PLMN) {
-        let iccPlmn = iccInfoPriv.PLMN; // PLMN list
-        for (let plmn in iccPlmn) {
-          let plmnMcc = iccPlmn[plmn].mcc;
-          let plmnMnc = iccPlmn[plmn].mnc;
+      if (!isOnMatchingPlmn && iccInfoPriv.SPDI) {
+        let iccSpdi = iccInfoPriv.SPDI; // PLMN list
+        for (let plmn in iccSpdi) {
+          let plmnMcc = iccSpdi[plmn].mcc;
+          let plmnMnc = iccSpdi[plmn].mnc;
           isOnMatchingPlmn = (plmnMcc == operatorMcc) && (plmnMnc == operatorMnc);
           if (isOnMatchingPlmn) {
             break;
@@ -1270,17 +1281,24 @@ let RIL = {
         // The first bit of display condition tells us if we should display
         // registered PLMN.
         if (DEBUG) debug("updateDisplayCondition: PLMN is HPLMN or PLMN is in PLMN list");
+
+        // TS 31.102 Sec. 4.2.66 and TS 51.011 Sec. 10.3.50
+        // EF_SPDI contains a list of PLMNs in which the Service Provider Name
+        // shall be displayed.
+        iccInfo.isDisplaySpnRequired = true;
         if (iccSpn.spnDisplayCondition & 0x01) {
           iccInfo.isDisplayNetworkNameRequired = true;
-          iccInfo.isDisplaySpnRequired = false;
         } else {
           iccInfo.isDisplayNetworkNameRequired = false;
-          iccInfo.isDisplaySpnRequired = false;
         }
       } else {
         // The second bit of display condition tells us if we should display
         // registered PLMN.
         if (DEBUG) debug("updateICCDisplayName: PLMN isn't HPLMN and PLMN isn't in PLMN list");
+
+        // We didn't found the requirement of displaying network name if
+        // current PLMN isn't HPLMN nor one of PLMN in SPDI. So we keep
+        // isDisplayNetworkNameRequired false.
         if (iccSpn.spnDisplayCondition & 0x02) {
           iccInfo.isDisplayNetworkNameRequired = false;
           iccInfo.isDisplaySpnRequired = false;
@@ -1499,13 +1517,13 @@ let RIL = {
    */
   getPLMNSelector: function getPLMNSelector() {
     function callback() {
-      if (DEBUG) debug("PLMN: [PLMN Selector] Process PLMN Selector");
+      if (DEBUG) debug("PLMN Selector: Process PLMN Selector");
 
       let length = Buf.readUint32();
       this.iccInfoPrivate.PLMN = this.readPLMNEntries(length/6);
       Buf.readStringDelimiter(length);
 
-      if (DEBUG) debug("PLMN: [PLMN Selector] " + JSON.stringify(this.iccInfoPrivate.PLMN));
+      if (DEBUG) debug("PLMN Selector: " + JSON.stringify(this.iccInfoPrivate.PLMN));
 
       if (this.updateDisplayCondition()) {
         this._handleICCInfoChange();
@@ -1530,17 +1548,18 @@ let RIL = {
   /**
    * Read the SPDI (Service Provider Display Information) from the ICC.
    *
-   * See TS 131.102 section 4.2.66
+   * See TS 131.102 section 4.2.66 for USIM and TS 51.011 section 10.3.50
+   * for SIM.
    */
   getSPDI: function getSPDI() {
     function callback() {
-      if (DEBUG) debug("PLMN: [SPDI] Process SPDI callback");
+      if (DEBUG) debug("SPDI: Process SPDI callback");
       let length = Buf.readUint32();
       let tlvTag;
       let tlvLen;
       let readLen = 0;
       let endLoop = false;
-      this.iccInfoPrivate.PLMN = null;
+      this.iccInfoPrivate.SPDI = null;
       while ((readLen < length) && !endLoop) {
         tlvTag = GsmPDUHelper.readHexOctet();
         tlvLen = GsmPDUHelper.readHexOctet();
@@ -1551,7 +1570,7 @@ let RIL = {
           continue;
         case SPDI_TAG_PLMN_LIST:
           // This PLMN list is what we want.
-          this.iccInfoPrivate.PLMN = readPLMNEntries(tlvLen/6);
+          this.iccInfoPrivate.SPDI = readPLMNEntries(tlvLen/6);
           readLen += tlvLen;
           endLoop = true;
           break;
@@ -1569,7 +1588,7 @@ let RIL = {
       }
       Buf.readStringDelimiter(length);
 
-      if (DEBUG) debug("PLMN: [SPDI] " + JSON.stringify(this.iccInfoPrivate.PLMN));
+      if (DEBUG) debug("SPDI: " + JSON.stringify(this.iccInfoPrivate.SPDI));
       if (this.updateDisplayCondition()) {
         this._handleICCInfoChange();
       }
@@ -1653,6 +1672,219 @@ let RIL = {
   },
 
   /**
+   * Choose network names using EF_OPL and EF_PNN
+   * See 3GPP TS 31.102 sec. 4.2.58 and sec. 4.2.59 for USIM,
+   *     3GPP TS 51.011 sec. 10.3.41 and sec. 10.3.42 for SIM.
+   */
+  updateNetworkName: function updateNetworkName() {
+    let iccInfoPriv = this.iccInfoPrivate;
+    let iccInfo = this.iccInfo;
+
+    // We won't update network name if voice registration isn't ready
+    // or PNN file haven't been retrieved.
+    if (!iccInfoPriv.PNN ||
+        !this.voiceRegistrationState.cell ||
+        this.voiceRegistrationState.cell.gsmLocationAreaCode == -1) {
+      return null;
+    }
+
+    let pnnEntry;
+    let lac = this.voiceRegistrationState.cell.gsmLocationAreaCode;
+    let mcc = this.operator.mcc;
+    let mnc = this.operator.mnc;
+
+    // According to 3GPP TS 31.102 Sec. 4.2.59 and 3GPP TS 51.011 Sec. 10.3.42,
+    // the ME shall use this EF_OPL in association with the EF_PNN in place
+    // of any network name stored within the ME's internal list and any network
+    // name received when registered to the PLMN.
+    if (iccInfoPriv.OPL) {
+      for (let i in iccInfoPriv.OPL) {
+        let opl = iccInfoPriv.OPL[i];
+        // Try to match the MCC/MNC.
+        if (mcc != opl.mcc || mnc != opl.mnc) {
+          continue;
+        }
+        // Try to match the location area code. If current local area code is
+        // covered by lac range that specified in the OPL entry, use the PNN
+        // that specified in the OPL entry.
+        if ((opl.lacTacStart == 0x0 && opl.lacTacEnd == 0xFFFE) ||
+            (opl.lacTacStart <= lac && opl.lacTacEnd >= lac)) {
+          if (opl.pnnRecordId == 0) {
+            // See 3GPP TS 31.102 Sec. 4.2.59 and 3GPP TS 51.011 Sec. 10.3.42,
+            // A value of '00' indicates that the name is to be taken from other
+            // sources.
+            return null;
+          }
+          pnnEntry = iccInfoPriv.PNN[opl.pnnRecordId - 1]
+          break;
+        }
+      }
+    }
+
+    // According to 3GPP TS 31.102 Sec. 4.2.58 and 3GPP TS 51.011 Sec. 10.3.41,
+    // the first record in this EF is used for the default network name when
+    // registered to the HPLMN.
+    // If we haven't get pnnEntry assigned, we should try to assign default
+    // value to it.
+    if (!pnnEntry && mcc == iccInfo.mcc && mnc == iccInfo.mnc) {
+      pnnEntry = iccInfoPriv.PNN[0]
+    }
+
+    if (DEBUG) {
+      if (pnnEntry) {
+        debug("updateNetworkName: Network names will be overriden: longName = " +
+              pnnEntry.fullName + ", shortName = " + pnnEntry.shortName);
+      } else {
+        debug("updateNetworkName: Network names will not be overriden");
+      }
+    }
+
+    if (pnnEntry) {
+      return [pnnEntry.fullName, pnnEntry.shortName];
+    }
+    return null;
+  },
+
+  /**
+   * Read OPL (Operator PLMN List) from USIM.
+   *
+   * See 3GPP TS 31.102 Sec. 4.2.59 for USIM
+   *     3GPP TS 51.011 Sec. 10.3.42 for SIM.
+   */
+  getOPL: function getOPL() {
+    let opl = [];
+    function callback(options) {
+      let len = Buf.readUint32();
+      // The first 7 bytes are LAI (for UMTS) and the format of LAI is defined
+      // in 3GPP TS 23.003, Sec 4.1
+      //    +-------------+---------+
+      //    | Octet 1 - 3 | MCC/MNC |
+      //    +-------------+---------+
+      //    | Octet 4 - 7 |   LAC   |
+      //    +-------------+---------+
+      let mccMnc = [GsmPDUHelper.readHexOctet(),
+                    GsmPDUHelper.readHexOctet(),
+                    GsmPDUHelper.readHexOctet()];
+      if (mccMnc[0] != 0xFF || mccMnc[1] != 0xFF || mccMnc[2] != 0xFF) {
+        let oplElement = {};
+        let semiOctets = [];
+        for (let i = 0; i < mccMnc.length; i++) {
+          semiOctets.push((mccMnc[i] & 0xf0) >> 4);
+          semiOctets.push(mccMnc[i] & 0x0f);
+        }
+        let reformat = [semiOctets[1], semiOctets[0], semiOctets[3],
+                        semiOctets[5], semiOctets[4], semiOctets[2]];
+        let buf = "";
+        for (let i = 0; i < reformat.length; i++) {
+          if (reformat[i] != 0xF) {
+            buf += GsmPDUHelper.semiOctetToBcdChar(reformat[i]);
+          }
+          if (i === 2) {
+            // 0-2: MCC
+            oplElement.mcc = parseInt(buf);
+            buf = "";
+          } else if (i === 5) {
+            // 3-5: MNC
+            oplElement.mnc = parseInt(buf);
+          }
+        }
+        // LAC/TAC
+        oplElement.lacTacStart =
+          (GsmPDUHelper.readHexOctet() << 8) | GsmPDUHelper.readHexOctet();
+        oplElement.lacTacEnd =
+          (GsmPDUHelper.readHexOctet() << 8) | GsmPDUHelper.readHexOctet();
+        // PLMN Network Name Record Identifier
+        oplElement.pnnRecordId = GsmPDUHelper.readHexOctet();
+        if (DEBUG) {
+          debug("OPL: [" + (opl.length + 1) + "]: " + JSON.stringify(oplElement));
+        }
+        opl.push(oplElement);
+      }
+      Buf.readStringDelimiter(len);
+      if (options.p1 < options.totalRecords) {
+        options.p1++;
+        this.iccIO(options);
+      } else {
+        this.iccInfoPrivate.OPL = opl;
+      }
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_OPL,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_OPL),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_LINEAR_FIXED,
+      callback:  callback,
+    });
+  },
+
+  /**
+   * Read PNN (PLMN Network Name) from USIM.
+   *
+   * See 3GPP TS 31.102 Sec. 4.2.58 for USIM
+   *     3GPP TS 51.011 Sec. 10.3.41 for SIM.
+   */
+  getPNN: function getPNN() {
+    let pnn = [];
+    function callback(options) {
+      let pnnElement = this.iccInfoPrivate.PNN = {};
+      let len = Buf.readUint32();
+      let readLen = 0;
+      while (len > readLen) {
+        let tlvTag = GsmPDUHelper.readHexOctet();
+        readLen = readLen + 2; // 1 Hex octet
+        if (tlvTag == 0xFF) {
+          // Unused byte
+          continue;
+        }
+        let tlvLen = GsmPDUHelper.readHexOctet();
+        let name;
+        switch (tlvTag) {
+        case PNN_IEI_FULL_NETWORK_NAME:
+          pnnElement.fullName = GsmPDUHelper.readNetworkName(tlvLen);
+          break;
+        case PNN_IEI_SHORT_NETWORK_NAME:
+          pnnElement.shortName = GsmPDUHelper.readNetworkName(tlvLen);
+          break;
+        default:
+          Buf.seekIncoming(PDU_HEX_OCTET_SIZE * tlvLen);
+        }
+        readLen += (tlvLen * 2 + 2);
+      }
+      if (DEBUG) {
+        debug("PNN: [" + (pnn.length + 1) + "]: " + JSON.stringify(pnnElement));
+      }
+      Buf.readStringDelimiter(len);
+      pnn.push(pnnElement);
+
+      if (options.p1 < options.totalRecords) {
+        options.p1++;
+        this.iccIO(options);
+      } else {
+        this.iccInfoPrivate.PNN = pnn;
+      }
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_PNN,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_PNN),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_LINEAR_FIXED,
+      callback:  callback,
+    });
+  },
+
+  /**
    * Read the (U)SIM Service Table from the ICC.
    */
   getSST: function getSST() {
@@ -1679,14 +1911,25 @@ let RIL = {
         if (DEBUG) debug("SPN: SPN service is not available");
       }
 
-      if (this.isICCServiceAvailable("PLMNSEL")) {
-        if (DEBUG) debug("PLMN: PLMNSEL available.");
-        this.getPLMNSelector();
-      } else if (this.isICCServiceAvailable("SPDI")) {
-        if (DEBUG) debug("PLMN: SPDI available.");
+      if (this.isICCServiceAvailable("SPDI")) {
+        if (DEBUG) debug("SPDI: SPDI available.");
         this.getSPDI();
       } else {
-        if (DEBUG) debug("PLMN: Both PLMNSEL/SPDI not available");
+        if (DEBUG) debug("SPDI: SPDI service is not available");
+      }
+
+      if (this.isICCServiceAvailable("PNN")) {
+        if (DEBUG) debug("PNN: PNN is available");
+        this.getPNN();
+      } else {
+        if (DEBUG) debug("PNN: PNN is not available");
+      }
+
+      if (this.isICCServiceAvailable("OPL")) {
+        if (DEBUG) debug("OPL: OPL is available");
+        this.getOPL();
+      } else {
+        if (DEBUG) debug("OPL: OPL is not available");
       }
 
       if (this.isICCServiceAvailable("CBMI")) {
@@ -2527,7 +2770,8 @@ let RIL = {
    *        String containing the processId for the SmsRequestManager.
    */
   sendSMS: function sendSMS(options) {
-    //TODO: verify values on 'options'
+    options.langIndex = options.langIndex || PDU_NL_IDENTIFIER_DEFAULT;
+    options.langShiftIndex = options.langShiftIndex || PDU_NL_IDENTIFIER_DEFAULT;
 
     if (!options.retryCount) {
       options.retryCount = 0;
@@ -3113,11 +3357,13 @@ let RIL = {
    * Send STK terminal response.
    *
    * @param command
+   * @param deviceIdentities
    * @param resultCode
    * @param [optional] itemIdentifier
    * @param [optional] input
    * @param [optional] isYesNo
    * @param [optional] hasConfirmed
+   * @param [optional] localInfo
    */
   sendStkTerminalResponse: function sendStkTerminalResponse(response) {
     if (response.hasConfirmed !== undefined) {
@@ -3149,6 +3395,18 @@ let RIL = {
                 TLV_RESULT_SIZE +
                 (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
                 (textLen ? textLen + 3 : 0)) * 2;
+    if (response.localInfo) {
+      let localInfo = response.localInfo;
+      size = size +
+             (((localInfo.locationInfo ?
+               (localInfo.locationInfo.gsmCellId > 0xffff ?
+                 TLV_LOCATION_INFO_UMTS_SIZE :
+                 TLV_LOCATION_INFO_GSM_SIZE) :
+               0) +
+             (localInfo.imei ? TLV_IMEI_SIZE : 0) +
+             (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
+             (localInfo.language ? TLV_LANGUAGE_SIZE : 0)) * 2);
+    }
     Buf.writeUint32(size);
 
     // Command Details
@@ -3230,6 +3488,40 @@ let RIL = {
             }
             break;
         }
+      }
+    }
+
+    // Local Information
+    if (response.localInfo) {
+      let localInfo = response.localInfo;
+
+      // Location Infomation
+      if (localInfo.locationInfo) {
+        ComprehensionTlvHelper.writeLocationInfoTlv(localInfo.locationInfo);
+      }
+
+      // IMEI
+      if (localInfo.imei) {
+        let imei = localInfo.imei;
+        if(imei.length == 15) {
+          imei = imei + "0";
+        }
+
+        GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_IMEI);
+        GsmPDUHelper.writeHexOctet(8);
+        for (let i = 0; i < imei.length / 2; i++) {
+          GsmPDUHelper.writeHexOctet(parseInt(imei.substr(i * 2, 2), 16));
+        }
+      }
+
+      // Date and Time Zone
+      if (localInfo.date) {
+        ComprehensionTlvHelper.writeDateTimeZoneTlv(localInfo.date);
+      }
+
+      // Language
+      if (localInfo.language) {
+        ComprehensionTlvHelper.writeLanguageTlv(localInfo.language);
       }
     }
 
@@ -3579,6 +3871,8 @@ let RIL = {
           case ICC_EF_SPDI:
           case ICC_EF_CBMI:
           case ICC_EF_CBMIR:
+          case ICC_EF_OPL:
+          case ICC_EF_PNN:
             return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
 
           default:
@@ -3904,8 +4198,15 @@ let RIL = {
         this.operator.shortName !== shortName ||
         thisTuple !== networkTuple) {
 
-      this.operator.longName = longName;
-      this.operator.shortName = shortName;
+      let networkName = this.updateNetworkName();
+      if (networkName) {
+        this.operator.longName = networkName[0];
+        this.operator.shortName = networkName[1];
+      } else {
+        this.operator.longName = longName;
+        this.operator.shortName = shortName;
+      }
+
       this.operator.mcc = 0;
       this.operator.mnc = 0;
 
@@ -3949,7 +4250,6 @@ let RIL = {
         if (newCall.state != currentCall.state) {
           // State has changed.
           currentCall.state = newCall.state;
-          currentCall.isActive = this._isActiveCall(currentCall.state);
           this._handleChangedCallState(currentCall);
         }
       } else {
@@ -3971,7 +4271,6 @@ let RIL = {
         }
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;
-        newCall.isActive = this._isActiveCall(newCall.state);
         this._handleChangedCallState(newCall);
       }
     }
@@ -3991,19 +4290,6 @@ let RIL = {
     let message = {rilMessageType: "callDisconnected",
                    call: disconnectedCall};
     this.sendDOMMessage(message);
-  },
-
-  _isActiveCall: function _isActiveCall(callState) {
-    switch (callState) {
-      case CALL_STATE_ACTIVE:
-      case CALL_STATE_DIALING:
-      case CALL_STATE_ALERTING:
-        return true;
-      case CALL_STATE_HOLDING:
-      case CALL_STATE_INCOMING:
-      case CALL_STATE_WAITING:
-        return false;
-    }
   },
 
   _sendDataCallError: function _sendDataCallError(message, errorCode) {
@@ -5118,8 +5404,6 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
       };
     }
 
-    call.isActive = false;
-
     calls[call.callIndex] = call;
   }
   this._processCalls(calls);
@@ -5923,7 +6207,7 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
   debug("DateTimeZone string " + dateString);
 
   let now = Date.now();
-	
+
   let year = parseInt(dateString.substr(0, 2), 10);
   let month = parseInt(dateString.substr(3, 2), 10);
   let day = parseInt(dateString.substr(6, 2), 10);
@@ -6133,6 +6417,20 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Convert a BCD number to an octet (number)
+   *
+   * Only take two digits with absolute value.
+   *
+   * @param bcd
+   *
+   * @return the corresponding octet.
+   */
+  BCDToOctet: function BCDToOctet(bcd) {
+    bcd = Math.abs(bcd);
+    return ((bcd % 10) << 4) + (Math.floor(bcd / 10) % 10);
+  },
+
+  /**
    * Convert a semi-octet (number) to a GSM BCD char.
    */
   bcdChars: "0123456789*#,;",
@@ -6209,6 +6507,24 @@ let GsmPDUHelper = {
     data = data.toString();
     if (data.length % 2) {
       data += "F";
+    }
+    for (let i = 0; i < data.length; i += 2) {
+      Buf.writeUint16(data.charCodeAt(i + 1));
+      Buf.writeUint16(data.charCodeAt(i));
+    }
+  },
+
+  /**
+   * Write numerical data as swapped nibble BCD.
+   * If the number of digit of data is even, add '0' at the beginning.
+   *
+   * @param data
+   *        Data to write (as a string or a number)
+   */
+  writeSwappedNibbleBCDNum: function writeSwappedNibbleBCDNum(data) {
+    data = data.toString();
+    if (data.length % 2) {
+      data = "0" + data;
     }
     for (let i = 0; i < data.length; i += 2) {
       Buf.writeUint16(data.charCodeAt(i + 1));
@@ -6742,16 +7058,18 @@ let GsmPDUHelper = {
       this.writeHexOctet(options.segmentSeq & 0xFF);
     }
 
-    if (options.langIndex != PDU_NL_IDENTIFIER_DEFAULT) {
-      this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT);
-      this.writeHexOctet(1);
-      this.writeHexOctet(options.langIndex);
-    }
+    if (options.dcs == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      if (options.langIndex != PDU_NL_IDENTIFIER_DEFAULT) {
+        this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT);
+        this.writeHexOctet(1);
+        this.writeHexOctet(options.langIndex);
+      }
 
-    if (options.langShiftIndex != PDU_NL_IDENTIFIER_DEFAULT) {
-      this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT);
-      this.writeHexOctet(1);
-      this.writeHexOctet(options.langShiftIndex);
+      if (options.langShiftIndex != PDU_NL_IDENTIFIER_DEFAULT) {
+        this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT);
+        this.writeHexOctet(1);
+        this.writeHexOctet(options.langShiftIndex);
+      }
     }
   },
 
@@ -7038,6 +7356,43 @@ let GsmPDUHelper = {
     timestamp -= tzOffset;
 
     return timestamp;
+  },
+
+  /**
+   * Write GSM TP-Service-Centre-Time-Stamp(TP-SCTS).
+   *
+   * @see 3GPP TS 23.040 9.2.3.11
+   */
+  writeTimestamp: function writeTimestamp(date) {
+    this.writeSwappedNibbleBCDNum(date.getFullYear() - PDU_TIMESTAMP_YEAR_OFFSET);
+
+    // The value returned by getMonth() is an integer between 0 and 11.
+    // 0 is corresponds to January, 1 to February, and so on.
+    this.writeSwappedNibbleBCDNum(date.getMonth() + 1);
+    this.writeSwappedNibbleBCDNum(date.getDate());
+    this.writeSwappedNibbleBCDNum(date.getHours());
+    this.writeSwappedNibbleBCDNum(date.getMinutes());
+    this.writeSwappedNibbleBCDNum(date.getSeconds());
+
+    // the value returned by getTimezoneOffset() is the difference,
+    // in minutes, between UTC and local time.
+    // For example, if your time zone is UTC+10 (Australian Eastern Standard Time),
+    // -600 will be returned.
+    // In TS 23.040 9.2.3.11, the Time Zone field of TP-SCTS indicates
+    // the different between the local time and GMT.
+    // And expressed in quarters of an hours. (so need to divid by 15)
+    let zone = date.getTimezoneOffset() / 15;
+    let octet = this.BCDToOctet(zone);
+
+    // the bit3 of the Time Zone field represents the algebraic sign.
+    // (0: positive, 1: negative).
+    // For example, if the time zone is -0800 GMT,
+    // 480 will be returned by getTimezoneOffset().
+    // In this case, need to mark sign bit as 1. => 0x08
+    if (zone > 0) {
+      octet = octet | 0x08;
+    }
+    this.writeHexOctet(octet);
   },
 
   /**
@@ -7732,6 +8087,60 @@ let GsmPDUHelper = {
 
     return msg;
   },
+
+  /**
+   * Read network name.
+   *
+   * @param len Length of the information element.
+   * @return
+   *   {
+   *     networkName: network name.
+   *     shouldIncludeCi: Should Country's initials included in text string.
+   *   }
+   * @see TS 24.008 clause 10.5.3.5a.
+   */
+  readNetworkName: function readNetworkName(len) {
+    // According to TS 24.008 Sec. 10.5.3.5a, the first octet is:
+    // bit 8: must be 1.
+    // bit 5-7: Text encoding.
+    //          000 - GSM default alphabet.
+    //          001 - UCS2 (16 bit).
+    //          else - reserved.
+    // bit 4: MS should add the letters for Country's Initials and a space
+    //        to the text string if this bit is true.
+    // bit 1-3: number of spare bits in last octet.
+
+    let codingInfo = GsmPDUHelper.readHexOctet();
+    if (!(codingInfo & 0x80)) {
+      return null;
+    }
+
+    let textEncoding = (codingInfo & 0x70) >> 4,
+        shouldIncludeCountryInitials = !!(codingInfo & 0x08),
+        spareBits = codingInfo & 0x07;
+    let resultString;
+
+    switch (textEncoding) {
+    case 0:
+      // GSM Default alphabet.
+      resultString = GsmPDUHelper.readSeptetsToString(
+        ((len - 1) * 8 - spareBits) / 7, 0,
+        PDU_NL_IDENTIFIER_DEFAULT,
+        PDU_NL_IDENTIFIER_DEFAULT);
+      break;
+    case 1:
+      // UCS2 encoded.
+      resultString = this.readUCS2String(len - 1);
+      break;
+    default:
+      // Not an available text coding.
+      return null;
+    }
+
+    // TODO - Bug 820286: According to shouldIncludeCountryInitials, add
+    // country initials to the resulting string.
+    return resultString;
+  }
 };
 
 let StkCommandParamsFactory = {
@@ -7749,6 +8158,9 @@ let StkCommandParamsFactory = {
         break;
       case STK_CMD_POLL_OFF:
         param = this.processPollOff(cmdDetails, ctlvs);
+        break;
+      case STK_CMD_PROVIDE_LOCAL_INFO:
+        param = this.processProvideLocalInfo(cmdDetails, ctlvs);
         break;
       case STK_CMD_SET_UP_EVENT_LIST:
         param = this.processSetUpEventList(cmdDetails, ctlvs);
@@ -8157,6 +8569,21 @@ let StkCommandParamsFactory = {
     playTone.isVibrate = (cmdDetails.commandQualifier & 0x01) != 0x00;
 
     return playTone;
+  },
+
+  /**
+   * Construct a param for Provide Local Information
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processProvideLocalInfo: function processProvideLocalInfo(cmdDetails, ctlvs) {
+    let provideLocalInfo = {
+      localInfoType: cmdDetails.commandQualifier
+    };
+    return provideLocalInfo;
   }
 };
 
@@ -8309,7 +8736,7 @@ let StkProactiveCmdHelper = {
     length--; // -1 for the codingScheme.
     switch (text.codingScheme & 0x0f) {
       case STK_TEXT_CODING_GSM_7BIT_PACKED:
-        text.textString = GsmPDUHelper.readSeptetsToString(length / 7, 0, 0, 0);
+        text.textString = GsmPDUHelper.readSeptetsToString(length * 8 / 7, 0, 0, 0);
         break;
       case STK_TEXT_CODING_GSM_8BIT:
         text.textString = GsmPDUHelper.read8BitUnpackedToString(length);
@@ -8347,6 +8774,13 @@ let StkProactiveCmdHelper = {
    * | (Y-1)+X+2    |                        |        |
    */
   retrieveItem: function retrieveItem(length) {
+    // TS 102.223 ,clause 6.6.7 SET-UP MENU
+    // If the "Item data object for item 1" is a null data object
+    // (i.e. length = '00' and no value part), this is an indication to the ME
+    // to remove the existing menu from the menu system in the ME.
+    if (!length) {
+      return null;
+    }
     let item = {
       identifier: GsmPDUHelper.readHexOctet(),
       text: GsmPDUHelper.readAlphaIdentifier(length - 1)
@@ -8674,6 +9108,24 @@ let ComprehensionTlvHelper = {
     // | Ext = 1 (1 bit) |          Cause (7 bits)          |
     // +-----------------+----------------------------------+
     GsmPDUHelper.writeHexOctet(0x80 | cause);
+  },
+
+  writeDateTimeZoneTlv: function writeDataTimeZoneTlv(date) {
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DATE_TIME_ZONE);
+    GsmPDUHelper.writeHexOctet(7);
+    GsmPDUHelper.writeTimestamp(date);
+  },
+
+  writeLanguageTlv: function writeLanguageTlv(language) {
+    GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_LANGUAGE);
+    GsmPDUHelper.writeHexOctet(2);
+
+    // ISO 639-1, Alpha-2 code
+    // TS 123.038, clause 6.2.1, GSM 7 bit Default Alphabet
+    GsmPDUHelper.writeHexOctet(
+      PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT].indexOf(language[0]));
+    GsmPDUHelper.writeHexOctet(
+      PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT].indexOf(language[1]));
   },
 
   getSizeOfLengthOctets: function getSizeOfLengthOctets(length) {

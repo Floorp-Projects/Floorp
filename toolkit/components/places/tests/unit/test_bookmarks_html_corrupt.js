@@ -21,8 +21,7 @@ var icos = Cc["@mozilla.org/browser/favicon-service;1"].
            getService(Ci.nsIFaviconService);
 var ps = Cc["@mozilla.org/preferences-service;1"].
          getService(Ci.nsIPrefBranch);
-var ies = Cc["@mozilla.org/browser/places/import-export-service;1"].
-          getService(Ci.nsIPlacesImportExportService);
+
 Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
@@ -33,69 +32,51 @@ const TEST_FAVICON_PAGE_URL = "http://en-US.www.mozilla.com/en-US/firefox/centra
 const TEST_FAVICON_DATA_SIZE = 580;
 
 function run_test() {
-  do_test_pending();
+  run_next_test();
+}
 
+add_task(function test_corrupt_file() {
   // avoid creating the places smart folder during tests
   ps.setIntPref("browser.places.smartBookmarksVersion", -1);
 
-  // import bookmarks from corrupt file
-  var corruptBookmarksFile = do_get_file("bookmarks.corrupt.html");
-  try {
-    BookmarkHTMLUtils.importFromFile(corruptBookmarksFile, true, after_import);
-  } catch(ex) { do_throw("couldn't import corrupt bookmarks file: " + ex); }
-}
+  // Import bookmarks from the corrupt file.
+  yield BookmarkHTMLUtils.importFromFile(do_get_file("bookmarks.corrupt.html"),
+                                         true);
 
-function after_import(success) {
-  if (!success) {
-    do_throw("Couldn't import corrupt bookmarks file.");
-  }
+  // Check that bookmarks that are not corrupt have been imported.
+  yield database_check();
+});
 
-  // Check that every bookmark is correct
-  // Corrupt bookmarks should not have been imported
-  database_check(function () {
-    // Create corruption in database
-    var corruptItemId = bs.insertBookmark(bs.toolbarFolder,
-                                          uri("http://test.mozilla.org"),
-                                          bs.DEFAULT_INDEX, "We love belugas");
-    var stmt = dbConn.createStatement("UPDATE moz_bookmarks SET fk = NULL WHERE id = :itemId");
-    stmt.params.itemId = corruptItemId;
-    stmt.execute();
-    stmt.finalize();
+add_task(function test_corrupt_database() {
+  // Create corruption in the database, then export.
+  var corruptItemId = bs.insertBookmark(bs.toolbarFolder,
+                                        uri("http://test.mozilla.org"),
+                                        bs.DEFAULT_INDEX, "We love belugas");
+  var stmt = dbConn.createStatement("UPDATE moz_bookmarks SET fk = NULL WHERE id = :itemId");
+  stmt.params.itemId = corruptItemId;
+  stmt.execute();
+  stmt.finalize();
 
-    // Export bookmarks
-    var bookmarksFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-    bookmarksFile.append("bookmarks.exported.html");
-    if (bookmarksFile.exists())
-      bookmarksFile.remove(false);
-    bookmarksFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
-    if (!bookmarksFile.exists())
-      do_throw("couldn't create file: bookmarks.exported.html");
-    try {
-      ies.exportHTMLToFile(bookmarksFile);
-    } catch(ex) { do_throw("couldn't export to bookmarks.exported.html: " + ex); }
+  let bookmarksFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  bookmarksFile.append("bookmarks.exported.html");
+  if (bookmarksFile.exists())
+    bookmarksFile.remove(false);
+  yield BookmarkHTMLUtils.exportToFile(bookmarksFile);
 
-    // Clear all bookmarks
-    remove_all_bookmarks();
-
-    // Import bookmarks
-    try {
-    BookmarkHTMLUtils.importFromFile(bookmarksFile, true, before_database_check);
-    } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-  });
-}
-
-function before_database_check(success) {
-  // Check that every bookmark is correct
-  database_check(do_test_finished);
-}
+  // Import again and check for correctness.
+  remove_all_bookmarks();
+  yield BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
+  yield database_check();
+});
 
 /*
  * Check for imported bookmarks correctness
  *
- * @param aCallback
- *        Called when the checks are finished.
+ * @return {Promise}
+ * @resolves When the checks are finished.
+ * @rejects Never.
  */
-function database_check(aCallback) {
+function database_check() {
   // BOOKMARKS MENU
   var query = hs.getNewQuery();
   query.setFolders([bs.bookmarksMenuFolder], 1);
@@ -194,6 +175,7 @@ function database_check(aCallback) {
   unfiledBookmarks.containerOpen = false;
 
   // favicons
+  let deferred = Promise.defer();
   icos.getFaviconDataForPage(uri(TEST_FAVICON_PAGE_URL),
     function DC_onComplete(aURI, aDataLen, aData, aMimeType) {
       // aURI should never be null when aDataLen > 0.
@@ -202,6 +184,7 @@ function database_check(aCallback) {
       // simplicity, instead of converting the data we receive to a "data:" URI
       // and comparing it, we just check the data size.
       do_check_eq(TEST_FAVICON_DATA_SIZE, aDataLen);
-      aCallback();
+      deferred.resolve();
     });
+  return deferred.promise;
 }

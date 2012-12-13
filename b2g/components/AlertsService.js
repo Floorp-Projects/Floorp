@@ -107,8 +107,6 @@ AlertsService.prototype = {
           Services.io.newURI(data.target, null, null),
           Services.io.newURI(listener.manifestURL, null, null));
       }
-
-      cpmm.sendAsyncMessage("app-notification-sysmsg-request", listener);
     }
 
     // we're done with this notification

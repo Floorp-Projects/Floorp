@@ -73,17 +73,17 @@ public:
   { *aX = kMaxDimension;  *aY = kMaxDimension;  return NS_OK; }
 
   // We're always at <0, 0>, and so ignore move requests.
-  NS_IMETHOD Move(int32_t aX, int32_t aY)
+  NS_IMETHOD Move(double aX, double aY)
   { return NS_OK; }
 
-  NS_IMETHOD Resize(int32_t aWidth,
-                    int32_t aHeight,
-                    bool    aRepaint);
-  NS_IMETHOD Resize(int32_t aX,
-                    int32_t aY,
-                    int32_t aWidth,
-                    int32_t aHeight,
-                    bool    aRepaint)
+  NS_IMETHOD Resize(double aWidth,
+                    double aHeight,
+                    bool   aRepaint);
+  NS_IMETHOD Resize(double aX,
+                    double aY,
+                    double aWidth,
+                    double aHeight,
+                    bool   aRepaint)
   // (we're always at <0, 0>)
   { return Resize(aWidth, aHeight, aRepaint); }
 

@@ -1459,6 +1459,7 @@ bltest_rsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     return SECSuccess;
 }
 
+SECStatus
 blapi_pqg_param_gen(unsigned int keysize, PQGParams **pqg, PQGVerify **vfy)
 {
     if (keysize < 1024) {

@@ -16,5 +16,5 @@ DEFINES += -DWINNT
 #
 OS_CFLAGS += -GT
 
-# WINNT uses the lib prefix, Win95 and WinCE don't
+# WINNT uses the lib prefix, Win95 doesn't
 NSPR31_LIB_PREFIX = lib

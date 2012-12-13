@@ -95,13 +95,19 @@ public:
     XPCShellDirProvider() { }
     ~XPCShellDirProvider() { }
 
+    // The platform resource folder
     bool SetGREDir(const char *dir);
     void ClearGREDir() { mGREDir = nullptr; }
+    // The application resource folder
+    void SetAppDir(nsIFile *appFile);
+    void ClearAppDir() { mAppDir = nullptr; }
+    // The app executable
     void SetAppFile(nsIFile *appFile);
     void ClearAppFile() { mAppFile = nullptr; }
 
 private:
     nsCOMPtr<nsIFile> mGREDir;
+    nsCOMPtr<nsIFile> mAppDir;
     nsCOMPtr<nsIFile> mAppFile;
 };
 
@@ -1736,6 +1742,7 @@ main(int argc, char **argv, char **envp)
         rv = XRE_GetFileFromPath(argv[2], getter_AddRefs(dir));
         if (NS_SUCCEEDED(rv)) {
             appDir = do_QueryInterface(dir, &rv);
+            dirprovider.SetAppDir(appDir);
         }
         if (NS_FAILED(rv)) {
             printf("Couldn't use given appdir.\n");
@@ -1970,6 +1977,7 @@ main(int argc, char **argv, char **envp)
     appDir = nullptr;
     appFile = nullptr;
     dirprovider.ClearGREDir();
+    dirprovider.ClearAppDir();
     dirprovider.ClearAppFile();
 
 #ifdef MOZ_CRASHREPORTER
@@ -2000,6 +2008,12 @@ void
 XPCShellDirProvider::SetAppFile(nsIFile* appFile)
 {
     mAppFile = appFile;
+}
+
+void
+XPCShellDirProvider::SetAppDir(nsIFile* appDir)
+{
+    mAppDir = appDir;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -2101,16 +2115,17 @@ XPCShellDirProvider::GetFiles(const char *prop, nsISimpleEnumerator* *result)
         return NS_NewArrayEnumerator(result, dirs);
     } else if (!strcmp(prop, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
         nsCOMArray<nsIFile> dirs;
-
-        nsCOMPtr<nsIFile> file;
-        if (NS_FAILED(NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                             getter_AddRefs(file))) ||
-            NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("defaults"))) ||
-            NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("preferences"))))
-            return NS_ERROR_FAILURE;
-
-        dirs.AppendObject(file);
-        return NS_NewArrayEnumerator(result, dirs);
+        nsCOMPtr<nsIFile> appDir;
+        bool exists;
+        if (mAppDir &&
+            NS_SUCCEEDED(mAppDir->Clone(getter_AddRefs(appDir))) &&
+            NS_SUCCEEDED(appDir->AppendNative(NS_LITERAL_CSTRING("defaults"))) &&
+            NS_SUCCEEDED(appDir->AppendNative(NS_LITERAL_CSTRING("preferences"))) &&
+            NS_SUCCEEDED(appDir->Exists(&exists)) && exists) {
+            dirs.AppendObject(appDir);
+            return NS_NewArrayEnumerator(result, dirs);
+        }
+        return NS_ERROR_FAILURE;
     } else if (mGREDir && !strcmp(prop, NS_APP_PLUGINS_DIR_LIST)) {
         nsCOMPtr<nsIFile> file;
         mGREDir->Clone(getter_AddRefs(file));

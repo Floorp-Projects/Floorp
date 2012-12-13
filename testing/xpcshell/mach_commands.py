@@ -41,7 +41,7 @@ class XPCShellRunner(MozbuildObject):
         manifest = os.path.join(self.topobjdir, '_tests', 'xpcshell',
             'xpcshell.ini')
 
-        self._run_xpcshell_harness(manifest=manifest, **kwargs)
+        return self._run_xpcshell_harness(manifest=manifest, **kwargs)
 
     def run_test(self, test_file, debug=False, interactive=False,
         keep_going=False, shuffle=False):
@@ -83,7 +83,7 @@ class XPCShellRunner(MozbuildObject):
         if os.path.isfile(test_file):
             args['test_path'] = os.path.basename(test_file)
 
-        self._run_xpcshell_harness(**args)
+        return self._run_xpcshell_harness(**args)
 
     def _run_xpcshell_harness(self, test_dirs=None, manifest=None,
         test_path=None, debug=False, shuffle=False, interactive=False,
@@ -140,10 +140,11 @@ class XPCShellRunner(MozbuildObject):
 
             filtered_args[k] = v
 
-        # TODO do something with result.
-        xpcshell.runTests(**filtered_args)
+        result = xpcshell.runTests(**filtered_args)
 
         self.log_manager.disable_unstructured()
+
+        return int(not result)
 
 
 @CommandProvider

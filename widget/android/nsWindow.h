@@ -79,15 +79,15 @@ public:
     NS_IMETHOD ConstrainPosition(bool aAllowSlop,
                                  int32_t *aX,
                                  int32_t *aY);
-    NS_IMETHOD Move(int32_t aX,
-                    int32_t aY);
-    NS_IMETHOD Resize(int32_t aWidth,
-                      int32_t aHeight,
-                      bool    aRepaint);
-    NS_IMETHOD Resize(int32_t aX,
-                      int32_t aY,
-                      int32_t aWidth,
-                      int32_t aHeight,
+    NS_IMETHOD Move(double aX,
+                    double aY);
+    NS_IMETHOD Resize(double aWidth,
+                      double aHeight,
+                      bool   aRepaint);
+    NS_IMETHOD Resize(double aX,
+                      double aY,
+                      double aWidth,
+                      double aHeight,
                       bool aRepaint);
     NS_IMETHOD SetZIndex(int32_t aZIndex);
     NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
@@ -167,6 +167,8 @@ protected:
     bool DrawTo(gfxASurface *targetSurface, const nsIntRect &aRect);
     bool IsTopLevel();
     void RemoveIMEComposition();
+    void PostFlushIMEChanges();
+    void FlushIMEChanges();
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
@@ -187,6 +189,33 @@ protected:
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     nsString mIMEComposingText;
     nsAutoTArray<nsTextRange, 4> mIMERanges;
+
+    struct IMEChange {
+        int32_t mStart, mOldEnd, mNewEnd;
+
+        IMEChange() :
+            mStart(-1), mOldEnd(-1), mNewEnd(-1)
+        {
+        }
+        IMEChange(int32_t start, int32_t oldEnd, int32_t newEnd) :
+            mStart(start), mOldEnd(oldEnd), mNewEnd(newEnd)
+        {
+        }
+        IMEChange(int32_t start, int32_t end) :
+            mStart(start), mOldEnd(end), mNewEnd(-1)
+        {
+        }
+        bool IsEmpty()
+        {
+            return mStart < 0;
+        }
+        bool IsTextChange()
+        {
+            return mNewEnd >= 0;
+        }
+    };
+    nsAutoTArray<IMEChange, 4> mIMETextChanges;
+    IMEChange mIMESelectionChange;
 
     InputContext mInputContext;
 

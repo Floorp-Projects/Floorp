@@ -23,12 +23,12 @@ CodeGeneratorX86::CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph)
 {
 }
 
-static const uint32 FrameSizes[] = { 128, 256, 512, 1024 };
+static const uint32_t FrameSizes[] = { 128, 256, 512, 1024 };
 
 FrameSizeClass
-FrameSizeClass::FromDepth(uint32 frameDepth)
+FrameSizeClass::FromDepth(uint32_t frameDepth)
 {
-    for (uint32 i = 0; i < JS_ARRAY_LENGTH(FrameSizes); i++) {
+    for (uint32_t i = 0; i < JS_ARRAY_LENGTH(FrameSizes); i++) {
         if (frameDepth < FrameSizes[i])
             return FrameSizeClass(i);
     }
@@ -42,7 +42,7 @@ FrameSizeClass::ClassLimit()
     return FrameSizeClass(JS_ARRAY_LENGTH(FrameSizes));
 }
 
-uint32
+uint32_t
 FrameSizeClass::frameSize() const
 {
     JS_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
@@ -176,7 +176,7 @@ CodeGeneratorX86::visitLoadSlotV(LLoadSlotV *load)
 {
     const ValueOperand out = ToOutValue(load);
     Register base = ToRegister(load->input());
-    int32 offset = load->mir()->slot() * sizeof(js::Value);
+    int32_t offset = load->mir()->slot() * sizeof(js::Value);
 
     masm.loadValue(Operand(base, offset), out);
     return true;
@@ -186,7 +186,7 @@ bool
 CodeGeneratorX86::visitLoadSlotT(LLoadSlotT *load)
 {
     Register base = ToRegister(load->input());
-    int32 offset = load->mir()->slot() * sizeof(js::Value);
+    int32_t offset = load->mir()->slot() * sizeof(js::Value);
 
     if (load->mir()->type() == MIRType_Double)
         masm.loadInt32OrDouble(Operand(base, offset), ToFloatRegister(load->output()));
@@ -199,7 +199,7 @@ bool
 CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
 {
     Register base = ToRegister(store->slots());
-    int32 offset = store->mir()->slot() * sizeof(js::Value);
+    int32_t offset = store->mir()->slot() * sizeof(js::Value);
 
     const LAllocation *value = store->value();
     MIRType valueType = store->mir()->value()->type();
@@ -230,12 +230,17 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
 {
     Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
 
+    if (load->mir()->needsHoleCheck()) {
+        Assembler::Condition cond = masm.testMagic(Assembler::Equal, source);
+        if (!bailoutIf(cond, load->snapshot()))
+            return false;
+    }
+
     if (load->mir()->type() == MIRType_Double)
         masm.loadInt32OrDouble(source, ToFloatRegister(load->output()));
     else
         masm.movl(masm.ToPayload(source), ToRegister(load->output()));
 
-    JS_ASSERT(!load->mir()->needsHoleCheck());
     return true;
 }
 

@@ -64,36 +64,32 @@ SettingsListener.observe('audio.volume.master', 0.5, function(value) {
   audioManager.masterVolume = Math.max(0.0, Math.min(value, 1.0));
 });
 
-let audioSettings = [];
+let audioChannelSettings = [];
 
 if ("nsIAudioManager" in Ci) {
   const nsIAudioManager = Ci.nsIAudioManager;
-  audioSettings = [
-    // settings name, default value, stream type
-    ['audio.volume.voice_call', 10, nsIAudioManager.STREAM_TYPE_VOICE_CALL],
-    ['audio.volume.system', 15,  nsIAudioManager.STREAM_TYPE_SYSTEM],
-    ['audio.volume.ring', 7, nsIAudioManager.STREAM_TYPE_RING],
-    ['audio.volume.music', 15, nsIAudioManager.STREAM_TYPE_MUSIC],
-    ['audio.volume.alarm', 7, nsIAudioManager.STREAM_TYPE_ALARM],
-    ['audio.volume.notification', 7, nsIAudioManager.STREAM_TYPE_NOTIFICATION],
-    ['audio.volume.bt_sco', 15, nsIAudioManager.STREAM_TYPE_BLUETOOTH_SCO],
-    ['audio.volume.enforced_audible', 7, nsIAudioManager.STREAM_TYPE_ENFORCED_AUDIBLE],
-    ['audio.volume.dtmf', 15, nsIAudioManager.STREAM_TYPE_DTMF],
-    ['audio.volume.tts', 15, nsIAudioManager.STREAM_TYPE_TTS],
-    ['audio.volume.fm', 15, nsIAudioManager.STREAM_TYPE_FM],
+  audioChannelSettings = [
+    // settings name, max value, apply to stream types
+    ['audio.volume.content', 15, [nsIAudioManager.STREAM_TYPE_SYSTEM, nsIAudioManager.STREAM_TYPE_MUSIC]],
+    ['audio.volume.notification', 15, [nsIAudioManager.STREAM_TYPE_RING, nsIAudioManager.STREAM_TYPE_NOTIFICATION]],
+    ['audio.volume.alarm', 15, [nsIAudioManager.STREAM_TYPE_ALARM]],
+    ['audio.volume.telephony', 5, [nsIAudioManager.STREAM_TYPE_VOICE_CALL]],
+    ['audio.volume.bt_sco', 15, [nsIAudioManager.STREAM_TYPE_BLUETOOTH_SCO]],
   ];
 }
 
-for each (let [setting, defaultValue, streamType] in audioSettings) {
-  (function AudioStreamSettings(s, d, t) {
-    SettingsListener.observe(s, d, function(value) {
+for each (let [setting, maxValue, streamTypes] in audioChannelSettings) {
+  (function AudioStreamSettings(setting, maxValue, streamTypes) {
+    SettingsListener.observe(setting, maxValue, function(value) {
       let audioManager = Services.audioManager;
       if (!audioManager)
         return;
 
-      audioManager.setStreamVolumeIndex(t, Math.min(value, d));
+      for each(let streamType in streamTypes) {
+        audioManager.setStreamVolumeIndex(streamType, Math.min(value, maxValue));
+      }
     });
-  })(setting, defaultValue, streamType);
+  })(setting, maxValue, streamTypes);
 }
 
 // =================== Console ======================
@@ -157,12 +153,14 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
                                      '@mozilla.org/settingsService;1',
                                      'nsISettingsService');
   let lock = gSettingsService.createLock();
-  //MOZ_B2G_VERSION is set in b2g/confvars.sh, and is outputed as a #define value
-  //from configure.in, defaults to 1.0.0 if this value is not exist
+  // MOZ_B2G_VERSION is set in b2g/confvars.sh, and is output as a #define value
+  // from configure.in, defaults to 1.0.0 if this value is not exist.
 #filter attemptSubstitution
   let os_version = '@MOZ_B2G_VERSION@';
+  let os_name = '@MOZ_B2G_OS_NAME@';
 #unfilter attemptSubstitution
   lock.set('deviceinfo.os', os_version, null, null);
+  lock.set('deviceinfo.software', os_name + ' ' + os_version, null, null);
 
   let appInfo = Cc["@mozilla.org/xre/app-info;1"]
                   .getService(Ci.nsIXULAppInfo);
@@ -172,8 +170,9 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
   let update_channel = Services.prefs.getCharPref('app.update.channel');
   lock.set('deviceinfo.update_channel', update_channel, null, null);
 
-  //Get the hardware info from android properties
-  let hardware_version = null;
+  // Get the hardware info and firmware revision from device properties.
+  let hardware_info = null;
+  let firmware_revision = null;
   try {
     let cutils = ctypes.open('libcutils.so');
     let cbuf = ctypes.char.array(128)();
@@ -189,12 +188,14 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
       c_property_get(key, cbuf, defaultValue);
       return cbuf.readString();
     }
-    hardware_version = property_get('ro.hardware');
+    hardware_info = property_get('ro.hardware');
+    firmware_revision = property_get('ro.firmware_revision');
     cutils.close();
   } catch(e) {
-    //Error
+    // Error.
   }
-  lock.set('deviceinfo.hardware', hardware_version, null, null);
+  lock.set('deviceinfo.hardware', hardware_info, null, null);
+  lock.set('deviceinfo.firmware_revision', firmware_revision, null, null);
 })();
 
 // =================== Debugger ====================

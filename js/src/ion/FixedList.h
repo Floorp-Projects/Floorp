@@ -41,6 +41,11 @@ class FixedList
         return length_;
     }
 
+    void shrink(size_t num) {
+        JS_ASSERT(num < length_);
+        length_ -= num;
+    }
+
     T &operator[](size_t index) {
         JS_ASSERT(index < length_);
         return list_[index];
@@ -48,7 +53,7 @@ class FixedList
     const T &operator [](size_t index) const {
         JS_ASSERT(index < length_);
         return list_[index];
-    };
+    }
 };
 
 } // namespace ion

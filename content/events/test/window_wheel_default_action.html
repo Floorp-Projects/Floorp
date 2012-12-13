@@ -1531,6 +1531,166 @@ function doTestWholeScroll(aCallback)
   doIt();
 }
 
+function doTestActionOverride(aCallback)
+{
+  const kNoScroll    = 0x00;
+  const kScrollUp    = 0x01;
+  const kScrollDown  = 0x02;
+  const kScrollLeft  = 0x04;
+  const kScrollRight = 0x08;
+
+  const kTests = [
+    { action: 1, override_x: -1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 1, override_x: 0,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 1, override_x: 1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 0, override_x: -1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 0, override_x: 0,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 0, override_x: 1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 1, override_x: -1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.5,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 1, override_x: 0,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.5,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 1, override_x: 1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.5,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 0, override_x: -1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.5,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 0, override_x: 0,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.5,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 0, override_x: 1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.5,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 1, override_x: -1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 1, override_x: 0,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 1, override_x: 1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kScrollDown | kScrollRight
+    },
+    { action: 0, override_x: -1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 0, override_x: 0,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+    { action: 0, override_x: 1,
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      expected: kNoScroll
+    },
+  ];
+
+  var index = 0;
+
+  function doIt()
+  {
+    const kTest = kTests[index];
+    description = "doTestActionOverride(action=" + kTest.action + ", " +
+                  "override_x=" + kTest.override_x + ", " +
+                  "deltaX=" + kTest.event.deltaX + ", " +
+                  "deltaY=" + kTest.event.deltaY + "): ";
+    SpecialPowers.setIntPref("mousewheel.default.action", kTest.action);
+    SpecialPowers.setIntPref("mousewheel.default.action.override_x", kTest.override_x);
+    gScrollableElement.scrollTop = 1000;
+    gScrollableElement.scrollLeft = 1000;
+    synthesizeWheel(gScrollableElement, 10, 10, kTest.event);
+    hitEventLoop(function () {
+      if (kTest.expected & kScrollUp) {
+        ok(gScrollableElement.scrollTop < 1000, description + "not scrolled up, got " + gScrollableElement.scrollTop);
+      } else if (kTest.expected & kScrollDown) {
+        ok(gScrollableElement.scrollTop > 1000, description + "not scrolled down, got " + gScrollableElement.scrollTop);
+      } else {
+        is(gScrollableElement.scrollTop, 1000, description + "scrolled vertical");
+      }
+      if (kTest.expected & kScrollLeft) {
+        ok(gScrollableElement.scrollLeft < 1000, description + "not scrolled to left, got " + gScrollableElement.scrollLeft);
+      } else if (kTest.expected & kScrollRight) {
+        ok(gScrollableElement.scrollLeft > 1000, description + "not scrolled to right, got " + gScrollableElement.scrollLeft);
+      } else {
+        is(gScrollableElement.scrollLeft, 1000, description + "scrolled horizontal");
+      }
+      if (++index == kTests.length) {
+        SpecialPowers.setIntPref("mousewheel.default.action", 1);
+        SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
+        SimpleTest.executeSoon(aCallback);
+      } else {
+        doIt();
+      }
+    }, 20);
+  }
+  doIt();
+}
+
 function runTests()
 {
   SpecialPowers.setBoolPref("general.smoothScroll", false);
@@ -1567,19 +1727,21 @@ function runTests()
   function doTest() {
     setDeltaMultiplierSettings(kSettings[index]);
     doTestScroll(kSettings[index], function () {
-        doTestZoom(kSettings[index], function() {
-          if (++index == kSettings.length) {
-            setDeltaMultiplierSettings(kSettings[0]);
-            doTestZoomedScroll(function() {
-              doTestWholeScroll(function() {
+      doTestZoom(kSettings[index], function() {
+        if (++index == kSettings.length) {
+          setDeltaMultiplierSettings(kSettings[0]);
+          doTestZoomedScroll(function() {
+            doTestWholeScroll(function() {
+              doTestActionOverride(function() {
                 finishTests();
               });
             });
-          } else {
-            doTest();
-          }
-        });
+          });
+        } else {
+          doTest();
+        }
       });
+    });
   }
   doTest();
 }

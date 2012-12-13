@@ -787,10 +787,6 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   if (!mRemoteFrame) {
     if (!mDocShell)
       return false;
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
-    if (presShell)
-      return true;
 
     mDocShell->SetMarginWidth(marginWidth);
     mDocShell->SetMarginHeight(marginHeight);
@@ -801,6 +797,19 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
                                          scrollbarPrefX);
       sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
                                          scrollbarPrefY);
+    }
+
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      // Ensure root scroll frame is reflowed in case scroll preferences or
+      // margins have changed
+      nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+      if (rootScrollFrame) {
+        presShell->FrameNeedsReflow(rootScrollFrame, nsIPresShell::eResize,
+                                    NS_FRAME_IS_DIRTY);
+      }
+      return true;
     }
   }
 

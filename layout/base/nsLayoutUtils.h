@@ -1766,6 +1766,14 @@ public:
   static bool PointIsCloserToRect(PointType aPoint, const RectType& aRect,
                                   CoordType& aClosestXDistance,
                                   CoordType& aClosestYDistance);
+  /**
+   * Computes the box shadow rect for the frame, or returns an empty rect if
+   * there are no shadows.
+   *
+   * @param aFrame Frame to compute shadows for.
+   * @param aFrameSize Size of aFrame (in case it hasn't been set yet).
+   */
+  static nsRect GetBoxShadowRectForFrame(nsIFrame* aFrame, const nsSize& aFrameSize);
 
 #ifdef DEBUG
   /**

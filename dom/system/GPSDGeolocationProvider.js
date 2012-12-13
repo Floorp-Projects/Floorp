@@ -121,7 +121,7 @@ GPSDProvider.prototype = {
     this.transport.close(Components.results.NS_OK);
   },
   
-  watch: function(c) {
+  watch: function(c, isPrivate) {
     LOG("watch called\n");    
     try {
         // Go into "watcher" mode

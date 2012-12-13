@@ -296,3 +296,46 @@ html|table {
   padding: 0 10px;
   text-align: center;
 }
+
+@media (min-resolution: 2dppx) {
+  .playButton {
+    background-image: url(chrome://global/skin/media/pauseButton@2x.png);
+    background-size: 28px 28px;
+  }
+  .playButton[paused] {
+    background-image: url(chrome://global/skin/media/playButton@2x.png);
+    background-size: 28px 28px;
+  }
+  .muteButton {
+    background-image: url(chrome://global/skin/media/muteButton@2x.png);
+    background-size: 33px 28px;
+  }
+  .muteButton[muted] {
+    background-image: url(chrome://global/skin/media/unmuteButton@2x.png);
+    background-size: 33px 28px;
+  }
+  .muteButton[noAudio] {
+    background-image: url(chrome://global/skin/media/noAudio@2x.png);
+    background-size: 33px 28px;
+  }
+  .fullscreenButton {
+    background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton@2x.png"), 0, 32, 32, 0);
+    background-size: 16px 16px;
+  }
+  .fullscreenButton[fullscreened] {
+    background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton@2x.png"), 0, 64, 32, 32);
+    background-size: 16px 16px;
+  }
+  .volumeControl .scale-thumb {
+    background-image: url(chrome://global/skin/media/volumeThumb@2x.png);
+    background-size: 20px 10px;
+  }
+  .timeThumb {
+    background-image: url(chrome://global/skin/media/scrubberThumb@2x.png);
+    background-size: 33px 28px;
+  }
+  .timeThumb[showhours="true"] {
+    background-image: url(chrome://global/skin/media/scrubberThumbWide@2x.png);
+    background-size: 45px 28px;
+  }
+}

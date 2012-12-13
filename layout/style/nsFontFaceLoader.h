@@ -74,9 +74,8 @@ protected:
                               uint32_t aFlags = nsIScriptError::errorFlag,
                               nsresult aStatus = NS_OK);
 
-  nsresult CheckFontLoad(gfxProxyFontEntry *aFontToLoad,
-                         const gfxFontFaceSrc *aFontFaceSrc,
-                         nsIPrincipal **aPrincipal);
+  virtual nsresult CheckFontLoad(const gfxFontFaceSrc *aFontFaceSrc,
+                                 nsIPrincipal **aPrincipal);
 
   virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
                                     const gfxFontFaceSrc *aFontFaceSrc,

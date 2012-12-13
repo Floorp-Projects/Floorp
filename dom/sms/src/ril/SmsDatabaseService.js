@@ -8,17 +8,18 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const RIL_SMSDATABASESERVICE_CONTRACTID = "@mozilla.org/sms/rilsmsdatabaseservice;1";
 const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d5e89249}");
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const STORE_NAME = "sms";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
-const DELIVERY_SENT = "sent";
+const DELIVERY_SENDING = "sending";
 const DELIVERY_RECEIVED = "received";
 
 const DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
@@ -54,7 +55,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
 const GLOBAL_SCOPE = this;
 
 function numberFromMessage(message) {
-  return message.delivery == DELIVERY_SENT ? message.receiver : message.sender;
+  return message.delivery == DELIVERY_RECEIVED ? message.sender : message.receiver;
 }
 
 /**
@@ -100,7 +101,8 @@ function SmsDatabaseService() {
 SmsDatabaseService.prototype = {
 
   classID:   RIL_SMSDATABASESERVICE_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISmsDatabaseService,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRilSmsDatabaseService,
+                                         Ci.nsISmsDatabaseService,
                                          Ci.nsIObserver]),
 
   /**
@@ -188,6 +190,10 @@ SmsDatabaseService.prototype = {
           case 4:
             if (DEBUG) debug("Upgrade to version 5. Populate quick threads view.")
             self.upgradeSchema4(event.target.transaction);
+            break;
+          case 5:
+            if (DEBUG) debug("Upgrade to version 6. Use PhonenumberJS.")
+            self.upgradeSchema5(event.target.transaction);
             break;
           default:
             event.target.transaction.abort();
@@ -357,6 +363,10 @@ SmsDatabaseService.prototype = {
     }
   },
 
+  upgradeSchema5: function upgradeSchema5(transaction) {
+    // Don't perform any upgrade. See Bug 819560.
+  },
+
   /**
    * Helper function to make the intersection of the partial result arrays
    * obtained within createMessageList.
@@ -490,10 +500,10 @@ SmsDatabaseService.prototype = {
 
 
   /**
-   * nsISmsDatabaseService API
+   * nsIRilSmsDatabaseService API
    */
 
-  saveReceivedMessage: function saveReceivedMessage(sender, body, messageClass, date) {
+  saveReceivedMessage: function saveReceivedMessage(aSender, aBody, aMessageClass, aDate) {
     let receiver = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
 
     // Workaround an xpconnect issue with undefined string objects.
@@ -502,18 +512,33 @@ SmsDatabaseService.prototype = {
       receiver = null;
     }
 
+    if (receiver) {
+      let parsedNumber = PhoneNumberUtils.parse(receiver);
+      receiver = (parsedNumber && parsedNumber.internationalNumber)
+                 ? parsedNumber.internationalNumber
+                 : receiver;
+    }
+
+    let sender = aSender;
+    if (sender) {
+      let parsedNumber = PhoneNumberUtils.parse(sender);
+      sender = (parsedNumber && parsedNumber.internationalNumber)
+               ? parsedNumber.internationalNumber
+               : sender;
+    }
+
     let message = {delivery:       DELIVERY_RECEIVED,
                    deliveryStatus: DELIVERY_STATUS_SUCCESS,
                    sender:         sender,
                    receiver:       receiver,
-                   body:           body,
-                   messageClass:   messageClass,
-                   timestamp:      date,
+                   body:           aBody,
+                   messageClass:   aMessageClass,
+                   timestamp:      aDate,
                    read:           FILTER_READ_UNREAD};
     return this.saveMessage(message);
   },
 
-  saveSentMessage: function saveSentMessage(receiver, body, date) {
+  saveSendingMessage: function saveSendingMessage(aReceiver, aBody, aDate) {
     let sender = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
 
     // Workaround an xpconnect issue with undefined string objects.
@@ -522,29 +547,36 @@ SmsDatabaseService.prototype = {
       sender = null;
     }
 
-    let message = {delivery:       DELIVERY_SENT,
+    let receiver = aReceiver
+    if (receiver) {
+      let parsedNumber = PhoneNumberUtils.parse(receiver.toString());
+      receiver = (parsedNumber && parsedNumber.internationalNumber)
+                 ? parsedNumber.internationalNumber
+                 : receiver;
+    }
+
+    if (sender) {
+      let parsedNumber = PhoneNumberUtils.parse(sender.toString());
+      sender = (parsedNumber && parsedNumber.internationalNumber)
+               ? parsedNumber.internationalNumber
+               : sender;
+    }
+
+    let message = {delivery:       DELIVERY_SENDING,
                    deliveryStatus: DELIVERY_STATUS_PENDING,
                    sender:         sender,
                    receiver:       receiver,
-                   body:           body,
+                   body:           aBody,
                    messageClass:   MESSAGE_CLASS_NORMAL,
-                   timestamp:      date,
+                   timestamp:      aDate,
                    read:           FILTER_READ_READ};
     return this.saveMessage(message);
   },
 
-  setMessageDeliveryStatus: function setMessageDeliveryStatus(messageId, deliveryStatus) {
-    if ((deliveryStatus != DELIVERY_STATUS_SUCCESS)
-        && (deliveryStatus != DELIVERY_STATUS_ERROR)) {
-      if (DEBUG) {
-        debug("Setting message " + messageId + " deliveryStatus to values other"
-              + " than 'success' and 'error'");
-      }
-      return;
-    }
+  setMessageDelivery: function setMessageDelivery(messageId, delivery, deliveryStatus) {
     if (DEBUG) {
-      debug("Setting message " + messageId + " deliveryStatus to "
-            + deliveryStatus);
+      debug("Setting message " + messageId + " delivery to " + delivery
+            + ", and deliveryStatus to " + deliveryStatus);
     }
     this.newTxn(READ_WRITE, function (error, txn, store) {
       if (error) {
@@ -566,20 +598,29 @@ SmsDatabaseService.prototype = {
           }
           return;
         }
-        // Only updates messages that are still waiting for its delivery status.
-        if (message.deliveryStatus != DELIVERY_STATUS_PENDING) {
+        // Only updates messages that have different delivery or deliveryStatus.
+        if ((message.delivery == delivery)
+            && (message.deliveryStatus == deliveryStatus)) {
           if (DEBUG) {
-            debug("The value of message.deliveryStatus is not 'pending' but "
-                  + message.deliveryStatus);
+            debug("The values of attribute delivery and deliveryStatus are the"
+                  + " the same with given parameters.");
           }
           return;
         }
+        message.delivery = delivery;
         message.deliveryStatus = deliveryStatus;
-        if (DEBUG) debug("Message.deliveryStatus set to: " + deliveryStatus);
+        if (DEBUG) {
+          debug("Message.delivery set to: " + delivery
+                + ", and Message.deliveryStatus set to: " + deliveryStatus);
+        }
         store.put(message);
       };
     });
   },
+
+  /**
+   * nsISmsDatabaseService API
+   */
 
   getMessage: function getMessage(messageId, aRequest) {
     if (DEBUG) debug("Retrieving message with ID " + messageId);
@@ -625,7 +666,10 @@ SmsDatabaseService.prototype = {
       };
 
       txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
+        if (DEBUG) {
+          if (event.target)
+            debug("Caught error on transaction", event.target.errorCode);
+        }
         //TODO look at event.target.errorCode, pick appropriate error constant
         aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };

@@ -1,181 +1,176 @@
-# Tests for flexbox pref "layout.css.flexbox.enabled"
-# (Note that it defaults to off for now)
-== flexbox-pref-1.xhtml flexbox-pref-1-disabled-ref.xhtml
+# Check that flexbox pref is default-enabled:
+== flexbox-pref-1.xhtml flexbox-pref-1-enabled-ref.xhtml
+
+# Check that manually setting the pref on/off w/ test-pref() works correctly:
 test-pref(layout.css.flexbox.enabled,false) == flexbox-pref-1.xhtml flexbox-pref-1-disabled-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-pref-1.xhtml flexbox-pref-1-enabled-ref.xhtml
 
 # Tests for cross-axis alignment (align-self / align-items properties)
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-baseline-horiz-1.xhtml  flexbox-align-self-baseline-horiz-1-ref.xhtml
-fails test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
+== flexbox-align-self-baseline-horiz-1.xhtml  flexbox-align-self-baseline-horiz-1-ref.xhtml
+fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
 # This one fails on windows R (but not Ru, strangely). On Windows R, the
 # single-line <label> flex item has a different background size in test vs. ref
-random-if(winWidget) test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
-# XXXdholbert This test needs the flexbox pref to be enabled _at startup time_
-# (when we parse ua.css) in order to pass -- so it'll fail until we enable the
-# flexbox pref by default (bug 783409):
-fails == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
+random-if(winWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
+== flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-horiz-1-block.xhtml  flexbox-align-self-horiz-1-ref.xhtml
-# XXXdholbert This test needs the flexbox pref to be enabled _at startup time_
-# (when we parse ua.css) in order to pass -- so it'll fail until we enable the
-# flexbox pref by default (bug 783409):
-fails == flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-horiz-2.xhtml  flexbox-align-self-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-horiz-3.xhtml  flexbox-align-self-horiz-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-horiz-4.xhtml  flexbox-align-self-horiz-4-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-horiz-5.xhtml  flexbox-align-self-horiz-5-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-1.xhtml  flexbox-align-self-vert-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-2.xhtml  flexbox-align-self-vert-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-3.xhtml  flexbox-align-self-vert-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-4.xhtml  flexbox-align-self-vert-4-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-self-vert-rtl-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-rtl-2.xhtml  flexbox-align-self-vert-rtl-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-rtl-3.xhtml  flexbox-align-self-vert-rtl-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-align-self-vert-rtl-4.xhtml  flexbox-align-self-vert-rtl-4-ref.xhtml
+== flexbox-align-self-horiz-1-block.xhtml  flexbox-align-self-horiz-1-ref.xhtml
+== flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref.xhtml
+== flexbox-align-self-horiz-2.xhtml  flexbox-align-self-horiz-2-ref.xhtml
+== flexbox-align-self-horiz-3.xhtml  flexbox-align-self-horiz-3-ref.xhtml
+== flexbox-align-self-horiz-4.xhtml  flexbox-align-self-horiz-4-ref.xhtml
+== flexbox-align-self-horiz-5.xhtml  flexbox-align-self-horiz-5-ref.xhtml
+== flexbox-align-self-vert-1.xhtml  flexbox-align-self-vert-1-ref.xhtml
+== flexbox-align-self-vert-2.xhtml  flexbox-align-self-vert-2-ref.xhtml
+== flexbox-align-self-vert-3.xhtml  flexbox-align-self-vert-3-ref.xhtml
+== flexbox-align-self-vert-4.xhtml  flexbox-align-self-vert-4-ref.xhtml
+== flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-self-vert-rtl-1-ref.xhtml
+== flexbox-align-self-vert-rtl-2.xhtml  flexbox-align-self-vert-rtl-2-ref.xhtml
+== flexbox-align-self-vert-rtl-3.xhtml  flexbox-align-self-vert-rtl-3-ref.xhtml
+== flexbox-align-self-vert-rtl-4.xhtml  flexbox-align-self-vert-rtl-4-ref.xhtml
 
 # Basic tests with with blocks as flex items
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-block-horiz-1.xhtml flexbox-basic-block-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-block-vert-1.xhtml flexbox-basic-block-vert-1-ref.xhtml
+== flexbox-basic-block-horiz-1.xhtml flexbox-basic-block-horiz-1-ref.xhtml
+== flexbox-basic-block-vert-1.xhtml flexbox-basic-block-vert-1-ref.xhtml
 
 # Tests for basic handling of <canvas>/<img>/etc as a flex item
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-canvas-horiz-1.xhtml   flexbox-basic-canvas-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-canvas-horiz-2.xhtml   flexbox-basic-canvas-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-canvas-vert-1.xhtml    flexbox-basic-canvas-vert-1-ref.xhtml
-fails pref(layout.css.flexbox.enabled,true) == flexbox-basic-canvas-vert-2.xhtml flexbox-basic-canvas-vert-2-ref.xhtml # bug 794660
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-fieldset-horiz-1.xhtml flexbox-basic-fieldset-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-fieldset-horiz-2.xhtml flexbox-basic-fieldset-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-fieldset-vert-1.xhtml  flexbox-basic-fieldset-vert-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-fieldset-vert-2.xhtml  flexbox-basic-fieldset-vert-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-iframe-horiz-1.xhtml   flexbox-basic-iframe-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-iframe-horiz-2.xhtml   flexbox-basic-iframe-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-iframe-vert-1.xhtml    flexbox-basic-iframe-vert-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-iframe-vert-2.xhtml    flexbox-basic-iframe-vert-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-img-horiz-1.xhtml      flexbox-basic-img-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-img-horiz-2.xhtml      flexbox-basic-img-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-img-vert-1.xhtml       flexbox-basic-img-vert-1-ref.xhtml
-fails pref(layout.css.flexbox.enabled,true) == flexbox-basic-img-vert-2.xhtml flexbox-basic-img-vert-2-ref.xhtml # bug 794660
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-textarea-horiz-1.xhtml flexbox-basic-textarea-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-textarea-horiz-2.xhtml flexbox-basic-textarea-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-textarea-vert-1.xhtml  flexbox-basic-textarea-vert-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-textarea-vert-2.xhtml  flexbox-basic-textarea-vert-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-video-horiz-1.xhtml    flexbox-basic-video-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-basic-video-horiz-2.xhtml    flexbox-basic-video-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-basic-video-vert-1.xhtml     flexbox-basic-video-vert-1-ref.xhtml
-fails pref(layout.css.flexbox.enabled,true) == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml # bug 794660
+== flexbox-basic-canvas-horiz-1.xhtml   flexbox-basic-canvas-horiz-1-ref.xhtml
+== flexbox-basic-canvas-horiz-2.xhtml   flexbox-basic-canvas-horiz-2-ref.xhtml
+== flexbox-basic-canvas-vert-1.xhtml    flexbox-basic-canvas-vert-1-ref.xhtml
+fails == flexbox-basic-canvas-vert-2.xhtml flexbox-basic-canvas-vert-2-ref.xhtml # bug 794660
+== flexbox-basic-fieldset-horiz-1.xhtml flexbox-basic-fieldset-horiz-1-ref.xhtml
+== flexbox-basic-fieldset-horiz-2.xhtml flexbox-basic-fieldset-horiz-2-ref.xhtml
+== flexbox-basic-fieldset-vert-1.xhtml  flexbox-basic-fieldset-vert-1-ref.xhtml
+== flexbox-basic-fieldset-vert-2.xhtml  flexbox-basic-fieldset-vert-2-ref.xhtml
+== flexbox-basic-iframe-horiz-1.xhtml   flexbox-basic-iframe-horiz-1-ref.xhtml
+== flexbox-basic-iframe-horiz-2.xhtml   flexbox-basic-iframe-horiz-2-ref.xhtml
+== flexbox-basic-iframe-vert-1.xhtml    flexbox-basic-iframe-vert-1-ref.xhtml
+== flexbox-basic-iframe-vert-2.xhtml    flexbox-basic-iframe-vert-2-ref.xhtml
+== flexbox-basic-img-horiz-1.xhtml      flexbox-basic-img-horiz-1-ref.xhtml
+== flexbox-basic-img-horiz-2.xhtml      flexbox-basic-img-horiz-2-ref.xhtml
+== flexbox-basic-img-vert-1.xhtml       flexbox-basic-img-vert-1-ref.xhtml
+fails == flexbox-basic-img-vert-2.xhtml flexbox-basic-img-vert-2-ref.xhtml # bug 794660
+== flexbox-basic-textarea-horiz-1.xhtml flexbox-basic-textarea-horiz-1-ref.xhtml
+== flexbox-basic-textarea-horiz-2.xhtml flexbox-basic-textarea-horiz-2-ref.xhtml
+== flexbox-basic-textarea-vert-1.xhtml  flexbox-basic-textarea-vert-1-ref.xhtml
+== flexbox-basic-textarea-vert-2.xhtml  flexbox-basic-textarea-vert-2-ref.xhtml
+== flexbox-basic-video-horiz-1.xhtml    flexbox-basic-video-horiz-1-ref.xhtml
+== flexbox-basic-video-horiz-2.xhtml    flexbox-basic-video-horiz-2-ref.xhtml
+== flexbox-basic-video-vert-1.xhtml     flexbox-basic-video-vert-1-ref.xhtml
+fails == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml # bug 794660
 
 # Tests for dynamic modifications to flexboxes
 # (with existing [div | span | text] inside the flexbox, and new content
 # inserted adjacent to that existing content.)
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+== flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+== flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
+== flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+== flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+== flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
+== flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
+== flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
+== flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
+== flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
 
 # Variant of one of the above tests, to regression-test an invalidation issue
-pref(layout.css.flexbox.enabled,true) == flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1-ref.xhtml
+== flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1-ref.xhtml
 
 # Tests for empty flexboxes (with no flex items)
-test-pref(layout.css.flexbox.enabled,true) == flexbox-empty-1a.xhtml  flexbox-empty-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-empty-1b.xhtml  flexbox-empty-1-ref.xhtml
+== flexbox-empty-1a.xhtml  flexbox-empty-1-ref.xhtml
+== flexbox-empty-1b.xhtml  flexbox-empty-1-ref.xhtml
 
 # Tests for handling of floated elements inside a flexbox
-pref(layout.css.flexbox.enabled,true) == flexbox-float-1a.xhtml  flexbox-float-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-float-1b.xhtml  flexbox-float-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-float-1c.xhtml  flexbox-float-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-float-1d.xhtml  flexbox-float-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-float-2a.xhtml  flexbox-float-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
+== flexbox-float-1a.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-1b.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-1c.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-1d.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-2a.xhtml  flexbox-float-2-ref.xhtml
+== flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
 
 # Tests for flex items as stacking contexts
-test-pref(layout.css.flexbox.enabled,true) == flexbox-items-as-stacking-contexts-1.xhtml flexbox-items-as-stacking-contexts-1-ref.xhtml
+== flexbox-items-as-stacking-contexts-1.xhtml flexbox-items-as-stacking-contexts-1-ref.xhtml
 
 # Tests for (default) "min-width: auto" / "min-height: auto" in flex containers
-test-pref(layout.css.flexbox.enabled,true) == flexbox-minSize-horiz-1.xhtml flexbox-minSize-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml
+== flexbox-minSize-horiz-1.xhtml flexbox-minSize-horiz-1-ref.xhtml
+== flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml
 
 # Tests for the order in which we paint flex items
-test-pref(layout.css.flexbox.enabled,true) == flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
+== flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
 
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-absolute-2.xhtml  flexbox-position-absolute-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-absolute-3.xhtml  flexbox-position-absolute-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-absolute-4.xhtml  flexbox-position-absolute-4-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-fixed-1.xhtml     flexbox-position-fixed-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-position-fixed-4.xhtml     flexbox-position-fixed-4-ref.xhtml
+== flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml
+== flexbox-position-absolute-2.xhtml  flexbox-position-absolute-2-ref.xhtml
+== flexbox-position-absolute-3.xhtml  flexbox-position-absolute-3-ref.xhtml
+== flexbox-position-absolute-4.xhtml  flexbox-position-absolute-4-ref.xhtml
+== flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
+== flexbox-position-fixed-1.xhtml     flexbox-position-fixed-1-ref.xhtml
+== flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml
+== flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
+== flexbox-position-fixed-4.xhtml     flexbox-position-fixed-4-ref.xhtml
 
 # Tests for main-axis alignment (jusify-content property)
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-horiz-1.xhtml flexbox-justify-content-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-horiz-2.xhtml flexbox-justify-content-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-horiz-3.xhtml flexbox-justify-content-horiz-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-horiz-4.xhtml flexbox-justify-content-horiz-4-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-horiz-5.xhtml flexbox-justify-content-horiz-5-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-vert-1.xhtml flexbox-justify-content-vert-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-vert-2.xhtml flexbox-justify-content-vert-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-vert-3.xhtml flexbox-justify-content-vert-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-vert-4.xhtml flexbox-justify-content-vert-4-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-justify-content-vert-5.xhtml flexbox-justify-content-vert-5-ref.xhtml
+== flexbox-justify-content-horiz-1.xhtml flexbox-justify-content-horiz-1-ref.xhtml
+== flexbox-justify-content-horiz-2.xhtml flexbox-justify-content-horiz-2-ref.xhtml
+== flexbox-justify-content-horiz-3.xhtml flexbox-justify-content-horiz-3-ref.xhtml
+== flexbox-justify-content-horiz-4.xhtml flexbox-justify-content-horiz-4-ref.xhtml
+== flexbox-justify-content-horiz-5.xhtml flexbox-justify-content-horiz-5-ref.xhtml
+== flexbox-justify-content-vert-1.xhtml flexbox-justify-content-vert-1-ref.xhtml
+== flexbox-justify-content-vert-2.xhtml flexbox-justify-content-vert-2-ref.xhtml
+== flexbox-justify-content-vert-3.xhtml flexbox-justify-content-vert-3-ref.xhtml
+== flexbox-justify-content-vert-4.xhtml flexbox-justify-content-vert-4-ref.xhtml
+== flexbox-justify-content-vert-5.xhtml flexbox-justify-content-vert-5-ref.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-inlinecontent-horiz-4.xhtml  flexbox-inlinecontent-horiz-4-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
+HTTP(..) == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
+HTTP(..) == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
+== flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
+HTTP(..) == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+HTTP(..) == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+HTTP(..) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+== flexbox-inlinecontent-horiz-4.xhtml  flexbox-inlinecontent-horiz-4-ref.xhtml
+== flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
 
 # Tests for intrinsic sizing of flexboxes
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) HTTP(..) == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
+HTTP(..) == flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+HTTP(..) == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+== flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
+== flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
 
 # Tests for invalidation after dynamic modifications
-pref(layout.css.flexbox.enabled,true) == flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
+== flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
 
 # Tests for flexbox with margin, border, and/or padding on flex items
-test-pref(layout.css.flexbox.enabled,true) == flexbox-margin-auto-horiz-1.xhtml     flexbox-margin-auto-horiz-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-margin-auto-horiz-2.xhtml     flexbox-margin-auto-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-1.xhtml             flexbox-mbp-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-1-reverse.xhtml     flexbox-mbp-horiz-1-reverse-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-1-rtl.xhtml         flexbox-mbp-horiz-1-reverse-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-1-rtl-reverse.xhtml flexbox-mbp-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-2a.xhtml            flexbox-mbp-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-2b.xhtml            flexbox-mbp-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-3.xhtml             flexbox-mbp-horiz-3-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-mbp-horiz-3-reverse.xhtml     flexbox-mbp-horiz-3-reverse-ref.xhtml
+== flexbox-margin-auto-horiz-1.xhtml     flexbox-margin-auto-horiz-1-ref.xhtml
+== flexbox-margin-auto-horiz-2.xhtml     flexbox-margin-auto-horiz-2-ref.xhtml
+== flexbox-mbp-horiz-1.xhtml             flexbox-mbp-horiz-1-ref.xhtml
+== flexbox-mbp-horiz-1-reverse.xhtml     flexbox-mbp-horiz-1-reverse-ref.xhtml
+== flexbox-mbp-horiz-1-rtl.xhtml         flexbox-mbp-horiz-1-reverse-ref.xhtml
+== flexbox-mbp-horiz-1-rtl-reverse.xhtml flexbox-mbp-horiz-1-ref.xhtml
+== flexbox-mbp-horiz-2a.xhtml            flexbox-mbp-horiz-2-ref.xhtml
+== flexbox-mbp-horiz-2b.xhtml            flexbox-mbp-horiz-2-ref.xhtml
+== flexbox-mbp-horiz-3.xhtml             flexbox-mbp-horiz-3-ref.xhtml
+== flexbox-mbp-horiz-3-reverse.xhtml     flexbox-mbp-horiz-3-reverse-ref.xhtml
 
 # Tests for flexbox in an iframe that gets resized.
-pref(layout.css.flexbox.enabled,true) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
+== flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
 
 # Tests for sizing of flex containers, e.g. under min/max size constraints
-test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-horiz-1.xhtml flexbox-sizing-horiz-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-horiz-2.xhtml flexbox-sizing-horiz-2-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-vert-1.xhtml  flexbox-sizing-vert-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-vert-2.xhtml  flexbox-sizing-vert-2-ref.xhtml
+== flexbox-sizing-horiz-1.xhtml flexbox-sizing-horiz-1-ref.xhtml
+== flexbox-sizing-horiz-2.xhtml flexbox-sizing-horiz-2-ref.xhtml
+== flexbox-sizing-vert-1.xhtml  flexbox-sizing-vert-1-ref.xhtml
+== flexbox-sizing-vert-2.xhtml  flexbox-sizing-vert-2-ref.xhtml
 
-test-pref(layout.css.flexbox.enabled,true) == flexbox-table-fixup-1a.xhtml flexbox-table-fixup-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-table-fixup-1b.xhtml flexbox-table-fixup-1-ref.xhtml
+== flexbox-table-fixup-1a.xhtml flexbox-table-fixup-1-ref.xhtml
+== flexbox-table-fixup-1b.xhtml flexbox-table-fixup-1-ref.xhtml
 
 # Tests for handling of whitespace within anonymous flex items.
-test-pref(layout.css.flexbox.enabled,true) == flexbox-whitespace-handling-1a.xhtml flexbox-whitespace-handling-1-ref.xhtml
-test-pref(layout.css.flexbox.enabled,true) == flexbox-whitespace-handling-1b.xhtml flexbox-whitespace-handling-1-ref.xhtml
-pref(layout.css.flexbox.enabled,true) == flexbox-whitespace-handling-2.xhtml  flexbox-whitespace-handling-2-ref.xhtml
+== flexbox-whitespace-handling-1a.xhtml flexbox-whitespace-handling-1-ref.xhtml
+== flexbox-whitespace-handling-1b.xhtml flexbox-whitespace-handling-1-ref.xhtml
+== flexbox-whitespace-handling-2.xhtml  flexbox-whitespace-handling-2-ref.xhtml
 
 # Tests with widgets as flex items
-fuzzy-if(gtk2Widget,1,66) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
-fuzzy-if(gtk2Widget,1,74) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
-fuzzy-if(gtk2Widget,1,58) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html
-fuzzy-if(gtk2Widget,1,31) test-pref(layout.css.flexbox.enabled,true) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+fuzzy-if(gtk2Widget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
+fuzzy-if(gtk2Widget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+fuzzy-if(gtk2Widget,1,58) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html
+fuzzy-if(gtk2Widget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html

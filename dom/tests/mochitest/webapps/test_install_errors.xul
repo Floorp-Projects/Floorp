@@ -97,7 +97,7 @@ function invalidContent(next) {
   };
 
   request.onsuccess = function onInstall() {
-    todo(false, "manifest with bad content type fails");
+    ok(false, "manifest with bad content type should fail");
     this.result.uninstall().onsuccess = function onUninstall() {
       next();
     };

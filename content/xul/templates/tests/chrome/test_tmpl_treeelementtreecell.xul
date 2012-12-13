@@ -14,6 +14,51 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <treecols id="treecols" orient="horizontal">
+      <treecol id="treecol" primary="true" label="Name" ordinal="1"/>
+      <treecol label="Species" ordinal="3"/>
+    </treecols>
+    <treechildren>
+      <treeitem step="3" id="http://www.some-fictitious-zoo.com/birds/wren">
+        <treerow>
+          <treecell label="Wren"/>
+          <treecell/>
+        </treerow>
+      </treeitem>
+      <treeitem id="http://www.some-fictitious-zoo.com/birds/emu">
+        <treerow>
+          <treecell label="Emu"/>
+          <treecell label="Dromaius novaehollandiae"/>
+        </treerow>
+      </treeitem>
+      <treeitem step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl">
+        <treerow>
+          <treecell label="Barn Owl"/>
+          <treecell label="Tyto alba"/>
+        </treerow>
+      </treeitem>
+      <treeitem id="http://www.some-fictitious-zoo.com/birds/raven">
+        <treerow>
+          <treecell label="Raven"/>
+          <treecell label="Corvus corax"/>
+        </treerow>
+      </treeitem>
+      <treeitem step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx">
+        <treerow>
+          <treecell label="Archaeopteryx"/>
+          <treecell/>
+        </treerow>
+      </treeitem>
+      <treeitem step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin">
+        <treerow>
+          <treecell label="Emperor Penguin"/>
+          <treecell/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,51 +71,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <treecols id="treecols" orient="horizontal">
-    <treecol id="treecol" primary="true" label="Name" ordinal="1"/>
-    <treecol label="Species" ordinal="3"/>
-  </treecols>
-  <treechildren>
-    <treeitem step="3" id="http://www.some-fictitious-zoo.com/birds/wren">
-      <treerow>
-        <treecell label="Wren"/>
-        <treecell/>
-      </treerow>
-    </treeitem>
-    <treeitem id="http://www.some-fictitious-zoo.com/birds/emu">
-      <treerow>
-        <treecell label="Emu"/>
-        <treecell label="Dromaius novaehollandiae"/>
-      </treerow>
-    </treeitem>
-    <treeitem step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl">
-      <treerow>
-        <treecell label="Barn Owl"/>
-        <treecell label="Tyto alba"/>
-      </treerow>
-    </treeitem>
-    <treeitem id="http://www.some-fictitious-zoo.com/birds/raven">
-      <treerow>
-        <treecell label="Raven"/>
-        <treecell label="Corvus corax"/>
-      </treerow>
-    </treeitem>
-    <treeitem step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx">
-      <treerow>
-        <treecell label="Archaeopteryx"/>
-        <treecell/>
-      </treerow>
-    </treeitem>
-    <treeitem step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin">
-      <treerow>
-        <treecell label="Emperor Penguin"/>
-        <treecell/>
-      </treerow>
-    </treeitem>
-  </treechildren>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1

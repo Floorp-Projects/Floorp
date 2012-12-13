@@ -94,9 +94,17 @@ public class GeckoEvent {
     public static final int IME_RANGE_CONVERTEDTEXT = 4;
     public static final int IME_RANGE_SELECTEDCONVERTEDTEXT = 5;
 
+    public static final int IME_RANGE_LINE_NONE = 0;
+    public static final int IME_RANGE_LINE_DOTTED = 1;
+    public static final int IME_RANGE_LINE_DASHED = 2;
+    public static final int IME_RANGE_LINE_SOLID = 3;
+    public static final int IME_RANGE_LINE_DOUBLE = 4;
+    public static final int IME_RANGE_LINE_WAVY = 5;
+
     public static final int IME_RANGE_UNDERLINE = 1;
     public static final int IME_RANGE_FORECOLOR = 2;
     public static final int IME_RANGE_BACKCOLOR = 4;
+    public static final int IME_RANGE_LINECOLOR = 8;
 
     public static final int ACTION_MAGNIFY_START = 11;
     public static final int ACTION_MAGNIFY = 12;
@@ -120,8 +128,9 @@ public class GeckoEvent {
     public int mCount;
     public int mStart, mEnd;
     public String mCharacters, mCharactersExtra;
-    public int mRangeType, mRangeStyles;
-    public int mRangeForeColor, mRangeBackColor;
+    public int mRangeType, mRangeStyles, mRangeLineStyle;
+    public boolean mRangeBoldLine;
+    public int mRangeForeColor, mRangeBackColor, mRangeLineColor;
     public Location mLocation;
     public Address  mAddress;
     public int mDomKeyLocation;
@@ -499,16 +508,22 @@ public class GeckoEvent {
     public static GeckoEvent createIMERangeEvent(int start,
                                                  int end, int rangeType,
                                                  int rangeStyles,
+                                                 int rangeLineStyle,
+                                                 boolean rangeBoldLine,
                                                  int rangeForeColor,
-                                                 int rangeBackColor) {
+                                                 int rangeBackColor,
+                                                 int rangeLineColor) {
         GeckoEvent event = new GeckoEvent(IME_EVENT);
         event.mAction = IME_ADD_COMPOSITION_RANGE;
         event.mStart = start;
         event.mEnd = end;
         event.mRangeType = rangeType;
         event.mRangeStyles = rangeStyles;
+        event.mRangeLineStyle = rangeLineStyle;
+        event.mRangeBoldLine = rangeBoldLine;
         event.mRangeForeColor = rangeForeColor;
         event.mRangeBackColor = rangeBackColor;
+        event.mRangeLineColor = rangeLineColor;
         return event;
     }
 

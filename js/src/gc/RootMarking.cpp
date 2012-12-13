@@ -27,6 +27,10 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
+#ifdef MOZ_VALGRIND
+# include <valgrind/memcheck.h>
+#endif
+
 using namespace js;
 using namespace js::gc;
 
@@ -201,6 +205,19 @@ IsAddressableGCThing(JSRuntime *rt, uintptr_t w,
     return CGCT_VALID;
 }
 
+#ifdef JSGC_ROOT_ANALYSIS
+bool
+js::gc::IsAddressableGCThing(JSRuntime *rt, uintptr_t w)
+{
+    void *thing;
+    ArenaHeader *aheader;
+    AllocKind thingKind;
+    ConservativeGCTest status =
+        IsAddressableGCThing(rt, w, false, &thingKind, &aheader, &thing);
+    return status == CGCT_VALID;
+}
+#endif
+
 /*
  * Returns CGCT_VALID and mark it if the w can be a  live GC thing and sets
  * thingKind accordingly. Otherwise returns the reason for rejection.
@@ -255,7 +272,7 @@ MarkWordConservatively(JSTracer *trc, uintptr_t w)
      * the memory we make as memcheck-defined the argument, a copy of the
      * original word. See bug 572678.
      */
-#ifdef JS_VALGRIND
+#ifdef MOZ_VALGRIND
     JS_SILENCE_UNUSED_VALUE_IN_EXPR(VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w)));
 #endif
 
@@ -682,7 +699,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 #else
         MarkConservativeStackRoots(trc, useSavedRoots);
 #endif
-        rt->markSelfHostedGlobal(trc);
+        rt->markSelfHostingGlobal(trc);
     }
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {

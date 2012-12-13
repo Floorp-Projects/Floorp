@@ -26,7 +26,7 @@ BitSet::init()
     size_t sizeRequired = numWords() * sizeof(*bits_);
 
     TempAllocator *alloc = GetIonContext()->temp;
-    bits_ = (uint32 *)alloc->allocate(sizeRequired);
+    bits_ = (uint32_t *)alloc->allocate(sizeRequired);
     if (!bits_)
         return false;
 
@@ -90,7 +90,7 @@ BitSet::fixedPointIntersect(const BitSet *other)
     bool changed = false;
 
     for (unsigned int i = 0; i < numWords(); i++) {
-        uint32 old = bits_[i];
+        uint32_t old = bits_[i];
         bits_[i] &= other->bits_[i];
 
         if (!changed && old != bits_[i])

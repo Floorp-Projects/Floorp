@@ -36,6 +36,17 @@
                   android:layout_height="wrap_content"
                   android:visibility="gone"/>
 
+        <ImageButton android:id="@+id/menu"
+                     android:layout_width="@dimen/browser_toolbar_height"
+                     android:layout_height="@dimen/browser_toolbar_height"
+                     android:paddingTop="15dip"
+                     android:paddingBottom="15dip"
+                     android:paddingLeft="20dip"
+                     android:paddingRight="20dip"
+                     android:src="@drawable/tabs_menu"
+                     android:contentDescription="@string/menu"
+                     android:background="@drawable/action_bar_button"/>
+
     </LinearLayout>
 
 </merge>

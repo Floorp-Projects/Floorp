@@ -639,26 +639,25 @@ add_test(function test_edit_item_last_modified() {
 add_test(function test_generic_page_annotation() {
   const TEST_ANNO = "testAnno/testInt";
   let testURI = NetUtil.newURI("http://www.mozilla.org/");
-  let history = PlacesUtils.history;
-  history.addVisit(testURI, Date.now() * 1000, null, history.TRANSITION_TYPED, false, 0);
+  addVisits(testURI, function () {
+    let pageAnnoObj = { name: TEST_ANNO,
+                        type: Ci.nsIAnnotationService.TYPE_INT32,
+                        flags: 0,
+                        value: 123,
+                        expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+    let txn = new PlacesSetPageAnnotationTransaction(testURI, pageAnnoObj);
 
-  let pageAnnoObj = { name: TEST_ANNO,
-                      type: Ci.nsIAnnotationService.TYPE_INT32,
-                      flags: 0,
-                      value: 123,
-                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-  let txn = new PlacesSetPageAnnotationTransaction(testURI, pageAnnoObj);
+    txn.doTransaction();
+    do_check_true(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
 
-  txn.doTransaction();
-  do_check_true(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
+    txn.undoTransaction();
+    do_check_false(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
 
-  txn.undoTransaction();
-  do_check_false(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
+    txn.redoTransaction();
+    do_check_true(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
 
-  txn.redoTransaction();
-  do_check_true(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
-
-  run_next_test();
+    run_next_test();
+  });
 });
 
 add_test(function test_sort_folder_by_name() {

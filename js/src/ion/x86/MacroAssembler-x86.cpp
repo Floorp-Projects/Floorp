@@ -15,7 +15,7 @@ using namespace js;
 using namespace js::ion;
 
 void
-MacroAssemblerX86::setupABICall(uint32 args)
+MacroAssemblerX86::setupABICall(uint32_t args)
 {
     JS_ASSERT(!inCall_);
     inCall_ = true;
@@ -26,14 +26,14 @@ MacroAssemblerX86::setupABICall(uint32 args)
 }
 
 void
-MacroAssemblerX86::setupAlignedABICall(uint32 args)
+MacroAssemblerX86::setupAlignedABICall(uint32_t args)
 {
     setupABICall(args);
     dynamicAlignment_ = false;
 }
 
 void
-MacroAssemblerX86::setupUnalignedABICall(uint32 args, const Register &scratch)
+MacroAssemblerX86::setupUnalignedABICall(uint32_t args, const Register &scratch)
 {
     setupABICall(args);
     dynamicAlignment_ = true;
@@ -75,7 +75,7 @@ MacroAssemblerX86::callWithABI(void *fun, Result result)
     JS_ASSERT(inCall_);
     JS_ASSERT(args_ == passedArgs_);
 
-    uint32 stackAdjust;
+    uint32_t stackAdjust;
     if (dynamicAlignment_) {
         stackAdjust = stackForCall_
                     + ComputeByteAlignment(stackForCall_ + STACK_SLOT_SIZE,

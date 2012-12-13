@@ -2133,7 +2133,7 @@ unsigned
 js::CurrentLine(JSContext *cx)
 {
     AutoAssertNoGC nogc;
-    return PCToLineNumber(cx->fp()->script().get(nogc), cx->regs().pc);
+    return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
 }
 
 void
@@ -2150,9 +2150,9 @@ js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *
         return;
     }
 
-    RawScript script = iter.script().get(nogc);
+    UnrootedScript script = iter.script();
     *file = script->filename;
-    *linenop = PCToLineNumber(iter.script().get(nogc), iter.pc());
+    *linenop = PCToLineNumber(iter.script(), iter.pc());
     *origin = script->originPrincipals;
 }
 

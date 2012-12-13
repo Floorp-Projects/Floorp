@@ -13,10 +13,18 @@
   %globalDTD;
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#ifdef XP_MACOSX
+  <!ENTITY basePBMenu.label   "&fileMenu.label;">
+#else
+  <!ENTITY basePBMenu.label   "<span class='appMenuButton'>&brandShortName;</span><span class='fileMenu'>&fileMenu.label;</span>">
+#endif
+#else
 #ifdef XP_MACOSX
   <!ENTITY basePBMenu.label   "&toolsMenu.label;">
 #else
   <!ENTITY basePBMenu.label   "<span class='appMenuButton'>&brandShortName;</span><span class='toolsMenu'>&toolsMenu.label;</span>">
+#endif
 #endif
   <!ENTITY % privatebrowsingpageDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
   %privatebrowsingpageDTD;
@@ -31,9 +39,15 @@
       body.private .showNormal {
         display: none;
       }
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      body.appMenuButtonVisible .fileMenu {
+        display: none;
+      }
+#else
       body.appMenuButtonVisible .toolsMenu {
         display: none;
       }
+#endif
       body.appMenuButtonInvisible .appMenuButton {
         display: none;
       }
@@ -93,10 +107,16 @@
         document.body.classList.add(appMenuButtonIsVisible ? "appMenuButtonVisible" :
                                                              "appMenuButtonInvisible");
       }, false);
-      
+
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      function openPrivateWindow() {
+        mainWindow.OpenBrowserWindow({private: true});
+      }
+#else
       function togglePrivateBrowsing() {
         mainWindow.gPrivateBrowsingUI.toggleMode();
       }
+#endif
     ]]></script>
   </head>
 
@@ -117,27 +137,48 @@
 
         <!-- Short Description -->
         <div id="errorShortDesc">
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+          <p id="errorShortDescText" class="showPrivate">&privatebrowsingpage.perwindow.issueDesc;</p>
+          <p id="errorShortDescTextNormal" class="showNormal">&privatebrowsingpage.perwindow.issueDesc.normal;</p>
+#else
           <p id="errorShortDescText" class="showPrivate">&privatebrowsingpage.issueDesc;</p>
           <p id="errorShortDescTextNormal" class="showNormal">&privatebrowsingpage.issueDesc.normal;</p>
+#endif
         </div>
 
         <!-- Long Description -->
         <div id="errorLongDesc">
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+          <p id="errorLongDescText">&privatebrowsingpage.perwindow.description;</p>
+#else
           <p id="errorLongDescText">&privatebrowsingpage.description;</p>
+#endif
         </div>
 
         <!-- Start Private Browsing -->
         <div id="startPrivateBrowsingDesc" class="showNormal">
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+          <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  id="startPrivateBrowsing" label="&privatebrowsingpage.openPrivateWindow.label;"
+                  accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"
+                  oncommand="openPrivateWindow();"/>
+#else
           <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   id="startPrivateBrowsing" label="&privatebrowsingpage.startPrivateBrowsing.label;"
                   accesskey="&privatebrowsingpage.startPrivateBrowsing.accesskey;"
                   oncommand="togglePrivateBrowsing();"/>
+#endif
         </div>
 
         <!-- Footer -->
         <div id="footerDesc">
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+          <p id="footerText" class="showPrivate">&privatebrowsingpage.howToStop3;</p>
+          <p id="footerTextNormal" class="showNormal">&privatebrowsingpage.howToStart3;</p>
+#else
           <p id="footerText" class="showPrivate">&privatebrowsingpage.howToStop2;</p>
           <p id="footerTextNormal" class="showNormal">&privatebrowsingpage.howToStart2;</p>
+#endif
         </div>
 
         <!-- More Info -->

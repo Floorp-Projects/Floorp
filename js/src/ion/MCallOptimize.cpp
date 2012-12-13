@@ -18,7 +18,7 @@ namespace js {
 namespace ion {
 
 IonBuilder::InliningStatus
-IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
+IonBuilder::inlineNativeCall(JSNative native, uint32_t argc, bool constructing)
 {
     // Array natives.
     if (native == js_Array)
@@ -78,12 +78,12 @@ IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
 }
 
 bool
-IonBuilder::discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
+IonBuilder::discardCallArgs(uint32_t argc, MDefinitionVector &argv, MBasicBlock *bb)
 {
     if (!argv.resizeUninitialized(argc + 1))
         return false;
 
-    for (int32 i = argc; i >= 0; i--) {
+    for (int32_t i = argc; i >= 0; i--) {
         // Unwrap each MPassArg, replacing it with its contents.
         MPassArg *passArg = bb->pop()->toPassArg();
         MBasicBlock *block = passArg->block();
@@ -99,7 +99,7 @@ IonBuilder::discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *b
 }
 
 bool
-IonBuilder::discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
+IonBuilder::discardCall(uint32_t argc, MDefinitionVector &argv, MBasicBlock *bb)
 {
     if (!discardCallArgs(argc, argv, bb))
         return false;
@@ -113,7 +113,7 @@ types::StackTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
     types::StackTypeSet *barrier;
-    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script_, pc, &barrier);
+    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script(), pc, &barrier);
 
     JS_ASSERT(returnTypes);
     return returnTypes;
@@ -127,22 +127,22 @@ IonBuilder::getInlineReturnType()
 }
 
 types::StackTypeSet *
-IonBuilder::getInlineArgTypeSet(uint32 argc, uint32 arg)
+IonBuilder::getInlineArgTypeSet(uint32_t argc, uint32_t arg)
 {
-    types::StackTypeSet *argTypes = oracle->getCallArg(script_, argc, arg, pc);
+    types::StackTypeSet *argTypes = oracle->getCallArg(script(), argc, arg, pc);
     JS_ASSERT(argTypes);
     return argTypes;
 }
 
 MIRType
-IonBuilder::getInlineArgType(uint32 argc, uint32 arg)
+IonBuilder::getInlineArgType(uint32_t argc, uint32_t arg)
 {
     types::StackTypeSet *argTypes = getInlineArgTypeSet(argc, arg);
     return MIRTypeFromValueType(argTypes->getKnownTypeTag());
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathFunction(MMathFunction::Function function, uint32 argc, bool constructing)
+IonBuilder::inlineMathFunction(MMathFunction::Function function, uint32_t argc, bool constructing)
 {
     if (constructing)
         return InliningStatus_NotInlined;
@@ -170,7 +170,7 @@ IonBuilder::inlineMathFunction(MMathFunction::Function function, uint32 argc, bo
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineArray(uint32 argc, bool constructing)
+IonBuilder::inlineArray(uint32_t argc, bool constructing)
 {
     uint32_t initLength = 0;
     MNewArray::AllocatingBehaviour allocating = MNewArray::NewArray_Unallocating;
@@ -236,7 +236,7 @@ IonBuilder::inlineArray(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool constructing)
+IonBuilder::inlineArrayPopShift(MArrayPopShift::Mode mode, uint32_t argc, bool constructing)
 {
     if (constructing)
         return InliningStatus_NotInlined;
@@ -282,7 +282,7 @@ IonBuilder::inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool con
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineArrayPush(uint32 argc, bool constructing)
+IonBuilder::inlineArrayPush(uint32_t argc, bool constructing)
 {
     if (argc != 1 || constructing)
         return InliningStatus_NotInlined;
@@ -315,7 +315,7 @@ IonBuilder::inlineArrayPush(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineArrayConcat(uint32 argc, bool constructing)
+IonBuilder::inlineArrayConcat(uint32_t argc, bool constructing)
 {
     if (argc != 1 || constructing)
         return InliningStatus_NotInlined;
@@ -399,7 +399,7 @@ IonBuilder::inlineArrayConcat(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathAbs(uint32 argc, bool constructing)
+IonBuilder::inlineMathAbs(uint32_t argc, bool constructing)
 {
     if (constructing)
         return InliningStatus_NotInlined;
@@ -426,7 +426,7 @@ IonBuilder::inlineMathAbs(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathFloor(uint32 argc, bool constructing)
+IonBuilder::inlineMathFloor(uint32_t argc, bool constructing)
 {
 
     if (constructing)
@@ -462,7 +462,7 @@ IonBuilder::inlineMathFloor(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathRound(uint32 argc, bool constructing)
+IonBuilder::inlineMathRound(uint32_t argc, bool constructing)
 {
     if (constructing)
         return InliningStatus_NotInlined;
@@ -496,7 +496,7 @@ IonBuilder::inlineMathRound(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathSqrt(uint32 argc, bool constructing)
+IonBuilder::inlineMathSqrt(uint32_t argc, bool constructing)
 {
     if (constructing)
         return InliningStatus_NotInlined;
@@ -521,7 +521,7 @@ IonBuilder::inlineMathSqrt(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathPow(uint32 argc, bool constructing)
+IonBuilder::inlineMathPow(uint32_t argc, bool constructing)
 {
     if (constructing)
         return InliningStatus_NotInlined;
@@ -621,7 +621,7 @@ IonBuilder::inlineMathPow(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathRandom(uint32 argc, bool constructing)
+IonBuilder::inlineMathRandom(uint32_t argc, bool constructing)
 {
     if (constructing)
         return InliningStatus_NotInlined;
@@ -640,7 +640,7 @@ IonBuilder::inlineMathRandom(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathMinMax(bool max, uint32 argc, bool constructing)
+IonBuilder::inlineMathMinMax(bool max, uint32_t argc, bool constructing)
 {
     if (argc != 2 || constructing)
         return InliningStatus_NotInlined;
@@ -674,7 +674,7 @@ IonBuilder::inlineMathMinMax(bool max, uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineStringObject(uint32 argc, bool constructing)
+IonBuilder::inlineStringObject(uint32_t argc, bool constructing)
 {
     if (argc != 1 || !constructing)
         return InliningStatus_NotInlined;
@@ -704,7 +704,7 @@ IonBuilder::inlineStringObject(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineStrCharCodeAt(uint32 argc, bool constructing)
+IonBuilder::inlineStrCharCodeAt(uint32_t argc, bool constructing)
 {
     if (argc != 1 || constructing)
         return InliningStatus_NotInlined;
@@ -713,7 +713,8 @@ IonBuilder::inlineStrCharCodeAt(uint32 argc, bool constructing)
         return InliningStatus_NotInlined;
     if (getInlineArgType(argc, 0) != MIRType_String)
         return InliningStatus_NotInlined;
-    if (getInlineArgType(argc, 1) != MIRType_Int32)
+    MIRType argType = getInlineArgType(argc, 1);
+    if (argType != MIRType_Int32 && argType != MIRType_Double)
         return InliningStatus_NotInlined;
 
     MDefinitionVector argv;
@@ -735,7 +736,7 @@ IonBuilder::inlineStrCharCodeAt(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineStrFromCharCode(uint32 argc, bool constructing)
+IonBuilder::inlineStrFromCharCode(uint32_t argc, bool constructing)
 {
     if (argc != 1 || constructing)
         return InliningStatus_NotInlined;
@@ -759,7 +760,7 @@ IonBuilder::inlineStrFromCharCode(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineStrCharAt(uint32 argc, bool constructing)
+IonBuilder::inlineStrCharAt(uint32_t argc, bool constructing)
 {
     if (argc != 1 || constructing)
         return InliningStatus_NotInlined;
@@ -768,7 +769,8 @@ IonBuilder::inlineStrCharAt(uint32 argc, bool constructing)
         return InliningStatus_NotInlined;
     if (getInlineArgType(argc, 0) != MIRType_String)
         return InliningStatus_NotInlined;
-    if (getInlineArgType(argc, 1) != MIRType_Int32)
+    MIRType argType = getInlineArgType(argc, 1);
+    if (argType != MIRType_Int32 && argType != MIRType_Double)
         return InliningStatus_NotInlined;
 
     MDefinitionVector argv;
@@ -794,7 +796,7 @@ IonBuilder::inlineStrCharAt(uint32 argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineRegExpTest(uint32 argc, bool constructing)
+IonBuilder::inlineRegExpTest(uint32_t argc, bool constructing)
 {
     if (argc != 1 || constructing)
         return InliningStatus_NotInlined;

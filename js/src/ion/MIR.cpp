@@ -91,8 +91,8 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         ret = Int32Value(lhs.toInt32() >> (rhs.toInt32() & 0x1F));
         break;
       case MDefinition::Op_Ursh: {
-        uint32 unsignedLhs = (uint32_t)lhs.toInt32();
-        ret.setNumber(uint32(unsignedLhs >> (rhs.toInt32() & 0x1F)));
+        uint32_t unsignedLhs = (uint32_t)lhs.toInt32();
+        ret.setNumber(uint32_t(unsignedLhs >> (rhs.toInt32() & 0x1F)));
         break;
       }
       case MDefinition::Op_Add:
@@ -136,7 +136,7 @@ MDefinition::valueHash() const
 {
     HashNumber out = op();
     for (size_t i = 0; i < numOperands(); i++) {
-        uint32 valueNumber = getOperand(i)->valueNumber();
+        uint32_t valueNumber = getOperand(i)->valueNumber();
         out = valueNumber + (out << 6) + (out << 16) - out;
     }
     return out;
@@ -269,7 +269,7 @@ MDefinition::replaceAllUsesWith(MDefinition *dom)
 }
 
 static inline bool
-IsPowerOfTwo(uint32 n)
+IsPowerOfTwo(uint32_t n)
 {
     return (n > 0) && ((n & (n - 1)) == 0);
 }
@@ -347,7 +347,7 @@ MConstantElements::printOpcode(FILE *fp)
 }
 
 MParameter *
-MParameter::New(int32 index, const types::TypeSet *types)
+MParameter::New(int32_t index, const types::TypeSet *types)
 {
     return new MParameter(index, types);
 }
@@ -416,7 +416,7 @@ MCompare::New(MDefinition *left, MDefinition *right, JSOp op)
 }
 
 MTableSwitch *
-MTableSwitch::New(MDefinition *ins, int32 low, int32 high)
+MTableSwitch::New(MDefinition *ins, int32_t low, int32_t high)
 {
     return new MTableSwitch(ins, low, high);
 }
@@ -429,7 +429,7 @@ MGoto::New(MBasicBlock *target)
 }
 
 MPhi *
-MPhi::New(uint32 slot)
+MPhi::New(uint32_t slot)
 {
     return new MPhi(slot);
 }
@@ -472,7 +472,7 @@ MPhi::addInput(MDefinition *ins)
     return inputs_.append(ins);
 }
 
-uint32
+uint32_t
 MPrepareCall::argc() const
 {
     JS_ASSERT(useCount() == 1);
@@ -716,6 +716,12 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
         return rhs; // x op id => x
 
     return this;
+}
+
+bool
+MAbs::fallible() const
+{
+    return !range() || !range()->isFinite();
 }
 
 MDefinition *
@@ -1297,7 +1303,7 @@ MTruncateToInt32::foldsTo(bool useValueNumbers)
 
     if (input->type() == MIRType_Double && input->isConstant()) {
         const Value &v = input->toConstant()->value();
-        uint32 ret = ToInt32(v.toDouble());
+        uint32_t ret = ToInt32(v.toDouble());
         return MConstant::New(Int32Value(ret));
     }
 

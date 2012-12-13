@@ -32,7 +32,7 @@ import java.util.GregorianCalendar;
 public class testHistoryTab extends PixelTest {
     private static final String ABOUT_HOME_URL = "about:home";
     private static final String OPEN_NEW_TAB = "Open in New Tab";
-    private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
+    private static final int WAIT_FOR_CHILD_TIMEOUT = 4000;
     private static ListView listview = null;
     private String[] bookmarks = new String[] {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
@@ -61,8 +61,36 @@ public class testHistoryTab extends PixelTest {
         loadAndPaint(url);
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        mSolo.waitForText("Bookmark");
-        mSolo.clickOnText("Bookmark");
+        mSolo.waitForText("Settings");
+
+        // On ICS+ phones, there is no button labeled "Bookmarks"
+        // instead we have to just dig through every button on the screen
+        ArrayList<View> images = mSolo.getCurrentViews();
+        for (int i = 0; i < images.size(); i++) {
+          final View view = images.get(i);
+          boolean found = false;
+          found = "Bookmark".equals(view.getContentDescription());
+
+          // on older android versions, try looking at the button's text
+          if (!found) {
+              if (view instanceof TextView) {
+                 found = "Bookmark".equals(((TextView)view).getText());
+              }
+          }
+
+          if (found) {
+            int[] xy = new int[2];
+            view.getLocationOnScreen(xy);
+
+            final int viewWidth = view.getWidth();
+            final int viewHeight = view.getHeight();
+            final float x = xy[0] + (viewWidth / 2.0f);
+            float y = xy[1] + (viewHeight / 2.0f);
+
+            mSolo.clickOnScreen(x, y);
+          }
+        }
+        
         mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added successfully");
 
         testList(url);
@@ -76,7 +104,7 @@ public class testHistoryTab extends PixelTest {
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
-        mAsserter.ok(listview != null, "checking that history list exists", listview.toString());
+        mAsserter.isnot(listview,  null, "checking that history list exists");
 
         mAsserter.is(listview.getChildCount(), 3, "history list has 3 children");
 
@@ -132,8 +160,6 @@ public class testHistoryTab extends PixelTest {
 
     private void testContextMenu(String url) {
         listview = getHistoryList();
-        // clear VKB
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
         // wait for the history list to be populated
@@ -186,8 +212,7 @@ public class testHistoryTab extends PixelTest {
 
     private void testClick(String url) {
         listview = getHistoryList();
-        // clear VKB
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
         mSolo.waitForText(url);
 
         View child = listview.getChildAt(0);
@@ -218,11 +243,10 @@ public class testHistoryTab extends PixelTest {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("History");
 
-        final ArrayList<ListView> views = mSolo.getCurrentListViews();
-
         listview = null;
         boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
+               final ArrayList<ListView> views = mSolo.getCurrentListViews();
                for (ListView view : views) {
                    if (view.getTag() == "history") {
                        listview = view;

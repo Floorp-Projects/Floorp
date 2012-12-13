@@ -105,7 +105,7 @@ function processStsHeader(hostname, header, status) {
   if (header != null) {
     try {
       var uri = Services.io.newURI("https://" + host.name, null, null);
-      gSTSService.processStsHeader(uri, header, maxAge, includeSubdomains);
+      gSTSService.processStsHeader(uri, header, 0, maxAge, includeSubdomains);
     }
     catch (e) {
       dump("ERROR: could not process header '" + header + "' from " + hostname +

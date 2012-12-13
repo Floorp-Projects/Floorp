@@ -985,7 +985,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 a11y::AccType
 nsTableCellFrame::AccessibleType()
 {
-  return a11y::eHTMLTableCellAccessible;
+  return a11y::eHTMLTableCell;
 }
 #endif
 

@@ -416,7 +416,8 @@
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-#appmenu_privateBrowsing {
+#appmenu_privateBrowsing,
+#appmenu_newPrivateWindow {
   list-style-image: url("chrome://browser/skin/Privacy-16.png");
 }
 
@@ -2399,17 +2400,29 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
 }
 
+#blocked-plugins-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/plugins/notifyPluginBlocked.png);
+}
+
+#blocked-plugins-notification-icon[showing] {
+  animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
+}
+
+@keyframes pluginBlockedNotification {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 #webRTC-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
 
 #identity-popup-container {
   min-width: 280px;
-}
-
-#download-monitor {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0, 108px, 18px, 90px);
 }
 
 /* Bookmarks roots menu-items */

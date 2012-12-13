@@ -26,7 +26,7 @@ LIRGraph::LIRGraph(MIRGraph *mir)
 }
 
 bool
-LIRGraph::addConstantToPool(const Value &v, uint32 *index)
+LIRGraph::addConstantToPool(const Value &v, uint32_t *index)
 {
     *index = constantPool_.length();
     return constantPool_.append(v);
@@ -48,7 +48,7 @@ LBlock::label()
     return begin()->toLabel()->label();
 }
 
-uint32
+uint32_t
 LBlock::firstId()
 {
     if (phis_.length()) {
@@ -61,7 +61,7 @@ LBlock::firstId()
     }
     return 0;
 }
-uint32
+uint32_t
 LBlock::lastId()
 {
     LInstruction *last = *instructions_.rbegin();

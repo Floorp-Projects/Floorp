@@ -450,6 +450,25 @@ function StartTests()
         ReadTopManifest(uri);
         BuildUseCounts();
 
+        // We need to filter the tests which will be skipped during this test run, so when we chunk,
+        // we have a more even distribution
+        var tURL = new Array();
+        for (var i = 0; i < gURLs.length; ++i) {
+            if (gURLs[i].expected == EXPECTED_DEATH)
+                continue;
+
+            if (gURLs[i].needsFocus && !Focus())
+                continue;
+
+            if (gURLs[i].slow && !gRunSlowTests)
+                continue;
+
+            tURL.push(gURLs[i]);
+        }
+
+        gDumpLog("REFTEST INFO | Discovered " + gURLs.length + " tests, after filtering SKIP tests, we have " + tURL.length + "\n");
+        gURLs = tURL;
+
         if (gTotalChunks > 0 && gThisChunk > 0) {
             var testsPerChunk = gURLs.length / gTotalChunks;
             var start = Math.round((gThisChunk-1) * testsPerChunk);

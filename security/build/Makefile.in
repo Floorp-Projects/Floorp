@@ -123,14 +123,8 @@ endif
 # To get debug symbols from NSS
 export MOZ_DEBUG_SYMBOLS
 
-ifdef .PYMAKE
-NSSMAKE = $(GMAKE)
-else
-NSSMAKE = $(MAKE)
-endif
-
 # NSS makefiles are not safe for parallel execution.
-DEFAULT_GMAKE_FLAGS = MAKE="$(NSSMAKE) -j1" -j1
+DEFAULT_GMAKE_FLAGS = -j1
 DEFAULT_GMAKE_FLAGS += CC="$(CC)"
 DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(ABS_DIST)
 DEFAULT_GMAKE_FLAGS += SOURCE_MDHEADERS_DIR=$(NSPR_INCLUDE_DIR)
@@ -148,9 +142,14 @@ endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
 endif
-ABS_topsrcdir   := $(call core_abspath,$(topsrcdir))
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+ifeq ($(HOST_OS_ARCH),WINNT)
+ifdef .PYMAKE
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd -W)
+endif
+endif
 # Hack to force NSS build system to use "normal" object directories
-DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $(shell cd $(topsrcdir); pwd)/security/,,$$(CURDIR))'
+DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $(ABS_topsrcdir)/security/,,$$(CURDIR))'
 DEFAULT_GMAKE_FLAGS += BUILD_TREE='$$(BUILD)' OBJDIR='$$(BUILD)' DEPENDENCIES='$$(BUILD)/.deps' SINGLE_SHLIB_DIR='$$(BUILD)'
 DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(ABS_DIST)
 ifndef MOZ_DEBUG
@@ -291,13 +290,17 @@ NSS_DIRS += \
   $(NULL)
 endif
 
+ifneq (,$(filter %--build-id,$(LDFLAGS)))
+DEFAULT_GMAKE_ENV = LDFLAGS=-Wl,--build-id
+endif
+
 ifndef MOZ_NATIVE_NSS
 define build_rules
 libs::
-	$$(NSSMAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS)
+	$$(DEFAULT_GMAKE_ENV) $$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS)
 
 clean clobber clobber_all realclean distclean depend::
-	$$(NSSMAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS) clean
+	$$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS) clean
 endef
 $(foreach dir,$(NSS_DIRS),$(eval $(call build_rules,$(dir))))
 

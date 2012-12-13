@@ -473,7 +473,6 @@ iterator
 JavaControl.h
 JavaEmbedding/JavaControl.h
 JavaVM/jni.h
-jemalloc.h
 JManager.h
 JNIEnvTests.h
 jni.h

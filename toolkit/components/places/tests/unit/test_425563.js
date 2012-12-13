@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function add_visit(aURI, aType) {
-  PlacesUtils.history.addVisit(uri(aURI), Date.now() * 1000, null, aType,
-                                 false, 0);
+function run_test()
+{
+  run_next_test();
 }
 
-function run_test() {
+add_task(function test_execute()
+{
   let count_visited_URIs = ["http://www.test-link.com/",
                             "http://www.test-typed.com/",
                             "http://www.test-bookmark.com/",
@@ -21,14 +22,24 @@ function run_test() {
                                "http://www.test-framed.com/"];
 
   // add visits, one for each transition type
-  add_visit("http://www.test-link.com/", TRANSITION_LINK);
-  add_visit("http://www.test-typed.com/", TRANSITION_TYPED);
-  add_visit("http://www.test-bookmark.com/", TRANSITION_BOOKMARK);
-  add_visit("http://www.test-embed.com/", TRANSITION_EMBED);
-  add_visit("http://www.test-framed.com/", TRANSITION_FRAMED_LINK);
-  add_visit("http://www.test-redirect-permanent.com/", TRANSITION_REDIRECT_PERMANENT);
-  add_visit("http://www.test-redirect-temporary.com/", TRANSITION_REDIRECT_TEMPORARY);
-  add_visit("http://www.test-download.com/", TRANSITION_DOWNLOAD);
+  yield promiseAddVisits([
+    { uri: uri("http://www.test-link.com/"),
+      transition: TRANSITION_LINK },
+    { uri: uri("http://www.test-typed.com/"),
+      transition: TRANSITION_TYPED },
+    { uri: uri("http://www.test-bookmark.com/"),
+      transition: TRANSITION_BOOKMARK },
+    { uri: uri("http://www.test-embed.com/"),
+      transition: TRANSITION_EMBED },
+    { uri: uri("http://www.test-framed.com/"),
+      transition: TRANSITION_FRAMED_LINK },
+    { uri: uri("http://www.test-redirect-permanent.com/"),
+      transition: TRANSITION_REDIRECT_PERMANENT },
+    { uri: uri("http://www.test-redirect-temporary.com/"),
+      transition: TRANSITION_REDIRECT_TEMPORARY },
+    { uri: uri("http://www.test-download.com/"),
+      transition: TRANSITION_DOWNLOAD },
+  ]);
 
   // check that all links are marked as visited
   count_visited_URIs.forEach(function (visited_uri) {
@@ -57,4 +68,4 @@ function run_test() {
     do_check_neq(count_visited_URIs.indexOf(node.uri), -1);
   }
   root.containerOpen = false;
-}
+});

@@ -8,8 +8,10 @@ SpecialPowers.addPermission("sms", true, document);
 
 let sms = window.navigator.mozSms;
 let myNumber = "15555215554";
+let myNumberFormats = ["15555215554", "+15555215554"];
 let inText = "Incoming SMS message. Mozilla Firefox OS!";
 let remoteNumber = "5559997777";
+let remoteNumberFormats = ["5559997777", "+15559997777"];
 let outText = "Outgoing SMS message. Mozilla Firefox OS!";
 let gotSmsOnsent = false;
 let gotReqOnsuccess = false;
@@ -22,6 +24,10 @@ function verifyInitialState() {
   log("Verifying initial state.");
   ok(sms, "mozSms");
   simulateIncomingSms();  
+}
+
+function isIn(aVal, aArray, aMsg) {
+  ok(aArray.indexOf(aVal) >= 0, aMsg);
 }
 
 function simulateIncomingSms() {
@@ -39,7 +45,7 @@ function simulateIncomingSms() {
     is(incomingSms.deliveryStatus, "success", "deliveryStatus");
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, null, "receiver");
-    is(incomingSms.sender, remoteNumber, "sender");
+    isIn(incomingSms.sender, remoteNumberFormats, "sender");
     is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
     inSmsTimeStamp = incomingSms.timestamp;
@@ -65,7 +71,7 @@ function sendSms() {
     is(sentSms.delivery, "sent", "delivery");
     is(sentSms.deliveryStatus, "pending", "deliveryStatus");
     is(sentSms.read, true, "read");
-    is(sentSms.receiver, remoteNumber, "receiver");
+    isIn(sentSms.receiver, remoteNumberFormats, "receiver");
     is(sentSms.sender, null, "sender");
     is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is instanceof date");  
@@ -114,8 +120,8 @@ function getReceivedSms() {
     is(foundSms.delivery, "received", "delivery");
     is(foundSms.deliveryStatus, "success", "deliveryStatus");
     is(foundSms.read, false, "read");
-    is(foundSms.receiver, myNumber, "receiver");
-    is(foundSms.sender, remoteNumber, "sender");
+    isIn(foundSms.receiver, myNumberFormats, "receiver");
+    isIn(foundSms.sender, remoteNumberFormats, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), inSmsTimeStamp.getTime(), "timestamp matches");
@@ -147,8 +153,8 @@ function getSentSms() {
     is(foundSms.delivery, "sent", "delivery");
     is(foundSms.deliveryStatus, "pending", "deliveryStatus");
     is(foundSms.read, true, "read");
-    is(foundSms.receiver, remoteNumber, "receiver");
-    is(foundSms.sender, myNumber, "sender");
+    isIn(foundSms.receiver, remoteNumberFormats, "receiver");
+    isIn(foundSms.sender, myNumberFormats, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), outSmsTimeStamp.getTime(), "timestamp matches");

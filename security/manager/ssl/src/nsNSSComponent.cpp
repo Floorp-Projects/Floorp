@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG 1
+#endif
+
 #include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
 #include "nsNSSIOLayer.h"
@@ -55,6 +59,7 @@
 #include "nsNSSShutDown.h"
 #include "nsSmartCardEvent.h"
 #include "nsIKeyModule.h"
+#include "ScopedNSSTypes.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -83,7 +88,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-#ifdef PR_LOGGING
+#ifdef MOZ_LOGGING
 PRLogModuleInfo* gPIPNSSLog = nullptr;
 #endif
 
@@ -2028,7 +2033,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
   *aPrincipal = nullptr;
 
   nsNSSShutDownPreventionLock locker;
-  SEC_PKCS7ContentInfo * p7_info = nullptr; 
+  ScopedSEC_PKCS7ContentInfo p7_info; 
   unsigned char hash[SHA1_LENGTH]; 
 
   SECItem item;
@@ -2126,8 +2131,6 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
       certPrincipal.swap(*aPrincipal);
     } while (0);
   }
-
-  SEC_PKCS7DestroyContentInfo(p7_info);
 
   return rv2;
 }

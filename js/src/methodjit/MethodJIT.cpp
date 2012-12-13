@@ -40,12 +40,6 @@ using namespace js::mjit;
 # define CFI(str)
 #endif
 
-// Put manually-inserted call frame unwinding information into .debug_frame
-// rather than .eh_frame, because we compile with -fno-exceptions which might
-// discard the .eh_frame section. (See
-// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=43232).
-CFI(asm(".cfi_sections .debug_frame");)
-
 js::mjit::CompilerAllocPolicy::CompilerAllocPolicy(JSContext *cx, Compiler &compiler)
 : TempAllocPolicy(cx),
   oomFlag(&compiler.oomInVector)

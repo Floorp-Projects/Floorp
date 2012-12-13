@@ -47,14 +47,11 @@ function run_test() {
   // 1. import bookmarks.preplaces.html
   // Note: we do not empty the db before this import to catch bugs like 380999
   try {
-    BookmarkHTMLUtils.importFromFile(bookmarksFileOld, true, after_import);
+    BookmarkHTMLUtils.importFromFile(bookmarksFileOld, true)
+                     .then(after_import, do_report_unexpected_exception);
   } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
 
-  function after_import(success) {
-    if (!success) {
-      do_throw("Couldn't import legacy bookmarks file.");
-    }
-
+  function after_import() {
     populate();
 
     // 2. run the test-suite

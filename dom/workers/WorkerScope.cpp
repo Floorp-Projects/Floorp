@@ -53,7 +53,7 @@ USING_WORKERS_NAMESPACE
 
 namespace {
 
-class WorkerGlobalScope : public EventTarget
+class WorkerGlobalScope : public workers::EventTarget
 {
   static JSClass sClass;
   static JSPropertySpec sProperties[];
@@ -770,8 +770,7 @@ private:
   {
     JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == Class()) {
-      return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj,
-                                                         eRegularDOMObject);
+      return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
@@ -806,7 +805,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
     DedicatedWorkerGlobalScope* scope =
-      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, eRegularDOMObject);
+      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
     if (scope) {
       DestroyProtoAndIfaceCache(aObj);
       scope->_finalize(aFop);
@@ -818,7 +817,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
     DedicatedWorkerGlobalScope* scope =
-      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, eRegularDOMObject);
+      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
     if (scope) {
       TraceProtoAndIfaceCache(aTrc, aObj);
       scope->_trace(aTrc);
@@ -850,9 +849,6 @@ private:
   }
 };
 
-MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
-                  "The MaxProtoChainLength must match our manual DOMJSClasses");
-
 DOMJSClass DedicatedWorkerGlobalScope::sClass = {
   {
     // We don't have to worry about Xray expando slots here because we'll never
@@ -865,8 +861,7 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
     Finalize, NULL, NULL, NULL, NULL, Trace
   },
   {
-    { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
-      prototypes::id::_ID_Count },
+    INTERFACE_CHAIN_1(prototypes::id::EventTarget_workers),
     false,
     &sWorkerNativePropertyHooks
   }
@@ -898,7 +893,7 @@ WorkerGlobalScope::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
   JS_ASSERT(classPtr != Class());
 
   if (classPtr == DedicatedWorkerGlobalScope::Class()) {
-    return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, eRegularDOMObject);
+    return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,

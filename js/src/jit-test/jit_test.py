@@ -11,6 +11,16 @@ import subprocess
 from subprocess import *
 from threading import Thread
 
+def add_libdir_to_path():
+    from os.path import dirname, exists, join, realpath
+    js_src_dir = dirname(dirname(realpath(sys.argv[0])))
+    assert exists(join(js_src_dir,'jsapi.h'))
+    sys.path.append(join(js_src_dir, 'lib'))
+    sys.path.append(join(js_src_dir, 'tests', 'lib'))
+
+add_libdir_to_path()
+from progressbar import ProgressBar, NullProgressBar
+
 DEBUGGER_INFO = {
   "gdb": {
     "interactive": True,
@@ -273,13 +283,15 @@ def print_tinderbox(label, test, message=None):
     print result
 
 def run_tests(tests, test_dir, lib_dir, shell_args):
-    pb = None
-    if not OPTIONS.hide_progress and not OPTIONS.show_cmd:
-        try:
-            from progressbar import ProgressBar
-            pb = ProgressBar('', len(tests), 24)
-        except ImportError:
-            pass
+    pb = NullProgressBar()
+    if not OPTIONS.hide_progress and not OPTIONS.show_cmd and ProgressBar.conservative_isatty():
+        fmt = [
+            {'value': 'PASS',    'color': 'green'},
+            {'value': 'FAIL',    'color': 'red'},
+            {'value': 'TIMEOUT', 'color': 'blue'},
+            {'value': 'SKIP',    'color': 'brightgray'},
+        ]
+        pb = ProgressBar(len(tests), fmt)
 
     failures = []
     timeouts = 0
@@ -293,6 +305,7 @@ def run_tests(tests, test_dir, lib_dir, shell_args):
 
             if not ok:
                 failures.append([ test, out, err, code, timed_out ])
+                pb.message("FAIL - %s" % test.path)
             if timed_out:
                 timeouts += 1
 
@@ -309,15 +322,17 @@ def run_tests(tests, test_dir, lib_dir, shell_args):
                     print_tinderbox("TEST-UNEXPECTED-FAIL", test, msg);
 
             n = i + 1
-            if pb:
-                pb.label = '[%4d|%4d|%4d|%4d]'%(n - len(failures), len(failures), timeouts, n)
-                pb.update(n)
+            pb.update(n, {
+                'PASS': n - len(failures),
+                'FAIL': len(failures),
+                'TIMEOUT': timeouts,
+                'SKIP': 0}
+            )
         complete = True
     except KeyboardInterrupt:
         print_tinderbox("TEST-UNEXPECTED-FAIL", test);
 
-    if pb:
-        pb.finish()
+    pb.finish(True)
 
     if failures:
         if OPTIONS.write_failures:

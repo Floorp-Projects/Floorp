@@ -168,10 +168,6 @@ int main(int argc, char* argv[])
 {
   char exePath[MAXPATHLEN];
 
-#if defined(MOZ_X11)
-  putenv("MOZ_USE_OMTC=1");
-#endif
-
   nsresult rv = mozilla::BinaryPath::Get(argv[0], exePath);
   if (NS_FAILED(rv)) {
     Output("Couldn't calculate the application directory.\n");

@@ -7,6 +7,7 @@
 #include "nsIInputStream.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
+#include "nsReadLine.h"
 
 #define CONVERTER_BUFFER_SIZE 8192
 
@@ -45,7 +46,11 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
 
     mInput = aStream;
     mReplacementChar = aReplacementChar;
-    
+    if (!aReplacementChar ||
+        aReplacementChar != mConverter->GetCharacterForUnMapped()) {
+        mConverter->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
+    }
+
     return NS_OK;
 }
 
@@ -53,7 +58,7 @@ NS_IMETHODIMP
 nsConverterInputStream::Close()
 {
     nsresult rv = mInput ? mInput->Close() : NS_OK;
-    PR_FREEIF(mLineBuffer);
+    mLineBuffer = nullptr;
     mInput = nullptr;
     mConverter = nullptr;
     mByteData = nullptr;
@@ -234,8 +239,7 @@ NS_IMETHODIMP
 nsConverterInputStream::ReadLine(nsAString& aLine, bool* aResult)
 {
   if (!mLineBuffer) {
-    nsresult rv = NS_InitLineBuffer(&mLineBuffer);
-    if (NS_FAILED(rv)) return rv;
+    mLineBuffer = new nsLineBuffer<PRUnichar>;
   }
-  return NS_ReadLine(this, mLineBuffer, aLine, aResult);
+  return NS_ReadLine(this, mLineBuffer.get(), aLine, aResult);
 }

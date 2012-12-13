@@ -64,8 +64,8 @@ static const Register JSReturnReg_Data = r2;
 static const Register StackPointer = sp;
 static const Register FramePointer = InvalidReg;
 static const Register ReturnReg = r0;
-static const FloatRegister ReturnFloatReg = { FloatRegisters::d1 };
-static const FloatRegister ScratchFloatReg = { FloatRegisters::d0 };
+static const FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
+static const FloatRegister ScratchFloatReg = { FloatRegisters::d1 };
 
 static const FloatRegister d0  = {FloatRegisters::d0};
 static const FloatRegister d1  = {FloatRegisters::d1};
@@ -89,22 +89,22 @@ static const FloatRegister d15 = {FloatRegisters::d15};
 // when the address they are dealing with is 8 byte aligned.
 // Also, the ARM abi wants the stack to be 8 byte aligned at
 // function boundaries.  I'm trying to make sure this is always true.
-static const uint32 StackAlignment = 8;
+static const uint32_t StackAlignment = 8;
 static const bool StackKeptAligned = true;
 
 static const Scale ScalePointer = TimesFour;
 
 class Instruction;
 class InstBranchImm;
-uint32 RM(Register r);
-uint32 RS(Register r);
-uint32 RD(Register r);
-uint32 RT(Register r);
-uint32 RN(Register r);
+uint32_t RM(Register r);
+uint32_t RS(Register r);
+uint32_t RD(Register r);
+uint32_t RT(Register r);
+uint32_t RN(Register r);
 
-uint32 maybeRD(Register r);
-uint32 maybeRT(Register r);
-uint32 maybeRN(Register r);
+uint32_t maybeRD(Register r);
+uint32_t maybeRT(Register r);
+uint32_t maybeRN(Register r);
 
 Register toRN (Instruction &i);
 Register toRM (Instruction &i);
@@ -112,9 +112,9 @@ Register toRD (Instruction &i);
 Register toR (Instruction &i);
 
 class VFPRegister;
-uint32 VD(VFPRegister vr);
-uint32 VN(VFPRegister vr);
-uint32 VM(VFPRegister vr);
+uint32_t VD(VFPRegister vr);
+uint32_t VN(VFPRegister vr);
+uint32_t VM(VFPRegister vr);
 
 class VFPRegister
 {
@@ -138,7 +138,7 @@ class VFPRegister
     // 5 bits should suffice.  If I do decide to address them seprately
     // (vmov, I'm looking at you), I will likely specify it as a separate
     // field.
-    uint32 _code : 5;
+    uint32_t _code : 5;
     bool _isInvalid : 1;
     bool _isMissing : 1;
 
@@ -187,13 +187,13 @@ class VFPRegister
 
     // for serializing values
     struct VFPRegIndexSplit {
-        const uint32 block : 4;
-        const uint32 bit : 1;
+        const uint32_t block : 4;
+        const uint32_t bit : 1;
 
       private:
         friend VFPRegIndexSplit js::ion::VFPRegister::encode();
 
-        VFPRegIndexSplit (uint32 block_, uint32 bit_)
+        VFPRegIndexSplit (uint32_t block_, uint32_t bit_)
           : block(block_), bit(bit_)
         {
             JS_ASSERT (block == block_);
@@ -201,7 +201,7 @@ class VFPRegister
         }
     };
 
-    uint32 code() const {
+    uint32_t code() const {
         return _code;
     }
 };
@@ -213,7 +213,7 @@ extern VFPRegister NoVFPRegister;
 struct ImmTag : public Imm32
 {
     ImmTag(JSValueTag mask)
-      : Imm32(int32(mask))
+      : Imm32(int32_t(mask))
     { }
 };
 
@@ -386,20 +386,20 @@ namespace datastore {
 struct Reg
 {
     // the "second register"
-    uint32 RM : 4;
+    uint32_t RM : 4;
     // do we get another register for shifting
-    uint32 RRS : 1;
+    uint32_t RRS : 1;
     ShiftType Type : 2;
     // I'd like this to be a more sensible encoding, but that would
     // need to be a struct and that would not pack :(
-    uint32 ShiftAmount : 5;
-    uint32 pad : 20;
+    uint32_t ShiftAmount : 5;
+    uint32_t pad : 20;
 
-    Reg(uint32 rm, ShiftType type, uint32 rsr, uint32 shiftamount)
+    Reg(uint32_t rm, ShiftType type, uint32_t rsr, uint32_t shiftamount)
       : RM(rm), RRS(rsr), Type(type), ShiftAmount(shiftamount), pad(0)
     { }
 
-    uint32 encode() {
+    uint32_t encode() {
         return RM | RRS << 4 | Type << 5 | ShiftAmount << 7;
     }
 };
@@ -411,16 +411,16 @@ struct Reg
 struct Imm8mData
 {
   private:
-    uint32 data : 8;
-    uint32 rot : 4;
+    uint32_t data : 8;
+    uint32_t rot : 4;
     // Throw in an extra bit that will be 1 if we can't encode this
     // properly.  if we can encode it properly, a simple "|" will still
     // suffice to meld it into the instruction.
-    uint32 buff : 19;
+    uint32_t buff : 19;
   public:
-    uint32 invalid : 1;
+    uint32_t invalid : 1;
 
-    uint32 encode() {
+    uint32_t encode() {
         JS_ASSERT(!invalid);
         return data | rot << 8;
     };
@@ -430,7 +430,7 @@ struct Imm8mData
       : data(0xff), rot(0xf), invalid(1)
     { }
 
-    Imm8mData(uint32 data_, uint32 rot_)
+    Imm8mData(uint32_t data_, uint32_t rot_)
       : data(data_), rot(rot_), invalid(0)
     {
         JS_ASSERT(data == data_);
@@ -441,15 +441,15 @@ struct Imm8mData
 struct Imm8Data
 {
   private:
-    uint32 imm4L : 4;
-    uint32 pad : 4;
-    uint32 imm4H : 4;
+    uint32_t imm4L : 4;
+    uint32_t pad : 4;
+    uint32_t imm4H : 4;
 
   public:
-    uint32 encode() {
+    uint32_t encode() {
         return imm4L | (imm4H << 8);
     };
-    Imm8Data(uint32 imm) : imm4L(imm&0xf), imm4H(imm>>4) {
+    Imm8Data(uint32_t imm) : imm4L(imm&0xf), imm4H(imm>>4) {
         JS_ASSERT(imm <= 0xff);
     }
 };
@@ -459,13 +459,13 @@ struct Imm8Data
 struct Imm8VFPOffData
 {
   private:
-    uint32 data;
+    uint32_t data;
 
   public:
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     };
-    Imm8VFPOffData(uint32 imm) : data (imm) {
+    Imm8VFPOffData(uint32_t imm) : data (imm) {
         JS_ASSERT((imm & ~(0xff)) == 0);
     }
 };
@@ -475,23 +475,23 @@ struct Imm8VFPOffData
 struct Imm8VFPImmData
 {
   private:
-    uint32 imm4L : 4;
-    uint32 pad : 12;
-    uint32 imm4H : 4;
-    int32 isInvalid : 12;
+    uint32_t imm4L : 4;
+    uint32_t pad : 12;
+    uint32_t imm4H : 4;
+    int32_t isInvalid : 12;
 
   public:
     Imm8VFPImmData()
       : imm4L(-1U & 0xf), imm4H(-1U & 0xf), isInvalid(-1)
     { }
 
-    Imm8VFPImmData(uint32 imm)
+    Imm8VFPImmData(uint32_t imm)
       : imm4L(imm&0xf), imm4H(imm>>4), isInvalid(0)
     {
         JS_ASSERT(imm <= 0xff);
     }
 
-    uint32 encode() {
+    uint32_t encode() {
         if (isInvalid != 0)
             return -1;
         return imm4L | (imm4H << 16);
@@ -500,12 +500,12 @@ struct Imm8VFPImmData
 
 struct Imm12Data
 {
-    uint32 data : 12;
-    uint32 encode() {
+    uint32_t data : 12;
+    uint32_t encode() {
         return data;
     }
 
-    Imm12Data(uint32 imm)
+    Imm12Data(uint32_t imm)
       : data(imm)
     {
         JS_ASSERT(data == imm);
@@ -515,12 +515,12 @@ struct Imm12Data
 
 struct RIS
 {
-    uint32 ShiftAmount : 5;
-    uint32 encode () {
+    uint32_t ShiftAmount : 5;
+    uint32_t encode () {
         return ShiftAmount;
     }
 
-    RIS(uint32 imm)
+    RIS(uint32_t imm)
       : ShiftAmount(imm)
     {
         JS_ASSERT(ShiftAmount == imm);
@@ -529,17 +529,17 @@ struct RIS
 
 struct RRS
 {
-    uint32 MustZero : 1;
+    uint32_t MustZero : 1;
     // the register that holds the shift amount
-    uint32 RS : 4;
+    uint32_t RS : 4;
 
-    RRS(uint32 rs)
+    RRS(uint32_t rs)
       : RS(rs)
     {
         JS_ASSERT(rs == RS);
     }
 
-    uint32 encode () {
+    uint32_t encode () {
         return RS << 1;
     }
 };
@@ -555,17 +555,17 @@ class Operand2
     friend class MacroAssemblerARM;
 
   public:
-    uint32 oper : 31;
-    uint32 invalid : 1;
+    uint32_t oper : 31;
+    uint32_t invalid : 1;
 
   protected:
     Operand2(datastore::Imm8mData base)
-      : oper(base.invalid ? -1 : (base.encode() | (uint32)IsImmOp2)),
+      : oper(base.invalid ? -1 : (base.encode() | (uint32_t)IsImmOp2)),
         invalid(base.invalid)
     { }
 
     Operand2(datastore::Reg base)
-      : oper(base.encode() | (uint32)IsNotImmOp2)
+      : oper(base.encode() | (uint32_t)IsNotImmOp2)
     { }
 
   private:
@@ -574,7 +574,7 @@ class Operand2
     { }
 
   public:
-    uint32 encode() {
+    uint32_t encode() {
         return oper;
     }
 };
@@ -582,7 +582,7 @@ class Operand2
 class Imm8 : public Operand2
 {
   public:
-    static datastore::Imm8mData encodeImm(uint32 imm) {
+    static datastore::Imm8mData encodeImm(uint32_t imm) {
         // In gcc, clz is undefined if you call it with 0.
         if (imm == 0)
             return datastore::Imm8mData(0, 0);
@@ -626,8 +626,8 @@ class Imm8 : public Operand2
         { }
     };
 
-    static TwoImm8mData encodeTwoImms(uint32);
-    Imm8(uint32 imm)
+    static TwoImm8mData encodeTwoImms(uint32_t);
+    Imm8(uint32_t imm)
       : Operand2(encodeImm(imm))
     { }
 };
@@ -647,7 +647,7 @@ class Op2Reg : public Operand2
 class O2RegImmShift : public Op2Reg
 {
   public:
-    O2RegImmShift(Register rn, ShiftType type, uint32 shift)
+    O2RegImmShift(Register rn, ShiftType type, uint32_t shift)
       : Op2Reg(rn, type, datastore::RIS(shift))
     { }
 };
@@ -679,25 +679,25 @@ O2RegRegShift ror (Register r, Register amt);
 // able to have a negative register offset e.g. ldr pc, [r1,-r2];
 class DtrOff
 {
-    uint32 data;
+    uint32_t data;
 
   protected:
     DtrOff(datastore::Imm12Data immdata, IsUp_ iu)
-      : data(immdata.encode() | (uint32)IsImmDTR | ((uint32)iu))
+      : data(immdata.encode() | (uint32_t)IsImmDTR | ((uint32_t)iu))
     { }
 
     DtrOff(datastore::Reg reg, IsUp_ iu = IsUp)
-      : data(reg.encode() | (uint32) IsNotImmDTR | iu)
+      : data(reg.encode() | (uint32_t) IsNotImmDTR | iu)
     { }
 
   public:
-    uint32 encode() { return data; }
+    uint32_t encode() { return data; }
 };
 
 class DtrOffImm : public DtrOff
 {
   public:
-    DtrOffImm(int32 imm)
+    DtrOffImm(int32_t imm)
       : DtrOff(datastore::Imm12Data(abs(imm)), imm >= 0 ? IsUp : IsDown)
     {
         JS_ASSERT((imm < 4096) && (imm > -4096));
@@ -721,7 +721,7 @@ class DtrOffReg : public DtrOff
 class DtrRegImmShift : public DtrOffReg
 {
   public:
-    DtrRegImmShift(Register rn, ShiftType type, uint32 shift)
+    DtrRegImmShift(Register rn, ShiftType type, uint32_t shift)
       : DtrOffReg(rn, type, datastore::RIS(shift))
     { }
 };
@@ -738,14 +738,14 @@ class DtrRegRegShift : public DtrOffReg
 // an "operand" to a load instruction.
 class DTRAddr
 {
-    uint32 data;
+    uint32_t data;
 
   public:
     DTRAddr(Register reg, DtrOff dtr)
       : data(dtr.encode() | (reg.code() << 16))
     { }
 
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     }
     Register getBase() {
@@ -753,7 +753,7 @@ class DTRAddr
     }
   private:
     friend class Operand;
-    DTRAddr(uint32 blob)
+    DTRAddr(uint32_t blob)
       : data(blob)
     { }
 };
@@ -762,11 +762,11 @@ class DTRAddr
 // ldrsh, ldrd, ldrsb, etc.
 class EDtrOff
 {
-    uint32 data;
+    uint32_t data;
 
   protected:
     EDtrOff(datastore::Imm8Data imm8, IsUp_ iu = IsUp)
-      : data(imm8.encode() | IsImmEDTR | (uint32)iu)
+      : data(imm8.encode() | IsImmEDTR | (uint32_t)iu)
     { }
 
     EDtrOff(Register rm, IsUp_ iu = IsUp)
@@ -774,7 +774,7 @@ class EDtrOff
     { }
 
   public:
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     }
 };
@@ -782,7 +782,7 @@ class EDtrOff
 class EDtrOffImm : public EDtrOff
 {
   public:
-    EDtrOffImm(int32 imm)
+    EDtrOffImm(int32_t imm)
       : EDtrOff(datastore::Imm8Data(abs(imm)), (imm >= 0) ? IsUp : IsDown)
     { }
 };
@@ -800,29 +800,29 @@ class EDtrOffReg : public EDtrOff
 
 class EDtrAddr
 {
-    uint32 data;
+    uint32_t data;
 
   public:
     EDtrAddr(Register r, EDtrOff off)
       : data(RN(r) | off.encode())
     { }
 
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     }
 };
 
 class VFPOff
 {
-    uint32 data;
+    uint32_t data;
 
   protected:
     VFPOff(datastore::Imm8VFPOffData imm, IsUp_ isup)
-      : data(imm.encode() | (uint32)isup)
+      : data(imm.encode() | (uint32_t)isup)
     { }
 
   public:
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     }
 };
@@ -830,7 +830,7 @@ class VFPOff
 class VFPOffImm : public VFPOff
 {
   public:
-    VFPOffImm(int32 imm)
+    VFPOffImm(int32_t imm)
       : VFPOff(datastore::Imm8VFPOffData(abs(imm) >> 2), imm < 0 ? IsDown : IsUp)
     { }
 };
@@ -838,10 +838,10 @@ class VFPAddr
 {
     friend class Operand;
 
-    uint32 data;
+    uint32_t data;
 
   protected:
-    VFPAddr(uint32 blob)
+    VFPAddr(uint32_t blob)
       : data(blob)
     { }
 
@@ -850,18 +850,18 @@ class VFPAddr
       : data(RN(base) | off.encode())
     { }
 
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     }
 };
 
 class VFPImm {
-    uint32 data;
+    uint32_t data;
 
   public:
-    VFPImm(uint32 top);
+    VFPImm(uint32_t top);
 
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     }
     bool isValid() {
@@ -873,14 +873,14 @@ class VFPImm {
 // be encoded in the branch instruction. This is the only sane way of constructing a branch.
 class BOffImm
 {
-    uint32 data;
+    uint32_t data;
 
   public:
-    uint32 encode() {
+    uint32_t encode() {
         return data;
     }
-    int32 decode() {
-        return ((((int32)data) << 8) >> 6) + 8;
+    int32_t decode() {
+        return ((((int32_t)data) << 8) >> 6) + 8;
     }
 
     explicit BOffImm(int offset)
@@ -903,7 +903,7 @@ class BOffImm
     { }
 
     bool isInvalid() {
-        return data == uint32(INVALID);
+        return data == uint32_t(INVALID);
     }
     Instruction *getDest(Instruction *src);
 
@@ -914,20 +914,20 @@ class BOffImm
 
 class Imm16
 {
-    uint32 lower : 12;
-    uint32 pad : 4;
-    uint32 upper : 4;
-    uint32 invalid : 12;
+    uint32_t lower : 12;
+    uint32_t pad : 4;
+    uint32_t upper : 4;
+    uint32_t invalid : 12;
 
   public:
     Imm16();
-    Imm16(uint32 imm);
+    Imm16(uint32_t imm);
     Imm16(Instruction &inst);
 
-    uint32 encode() {
+    uint32_t encode() {
         return lower | upper << 16;
     }
-    uint32 decode() {
+    uint32_t decode() {
         return lower | upper << 12;
     }
 
@@ -942,7 +942,7 @@ class Imm16
 // IIRC, this has been subsumed by vfpreg.
 class FloatOp
 {
-    uint32 data;
+    uint32_t data;
 };
 
 /* I would preffer that these do not exist, since there are essentially
@@ -963,9 +963,9 @@ class Operand
 
   private:
     Tag_ Tag : 3;
-    uint32 reg : 5;
-    int32 offset;
-    uint32 data;
+    uint32_t reg : 5;
+    int32_t offset;
+    uint32_t data;
 
   public:
     Operand (Register reg_)
@@ -980,7 +980,7 @@ class Operand
       : Tag(MEM), reg(base.code()), offset(off.value)
     { }
 
-    Operand (Register base, int32 off)
+    Operand (Register base, int32_t off)
       : Tag(MEM), reg(base.code()), offset(off)
     { }
 
@@ -1010,12 +1010,12 @@ class Operand
     Address toAddress() const {
         return Address(Register::FromCode(reg), offset);
     }
-    int32 disp() const {
+    int32_t disp() const {
         JS_ASSERT(Tag == MEM);
         return offset;
     }
 
-    int32 base() const {
+    int32_t base() const {
         JS_ASSERT(Tag == MEM);
         return reg;
     }
@@ -1114,7 +1114,7 @@ class Assembler
         DoubleLessThanOrEqualOrUnordered = VFP_LessThanOrEqualOrUnordered
     };
 
-    Condition getCondition(uint32 inst) {
+    Condition getCondition(uint32_t inst) {
         return (Condition) (0xf0000000 & inst);
     }
     static inline Condition ConditionFromDoubleCondition(DoubleCondition cond) {
@@ -1139,9 +1139,9 @@ class Assembler
     }
   public:
     void resetCounter();
-    uint32 actualOffset(uint32) const;
-    uint32 actualIndex(uint32) const;
-    static uint8 *PatchableJumpAddress(IonCode *code, uint32 index);
+    uint32_t actualOffset(uint32_t) const;
+    uint32_t actualIndex(uint32_t) const;
+    static uint8_t *PatchableJumpAddress(IonCode *code, uint32_t index);
     BufferOffset actualOffset(BufferOffset) const;
   protected:
 
@@ -1176,8 +1176,8 @@ class Assembler
     class JumpPool : TempObject
     {
         BufferOffset start;
-        uint32 size;
-        bool fixup(IonCode *code, uint8 *data);
+        uint32_t size;
+        bool fixup(IonCode *code, uint8_t *data);
     };
 
     CompactBufferWriter jumpRelocations_;
@@ -1262,11 +1262,11 @@ class Assembler
     // given the start of a function that loads an address into a register get the address that
     // ends up in the register.
     template <class Iter>
-    static const uint32 * getCF32Target(Iter *iter);
+    static const uint32_t * getCF32Target(Iter *iter);
 
-    static uintptr_t getPointer(uint8 *);
+    static uintptr_t getPointer(uint8_t *);
     template <class Iter>
-    static const uint32 * getPtr32Target(Iter *iter, Register *dest = NULL, RelocStyle *rs = NULL);
+    static const uint32_t * getPtr32Target(Iter *iter, Register *dest = NULL, RelocStyle *rs = NULL);
 
     bool oom() const;
 
@@ -1278,10 +1278,10 @@ class Assembler
   public:
     void finish();
     void executableCopy(void *buffer);
-    void processDeferredData(IonCode *code, uint8 *data);
+    void processDeferredData(IonCode *code, uint8_t *data);
     void processCodeLabels(IonCode *code);
-    void copyJumpRelocationTable(uint8 *buffer);
-    void copyDataRelocationTable(uint8 *buffer);
+    void copyJumpRelocationTable(uint8_t *buffer);
+    void copyDataRelocationTable(uint8_t *buffer);
 
     bool addDeferredData(DeferredData *data, size_t bytes);
 
@@ -1301,15 +1301,15 @@ class Assembler
     // instruction gets written into the instruction stream. If dest is not null
     // it is interpreted as a pointer to the location that we want the
     // instruction to be written.
-    BufferOffset writeInst(uint32 x, uint32 *dest = NULL);
+    BufferOffset writeInst(uint32_t x, uint32_t *dest = NULL);
     // A static variant for the cases where we don't want to have an assembler
     // object at all. Normally, you would use the dummy (NULL) object.
-    static void writeInstStatic(uint32 x, uint32 *dest);
+    static void writeInstStatic(uint32_t x, uint32_t *dest);
 
   public:
     // resreve enough space in the instruction stream for a jumpPool.
     // return the reserved space.
-    BufferOffset as_jumpPool(uint32 size);
+    BufferOffset as_jumpPool(uint32_t size);
 
     BufferOffset align(int alignment);
     BufferOffset as_nop();
@@ -1380,19 +1380,19 @@ class Assembler
     // Using an int to differentiate between 8 bits and 32 bits is
     // overkill, but meh
     BufferOffset as_dtr(LoadStore ls, int size, Index mode,
-                Register rt, DTRAddr addr, Condition c = Always, uint32 *dest = NULL);
+                Register rt, DTRAddr addr, Condition c = Always, uint32_t *dest = NULL);
     // Handles all of the other integral data transferring functions:
     // ldrsb, ldrsh, ldrd, etc.
     // size is given in bits.
     BufferOffset as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
-                   Register rt, EDtrAddr addr, Condition c = Always, uint32 *dest = NULL);
+                   Register rt, EDtrAddr addr, Condition c = Always, uint32_t *dest = NULL);
 
-    BufferOffset as_dtm(LoadStore ls, Register rn, uint32 mask,
+    BufferOffset as_dtm(LoadStore ls, Register rn, uint32_t mask,
                 DTMMode mode, DTMWriteBack wb, Condition c = Always);
     // load a 32 bit immediate from a pool into a register
-    BufferOffset as_Imm32Pool(Register dest, uint32 value, ARMBuffer::PoolEntry *pe = NULL, Condition c = Always);
+    BufferOffset as_Imm32Pool(Register dest, uint32_t value, ARMBuffer::PoolEntry *pe = NULL, Condition c = Always);
     // make a patchable jump that can target the entire 32 bit address space.
-    BufferOffset as_BranchPool(uint32 value, RepatchLabel *label, ARMBuffer::PoolEntry *pe = NULL, Condition c = Always);
+    BufferOffset as_BranchPool(uint32_t value, RepatchLabel *label, ARMBuffer::PoolEntry *pe = NULL, Condition c = Always);
 
     // load a 64 bit floating point immediate from a pool into a register
     BufferOffset as_FImm64Pool(VFPRegister dest, double value, ARMBuffer::PoolEntry *pe = NULL, Condition c = Always);
@@ -1434,7 +1434,7 @@ class Assembler
         isSingle = 0 << 8
     };
 
-    BufferOffset writeVFPInst(vfp_size sz, uint32 blob, uint32 *dest=NULL);
+    BufferOffset writeVFPInst(vfp_size sz, uint32_t blob, uint32_t *dest=NULL);
     // Unityped variants: all registers hold the same (ieee754 single/double)
     // notably not included are vcvt; vmov vd, #imm; vmov rt, vn.
     BufferOffset as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
@@ -1501,12 +1501,12 @@ class Assembler
     BufferOffset as_vcvt(VFPRegister vd, VFPRegister vm, bool useFPSCR = false,
                          Condition c = Always);
     // hard coded to a 32 bit fixed width result for now
-    BufferOffset as_vcvtFixed(VFPRegister vd, bool isSigned, uint32 fixedPoint, bool toFixed, Condition c = Always);
+    BufferOffset as_vcvtFixed(VFPRegister vd, bool isSigned, uint32_t fixedPoint, bool toFixed, Condition c = Always);
 
     /* xfer between VFP and memory*/
     BufferOffset as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
                  Condition c = Always /* vfp doesn't have a wb option*/,
-                 uint32 *dest = NULL);
+                 uint32_t *dest = NULL);
 
     // VFP's ldm/stm work differently from the standard arm ones.
     // You can only transfer a range
@@ -1521,7 +1521,7 @@ class Assembler
     bool nextLink(BufferOffset b, BufferOffset *next);
     void bind(Label *label, BufferOffset boff = BufferOffset());
     void bind(RepatchLabel *label);
-    uint32 currentOffset() {
+    uint32_t currentOffset() {
         return nextOffset().getOffset();
     }
     void retarget(Label *label, Label *target);
@@ -1555,7 +1555,7 @@ class Assembler
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
-    void executableCopy(uint8 *buffer);
+    void executableCopy(uint8_t *buffer);
 
     // Actual assembly emitting functions.
 
@@ -1641,14 +1641,14 @@ class Assembler
 
     // API for speaking with the IonAssemblerBufferWithConstantPools
     // generate an initial placeholder instruction that we want to later fix up
-    static void insertTokenIntoTag(uint32 size, uint8 *load, int32 token);
+    static void insertTokenIntoTag(uint32_t size, uint8_t *load, int32_t token);
     // take the stub value that was written in before, and write in an actual load
     // using the index we'd computed previously as well as the address of the pool start.
     static bool patchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
     // this is a callback for when we have filled a pool, and MUST flush it now.
     // The pool requires the assembler to place a branch past the pool, and it
     // calls this function.
-    static uint32 placeConstantPoolBarrier(int offset);
+    static uint32_t placeConstantPoolBarrier(int offset);
     // END API
 
     // move our entire pool into the instruction stream
@@ -1663,23 +1663,23 @@ class Assembler
     static ptrdiff_t getBranchOffset(const Instruction *i);
     static void retargetNearBranch(Instruction *i, int offset, Condition cond, bool final = true);
     static void retargetNearBranch(Instruction *i, int offset, bool final = true);
-    static void retargetFarBranch(Instruction *i, uint8 **slot, uint8 *dest, Condition cond);
+    static void retargetFarBranch(Instruction *i, uint8_t **slot, uint8_t *dest, Condition cond);
 
-    static void writePoolHeader(uint8 *start, Pool *p, bool isNatural);
-    static void writePoolFooter(uint8 *start, Pool *p, bool isNatural);
+    static void writePoolHeader(uint8_t *start, Pool *p, bool isNatural);
+    static void writePoolFooter(uint8_t *start, Pool *p, bool isNatural);
     static void writePoolGuard(BufferOffset branch, Instruction *inst, BufferOffset dest);
 
 
-    static uint32 patchWrite_NearCallSize();
-    static uint32 nopSize() { return 4; }
+    static uint32_t patchWrite_NearCallSize();
+    static uint32_t nopSize() { return 4; }
     static void patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
     static void patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue,
                                         ImmWord expectedValue);
     static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
-    static uint32 alignDoubleArg(uint32 offset) {
+    static uint32_t alignDoubleArg(uint32_t offset) {
         return (offset+1)&~1;
     }
-    static uint8 *nextInstruction(uint8 *instruction, uint32 *count = NULL);
+    static uint8_t *nextInstruction(uint8_t *instruction, uint32_t *count = NULL);
     // Toggle a jmp or cmp emitted by toggledJump().
 
     static void ToggleToJmp(CodeLocationLabel inst_);
@@ -1691,23 +1691,23 @@ class Assembler
 // many classes have not been implemented thusfar.
 class Instruction
 {
-    uint32 data;
+    uint32_t data;
 
   protected:
     // This is not for defaulting to always, this is for instructions that
     // cannot be made conditional, and have the usually invalid 4b1111 cond field
-    Instruction (uint32 data_, bool fake = false) : data(data_ | 0xf0000000) {
+    Instruction (uint32_t data_, bool fake = false) : data(data_ | 0xf0000000) {
         JS_ASSERT (fake || ((data_ & 0xf0000000) == 0));
     }
     // Standard constructor
-    Instruction (uint32 data_, Assembler::Condition c) : data(data_ | (uint32) c) {
+    Instruction (uint32_t data_, Assembler::Condition c) : data(data_ | (uint32_t) c) {
         JS_ASSERT ((data_ & 0xf0000000) == 0);
     }
     // You should never create an instruction directly.  You should create a
     // more specific instruction which will eventually call one of these
     // constructors for you.
   public:
-    uint32 encode() const {
+    uint32_t encode() const {
         return data;
     }
     // Check if this instruction is really a particular case
@@ -1732,10 +1732,10 @@ class Instruction
     // This does neat things like ignoreconstant pools and their guards.
     Instruction *next();
 
-    // Sometimes, an api wants a uint32 (or a pointer to it) rather than
-    // an instruction.  raw() just coerces this into a pointer to a uint32
-    const uint32 *raw() const { return &data; }
-    uint32 size() const { return 4; }
+    // Sometimes, an api wants a uint32_t (or a pointer to it) rather than
+    // an instruction.  raw() just coerces this into a pointer to a uint32_t
+    const uint32_t *raw() const { return &data; }
+    uint32_t size() const { return 4; }
 }; // Instruction
 
 // make sure that it is the right size
@@ -1783,7 +1783,7 @@ class InstBranchReg : public Instruction
         IsBX  = 0x012fff10,
         IsBLX = 0x012fff30
     };
-    static const uint32 IsBRegMask = 0x0ffffff0;
+    static const uint32_t IsBRegMask = 0x0ffffff0;
     InstBranchReg(BranchTag tag, Register rm, Assembler::Condition c)
       : Instruction(tag | RM(rm), c)
     { }
@@ -1805,7 +1805,7 @@ class InstBranchImm : public Instruction
         IsB   = 0x0a000000,
         IsBL  = 0x0b000000
     };
-    static const uint32 IsBImmMask = 0x0f000000;
+    static const uint32_t IsBImmMask = 0x0f000000;
 
     InstBranchImm(BranchTag tag, BOffImm off, Assembler::Condition c)
       : Instruction(tag | off.encode(), c)
@@ -1861,7 +1861,7 @@ class InstMovWT : public Instruction
         IsW = 0x03000000,
         IsT = 0x03400000
     };
-    static const uint32 IsWTMask = 0x0ff00000;
+    static const uint32_t IsWTMask = 0x0ff00000;
 
     InstMovWT(Register rd, Imm16 imm, WT wt, Assembler::Condition c)
       : Instruction (RD(rd) | imm.encode() | wt, c)
@@ -1902,7 +1902,7 @@ class InstMovT : public InstMovWT
 
 class InstALU : public Instruction
 {
-    static const int32 ALUMask = 0xc << 24;
+    static const int32_t ALUMask = 0xc << 24;
   public:
     InstALU (Register rd, Register rn, Operand2 op2, ALUOp op, SetCond_ sc, Assembler::Condition c)
         : Instruction(RD(rd) | RN(rn) | op2.encode() | op | sc | c)
@@ -1939,9 +1939,56 @@ class InstructionIterator {
     }
 };
 
-static const uint32 NumArgRegs = 4;
+static const uint32_t NumIntArgRegs = 4;
+static const uint32_t NumFloatArgRegs = 8;
+
+#ifdef JS_CPU_ARM_HARDFP
 static inline bool
-GetArgReg(uint32 arg, Register *out)
+GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
+{
+   if (usedIntArgs >= NumIntArgRegs)
+        return false;
+    *out = Register::FromCode(usedIntArgs);
+    return true;
+}
+
+static inline bool
+GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
+{
+    if (usedFloatArgs >= NumFloatArgRegs)
+        return false;
+    *out = FloatRegister::FromCode(usedFloatArgs);
+    return true;
+}
+
+static inline uint32_t
+GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+{
+    JS_ASSERT(usedIntArgs >= NumIntArgRegs);
+    uint32_t doubleSlots = Max(0, (int32_t)usedFloatArgs - (int32_t)NumFloatArgRegs);
+    doubleSlots *= 2;
+    int intSlots = usedIntArgs - NumIntArgRegs;
+    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+}
+
+static inline uint32_t
+GetFloatArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+{
+
+    JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
+    uint32_t intSlots = 0;
+    if (usedIntArgs > NumIntArgRegs) {
+        intSlots = usedIntArgs - NumIntArgRegs;
+        // update the amount of padding required.
+        *padding += (*padding + usedIntArgs) % 2;
+    }
+    uint32_t doubleSlots = usedFloatArgs - NumFloatArgRegs;
+    doubleSlots *= 2;
+    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+}
+#else
+static inline bool
+GetIntArgReg(uint32_t arg, uint32_t floatArg, Register *out)
 {
     if (arg < 4) {
         *out = Register::FromCode(arg);
@@ -1950,21 +1997,22 @@ GetArgReg(uint32 arg, Register *out)
     return false;
 }
 
-static inline uint32
-GetArgStackDisp(uint32 arg)
+static inline uint32_t
+GetArgStackDisp(uint32_t arg)
 {
-    JS_ASSERT(arg >= NumArgRegs);
-    return (arg - NumArgRegs) * STACK_SLOT_SIZE;
+    JS_ASSERT(arg >= NumIntArgRegs);
+    return (arg - NumIntArgRegs) * STACK_SLOT_SIZE;
 }
 
+#endif
 class DoubleEncoder {
-    uint32 rep(bool b, uint32 count) {
-        uint32 ret = 0;
-        for (uint32 i = 0; i < count; i++)
+    uint32_t rep(bool b, uint32_t count) {
+        uint32_t ret = 0;
+        for (uint32_t i = 0; i < count; i++)
             ret = (ret << 1) | b;
         return ret;
     }
-    uint32 encode(uint8 value) {
+    uint32_t encode(uint8_t value) {
         //ARM ARM "VFP modified immediate constants"
         // aBbbbbbb bbcdefgh 000...
         // we want to return the top 32 bits of the double
@@ -1972,7 +2020,7 @@ class DoubleEncoder {
         bool a = value >> 7;
         bool b = value >> 6 & 1;
         bool B = !b;
-        uint32 cdefgh = value & 0x3f;
+        uint32_t cdefgh = value & 0x3f;
         return a << 31 |
             B << 30 |
             rep(b, 8) << 22 |
@@ -1981,13 +2029,13 @@ class DoubleEncoder {
 
     struct DoubleEntry
     {
-        uint32 dblTop;
+        uint32_t dblTop;
         datastore::Imm8VFPImmData data;
 
         DoubleEntry()
           : dblTop(-1)
         { }
-        DoubleEntry(uint32 dblTop_, datastore::Imm8VFPImmData data_)
+        DoubleEntry(uint32_t dblTop_, datastore::Imm8VFPImmData data_)
           : dblTop(dblTop_), data(data_)
         { }
     };
@@ -2003,7 +2051,7 @@ class DoubleEncoder {
     }
 
   public:
-    static bool lookup(uint32 top, datastore::Imm8VFPImmData *ret) {
+    static bool lookup(uint32_t top, datastore::Imm8VFPImmData *ret) {
         for (int i = 0; i < 256; i++) {
             if (_this.table[i].dblTop == top) {
                 *ret = _this.table[i].data;

@@ -21,6 +21,7 @@ CSRCS = \
 	certreq.c \
 	crlv2.c \
 	ocsp.c \
+	ocspsig.c \
 	certhigh.c \
  	certvfy.c \
  	certvfypkix.c \

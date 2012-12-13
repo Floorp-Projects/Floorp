@@ -18,28 +18,28 @@ using namespace js::ion;
 
 // Encode a standard register when it is being used as src1, the dest, and
 // an extra register. These should never be called with an InvalidReg.
-uint32
+uint32_t
 js::ion::RT(Register r)
 {
     JS_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 12;
 }
 
-uint32
+uint32_t
 js::ion::RN(Register r)
 {
     JS_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 16;
 }
 
-uint32
+uint32_t
 js::ion::RD(Register r)
 {
     JS_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 12;
 }
 
-uint32
+uint32_t
 js::ion::RM(Register r)
 {
     JS_ASSERT((r.code() & ~0xf) == 0);
@@ -49,7 +49,7 @@ js::ion::RM(Register r)
 // Encode a standard register when it is being used as src1, the dest, and
 // an extra register.  For these, an InvalidReg is used to indicate a optional
 // register that has been omitted.
-uint32
+uint32_t
 js::ion::maybeRT(Register r)
 {
     if (r == InvalidReg)
@@ -59,7 +59,7 @@ js::ion::maybeRT(Register r)
     return r.code() << 12;
 }
 
-uint32
+uint32_t
 js::ion::maybeRN(Register r)
 {
     if (r == InvalidReg)
@@ -69,7 +69,7 @@ js::ion::maybeRN(Register r)
     return r.code() << 16;
 }
 
-uint32
+uint32_t
 js::ion::maybeRD(Register r)
 {
     if (r == InvalidReg)
@@ -102,7 +102,7 @@ js::ion::toRN(Instruction &i)
     return Register::FromCode((i.encode()>>16) & 0xf);
 }
 
-uint32
+uint32_t
 js::ion::VD(VFPRegister vr)
 {
     if (vr.isMissing())
@@ -112,7 +112,7 @@ js::ion::VD(VFPRegister vr)
     VFPRegister::VFPRegIndexSplit s = vr.encode();
     return s.bit << 22 | s.block << 12;
 }
-uint32
+uint32_t
 js::ion::VN(VFPRegister vr)
 {
     if (vr.isMissing())
@@ -122,7 +122,7 @@ js::ion::VN(VFPRegister vr)
     VFPRegister::VFPRegIndexSplit s = vr.encode();
     return s.bit << 7 | s.block << 16;
 }
-uint32
+uint32_t
 js::ion::VM(VFPRegister vr)
 {
     if (vr.isMissing())
@@ -154,7 +154,7 @@ VFPRegister js::ion::NoVFPRegister(true);
 bool
 InstDTR::isTHIS(const Instruction &i)
 {
-    return (i.encode() & IsDTRMask) == (uint32)IsDTR;
+    return (i.encode() & IsDTRMask) == (uint32_t)IsDTR;
 }
 
 InstDTR *
@@ -168,7 +168,7 @@ InstDTR::asTHIS(Instruction &i)
 bool
 InstLDR::isTHIS(const Instruction &i)
 {
-    return (i.encode() & IsDTRMask) == (uint32)IsDTR;
+    return (i.encode() & IsDTRMask) == (uint32_t)IsDTR;
 }
 
 InstLDR *
@@ -405,7 +405,7 @@ Imm16::Imm16(Instruction &inst)
     invalid(0xfff)
 { }
 
-Imm16::Imm16(uint32 imm)
+Imm16::Imm16(uint32_t imm)
   : lower(imm & 0xfff), pad(0),
     upper((imm>>12) & 0xf),
     invalid(0)
@@ -433,7 +433,7 @@ ion::PatchJump(CodeLocationJump &jump_, CodeLocationLabel label)
         Assembler::retargetNearBranch(jump, jumpOffset, c);
     } else {
         // This instruction started off as a branch, but now needs to be demoted to an ldr.
-        uint8 **slot = reinterpret_cast<uint8**>(jump_.jumpTableEntry());
+        uint8_t **slot = reinterpret_cast<uint8_t**>(jump_.jumpTableEntry());
         Assembler::retargetFarBranch(jump, slot, label.raw(), c);
     }
 }
@@ -462,7 +462,7 @@ Assembler::finish()
 }
 
 void
-Assembler::executableCopy(uint8 *buffer)
+Assembler::executableCopy(uint8_t *buffer)
 {
     JS_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
@@ -475,21 +475,21 @@ Assembler::resetCounter()
     m_buffer.resetCounter();
 }
 
-uint32
-Assembler::actualOffset(uint32 off_) const
+uint32_t
+Assembler::actualOffset(uint32_t off_) const
 {
     return off_ + m_buffer.poolSizeBefore(off_);
 }
 
-uint32
-Assembler::actualIndex(uint32 idx_) const
+uint32_t
+Assembler::actualIndex(uint32_t idx_) const
 {
     ARMBuffer::PoolEntry pe(idx_);
     return m_buffer.poolEntryOffset(pe);
 }
 
-uint8 *
-Assembler::PatchableJumpAddress(IonCode *code, uint32 pe_)
+uint8_t *
+Assembler::PatchableJumpAddress(IonCode *code, uint32_t pe_)
 {
     return code->raw() + pe_;
 }
@@ -504,7 +504,7 @@ class RelocationIterator
 {
     CompactBufferReader reader_;
     // offset in bytes
-    uint32 offset_;
+    uint32_t offset_;
 
   public:
     RelocationIterator(CompactBufferReader &reader)
@@ -518,13 +518,13 @@ class RelocationIterator
         return true;
     }
 
-    uint32 offset() const {
+    uint32_t offset() const {
         return offset_;
     }
 };
 
 template<class Iter>
-const uint32 *
+const uint32_t *
 Assembler::getCF32Target(Iter *iter)
 {
     Instruction *inst1 = iter->cur();
@@ -574,7 +574,7 @@ Assembler::getCF32Target(Iter *iter)
                                                                : inst4->as<InstBranchReg>();
         JS_ASSERT(realBranch->checkDest(temp));
 
-        uint32 *dest = (uint32*) (targ_bot.decode() | (targ_top.decode() << 16));
+        uint32_t *dest = (uint32_t*) (targ_bot.decode() | (targ_top.decode() << 16));
         return dest;
     }
     
@@ -587,7 +587,7 @@ Assembler::getCF32Target(Iter *iter)
 }
 
 uintptr_t
-Assembler::getPointer(uint8 *instPtr)
+Assembler::getPointer(uint8_t *instPtr)
 {
     InstructionIterator iter((Instruction*)instPtr);
     uintptr_t ret = (uintptr_t)getPtr32Target(&iter, NULL, NULL);
@@ -595,7 +595,7 @@ Assembler::getPointer(uint8 *instPtr)
 }
 
 template<class Iter>
-const uint32 *
+const uint32_t *
 Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
 {
     Instruction *load1 = start->cur();
@@ -627,7 +627,7 @@ Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
         if (style)
             *style = L_MOVWT;
 
-        uint32 *value = (uint32*) (targ_bot.decode() | (targ_top.decode() << 16));
+        uint32_t *value = (uint32_t*) (targ_bot.decode() | (targ_top.decode() << 16));
         return value;
     }
 
@@ -638,7 +638,7 @@ Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
 static IonCode *
 CodeFromJump(InstructionIterator *jump)
 {
-    uint8 *target = (uint8 *)Assembler::getCF32Target(jump);
+    uint8_t *target = (uint8_t *)Assembler::getCF32Target(jump);
     return IonCode::FromExecutable(target);
 }
 
@@ -654,12 +654,12 @@ Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReade
 }
 
 static void
-TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
+TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         InstructionIterator iter((Instruction*)(buffer+offset));
-        void *ptr = const_cast<uint32 *>(js::ion::Assembler::getPtr32Target(&iter));
+        void *ptr = const_cast<uint32_t *>(js::ion::Assembler::getPtr32Target(&iter));
         // No barrier needed since these are constants.
         gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
     }
@@ -672,7 +672,7 @@ TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer,
     for (unsigned int idx = 0; idx < locs->length(); idx++) {
         BufferOffset bo = (*locs)[idx];
         ARMBuffer::AssemblerBufferInstIterator iter(bo, buffer);
-        void *ptr = const_cast<uint32 *>(ion::Assembler::getPtr32Target(&iter));
+        void *ptr = const_cast<uint32_t *>(ion::Assembler::getPtr32Target(&iter));
 
         // No barrier needed since these are constants.
         gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
@@ -686,14 +686,14 @@ Assembler::TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReade
 }
 
 void
-Assembler::copyJumpRelocationTable(uint8 *dest)
+Assembler::copyJumpRelocationTable(uint8_t *dest)
 {
     if (jumpRelocations_.length())
         memcpy(dest, jumpRelocations_.buffer(), jumpRelocations_.length());
 }
 
 void
-Assembler::copyDataRelocationTable(uint8 *dest)
+Assembler::copyDataRelocationTable(uint8_t *dest)
 {
     if (dataRelocations_.length())
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
@@ -705,9 +705,9 @@ Assembler::trace(JSTracer *trc)
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
         if (rp.kind == Relocation::IONCODE) {
-            IonCode *code = IonCode::FromExecutable((uint8*)rp.target);
+            IonCode *code = IonCode::FromExecutable((uint8_t*)rp.target);
             MarkIonCodeUnbarriered(trc, &code, "masmrel32");
-            JS_ASSERT(code == IonCode::FromExecutable((uint8*)rp.target));
+            JS_ASSERT(code == IonCode::FromExecutable((uint8_t*)rp.target));
         }
     }
 
@@ -716,7 +716,7 @@ Assembler::trace(JSTracer *trc)
 }
 
 void
-Assembler::processDeferredData(IonCode *code, uint8 *data)
+Assembler::processDeferredData(IonCode *code, uint8_t *data)
 {
     // Deferred Data is something like Pools for X86.
     // Since ARM has competent pools, this isn't actually used.
@@ -748,12 +748,12 @@ Assembler::processCodeLabels(IonCode *code)
 Assembler::Condition
 Assembler::InvertCondition(Condition cond)
 {
-    const uint32 ConditionInversionBit = 0x10000000;
+    const uint32_t ConditionInversionBit = 0x10000000;
     return Condition(ConditionInversionBit ^ cond);
 }
 
 Imm8::TwoImm8mData
-Imm8::encodeTwoImms(uint32 imm)
+Imm8::encodeTwoImms(uint32_t imm)
 {
     // In the ideal case, we are looking for a number that (in binary) looks like:
     // 0b((00)*)n_1((00)*)n_2((00)*)
@@ -766,9 +766,9 @@ Imm8::encodeTwoImms(uint32 imm)
     //   n1a  mid  n2   rgh    n1b
     // also remember, values are rotated by multiples of two, and left,
     // mid or right can have length zero
-    uint32 imm1, imm2;
+    uint32_t imm1, imm2;
     int left = (js_bitscan_clz32(imm)) & 0x1E;
-    uint32 no_n1 = imm & ~(0xff << (24 - left));
+    uint32_t no_n1 = imm & ~(0xff << (24 - left));
 
     // not technically needed: this case only happens if we can encode
     // as a single imm8m.  There is a perfectly reasonable encoding in this
@@ -777,7 +777,7 @@ Imm8::encodeTwoImms(uint32 imm)
         return TwoImm8mData();
 
     int mid = ((js_bitscan_clz32(no_n1)) & 0x1E);
-    uint32 no_n2 = no_n1 & ~((0xff << ((24 - mid) & 0x1f)) | 0xff >> ((8 + mid) & 0x1f));
+    uint32_t no_n2 = no_n1 & ~((0xff << ((24 - mid) & 0x1f)) | 0xff >> ((8 + mid) & 0x1f));
 
     if (no_n2 == 0) {
         // we hit the easy case, no wraparound.
@@ -1017,7 +1017,7 @@ ion::asr (Register r, Register amt)
 }
 
 
-js::ion::VFPImm::VFPImm(uint32 top)
+js::ion::VFPImm::VFPImm(uint32_t top)
 {
     data = -1;
     datastore::Imm8VFPImmData tmp;
@@ -1036,7 +1036,7 @@ BOffImm::getDest(Instruction *src)
     // TODO: It is probably worthwhile to verify that src is actually a branch
     // NOTE: This does not explicitly shift the offset of the destination left by 2,
     // since it is indexing into an array of instruction sized objects.
-    return &src[(((int32)data<<8)>>8) + 2];
+    return &src[(((int32_t)data<<8)>>8) + 2];
 }
 
 js::ion::DoubleEncoder js::ion::DoubleEncoder::_this;
@@ -1160,7 +1160,7 @@ Assembler::bytesNeeded() const
 }
 // write a blob of binary into the instruction stream
 BufferOffset
-Assembler::writeInst(uint32 x, uint32 *dest)
+Assembler::writeInst(uint32_t x, uint32_t *dest)
 {
     if (dest == NULL)
         return m_buffer.putInt(x);
@@ -1169,7 +1169,7 @@ Assembler::writeInst(uint32 x, uint32 *dest)
     return BufferOffset();
 }
 void
-Assembler::writeInstStatic(uint32 x, uint32 *dest)
+Assembler::writeInstStatic(uint32_t x, uint32_t *dest)
 {
     JS_ASSERT(dest != NULL);
     *dest = x;
@@ -1294,13 +1294,13 @@ BufferOffset
 Assembler::as_movw(Register dest, Imm16 imm, Condition c, Instruction *pos)
 {
     JS_ASSERT(hasMOVWT());
-    return writeInst(0x03000000 | c | imm.encode() | RD(dest), (uint32*)pos);
+    return writeInst(0x03000000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
 }
 BufferOffset
 Assembler::as_movt(Register dest, Imm16 imm, Condition c, Instruction *pos)
 {
     JS_ASSERT(hasMOVWT());
-    return writeInst(0x03400000 | c | imm.encode() | RD(dest), (uint32*)pos);
+    return writeInst(0x03400000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
 }
 
 const int mull_tag = 0x90;
@@ -1367,7 +1367,7 @@ Assembler::as_smlal(Register destHI, Register destLO, Register src1, Register sr
 // overkill, but meh
 BufferOffset
 Assembler::as_dtr(LoadStore ls, int size, Index mode,
-                  Register rt, DTRAddr addr, Condition c, uint32 *dest)
+                  Register rt, DTRAddr addr, Condition c, uint32_t *dest)
 {
     JS_ASSERT (mode == Offset ||  (rt != addr.getBase() && pc != addr.getBase()));
     JS_ASSERT(size == 32 || size == 8);
@@ -1387,14 +1387,14 @@ class PoolHintData {
     };
 
   private:
-    uint32   index    : 17;
-    uint32   cond     : 4;
+    uint32_t   index    : 17;
+    uint32_t   cond     : 4;
     LoadType loadType : 2;
-    uint32   destReg  : 5;
-    uint32   ONES     : 4;
+    uint32_t   destReg  : 5;
+    uint32_t   ONES     : 4;
 
   public:
-    void init(uint32 index_, Assembler::Condition cond_, LoadType lt, const Register &destReg_) {
+    void init(uint32_t index_, Assembler::Condition cond_, LoadType lt, const Register &destReg_) {
         index = index_;
         JS_ASSERT(index == index_);
         cond = cond_ >> 28;
@@ -1403,7 +1403,7 @@ class PoolHintData {
         ONES = 0xfu;
         destReg = destReg_.code();
     }
-    void init(uint32 index_, Assembler::Condition cond_, LoadType lt, const VFPRegister &destReg_) {
+    void init(uint32_t index_, Assembler::Condition cond_, LoadType lt, const VFPRegister &destReg_) {
         index = index_;
         JS_ASSERT(index == index_);
         cond = cond_ >> 28;
@@ -1423,10 +1423,10 @@ class PoolHintData {
         return VFPRegister(FloatRegister::FromCode(destReg));
     }
 
-    int32 getIndex() {
+    int32_t getIndex() {
         return index;
     }
-    void setIndex(uint32 index_) {
+    void setIndex(uint32_t index_) {
         JS_ASSERT(ONES == 0xf && loadType != poolBOGUS);
         index = index_;
         JS_ASSERT(index == index_);
@@ -1452,7 +1452,7 @@ class PoolHintData {
 
 union PoolHintPun {
     PoolHintData phd;
-    uint32 raw;
+    uint32_t raw;
 };
 
 // Handles all of the other integral data transferring functions:
@@ -1460,7 +1460,7 @@ union PoolHintPun {
 // size is given in bits.
 BufferOffset
 Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
-                     Register rt, EDtrAddr addr, Condition c, uint32 *dest)
+                     Register rt, EDtrAddr addr, Condition c, uint32_t *dest)
 {
     int extra_bits2 = 0;
     int extra_bits1 = 0;
@@ -1493,7 +1493,7 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
 }
 
 BufferOffset
-Assembler::as_dtm(LoadStore ls, Register rn, uint32 mask,
+Assembler::as_dtm(LoadStore ls, Register rn, uint32_t mask,
                 DTMMode mode, DTMWriteBack wb, Condition c)
 {
     return writeInst(0x08000000 | RN(rn) | ls |
@@ -1501,21 +1501,21 @@ Assembler::as_dtm(LoadStore ls, Register rn, uint32 mask,
 }
 
 BufferOffset
-Assembler::as_Imm32Pool(Register dest, uint32 value, ARMBuffer::PoolEntry *pe, Condition c)
+Assembler::as_Imm32Pool(Register dest, uint32_t value, ARMBuffer::PoolEntry *pe, Condition c)
 {
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::poolDTR, dest);
-    return m_buffer.insertEntry(4, (uint8*)&php.raw, int32Pool, (uint8*)&value, pe);
+    return m_buffer.insertEntry(4, (uint8_t*)&php.raw, int32Pool, (uint8_t*)&value, pe);
 }
 
 BufferOffset
-Assembler::as_BranchPool(uint32 value, RepatchLabel *label, ARMBuffer::PoolEntry *pe, Condition c)
+Assembler::as_BranchPool(uint32_t value, RepatchLabel *label, ARMBuffer::PoolEntry *pe, Condition c)
 {
     PoolHintPun php;
     BufferOffset next = nextOffset();
     php.phd.init(0, c, PoolHintData::poolBranch, pc);
     m_buffer.markNextAsBranch();
-    BufferOffset ret = m_buffer.insertEntry(4, (uint8*)&php.raw, int32Pool, (uint8*)&value, pe);
+    BufferOffset ret = m_buffer.insertEntry(4, (uint8_t*)&php.raw, int32Pool, (uint8_t*)&value, pe);
     // If this label is already bound, then immediately replace the stub load with
     // a correct branch.
     if (label->bound()) {
@@ -1534,13 +1534,13 @@ Assembler::as_FImm64Pool(VFPRegister dest, double value, ARMBuffer::PoolEntry *p
     JS_ASSERT(dest.isDouble());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::poolVDTR, dest);
-    return m_buffer.insertEntry(4, (uint8*)&php.raw, doublePool, (uint8*)&value, pe);
+    return m_buffer.insertEntry(4, (uint8_t*)&php.raw, doublePool, (uint8_t*)&value, pe);
 }
 // Pool callbacks stuff:
 void
-Assembler::insertTokenIntoTag(uint32 instSize, uint8 *load_, int32 token)
+Assembler::insertTokenIntoTag(uint32_t instSize, uint8_t *load_, int32_t token)
 {
-    uint32 *load = (uint32*) load_;
+    uint32_t *load = (uint32_t*) load_;
     PoolHintPun php;
     php.raw = *load;
     php.phd.setIndex(token);
@@ -1552,7 +1552,7 @@ bool
 Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
 {
     PoolHintData data = *(PoolHintData*)loadAddr;
-    uint32 *instAddr = (uint32*) loadAddr;
+    uint32_t *instAddr = (uint32_t*) loadAddr;
     int offset = (char *)constPoolAddr - (char *)loadAddr;
     switch(data.getLoadType()) {
       case PoolHintData::poolBOGUS:
@@ -1588,7 +1588,7 @@ Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
     return true;
 }
 
-uint32
+uint32_t
 Assembler::placeConstantPoolBarrier(int offset)
 {
     // BUG: 700526
@@ -1637,6 +1637,10 @@ Assembler::as_b(BOffImm off, Condition c, bool isPatchable)
 BufferOffset
 Assembler::as_b(Label *l, Condition c, bool isPatchable)
 {
+    if (m_buffer.oom()) {
+        BufferOffset ret;
+        return ret;
+    }
     m_buffer.markNextAsBranch();
     if (l->bound()) {
         BufferOffset ret = as_nop();
@@ -1644,7 +1648,7 @@ Assembler::as_b(Label *l, Condition c, bool isPatchable)
         return ret;
     }
 
-    int32 old;
+    int32_t old;
     BufferOffset ret;
     if (l->used()) {
         old = l->offset();
@@ -1656,7 +1660,7 @@ Assembler::as_b(Label *l, Condition c, bool isPatchable)
         BOffImm inv;
         ret = as_b(inv, c, isPatchable);
     }
-    int32 check = l->use(ret.getOffset());
+    int32_t check = l->use(ret.getOffset());
     JS_ASSERT(check == old);
     return ret;
 }
@@ -1695,7 +1699,7 @@ Assembler::as_bl(Label *l, Condition c)
         return ret;
     }
 
-    int32 old;
+    int32_t old;
     BufferOffset ret;
     // See if the list was empty :(
     if (l->used()) {
@@ -1708,7 +1712,7 @@ Assembler::as_bl(Label *l, Condition c)
         BOffImm inv;
         ret = as_bl(inv, c);
     }
-    int32 check = l->use(ret.getOffset());
+    int32_t check = l->use(ret.getOffset());
     JS_ASSERT(check == old);
     return ret;
 }
@@ -1725,7 +1729,7 @@ enum vfp_tags {
     vfp_arith = 0x02000000
 };
 BufferOffset
-Assembler::writeVFPInst(vfp_size sz, uint32 blob, uint32 *dest)
+Assembler::writeVFPInst(vfp_size sz, uint32_t blob, uint32_t *dest)
 {
     JS_ASSERT((sz & blob) == 0);
     JS_ASSERT((vfp_tag & blob) == 0);
@@ -1863,7 +1867,7 @@ Assembler::as_vxfer(Register vt1, Register vt2, VFPRegister vm, FloatToCore_ f2c
         JS_ASSERT(idx == 0);
     }
     VFPXferSize xfersz = WordTransfer;
-    uint32 (*encodeVFP)(VFPRegister) = VN;
+    uint32_t (*encodeVFP)(VFPRegister) = VN;
     if (vt2 != InvalidReg) {
         // We are doing a 64 bit transfer.
         xfersz = DoubleTransfer;
@@ -1925,12 +1929,12 @@ Assembler::as_vcvt(VFPRegister vd, VFPRegister vm, bool useFPSCR,
 }
 
 BufferOffset
-Assembler::as_vcvtFixed(VFPRegister vd, bool isSigned, uint32 fixedPoint, bool toFixed, Condition c)
+Assembler::as_vcvtFixed(VFPRegister vd, bool isSigned, uint32_t fixedPoint, bool toFixed, Condition c)
 {
     JS_ASSERT(vd.isFloat());
-    uint32 sx = 0x1;
+    uint32_t sx = 0x1;
     vfp_size sf = vd.isDouble() ? isDouble : isSingle;
-    int32 imm5 = fixedPoint;
+    int32_t imm5 = fixedPoint;
     imm5 = (sx ? 32 : 16) - imm5;
     JS_ASSERT(imm5 >= 0);
     imm5 = imm5 >> 1 | (imm5 & 1) << 6;
@@ -1942,7 +1946,7 @@ Assembler::as_vcvtFixed(VFPRegister vd, bool isSigned, uint32 fixedPoint, bool t
 BufferOffset
 Assembler::as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
                    Condition c /* vfp doesn't have a wb option*/,
-                   uint32 *dest)
+                   uint32_t *dest)
 {
     vfp_size sz = vd.isDouble() ? isDouble : isSingle;
     return writeVFPInst(sz, ls | 0x01000000 | addr.encode() | VD(vd) | c, dest);
@@ -2061,8 +2065,8 @@ Assembler::retarget(Label *label, Label *target)
         } else {
             // The target is unbound.  We can just take the head of the list
             // hanging off of label, and dump that into target.
-            DebugOnly<uint32> prev = target->use(label->offset());
-            JS_ASSERT((int32)prev == Label::INVALID_OFFSET);
+            DebugOnly<uint32_t> prev = target->use(label->offset());
+            JS_ASSERT((int32_t)prev == Label::INVALID_OFFSET);
         }
     }
     label->reset();
@@ -2123,13 +2127,13 @@ Assembler::leaveNoPool()
 }
 
 BufferOffset
-Assembler::as_jumpPool(uint32 numCases)
+Assembler::as_jumpPool(uint32_t numCases)
 {
     if (numCases == 0)
         return BufferOffset();
 
     BufferOffset ret = writeInst(-1);
-    for (uint32 i = 1; i < numCases; i++)
+    for (uint32_t i = 1; i < numCases; i++)
         writeInst(-1);
 
     return ret;
@@ -2167,9 +2171,9 @@ Assembler::retargetNearBranch(Instruction *i, int offset, Condition cond, bool f
 }
 
 void
-Assembler::retargetFarBranch(Instruction *i, uint8 **slot, uint8 *dest, Condition cond)
+Assembler::retargetFarBranch(Instruction *i, uint8_t **slot, uint8_t *dest, Condition cond)
 {
-    int32 offset = reinterpret_cast<uint8*>(slot) - reinterpret_cast<uint8*>(i);
+    int32_t offset = reinterpret_cast<uint8_t*>(slot) - reinterpret_cast<uint8_t*>(i);
     if (!i->is<InstLDR>()) {
         new (i) InstLDR(Offset, pc, DTRAddr(pc, DtrOffImm(offset - 8)), cond);
         AutoFlushCache::updateTop(uintptr_t(i), 4);
@@ -2183,9 +2187,9 @@ struct PoolHeader : Instruction {
     {
         // size should take into account the pool header.
         // size is in units of Instruction (4bytes), not byte
-        uint32 size : 15;
+        uint32_t size : 15;
         bool isNatural : 1;
-        uint32 ONES : 16;
+        uint32_t ONES : 16;
 
         Header(int size_, bool isNatural_)
           : size(size_),
@@ -2194,14 +2198,14 @@ struct PoolHeader : Instruction {
         { }
 
         Header(const Instruction *i) {
-            JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32));
+            JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32_t));
             memcpy(this, i, sizeof(Header));
             JS_ASSERT(ONES == 0xffff);
         }
 
-        uint32 raw() const {
-            JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32));
-            uint32 dest;
+        uint32_t raw() const {
+            JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32_t));
+            uint32_t dest;
             memcpy(&dest, this, sizeof(Header));
             return dest;
         }
@@ -2211,11 +2215,11 @@ struct PoolHeader : Instruction {
       : Instruction(Header(size_, isNatural_).raw(), true)
     { }
 
-    uint32 size() const {
+    uint32_t size() const {
         Header tmp(this);
         return tmp.size;
     }
-    uint32 isNatural() const {
+    uint32_t isNatural() const {
         Header tmp(this);
         return tmp.isNatural;
     }
@@ -2231,16 +2235,16 @@ struct PoolHeader : Instruction {
 
 
 void
-Assembler::writePoolHeader(uint8 *start, Pool *p, bool isNatural)
+Assembler::writePoolHeader(uint8_t *start, Pool *p, bool isNatural)
 {
     STATIC_ASSERT(sizeof(PoolHeader) == 4);
-    uint8 *pool = start+4;
+    uint8_t *pool = start+4;
     // go through the usual rigaramarole to get the size of the pool.
     pool = p[0].addPoolSize(pool);
     pool = p[1].addPoolSize(pool);
     pool = p[1].other->addPoolSize(pool);
     pool = p[0].other->addPoolSize(pool);
-    uint32 size = pool - start;
+    uint32_t size = pool - start;
     JS_ASSERT((size & 3) == 0);
     size = size >> 2;
     JS_ASSERT(size < (1 << 15));
@@ -2250,7 +2254,7 @@ Assembler::writePoolHeader(uint8 *start, Pool *p, bool isNatural)
 
 
 void
-Assembler::writePoolFooter(uint8 *start, Pool *p, bool isNatural)
+Assembler::writePoolFooter(uint8_t *start, Pool *p, bool isNatural)
 {
     return;
 }
@@ -2258,10 +2262,10 @@ Assembler::writePoolFooter(uint8 *start, Pool *p, bool isNatural)
 // The size of an arbitrary 32-bit call in the instruction stream.
 // On ARM this sequence is |pc = ldr pc - 4; imm32| given that we
 // never reach the imm32.
-uint32
+uint32_t
 Assembler::patchWrite_NearCallSize()
 {
-    return sizeof(uint32);
+    return sizeof(uint32_t);
 }
 void
 Assembler::patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall)
@@ -2270,8 +2274,8 @@ Assembler::patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall
     // Overwrite whatever instruction used to be here with a call.
     // Since the destination is in the same function, it will be within range of the 24<<2 byte
     // bl instruction.
-    uint8 *dest = toCall.raw();
-    new (inst) InstBLImm(BOffImm(dest - (uint8*)inst) , Always);
+    uint8_t *dest = toCall.raw();
+    new (inst) InstBLImm(BOffImm(dest - (uint8_t*)inst) , Always);
     // Ensure everyone sees the code that was just written into memory.
 
     AutoFlushCache::updateTop(uintptr_t(inst), 4);
@@ -2284,8 +2288,8 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, Im
     InstructionIterator iter(ptr);
     Register dest;
     Assembler::RelocStyle rs;
-    const uint32 *val = getPtr32Target(&iter, &dest, &rs);
-    JS_ASSERT((uint32)val == expectedValue.value);
+    const uint32_t *val = getPtr32Target(&iter, &dest, &rs);
+    JS_ASSERT((uint32_t)val == expectedValue.value);
     reinterpret_cast<MacroAssemblerARM*>(dummy)->ma_movPatchable(Imm32(newValue.value), dest, Always, rs, ptr);
 
     AutoFlushCache::updateTop(uintptr_t(ptr), 4);
@@ -2300,23 +2304,24 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, Im
 void
 Assembler::patchWrite_Imm32(CodeLocationLabel label, Imm32 imm) {
     // Raw is going to be the return address.
-    uint32 *raw = (uint32*)label.raw();
+    uint32_t *raw = (uint32_t*)label.raw();
     // Overwrite the 4 bytes before the return address, which will
     // end up being the call instruction.
     *(raw-1) = imm.value;
 }
 
 
-uint8 *
-Assembler::nextInstruction(uint8 *inst_, uint32 *count)
+uint8_t *
+Assembler::nextInstruction(uint8_t *inst_, uint32_t *count)
 {
     Instruction *inst = reinterpret_cast<Instruction*>(inst_);
     if (count != NULL)
         *count += sizeof(Instruction);
-    return reinterpret_cast<uint8*>(inst->next());
+    return reinterpret_cast<uint8_t*>(inst->next());
 }
 
-bool instIsGuard(Instruction *inst, const PoolHeader **ph)
+static bool
+InstIsGuard(Instruction *inst, const PoolHeader **ph)
 {
     Assembler::Condition c;
     inst->extractCond(&c);
@@ -2329,7 +2334,8 @@ bool instIsGuard(Instruction *inst, const PoolHeader **ph)
     return *ph != NULL;
 }
 
-bool instIsBNop(Instruction *inst) {
+static bool
+InstIsBNop(Instruction *inst) {
     // In some special situations, it is necessary to insert a NOP
     // into the instruction stream that nobody knows about, since nobody should know about
     // it, make sure it gets skipped when Instruction::next() is called.
@@ -2346,9 +2352,10 @@ bool instIsBNop(Instruction *inst) {
     return offset.decode() == 4;
 }
 
-bool instIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
+static bool
+InstIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
 {
-    if (!instIsGuard(inst, ph))
+    if (!InstIsGuard(inst, ph))
         return false;
     return !(*ph)->isNatural();
 }
@@ -2391,11 +2398,11 @@ Instruction::next()
     const PoolHeader *ph;
     // If this is a guard, and the next instruction is a header, always work around the pool
     // If it isn't a guard, then start looking ahead.
-    if (instIsGuard(this, &ph))
+    if (InstIsGuard(this, &ph))
         return ret + ph->size();
-    if (instIsArtificialGuard(ret, &ph))
+    if (InstIsArtificialGuard(ret, &ph))
         return ret + 1 + ph->size();
-    if (instIsBNop(ret))
+    if (InstIsBNop(ret))
         return ret + 1;
     return ret;
 }
@@ -2403,7 +2410,7 @@ Instruction::next()
 void
 Assembler::ToggleToJmp(CodeLocationLabel inst_)
 {
-    uint32 *ptr = (uint32 *)inst_.raw();
+    uint32_t *ptr = (uint32_t *)inst_.raw();
 
     DebugOnly<Instruction *> inst = (Instruction *)inst_.raw();
     JS_ASSERT(inst->is<InstCMP>());
@@ -2417,7 +2424,7 @@ Assembler::ToggleToJmp(CodeLocationLabel inst_)
 void
 Assembler::ToggleToCmp(CodeLocationLabel inst_)
 {
-    uint32 *ptr = (uint32 *)inst_.raw();
+    uint32_t *ptr = (uint32_t *)inst_.raw();
 
     DebugOnly<Instruction *> inst = (Instruction *)inst_.raw();
     JS_ASSERT(inst->is<InstBImm>());
@@ -2442,7 +2449,7 @@ AutoFlushCache::update(uintptr_t newStart, size_t len)
 {
     uintptr_t newStop = newStart + len;
     used_ = true;
-    if (start_ == NULL) {
+    if (!start_) {
         IonSpewCont(IonSpew_CacheFlush,  ".");
         start_ = newStart;
         stop_ = newStop;
@@ -2484,7 +2491,7 @@ AutoFlushCache::flushAnyway()
     if (!used_)
         return;
 
-    if (start_ != NULL) {
+    if (start_) {
         JSC::ExecutableAllocator::cacheFlush((void*)start_, (size_t)(stop_ - start_ + sizeof(Instruction)));
     } else {
         JSC::ExecutableAllocator::cacheFlush(NULL, 0xff000000);

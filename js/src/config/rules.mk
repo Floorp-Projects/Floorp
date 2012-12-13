@@ -1167,14 +1167,14 @@ $(foreach namespace,$(EXPORTS_NAMESPACES),$(eval $(EXPORT_NAMESPACE_RULE)))
 ################################################################################
 # Copy each element of PREF_JS_EXPORTS
 
-ifdef GRE_MODULE
-PREF_DIR = greprefs
-else
-ifneq (,$(XPI_NAME)$(LIBXUL_SDK)$(MOZ_PHOENIX))
-PREF_DIR = defaults/preferences
-else
+# The default location for PREF_JS_EXPORTS is the gre prefs directory.
 PREF_DIR = defaults/pref
-endif
+
+# If DIST_SUBDIR is defined it indicates that app and gre dirs are
+# different and that we are building app related resources. Hence,
+# PREF_DIR should point to the app prefs location.
+ifneq (,$(DIST_SUBDIR)$(XPI_NAME)$(LIBXUL_SDK))
+PREF_DIR = defaults/preferences
 endif
 
 ifneq ($(PREF_JS_EXPORTS),)
@@ -1544,7 +1544,7 @@ define install_file_template
 $(or $(3),libs):: $(2)/$(notdir $(1))
 $(call install_cmd_override,$(2)/$(notdir $(1)))
 $(2)/$(notdir $(1)): $(1) $$(call mkdir_deps,$(2))
-	$$(call install_cmd,$(4) $$< $${@D})
+	$$(call install_cmd,$(4) "$$<" "$${@D}")
 endef
 $(foreach category,$(INSTALL_TARGETS),\
   $(if $($(category)_DEST),,$(error Missing $(category)_DEST))\
@@ -1591,8 +1591,8 @@ $(foreach category,$(INSTALL_TARGETS),\
 #                                  makefile_target, extra_flags)
 define preprocess_file_template
 $(2): $(1) $$(call mkdir_deps,$(dir $(2))) $$(GLOBAL_DEPS)
-	$$(RM) $$@
-	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(4) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) $$< > $$@
+	$$(RM) "$$@"
+	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(4) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) "$$<" > "$$@"
 $(3):: $(2)
 endef
 

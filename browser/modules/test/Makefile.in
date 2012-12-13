@@ -8,6 +8,10 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 
+DIRS = \
+	chrome \
+	$(NULL)
+
 include $(DEPTH)/config/autoconf.mk
 
 XPCSHELL_TESTS = unit

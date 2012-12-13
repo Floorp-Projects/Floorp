@@ -272,17 +272,30 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   bool changedSize = curBounds.Size() != newBounds.Size();
 
   // Child views are never attached to top level widgets, this is safe.
+
+  // Coordinates are converted to display pixels for window Move/Resize APIs,
+  // because of the potential for device-pixel coordinate spaces for mixed
+  // hidpi/lodpi screens to overlap each other and result in bad placement
+  // (bug 814434).
+  nsRefPtr<nsDeviceContext> dx;
+  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  double invScale = dx->UnscaledAppUnitsPerDevPixel() / 60.0;
+
   if (changedPos) {
     if (changedSize && !aMoveOnly) {
-      mWindow->ResizeClient(newBounds.x, newBounds.y,
-                            newBounds.width, newBounds.height,
+      mWindow->ResizeClient(newBounds.x * invScale,
+                            newBounds.y * invScale,
+                            newBounds.width * invScale,
+                            newBounds.height * invScale,
                             aInvalidateChangedSize);
     } else {
-      mWindow->MoveClient(newBounds.x, newBounds.y);
+      mWindow->MoveClient(newBounds.x * invScale,
+                          newBounds.y * invScale);
     }
   } else {
     if (changedSize && !aMoveOnly) {
-      mWindow->ResizeClient(newBounds.width, newBounds.height,
+      mWindow->ResizeClient(newBounds.width * invScale,
+                            newBounds.height * invScale,
                             aInvalidateChangedSize);
     } // else do nothing!
   }

@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "prlog.h"
-#include "prmem.h"
 #include "prdtoa.h"
 #include "AudioStream.h"
 #include "nsAlgorithm.h"
@@ -167,6 +166,8 @@ static sa_stream_type_t ConvertChannelToSAType(dom::AudioChannelType aType)
       return SA_STREAM_TYPE_ALARM;
     case dom::AUDIO_CHANNEL_TELEPHONY:
       return SA_STREAM_TYPE_VOICE_CALL;
+    case dom::AUDIO_CHANNEL_RINGER:
+      return SA_STREAM_TYPE_RING;
     case dom::AUDIO_CHANNEL_PUBLICNOTIFICATION:
       return SA_STREAM_TYPE_ENFORCED_AUDIBLE;
     default:
@@ -1049,6 +1050,7 @@ AudioClock::AudioClock(AudioStream* aStream)
   mBasePosition(0),
   mBaseOffset(0),
   mOldBaseOffset(0),
+  mOldBasePosition(0),
   mPlaybackRateChangeOffset(0),
   mPreviousPosition(0),
   mWritten(0),
@@ -1064,6 +1066,7 @@ void AudioClock::Init()
   mOutRate = mAudioStream->GetRate();
   mInRate = mAudioStream->GetRate();
   mPlaybackRate = 1.0;
+  mOldOutRate = mOutRate;
 }
 
 void AudioClock::UpdateWritePosition(uint32_t aCount)

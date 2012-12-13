@@ -84,7 +84,7 @@ public:
   NS_DECL_NSIGSETTINGSCOLLECTION
 
   nsGSettingsCollection(GSettings* aSettings) : mSettings(aSettings),
-                                                mKeys(NULL) {};
+                                                mKeys(NULL) {}
   ~nsGSettingsCollection();
 
 private:

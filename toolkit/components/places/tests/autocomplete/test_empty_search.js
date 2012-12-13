@@ -31,7 +31,7 @@ addPageBook(4, 0, 0); // bookmark
 addPageBook(5, 0, 0); // bookmark typed
 
 // Set some pages as typed
-markTyped([2,3,5]);
+markTyped([2,3,5], 0);
 // Remove pages from history to treat them as unvisited
 removePages([4,5]);
 

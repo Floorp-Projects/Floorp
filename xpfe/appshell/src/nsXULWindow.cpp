@@ -55,6 +55,8 @@
 #include "prenv.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 
@@ -532,7 +534,9 @@ NS_IMETHODIMP nsXULWindow::SetPosition(int32_t aX, int32_t aY)
 {
   // Don't reset the window's size mode here - platforms that don't want to move
   // maximized windows should reset it in their respective Move implementation.
-  NS_ENSURE_SUCCESS(mWindow->Move(aX, aY), NS_ERROR_FAILURE);
+  double invScale = 1.0 / mWindow->GetDefaultScale();
+  nsresult rv = mWindow->Move(aX * invScale, aY * invScale);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
     // window at this position. We don't persist this one-time position.
@@ -558,7 +562,9 @@ NS_IMETHODIMP nsXULWindow::SetSize(int32_t aCX, int32_t aCY, bool aRepaint)
 
   mIntrinsicallySized = false;
 
-  NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
+  double invScale = 1.0 / mWindow->GetDefaultScale();
+  nsresult rv = mWindow->Resize(aCX * invScale, aCY * invScale, aRepaint);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
     // window at this size & in the normal size mode (since it is the only mode
@@ -588,7 +594,11 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(int32_t aX, int32_t aY,
 
   mIntrinsicallySized = false;
 
-  NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), NS_ERROR_FAILURE);
+  double invScale = 1.0 / mWindow->GetDefaultScale();
+  nsresult rv = mWindow->Resize(aX * invScale, aY * invScale,
+                                aCX * invScale, aCY * invScale,
+                                aRepaint);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
     // window at this size and position. We don't persist this one-time setting.
@@ -1338,8 +1348,8 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
           listY = NSToIntRound(listY / scale);
         }
 
-        if (NS_ABS(listX - aRequestedX) <= kSlop &&
-            NS_ABS(listY - aRequestedY) <= kSlop) {
+        if (std::abs(listX - aRequestedX) <= kSlop &&
+            std::abs(listY - aRequestedY) <= kSlop) {
           // collision! offset and start over
           if (bouncedX & 0x1)
             aRequestedX -= kOffset;

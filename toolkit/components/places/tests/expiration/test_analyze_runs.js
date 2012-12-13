@@ -52,86 +52,19 @@ function do_check_analyze_ran(aTableName, aRan)
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
-function test_timed()
-{
-  clearAnalyzeData();
-
-  let observer = function(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(observer,
-                                PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-    setInterval(3600);
-    do_check_analyze_ran("moz_places", false);
-    do_check_analyze_ran("moz_bookmarks", false);
-    do_check_analyze_ran("moz_historyvisits", false);
-    do_check_analyze_ran("moz_inputhistory", true);
-    run_next_test();
-  };
-
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED,
-                           false);
-  // Set a low interval and wait for the timed expiration to start.
-  setInterval(3);
-}
-
-function test_debug()
-{
-  clearAnalyzeData();
-
-  let observer = function(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(observer,
-                                PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-    do_check_analyze_ran("moz_places", true);
-    do_check_analyze_ran("moz_bookmarks", true);
-    do_check_analyze_ran("moz_historyvisits", true);
-    do_check_analyze_ran("moz_inputhistory", true);
-    run_next_test();
-  };
-
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED,
-                           false);
-  force_expiration_step(1);
-}
-
-function test_clear_history()
-{
-  clearAnalyzeData();
-
-  let observer = function(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(observer,
-                                PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-    do_check_analyze_ran("moz_places", true);
-    do_check_analyze_ran("moz_bookmarks", false);
-    do_check_analyze_ran("moz_historyvisits", true);
-    do_check_analyze_ran("moz_inputhistory", true);
-    run_next_test();
-  };
-
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED,
-                           false);
-  let listener = Cc["@mozilla.org/places/expiration;1"].
-                 getService(Ci.nsINavHistoryObserver);
-  listener.onClearHistory();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// Test Harness
-
-[
-  test_timed,
-  test_debug,
-  test_clear_history,
-].forEach(add_test);
-
 function run_test()
+{
+  run_next_test();
+}
+
+add_task(function init_tests()
 {
   const TEST_URI = NetUtil.newURI("http://mozilla.org/");
   const TEST_TITLE = "This is a test";
   let bs = PlacesUtils.bookmarks;
   bs.insertBookmark(PlacesUtils.unfiledBookmarksFolderId, TEST_URI,
                     bs.DEFAULT_INDEX, TEST_TITLE);
-  let hs = PlacesUtils.history;
-  hs.addVisit(TEST_URI, Date.now() * 1000, null, hs.TRANSITION_TYPED, false, 0);
-
+  yield promiseAddVisits(TEST_URI);
   let thing = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput,
                                            Ci.nsIAutoCompletePopup,
@@ -145,6 +78,48 @@ function run_test()
   };
   Services.obs.notifyObservers(thing, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING,
                                null);
+});
 
-  run_next_test();
-}
+add_task(function test_timed()
+{
+  clearAnalyzeData();
+
+  // Set a low interval and wait for the timed expiration to start.
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  setInterval(3);
+  yield promise;
+  setInterval(3600);
+
+  do_check_analyze_ran("moz_places", false);
+  do_check_analyze_ran("moz_bookmarks", false);
+  do_check_analyze_ran("moz_historyvisits", false);
+  do_check_analyze_ran("moz_inputhistory", true);
+});
+
+add_task(function test_debug()
+{
+  clearAnalyzeData();
+
+  yield promiseForceExpirationStep(1);
+
+  do_check_analyze_ran("moz_places", true);
+  do_check_analyze_ran("moz_bookmarks", true);
+  do_check_analyze_ran("moz_historyvisits", true);
+  do_check_analyze_ran("moz_inputhistory", true);
+});
+
+add_task(function test_clear_history()
+{
+  clearAnalyzeData();
+
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  let listener = Cc["@mozilla.org/places/expiration;1"]
+                 .getService(Ci.nsINavHistoryObserver);
+  listener.onClearHistory();
+  yield promise;
+
+  do_check_analyze_ran("moz_places", true);
+  do_check_analyze_ran("moz_bookmarks", false);
+  do_check_analyze_ran("moz_historyvisits", true);
+  do_check_analyze_ran("moz_inputhistory", true);
+});

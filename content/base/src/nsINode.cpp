@@ -2198,6 +2198,16 @@ ParseSelectorList(nsINode* aNode,
   return NS_OK;
 }
 
+static void
+AddScopeElements(TreeMatchContext& aMatchContext,
+                 nsINode* aMatchContextNode)
+{
+  if (aMatchContextNode->IsElement()) {
+    aMatchContext.SetHasSpecifiedScope();
+    aMatchContext.AddScopeElement(aMatchContextNode->AsElement());
+  }
+}
+
 // Actually find elements matching aSelectorList (which must not be
 // null) and which are descendants of aRoot and put them in aList.  If
 // onlyFirstMatch, then stop once the first one is found.
@@ -2218,6 +2228,7 @@ FindMatchingElements(nsINode* aRoot, const nsAString& aSelector, T &aList)
   TreeMatchContext matchingContext(false, nsRuleWalker::eRelevantLinkUnvisited,
                                    doc, TreeMatchContext::eNeverMatchVisited);
   doc->FlushPendingLinkUpdates();
+  AddScopeElements(matchingContext, aRoot);
 
   // Fast-path selectors involving IDs.  We can only do this if aRoot
   // is in the document and the document is not in quirks mode, since

@@ -122,6 +122,75 @@ add_test(function test_write_dialling_number() {
 });
 
 /**
+ * Verify GsmPDUHelper.writeTimestamp
+ */
+add_test(function test_write_timestamp() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+
+  // current date
+  let dateInput = new Date();
+  let dateOutput = new Date();
+  helper.writeTimestamp(dateInput);
+  dateOutput.setTime(helper.readTimestamp());
+
+  do_check_eq(dateInput.getFullYear(), dateOutput.getFullYear());
+  do_check_eq(dateInput.getMonth(), dateOutput.getMonth());
+  do_check_eq(dateInput.getDate(), dateOutput.getDate());
+  do_check_eq(dateInput.getHours(), dateOutput.getHours());
+  do_check_eq(dateInput.getMinutes(), dateOutput.getMinutes());
+  do_check_eq(dateInput.getSeconds(), dateOutput.getSeconds());
+  do_check_eq(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
+
+  // 2034-01-23 12:34:56 -0800 GMT
+  let time = Date.UTC(2034, 1, 23, 12, 34, 56);
+  time = time - (8 * 60 * 60 * 1000);
+  dateInput.setTime(time);
+  helper.writeTimestamp(dateInput);
+  dateOutput.setTime(helper.readTimestamp());
+
+  do_check_eq(dateInput.getFullYear(), dateOutput.getFullYear());
+  do_check_eq(dateInput.getMonth(), dateOutput.getMonth());
+  do_check_eq(dateInput.getDate(), dateOutput.getDate());
+  do_check_eq(dateInput.getHours(), dateOutput.getHours());
+  do_check_eq(dateInput.getMinutes(), dateOutput.getMinutes());
+  do_check_eq(dateInput.getSeconds(), dateOutput.getSeconds());
+  do_check_eq(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
+
+  run_next_test();
+});
+
+/**
+ * Verify GsmPDUHelper.octectToBCD and GsmPDUHelper.BCDToOctet
+ */
+add_test(function test_octect_BCD() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+
+  // 23
+  let number = 23;
+  let octet = helper.BCDToOctet(number);
+  do_check_eq(helper.octetToBCD(octet), number);
+
+  // 56
+  number = 56;
+  octet = helper.BCDToOctet(number);
+  do_check_eq(helper.octetToBCD(octet), number);
+
+  // 0x23
+  octet = 0x23;
+  number = helper.octetToBCD(octet);
+  do_check_eq(helper.BCDToOctet(number), octet);
+
+  // 0x56
+  octet = 0x56;
+  number = helper.octetToBCD(octet);
+  do_check_eq(helper.BCDToOctet(number), octet);
+
+  run_next_test();
+});
+
+/**
  * Verify RIL.isICCServiceAvailable.
  */
 add_test(function test_is_icc_service_available() {
@@ -436,6 +505,37 @@ add_test(function test_stk_proactive_command_poll_interval() {
   run_next_test();
 });
 
+/**
+ * Verify Proactive Command: Display Text
+ */
+add_test(function test_read_septets_to_string() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let display_text_1 = [
+    0xd0,
+    0x28,
+    0x81, 0x03, 0x01, 0x21, 0x80,
+    0x82, 0x02, 0x81, 0x02,
+    0x0d, 0x1d, 0x00, 0xd3, 0x30, 0x9b, 0xfc, 0x06, 0xc9, 0x5c, 0x30, 0x1a,
+    0xa8, 0xe8, 0x02, 0x59, 0xc3, 0xec, 0x34, 0xb9, 0xac, 0x07, 0xc9, 0x60,
+    0x2f, 0x58, 0xed, 0x15, 0x9b, 0xb9, 0x40,
+  ];
+
+  for (let i = 0; i < display_text_1.length; i++) {
+    pduHelper.writeHexOctet(display_text_1[i]);
+  }
+
+  let berTlv = berHelper.decode(display_text_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
+  do_check_eq(tlv.value.textString, "Saldo 2.04 E. Validez 20/05/13. ");
+
+  run_next_test();
+});
+
 add_test(function test_stk_proactive_command_event_list() {
   let worker = newUint8Worker();
   let pduHelper = worker.GsmPDUHelper;
@@ -517,12 +617,13 @@ add_test(function test_spn_display_condition() {
   }
 
   testDisplayConditions(testDisplayCondition, [
-    [1, 123, 456, 123, 456, true, false],
-    [0, 123, 456, 123, 456, false, false],
+    [1, 123, 456, 123, 456, true, true],
+    [0, 123, 456, 123, 456, false, true],
     [2, 123, 456, 123, 457, false, false],
     [0, 123, 456, 123, 457, false, true],
   ], run_next_test);
 });
+
 /**
  * Verify Proactive Command : More Time
  */
@@ -548,6 +649,191 @@ add_test(function test_stk_proactive_command_more_time() {
   do_check_eq(tlv.value.commandNumber, 0x01);
   do_check_eq(tlv.value.typeOfCommand, STK_CMD_MORE_TIME);
   do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  run_next_test();
+});
+
+add_test(function read_network_name() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let buf = worker.Buf;
+
+  // Returning length of byte.
+  function writeNetworkName(isUCS2, requireCi, name) {
+    let codingOctet = 0x80;
+    let len;
+    if (requireCi) {
+      codingOctet |= 0x08;
+    }
+
+    if (isUCS2) {
+      codingOctet |= 0x10;
+      len = name.length * 2;
+    } else {
+      let spare = (8 - (name.length * 7) % 8) % 8;
+      codingOctet |= spare;
+      len = Math.ceil(name.length * 7 / 8);
+    }
+    helper.writeHexOctet(codingOctet);
+
+    if (isUCS2) {
+      helper.writeUCS2String(name);
+    } else {
+      helper.writeStringAsSeptets(name, 0, 0, 0);
+    }
+
+    return len + 1; // codingOctet.
+  }
+
+  function testNetworkName(isUCS2, requireCi, name) {
+    let len = writeNetworkName(isUCS2, requireCi, name);
+    do_check_eq(helper.readNetworkName(len), name);
+  }
+
+  testNetworkName( true,  true, "Test Network Name1");
+  testNetworkName( true, false, "Test Network Name2");
+  testNetworkName(false,  true, "Test Network Name3");
+  testNetworkName(false, false, "Test Network Name4");
+
+  run_next_test();
+});
+
+add_test(function test_update_network_name() {
+  let RIL = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+      // Do nothing
+    },
+    postMessage: function fakePostMessage(message) {
+      // Do nothing
+    }
+  }).RIL;
+
+  function testNetworkNameIsNull(operatorMcc, operatorMnc) {
+    RIL.operator.mcc = operatorMcc;
+    RIL.operator.mnc = operatorMnc;
+    do_check_eq(RIL.updateNetworkName(), null);
+  }
+
+  function testNetworkName(operatorMcc, operatorMnc,
+                            expectedLongName, expectedShortName) {
+    RIL.operator.mcc = operatorMcc;
+    RIL.operator.mnc = operatorMnc;
+    let result = RIL.updateNetworkName();
+
+    do_check_eq(result[0], expectedLongName);
+    do_check_eq(result[1], expectedShortName);
+  }
+
+  // Before EF_OPL and EF_PNN have been loaded.
+  do_check_eq(RIL.updateNetworkName(), null);
+
+  // Set HPLMN
+  RIL.iccInfo.mcc = 123;
+  RIL.iccInfo.mnc = 456;
+
+  RIL.voiceRegistrationState = {
+    cell: {
+      gsmLocationAreaCode: 0x1000
+    }
+  };
+  RIL.operator = {};
+
+  // Set EF_PNN
+  RIL.iccInfoPrivate = {
+    PNN: [
+      {"fullName": "PNN1Long", "shortName": "PNN1Short"},
+      {"fullName": "PNN2Long", "shortName": "PNN2Short"},
+      {"fullName": "PNN3Long", "shortName": "PNN3Short"},
+      {"fullName": "PNN4Long", "shortName": "PNN4Short"}
+    ]
+  };
+
+  // EF_OPL isn't available and current isn't in HPLMN,
+  testNetworkNameIsNull(123, 457);
+
+  // EF_OPL isn't available and current is in HPLMN,
+  // the first record of PNN should be returned.
+  testNetworkName(123, 456, "PNN1Long", "PNN1Short");
+
+  // Set EF_OPL
+  RIL.iccInfoPrivate.OPL = [
+    {
+      "mcc": 123,
+      "mnc": 456,
+      "lacTacStart": 0,
+      "lacTacEnd": 0xFFFE,
+      "pnnRecordId": 4
+    },
+    {
+      "mcc": 123,
+      "mnc": 457,
+      "lacTacStart": 0,
+      "lacTacEnd": 0x0010,
+      "pnnRecordId": 3
+    },
+    {
+      "mcc": 123,
+      "mnc": 457,
+      "lacTacStart": 0,
+      "lacTacEnd": 0x1010,
+      "pnnRecordId": 2
+    }
+  ];
+
+  // Both EF_PNN and EF_OPL are presented, and current PLMN is HPLMN,
+  testNetworkName(123, 456, "PNN4Long", "PNN4Short");
+
+  // Current PLMN is not HPLMN, and according to LAC, we should get
+  // the second PNN record.
+  testNetworkName(123, 457, "PNN2Long", "PNN2Short");
+
+  run_next_test();
+});
+
+/**
+ * Verify Proactive Command : Provide Local Information
+ */
+add_test(function test_stk_proactive_command_provide_local_information() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  // Verify IMEI
+  let local_info_1 = [
+    0xD0,
+    0x09,
+    0x81, 0x03, 0x01, 0x26, 0x01,
+    0x82, 0x02, 0x81, 0x82];
+
+  for (let i = 0; i < local_info_1.length; i++) {
+    pduHelper.writeHexOctet(local_info_1[i]);
+  }
+
+  let berTlv = berHelper.decode(local_info_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_PROVIDE_LOCAL_INFO);
+  do_check_eq(tlv.value.commandQualifier, STK_LOCAL_INFO_IMEI);
+
+  // Verify Date and Time Zone
+  let local_info_2 = [
+    0xD0,
+    0x09,
+    0x81, 0x03, 0x01, 0x26, 0x03,
+    0x82, 0x02, 0x81, 0x82];
+
+  for (let i = 0; i < local_info_2.length; i++) {
+    pduHelper.writeHexOctet(local_info_2[i]);
+  }
+
+  berTlv = berHelper.decode(local_info_2.length);
+  ctlvs = berTlv.value;
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_PROVIDE_LOCAL_INFO);
+  do_check_eq(tlv.value.commandQualifier, STK_LOCAL_INFO_DATE_TIME_ZONE);
 
   run_next_test();
 });

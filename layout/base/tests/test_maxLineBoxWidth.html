@@ -28,6 +28,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780258
     width: 200px;
     border: 1px solid blue;
   }
+
+  #constrained {
+    display: none;
+    border: 1px solid red;
+    height: 200px;
+    width: 300px;
+  }
   </style>
 </head>
 <body>
@@ -52,6 +59,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780258
     <p>You are what you are.
        You dream what you dream.
        Play on your blue guitar for me.
+  </div>
+  <div id="constrained">
+    <p>This text should not apply the max line box width, since it exists within a constrained height block. This is used for limiting the reflow-on-zoom feature for constrained height blocks, since otherwise they could overflow into an element later in the document, or potentially have their text cut off vertically.
   </div>
 </div>
 <pre id="test">
@@ -134,6 +144,29 @@ function performSecondTest() {
      " a max line box width of 200px should be the same with a 100px left padding");
 }
 
+function setupThirdTest() {
+  document.getElementById('container').style.display = 'none';
+  document.getElementById('box').style.display = 'none';
+  document.getElementById('constrained').style.display = 'block';
+}
+
+function performThirdTest() {
+  setupThirdTest();
+
+  // Take a snapshot of what the content looks like before.
+  gCorrectContentSnap = snapshotWindow(window);
+
+  // Apply a max line box width.
+  SpecialPowers.setMaxLineBoxWidth(window, 200);
+
+  // Take another snapshot.
+  gNarrowerContentSnap = snapshotWindow(window);
+
+  // Verify the max line box width change hasn't changed anything.
+  result = compareSnapshots(gNarrowerContentSnap, gCorrectContentSnap, true);
+  ok(result[0], "constrained height elements should not be subjected to max line box width adjustments"); 
+}
+
 SimpleTest.waitForExplicitFinish();
 
 // The first test verifies that the max line box width
@@ -144,6 +177,10 @@ performFirstTest();
 // is actually measuring width, and not position of
 // the left/right edges of the line box.
 performSecondTest();
+
+// The third test verifies that the max line box width
+// does not have any effect on constrained height elements.
+performThirdTest();
 
 // Finish the test.
 SimpleTest.finish();

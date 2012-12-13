@@ -20,6 +20,8 @@
 #include "MediaResource.h"
 #include "nsError.h"
 #include "mozilla/Preferences.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -561,11 +563,11 @@ nsresult MediaDecoder::Seek(double aTime)
         NS_ENSURE_SUCCESS(res, NS_OK);
         res = seekable.Start(range + 1, &rightBound);
         NS_ENSURE_SUCCESS(res, NS_OK);
-        double distanceLeft = NS_ABS(leftBound - aTime);
-        double distanceRight = NS_ABS(rightBound - aTime);
+        double distanceLeft = std::abs(leftBound - aTime);
+        double distanceRight = std::abs(rightBound - aTime);
         if (distanceLeft == distanceRight) {
-          distanceLeft = NS_ABS(leftBound - mCurrentTime);
-          distanceRight = NS_ABS(rightBound - mCurrentTime);
+          distanceLeft = std::abs(leftBound - mCurrentTime);
+          distanceRight = std::abs(rightBound - mCurrentTime);
         } 
         aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
       } else {
@@ -1238,13 +1240,8 @@ nsresult MediaDecoder::GetSeekable(nsTimeRanges* aSeekable)
   // server supports range requests, etc.)
   if (!IsMediaSeekable()) {
     return NS_OK;
-  } else if (!IsTransportSeekable()){
-    if (mDecoderStateMachine &&
-        mDecoderStateMachine->IsSeekableInBufferedRanges()) {
-      return GetBuffered(aSeekable);
-    } else {
-      return NS_OK;
-    }
+  } else if (!IsTransportSeekable()) {
+    return GetBuffered(aSeekable);
   } else {
     double end = IsInfinite() ? std::numeric_limits<double>::infinity()
                               : initialTime + GetDuration();

@@ -855,7 +855,17 @@ public:
       aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
     }
   }
-  
+
+  /**
+   * Called when the area rendered by this display item has changed (been
+   * invalidated or changed geometry) since the last paint. This includes
+   * when the display item was not rendered at all in the last paint.
+   * It does NOT get called when a display item was being rendered and no
+   * longer is, because generally that means there is no display item to
+   * call this method on.
+   */
+  virtual void NotifyRenderingChanged() {}
+
   /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
    * region would be snapped to device pixels when drawing
@@ -1960,6 +1970,7 @@ public:
   nsDisplayBoxShadowOuter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBoxShadowOuter);
+    mBounds = GetBoundsInternal();
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayBoxShadowOuter() {
@@ -1989,8 +2000,11 @@ public:
     }
   }
 
+  nsRect GetBoundsInternal();
+
 private:
   nsRegion mVisibleRegion;
+  nsRect mBounds;
 };
 
 /**
@@ -2800,6 +2814,29 @@ public:
    */
   static nsRect GetFrameBoundsForTransform(const nsIFrame* aFrame);
 
+  struct FrameTransformProperties
+  {
+    FrameTransformProperties(const nsIFrame* aFrame,
+                             float aAppUnitsPerPixel,
+                             const nsRect* aBoundsOverride);
+    FrameTransformProperties(const nsCSSValueList* aTransformList,
+                             const gfxPoint3D& aToMozOrigin,
+                             const gfxPoint3D& aToPerspectiveOrigin,
+                             nscoord aChildPerspective)
+      : mFrame(nullptr)
+      , mTransformList(aTransformList)
+      , mToMozOrigin(aToMozOrigin)
+      , mToPerspectiveOrigin(aToPerspectiveOrigin)
+      , mChildPerspective(aChildPerspective)
+    {}
+
+    const nsIFrame* mFrame;
+    const nsCSSValueList* mTransformList;
+    const gfxPoint3D mToMozOrigin;
+    const gfxPoint3D mToPerspectiveOrigin;
+    nscoord mChildPerspective;
+  };
+
   /**
    * Given a frame with the -moz-transform property or an SVG transform,
    * returns the transformation matrix for that frame.
@@ -2817,10 +2854,11 @@ public:
                                                  const nsPoint& aOrigin,
                                                  float aAppUnitsPerPixel,
                                                  const nsRect* aBoundsOverride = nullptr,
-                                                 const nsCSSValueList* aTransformOverride = nullptr,
-                                                 gfxPoint3D* aToMozOrigin = nullptr,
-                                                 gfxPoint3D* aToPerspectiveOrigin = nullptr,
-                                                 nscoord* aChildPerspective = nullptr,
+                                                 nsIFrame** aOutAncestor = nullptr);
+  static gfx3DMatrix GetResultingTransformMatrix(const FrameTransformProperties& aProperties,
+                                                 const nsPoint& aOrigin,
+                                                 float aAppUnitsPerPixel,
+                                                 const nsRect* aBoundsOverride = nullptr,
                                                  nsIFrame** aOutAncestor = nullptr);
   /**
    * Return true when we should try to prerender the entire contents of the
@@ -2832,14 +2870,10 @@ public:
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
 private:
-  static gfx3DMatrix GetResultingTransformMatrixInternal(const nsIFrame* aFrame,
+  static gfx3DMatrix GetResultingTransformMatrixInternal(const FrameTransformProperties& aProperties,
                                                          const nsPoint& aOrigin,
                                                          float aAppUnitsPerPixel,
                                                          const nsRect* aBoundsOverride,
-                                                         const nsCSSValueList* aTransformOverride,
-                                                         gfxPoint3D* aToMozOrigin,
-                                                         gfxPoint3D* aToPerspectiveOrigin,
-                                                         nscoord* aChildPerspective,
                                                          nsIFrame** aOutAncestor);
 
   nsDisplayWrapList mStoredList;

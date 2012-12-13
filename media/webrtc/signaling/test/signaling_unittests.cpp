@@ -297,20 +297,20 @@ TestObserver::OnAddStream(nsIDOMMediaStream *stream, const char *type)
 
   nsDOMMediaStream *ms = static_cast<nsDOMMediaStream *>(stream);
 
-  cout << "OnAddStream called hints=" << ms->GetHintContents() << endl;
-  state = stateSuccess;
+  cout << "OnAddStream called hints=" << ms->GetHintContents() << " type=" << type << " thread=" <<
+    PR_GetCurrentThread() << endl ;
+
   onAddStreamCalled = true;
+
+  streams.push_back(ms);
 
   // We know that the media stream is secretly a Fake_SourceMediaStream,
   // so now we can start it pulling from us
   Fake_SourceMediaStream *fs = static_cast<Fake_SourceMediaStream *>(ms->GetStream());
 
-  nsresult ret;
   test_utils->sts_target()->Dispatch(
-    WrapRunnableRet(fs, &Fake_SourceMediaStream::Start, &ret),
-    NS_DISPATCH_SYNC);
-
-  streams.push_back(ms);
+    WrapRunnable(fs, &Fake_SourceMediaStream::Start),
+    NS_DISPATCH_NORMAL);
 
   return NS_OK;
 }
@@ -475,14 +475,15 @@ class ParsedSDP {
 
 class SignalingAgent {
  public:
-  SignalingAgent() {
-    Init();
-  }
+  SignalingAgent() : pc(nullptr) {}
+
   ~SignalingAgent() {
-    Close();
+    pc->GetMainThread()->Dispatch(
+      WrapRunnable(this, &SignalingAgent::Close),
+      NS_DISPATCH_SYNC);
   }
 
-  void Init()
+  void Init(nsCOMPtr<nsIThread> thread)
   {
     size_t found = 2;
     ASSERT_TRUE(found > 0);
@@ -493,7 +494,7 @@ class SignalingAgent {
     pObserver = new TestObserver(pc);
     ASSERT_TRUE(pObserver);
 
-    ASSERT_EQ(pc->Initialize(pObserver, nullptr, nullptr), NS_OK);
+    ASSERT_EQ(pc->Initialize(pObserver, nullptr, thread), NS_OK);
 
     ASSERT_TRUE_WAIT(sipcc_state() == sipcc::PeerConnectionImpl::kStarted,
                      kDefaultTimeout);
@@ -520,7 +521,10 @@ class SignalingAgent {
   void Close()
   {
     cout << "Close" << endl;
+
     pc->Close(false);
+    pc = nullptr;
+
     // Shutdown is synchronous evidently.
     // ASSERT_TRUE(pObserver->WaitForObserverCall());
     // ASSERT_EQ(pc->sipcc_state(), sipcc::PeerConnectionInterface::kIdle);
@@ -677,6 +681,22 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
         domMediaStream_->GetStream())->GetSegmentsAdded();
   }
 
+  //Stops generating new audio data for transmission.
+  //Should be called before Cleanup of the peer connection.
+  void CloseSendStreams() {
+    static_cast<Fake_AudioStreamSource*>(
+        domMediaStream_->GetStream())->StopStream();
+  }
+
+  //Stops pulling audio data off the receivers.
+  //Should be called before Cleanup of the peer connection.
+  void CloseReceiveStreams() {
+    std::vector<nsDOMMediaStream *> streams =
+                            pObserver->GetStreams();
+    for(int i=0; i < streams.size(); i++) {
+      streams[i]->GetStream()->AsSourceStream()->StopStream();
+    }
+  }
 
 public:
   mozilla::RefPtr<sipcc::PeerConnectionImpl> pc;
@@ -778,6 +798,24 @@ class SignalingEnvironment : public ::testing::Environment {
 
 class SignalingTest : public ::testing::Test {
 public:
+  static void SetUpTestCase() {
+    nsIThread *thread;
+
+    nsresult rv = NS_NewThread(&thread);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+    gThread = thread;
+  }
+
+  void SetUp() {
+    a1_.Init(gThread);
+    a2_.Init(gThread);
+  }
+
+  static void TearDownTestCase() {
+    gThread = nullptr;
+  }
+
   void CreateOffer(sipcc::MediaConstraints& constraints,
                    uint32_t offerFlags, uint32_t sdpCheck) {
     a1_.CreateOffer(constraints, offerFlags, sdpCheck);
@@ -866,9 +904,12 @@ public:
   }
 
  protected:
+  static nsCOMPtr<nsIThread> gThread;
   SignalingAgent a1_;  // Canonically "caller"
   SignalingAgent a2_;  // Canonically "callee"
 };
+
+nsCOMPtr<nsIThread> SignalingTest::gThread;
 
 
 TEST_F(SignalingTest, JustInit)
@@ -1189,6 +1230,8 @@ TEST_F(SignalingTest, OfferModifiedAnswer)
   OfferModifiedAnswer(constraints, constraints, SHOULD_SENDRECV_AV,
                       SHOULD_SENDRECV_AV);
   PR_Sleep(kDefaultTimeout * 2); // Wait for completion
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
 }
 
 TEST_F(SignalingTest, FullCall)
@@ -1199,6 +1242,8 @@ TEST_F(SignalingTest, FullCall)
 
   PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
 
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
   // Check that we wrote a bunch of data
   ASSERT_GE(a1_.GetPacketsSent(0), 40);
   //ASSERT_GE(a2_.GetPacketsSent(0), 40);
@@ -1212,8 +1257,11 @@ TEST_F(SignalingTest, FullCallTrickle)
   OfferAnswerTrickle(constraints, constraints,
                      SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
 
+  std::cerr << "ICE handshake completed" << std::endl;
   PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
 
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
   ASSERT_GE(a1_.GetPacketsSent(0), 40);
   ASSERT_GE(a2_.GetPacketsReceived(0), 40);
 }
@@ -1344,7 +1392,45 @@ TEST_F(SignalingTest, ChromeOfferAnswer)
   std::string answer = a2_.answer();
 }
 
+TEST_F(SignalingTest, OfferAllDynamicTypes)
+{
+  sipcc::MediaConstraints constraints;
+  std::string offer;
+  for (int i = 96; i < 128; i++)
+  {
+    std::stringstream ss;
+    ss << i;
+    std::cout << "Trying dynamic pt = " << i << std::endl;
+    offer =
+      "v=0\r\n"
+      "o=- 1 1 IN IP4 148.147.200.251\r\n"
+      "s=-\r\n"
+      "b=AS:64\r\n"
+      "t=0 0\r\n"
+      "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+        "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+      "m=audio 9000 RTP/AVP " + ss.str() + "\r\n"
+      "c=IN IP4 148.147.200.251\r\n"
+      "b=TIAS:64000\r\n"
+      "a=rtpmap:" + ss.str() +" opus/48000/2\r\n"
+      "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
+      "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
+      "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+      "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+      "a=sendrecv\r\n";
 
+      //std::cout << "Setting offer to:" << std::endl << offer << std::endl;
+      a2_.SetRemote(TestObserver::OFFER, offer);
+
+      //std::cout << "Creating answer:" << std::endl;
+      a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO);
+
+      std::string answer = a2_.answer();
+
+      ASSERT_NE(answer.find(ss.str() + " opus/"), std::string::npos);
+  }
+
+}
 
 } // End namespace test.
 

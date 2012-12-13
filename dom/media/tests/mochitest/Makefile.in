@@ -10,14 +10,21 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# TODO: When bug 814718 and bug 814721 are fixed, add the following files:
-#          test_getUserMedia_basicVideo.html
-#          test_getUserMedia_basicAudio.thml
-#          test_getUserMedia_basicVideoAudio.html
-#          mediaStreamPlayback.js
+# Bug 814718 prevents us from running the following test:
+#  test_getUserMedia_basicVideo.html
+
 MOCHITEST_FILES = \
   test_getUserMedia_exceptions.html \
   head.js \
+  mediaStreamPlayback.js \
   $(NULL)
+
+# The following tests are leaking and cannot be run by default yet
+ifdef MOZ_WEBRTC_LEAKING_TESTS
+MOCHITEST_FILES += \
+  test_getUserMedia_basicAudio.html \
+  test_getUserMedia_basicVideoAudio.html \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk

@@ -100,6 +100,8 @@
 #include "sampler.h"
 
 #include "nsIDOMClientRect.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -2070,8 +2072,8 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
     // fire drag gesture if mouse has moved enough
     nsIntPoint pt = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
-    if (NS_ABS(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
-        NS_ABS(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
+    if (std::abs(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
+        std::abs(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
       if (mClickHoldContextMenu) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time
@@ -2895,14 +2897,14 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   nsIntSize devPixelPageSize(pc->AppUnitsToDevPixels(pageSize.width),
                              pc->AppUnitsToDevPixels(pageSize.height));
   if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedX(aEvent) &&
-      NS_ABS(actualDevPixelScrollAmount.x) > devPixelPageSize.width) {
+      std::abs(actualDevPixelScrollAmount.x) > devPixelPageSize.width) {
     actualDevPixelScrollAmount.x =
       (actualDevPixelScrollAmount.x >= 0) ? devPixelPageSize.width :
                                             -devPixelPageSize.width;
   }
 
   if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedY(aEvent) &&
-      NS_ABS(actualDevPixelScrollAmount.y) > devPixelPageSize.height) {
+      std::abs(actualDevPixelScrollAmount.y) > devPixelPageSize.height) {
     actualDevPixelScrollAmount.y =
       (actualDevPixelScrollAmount.y >= 0) ? devPixelPageSize.height :
                                             -devPixelPageSize.height;
@@ -5455,13 +5457,25 @@ nsEventStateManager::WheelPrefs::Init(
 
   nsAutoCString prefNameAction(basePrefName);
   prefNameAction.AppendLiteral("action");
-  mActions[aIndex] =
-    static_cast<Action>(Preferences::GetInt(prefNameAction.get(),
-                                            ACTION_SCROLL));
-  if (mActions[aIndex] < ACTION_NONE || mActions[aIndex] > ACTION_LAST) {
+  int32_t action = Preferences::GetInt(prefNameAction.get(), ACTION_SCROLL);
+  if (action < int32_t(ACTION_NONE) || action > int32_t(ACTION_LAST)) {
     NS_WARNING("Unsupported action pref value, replaced with 'Scroll'.");
-    mActions[aIndex] = ACTION_SCROLL;
+    action = ACTION_SCROLL;
   }
+  mActions[aIndex] = static_cast<Action>(action);
+
+  // Compute action values overridden by .override_x pref.
+  // At present, override is possible only for the x-direction
+  // because this pref is introduced mainly for tilt wheels.
+  prefNameAction.AppendLiteral(".override_x");
+  int32_t actionOverrideX = Preferences::GetInt(prefNameAction.get(), -1);
+  if (actionOverrideX < -1 || actionOverrideX > int32_t(ACTION_LAST)) {
+    NS_WARNING("Unsupported action override pref value, didn't override.");
+    actionOverrideX = -1;
+  }
+  mOverriddenActionsX[aIndex] = (actionOverrideX == -1)
+                              ? static_cast<Action>(action)
+                              : static_cast<Action>(actionOverrideX);
 }
 
 void
@@ -5522,21 +5536,25 @@ nsEventStateManager::WheelPrefs::ComputeActionFor(widget::WheelEvent* aEvent)
   Index index = GetIndexFor(aEvent);
   Init(index);
 
-  if (mActions[index] == ACTION_NONE || mActions[index] == ACTION_SCROLL) {
-    return mActions[index];
+  bool deltaXPreferred =
+    (std::abs(aEvent->deltaX) > std::abs(aEvent->deltaY) &&
+     std::abs(aEvent->deltaX) > std::abs(aEvent->deltaZ));
+  Action* actions = deltaXPreferred ? mOverriddenActionsX : mActions;
+  if (actions[index] == ACTION_NONE || actions[index] == ACTION_SCROLL) {
+    return actions[index];
   }
 
   // Momentum events shouldn't run special actions.
   if (aEvent->isMomentum) {
     // Use the default action.  Note that user might kill the wheel scrolling.
     Init(INDEX_DEFAULT);
-    return (mActions[INDEX_DEFAULT] == ACTION_SCROLL) ? ACTION_SCROLL :
-                                                        ACTION_NONE;
+    return (actions[INDEX_DEFAULT] == ACTION_SCROLL) ? ACTION_SCROLL :
+                                                       ACTION_NONE;
   }
 
   // If this event doesn't cause NS_MOUSE_SCROLL event or the direction is
   // oblique, history and zoom shouldn't be executed.
-  return !aEvent->GetPreferredIntDelta() ? ACTION_NONE : mActions[index];
+  return !aEvent->GetPreferredIntDelta() ? ACTION_NONE : actions[index];
 }
 
 bool
@@ -5556,7 +5574,7 @@ nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedX(
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
-  return NS_ABS(mMultiplierX[index]) >=
+  return std::abs(mMultiplierX[index]) >=
            MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
 }
 
@@ -5566,6 +5584,6 @@ nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
-  return NS_ABS(mMultiplierY[index]) >=
+  return std::abs(mMultiplierY[index]) >=
            MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
 }

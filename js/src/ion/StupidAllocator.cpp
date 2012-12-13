@@ -10,8 +10,8 @@
 using namespace js;
 using namespace js::ion;
 
-static inline uint32
-DefaultStackSlot(uint32 vreg)
+static inline uint32_t
+DefaultStackSlot(uint32_t vreg)
 {
 #if JS_BITS_PER_WORD == 32
     return vreg * 2 + 2;
@@ -21,7 +21,7 @@ DefaultStackSlot(uint32 vreg)
 }
 
 LAllocation *
-StupidAllocator::stackLocation(uint32 vreg)
+StupidAllocator::stackLocation(uint32_t vreg)
 {
     LDefinition *def = virtualRegisters[vreg];
     if (def->policy() == LDefinition::PRESET && def->output()->kind() == LAllocation::ARGUMENT)
@@ -71,7 +71,7 @@ StupidAllocator::init()
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi *phi = block->getPhi(j);
             LDefinition *def = phi->getDef(0);
-            uint32 vreg = def->virtualRegister();
+            uint32_t vreg = def->virtualRegister();
 
             virtualRegisters[vreg] = def;
         }
@@ -124,7 +124,7 @@ RegisterIsReserved(LInstruction *ins, AnyRegister reg)
 }
 
 AnyRegister
-StupidAllocator::ensureHasRegister(LInstruction *ins, uint32 vreg)
+StupidAllocator::ensureHasRegister(LInstruction *ins, uint32_t vreg)
 {
     // Ensure that vreg is held in a register before ins.
 
@@ -146,7 +146,7 @@ StupidAllocator::ensureHasRegister(LInstruction *ins, uint32 vreg)
 }
 
 StupidAllocator::RegisterIndex
-StupidAllocator::allocateRegister(LInstruction *ins, uint32 vreg)
+StupidAllocator::allocateRegister(LInstruction *ins, uint32_t vreg)
 {
     // Pick a register for vreg, evicting an existing register if necessary.
     // Spill code will be placed before ins, and no existing allocated input
@@ -187,7 +187,7 @@ StupidAllocator::syncRegister(LInstruction *ins, RegisterIndex index)
         LMoveGroup *input = getInputMoveGroup(ins->id());
         LAllocation *source = new LAllocation(registers[index].reg);
 
-        uint32 existing = registers[index].vreg;
+        uint32_t existing = registers[index].vreg;
         LAllocation *dest = stackLocation(existing);
         input->addAfter(source, dest);
 
@@ -203,7 +203,7 @@ StupidAllocator::evictRegister(LInstruction *ins, RegisterIndex index)
 }
 
 void
-StupidAllocator::loadRegister(LInstruction *ins, uint32 vreg, RegisterIndex index)
+StupidAllocator::loadRegister(LInstruction *ins, uint32_t vreg, RegisterIndex index)
 {
     // Load a vreg from its stack location to a register.
     LMoveGroup *input = getInputMoveGroup(ins->id());
@@ -214,7 +214,7 @@ StupidAllocator::loadRegister(LInstruction *ins, uint32 vreg, RegisterIndex inde
 }
 
 StupidAllocator::RegisterIndex
-StupidAllocator::findExistingRegister(uint32 vreg)
+StupidAllocator::findExistingRegister(uint32_t vreg)
 {
     for (size_t i = 0; i < registerCount; i++) {
         if (registers[i].vreg == vreg)
@@ -283,13 +283,13 @@ StupidAllocator::syncForBlockEnd(LBlock *block, LInstruction *ins)
 
     MBasicBlock *successor = block->mir()->successorWithPhis();
     if (successor) {
-        uint32 position = block->mir()->positionInPhiSuccessor();
+        uint32_t position = block->mir()->positionInPhiSuccessor();
         LBlock *lirsuccessor = graph.getBlock(successor->id());
         for (size_t i = 0; i < lirsuccessor->numPhis(); i++) {
             LPhi *phi = lirsuccessor->getPhi(i);
 
-            uint32 sourcevreg = phi->getOperand(position)->toUse()->virtualRegister();
-            uint32 destvreg = phi->getDef(0)->virtualRegister();
+            uint32_t sourcevreg = phi->getOperand(position)->toUse()->virtualRegister();
+            uint32_t destvreg = phi->getDef(0)->virtualRegister();
 
             if (sourcevreg == destvreg)
                 continue;
@@ -328,7 +328,7 @@ StupidAllocator::allocateForInstruction(LInstruction *ins)
         if (!alloc->isUse())
             continue;
         LUse *use = alloc->toUse();
-        uint32 vreg = use->virtualRegister();
+        uint32_t vreg = use->virtualRegister();
         if (use->policy() == LUse::REGISTER) {
             AnyRegister reg = ensureHasRegister(ins, vreg);
             alloc.replace(LAllocation(reg));
@@ -367,7 +367,7 @@ StupidAllocator::allocateForInstruction(LInstruction *ins)
         if (!alloc->isUse())
             continue;
         LUse *use = alloc->toUse();
-        uint32 vreg = use->virtualRegister();
+        uint32_t vreg = use->virtualRegister();
         JS_ASSERT(use->policy() != LUse::REGISTER && use->policy() != LUse::FIXED);
 
         RegisterIndex index = findExistingRegister(vreg);
@@ -392,7 +392,7 @@ StupidAllocator::allocateForInstruction(LInstruction *ins)
 void
 StupidAllocator::allocateForDefinition(LInstruction *ins, LDefinition *def)
 {
-    uint32 vreg = def->virtualRegister();
+    uint32_t vreg = def->virtualRegister();
 
     CodePosition from;
     if ((def->output()->isRegister() && def->policy() == LDefinition::PRESET) ||

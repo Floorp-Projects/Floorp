@@ -15,8 +15,6 @@
  * http://groups.google.com/groups?q=nsisupportsarray+group:netscape.public.mozilla.xpcom&hl=en&lr=&ie=UTF-8&oe=UTF-8&selm=al8412%245ab2%40ripley.netscape.com&rnum=8
  */
 
-native nsISupportsArrayEnumFunc(nsISupportsArrayEnumFunc);
-
 %{C++
 
 class nsIBidirectionalEnumerator;
@@ -32,15 +30,12 @@ class nsISupportsArray;
 #define NS_SUPPORTSARRAY_CONTRACTID "@mozilla.org/supports-array;1"
 #define NS_SUPPORTSARRAY_CLASSNAME "Supports Array"
  
-// Enumerator callback function. Return PR_FALSE to stop
-typedef bool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
- 
 nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsISupportsArray* array);
 %}
 
-[scriptable, uuid(791eafa0-b9e6-11d1-8031-006008159b5a)]
+[scriptable, uuid(241addc8-3608-4e73-8083-2fd6fa09eba2)]
 interface nsISupportsArray : nsICollection {
 
   [notxpcom] boolean Equals([const] in nsISupportsArray other);
@@ -74,12 +69,6 @@ interface nsISupportsArray : nsICollection {
   
   void Compact();
   
-  [notxpcom, noscript]
-      boolean EnumerateForwards(in nsISupportsArrayEnumFunc aFunc,
-                                in voidPtr aData);
-  [notxpcom, noscript]
-      boolean EnumerateBackwards(in nsISupportsArrayEnumFunc aFunc,
-                                 in voidPtr aData);
 
   nsISupportsArray clone();
 
@@ -101,11 +90,5 @@ interface nsISupportsArray : nsICollection {
 // Construct and return a default implementation of nsISupportsArray:
 extern nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult);
-
-// Construct and return a default implementation of an enumerator for nsISupportsArrays:
-extern nsresult
-NS_NewISupportsArrayEnumerator(nsISupportsArray* array,
-                               nsIBidirectionalEnumerator* *aInstancePtrResult);
-
 
 %}

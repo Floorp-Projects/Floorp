@@ -302,7 +302,7 @@ class MochiRemote(Mochitest):
         self.localLog = options.logFile
         options.logFile = self.remoteLog
         options.profilePath = self.localProfile
-        env["MOZ_HIDE_RESULTS_TABLE"] = 1
+        env["MOZ_HIDE_RESULTS_TABLE"] = "1"
         retVal = Mochitest.buildURLOptions(self, options, env)
         #we really need testConfig.js (for browser chrome)
         try:
@@ -388,6 +388,14 @@ class MochiRemote(Mochitest):
         if failed > 0:
             return 1
         return 0
+
+    def printDeviceInfo(self):
+        try:
+            logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
+            print ''.join(logcat)
+            print self._dm.getInfo()
+        except devicemanager.DMError:
+            print "WARNING: Error getting device information"
 
     def buildRobotiumConfig(self, options, browserEnv):
         deviceRoot = self._dm.getDeviceRoot()
@@ -500,6 +508,7 @@ def main():
                 result = mochitest.runTests(options)
                 if result != 0:
                     print "ERROR: runTests() exited with code %s" % result
+                    mochitest.printDeviceInfo()
                 # Ensure earlier failures aren't overwritten by success on this run
                 if retVal is None or retVal == 0:
                     retVal = result
@@ -541,15 +550,9 @@ def main():
                 pass
             retVal = 1
 
-    try:
-        logcat = dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
-        print ''.join(logcat)
-        print dm.getInfo()
-    except devicemanager.DMError:
-        print "WARNING: Error getting device information at end of test"
+    mochitest.printDeviceInfo()
 
     sys.exit(retVal)
-        
+
 if __name__ == "__main__":
     main()
-

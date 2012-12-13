@@ -10,6 +10,9 @@
 #include "nspr.h"
 #include "nsError.h"
 
+static const int AUDIO_BUFFER_SIZE = 1600;
+static const int NUM_CHANNELS      = 2;
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(Fake_nsDOMMediaStream, nsIDOMMediaStream)
 
 // DOM Media stream
@@ -35,6 +38,7 @@ nsresult Fake_SourceMediaStream::Start() {
 }
 
 nsresult Fake_SourceMediaStream::Stop() {
+  mozilla::MutexAutoLock lock(mMutex);
   if (mTimer)
     mTimer->Cancel();
   mPeriodic->Detach();
@@ -42,14 +46,17 @@ nsresult Fake_SourceMediaStream::Stop() {
 }
 
 void Fake_SourceMediaStream::Periodic() {
-  if (mPullEnabled) {
+  mozilla::MutexAutoLock lock(mMutex);
+  // Pull more audio-samples iff pulling is enabled
+  // and we are not asked by the signaling agent to stop
+  //pulling data.
+  if (mPullEnabled && !mStop) {
     for (std::set<Fake_MediaStreamListener *>::iterator it =
              mListeners.begin(); it != mListeners.end(); ++it) {
       (*it)->NotifyPull(NULL, mozilla::MillisecondsToMediaTime(10));
     }
   }
 }
-
 
 // Fake_MediaStreamBase
 nsresult Fake_MediaStreamBase::Start() {
@@ -64,6 +71,10 @@ nsresult Fake_MediaStreamBase::Start() {
 }
 
 nsresult Fake_MediaStreamBase::Stop() {
+  // Lock the mutex so that we know that after this
+  // has returned, periodic will not be firing again
+  // and so it's safe to destruct.
+  mozilla::MutexAutoLock lock(mMutex);
   mTimer->Cancel();
 
   return NS_OK;
@@ -71,11 +82,30 @@ nsresult Fake_MediaStreamBase::Stop() {
 
 // Fake_AudioStreamSource
 void Fake_AudioStreamSource::Periodic() {
+  mozilla::MutexAutoLock lock(mMutex);
+  //Are we asked to stop pumping audio samples ?
+  if(mStop) {
+    return;
+  }
+  //Generate Signed 16 Bit Audio samples
+  nsRefPtr<mozilla::SharedBuffer> samples =
+    mozilla::SharedBuffer::Create(AUDIO_BUFFER_SIZE * NUM_CHANNELS * sizeof(int16_t));
+  for(int i=0; i<(1600*2); i++) {
+    //saw tooth audio sample
+    reinterpret_cast<int16_t *>(samples->Data())[i] =
+                              ((mCount % 8) * 4000) - (7*4000)/2;
+    mCount++;
+  }
+
   mozilla::AudioSegment segment;
   segment.Init(1);
-  segment.InsertNullDataAtStart(160);
+  segment.AppendFrames(samples.forget(),
+                       AUDIO_BUFFER_SIZE,
+                       0,
+                       AUDIO_BUFFER_SIZE,
+                       mozilla::AUDIO_FORMAT_S16);
 
-  for (std::set<Fake_MediaStreamListener *>::iterator it = mListeners.begin();
+  for(std::set<Fake_MediaStreamListener *>::iterator it = mListeners.begin();
        it != mListeners.end(); ++it) {
     (*it)->NotifyQueuedTrackChanges(NULL, // Graph
                                     0, // TrackID

@@ -74,12 +74,18 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isUnbox() || ins->isParameter())
                 continue;
 
+            // If the instruction's behavior has been constant folded into a
+            // separate instruction, we can't determine precisely where the
+            // instruction becomes dead and can't eliminate its uses.
+            if (ins->isFolded())
+                continue;
+
             // Check if this instruction's result is only used within the
             // current block, and keep track of its last use in a definition
             // (not resume point). This requires the instructions in the block
             // to be numbered, ensured by running this immediately after alias
             // analysis.
-            uint32 maxDefinition = 0;
+            uint32_t maxDefinition = 0;
             for (MUseDefIterator uses(*ins); uses; uses++) {
                 if (uses.def()->block() != *block || uses.def()->isBox() || uses.def()->isPassArg()) {
                     maxDefinition = UINT32_MAX;
@@ -119,10 +125,6 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                 block->insertBefore(*(block->begin()), constant);
                 uses = mrp->replaceOperand(uses, constant);
             }
-
-            MResumePoint *mrp = ins->resumePoint();
-            if (!mrp)
-                continue;
         }
     }
 
@@ -159,9 +161,9 @@ ion::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
 static inline bool
 IsPhiObservable(MPhi *phi)
 {
-    // If the phi has bytecode uses, there may be no SSA uses but the value
-    // is still observable in the interpreter after a bailout.
-    if (phi->hasBytecodeUses())
+    // If the phi has uses which are not reflected in SSA, then behavior in the
+    // interpreter may be affected by removing the phi.
+    if (phi->isFolded())
         return true;
 
     // Check for any SSA uses. Note that this skips reading resume points,
@@ -173,15 +175,17 @@ IsPhiObservable(MPhi *phi)
     }
 
     // If the Phi is of the |this| value, it must always be observable.
-    uint32 slot = phi->slot();
+    uint32_t slot = phi->slot();
     if (slot == 1)
         return true;
 
+    // If the Phi is one of the formal argument, and we are using an argument
+    // object in the function.  The phi might be observable after a bailout.
     CompileInfo &info = phi->block()->info();
     if (info.fun() && info.hasArguments()) {
         // We do not support arguments object inside inline frames yet.
         JS_ASSERT(!phi->block()->callerResumePoint());
-        uint32 first = info.firstArgSlot();
+        uint32_t first = info.firstArgSlot();
         if (first <= slot && slot - first < info.nargs())
             return true;
     }
@@ -201,10 +205,9 @@ IsPhiRedundant(MPhi *phi)
             return NULL;
     }
 
-    // Propagate the HasBytecodeUses flag if |phi| is replaced with
-    // another phi.
-    if (phi->hasBytecodeUses() && first->isPhi())
-        first->toPhi()->setHasBytecodeUses();
+    // Propagate the Folded flag if |phi| is replaced with another phi.
+    if (phi->isFolded())
+        first->setFoldedUnchecked();
 
     return first;
 }
@@ -877,7 +880,7 @@ ion::AssertGraphCoherency(MIRGraph &graph)
             JS_ASSERT(CheckPredecessorImpliesSuccessor(*block, block->getPredecessor(i)));
 
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            for (uint32 i = 0; i < ins->numOperands(); i++)
+            for (uint32_t i = 0; i < ins->numOperands(); i++)
                 JS_ASSERT(CheckMarkedAsUse(*ins, ins->getOperand(i)));
         }
     }
@@ -890,12 +893,12 @@ ion::AssertGraphCoherency(MIRGraph &graph)
 struct BoundsCheckInfo
 {
     MBoundsCheck *check;
-    uint32 validUntil;
+    uint32_t validUntil;
 };
 
-typedef HashMap<uint32,
+typedef HashMap<uint32_t,
                 BoundsCheckInfo,
-                DefaultHasher<uint32>,
+                DefaultHasher<uint32_t>,
                 IonAllocPolicy> BoundsCheckMap;
 
 // Compute a hash for bounds checks which ignores constant offsets in the index.
@@ -955,12 +958,12 @@ ion::ExtractLinearSum(MDefinition *ins)
 
             // Check if this is of the form <SUM> + n, n + <SUM> or <SUM> - n.
             if (ins->isAdd()) {
-                int32 constant;
+                int32_t constant;
                 if (!SafeAdd(lsum.constant, rsum.constant, &constant))
                     return SimpleLinearSum(ins, 0);
                 return SimpleLinearSum(lsum.term ? lsum.term : rsum.term, constant);
             } else if (lsum.term) {
-                int32 constant;
+                int32_t constant;
                 if (!SafeSub(lsum.constant, rsum.constant, &constant))
                     return SimpleLinearSum(ins, 0);
                 return SimpleLinearSum(lsum.term, constant);
@@ -1052,7 +1055,7 @@ TryEliminateBoundsCheck(MBoundsCheck *dominating, MBoundsCheck *dominated, bool 
     *eliminated = true;
 
     // Normalize the ranges according to the constant offsets in the two indexes.
-    int32 minimumA, maximumA, minimumB, maximumB;
+    int32_t minimumA, maximumA, minimumB, maximumB;
     if (!SafeAdd(sumA.constant, dominating->minimum(), &minimumA) ||
         !SafeAdd(sumA.constant, dominating->maximum(), &maximumA) ||
         !SafeAdd(sumB.constant, dominated->minimum(), &minimumB) ||
@@ -1063,7 +1066,7 @@ TryEliminateBoundsCheck(MBoundsCheck *dominating, MBoundsCheck *dominated, bool 
 
     // Update the dominating check to cover both ranges, denormalizing the
     // result per the constant offset in the index.
-    int32 newMinimum, newMaximum;
+    int32_t newMinimum, newMaximum;
     if (!SafeSub(Min(minimumA, minimumB), sumA.constant, &newMinimum) ||
         !SafeSub(Max(maximumA, maximumB), sumA.constant, &newMaximum))
     {
@@ -1164,7 +1167,7 @@ ion::EliminateRedundantBoundsChecks(MIRGraph &graph)
 }
 
 bool
-LinearSum::multiply(int32 scale)
+LinearSum::multiply(int32_t scale)
 {
     for (size_t i = 0; i < terms_.length(); i++) {
         if (!SafeMul(scale, terms_[i].scale, &terms_[i].scale))
@@ -1184,7 +1187,7 @@ LinearSum::add(const LinearSum &other)
 }
 
 bool
-LinearSum::add(MDefinition *term, int32 scale)
+LinearSum::add(MDefinition *term, int32_t scale)
 {
     JS_ASSERT(term);
 
@@ -1192,7 +1195,7 @@ LinearSum::add(MDefinition *term, int32 scale)
         return true;
 
     if (term->isConstant()) {
-        int32 constant = term->toConstant()->value().toInt32();
+        int32_t constant = term->toConstant()->value().toInt32();
         if (!SafeMul(constant, scale, &constant))
             return false;
         return add(constant);
@@ -1215,7 +1218,7 @@ LinearSum::add(MDefinition *term, int32 scale)
 }
 
 bool
-LinearSum::add(int32 constant)
+LinearSum::add(int32_t constant)
 {
     return SafeAdd(constant, constant_, &constant_);
 }
@@ -1224,8 +1227,8 @@ void
 LinearSum::print(Sprinter &sp) const
 {
     for (size_t i = 0; i < terms_.length(); i++) {
-        int32 scale = terms_[i].scale;
-        int32 id = terms_[i].term->id();
+        int32_t scale = terms_[i].scale;
+        int32_t id = terms_[i].term->id();
         JS_ASSERT(scale);
         if (scale > 0) {
             if (i)

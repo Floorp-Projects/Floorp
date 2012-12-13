@@ -576,13 +576,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             /* Draw any extra layers that were added (likely plugins) */
             if (mExtraLayers.size() > 0) {
                 for (Layer layer : mExtraLayers) {
-                    if (!layer.usesDefaultProgram())
-                        deactivateDefaultProgram();
-
                     layer.draw(mPageContext);
-
-                    if (!layer.usesDefaultProgram())
-                        activateDefaultProgram();
                 }
             }
 

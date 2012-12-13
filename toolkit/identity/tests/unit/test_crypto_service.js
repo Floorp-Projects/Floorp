@@ -5,7 +5,7 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import('resource://gre/modules/LogUtils.jsm');
+Cu.import('resource://gre/modules/identity/LogUtils.jsm');
 
 const idService = Cc["@mozilla.org/identity/crypto-service;1"]
                     .getService(Ci.nsIIdentityCryptoService);

@@ -113,7 +113,6 @@ public class Tabs implements GeckoEventListener {
             public void run() {
                 mActivity.hideFormAssistPopup();
                 if (isSelectedTab(tab)) {
-                    String url = tab.getURL();
                     notifyListeners(tab, TabEvents.SELECTED);
 
                     if (oldTab != null)

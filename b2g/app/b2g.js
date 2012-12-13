@@ -234,16 +234,25 @@ pref("editor.singleLine.pasteNewlines", 2);
 pref("ui.dragThresholdX", 25);
 pref("ui.dragThresholdY", 25);
 
-// Layers Acceleration
-pref("layers.acceleration.disabled", false);
-#ifndef XP_WIN
-//TODO: turn this on for Windows in bug 808016
+// Layers Acceleration.  We can only have nice things on gonk, because
+// they're not maintained anywhere else.
+#ifndef MOZ_WIDGET_GONK
+pref("dom.ipc.tabs.disabled", true);
+pref("layers.offmainthreadcomposition.enabled", false);
+pref("layers.offmainthreadcomposition.animate-opacity", false);
+pref("layers.offmainthreadcomposition.animate-transform", false);
+pref("layers.offmainthreadcomposition.throttle-animations", false);
+pref("layers.async-video.enabled", false);
+#else
+pref("dom.ipc.tabs.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
-#endif
+pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.animate-opacity", true);
 pref("layers.offmainthreadcomposition.animate-transform", true);
+pref("layers.offmainthreadcomposition.throttle-animations", true);
 pref("layers.async-video.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
+#endif
 
 // Web Notifications
 pref("notification.feature.enabled", true);
@@ -379,7 +388,6 @@ pref("dom.mozBrowserFramesEnabled", true);
 // We'll run out of PIDs on UNIX-y systems before we hit this limit.
 pref("dom.ipc.processCount", 100000);
 
-pref("dom.ipc.tabs.disabled", false);
 pref("dom.ipc.browser_frames.oop_by_default", false);
 
 // Temporary permission hack for WebSMS

@@ -426,7 +426,7 @@
 
        // An implementation of |pump| using |read|/|write|
        let pump_userland = function pump_userland(source, dest, options) {
-         let options = options || noOptions;
+         options = options || noOptions;
          let bufSize = options.bufSize || 4096;
          let nbytes = options.nbytes || Infinity;
          if (!pump_buffer || pump_buffer.length < bufSize) {
@@ -463,7 +463,7 @@
 
          // An implementation of |pump| using |splice| (for Linux/Android)
          pump = function pump_splice(source, dest, options) {
-           let options = options || noOptions;
+           options = options || noOptions;
            let nbytes = options.nbytes || Infinity;
            let pipe = [];
            throw_on_negative("pump", UnixFile.pipe(pipe));

@@ -132,18 +132,16 @@ public:
     NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk);
     bool OnDocumentParserError();
 
-    // nsIDOMNode interface overrides
-    NS_IMETHOD CloneNode(bool deep, uint8_t aOptionalArgc, nsIDOMNode **_retval)
-        MOZ_OVERRIDE;
+    // nsINode interface overrides
+    virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-    // nsIDOMDocument
-    NS_IMETHOD GetContentType(nsAString& aContentType);
+    // nsIDOMNode interface
+    NS_FORWARD_NSIDOMNODE_TO_NSINODE
+
+    // nsIDOMDocument interface
+    NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
 
     // nsDocument interface overrides
-    NS_IMETHOD GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
-    {
-        return nsDocument::GetElementById(aId, aReturn);
-    }
     virtual mozilla::dom::Element* GetElementById(const nsAString & elementId);
 
     // nsIDOMXULDocument interface

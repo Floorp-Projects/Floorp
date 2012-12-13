@@ -299,7 +299,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
         return false;
 
     /* Try to compile if not already compiled. */
-    if (ShouldJaegerCompileCallee(cx, f.script().unsafeGet(), newscript, f.jit())) {
+    if (ShouldJaegerCompileCallee(cx, f.script(), newscript, f.jit())) {
         CompileStatus status = CanMethodJIT(cx, newscript, newscript->code, construct,
                                             CompileRequest_JIT, f.fp());
         if (status == Compile_Error) {
@@ -663,7 +663,7 @@ void JS_FASTCALL
 stubs::ScriptDebugPrologue(VMFrame &f)
 {
     AssertCanGC();
-    Probes::enterScript(f.cx, f.script().unsafeGet(), f.script()->function(), f.fp());
+    Probes::enterScript(f.cx, f.script(), f.script()->function(), f.fp());
     JSTrapStatus status = js::ScriptDebugPrologue(f.cx, f.fp());
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -690,14 +690,14 @@ void JS_FASTCALL
 stubs::ScriptProbeOnlyPrologue(VMFrame &f)
 {
     AutoAssertNoGC nogc;
-    Probes::enterScript(f.cx, f.script().get(nogc), f.script()->function(), f.fp());
+    Probes::enterScript(f.cx, f.script(), f.script()->function(), f.fp());
 }
 
 void JS_FASTCALL
 stubs::ScriptProbeOnlyEpilogue(VMFrame &f)
 {
     AutoAssertNoGC nogc;
-    Probes::exitScript(f.cx, f.script().get(nogc), f.script()->function(), f.fp());
+    Probes::exitScript(f.cx, f.script(), f.script()->function(), f.fp());
 }
 
 void JS_FASTCALL
@@ -708,13 +708,13 @@ stubs::CrossChunkShim(VMFrame &f, void *edge_)
 
     mjit::ExpandInlineFrames(f.cx->compartment);
 
-    RawScript script = f.script().unsafeGet();
+    UnrootedScript script = f.script();
     JS_ASSERT(edge->target < script->length);
     JS_ASSERT(script->code + edge->target == f.pc());
 
-    CompileStatus status = CanMethodJIT(f.cx, script, f.pc(), f.fp()->isConstructing(),
+    CompileStatus status = CanMethodJIT(f.cx, DropUnrooted(script), f.pc(),
+                                        f.fp()->isConstructing(),
                                         CompileRequest_Interpreter, f.fp());
-    script = NULL;
     if (status == Compile_Error)
         THROW();
 
@@ -870,7 +870,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
       }
 
       case REJOIN_THIS_CREATED: {
-        Probes::enterScript(f.cx, f.script().unsafeGet(), f.script()->function(), fp);
+        Probes::enterScript(f.cx, f.script(), f.script()->function(), fp);
 
         if (script->debugMode) {
             JSTrapStatus status = js::ScriptDebugPrologue(f.cx, f.fp());
@@ -930,7 +930,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         }
         /* FALLTHROUGH */
       case REJOIN_EVAL_PROLOGUE:
-        Probes::enterScript(cx, f.script().unsafeGet(), f.script()->function(), fp);
+        Probes::enterScript(cx, f.script(), f.script()->function(), fp);
         if (cx->compartment->debugMode()) {
             JSTrapStatus status = ScriptDebugPrologue(cx, fp);
             switch (status) {

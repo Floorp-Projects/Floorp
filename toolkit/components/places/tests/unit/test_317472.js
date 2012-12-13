@@ -23,16 +23,16 @@ try {
 const TEST_URI = uri("http://foo.com");
 const TEST_BOOKMARKED_URI = uri("http://bar.com");
 
-function run_test() {
-  var now = Date.now();
+function run_test()
+{
+  run_next_test();
+}
 
+add_task(function test_execute()
+{
   // add pages to history
-  histsvc.addVisit(TEST_URI, now, null,
-                   Ci.nsINavHistoryService.TRANSITION_TYPED,
-                   false, 0);
-  histsvc.addVisit(TEST_BOOKMARKED_URI, now, null,
-                   Ci.nsINavHistoryService.TRANSITION_TYPED,
-                   false, 0);
+  yield promiseAddVisits(TEST_URI);
+  yield promiseAddVisits(TEST_BOOKMARKED_URI);
 
   // create bookmarks on TEST_BOOKMARKED_URI
   var bm1 = bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
@@ -55,12 +55,8 @@ function run_test() {
   // get charset from bookmarked page
   do_check_eq(histsvc.getCharsetForURI(TEST_BOOKMARKED_URI), charset);
 
-  promiseClearHistory().then(continue_test);
+  yield promiseClearHistory();
 
-  do_test_pending();
-}
-
-function continue_test() {
   // ensure that charset has gone for not-bookmarked page
   do_check_neq(histsvc.getCharsetForURI(TEST_URI), charset);
 
@@ -76,6 +72,4 @@ function continue_test() {
   // remove charset from bookmark and check that has gone
   histsvc.setCharsetForURI(TEST_BOOKMARKED_URI, "");
   do_check_neq(histsvc.getCharsetForURI(TEST_BOOKMARKED_URI), charset);
-
-  do_test_finished();
-}
+});

@@ -378,7 +378,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                              GlobalObjectSet::Enum *compartmentEnum);
     static unsigned gcGrayLinkSlot();
     static bool isDebugWrapper(RawObject o);
-    static void findCompartmentEdges(JSCompartment *v, js::gc::ComponentFinder &finder);
+    static void findCompartmentEdges(JSCompartment *v, gc::ComponentFinder<JSCompartment> &finder);
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);
     static inline bool onLeaveFrame(JSContext *cx, bool ok);

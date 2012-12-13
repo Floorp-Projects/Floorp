@@ -108,6 +108,22 @@ panel[type="arrow"][side="right"] {
   margin-left: -2px;
 }
 
+@media (min-resolution: 2dppx) {
+  .panel-arrow[side="top"],
+  .panel-arrow[side="bottom"] {
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical@2x.png");
+    width: 39px;
+    height: 16px;
+  }
+
+  .panel-arrow[side="left"],
+  .panel-arrow[side="right"] {
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal@2x.png");
+    width: 16px;
+    height: 39px;
+  }
+}
+
 /* ::::: tooltip ::::: */
 
 tooltip {

@@ -24,6 +24,9 @@ Service.engineManager.register(HistoryEngine);
 let engine = Service.engineManager.get("history");
 let tracker = engine._tracker;
 
+// Don't write out by default.
+tracker.persistChangedIDs = false;
+
 let _counter = 0;
 function addVisit() {
   let uri = Utils.makeURI("http://getfirefox.com/" + _counter);
@@ -55,12 +58,23 @@ add_test(function test_not_tracking(next) {
 });
 
 add_test(function test_start_tracking() {
+  _("Add hook for save completion.");
+  tracker.persistChangedIDs = true;
+  tracker.onSavedChangedIDs = function () {
+    _("changedIDs written to disk. Proceeding.");
+    // Turn this back off.
+    tracker.persistChangedIDs = false;
+    delete tracker.onSavedChangedIDs;
+    run_next_test();
+  };
+
   _("Tell the tracker to start tracking changes.");
   onScoreUpdated(function() {
     do_check_attribute_count(tracker.changedIDs, 1);
     do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
     run_next_test();
   });
+
   Svc.Obs.notify("weave:engine:start-tracking");
   addVisit();
 });
@@ -148,8 +162,5 @@ add_test(function test_stop_tracking_twice() {
 add_test(function cleanup() {
    _("Clean up.");
   PlacesUtils.history.removeAllPages();
-  if (tracker._lazySave) {
-    tracker._lazySave.clear();
-  }
   run_next_test();
 });

@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[builtinclass, uuid(24fdfcbe-54cb-4997-8392-3c476126ea3b)]
+interface nsIDashboardEventNotifier : nsISupports
+{
+    /* These methods are called to register a websocket event with the dashboard
+     *
+     * A host is identified by the (aHost, aSerial) pair.
+     * aHost: the host's name: example.com
+     * aSerial: a number that uniquely identifies the websocket
+     *
+     * aEncrypted: if the connection is encrypted
+     * aLength: the length of the message in bytes
+     */
+    void addHost(in ACString aHost, in unsigned long aSerial, in boolean aEncrypted);
+    void removeHost(in ACString aHost, in unsigned long aSerial);
+    void newMsgSent(in ACString aHost, in unsigned long aSerial, in unsigned long aLength);
+    void newMsgReceived(in ACString aHost, in unsigned long aSerial, in unsigned long aLength);
+};

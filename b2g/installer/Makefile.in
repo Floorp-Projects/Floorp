@@ -20,7 +20,7 @@ MOZ_NONLOCALIZED_PKG_LIST = \
 	b2g \
 	$(NULL)
 
-MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
+MOZ_LOCALIZED_PKG_LIST = $(AB_CD) multilocale
 
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
@@ -71,6 +71,14 @@ endif
 ifdef MOZ_PKG_MANIFEST_P
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@
+ifdef MOZ_CHROME_MULTILOCALE
+	printf "\n[multilocale]\n" >> $@
+	for LOCALE in $(MOZ_CHROME_MULTILOCALE) ;\
+	do \
+	  printf "$(BINPATH)/chrome/$$LOCALE$(JAREXT)\n" >> $@; \
+	  printf "$(BINPATH)/chrome/$$LOCALE.manifest\n" >> $@; \
+	done
+endif
 
 GARBAGE += $(MOZ_PKG_MANIFEST)
 endif

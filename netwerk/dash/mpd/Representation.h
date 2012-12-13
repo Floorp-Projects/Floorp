@@ -66,6 +66,10 @@ public:
     MOZ_COUNT_DTOR(Representation);
   }
 
+  bool operator<(const Representation &other) const {
+    return this->mBitrate < other.mBitrate;
+  }
+
   // Gets/Sets @bitrate in kbps.
   int64_t const    GetBitrate() const;
   void             SetBitrate(int64_t const aBitrate);
@@ -99,6 +103,31 @@ private:
 
   // The base |Segment| for the |Representation|.
   nsAutoPtr<SegmentBase> mSegmentBase;
+};
+
+// Comparator allows comparing |Representation|s based on media stream bitrate.
+class CompareRepresentationBitrates
+{
+public:
+  // Returns true if the elements are equals; false otherwise.
+  // Note: |Representation| is stored as an array of |nsAutoPtr| in
+  // |AdaptationSet|, but needs to be compared to regular pointers.
+  // Hence the left hand side of the function being an
+  // |nsAutoPtr| and the right being a regular pointer.
+  bool Equals(const nsAutoPtr<Representation>& a,
+              const Representation *b) const {
+    return a == b;
+  }
+
+  // Returns true if (a < b); false otherwise.
+  // Note: |Representation| is stored as an array of |nsAutoPtr| in
+  // |AdaptationSet|, but needs to be compared to regular pointers.
+  // Hence the left hand side of the function being an
+  // |nsAutoPtr| and the right being a regular pointer.
+  bool LessThan(const nsAutoPtr<Representation>& a,
+                const Representation *b) const {
+    return *a < *b;
+  }
 };
 
 }//namespace net

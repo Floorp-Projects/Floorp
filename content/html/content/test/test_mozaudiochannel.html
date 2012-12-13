@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mozaudiochannel</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <audio id="audio1" />
+  <audio id="audio2" mozaudiochannel="foo" />
+  <audio id="audio3" mozaudiochannel="content" />
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+var audio1 = document.getElementById("audio1");
+ok(audio1, "Audio Element exists");
+ok(audio1.mozAudioChannelType == "normal", "Default audio1 channel == 'normal'");
+try {
+audio1.mozAudioChannelType = "foo";
+} catch(e) {}
+ok(audio1.mozAudioChannelType == "normal", "Default audio1 channel == 'normal'");
+audio1.mozAudioChannelType = "alarm";
+ok(audio1.mozAudioChannelType == "alarm", "Default audio1 channel == 'alarm'");
+
+var audio2 = document.getElementById("audio2");
+ok(audio2, "Audio Element exists");
+ok(audio2.mozAudioChannelType == "normal", "Default audio2 channel == 'normal'");
+try {
+audio2.mozAudioChannelType = "foo";
+} catch(e) {}
+ok(audio2.mozAudioChannelType == "normal", "Default audio2 channel == 'normal'");
+audio2.mozAudioChannelType = "alarm";
+ok(audio2.mozAudioChannelType == "alarm", "Default audio2 channel == 'alarm'");
+
+var audio3 = document.getElementById("audio3");
+ok(audio3, "Audio Element exists");
+ok(audio3.mozAudioChannelType == "content", "Default audio3 channel == 'content'");
+try {
+audio3.mozAudioChannelType = "foo";
+} catch(e) {}
+ok(audio3.mozAudioChannelType == "normal", "audio3 channel == 'normal'");
+audio3.mozAudioChannelType = "alarm";
+ok(audio3.mozAudioChannelType == "alarm", "audio3 channel == 'alarm'");
+
+</script>
+</pre>
+</body>
+</html>

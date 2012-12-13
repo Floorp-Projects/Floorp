@@ -85,13 +85,13 @@ public:
     }
     callbackCount--;
     return NS_OK;
-  };
+  }
 
   NS_IMETHOD HandleError(const nsAString &name) {
     fprintf(stderr, "HANDLE Error! %s\n", NS_LossyConvertUTF16toASCII(name).get());
     errors++;
     return NS_OK;
-  };
+  }
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(SettingsServiceCallback, nsISettingsServiceCallback)

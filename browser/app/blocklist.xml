@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1354308657000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1354916891000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -45,6 +45,10 @@
                         <versionRange  minVersion="2.5.0" maxVersion="2.5.0" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i236" id="{EEE6C361-6118-11DC-9C72-001320C79847}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i64" id="royal@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -59,6 +63,13 @@
                   </emItem>
       <emItem  blockID="i78" id="socialnetworktools@mozilla.doslash.org">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i238" id="/^pink@.*\.info$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                   </emItem>
       <emItem  blockID="i174" id="info@thebflix.com">

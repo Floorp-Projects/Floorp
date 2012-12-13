@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
         wp.DOMWindow; // Force the lazy creation of a DOM window.
         calledListenerForBrowserXUL = true;
       }
-      if (/aboutHome.xhtml/.test(req.name) && (stateFlags & Ci.nsIWebProgressListener.STATE_STOP))
+      if (/mozilla.xhtml/.test(req.name) && (stateFlags & Ci.nsIWebProgressListener.STATE_STOP))
         finishTest();
     },
     QueryInterface: function(iid) {
@@ -55,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
    webProgress.addProgressListener(testProgressListener, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
 
    // Open the window.
-   var popup = window.open("about:home", "_blank", "width=640,height=400");
+   var popup = window.open("about:mozilla", "_blank", "width=640,height=400");
 
    // Wait for the window to load.
    function finishTest() {

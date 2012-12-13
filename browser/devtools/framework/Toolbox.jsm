@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommandUtils",
 
 // DO NOT put Require.jsm or gcli.jsm into lazy getters as this breaks the
 // requisition import a few lines down.
-Cu.import("resource://gre/modules/devtools/gcli.jsm");
+Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/devtools/Require.jsm");
 
 let Requisition = require('gcli/cli').Requisition;

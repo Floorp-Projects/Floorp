@@ -18,15 +18,45 @@ SDK_LIBRARY = $(REAL_LIBRARY)
 DIST_INSTALL = 1
 endif
 
-CSRCS = extraMallocFuncs.c
+DEFINES += -DMOZ_MEMORY_IMPL
 
-ifdef MOZ_JEMALLOC
+CSRCS = \
+  mozmemory_wrap.c \
+  jemalloc_config.c \
+  $(NULL)
+
+EXPORTS = \
+  mozmemory.h \
+  mozmemory_wrap.h \
+  $(NULL)
+
+ifdef MOZ_JEMALLOC3
 CSRCS += mozjemalloc_compat.c
+LOCAL_INCLUDES += -I../jemalloc/src/include
+ifdef _MSC_VER
+LOCAL_INCLUDES += -I$(topsrcdir)/memory/jemalloc/src/include/msvc_compat
+endif
+
 ifndef MOZ_NATIVE_JEMALLOC
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
 endif
 else
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/mozjemalloc)
+endif
+
+ifdef MOZ_REPLACE_MALLOC
+DEFINES += -DMOZ_REPLACE_MALLOC
+CSRCS += replace_malloc.c
+
+EXPORTS += \
+  replace_malloc.h \
+  malloc_decls.h \
+  $(NULL)
+
+# The zone allocator for OSX needs some jemalloc internal functions
+ifeq (Darwin,$(OS_TARGET))
+LOCAL_INCLUDES += -I$(topsrcdir)/memory/jemalloc/src/include
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

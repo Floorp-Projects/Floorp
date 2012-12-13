@@ -100,6 +100,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("th2", { "abbr": "SS#" }, true);
       testAttrs("th2", { "axis": "social" }, true);
 
+      // don't barf on an empty abbr element.
+      testAbsentAttrs("th3", { "abbr": "" }, true);
+
       // application accessible
       if (WIN) {
         var gfxInfo = Components.classes["@mozilla.org/gfx/info;1"].
@@ -153,6 +156,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=563862"
      title="Expand support for nsIAccessibleEvent::OBJECT_ATTRIBUTE_CHANGE">
     Mozilla Bug 563862
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=819303"
+     title="crash in nsTextEquivUtils::AppendTextEquivFromTextContent">
+    Mozilla Bug 819303
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -211,6 +219,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
     <tr>
       <th id="th1"><abbr title="Social Security Number">SS#</abbr></th>
       <th id="th2" abbr="SS#" axis="social">Social Security Number</th>
+      <th id="th3"><abbr></abbr></th>
     </tr>
   </table>
 

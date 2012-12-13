@@ -85,6 +85,7 @@
     <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset()"/>
     <command id="cmd_fullZoomToggle"  oncommand="ZoomManager.toggleZoom();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
+    <command id="Browser:RestoreLastSession" oncommand="restoreLastSession();" disabled="true"/>
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>

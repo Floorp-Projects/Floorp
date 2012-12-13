@@ -434,6 +434,7 @@ if (IS_WIN) {
     file.QueryInterface(AUS_Ci.nsILocalFileWin);
     file.fileAttributesWin |= file.WFA_READONLY;
     file.fileAttributesWin &= ~file.WFA_READWRITE;
+    logTestInfo("testing the successful creation of the lock file");
     do_check_true(file.exists());
     do_check_false(file.isWritable());
   }
@@ -446,6 +447,7 @@ if (IS_WIN) {
     file.QueryInterface(AUS_Ci.nsILocalFileWin);
     file.fileAttributesWin |= file.WFA_READWRITE;
     file.fileAttributesWin &= ~file.WFA_READONLY;
+    logTestInfo("removing and testing the successful removal of the lock file");
     file.remove(false);
     do_check_false(file.exists());
   }
@@ -1433,18 +1435,19 @@ function removeCallbackCopy() {
   appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
   if (appBinCopy.exists()) {
     try {
+      logTestInfo("attempting removal of file: " + appBinCopy.path);
       appBinCopy.remove(false);
-      // Use a timeout to give any files that were in use additional 
-      // time to close.  Same as updater.exe without service tests.
-      do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
     }
     catch (e) {
-      logTestInfo("unable to remove file during cleanup. Exception: " + e);
+      logTestInfo("non-fatal error removing file during cleanup (will try " +
+                  "again). File: " + appBinCopy.path + " Exception: " + e);
       do_timeout(TEST_HELPER_TIMEOUT, removeCallbackCopy);
+      return;
     }
-  } else {
-    do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
   }
+  // Use a timeout to give any files that were in use additional 
+  // time to close.  Same as updater.exe without service tests.
+  do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
 }
 
 /**

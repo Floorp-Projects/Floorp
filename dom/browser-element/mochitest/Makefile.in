@@ -71,6 +71,10 @@ MOCHITEST_FILES = \
 		file_browserElement_XFrameOptionsAllowFrom.sjs \
 		browserElement_FirstPaint.js \
 		test_browserElement_inproc_FirstPaint.html \
+		browserElement_NextPaint.js \
+		test_browserElement_inproc_NextPaint.html \
+		test_browserElement_oop_NextPaint.html \
+		file_browserElement_NextPaint.html \
 		browserElement_Alert.js \
 		test_browserElement_inproc_Alert.html \
 		browserElement_AlertInFrame.js \

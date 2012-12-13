@@ -45,7 +45,9 @@ const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
+const kSmsSendingObserverTopic           = "sms-sending";
 const kSmsSentObserverTopic              = "sms-sent";
+const kSmsFailedObserverTopic            = "sms-failed";
 const kSmsDeliverySuccessObserverTopic   = "sms-delivery-success";
 const kSmsDeliveryErrorObserverTopic     = "sms-delivery-error";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
@@ -55,7 +57,9 @@ const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
 const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
 
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
+const DOM_SMS_DELIVERY_SENDING           = "sending";
 const DOM_SMS_DELIVERY_SENT              = "sent";
+const DOM_SMS_DELIVERY_ERROR             = "error";
 
 const RIL_IPC_TELEPHONY_MSG_NAMES = [
   "RIL:EnumerateCalls",
@@ -107,7 +111,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsDatabaseService",
                                    "@mozilla.org/sms/rilsmsdatabaseservice;1",
-                                   "nsISmsDatabaseService");
+                                   "nsIRilSmsDatabaseService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -1163,22 +1167,13 @@ RadioInterfaceLayer.prototype = {
    * Track the active call and update the audio system as its state changes.
    */
   _activeCall: null,
-  updateCallAudioState: function updateCallAudioState() {
-    if (!this._activeCall) {
-      // Disable audio.
-      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
-      debug("No active call, put audio system into PHONE_STATE_NORMAL: "
-            + gAudioManager.phoneState);
-      return;
-    }
-    switch (this._activeCall.state) {
-      case nsIRadioInterfaceLayer.CALL_STATE_INCOMING:
-        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
-        debug("Incoming call, put audio system into PHONE_STATE_RINGTONE: "
-              + gAudioManager.phoneState);
-        break;
+  updateCallAudioState: function updateCallAudioState(call) {
+    switch (call.state) {
       case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
+      case nsIRadioInterfaceLayer.CALL_STATE_ALERTING:
       case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
+        call.isActive = true;
+        this._activeCall = call;
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
         if (this.speakerEnabled) {
           gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
@@ -1186,6 +1181,28 @@ RadioInterfaceLayer.prototype = {
         }
         debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
               + gAudioManager.phoneState);
+        break;
+      case nsIRadioInterfaceLayer.CALL_STATE_INCOMING:
+        call.isActive = false;
+        if (!this._activeCall) {
+          // We can change the phone state into RINGTONE only when there's
+          // no active call.
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
+          debug("Incoming call, put audio system into PHONE_STATE_RINGTONE: "
+                + gAudioManager.phoneState);
+        }
+        break;
+      case nsIRadioInterfaceLayer.CALL_STATE_HELD: // Fall through...
+      case nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED:
+        call.isActive = false;
+        if (this._activeCall &&
+            this._activeCall.callIndex == call.callIndex) {
+          // Previously active call is not active now. Disable audio.
+          this._activeCall = null;
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+          debug("No active call, put audio system into PHONE_STATE_NORMAL: "
+                + gAudioManager.phoneState);
+        }
         break;
     }
   },
@@ -1211,15 +1228,7 @@ RadioInterfaceLayer.prototype = {
     if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
       gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
-
-    if (call.isActive) {
-      this._activeCall = call;
-    } else if (this._activeCall &&
-               this._activeCall.callIndex == call.callIndex) {
-      // Previously active call is not active now.
-      this._activeCall = null;
-    }
-    this.updateCallAudioState();
+    this.updateCallAudioState(call);
     this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },
 
@@ -1228,11 +1237,8 @@ RadioInterfaceLayer.prototype = {
    */
   handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
-    if (call.isActive) {
-      this._activeCall = null;
-    }
-    this.updateCallAudioState();
     call.state = nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED;
+    this.updateCallAudioState(call);
     this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },
 
@@ -1402,27 +1408,34 @@ RadioInterfaceLayer.prototype = {
       return;
     }
 
-    let timestamp = Date.now();
-    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
-    let id = gSmsDatabaseService.saveSentMessage(options.number,
-                                                 options.fullBody,
-                                                 timestamp);
-    let sms = gSmsService.createSmsMessage(id,
+    gSmsDatabaseService.setMessageDelivery(options.sms.id,
                                            DOM_SMS_DELIVERY_SENT,
-                                           RIL.GECKO_SMS_DELIVERY_STATUS_PENDING,
+                                           options.sms.deliveryStatus);
+
+    let sms = gSmsService.createSmsMessage(options.sms.id,
+                                           DOM_SMS_DELIVERY_SENT,
+                                           options.sms.deliveryStatus,
                                            null,
-                                           options.number,
-                                           options.fullBody,
-                                           messageClass,
-                                           timestamp,
+                                           options.sms.receiver,
+                                           options.sms.body,
+                                           options.sms.messageClass,
+                                           options.sms.timestamp,
                                            true);
+
+    gSystemMessenger.broadcastMessage("sms-sent",
+                                      {id: options.sms.id,
+                                       delivery: DOM_SMS_DELIVERY_SENT,
+                                       deliveryStatus: options.sms.deliveryStatus,
+                                       sender: message.sender || null,
+                                       receiver: options.sms.receiver,
+                                       body: options.sms.body,
+                                       messageClass: options.sms.messageClass,
+                                       timestamp: options.sms.timestamp,
+                                       read: true});
 
     if (!options.requestStatusReport) {
       // No more used if STATUS-REPORT not requested.
       delete this._sentSmsEnvelopes[message.envelopeId];
-    } else {
-      options.id = id;
-      options.timestamp = timestamp;
     }
 
     options.request.notifyMessageSent(sms);
@@ -1439,17 +1452,18 @@ RadioInterfaceLayer.prototype = {
     }
     delete this._sentSmsEnvelopes[message.envelopeId];
 
-    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
-    gSmsDatabaseService.setMessageDeliveryStatus(options.id,
-                                                 message.deliveryStatus);
-    let sms = gSmsService.createSmsMessage(options.id,
-                                           DOM_SMS_DELIVERY_SENT,
+    gSmsDatabaseService.setMessageDelivery(options.sms.id,
+                                           options.sms.delivery,
+                                           message.deliveryStatus);
+
+    let sms = gSmsService.createSmsMessage(options.sms.id,
+                                           options.sms.delivery,
                                            message.deliveryStatus,
                                            null,
-                                           options.number,
-                                           options.fullBody,
-                                           messageClass,
-                                           options.timestamp,
+                                           options.sms.receiver,
+                                           options.sms.body,
+                                           options.sms.messageClass,
+                                           options.sms.timestamp,
                                            true);
 
     let topic = (message.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
@@ -1474,7 +1488,23 @@ RadioInterfaceLayer.prototype = {
         break;
     }
 
+    gSmsDatabaseService.setMessageDelivery(options.sms.id,
+                                           DOM_SMS_DELIVERY_ERROR,
+                                           RIL.GECKO_SMS_DELIVERY_STATUS_ERROR);
+
+    let sms = gSmsService.createSmsMessage(options.sms.id,
+                                           DOM_SMS_DELIVERY_ERROR,
+                                           RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
+                                           null,
+                                           options.sms.receiver,
+                                           options.sms.body,
+                                           options.sms.messageClass,
+                                           options.sms.timestamp,
+                                           true);
+
     options.request.notifySendMessageFailed(error);
+
+    Services.obs.notifyObservers(sms, kSmsFailedObserverTopic, null);
   },
 
   /**
@@ -2353,10 +2383,28 @@ RadioInterfaceLayer.prototype = {
       options.segmentRef = this.nextSegmentRef;
     }
 
+    let timestamp = Date.now();
+    let id = gSmsDatabaseService.saveSendingMessage(options.number,
+                                                    options.fullBody,
+                                                    timestamp);
+    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
+    let deliveryStatus = options.requestStatusReport
+                       ? RIL.GECKO_SMS_DELIVERY_STATUS_PENDING
+                       : RIL.GECKO_SMS_DELIVERY_STATUS_NOT_APPLICABLE;
+    let sms = gSmsService.createSmsMessage(id,
+                                           DOM_SMS_DELIVERY_SENDING,
+                                           deliveryStatus,
+                                           null,
+                                           options.number,
+                                           options.fullBody,
+                                           messageClass,
+                                           timestamp,
+                                           true);
+    Services.obs.notifyObservers(sms, kSmsSendingObserverTopic, null);
+
     // Keep current SMS message info for sent/delivered notifications
     options.envelopeId = this.createSmsEnvelope({request: request,
-                                                 number: options.number,
-                                                 fullBody: options.fullBody,
+                                                 sms: sms,
                                                  requestStatusReport: options.requestStatusReport});
 
     this.worker.postMessage(options);

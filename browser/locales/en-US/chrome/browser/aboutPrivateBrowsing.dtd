@@ -8,16 +8,27 @@
 <!ENTITY privatebrowsingpage.issueDesc                 "&brandShortName; won't remember any history for this session.">
 <!ENTITY privatebrowsingpage.issueDesc.normal          "&brandShortName; is not currently in Private Browsing mode.">
 
+<!ENTITY privatebrowsingpage.perwindow.issueDesc        "&brandShortName; won't remember any history for this window.">
+<!ENTITY privatebrowsingpage.perwindow.issueDesc.normal "You are not currently in a private window.">
+
 <!ENTITY privatebrowsingpage.description               "In a Private Browsing session, &brandShortName; won't keep any browser history, search history, download history, web form history, cookies, or temporary internet files.  However, files you download and bookmarks you make will be kept.">
 
+<!ENTITY privatebrowsingpage.perwindow.description     "In a Private Browsing window, &brandShortName; won't keep any browser history, search history, download history, web form history, cookies, or temporary internet files.  However, files you download and bookmarks you make will be kept.">
 
 <!ENTITY privatebrowsingpage.startPrivateBrowsing.label "Start Private Browsing">
 <!ENTITY privatebrowsingpage.startPrivateBrowsing.accesskey "P">
+
+<!ENTITY privatebrowsingpage.openPrivateWindow.label "Open a Private Window">
+<!ENTITY privatebrowsingpage.openPrivateWindow.accesskey "P">
 
 <!-- LOCALIZATION NOTE (privatebrowsingpage.howToStop2): please leave &basePBMenu.label; intact in the translation -->
 <!-- LOCALIZATION NOTE (privatebrowsingpage.howToStart2): please leave &basePBMenu.label; intact in the translation -->
 <!ENTITY privatebrowsingpage.howToStop2                "To stop Private Browsing, select &basePBMenu.label; &gt; &privateBrowsingCmd.stop.label;, or close &brandShortName;.">
 <!ENTITY privatebrowsingpage.howToStart2               "To start Private Browsing, you can also select &basePBMenu.label; &gt; &privateBrowsingCmd.start.label;.">
+
+<!-- LOCALIZATION NOTE (privatebrowsingpage.howToStart3): please leave &basePBMenu.label; intact in the translation -->
+<!ENTITY privatebrowsingpage.howToStart3               "To start Private Browsing, you can also select &basePBMenu.label; &gt; &newPrivateWindow.label;.">
+<!ENTITY privatebrowsingpage.howToStop3                "To stop Private Browsing, you can close this window.">
 
 <!ENTITY privatebrowsingpage.moreInfo                  "While this computer won't have a record of your browsing history, your internet service provider or employer can still track the pages you visit.">
 <!ENTITY privatebrowsingpage.learnMore                 "Learn More">

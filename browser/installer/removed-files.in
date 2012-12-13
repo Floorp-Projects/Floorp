@@ -98,6 +98,10 @@ defaults/pref/reporter.js
 defaults/pref/security-prefs.js
 defaults/pref/winpref.js
 defaults/pref/xpinstall.js
+defaults/preferences/services-aitc.js
+defaults/preferences/services-notifications.js
+defaults/preferences/services-sync.js
+defaults/preferences/healthreport-prefs.js
 defaults/profile/US/
 defaults/profile/extensions/
 defaults/profile/extensions/Extensions.rdf
@@ -704,7 +708,6 @@ uninstall/UninstallDeerPark.exe
 uninstall/UninstallFirefox.exe
 uninstall/uninst.exe
 uninstall/uninstall.exe
-update.locale
 #ifndef MOZ_UPDATER
   #ifdef XP_MACOSX
     updater.app/
@@ -715,6 +718,7 @@ update.locale
 #endif
 xpicleanup@BIN_SUFFIX@
 #ifdef MOZ_OMNIJAR
+  update.locale
   omni.jar
   chrome/af.jar
   chrome/af.manifest

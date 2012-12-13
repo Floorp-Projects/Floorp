@@ -1,0 +1,11 @@
+<html>
+<body>
+<script>
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var evt = document.createEvent('CustomEvent');
+    evt.initCustomEvent('georesult', true, false, pos.coords.latitude);
+    document.dispatchEvent(evt);
+  });
+</script>
+</body>
+</html>

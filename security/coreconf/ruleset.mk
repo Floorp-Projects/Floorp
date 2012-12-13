@@ -181,9 +181,11 @@ endif #NS_USE_JDK
 ifdef NSS_BUILD_CONTINUE_ON_ERROR
 # Try to build everything. I.e., don't exit on errors.
     EXIT_ON_ERROR		= +e
+    IGNORE_ERROR		= -
     CLICK_STOPWATCH		= date
 else
     EXIT_ON_ERROR		= -e
+    IGNORE_ERROR		=
     CLICK_STOPWATCH		= true
 endif
 
@@ -201,18 +203,14 @@ ifdef SYSTEM_INCL_DIR
 endif
 
 ifdef DIRS
-    LOOP_OVER_DIRS	=					\
-	@for directory in $(DIRS); do				\
-	    if test -d $$directory; then			\
-		set $(EXIT_ON_ERROR);				\
-		echo "cd $$directory; $(MAKE) $@";		\
-		$(MAKE) -C $$directory $@;			\
-		set +e;						\
-	    else						\
-		echo "Skipping non-directory $$directory...";	\
-	    fi;							\
-	    $(CLICK_STOPWATCH);					\
-	done
+define SUBMAKE
++@echo "cd $2; $(MAKE) $1"
+$(IGNORE_ERROR)@$(MAKE) -C $(2) $(1)
+@$(CLICK_STOPWATCH)
+
+endef
+
+    LOOP_OVER_DIRS	= $(foreach dir,$(DIRS),$(call SUBMAKE,$@,$(dir)))
 endif
 
 MK_RULESET = included
