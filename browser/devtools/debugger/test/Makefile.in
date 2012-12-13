@@ -11,7 +11,7 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
-	browser_dbg_leaktest.js \
+	browser_dbg_aaa_run_first_leaktest.js \
 	browser_dbg_createChrome.js \
 	$(browser_dbg_debugger-tab-switch.js disabled until issues 106, 40 are fixed) \
 	$(browser_dbg_debugger-tab-switch-window.js disabled until issues 106, 40 are fixed) \
