@@ -82,23 +82,22 @@ MacroAssemblerX64::passABIArg(const FloatRegister &reg)
 }
 
 void
-MacroAssemblerX64::callWithABI(void *fun, Result result)
+MacroAssemblerX64::callWithABIPre(uint32_t *stackAdjust)
 {
     JS_ASSERT(inCall_);
     JS_ASSERT(args_ == passedIntArgs_ + passedFloatArgs_);
 
-    uint32_t stackAdjust;
     if (dynamicAlignment_) {
-        stackAdjust = stackForCall_
-                    + ComputeByteAlignment(stackForCall_ + STACK_SLOT_SIZE,
-                                           StackAlignment);
+        *stackAdjust = stackForCall_
+                     + ComputeByteAlignment(stackForCall_ + STACK_SLOT_SIZE,
+                                            StackAlignment);
     } else {
-        stackAdjust = stackForCall_
-                    + ComputeByteAlignment(stackForCall_ + framePushed_,
-                                           StackAlignment);
+        *stackAdjust = stackForCall_
+                     + ComputeByteAlignment(stackForCall_ + framePushed_,
+                                            StackAlignment);
     }
 
-    reserveStack(stackAdjust);
+    reserveStack(*stackAdjust);
 
     // Position all arguments.
     {
@@ -121,15 +120,55 @@ MacroAssemblerX64::callWithABI(void *fun, Result result)
         bind(&good);
     }
 #endif
+}
 
-    call(ImmWord(fun));
-
+void
+MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, Result result)
+{
     freeStack(stackAdjust);
     if (dynamicAlignment_)
         pop(rsp);
 
     JS_ASSERT(inCall_);
     inCall_ = false;
+}
+
+void
+MacroAssemblerX64::callWithABI(void *fun, Result result)
+{
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(ImmWord(fun));
+    callWithABIPost(stackAdjust, result);
+}
+
+static bool
+IsIntArgReg(Register reg)
+{
+    for (uint32_t i = 0; i < NumIntArgRegs; i++) {
+        if (IntArgRegs[i] == reg)
+            return true;
+    }
+
+    return false;
+}
+
+void
+MacroAssemblerX64::callWithABI(Address fun, Result result)
+{
+    if (IsIntArgReg(fun.base)) {
+        // Callee register may be clobbered for an argument. Move the callee to
+        // r10, a volatile, non-argument register.
+        moveResolver_.addMove(MoveOperand(fun.base), MoveOperand(r10), Move::GENERAL);
+        fun.base = r10;
+    }
+
+    JS_ASSERT(!IsIntArgReg(fun.base));
+
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(Operand(fun));
+    callWithABIPost(stackAdjust, result);
 }
 
 void
