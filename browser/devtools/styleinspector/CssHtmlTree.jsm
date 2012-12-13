@@ -736,7 +736,7 @@ this.PropertyView = function PropertyView(aTree, aName)
   this.name = aName;
   this.getRTLAttr = aTree.getRTLAttr;
 
-  this.link = "https://developer.mozilla.org/en/CSS/" + aName;
+  this.link = "https://developer.mozilla.org/CSS/" + aName;
 
   this.templateMatchedSelectors = aTree.styleDocument.getElementById("templateMatchedSelectors");
 }
