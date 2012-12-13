@@ -196,6 +196,7 @@ public:
   static JSContext* GetContextFromDocument(nsIDocument *aDocument);
 
   static bool     IsCallerChrome();
+  static bool     IsCallerXBL();
 
   static bool     IsImageSrcSetDisabled();
 
