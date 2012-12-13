@@ -70,7 +70,6 @@
 #include "mozilla/Attributes.h"
 
 #include "nsIGfxInfo.h"
-#include "nsIMemoryReporter.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -214,33 +213,6 @@ static const char *gPrefLangNames[] = {
     "x-user-def"
 };
 
-static int64_t sTiledThebesLayerTextureUsage = 0;
-
-static int64_t
-GetTiledThebesLayerTextureUsage()
-{
-    return sTiledThebesLayerTextureUsage;
-}
-
-void
-gfxPlatform::UpdateTiledThebesLayerTextureUsage(eMemoryUse action, GLenum format, GLenum type, uint16_t tileSize)
-{
-    uint32_t bytesPerTexel = mozilla::gl::GetBitsPerTexel(format, type) / 8;
-    int64_t bytes = (int64_t)(tileSize * tileSize * bytesPerTexel);
-    if (action == eMemoryUse_free) {
-        sTiledThebesLayerTextureUsage -= bytes;
-    } else {
-        sTiledThebesLayerTextureUsage += bytes;
-    }
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(TiledThebesLayer,
-    "gfx-tiled-thebes-layer-textures",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetTiledThebesLayerTextureUsage,
-    "Texture memory used by TiledThebesLayer.");
-
 gfxPlatform::gfxPlatform()
   : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
 {
@@ -257,8 +229,6 @@ gfxPlatform::gfxPlatform()
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
     uint32_t contentMask = 0;
     InitBackendPrefs(canvasMask, contentMask);
-
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(TiledThebesLayer));
 }
 
 gfxPlatform*

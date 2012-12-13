@@ -20,7 +20,6 @@
 #include "gfx2DGlue.h"
 #include "mozilla/RefPtr.h"
 #include "GfxInfoCollector.h"
-#include "GLContext.h"
 
 #ifdef XP_OS2
 #undef OS2EMX_PLAIN_CHAR
@@ -103,13 +102,6 @@ enum eGfxLog {
     eGfxLog_textrunui        = 3,
     // dump cmap coverage data as they are loaded
     eGfxLog_cmapdata         = 4
-};
-
-enum eMemoryUse {
-    // when memory being allocated is reported to a memory reporter
-    eMemoryUse_alloc    = 0,
-    // when memory being freed is reported to a memory reporter
-    eMemoryUse_free     = 1
 };
 
 // when searching through pref langs, max number of pref langs
@@ -423,13 +415,6 @@ public:
     // Retain some invalid tiles when the valid region of a layer changes and
     // excludes previously valid tiles.
     static bool UseReusableTileStore();
-
-    // When memory is used/freed for tile textures, call this method
-    // to update the value reported by the memory reporter.
-    static void UpdateTiledThebesLayerTextureUsage(eMemoryUse action,
-                                                   GLenum format,
-                                                   GLenum type,
-                                                   uint16_t tileSize);
 
     static bool OffMainThreadCompositingEnabled();
 
