@@ -39,6 +39,7 @@ def replaceFileIfChanged(filename, newContents):
     f = open(filename, 'wb')
     f.write(newContents)
     f.close()
+    return True
 
 def toStringBool(arg):
     return str(not not arg).lower()
