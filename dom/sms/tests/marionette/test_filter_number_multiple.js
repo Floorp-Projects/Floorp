@@ -9,7 +9,7 @@ SpecialPowers.setBoolPref("dom.sms.enabled", true);
 let sms = window.navigator.mozSms;
 let numberMsgs = 10;
 let smsList = new Array();
-let defaultRemoteNumber = "5552227777";
+let defaultRemoteNumber = "+15552227777";
 
 function verifyInitialState() {
   log("Verifying initial state.");
@@ -95,7 +95,7 @@ function sendSms() {
   // Send an SMS to a unique number that will fall outside of the filter
   let gotSmsSent = false;
   let gotRequestSuccess = false;
-  let remoteNumber = "5558120649";
+  let remoteNumber = "+15558120649";
   let text = "Outgoing SMS brought to you by Firefox OS!";
 
   log("Sending an SMS.");
@@ -169,7 +169,7 @@ sms.onreceived = function onreceived(event) {
 
 function nextRep() {
   // Keep simulating incoming messages until have received specified number
-  let secondNumber = "5559990000";
+  let secondNumber = "+15559990000";
   if (smsList.length < (numberMsgs - 1)) {
     // Have every other SMS be from different number, so filter won't find all
     if (smsList.length % 2) {
