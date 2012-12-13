@@ -188,11 +188,12 @@ int nestegg_track_count(nestegg * context, unsigned int * tracks);
     @param start_pos   Starting offset of the cluster. -1 means non-existant.
     @param end_pos     Starting offset of the cluster. -1 means non-existant or
                        final cluster.
+    @param tstamp      Starting timestamp of the cluster.
     @retval  0 Success.
     @retval -1 Error. */
 int nestegg_get_cue_point(nestegg * context, unsigned int cluster_num,
                           int64_t max_offset, int64_t * start_pos,
-                          int64_t * end_pos);
+                          int64_t * end_pos, uint64_t * tstamp);
 
 /** Seek to @a offset.  Stream will seek directly to offset.
     Should be used to seek to the start of a resync point, i.e. cluster; the
