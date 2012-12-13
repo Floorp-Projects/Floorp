@@ -4,7 +4,10 @@
 
 #include "nsISupports.idl"
 
-native PRNetAddr(union PRNetAddr);
+%{ C++
+#include "mozilla/net/DNS.h"
+%}
+native NetAddr(mozilla::net::NetAddr);
 
 /**
  * nsIDNSRecord
@@ -14,7 +17,7 @@ native PRNetAddr(union PRNetAddr);
  * like an enumerator, allowing the caller to easily step through the
  * list of IP addresses.
  */
-[scriptable, uuid(ead9e9d8-7eef-4dae-a7f0-a1edcfb20478)]
+[scriptable, uuid(67E6CF03-12C7-4AF4-AE5F-AE362C7AF8FF)]
 interface nsIDNSRecord : nsISupports
 {
     /**
@@ -27,15 +30,15 @@ interface nsIDNSRecord : nsISupports
 
     /**
      * this function copies the value of the next IP address into the
-     * given PRNetAddr struct and increments the internal address iterator.
+     * given NetAddr struct and increments the internal address iterator.
      *
      * @param aPort
-     *        A port number to initialize the PRNetAddr with.
+     *        A port number to initialize the NetAddr with.
      *
      * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
      * the record.
      */
-    [noscript] PRNetAddr getNextAddr(in uint16_t aPort);
+    [noscript] NetAddr getNextAddr(in uint16_t aPort);
 
     /**
      * this function returns the value of the next IP address as a
