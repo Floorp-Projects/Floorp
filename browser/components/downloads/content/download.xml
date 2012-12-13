@@ -33,7 +33,7 @@
              -->
         <xul:description class="downloadTarget"
                          crop="center"
-                         style="min-width: &downloadsSummary.minWidth;"
+                         style="min-width: &downloadsSummary.minWidth2;"
                          xbl:inherits="value=target,tooltiptext=target"/>
         <xul:progressmeter anonid="progressmeter"
                            class="downloadProgress"
