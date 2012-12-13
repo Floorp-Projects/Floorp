@@ -24,6 +24,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
+#include "nsIProfileChangeStatus.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
 #include "nsSmartCardMonitor.h"
@@ -1829,7 +1830,7 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
   return NS_OK;
 }
 
-void
+nsresult
 nsNSSComponent::ShutdownNSS()
 {
   // Can be called both during init and profile change,
@@ -2153,7 +2154,9 @@ nsNSSComponent::RandomUpdate(void *entropy, int32_t bufLen)
 
 #define PROFILE_CHANGE_NET_TEARDOWN_TOPIC "profile-change-net-teardown"
 #define PROFILE_CHANGE_NET_RESTORE_TOPIC "profile-change-net-restore"
+#define PROFILE_APPROVE_CHANGE_TOPIC "profile-approve-change"
 #define PROFILE_CHANGE_TEARDOWN_TOPIC "profile-change-teardown"
+#define PROFILE_CHANGE_TEARDOWN_VETO_TOPIC "profile-change-teardown-veto"
 #define PROFILE_BEFORE_CHANGE_TOPIC "profile-before-change"
 #define PROFILE_DO_CHANGE_TOPIC "profile-do-change"
 
@@ -2161,9 +2164,15 @@ NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
                         const PRUnichar *someData)
 {
-  if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0) {
+  if (nsCRT::strcmp(aTopic, PROFILE_APPROVE_CHANGE_TOPIC) == 0) {
+    DoProfileApproveChange(aSubject);
+  }
+  else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("in PSM code, receiving change-teardown\n"));
     DoProfileChangeTeardown(aSubject);
+  }
+  else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC) == 0) {
+    mShutdownObjectList->allowUI();
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving profile change topic\n"));
@@ -2178,6 +2187,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       // it again. We use the same cleanup functionality used when switching
       // profiles. The order of function calls must correspond to the order
       // of notifications sent by Profile Manager (nsProfile).
+      DoProfileApproveChange(aSubject);
       DoProfileChangeNetTeardown();
       DoProfileChangeTeardown(aSubject);
       DoProfileBeforeChange(aSubject);
@@ -2199,6 +2209,10 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     if (needsInit) {
       if (NS_FAILED(InitializeNSS(false))) { // do not show a warning box on failure
         PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS after profile switch.\n"));
+        nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+        if (status) {
+          status->ChangeFailed();
+        }
       }
     }
 
@@ -2400,7 +2414,9 @@ nsNSSComponent::RegisterObservers()
 
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
+    observerService->AddObserver(this, PROFILE_APPROVE_CHANGE_TOPIC, false);
     observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC, false);
+    observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC, false);
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, false);
     observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC, false);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, false);
@@ -2423,7 +2439,9 @@ nsNSSComponent::DeregisterObservers()
 
     observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
+    observerService->RemoveObserver(this, PROFILE_APPROVE_CHANGE_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC);
+    observerService->RemoveObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC);
     observerService->RemoveObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
     observerService->RemoveObserver(this, PROFILE_DO_CHANGE_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC);
@@ -2463,6 +2481,23 @@ nsNSSComponent::RememberCert(CERTCertificate *cert)
   return NS_OK;
 }
 
+static const char PROFILE_SWITCH_CRYPTO_UI_ACTIVE[] =
+                        "ProfileSwitchCryptoUIActive";
+static const char PROFILE_SWITCH_SOCKETS_STILL_ACTIVE[] =
+                        "ProfileSwitchSocketsStillActive";
+
+void
+nsNSSComponent::DoProfileApproveChange(nsISupports* aSubject)
+{
+  if (mShutdownObjectList->isUIActive()) {
+    ShowAlertFromStringBundle(PROFILE_SWITCH_CRYPTO_UI_ACTIVE);
+    nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+    if (status) {
+      status->VetoChange();
+    }
+  }
+}
+
 void
 nsNSSComponent::DoProfileChangeNetTeardown()
 {
@@ -2474,7 +2509,23 @@ nsNSSComponent::DoProfileChangeNetTeardown()
 void
 nsNSSComponent::DoProfileChangeTeardown(nsISupports* aSubject)
 {
-  mShutdownObjectList->ifPossibleDisallowUI();
+  bool callVeto = false;
+
+  if (!mShutdownObjectList->ifPossibleDisallowUI()) {
+    callVeto = true;
+    ShowAlertFromStringBundle(PROFILE_SWITCH_CRYPTO_UI_ACTIVE);
+  }
+  else if (mShutdownObjectList->areSSLSocketsActive()) {
+    callVeto = true;
+    ShowAlertFromStringBundle(PROFILE_SWITCH_SOCKETS_STILL_ACTIVE);
+  }
+
+  if (callVeto) {
+    nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+    if (status) {
+      status->VetoChange();
+    }
+  }
 }
 
 void
@@ -2498,7 +2549,12 @@ nsNSSComponent::DoProfileBeforeChange(nsISupports* aSubject)
   StopCRLUpdateTimer();
 
   if (needsCleanup) {
-    ShutdownNSS();
+    if (NS_FAILED(ShutdownNSS())) {
+      nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+      if (status) {
+        status->ChangeFailed();
+      }
+    }
   }
   mShutdownObjectList->allowUI();
 }
