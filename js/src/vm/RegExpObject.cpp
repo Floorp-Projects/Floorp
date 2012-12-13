@@ -448,10 +448,10 @@ RegExpShared::checkSyntax(JSContext *cx, TokenStream *tokenStream, JSLinearStrin
 }
 
 bool
-RegExpShared::compile(JSContext *cx)
+RegExpShared::compile(JSContext *cx, bool matchOnly)
 {
     if (!sticky())
-        return compile(cx, *source);
+        return compile(cx, *source, matchOnly);
 
     /*
      * The sticky case we implement hackily by prepending a caret onto the front
@@ -472,11 +472,11 @@ RegExpShared::compile(JSContext *cx)
     if (!fakeySource)
         return false;
 
-    return compile(cx, *fakeySource);
+    return compile(cx, *fakeySource, matchOnly);
 }
 
 bool
-RegExpShared::compile(JSContext *cx, JSLinearString &pattern)
+RegExpShared::compile(JSContext *cx, JSLinearString &pattern, bool matchOnly)
 {
     /* Parse the pattern. */
     ErrorCode yarrError;
@@ -494,7 +494,8 @@ RegExpShared::compile(JSContext *cx, JSLinearString &pattern)
             return false;
 
         JSGlobalData globalData(execAlloc);
-        YarrJITCompileMode compileMode = JSC::Yarr::IncludeSubpatterns;
+        YarrJITCompileMode compileMode = matchOnly ? JSC::Yarr::MatchOnly
+                                                   : JSC::Yarr::IncludeSubpatterns;
 
         jitCompile(yarrPattern, JSC::Yarr::Char16, &globalData, codeBlock, compileMode);
 
@@ -520,7 +521,15 @@ RegExpShared::compileIfNecessary(JSContext *cx)
 {
     if (hasCode() || hasBytecode())
         return true;
-    return compile(cx);
+    return compile(cx, false);
+}
+
+bool
+RegExpShared::compileMatchOnlyIfNecessary(JSContext *cx)
+{
+    if (hasMatchOnlyCode() || hasBytecode())
+        return true;
+    return compile(cx, true);
 }
 
 RegExpRunStatus
@@ -568,6 +577,62 @@ RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length,
     matches.displace(displacement);
     matches.checkAgainst(origLength);
     *lastIndex = matches[0].limit;
+    return RegExpRunStatus_Success;
+}
+
+RegExpRunStatus
+RegExpShared::executeMatchOnly(JSContext *cx, StableCharPtr chars, size_t length,
+                               size_t *lastIndex, MatchPair &match)
+{
+    /* Compile the code at point-of-use. */
+    if (!compileMatchOnlyIfNecessary(cx))
+        return RegExpRunStatus_Error;
+
+    const size_t origLength = length;
+    size_t start = *lastIndex;
+    size_t displacement = 0;
+
+    if (sticky()) {
+        displacement = start;
+        chars += displacement;
+        length -= displacement;
+        start = 0;
+    }
+
+#if ENABLE_YARR_JIT
+    if (!codeBlock.isFallBack()) {
+        MatchResult result = codeBlock.execute(chars.get(), start, length);
+        if (!result)
+            return RegExpRunStatus_Success_NotFound;
+
+        match = MatchPair(result.start, result.end);
+        match.displace(displacement);
+        *lastIndex = match.limit;
+        return RegExpRunStatus_Success;
+    }
+#endif
+
+    /*
+     * The JIT could not be used, so fall back to the Yarr interpreter.
+     * Unfortunately, the interpreter does not have a MatchOnly mode, so a
+     * temporary output vector must be provided.
+     */
+    JS_ASSERT(hasBytecode());
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    if (!matches.initArray(pairCount()))
+        return RegExpRunStatus_Error;
+
+    unsigned result =
+        JSC::Yarr::interpret(bytecode, chars.get(), length, start, matches.rawBuf());
+
+    if (result == JSC::Yarr::offsetNoMatch)
+        return RegExpRunStatus_Success_NotFound;
+
+    matches.displace(displacement);
+    matches.checkAgainst(origLength);
+
+    *lastIndex = matches[0].limit;
+    match = MatchPair(result, matches[0].limit);
     return RegExpRunStatus_Success;
 }
 

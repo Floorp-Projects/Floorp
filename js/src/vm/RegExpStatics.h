@@ -24,15 +24,27 @@ class RegExpStatics
     VectorMatchPairs        matches;
     HeapPtr<JSLinearString> matchesInput;
 
+    /* The previous RegExp input, used to resolve lazy state. */
+    HeapPtr<RegExpObject>   regexp;
+    size_t                  lastIndex;
+
     /* The latest RegExp input, set before execution. */
     HeapPtr<JSString>       pendingInput;
     RegExpFlag              flags;
+
+    /*
+     * If true, |matchesInput|, |regexp|, and |lastIndex| may be used
+     * to replay the last executed RegExp, and |matches| is invalid.
+     */
+    bool                    pendingLazyEvaluation;
 
     /* Linkage for preserving RegExpStatics during nested RegExp execution. */
     RegExpStatics           *bufferLink;
     bool                    copied;
 
   private:
+    bool executeLazy(JSContext *cx);
+
     inline void aboutToWrite();
     inline void copyTo(RegExpStatics &dst);
 
@@ -72,6 +84,8 @@ class RegExpStatics
 
     /* Mutators. */
 
+    inline void updateLazily(JSContext *cx, JSLinearString *input,
+                             RegExpObject *regexp, size_t lastIndex);
     inline bool updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchPairs &newPairs);
     inline void setMultiline(JSContext *cx, bool enabled);
 
@@ -85,6 +99,8 @@ class RegExpStatics
   public:
     /* Default match accessor. */
     const MatchPairs &getMatches() const {
+        /* Safe: only used by String methods, which do not set lazy mode. */
+        JS_ASSERT(!pendingLazyEvaluation);
         return matches;
     }
 
@@ -95,11 +111,15 @@ class RegExpStatics
 
     /* Returns whether results for a non-empty match are present. */
     bool matched() const {
+        /* Safe: only used by String methods, which do not set lazy mode. */
+        JS_ASSERT(!pendingLazyEvaluation);
         JS_ASSERT(matches.pairCount() > 0);
         return matches[0].limit - matches[0].start > 0;
     }
 
     void mark(JSTracer *trc) {
+        if (regexp)
+            gc::MarkObject(trc, &regexp, "res->regexp");
         if (pendingInput)
             MarkString(trc, &pendingInput, "res->pendingInput");
         if (matchesInput)
