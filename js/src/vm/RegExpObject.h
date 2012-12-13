@@ -31,8 +31,6 @@
  *
  *   RegExpShared - The compiled representation of the regexp.
  *
- *   RegExpCode - The low-level implementation jit details.
- *
  *   RegExpCompartment - Owns all RegExpShared instances in a compartment.
  *
  * To save memory, a RegExpShared is not created for a RegExpObject until it is
@@ -74,70 +72,6 @@ class RegExpObjectBuilder
 JSObject *
 CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 
-namespace detail {
-
-class RegExpCode
-{
-    typedef JSC::Yarr::BytecodePattern BytecodePattern;
-    typedef JSC::Yarr::ErrorCode ErrorCode;
-    typedef JSC::Yarr::YarrPattern YarrPattern;
-#if ENABLE_YARR_JIT
-    typedef JSC::Yarr::JSGlobalData JSGlobalData;
-    typedef JSC::Yarr::YarrCodeBlock YarrCodeBlock;
-
-    /* Note: Native code is valid only if |codeBlock.isFallBack() == false|. */
-    YarrCodeBlock   codeBlock;
-#endif
-    BytecodePattern *byteCode;
-
-  public:
-    RegExpCode()
-      :
-#if ENABLE_YARR_JIT
-        codeBlock(),
-#endif
-        byteCode(NULL)
-    { }
-
-    ~RegExpCode() {
-#if ENABLE_YARR_JIT
-        codeBlock.release();
-#endif
-        if (byteCode)
-            js_delete<BytecodePattern>(byteCode);
-    }
-
-    static bool checkSyntax(JSContext *cx, frontend::TokenStream *tokenStream,
-                            JSLinearString *source)
-    {
-        ErrorCode error = JSC::Yarr::checkSyntax(*source);
-        if (error == JSC::Yarr::NoError)
-            return true;
-
-        reportYarrError(cx, tokenStream, error);
-        return false;
-    }
-
-#if ENABLE_YARR_JIT
-    static inline bool isJITRuntimeEnabled(JSContext *cx);
-#endif
-    static void reportYarrError(JSContext *cx, frontend::TokenStream *ts,
-                                JSC::Yarr::ErrorCode error);
-
-    static size_t getOutputSize(size_t pairCount) {
-        return pairCount * 2;
-    }
-
-    bool compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount, RegExpFlag flags);
-
-
-    RegExpRunStatus
-    execute(JSContext *cx, StableCharPtr chars, size_t length, size_t start,
-            int *output, size_t outputCount);
-};
-
-}  /* namespace detail */
-
 /*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
  * potentially pointed to by multiple RegExpObjects. Additionally, C++ code may
@@ -173,40 +107,79 @@ class RegExpShared
     friend class RegExpCompartment;
     friend class RegExpGuard;
 
-    detail::RegExpCode code;
-    unsigned           parenCount;
-    RegExpFlag         flags;
-    size_t             activeUseCount;   /* See comment above. */
-    uint64_t           gcNumberWhenUsed; /* See comment above. */
+    typedef frontend::TokenStream TokenStream;
+    typedef JSC::Yarr::BytecodePattern BytecodePattern;
+    typedef JSC::Yarr::ErrorCode ErrorCode;
+    typedef JSC::Yarr::YarrPattern YarrPattern;
+#if ENABLE_YARR_JIT
+    typedef JSC::Yarr::JSGlobalData JSGlobalData;
+    typedef JSC::Yarr::YarrCodeBlock YarrCodeBlock;
+    typedef JSC::Yarr::YarrJITCompileMode YarrJITCompileMode;
+#endif
 
-    bool compile(JSContext *cx, JSAtom *source);
+    /*
+     * Source to the RegExp. Safe to hold: if the RegExpShared is active,
+     * then at least one RegExpObject must be referencing the RegExpShared,
+     * and the RegExpObject keeps alive the source JSAtom.
+     */
+    JSAtom *           source;
+    RegExpFlag         flags;
+    unsigned           parenCount;
+
+#if ENABLE_YARR_JIT
+    /* Note: Native code is valid only if |codeBlock.isFallBack() == false|. */
+    YarrCodeBlock   codeBlock;
+#endif
+    BytecodePattern *bytecode;
+
+    /* Lifetime-preserving variables: see class-level comment above. */
+    size_t             activeUseCount;
+    uint64_t           gcNumberWhenUsed;
+
+    /* Internal functions. */
+    bool compile(JSContext *cx);
+    bool compile(JSContext *cx, JSLinearString &pattern);
+
+    bool compileIfNecessary(JSContext *cx);
 
   public:
-    RegExpShared(JSRuntime *rt, RegExpFlag flags);
+    RegExpShared(JSRuntime *rt, JSAtom *source, RegExpFlag flags);
+    ~RegExpShared();
+
+    /* Static functions to expose some Yarr logic. */
+    static inline bool isJITRuntimeEnabled(JSContext *cx);
+    static void reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error);
+    static bool checkSyntax(JSContext *cx, TokenStream *tokenStream, JSLinearString *source);
 
     /* Called when a RegExpShared is installed into a RegExpObject. */
     inline void prepareForUse(JSContext *cx);
 
     /* Primary interface: run this regular expression on the given string. */
-
-    RegExpRunStatus
-    execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
-            MatchPairs **output);
+    RegExpRunStatus execute(JSContext *cx, StableCharPtr chars, size_t length,
+                            size_t *lastIndex, MatchPairs **matches);
 
     /* Accessors */
 
-    size_t getParenCount() const        { return parenCount; }
+    size_t getParenCount() const        { JS_ASSERT(isCompiled()); return parenCount; }
     void incRef()                       { activeUseCount++; }
     void decRef()                       { JS_ASSERT(activeUseCount > 0); activeUseCount--; }
 
     /* Accounts for the "0" (whole match) pair. */
-    size_t pairCount() const            { return parenCount + 1; }
+    size_t pairCount() const            { return getParenCount() + 1; }
 
     RegExpFlag getFlags() const         { return flags; }
     bool ignoreCase() const             { return flags & IgnoreCaseFlag; }
     bool global() const                 { return flags & GlobalFlag; }
     bool multiline() const              { return flags & MultilineFlag; }
     bool sticky() const                 { return flags & StickyFlag; }
+
+#ifdef ENABLE_YARR_JIT
+    bool hasCode() const                { return codeBlock.has16BitCode(); }
+#else
+    bool hasCode() const                { return false; }
+#endif
+    bool hasBytecode() const            { return bytecode != NULL; }
+    bool isCompiled() const             { return hasBytecode() || hasCode(); }
 };
 
 /*
@@ -288,8 +261,6 @@ class RegExpCompartment
 
 class RegExpObject : public JSObject
 {
-    typedef detail::RegExpCode RegExpCode;
-
     static const unsigned LAST_INDEX_SLOT          = 0;
     static const unsigned SOURCE_SLOT              = 1;
     static const unsigned GLOBAL_FLAG_SLOT         = 2;
@@ -333,17 +304,13 @@ class RegExpObject : public JSObject
 
     /* Accessors. */
 
-    const Value &getLastIndex() const {
-        return getSlot(LAST_INDEX_SLOT);
-    }
+    const Value &getLastIndex() const { return getSlot(LAST_INDEX_SLOT); }
     inline void setLastIndex(double d);
     inline void zeroLastIndex();
 
     JSFlatString *toString(JSContext *cx) const;
 
-    JSAtom *getSource() const {
-        return &getSlot(SOURCE_SLOT).toString()->asAtom();
-    }
+    JSAtom *getSource() const { return &getSlot(SOURCE_SLOT).toString()->asAtom(); }
     inline void setSource(JSAtom *source);
 
     RegExpFlag getFlags() const {
