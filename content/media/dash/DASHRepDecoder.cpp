@@ -473,7 +473,14 @@ ReentrantMonitor&
 DASHRepDecoder::GetReentrantMonitor()
 {
   NS_ASSERTION(mMainDecoder, "Can't get monitor if main decoder is null!");
-  return mMainDecoder->GetReentrantMonitor();
+  if (mMainDecoder) {
+    return mMainDecoder->GetReentrantMonitor();
+  } else {
+    // XXX If mMainDecoder is gone, most likely we're past shutdown and
+    // a waiting function has been wakened. Just return this decoder's own
+    // monitor and let the function complete.
+    return MediaDecoder::GetReentrantMonitor();
+  }
 }
 
 mozilla::layers::ImageContainer*
