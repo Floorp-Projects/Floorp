@@ -1576,10 +1576,11 @@ this.JSTermHelpers = function JSTermHelpers(aOwner)
       try {
         let window = aOwner.chromeWindow();
         let target = TargetFactory.forTab(window.gBrowser.selectedTab);
-        let panel = gDevTools.getPanelForTarget("inspector", target);
-        if (panel) {
-          return panel.selection.node;
-        }
+        let toolbox = gDevTools.getToolbox(target);
+
+        return toolbox == null ?
+            undefined :
+            toolbox.getPanel("inspector").selection.node;
       }
       catch (ex) {
         aOwner.window.console.error(ex.message);
