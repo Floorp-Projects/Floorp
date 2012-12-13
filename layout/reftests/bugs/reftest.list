@@ -1734,5 +1734,6 @@ fuzzy(40,800) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) te
 == 812824-1.html 812824-1-ref.html
 == 814677.html 814677-ref.html
 == 815593-1.html 815593-1-ref.html
+== 814952-1.html 814952-1-ref.html
 == 816458-1.html 816458-1-ref.html
 == 818276-1.html 818276-1-ref.html
