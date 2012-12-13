@@ -1531,7 +1531,7 @@ SliceBudget::checkOverBudget()
     return over;
 }
 
-GCMarker::GCMarker()
+GCMarker::GCMarker(JSRuntime *rt)
   : stack(size_t(-1)),
     color(BLACK),
     started(false),
@@ -1539,6 +1539,7 @@ GCMarker::GCMarker()
     markLaterArenas(0),
     grayFailed(false)
 {
+    InitTracer(this, rt, NULL);
 }
 
 bool
@@ -1548,9 +1549,8 @@ GCMarker::init()
 }
 
 void
-GCMarker::start(JSRuntime *rt)
+GCMarker::start()
 {
-    InitTracer(this, rt, NULL);
     JS_ASSERT(!started);
     started = true;
     color = BLACK;
@@ -2586,7 +2586,7 @@ BeginMarkPhase(JSRuntime *rt)
             c->arenas.purge();
     }
 
-    rt->gcMarker.start(rt);
+    rt->gcMarker.start();
     JS_ASSERT(!rt->gcMarker.callback);
     JS_ASSERT(IS_GC_MARKING_TRACER(&rt->gcMarker));
 
