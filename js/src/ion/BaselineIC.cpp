@@ -1085,7 +1085,7 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
         return false;
 
     RootedScript script(cx, GetTopIonJSScript(cx));
-    if (!SetObjectElement(cx, obj, index, rhs, script->strictModeCode))
+    if (!SetObjectElement(cx, obj, index, rhs, script->strict))
         return false;
 
     if (stub->numOptimizedStubs() >= ICSetElem_Fallback::MAX_OPTIMIZED_STUBS) {
