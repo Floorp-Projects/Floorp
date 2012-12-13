@@ -45,7 +45,6 @@
 #include "nsIURI.h"
 #include "nsIWebProgress.h"
 #include "nsCWebBrowser.h"
-#include "nsIProfileChangeStatus.h"
 
 // Glue APIs (not frozen, but safe to use because they are statically linked)
 #include "nsComponentManagerUtils.h"
