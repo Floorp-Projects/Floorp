@@ -469,7 +469,9 @@ RegExpRunStatus
 RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
                       MatchPairs **output)
 {
-    JS_ASSERT(isCompiled());
+    /* Compile the code at point-of-use. */
+    if (!compileIfNecessary(cx))
+        return RegExpRunStatus_Error;
 
     const size_t origLength = length;
     size_t backingPairCount = pairCount() * 2;
@@ -574,26 +576,20 @@ RegExpCompartment::get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
     if (!shared)
         return false;
 
-    if (!shared->compile(cx))
-        return false;
-
-    /* Re-lookup in case there was a GC. */
-    if (!map_.relookupOrAdd(p, key, shared)) {
+    /* Add to RegExpShared sharing hashmap. */
+    if (!map_.add(p, key, shared)) {
         js_ReportOutOfMemory(cx);
         return false;
     }
 
+    /* Add to list of all RegExpShared objects in this RegExpCompartment. */
     if (!inUse_.put(shared)) {
         map_.remove(key);
         js_ReportOutOfMemory(cx);
         return false;
     }
 
-    /*
-     * Since 'error' deletes 'shared', only guard 'shared' on success. This is
-     * safe since 'shared' cannot be deleted by GC until after the call to
-     * map_.relookupOrAdd() directly above.
-     */
+    /* Since error deletes |shared|, only guard |shared| on success. */
     g->init(*shared.forget());
     return true;
 }
