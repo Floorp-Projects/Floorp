@@ -360,6 +360,19 @@ ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObje
     return &argv[0].toObject();
 }
 
+bool
+CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code)
+{
+    JS_ASSERT(index < str->length());
+
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return false;
+
+    *code = chars[index];
+    return true;
+}
+
 JSFlatString *
 StringFromCharCode(JSContext *cx, int32_t code)
 {
