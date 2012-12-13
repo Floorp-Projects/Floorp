@@ -50,7 +50,7 @@ public:
   nsAsyncMessageToParent(nsInProcessTabChildGlobal* aTabChild,
                          const nsAString& aMessage,
                          const StructuredCloneData& aData)
-    : mTabChild(aTabChild), mMessage(aMessage)
+    : mTabChild(aTabChild), mMessage(aMessage), mRun(false)
   {
     if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
       NS_RUNTIMEABORT("OOM");
@@ -60,6 +60,11 @@ public:
 
   NS_IMETHOD Run()
   {
+    if (mRun) {
+      return NS_OK;
+    }
+
+    mRun = true;
     mTabChild->mASyncMessages.RemoveElement(this);
     if (mTabChild->mChromeMessageManager) {
       StructuredCloneData data;
@@ -77,6 +82,9 @@ public:
   nsString mMessage;
   JSAutoStructuredCloneBuffer mData;
   StructuredCloneClosure mClosure;
+  // True if this runnable has already been called. This can happen if DoSendSyncMessage
+  // is called while waiting for an asynchronous message send.
+  bool mRun;
 };
 
 bool
