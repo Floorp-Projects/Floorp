@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(a106db7f-6449-4a6b-914f-834ba308c3e2)]
+[scriptable, builtinclass, uuid(ed04b29f-ae9a-460a-858e-960b523bb3a5)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -463,6 +463,18 @@ interface nsIDocShell : nsISupports
    * known JAR type).
    */
   readonly attribute boolean channelIsUnsafe;
+
+  /**
+   * This attribute determines whether Mixed Active Content is loaded on the
+   * document. When it is true, mixed active content was not blocked and has
+   * loaded on the page. When it is false, mixed active content has not loaded on
+   * the page, either because there was no mixed active content requests on the page
+   * or such requests were blocked by nsMixedContentBlocker.
+   * This boolean is set to true in nsMixedContentBlocker if Mixed Active Content
+   * is allowed (either explicitly on the page by the user or when the about:config
+   * setting security.mixed_content.block_active_content is set to false).
+   */
+  readonly attribute boolean hasMixedActiveContentLoaded;
 
   /**
    * Disconnects this docshell's editor from its window, and stores the
