@@ -124,7 +124,7 @@ public:
 
   static char* strdup_(const char* aStr)
   {
-    char* s = (char*) gMallocTable->malloc(strlen(aStr));
+    char* s = (char*) gMallocTable->malloc(strlen(aStr) + 1);
     ExitOnFailure(s);
     strcpy(s, aStr);
     return s;
