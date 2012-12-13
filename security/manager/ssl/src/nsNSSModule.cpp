@@ -38,7 +38,6 @@
 #include "nsDataSignatureVerifier.h"
 #include "nsCertOverrideService.h"
 #include "nsRandomGenerator.h"
-#include "nsRecentBadCerts.h"
 #include "nsSSLStatus.h"
 #include "TransportSecurityInfo.h"
 #include "NSSErrorsService.h"
@@ -204,7 +203,6 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsKeyObjectFactory)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsDataSignatureVerifier)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsCertOverrideService, Init)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsRandomGenerator)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsRecentBadCertsService, Init)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsureOnChromeOnly, nsSSLStatus)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsureOnChromeOnly, TransportSecurityInfo)
 
@@ -243,7 +241,6 @@ NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECTFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_DATASIGNATUREVERIFIER_CID);
 NS_DEFINE_NAMED_CID(NS_CERTOVERRIDE_CID);
 NS_DEFINE_NAMED_CID(NS_RANDOMGENERATOR_CID);
-NS_DEFINE_NAMED_CID(NS_RECENTBADCERTS_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSTATUS_CID);
 NS_DEFINE_NAMED_CID(TRANSPORTSECURITYINFO_CID);
 NS_DEFINE_NAMED_CID(NS_NSSERRORSSERVICE_CID);
@@ -281,7 +278,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_DATASIGNATUREVERIFIER_CID, false, nullptr, nsDataSignatureVerifierConstructor },
   { &kNS_CERTOVERRIDE_CID, false, nullptr, nsCertOverrideServiceConstructor },
   { &kNS_RANDOMGENERATOR_CID, false, nullptr, nsRandomGeneratorConstructor },
-  { &kNS_RECENTBADCERTS_CID, false, nullptr, nsRecentBadCertsServiceConstructor },
   { &kNS_SSLSTATUS_CID, false, nullptr, nsSSLStatusConstructor },
   { &kTRANSPORTSECURITYINFO_CID, false, nullptr, TransportSecurityInfoConstructor },
   { &kNS_NSSERRORSSERVICE_CID, false, nullptr, NSSErrorsServiceConstructor },
@@ -324,7 +320,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_DATASIGNATUREVERIFIER_CONTRACTID, &kNS_DATASIGNATUREVERIFIER_CID },
   { NS_CERTOVERRIDE_CONTRACTID, &kNS_CERTOVERRIDE_CID },
   { NS_RANDOMGENERATOR_CONTRACTID, &kNS_RANDOMGENERATOR_CID },
-  { NS_RECENTBADCERTS_CONTRACTID, &kNS_RECENTBADCERTS_CID },
   { nullptr }
 };
 
