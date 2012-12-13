@@ -239,8 +239,11 @@ class FrameInfo
     inline Address addressOfThis() const {
         return Address(BaselineFrameReg, BaselineFrame::offsetOfThis());
     }
-    inline size_t offsetOfCallee() const {
-        return BaselineFrame::offsetOfCalleeToken();
+    inline Address addressOfCallee() const {
+        return Address(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+    }
+    inline Address addressOfScopeChain() const {
+        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScopeChain());
     }
     inline Address addressOfStackValue(const StackValue *value) const {
         JS_ASSERT(value->kind() == StackValue::Stack);

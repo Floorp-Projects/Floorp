@@ -459,6 +459,7 @@ class BaselineFrame
     uint32_t loScratchValue;
     uint32_t hiScratchValue;
     size_t frameSize;
+    JSObject *scopeChain;
 
   public:
     // Distance between the frame pointer and the frame header (return address).
@@ -486,6 +487,9 @@ class BaselineFrame
     }
     static inline size_t reverseOffsetOfScratchValue() {
         return -(sizeof(BaselineFrame) - offsetof(BaselineFrame, loScratchValue));
+    }
+    static inline size_t reverseOffsetOfScopeChain() {
+        return -(sizeof(BaselineFrame) - offsetof(BaselineFrame, scopeChain));
     }
     static inline size_t reverseOffsetOfLocal(size_t index) {
         return -(sizeof(BaselineFrame) + index * sizeof(js::Value)) - sizeof(js::Value);
