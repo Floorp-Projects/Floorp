@@ -29,7 +29,8 @@ SizeOfRegExpStaticsData(const JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
 
 inline
 RegExpStatics::RegExpStatics()
-  : bufferLink(NULL),
+  : pendingLazyEvaluation(false),
+    bufferLink(NULL),
     copied(false)
 {
     clear();
@@ -38,6 +39,8 @@ RegExpStatics::RegExpStatics()
 inline bool
 RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *out)
 {
+    /* Private function: caller must perform lazy evaluation. */
+    JS_ASSERT(!pendingLazyEvaluation);
 
     JS_ASSERT(start <= end);
     JS_ASSERT(end <= matchesInput->length());
@@ -59,6 +62,9 @@ RegExpStatics::createPendingInput(JSContext *cx, Value *out)
 inline bool
 RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, Value *out)
 {
+    /* Private function: caller must perform lazy evaluation. */
+    JS_ASSERT(!pendingLazyEvaluation);
+
     bool checkWhich  = checkValidIndex % 2;
     size_t checkPair = checkValidIndex / 2;
 
@@ -75,12 +81,17 @@ RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, 
 inline bool
 RegExpStatics::createLastMatch(JSContext *cx, Value *out)
 {
+    if (!executeLazy(cx))
+        return false;
     return makeMatch(cx, 0, 0, out);
 }
 
 inline bool
 RegExpStatics::createLastParen(JSContext *cx, Value *out)
 {
+    if (!executeLazy(cx))
+        return false;
+
     if (matches.empty() || matches.pairCount() == 1) {
         out->setString(cx->runtime->emptyString);
         return true;
@@ -99,6 +110,9 @@ inline bool
 RegExpStatics::createParen(JSContext *cx, size_t pairNum, Value *out)
 {
     JS_ASSERT(pairNum >= 1);
+    if (!executeLazy(cx))
+        return false;
+
     if (matches.empty() || pairNum >= matches.pairCount()) {
         out->setString(cx->runtime->emptyString);
         return true;
@@ -109,6 +123,9 @@ RegExpStatics::createParen(JSContext *cx, size_t pairNum, Value *out)
 inline bool
 RegExpStatics::createLeftContext(JSContext *cx, Value *out)
 {
+    if (!executeLazy(cx))
+        return false;
+
     if (matches.empty()) {
         out->setString(cx->runtime->emptyString);
         return true;
@@ -123,6 +140,9 @@ RegExpStatics::createLeftContext(JSContext *cx, Value *out)
 inline bool
 RegExpStatics::createRightContext(JSContext *cx, Value *out)
 {
+    if (!executeLazy(cx))
+        return false;
+
     if (matches.empty()) {
         out->setString(cx->runtime->emptyString);
         return true;
@@ -137,6 +157,8 @@ RegExpStatics::createRightContext(JSContext *cx, Value *out)
 inline void
 RegExpStatics::getParen(size_t pairNum, JSSubString *out) const
 {
+    JS_ASSERT(!pendingLazyEvaluation);
+
     JS_ASSERT(pairNum >= 1 && pairNum < matches.pairCount());
     const MatchPair &pair = matches[pairNum];
     if (pair.isUndefined()) {
@@ -150,6 +172,8 @@ RegExpStatics::getParen(size_t pairNum, JSSubString *out) const
 inline void
 RegExpStatics::getLastMatch(JSSubString *out) const
 {
+    JS_ASSERT(!pendingLazyEvaluation);
+
     if (matches.empty()) {
         *out = js_EmptySubString;
         return;
@@ -163,6 +187,8 @@ RegExpStatics::getLastMatch(JSSubString *out) const
 inline void
 RegExpStatics::getLastParen(JSSubString *out) const
 {
+    JS_ASSERT(!pendingLazyEvaluation);
+
     /* Note: the first pair is the whole match. */
     if (matches.empty() || matches.pairCount() == 1) {
         *out = js_EmptySubString;
@@ -174,6 +200,8 @@ RegExpStatics::getLastParen(JSSubString *out) const
 inline void
 RegExpStatics::getLeftContext(JSSubString *out) const
 {
+    JS_ASSERT(!pendingLazyEvaluation);
+
     if (matches.empty()) {
         *out = js_EmptySubString;
         return;
@@ -185,6 +213,8 @@ RegExpStatics::getLeftContext(JSSubString *out) const
 inline void
 RegExpStatics::getRightContext(JSSubString *out) const
 {
+    JS_ASSERT(!pendingLazyEvaluation);
+
     if (matches.empty()) {
         *out = js_EmptySubString;
         return;
@@ -197,10 +227,19 @@ RegExpStatics::getRightContext(JSSubString *out) const
 inline void
 RegExpStatics::copyTo(RegExpStatics &dst)
 {
-    dst.matches.initArrayFrom(matches);
+    /* Destination buffer has already been reserved by save(). */
+    if (!pendingLazyEvaluation)
+        dst.matches.initArrayFrom(matches);
+
     dst.matchesInput = matchesInput;
+    dst.regexp = regexp;
+    dst.lastIndex = lastIndex;
     dst.pendingInput = pendingInput;
     dst.flags = flags;
+    dst.pendingLazyEvaluation = pendingLazyEvaluation;
+
+    JS_ASSERT_IF(pendingLazyEvaluation, regexp);
+    JS_ASSERT_IF(pendingLazyEvaluation, matchesInput);
 }
 
 inline void
@@ -220,11 +259,31 @@ RegExpStatics::restore()
     bufferLink = bufferLink->bufferLink;
 }
 
+inline void
+RegExpStatics::updateLazily(JSContext *cx, JSLinearString *input,
+                            RegExpObject *regexp, size_t lastIndex)
+{
+    JS_ASSERT(input && regexp);
+    aboutToWrite();
+
+    BarrieredSetPair<JSString, JSLinearString>(cx->compartment,
+                                               pendingInput, input,
+                                               matchesInput, input);
+    pendingLazyEvaluation = true;
+    this->regexp = regexp;
+    this->lastIndex = lastIndex;
+}
+
 inline bool
 RegExpStatics::updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchPairs &newPairs)
 {
     JS_ASSERT(input);
     aboutToWrite();
+
+    /* Unset all lazy state. */
+    pendingLazyEvaluation = false;
+    this->regexp = NULL;
+    this->lastIndex = size_t(-1);
 
     BarrieredSetPair<JSString, JSLinearString>(cx->compartment,
                                                pendingInput, input,
@@ -244,6 +303,7 @@ RegExpStatics::clear()
     aboutToWrite();
     flags = RegExpFlag(0);
     pendingInput = NULL;
+    pendingLazyEvaluation = false;
     matchesInput = NULL;
     matches.forgetArray();
 }
@@ -302,6 +362,12 @@ inline void
 RegExpStatics::checkInvariants()
 {
 #ifdef DEBUG
+    if (pendingLazyEvaluation) {
+        JS_ASSERT(regexp);
+        JS_ASSERT(pendingInput);
+        return;
+    }
+
     if (matches.empty()) {
         JS_ASSERT(!matchesInput);
         return;

@@ -67,3 +67,37 @@ RegExpStatics::create(JSContext *cx, GlobalObject *parent)
     obj->setPrivate(static_cast<void *>(res));
     return obj;
 }
+
+bool
+RegExpStatics::executeLazy(JSContext *cx)
+{
+    if (!pendingLazyEvaluation)
+        return true;
+
+    JS_ASSERT(regexp);
+    JS_ASSERT(matchesInput);
+    JS_ASSERT(lastIndex != size_t(-1));
+
+    /*
+     * It is not necessary to call aboutToWrite(): evaluation of
+     * implicit copies is safe.
+     */
+
+    size_t length = matchesInput->length();
+    StableCharPtr chars(matchesInput->chars(), length);
+
+    /* Execute the full regular expression. */
+    RegExpGuard shared;
+    if (!regexp->getShared(cx, &shared))
+        return false;
+
+    RegExpRunStatus status = shared->execute(cx, chars, length, &this->lastIndex, this->matches);
+    if (status == RegExpRunStatus_Error)
+        return false;
+
+    /* Unset lazy state and remove rooted values that now have no use. */
+    pendingLazyEvaluation = false;
+    regexp = NULL;
+
+    return true;
+}
