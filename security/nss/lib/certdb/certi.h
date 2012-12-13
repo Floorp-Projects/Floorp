@@ -4,7 +4,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.37 2012/04/25 14:49:26 gerv%gerv.net Exp $
+ * $Id: certi.h,v 1.38 2012/12/06 17:56:57 wtc%google.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -291,7 +291,7 @@ extern SECStatus cert_GetCertType(CERTCertificate *cert);
 extern PRUint32 cert_ComputeCertType(CERTCertificate *cert);
 
 void cert_AddToVerifyLog(CERTVerifyLog *log,CERTCertificate *cert,
-                         unsigned long errorCode, unsigned int depth,
+                         long errorCode, unsigned int depth,
                          void *arg);
 
 /* Insert a DER CRL into the CRL cache, and take ownership of it.

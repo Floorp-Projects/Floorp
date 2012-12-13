@@ -132,7 +132,7 @@ char *_NSSUTIL_GetOldSecmodName(const char *dbname,const char *filename)
     return file;
 }
 
-static SECStatus nssutil_AddSecmodDB(NSSDBType dbType, const char *appName, 
+static SECStatus nssutil_AddSecmodDB(const char *appName, 
 		   const char *filename, const char *dbname, 
 		   char *module, PRBool rw);
 
@@ -166,7 +166,7 @@ lfopen(const char *name, const char *mode, int flags)
  * Read all the existing modules in out of the file.
  */
 static char **
-nssutil_ReadSecmodDB(NSSDBType dbType, const char *appName, 
+nssutil_ReadSecmodDB(const char *appName, 
 		    const char *filename, const char *dbname, 
 		    char *params, PRBool rw)
 {
@@ -415,13 +415,13 @@ loser:
 	fclose(fd);
     } else if (!failed && rw) {
 	/* update our internal module */
-	nssutil_AddSecmodDB(dbType,appName,filename,dbname,moduleList[0],rw);
+	nssutil_AddSecmodDB(appName,filename,dbname,moduleList[0],rw);
     }
     return moduleList;
 }
 
 static SECStatus
-nssutil_ReleaseSecmodDBData(NSSDBType dbType, const char *appName, 
+nssutil_ReleaseSecmodDBData(const char *appName, 
 			const char *filename, const char *dbname, 
 			char **moduleSpecList, PRBool rw)
 {
@@ -436,7 +436,7 @@ nssutil_ReleaseSecmodDBData(NSSDBType dbType, const char *appName,
  * Delete a module from the Data Base
  */
 static SECStatus
-nssutil_DeleteSecmodDB(NSSDBType dbType, const char *appName, 
+nssutil_DeleteSecmodDB(const char *appName, 
 		      const char *filename, const char *dbname, 
 		      char *args, PRBool rw)
 {
@@ -565,7 +565,7 @@ loser:
  * Add a module to the Data base 
  */
 static SECStatus
-nssutil_AddSecmodDB(NSSDBType dbType, const char *appName, 
+nssutil_AddSecmodDB(const char *appName, 
 		   const char *filename, const char *dbname, 
 		   char *module, PRBool rw)
 {
@@ -585,7 +585,7 @@ nssutil_AddSecmodDB(NSSDBType dbType, const char *appName,
     }
 
     /* remove the previous version if it exists */
-    (void) nssutil_DeleteSecmodDB(dbType, appName, filename, 
+    (void) nssutil_DeleteSecmodDB(appName, filename, 
 				  dbname, module, rw);
 
     fd = lfopen(dbname, "a+", O_CREAT|O_RDWR|O_APPEND);
@@ -660,19 +660,19 @@ NSSUTIL_DoModuleDBFunction(unsigned long function,char *parameters, void *args)
 
     switch (function) {
     case SECMOD_MODULE_DB_FUNCTION_FIND:
-        rvstr = nssutil_ReadSecmodDB(dbType,appName,filename,
+        rvstr = nssutil_ReadSecmodDB(appName,filename,
 				     secmod,(char *)parameters,rw);
         break;
     case SECMOD_MODULE_DB_FUNCTION_ADD:
-        rvstr = (nssutil_AddSecmodDB(dbType,appName,filename,
+        rvstr = (nssutil_AddSecmodDB(appName,filename,
 		secmod,(char *)args,rw) == SECSuccess) ? &success: NULL;
         break;
     case SECMOD_MODULE_DB_FUNCTION_DEL:
-        rvstr = (nssutil_DeleteSecmodDB(dbType,appName,filename,
+        rvstr = (nssutil_DeleteSecmodDB(appName,filename,
 		secmod,(char *)args,rw) == SECSuccess) ? &success: NULL;
         break;
     case SECMOD_MODULE_DB_FUNCTION_RELEASE:
-        rvstr = (nssutil_ReleaseSecmodDBData(dbType, appName,filename,
+        rvstr = (nssutil_ReleaseSecmodDBData(appName,filename,
 		secmod, (char **)args,rw) == SECSuccess) ? &success: NULL;
         break;
     }

@@ -438,8 +438,7 @@ nsContextMenu.prototype = {
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
-        aNode.nodeType == Node.DOCUMENT_NODE ||
-        this.isTargetAFormControl(aNode)) {
+        aNode.nodeType == Node.DOCUMENT_NODE) {
       this.shouldDisplay = false;
       return;
     }
@@ -1295,18 +1294,6 @@ nsContextMenu.prototype = {
            "contextMenu.link       = " + this.link + "\n" +
            "contextMenu.inFrame    = " + this.inFrame + "\n" +
            "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
-  },
-
-  // Returns true if aNode is a from control (except text boxes and images).
-  // This is used to disable the context menu for form controls.
-  isTargetAFormControl: function(aNode) {
-    if (aNode instanceof HTMLInputElement)
-      return (!aNode.mozIsTextField(false) && aNode.type != "image");
-
-    return (aNode instanceof HTMLButtonElement) ||
-           (aNode instanceof HTMLSelectElement) ||
-           (aNode instanceof HTMLOptionElement) ||
-           (aNode instanceof HTMLOptGroupElement);
   },
 
   isTargetATextBox: function(node) {

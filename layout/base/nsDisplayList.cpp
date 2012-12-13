@@ -10,6 +10,11 @@
  * used during painting and hit testing
  */
 
+// include PBrowserChild explicitly because TabChild won't include it
+// because we're in layout :(
+#include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/TabChild.h"
+
 #include "mozilla/layers/PLayers.h"
 
 #include "nsDisplayList.h"
@@ -44,12 +49,14 @@
 #include "nsIViewManager.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
+#include "nsCanvasFrame.h"
 
 #include "mozilla/StandardInteger.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 typedef FrameMetrics::ViewID ViewID;
 
 static void AddTransformFunctions(nsCSSValueList* aList,
@@ -658,6 +665,9 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   metrics.mScrollId = aScrollId;
 
   nsIPresShell* presShell = presContext->GetPresShell();
+  if (TabChild *tc = GetTabChildFrom(presShell)) {
+    metrics.mZoom = tc->GetZoom();
+  }
   metrics.mResolution = gfxSize(presShell->GetXResolution(), presShell->GetYResolution());
 
   metrics.mDevPixelsPerCSSPixel = auPerCSSPixel / auPerDevPixel;
@@ -2074,14 +2084,22 @@ static void CheckForBorderItem(nsDisplayItem *aItem, uint32_t& aFlags)
 void
 nsDisplayBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx) {
+  PaintInternal(aBuilder, aCtx, mVisibleRect, nullptr);
+}
 
+void
+nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
+                                        nsRenderingContext* aCtx, const nsRect& aBounds,
+                                        nsRect* aClipRect) {
   nsPoint offset = ToReferenceFrame();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   CheckForBorderItem(this, flags);
+
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
-                                  mVisibleRect,
+                                  aBounds,
                                   nsRect(offset, mFrame->GetSize()),
-                                  flags, nullptr, mLayer);
+                                  flags, aClipRect, mLayer);
+
 }
 
 void nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
@@ -2140,6 +2158,10 @@ nsDisplayBackgroundImage::GetBoundsInternal() {
   }
 
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
+    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
+    borderBox = frame->CanvasArea() + ToReferenceFrame();
+  }
   const nsStyleBackground::Layer& layer = mBackgroundStyle->mLayers[mLayer];
   return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
                                                 borderBox, *mBackgroundStyle, layer);

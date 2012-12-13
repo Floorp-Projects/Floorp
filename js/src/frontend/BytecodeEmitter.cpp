@@ -1177,7 +1177,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
         bce->hasGlobalScope &&
         !(bce->sc->isFunction && bce->sc->asFunbox()->mightAliasLocals()) &&
         !pn->isDeoptimized() &&
-        !bce->sc->inStrictMode())
+        !bce->sc->strict)
     {
         switch (*op) {
           case JSOP_NAME:     *op = JSOP_GETGNAME; break;
@@ -1576,7 +1576,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
               case PNK_DOT:
 #if JS_HAS_XML_SUPPORT
               case PNK_DBLDOT:
-                JS_ASSERT_IF(pn2->getKind() == PNK_DBLDOT, !bce->sc->inStrictMode());
+                JS_ASSERT_IF(pn2->getKind() == PNK_DBLDOT, !bce->sc->strict);
                 /* FALL THROUGH */
 
 #endif
@@ -1794,7 +1794,7 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
 static bool
 EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
-    JS_ASSERT(!bce->sc->inStrictMode());
+    JS_ASSERT(!bce->sc->strict);
     JS_ASSERT(pn->isKind(PNK_XMLUNARY));
     JS_ASSERT(pn->isOp(JSOP_XMLNAME));
     JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
@@ -3503,7 +3503,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         break;
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
         JS_ASSERT(lhs->isOp(JSOP_SETXMLNAME));
         if (!EmitTree(cx, bce, lhs->pn_kid))
             return false;
@@ -3646,7 +3646,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
 #endif
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
         if (Emit1(cx, bce, JSOP_SETXMLNAME) < 0)
             return false;
         break;
@@ -4346,7 +4346,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
 MOZ_NEVER_INLINE static bool
 EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    JS_ASSERT(!bce->sc->inStrictMode());
+    JS_ASSERT(!bce->sc->strict);
 
     if (Emit1(cx, bce, JSOP_STARTXML) < 0)
         return false;
@@ -4407,7 +4407,7 @@ EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitXMLProcessingInstruction(JSContext *cx, BytecodeEmitter *bce, XMLProcessingInstruction &pi)
 {
-    JS_ASSERT(!bce->sc->inStrictMode());
+    JS_ASSERT(!bce->sc->strict);
 
     jsatomid index;
     if (!bce->makeAtomIndex(pi.data(), &index))
@@ -4850,15 +4850,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         SharedContext *outersc = bce->sc;
         FunctionBox *funbox = pn->pn_funbox;
 
-        // If funbox's strictModeState is still unknown (as can happen for
-        // functions defined in defaults), inherit it from the parent.
-        if (funbox->strictModeState == StrictMode::UNKNOWN) {
-            JS_ASSERT(outersc->strictModeState != StrictMode::UNKNOWN);
-            funbox->strictModeState = outersc->strictModeState;
-        }
         if (outersc->isFunction && outersc->asFunbox()->mightAliasLocals())
             funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
-        JS_ASSERT_IF(outersc->inStrictMode(), funbox->inStrictMode());
+        JS_ASSERT_IF(outersc->strict, funbox->strict);
 
         // Inherit most things (principals, version, etc) from the parent.
         Rooted<JSScript*> parent(cx, bce->script);
@@ -4868,7 +4862,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                .setOriginPrincipals(parent->originPrincipals)
                .setCompileAndGo(parent->compileAndGo)
                .setNoScriptRval(false)
-               .setVersion(parent->getVersion());
+               .setVersion(parent->getVersion())
+               .setUserBit(parent->userBit);
         Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
                                                       parent->staticLevel + 1,
                                                       bce->script->scriptSource(),
@@ -5283,7 +5278,7 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 #if JS_HAS_XML_SUPPORT
       case PNK_DBLDOT:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
         if (!EmitElemOp(cx, pn2, JSOP_DELDESC, bce))
             return false;
         break;
@@ -5567,7 +5562,7 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
         JS_ASSERT(pn2->isOp(JSOP_SETXMLNAME));
         if (!EmitTree(cx, bce, pn2->pn_kid))
             return false;
@@ -6382,7 +6377,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #if JS_HAS_XML_SUPPORT
       case PNK_FILTER:
       {
-        JS_ASSERT(!bce->sc->inStrictMode());
+          JS_ASSERT(!bce->sc->strict);
 
         if (!EmitTree(cx, bce, pn->pn_left))
             return false;
@@ -6414,7 +6409,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_XML_SUPPORT
       case PNK_DBLDOT:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
         /* FALL THROUGH */
 #endif
 
@@ -6487,7 +6482,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_XMLTEXT:
       case PNK_XMLCDATA:
       case PNK_XMLCOMMENT:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
         /* FALL THROUGH */
 #endif
       case PNK_STRING:
@@ -6522,7 +6517,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLELEM:
       case PNK_XMLLIST:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
         JS_ASSERT(pn->isKind(PNK_XMLLIST) || pn->pn_count != 0);
 
         switch (pn->pn_head ? pn->pn_head->getKind() : PNK_XMLLIST) {
@@ -6572,7 +6567,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_XMLNAME:
-        JS_ASSERT(!bce->sc->inStrictMode());
+        JS_ASSERT(!bce->sc->strict);
 
         if (pn->isArity(PN_LIST)) {
             JS_ASSERT(pn->pn_count != 0);

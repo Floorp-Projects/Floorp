@@ -775,6 +775,48 @@ struct ParseNode {
         return !(isOp(JSOP_LAMBDA) || isOp(JSOP_DEFFUN));
     }
 
+    /*
+     * True if this statement node could be a member of a Directive Prologue: an
+     * expression statement consisting of a single string literal.
+     *
+     * This considers only the node and its children, not its context. After
+     * parsing, check the node's pn_prologue flag to see if it is indeed part of
+     * a directive prologue.
+     *
+     * Note that a Directive Prologue can contain statements that cannot
+     * themselves be directives (string literals that include escape sequences
+     * or escaped newlines, say). This member function returns true for such
+     * nodes; we use it to determine the extent of the prologue.
+     * isEscapeFreeStringLiteral, below, checks whether the node itself could be
+     * a directive.
+     */
+    bool isStringExprStatement() const {
+        if (getKind() == PNK_SEMI) {
+            JS_ASSERT(pn_arity == PN_UNARY);
+            ParseNode *kid = pn_kid;
+            return kid && kid->getKind() == PNK_STRING && !kid->pn_parens;
+        }
+        return false;
+    }
+
+    /*
+     * Return true if this node, known to be an unparenthesized string literal,
+     * could be the string of a directive in a Directive Prologue. Directive
+     * strings never contain escape sequences or line continuations.
+     */
+    bool isEscapeFreeStringLiteral() const {
+        JS_ASSERT(isKind(PNK_STRING) && !pn_parens);
+
+        /*
+         * If the string's length in the source code is its length as a value,
+         * accounting for the quotes, then it must not contain any escape
+         * sequences or line continuations.
+         */
+        JSString *str = pn_atom;
+        return (pn_pos.begin.lineno == pn_pos.end.lineno &&
+                pn_pos.begin.index + str->length() + 2 == pn_pos.end.index);
+    }
+
     inline bool test(unsigned flag) const;
 
     bool isLet() const          { return test(PND_LET); }

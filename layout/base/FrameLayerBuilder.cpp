@@ -977,52 +977,29 @@ FrameLayerBuilder::WillEndTransaction()
     (mRetainingManager->GetUserData(&gLayerManagerUserData));
   NS_ASSERTION(data, "Must have data!");
   // Update all the frames that used to have layers.
-  data->mDisplayItems.EnumerateEntries(UpdateDisplayItemDataForFrame, nullptr);
+  data->mDisplayItems.EnumerateEntries(ProcessRemovedDisplayItems, this);
   data->mInvalidateAllLayers = false;
 }
-
-struct ProcessRemovedDisplayItemsData
-{
-  ProcessRemovedDisplayItemsData(Layer* aLayer, FrameLayerBuilder* aLayerBuilder)
-    : mLayer(aLayer)
-    , mLayerBuilder(aLayerBuilder)
-  {}
-
-  Layer *mLayer;
-  FrameLayerBuilder *mLayerBuilder;
-};
-
 
 /* static */ PLDHashOperator
 FrameLayerBuilder::ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* aEntry,
                                               void* aUserArg)
 {
-  ProcessRemovedDisplayItemsData *userData =
-    static_cast<ProcessRemovedDisplayItemsData*>(aUserArg);
-  Layer* layer = userData->mLayer;
-  FrameLayerBuilder* layerBuilder = userData->mLayerBuilder;
-
-  DisplayItemData* item = aEntry->GetKey();
-  ThebesLayer* t = item->mLayer->AsThebesLayer();
-  if (!item->mUsed && t && (t == layer)) {
-#ifdef DEBUG_INVALIDATIONS
-    printf("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", item->mDisplayItemKey, item->mFrameList[0], t);
-#endif
-    InvalidatePostTransformRegion(t, 
-                                  item->mGeometry->ComputeInvalidationRegion(), 
-                                  item->mClip, 
-                                  layerBuilder->GetLastPaintOffset(t));
-  }
-  return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData>* aEntry,
-                                                 void* aUserArg)
-{
   DisplayItemData* data = aEntry->GetKey();
   if (!data->mUsed) {
     // This item was visible, but isn't anymore.
+    FrameLayerBuilder* layerBuilder = static_cast<FrameLayerBuilder*>(aUserArg);
+
+    ThebesLayer* t = data->mLayer->AsThebesLayer();
+    if (t) {
+#ifdef DEBUG_INVALIDATIONS
+      printf("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", data->mDisplayItemKey, data->mFrameList[0], t);
+#endif
+      InvalidatePostTransformRegion(t,
+                                    data->mGeometry->ComputeInvalidationRegion(),
+                                    data->mClip,
+                                    layerBuilder->GetLastPaintOffset(t));
+    }
     return PL_DHASH_REMOVE;
   }
 
@@ -2680,11 +2657,6 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData)
     Layer* prevChild = i == 0 ? nullptr : mNewChildLayers[i - 1].get();
     layer = mNewChildLayers[i];
   
-    if (aData) {
-      ProcessRemovedDisplayItemsData data(layer, mLayerBuilder);
-      aData->mDisplayItems.EnumerateEntries(FrameLayerBuilder::ProcessRemovedDisplayItems, &data);
-    } 
-      
     if (!layer->GetVisibleRegion().IsEmpty()) {
       textContentFlags |= layer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA;
     }
