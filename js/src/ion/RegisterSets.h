@@ -362,6 +362,9 @@ class TypedRegisterSet
         JS_ASSERT(has(reg));
         bits_ &= ~(1 << reg.code());
     }
+    void takeUnchecked(T reg) {
+        bits_ &= ~(1 << reg.code());
+    }
     void take(ValueOperand value) {
 #if defined(JS_NUNBOX32)
         take(value.payloadReg());
