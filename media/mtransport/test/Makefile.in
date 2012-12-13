@@ -72,15 +72,30 @@ endif
 endif
 endif
 
-ifeq ($(OS_ARCH), Darwin)
+ifeq ($(OS_TARGET), Darwin)
 LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/darwin/include
 DEFINES += \
   -DGTEST_USE_OWN_TR1_TUPLE=1 \
   $(NULL)
 endif
 
-ifeq ($(OS_ARCH), Linux)
+ifeq ($(OS_TARGET), Linux)
 LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/linux/include
+endif
+
+ifeq ($(OS_TARGET), Android)
+LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/android/include
+
+LIBS += \
+  $(STLPORT_LDFLAGS) \
+  $(STLPORT_LIBS) \
+  $(NULL)
+CPPFLAGS += \
+  $(STLPORT_CPPFLAGS) \
+  $(NULL)
+DEFINES += \
+  -DGTEST_USE_OWN_TR1_TUPLE=1 \
+  $(NULL)
 endif
 
 ifneq ($(OS_TARGET),WINNT)

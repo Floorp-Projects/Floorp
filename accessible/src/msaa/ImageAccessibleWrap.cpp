@@ -15,5 +15,5 @@ NS_IMPL_ISUPPORTS_INHERITED0(ImageAccessibleWrap,
 
 IMPL_IUNKNOWN_INHERITED1(ImageAccessibleWrap,
                          AccessibleWrap,
-                         ia2AccessibleImage);
+                         ia2AccessibleImage)
 

@@ -87,7 +87,7 @@ ComputeThis(JSContext *cx, StackFrame *fp)
     if (thisv.isObject())
         return true;
     if (fp->isFunctionFrame()) {
-        if (fp->fun()->inStrictMode() || fp->fun()->isSelfHostedBuiltin())
+        if (fp->fun()->strict() || fp->fun()->isSelfHostedBuiltin())
             return true;
         /*
          * Eval function frames have their own |this| slot, which is a copy of the function's
@@ -346,7 +346,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
                 JSObject::nativeSetSlotWithType(cx, obj, shape, rval);
             } else {
                 RootedValue rref(cx, rval);
-                bool strict = cx->stack.currentScript()->strictModeCode;
+                bool strict = cx->stack.currentScript()->strict;
                 if (!js_NativeSet(cx, obj, obj, shape, false, strict, rref.address()))
                     return false;
             }
@@ -356,7 +356,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
         GET_NAME_FROM_BYTECODE(cx->stack.currentScript(), pc, 0, name);
     }
 
-    bool strict = cx->stack.currentScript()->strictModeCode;
+    bool strict = cx->stack.currentScript()->strict;
     RootedValue rref(cx, rval);
 
     RootedId id(cx, NameToId(name));
@@ -446,7 +446,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     JS_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
     JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
 
-    bool strict = script->strictModeCode;
+    bool strict = script->strict;
     RootedPropertyName name(cx, script->getName(pc));
     RootedValue valCopy(cx, val);
 
@@ -779,7 +779,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
         }
     }
 
-    assertSameCompartment(cx, res);
+    assertSameCompartmentDebugOnly(cx, res);
     return true;
 }
 

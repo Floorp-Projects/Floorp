@@ -278,7 +278,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(uint32_t aHint, RemoteSourceStr
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   nsIDOMMediaStream* stream;
-  
+
   nsresult res = MakeMediaStream(aHint, &stream);
   if (NS_FAILED(res)) {
     return res;
@@ -929,7 +929,7 @@ PeerConnectionImpl::Close(bool aIsSynchronous)
 nsresult
 PeerConnectionImpl::CloseInt(bool aIsSynchronous)
 {
-  PC_AUTO_ENTER_API_CALL(true);
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   if (mCall != nullptr)
     mCall->endCall();
@@ -1028,7 +1028,8 @@ PeerConnectionImpl::ChangeReadyState(PeerConnectionImpl::ReadyState aReadyState)
   // keeps the observer live.
   RUN_ON_THREAD(mThread, WrapRunnable(mPCObserver,
                                       &IPeerConnectionObserver::OnStateChange,
-                                      IPeerConnectionObserver::kReadyState),
+                                      // static_cast needed to work around old Android NDK r5c compiler
+                                      static_cast<int>(IPeerConnectionObserver::kReadyState)),
     NS_DISPATCH_NORMAL);
 }
 
@@ -1039,7 +1040,12 @@ PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     return;
   }
 
-  impl_ = PeerConnectionCtx::GetInstance()->mPeerConnections[handle];
+  PeerConnectionImpl *impl = PeerConnectionCtx::GetInstance()->mPeerConnections[handle];
+
+  if (!impl->media())
+    return;
+
+  impl_ = impl;
 }
 
 const std::string&
@@ -1076,7 +1082,8 @@ PeerConnectionImpl::IceGatheringCompleted_m(NrIceCtx *aCtx)
     RUN_ON_THREAD(mThread,
                   WrapRunnable(mPCObserver,
                                &IPeerConnectionObserver::OnStateChange,
-                               IPeerConnectionObserver::kIceState),
+                               // static_cast required to work around old C++ compiler on Android NDK r5c
+                               static_cast<int>(IPeerConnectionObserver::kIceState)),
                   NS_DISPATCH_NORMAL);
   }
 #endif
@@ -1107,7 +1114,8 @@ PeerConnectionImpl::IceCompleted_m(NrIceCtx *aCtx)
     RUN_ON_THREAD(mThread,
                   WrapRunnable(mPCObserver,
                                &IPeerConnectionObserver::OnStateChange,
-                               IPeerConnectionObserver::kIceState),
+                               // static_cast required to work around old C++ compiler on Android NDK r5c
+			       static_cast<int>(IPeerConnectionObserver::kIceState)),
                   NS_DISPATCH_NORMAL);
   }
 #endif

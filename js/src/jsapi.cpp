@@ -1069,12 +1069,14 @@ JSRuntime::abortIfWrongThread() const
         MOZ_CRASH();
 }
 
+#ifdef DEBUG
 JS_FRIEND_API(void)
 JSRuntime::assertValidThread() const
 {
     JS_ASSERT(ownerThread_ == PR_GetCurrentThread());
     JS_ASSERT(js::TlsPerThreadData.get()->associatedWith(this));
 }
+#endif  /* DEBUG */
 #endif  /* JS_THREADSAFE */
 
 JS_PUBLIC_API(JSRuntime *)
@@ -5223,6 +5225,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       compileAndGo(cx->hasRunOption(JSOPTION_COMPILE_N_GO)),
       noScriptRval(cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL)),
       selfHostingMode(false),
+      userBit(false),
       sourcePolicy(SAVE_SOURCE)
 {
 }

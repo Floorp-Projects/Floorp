@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.util.GeckoAsyncTask;
+import org.mozilla.gecko.util.StringUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -305,34 +306,6 @@ public class AwesomeBar extends GeckoActivity {
         return true;
     }
 
-    /*
-     * This method tries to guess if the given string could be a search query or URL
-     * Search examples:
-     *  foo
-     *  foo bar.com
-     *  foo http://bar.com
-     *
-     * URL examples
-     *  foo.com
-     *  foo.c
-     *  :foo
-     *  http://foo.com bar
-    */
-    private boolean isSearchUrl(String text) {
-        text = text.trim();
-        if (text.length() == 0)
-            return false;
-
-        int colon = text.indexOf(':');
-        int dot = text.indexOf('.');
-        int space = text.indexOf(' ');
-
-        // If a space is found before any dot or colon, we assume this is a search query
-        boolean spacedOut = space > -1 && (space < colon || space < dot);
-
-        return spacedOut || (dot == -1 && colon == -1);
-    }
-
     private void updateGoButton(String text) {
         if (text.length() == 0) {
             mGoButton.setVisibility(View.GONE);
@@ -344,7 +317,7 @@ public class AwesomeBar extends GeckoActivity {
         int imageResource = R.drawable.ic_awesomebar_go;
         String contentDescription = getString(R.string.go);
         int imeAction = EditorInfo.IME_ACTION_GO;
-        if (isSearchUrl(text)) {
+        if (StringUtils.isSearchQuery(text)) {
             imageResource = R.drawable.ic_awesomebar_search;
             contentDescription = getString(R.string.search);
             imeAction = EditorInfo.IME_ACTION_SEARCH;
@@ -537,7 +510,8 @@ public class AwesomeBar extends GeckoActivity {
         final int display = mContextMenuSubject.display;
 
         switch (item.getItemId()) {
-            case R.id.open_new_tab: {
+            case R.id.open_new_tab:
+            case R.id.open_new_private_tab: {
                 if (url == null) {
                     Log.e(LOGTAG, "Can't open in new tab because URL is null");
                     break;
@@ -547,7 +521,11 @@ public class AwesomeBar extends GeckoActivity {
                 if (display == Combined.DISPLAY_READER)
                     newTabUrl = ReaderModeUtils.getAboutReaderForUrl(url, true);
 
-                Tabs.getInstance().loadUrl(newTabUrl, Tabs.LOADURL_NEW_TAB);
+                int flags = Tabs.LOADURL_NEW_TAB;
+                if (item.getItemId() == R.id.open_new_private_tab)
+                    flags |= Tabs.LOADURL_PRIVATE;
+
+                Tabs.getInstance().loadUrl(newTabUrl, flags);
                 Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
                 break;
             }
