@@ -10,6 +10,16 @@
 #include "nsPluginHost.h"
 #include <prinrval.h>
 
+// On Android, we need to guard against plugin code leaking entries in the local
+// JNI ref table. See https://bugzilla.mozilla.org/show_bug.cgi?id=780831#c21
+#ifdef MOZ_WIDGET_ANDROID
+  #include "AndroidBridge.h"
+
+  #define MAIN_THREAD_JNI_REF_GUARD mozilla::AutoLocalJNIFrame jniFrame
+#else
+  #define MAIN_THREAD_JNI_REF_GUARD
+#endif
+
 #if defined(XP_WIN)
 #define CALL_SAFETY_ON
 #endif
@@ -32,6 +42,7 @@ PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst) \
 PR_BEGIN_MACRO                                     \
+  MAIN_THREAD_JNI_REF_GUARD;                       \
   PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
   if(gSkipPluginSafeCalls)                         \
     ret = fun;                                     \
@@ -55,6 +66,7 @@ PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_VOID(fun, pluginInst) \
 PR_BEGIN_MACRO                              \
+  MAIN_THREAD_JNI_REF_GUARD;                \
   PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
   if(gSkipPluginSafeCalls)                  \
     fun;                                    \
@@ -79,6 +91,7 @@ PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst) \
 PR_BEGIN_MACRO                                     \
+  MAIN_THREAD_JNI_REF_GUARD;                       \
   PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
   ret = fun;                                       \
   NS_NotifyPluginCall(startTime);		               \
@@ -86,6 +99,7 @@ PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_VOID(fun, pluginInst)     \
 PR_BEGIN_MACRO                                     \
+  MAIN_THREAD_JNI_REF_GUARD;                       \
   PRIntervalTime startTime = NS_NotifyBeginPluginCall(); \
   fun;                                             \
   NS_NotifyPluginCall(startTime);		               \
