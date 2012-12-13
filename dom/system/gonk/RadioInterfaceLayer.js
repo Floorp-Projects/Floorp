@@ -270,9 +270,6 @@ function RadioInterfaceLayer() {
   lock.get("ril.supl.httpProxyHost", this);
   lock.get("ril.supl.httpProxyPort", this);
 
-  // Read the desired setting of call waiting from the settings DB.
-  lock.get("ril.callwaiting.enabled", this);
-
   // Read the 'time.nitz.automatic-update.enabled' setting to see if
   // we need to adjust the system clock time and time zone by NITZ.
   lock.get(kTimeNitzAutomaticUpdateEnabled, this);
@@ -830,12 +827,6 @@ RadioInterfaceLayer.prototype = {
     // this here. (TODO GSM only for now, see bug 726098.)
     voiceInfo.type = "gsm";
 
-    // Ensure the call waiting status once the voice network connects.
-    if (voiceInfo.connected && this.callWaitingStatus == null) {
-      // The call waiting status has not been updated yet. Update that.
-      this.setCallWaitingEnabled(this._callWaitingEnabled);
-    }
-
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
     if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
@@ -1094,7 +1085,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     if (value == null) {
-      // We haven't read the initial value from the settings DB yet.
+      // We haven't read the valid value from the settings DB yet.
       // Wait for that.
       return;
     }
