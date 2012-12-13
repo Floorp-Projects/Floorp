@@ -1065,8 +1065,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void passABIArg(const FloatRegister &reg);
     void passABIArg(const ValueOperand &regs);
 
+  private:
+    void callWithABIPre(uint32_t *stackAdjust);
+    void callWithABIPost(uint32_t stackAdjust, Result result);
+
+  public:
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun, Result result = GENERAL);
+    void callWithABI(const Address &fun, Result result = GENERAL);
 
     CodeOffsetLabel labelForPatch() {
         return CodeOffsetLabel(nextOffset().getOffset());
