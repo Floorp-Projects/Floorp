@@ -165,23 +165,33 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
         filePos = 0;
     else
         filePos++;
-    notes.Put(CS("PluginFilename"), CS(pluginFile.substr(filePos).c_str()));
+    notes.Put(NS_LITERAL_CSTRING("PluginFilename"), CS(pluginFile.substr(filePos).c_str()));
 
-    //TODO: add plugin name and version: bug 539841
-    // (as PluginName, PluginVersion)
-    notes.Put(CS("PluginName"), CS(""));
-    notes.Put(CS("PluginVersion"), CS(""));
+    nsCString pluginName;
+    nsCString pluginVersion;
+
+    nsRefPtr<nsPluginHost> ph = already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+    if (ph) {
+        nsPluginTag* tag = ph->TagForPlugin(mPlugin);
+        if (tag) {
+            pluginName = tag->mName;
+            pluginVersion = tag->mVersion;
+        }
+    }
+        
+    notes.Put(NS_LITERAL_CSTRING("PluginName"), pluginName);
+    notes.Put(NS_LITERAL_CSTRING("PluginVersion"), pluginVersion);
 
     CrashReporterParent* crashReporter = CrashReporter();
     if (crashReporter) {
 #ifdef XP_WIN
         if (mPluginCpuUsageOnHang.Length() > 0) {
-            notes.Put(CS("NumberOfProcessors"),
+            notes.Put(NS_LITERAL_CSTRING("NumberOfProcessors"),
                       nsPrintfCString("%d", PR_GetNumberOfProcessors()));
 
             nsCString cpuUsageStr;
             cpuUsageStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[0] * 100) / 100);
-            notes.Put(CS("PluginCpuUsage"), cpuUsageStr);
+            notes.Put(NS_LITERAL_CSTRING("PluginCpuUsage"), cpuUsageStr);
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
             for (uint32_t i=1; i<mPluginCpuUsageOnHang.Length(); ++i) {
