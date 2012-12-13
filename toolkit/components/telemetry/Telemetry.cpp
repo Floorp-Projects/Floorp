@@ -24,12 +24,15 @@
 #include "nsBaseHashtable.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
+#include "plstr.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/mozPoisonWrite.h"
 
 namespace {
 
@@ -313,6 +316,9 @@ private:
   HangReports mHangReports;
   Mutex mHangReportsMutex;
   nsIMemoryReporter *mMemoryReporter;
+
+  bool mCachedShutdownTime;
+  uint32_t mLastShutdownTime;
 };
 
 TelemetryImpl*  TelemetryImpl::sTelemetry = NULL;
@@ -680,11 +686,83 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
   return NS_OK;
 }
 
+static TimeStamp gRecordedShutdownStartTime;
+static bool gAlreadyFreedShutdownTimeFileName = false;
+static char *gRecordedShutdownTimeFileName = nullptr;
+
+static char *
+GetShutdownTimeFileName()
+{
+  if (gAlreadyFreedShutdownTimeFileName) {
+    return nullptr;
+  }
+
+  if (!gRecordedShutdownTimeFileName) {
+    nsCOMPtr<nsIFile> mozFile;
+    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
+    if (!mozFile)
+      return nullptr;
+
+    mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
+    nsAutoCString nativePath;
+    nsresult rv = mozFile->GetNativePath(nativePath);
+    if (!NS_SUCCEEDED(rv))
+      return nullptr;
+
+    gRecordedShutdownTimeFileName = PL_strdup(nativePath.get());
+  }
+
+  return gRecordedShutdownTimeFileName;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetLastShutdownDuration(uint32_t *aResult)
+{
+  // We make this check so that GetShutdownTimeFileName() doesn't get
+  // called; calling that function without telemetry enabled violates
+  // assumptions that the write-the-shutdown-timestamp machinery makes.
+  if (!Telemetry::CanRecord()) {
+    *aResult = 0;
+    return NS_OK;
+  }
+
+  if (!mCachedShutdownTime) {
+    const char *filename = GetShutdownTimeFileName();
+
+    if (!filename) {
+      *aResult = 0;
+      return NS_OK;
+    }
+
+    FILE *f = fopen(filename, "r");
+    if (!f) {
+      *aResult = 0;
+      return NS_OK;
+    }
+
+    int shutdownTime;
+    int r = fscanf(f, "%d\n", &shutdownTime);
+    fclose(f);
+    if (r != 1) {
+      *aResult = 0;
+      return NS_OK;
+    }
+
+    mLastShutdownTime = shutdownTime;
+    mCachedShutdownTime = true;
+  }
+
+  *aResult = mLastShutdownTime;
+  return NS_OK;
+}
+
 TelemetryImpl::TelemetryImpl():
 mHistogramMap(Telemetry::HistogramCount),
 mCanRecord(XRE_GetProcessType() == GeckoProcessType_Default),
 mHashMutex("Telemetry::mHashMutex"),
-mHangReportsMutex("Telemetry::mHangReportsMutex")
+mHangReportsMutex("Telemetry::mHangReportsMutex"),
+mCachedShutdownTime(false),
+mLastShutdownTime(0)
 {
   // A whitelist to prevent Telemetry reporting on Addon & Thunderbird DBs
   const char *trackedDBs[] = {
@@ -1673,6 +1751,53 @@ const Module kTelemetryModule = {
 } // anonymous namespace
 
 namespace mozilla {
+void
+RecordShutdownStartTimeStamp() {
+  if (!Telemetry::CanRecord())
+    return;
+
+  gRecordedShutdownStartTime = TimeStamp::Now();
+
+  GetShutdownTimeFileName();
+}
+
+void
+RecordShutdownEndTimeStamp() {
+  if (!gRecordedShutdownTimeFileName || gAlreadyFreedShutdownTimeFileName)
+    return;
+
+  nsCString name(gRecordedShutdownTimeFileName);
+  PL_strfree(gRecordedShutdownTimeFileName);
+  gRecordedShutdownTimeFileName = nullptr;
+  gAlreadyFreedShutdownTimeFileName = true;
+
+  nsCString tmpName = name;
+  tmpName += ".tmp";
+  FILE *f = fopen(tmpName.get(), "w");
+  if (!f)
+    return;
+  // On a normal release build this should be called just before
+  // calling _exit, but on a debug build or when the user forces a full
+  // shutdown this is called as late as possible, so we have to
+  // white list this write as write poisoning will be enabled.
+  int fd = fileno(f);
+  MozillaRegisterDebugFD(fd);
+
+  TimeStamp now = TimeStamp::Now();
+  MOZ_ASSERT(now >= gRecordedShutdownStartTime);
+  TimeDuration diff = now - gRecordedShutdownStartTime;
+  uint32_t diff2 = diff.ToMilliseconds();
+  int written = fprintf(f, "%d\n", diff2);
+  MozillaUnRegisterDebugFILE(f);
+  int rv = fclose(f);
+  if (written < 0 || rv != 0) {
+    PR_Delete(tmpName.get());
+    return;
+  }
+  PR_Delete(name.get());
+  PR_Rename(tmpName.get(), name.get());
+}
+
 namespace Telemetry {
 
 void
