@@ -310,9 +310,21 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
     aLists.BorderBackground()->AppendNewToTop(
         new (aBuilder) nsDisplayCanvasBackgroundColor(aBuilder, this));
+  
+    if (isThemed) {
+      return aLists.BorderBackground()->AppendNewToTop(
+        new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, 0, isThemed, nullptr));
+    }
+
+    if (!bg) {
+      return NS_OK;
+    }
 
     // Create separate items for each background layer.
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+      if (bg->mLayers[i].mImage.IsEmpty()) {
+        continue;
+      }
       rv = aLists.BorderBackground()->AppendNewToTop(
           new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i,
                                                         isThemed, bg));
