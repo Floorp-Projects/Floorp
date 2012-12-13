@@ -1201,6 +1201,8 @@ static void sanity_check_encoding_stuff(nr_stun_message *msg)
     int padding_bytes;
     int l;
 
+    r_log(NR_LOG_STUN, LOG_DEBUG, "Starting to sanity check encoding");
+
     l = 0;
     TAILQ_FOREACH(attr, &msg->attributes, entry) {
         padding_bytes = 0;
@@ -1362,6 +1364,8 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
     offset = sizeof(msg->header);
 
     while (size > 0) {
+        r_log(NR_LOG_STUN, LOG_DEBUG, "size = %d", size);
+
         if (size < 4) {
            r_log(NR_LOG_STUN, LOG_WARNING, "Illegal message length: %d", size);
            ABORT(R_FAILED);
@@ -1430,10 +1434,14 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
                 attr_info->codec->print(attr_info, "Parsed", &attr->u);
 
 #ifdef USE_STUN_PEDANTIC
+                r_log(NR_LOG_STUN, LOG_DEBUG, "Before pedantic attr_info checks");
                 if (attr_info->illegal) {
-                    if ((r=attr_info->illegal(attr_info, attr->length, &attr->u)))
+    		    if ((r=attr_info->illegal(attr_info, attr->length, &attr->u))) {
+                        r_log(NR_LOG_STUN, LOG_DEBUG, "Failed pedantic attr_info checks");
                         ABORT(r);
+		    }
                 }
+                r_log(NR_LOG_STUN, LOG_DEBUG, "After pedantic attr_info checks");
 #endif /* USE_STUN_PEDANTIC */
             }
         }
