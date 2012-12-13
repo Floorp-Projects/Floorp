@@ -299,17 +299,3 @@ AudioChannelService::ChannelName(AudioChannelType aType)
   return nullptr;
 }
 
-#ifdef MOZ_WIDGET_GONK
-void
-AudioChannelService::SetPhoneInCall(bool aActive)
-{
-  //while ring tone and in-call mode, mute media element
-  if (aActive) {
-    mChannelCounters[AUDIO_CHANNEL_TELEPHONY] = 1;
-  } else {
-    mChannelCounters[AUDIO_CHANNEL_TELEPHONY] = 0;
-  }
-  Notify();
-}
-#endif
-
