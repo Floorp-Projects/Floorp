@@ -98,7 +98,9 @@ function observeProviderSet(cb) {
 
 function waitForProviderLoad(cb) {
   waitForCondition(function() {
+    let sbrowser = document.getElementById("social-sidebar-browser");
     return Social.provider.profile &&
-           Social.provider.profile.displayName;
+           Social.provider.profile.displayName &&
+           sbrowser.docShellIsActive;
   }, cb, "waitForProviderLoad: provider profile was not set");
 }
