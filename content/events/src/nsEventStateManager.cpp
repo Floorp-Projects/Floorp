@@ -1298,8 +1298,11 @@ GetAccessModifierMask(nsISupports* aDocShell)
 static bool
 IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
 {
-  if (!aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::accesskey, aKey,
-                             eIgnoreCase))
+  // Use GetAttr because we want Unicode case=insensitive matching
+  // XXXbz shouldn't this be case-sensitive, per spec?
+  nsString contentKey;
+  if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, contentKey) ||
+      !contentKey.Equals(aKey, nsCaseInsensitiveStringComparator()))
     return false;
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
