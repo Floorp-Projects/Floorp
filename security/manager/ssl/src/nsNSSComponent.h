@@ -270,7 +270,7 @@ public:
 private:
 
   nsresult InitializeNSS(bool showWarningBox);
-  nsresult ShutdownNSS();
+  void ShutdownNSS();
 
 #ifdef XP_MACOSX
   void TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath);
@@ -294,7 +294,6 @@ private:
 
   // Methods that we use to handle the profile change notifications (and to
   // synthesize a full profile change when we're just doing a profile startup):
-  void DoProfileApproveChange(nsISupports* aSubject);
   void DoProfileChangeNetTeardown();
   void DoProfileChangeTeardown(nsISupports* aSubject);
   void DoProfileBeforeChange(nsISupports* aSubject);
