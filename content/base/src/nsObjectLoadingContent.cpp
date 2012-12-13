@@ -552,8 +552,8 @@ nsObjectLoadingContent::MakePluginListener()
   nsCOMPtr<nsIStreamListener> finalListener;
   rv = mInstanceOwner->GetInstance(getter_AddRefs(inst));
   NS_ENSURE_SUCCESS(rv, false);
-  rv = pluginHost->NewEmbeddedPluginStreamListener(mURI, inst,
-                                                   getter_AddRefs(finalListener));
+  rv = pluginHost->NewPluginStreamListener(mURI, inst,
+                                           getter_AddRefs(finalListener));
   NS_ENSURE_SUCCESS(rv, false);
   mFinalListener = finalListener;
   return true;
@@ -740,9 +740,9 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
     appShell->SuspendNative();
   }
 
-  rv = pluginHost->InstantiateEmbeddedPluginInstance(mContentType.get(),
-                                                     mURI.get(), this,
-                                                     getter_AddRefs(mInstanceOwner));
+  rv = pluginHost->InstantiatePluginInstance(mContentType.get(),
+                                             mURI.get(), this,
+                                             getter_AddRefs(mInstanceOwner));
 
   if (appShell) {
     appShell->ResumeNative();
