@@ -325,7 +325,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics.Start(TimeStamp::Now());
+    mChannelStatistics->Start();
   }
 
   mReopenOnError = false;
@@ -406,7 +406,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics.Stop(TimeStamp::Now());
+    mChannelStatistics->Stop();
   }
 
   // If we were loading a byte range, notify decoder and return.
@@ -512,7 +512,7 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics.AddBytes(aCount);
+    mChannelStatistics->AddBytes(aCount);
   }
 
   CopySegmentClosure closure;
@@ -582,6 +582,10 @@ ChannelMediaResource::CancelByteRangeOpen()
 nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  if (!mChannelStatistics) {
+    mChannelStatistics = new MediaChannelStatistics();
+  }
 
   nsresult rv = mCacheStream.Init();
   if (NS_FAILED(rv))
@@ -731,7 +735,7 @@ MediaResource* ChannelMediaResource::CloneData(MediaDecoder* aDecoder)
     resource->mSuspendCount = 1;
     resource->mCacheStream.InitAsClone(&mCacheStream);
     resource->mChannelStatistics = mChannelStatistics;
-    resource->mChannelStatistics.Stop(TimeStamp::Now());
+    resource->mChannelStatistics->Stop();
   }
   return resource;
 }
@@ -742,7 +746,7 @@ void ChannelMediaResource::CloseChannel()
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics.Stop(TimeStamp::Now());
+    mChannelStatistics->Stop();
   }
 
   if (mListener) {
@@ -844,7 +848,7 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately)
     } else if (mSuspendCount == 0) {
       {
         MutexAutoLock lock(mLock);
-        mChannelStatistics.Stop(TimeStamp::Now());
+        mChannelStatistics->Stop();
       }
       PossiblySuspend();
       element->DownloadSuspended();
@@ -877,7 +881,7 @@ void ChannelMediaResource::Resume()
       // Just wake up our existing channel
       {
         MutexAutoLock lock(mLock);
-        mChannelStatistics.Start(TimeStamp::Now());
+        mChannelStatistics->Start();
       }
       // if an error occurs after Resume, assume it's because the server
       // timed out the connection and we should reopen it.
@@ -1219,7 +1223,7 @@ double
 ChannelMediaResource::GetDownloadRate(bool* aIsReliable)
 {
   MutexAutoLock lock(mLock);
-  return mChannelStatistics.GetRate(TimeStamp::Now(), aIsReliable);
+  return mChannelStatistics->GetRate(aIsReliable);
 }
 
 int64_t

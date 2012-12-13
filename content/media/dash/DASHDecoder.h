@@ -179,6 +179,31 @@ public:
     return switchCount;
   }
 
+  // The actual playback rate computation. The monitor must be held.
+  // XXX Computes playback for the current video rep decoder only.
+  double ComputePlaybackRate(bool* aReliable) MOZ_OVERRIDE;
+
+  // Something has changed that could affect the computed playback rate,
+  // so recompute it. The monitor must be held. Will be forwarded to current
+  // audio and video rep decoders.
+  void UpdatePlaybackRate() MOZ_OVERRIDE;
+
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity starting on the channel. The monitor must be held.
+  virtual void NotifyPlaybackStarted() MOZ_OVERRIDE;
+
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity stopping on the channel. The monitor must be held.
+  virtual void NotifyPlaybackStopped() MOZ_OVERRIDE;
+
+  // Return statistics. This is used for progress events and other things.
+  // This can be called from any thread. It's only a snapshot of the
+  // current state, since other threads might be changing the state
+  // at any time.
+  // XXX Stats are calculated based on the current video rep decoder, with the
+  // exception of download rate, which is based on all video downloads.
+  virtual Statistics GetStatistics() MOZ_OVERRIDE;
+
   // Drop reference to state machine and tell sub-decoders to do the same.
   // Only called during shutdown dance, on main thread only.
   void ReleaseStateMachine();
@@ -320,6 +345,13 @@ private:
   // |NotifySeekInSubsegment| is called, which will set it to false, and will
   // start a new series of downloads from the seeked subsegment.
   bool mSeeking;
+
+  // Mutex for statistics.
+  Mutex mStatisticsLock;
+  // Stores snapshot statistics, such as download rate, for the audio|video
+  // data streams. |mStatisticsLock| must be locked for access.
+  nsRefPtr<MediaChannelStatistics> mAudioStatistics;
+  nsRefPtr<MediaChannelStatistics> mVideoStatistics;
 };
 
 } // namespace mozilla

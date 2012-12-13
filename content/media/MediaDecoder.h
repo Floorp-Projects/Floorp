@@ -618,10 +618,24 @@ public:
 
   // Something has changed that could affect the computed playback rate,
   // so recompute it. The monitor must be held.
-  void UpdatePlaybackRate();
+  virtual void UpdatePlaybackRate();
+
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity stopping on the channel. The monitor must be held.
+  virtual void NotifyPlaybackStarted() {
+    GetReentrantMonitor().AssertCurrentThreadIn();
+    mPlaybackStatistics.Start();
+  }
+
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity stopping on the channel. The monitor must be held.
+  virtual void NotifyPlaybackStopped() {
+    GetReentrantMonitor().AssertCurrentThreadIn();
+    mPlaybackStatistics.Stop();
+  }
 
   // The actual playback rate computation. The monitor must be held.
-  double ComputePlaybackRate(bool* aReliable);
+  virtual double ComputePlaybackRate(bool* aReliable);
 
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
@@ -787,7 +801,7 @@ public:
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
   // at any time.
-  Statistics GetStatistics();
+  virtual Statistics GetStatistics();
 
   // Frame decoding/painting related performance counters.
   // Threadsafe.
@@ -862,7 +876,7 @@ public:
 
   // Increments the parsed and decoded frame counters by the passed in counts.
   // Can be called on any thread.
-  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_FINAL MOZ_OVERRIDE
+  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_OVERRIDE
   {
     GetFrameStatistics().NotifyDecodedFrames(aParsed, aDecoded);
   }
@@ -881,10 +895,6 @@ public:
   // during decoder seek operations, but it's updated at the end when we
   // start playing back again.
   int64_t mPlaybackPosition;
-  // Data needed to estimate playback data rate. The timeline used for
-  // this estimate is "decode time" (where the "current time" is the
-  // time of the last decoded video frame).
-  MediaChannelStatistics mPlaybackStatistics;
 
   // The current playback position of the media resource in units of
   // seconds. This is updated approximately at the framerate of the
@@ -1049,6 +1059,11 @@ protected:
   // that a stall event has already fired and not to fire another one until
   // more data is received. Read/Write from the main thread only.
   TimeStamp mDataTime;
+
+  // Data needed to estimate playback data rate. The timeline used for
+  // this estimate is "decode time" (where the "current time" is the
+  // time of the last decoded video frame).
+  MediaChannelStatistics mPlaybackStatistics;
 
   // The framebuffer size to use for audioavailable events.
   uint32_t mFrameBufferLength;
