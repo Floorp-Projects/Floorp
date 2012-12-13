@@ -545,7 +545,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // they are returning the offset of the assembler just after the call has
     // been made so that a safepoint can be made at that location.
 
-    void callWithABI(void *fun, Result result = GENERAL) {
+    template <typename T>
+    void callWithABI(const T &fun, Result result = GENERAL) {
         leaveSPSFrame();
         MacroAssemblerSpecific::callWithABI(fun, result);
         reenterSPSFrame();
