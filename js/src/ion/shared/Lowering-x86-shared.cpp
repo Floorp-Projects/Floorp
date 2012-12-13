@@ -88,7 +88,7 @@ LIRGeneratorX86Shared::lowerModI(MMod *mod)
             return assignSnapshot(lir) && defineReuseInput(lir, mod, 0);
         }
     }
-    LModI *lir = new LModI(useFixed(mod->lhs(), eax), useRegister(mod->rhs()));
+    LModI *lir = new LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(eax));
     return assignSnapshot(lir) && defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
 
