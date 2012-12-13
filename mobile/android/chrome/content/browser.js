@@ -336,6 +336,17 @@ var BrowserApp = {
         NativeWindow.toast.show(label, "short");
       });
 
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInNewPrivateTab"),
+      NativeWindow.contextmenus.linkOpenableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id, isPrivate: true });
+
+        let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
+        let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
+        NativeWindow.toast.show(label, "short");
+      });
+
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
       NativeWindow.contextmenus.linkCopyableContext,
       function(aTarget) {
@@ -2434,13 +2445,16 @@ nsBrowserAccess.prototype = {
     let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB);
+    let isPrivate = false;
 
     if (newTab) {
       let parentId = -1;
       if (!isExternal && aOpener) {
         let parent = BrowserApp.getTabForWindow(aOpener.top);
-        if (parent)
+        if (parent) {
           parentId = parent.id;
+          isPrivate = PrivateBrowsingUtils.isWindowPrivate(parent.browser.contentWindow);
+        }
       }
 
       // BrowserApp.addTab calls loadURIWithFlags with the appropriate params
@@ -2449,6 +2463,7 @@ nsBrowserAccess.prototype = {
                                                                       external: isExternal,
                                                                       parentId: parentId,
                                                                       selected: true,
+                                                                      isPrivate: isPrivate,
                                                                       pinned: pinned });
 
       return tab.browser;

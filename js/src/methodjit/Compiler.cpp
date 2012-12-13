@@ -321,7 +321,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
              */
             if (!globalObj ||
                 fun->getParent() != globalObj ||
-                outerScript->strictModeCode != script->strictModeCode) {
+                outerScript->strict != script->strict) {
                 okay = false;
                 break;
             }
@@ -1263,7 +1263,7 @@ mjit::Compiler::generatePrologue()
     }
 
     /* Inline StackFrame::prologue. */
-    if (script_->isActiveEval && script_->strictModeCode) {
+    if (script_->isActiveEval && script_->strict) {
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::StrictEvalPrologue, REJOIN_EVAL_PROLOGUE);
     } else if (script_->function()) {
@@ -1797,7 +1797,7 @@ mjit::Compiler::finishThisUp()
         new (&to) ic::SetElementIC();
         from.copyTo(to, fullCode, stubCode);
 
-        to.strictMode = script_->strictModeCode;
+        to.strictMode = script_->strict;
         to.vr = from.vr;
         to.objReg = from.objReg;
         to.objRemat = from.objRemat.toInt32();
@@ -6124,7 +6124,7 @@ mjit::Compiler::jsop_this()
      * In direct-call eval code, we wrapped 'this' before entering the eval.
      * In global code, 'this' is always an object.
      */
-    if (script_->function() && !script_->strictModeCode &&
+    if (script_->function() && !script_->strict &&
         !script_->function()->isSelfHostedBuiltin())
     {
         FrameEntry *thisFe = frame.peek(-1);

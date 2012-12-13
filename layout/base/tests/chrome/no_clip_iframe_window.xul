@@ -8,7 +8,7 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
-  <script type="text/javascript" src="paint_listener.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
 
   <div id="container" xmlns="http://www.w3.org/1999/xhtml" style="height:400px; overflow:auto; background:gray">
     <div style="height:0">

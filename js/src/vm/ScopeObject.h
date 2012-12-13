@@ -193,6 +193,8 @@ class CallObject : public ScopeObject
 
     static const uint32_t RESERVED_SLOTS = 2;
 
+    static CallObject *createForFunction(JSContext *cx, HandleObject enclosing, HandleFunction callee);
+
     static CallObject *createForFunction(JSContext *cx, StackFrame *fp);
     static CallObject *createForStrictEval(JSContext *cx, StackFrame *fp);
 
@@ -228,7 +230,7 @@ class DeclEnvObject : public ScopeObject
     static DeclEnvObject *
     createTemplateObject(JSContext *cx, HandleFunction fun);
 
-    static DeclEnvObject *create(JSContext *cx, StackFrame *fp);
+    static DeclEnvObject *create(JSContext *cx, HandleObject enclosing, HandleFunction callee);
 
     static inline size_t lambdaSlot() {
         return LAMBDA_SLOT;

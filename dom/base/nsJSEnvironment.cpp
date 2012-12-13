@@ -1250,6 +1250,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      const char *aURL,
                                      uint32_t aLineNo,
                                      uint32_t aVersion,
+                                     bool aIsXBL,
                                      JS::Value* aRetValue,
                                      bool* aIsUndefined)
 {
@@ -1324,7 +1325,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     JS::CompileOptions options(mContext);
     options.setFileAndLine(aURL, aLineNo)
            .setVersion(JSVersion(aVersion))
-           .setPrincipals(nsJSPrincipals::get(principal));
+           .setPrincipals(nsJSPrincipals::get(principal))
+           .setUserBit(aIsXBL);
     js::RootedObject rootedScope(mContext, aScopeObject);
     ok = JS::Evaluate(mContext, rootedScope, options, PromiseFlatString(aScript).get(),
                       aScript.Length(), &val);
@@ -1782,7 +1784,8 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
 
   JS::CompileOptions options(mContext);
   options.setVersion(JSVersion(aVersion))
-         .setFileAndLine(aURL, aLineNo);
+         .setFileAndLine(aURL, aLineNo)
+         .setUserBit(aIsXBL);
   js::RootedObject empty(mContext, NULL);
   JSFunction* fun = JS::CompileFunction(mContext, empty, options, nsAtomCString(aName).get(),
                                         aArgCount, aArgNames,
@@ -1791,11 +1794,6 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   if (!fun) {
     ReportPendingException();
     return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  // If this is an XBL function, make a note to that effect on its script.
-  if (aIsXBL) {
-    JS_SetScriptUserBit(JS_GetFunctionScript(mContext, fun), true);
   }
 
   JSObject *handler = ::JS_GetFunctionObject(fun);
@@ -1849,7 +1847,8 @@ nsJSContext::CompileFunction(JSObject* aTarget,
   JS::CompileOptions options(mContext);
   options.setPrincipals(nsJSPrincipals::get(principal))
          .setVersion(JSVersion(aVersion))
-         .setFileAndLine(aURL, aLineNo);
+         .setFileAndLine(aURL, aLineNo)
+         .setUserBit(aIsXBL);
   JSFunction* fun = JS::CompileFunction(mContext, target,
                                         options, PromiseFlatCString(aName).get(),
                                         aArgCount, aArgArray,
@@ -1857,11 +1856,6 @@ nsJSContext::CompileFunction(JSObject* aTarget,
 
   if (!fun)
     return NS_ERROR_FAILURE;
-
-  // If this is an XBL function, make a note to that effect on its script.
-  if (aIsXBL) {
-    JS_SetScriptUserBit(JS_GetFunctionScript(mContext, fun), true);
-  }
 
   *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
