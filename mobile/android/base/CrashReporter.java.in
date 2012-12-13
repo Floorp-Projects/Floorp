@@ -20,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.util.zip.GZIPOutputStream;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -260,8 +261,9 @@ public class CrashReporter extends Activity
             String boundary = generateBoundary();
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+            conn.setRequestProperty("Content-Encoding", "gzip");
 
-            OutputStream os = conn.getOutputStream();
+            OutputStream os = new GZIPOutputStream(conn.getOutputStream());
             for (String key : extras.keySet()) {
                 if (key.equals(PAGE_URL_KEY)) {
                     if (includeURLCheckbox.isChecked())
@@ -325,6 +327,8 @@ public class CrashReporter extends Activity
                 fos.write("Crash ID: ".getBytes());
                 fos.write(crashid.getBytes());
                 fos.close();
+            } else {
+                Log.i(LOGTAG, "Received failure HTTP response code from server: " + conn.getResponseCode());
             }
         } catch (IOException e) {
             Log.e(LOGTAG, "exception during send: ", e);
