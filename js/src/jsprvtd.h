@@ -94,8 +94,6 @@ class RegExpStatics;
 class MatchPairs;
 class PropertyName;
 
-namespace detail { class RegExpCode; }
-
 enum RegExpFlag
 {
     IgnoreCaseFlag  = 0x01,

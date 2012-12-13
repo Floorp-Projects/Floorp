@@ -99,18 +99,20 @@ RegExpObject::setSticky(bool enabled)
     setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
 }
 
-#if ENABLE_YARR_JIT
 /* This function should be deleted once bad Android platforms phase out. See bug 604774. */
 inline bool
-detail::RegExpCode::isJITRuntimeEnabled(JSContext *cx)
+RegExpShared::isJITRuntimeEnabled(JSContext *cx)
 {
-#if defined(ANDROID) && defined(JS_METHODJIT)
+#if ENABLE_YARR_JIT
+# if defined(ANDROID) && defined(JS_METHODJIT)
     return cx->methodJitEnabled;
-#else
+# else
     return true;
+# endif
+#else
+    return false;
 #endif
 }
-#endif
 
 inline bool
 RegExpToShared(JSContext *cx, JSObject &obj, RegExpGuard *g)
