@@ -99,9 +99,15 @@ endif
 
 # Put a useful .gdbinit in the bin directory, to be picked up automatically
 # by GDB when we debug executables there.
-GDBINIT_FILES := .gdbinit
+# NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
+GDBINIT_FILES := $(topsrcdir)/.gdbinit
 GDBINIT_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += GDBINIT
+
+PYTHON_UNIT_TESTS := \
+  tests/unit-ConfigStatus.py \
+  tests/test.py \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -168,11 +174,6 @@ endif
 ifdef ENABLE_TESTS
 libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
 	$(INSTALL) $< $(DIST)/bin
-
-# Unit tests for ManifestParser
-check::
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py -I$(srcdir) \
-	  $(srcdir)/tests/test.py
 
 ifeq ($(OS_ARCH),Darwin)
 libs:: $(topsrcdir)/tools/rb/fix_macosx_stack.py
@@ -266,7 +267,4 @@ endif
 
 GARBAGE += $(srcdir)/automationutils.pyc
 
-# Test for ConfigStatus.py
-check::
-	$(PYTHON) $(srcdir)/tests/unit-ConfigStatus.py
 endif # ENABLE_TESTS

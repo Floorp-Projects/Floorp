@@ -24,6 +24,13 @@ enum ImageFormat {
   GRALLOC_PLANAR_YCBCR,
 
   /**
+   * The SHARED_RGB format creates a SharedRGBImage, which stores RGB data in
+   * shared memory. Some Android hardware video decoders require this format.
+   * Currently only used on Android.
+   */
+  SHARED_RGB,
+
+  /**
    * The CAIRO_SURFACE format creates a CairoImage. All backends should
    * support this format, because video rendering sometimes requires it.
    * 

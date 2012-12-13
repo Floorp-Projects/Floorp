@@ -1084,6 +1084,7 @@ AttachFinishedCompilations(JSContext *cx)
                 // Release the worker thread lock and root the compiler for GC.
                 AutoTempAllocatorRooter root(cx, &builder->temp());
                 AutoUnlockWorkerThreadState unlock(cx->runtime);
+                AutoFlushCache afc("AttachFinishedCompilations");
                 success = codegen->link();
             }
 

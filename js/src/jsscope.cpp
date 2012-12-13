@@ -77,7 +77,7 @@ ShapeTable::init(JSRuntime *rt, Shape *lastProp)
 Shape::makeOwnBaseShape(JSContext *cx, HandleShape shape)
 {
     JS_ASSERT(!shape->base()->isOwned());
-    assertSameCompartment(cx, shape->compartment());
+    assertSameCompartmentDebugOnly(cx, shape->compartment());
 
     UnrootedBaseShape nbase = js_NewGCBaseShape(cx);
     if (!nbase)

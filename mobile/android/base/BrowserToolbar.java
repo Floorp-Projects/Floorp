@@ -696,7 +696,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             public void run() {
                 GeckoTextView view = (GeckoTextView) mTabsCount.getCurrentView();
                 view.setSelected(true);
-                view.setPrivateMode(false);
             }
         }, mDuration);
 
@@ -704,7 +703,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             public void run() {
                 GeckoTextView view = (GeckoTextView) mTabsCount.getCurrentView();
                 view.setSelected(false);
-                view.setPrivateMode(Tabs.getInstance().getSelectedTab().isPrivate());
             }
         }, 2 * mDuration);
     }
@@ -1018,9 +1016,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             else if (mAwesomeBar instanceof GeckoRelativeLayout)
                 ((GeckoRelativeLayout) mAwesomeBar).setPrivateMode(tab.isPrivate());
 
-            mTabs.setPrivateMode(tab.isPrivate());
-            mTabsCount.setPrivateMode(tab.isPrivate());
-            ((GeckoTextView) mTabsCount.getCurrentView()).setPrivateMode(tab.isPrivate());
             mTitle.setPrivateMode(tab.isPrivate());
             mMenu.setPrivateMode(tab.isPrivate());
 

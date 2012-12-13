@@ -456,6 +456,7 @@ class TableTicker: public Sampler {
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
+    mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
     mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
   }
 
@@ -495,6 +496,7 @@ private:
   ThreadProfile mPrimaryThreadProfile;
   TimeStamp mStartTime;
   bool mSaveRequested;
+  bool mAddLeafAddresses;
   bool mUseStackWalk;
   bool mJankOnly;
   bool mProfileJS;
@@ -706,6 +708,26 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
 }
 
 static
+void addDynamicTag(ThreadProfile &aProfile, char aTagName, const char *aStr)
+{
+  aProfile.addTag(ProfileEntry(aTagName, ""));
+  // Add one to store the null termination
+  size_t strLen = strlen(aStr) + 1;
+  for (size_t j = 0; j < strLen;) {
+    // Store as many characters in the void* as the platform allows
+    char text[sizeof(void*)];
+    int len = sizeof(void*)/sizeof(char);
+    if (j+len >= strLen) {
+      len = strLen - j;
+    }
+    memcpy(text, &aStr[j], len);
+    j += sizeof(void*)/sizeof(char);
+    // Cast to *((void**) to pass the text data to a void*
+    aProfile.addTag(ProfileEntry('d', *((void**)(&text[0]))));
+  }
+}
+
+static
 void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
                      ProfileStack *stack, void *lastpc)
 {
@@ -718,19 +740,7 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
     // Store the string using 1 or more 'd' (dynamic) tags
     // that will happen to the preceding tag
 
-    aProfile.addTag(ProfileEntry('c', ""));
-    // Add one to store the null termination
-    size_t strLen = strlen(sampleLabel) + 1;
-    for (size_t j = 0; j < strLen;) {
-      // Store as many characters in the void* as the platform allows
-      char text[sizeof(void*)];
-      for (size_t pos = 0; pos < sizeof(void*) && j+pos < strLen; pos++) {
-        text[pos] = sampleLabel[j+pos];
-      }
-      j += sizeof(void*)/sizeof(char);
-      // Cast to *((void**) to pass the text data to a void*
-      aProfile.addTag(ProfileEntry('d', *((void**)(&text[0]))));
-    }
+    addDynamicTag(aProfile, 'c', sampleLabel);
     if (entry.js()) {
       if (!entry.pc()) {
         // The JIT only allows the top-most entry to have a NULL pc
@@ -907,7 +917,7 @@ void TableTicker::Tick(TickSample* sample)
   // Marker(s) come before the sample
   ProfileStack* stack = mPrimaryThreadProfile.GetStack();
   for (int i = 0; stack->getMarker(i) != NULL; i++) {
-    mPrimaryThreadProfile.addTag(ProfileEntry('m', stack->getMarker(i)));
+    addDynamicTag(mPrimaryThreadProfile, 'm', stack->getMarker(i));
   }
   stack->mQueueClearMarker = true;
 
@@ -937,10 +947,10 @@ void TableTicker::Tick(TickSample* sample)
   if (mUseStackWalk) {
     doBacktrace(mPrimaryThreadProfile, sample);
   } else {
-    doSampleStackTrace(stack, mPrimaryThreadProfile, sample);
+    doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
   }
 #else
-  doSampleStackTrace(stack, mPrimaryThreadProfile, sample);
+  doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
 #endif
 
   if (recordSample)
@@ -1016,7 +1026,7 @@ void mozilla_sampler_init()
     return;
   }
 
-  const char* features[] = {"js"
+  const char* features[] = {"js", "leaf"
 #if defined(XP_WIN) || defined(XP_MACOSX)
                          , "stackwalk"
 #endif
@@ -1093,6 +1103,9 @@ const char** mozilla_sampler_get_features()
   static const char* features[] = {
 #if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK))
     "stackwalk",
+#endif
+#if defined(ENABLE_SPS_LEAF_DATA)
+    "leaf",
 #endif
     "jank",
     "js",

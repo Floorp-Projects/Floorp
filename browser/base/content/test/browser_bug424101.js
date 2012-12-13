@@ -34,15 +34,15 @@ function test() {
     testInput("text", true);
     testInput("password", true);
     testInput("image", true);
-    testInput("button", false);
-    testInput("submit", false);
-    testInput("reset", false);
-    testInput("checkbox", false);
-    testInput("radio", false);
-    testElement("button", false);
-    testElement("select", false);
-    testElement("option", false);
-    testElement("optgroup", false);
+    testInput("button", true);
+    testInput("submit", true);
+    testInput("reset", true);
+    testInput("checkbox", true);
+    testInput("radio", true);
+    testElement("button", true);
+    testElement("select", true);
+    testElement("option", true);
+    testElement("optgroup", true);
 
     // cleanup
     document.popupNode = null;

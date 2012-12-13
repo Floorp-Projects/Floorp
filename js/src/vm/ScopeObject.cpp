@@ -196,6 +196,28 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
 }
 
 CallObject *
+CallObject::createForFunction(JSContext *cx, HandleObject enclosing, HandleFunction callee)
+{
+    AssertCanGC();
+
+    RootedObject scopeChain(cx, enclosing);
+    JS_ASSERT(scopeChain);
+
+    /*
+     * For a named function expression Call's parent points to an environment
+     * object holding function's name.
+     */
+    if (callee->isNamedLambda()) {
+        scopeChain = DeclEnvObject::create(cx, scopeChain, callee);
+        if (!scopeChain)
+            return NULL;
+    }
+
+    RootedScript script(cx, callee->nonLazyScript());
+    return create(cx, script, scopeChain, callee);
+}
+
+CallObject *
 CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 {
     AssertCanGC();
@@ -203,25 +225,14 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
     assertSameCompartment(cx, fp);
 
     RootedObject scopeChain(cx, fp->scopeChain());
-
-    /*
-     * For a named function expression Call's parent points to an environment
-     * object holding function's name.
-     */
-    if (fp->fun()->isNamedLambda()) {
-        scopeChain = DeclEnvObject::create(cx, fp);
-        if (!scopeChain)
-            return NULL;
-    }
-
-    RootedScript script(cx, fp->script());
     RootedFunction callee(cx, &fp->callee());
-    CallObject *callobj = create(cx, script, scopeChain, callee);
+
+    CallObject *callobj = createForFunction(cx, scopeChain, callee);
     if (!callobj)
         return NULL;
 
     /* Copy in the closed-over formal arguments. */
-    for (AliasedFormalIter i(script); i; i++)
+    for (AliasedFormalIter i(fp->script()); i; i++)
         callobj->setAliasedVar(i, fp->unaliasedFormal(i.frameIndex(), DONT_CHECK_ALIASING));
 
     return callobj;
@@ -303,17 +314,14 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun)
 }
 
 DeclEnvObject *
-DeclEnvObject::create(JSContext *cx, StackFrame *fp)
+DeclEnvObject::create(JSContext *cx, HandleObject enclosing, HandleFunction callee)
 {
-    assertSameCompartment(cx, fp);
-
-    RootedFunction fun(cx, fp->fun());
-    RootedObject obj(cx, createTemplateObject(cx, fun));
+    RootedObject obj(cx, createTemplateObject(cx, callee));
     if (!obj)
         return NULL;
 
-    obj->asScope().setEnclosingScope(fp->scopeChain());
-    obj->setFixedSlot(lambdaSlot(), ObjectValue(fp->callee()));
+    obj->asScope().setEnclosingScope(enclosing);
+    obj->setFixedSlot(lambdaSlot(), ObjectValue(*callee));
     return &obj->asDeclEnv();
 }
 

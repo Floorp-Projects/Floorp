@@ -43,6 +43,8 @@ public:
 
   // nsISMILAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
+  virtual bool GetTargetAttributeName(PRInt32 *aNamespaceID,
+                                      nsIAtom **aLocalName) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -114,4 +116,18 @@ nsSMILAnimationFunction&
 nsSVGAnimateTransformElement::AnimationFunction()
 {
   return mAnimationFunction;
+}
+
+bool
+nsSVGAnimateTransformElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
+                                                     nsIAtom **aLocalName) const
+{
+  if (nsSVGAnimateTransformElementBase::GetTargetAttributeName(aNamespaceID,
+                                                               aLocalName)) {
+    return *aNamespaceID == kNameSpaceID_None &&
+           (*aLocalName == nsGkAtoms::transform ||
+            *aLocalName == nsGkAtoms::patternTransform ||
+            *aLocalName == nsGkAtoms::gradientTransform);
+  }
+  return false;
 }

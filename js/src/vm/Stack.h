@@ -434,11 +434,11 @@ class StackFrame
     }
 
     inline bool isStrictEvalFrame() const {
-        return isEvalFrame() && script()->strictModeCode;
+        return isEvalFrame() && script()->strict;
     }
 
     bool isNonStrictEvalFrame() const {
-        return isEvalFrame() && !script()->strictModeCode;
+        return isEvalFrame() && !script()->strict;
     }
 
     bool isDirectEvalFrame() const {

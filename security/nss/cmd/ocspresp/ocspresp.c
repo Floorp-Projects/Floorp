@@ -36,8 +36,7 @@ getCaAndSubjectCert(CERTCertDBHandle *certHandle,
 }
 
 static SECItem *
-encode(PRArenaPool *arena, CERTOCSPCertID *cid,
-       CERTCertificate *ca, CERTCertificate *cert)
+encode(PRArenaPool *arena, CERTOCSPCertID *cid, CERTCertificate *ca)
 {
     SECItem *response;
     PRTime now = PR_Now();
@@ -50,7 +49,7 @@ encode(PRArenaPool *arena, CERTOCSPCertID *cid,
 
     nextUpdate = now + 10 * PR_USEC_PER_SEC; /* in the future */
     
-    sr = OCSP_CreateSingleResponseGood(arena, cid, now, &nextUpdate);
+    sr = CERT_CreateOCSPSingleResponseGood(arena, cid, now, &nextUpdate);
 
     /* meaning of value 2: one entry + one end marker */
     responses = PORT_ArenaNewArray(arena, CERTOCSPSingleResponse*, 2);
@@ -60,15 +59,14 @@ encode(PRArenaPool *arena, CERTOCSPCertID *cid,
     responses[0] = sr;
     responses[1] = NULL;
     
-    response = OCSP_CreateSuccessResponseEncodedBasicV1(
-        arena, ca, PR_TRUE, now, responses, &pwdata);
+    response = CERT_CreateEncodedOCSPSuccessResponse(
+        arena, ca, ocspResponderID_byName, now, responses, &pwdata);
 
     return response;
 }
 
 static SECItem *
-encodeRevoked(PRArenaPool *arena, CERTOCSPCertID *cid,
-       CERTCertificate *ca, CERTCertificate *cert)
+encodeRevoked(PRArenaPool *arena, CERTOCSPCertID *cid, CERTCertificate *ca)
 {
     SECItem *response;
     PRTime now = PR_Now();
@@ -81,8 +79,8 @@ encodeRevoked(PRArenaPool *arena, CERTOCSPCertID *cid,
 
     revocationTime = now - 10 * PR_USEC_PER_SEC; /* in the past */
 
-    sr = OCSP_CreateSingleResponseRevoked(arena, cid, now, NULL,
-                                          revocationTime);
+    sr = CERT_CreateOCSPSingleResponseRevoked(arena, cid, now, NULL,
+                                              revocationTime, NULL);
 
     /* meaning of value 2: one entry + one end marker */
     responses = PORT_ArenaNewArray(arena, CERTOCSPSingleResponse*, 2);
@@ -92,13 +90,13 @@ encodeRevoked(PRArenaPool *arena, CERTOCSPCertID *cid,
     responses[0] = sr;
     responses[1] = NULL;
 
-    response = OCSP_CreateSuccessResponseEncodedBasicV1(
-        arena, ca, PR_TRUE, now, responses, &pwdata);
+    response = CERT_CreateEncodedOCSPSuccessResponse(
+        arena, ca, ocspResponderID_byName, now, responses, &pwdata);
 
     return response;
 }
 
-int Usage()
+int Usage(void)
 {
     PRFileDesc *pr_stderr = PR_STDERR;
     PR_fprintf (pr_stderr, "ocspresp runs an internal selftest for OCSP response creation");
@@ -180,7 +178,7 @@ main(int argc, char **argv)
     cid = CERT_CreateOCSPCertID(cert, now);
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    encoded = encode(arena, cid, caCert, cert);
+    encoded = encode(arena, cid, caCert);
     PORT_Assert(encoded);
     decoded = CERT_DecodeOCSPResponse(encoded);
     statusDecoded = CERT_GetOCSPResponseStatus(decoded);
@@ -194,7 +192,7 @@ main(int argc, char **argv)
     PORT_Assert(statusDecoded == SECSuccess);
     CERT_DestroyCertificate(obtainedSignerCert);
 
-    encodedRev = encodeRevoked(arena, cid, caCert, cert);
+    encodedRev = encodeRevoked(arena, cid, caCert);
     PORT_Assert(encodedRev);
     decodedRev = CERT_DecodeOCSPResponse(encodedRev);
     statusDecodedRev = CERT_GetOCSPResponseStatus(decodedRev);
@@ -209,7 +207,8 @@ main(int argc, char **argv)
     PORT_Assert(PORT_GetError() == SEC_ERROR_REVOKED_CERTIFICATE);
     CERT_DestroyCertificate(obtainedSignerCert);
     
-    encodedFail = OCSP_CreateFailureResponse(arena, SEC_ERROR_OCSP_TRY_SERVER_LATER);
+    encodedFail = CERT_CreateEncodedOCSPErrorResponse(
+        arena, SEC_ERROR_OCSP_TRY_SERVER_LATER);
     PORT_Assert(encodedFail);
     decodedFail = CERT_DecodeOCSPResponse(encodedFail);
     statusDecodedFail = CERT_GetOCSPResponseStatus(decodedFail);
