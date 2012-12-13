@@ -1,4 +1,4 @@
-random-if(bug685516) == background-image-zoom-1.html background-image-zoom-1-ref.html
+random-if(bug685516) fuzzy-if(Android,4,2) == background-image-zoom-1.html background-image-zoom-1-ref.html
 == background-image-zoom-2.html about:blank
 == image-zoom-1.html image-zoom-1-ref.html
 == image-zoom-2.html image-zoom-1-ref.html
