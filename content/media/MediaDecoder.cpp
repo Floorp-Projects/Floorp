@@ -925,6 +925,10 @@ void MediaDecoder::NotifySuspendedStatusChanged()
 void MediaDecoder::NotifyBytesDownloaded()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  {
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    UpdatePlaybackRate();
+  }
   UpdateReadyStateForData();
   Progress(false);
 }

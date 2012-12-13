@@ -156,9 +156,12 @@ DASHDecoder::DASHDecoder() :
   mVideoSubsegmentIdx(0),
   mAudioMetadataReadCount(0),
   mVideoMetadataReadCount(0),
-  mSeeking(false)
+  mSeeking(false),
+  mStatisticsLock("DASHDecoder.mStatisticsLock")
 {
   MOZ_COUNT_CTOR(DASHDecoder);
+  mAudioStatistics = new MediaChannelStatistics();
+  mVideoStatistics = new MediaChannelStatistics();
 }
 
 DASHDecoder::~DASHDecoder()
@@ -536,6 +539,7 @@ DASHDecoder::CreateAudioSubResource(nsIURI* aUrl,
     = MediaResource::Create(aAudioDecoder, channel);
   NS_ENSURE_TRUE(audioResource, nullptr);
 
+  audioResource->RecordStatisticsTo(mAudioStatistics);
   return audioResource;
 }
 
@@ -557,6 +561,7 @@ DASHDecoder::CreateVideoSubResource(nsIURI* aUrl,
     = MediaResource::Create(aVideoDecoder, channel);
   NS_ENSURE_TRUE(videoResource, nullptr);
 
+  videoResource->RecordStatisticsTo(mVideoStatistics);
   return videoResource;
 }
 
@@ -910,19 +915,23 @@ DASHDecoder::PossiblySwitchDecoder(DASHRepDecoder* aRepDecoder)
 
   // Now, determine if and which decoder to switch to.
   // XXX This download rate is averaged over time, and only refers to the bytes
-  // downloaded for the given decoder. A running average would be better, and
+  // downloaded for the video decoder. A running average would be better, and
   // something that includes all downloads. But this will do for now.
   NS_ASSERTION(VideoRepDecoder(), "Video decoder should not be null.");
   NS_ASSERTION(VideoRepDecoder()->GetResource(),
                "Video resource should not be null");
   bool reliable = false;
-  double downloadRate = VideoRepDecoder()->GetResource()->GetDownloadRate(&reliable);
+  double downloadRate = 0;
+  {
+    MutexAutoLock lock(mStatisticsLock);
+    downloadRate = mVideoStatistics->GetRate(&reliable);
+  }
   uint32_t bestRepIdx = UINT32_MAX;
   bool noRepAvailable = !mMPDManager->GetBestRepForBandwidth(mVideoAdaptSetIdx,
                                                              downloadRate,
                                                              bestRepIdx);
-  LOG("downloadRate [%f] reliable [%s] bestRepIdx [%d] noRepAvailable",
-      downloadRate, (reliable ? "yes" : "no"), bestRepIdx,
+  LOG("downloadRate [%0.2f kbps] reliable [%s] bestRepIdx [%d] noRepAvailable [%s]",
+      downloadRate/1000.0, (reliable ? "yes" : "no"), bestRepIdx,
       (noRepAvailable ? "yes" : "no"));
 
   // If there is a higher bitrate stream that can be downloaded with the
@@ -1119,5 +1128,124 @@ DASHDecoder::SetSubsegmentIndex(DASHRepDecoder* aRepDecoder,
   }
 }
 
-} // namespace mozilla
+double
+DASHDecoder::ComputePlaybackRate(bool* aReliable)
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  NS_ASSERTION(aReliable, "Bool pointer aRelible should not be null!");
 
+  // While downloading the MPD, return 0; do not count manifest as media data.
+  if (mResource && !mMPDManager) {
+    return 0;
+  }
+
+  // Once MPD is downloaded, use the rate from the video decoder.
+  // XXX Not ideal, but since playback rate is used to estimate if we have
+  // enough data to continue playing, this should be sufficient.
+  double videoRate = 0;
+  if (VideoRepDecoder()) {
+    videoRate = VideoRepDecoder()->ComputePlaybackRate(aReliable);
+  }
+  return videoRate;
+}
+
+void
+DASHDecoder::UpdatePlaybackRate()
+{
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  // While downloading the MPD, return silently; playback rate has no meaning
+  // for the manifest.
+  if (mResource && !mMPDManager) {
+    return;
+  }
+  // Once MPD is downloaded and audio/video decoder(s) are loading, forward to
+  // active rep decoders.
+  if (AudioRepDecoder()) {
+    AudioRepDecoder()->UpdatePlaybackRate();
+  }
+  if (VideoRepDecoder()) {
+    VideoRepDecoder()->UpdatePlaybackRate();
+  }
+}
+
+void
+DASHDecoder::NotifyPlaybackStarted()
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  // While downloading the MPD, return silently; playback rate has no meaning
+  // for the manifest.
+  if (mResource && !mMPDManager) {
+    return;
+  }
+  // Once MPD is downloaded and audio/video decoder(s) are loading, forward to
+  // active rep decoders.
+  if (AudioRepDecoder()) {
+    AudioRepDecoder()->NotifyPlaybackStarted();
+  }
+  if (VideoRepDecoder()) {
+    VideoRepDecoder()->NotifyPlaybackStarted();
+  }
+}
+
+void
+DASHDecoder::NotifyPlaybackStopped()
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  // While downloading the MPD, return silently; playback rate has no meaning
+  // for the manifest.
+  if (mResource && !mMPDManager) {
+    return;
+  }
+  // Once  // Once MPD is downloaded and audio/video decoder(s) are loading, forward to
+  // active rep decoders.
+  if (AudioRepDecoder()) {
+    AudioRepDecoder()->NotifyPlaybackStopped();
+  }
+  if (VideoRepDecoder()) {
+    VideoRepDecoder()->NotifyPlaybackStopped();
+  }
+}
+
+MediaDecoder::Statistics
+DASHDecoder::GetStatistics()
+{
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  Statistics result;
+
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  if (mResource && !mMPDManager) {
+    return MediaDecoder::GetStatistics();
+  }
+
+  // XXX Use video decoder and its media resource to get stats.
+  // This assumes that the following getter functions are getting relevant
+  // video data only.
+  if (VideoRepDecoder() && VideoRepDecoder()->GetResource()) {
+    MediaResource *resource = VideoRepDecoder()->GetResource();
+    // Note: this rate reflects the rate observed for all video downloads.
+    result.mDownloadRate =
+      resource->GetDownloadRate(&result.mDownloadRateReliable);
+    result.mDownloadPosition =
+      resource->GetCachedDataEnd(VideoRepDecoder()->mDecoderPosition);
+    result.mTotalBytes = resource->GetLength();
+    result.mPlaybackRate = ComputePlaybackRate(&result.mPlaybackRateReliable);
+    result.mDecoderPosition = VideoRepDecoder()->mDecoderPosition;
+    result.mPlaybackPosition = VideoRepDecoder()->mPlaybackPosition;
+  }
+  else {
+    result.mDownloadRate = 0;
+    result.mDownloadRateReliable = true;
+    result.mPlaybackRate = 0;
+    result.mPlaybackRateReliable = true;
+    result.mDecoderPosition = 0;
+    result.mPlaybackPosition = 0;
+    result.mDownloadPosition = 0;
+    result.mTotalBytes = 0;
+  }
+
+  return result;
+}
+
+} // namespace mozilla

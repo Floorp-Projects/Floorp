@@ -136,6 +136,12 @@ public:
   // start consuming data, if possible, because the cache is full.
   void NotifySuspendedStatusChanged();
 
+  // Increments the parsed and decoded frame counters by the passed in counts.
+  // Can be called on any thread.
+  void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_OVERRIDE {
+    if (mMainDecoder) {mMainDecoder->NotifyDecodedFrames(aParsed, aDecoded); }
+  }
+
   // Gets a byte range containing the byte offset. Call on main thread only.
   nsresult GetByteRangeForSeek(int64_t const aOffset,
                                MediaByteRange& aByteRange);
