@@ -168,6 +168,17 @@ function run_test() {
 
   setEnvironment();
 
+  // Backup the updater.ini if it exists by moving it. This prevents the post
+  // update executable from being launched if it is specified.
+//XXX disabled until bug 820933 and bug 820934 are fixed
+if (0) {
+  let updaterIni = processDir.clone();
+  updaterIni.append(FILE_UPDATER_INI);
+  if (updaterIni.exists()) {
+    updaterIni.moveTo(processDir, FILE_UPDATER_INI_BAK);
+  }
+}
+
   let updateSettingsIni = processDir.clone();
   updateSettingsIni.append(UPDATE_SETTINGS_INI_FILE);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
@@ -215,6 +226,14 @@ function end_test() {
   }
 
   resetEnvironment();
+
+  let processDir = getAppDir();
+  // Restore the backup of the updater.ini if it exists
+  let updaterIni = processDir.clone();
+  updaterIni.append(FILE_UPDATER_INI_BAK);
+  if (updaterIni.exists()) {
+    updaterIni.moveTo(processDir, FILE_UPDATER_INI);
+  }
 
   // Remove the files added by the update.
   let updateTestDir = getUpdateTestDir();
