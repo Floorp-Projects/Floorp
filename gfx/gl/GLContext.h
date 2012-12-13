@@ -3108,6 +3108,8 @@ protected:
     }
 };
 
+uint32_t GetBitsPerTexel(GLenum format, GLenum type);
+
 } /* namespace gl */
 } /* namespace mozilla */
 
