@@ -599,8 +599,9 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     private void showSuggestionsOptIn() {
         mSuggestionsOptInPrompt = LayoutInflater.from(mContext).inflate(R.layout.awesomebar_suggestion_prompt, (LinearLayout)getView(), false);
-        ((TextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title))
-                .setText(getResources().getString(R.string.suggestions_prompt, mSearchEngines.get(0).name));
+        GeckoTextView promptText = (GeckoTextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title);
+        promptText.setText(getResources().getString(R.string.suggestions_prompt, mSearchEngines.get(0).name));
+        promptText.setPrivateMode(Tabs.getInstance().getSelectedTab().isPrivate());
 
         final View yesButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes);
         final View noButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_no);
