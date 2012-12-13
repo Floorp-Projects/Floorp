@@ -288,6 +288,7 @@ class ICEntry
                                 \
     _(Call_Fallback)            \
     _(Call_Scripted)            \
+    _(Call_Native)              \
                                 \
     _(GetElem_Fallback)         \
     _(GetElem_Dense)            \
@@ -1747,6 +1748,51 @@ class ICCall_Scripted : public ICMonitoredStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, callee_);
+        }
+    };
+};
+
+class ICCall_Native : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrFunction callee_;
+
+    ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee)
+      : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
+        callee_(callee)
+    { }
+
+  public:
+    static inline ICCall_Native *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
+                                     HandleFunction callee)
+    {
+        return space->allocate<ICCall_Native>(code, firstMonitorStub, callee);
+    }
+
+    static size_t offsetOfCallee() {
+        return offsetof(ICCall_Native, callee_);
+    }
+    HeapPtrFunction &callee() {
+        return callee_;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICCallStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        RootedFunction callee_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee)
+          : ICCallStubCompiler(cx, ICStub::Call_Native),
+            firstMonitorStub_(firstMonitorStub),
+            callee_(cx, callee)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCall_Native::New(space, getStubCode(), firstMonitorStub_, callee_);
         }
     };
 };
