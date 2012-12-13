@@ -10,5 +10,5 @@ load 492286-1.xhtml
 load 576612-1.html
 skip-if(Android) load 691096-1.html # Android sound API can't handle playing large number of sounds at once.
 load 752784-1.html
-HTTP load 795892-1.html
-load 789075-1.html
+skip-if(Android) HTTP load 795892-1.html
+skip-if(Android) load 789075-1.html

@@ -231,7 +231,7 @@ def lookup_for_objfile(objfile):
                 for t2 in implemented_types(t.target()):
                     if t2.code == gdb.TYPE_CODE_TYPEDEF:
                         p = check_table(ptr_printers_by_tag, str(t2))
-                    elif t2.code == gdb.TYPE_CODE_STRUCT:
+                    elif t2.code == gdb.TYPE_CODE_STRUCT and t2.tag:
                         p = check_table(ptr_printers_by_tag, t2.tag)
                     else:
                         p = None
@@ -239,7 +239,7 @@ def lookup_for_objfile(objfile):
             else:
                 if t.code == gdb.TYPE_CODE_TYPEDEF:
                     p = check_table(printers_by_tag, str(t))
-                elif t.code == gdb.TYPE_CODE_STRUCT:
+                elif t.code == gdb.TYPE_CODE_STRUCT and t.tag:
                     m = template_regexp.match(t.tag)
                     if m:
                         p = check_table(template_printers_by_tag, m.group(1))

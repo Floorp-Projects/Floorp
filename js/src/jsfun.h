@@ -111,20 +111,21 @@ struct JSFunction : public JSObject
     }
 
     /* Returns the strictness of this function, which must be interpreted. */
-    inline bool inStrictMode() const;
+    inline bool strict() const;
 
+    // Can be called multiple times by the parser.
     void setArgCount(uint16_t nargs) {
-        JS_ASSERT(this->nargs == 0);
+        JS_ASSERT(this->nargs == 0 || this->nargs == nargs);
         this->nargs = nargs;
     }
 
+    // Can be called multiple times by the parser.
     void setHasRest() {
-        JS_ASSERT(!hasRest());
         flags |= HAS_REST;
     }
 
+    // Can be called multiple times by the parser.
     void setHasDefaults() {
-        JS_ASSERT(!hasDefaults());
         flags |= HAS_DEFAULTS;
     }
 
@@ -147,8 +148,8 @@ struct JSFunction : public JSObject
         flags |= HEAVYWEIGHT;
     }
 
+    // Can be called multiple times by the parser.
     void setIsExprClosure() {
-        JS_ASSERT(!isExprClosure());
         flags |= EXPR_CLOSURE;
     }
 

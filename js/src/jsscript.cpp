@@ -393,7 +393,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     enum ScriptBits {
         NoScriptRval,
         SavedCallerFun,
-        StrictModeCode,
+        Strict,
         ContainsDynamicNameAccess,
         FunHasExtensibleScope,
         FunHasAnyAliasedFormal,
@@ -470,8 +470,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << NoScriptRval);
         if (script->savedCallerFun)
             scriptBits |= (1 << SavedCallerFun);
-        if (script->strictModeCode)
-            scriptBits |= (1 << StrictModeCode);
+        if (script->strict)
+            scriptBits |= (1 << Strict);
         if (script->explicitUseStrict)
             scriptBits |= (1 << ExplicitUseStrict);
         if (script->bindingsAccessedDynamically)
@@ -573,8 +573,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         notes = script->notes();
         scriptp.set(script);
 
-        if (scriptBits & (1 << StrictModeCode))
-            script->strictModeCode = true;
+        if (scriptBits & (1 << Strict))
+            script->strict = true;
         if (scriptBits & (1 << ExplicitUseStrict))
             script->explicitUseStrict = true;
         if (scriptBits & (1 << ContainsDynamicNameAccess))
@@ -1615,6 +1615,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     script->setScriptSource(ss);
     script->sourceStart = bufStart;
     script->sourceEnd = bufEnd;
+    script->userBit = options.userBit;
 
     return script;
 }
@@ -1770,7 +1771,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         bce->regexpList.finish(script->regexps());
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());
-    script->strictModeCode = bce->sc->inStrictMode();
+    script->strict = bce->sc->strict;
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;
@@ -2255,7 +2256,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
            .setOriginPrincipals(src->originPrincipals)
            .setCompileAndGo(src->compileAndGo)
            .setNoScriptRval(src->noScriptRval)
-           .setVersion(src->getVersion());
+           .setVersion(src->getVersion())
+           .setUserBit(src->userBit);
     RootedScript dst(cx, JSScript::Create(cx, enclosingScope, src->savedCallerFun,
                                           options, src->staticLevel,
                                           src->scriptSource(), src->sourceStart, src->sourceEnd));
@@ -2293,7 +2295,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
             dst->setNeedsArgsObj(src->needsArgsObj());
     }
     dst->cloneHasArray(src);
-    dst->strictModeCode = src->strictModeCode;
+    dst->strict = src->strict;
     dst->explicitUseStrict = src->explicitUseStrict;
     dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
     dst->funHasExtensibleScope = src->funHasExtensibleScope;
@@ -2301,7 +2303,6 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->hasSingletons = src->hasSingletons;
     dst->isGenerator = src->isGenerator;
     dst->isGeneratorExp = src->isGeneratorExp;
-    dst->userBit = src->userBit;
 
     /*
      * initScriptCounts updates scriptCountsMap if necessary. The other script

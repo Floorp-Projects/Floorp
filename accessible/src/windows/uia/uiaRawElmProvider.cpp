@@ -77,7 +77,7 @@ uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds)
   if (!*aRuntimeIds)
     return E_OUTOFMEMORY;
 
-  for (LONG i = 0; i < ArrayLength(ids); i++)
+  for (LONG i = 0; i < (LONG)ArrayLength(ids); i++)
     SafeArrayPutElement(*aRuntimeIds, &i, (void*)&(ids[i]));
 
   return S_OK;

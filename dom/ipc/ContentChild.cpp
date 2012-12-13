@@ -305,6 +305,18 @@ ContentChild::Init(MessageLoop* aIOLoop,
 void
 ContentChild::SetProcessName(const nsAString& aName)
 {
+    char* name;
+    if ((name = PR_GetEnv("MOZ_DEBUG_APP_PROCESS")) &&
+        aName.EqualsASCII(name)) {
+#ifdef OS_POSIX
+        printf_stderr("\n\nCHILDCHILDCHILDCHILD\n  [%s] debug me @%d\n\n", name, getpid());
+        sleep(30);
+#elif defined(OS_WIN)
+        printf_stderr("\n\nCHILDCHILDCHILDCHILD\n  [%s] debug me @%d\n\n", name, _getpid());
+        Sleep(30000);
+#endif
+    }
+
     mProcessName = aName;
     mozilla::ipc::SetThisProcessName(NS_LossyConvertUTF16toASCII(aName).get());
 }

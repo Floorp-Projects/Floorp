@@ -4285,8 +4285,9 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
 bool
 IonBuilder::jsop_initelem()
 {
-    if (oracle->propertyWriteCanSpecialize(script(), pc)) {
-        if (oracle->elementWriteIsDenseArray(script(), pc))
+    RootedScript scriptRoot(cx, script());
+    if (oracle->propertyWriteCanSpecialize(scriptRoot, pc)) {
+        if (oracle->elementWriteIsDenseArray(scriptRoot, pc))
             return jsop_initelem_dense();
     }
 
@@ -6558,7 +6559,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
 
     MSetPropertyInstruction *ins;
     if (monitored) {
-        ins = MCallSetProperty::New(obj, value, name, script()->strictModeCode);
+        ins = MCallSetProperty::New(obj, value, name, script()->strict);
     } else {
         Shape *objShape;
         if ((objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) &&
@@ -6583,7 +6584,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
 
         spew("SETPROP not monomorphic");
 
-        ins = MSetPropertyCache::New(obj, value, name, script()->strictModeCode);
+        ins = MSetPropertyCache::New(obj, value, name, script()->strict);
 
         if (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))
             ins->setNeedsBarrier();
@@ -6686,7 +6687,7 @@ IonBuilder::jsop_this()
     if (!info().fun())
         return abort("JSOP_THIS outside of a JSFunction.");
 
-    if (script()->strictModeCode) {
+    if (script()->strict) {
         current->pushSlot(info().thisSlot());
         return true;
     }

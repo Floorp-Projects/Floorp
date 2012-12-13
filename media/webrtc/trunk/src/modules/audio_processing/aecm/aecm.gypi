@@ -32,7 +32,7 @@
       ],
       'conditions': [
         ['target_arch=="arm" and armv7==1', {
-          'dependencies': [ 'aecm_neon', ],
+          'dependencies': [ 'aecm_neon', ]
         }],
       ],
     },

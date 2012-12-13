@@ -10,6 +10,21 @@
 
 namespace MPAPI {
 
+enum ColorFormat {
+  YCbCr,
+  RGB565,
+};
+
+/*
+ * A callback for the plugin to use to request a buffer owned by gecko. This can
+ * save us a copy or two down the line.
+ */
+class BufferCallback {
+public:
+  virtual void *operator()(size_t aWidth, size_t aHeight,
+                           ColorFormat aColorFormat) = 0;
+};
+
 struct VideoPlane {
   void *mData;
   int32_t mStride;
@@ -114,7 +129,7 @@ struct Decoder {
   void (*GetAudioParameters)(Decoder *aDecoder, int32_t *aNumChannels, int32_t *aSampleRate);
   bool (*HasVideo)(Decoder *aDecoder);
   bool (*HasAudio)(Decoder *aDecoder);
-  bool (*ReadVideo)(Decoder *aDecoder, VideoFrame *aFrame, int64_t aSeekTimeUs);
+  bool (*ReadVideo)(Decoder *aDecoder, VideoFrame *aFrame, int64_t aSeekTimeUs, BufferCallback *aBufferCallback);
   bool (*ReadAudio)(Decoder *aDecoder, AudioFrame *aFrame, int64_t aSeekTimeUs);
   void (*DestroyDecoder)(Decoder *);
 };

@@ -257,16 +257,51 @@ static const size_t kNoSize = size_t(-1);
 // The global lock
 //---------------------------------------------------------------------------
 
+// MutexBase implements the platform-specific parts of a mutex.
 #ifdef XP_WIN
 
-#error "Windows not supported yet, sorry."
+#include <windows.h>
+
+class MutexBase
+{
+  HANDLE mMutex;
+
+  DISALLOW_COPY_AND_ASSIGN(MutexBase);
+
+public:
+  MutexBase()
+    : mMutex(CreateMutexW(nullptr, false, nullptr))
+  {
+    MOZ_ASSERT(mMutex);
+  }
+
+  ~MutexBase()
+  {
+    if (mMutex) {
+      CloseHandle(mMutex);
+    }
+  }
+
+  void Lock()
+  {
+    if (mMutex) {
+      WaitForSingleObject(mMutex, INFINITE);
+    }
+  }
+
+  void Unlock()
+  {
+    if (mMutex) {
+      ReleaseMutex(mMutex);
+    }
+  }
+};
 
 #else
 
 #include <pthread.h>
 #include <sys/types.h>
 
-// MutexBase implements the platform-specific parts of a mutex.
 class MutexBase
 {
   pthread_mutex_t mMutex;
@@ -1273,7 +1308,7 @@ FrameGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
 //---------------------------------------------------------------------------
 
 static void RunTestMode(FILE* fp);
-static void RunStressMode();
+static void RunStressMode(FILE* fp);
 
 static const char* gDMDEnvVar = nullptr;
 
@@ -1346,6 +1381,18 @@ BadArg(const char* aArg)
   StatusMsg("  --mode=<normal|test|stress>   Which mode to run in? [normal]\n");
   StatusMsg("\n");
   exit(1);
+}
+
+// Note that fopen() can allocate.
+static FILE*
+OpenTestOrStressFile(const char* aFilename)
+{
+  FILE* fp = fopen(aFilename, "w");
+  if (!fp) {
+    StatusMsg("can't create %s file: %s\n", aFilename, strerror(errno));
+    exit(1);
+  }
+  return fp;
 }
 
 // WARNING: this function runs *very* early -- before all static initializers
@@ -1432,19 +1479,6 @@ Init(const malloc_table_t* aMallocTable)
 
   gSmallBlockActualSizeCounter = 0;
 
-  FILE* testFp;
-
-  if (gMode == Test) {
-    // fopen() allocates.  So do this before setting gIsDMDRunning so those
-    // allocations don't show up in our results.
-    const char* filename = "test.dmd";
-    testFp = fopen(filename, "w");
-    if (!testFp) {
-      StatusMsg("can't create test file %s: %s\n", filename, strerror(errno));
-      exit(1);
-    }
-  }
-
   DMD_CREATE_TLS_INDEX(gTlsIndex);
 
   gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>();
@@ -1456,25 +1490,32 @@ Init(const malloc_table_t* aMallocTable)
   gDoubleReportBlockGroupTable = InfallibleAllocPolicy::new_<BlockGroupTable>();
   gDoubleReportBlockGroupTable->init(0);
 
-  // Set this as late as possible, so that allocations during initialization
-  // aren't intercepted.  Once this is set, we are intercepting malloc et al.
-  // in earnest.
-  gIsDMDRunning = true;
-
   if (gMode == Test) {
+    // OpenTestOrStressFile() can allocate.  So do this before setting
+    // gIsDMDRunning so those allocations don't show up in our results.  Once
+    // gIsDMDRunning is set we are intercepting malloc et al. in earnest.
+    FILE* fp = OpenTestOrStressFile("test.dmd");
+    gIsDMDRunning = true;
+
     StatusMsg("running test mode...\n");
-    RunTestMode(testFp);
+    RunTestMode(fp);
     StatusMsg("finished test mode\n");
-    fclose(testFp);
+    fclose(fp);
     exit(0);
   }
 
   if (gMode == Stress) {
+    FILE* fp = OpenTestOrStressFile("stress.dmd");
+    gIsDMDRunning = true;
+
     StatusMsg("running stress mode...\n");
-    RunStressMode();
+    RunStressMode(fp);
     StatusMsg("finished stress mode\n");
+    fclose(fp);
     exit(0);
   }
+
+  gIsDMDRunning = true;
 }
 
 //---------------------------------------------------------------------------
@@ -2099,10 +2140,17 @@ stress1()
 // It's highly artificial, but it's deterministic and easy to run.  It can be
 // timed under different conditions to glean performance data.
 static void
-RunStressMode()
+RunStressMode(FILE* fp)
 {
+  Writer writer(FpWrite, fp);
+
+  // Disable sampling for maximum stress.
+  gSampleBelowSize = 1;
+
   stress1(); stress1(); stress1(); stress1(); stress1();
   stress1(); stress1(); stress1(); stress1(); stress1();
+
+  Dump(writer);
 }
 
 }   // namespace dmd

@@ -235,7 +235,7 @@ HashStore::Open()
 
   nsCOMPtr<nsIInputStream> origStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(origStream), storeFile,
-                                  PR_RDONLY);
+                                  PR_RDONLY | nsIFile::OS_READAHEAD);
 
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
     UpdateHeader();

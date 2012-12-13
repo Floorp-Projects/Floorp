@@ -119,7 +119,7 @@ public:
 
   ObexHeaderId mId;
   int mDataLength;
-  nsAutoPtr<uint8_t> mData;
+  nsAutoArrayPtr<uint8_t> mData;
 };
 
 class ObexHeaderSet {

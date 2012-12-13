@@ -2,6 +2,7 @@
 # element.
 
 == additive-1.svg additive-1-ref.svg
+== animate-width-1.svg lime.svg
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,18) == paced-1.svg paced-1-ref.svg
 == rotate-angle-1.svg rotate-angle-ref.svg
 == rotate-angle-2.svg rotate-angle-ref.svg

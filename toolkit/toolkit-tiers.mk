@@ -173,6 +173,7 @@ tier_platform_dirs += \
 		media/omx-plugin/lib/ics/libstagefright \
 		media/omx-plugin/lib/gb/libutils \
 		media/omx-plugin/lib/gb/libstagefright \
+		media/omx-plugin/lib/gb/libstagefright_color_conversion \
 		media/omx-plugin/lib/gb235/libstagefright \
 		media/omx-plugin \
 		media/omx-plugin/gb \

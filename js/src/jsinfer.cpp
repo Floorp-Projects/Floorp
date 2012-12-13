@@ -1488,7 +1488,7 @@ TypeConstraintArith::newType(JSContext *cx, TypeSet *source, Type type)
 void
 TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, Type type)
 {
-    if (type.isUnknown() || type.isAnyObject() || type.isObject() || script_->strictModeCode) {
+    if (type.isUnknown() || type.isAnyObject() || type.isObject() || script_->strict) {
         target->addType(cx, type);
         return;
     }

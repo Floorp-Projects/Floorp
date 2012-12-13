@@ -3,6 +3,7 @@
   <title>Bug 751809</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
   SpecialPowers.setBoolPref("plugins.click_to_play", true);
   </script>
@@ -46,10 +47,9 @@
 
   function afterWindowFocus() {
     var plugin = document.getElementById('plugin');
-    var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
 
     synthesizeMouseAtCenter(plugin, {});
-    var condition = function() objLoadingContent.activated;
+    var condition = function() plugin.setColor !== undefined;
     waitForCondition(condition, afterPluginActivation, "Waited too long for plugin to activate");
   }
     
@@ -57,6 +57,16 @@
     var plugin = document.getElementById('plugin');
     var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     ok(objLoadingContent.activated, "plugin should be activated now");
+
+    // Triggering a paint and waiting for it to be flushed makes sure
+    // that both plugin and platform see the plugin element as visible.
+    // See bug 805330 for details.
+    plugin.setColor("FF000088");
+    waitForAllPaintsFlushed(afterPaintsFlushed);
+  }
+
+  function afterPaintsFlushed() {
+    var plugin = document.getElementById('plugin');
     try {
       is(plugin.getMouseUpEventCount(), 0, "Plugin should not have received mouse events yet.");
     } catch(e) {
