@@ -265,11 +265,16 @@ jstring NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string, uint32_
     return ret;
 }
 
-jstring NewJavaStringUTF(AutoLocalJNIFrame* frame, const char* string) {
-    jstring ret = frame->GetEnv()->NewStringUTF(string);
-    if (frame->CheckForException())
-        return NULL;
-    return ret;
+jstring NewJavaString(AutoLocalJNIFrame* frame, const nsAString& string) {
+    return NewJavaString(frame, string.BeginReading(), string.Length());
+}
+
+jstring NewJavaString(AutoLocalJNIFrame* frame, const char* string) {
+    return NewJavaString(frame, NS_ConvertUTF8toUTF16(string));
+}
+
+jstring NewJavaString(AutoLocalJNIFrame* frame, const nsACString& string) {
+    return NewJavaString(frame, NS_ConvertUTF8toUTF16(string));
 }
 
 void
@@ -285,15 +290,12 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    nsPromiseFlatString typeHint(aTypeHint);
-    nsPromiseFlatString modeHint(aModeHint);
-    nsPromiseFlatString actionHint(aActionHint);
 
     jvalue args[5];
     args[0].i = aState;
-    args[1].l = NewJavaString(&jniFrame, typeHint.get(), typeHint.Length());
-    args[2].l = env->NewString(modeHint.get(), modeHint.Length());
-    args[3].l = env->NewString(actionHint.get(), actionHint.Length());
+    args[1].l = NewJavaString(&jniFrame, aTypeHint);
+    args[2].l = NewJavaString(&jniFrame, aModeHint);
+    args[3].l = NewJavaString(&jniFrame, aActionHint);
     args[4].z = false;
 
     int32_t landscapeFS;
@@ -468,12 +470,9 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
         return false;
 
     AutoLocalJNIFrame jniFrame(env);
-    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
-    jstring jstrMimeType =
-        NewJavaString(&jniFrame, wMimeType.get(), wMimeType.Length());
+    jstring jstrMimeType = NewJavaString(&jniFrame, aMimeType);
 
-    jstring jstrAction = NewJavaString(&jniFrame, nsPromiseFlatString(aAction).get(),
-                                       aAction.Length());
+    jstring jstrAction = NewJavaString(&jniFrame, aAction);
 
     jobject obj = env->CallStaticObjectMethod(mGeckoAppShellClass,
                                               jGetHandlersForMimeType,
@@ -509,10 +508,8 @@ AndroidBridge::GetHandlersForURL(const char *aURL,
         return false;
 
     AutoLocalJNIFrame jniFrame(env);
-    NS_ConvertUTF8toUTF16 wScheme(aURL);
-    jstring jstrScheme = NewJavaString(&jniFrame, wScheme.get(), wScheme.Length());
-    jstring jstrAction = NewJavaString(&jniFrame, nsPromiseFlatString(aAction).get(),
-                                       aAction.Length());
+    jstring jstrScheme = NewJavaString(&jniFrame, aURL);
+    jstring jstrAction = NewJavaString(&jniFrame, aAction);
 
     jobject obj = env->CallStaticObjectMethod(mGeckoAppShellClass,
                                               jGetHandlersForURL,
@@ -546,20 +543,14 @@ AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMi
         return false;
 
     AutoLocalJNIFrame jniFrame(env);
-    NS_ConvertUTF8toUTF16 wUriSpec(aUriSpec);
-    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
 
-    jstring jstrUri = NewJavaString(&jniFrame, wUriSpec.get(), wUriSpec.Length());
-    jstring jstrType = NewJavaString(&jniFrame, wMimeType.get(), wMimeType.Length());
+    jstring jstrUri = NewJavaString(&jniFrame, aUriSpec);
+    jstring jstrType = NewJavaString(&jniFrame, aMimeType);
 
-    jstring jstrPackage = NewJavaString(&jniFrame, nsPromiseFlatString(aPackageName).get(),
-                                        aPackageName.Length());
-    jstring jstrClass = NewJavaString(&jniFrame, nsPromiseFlatString(aClassName).get(),
-                                      aClassName.Length());
-    jstring jstrAction = NewJavaString(&jniFrame, nsPromiseFlatString(aAction).get(),
-                                       aAction.Length());
-    jstring jstrTitle = NewJavaString(&jniFrame, nsPromiseFlatString(aTitle).get(),
-                                      aTitle.Length());
+    jstring jstrPackage = NewJavaString(&jniFrame, aPackageName);
+    jstring jstrClass = NewJavaString(&jniFrame, aClassName);
+    jstring jstrAction = NewJavaString(&jniFrame, aAction);
+    jstring jstrTitle = NewJavaString(&jniFrame, aTitle);
 
     bool ret = env->CallStaticBooleanMethod(mGeckoAppShellClass,
                                             jOpenUriExternal,
@@ -581,8 +572,7 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    NS_ConvertUTF8toUTF16 wFileExt(aFileExt);
-    jstring jstrExt = NewJavaString(&jniFrame, wFileExt.get(), wFileExt.Length());
+    jstring jstrExt = NewJavaString(&jniFrame, aFileExt);
     jstring jstrType =  static_cast<jstring>(
         env->CallStaticObjectMethod(mGeckoAppShellClass,
                                     jGetMimeTypeFromExtensions,
@@ -591,7 +581,7 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
         return;
 
     nsJNIString jniStr(jstrType, env);
-    aMimeType.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
+    CopyUTF16toUTF8(jniStr.get(), aMimeType);
 }
 
 void
@@ -604,8 +594,7 @@ AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType, nsACString&
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
-    jstring jstrType = NewJavaString(&jniFrame, wMimeType.get(), wMimeType.Length());
+    jstring jstrType = NewJavaString(&jniFrame, aMimeType);
     jstring jstrExt = static_cast<jstring>(
         env->CallStaticObjectMethod(mGeckoAppShellClass,
                                     jGetExtensionFromMimeType,
@@ -614,7 +603,7 @@ AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType, nsACString&
         return;
 
     nsJNIString jniStr(jstrExt, env);
-    aFileExt.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
+    CopyUTF16toUTF8(jniStr.get(), aFileExt);
 }
 
 void
@@ -661,8 +650,7 @@ AndroidBridge::SetClipboardText(const nsAString& aText)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstr = NewJavaString(&jniFrame, nsPromiseFlatString(aText).get(),
-                                 aText.Length());
+    jstring jstr = NewJavaString(&jniFrame, aText);
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetClipboardText, jstr);
 }
 
@@ -718,11 +706,11 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
         nsAppShell::gAppShell->AddObserver(aAlertName, aAlertListener);
 
     jvalue args[5];
-    args[0].l = NewJavaString(&jniFrame, nsPromiseFlatString(aImageUrl).get(), aImageUrl.Length());
-    args[1].l = NewJavaString(&jniFrame, nsPromiseFlatString(aAlertTitle).get(), aAlertTitle.Length());
-    args[2].l = NewJavaString(&jniFrame, nsPromiseFlatString(aAlertText).get(), aAlertText.Length());
-    args[3].l = NewJavaString(&jniFrame, nsPromiseFlatString(aAlertCookie).get(), aAlertCookie.Length());
-    args[4].l = NewJavaString(&jniFrame, nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
+    args[0].l = NewJavaString(&jniFrame, aImageUrl);
+    args[1].l = NewJavaString(&jniFrame, aAlertTitle);
+    args[2].l = NewJavaString(&jniFrame, aAlertText);
+    args[3].l = NewJavaString(&jniFrame, aAlertCookie);
+    args[4].l = NewJavaString(&jniFrame, aAlertName);
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jShowAlertNotification, args);
 }
 
@@ -739,8 +727,8 @@ AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& aAlertName,
 
     AutoLocalJNIFrame jniFrame(env);
 
-    jstring jstrName = NewJavaString(&jniFrame, nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
-    jstring jstrText = NewJavaString(&jniFrame, nsPromiseFlatString(aAlertText).get(), aAlertText.Length());
+    jstring jstrName = NewJavaString(&jniFrame, aAlertName);
+    jstring jstrText = NewJavaString(&jniFrame, aAlertText);
     env->CallStaticVoidMethod(mGeckoAppShellClass, jAlertsProgressListener_OnProgress,
                               jstrName, aProgress, aProgressMax, jstrText);
 }
@@ -756,7 +744,7 @@ AndroidBridge::AlertsProgressListener_OnCancel(const nsAString& aAlertName)
 
     AutoLocalJNIFrame jniFrame(env);
 
-    jstring jstrName = NewJavaString(&jniFrame, nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
+    jstring jstrName = NewJavaString(&jniFrame, aAlertName);
     env->CallStaticVoidMethod(mGeckoAppShellClass, jAlertsProgressListener_OnCancel, jstrName);
 }
 
@@ -794,8 +782,7 @@ AndroidBridge::ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstrFilers = NewJavaString(&jniFrame, nsPromiseFlatString(aExtensions).get(),
-                                       aExtensions.Length());
+    jstring jstrFilers = NewJavaString(&jniFrame, aExtensions);
     jstring jstr = static_cast<jstring>(env->CallStaticObjectMethod(
                                             mGeckoAppShellClass,
                                             jShowFilePickerForExtensions, jstrFilers));
@@ -815,8 +802,7 @@ AndroidBridge::ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& 
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstrFilers = NewJavaString(&jniFrame, nsPromiseFlatString(aMimeType).get(),
-                                       aMimeType.Length());
+    jstring jstrFilers = NewJavaString(&jniFrame, aMimeType);
     jstring jstr = static_cast<jstring>(env->CallStaticObjectMethod(
                                             mGeckoAppShellClass,
                                             jShowFilePickerForMimeType, jstrFilers));
@@ -834,8 +820,7 @@ AndroidBridge::ShowFilePickerAsync(const nsAString& aMimeType, nsFilePickerCallb
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jMimeType = NewJavaString(&jniFrame, nsPromiseFlatString(aMimeType).get(),
-                                      aMimeType.Length());
+    jstring jMimeType = NewJavaString(&jniFrame, aMimeType);
     callback->AddRef();
     env->CallStaticVoidMethod(mGeckoAppShellClass, jShowFilePickerAsync, jMimeType, (jlong) callback);
 }
@@ -995,7 +980,7 @@ AndroidBridge::SetSelectedLocale(const nsAString& aLocale)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jLocale = NewJavaString(&jniFrame, PromiseFlatString(aLocale).get(), aLocale.Length());
+    jstring jLocale = NewJavaString(&jniFrame, aLocale);
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, jLocale);
 }
 
@@ -1056,9 +1041,7 @@ AndroidBridge::GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSiz
 
     AutoLocalJNIFrame jniFrame(env);
 
-    nsString fileExt;
-    CopyUTF8toUTF16(aFileExt, fileExt);
-    jstring jstrFileExt = NewJavaString(&jniFrame, nsPromiseFlatString(fileExt).get(), fileExt.Length());
+    jstring jstrFileExt = NewJavaString(&jniFrame, aFileExt);
 
     jobject obj = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetIconForExtension, jstrFileExt, aIconSize);
     if (jniFrame.CheckForException())
@@ -1314,11 +1297,9 @@ AndroidBridge::ScanMedia(const nsAString& aFile, const nsACString& aMimeType)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstrFile = NewJavaString(&jniFrame, nsPromiseFlatString(aFile).get(), aFile.Length());
+    jstring jstrFile = NewJavaString(&jniFrame, aFile);
 
-    nsString mimeType2;
-    CopyUTF8toUTF16(aMimeType, mimeType2);
-    jstring jstrMimeTypes = NewJavaString(&jniFrame, nsPromiseFlatString(mimeType2).get(), mimeType2.Length());
+    jstring jstrMimeTypes = NewJavaString(&jniFrame, aMimeType);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jScanMedia, jstrFile, jstrMimeTypes);
 }
@@ -1331,10 +1312,10 @@ AndroidBridge::CreateShortcut(const nsAString& aTitle, const nsAString& aURI, co
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstrTitle = NewJavaString(&jniFrame, nsPromiseFlatString(aTitle).get(), aTitle.Length());
-    jstring jstrURI = NewJavaString(&jniFrame, nsPromiseFlatString(aURI).get(), aURI.Length());
-    jstring jstrIconData = NewJavaString(&jniFrame, nsPromiseFlatString(aIconData).get(), aIconData.Length());
-    jstring jstrIntent = NewJavaString(&jniFrame, nsPromiseFlatString(aIntent).get(), aIntent.Length());
+    jstring jstrTitle = NewJavaString(&jniFrame, aTitle);
+    jstring jstrURI = NewJavaString(&jniFrame, aURI);
+    jstring jstrIconData = NewJavaString(&jniFrame, aIconData);
+    jstring jstrIntent = NewJavaString(&jniFrame, aIntent);
 
     if (!jstrURI || !jstrTitle || !jstrIconData)
         return;
@@ -1539,8 +1520,7 @@ AndroidBridge::InitCamera(const nsCString& contentType, uint32_t camera, uint32_
 
     AutoLocalJNIFrame jniFrame(env);
 
-    NS_ConvertASCIItoUTF16 s(contentType);
-    jstring jstrContentType = NewJavaString(&jniFrame, s.get(), NS_strlen(s.get()));
+    jstring jstrContentType = NewJavaString(&jniFrame, contentType);
 
     jobject obj = env->CallStaticObjectMethod(mGeckoAppShellClass, jInitCamera, jstrContentType, camera, *width, *height);
     if (jniFrame.CheckForException())
@@ -1642,7 +1622,7 @@ AndroidBridge::HandleGeckoMessage(const nsAString &aMessage, nsAString &aRet)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jMessage = NewJavaString(&jniFrame, nsPromiseFlatString(aMessage).get(), aMessage.Length());
+    jstring jMessage = NewJavaString(&jniFrame, aMessage);
     jstring returnMessage =  static_cast<jstring>(env->CallStaticObjectMethod(mGeckoAppShellClass, jHandleGeckoMessage, jMessage));
     if (jniFrame.CheckForException())
         return;
@@ -1660,7 +1640,7 @@ AndroidBridge::CheckURIVisited(const nsAString& aURI)
         return;
 
     AutoLocalJNIFrame jniFrame(env, 1);
-    jstring jstrURI = NewJavaString(&jniFrame, nsPromiseFlatString(aURI).get(), aURI.Length());
+    jstring jstrURI = NewJavaString(&jniFrame, aURI);
     // If creating the string fails, just bail
     if (jstrURI)
         env->CallStaticVoidMethod(mGeckoAppShellClass, jCheckUriVisited, jstrURI);
@@ -1674,7 +1654,7 @@ AndroidBridge::MarkURIVisited(const nsAString& aURI)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstrURI = NewJavaString(&jniFrame, nsPromiseFlatString(aURI).get(), aURI.Length());
+    jstring jstrURI = NewJavaString(&jniFrame, aURI);
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMarkUriVisited, jstrURI);
 }
 
@@ -1688,7 +1668,7 @@ AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
         return 0;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jText = NewJavaString(&jniFrame, PromiseFlatString(aText).get(), aText.Length());
+    jstring jText = NewJavaString(&jniFrame, aText);
     uint16_t ret = env->CallStaticIntMethod(mGeckoAppShellClass, jNumberOfMessages, jText);
     if (jniFrame.CheckForException())
         return 0;
@@ -1709,8 +1689,8 @@ AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage, 
     NS_ENSURE_TRUE_VOID(requestId >= 0);
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jNumber = NewJavaString(&jniFrame, PromiseFlatString(aNumber).get(), aNumber.Length());
-    jstring jMessage = NewJavaString(&jniFrame, PromiseFlatString(aMessage).get(), aMessage.Length());
+    jstring jNumber = NewJavaString(&jniFrame, aNumber);
+    jstring jMessage = NewJavaString(&jniFrame, aMessage);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage, requestId);
 }
@@ -1765,11 +1745,11 @@ AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aR
     jobjectArray numbers =
         (jobjectArray)env->NewObjectArray(aFilter.numbers().Length(),
                                           jStringClass,
-                                          NewJavaStringUTF(&jniFrame, ""));
+                                          NewJavaString(&jniFrame, EmptyString()));
 
     for (uint32_t i = 0; i < aFilter.numbers().Length(); ++i) {
         env->SetObjectArrayElement(numbers, i,
-                                   NewJavaStringUTF(&jniFrame, NS_ConvertUTF16toUTF8(aFilter.numbers()[i]).get()));
+                                   NewJavaString(&jniFrame, aFilter.numbers()[i]));
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCreateMessageList,
@@ -2320,10 +2300,8 @@ AndroidBridge::NotifyWakeLockChanged(const nsAString& topic, const nsAString& st
 
     AutoLocalJNIFrame jniFrame(env);
 
-    jstring jstrTopic = NewJavaString(&jniFrame, nsPromiseFlatString(topic).get(),
-                                      topic.Length());
-    jstring jstrState = NewJavaString(&jniFrame, nsPromiseFlatString(state).get(),
-                                      state.Length());
+    jstring jstrTopic = NewJavaString(&jniFrame, topic);
+    jstring jstrState = NewJavaString(&jniFrame, state);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyWakeLockChanged, jstrTopic, jstrState);
 }
@@ -2379,8 +2357,6 @@ AndroidBridge::GetGfxInfoData(nsACString& aRet)
     CopyUTF16toUTF8(jniStr, aRet);
 }
 
-#define CREATE_JAVA_STRING(name) jstring j##name = NewJavaStringUTF(&jniFrame, nsPromiseFlatCString(a##name).get())
-
 nsresult
 AndroidBridge::GetProxyForURI(const nsACString & aSpec,
                               const nsACString & aScheme,
@@ -2394,9 +2370,9 @@ AndroidBridge::GetProxyForURI(const nsACString & aSpec,
 
     AutoLocalJNIFrame jniFrame(env);
 
-    CREATE_JAVA_STRING(Spec);
-    CREATE_JAVA_STRING(Scheme);
-    CREATE_JAVA_STRING(Host);
+    jstring jSpec = NewJavaString(&jniFrame, aSpec);
+    jstring jScheme = NewJavaString(&jniFrame, aScheme);
+    jstring jHost = NewJavaString(&jniFrame, aHost);
     jstring jstrRet = static_cast<jstring>
         (env->CallStaticObjectMethod(mGeckoAppShellClass, jGetProxyForURI, jSpec, jScheme, jHost, aPort));
 
