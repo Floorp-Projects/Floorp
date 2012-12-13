@@ -271,7 +271,8 @@ ContactDB.prototype = {
                   debug("InternationalNumber: " + parsedNumber.internationalNumber);
                   debug("NationalNumber: " + parsedNumber.nationalNumber);
                   debug("NationalFormat: " + parsedNumber.nationalFormat);
-                  if (number.toString() !== parsedNumber.internationalNumber) {
+                  if (parsedNumber.internationalNumber &&
+                      number.toString() !== parsedNumber.internationalNumber) {
                     let digits = parsedNumber.internationalNumber.match(/\d/g);
                     if (digits) {
                       digits = digits.join('');
