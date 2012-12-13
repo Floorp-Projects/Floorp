@@ -143,6 +143,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitStackCheck();
     bool emitUseCountIncrement();
 
+    bool initScopeChain();
+
     void storeValue(const StackValue *source, const Address &dest,
                     const ValueOperand &scratch);
 

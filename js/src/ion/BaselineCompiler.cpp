@@ -51,6 +51,11 @@ BaselineCompiler::compile()
         return Method_CantCompile;
     }
 
+    if (function() && function()->isHeavyweight()) {
+        IonSpew(IonSpew_BaselineAbort, "FIXME compile heavy weight functions");
+        return Method_CantCompile;
+    }
+
     // Pin analysis info during compilation.
     analyze::AutoEnterAnalysis autoEnterAnalysis(cx);
 
@@ -183,6 +188,34 @@ BaselineCompiler::emitIC(ICStub *stub)
 }
 
 bool
+BaselineCompiler::initScopeChain()
+{
+    RootedFunction fun(cx, function());
+    if (fun) {
+        // Use callee->environment as scope chain. Note that we do
+        // this also for heavy-weight functions, so that the scope
+        // chain slot is properly initialized if the call triggers GC.
+        Register callee = R0.scratchReg();
+        Register scope = R1.scratchReg();
+        masm.loadPtr(frame.addressOfCallee(), callee);
+        masm.loadPtr(Address(callee, JSFunction::offsetOfEnvironment()), scope);
+        masm.storePtr(scope, frame.addressOfScopeChain());
+
+        // Once we compile heavy-weight functions, we should create a new
+        // call object here.
+        JS_ASSERT(!fun->isHeavyweight());
+    } else {
+        // Once we compile eval scripts, we should create a call object.
+        JS_ASSERT(!script->isForEval());
+
+        // For global scripts, the scope chain is the global object.
+        masm.storePtr(ImmGCPtr(&script->global()), frame.addressOfScopeChain());
+    }
+
+    return true;
+}
+
+bool
 BaselineCompiler::emitStackCheck()
 {
     Label skipIC;
@@ -232,6 +265,11 @@ MethodStatus
 BaselineCompiler::emitBody()
 {
     pc = script->code;
+
+    // Initialize the scope chain before any operation that may
+    // call into the VM and trigger a GC.
+    if (!initScopeChain())
+        return Method_Error;
 
     if (!emitStackCheck())
         return Method_Error;
