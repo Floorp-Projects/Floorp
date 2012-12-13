@@ -50,7 +50,9 @@ self.onmessage = function(e) {
       // don't return a response with a trailing newline, so handle both cases
       // here. Note that if we wrote 4096 characters to cbuf, we don't have to
       // null-terminate the buffer, as ctypes has the maximum size already.
-      var reply_len = len.value;
+      // Note also that len.value is an object. We can ignore the high 32 bits
+      // because we know that the maximum that it can be is 4096.
+      var reply_len = ctypes.UInt64.lo(len.value);
       if (reply_len !== 0) {
         if (cbuf[reply_len - 1] === 10)
           cbuf[--reply_len] = 0;
