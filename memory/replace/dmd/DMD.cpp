@@ -783,48 +783,41 @@ public:
   }
 };
 
-class BlockSize
+// A live heap block.
+class LiveBlock : public LiveBlockKey
 {
   static const size_t kReqBits = sizeof(size_t) * 8 - 1;    // 31 or 63
 
   // This assumes that we'll never request an allocation of 2 GiB or more on
   // 32-bit platforms.
-  const size_t mReq:kReqBits;   // size requested
-  const size_t mSampled:1;      // was this block sampled?  (if so, slop == 0)
-
-public:
-  BlockSize(size_t aReq, bool aSampled)
-    : mReq(aReq),
-      mSampled(aSampled)
-  {}
-
-  size_t Req() const { return mReq; }
-
-  // Sampled blocks always have zero slop.
-  size_t Slop(const void* aPtr) const
-  {
-    return mSampled ? 0 : MallocSizeOf(aPtr) - mReq;
-  }
-
-  size_t Usable(const void* aPtr) const
-  {
-    return mSampled ? mReq : MallocSizeOf(aPtr);
-  }
-
-  bool IsSampled() const { return mSampled; }
-};
-
-// A live heap block.
-class LiveBlock : public LiveBlockKey
-{
-public:
-  const BlockSize mBlockSize;
+  const size_t mReqSize:kReqBits; // size requested
+  const size_t mSampled:1;        // was this block sampled? (if so, slop == 0)
 
 public:
   LiveBlock(size_t aReqSize, const StackTrace* aAllocStackTrace, bool aSampled)
     : LiveBlockKey(aAllocStackTrace),
-      mBlockSize(aReqSize, aSampled)
-  {}
+      mReqSize(aReqSize),
+      mSampled(aSampled)
+  {
+    if (mReqSize != aReqSize) {
+      MOZ_CRASH();              // overflowed mReqSize
+    }
+  }
+
+  size_t ReqSize() const { return mReqSize; }
+
+  // Sampled blocks always have zero slop.
+  size_t SlopSize(const void* aPtr) const
+  {
+    return mSampled ? 0 : MallocSizeOf(aPtr) - mReqSize;
+  }
+
+  size_t UsableSize(const void* aPtr) const
+  {
+    return mSampled ? mReqSize : MallocSizeOf(aPtr);
+  }
+
+  bool IsSampled() const { return mSampled; }
 
   void Report(Thread* aT, const void* aPtr, const char* aReporterName,
               bool aReportedOnAlloc);
@@ -1058,11 +1051,11 @@ public:
 
   bool IsSampled() const { return mSampled; }
 
-  void Add(const void* aPtr, const BlockSize& aBlockSize)
+  void Add(const void* aPtr, const LiveBlock& aB)
   {
-    mReq  += aBlockSize.Req();
-    mSlop += aBlockSize.Slop(aPtr);
-    mSampled = mSampled || aBlockSize.IsSampled();
+    mReq  += aB.ReqSize();
+    mSlop += aB.SlopSize(aPtr);
+    mSampled = mSampled || aB.IsSampled();
   }
 
   void Add(const GroupSize& aGroupSize)
@@ -1108,7 +1101,7 @@ public:
   void Add(const void* aPtr, const LiveBlock& aB) const
   {
     mNumBlocks++;
-    mGroupSize.Add(aPtr, aB.mBlockSize);
+    mGroupSize.Add(aPtr, aB);
   }
 
   static const char* const kName;   // for PrintSortedGroups
@@ -1816,7 +1809,7 @@ Dump(Writer aWriter)
     const LiveBlock& b = r.front().value;
 
     size_t& size = !b.IsReported() ? unreportedUsableSize : reportedUsableSize;
-    size += b.mBlockSize.Usable(pc);
+    size += b.UsableSize(pc);
 
     LiveBlockGroupTable& table = !b.IsReported()
                                ? unreportedLiveBlockGroupTable
@@ -1828,7 +1821,7 @@ Dump(Writer aWriter)
     }
     p->Add(pc, b);
 
-    anyBlocksSampled = anyBlocksSampled || b.mBlockSize.IsSampled();
+    anyBlocksSampled = anyBlocksSampled || b.IsSampled();
   }
   size_t totalUsableSize = unreportedUsableSize + reportedUsableSize;
 
