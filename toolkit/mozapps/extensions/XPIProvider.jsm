@@ -887,7 +887,7 @@ function loadManifestFromDir(aDir) {
     let size = 0;
     let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
     let entry;
-    while (entry = entries.nextFile)
+    while ((entry = entries.nextFile))
       size += getFileSize(entry);
     entries.close();
     return size;
@@ -1312,7 +1312,7 @@ function recursiveLastModifiedTime(aFile) {
     let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
     let entry, time;
     let maxTime = aFile.lastModifiedTime;
-    while (entry = entries.nextFile) {
+    while ((entry = entries.nextFile)) {
       time = recursiveLastModifiedTime(entry);
       maxTime = Math.max(time, maxTime);
     }
@@ -2171,7 +2171,7 @@ var XPIProvider = {
     let entries = distroDir.directoryEntries
                            .QueryInterface(Ci.nsIDirectoryEnumerator);
     let entry;
-    while (entry = entries.nextFile) {
+    while ((entry = entries.nextFile)) {
 
       let id = entry.leafName;
 
