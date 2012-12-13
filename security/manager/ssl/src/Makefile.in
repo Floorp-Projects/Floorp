@@ -74,6 +74,7 @@ CPPSRCS = 				\
   PSMRunnable.cpp \
   nsNSSVersion.cpp \
   nsCertificatePrincipal.cpp \
+  SharedSSLState.cpp \
   $(NULL)
 
 ifdef MOZ_XUL
@@ -81,7 +82,6 @@ CPPSRCS += nsCertTree.cpp
 endif
 
 CSRCS += md4.c
-
 
 EXTRA_DEPS = $(NSS_DEP_LIBS)
 
@@ -95,6 +95,12 @@ EXPORTS += \
   CryptoTask.h \
   nsNSSShutDown.h \
   ScopedNSSTypes.h \
+  $(NULL)
+
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla += \
+  PublicSSL.h \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
