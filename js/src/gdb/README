@@ -1,0 +1,198 @@
+This directory holds Python code to support debugging SpiderMonkey with
+GDB. It includes pretty-printers for common SpiderMonkey types like jsval,
+jsid, and JSObject, and makes GDB "see through" the SpiderMonkey rooting
+types like js::Rooted and JS::Handle. For example:
+
+    (gdb) frame
+    #0  js::baseops::SetPropertyHelper (cx=0xbf3460,
+        obj=(JSObject * const) 0x7ffff150b060 [object global] delegate,
+        receiver=(JSObject * const) 0x7ffff150b060 [object global] delegate,
+        id=$jsid("x"), defineHow=4, vp=$jsval(1), strict=0)
+        at /home/jimb/moz/archer/js/src/jsobj.cpp:4495
+    4495	    JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_UNQUALIFIED)) == 0);
+    (gdb)
+
+Things to note here:
+
+- obj, a JS::HandleObject, prints as:
+      obj=(JSObject * const) 0x7ffff150b060 [object global] delegate,
+  This immediately shows the handle's referent, along with a JavaScript-like summary
+  of the object.
+
+- id, a JS::HandleId, prints as:
+      id=$jsid("x"),
+  We show the handle's referent, and print the identifier as a string.
+
+- vp, a JS::MutableHandleValue, prints as:
+      vp=$jsval(1)
+  We show the handle's referent, using the jsval's tag to print it in its
+  JavaScript form.
+
+You can still see the raw form of a value with 'print/r':
+
+    (gdb) p/r obj
+    $1 = {<js::HandleBase<JSObject*>> = {<No data fields>}, ptr = 0x7fffffffca60}
+    (gdb)
+
+You can also use GDB's 'disable pretty-printer' command to turn off
+individual pretty-printers; try 'info pretty-printer' first.
+
+GDB should pick these extensions up automatically when you debug the shell, by
+auto-loading the 'js-gdb.py' file that js/src/shell/Makefile.in places in the
+same directory as the 'js' executable. You may need to add a command like the
+following to your '$HOME/.gdbinit' file:
+
+    # Tell GDB to trust auto-load files found under ~/moz.
+    add-auto-load-safe-path ~/moz
+
+If you do need this, GDB will tell you.
+
+In general, pretty-printers for pointer types include a summary of the
+pointer's referent:
+
+    (gdb) b math_atan2
+    Breakpoint 1 at 0x542e0a: file /home/jimb/moz/archer/js/src/jsmath.cpp, line 214.
+    (gdb) run
+    js> Math.atan2('Spleen', 42)
+    Breakpoint 1, math_atan2 (cx=0xbf3440, argc=2, vp=0x7ffff172f0a0)
+    (gdb) print vp[0]
+    $1 = $jsval((JSObject *) 0x7ffff151c0c0 [object Function "atan2"])
+    (gdb) print vp[1]
+    $2 = $jsval((JSObject *) 0x7ffff150d0a0 [object Math])
+    (gdb) print vp[2]
+    $3 = $jsval("Spleen")
+    (gdb) print vp[3]
+    $4 = $jsval(42)
+    (gdb)
+
+We used to also have pretty-printers for the actual contents of a JSString
+struct, that knew which union branches were live and which were dead. These were
+more fragile than the summary pretty-printers, and harder to test, so I've
+removed them until we can see how to do better.
+
+There are unit tests; see 'Running the unit tests', below.
+
+I'd love for others to pitch in. GDB's Python API is documented in the GDB
+manual.
+
+I've recently rewritten the printers. The new code is simpler, and more
+robust; unit tests are easier to write; and the new test harness can run
+the tests in parallel. If a printer you'd contributed to in the past was
+dropped in the process, I apologize; I felt we should have good test
+coverage for any printer landed in-tree. You may also be interested in
+'Personal pretty-printers', below.
+
+Directory layout
+----------------
+
+- js/src/gdb/mozilla: The actual SpiderMonkey support code. GDB auto-loads this
+  when you debug an executable or shared library that contains SpiderMonkey.
+- js/src/gdb/tests: Unit tests for the above.
+  - Each '.py' file is a unit test, to be run by js/src/gdb/run-tests.py.
+  - Each '.cpp' file contains C++ code fragments for some unit test to use.
+- js/src/gdb/lib-for-tests: Python modules used by the unit tests.
+
+In js/src/gdb:
+
+- run-tests.py: test harness for GDB SpiderMonkey support unit tests. See
+  'Running the unit tests', below.
+- taskpool.py, progressbar.py: Python modules used by run-tests.py.
+- gdb-tests.cpp, gdb-tests.h: Driver program for C++ code fragments.
+- gdb-tests-gdb.py.in: Template for GDB autoload file for gdb-tests.
+
+Personal pretty-printers
+------------------------
+
+If you'd like to write your own pretty-printers, you can put them in a
+module named 'my_mozilla_printers' in a directory somewhere on your Python
+module search path. Our autoload code tries to import 'my_mozilla_printers'
+after importing our other SpiderMonkey support modules. For example:
+
+    $ echo $PYTHONPATH
+    /home/jimb/python
+    $ cat ~/python/my_mozilla_printers.py
+    import gdb
+    from mozilla.prettyprinters import ptr_pretty_printer
+
+    # Simple jschar * printer. Doesn't show address; chases null pointers.
+    @ptr_pretty_printer('jschar')
+    class jscharPtr(object):
+        def __init__(self, value, cache): self.value = value
+        def display_hint(self): return 'string'
+        def to_string(self):
+            c = u''
+            for i in xrange(50):
+                if self.value[i] == 0: break
+                c += unichr(self.value[i])
+            return c
+    $
+    ...
+    (gdb) whatis sample
+    type = jschar [4]
+    (gdb) print &sample[0]
+    $1 = "Hi!"
+
+Running the unit tests
+----------------------
+
+These extensions have unit tests, invoked as follows:
+
+$ python run-tests.py [OPTIONS] LIBDIR [TESTS...]
+
+where LIBDIR is a directory containing a compiled SpiderMonkey library,
+libmozjs.so; TESTS are names of selected tests to run (if omitted, we run
+them all); and OPTIONS are drawn from the list below.
+
+--gdb=EXECUTABLE
+  Instead of running whatever 'gdb' we find in our search path, use
+  EXECUTABLE to run the tests.
+
+--srcdir=SRCDIR
+  Find the sources corresponding to LIBDIR/libmozjs.so in SRCDIR. Without
+  this option, we use the parent of the directory containing
+  'run-tests.py'. Note that SRCDIR must be a complete SpiderMonkey source
+  directory, as our tests #include internal SpiderMonkey header files (to
+  test pretty-printers for internal types, like parse nodes.)
+
+--testdir=TESTDIR
+  Search for Python scripts and any accompanying C++ source code in
+  TESTDIR. If omitted, we use the 'tests' directory in the directory
+  containing 'run-tests.py'.
+
+--builddir=BUILDDIR
+  Build the C++ executable that GDB debugs to run the tests in BUILDDIR.
+  If omitted, create a 'gdb-tests' subdirectory of LIBDIR.
+
+(It is safe to use relative paths for LIBDIR, SRCDIR, and so on. They are
+always interpreted relative to the directory that was current when
+run-tests.py was started.)
+
+For example, since I build in a subdirectory 'obj~' of the 'js/src'
+directory, I use this command from 'js/src' to run the pretty-printer unit
+tests:
+
+  $ python gdb/run-tests.py obj~
+
+Writing new unit tests
+----------------------
+
+Each unit test consists of a Python script, possibly with some accompanying
+C++ code. Running tests works like this:
+
+- The run-tests.py script calls 'make' in 'BUILDDIR/gdb' to build
+  'gdb-tests'.
+
+- Then, for each '.py' test script in js/src/gdb/tests, the harness starts
+  GDB on the 'gdb-tests' executable, and then has GDB run
+  js/src/gdb/lib-for-tests/prolog.py, passing it the test script's path as
+  its first command-line argument.
+
+Thanks To:
+----------
+
+- David Anderson
+- Steve Fink
+- Chris Leary
+- Josh Matthews
+- Jason Orendorff
+- Andrew Sutherland

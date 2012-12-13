@@ -55,6 +55,7 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_RETURN,     GDK_Return },
     { NS_VK_SHIFT,      GDK_Shift_L },
     { NS_VK_SHIFT,      GDK_Shift_R },
+    { NS_VK_SHIFT,      GDK_Shift_Lock },
     { NS_VK_CONTROL,    GDK_Control_L },
     { NS_VK_CONTROL,    GDK_Control_R },
     { NS_VK_ALT,        GDK_Alt_L },
@@ -211,6 +212,7 @@ KeymapWrapper::GetModifierForGDKKeyval(guint aGdkKeyval)
         case GDK_Caps_Lock:        return CAPS_LOCK;
         case GDK_Num_Lock:         return NUM_LOCK;
         case GDK_Scroll_Lock:      return SCROLL_LOCK;
+        case GDK_Shift_Lock:
         case GDK_Shift_L:
         case GDK_Shift_R:          return SHIFT;
         case GDK_Control_L:

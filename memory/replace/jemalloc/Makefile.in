@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH           = @DEPTH@
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = memory
+LIBRARY_NAME = replace_jemalloc
+FORCE_SHARED_LIB = 1
+NO_DIST_INSTALL = 1
+
+SHARED_LIBRARY_LIBS = $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
+DEFINES += -DMOZ_JEMALLOC3 -DMOZ_REPLACE_JEMALLOC
+LOCAL_INCLUDES += -I../../jemalloc/src/include
+ifdef _MSC_VER
+LOCAL_INCLUDES += -I$(topsrcdir)/memory/jemalloc/src/include/msvc_compat
+endif
+
+VPATH += $(topsrcdir)/memory/build
+
+CSRCS = \
+  mozjemalloc_compat.c \
+  jemalloc_config.c \
+  $(NULL)
+
+MOZ_GLUE_LDFLAGS = # Don't link against mozglue
+WRAP_LDFLAGS = # Never wrap malloc function calls with -Wl,--wrap
+
+# Android doesn't have pthread_atfork, so just implement a dummy function.
+# It shouldn't make much problem, as the use of fork is pretty limited on
+# Android.
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CSRCS += pthread_atfork.c
+endif
+
+include $(topsrcdir)/config/rules.mk

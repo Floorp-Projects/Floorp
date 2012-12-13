@@ -750,6 +750,7 @@ enable_autogen
 enable_experimental
 with_mangling
 with_jemalloc_prefix
+with_export
 with_private_namespace
 with_install_suffix
 enable_cc_silence
@@ -1420,6 +1421,7 @@ Optional Packages:
   --with-mangling=<map>   Mangle symbols in <map>
   --with-jemalloc-prefix=<prefix>
                           Prefix to prepend to all public APIs
+  --without-export        disable exporting jemalloc public APIs
   --with-private-namespace=<prefix>
                           Prefix to prepend to all library-private APIs
   --with-install-suffix=<suffix>
@@ -5146,6 +5148,17 @@ for stem in ${public_syms}; do
 _ACEOF
 
 done
+
+
+# Check whether --with-export was given.
+if test "${with_export+set}" = set; then :
+  withval=$with_export; if test "x$with_export" = "xno"; then
+  $as_echo "#define JEMALLOC_EXPORT /**/" >>confdefs.h
+
+fi
+]
+fi
+
 
 
 # Check whether --with-private_namespace was given.

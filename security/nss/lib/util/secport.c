@@ -9,7 +9,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.30 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id: secport.c,v 1.31 2012/11/14 01:14:12 wtc%google.com Exp $
  */
 
 #include "seccomon.h"
@@ -633,9 +633,6 @@ PORT_UCS2_ASCIIConversion(PRBool toUnicode, unsigned char *inBuf,
 int
 NSS_PutEnv(const char * envVarName, const char * envValue)
 {
-#ifdef _WIN32_WCE
-    return SECFailure;
-#else
     SECStatus result = SECSuccess;
     char *    encoded;
     int       putEnvFailed;
@@ -661,7 +658,6 @@ NSS_PutEnv(const char * envVarName, const char * envValue)
         PORT_Free(encoded);
     }
     return result;
-#endif
 }
 
 /*

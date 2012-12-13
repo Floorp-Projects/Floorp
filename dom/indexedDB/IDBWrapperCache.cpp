@@ -55,12 +55,7 @@ IDBWrapperCache::SetScriptOwner(JSObject* aScriptOwner)
   nsISupports* thisSupports = NS_CYCLE_COLLECTION_UPCAST(this, IDBWrapperCache);
   nsXPCOMCycleCollectionParticipant* participant;
   CallQueryInterface(this, &participant);
-  nsresult rv = nsContentUtils::HoldJSObjects(thisSupports, participant);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("nsContentUtils::HoldJSObjects failed.");
-    mScriptOwner = nullptr;
-    return false;
-  }
+  nsContentUtils::HoldJSObjects(thisSupports, participant);
 
   return true;
 }

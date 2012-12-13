@@ -1,0 +1,48 @@
+#!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This script provides an execution environment for mozconfig scripts.
+# This script is not meant to be called by users. Instead, some
+# higher-level driver invokes it and parses the machine-tailored output.
+
+set -e
+
+ac_add_options() {
+  local opt
+  for opt in $*; do
+    echo "------BEGIN_AC_OPTION"
+    echo $opt
+    echo "------END_AC_OPTION"
+  done
+}
+
+ac_add_app_options() {
+  echo "ac_add_app_options is not supported."
+  exit 1
+}
+
+mk_add_options() {
+  local opt
+  for opt in $*; do
+    echo "------BEGIN_MK_OPTION"
+    echo $opt
+    echo "------END_MK_OPTION"
+  done
+}
+
+echo "------BEGIN_BEFORE_SOURCE"
+set
+echo "------END_BEFORE_SOURCE"
+
+topsrcdir=$1
+
+. $2
+
+unset topsrcdir
+
+echo "------BEGIN_AFTER_SOURCE"
+set
+echo "------END_AFTER_SOURCE"
+

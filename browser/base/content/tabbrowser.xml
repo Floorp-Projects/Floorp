@@ -1896,6 +1896,14 @@
         <parameter name="aOtherTab"/>
         <body>
           <![CDATA[
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+            // Do not allow transfering a private tab to a non-private window
+            // and vice versa.
+            if (PrivateBrowsingUtils.isWindowPrivate(window) !=
+                PrivateBrowsingUtils.isWindowPrivate(aOtherTab.ownerDocument.defaultView))
+              return;
+#endif
+
             // That's gBrowser for the other window, not the tab's browser!
             var remoteBrowser = aOtherTab.ownerDocument.defaultView.gBrowser;
 
@@ -3422,6 +3430,14 @@
                 sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
                 sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser" &&
                 sourceNode.ownerDocument.defaultView.gBrowser.tabContainer == sourceNode.parentNode) {
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+              // Do not allow transfering a private tab to a non-private window
+              // and vice versa.
+              if (PrivateBrowsingUtils.isWindowPrivate(window) !=
+                  PrivateBrowsingUtils.isWindowPrivate(sourceNode.ownerDocument.defaultView))
+                return dt.effectAllowed = "none";
+#endif
+
 #ifdef XP_MACOSX
               return dt.effectAllowed = event.altKey ? "copy" : "move";
 #else
@@ -3740,6 +3756,8 @@
           if (draggedTab.parentNode != this || event.shiftKey)
             this.selectedItem = newTab;
         } else if (draggedTab && draggedTab.parentNode == this) {
+          this._finishAnimateTabMove();
+
           // actually move the dragged tab
           if ("animDropIndex" in draggedTab._dragData) {
             let newIndex = draggedTab._dragData.animDropIndex;
@@ -3747,7 +3765,6 @@
               newIndex--;
             this.tabbrowser.moveTabTo(draggedTab, newIndex);
           }
-          this._finishAnimateTabMove();
         } else if (draggedTab) {
           // swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between

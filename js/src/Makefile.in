@@ -31,7 +31,7 @@ ifneq ($(OS_ARCH),ANDROID)
 TEST_DIRS += jsapi-tests
 endif
 
-TEST_DIRS += tests
+TEST_DIRS += tests gdb
 
 MODULE		    = js
 LIBRARY_NAME	    = mozjs
@@ -134,6 +134,7 @@ CPPSRCS		= \
 		ParseNode.cpp \
 		Parser.cpp \
 		SPSProfiler.cpp \
+		SelfHosting.cpp \
 		TokenStream.cpp \
 		TestingFunctions.cpp \
 		Profilers.cpp \
@@ -148,7 +149,6 @@ CPPSRCS		= \
 		Memory.cpp \
 		Statistics.cpp \
 		StoreBuffer.cpp \
-		FindSCCs.cpp \
 		Iteration.cpp \
 		Verifier.cpp \
 		StringBuffer.cpp \

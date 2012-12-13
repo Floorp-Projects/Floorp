@@ -15,10 +15,10 @@ namespace js {
 namespace ion {
 
 struct AnyRegister {
-    typedef uint32 Code;
+    typedef uint32_t Code;
 
-    static const uint32 Total = Registers::Total + FloatRegisters::Total;
-    static const uint32 Invalid = UINT_MAX;
+    static const uint32_t Total = Registers::Total + FloatRegisters::Total;
+    static const uint32_t Invalid = UINT_MAX;
 
     union {
         Registers::Code gpr_;
@@ -36,7 +36,7 @@ struct AnyRegister {
         fpu_ = fpu.code();
         isFloat_ = true;
     }
-    static AnyRegister FromCode(uint32 i) {
+    static AnyRegister FromCode(uint32_t i) {
         JS_ASSERT(i < Total);
         AnyRegister r;
         if (i < Registers::Total) {
@@ -278,10 +278,10 @@ struct Int32Key {
 template <typename T>
 class TypedRegisterSet
 {
-    uint32 bits_;
+    uint32_t bits_;
 
   public:
-    explicit TypedRegisterSet(uint32 bits)
+    explicit TypedRegisterSet(uint32_t bits)
       : bits_(bits)
     { }
 
@@ -305,7 +305,7 @@ class TypedRegisterSet
         return TypedRegisterSet(~in.bits_ & T::Codes::AllocatableMask);
     }
     static inline TypedRegisterSet VolatileNot(const TypedRegisterSet &in) {
-        const uint32 allocatableVolatile =
+        const uint32_t allocatableVolatile =
             T::Codes::AllocatableMask & T::Codes::VolatileMask;
         return TypedRegisterSet(~in.bits_ & allocatableVolatile);
     }
@@ -353,14 +353,14 @@ class TypedRegisterSet
     void clear() {
         bits_ = 0;
     }
-    uint32 bits() const {
+    uint32_t bits() const {
         return bits_;
     }
-    uint32 size() const {
-        uint32 sum2  = (bits_ & 0x55555555) + ((bits_ & 0xaaaaaaaa) >> 1);
-        uint32 sum4  = (sum2  & 0x33333333) + ((sum2  & 0xcccccccc) >> 2);
-        uint32 sum8  = (sum4  & 0x0f0f0f0f) + ((sum4  & 0xf0f0f0f0) >> 4);
-        uint32 sum16 = (sum8  & 0x00ff00ff) + ((sum8  & 0xff00ff00) >> 8);
+    uint32_t size() const {
+        uint32_t sum2  = (bits_ & 0x55555555) + ((bits_ & 0xaaaaaaaa) >> 1);
+        uint32_t sum4  = (sum2  & 0x33333333) + ((sum2  & 0xcccccccc) >> 2);
+        uint32_t sum8  = (sum4  & 0x0f0f0f0f) + ((sum4  & 0xf0f0f0f0) >> 4);
+        uint32_t sum16 = (sum8  & 0x00ff00ff) + ((sum8  & 0xff00ff00) >> 8);
         return sum16;
     }
     bool operator ==(const TypedRegisterSet<T> &other) const {

@@ -607,40 +607,45 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
     return (headers, implheaders, declarations,
             CGList(SortedDictValues(unionStructs), "\n"))
 
-def UnionConversions(descriptors):
+def UnionConversions(descriptors, dictionaries, callbacks, config):
     """
     Returns a CGThing to declare all union argument conversion helper structs.
     """
     # Now find all the things we'll need as arguments because we
     # need to unwrap them.
+    headers = set()
     unionConversions = dict()
-    for d in descriptors:
-        if d.interface.isExternal():
-            continue
 
-        def addUnionTypes(type):
-            if type.isUnion():
-                type = type.unroll()
-                name = str(type)
-                if not name in unionConversions:
-                    unionConversions[name] = CGUnionConversionStruct(type, d)
+    def addInfoForType(t, descriptor=None, dictionary=None):
+        """
+        Add info for the given type.  descriptor and dictionary, if passed, are
+        used to figure out what to do with interface types.
+        """
+        assert not descriptor or not dictionary
+        t = t.unroll()
+        if not t.isUnion():
+            return
+        name = str(t)
+        if not name in unionConversions:
+            providers = getRelevantProviders(descriptor, dictionary,
+                                             config)
+            unionConversions[name] = CGUnionConversionStruct(t, providers[0])
+            for f in t.flatMemberTypes:
+                f = f.unroll()
+                if f.isInterface():
+                    if f.isSpiderMonkeyInterface():
+                        headers.add("jsfriendapi.h")
+                        headers.add("mozilla/dom/TypedArray.h")
+                    elif not f.inner.isExternal():
+                        headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif f.isDictionary():
+                    headers.add(CGHeaders.getDeclarationFilename(f.inner))
 
-        members = [m for m in d.interface.members]
-        if d.interface.ctor():
-            members.append(d.interface.ctor())
-        signatures = [s for m in members if m.isMethod() for s in m.signatures()]
-        for s in signatures:
-            assert len(s) == 2
-            (_, arguments) = s
-            for a in arguments:
-                addUnionTypes(a.type)
+    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
 
-        for m in members:
-            if m.isAttr() and not m.readonly:
-                addUnionTypes(m.type)
-
-    return CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
-                     post="\n\n")
+    return (headers,
+            CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
+                      post="\n\n"))
 
 class Argument():
     """
@@ -744,7 +749,7 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
 
     def definition_body_prologue(self):
         return """
-  %s* self = UnwrapDOMObject<%s>(obj, eRegularDOMObject);
+  %s* self = UnwrapDOMObject<%s>(obj);
 """ % (self.descriptor.nativeType, self.descriptor.nativeType)
 
     def definition_body(self):
@@ -1458,9 +1463,11 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                           "  return;\n" +
                           "}\n") % getParentProto
 
-        needConstructor = (needInterfaceObject and
-                           not self.descriptor.hasInstanceInterface)
-        constructHook = "&" + CONSTRUCT_HOOK_NAME + "_holder"
+        if (needInterfaceObject and
+            self.descriptor.needsConstructHookHolder()):
+            constructHookHolder = "&" + CONSTRUCT_HOOK_NAME + "_holder"
+        else:
+            constructHookHolder = "nullptr"
         if self.descriptor.interface.ctor():
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
@@ -1475,6 +1482,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if needInterfaceObject:
             if self.descriptor.hasInstanceInterface:
                 interfaceClass = "&InterfaceObjectClass.mBase"
+            elif self.descriptor.interface.isCallback():
+                interfaceClass = "js::Jsvalify(&js::ObjectClass)"
             else:
                 interfaceClass = "nullptr"
             interfaceCache = "&protoAndIfaceArray[constructors::id::%s]" % self.descriptor.name
@@ -1507,7 +1516,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 "                            %s,\n"
                 "                            %s);" % (
             protoClass, protoCache,
-            interfaceClass, constructHook if needConstructor else "nullptr",
+            interfaceClass, constructHookHolder,
             constructArgs, interfaceCache,
             domClass,
             properties,
@@ -2187,6 +2196,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         if not isOptional:
             typeName = CGWrapper(typeName, pre="const ")
 
+        # NOTE: Keep this in sync with variadic conversions as needed
         templateBody = ("""JSObject* seq = &${val}.toObject();\n
 if (!IsArrayLike(cx, seq)) {
 %s
@@ -3033,9 +3043,6 @@ class CGArgumentConverter(CGThing):
                  invalidEnumValueFatal=True, lenientFloatCode=None):
         CGThing.__init__(self)
         self.argument = argument
-        if argument.variadic:
-            raise TypeError("We don't support variadic arguments yet " +
-                            str(argument.location))
         assert(not argument.defaultValue or argument.optional)
 
         replacer = {
@@ -3065,19 +3072,70 @@ class CGArgumentConverter(CGThing):
         self.lenientFloatCode = lenientFloatCode
 
     def define(self):
-        return instantiateJSToNativeConversionTemplate(
-            getJSToNativeConversionTemplate(self.argument.type,
-                                            self.descriptorProvider,
-                                            isOptional=(self.argcAndIndex is not None),
-                                            invalidEnumValueFatal=self.invalidEnumValueFatal,
-                                            defaultValue=self.argument.defaultValue,
-                                            treatNullAs=self.argument.treatNullAs,
-                                            treatUndefinedAs=self.argument.treatUndefinedAs,
-                                            isEnforceRange=self.argument.enforceRange,
-                                            isClamp=self.argument.clamp,
-                                            lenientFloatCode=self.lenientFloatCode),
-            self.replacementVariables,
-            self.argcAndIndex).define()
+        typeConversion = getJSToNativeConversionTemplate(
+            self.argument.type,
+            self.descriptorProvider,
+            isOptional=(self.argcAndIndex is not None and
+                        not self.argument.variadic),
+            invalidEnumValueFatal=self.invalidEnumValueFatal,
+            defaultValue=self.argument.defaultValue,
+            treatNullAs=self.argument.treatNullAs,
+            treatUndefinedAs=self.argument.treatUndefinedAs,
+            isEnforceRange=self.argument.enforceRange,
+            isClamp=self.argument.clamp,
+            lenientFloatCode=self.lenientFloatCode,
+            isMember=self.argument.variadic)
+
+        if not self.argument.variadic:
+            return instantiateJSToNativeConversionTemplate(
+                typeConversion,
+                self.replacementVariables,
+                self.argcAndIndex).define()
+
+        # Variadic arguments get turned into a sequence.
+        (elementTemplate, elementDeclType,
+         elementHolderType, dealWithOptional) = typeConversion
+        if dealWithOptional:
+            raise TypeError("Shouldn't have optional things in variadics")
+        if elementHolderType is not None:
+            raise TypeError("Shouldn't need holders for variadics")
+
+        replacer = dict(self.argcAndIndex, **self.replacementVariables)
+        replacer["seqType"] = CGWrapper(elementDeclType, pre="Sequence< ", post=" >").define()
+        replacer["elemType"] = elementDeclType.define()
+
+        # NOTE: Keep this in sync with sequence conversions as needed
+        variadicConversion = string.Template("""const ${seqType} ${declName};
+if (${argc} > ${index}) {
+  ${seqType}& arr = const_cast< ${seqType}& >(${declName});
+  if (!arr.SetCapacity(${argc} - ${index})) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+  for (uint32_t variadicArg = ${index}; variadicArg < ${argc}; ++variadicArg) {
+    ${elemType}& slot = *arr.AppendElement();
+""").substitute(replacer)
+
+        val = string.Template("${argv}[variadicArg]").substitute(replacer)
+        variadicConversion += CGIndenter(CGGeneric(
+                string.Template(elementTemplate).substitute(
+                    {
+                        "val" : val,
+                        "valPtr": "&" + val,
+                        "declName" : "slot",
+                        # We only need holderName here to handle isExternal()
+                        # interfaces, which use an internal holder for the
+                        # conversion even when forceOwningType ends up true.
+                        "holderName": "tempHolder",
+                        # Use the same ${obj} as for the variadic arg itself
+                        "obj": replacer["obj"]
+                        }
+                    )), 4).define()
+
+        variadicConversion += ("\n"
+                               "  }\n"
+                               "}")
+        return variadicConversion
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                            isCreator, exceptionCode):
@@ -3768,16 +3826,44 @@ class CGMethodCall(CGThing):
 
             distinguishingIndex = method.distinguishingIndexForArgCount(argCount)
 
-            for (_, args) in possibleSignatures:
+            def distinguishingArgument(signature):
+                args = signature[1]
+                if distinguishingIndex < len(args):
+                    return args[distinguishingIndex]
+                assert args[-1].variadic
+                return args[-1]
+
+            def distinguishingType(signature):
+                return distinguishingArgument(signature).type
+
+            for sig in possibleSignatures:
                 # We should not have "any" args at distinguishingIndex,
                 # since we have multiple possible signatures remaining,
                 # but "any" is never distinguishable from anything else.
-                assert not args[distinguishingIndex].type.isAny()
+                assert not distinguishingType(sig).isAny()
                 # We can't handle unions at the distinguishing index.
-                if args[distinguishingIndex].type.isUnion():
+                if distinguishingType(sig).isUnion():
                     raise TypeError("No support for unions as distinguishing "
                                     "arguments yet: %s",
-                                    args[distinguishingIndex].location)
+                                    distinguishingArgument(sig).location)
+                # We don't support variadics as the distinguishingArgument yet.
+                # If you want to add support, consider this case:
+                #
+                #   void(long... foo);
+                #   void(long bar, Int32Array baz);
+                #
+                # in which we have to convert argument 0 to long before picking
+                # an overload... but all the variadic stuff needs to go into a
+                # single array in case we pick that overload, so we have to have
+                # machinery for converting argument 0 to long and then either
+                # placing it in the variadic bit or not.  Or something.  We may
+                # be able to loosen this restriction if the variadic arg is in
+                # fact at distinguishingIndex, perhaps.  Would need to
+                # double-check.
+                if distinguishingArgument(sig).variadic:
+                    raise TypeError("No support for variadics as distinguishing "
+                                    "arguments yet: %s",
+                                    distinguishingArgument(sig).location)
 
             # Convert all our arguments up to the distinguishing index.
             # Doesn't matter which of the possible signatures we use, since
@@ -3806,9 +3892,6 @@ class CGMethodCall(CGThing):
                         caseBody.append(CGGeneric("}"))
                     return True
                 return False
-
-            def distinguishingType(signature):
-                return signature[1][distinguishingIndex].type
 
             def tryCall(signature, indent, isDefinitelyObject=False,
                         isNullOrUndefined=False):
@@ -4997,22 +5080,28 @@ class ClassConstructor(ClassItem):
     visibility determines the visibility of the constructor (public,
     protected, private), defaults to private.
 
+    explicit should be True if the constructor should be marked explicit.
+
     baseConstructors is a list of strings containing calls to base constructors,
     defaults to None.
 
     body contains a string with the code for the constructor, defaults to None.
     """
     def __init__(self, args, inline=False, bodyInHeader=False,
-                 visibility="private", baseConstructors=None, body=None):
+                 visibility="private", explicit=False, baseConstructors=None,
+                 body=None):
         self.args = args
         self.inline = inline or bodyInHeader
         self.bodyInHeader = bodyInHeader
+        self.explicit = explicit
         self.baseConstructors = baseConstructors
         self.body = body
         ClassItem.__init__(self, None, visibility)
 
     def getDecorators(self, declaring):
         decorators = []
+        if self.explicit:
+            decorators.append('explicit')
         if self.inline and declaring:
             decorators.append('inline')
         if decorators:
@@ -6148,7 +6237,8 @@ class CGDescriptor(CGThing):
             cgThings.append(CGClassConstructHook(descriptor))
             cgThings.append(CGClassHasInstanceHook(descriptor))
             cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
-            cgThings.append(CGClassConstructHookHolder(descriptor))
+            if descriptor.needsConstructHookHolder():
+                cgThings.append(CGClassConstructHookHolder(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
@@ -6802,7 +6892,7 @@ class CGBindingRoot(CGThing):
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptor, member, name, signature, extendedAttrs,
                  breakAfter=True, passCxAsNeeded=True, visibility="public",
-                 jsObjectsArePtr=False):
+                 jsObjectsArePtr=False, variadicIsSequence=False):
         """
         If jsObjectsArePtr is true, typed arrays and "object" will be
         passed as JSObject*
@@ -6814,6 +6904,7 @@ class CGNativeMember(ClassMethod):
                                                              self.extendedAttrs)
         self.passCxAsNeeded = passCxAsNeeded
         self.jsObjectsArePtr = jsObjectsArePtr
+        self.variadicIsSequence = variadicIsSequence
         breakAfterSelf = "\n" if breakAfter else ""
         ClassMethod.__init__(self, name,
                              self.getReturnType(signature[0], False),
@@ -7094,7 +7185,8 @@ class CGNativeMember(ClassMethod):
             decl = CGWrapper(decl, pre="Nullable< ", post=" >")
             ref = True
         if variadic:
-            decl = CGWrapper(decl, pre="nsTArray< ", post=" >")
+            arrayType = "Sequence" if self.variadicIsSequence else "nsTArray"
+            decl = CGWrapper(decl, pre="%s< " % arrayType, post=" >")
             ref = True
         elif optional:
             # Note: All variadic args claim to be optional, but we can just use
@@ -7124,7 +7216,8 @@ class CGExampleMethod(CGNativeMember):
                                                                    method),
                                 signature,
                                 descriptor.getExtendedAttributes(method),
-                                breakAfter)
+                                breakAfter=breakAfter,
+                                variadicIsSequence=True)
     def define(self, cgClass):
         return ''
 
@@ -7373,7 +7466,7 @@ class CGCallbackFunction(CGClass):
             callCallback = CallCallback(callback, descriptorProvider)
             CGClass.__init__(self, name,
                              bases=[ClassBase("CallbackFunction")],
-                             constructors=[self.getConstructor()],
+                             constructors=self.getConstructors(),
                              methods=self.getCallImpls(callCallback))
             self.generatable = True
         except NoSuchDescriptorError, err:
@@ -7391,8 +7484,8 @@ class CGCallbackFunction(CGClass):
             return ""
         return CGClass.declare(self)
 
-    def getConstructor(self):
-        return ClassConstructor(
+    def getConstructors(self):
+        return [ClassConstructor(
             [Argument("JSContext*", "cx"),
              Argument("JSObject*", "aOwner"),
              Argument("JSObject*", "aCallable"),
@@ -7402,7 +7495,16 @@ class CGCallbackFunction(CGClass):
             baseConstructors=[
                 "CallbackFunction(cx, aOwner, aCallable, aInited)"
                 ],
-            body="")
+            body=""),
+            ClassConstructor(
+            [Argument("CallbackFunction*", "aOther")],
+            bodyInHeader=True,
+            visibility="public",
+            explicit=True,
+            baseConstructors=[
+                "CallbackFunction(aOther)"
+                ],
+            body="")]
 
     def getCallImpls(self, callCallback):
         args = list(callCallback.args)
@@ -7652,8 +7754,21 @@ class GlobalGenRoots():
         idEnum = CGNamespacedEnum('id', 'ID', ['_ID_Start'] + protos,
                                   [0, '_ID_Start'])
         idEnum = CGList([idEnum])
-        idEnum.append(CGGeneric(declare="const unsigned MaxProtoChainLength = " +
-                                str(config.maxProtoChainLength) + ";\n\n"))
+
+        # This is only used by DOM worker code, once there are no more consumers
+        # of INTERFACE_CHAIN_* this code should be removed.
+        def ifaceChainMacro(ifaceCount):
+            supplied = [CGGeneric(declare="_iface_" + str(i + 1)) for i in range(ifaceCount)]
+            remaining = [CGGeneric(declare="prototypes::id::_ID_Count")] * (config.maxProtoChainLength - ifaceCount)
+            macro = CGWrapper(CGList(supplied, ", "),
+                              pre="#define INTERFACE_CHAIN_" + str(ifaceCount) + "(",
+                              post=") \\\n")
+            macroContent = CGIndenter(CGList(supplied + remaining, ", \\\n"))
+            macroContent = CGIndenter(CGWrapper(macroContent, pre="{ \\\n",
+                                                post=" \\\n}"))
+            return CGWrapper(CGList([macro, macroContent]), post="\n\n")
+
+        idEnum.append(ifaceChainMacro(1))
 
         # Wrap all of that in our namespaces.
         idEnum = CGNamespace.build(['mozilla', 'dom', 'prototypes'],
@@ -7776,14 +7891,18 @@ struct PrototypeIDMap;
     @staticmethod
     def UnionConversions(config):
 
-        unions = UnionConversions(config.getDescriptors())
+        (headers, unions) = UnionConversions(config.getDescriptors(),
+                                             config.getDictionaries(),
+                                             config.getCallbacks(),
+                                             config)
 
         # Wrap all of that in our namespaces.
         curr = CGNamespace.build(['mozilla', 'dom'], unions)
 
         curr = CGWrapper(curr, post='\n')
 
-        curr = CGHeaders([], [], [], ["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"], [], curr)
+        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"])
+        curr = CGHeaders([], [], [], headers, [], curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionConversions', curr)

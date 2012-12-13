@@ -96,40 +96,6 @@ SmsIPCService::CreateSmsMessage(int32_t aId,
  * Implementation of nsISmsDatabaseService.
  */
 NS_IMETHODIMP
-SmsIPCService::SaveReceivedMessage(const nsAString& aSender,
-                                   const nsAString& aBody,
-                                   const nsAString& aMessageClass,
-                                   uint64_t aDate,
-                                   int32_t* aId)
-{
-  GetSmsChild()->SendSaveReceivedMessage(nsString(aSender), nsString(aBody),
-                                         nsString(aMessageClass), aDate, aId);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SmsIPCService::SaveSentMessage(const nsAString& aReceiver,
-                               const nsAString& aBody,
-                               uint64_t aDate, int32_t* aId)
-{
-  GetSmsChild()->SendSaveSentMessage(nsString(aReceiver), nsString(aBody),
-                                     aDate, aId);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SmsIPCService::SetMessageDeliveryStatus(int32_t aMessageId,
-                                        const nsAString& aDeliveryStatus)
-{
-  GetSmsChild()->SendSetMessageDeliveryStatus(aMessageId,
-                                              nsString(aDeliveryStatus));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 SmsIPCService::GetMessageMoz(int32_t aMessageId,
                              nsISmsRequest* aRequest)
 {

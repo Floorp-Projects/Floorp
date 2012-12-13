@@ -7,10 +7,6 @@
 %undef WINSTRIPE_AERO
 
 @media (-moz-windows-default-theme) {
-  #downloadsPanel[hasdownloads] > #downloadsFooter {
-    background-color: #f1f5fb;
-  }
-
   richlistitem[type="download"] {
     border: 1px solid transparent;
     border-bottom: 1px solid hsl(213,40%,90%);

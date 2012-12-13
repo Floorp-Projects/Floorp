@@ -27,12 +27,12 @@ class SnapshotReader
 {
     CompactBufferReader reader_;
 
-    uint32 pcOffset_;           // Offset from script->code.
-    uint32 slotCount_;          // Number of slots.
-    uint32 frameCount_;
+    uint32_t pcOffset_;           // Offset from script->code.
+    uint32_t slotCount_;          // Number of slots.
+    uint32_t frameCount_;
     BailoutKind bailoutKind_;
-    uint32 framesRead_;         // Number of frame headers that have been read.
-    uint32 slotsRead_;          // Number of slots that have been read.
+    uint32_t framesRead_;         // Number of frame headers that have been read.
+    uint32_t slotsRead_;          // Number of slots that have been read.
     bool resumeAfter_;
 
 #ifdef DEBUG
@@ -42,11 +42,11 @@ class SnapshotReader
 
 #ifdef TRACK_SNAPSHOTS
   private:
-    uint32 pcOpcode_;
-    uint32 mirOpcode_;
-    uint32 mirId_;
-    uint32 lirOpcode_;
-    uint32 lirId_;
+    uint32_t pcOpcode_;
+    uint32_t mirOpcode_;
+    uint32_t mirId_;
+    uint32_t lirOpcode_;
+    uint32_t lirId_;
   public:
     void spewBailingFrom() const;
 #endif
@@ -76,7 +76,7 @@ class SnapshotReader
         friend class SnapshotReader;
 
         Register::Code reg_;
-        int32 stackSlot_;
+        int32_t stackSlot_;
 
         static Location From(const Register &reg) {
             Location loc;
@@ -84,7 +84,7 @@ class SnapshotReader
             loc.stackSlot_ = INVALID_STACK_SLOT;
             return loc;
         }
-        static Location From(int32 stackSlot) {
+        static Location From(int32_t stackSlot) {
             Location loc;
             loc.reg_ = Register::Code(0);      // Quell compiler warnings.
             loc.stackSlot_ = stackSlot;
@@ -96,7 +96,7 @@ class SnapshotReader
             JS_ASSERT(!isStackSlot());
             return Register::FromCode(reg_);
         }
-        int32 stackSlot() const {
+        int32_t stackSlot() const {
             JS_ASSERT(isStackSlot());
             return stackSlot_;
         }
@@ -127,7 +127,7 @@ class SnapshotReader
                 Location value;
             } unknown_type_;
 #endif
-            int32 value_;
+            int32_t value_;
         };
 
         Slot(SlotMode mode, JSValueType type, const Location &loc)
@@ -144,7 +144,7 @@ class SnapshotReader
         Slot(SlotMode mode)
           : mode_(mode)
         { }
-        Slot(SlotMode mode, uint32 index)
+        Slot(SlotMode mode, uint32_t index)
           : mode_(mode)
         {
             JS_ASSERT(mode == CONSTANT || mode == JS_INT32);
@@ -155,11 +155,11 @@ class SnapshotReader
         SlotMode mode() const {
             return mode_;
         }
-        uint32 constantIndex() const {
+        uint32_t constantIndex() const {
             JS_ASSERT(mode() == CONSTANT);
             return value_;
         }
-        int32 int32Value() const {
+        int32_t int32Value() const {
             JS_ASSERT(mode() == JS_INT32);
             return value_;
         }
@@ -175,7 +175,7 @@ class SnapshotReader
             JS_ASSERT(mode() == DOUBLE_REG);
             return FloatRegister::FromCode(fpu_);
         }
-        int32 stackSlot() const {
+        int32_t stackSlot() const {
             JS_ASSERT(mode() == TYPED_STACK);
             return known_type_.payload.stackSlot();
         }
@@ -197,12 +197,12 @@ class SnapshotReader
     };
 
   public:
-    SnapshotReader(const uint8 *buffer, const uint8 *end);
+    SnapshotReader(const uint8_t *buffer, const uint8_t *end);
 
-    uint32 pcOffset() const {
+    uint32_t pcOffset() const {
         return pcOffset_;
     }
-    uint32 slots() const {
+    uint32_t slots() const {
         return slotCount_;
     }
     BailoutKind bailoutKind() const {
@@ -229,7 +229,7 @@ class SnapshotReader
     bool moreSlots() const {
         return slotsRead_ < slotCount_;
     }
-    uint32 frameCount() const {
+    uint32_t frameCount() const {
         return frameCount_;
     }
 };

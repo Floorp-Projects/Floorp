@@ -5,7 +5,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: ssl3con.c,v 1.192 2012/09/28 05:10:25 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.195 2012/11/15 18:49:01 wtc%google.com Exp $ */
 
 /* TODO(ekr): Implement HelloVerifyRequest on server side. OK for now. */
 
@@ -5577,7 +5577,6 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    ss->sec.peerCert = CERT_DupCertificate(sid->peerCert);
 	}
 
-
 	/* NULL value for PMS signifies re-use of the old MS */
 	rv = ssl3_InitPendingCipherSpec(ss,  NULL);
 	if (rv != SECSuccess) {
@@ -5981,14 +5980,14 @@ ssl3_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     desc = no_certificate;
     ss->ssl3.hs.ws = wait_hello_done;
 
-    if (ss->getClientAuthData == NULL) {
-	rv = SECFailure; /* force it to send a no_certificate alert */
-    } else {
+    if (ss->getClientAuthData != NULL) {
 	/* XXX Should pass cert_types in this call!! */
 	rv = (SECStatus)(*ss->getClientAuthData)(ss->getClientAuthDataArg,
 						 ss->fd, &ca_list,
 						 &ss->ssl3.clientCertificate,
 						 &ss->ssl3.clientPrivateKey);
+    } else {
+	rv = SECFailure; /* force it to send a no_certificate alert */
     }
     switch (rv) {
     case SECWouldBlock:	/* getClientAuthData has put up a dialog box. */
@@ -6078,10 +6077,17 @@ ssl3_CanFalseStart(sslSocket *ss) {
 	 !ss->sec.isServer &&
 	 !ss->ssl3.hs.isResuming &&
 	 ss->ssl3.cwSpec &&
+
+	 /* An attacker can control the selected ciphersuite so we only wish to
+	  * do False Start in the case that the selected ciphersuite is
+	  * sufficiently strong that the attack can gain no advantage.
+	  * Therefore we require an 80-bit cipher and a forward-secret key
+	  * exchange. */
 	 ss->ssl3.cwSpec->cipher_def->secret_key_size >= 10 &&
-	(ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_rsa ||
-	 ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_dh  ||
-	 ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh);
+	(ss->ssl3.hs.kea_def->kea == kea_dhe_dss ||
+	 ss->ssl3.hs.kea_def->kea == kea_dhe_rsa ||
+	 ss->ssl3.hs.kea_def->kea == kea_ecdhe_ecdsa ||
+	 ss->ssl3.hs.kea_def->kea == kea_ecdhe_rsa);
     ssl_ReleaseSpecReadLock(ss);
     return rv;
 }

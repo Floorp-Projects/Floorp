@@ -144,92 +144,85 @@ add_test(function test_savedsearches_bookmarks() {
   run_next_test();
 });
 
-add_test(function test_savedsearches_history() {
+add_task(function test_savedsearches_history() {
   // add a visit that matches the search term
   var testURI = uri("http://" + searchTerm + ".com");
-  addVisits({ uri: testURI, title: searchTerm }, function afterAddVisits() {
+  yield promiseAddVisits({ uri: testURI, title: searchTerm });
 
-    // create a saved-search that matches the visit we added
-    var searchId = bmsvc.insertBookmark(testRoot,
-                                        uri("place:terms=" + searchTerm + "&excludeQueries=1&expandQueries=1&queryType=0"),
-                                        bmsvc.DEFAULT_INDEX, searchTerm);
+  // create a saved-search that matches the visit we added
+  var searchId = bmsvc.insertBookmark(testRoot,
+                                      uri("place:terms=" + searchTerm + "&excludeQueries=1&expandQueries=1&queryType=0"),
+                                      bmsvc.DEFAULT_INDEX, searchTerm);
 
-    // query for the test root, expandQueries=1
-    // the query should show up as a query container, with 1 child
+  // query for the test root, expandQueries=1
+  // the query should show up as a query container, with 1 child
+  try {
+    var options = histsvc.getNewQueryOptions();
+    options.expandQueries = 1;
+    var query = histsvc.getNewQuery();
+    query.setFolders([testRoot], 1);
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    do_check_eq(cc, 1);
+    for (var i = 0; i < cc; i++) {
+      var node = rootNode.getChild(i);
+      // test that query node type is container when expandQueries=1
+      do_check_eq(node.type, node.RESULT_TYPE_QUERY);
+      // test that queries (as containers) have valid itemId
+      do_check_eq(node.itemId, searchId);
+      node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+      node.containerOpen = true;
+
+      // test that queries have children when excludeItems=1
+      // test that query nodes don't show containers (shouldn't have our folder that matches)
+      // test that queries don't show themselves in query results (shouldn't have our saved search)
+      do_check_eq(node.childCount, 1);
+
+      // test that history visit shows in query results
+      var item = node.getChild(0);
+      do_check_eq(item.type, item.RESULT_TYPE_URI);
+      do_check_eq(item.itemId, -1); // history visit
+      do_check_eq(item.uri, testURI.spec); // history visit
+
+      // test live-update of query results - add a history visit that matches the query
+      yield promiseAddVisits({
+        uri: uri("http://foo.com"),
+        title: searchTerm + "blah"
+      });
+      do_check_eq(node.childCount, 2);
+
+      // test live-update of query results - delete a history visit that matches the query
+      bhist.removePage(uri("http://foo.com"));
+      do_check_eq(node.childCount, 1);
+      node.containerOpen = false;
+    }
+
+    // test live-update of moved queries
+    var tmpFolderId = bmsvc.createFolder(testRoot, "foo", bmsvc.DEFAULT_INDEX);
+    bmsvc.moveItem(searchId, tmpFolderId, bmsvc.DEFAULT_INDEX);
+    var tmpFolderNode = rootNode.getChild(0);
+    do_check_eq(tmpFolderNode.itemId, tmpFolderId);
+    tmpFolderNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+    tmpFolderNode.containerOpen = true;
+    do_check_eq(tmpFolderNode.childCount, 1);
+
+    // test live-update of renamed queries
+    bmsvc.setItemTitle(searchId, "foo");
+    do_check_eq(tmpFolderNode.title, "foo");
+
+    // test live-update of deleted queries
+    bmsvc.removeItem(searchId);
     try {
-      var options = histsvc.getNewQueryOptions();
-      options.expandQueries = 1;
-      var query = histsvc.getNewQuery();
-      query.setFolders([testRoot], 1);
-      var result = histsvc.executeQuery(query, options);
-      var rootNode = result.root;
-      rootNode.containerOpen = true;
-      var cc = rootNode.childCount;
-      do_check_eq(cc, 1);
-      for (var i = 0; i < cc; i++) {
-        var node = rootNode.getChild(i);
-        // test that query node type is container when expandQueries=1
-        do_check_eq(node.type, node.RESULT_TYPE_QUERY);
-        // test that queries (as containers) have valid itemId
-        do_check_eq(node.itemId, searchId);
-        node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-        node.containerOpen = true;
+      var tmpFolderNode = root.getChild(1);
+      do_throw("query was not removed");
+    } catch(ex) {}
 
-        // test that queries have children when excludeItems=1
-        // test that query nodes don't show containers (shouldn't have our folder that matches)
-        // test that queries don't show themselves in query results (shouldn't have our saved search)
-        do_check_eq(node.childCount, 1);
-
-        // test that history visit shows in query results
-        var item = node.getChild(0);
-        do_check_eq(item.type, item.RESULT_TYPE_URI);
-        do_check_eq(item.itemId, -1); // history visit
-        do_check_eq(item.uri, testURI.spec); // history visit
-
-        // test live-update of query results - add a history visit that matches the query
-        PlacesUtils.history.addVisit(uri("http://foo.com"),
-                                     Date.now() * 1000,
-                                     null,
-                                     Ci.nsINavHistoryService.TRANSITION_LINK,
-                                     false,
-                                     0);
-        PlacesUtils.ghistory2.setPageTitle(uri("http://foo.com"),
-                                           searchTerm + "blah");
-        do_check_eq(node.childCount, 2);
-
-        // test live-update of query results - delete a history visit that matches the query
-        bhist.removePage(uri("http://foo.com"));
-        do_check_eq(node.childCount, 1);
-        node.containerOpen = false;
-      }
-
-      // test live-update of moved queries
-      var tmpFolderId = bmsvc.createFolder(testRoot, "foo", bmsvc.DEFAULT_INDEX);
-      bmsvc.moveItem(searchId, tmpFolderId, bmsvc.DEFAULT_INDEX);
-      var tmpFolderNode = rootNode.getChild(0);
-      do_check_eq(tmpFolderNode.itemId, tmpFolderId);
-      tmpFolderNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-      tmpFolderNode.containerOpen = true;
-      do_check_eq(tmpFolderNode.childCount, 1);
-
-      // test live-update of renamed queries
-      bmsvc.setItemTitle(searchId, "foo");
-      do_check_eq(tmpFolderNode.title, "foo");
-
-      // test live-update of deleted queries
-      bmsvc.removeItem(searchId);
-      try {
-        var tmpFolderNode = root.getChild(1);
-        do_throw("query was not removed");
-      } catch(ex) {}
-
-      tmpFolderNode.containerOpen = false;
-      rootNode.containerOpen = false;
-    }
-    catch(ex) {
-      do_throw("expandQueries=1 bookmarks query: " + ex);
-    }
-
-    run_next_test();
-  });
+    tmpFolderNode.containerOpen = false;
+    rootNode.containerOpen = false;
+  }
+  catch(ex) {
+    do_throw("expandQueries=1 bookmarks query: " + ex);
+  }
 });

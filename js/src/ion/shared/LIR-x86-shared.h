@@ -14,7 +14,7 @@ namespace ion {
 class LDivI : public LBinaryMath<1>
 {
   public:
-    LIR_HEADER(DivI);
+    LIR_HEADER(DivI)
 
     LDivI(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp) {
         setOperand(0, lhs);
@@ -33,7 +33,7 @@ class LDivI : public LBinaryMath<1>
 class LModI : public LBinaryMath<1>
 {
   public:
-    LIR_HEADER(ModI);
+    LIR_HEADER(ModI)
 
     LModI(const LAllocation &lhs, const LAllocation &rhs) {
         setOperand(0, lhs);
@@ -47,18 +47,18 @@ class LModI : public LBinaryMath<1>
 
 class LModPowTwoI : public LInstructionHelper<1,1,0>
 {
-    const int32 shift_;
+    const int32_t shift_;
 
   public:
-    LIR_HEADER(ModPowTwoI);
+    LIR_HEADER(ModPowTwoI)
 
-    LModPowTwoI(const LAllocation &lhs, int32 shift)
+    LModPowTwoI(const LAllocation &lhs, int32_t shift)
       : shift_(shift)
     {
         setOperand(0, lhs);
     }
 
-    int32 shift() const {
+    int32_t shift() const {
         return shift_;
     }
     const LDefinition *remainder() {
@@ -70,7 +70,7 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
 class LPowHalfD : public LInstructionHelper<1, 1, 1>
 {
   public:
-    LIR_HEADER(PowHalfD);
+    LIR_HEADER(PowHalfD)
     LPowHalfD(const LAllocation &input, const LDefinition &temp) {
         setOperand(0, input);
         setTemp(0, temp);
@@ -91,7 +91,7 @@ class LPowHalfD : public LInstructionHelper<1, 1, 1>
 class LTableSwitch : public LInstructionHelper<0, 1, 2>
 {
   public:
-    LIR_HEADER(TableSwitch);
+    LIR_HEADER(TableSwitch)
 
     LTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
                  const LDefinition &jumpTablePointer, MTableSwitch *ins)
@@ -121,7 +121,7 @@ class LTableSwitch : public LInstructionHelper<0, 1, 2>
 class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
 {
   public:
-    LIR_HEADER(TableSwitchV);
+    LIR_HEADER(TableSwitchV)
 
     LTableSwitchV(const LDefinition &inputCopy, const LDefinition &floatCopy,
                   const LDefinition &jumpTablePointer, MTableSwitch *ins)
@@ -153,7 +153,7 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
 class LGuardShape : public LInstructionHelper<0, 1, 0>
 {
   public:
-    LIR_HEADER(GuardShape);
+    LIR_HEADER(GuardShape)
 
     LGuardShape(const LAllocation &in) {
         setOperand(0, in);
@@ -166,7 +166,7 @@ class LGuardShape : public LInstructionHelper<0, 1, 0>
 class LRecompileCheck : public LInstructionHelper<0, 0, 0>
 {
   public:
-    LIR_HEADER(RecompileCheck);
+    LIR_HEADER(RecompileCheck)
 
     const MRecompileCheck *mir() const {
         return mir_->toRecompileCheck();
@@ -176,13 +176,13 @@ class LRecompileCheck : public LInstructionHelper<0, 0, 0>
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
   public:
-    LIR_HEADER(InterruptCheck);
+    LIR_HEADER(InterruptCheck)
 };
 
 class LMulI : public LBinaryMath<0, 1>
 {
   public:
-    LIR_HEADER(MulI);
+    LIR_HEADER(MulI)
 
     LMulI(const LAllocation &lhs, const LAllocation &rhs, const LAllocation &lhsCopy) {
         setOperand(0, lhs);

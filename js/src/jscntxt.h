@@ -450,6 +450,10 @@ class PerThreadData : public js::PerThreadDataFriendFields
     bool associatedWith(const JSRuntime *rt) { return runtime_ == rt; }
 };
 
+namespace gc {
+class MarkingValidator;
+} // namespace gc
+
 } // namespace js
 
 struct JSRuntime : js::RuntimeFriendFields
@@ -513,7 +517,7 @@ struct JSRuntime : js::RuntimeFriendFields
 #endif
     js::ion::IonRuntime *ionRuntime_;
 
-    JSObject *selfHostedGlobal_;
+    JSObject *selfHostingGlobal_;
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
@@ -551,9 +555,9 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     bool initSelfHosting(JSContext *cx);
-    void markSelfHostedGlobal(JSTracer *trc);
-    bool isSelfHostedGlobal(js::HandleObject global) {
-        return global == selfHostedGlobal_;
+    void markSelfHostingGlobal(JSTracer *trc);
+    bool isSelfHostingGlobal(js::HandleObject global) {
+        return global == selfHostingGlobal_;
     }
     bool getUnclonedSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                                     js::MutableHandleValue vp);
@@ -718,8 +722,8 @@ struct JSRuntime : js::RuntimeFriendFields
     /*
      * Incremental sweep state.
      */
-    JSCompartment       *gcRemainingCompartmentGroups;
-    JSCompartment       *gcCompartmentGroup;
+    JSCompartment       *gcCompartmentGroups;
+    JSCompartment       *gcCurrentCompartmentGroup;
     int                 gcSweepPhase;
     JSCompartment       *gcSweepCompartment;
     int                 gcSweepKindIndex;
@@ -728,6 +732,10 @@ struct JSRuntime : js::RuntimeFriendFields
      * List head of arenas allocated during the sweep phase.
      */
     js::gc::ArenaHeader *gcArenasAllocatedDuringSweep;
+
+#ifdef DEBUG
+    js::gc::MarkingValidator *gcMarkingValidator;
+#endif
 
     /*
      * Indicates that a GC slice has taken place in the middle of an animation
@@ -899,10 +907,7 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Had an out-of-memory error which did not populate an exception. */
     bool                hadOutOfMemory;
 
-    /*
-     * Linked list of all js::Debugger objects. This may be accessed by the GC
-     * thread, if any, or a thread that is in a request and holds gcLock.
-     */
+    /* Linked list of all Debugger objects in the runtime. */
     mozilla::LinkedList<js::Debugger> debuggerList;
 
     /*
@@ -914,7 +919,7 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Client opaque pointers */
     void                *data;
 
-    /* These combine to interlock the GC and new requests. */
+    /* Synchronize GC heap access between main thread and GCHelperThread. */
     PRLock              *gcLock;
 
     js::GCHelperThread  gcHelperThread;
@@ -1393,33 +1398,8 @@ struct JSContext : js::ContextFriendFields,
         return enterCompartmentDepth_ > 0;
     }
 
-    void enterCompartment(JSCompartment *c) {
-        enterCompartmentDepth_++;
-        compartment = c;
-        if (throwing)
-            wrapPendingException();
-    }
-
-    inline void leaveCompartment(JSCompartment *oldCompartment) {
-        JS_ASSERT(hasEnteredCompartment());
-        enterCompartmentDepth_--;
-
-        /*
-         * Before we entered the current compartment, 'compartment' was
-         * 'oldCompartment', so we might want to simply set it back. However, we
-         * currently have this terrible scheme whereby defaultCompartmentObject_
-         * can be updated while enterCompartmentDepth_ > 0. In this case,
-         * oldCompartment != defaultCompartmentObject_->compartment and we must
-         * ignore oldCompartment.
-         */
-        if (hasEnteredCompartment() || !defaultCompartmentObject_)
-            compartment = oldCompartment;
-        else
-            compartment = defaultCompartmentObject_->compartment();
-
-        if (throwing)
-            wrapPendingException();
-    }
+    inline void enterCompartment(JSCompartment *c);
+    inline void leaveCompartment(JSCompartment *oldCompartment);
 
     /* See JS_SaveFrameChain/JS_RestoreFrameChain. */
   private:
@@ -1450,7 +1430,10 @@ struct JSContext : js::ContextFriendFields,
     /* Current execution stack. */
     js::ContextStack    stack;
 
-    /* Current global. */
+    /*
+     * Current global. This is only safe to use within the scope of the
+     * AutoCompartment from which it's called.
+     */
     inline js::Handle<js::GlobalObject*> global() const;
 
     /* ContextStack convenience functions */
@@ -1594,7 +1577,6 @@ struct JSContext : js::ContextFriendFields,
 
     inline bool typeInferenceEnabled() const;
 
-    /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled();
 
 #ifdef MOZ_TRACE_JSCALLS
@@ -1844,49 +1826,6 @@ class AutoKeepAtoms {
         JS_KEEP_ATOMS(rt);
     }
     ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
-};
-
-class AutoReleasePtr {
-    void        *ptr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    AutoReleasePtr(const AutoReleasePtr &other) MOZ_DELETE;
-    AutoReleasePtr operator=(const AutoReleasePtr &other) MOZ_DELETE;
-
-  public:
-    explicit AutoReleasePtr(void *ptr
-                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(ptr)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    void forget() { ptr = NULL; }
-    ~AutoReleasePtr() { js_free(ptr); }
-};
-
-/*
- * FIXME: bug 602774: cleaner API for AutoReleaseNullablePtr
- */
-class AutoReleaseNullablePtr {
-    void        *ptr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    AutoReleaseNullablePtr(const AutoReleaseNullablePtr &other) MOZ_DELETE;
-    AutoReleaseNullablePtr operator=(const AutoReleaseNullablePtr &other) MOZ_DELETE;
-
-  public:
-    explicit AutoReleaseNullablePtr(void *ptr
-                                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(ptr)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    void reset(void *ptr2) {
-        if (ptr)
-            js_free(ptr);
-        ptr = ptr2;
-    }
-    ~AutoReleaseNullablePtr() { if (ptr) js_free(ptr); }
 };
 
 } /* namespace js */

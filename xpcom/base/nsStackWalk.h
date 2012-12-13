@@ -36,6 +36,11 @@ typedef void
  *                     Passing null causes us to walk the stack of the
  *                     current thread. On Windows, this is a thread HANDLE.
  *                     It is currently not supported on any other platform.
+ * @param aPlatformData Platform specific data that can help in walking the
+ *                      stack, this should be NULL unless you really know
+ *                      what you're doing! This needs to be a pointer to a
+ *                      CONTEXT on Windows and should not be passed on other
+ *                      platforms.
  *
  * Returns NS_ERROR_NOT_IMPLEMENTED on platforms where it is
  * unimplemented.
@@ -48,7 +53,7 @@ typedef void
  */
 XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             void *aClosure, uintptr_t aThread);
+             void *aClosure, uintptr_t aThread, void *aPlatformData);
 
 typedef struct {
     /*

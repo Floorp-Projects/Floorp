@@ -23,87 +23,92 @@ NavHistoryObserver.prototype = {
 /**
  * Registers a one-time history observer for and calls the callback
  * when the specified nsINavHistoryObserver method is called.
+ * Returns a promise that is resolved when the callback returns.
  */
 function onNotify(callback) {
+  let deferred = Promise.defer();
   let obs = new NavHistoryObserver();
   obs[callback.name] = function () {
     PlacesUtils.history.removeObserver(this);
     callback.apply(this, arguments);
+    deferred.resolve();
   };
   PlacesUtils.history.addObserver(obs, false);
+  return deferred.promise;
 }
 
 /**
- * Adds a TRANSITION_TYPED visit to the history database.
+ * Asynchronous task that adds a TRANSITION_TYPED visit to the history database.
  */
-function add_visit(uri, timestamp) {
+function task_add_visit(uri, timestamp) {
   uri = uri || NetUtil.newURI("http://firefox.com/");
   timestamp = timestamp || Date.now() * 1000;
-  PlacesUtils.history.addVisit(
-    uri, timestamp, null, Ci.nsINavHistoryService.TRANSITION_TYPED, false, 0);
-  return [uri, timestamp];
+  yield promiseAddVisits({
+    uri: uri,
+    transition: TRANSITION_TYPED,
+    visitDate: timestamp
+  });
+  throw new Task.Result([uri, timestamp]);
 }
 
 function run_test() {
   run_next_test();
 }
 
-add_test(function test_onVisit() {
-  onNotify(function onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
-                            aTransitionType, aGUID) {
+add_task(function test_onVisit() {
+  let promiseNotify = onNotify(function onVisit(aURI, aVisitID, aTime,
+                                                aSessionID, aReferringID,
+                                                aTransitionType, aGUID) {
     do_check_true(aURI.equals(testuri));
     do_check_true(aVisitID > 0);
     do_check_eq(aTime, testtime);
-    do_check_eq(aSessionID, 0);
+    do_check_true(aSessionID > 0);
     do_check_eq(aReferringID, 0);
     do_check_eq(aTransitionType, Ci.nsINavHistoryService.TRANSITION_TYPED);
     do_check_guid_for_uri(aURI, aGUID);
-
-    run_next_test();
   });
   let testuri = NetUtil.newURI("http://firefox.com/");
   let testtime = Date.now() * 1000;
-  add_visit(testuri, testtime);
+  yield task_add_visit(testuri, testtime);
+  yield promiseNotify;
 });
 
-add_test(function test_onBeforeDeleteURI() {
-  onNotify(function onBeforeDeleteURI(aURI, aGUID, aReason) {
+add_task(function test_onBeforeDeleteURI() {
+  let promiseNotify = onNotify(function onBeforeDeleteURI(aURI, aGUID,
+                                                          aReason) {
     do_check_true(aURI.equals(testuri));
     do_check_guid_for_uri(aURI, aGUID);
     do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_DELETED);
-
-    run_next_test();
   });
-  let [testuri] = add_visit();
+  let [testuri] = yield task_add_visit();
   PlacesUtils.bhistory.removePage(testuri);
+  yield promiseNotify;
 });
 
-add_test(function test_onDeleteURI() {
-  onNotify(function onDeleteURI(aURI, aGUID, aReason) {
+add_task(function test_onDeleteURI() {
+  let promiseNotify = onNotify(function onDeleteURI(aURI, aGUID, aReason) {
     do_check_true(aURI.equals(testuri));
     // Can't use do_check_guid_for_uri() here because the visit is already gone.
     do_check_eq(aGUID, testguid);
     do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_DELETED);
-
-    run_next_test();
   });
-  let [testuri] = add_visit();
+  let [testuri] = yield task_add_visit();
   let testguid = do_get_guid_for_uri(testuri);
   PlacesUtils.bhistory.removePage(testuri);
+  yield promiseNotify;
 });
 
-add_test(function test_onDeleteVisits() {
-  onNotify(function onDeleteVisits(aURI, aVisitTime, aGUID, aReason) {
+add_task(function test_onDeleteVisits() {
+  let promiseNotify = onNotify(function onDeleteVisits(aURI, aVisitTime, aGUID,
+                                                       aReason) {
     do_check_true(aURI.equals(testuri));
     // Can't use do_check_guid_for_uri() here because the visit is already gone.
     do_check_eq(aGUID, testguid);
     do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_DELETED);
     do_check_eq(aVisitTime, 0); // All visits have been removed.
-
-    run_next_test();
   });
   let msecs24hrsAgo = Date.now() - (86400 * 1000);
-  let [testuri] = add_visit(undefined, msecs24hrsAgo * 1000);
+  let [testuri] = yield task_add_visit(undefined, msecs24hrsAgo * 1000);
   // Add a bookmark so the page is not removed.
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        testuri,
@@ -111,33 +116,32 @@ add_test(function test_onDeleteVisits() {
                                        "test");
   let testguid = do_get_guid_for_uri(testuri);
   PlacesUtils.bhistory.removePage(testuri);
+  yield promiseNotify;
 });
 
-add_test(function test_onTitleChanged() {
-  onNotify(function onTitleChanged(aURI, aTitle, aGUID) {
+add_task(function test_onTitleChanged() {
+  let promiseNotify = onNotify(function onTitleChanged(aURI, aTitle, aGUID) {
     do_check_true(aURI.equals(testuri));
     do_check_eq(aTitle, title);
     do_check_guid_for_uri(aURI, aGUID);
-
-    run_next_test();
   });
 
-  let [testuri] = add_visit();
+  let [testuri] = yield task_add_visit();
   let title = "test-title";
   PlacesUtils.history.setPageTitle(testuri, title);
+  yield promiseNotify;
 });
 
-add_test(function test_onPageChanged() {
-  onNotify(function onPageChanged(aURI, aChangedAttribute, aNewValue, aGUID) {
+add_task(function test_onPageChanged() {
+  let promiseNotify = onNotify(function onPageChanged(aURI, aChangedAttribute,
+                                                      aNewValue, aGUID) {
     do_check_eq(aChangedAttribute, Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON);
     do_check_true(aURI.equals(testuri));
     do_check_eq(aNewValue, SMALLPNG_DATA_URI.spec);
     do_check_guid_for_uri(aURI, aGUID);
-
-    run_next_test();
   });
 
-  let [testuri] = add_visit();
+  let [testuri] = yield task_add_visit();
 
   // The new favicon for the page must have data associated with it in order to
   // receive the onPageChanged notification.  To keep this test self-contained,
@@ -146,4 +150,5 @@ add_test(function test_onPageChanged() {
                                                  false,
                                                  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
                                                  null);
+  yield promiseNotify;
 });

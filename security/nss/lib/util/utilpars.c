@@ -339,7 +339,7 @@ nssutil_escapeQuotes(const char *string, char quote, PRBool addquotes)
 
     size = nssutil_escapeQuotesSize(string, quote, addquotes);
 
-    dest = newString = PORT_ZAlloc(size+2); 
+    dest = newString = PORT_ZAlloc(size); 
     if (newString == NULL) {
 	return NULL;
     }
@@ -543,6 +543,8 @@ static struct nssutilArgSlotFlagTable nssutil_argSlotFlagTable[] = {
 	NSSUTIL_ARG_ENTRY(FORTEZZA,SECMOD_FORTEZZA_FLAG),
 	NSSUTIL_ARG_ENTRY(RC5,SECMOD_RC5_FLAG),
 	NSSUTIL_ARG_ENTRY(SHA1,SECMOD_SHA1_FLAG),
+	NSSUTIL_ARG_ENTRY(SHA256,SECMOD_SHA256_FLAG),
+	NSSUTIL_ARG_ENTRY(SHA512,SECMOD_SHA512_FLAG),
 	NSSUTIL_ARG_ENTRY(MD5,SECMOD_MD5_FLAG),
 	NSSUTIL_ARG_ENTRY(MD2,SECMOD_MD2_FLAG),
 	NSSUTIL_ARG_ENTRY(SSL,SECMOD_SSL_FLAG),
@@ -1062,6 +1064,7 @@ _NSSUTIL_GetSecmodName(char *param, NSSDBType *dbType, char **appName,
     char *value = NULL;
     char *save_params = param;
     const char *lconfigdir;
+    PRBool noModDB = PR_FALSE;
     param = NSSUTIL_ArgStrip(param);
 	
 
@@ -1086,7 +1089,10 @@ _NSSUTIL_GetSecmodName(char *param, NSSDBType *dbType, char **appName,
 
    if (NSSUTIL_ArgHasFlag("flags","noModDB",save_params)) {
 	/* there isn't a module db, don't load the legacy support */
+	noModDB = PR_TRUE;
 	*dbType = NSS_DB_TYPE_SQL;
+	PORT_Free(*filename);
+	*filename = NULL;
         *rw = PR_FALSE;
    }
 
@@ -1096,7 +1102,9 @@ _NSSUTIL_GetSecmodName(char *param, NSSDBType *dbType, char **appName,
 	secmodName="pkcs11.txt";
    }
 
-   if (lconfigdir) {
+   if (noModDB) {
+	value = NULL;
+   } else if (lconfigdir && lconfigdir[0] != '\0') {
 	value = PR_smprintf("%s" NSSUTIL_PATH_SEPARATOR "%s",
 			lconfigdir,secmodName);
    } else {

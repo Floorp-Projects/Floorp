@@ -740,7 +740,7 @@ PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType,
 	CK_KEY_TYPE pk11Type = CKK_RSA;
 
 	pk11Type = PK11_ReadULongAttribute(slot,privID,CKA_KEY_TYPE);
-	isTemp = (PRBool)!PK11_HasAttributeSet(slot,privID,CKA_TOKEN);
+	isTemp = (PRBool)!PK11_HasAttributeSet(slot,privID,CKA_TOKEN,PR_FALSE);
 	switch (pk11Type) {
 	case CKK_RSA: keyType = rsaKey; break;
 	case CKK_DSA: keyType = dsaKey; break;
@@ -754,7 +754,7 @@ PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType,
 
     /* if the key is private, make sure we are authenticated to the
      * token before we try to use it */
-    isPrivate = (PRBool)PK11_HasAttributeSet(slot,privID,CKA_PRIVATE);
+    isPrivate = (PRBool)PK11_HasAttributeSet(slot,privID,CKA_PRIVATE,PR_FALSE);
     if (isPrivate) {
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
  	if (rv != SECSuccess) {
@@ -1432,7 +1432,7 @@ PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 
     /* set the ID to the public key so we can find it again */
     cka_id = pk11_MakeIDFromPublicKey(*pubKey);
-    pubIsToken = (PRBool)PK11_HasAttributeSet(slot,pubID, CKA_TOKEN);
+    pubIsToken = (PRBool)PK11_HasAttributeSet(slot,pubID, CKA_TOKEN,PR_FALSE);
 
     PK11_SETATTRS(&setTemplate, CKA_ID, cka_id->data, cka_id->len);
 

@@ -14,37 +14,6 @@
 #include "nsDependentString.h"
 #endif
 
-
-#if 0
-inline
-const nsDependentString
-literal_string( const nsAString::char_type* aPtr )
-  {
-    return nsDependentString(aPtr);
-  }
-
-inline
-const nsDependentString
-literal_string( const nsAString::char_type* aPtr, uint32_t aLength )
-  {
-    return nsDependentString(aPtr, aLength);
-  }
-
-inline
-const nsDependentCString
-literal_string( const nsACString::char_type* aPtr )
-  {
-    return nsDependentCString(aPtr);
-  }
-
-inline
-const nsDependentCString
-literal_string( const nsACString::char_type* aPtr, uint32_t aLength )
-  {
-    return nsDependentCString(aPtr, aLength);
-  }
-#endif
-
 namespace mozilla {
 namespace internal {
 

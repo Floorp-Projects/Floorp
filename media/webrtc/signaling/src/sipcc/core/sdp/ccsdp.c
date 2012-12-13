@@ -290,3 +290,37 @@ sdp_result_e ccsdpSetBandwidth (void *sdp_ptr, u16 level, u16 inst_num,
   return sdp_set_bw(sdpp->src_sdp, level, inst_num, bw_modifier, bw_val);
 }
 
+const char * ccsdpCodecName(rtp_ptype ptype)
+{
+  switch (ptype)
+ {
+    case RTP_NONE:       return "NONE";
+    case RTP_PCMU:       return "PCMU";
+    case RTP_CELP:       return "CELP";
+    case RTP_G726:       return "G726";
+    case RTP_GSM:        return "GSM";
+    case RTP_G723:       return "G723";
+    case RTP_DVI4:       return "DVI4";
+    case RTP_DVI4_II:    return "DVI4_II";
+    case RTP_LPC:        return "LPC";
+    case RTP_PCMA:       return "PCMA";
+    case RTP_G722:       return "G722";
+    case RTP_G728:       return "G728";
+    case RTP_G729:       return "G729";
+    case RTP_JPEG:       return "JPEG";
+    case RTP_NV:         return "NV";
+    case RTP_H261:       return "H261";
+    case RTP_H264_P0:    return "H264_P0";
+    case RTP_H264_P1:    return "H264_P1";
+    case RTP_AVT:        return "AVT";
+    case RTP_L16:        return "L16";
+    case RTP_H263:       return "H263";
+    case RTP_ILBC:       return "iLBC";
+    case RTP_OPUS:       return "OPUS";
+    case RTP_VP8:        return "VP8";
+    case RTP_I420:       return "I420";
+    /* case RTP_ISAC:       return "ISAC"; */
+  }
+  return "UNKNOWN";
+}
+

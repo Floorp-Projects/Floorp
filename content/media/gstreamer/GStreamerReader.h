@@ -36,10 +36,6 @@ public:
                         int64_t aCurrentTime);
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
 
-  virtual bool IsSeekableInBufferedRanges() {
-    return true;
-  }
-
   virtual bool HasAudio() {
     return mInfo.mHasAudio;
   }

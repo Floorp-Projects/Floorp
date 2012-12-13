@@ -17,11 +17,23 @@ MOCHITEST_BROWSER_FILES := \
   browser_ConsoleAPITests.js \
   test-console-api.html \
   browser_ConsoleStorageAPITests.js \
-  browser_ConsoleStoragePBTest.js \
   browser_autofocus_preference.js \
   browser_bug396843.js \
   browser_xhr_sandbox.js \
+  browser_geolocation_privatebrowsing_page.html \
+  network_geolocation.sjs \
   $(NULL)
+
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+  browser_geolocation_privatebrowsing_perwindowpb.js \
+  $(NULL)
+else
+MOCHITEST_BROWSER_FILES += \
+  browser_ConsoleStoragePBTest.js \
+  browser_geolocation_privatebrowsing.js \
+  $(NULL)
+endif
 
 ifeq (Linux,$(OS_ARCH))
 MOCHITEST_BROWSER_FILES += \
@@ -30,6 +42,16 @@ MOCHITEST_BROWSER_FILES += \
   test-webapp-reinstall.webapp \
   test-webapp-original.webapp \
   test-webapps-permissions.html \
+  $(NULL)
+endif
+
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+  browser_ConsoleStoragePBTest_perwindowpb.js \
+  $(NULL)
+else
+MOCHITEST_BROWSER_FILES += \
+  browser_ConsoleStoragePBTest.js \
   $(NULL)
 endif
 

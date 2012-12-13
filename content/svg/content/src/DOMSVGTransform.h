@@ -81,7 +81,7 @@ public:
     if (mList) {
       mList->mItems[mListIndex] = nullptr;
     }
-  };
+  }
 
   /**
    * Create an unowned copy of an owned transform. The caller is responsible for

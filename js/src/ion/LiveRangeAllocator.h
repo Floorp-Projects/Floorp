@@ -55,7 +55,7 @@ class Requirement
         position_(at)
     { }
 
-    Requirement(uint32 vreg, CodePosition at)
+    Requirement(uint32_t vreg, CodePosition at)
       : kind_(SAME_AS_OTHER),
         allocation_(LUse(vreg, LUse::ANY)),
         position_(at)
@@ -70,7 +70,7 @@ class Requirement
         return allocation_;
     }
 
-    uint32 virtualRegister() const {
+    uint32_t virtualRegister() const {
         JS_ASSERT(allocation_.isUse());
         return allocation_.toUse()->virtualRegister();
     }
@@ -182,8 +182,8 @@ class LiveInterval
   private:
     Vector<Range, 1, IonAllocPolicy> ranges_;
     LAllocation alloc_;
-    uint32 vreg_;
-    uint32 index_;
+    uint32_t vreg_;
+    uint32_t index_;
     Requirement requirement_;
     Requirement hint_;
     InlineForwardList<UsePosition> uses_;
@@ -191,13 +191,13 @@ class LiveInterval
 
   public:
 
-    LiveInterval(uint32 vreg, uint32 index)
+    LiveInterval(uint32_t vreg, uint32_t index)
       : vreg_(vreg),
         index_(index),
         lastProcessedRange_(size_t(-1))
     { }
 
-    LiveInterval(uint32 index)
+    LiveInterval(uint32_t index)
       : vreg_(UINT32_MAX),
         index_(index),
         lastProcessedRange_(size_t(-1))
@@ -247,14 +247,14 @@ class LiveInterval
     bool hasVreg() const {
         return vreg_ != UINT32_MAX;
     }
-    uint32 vreg() const {
+    uint32_t vreg() const {
         JS_ASSERT(hasVreg());
         return vreg_;
     }
-    uint32 index() const {
+    uint32_t index() const {
         return index_;
     }
-    void setIndex(uint32 index) {
+    void setIndex(uint32_t index) {
         index_ = index;
     }
     Requirement *requirement() {
@@ -308,7 +308,7 @@ class LiveInterval
  */
 class VirtualRegister
 {
-    uint32 id_;
+    uint32_t id_;
     LBlock *block_;
     LInstruction *ins_;
     LDefinition *def_;
@@ -318,7 +318,7 @@ class VirtualRegister
     bool isTemp_ : 1;
 
   public:
-    bool init(uint32 id, LBlock *block, LInstruction *ins, LDefinition *def, bool isTemp) {
+    bool init(uint32_t id, LBlock *block, LInstruction *ins, LDefinition *def, bool isTemp) {
         id_ = id;
         block_ = block;
         ins_ = ins;
@@ -329,7 +329,7 @@ class VirtualRegister
             return false;
         return intervals_.append(initial);
     }
-    uint32 id() {
+    uint32_t id() {
         return id_;
     }
     LBlock *block() {
@@ -388,7 +388,7 @@ class VirtualRegisterMap
 {
   private:
     VREG *vregs_;
-    uint32 numVregs_;
+    uint32_t numVregs_;
 
   public:
     VirtualRegisterMap()
@@ -396,7 +396,7 @@ class VirtualRegisterMap
         numVregs_(0)
     { }
 
-    bool init(MIRGenerator *gen, uint32 numVregs) {
+    bool init(MIRGenerator *gen, uint32_t numVregs) {
         vregs_ = gen->allocate<VREG>(numVregs);
         numVregs_ = numVregs;
         if (!vregs_)
@@ -417,7 +417,7 @@ class VirtualRegisterMap
         JS_ASSERT(def->virtualRegister() < numVregs_);
         return vregs_[def->virtualRegister()];
     }
-    uint32 numVirtualRegisters() const {
+    uint32_t numVirtualRegisters() const {
         return numVregs_;
     }
 };

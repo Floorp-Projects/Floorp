@@ -101,9 +101,13 @@ NS_IMETHODIMP nsVolumeService::GetVolumeByPath(const nsAString &aPath, nsIVolume
       return NS_OK;
     }
   }
-  ERR("GetVolumeByPath: Unable to find volume by path: '%s'",
-      NS_LossyConvertUTF16toASCII(aPath).get());
-  return NS_ERROR_NOT_AVAILABLE;
+
+  // In order to support queries by DeviceStorage and the updater, we will fabricate
+  // a volume from the pathname, so that the caller can determine the volume size
+  nsRefPtr<nsVolume> vol = new nsVolume(NS_LITERAL_STRING("fake"),
+  aPath, nsIVolume::STATE_MOUNTED);
+  NS_ADDREF(*aResult = vol);
+  return NS_OK;
 }
 
 already_AddRefed<nsVolume> nsVolumeService::FindVolumeByName(const nsAString &aName)

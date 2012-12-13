@@ -100,6 +100,9 @@
     /* :root tests */
     :root { background-color: green; }
 
+    /* :-moz-scope tests */
+    :-moz-scope { background-color: green; }
+
     /* :nth-child(n) tests */
     .nthchild1 > :nth-last-child(odd) { background-color: lime; }
     .nthchild1 > :nth-child(odd) { background-color: lime; }
@@ -269,6 +272,9 @@
     cacheCheck( "Disconnected Element", root4 );
     runTest( ecss, "SyntaxError: Disconnected Element", root4, false );
     jqTests("Disconnected Element", root3.cloneNode(true), "querySelectorAll");
+    var newRoot = document.createElement("nosuchtag");
+    newRoot.appendChild(root3.cloneNode(true));
+    jqTests("Disconnected Element scoping", newRoot, "querySelectorAll");
 
     var fragment = document.createDocumentFragment();
     fragment.appendChild( root2.cloneNode(true) );
@@ -537,7 +543,9 @@
 
         var namespaced = /\|[^=]/.test( q );
         var prepend = namespaced ? "xHTML|*#root3 " : "#root3 ";
-        q = (restrict === false || restrict === ":root" ? "" : prepend) + q.replace(/,/g, ", " + prepend);
+        q = (restrict === false || restrict === ":root" ||
+             restrict === ":-moz-scope" ? "" : prepend) +
+            q.replace(/,/g, ", " + prepend);
         var nq = q.replace(/>/g, "&gt;").replace(/</g, "&lt;");
 
         if ( namespaced ) {
@@ -567,7 +575,10 @@
           assert( pass, type + ": " + name + " (" + nq + ")" +
             (pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
 
-          if (results)
+          // For now, don't use checkMatchesSelector when
+          // restrict === ":-moz-scope" because we have no way to hand the
+          // right scope to it yet.
+          if (results && restrict !== ":-moz-scope")
             checkMatchesSelector( results, q );
         }
 
@@ -630,8 +641,15 @@
 
       if ( root == document ) {
         t( ":root Selector", ":root", ["html"], false );
+        t( ":-moz-scope Selector", ":-moz-scope", ["html"], ":-moz-scope" );
       } else {
         t( ":root Selector", ":root", [], ":root" );
+        if (root.localName != "nosuchtag") {
+          t( ":-moz-scope Selector", ":-moz-scope > nosuchtag",
+             [ "outerbogustag" ], ":-moz-scope");
+        }
+        t( ":-moz-scope Selector", ":-moz-scope nosuchtag nosuchtag",
+           [ "innerbogustag" ], ":-moz-scope");
 
         if ( !root.parentNode ) {
           t( ":root All Selector", ":root *", [], ":root" );
@@ -641,6 +659,7 @@
       if ( root.parentNode || root == document ) {
         assert( query(":root *").length == query("*").length - (root == document ? 1 : 0), type + ": :root All Selector" );
       }
+      assert( query(":-moz-scope *").length == query("*").length - (root == document ? 1 : 0), type + ": :-moz-scope All Selector" );
 
       t( "Element Selector", "p", ["firstp","ap","sndp","en","sap","first"] );
       t( "Element Selector", "body", ["body"], false );
@@ -1259,6 +1278,10 @@
 
     <div id="nothiddendivchild"></div>
   </div>
+  <!-- Test for scoping -->
+  <nosuchtag id="outerbogustag">
+    <nosuchtag id="innerbogustag"></nosuchtag>
+  </nosuchtag>
   <!-- this iframe is outside the #main so it won't reload constantly wasting time, but it means the tests must be "safe" and clean up after themselves -->
   <iframe id="loadediframe" name="loadediframe" style="display:none;" src="data/iframe.html"></iframe>
   <dl id="dl" style="display:none;">

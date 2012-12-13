@@ -46,14 +46,14 @@ ShouldMonitorReturnType(JSFunction *fun)
 }
 
 bool
-InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval)
+InvokeFunction(JSContext *cx, JSFunction *fun, uint32_t argc, Value *argv, Value *rval)
 {
     Value fval = ObjectValue(*fun);
 
     // In order to prevent massive bouncing between Ion and JM, see if we keep
     // hitting functions that are uncompilable.
     if (fun->isInterpreted()) {
-        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx).unsafeGet())
+        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
             return false;
         if (!fun->nonLazyScript()->canIonCompile()) {
             JSScript *script = GetTopIonJSScript(cx);
@@ -87,35 +87,6 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
 
     // Run the function in the interpreter.
     bool ok = Invoke(cx, thisv, fval, argc, argvWithoutThis, rval);
-    if (ok && needsMonitor)
-        types::TypeScript::Monitor(cx, *rval);
-
-    return ok;
-}
-
-bool
-InvokeConstructor(JSContext *cx, JSObject *obj, uint32 argc, Value *argv, Value *rval)
-{
-    Value fval = ObjectValue(*obj);
-
-    // See the comment in InvokeFunction.
-    bool needsMonitor;
-
-    if (obj->isFunction()) {
-        if (obj->toFunction()->isInterpretedLazy() &&
-            !obj->toFunction()->getOrCreateScript(cx).unsafeGet())
-        {
-            return false;
-        }
-        needsMonitor = ShouldMonitorReturnType(obj->toFunction());
-    } else {
-        needsMonitor = true;
-    }
-
-    // Data in the argument vector is arranged for a JIT -> JIT call.
-    Value *argvWithoutThis = argv + 1;
-
-    bool ok = js::InvokeConstructor(cx, fval, argc, argvWithoutThis, rval);
     if (ok && needsMonitor)
         types::TypeScript::Monitor(cx, *rval);
 

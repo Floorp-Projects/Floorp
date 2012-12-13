@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[scriptable, uuid(efa52d52-a876-486f-8739-87e1a13bc42d)]
+[scriptable, uuid(d9331886-3928-11e2-b0e1-10bf48d64bd4)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -136,11 +136,20 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
    //   played.
    //   User case: Alarm clock, calendar alarms
    // * telephony
+   //   Automatically paused if "ringer" or higher priority
+   //   channel is played.
+   //   Use case: dialer, voip
+   // * ringer
    //   Automatically paused if "publicnotification" or higher priority
    //   channel is played.
    //   Use case: dialer, voip
    // * publicnotification
    //   Always plays in speaker, even when headphones are plugged in.
-
+   //   Use case: Camera shutter sound.
    attribute DOMString mozAudioChannelType;
+
+  // In addition the media element has this new events:
+  // * onmozinterruptbegin - called when the media element is interrupted
+  //   because of the audiochannel manager.
+  // * onmozinterruptend - called when the interruption is concluded
 };

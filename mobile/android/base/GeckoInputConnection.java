@@ -29,8 +29,6 @@ import android.view.inputmethod.InputMethodManager;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Timer;
-import java.util.TimerTask;
 
 class GeckoInputConnection
     extends BaseInputConnection
@@ -40,8 +38,6 @@ class GeckoInputConnection
     protected static final String LOGTAG = "GeckoInputConnection";
 
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
-
-    private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
 
     private static int mIMEState;
     private static String mIMETypeHint = "";
@@ -57,8 +53,8 @@ class GeckoInputConnection
     private boolean mBatchSelectionChanged;
     private boolean mBatchTextChanged;
 
-    public static InputConnectionHandler create(View targetView,
-                                                GeckoEditableClient editable) {
+    public static GeckoEditableListener create(View targetView,
+                                               GeckoEditableClient editable) {
         if (DEBUG)
             return DebugGeckoInputConnection.create(targetView, editable);
         else
@@ -69,8 +65,6 @@ class GeckoInputConnection
                                    GeckoEditableClient editable) {
         super(targetView, true);
         mEditableClient = editable;
-        // install the editable => input connection listener
-        editable.setListener(this);
         mIMEState = IME_STATE_DISABLED;
     }
 
@@ -172,12 +166,6 @@ class GeckoInputConnection
         return extract;
     }
 
-    private static void postToUiThread(Runnable runnable) {
-        // postToUiThread() is called by the Gecko and TimerTask threads.
-        // The UI thread does not need to post Runnables to itself.
-        GeckoApp.mAppContext.mMainHandler.post(runnable);
-    }
-
     private static View getView() {
         return GeckoApp.mAppContext.getLayerView();
     }
@@ -189,6 +177,35 @@ class GeckoInputConnection
         }
         Context context = view.getContext();
         return InputMethods.getInputMethodManager(context);
+    }
+
+    private static void showSoftInput() {
+        final InputMethodManager imm = getInputMethodManager();
+        if (imm != null) {
+            final View v = getView();
+            imm.showSoftInput(v, 0);
+        }
+    }
+
+    private static void hideSoftInput() {
+        final InputMethodManager imm = getInputMethodManager();
+        if (imm != null) {
+            final View v = getView();
+            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        }
+    }
+
+    private void restartInput() {
+        final InputMethodManager imm = getInputMethodManager();
+        if (imm != null) {
+            final View v = getView();
+            final Editable editable = getEditable();
+            // Fake a selection change, so that when we restart the input,
+            // the IME will make sure that any old composition string is cleared
+            notifySelectionChange(Selection.getSelectionStart(editable),
+                                  Selection.getSelectionEnd(editable));
+            imm.restartInput(v);
+        }
     }
 
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
@@ -249,17 +266,6 @@ class GeckoInputConnection
         final Editable editable = getEditable();
         imm.updateSelection(v, start, end, getComposingSpanStart(editable),
                             getComposingSpanEnd(editable));
-    }
-
-    protected void resetCompositionState() {
-        if (mBatchEditCount > 0) {
-            Log.d(LOGTAG, "resetCompositionState: resetting mBatchEditCount "
-                          + mBatchEditCount + " -> 0");
-            mBatchEditCount = 0;
-        }
-
-        removeComposingSpans(getEditable());
-        mUpdateRequest = null;
     }
 
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
@@ -342,7 +348,9 @@ class GeckoInputConnection
             }
         }
 
-        resetCompositionState();
+        // We don't know the selection
+        outAttrs.initialSelStart = -1;
+        outAttrs.initialSelEnd = -1;
         return this;
     }
 
@@ -450,41 +458,23 @@ class GeckoInputConnection
     }
 
     public void notifyIME(final int type, final int state) {
-
-        final View v = getView();
-        if (v == null)
-            return;
-
         switch (type) {
-            case NOTIFY_IME_RESETINPUTSTATE:
-                if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
-
-                resetCompositionState();
-
-                // Don't use IMEStateUpdater for reset.
-                // Because IME may not work showSoftInput()
-                // after calling restartInput() immediately.
-                // So we have to call showSoftInput() delay.
-                InputMethodManager imm = getInputMethodManager();
-                if (imm == null) {
-                    // no way to reset IME status directly
-                    IMEStateUpdater.resetIME();
-                } else {
-                    imm.restartInput(v);
-                }
-
-                // keep current enabled state
-                IMEStateUpdater.enableIME();
-                break;
 
             case NOTIFY_IME_CANCELCOMPOSITION:
-                if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
-                removeComposingSpans(getEditable());
+                // Set composition to empty and end composition
+                setComposingText("", 0);
+                // Fall through
+
+            case NOTIFY_IME_RESETINPUTSTATE:
+                // Commit and end composition
+                finishComposingText();
+                restartInput();
                 break;
 
             case NOTIFY_IME_FOCUSCHANGE:
-                if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
-                IMEStateUpdater.resetIME();
+                // Showing/hiding vkb is done in notifyIMEEnabled
+                mBatchEditCount = 0;
+                mUpdateRequest = null;
                 break;
 
             default:
@@ -497,19 +487,16 @@ class GeckoInputConnection
 
     public void notifyIMEEnabled(final int state, final String typeHint,
                                  final String modeHint, final String actionHint) {
-        // For some input type we will use a  widget to display the ui, for those we must not
+        // For some input type we will use a widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is greater than 11, for datetime/month/week as well.
         if (typeHint.equals("date") || typeHint.equals("time") ||
             (Build.VERSION.SDK_INT > 10 &&
             (typeHint.equals("datetime") || typeHint.equals("month") ||
             typeHint.equals("week") || typeHint.equals("datetime-local")))) {
+            mIMEState = IME_STATE_DISABLED;
             return;
         }
-
-        final View v = getView();
-        if (v == null)
-            return;
 
         /* When IME is 'disabled', IME processing is disabled.
            In addition, the IME UI is hidden */
@@ -517,62 +504,17 @@ class GeckoInputConnection
         mIMETypeHint = (typeHint == null) ? "" : typeHint;
         mIMEModeHint = (modeHint == null) ? "" : modeHint;
         mIMEActionHint = (actionHint == null) ? "" : actionHint;
-        IMEStateUpdater.enableIME();
-    }
 
-    /* Delay updating IME states (see bug 573800) */
-    private static final class IMEStateUpdater extends TimerTask {
-        private static IMEStateUpdater instance;
-        private boolean mEnable;
-        private boolean mReset;
-
-        private static IMEStateUpdater getInstance() {
-            if (instance == null) {
-                instance = new IMEStateUpdater();
-                mIMETimer.schedule(instance, 200);
-            }
-            return instance;
-        }
-
-        public static synchronized void enableIME() {
-            getInstance().mEnable = true;
-        }
-
-        public static synchronized void resetIME() {
-            getInstance().mReset = true;
-        }
-
-        public void run() {
-            if (DEBUG) Log.d(LOGTAG, "IME: IMEStateUpdater.run()");
-            synchronized (IMEStateUpdater.class) {
-                instance = null;
-            }
-
-            // TimerTask.run() is running on a random background thread, so post to UI thread.
-            postToUiThread(new Runnable() {
-                public void run() {
-                    final View v = getView();
-                    if (v == null)
-                        return;
-
-                    final InputMethodManager imm = getInputMethodManager();
-                    if (imm == null)
-                        return;
-
-                    if (mReset)
-                        imm.restartInput(v);
-
-                    if (!mEnable)
-                        return;
-
-                    if (mIMEState != IME_STATE_DISABLED) {
-                        imm.showSoftInput(v, 0);
-                    } else if (imm.isActive(v)) {
-                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    }
+        restartInput();
+        GeckoApp.mAppContext.mMainHandler.postDelayed(new Runnable() {
+            public void run() {
+                if (mIMEState == IME_STATE_DISABLED) {
+                    hideSoftInput();
+                } else {
+                    showSoftInput();
                 }
-            });
-        }
+            }
+        }, 200); // Delay 200ms to prevent repeated IME showing/hiding
     }
 }
 
@@ -587,8 +529,8 @@ final class DebugGeckoInputConnection
         super(targetView, editable);
     }
 
-    public static InputConnectionHandler create(View targetView,
-                                                GeckoEditableClient editable) {
+    public static GeckoEditableListener create(View targetView,
+                                               GeckoEditableClient editable) {
         final Class[] PROXY_INTERFACES = { InputConnection.class,
                 InputConnectionHandler.class,
                 GeckoEditableListener.class };
@@ -597,8 +539,7 @@ final class DebugGeckoInputConnection
         dgic.mProxy = (InputConnection)Proxy.newProxyInstance(
                 GeckoInputConnection.class.getClassLoader(),
                 PROXY_INTERFACES, dgic);
-        editable.setListener((GeckoEditableListener)dgic.mProxy);
-        return (InputConnectionHandler)dgic.mProxy;
+        return (GeckoEditableListener)dgic.mProxy;
     }
 
     private static StringBuilder debugAppend(StringBuilder sb, Object obj) {

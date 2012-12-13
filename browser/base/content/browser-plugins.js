@@ -3,6 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+const PLUGIN_SCRIPTED_STATE_NONE = 0;
+const PLUGIN_SCRIPTED_STATE_FIRED = 1;
+const PLUGIN_SCRIPTED_STATE_DONE = 2;
+
 function getPluginInfo(pluginElement)
 {
   var tagMimetype;
@@ -227,6 +231,16 @@ var gPluginHandler = {
         let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
         self.addLinkClickCallback(manageLink, "managePlugins");
         break;
+
+      case "PluginScripted":
+        let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
+        if (browser._pluginScriptedState == PLUGIN_SCRIPTED_STATE_NONE) {
+          browser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_FIRED;
+          setTimeout(function() {
+            gPluginHandler.handlePluginScripted(this);
+          }.bind(browser), 500);
+        }
+        break;
     }
 
     // Hide the in-content UI if it's too big. The crashed plugin handler already did this.
@@ -237,18 +251,64 @@ var gPluginHandler = {
     }
   },
 
-  canActivatePlugin: function PH_canActivatePlugin(objLoadingContent) {
-    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-    let pluginPermission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
-    if (objLoadingContent.actualType) {
-      let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-      let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
-      pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
+  _notificationDisplayedOnce: false,
+  handlePluginScripted: function PH_handlePluginScripted(aBrowser) {
+    let contentWindow = aBrowser.contentWindow;
+    if (!contentWindow)
+      return;
+
+    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    let haveVisibleCTPPlugin = cwu.plugins.some(function(plugin) {
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      let doc = plugin.ownerDocument;
+      let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+      if (!overlay)
+        return false;
+
+      // if the plugin's style is 240x200, it's a good bet we set that in
+      // toolkit/mozapps/plugins/content/pluginProblemContent.css
+      // (meaning this plugin was never actually given a size, so it's really
+      // not part of visible content)
+      let computedStyle = contentWindow.getComputedStyle(plugin);
+      let isInvisible = ((computedStyle.width == "240px" &&
+                          computedStyle.height == "200px") ||
+                         gPluginHandler.isTooSmall(plugin, overlay));
+      return (!isInvisible &&
+              gPluginHandler.canActivatePlugin(objLoadingContent));
+    });
+
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
+    if (notification && !haveVisibleCTPPlugin && !this._notificationDisplayedOnce) {
+      notification.dismissed = false;
+      PopupNotifications._update(notification.anchorElement);
+      this._notificationDisplayedOnce = true;
     }
+
+    aBrowser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_DONE;
+  },
+
+  isKnownPlugin: function PH_isKnownPlugin(objLoadingContent) {
+    return (objLoadingContent.getContentTypeForMIMEType(objLoadingContent.actualType) ==
+            Ci.nsIObjectLoadingContent.TYPE_PLUGIN);
+  },
+
+  canActivatePlugin: function PH_canActivatePlugin(objLoadingContent) {
+    // if this isn't a known plugin, we can't activate it
+    // (this also guards pluginHost.getPermissionStringForType against
+    // unexpected input)
+    if (!gPluginHandler.isKnownPlugin(objLoadingContent))
+      return false;
+
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
+    let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
+    let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
 
     return !objLoadingContent.activated &&
            pluginPermission != Ci.nsIPermissionManager.DENY_ACTION &&
-           objLoadingContent.pluginFallbackType !== Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW;
+           objLoadingContent.pluginFallbackType >= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
+           objLoadingContent.pluginFallbackType <= Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE;
   },
 
   activatePlugins: function PH_activatePlugins(aContentWindow) {
@@ -361,12 +421,14 @@ var gPluginHandler = {
     let doc = aPlugin.ownerDocument;
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-    let pluginPermission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
     let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (objLoadingContent.actualType) {
-      let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-      pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
-    }
+    // guard against giving pluginHost.getPermissionStringForType a type
+    // not associated with any known plugin
+    if (!gPluginHandler.isKnownPlugin(objLoadingContent))
+      return;
+    let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
+    let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
+
     let overlay = doc.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
 
     if (pluginPermission == Ci.nsIPermissionManager.DENY_ACTION) {
@@ -531,8 +593,9 @@ var gPluginHandler = {
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     for (let plugin of aPluginList) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      if (gPluginHandler.canActivatePlugin(objLoadingContent) &&
-          objLoadingContent.actualType) {
+      // canActivatePlugin will return false if this isn't a known plugin type,
+      // so the pluginHost.getPermissionStringForType call is protected
+      if (gPluginHandler.canActivatePlugin(objLoadingContent)) {
         let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
         Services.perms.add(aBrowser.currentURI, permissionString, aPermission);
       }
@@ -579,9 +642,12 @@ var gPluginHandler = {
         gPluginHandler._removeClickToPlayOverlays(contentWindow);
       }
     }];
-    let options = { dismissed: true, centerActions: centerActions };
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
+    let dismissed = notification ? notification.dismissed : true;
+    let options = { dismissed: dismissed, centerActions: centerActions };
+    let icon = haveVulnerablePlugin ? "blocked-plugins-notification-icon" : "plugins-notification-icon"
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
-                            messageString, "plugins-notification-icon",
+                            messageString, icon,
                             mainAction, secondaryActions, options);
   },
 

@@ -95,7 +95,7 @@ bool ValidWriteAssert(bool ok)
     // concurrently from many writes, so we use multiple temporary files.
     std::vector<uintptr_t> rawStack;
 
-    NS_StackWalk(RecordStackWalker, 0, reinterpret_cast<void*>(&rawStack), 0);
+    NS_StackWalk(RecordStackWalker, 0, reinterpret_cast<void*>(&rawStack), 0, nullptr);
     Telemetry::ProcessedStack stack = Telemetry::GetStackAndModules(rawStack);
 
     nsPrintfCString nameAux("%s%s", sProfileDirectory,

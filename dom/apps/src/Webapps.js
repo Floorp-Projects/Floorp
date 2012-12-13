@@ -34,14 +34,6 @@ function WebappsRegistry() {
 WebappsRegistry.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
-  // Hosted apps can't be trusted or certified, so just check that the
-  // manifest doesn't ask for those.
-  checkAppStatus: function(aManifest) {
-    let manifestStatus = aManifest.type || "web";
-    return (Services.prefs.getBoolPref("dom.mozApps.dev_mode") ||
-            manifestStatus === "web");
-  },
-
   receiveMessage: function(aMessage) {
     let msg = aMessage.json;
     if (msg.oid != this._id)
@@ -96,60 +88,30 @@ WebappsRegistry.prototype = {
     this._validateScheme(aURL);
 
     let installURL = this._window.location.href;
-    let installOrigin = this._getOrigin(installURL);
     let request = this.createRequest();
     let requestID = this.getRequestId(request);
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
-    xhr.open("GET", aURL, true);
-    xhr.channel.loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+    let receipts = (aParams && aParams.receipts &&
+                    Array.isArray(aParams.receipts)) ? aParams.receipts
+                                                     : [];
+    let categories = (aParams && aParams.categories &&
+                      Array.isArray(aParams.categories)) ? aParams.categories
+                                                         : [];
 
-    xhr.addEventListener("load", (function() {
-      if (xhr.status == 200) {
-        let manifest;
-        try {
-          manifest = JSON.parse(xhr.responseText, installOrigin);
-        } catch (e) {
-          Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
-          Cu.reportError("Error installing app from: " + installOrigin + ": " + "MANIFEST_PARSE_ERROR");
-          return;
-        }
-
-        if (!AppsUtils.checkManifest(manifest)) {
-          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
-          Cu.reportError("Error installing app from: " + installOrigin + ": " + "INVALID_MANIFEST");
-        } else if (!AppsUtils.checkInstallAllowed(manifest, installOrigin)) {
-          Services.DOMRequest.fireError(request, "INSTALL_FROM_DENIED");
-          Cu.reportError("Error installing app from: " + installOrigin + ": " + "INSTALL_FROM_DENIED");
-        } else if (!this.checkAppStatus(manifest)) {
-          Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
-          Cu.reportError("Error installing app, '" + manifest.name + "': " + "INVALID_SECURITY_LEVEL");
-        } else {
-          let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
-          let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
-          let etag = xhr.getResponseHeader("Etag");
-          cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
-                                                            origin: this._getOrigin(aURL),
-                                                            manifestURL: aURL,
-                                                            manifest: manifest,
-                                                            etag: etag,
-                                                            receipts: receipts,
-                                                            categories: categories },
-                                                     from: installURL,
-                                                     oid: this._id,
-                                                     requestID: requestID });
-        }
-      } else {
-        Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
-        Cu.reportError("Error installing app from: " + installOrigin + ": " + "MANIFEST_URL_ERROR");
-      }
-    }).bind(this), false);
-
-    xhr.addEventListener("error", (function() {
-      Services.DOMRequest.fireError(request, "NETWORK_ERROR");
-      Cu.reportError("Error installing app from: " + installOrigin + ": " + "NETWORK_ERROR");
-    }).bind(this), false);
-
-    xhr.send(null);
+    let principal = this._window.document.nodePrincipal;
+    cpmm.sendAsyncMessage("Webapps:Install",
+                          { app: {
+                              installOrigin: this._getOrigin(installURL),
+                              origin: this._getOrigin(aURL),
+                              manifestURL: aURL,
+                              receipts: receipts,
+                              categories: categories
+                            },
+                            from: installURL,
+                            oid: this._id,
+                            requestID: requestID,
+                            appId: principal.appId,
+                            isBrowser: principal.isInBrowserElement
+                          });
     return request;
   },
 
@@ -197,67 +159,34 @@ WebappsRegistry.prototype = {
   // mozIDOMApplicationRegistry2 implementation
 
   installPackage: function(aURL, aParams) {
-    let installURL = this._window.location.href;
-    let installOrigin = this._getOrigin(installURL);
     this._validateScheme(aURL);
 
+    let installURL = this._window.location.href;
     let request = this.createRequest();
     let requestID = this.getRequestId(request);
-
     let receipts = (aParams && aParams.receipts &&
-                    Array.isArray(aParams.receipts)) ? aParams.receipts : [];
+                    Array.isArray(aParams.receipts)) ? aParams.receipts
+                                                     : [];
     let categories = (aParams && aParams.categories &&
-                      Array.isArray(aParams.categories)) ? aParams.categories : [];
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
-    xhr.open("GET", aURL, true);
-    xhr.channel.loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+                      Array.isArray(aParams.categories)) ? aParams.categories
+                                                         : [];
 
-    xhr.addEventListener("load", (function() {
-      if (xhr.status == 200) {
-        let manifest;
-        try {
-          manifest = JSON.parse(xhr.responseText, installOrigin);
-        } catch(e) {
-          Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
-          return;
-        }
-        if (!(AppsUtils.checkManifest(manifest) &&
-              manifest.package_path)) {
-          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
-        } else if (!AppsUtils.checkInstallAllowed(manifest, installOrigin)) {
-          Services.DOMRequest.fireError(request, "INSTALL_FROM_DENIED");
-        } else {
-          if (!this.checkAppStatus(manifest)) {
-            Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
-          } else {
-            let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
-            let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
-            let etag = xhr.getResponseHeader("Etag");
-            cpmm.sendAsyncMessage("Webapps:InstallPackage", { app: {
-                                                              installOrigin: installOrigin,
-                                                              origin: this._getOrigin(aURL),
-                                                              manifestURL: aURL,
-                                                              updateManifest: manifest,
-                                                              etag: etag,
-                                                              receipts: receipts,
-                                                              categories: categories },
-                                                              from: installURL,
-                                                              oid: this._id,
-                                                              requestID: requestID,
-                                                              isPackage: true });
-          }
-        }
-      }
-      else {
-        Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
-      }
-    }).bind(this), false);
-
-    xhr.addEventListener("error", (function() {
-      Services.DOMRequest.fireError(request, "NETWORK_ERROR");
-    }).bind(this), false);
-
-    xhr.send(null);
+    let principal = this._window.document.nodePrincipal;
+    cpmm.sendAsyncMessage("Webapps:InstallPackage",
+                          { app: {
+                              installOrigin: this._getOrigin(installURL),
+                              origin: this._getOrigin(aURL),
+                              manifestURL: aURL,
+                              receipts: receipts,
+                              categories: categories
+                            },
+                            from: installURL,
+                            oid: this._id,
+                            requestID: requestID,
+                            isPackage: true,
+                            appId: principal.appId,
+                            isBrowser: principal.isInBrowserElement
+                          });
     return request;
   },
 

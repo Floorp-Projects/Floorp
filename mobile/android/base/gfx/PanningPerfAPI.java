@@ -85,21 +85,23 @@ public class PanningPerfAPI {
             Log.e(LOGTAG, "Error: stopCheckerboardRecording() called when not recording!");
             return null;
         }
-        if (mCheckerboardAmounts.size() != mFrameTimes.size()) {
-            Log.e(LOGTAG, "Error: Inconsistent number of checkerboard and frame time recordings!");
-            return null;
-        }
         mRecordingCheckerboard = false;
+
+        // We take the number of values in mCheckerboardAmounts here, as there's
+        // the possibility that this function is called while recordCheckerboard
+        // is still executing. As values are added to this list last, we use
+        // this number as the canonical number of recordings.
+        int values = mCheckerboardAmounts.size();
 
         // The score will be the sum of all the values in mCheckerboardAmounts,
         // so weight the checkerboard values by time so that frame-rate and
         // run-length don't affect score.
         long lastTime = 0;
-        float totalTime = mFrameTimes.get(mFrameTimes.size() - 1);
-        for (int i = 0; i < mCheckerboardAmounts.size(); i++) {
+        float totalTime = mFrameTimes.get(values - 1);
+        for (int i = 0; i < values; i++) {
             long elapsedTime = mFrameTimes.get(i) - lastTime;
             mCheckerboardAmounts.set(i, mCheckerboardAmounts.get(i) * elapsedTime / totalTime);
-            lastTime = mFrameTimes.get(i);
+            lastTime += elapsedTime;
         }
 
         return mCheckerboardAmounts;

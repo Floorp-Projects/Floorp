@@ -12,8 +12,8 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
-Cu.import("resource://gre/modules/services-common/log4moz.js");
-Cu.import("resource://gre/modules/services-common/utils.js");
+Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/utils.js");
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 

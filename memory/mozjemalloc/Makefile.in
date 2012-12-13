@@ -12,13 +12,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jemalloc
 
-EXPORTS = jemalloc.h jemalloc_types.h
+EXPORTS = jemalloc_types.h
 
-ifndef MOZ_JEMALLOC
-# jemalloc.c properly uses 'static', so don't burden it with manually exposing
-# symbols.
-VISIBILITY_FLAGS=
-
+ifndef MOZ_JEMALLOC3
 CSRCS = jemalloc.c
 
 LIBRARY_NAME = jemalloc
@@ -37,6 +33,8 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 endif
 
+LOCAL_INCLUDES += -I$(topsrcdir)/memory/build
+
 # For non release/esr builds, enable (some) fatal jemalloc assertions.  This
 # helps us catch memory errors.  See bug 764192 for details on what
 # MOZ_TEMP_INVESTIGATION is for.
@@ -45,5 +43,11 @@ DEFINES	+= -DMOZ_JEMALLOC_HARD_ASSERTS -DMOZ_TEMP_INVESTIGATION
 endif
 
 DEFINES += -Dabort=moz_abort
+
+ifdef MOZ_REPLACE_MALLOC
+DEFINES += -DMOZ_REPLACE_MALLOC
+endif
+
+DEFINES += -DMOZ_JEMALLOC_IMPL
 
 include $(topsrcdir)/config/rules.mk

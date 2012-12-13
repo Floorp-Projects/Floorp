@@ -54,6 +54,9 @@
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
+#ifdef MOZ_DMD
+@BINPATH@/@DLL_PREFIX@dmd@DLL_SUFFIX@
+#endif
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
@@ -572,16 +575,18 @@
 ; All the pref files must be part of base to prevent migration bugs
 @BINPATH@/@PREF_DIR@/b2g.js
 @BINPATH@/@PREF_DIR@/channel-prefs.js
-#ifdef MOZ_SERVICES_SYNC
-@BINPATH@/@PREF_DIR@/services-sync.js
-#endif
-#ifdef MOZ_SERVICES_HEALTHREPORT
-@BINPATH@/@PREF_DIR@/healthreport-prefs.js
-#endif
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 @BINPATH@/defaults/profile/prefs.js
+
+; Services (gre) prefs
+#ifdef MOZ_SERVICES_SYNC
+@BINPATH@/defaults/pref/services-sync.js
+#endif
+#ifdef MOZ_SERVICES_HEALTHREPORT
+@BINPATH@/defaults/pref/healthreport-prefs.js
+#endif
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 

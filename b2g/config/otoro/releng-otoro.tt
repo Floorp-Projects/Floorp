@@ -1,8 +1,14 @@
 [
 {
-"size": 868355892,
-"digest": "0ccae39ee8910947fe3cf51fa3a45e820d2ff11571f6ccec29d9b3e5ae7f7709c1ad657210fbfea98baadd032c3d6a58e00ddbb2e93acafd751089869a72fed6",
+"size": 895408640,
+"digest": "fc5be04b9b8365cd65fa8e66f4686bf0da8e34abb16ee618dd069469c9d9c9c3495562ebfcd21a2beadb27d59d6c011781188b9038ffebfd3e85cdd264f0aac3",
 "algorithm": "sha512",
 "filename": "gonk.tar.xz"
+},
+{
+"size": 4139008,
+"digest": "b1eac90cebe52708d512bbc293c507da9d93bc8c6a78cbbbd78cc9b7beb2cd335bef9bf8e4bf5a9dc38521f7080d29a743626f9e4af6c42ec211db22dc9d0fda",
+"algorithm": "sha512",
+"filename": "boot.img"
 }
 ]

@@ -75,7 +75,11 @@ sync protocol PSms {
 child:
   NotifyReceivedMessage(SmsMessageData aMessageData);
 
+  NotifySendingMessage(SmsMessageData aMessageData);
+
   NotifySentMessage(SmsMessageData aMessageData);
+
+  NotifyFailedMessage(SmsMessageData aMessageData);
 
   NotifyDeliverySuccessMessage(SmsMessageData aMessageData);
 
@@ -97,14 +101,6 @@ parent:
 
   sync GetNumberOfMessagesForText(nsString aText)
       returns (uint16_t aNumber);
-
-  sync SaveReceivedMessage(nsString aSender, nsString aBody, nsString aMessageClass, uint64_t aDate)
-      returns (int32_t aId);
-
-  sync SaveSentMessage(nsString aReceiver, nsString aBody, uint64_t aDate)
-      returns (int32_t aId);
-
-  SetMessageDeliveryStatus(int32_t aMessageId, nsString aDeliveryStatus);
 
   ClearMessageList(int32_t aListId);
 };

@@ -7,4 +7,4 @@ component {1de7cbe8-60f1-493e-b56b-9d099b3c018e} Aitc.js
 contract @mozilla.org/network/protocol/about;1?what=apps {1de7cbe8-60f1-493e-b56b-9d099b3c018e}
 
 # Register resource aliases
-resource services-aitc resource:///modules/services-aitc/
+resource services-aitc resource://gre/modules/services-aitc/

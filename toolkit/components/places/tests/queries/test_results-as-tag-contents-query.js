@@ -59,8 +59,14 @@ function getIdForTag(aTagName) {
  /**
   * This test will test Queries that use relative search terms and URI options
   */
-function run_test() {
-  populateDB(testData);
+function run_test()
+{
+  run_next_test();
+}
+
+add_task(function test_results_as_tag_contents_query()
+{
+  yield task_populateDB(testData);
 
   // Get tag id.
   let tagId = getIdForTag("bugzilla");
@@ -92,36 +98,30 @@ function run_test() {
                   isTag: true,
                   tagArray: ["moz", "bugzilla"] };
   LOG("Adding item to query")
-  populateDB([change1]);
+  yield task_populateDB([change1]);
   LOG("These results should have been LIVE UPDATED with the new addition");
   displayResultSet(root);
   do_check_true(isInResult(change1, root));
 
-  // Update some in batch mode - add one by adding a tag, remove one by removing
-  // search term.
-  LOG("Updating Items in batch");
-  var updateBatch = {
-    runBatched: function (aUserData) {
-      var batchchange = [{ isDetails: true,
-                           uri: "http://foo3.com/",
-                           title: "foo"},
-                         { isDetails: true,
-                           uri: "http://foo.com/changeme2.html",
-                           title: "zydeco",
-                           isBookmark:true,
-                           isTag: true,
-                           tagArray: ["bugzilla", "moz"] }];
-      populateDB(batchchange);
-    }
-  };
-  PlacesUtils.history.runInBatchMode(updateBatch, null);
+  // Add one by adding a tag, remove one by removing search term.
+  LOG("Updating items");
+  var change2 = [{ isDetails: true,
+                   uri: "http://foo3.com/",
+                   title: "foo"},
+                 { isDetails: true,
+                   uri: "http://foo.com/changeme2.html",
+                   title: "zydeco",
+                   isBookmark:true,
+                   isTag: true,
+                   tagArray: ["bugzilla", "moz"] }];
+  yield task_populateDB(change2);
   do_check_false(isInResult({uri: "http://fooz.com/"}, root));
   do_check_true(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 
   // Test removing a tag updates us.
-  LOG("Delete item outside of batch");
+  LOG("Deleting item");
   PlacesUtils.tagging.untagURI(uri("http://foo.com/changeme2.html"), ["bugzilla"]);
   do_check_false(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 
   root.containerOpen = false;
-}
+});

@@ -27,38 +27,10 @@ class ApplicationAccessible;
  */
 FocusManager* FocusMgr();
 
-enum EPlatformDisabledState {
-  ePlatformIsForceEnabled = -1,
-  ePlatformIsEnabled = 0,
-  ePlatformIsDisabled = 1
-};
-
-/**
- * Return the platform disabled state.
- */
-EPlatformDisabledState PlatformDisabledState();
-
 /**
  * Returns the application accessible.
  */
 ApplicationAccessible* ApplicationAcc();
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-/**
- * Perform initialization that should be done as soon as possible, in order
- * to minimize startup time.
- * XXX: this function and the next defined in ApplicationAccessibleWrap.cpp
- */
-void PreInit();
-#endif
-
-#if defined(MOZ_ACCESSIBILITY_ATK) || defined(XP_MACOSX)
-/**
- * Is platform accessibility enabled.
- * Only used on linux with atk and MacOS for now.
- */
-bool ShouldA11yBeEnabled();
-#endif
 
 } // namespace a11y
 } // namespace mozilla
@@ -82,8 +54,8 @@ public:
   virtual Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
                                                 bool aCanCreate);
   already_AddRefed<Accessible>
-    CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame, nsIContent* aContent,
-                                    Accessible* aContext);
+    CreatePluginAccessible(nsObjectFrame* aFrame, nsIContent* aContent,
+                           Accessible* aContext);
 
   /**
    * Adds/remove ATK root accessible for gtk+ native window to/from children

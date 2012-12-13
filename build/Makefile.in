@@ -175,8 +175,6 @@ check::
 	  $(srcdir)/tests/test.py
 
 ifeq ($(OS_ARCH),Darwin)
-libs:: $(topsrcdir)/tools/rb/fix-macosx-stack.pl
-	$(INSTALL) $< $(DIST)/bin
 libs:: $(topsrcdir)/tools/rb/fix_macosx_stack.py
 	$(INSTALL) $< $(DIST)/bin
 

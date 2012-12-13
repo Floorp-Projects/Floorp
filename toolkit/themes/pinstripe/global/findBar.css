@@ -123,17 +123,34 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-container > checkbox:hover:active {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
-
 .findbar-container > checkbox[checked] {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
-
 .findbar-container > checkbox[checked]:hover:active {
   -moz-image-region: rect(0px 64px 16px 48px);
 }
 
+@media (min-resolution: 2dppx) {
+  .findbar-container > checkbox {
+    list-style-image: url("chrome://global/skin/icons/checkbox@2x.png");
+    -moz-image-region: rect(0px 32px 32px 0px);
+  }
+
+  .findbar-container > checkbox:hover:active {
+    -moz-image-region: rect(0px 64px 32px 32px);
+  }
+  .findbar-container > checkbox[checked] {
+    -moz-image-region: rect(0px 96px 32px 64px);
+  }
+  .findbar-container > checkbox[checked]:hover:active {
+    -moz-image-region: rect(0px 128px 32px 96px);
+  }
+}
+
+
+
 .findbar-container > checkbox > .checkbox-check {
-  display: none; 
+  display: none;
 }
 
 .findbar-container > checkbox > .checkbox-label-box > .checkbox-label {
@@ -144,6 +161,12 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-container > checkbox > .checkbox-label-box > .checkbox-icon {
   -moz-padding-start: 1px;
   padding-bottom: 1px;
+}
+@media (min-resolution: 2dppx) {
+  .findbar-container > checkbox > .checkbox-label-box > .checkbox-icon {
+    width: 17px;
+    height: 17px;
+  }
 }
 
 .findbar-container > checkbox:-moz-focusring > .checkbox-label-box > .checkbox-icon {

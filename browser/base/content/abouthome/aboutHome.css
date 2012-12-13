@@ -19,7 +19,7 @@ body {
   width: 100%;
   height: 100%;
   background-image: url(chrome://browser/content/abouthome/noise.png),
-                    -moz-linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
+                    linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
 }
 
 input,
@@ -93,7 +93,7 @@ a {
 
 #searchSubmit {
   -moz-margin-start: -1px;
-  background: -moz-linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
+  background: linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
   padding: 0 9px;
   border: 1px solid;
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
@@ -119,14 +119,14 @@ a {
 
 #searchText:focus + #searchSubmit,
 #searchText[autofocus] + #searchSubmit {
-  background-image: -moz-linear-gradient(#4cb1ff, #1793e5);
+  background-image: linear-gradient(#4cb1ff, #1793e5);
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
               0 0 0 1px hsla(0,0%,100%,.1) inset,
               0 1px 0 hsla(210,54%,20%,.03);
 }
 
 #searchText + #searchSubmit:hover {
-  background-image: -moz-linear-gradient(#66bdff, #0d9eff);
+  background-image: linear-gradient(#66bdff, #0d9eff);
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
               0 0 0 1px hsla(0,0%,100%,.1) inset,
               0 1px 0 hsla(210,54%,20%,.03),
@@ -223,7 +223,7 @@ body[narrow] #launcher[session] > .launchButton {
 }
 
 .launchButton:hover:active {
-  background-image: -moz-linear-gradient(hsla(211,79%,6%,.02), hsla(211,79%,6%,.05));
+  background-image: linear-gradient(hsla(211,79%,6%,.02), hsla(211,79%,6%,.05));
   border-color: hsla(210,54%,20%,.2) hsla(210,54%,20%,.23) hsla(210,54%,20%,.25);
   box-shadow: 0 1px 1px hsla(211,79%,6%,.05) inset,
               0 0 1px hsla(211,79%,6%,.1) inset;
@@ -240,9 +240,9 @@ body[narrow] #launcher[session] > .launchButton {
   width: 3px;
   height: 116px;
   margin: 0 10px;
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0)),
-                    -moz-linear-gradient(hsla(211,79%,6%,0), hsla(211,79%,6%,.2), hsla(211,79%,6%,0)),
-                    -moz-linear-gradient(hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0)),
+                    linear-gradient(hsla(211,79%,6%,0), hsla(211,79%,6%,.2), hsla(211,79%,6%,0)),
+                    linear-gradient(hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0));
   background-position: left top, center, right bottom;
   background-size: 1px auto;
   background-repeat: no-repeat;
@@ -252,9 +252,9 @@ body[narrow] #restorePreviousSessionSeparator {
   margin: 0 auto;
   width: 512px;
   height: 3px;
-  background-image: -moz-linear-gradient(0, hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0)),
-                    -moz-linear-gradient(0, hsla(211,79%,6%,0), hsla(211,79%,6%,.2), hsla(211,79%,6%,0)),
-                    -moz-linear-gradient(0, hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0));
+  background-image: linear-gradient(to right, hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0)),
+                    linear-gradient(to right, hsla(211,79%,6%,0), hsla(211,79%,6%,.2), hsla(211,79%,6%,0)),
+                    linear-gradient(to right, hsla(0,0%,100%,0), hsla(0,0%,100%,.35), hsla(0,0%,100%,0));
   background-size: auto 1px;
 }
 

@@ -18,7 +18,7 @@
     </RelativeLayout>
 
     <ImageView android:id="@+id/menu_arrow"
-               android:layout_width="40dip"
+               android:layout_width="@dimen/menu_popup_arrow_width"
                android:layout_height="12dip"
                android:layout_marginRight="@dimen/menu_popup_arrow_margin"
                android:layout_alignRight="@id/menu_panel"

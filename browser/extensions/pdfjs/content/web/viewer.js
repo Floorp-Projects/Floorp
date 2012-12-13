@@ -681,11 +681,11 @@ var PDFFindBar = {
 
       case FindStates.FIND_WRAPPED:
         if (previous) {
-          findMsg = mozL10n.get('find_wrapped_to_bottom', null,
-                                'Reached top of page, continued from bottom');
+          findMsg = mozL10n.get('find_reached_top', null,
+                      'Reached top of document, continued from bottom');
         } else {
-          findMsg = mozL10n.get('find_wrapped_to_top', null,
-                                'Reached end of page, continued from top');
+          findMsg = mozL10n.get('find_reached_bottom', null,
+                                'Reached end of document, continued from top');
         }
         break;
     }
@@ -966,12 +966,16 @@ var PDFView = {
   setTitleUsingUrl: function pdfViewSetTitleUsingUrl(url) {
     this.url = url;
     try {
-      document.title = decodeURIComponent(getFileName(url)) || url;
+      this.setTitle(decodeURIComponent(getFileName(url)) || url);
     } catch (e) {
       // decodeURIComponent may throw URIError,
       // fall back to using the unprocessed url in that case
-      document.title = url;
+      this.setTitle(url);
     }
+  },
+
+  setTitle: function pdfViewSetTitle(title) {
+    document.title = title;
   },
 
   open: function pdfViewOpen(url, scale, password) {
@@ -1286,6 +1290,11 @@ var PDFView = {
       self.documentInfo = info;
       self.metadata = metadata;
 
+      // Provides some basic debug information
+      console.log('PDF ' + pdfDocument.fingerprint + ' [' +
+                  info.PDFFormatVersion + ' ' + (info.Producer || '-') +
+                  ' / ' + (info.Creator || '-') + ']');
+
       var pdfTitle;
       if (metadata) {
         if (metadata.has('dc:title'))
@@ -1296,7 +1305,7 @@ var PDFView = {
         pdfTitle = info['Title'];
 
       if (pdfTitle)
-        document.title = pdfTitle + ' - ' + document.title;
+        self.setTitle(pdfTitle + ' - ' + document.title);
     });
   },
 
@@ -2986,7 +2995,7 @@ function selectScaleOption(value) {
 }
 
 window.addEventListener('localized', function localized(evt) {
-  document.getElementsByTagName('html')[0].dir = mozL10n.language.direction;
+  document.getElementsByTagName('html')[0].dir = mozL10n.getDirection();
 }, true);
 
 window.addEventListener('scalechange', function scalechange(evt) {

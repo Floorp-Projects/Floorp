@@ -1,0 +1,38 @@
+{
+  "name": "Mochitest",
+  "type": "certified",
+  "description": "Mochitests",
+  "developer": {
+    "name": "The Ateam",
+    "url": "https://wiki.mozilla.org/Auto-tools"
+  },
+  "permissions": {
+    "alarms": {},
+    "browser":{},
+    "power":{},
+    "webapps-manage":{},
+    "mobileconnection":{},
+    "mozBluetooth":{},
+    "bluetooth":{},
+    "telephony":{},
+    "voicemail":{},
+    "device-storage:pictures":{ "access": "readwrite" },
+    "settings":{ "access": "readwrite" },
+    "storage":{},
+    "camera":{},
+    "geolocation":{},
+    "wifi-manage":{},
+    "wifi":{},
+    "desktop-notification":{},
+    "idle":{},
+    "network-events":{},
+    "embed-apps":{}
+  },
+  "locales": {
+    "en-US": {
+      "name": "Mochitest",
+      "description": "Mochitests"
+    }
+  },
+  "default_locale": "en-US"
+}

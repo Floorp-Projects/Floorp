@@ -16,6 +16,9 @@ const Cc = Components.classes;
 let gLoggingEnabled = false;
 let gTestingEnabled = false;
 
+let gPrivateAccessToken = '';
+let gPrivateAccessTime = 0;
+
 function LOG(aMsg) {
   if (gLoggingEnabled)
   {
@@ -58,6 +61,11 @@ WifiGeoPositionObject.prototype = {
                                     classDescription: "wifi geo location position object"}),
 };
 
+function privateBrowsingObserver(aSubject, aTopic, aData) {
+  gPrivateAccessToken = '';
+  gPrivateAccessTime = 0;
+}
+
 function WifiGeoPositionProvider() {
   try {
     gLoggingEnabled = Services.prefs.getBoolPref("geo.wifi.logging.enabled");
@@ -71,6 +79,9 @@ function WifiGeoPositionProvider() {
   this.timer = null;
   this.hasSeenWiFi = false;
   this.started = false;
+  this.lastRequestPrivate = false;
+
+  Services.obs.addObserver(privateBrowsingObserver, "last-pb-context-exited", false);
 }
 
 WifiGeoPositionProvider.prototype = {
@@ -96,16 +107,18 @@ WifiGeoPositionProvider.prototype = {
       this.timer.initWithCallback(this, 200, this.timer.TYPE_REPEATING_SLACK);
   },
 
-  watch: function(c) {
+  watch: function(c, requestPrivate) {
     LOG("watch called");
     if (!this.wifiService) {
       this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
       this.wifiService.startWatching(this);
+      this.lastRequestPrivate = requestPrivate;
     }
     if (this.hasSeenWiFi) {
       this.hasSeenWiFi = false;
       this.wifiService.stopWatching(this);
       this.wifiService.startWatching(this);
+      this.lastRequestPrivate = requestPrivate;
     }
   },
 
@@ -138,11 +151,20 @@ WifiGeoPositionProvider.prototype = {
     // check to see if we have an access token:
     let accessToken = "";
     try {
-      let accessTokenPrefName = "geo.wifi.access_token." + url;
-      accessToken = Services.prefs.getCharPref(accessTokenPrefName);
+      if (this.lastRequestPrivate) {
+        accessToken = gPrivateAccessToken;
+      } else {
+        let accessTokenPrefName = "geo.wifi.access_token." + url;
+        accessToken = Services.prefs.getCharPref(accessTokenPrefName);
+      }
 
       // check to see if it has expired
-      let accessTokenDate = Services.prefs.getIntPref(accessTokenPrefName + ".time");
+      let accessTokenDate;
+      if (this.lastRequestPrivate) {
+        accessTokenDate = gPrivateAccessTime;
+      } else {
+        Services.prefs.getIntPref(accessTokenPrefName + ".time");
+      }
       
       let accessTokenInterval = 1209600;  // seconds in 2 weeks
       try {
@@ -252,17 +274,26 @@ WifiGeoPositionProvider.prototype = {
         {
           let accessToken = "";
           let accessTokenPrefName = "geo.wifi.access_token." + providerUrlBase;
-          try { accessToken = Services.prefs.getCharPref(accessTokenPrefName); } catch (e) {}
+          if (this.lastRequestPrivate) {
+            accessTokenPrefName = gPrivateAccessToken;
+          } else {
+            try { accessToken = Services.prefs.getCharPref(accessTokenPrefName); } catch (e) {}
+          }
 
           if (accessToken != newAccessToken) {
             // no match, lets cache
-              LOG("New Access Token: " + newAccessToken + "\n" + accessTokenPrefName);
+            LOG("New Access Token: " + newAccessToken + "\n" + accessTokenPrefName);
+            if (this.lastRequestPrivate) {
+              gPrivateAccessToken = newAccessToken;
+              gPrivateAccessTime = nowInSeconds();
+            } else {
               try {
                 Services.prefs.setIntPref(accessTokenPrefName + ".time", nowInSeconds());
                 Services.prefs.setCharPref(accessTokenPrefName, newAccessToken);
               } catch (x) {
                   // XXX temporary hack for bug 575346 to allow geolocation to function
               }
+            }
           }
         }
     }, false);

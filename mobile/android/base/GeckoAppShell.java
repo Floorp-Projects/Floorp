@@ -236,7 +236,6 @@ public class GeckoAppShell
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
     public static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
-    public static native int  saveMessageInSentbox(String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
     public static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSendFailed(int aError, int aRequestId);
@@ -418,18 +417,6 @@ public class GeckoAppShell
         // profile home path
         GeckoAppShell.putenv("HOME=" + profile.getFilesDir().getPath());
 
-        Intent i = null;
-        i = ((Activity)context).getIntent();
-
-        // if we have an intent (we're being launched by an activity)
-        // read in any environmental variables from it here
-        String env = i.getStringExtra("env0");
-        Log.d(LOGTAG, "Gecko environment env0: "+ env);
-        for (int c = 1; env != null; c++) {
-            GeckoAppShell.putenv(env);
-            env = i.getStringExtra("env" + c);
-            Log.d(LOGTAG, "env" + c + ": " + env);
-        }
         // setup the tmp path
         File f = context.getDir("tmp", Context.MODE_WORLD_READABLE |
                                  Context.MODE_WORLD_WRITEABLE );
@@ -484,7 +471,7 @@ public class GeckoAppShell
         synchronized(sSQLiteLibsLoaded) {
             if (sSQLiteLibsLoaded)
                 return;
-            loadMozGlue();
+            loadMozGlue(context);
             // the extract libs parameter is being removed in bug 732069
             loadLibsSetup(context);
             loadSQLiteLibsNative(apkName, false);
@@ -498,15 +485,33 @@ public class GeckoAppShell
         synchronized(sNSSLibsLoaded) {
             if (sNSSLibsLoaded)
                 return;
-            loadMozGlue();
+            loadMozGlue(context);
             loadLibsSetup(context);
             loadNSSLibsNative(apkName, false);
             sNSSLibsLoaded = true;
         }
     }
 
-    public static void loadMozGlue() {
+    public static void loadMozGlue(Context context) {
         System.loadLibrary("mozglue");
+
+        // When running TestPasswordProvider, we're being called with
+        // a GeckoApplication, which is not an Activity
+        if (!(context instanceof Activity))
+            return;
+
+        Intent i = null;
+        i = ((Activity)context).getIntent();
+
+        // if we have an intent (we're being launched by an activity)
+        // read in any environmental variables from it here
+        String env = i.getStringExtra("env0");
+        Log.d(LOGTAG, "Gecko environment env0: "+ env);
+        for (int c = 1; env != null; c++) {
+            GeckoAppShell.putenv(env);
+            env = i.getStringExtra("env" + c);
+            Log.d(LOGTAG, "env" + c + ": " + env);
+        }
     }
 
     public static void loadGeckoLibs(String apkName) {
@@ -563,10 +568,7 @@ public class GeckoAppShell
 
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
-        LayerView v = GeckoApp.mAppContext.getLayerView();
         GeckoEditable editable = new GeckoEditable();
-        InputConnectionHandler ich = GeckoInputConnection.create(v, editable);
-        v.setInputConnectionHandler(ich);
         // install the gecko => editable listener
         mEditableListener = editable;
     }
@@ -1982,14 +1984,6 @@ public class GeckoAppShell
         }
 
         SmsManager.getInstance().send(aNumber, aMessage, aRequestId);
-    }
-
-    public static int saveSentMessage(String aRecipient, String aBody, long aDate) {
-        if (SmsManager.getInstance() == null) {
-            return -1;
-        }
-
-        return SmsManager.getInstance().saveSentMessage(aRecipient, aBody, aDate);
     }
 
     public static void getMessage(int aMessageId, int aRequestId) {

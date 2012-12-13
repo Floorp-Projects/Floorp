@@ -14,14 +14,27 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   
   var r = h.snapshot().ranges;
   var sum = 0;
+  var log_sum = 0;
+  var log_sum_squares = 0;
   for(var i=0;i<r.length;i++) {
     var v = r[i];
     sum += v;
+    if (histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
+      var log_v = Math.log(1+v);
+      log_sum += log_v;
+      log_sum_squares += log_v*log_v;
+    }
     h.add(v);
   }
   var s = h.snapshot();
   // verify sum
-  do_check_eq(sum, h.snapshot().sum);;
+  do_check_eq(sum, s.sum);
+  // Doing the math to verify sum_squares was reflected correctly is
+  // tedious in JavaScript.  Just make sure we have something.
+  do_check_neq(s.sum_squares_lo + s.sum_squares_hi, 0);
+  do_check_eq(log_sum, s.log_sum);
+  do_check_eq(log_sum_squares, s.log_sum_squares);
+
   // there should be exactly one element per bucket
   for each(var i in s.counts) {
     do_check_eq(i, 1);
@@ -147,6 +160,10 @@ function compareHistograms(h1, h2) {
   do_check_eq(s1.min, s2.min);
   do_check_eq(s1.max, s2.max);
   do_check_eq(s1.sum, s2.sum);
+  do_check_eq(s1.sum_squares_lo, s2.sum_squares_lo);
+  do_check_eq(s1.sum_squares_hi, s2.sum_squares_hi);
+  do_check_eq(s1.log_sum, s2.log_sum);
+  do_check_eq(s1.log_sum_squares, s2.log_sum_squares);
 
   do_check_eq(s1.counts.length, s2.counts.length);
   for (let i = 0; i < s1.counts.length; i++)

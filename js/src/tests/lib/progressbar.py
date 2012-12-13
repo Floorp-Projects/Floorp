@@ -1,12 +1,13 @@
 # Text progress bar library, like curl or scp.
 
-import sys
 from datetime import datetime, timedelta
+import math
+import sys
 
 if sys.platform.startswith('win'):
-    from lib.terminal_win import Terminal
+    from terminal_win import Terminal
 else:
-    from lib.terminal_unix import Terminal
+    from terminal_unix import Terminal
 
 class NullProgressBar(object):
     def update(self, current, data): pass
@@ -18,20 +19,20 @@ class NullProgressBar(object):
 
 class ProgressBar(object):
     def __init__(self, limit, fmt):
-        assert not self.conservative_isatty()
-        assert limit < 9999
+        assert self.conservative_isatty()
 
         self.prior = None
         self.atLineStart = True
         self.counters_fmt = fmt # [{str:str}] Describtion of how to lay out each
                                 #             field in the counters map.
         self.limit = limit # int: The value of 'current' equal to 100%.
+        self.limit_digits = int(math.ceil(math.log10(self.limit))) # int: max digits in limit
         self.t0 = datetime.now() # datetime: The start time.
 
         # Compute the width of the counters and build the format string.
         self.counters_width = 1 # [
         for layout in self.counters_fmt:
-            self.counters_width += 4 # Less than 9999 tests total.
+            self.counters_width += self.limit_digits
             self.counters_width += 1 # | (or ']' for the last one)
 
         self.barlen = 64 - self.counters_width
@@ -48,7 +49,7 @@ class ProgressBar(object):
         sys.stdout.write('\r[')
         for layout in self.counters_fmt:
             Terminal.set_color(layout['color'])
-            sys.stdout.write('%4d' % data[layout['value']])
+            sys.stdout.write(('%' + str(self.limit_digits) + 'd') % data[layout['value']])
             Terminal.reset_color()
             if layout != self.counters_fmt[-1]:
                 sys.stdout.write('|')
@@ -102,6 +103,7 @@ class ProgressBar(object):
         """
         try:
             import android
-        except ImportError:
             return False
-        return sys.stdout.isatty()
+        except ImportError:
+            return sys.stdout.isatty()
+        return False

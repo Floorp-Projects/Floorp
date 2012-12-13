@@ -241,7 +241,7 @@ alltags:
 $(PROGRAM): $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
-	$(MKPROG) $(subst /,\\,$(OBJS)) -Fe$@ -link $(LDFLAGS) $(subst /,\\,$(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)) $(EXTRA_EXE_LD_FLAGS)
+	$(MKPROG) $(subst /,\\,$(OBJS)) -Fe$@ -link $(LDFLAGS) $(subst /,\\,$(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS))
 ifdef MT
 	if test -f $@.manifest; then \
 		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
@@ -337,7 +337,7 @@ $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 	$(MKPROG) $< -Fe$@ -link \
-	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(EXTRA_EXE_LD_FLAGS)
+	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 ifdef MT
 	if test -f $@.manifest; then \
 		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
@@ -365,10 +365,14 @@ else
 # Windows
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 NEED_ABSOLUTE_PATH := 1
+ifdef .PYMAKE
+PWD := $(CURDIR)
+else
 PWD := $(shell pwd)
 ifeq (,$(findstring ;,$(PATH)))
 ifndef USE_MSYS
 PWD := $(subst \,/,$(shell cygpath -w $(PWD)))
+endif
 endif
 endif
 
@@ -475,19 +479,6 @@ endif
 
 %: %.sh
 	rm -f $@; cp $< $@; chmod +x $@
-
-ifdef DIRS
-$(DIRS)::
-	@if test -d $@; then				\
-		set $(EXIT_ON_ERROR);			\
-		echo "cd $@; $(MAKE)";			\
-		cd $@; $(MAKE);				\
-		set +e;					\
-	else						\
-		echo "Skipping non-directory $@...";	\
-	fi;						\
-	$(CLICK_STOPWATCH)
-endif
 
 ################################################################################
 # Bunch of things that extend the 'export' rule (in order):
@@ -896,7 +887,7 @@ $(MKDEPENDENCIES)::
 $(NOMD_CFLAGS) $(YOPT) $(CSRCS) $(CPPSRCS) $(ASFILES)
 
 $(MKDEPEND):: $(MKDEPEND_DIR)/*.c $(MKDEPEND_DIR)/*.h
-	cd $(MKDEPEND_DIR); $(MAKE)
+	$(MAKE) -C $(MKDEPEND_DIR)
 
 ifdef OBJS
 depend:: $(MKDEPEND) $(MKDEPENDENCIES)
@@ -958,5 +949,5 @@ $(filter $(OBJDIR)/%$(OBJ_SUFFIX),$(OBJS)): $(OBJDIR)/%$(OBJ_SUFFIX): $(DUMMY_DE
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs program realclean release $(OBJDIR) $(DIRS)
+.PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs program realclean release $(OBJDIR)
 

@@ -95,6 +95,35 @@ CallThisObjectHook(JSContext *cx, HandleObject obj, Value *argv)
     return thisp;
 }
 
+bool
+js::BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified)
+{
+    /*
+     * Check for SynthesizeFrame poisoning and fast constructors which
+     * didn't check their callee properly.
+     */
+    JS_ASSERT(!thisv.isMagic());
+    *modified = false;
+
+    if (thisv.isNullOrUndefined()) {
+        Rooted<GlobalObject*> global(cx, cx->global());
+        JSObject *thisp = JSObject::thisObject(cx, global);
+        if (!thisp)
+            return false;
+        thisv.set(ObjectValue(*thisp));
+        *modified = true;
+        return true;
+    }
+
+    if (!thisv.isObject()) {
+        if (!js_PrimitiveToObject(cx, thisv.address()))
+            return false;
+        *modified = true;
+    }
+
+    return true;
+}
+
 /*
  * ECMA requires "the global object", but in embeddings such as the browser,
  * which have multiple top-level objects (windows, frames, etc. in the DOM),
@@ -117,7 +146,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
      * Check for SynthesizeFrame poisoning and fast constructors which
      * didn't check their callee properly.
      */
-    Value thisv = call.thisv();
+    RootedValue thisv(cx, call.thisv());
     JS_ASSERT(!thisv.isMagic());
 
 #ifdef DEBUG
@@ -125,20 +154,11 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
     JS_ASSERT_IF(fun && fun->isInterpreted(), !fun->inStrictMode());
 #endif
 
-    if (thisv.isNullOrUndefined()) {
-        Rooted<GlobalObject*> global(cx, &call.callee().global());
-        JSObject *thisp = JSObject::thisObject(cx, global);
-        if (!thisp)
-            return false;
-        call.setThis(ObjectValue(*thisp));
-        return true;
-    }
-
-    if (!thisv.isObject()) {
-        if (!js_PrimitiveToObject(cx, &thisv))
-            return false;
+    bool modified;
+    if (!BoxNonStrictThis(cx, &thisv, &modified))
+        return false;
+    if (modified)
         call.setThis(thisv);
-    }
 
     return true;
 }
@@ -1207,6 +1227,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* The REJOIN mode acts like the normal mode, except the prologue is skipped. */
     if (interpMode == JSINTERP_REJOIN)
         interpMode = JSINTERP_NORMAL;
+
+    /*
+     * The RETHROW mode acts like a bailout mode, except that it resume an
+     * exception instead of resuming the script.
+     */
+    if (interpMode == JSINTERP_RETHROW)
+        goto error;
 
     /*
      * It is important that "op" be initialized before calling DO_OP because
@@ -2333,7 +2360,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RawScript funScript = fun->getOrCreateScript(cx).unsafeGet();
+    RawScript funScript = fun->getOrCreateScript(cx);
     if (!funScript)
         goto error;
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))

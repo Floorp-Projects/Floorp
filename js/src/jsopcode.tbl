@@ -352,11 +352,11 @@ OPDEF(JSOP_ALIASEDVARINC, 141,"aliasedvarinc",NULL,   10, 0,  1, 15,  JOF_SCOPEC
 OPDEF(JSOP_ALIASEDVARDEC, 142,"aliasedvardec",NULL,   10, 0,  1, 15,  JOF_SCOPECOORD|JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT3|JOF_DECOMPOSE)
 
 /*
- * Intrinsic names have the syntax %name and can only be used when the 
+ * Intrinsic names are emitted instead of JSOP_*NAME ops when the 
  * CompileOptions flag "selfHostingMode" is set.
  *
- * They are used to access intrinsic functions the runtime doesn't give 
- * client JS code access to from self-hosted code.
+ * They are used in self-hosted code to access other self-hosted values and 
+ * intrinsic functions the runtime doesn't give client JS code access to.
  */
 OPDEF(JSOP_INTRINSICNAME, 143, "intrinsicname", NULL, 5,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
 OPDEF(JSOP_CALLINTRINSIC, 144, "callintrinsic", NULL, 5,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)

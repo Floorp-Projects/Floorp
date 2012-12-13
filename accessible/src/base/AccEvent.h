@@ -213,7 +213,7 @@ public:
     mNode = aTargetNode;
     mParent = mAccessible->Parent();
   }
-  virtual ~AccMutationEvent() { };
+  virtual ~AccMutationEvent() { }
 
   // Event
   static const EventGroup kEventGroup = eMutationEvent;
@@ -291,7 +291,7 @@ public:
   AccReorderEvent(Accessible* aTarget) :
     AccEvent(::nsIAccessibleEvent::EVENT_REORDER, aTarget,
              eAutoDetect, eCoalesceReorder) { }
-  virtual ~AccReorderEvent() { };
+  virtual ~AccReorderEvent() { }
 
   // Event
   static const EventGroup kEventGroup = eReorderEvent;

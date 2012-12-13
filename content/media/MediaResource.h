@@ -304,6 +304,13 @@ public:
    * aRanges is being used.
    */
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) = 0;
+
+  // Ensure that the media cache writes any data held in its partial block.
+  // Called on the main thread only.
+  virtual void FlushCache() { }
+
+  // Notify that the last data byte range was loaded.
+  virtual void NotifyLastByteRange() { }
 };
 
 class BaseMediaResource : public MediaResource {
@@ -387,6 +394,13 @@ public:
   nsresult CacheClientSuspend();
   // Resume the current load since data is wanted again
   nsresult CacheClientResume();
+
+  // Ensure that the media cache writes any data held in its partial block.
+  // Called on the main thread.
+  virtual void FlushCache() MOZ_OVERRIDE;
+
+  // Notify that the last data byte range was loaded.
+  virtual void NotifyLastByteRange() MOZ_OVERRIDE;
 
   // Main thread
   virtual nsresult Open(nsIStreamListener** aStreamListener);

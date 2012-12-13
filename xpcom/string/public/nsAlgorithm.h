@@ -42,6 +42,17 @@ NS_MAX( const T& a, const T& b )
     return a > b ? a : b;
   }
 
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
+namespace std {
+inline
+long long
+abs( const long long& a )
+{
+  return a < 0 ? -a : a;
+}
+}
+#endif
+
 namespace mozilla {
 
 template <class T>
@@ -54,14 +65,6 @@ clamped( const T& a, const T& min, const T& max )
   }
 
 }
-
-template <class T>
-inline
-T
-NS_ABS( const T& a )
-  {
-    return a < 0 ? -a : a;
-  }
 
 template <class InputIterator, class T>
 inline

@@ -123,7 +123,10 @@ class DeviceManagerADB(DeviceManager):
         if self._deviceSerial:
             args.extend(['-s', self._deviceSerial])
         args.extend(["shell", cmdline])
-        proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        procOut = tempfile.SpooledTemporaryFile()
+        procErr = tempfile.SpooledTemporaryFile()
+        proc = subprocess.Popen(args, stdout=procOut, stderr=procErr)
 
         if not timeout:
             # We are asserting that all commands will complete in this time unless otherwise specified
@@ -138,8 +141,11 @@ class DeviceManagerADB(DeviceManager):
         if ret_code == None:
             proc.kill()
             raise DMError("Timeout exceeded for shell call")
-        (stdout, stderr) = proc.communicate()
-        outputfile.write(stdout.rstrip('\n'))
+
+        procOut.seek(0)
+        outputfile.write(procOut.read().rstrip('\n'))
+        procOut.close()
+        procErr.close()
 
         lastline = _pop_last_line(outputfile)
         if lastline:
@@ -203,7 +209,8 @@ class DeviceManagerADB(DeviceManager):
             try:
                 localZip = tempfile.mktemp() + ".zip"
                 remoteZip = remoteDir + "/adbdmtmp.zip"
-                subprocess.check_output(["zip", "-r", localZip, '.'], cwd=localDir)
+                subprocess.Popen(["zip", "-r", localZip, '.'], cwd=localDir,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
                 self.pushFile(localZip, remoteZip)
                 os.remove(localZip)
                 data = self._runCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir]).stdout.read()

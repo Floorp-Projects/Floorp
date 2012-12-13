@@ -77,9 +77,19 @@ Tracker.prototype = {
     this._score = 0;
   },
 
-  saveChangedIDs: function T_saveChangedIDs() {
+  persistChangedIDs: true,
+
+  /**
+   * Persist changedIDs to disk at a later date.
+   * Optionally pass a callback to be invoked when the write has occurred.
+   */
+  saveChangedIDs: function (cb) {
+    if (!this.persistChangedIDs) {
+      this._log.debug("Not saving changedIDs.");
+      return;
+    }
     Utils.namedTimer(function() {
-      Utils.jsonSave("changes/" + this.file, this, this.changedIDs);
+      Utils.jsonSave("changes/" + this.file, this, this.changedIDs, cb);
     }, 1000, this, "_lazySave");
   },
 
@@ -122,7 +132,7 @@ Tracker.prototype = {
     if ((this.changedIDs[id] || -Infinity) < when) {
       this._log.trace("Adding changed ID: " + [id, when]);
       this.changedIDs[id] = when;
-      this.saveChangedIDs();
+      this.saveChangedIDs(this.onSavedChangedIDs);
     }
     return true;
   },

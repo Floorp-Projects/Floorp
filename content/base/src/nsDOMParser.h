@@ -8,16 +8,12 @@
 
 #include "nsIDOMParser.h"
 #include "nsCOMPtr.h"
-#include "nsIURI.h"
 #include "nsWeakReference.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsIDocument.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/TypedArray.h"
-
-class nsIInputStream;
 
 class nsDOMParser MOZ_FINAL : public nsIDOMParser,
                               public nsSupportsWeakReference,
@@ -88,6 +84,10 @@ private:
                         nsIURI* documentURI, nsIURI* baseURI);
 
   nsresult SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult);
+
+  // Helper for ParseFromString
+  nsresult ParseFromString(const nsAString& str, const char *contentType,
+                           nsIDOMDocument **aResult);
 
   class AttemptedInitMarker {
   public:

@@ -20,6 +20,8 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 CPPSRCS = 				\
+	CryptoTask.cpp \
+	JARSignatureVerification.cpp \
 	nsCERTValInParamWrapper.cpp     \
 	nsNSSCleaner.cpp                \
 	nsCertOverrideService.cpp   \
@@ -90,6 +92,7 @@ DEFINES += \
   $(NULL)
 
 EXPORTS += \
+  CryptoTask.h \
   nsNSSShutDown.h \
   ScopedNSSTypes.h \
   $(NULL)

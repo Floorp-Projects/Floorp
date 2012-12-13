@@ -30,8 +30,14 @@
 
 @media (-moz-windows-default-theme) {
   #downloadsPanel[hasdownloads] > #downloadsFooter {
+%ifdef WINSTRIPE_AERO
+    background-color: #f1f5fb;
+%else
     background-color: hsla(216,45%,88%,.98);
+%endif
     box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
   }
 }
 

@@ -42,6 +42,17 @@ function Parse(dial, currentRegion) {
   return result;
 }
 
+function ParseWithIntl(dial, currentRegion) {
+  var result = PhoneNumber.Parse(dial, currentRegion);
+  if (!result) {
+  	ok(false, "got: " + dial + " " + currentRegion);
+  } else {
+    ok(result.internationalNumber, "Has International!");
+  	ok(true, "Parses!\n");
+  }
+  return result;
+}
+
 function Test(dial, currentRegion, nationalNumber, region) {
   var result = Parse(dial, currentRegion);
   if (result.region != region || result.nationalNumber != nationalNumber) {
@@ -124,6 +135,26 @@ Parse("+52 1 33 1234-5678", "MX");
 Parse("044 (33) 1234-5678", "MX");
 Parse("045 33 1234-5678", "MX");
 
+
+ParseWithIntl("4031234567", "CA");
+Parse("(416) 585-4319", "CA");
+Parse("647-967-4357", "CA");
+Parse("416-716-8768", "CA");
+Parse("18002684646", "CA");
+Parse("416-445-9119", "CA");
+Parse("1-800-668-6866", "CA");
+Parse("(416) 453-6486", "CA");
+Parse("(647) 268-4778", "CA");
+Parse("647-218-1313", "CA");
+Parse("+1 647-209-4642", "CA");
+Parse("416-559-0133", "CA");
+Parse("+1 647-639-4118", "CA");
+Parse("+12898803664", "CA");
+Parse("780-901-4687", "CA");
+Parse("+14167070550", "CA");
+Parse("+1-647-522-6487", "CA");
+Parse("(416) 877-0880", "CA");
+
 // Test that lots of spaces are ok.
 Parse("0 3   3 3 1   6 0 0 5", "NZ");
 
@@ -133,7 +164,7 @@ Parse("+64 3 331 6005");
 Parse("+64 3 331 6005", null);
 
 // US numbers
-Format("19497262896", "US", "9497262896", "US", "(949) 726-2896", "+1 949-726-2896");
+Format("19497261234", "US", "9497261234", "US", "(949) 726-1234", "+1 949-726-1234");
 
 // Try a couple german numbers from the US with various access codes.
 Format("49451491934", "US", "451491934", "DE", "0451 491934", "+49 451 491934");

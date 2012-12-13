@@ -14,13 +14,21 @@ const URLS = [
     s: "goog" },
 ];
 
-function run_test() {
-  URLS.forEach(test_url);
+function run_test()
+{
+  run_next_test();
 }
 
-function test_url(aURL) {
+add_task(function test_execute()
+{
+  for (let [, url] in Iterator(URLS)) {
+    yield task_test_url(url);
+  }
+});
+
+function task_test_url(aURL) {
   print("Testing url: " + aURL.u);
-  hs.addVisit(uri(aURL.u), Date.now() * 1000, null, hs.TRANSITION_TYPED, false, 0);
+  yield promiseAddVisits(uri(aURL.u));
   let query = hs.getNewQuery();
   query.searchTerms = aURL.s;
   let options = hs.getNewQueryOptions();

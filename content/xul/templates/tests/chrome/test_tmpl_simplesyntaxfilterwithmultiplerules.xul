@@ -14,6 +14,16 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <button id="http://www.some-fictitious-zoo.com/birds/emu" label="Emu"/>
+    <label step="-1" id="http://www.some-fictitious-zoo.com/birds/barnowl" value="Barn Owl"/>
+    <button step="4,-5" id="http://www.some-fictitious-zoo.com/birds/barnowl" label="Spooky Bird"/>
+    <label step="5" id="http://www.some-fictitious-zoo.com/birds/barnowl" value="Barn Owl"/>
+    <button step="1,-3" id="http://www.some-fictitious-zoo.com/birds/barnowl" label="Spooky Bird"/>
+    <button id="http://www.some-fictitious-zoo.com/birds/raven" label="Raven"/>
+    <label step="2" id="http://www.some-fictitious-zoo.com/birds/syntheticbarnowl" value="Barn Owl"/>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,16 +36,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <button id="http://www.some-fictitious-zoo.com/birds/emu" label="Emu"/>
-  <label step="-1" id="http://www.some-fictitious-zoo.com/birds/barnowl" value="Barn Owl"/>
-  <button step="4,-5" id="http://www.some-fictitious-zoo.com/birds/barnowl" label="Spooky Bird"/>
-  <label step="5" id="http://www.some-fictitious-zoo.com/birds/barnowl" value="Barn Owl"/>
-  <button step="1,-3" id="http://www.some-fictitious-zoo.com/birds/barnowl" label="Spooky Bird"/>
-  <button id="http://www.some-fictitious-zoo.com/birds/raven" label="Raven"/>
-  <label step="2" id="http://www.some-fictitious-zoo.com/birds/syntheticbarnowl" value="Barn Owl"/>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1

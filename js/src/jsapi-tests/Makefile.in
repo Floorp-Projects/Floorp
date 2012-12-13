@@ -91,6 +91,12 @@ ifdef QEMU_EXE
 MOZ_POST_PROGRAM_COMMAND = $(topsrcdir)/build/qemu-wrap --qemu $(QEMU_EXE) --libdir $(CROSS_LIB)
 endif
 
+# Place a GDB Python auto-load file next to the jsapi-tests executable in
+# the build directory.
+PP_TARGETS += JSAPI_TESTS_AUTOLOAD
+JSAPI_TESTS_AUTOLOAD := jsapi-tests-gdb.py.in
+JSAPI_TESTS_AUTOLOAD_FLAGS := -Dtopsrcdir=$(abspath $(topsrcdir))
+
 include $(topsrcdir)/config/rules.mk
 
 check::

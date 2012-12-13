@@ -48,7 +48,7 @@ CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *linenop,
         AutoAssertNoGC nogc;
         JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
         JS_ASSERT(*(cx->regs().pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
-        RawScript script = cx->fp()->script().get(nogc);
+        UnrootedScript script = cx->fp()->script();
         *file = script->filename;
         *linenop = GET_UINT16(cx->regs().pc + JSOP_EVAL_LENGTH);
         *origin = script->originPrincipals;

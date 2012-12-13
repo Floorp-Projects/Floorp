@@ -98,6 +98,20 @@ this.UtteranceGenerator = {
   },
 
   /**
+   * Generates an utterance for an announcement. Basically attempts to localize
+   * the announcement string.
+   * @param {string} aAnnouncement unlocalized announcement.
+   * @return {Array} A one string array with the announcement.
+   */
+  genForAnnouncement: function genForAnnouncement(aAnnouncement) {
+    try {
+      return [gStringBundle.GetStringFromName(aAnnouncement)];
+    } catch (x) {
+      return [aAnnouncement];
+    }
+  },
+
+  /**
    * Generates an utterance for a tab state change.
    * @param {nsIAccessible} aAccessible accessible object of the tab's attached
    *    document.
@@ -309,7 +323,7 @@ this.UtteranceGenerator = {
 
     return stateUtterances;
   },
-  
+
   _getListUtterance: function _getListUtterance(aAccessible, aRoleStr, aFlags, aItemCount) {
     let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
     let desc = [];

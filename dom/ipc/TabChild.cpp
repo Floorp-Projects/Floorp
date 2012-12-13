@@ -96,6 +96,7 @@ static const nsIntSize kDefaultViewportSize(980, 480);
 static const char CANCEL_DEFAULT_PAN_ZOOM[] = "cancel-default-pan-zoom";
 static const char BROWSER_ZOOM_TO_RECT[] = "browser-zoom-to-rect";
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
+static const char DETECT_SCROLLABLE_SUBFRAME[] = "detect-scrollable-subframe";
 
 NS_IMETHODIMP
 ContentListener::HandleEvent(nsIDOMEvent* aEvent)
@@ -241,6 +242,12 @@ TabChild::Observe(nsISupports *aSubject,
         HandlePossibleViewportChange();
       }
     }
+  } else if (!strcmp(aTopic, DETECT_SCROLLABLE_SUBFRAME)) {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
+    nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
+    if (tabChild == this) {
+      mRemoteFrame->DetectScrollableSubframe();
+    }
   }
 
   return NS_OK;
@@ -283,6 +290,9 @@ TabChild::OnLocationChange(nsIWebProgress* aWebProgress,
   if (!window) {
     return NS_OK;
   }
+
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(window));
+  utils->SetIsFirstPaint(true);
 
   nsCOMPtr<nsIDOMDocument> progressDoc;
   window->GetDocument(getter_AddRefs(progressDoc));
@@ -463,20 +473,27 @@ TabChild::HandlePossibleViewportChange()
   metrics.mScrollableRect = gfx::Rect(0.0f, 0.0f, pageWidth, pageHeight);
   metrics.mCompositionBounds = nsIntRect(0, 0, mInnerSize.width, mInnerSize.height);
 
-  gfxSize intrinsicScale =
-      AsyncPanZoomController::CalculateIntrinsicScale(metrics);
-  // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
-  // 0.0 to mean "did not calculate a zoom".  In that case, we default
-  // it to the intrinsic scale.
-  if (viewportInfo.defaultZoom < 0.01f) {
-    viewportInfo.defaultZoom = intrinsicScale.width;
+  // Changing the zoom when we're not doing a first paint will get ignored
+  // by AsyncPanZoomController and causes a blurry flash.
+  bool isFirstPaint;
+  nsresult rv = utils->GetIsFirstPaint(&isFirstPaint);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_FAILED(rv) || isFirstPaint) {
+    gfxSize intrinsicScale =
+        AsyncPanZoomController::CalculateIntrinsicScale(metrics);
+    // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
+    // 0.0 to mean "did not calculate a zoom".  In that case, we default
+    // it to the intrinsic scale.
+    if (viewportInfo.defaultZoom < 0.01f) {
+      viewportInfo.defaultZoom = intrinsicScale.width;
+    }
+    MOZ_ASSERT(viewportInfo.minZoom <= viewportInfo.defaultZoom &&
+               viewportInfo.defaultZoom <= viewportInfo.maxZoom);
+    // GetViewportInfo() returns a resolution-dependent scale factor.
+    // Convert that to a resolution-indepedent zoom.
+    metrics.mZoom = gfxSize(viewportInfo.defaultZoom / intrinsicScale.width,
+                            viewportInfo.defaultZoom / intrinsicScale.height);
   }
-  MOZ_ASSERT(viewportInfo.minZoom <= viewportInfo.defaultZoom &&
-             viewportInfo.defaultZoom <= viewportInfo.maxZoom);
-  // GetViewportInfo() returns a resolution-dependent scale factor.
-  // Convert that to a resolution-indepedent zoom.
-  metrics.mZoom = gfxSize(viewportInfo.defaultZoom / intrinsicScale.width,
-                          viewportInfo.defaultZoom / intrinsicScale.height);
 
   metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
     // The page must have been refreshed in some way such as a new document or
@@ -1262,6 +1279,7 @@ TabChild::RecvHandleSingleTap(const nsIntPoint& aPoint)
     return true;
   }
 
+  RecvMouseEvent(NS_LITERAL_STRING("mousemove"), aPoint.x, aPoint.y, 0, 1, 0, false);
   RecvMouseEvent(NS_LITERAL_STRING("mousedown"), aPoint.x, aPoint.y, 0, 1, 0, false);
   RecvMouseEvent(NS_LITERAL_STRING("mouseup"), aPoint.x, aPoint.y, 0, 1, 0, false);
 
@@ -1665,6 +1683,7 @@ TabChild::RecvDestroy()
   observerService->RemoveObserver(this, CANCEL_DEFAULT_PAN_ZOOM);
   observerService->RemoveObserver(this, BROWSER_ZOOM_TO_RECT);
   observerService->RemoveObserver(this, BEFORE_FIRST_PAINT);
+  observerService->RemoveObserver(this, DETECT_SCROLLABLE_SUBFRAME);
 
   const InfallibleTArray<PIndexedDBChild*>& idbActors =
     ManagedPIndexedDBChild();
@@ -1791,6 +1810,9 @@ TabChild::InitRenderingState()
                                      false);
         observerService->AddObserver(this,
                                      BEFORE_FIRST_PAINT,
+                                     false);
+        observerService->AddObserver(this,
+                                     DETECT_SCROLLABLE_SUBFRAME,
                                      false);
     }
 

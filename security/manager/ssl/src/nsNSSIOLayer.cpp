@@ -27,6 +27,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsIConsoleService.h"
 #include "PSMRunnable.h"
+#include "ScopedNSSTypes.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -49,7 +50,6 @@ using namespace mozilla::psm;
 
 namespace {
 
-NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass(void, PR_FREEIF)
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
@@ -259,8 +259,7 @@ nsNSSSocketInfo::JoinConnection(const nsACString & npnProtocol,
   // Ensure that the server certificate covers the hostname that would
   // like to join this connection
 
-  CERTCertificate *nssCert = nullptr;
-  CERTCertificateCleaner nsscertCleaner(nssCert);
+  ScopedCERTCertificate nssCert;
 
   nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(SSLStatus()->mServerCert);
   if (cert2)
@@ -1914,11 +1913,11 @@ void ClientAuthDataRunnable::RunOnTargetThread()
 {
   PLArenaPool* arena = nullptr;
   char** caNameStrings;
-  CERTCertificate* cert = nullptr;
-  SECKEYPrivateKey* privKey = nullptr;
-  CERTCertList* certList = nullptr;
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey privKey;
+  ScopedCERTCertList certList;
   CERTCertListNode* node;
-  CERTCertNicknames* nicknames = nullptr;
+  ScopedCERTCertNicknames nicknames;
   char* extracted = nullptr;
   int keyError = 0; /* used for private key retrieval error */
   SSM_UserCertChoice certChoice;
@@ -1972,8 +1971,7 @@ void ClientAuthDataRunnable::RunOnTargetThread()
       goto noCert;
     }
 
-    CERTCertificate* low_prio_nonrep_cert = nullptr;
-    CERTCertificateCleaner low_prio_cleaner(low_prio_nonrep_cert);
+    ScopedCERTCertificate low_prio_nonrep_cert;
 
     /* loop through the list until we find a cert with a key */
     while (!CERT_LIST_END(node, certList)) {
@@ -1991,7 +1989,6 @@ void ClientAuthDataRunnable::RunOnTargetThread()
       privKey = PK11_FindKeyByAnyCert(node->cert, wincx);
       if (privKey) {
         if (hasExplicitKeyUsageNonRepudiation(node->cert)) {
-          SECKEY_DestroyPrivateKey(privKey);
           privKey = nullptr;
           // Not a prefered cert
           if (!low_prio_nonrep_cert) // did not yet find a low prio cert
@@ -2013,8 +2010,7 @@ void ClientAuthDataRunnable::RunOnTargetThread()
     }
 
     if (!cert && low_prio_nonrep_cert) {
-      cert = low_prio_nonrep_cert;
-      low_prio_nonrep_cert = nullptr; // take it away from the cleaner
+      cert = low_prio_nonrep_cert.forget();
       privKey = PK11_FindKeyByAnyCert(cert, wincx);
     }
 
@@ -2270,7 +2266,8 @@ if (!hasRemembered)
     }
 
     if (cars && wantRemember) {
-      cars->RememberDecision(hostname, mServerCert, canceled ? 0 : cert);
+      cars->RememberDecision(hostname, mServerCert,
+                             canceled ? nullptr : cert.get());
     }
 }
 
@@ -2300,28 +2297,18 @@ loser:
   if (mRV == SECSuccess) {
     mRV = SECFailure;
   }
-  if (cert) {
-    CERT_DestroyCertificate(cert);
-    cert = nullptr;
-  }
 done:
   int error = PR_GetError();
 
   if (extracted) {
     PR_Free(extracted);
   }
-  if (nicknames) {
-    CERT_FreeNicknames(nicknames);
-  }
-  if (certList) {
-    CERT_DestroyCertList(certList);
-  }
   if (arena) {
     PORT_FreeArena(arena, false);
   }
 
-  *mPRetCert = cert;
-  *mPRetKey = privKey;
+  *mPRetCert = cert.forget();
+  *mPRetKey = privKey.forget();
 
   if (mRV == SECFailure) {
     mErrorCodeToReport = error;

@@ -34,6 +34,7 @@ void StopSSLServerCertVerificationThreads();
 } } // namespace mozilla::psm
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gSocketTransportLog = nullptr;
@@ -1014,3 +1015,41 @@ nsSocketTransportService::DiscoverMaxCount()
 
     return PR_SUCCESS;
 }
+
+void
+nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo> *data,
+        struct SocketContext *context, bool aActive)
+{
+    PRFileDesc *aFD = context->mFD;
+    bool tcp = (PR_GetDescType(aFD) == PR_DESC_SOCKET_TCP);
+
+    PRNetAddr peer_addr;
+    PR_GetPeerName(aFD, &peer_addr);
+
+    char host[64] = {0};
+    PR_NetAddrToString(&peer_addr, host, sizeof(host));
+
+    uint16_t port;
+    if (peer_addr.raw.family == PR_AF_INET)
+        port = peer_addr.inet.port;
+    else
+        port = peer_addr.ipv6.port;
+    port = PR_ntohs(port);
+    uint64_t sent = context->mHandler->ByteCountSent();
+    uint64_t received = context->mHandler->ByteCountReceived();
+    SocketInfo info = { nsCString(host), sent, received, port, aActive, tcp };
+
+    data->AppendElement(info);
+}
+
+void
+nsSocketTransportService::GetSocketConnections(nsTArray<SocketInfo> *data)
+{
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    for (uint32_t i = 0; i < mActiveCount; i++)
+        AnalyzeConnection(data, &mActiveList[i], true);
+    for (uint32_t i = 0; i < mIdleCount; i++)
+        AnalyzeConnection(data, &mIdleList[i], false);
+}
+
+

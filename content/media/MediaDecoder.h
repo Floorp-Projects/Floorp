@@ -504,7 +504,7 @@ public:
   void SetMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
 
   // Set a flag indicating whether seeking is supported
-  virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
   virtual void SetTransportSeekable(bool aTransportSeekable) MOZ_FINAL MOZ_OVERRIDE;
   // Returns true if this media supports seeking. False for example for WebM
   // files without an index and chained ogg files.
@@ -655,8 +655,8 @@ public:
   // change. Call on the main thread only.
   void ChangeState(PlayState aState);
 
-  // Called when the metadata from the media file has been read by the reader.
-  // Call on the decode thread only.
+  // May be called by the reader to notify this decoder that the metadata from
+  // the media file has been read. Call on the decode thread only.
   void OnReadMetadataCompleted() MOZ_OVERRIDE { }
 
   // Called when the metadata from the media file has been loaded by the

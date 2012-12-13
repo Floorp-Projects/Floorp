@@ -22,7 +22,6 @@ public abstract class Layer {
 
     protected Rect mPosition;
     protected float mResolution;
-    protected boolean mUsesDefaultProgram = true;
 
     public Layer() {
         this(null);
@@ -66,15 +65,6 @@ public abstract class Layer {
     /** Given the intrinsic size of the layer, returns the pixel boundaries of the layer rect. */
     protected RectF getBounds(RenderContext context) {
         return RectUtils.scale(new RectF(mPosition), context.zoomFactor / mResolution);
-    }
-
-    /**
-     * Returns the region of the layer that is considered valid. The default
-     * implementation of this will return the bounds of the layer, but this
-     * may be overridden.
-     */
-    public Region getValidRegion(RenderContext context) {
-        return new Region(RectUtils.round(getBounds(context)));
     }
 
     /**
@@ -131,10 +121,6 @@ public abstract class Layer {
         if (!mInTransaction)
             throw new RuntimeException("setResolution() is only valid inside a transaction");
         mNewResolution = newResolution;
-    }
-
-    public boolean usesDefaultProgram() {
-        return mUsesDefaultProgram;
     }
 
     /**

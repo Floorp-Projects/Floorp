@@ -51,7 +51,7 @@ using namespace js::ion;
 IonOptions ion::js_IonOptions;
 
 // Assert that IonCode is gc::Cell aligned.
-JS_STATIC_ASSERT(sizeof(IonCode) % gc::Cell::CellSize == 0);
+JS_STATIC_ASSERT(sizeof(IonCode) % gc::CellSize == 0);
 
 #ifdef JS_THREADSAFE
 static bool IonTLSInitialized = false;
@@ -161,7 +161,7 @@ IonRuntime::initialize(JSContext *cx)
     if (!bailoutTables_.reserve(FrameSizeClass::ClassLimit().classId()))
         return false;
 
-    for (uint32 id = 0;; id++) {
+    for (uint32_t id = 0;; id++) {
         FrameSizeClass class_ = FrameSizeClass::FromClass(id);
         if (class_ == FrameSizeClass::ClassLimit())
             break;
@@ -317,7 +317,7 @@ IonActivation::~IonActivation()
 }
 
 IonCode *
-IonCode::New(JSContext *cx, uint8 *code, uint32 bufferSize, JSC::ExecutablePool *pool)
+IonCode::New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool)
 {
     AssertCanGC();
 
@@ -360,12 +360,12 @@ IonCode::trace(JSTracer *trc)
         return;
 
     if (jumpRelocTableBytes_) {
-        uint8 *start = code_ + jumpRelocTableOffset();
+        uint8_t *start = code_ + jumpRelocTableOffset();
         CompactBufferReader reader(start, start + jumpRelocTableBytes_);
         MacroAssembler::TraceJumpRelocations(trc, this, reader);
     }
     if (dataRelocTableBytes_) {
-        uint8 *start = code_ + dataRelocTableOffset();
+        uint8_t *start = code_ + dataRelocTableOffset();
         CompactBufferReader reader(start, start + dataRelocTableBytes_);
         MacroAssembler::TraceDataRelocations(trc, this, reader);
     }
@@ -454,13 +454,13 @@ IonScript::IonScript()
 static const int DataAlignment = 4;
 
 IonScript *
-IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapshotsSize,
+IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t cacheEntries, size_t prebarrierEntries,
                size_t safepointsSize, size_t scriptEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
-        (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
+        (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t)))
     {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -470,7 +470,7 @@ IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapsh
     // *somewhere* and if their total overflowed there would be no memory left
     // at all.
     size_t paddedSnapshotsSize = AlignBytes(snapshotsSize, DataAlignment);
-    size_t paddedBailoutSize = AlignBytes(bailoutEntries * sizeof(uint32), DataAlignment);
+    size_t paddedBailoutSize = AlignBytes(bailoutEntries * sizeof(uint32_t), DataAlignment);
     size_t paddedConstantsSize = AlignBytes(constants * sizeof(Value), DataAlignment);
     size_t paddedSafepointIndicesSize = AlignBytes(safepointIndices * sizeof(SafepointIndex), DataAlignment);
     size_t paddedOsiIndicesSize = AlignBytes(osiIndices * sizeof(OsiIndex), DataAlignment);
@@ -488,14 +488,14 @@ IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapsh
                    paddedPrebarrierEntriesSize +
                    paddedSafepointSize +
                    paddedScriptSize;
-    uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
+    uint8_t *buffer = (uint8_t *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
 
     IonScript *script = reinterpret_cast<IonScript *>(buffer);
     new (script) IonScript();
 
-    uint32 offsetCursor = sizeof(IonScript);
+    uint32_t offsetCursor = sizeof(IonScript);
 
     script->snapshots_ = offsetCursor;
     script->snapshotsSize_ = snapshotsSize;
@@ -558,20 +558,20 @@ void
 IonScript::copySnapshots(const SnapshotWriter *writer)
 {
     JS_ASSERT(writer->size() == snapshotsSize_);
-    memcpy((uint8 *)this + snapshots_, writer->buffer(), snapshotsSize_);
+    memcpy((uint8_t *)this + snapshots_, writer->buffer(), snapshotsSize_);
 }
 
 void
 IonScript::copySafepoints(const SafepointWriter *writer)
 {
     JS_ASSERT(writer->size() == safepointsSize_);
-    memcpy((uint8 *)this + safepointsStart_, writer->buffer(), safepointsSize_);
+    memcpy((uint8_t *)this + safepointsStart_, writer->buffer(), safepointsSize_);
 }
 
 void
 IonScript::copyBailoutTable(const SnapshotOffset *table)
 {
-    memcpy(bailoutTable(), table, bailoutEntries_ * sizeof(uint32));
+    memcpy(bailoutTable(), table, bailoutEntries_ * sizeof(uint32_t));
 }
 
 void
@@ -642,7 +642,7 @@ IonScript::copyPrebarrierEntries(const CodeOffsetLabel *barriers, MacroAssembler
 }
 
 const SafepointIndex *
-IonScript::getSafepointIndex(uint32 disp) const
+IonScript::getSafepointIndex(uint32_t disp) const
 {
     JS_ASSERT(safepointIndexEntries_ > 0);
 
@@ -654,15 +654,15 @@ IonScript::getSafepointIndex(uint32 disp) const
 
     size_t minEntry = 0;
     size_t maxEntry = safepointIndexEntries_ - 1;
-    uint32 min = table[minEntry].displacement();
-    uint32 max = table[maxEntry].displacement();
+    uint32_t min = table[minEntry].displacement();
+    uint32_t max = table[maxEntry].displacement();
 
     // Raise if the element is not in the list.
     JS_ASSERT(min <= disp && disp <= max);
 
     // Approximate the location of the FrameInfo.
     size_t guess = (disp - min) * (maxEntry - minEntry) / (max - min) + minEntry;
-    uint32 guessDisp = table[guess].displacement();
+    uint32_t guessDisp = table[guess].displacement();
 
     if (table[guess].displacement() == disp)
         return &table[guess];
@@ -692,7 +692,7 @@ IonScript::getSafepointIndex(uint32 disp) const
 }
 
 const OsiIndex *
-IonScript::getOsiIndex(uint32 disp) const
+IonScript::getOsiIndex(uint32_t disp) const
 {
     for (const OsiIndex *it = osiIndices(), *end = osiIndices() + osiIndexEntries_;
          it != end;
@@ -707,13 +707,13 @@ IonScript::getOsiIndex(uint32 disp) const
 }
 
 const OsiIndex *
-IonScript::getOsiIndex(uint8 *retAddr) const
+IonScript::getOsiIndex(uint8_t *retAddr) const
 {
     IonSpew(IonSpew_Invalidate, "IonScript %p has method %p raw %p", (void *) this, (void *)
             method(), method()->raw());
 
     JS_ASSERT(containsCodeAddress(retAddr));
-    uint32 disp = retAddr - method()->raw();
+    uint32_t disp = retAddr - method()->raw();
     return getOsiIndex(disp);
 }
 
@@ -1170,7 +1170,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     JS_ASSERT(!builder->script()->ion);
     JSContext *cx = GetIonContext()->cx;
 
-    IonSpewNewFunction(graph, builder->script().unsafeGet());
+    IonSpewNewFunction(graph, builder->script());
 
     if (!builder->build()) {
         IonSpew(IonSpew_Abort, "Builder failed to build.");
@@ -1183,7 +1183,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     // incremental read barriers.
     if (js_IonOptions.parallelCompilation &&
         OffThreadCompilationAvailable(cx) &&
-        !IsIncrementalGCInProgress(cx->runtime))
+        cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL)
     {
         builder->script()->ion = ION_COMPILING_SCRIPT;
 
@@ -1288,7 +1288,7 @@ CheckScriptSize(JSScript *script)
     if (!js_IonOptions.limitScriptSize)
         return true;
 
-    static const uint32_t MAX_SCRIPT_SIZE = 1500;
+    static const uint32_t MAX_SCRIPT_SIZE = 2000;
     static const uint32_t MAX_LOCALS_AND_ARGS = 256;
 
     if (script->length > MAX_SCRIPT_SIZE) {
@@ -1510,7 +1510,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         }
         calleeToken = CalleeToToken(&fp->callee());
     } else {
-        calleeToken = CalleeToToken(fp->script().unsafeGet());
+        calleeToken = CalleeToToken(fp->script());
     }
 
     // Caller must construct |this| before invoking the Ion function.
@@ -1527,7 +1527,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     }
 
     if (result.isMagic() && result.whyMagic() == JS_ION_BAILOUT) {
-        if (!EnsureHasCallObject(cx, cx->fp()))
+        if (!EnsureHasScopeObjects(cx, cx->fp()))
             return IonExec_Error;
         return IonExec_Bailout;
     }
@@ -1673,7 +1673,7 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
 }
 
 static void
-InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
+InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
 {
     AutoAssertNoGC nogc;
     IonSpew(IonSpew_Invalidate, "BEGIN invalidating activation");
@@ -1817,6 +1817,7 @@ void
 ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
+    AutoAssertNoGC nogc;
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
     AutoFlushCache afc ("Invalidate");
 
@@ -1855,12 +1856,11 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        ExecutionMode executionMode;
+        ExecutionMode executionMode = SequentialExecution;
         switch (co.kind()) {
           case types::CompilerOutput::MethodJIT:
             continue;
           case types::CompilerOutput::Ion:
-            executionMode = SequentialExecution;
             break;
           case types::CompilerOutput::ParallelIon:
             executionMode = ParallelExecution;

@@ -41,9 +41,6 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitVersion(
           /* [retval][out] */ BSTR *version);
 
-public:
-  static void PreCreate();
-  static void Unload();
 };
 
 } // namespace a11y

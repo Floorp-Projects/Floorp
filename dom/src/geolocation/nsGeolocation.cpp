@@ -392,10 +392,15 @@ nsGeolocationRequest::Cancel()
 NS_IMETHODIMP
 nsGeolocationRequest::Allow()
 {
-  nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
+  nsCOMPtr<nsIDOMWindow> window;
+  GetWindow(getter_AddRefs(window));
+  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(window);
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
+  bool isPrivate = loadContext && loadContext->UsePrivateBrowsing();
 
   // Kick off the geo device, if it isn't already running
-  nsresult rv = gs->StartDevice();
+  nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
+  nsresult rv = gs->StartDevice(isPrivate);
 
   if (NS_FAILED(rv)) {
     // Location provider error
@@ -741,9 +746,6 @@ nsGeolocationService::HandleMozsettingValue(const bool aValue)
 {
     if (!aValue) {
       // turn things off
-      for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
-        mGeolocators[i]->Shutdown();
-      }
       StopDevice();
       Update(nullptr);
       mLastPosition = nullptr;
@@ -919,7 +921,7 @@ nsGeolocationService::GetCachedPosition()
 }
 
 nsresult
-nsGeolocationService::StartDevice()
+nsGeolocationService::StartDevice(bool aRequestPrivate)
 {
   if (!sGeoEnabled || sGeoInitPending) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -944,7 +946,7 @@ nsGeolocationService::StartDevice()
 
   for (int32_t i = 0; i < mProviders.Count(); i++) {
     mProviders[i]->Startup();
-    mProviders[i]->Watch(this);
+    mProviders[i]->Watch(this, aRequestPrivate);
     obs->NotifyObservers(mProviders[i],
                          "geolocation-device-events",
                          NS_LITERAL_STRING("starting").get());

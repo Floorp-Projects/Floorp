@@ -14,6 +14,7 @@
 #include "nsIDOMSVGAnimationElement.h"
 #include "nsSMILTimedElement.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
@@ -366,14 +367,8 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   mResampleNeeded = false;
   // Set running sample flag -- do this before flushing styles so that when we
   // flush styles we don't end up requesting extra samples
+  AutoRestore<bool> autoRestoreRunningSample(mRunningSample);
   mRunningSample = true;
-  nsCOMPtr<nsIDocument> kungFuDeathGrip(mDocument);  // keeps 'this' alive too
-  mDocument->FlushPendingNotifications(Flush_Style);
-
-  // WARNING: 
-  // WARNING: the above flush may have destroyed the pres shell and/or
-  // WARNING: frames and other layout related objects.
-  // WARNING:
   
   // STEP 1: Bring model up to date
   // (i)  Rewind elements where necessary
@@ -441,13 +436,26 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
     mLastCompositorTable->EnumerateEntries(DoClearAnimationEffects, nullptr);
   }
 
+  // return early if there are no active animations to avoid a style flush
+  if (currentCompositorTable->Count() == 0) {
+    mLastCompositorTable = nullptr;
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> kungFuDeathGrip(mDocument);  // keeps 'this' alive too
+  mDocument->FlushPendingNotifications(Flush_Style);
+
+  // WARNING: 
+  // WARNING: the above flush may have destroyed the pres shell and/or
+  // WARNING: frames and other layout related objects.
+  // WARNING:
+
   // STEP 5: Compose currently-animated attributes.
   // XXXdholbert: This step traverses our animation targets in an effectively
   // random order. For animation from/to 'inherit' values to work correctly
   // when the inherited value is *also* being animated, we really should be
   // traversing our animated nodes in an ancestors-first order (bug 501183)
   currentCompositorTable->EnumerateEntries(DoComposeAttribute, nullptr);
-  mRunningSample = false;
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();

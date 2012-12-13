@@ -497,7 +497,7 @@ LinearScanAllocator::populateSafepoints()
 {
     size_t firstSafepoint = 0;
 
-    for (uint32 i = 0; i < vregs.numVirtualRegisters(); i++) {
+    for (uint32_t i = 0; i < vregs.numVirtualRegisters(); i++) {
         LinearScanVirtualRegister *reg = &vregs[i];
 
         if (!reg->def() || (!IsTraceable(reg) && !IsNunbox(reg)))
@@ -587,8 +587,8 @@ LinearScanAllocator::populateSafepoints()
                 {
                     // These two components of the Value are spilled
                     // contiguously, so simply keep track of the base slot.
-                    uint32 payloadSlot = payload->canonicalSpillSlot();
-                    uint32 slot = BaseOfNunboxSlot(LDefinition::PAYLOAD, payloadSlot);
+                    uint32_t payloadSlot = payload->canonicalSpillSlot();
+                    uint32_t slot = BaseOfNunboxSlot(LDefinition::PAYLOAD, payloadSlot);
                     if (!safepoint->addValueSlot(slot))
                         return false;
                 }
@@ -763,8 +763,8 @@ LinearScanAllocator::assign(LAllocation allocation)
             // If this spill is inside a loop, and the definition is outside
             // the loop, instead move the spill to outside the loop.
             InstructionData *other = &insData[current->start()];
-            uint32 loopDepthAtDef = reg->block()->mir()->loopDepth();
-            uint32 loopDepthAtSpill = other->block()->mir()->loopDepth();
+            uint32_t loopDepthAtDef = reg->block()->mir()->loopDepth();
+            uint32_t loopDepthAtSpill = other->block()->mir()->loopDepth();
             if (loopDepthAtSpill > loopDepthAtDef)
                 reg->setSpillAtDefinition(outputOf(reg->ins()));
         }
@@ -787,7 +787,7 @@ LinearScanAllocator::otherHalfOfNunbox(VirtualRegister *vreg)
 #endif
 
 
-uint32
+uint32_t
 LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
 {
     LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
@@ -843,7 +843,7 @@ LinearScanAllocator::spill()
         return assign(*reg->canonicalSpill());
     }
 
-    uint32 stackSlot;
+    uint32_t stackSlot;
 #if defined JS_NUNBOX32
     if (IsNunbox(reg)) {
         LinearScanVirtualRegister *other = otherHalfOfNunbox(reg);
@@ -1007,7 +1007,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
 
     if (bestCode == AnyRegister::Invalid) {
         // If all else fails, search freeUntilPos for largest value
-        for (uint32 i = 0; i < AnyRegister::Total; i++) {
+        for (uint32_t i = 0; i < AnyRegister::Total; i++) {
             if (freeUntilPos[i] == CodePosition::MIN)
                 continue;
             if (bestCode == AnyRegister::Invalid || freeUntilPos[i] > freeUntilPos[bestCode])

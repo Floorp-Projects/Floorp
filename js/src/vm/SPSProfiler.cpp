@@ -367,7 +367,7 @@ SPSProfiler::discardMJITCode(mjit::JITScript *jscr,
 
     unregisterScript(jscr->script, chunk);
     for (unsigned i = 0; i < chunk->nInlineFrames; i++)
-        unregisterScript(chunk->inlineFrames()[i].fun->nonLazyScript().get(nogc), chunk);
+        unregisterScript(chunk->inlineFrames()[i].fun->nonLazyScript(), chunk);
 }
 
 void

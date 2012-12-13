@@ -29,18 +29,6 @@ try {
   do_throw("Could not get annotation service\n");
 }
 
-// adds a test URI visit to the database
-function add_visit(aURI, aTime) {
-  let time = aTime || Date.now() * 1000;
-  histsvc.addVisit(aURI,
-                    time,
-                    null, // no referrer
-                    histsvc.TRANSITION_TYPED, // user typed in URL bar
-                    false, // not redirect
-                    0);
-}
-
-// main
 function run_test() {
   do_test_pending();
 
@@ -114,20 +102,24 @@ function run_test() {
 
   // XXXtodo:  test dateAdded sort
   // XXXtodo:  test lastModified sort
-  
+
   // test live update
   annosvc.setItemAnnotation(id1, "testAnno", "c", 0, 0);
   checkOrder(id1, id3, id2);
 
   // Add a visit, then check frecency ordering.
-  add_visit(NetUtil.newURI("http://foo.tld/b"));
-  promiseAsyncUpdates().then(function () {
-    result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
-    checkOrder(id2, id3, id1);
-    result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;
-    checkOrder(id1, id3, id2);
+  addVisits({
+    uri: uri("http://foo.tld/b"),
+    transition: TRANSITION_TYPED
+  }, function () {
+    promiseAsyncUpdates().then(function () {
+      result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
+      checkOrder(id2, id3, id1);
+      result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;
+      checkOrder(id1, id3, id2);
 
-    root.containerOpen = false;
-    do_test_finished();
+      root.containerOpen = false;
+      do_test_finished();
+    });
   });
 }

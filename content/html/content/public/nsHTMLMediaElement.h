@@ -26,6 +26,7 @@
 #include "AudioChannelCommon.h"
 #include "DecoderTraits.h"
 #include "MediaMetadataManager.h"
+#include "AudioChannelAgent.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -36,14 +37,12 @@ typedef uint16_t nsMediaReadyState;
 namespace mozilla {
 class MediaResource;
 class MediaDecoder;
-#ifdef MOZ_DASH
-class DASHDecoder;
-#endif
 }
 
 class nsHTMLMediaElement : public nsGenericHTMLElement,
                            public nsIObserver,
-                           public mozilla::MediaDecoderOwner
+                           public mozilla::MediaDecoderOwner,
+                           public nsIAudioChannelAgentCallback
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -55,10 +54,6 @@ public:
   typedef mozilla::MetadataTags MetadataTags;
   typedef mozilla::AudioStream AudioStream;
   typedef mozilla::MediaDecoder MediaDecoder;
-
-#ifdef MOZ_DASH
-  friend class DASHDecoder;
-#endif
 
   mozilla::CORSMode GetCORSMode() {
     return mCORSMode;
@@ -81,6 +76,8 @@ public:
   NS_DECL_NSIDOMHTMLMEDIAELEMENT
 
   NS_DECL_NSIOBSERVER
+
+  NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -113,7 +110,7 @@ public:
 
   /**
    * Call this to reevaluate whether we should start/stop due to our owner
-   * document being active or inactive.
+   * document being active, inactive, visible or hidden.
    */
   void NotifyOwnerDocumentActivityChanged();
 
@@ -590,6 +587,13 @@ protected:
    */
   void SetMutedInternal(bool aMuted);
 
+  /**
+   * Suspend (if aPauseForInactiveDocument) or resume element playback and
+   * resource download.  If aSuspendEvents is true, event delivery is
+   * suspended (and events queued) until the element is resumed.
+   */
+  void SuspendOrResumeElement(bool aPauseElement, bool aSuspendEvents);
+
   // Get the nsHTMLMediaElement object if the decoder is being used from an
   // HTML media element, and null otherwise.
   virtual nsHTMLMediaElement* GetMediaElement() MOZ_FINAL MOZ_OVERRIDE
@@ -604,6 +608,15 @@ protected:
     GetPaused(&isPaused);
     return isPaused;
   }
+
+  // Check the permissions for audiochannel.
+  bool CheckAudioChannelPermissions(const nsAString& aType);
+
+  // This method does the check for muting/unmuting the audio channel.
+  nsresult UpdateChannelMuteState(bool aCanPlay);
+
+  // Update the audio channel playing state
+  void UpdateAudioChannelPlayingState();
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
@@ -805,8 +818,12 @@ protected:
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   bool mPlayingBeforeSeek;
 
-  // True iff this element is paused because the document is inactive
-  bool mPausedForInactiveDocument;
+  // True iff this element is paused because the document is inactive or has
+  // been suspended by the audio channel service.
+  bool mPausedForInactiveDocumentOrChannel;
+
+  // True iff event delivery is suspended (mPausedForInactiveDocumentOrChannel must also be true).
+  bool mEventDeliveryPaused;
 
   // True if we've reported a "waiting" event since the last
   // readyState change to HAVE_CURRENT_DATA.
@@ -879,6 +896,15 @@ protected:
 
   // Audio Channel Type.
   mozilla::dom::AudioChannelType mAudioChannelType;
+
+  // The audiochannel has been suspended.
+  bool mChannelSuspended;
+
+  // Is this media element playing?
+  bool mPlayingThroughTheAudioChannel;
+
+  // An agent used to join audio channel service.
+  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 };
 
 #endif

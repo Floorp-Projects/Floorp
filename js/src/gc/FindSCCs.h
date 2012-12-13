@@ -12,50 +12,32 @@
 namespace js {
 namespace gc {
 
-class ComponentFinder;
-
-struct GraphNodeBase {
-    GraphNodeBase  *gcNextGraphNode;
+template<class Node>
+struct GraphNodeBase
+{
+    Node           *gcNextGraphNode;
+    Node           *gcNextGraphComponent;
     unsigned       gcDiscoveryTime;
     unsigned       gcLowLink;
 
     GraphNodeBase()
       : gcNextGraphNode(NULL),
+        gcNextGraphComponent(NULL),
         gcDiscoveryTime(0),
         gcLowLink(0) {}
 
-    virtual ~GraphNodeBase() {}
-    virtual void findOutgoingEdges(ComponentFinder& finder) = 0;
-};
+    ~GraphNodeBase() {}
 
-template <class T> static T *
-NextGraphNode(const T *current)
-{
-    const GraphNodeBase *node = current;
-    return static_cast<T *>(node->gcNextGraphNode);
-}
-
-template <class T> void
-AddGraphNode(T *&listHead, T *newFirstNode)
-{
-    GraphNodeBase *node = newFirstNode;
-    JS_ASSERT(!node->gcNextGraphNode);
-    node->gcNextGraphNode = listHead;
-    listHead = newFirstNode;
-}
-
-template <class T> static T *
-RemoveGraphNode(T *&listHead)
-{
-    GraphNodeBase *node = listHead;
-    if (!node)
+    Node *nextNodeInGroup() const {
+        if (gcNextGraphNode && gcNextGraphNode->gcNextGraphComponent == gcNextGraphComponent)
+            return gcNextGraphNode;
         return NULL;
+    }
 
-    T *result = listHead;
-    listHead = static_cast<T *>(node->gcNextGraphNode);
-    node->gcNextGraphNode = NULL;
-    return result;
-}
+    Node *nextGroup() const {
+        return gcNextGraphComponent;
+    }
+};
 
 /*
  * Find the strongly connected components of a graph using Tarjan's algorithm,
@@ -66,45 +48,35 @@ RemoveGraphNode(T *&listHead)
  *
  * struct MyGraphNode : public GraphNodeBase
  * {
- *     void findOutgoingEdges(ComponentFinder& finder)
+ *     void findOutgoingEdges(ComponentFinder<MyGraphNode> &finder)
  *     {
  *         for edge in my_outgoing_edges:
  *             if is_relevant(edge):
  *                 finder.addEdgeTo(edge.destination)
  *     }
  * }
+ *
+ * ComponentFinder<MyGraphNode> finder;
+ * finder.addNode(v);
  */
+template<class Node>
 class ComponentFinder
 {
   public:
     ComponentFinder(uintptr_t stackLimit);
     ~ComponentFinder();
-    void addNode(GraphNodeBase *v);
-    GraphNodeBase *getResultsList();
 
-    template <class T> static T *
-    getNextGroup(T *&resultsList) {
-        T *group = resultsList;
-        if (resultsList)
-            resultsList = static_cast<T *>(removeFirstGroup(resultsList));
-        return group;
-    }
+    /* Forces all nodes to be added to a single component. */
+    void useOneComponent() { stackFull = true; }
 
-    template <class T> static T *
-    getAllRemaining(T *&resultsList) {
-        T *all = resultsList;
-        removeAllRemaining(resultsList);
-        resultsList = NULL;
-        return all;
-    }
+    void addNode(Node *v);
+    Node *getResultsList();
 
-  private:
-    static GraphNodeBase *removeFirstGroup(GraphNodeBase *resultsList);
-    static void removeAllRemaining(GraphNodeBase *resultsList);
+    static void mergeCompartmentGroups(Node *first);
 
   public:
     /* Call from implementation of GraphNodeBase::findOutgoingEdges(). */
-    void addEdgeTo(GraphNodeBase *w);
+    void addEdgeTo(Node *w);
 
   private:
     /* Constant used to indicate an unprocessed vertex. */
@@ -113,14 +85,13 @@ class ComponentFinder
     /* Constant used to indicate an processed vertex that is no longer on the stack. */
     static const unsigned Finished = (unsigned)-1;
 
-    void processNode(GraphNodeBase *v);
-    void checkStackFull();
+    void processNode(Node *v);
 
   private:
     unsigned       clock;
-    GraphNodeBase  *stack;
-    GraphNodeBase  *firstComponent;
-    GraphNodeBase  *cur;
+    Node           *stack;
+    Node           *firstComponent;
+    Node           *cur;
     uintptr_t      stackLimit;
     bool           stackFull;
 };

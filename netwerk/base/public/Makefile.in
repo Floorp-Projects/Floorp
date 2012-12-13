@@ -30,6 +30,8 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIDashboard.idl \
+		nsIDashboardEventNotifier.idl \
 		nsIApplicationCache.idl \
 		nsIApplicationCacheChannel.idl \
 		nsIApplicationCacheContainer.idl \
@@ -41,6 +43,7 @@ XPIDLSRCS	= \
 		nsIAuthPromptCallback.idl \
 		nsIAsyncStreamCopier.idl \
 		nsIAsyncVerifyRedirectCallback.idl \
+		nsIBackgroundFileSaver.idl \
 		nsIBufferedStreams.idl \
 		nsICancelable.idl \
 		nsIChannelPolicy.idl \
@@ -52,10 +55,10 @@ XPIDLSRCS	= \
 		nsIIncrementalDownload.idl \
 		nsIInputStreamPump.idl \
 		nsIInputStreamChannel.idl \
-                nsIIOService2.idl \
+		nsIIOService2.idl \
 		nsIMIMEInputStream.idl \
 		nsINetAddr.idl \
-                nsINetworkLinkService.idl \
+		nsINetworkLinkService.idl \
 		nsIPermission.idl \
 		nsIPermissionManager.idl \
 		nsIPrivateBrowsingChannel.idl \

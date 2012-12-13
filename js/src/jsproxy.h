@@ -107,7 +107,6 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
-    virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
@@ -172,8 +171,6 @@ public:
                                  RegExpGuard *g) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint,
                               Value *vp) MOZ_OVERRIDE;
-    virtual bool iteratorNext(JSContext *cx, JSObject *proxy,
-                              Value *vp) MOZ_OVERRIDE;
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
 };
 
@@ -216,7 +213,6 @@ class Proxy {
     static JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
     static bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     static bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
-    static bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     static bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
 
     static JSObject * const LazyProto;
@@ -249,8 +245,14 @@ inline bool IsProxy(RawObject obj)
 }
 
 /* Shared between object and function proxies. */
-const uint32_t JSSLOT_PROXY_HANDLER = 0;
-const uint32_t JSSLOT_PROXY_PRIVATE = 1;
+/*
+ * NOTE: JSSLOT_PROXY_PRIVATE is 0, because that way slot 0 is usable by API
+ * clients for both proxy and non-proxy objects.  So an API client that only
+ * needs to store one slot's worth of data doesn't need to branch on what sort
+ * of object it has.
+ */
+const uint32_t JSSLOT_PROXY_PRIVATE = 0;
+const uint32_t JSSLOT_PROXY_HANDLER = 1;
 const uint32_t JSSLOT_PROXY_EXTRA   = 2;
 /* Function proxies only. */
 const uint32_t JSSLOT_PROXY_CALL = 4;

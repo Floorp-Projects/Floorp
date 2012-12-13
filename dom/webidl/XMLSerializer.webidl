@@ -15,6 +15,6 @@ interface XMLSerializer {
 
   // Mozilla-specific stuff
   [Throws, ChromeOnly]
-  void serializeToStream(Node root, OutputStream stream, DOMString charset);
+  void serializeToStream(Node root, OutputStream stream, DOMString? charset);
 };
 

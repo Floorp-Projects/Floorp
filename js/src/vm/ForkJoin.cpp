@@ -229,7 +229,8 @@ ForkJoinShared::execute()
     // Notify workers to start and execute one portion on this thread.
     {
         AutoUnlockMonitor unlock(*this);
-        threadPool_->submitAll(this);
+        if (!threadPool_->submitAll(cx_, this))
+            return TP_FATAL;
         executeFromMainThread(cx_->runtime->ionStackLimit);
     }
 

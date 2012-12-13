@@ -1,3 +1,4 @@
+#filter substitution
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -46,6 +47,9 @@ var gAdvancedPane = {
     this.updateOfflineApps();
 #ifdef MOZ_CRASHREPORTER
     this.initSubmitCrashes();
+#endif
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+    this.initTelemetry();
 #endif
     this.updateActualCacheSize("disk");
     this.updateActualCacheSize("offline");
@@ -151,6 +155,40 @@ var gAdvancedPane = {
                getService(Components.interfaces.nsICrashReporter);
       cr.submitReports = checkbox.checked;
     } catch (e) { }
+  },
+
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+  /**
+   * When telemetry is opt-out, verify if the user explicitly rejected the
+   * telemetry prompt, and if so reflect his choice in the current preference
+   * value. This doesn't cover the case where the user refused telemetry in the
+   * prompt but later enabled it in preferences in builds before the fix for
+   * bug 737600.
+   */
+  initTelemetry: function ()
+  {
+    const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabledPreRelease";
+    let enabled = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED);
+    let rejected = false;
+    try {
+      rejected = Services.prefs.getBoolPref("toolkit.telemetry.rejected");
+    } catch (e) {}
+    if (enabled && rejected) {
+      Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, false);
+    }
+  },
+#endif
+
+  /**
+   * When the user toggles telemetry, update the rejected value as well, so we
+   * know he expressed a choice, and don't re-prompt inadvertently.
+   */
+  telemetryEnabledChanged: function (event)
+  {
+    let rejected = document.getElementById("toolkit.telemetry.rejected");
+    rejected.value = !event.target.value;
+    let displayed = document.getElementById("toolkit.telemetry.prompted");
+    displayed.value = @MOZ_TELEMETRY_DISPLAY_REV@;
   },
 
   /**

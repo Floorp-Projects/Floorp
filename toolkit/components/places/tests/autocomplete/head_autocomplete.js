@@ -160,6 +160,9 @@ let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
 // Store the page info for each uri
 let gPages = [];
 
+// Initialization tasks to be run before the next test
+let gNextTestSetupTasks = [];
+
 /**
  * Adds a page, and creates various properties for it depending on the
  * parameters passed in.  This function will also add one visit, unless
@@ -191,6 +194,11 @@ let gPages = [];
  */
 function addPageBook(aURI, aTitle, aBook, aTags, aKey, aTransitionType, aNoVisit)
 {
+  gNextTestSetupTasks.push([task_addPageBook, arguments]);
+}
+
+function task_addPageBook(aURI, aTitle, aBook, aTags, aKey, aTransitionType, aNoVisit)
+{
   // Add a page entry for the current uri
   gPages[aURI] = [aURI, aBook != undefined ? aBook : aTitle, aTags];
 
@@ -203,11 +211,12 @@ function addPageBook(aURI, aTitle, aBook, aTags, aKey, aTransitionType, aNoVisit
 
   // Add the page and a visit if we need to
   if (!aNoVisit) {
-    let tt = aTransitionType || TRANSITION_LINK;
-    let isRedirect = tt == TRANSITION_REDIRECT_PERMANENT ||
-                     tt == TRANSITION_REDIRECT_TEMPORARY;
-    histsvc.addVisit(uri, gDate, null, tt, isRedirect, 0);
-    setPageTitle(uri, title);
+    yield promiseAddVisits({
+      uri: uri,
+      transition: aTransitionType || TRANSITION_LINK,
+      visitDate: gDate,
+      title: title
+    });
     out.push("\nwith visit");
   }
 
@@ -254,24 +263,49 @@ function run_test() {
   if (func)
     func();
 
-  // At this point frecency could still be updating due to latest pages updates.
-  // This is not a problem in real life, but autocomplete tests should return
-  // reliable resultsets, thus we have to wait.
-  promiseAsyncUpdates().then(function () ensure_results(search, expected));
+  Task.spawn(function () {
+    // Iterate over all tasks and execute them
+    for (let [, [fn, args]] in Iterator(gNextTestSetupTasks)) {
+      yield fn.apply(this, args);
+    };
+
+    // Clean up to allow tests to register more functions.
+    gNextTestSetupTasks = [];
+
+    // At this point frecency could still be updating due to latest pages
+    // updates.  This is not a problem in real life, but autocomplete tests
+    // should return reliable resultsets, thus we have to wait.
+    yield promiseAsyncUpdates();
+
+  }).then(function () ensure_results(search, expected),
+          do_report_unexpected_exception);
 }
 
 // Utility function to remove history pages
 function removePages(aURIs)
+{
+  gNextTestSetupTasks.push([do_removePages, arguments]);
+}
+
+function do_removePages(aURIs)
 {
   for each (let uri in aURIs)
     histsvc.removePage(toURI(kURIs[uri]));
 }
 
 // Utility function to mark pages as typed
-function markTyped(aURIs)
+function markTyped(aURIs, aTitle)
 {
-  for each (let uri in aURIs)
-    histsvc.addVisit(toURI(kURIs[uri]), Date.now() * 1000, null,
-      histsvc.TRANSITION_TYPED, false, 0);
+  gNextTestSetupTasks.push([task_markTyped, arguments]);
 }
 
+function task_markTyped(aURIs, aTitle)
+{
+  for (let uri of aURIs) {
+    yield promiseAddVisits({
+      uri: toURI(kURIs[uri]),
+      transition: TRANSITION_TYPED,
+      title: kTitles[aTitle]
+    });
+  }
+}

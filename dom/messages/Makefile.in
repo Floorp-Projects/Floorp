@@ -19,4 +19,8 @@ EXTRA_COMPONENTS = \
   SystemMessageManager.manifest \
   $(NULL)
 
+EXTRA_JS_MODULES += \
+  SystemMessagePermissionsChecker.jsm \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk

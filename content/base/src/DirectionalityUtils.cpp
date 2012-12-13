@@ -273,7 +273,7 @@ inline static bool NodeAffectsDirAutoAncestor(nsINode* aTextNode)
  * first-strong algorithm defined in http://unicode.org/reports/tr9/#P2
  *
  * @param[out] aFirstStrong the offset to the first character in the string with
- *             strong directionality, or PR_UINT32_MAX if there is none (return
+ *             strong directionality, or UINT32_MAX if there is none (return
                value is eDir_NotSet).
  * @return the directionality of the string
  */
@@ -304,7 +304,7 @@ GetDirectionFromText(const PRUnichar* aText, const uint32_t aLength,
   }
 
   if (aFirstStrong) {
-    *aFirstStrong = PR_UINT32_MAX;
+    *aFirstStrong = UINT32_MAX;
   }
   return eDir_NotSet;
 }
@@ -330,7 +330,7 @@ GetDirectionFromText(const char* aText, const uint32_t aLength,
   }
 
   if (aFirstStrong) {
-    *aFirstStrong = PR_UINT32_MAX;
+    *aFirstStrong = UINT32_MAX;
   }
   return eDir_NotSet;
 }
@@ -732,6 +732,9 @@ void SetAncestorDirectionIfAuto(nsINode* aTextNode, Directionality aDir,
               // we found the node that set the element's direction after our
               // text node, so we need to reset the direction
               resetDirection = true;
+              nsTextNodeDirectionalityMap::RemoveElementFromMap(
+                directionWasSetByTextNode, parent
+              );
               break;
             }
 

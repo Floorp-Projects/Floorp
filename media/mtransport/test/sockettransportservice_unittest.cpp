@@ -79,7 +79,7 @@ class SocketTransportServiceTest : public ::testing::Test {
 class EventReceived : public nsRunnable {
 public:
   EventReceived(SocketTransportServiceTest *test) :
-      test_(test) {};
+      test_(test) {}
 
   NS_IMETHOD Run() {
     test_->ReceiveEvent();
@@ -94,7 +94,7 @@ public:
 class RegisterEvent : public nsRunnable {
 public:
   RegisterEvent(SocketTransportServiceTest *test) :
-      test_(test) {};
+      test_(test) {}
 
   NS_IMETHOD Run() {
     test_->RegisterHandler();
@@ -128,6 +128,9 @@ class SocketHandler : public nsASocketHandler {
     // TODO(jesup): better check? Does it matter? (likely no)
     *aIsLocal = false;
   }
+
+  virtual uint64_t ByteCountSent() { return 0; }
+  virtual uint64_t ByteCountReceived() { return 0; }
 
   NS_DECL_ISUPPORTS
 

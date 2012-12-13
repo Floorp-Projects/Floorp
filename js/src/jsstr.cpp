@@ -17,6 +17,7 @@
  */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <stdlib.h>
@@ -62,6 +63,8 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 using namespace js::unicode;
+
+using mozilla::CheckedInt;
 
 static JSLinearString *
 ArgToRootedString(JSContext *cx, CallArgs &args, unsigned argno)
@@ -2025,19 +2028,28 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
     }
 
     JSString *repstr = rdata.repstr;
-    size_t replen = repstr->length();
+    CheckedInt<uint32_t> replen = repstr->length();
     for (const jschar *dp = rdata.dollar, *ep = rdata.dollarEnd; dp;
          dp = js_strchr_limit(dp, '$', ep)) {
         JSSubString sub;
         size_t skip;
         if (InterpretDollar(res, dp, ep, rdata, &sub, &skip)) {
-            replen += sub.length - skip;
+            if (sub.length > skip)
+                replen += sub.length - skip;
+            else
+                replen -= skip - sub.length;
             dp += skip;
         } else {
             dp++;
         }
     }
-    *sizep = replen;
+
+    if (!replen.isValid()) {
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    *sizep = replen.value();
     return true;
 }
 
@@ -2088,8 +2100,14 @@ ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     if (!FindReplaceLength(cx, res, rdata, &replen))
         return false;
 
-    size_t growth = leftlen + replen;
-    if (!rdata.sb.reserve(rdata.sb.length() + growth))
+    CheckedInt<uint32_t> newlen(rdata.sb.length());
+    newlen += leftlen;
+    newlen += replen;
+    if (!newlen.isValid()) {
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
+    if (!rdata.sb.reserve(newlen.value()))
         return false;
 
     JSLinearString &str = rdata.str->asLinear();  /* flattened for regexp */
@@ -2369,7 +2387,7 @@ LambdaIsGetElem(JSObject &lambda)
     if (!fun->hasScript())
         return NULL;
 
-    RawScript script = fun->nonLazyScript().get(nogc);
+    UnrootedScript script = fun->nonLazyScript();
     jsbytecode *pc = script->code;
 
     /*

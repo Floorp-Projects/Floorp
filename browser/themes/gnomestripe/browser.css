@@ -501,6 +501,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 #appmenu_privateBrowsing,
+#appmenu_newPrivateWindow,
 #privateBrowsingItem {
   list-style-image: url("chrome://browser/skin/Privacy-16.png");
 }
@@ -1270,6 +1271,23 @@ toolbar[iconsize="small"] #feed-button {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric-16.png);
 }
 
+#blocked-plugins-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/plugins/notifyPluginBlocked.png);
+}
+
+#blocked-plugins-notification-icon[showing] {
+  animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
+}
+
+@keyframes pluginBlockedNotification {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 #webRTC-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
@@ -1789,12 +1807,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   display: -moz-box; /* display chevron icon in text mode */
 }
-
-#download-monitor {
-  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
 
 /* ::::: Keyboard UI Panel ::::: */
 

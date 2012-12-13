@@ -146,30 +146,6 @@ nsLoadGroup::~nsLoadGroup()
 }
 
 
-nsresult nsLoadGroup::Init()
-{
-    static PLDHashTableOps hash_table_ops =
-    {
-        PL_DHashAllocTable,
-        PL_DHashFreeTable,
-        PL_DHashVoidPtrKeyStub,
-        RequestHashMatchEntry,
-        PL_DHashMoveEntryStub,
-        RequestHashClearEntry,
-        PL_DHashFinalizeStub,
-        RequestHashInitEntry
-    };
-
-    if (!PL_DHashTableInit(&mRequests, &hash_table_ops, nullptr,
-                           sizeof(RequestMapEntry), 16)) {
-        mRequests.ops = nullptr;
-
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
@@ -791,6 +767,15 @@ nsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLoadGroup::GetConnectionInfo(nsILoadGroupConnectionInfo **aCI)
+{
+    NS_ENSURE_ARG_POINTER(aCI);
+    *aCI = mConnectionInfo;
+    NS_IF_ADDREF(*aCI);
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupportsPriority methods:
 
@@ -1003,4 +988,74 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
 
     outFlags = flags;
     return rv;
+}
+
+// nsLoadGroupConnectionInfo
+
+class nsLoadGroupConnectionInfo MOZ_FINAL : public nsILoadGroupConnectionInfo
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSILOADGROUPCONNECTIONINFO
+
+    nsLoadGroupConnectionInfo();
+private:
+    int32_t       mBlockingTransactionCount; // signed for PR_ATOMIC_*
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
+
+nsLoadGroupConnectionInfo::nsLoadGroupConnectionInfo()
+    : mBlockingTransactionCount(0)
+{
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::GetBlockingTransactionCount(uint32_t *aBlockingTransactionCount)
+{
+    NS_ENSURE_ARG_POINTER(aBlockingTransactionCount);
+    *aBlockingTransactionCount = static_cast<uint32_t>(mBlockingTransactionCount);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::AddBlockingTransaction()
+{
+    PR_ATOMIC_INCREMENT(&mBlockingTransactionCount);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::RemoveBlockingTransaction(uint32_t *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval =
+        static_cast<uint32_t>(PR_ATOMIC_DECREMENT(&mBlockingTransactionCount));
+    return NS_OK;
+}
+
+nsresult nsLoadGroup::Init()
+{
+    static PLDHashTableOps hash_table_ops =
+    {
+        PL_DHashAllocTable,
+        PL_DHashFreeTable,
+        PL_DHashVoidPtrKeyStub,
+        RequestHashMatchEntry,
+        PL_DHashMoveEntryStub,
+        RequestHashClearEntry,
+        PL_DHashFinalizeStub,
+        RequestHashInitEntry
+    };
+
+    if (!PL_DHashTableInit(&mRequests, &hash_table_ops, nullptr,
+                           sizeof(RequestMapEntry), 16)) {
+        mRequests.ops = nullptr;
+
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    mConnectionInfo = new nsLoadGroupConnectionInfo();
+
+    return NS_OK;
 }

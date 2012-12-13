@@ -210,13 +210,17 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
  *  eventUtils - optional; allows you to pass in a reference to EventUtils.js. 
  *               If the eventUtils parameter is not passed in, we assume EventUtils.js is 
  *               in the scope. Used by browser-chrome tests.
+ *  aDestWindow - optional; defaults to aWindow.
+ *                Used when destElement is in a different window than srcElement.
  *
  * Returns the drop effect that was desired.
  */
-function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, eventUtils)
+function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, eventUtils, aDestWindow)
 {
   if (!aWindow)
     aWindow = window;
+  if (!aDestWindow)
+    aDestWindow = aWindow;
 
   var synthesizeMouseAtCenter = (eventUtils || window).synthesizeMouseAtCenter;
   var synthesizeMouse = (eventUtils || window).synthesizeMouse;
@@ -254,24 +258,24 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
     synthesizeMouse(srcElement, x+10, y+10, { type: "mousemove" }, aWindow);
     aWindow.removeEventListener("dragstart", trapDrag, true);
 
-    event = aWindow.document.createEvent("DragEvents");
-    event.initDragEvent("dragenter", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    event = aDestWindow.document.createEvent("DragEvents");
+    event.initDragEvent("dragenter", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
     gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
 
-    var event = aWindow.document.createEvent("DragEvents");
-    event.initDragEvent("dragover", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    var event = aDestWindow.document.createEvent("DragEvents");
+    event.initDragEvent("dragover", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
     if (gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true)) {
-      synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aWindow);
+      synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
       return "none";
     }
 
     if (dataTransfer.dropEffect != "none") {
-      event = aWindow.document.createEvent("DragEvents");
-      event.initDragEvent("drop", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+      event = aDestWindow.document.createEvent("DragEvents");
+      event.initDragEvent("drop", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
       gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
     }
 
-    synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aWindow);
+    synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
 
     return dataTransfer.dropEffect;
   } finally {

@@ -12,7 +12,7 @@ RANLIB=ranlib
 AR=ar
 AS=$CC
 LD=ld
-STRIP="strip -x -S"
+STRIP="strip"
 
 MOZ_CAN_RUN_PROGRAMS=1
 

@@ -30,7 +30,13 @@ protected:
   RecvNotifyReceivedMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
 
   virtual bool
+  RecvNotifySendingMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
+
+  virtual bool
   RecvNotifySentMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvNotifyFailedMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
 
   virtual bool
   RecvNotifyDeliverySuccessMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;

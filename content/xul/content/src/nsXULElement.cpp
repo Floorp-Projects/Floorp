@@ -141,7 +141,7 @@ public:
     NS_ADDREF(*aStyle);
     return NS_OK;
   }
-  NS_FORWARD_NSIFRAMELOADEROWNER(static_cast<nsXULElement*>(mElement.get())->);
+  NS_FORWARD_NSIFRAMELOADEROWNER(static_cast<nsXULElement*>(mElement.get())->)
 private:
   nsCOMPtr<nsIDOMXULElement> mElement;
 };
@@ -2505,11 +2505,9 @@ nsXULPrototypeScript::Set(JSScript* aObject)
         return;
     }
 
-    nsresult rv = nsContentUtils::HoldJSObjects(
+    nsContentUtils::HoldJSObjects(
         this, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
-    if (NS_SUCCEEDED(rv)) {
-        mScriptObject.mObject = aObject;
-    }
+    mScriptObject.mObject = aObject;
 }
 
 //----------------------------------------------------------------------

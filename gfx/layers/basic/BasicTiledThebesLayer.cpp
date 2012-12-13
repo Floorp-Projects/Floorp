@@ -7,6 +7,8 @@
 #include "gfxImageSurface.h"
 #include "sampler.h"
 #include "gfxPlatform.h"
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
@@ -236,6 +238,20 @@ BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
   return aTile;
 }
 
+BasicTiledThebesLayer::BasicTiledThebesLayer(BasicShadowLayerManager* const aManager)
+  : ThebesLayer(aManager, static_cast<BasicImplData*>(this))
+  , mLastScrollOffset(0, 0)
+  , mFirstPaint(true)
+{
+  MOZ_COUNT_CTOR(BasicTiledThebesLayer);
+  mLowPrecisionTiledBuffer.SetResolution(gfxPlatform::GetLowPrecisionResolution());
+}
+
+BasicTiledThebesLayer::~BasicTiledThebesLayer()
+{
+  MOZ_COUNT_DTOR(BasicTiledThebesLayer);
+}
+
 void
 BasicTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
@@ -361,7 +377,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     if (!aRegionToPaint.IsEmpty()) {
       break;
     }
-    if (NS_ABS(scrollDiffY) >= NS_ABS(scrollDiffX)) {
+    if (std::abs(scrollDiffY) >= std::abs(scrollDiffX)) {
       tileBounds.x += incX;
     } else {
       tileBounds.y += incY;
@@ -557,7 +573,9 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     mTiledBuffer.PaintThebes(this, mValidRegion, invalidRegion, aCallback, aCallbackData);
     mTiledBuffer.ReadLock();
 
-    static_cast<BasicImplData*>(aMaskLayer->ImplData())->Paint(aContext, nullptr);
+    if (aMaskLayer) {
+      static_cast<BasicImplData*>(aMaskLayer->ImplData())->Paint(aContext, nullptr);
+    }
 
     // Create a heap copy owned and released by the compositor. This is needed
     // since we're sending this over an async message and content needs to be

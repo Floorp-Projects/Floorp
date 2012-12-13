@@ -91,7 +91,7 @@
           <vbox id="experimental" hidden="true">
             <description class="text-blurb" id="warningDesc">
               &warningDesc.version;
-#ifdef MOZ_TELEMETRY_REPORTING
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
               &warningDesc.telemetryDesc;
 #endif
             </description>

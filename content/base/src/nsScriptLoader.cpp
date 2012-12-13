@@ -24,6 +24,7 @@
 #include "nsIPrincipal.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIScriptElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDocShell.h"
@@ -257,7 +258,8 @@ nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
 }
 
 nsresult
-nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
+nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
+                          bool aScriptFromHead)
 {
   nsISupports *context = aRequest->mElement.get()
                          ? static_cast<nsISupports *>(aRequest->mElement.get())
@@ -301,6 +303,15 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
                      nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI,
                      channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIScriptElement *script = aRequest->mElement;
+  if (aScriptFromHead &&
+      !(script && (script->GetScriptAsync() || script->GetScriptDeferred()))) {
+    nsCOMPtr<nsIHttpChannelInternal>
+      internalHttpChannel(do_QueryInterface(channel));
+    if (internalHttpChannel)
+      internalHttpChannel->SetLoadAsBlocking(true);
+  }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
@@ -518,7 +529,10 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       request->mURI = scriptURI;
       request->mIsInline = false;
       request->mLoading = true;
-      rv = StartLoad(request, type);
+
+      // set aScriptFromHead to false so we don't treat non preloaded scripts as
+      // blockers for full page load. See bug 792438.
+      rv = StartLoad(request, type, false);
       if (NS_FAILED(rv)) {
         // Asynchronously report the load failure
         NS_DispatchToCurrentThread(
@@ -1059,31 +1073,11 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
 
   PRUnichar *ustr = aString.BeginWriting();
 
-  int32_t consumedLength = 0;
-  int32_t originalLength = aLength;
-  int32_t convertedLength = 0;
-  int32_t bufferLength = unicodeLength;
-  do {
-    rv = unicodeDecoder->Convert(reinterpret_cast<const char*>(aData),
-                                 (int32_t *) &aLength, ustr,
-                                 &unicodeLength);
-    if (NS_FAILED(rv)) {
-      // if we failed, we consume one byte, replace it with U+FFFD
-      // and try the conversion again.
-      ustr[unicodeLength++] = (PRUnichar)0xFFFD;
-      ustr += unicodeLength;
-
-      unicodeDecoder->Reset();
-    }
-    aData += ++aLength;
-    consumedLength += aLength;
-    aLength = originalLength - consumedLength;
-    convertedLength += unicodeLength;
-    unicodeLength = bufferLength - convertedLength;
-  } while (NS_FAILED(rv) &&
-           (originalLength > consumedLength) &&
-           (bufferLength > convertedLength));
-  aString.SetLength(convertedLength);
+  rv = unicodeDecoder->Convert(reinterpret_cast<const char*>(aData),
+                               (int32_t *) &aLength, ustr,
+                               &unicodeLength);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  aString.SetLength(unicodeLength);
   return rv;
 }
 
@@ -1236,7 +1230,8 @@ nsScriptLoader::ParsingComplete(bool aTerminated)
 void
 nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
                            const nsAString &aType,
-                           const nsAString &aCrossOrigin)
+                           const nsAString &aCrossOrigin,
+                           bool aScriptFromHead)
 {
   // Check to see if scripts has been turned off.
   if (!mEnabled || !mDocument->IsScriptEnabled()) {
@@ -1249,7 +1244,7 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
   request->mURI = aURI;
   request->mIsInline = false;
   request->mLoading = true;
-  nsresult rv = StartLoad(request, aType);
+  nsresult rv = StartLoad(request, aType, aScriptFromHead);
   if (NS_FAILED(rv)) {
     return;
   }

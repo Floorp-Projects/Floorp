@@ -172,6 +172,28 @@ WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JS_ALWAYS_INLINE bool
+WeakMap_clear_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsWeakMap(args.thisv()));
+
+    // We can't js_delete the weakmap because the data gathered during GC
+    // is used by the Cycle Collector
+    if (ObjectValueMap *map = GetObjectMap(&args.thisv().toObject())) {
+        map->clear();
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
+WeakMap_clear(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsWeakMap, WeakMap_clear_impl>(cx, args);
+}
+
+JS_ALWAYS_INLINE bool
 WeakMap_get_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsWeakMap(args.thisv()));
@@ -374,6 +396,7 @@ static JSFunctionSpec weak_map_methods[] = {
     JS_FN("get",    WeakMap_get, 2, 0),
     JS_FN("delete", WeakMap_delete, 1, 0),
     JS_FN("set",    WeakMap_set, 2, 0),
+    JS_FN("clear",  WeakMap_clear, 0, 0),
     JS_FS_END
 };
 

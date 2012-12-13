@@ -32,7 +32,11 @@ kMediaConduitUnknownError,             // More information can be found in logs
 kMediaConduitExternalRecordingError,   // Couldn't start external recording
 kMediaConduitRecordingError,           // Runtime recording error
 kMediaConduitExternalPlayoutError,     // Couldn't start external playout
-kMediaConduitPlayoutError              // Runtime playout error
+kMediaConduitPlayoutError,             // Runtime playout error
+kMediaConduitMTUError,                 // Can't set MTU
+kMediaConduitRTCPStatusError,          // Can't set RTCP mode
+kMediaConduitKeyFrameRequestError,     // Can't set KeyFrameRequest mode
+kMediaConduitNACKStatusError           // Can't set NACK mode
 };
 
 }

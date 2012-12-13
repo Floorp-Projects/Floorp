@@ -426,7 +426,7 @@ static struct curveType *read_curveType(struct mem_source *src, uint32_t offset,
 			return NULL;
 
 		curve->count = count;
-		curve->type = type;
+		curve->type = CURVE_TYPE;
 
 		for (i=0; i<count; i++) {
 			curve->data[i] = read_u16(src, offset + 12 + i*2);
@@ -445,7 +445,7 @@ static struct curveType *read_curveType(struct mem_source *src, uint32_t offset,
 			return NULL;
 
 		curve->count = count;
-		curve->type = type;
+		curve->type = PARAMETRIC_CURVE_TYPE;
 
 		for (i=0; i < COUNT_TO_LENGTH[count]; i++) {
 			curve->parameter[i] = s15Fixed16Number_to_float(read_s15Fixed16Number(src, offset + 12 + i*4));	
@@ -848,6 +848,7 @@ static struct curveType *curve_from_gamma(float gamma)
 		return NULL;
 	curve->count = num_entries;
 	curve->data[0] = float_to_u8Fixed8Number(gamma);
+  curve->type = CURVE_TYPE;
 	return curve;
 }
 

@@ -43,7 +43,7 @@ MOCHITEST_FILES = 	test_bug1682.html \
 		test_viewport.html \
 		test_documentAll.html \
 		test_document-element-inserted.html \
-		test_bug445004.html \
+		$(filter disabled-temporarily--bug-559932, test_bug445004.html) \
 		bug445004-inner.js \
 		bug445004-outer-rel.html \
 		bug445004-outer-abs.html \

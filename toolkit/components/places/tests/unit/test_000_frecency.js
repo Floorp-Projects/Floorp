@@ -29,14 +29,6 @@ try {
   do_throw("Could not get services\n");
 }
 
-function add_visit(aURI, aVisitDate, aVisitType) {
-  var isRedirect = aVisitType == histsvc.TRANSITION_REDIRECT_PERMANENT ||
-                   aVisitType == histsvc.TRANSITION_REDIRECT_TEMPORARY;
-  var visitId = histsvc.addVisit(aURI, aVisitDate, null,
-                                 aVisitType, isRedirect, 0);
-  return visitId;
-}
-
 var bucketPrefs = [
   [ "firstBucketCutoff", "firstBucketWeight"],
   [ "secondBucketCutoff", "secondBucketWeight"],
@@ -54,10 +46,6 @@ var bonusPrefs = {
   downloadVisitBonus: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   permRedirectVisitBonus: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
   tempRedirectVisitBonus: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
-  defaultVisitBonus: 0,
-  unvisitedBookmarkBonus: 0
-// XXX todo
-// unvisitedTypedBonus: 0
 };
 
 // create test data
@@ -66,7 +54,8 @@ var results = [];
 var matchCount = 0;
 var now = Date.now();
 var prefPrefix = "places.frecency.";
-bucketPrefs.every(function(bucket) {
+
+function task_initializeBucket(bucket) {
   let [cutoffName, weightName] = bucket;
   // get pref values
   var weight = 0, cutoff = 0, bonus = 0;
@@ -78,7 +67,7 @@ bucketPrefs.every(function(bucket) {
   } catch(ex) {}
 
   if (cutoff < 1)
-    return true;
+    return;
 
   // generate a date within the cutoff period
   var dateInPeriod = (now - ((cutoff - 1) * 86400 * 1000)) * 1000;
@@ -91,7 +80,7 @@ bucketPrefs.every(function(bucket) {
     // unvisited (only for first cutoff date bucket)
     if (bonusName == "unvisitedBookmarkBonus" || bonusName == "unvisitedTypedBonus") {
       if (cutoffName == "firstBucketCutoff") {
-        var points = Math.ceil(bonusValue / parseFloat(100.0) * weight); 
+        var points = Math.ceil(bonusValue / parseFloat(100.0) * weight);
         var visitCount = 1; //bonusName == "unvisitedBookmarkBonus" ? 1 : 0;
         frecency = Math.ceil(visitCount * points);
         calculatedURI = uri("http://" + searchTerm + ".com/" +
@@ -116,8 +105,7 @@ bucketPrefs.every(function(bucket) {
 
       var points = Math.ceil(1 * ((bonusValue / parseFloat(100.000000)).toFixed(6) * weight) / 1);
       if (!points) {
-        if (!visitType ||
-            visitType == Ci.nsINavHistoryService.TRANSITION_EMBED ||
+        if (visitType == Ci.nsINavHistoryService.TRANSITION_EMBED ||
             visitType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
             visitType == Ci.nsINavHistoryService.TRANSITION_DOWNLOAD ||
             bonusName == "defaultVisitBonus")
@@ -136,7 +124,11 @@ bucketPrefs.every(function(bucket) {
       }
       else
         matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/")+1);
-      add_visit(calculatedURI, dateInPeriod, visitType);
+      yield promiseAddVisits({
+        uri: calculatedURI,
+        transition: visitType,
+        visitDate: dateInPeriod
+      });
     }
 
     if (calculatedURI && frecency) {
@@ -144,46 +136,37 @@ bucketPrefs.every(function(bucket) {
       setPageTitle(calculatedURI, matchTitle);
     }
   }
-  return true;
-});
-
-// sort results by frecency
-results.sort(function(a,b) a[1] - b[1]);
-results.reverse();
-// Make sure there's enough results returned
-prefs.setIntPref("browser.urlbar.maxRichResults", results.length);
-
-//results.every(function(el) { dump("result: " + el[1] + ": " + el[0].spec + " (" + el[2] + ")\n"); return true; })
+}
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
 }
 AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput, 
+  constructor: AutoCompleteInput,
 
   searches: null,
-  
+
   minResultsForPopup: 0,
   timeout: 10,
   searchParam: "",
   textValue: "",
-  disableAutoComplete: false,  
+  disableAutoComplete: false,
   completeDefaultIndex: false,
-  
+
   get searchCount() {
     return this.searches.length;
   },
-  
+
   getSearchAt: function(aIndex) {
     return this.searches[aIndex];
   },
-  
+
   onSearchBegin: function() {},
   onSearchComplete: function() {},
-  
-  popupOpen: false,  
-  
-  popup: { 
+
+  popupOpen: false,
+
+  popup: {
     setSelectedIndex: function(aIndex) {},
     invalidate: function() {},
 
@@ -194,9 +177,9 @@ AutoCompleteInput.prototype = {
         return this;
 
       throw Components.results.NS_ERROR_NO_INTERFACE;
-    }    
+    }
   },
-    
+
   // nsISupports implementation
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsISupports) ||
@@ -207,12 +190,27 @@ AutoCompleteInput.prototype = {
   }
 }
 
-function run_test() {
-  do_test_pending();
-  promiseAsyncUpdates().then(continue_test);
+function run_test()
+{
+  run_next_test();
 }
 
-function continue_test() {
+add_task(function test_frecency()
+{
+  for (let [, bucket] in Iterator(bucketPrefs)) {
+    yield task_initializeBucket(bucket);
+  }
+
+  // sort results by frecency
+  results.sort(function(a,b) b[1] - a[1]);
+  // Make sure there's enough results returned
+  prefs.setIntPref("browser.urlbar.maxRichResults", results.length);
+
+  // DEBUG
+  //results.every(function(el) { dump("result: " + el[1] + ": " + el[0].spec + " (" + el[2] + ")\n"); return true; })
+
+  yield promiseAsyncUpdates();
+
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
 
@@ -232,6 +230,7 @@ function continue_test() {
     do_check_eq(numSearchesStarted, 1);
   };
 
+  let deferred = Promise.defer();
   input.onSearchComplete = function() {
     do_check_eq(numSearchesStarted, 1);
     do_check_eq(controller.searchStatus,
@@ -258,9 +257,10 @@ function continue_test() {
         do_check_eq(getFrecency(searchURL), getFrecency(expectURL));
       }
     }
-
-    do_test_finished();
+    deferred.resolve();
   };
 
   controller.startSearch(searchTerm);
-}
+
+  yield deferred.promise;
+});

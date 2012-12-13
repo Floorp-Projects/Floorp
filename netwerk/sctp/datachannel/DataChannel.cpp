@@ -375,7 +375,7 @@ DataChannelConnection::DTLSConnectThread(void *data)
 
   memset(&addr, 0, sizeof(addr));
   addr.sconn_family = AF_CONN;
-#if !defined(__Userspace_os_Linux) && !defined(__Userspace_os_Windows)
+#if defined(__Userspace_os_Darwin)
   addr.sconn_len = sizeof(addr);
 #endif
   addr.sconn_port = htons(_this->mLocalPort);

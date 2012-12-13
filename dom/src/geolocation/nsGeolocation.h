@@ -125,7 +125,7 @@ public:
   PRBool IsBetterPosition(nsIDOMGeoPosition *aSomewhere);
 
   // Find and startup a geolocation device (gps, nmea, etc.)
-  nsresult StartDevice();
+  nsresult StartDevice(bool aRequestPrivate);
 
   // Stop the started geolocation device (gps, nmea, etc.)
   void     StopDevice();
