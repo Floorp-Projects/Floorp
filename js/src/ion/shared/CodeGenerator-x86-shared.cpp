@@ -798,10 +798,16 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
     Register remainder = ToRegister(ins->remainder());
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
+    Register temp = ToRegister(ins->getTemp(0));
 
     // Required to use idiv.
     JS_ASSERT(remainder == edx);
-    JS_ASSERT(lhs == eax);
+    JS_ASSERT(temp == eax);
+
+    if (lhs != temp) {
+        masm.mov(lhs, temp);
+        lhs = temp;
+    }
 
     // If rhs == 0, bailout, since result must be a double (NaN).
     masm.testl(rhs, rhs);
