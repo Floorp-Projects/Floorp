@@ -314,46 +314,18 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
     mPluginInstance->FileCachedStreamListeners()->RemoveElement(this);
 }
 
-// Called as a result of GetURL and PostURL
+// Called as a result of GetURL and PostURL, or by the host in the case of the
+// initial plugin stream.
 nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
                                                 nsNPAPIPluginInstance *aInstance,
                                                 nsNPAPIPluginStreamListener* aListener)
 {
 #ifdef PLUGIN_LOGGING
   nsAutoCString urlSpec;
-  if (aURL != nullptr) aURL->GetAsciiSpec(urlSpec);
-  
+  if (aURL != nullptr) aURL->GetSpec(urlSpec);
+
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
          ("nsPluginStreamListenerPeer::Initialize instance=%p, url=%s\n", aInstance, urlSpec.get()));
-  
-  PR_LogFlush();
-#endif
-  
-  mURL = aURL;
-  
-  mPluginInstance = aInstance;
-
-  mPStreamListener = aListener;
-  mPStreamListener->SetStreamListenerPeer(this);
-
-  mPendingRequests = 1;
-  
-  mDataForwardToRequest = new nsHashtable(16, false);
-  if (!mDataForwardToRequest)
-    return NS_ERROR_FAILURE;
-  
-  return NS_OK;
-}
-
-nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
-                                                        nsNPAPIPluginInstance* aInstance)
-{
-#ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec;
-  aURL->GetSpec(urlSpec);
-
-  PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-         ("nsPluginStreamListenerPeer::InitializeEmbedded url=%s\n", urlSpec.get()));
 
   PR_LogFlush();
 #endif
@@ -365,8 +337,17 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
 
   mURL = aURL;
 
-  NS_ASSERTION(mPluginInstance == nullptr, "nsPluginStreamListenerPeer::InitializeEmbedded mPluginInstance != nullptr");
+  NS_ASSERTION(mPluginInstance == nullptr,
+               "nsPluginStreamListenerPeer::Initialize mPluginInstance != nullptr");
   mPluginInstance = aInstance;
+
+  // If the plugin did not request this stream, e.g. the initial stream, we wont
+  // have a nsNPAPIPluginStreamListener yet - this will be handled by
+  // SetUpStreamListener
+  if (aListener) {
+    mPStreamListener = aListener;
+    mPStreamListener->SetStreamListenerPeer(this);
+  }
 
   mPendingRequests = 1;
 

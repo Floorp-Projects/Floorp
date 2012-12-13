@@ -67,13 +67,11 @@ public:
 
   bool UseExistingPluginCacheFile(nsPluginStreamListenerPeer* psi);
 
-  // Called by GetURL and PostURL (via NewStream)
+  // Called by GetURL and PostURL (via NewStream) or by the host in the case of
+  // the initial plugin stream.
   nsresult Initialize(nsIURI *aURL,
                       nsNPAPIPluginInstance *aInstance,
                       nsNPAPIPluginStreamListener *aListener);
-
-  nsresult InitializeEmbedded(nsIURI *aURL,
-                              nsNPAPIPluginInstance* aInstance);
 
   nsresult OnFileAvailable(nsIFile* aFile);
 
