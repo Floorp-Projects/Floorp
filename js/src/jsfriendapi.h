@@ -1424,9 +1424,16 @@ typedef bool
                   void *specializedThis, unsigned argc, JS::Value *vp);
 
 struct JSJitInfo {
+    enum OpType {
+        Getter,
+        Setter,
+        Method
+    };
+
     JSJitPropertyOp op;
     uint32_t protoID;
     uint32_t depth;
+    OpType type;
     bool isInfallible;    /* Is op fallible? False in setters. */
     bool isConstant;      /* Getting a construction-time constant? */
 };

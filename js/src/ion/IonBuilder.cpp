@@ -5943,7 +5943,8 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
 }
 
 static bool
-TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func)
+TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func,
+                  JSJitInfo::OpType opType)
 {
     if (!func->isNative() || !func->jitInfo())
         return false;
@@ -5954,6 +5955,8 @@ TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func)
         GetDOMCallbacks(cx->runtime)->instanceClassMatchesProto;
 
     const JSJitInfo *jinfo = func->jitInfo();
+    if (jinfo->type != opType)
+        return false;
 
     for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
         types::TypeObject *curType = inTypes->getTypeObject(i);
@@ -6303,7 +6306,7 @@ IonBuilder::getPropTryConstant(bool *emitted, HandleId id, types::StackTypeSet *
     if (singleton->isFunction()) {
         RootedFunction singletonFunc(cx, singleton->toFunction());
         if (TestAreKnownDOMTypes(cx, unaryTypes.inTypes) &&
-            TestShouldDOMCall(cx, unaryTypes.inTypes, singletonFunc))
+            TestShouldDOMCall(cx, unaryTypes.inTypes, singletonFunc, JSJitInfo::Method))
         {
             FreezeDOMTypes(cx, unaryTypes.inTypes);
             known->setDOMFunction();
@@ -6369,7 +6372,7 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id, types::StackTypeS
     MDefinition *obj = current->pop();
     RootedFunction getter(cx, commonGetter);
 
-    if (isDOM && TestShouldDOMCall(cx, unaryTypes.inTypes, getter)) {
+    if (isDOM && TestShouldDOMCall(cx, unaryTypes.inTypes, getter, JSJitInfo::Getter)) {
         const JSJitInfo *jitinfo = getter->jitInfo();
         MGetDOMProperty *get = MGetDOMProperty::New(jitinfo, obj, guard);
         current->add(get);
@@ -6526,7 +6529,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         return false;
     if (!monitored && commonSetter) {
         RootedFunction setter(cx, commonSetter);
-        if (isDOM && TestShouldDOMCall(cx, types, setter)) {
+        if (isDOM && TestShouldDOMCall(cx, types, setter, JSJitInfo::Setter)) {
             MSetDOMProperty *set = MSetDOMProperty::New(setter->jitInfo()->op, obj, value);
             if (!set)
                 return false;
