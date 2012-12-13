@@ -194,6 +194,7 @@ public:
   MediaCacheStream(ChannelMediaResource* aClient)
     : mClient(aClient), mInitialized(false),
       mHasHadUpdate(false),
+      mDownloadCancelled(false),
       mClosed(false),
       mDidNotifyDataEnded(false), mResourceID(0),
       mIsTransportSeekable(false), mCacheSuspended(false),
@@ -278,6 +279,13 @@ public:
   void FlushPartialBlock();
   // Notifies the cache that the channel has closed with the given status.
   void NotifyDataEnded(nsresult aStatus);
+  // Notifies the cache that the download was cancelled. Sets
+  // |mDownloadCancelled| to false and notifies any thread waiting on the media
+  // cache monitor. In this way, if |Read| is waiting when a download is
+  // cancelled, it will be wakened and should stop trying to read.
+  // Note: |mDownloadCancelled| is set to false when |Read| is awakened, and in
+  // |NotifyDataStarted|, when new data starts downloading.
+  void NotifyDownloadCancelled();
 
   // These methods can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
@@ -440,6 +448,9 @@ private:
   // Set to true when MediaCache::Update() has finished while this stream
   // was present.
   bool                   mHasHadUpdate;
+  // True if the download was cancelled. Set true in NotifyDownloadCancelled.
+  // Set false in NotifyDataStarted.
+  bool mDownloadCancelled;
   // Set to true when the stream has been closed either explicitly or
   // due to an internal cache error
   bool                   mClosed;

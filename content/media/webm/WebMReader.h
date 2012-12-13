@@ -181,6 +181,9 @@ public:
     mCuesByteRange = aByteRange;
   }
 
+  // Returns the index of the subsegment which contains the seek time.
+  int64_t GetSubsegmentForSeekTime(int64_t aSeekToTime) MOZ_OVERRIDE;
+
   // Returns list of ranges for cluster start and end offsets.
   nsresult GetSubsegmentByteRanges(nsTArray<MediaByteRange>& aByteRanges)
                                                                   MOZ_OVERRIDE;
@@ -304,7 +307,7 @@ private:
   MediaByteRange mCuesByteRange;
 
   // Byte ranges for clusters; set internally, derived from cues.
-  nsTArray<MediaByteRange> mClusterByteRanges;
+  nsTArray<TimestampedMediaByteRange> mClusterByteRanges;
 
   // Pointer to the main |DASHReader|. Set in the constructor.
   DASHReader* mMainReader;
