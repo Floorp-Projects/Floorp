@@ -11,7 +11,6 @@ relativesrcdir  = layout/base/test/chrome
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES = \
-	paint_listener.js \
 	test_bug370436.html \
 	test_bug396367-1.html \
 	test_bug396367-2.html \

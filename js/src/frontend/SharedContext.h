@@ -143,27 +143,11 @@ class SharedContext
                                        global code */
     AnyContextFlags anyCxFlags;
 
-    // strictModeState tracks the strictness of this context. Normally, it
-    // should be STRICT or NOTSTRICT. However, it can be UNKNOWN when parsing
-    // code for which the strictness has not yet been determined. This happens
-    // when parsing the defaults of a functions and non-"use strict" directive
-    // prologue strings.
-    //
-    // Unless its parent is strict, a context starts out in the UNKNOWN
-    // state. Parser::setStrictMode() should be called when a context has been
-    // determined to be strict or it cannot possibly become strict through the
-    // directive prologue.
-    //
-    // When parsing is done, no contexts can be in the UNKNOWN state, with the
-    // exception of functions defined in default expressions.  Any such context
-    // subsequently inherits its parent's state when it starts being used in
-    // BytecodeEmitter (see EmitFunc()).
-    //
-    StrictMode strictModeState;
+    bool strict;
 
     // If it's function code, funbox must be non-NULL and scopeChain must be NULL.
     // If it's global code, funbox must be NULL.
-    inline SharedContext(JSContext *cx, bool isFun, StrictMode sms);
+    inline SharedContext(JSContext *cx, bool isFun, bool strict);
 
     inline GlobalSharedContext *asGlobal();
     inline FunctionBox *asFunbox();
@@ -176,7 +160,6 @@ class SharedContext
 
     // JSOPTION_STRICT warnings or strict mode errors.
     inline bool needStrictChecks();
-    inline bool inStrictMode();
 };
 
 class GlobalSharedContext : public SharedContext
@@ -185,7 +168,7 @@ class GlobalSharedContext : public SharedContext
     const RootedObject scopeChain_; /* scope chain object for the script */
 
   public:
-    inline GlobalSharedContext(JSContext *cx, JSObject *scopeChain, StrictMode sms);
+    inline GlobalSharedContext(JSContext *cx, JSObject *scopeChain, bool strict);
 
     JSObject *scopeChain() const { return scopeChain_; }
 };
@@ -204,7 +187,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     FunctionContextFlags funCxFlags;
 
     FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun, ParseContext *pc,
-                StrictMode sms);
+                bool strict);
 
     JSFunction *function() const { return object->toFunction(); }
 

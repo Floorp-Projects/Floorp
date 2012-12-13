@@ -14,7 +14,7 @@ LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1
 
 ifdef GNU_CC
-OS_CFLAGS := $(filter-out -pedantic,$(OX_CFLAGS))
+OS_CFLAGS := $(filter-out -pedantic,$(OS_CFLAGS))
 OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 ifeq ($(OS_TARGET),Android)
 MODULE_OPTIMIZE_FLAGS = -O2

@@ -451,6 +451,7 @@ protected:
                                            PAINTSTRUCT ps, HDC aDC);
   static void             ActivateOtherWindowHelper(HWND aWnd);
   void                    ClearCachedResources();
+  nsIWidgetListener*      GetPaintListener();
 
 protected:
   nsCOMPtr<nsIWidget>   mParent;

@@ -100,7 +100,6 @@ function getAllPendingMinidumpsIDs() {
   while (entries.hasMoreElements()) {
     let entry = entries.getNext().QueryInterface(Ci.nsIFile);
     if (entry.isFile()) {
-      entry.leafName
       let matches = entry.leafName.match(/(.+)\.extra$/);
       if (matches)
         minidumps.push(matches[1]);
@@ -108,6 +107,48 @@ function getAllPendingMinidumpsIDs() {
   }
 
   return minidumps;
+}
+
+function pruneSavedDumps() {
+  const KEEP = 10;
+
+  let pendingDir = getPendingDir();
+  if (!(pendingDir.exists() && pendingDir.isDirectory()))
+    return;
+  let entries = pendingDir.directoryEntries;
+  let entriesArray = [];
+
+  while (entries.hasMoreElements()) {
+    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+    if (entry.isFile()) {
+      let matches = entry.leafName.match(/(.+)\.extra$/);
+      if (matches)
+	entriesArray.push(entry);
+    }
+  }
+
+  entriesArray.sort(function(a,b) {
+    let dateA = a.lastModifiedTime;
+    let dateB = b.lastModifiedTime;
+    if (dateA < dateB)
+      return -1;
+    if (dateB < dateA)
+      return 1;
+    return 0;
+  });
+
+  if (entriesArray.length > KEEP) {
+    for (let i = 0; i < entriesArray.length - KEEP; ++i) {
+      let extra = entriesArray[i];
+      let matches = extra.leafName.match(/(.+)\.extra$/);
+      if (matches) {
+        let dump = extra.clone();
+        dump.leafName = matches[1] + '.dmp';
+        dump.remove(false);
+        extra.remove(false);
+      }
+    }
+  }
 }
 
 function addFormEntry(doc, form, name, value) {
@@ -385,6 +426,13 @@ this.CrashSubmit = {
    */
   pendingIDs: function CrashSubmit_pendingIDs() {
     return getAllPendingMinidumpsIDs();
+  },
+
+  /**
+   * Prune the saved dumps.
+   */
+  pruneSavedDumps: function CrashSubmit_pruneSavedDumps() {
+    pruneSavedDumps();
   },
 
   // List of currently active submit objects

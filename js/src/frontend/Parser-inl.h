@@ -41,7 +41,6 @@ ParseContext::ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel,
     args_(prs->context),
     vars_(prs->context),
     yieldNode(NULL),
-    queuedStrictModeError(NULL),
     parserPC(&prs->pc),
     lexdeps(prs->context),
     parent(prs->pc),
@@ -50,7 +49,8 @@ ParseContext::ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel,
     funHasReturnVoid(false),
     parsingForInit(false),
     parsingWith(prs->pc ? prs->pc->parsingWith : false), // inherit from parent context
-    inDeclDestructuring(false)
+    inDeclDestructuring(false),
+    funBecameStrict(false)
 {
     prs->pc = this;
 }
@@ -64,13 +64,6 @@ ParseContext::init()
     return decls_.init() && lexdeps.ensureMap(sc->context);
 }
 
-inline void
-ParseContext::setQueuedStrictModeError(CompileError *e)
-{
-    JS_ASSERT(!queuedStrictModeError);
-    queuedStrictModeError = e;
-}
-
 inline
 ParseContext::~ParseContext()
 {
@@ -79,15 +72,6 @@ ParseContext::~ParseContext()
     JS_ASSERT(*parserPC == this);
     *parserPC = this->parent;
     js_delete(funcStmts);
-    if (queuedStrictModeError) {
-        // If the parent context is looking for strict mode violations, pass
-        // ours up. Otherwise, free it.
-        if (parent && parent->sc->strictModeState == StrictMode::UNKNOWN &&
-            !parent->queuedStrictModeError)
-            parent->queuedStrictModeError = queuedStrictModeError;
-        else
-            js_delete(queuedStrictModeError);
-    }
 }
 
 } // namespace frontend

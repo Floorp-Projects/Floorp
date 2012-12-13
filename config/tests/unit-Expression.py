@@ -59,5 +59,24 @@ class TestExpression(unittest.TestCase):
     """ Test for the != operator"""
     self.assert_(Expression('FAIL != 1').evaluate(self.c))
 
+  def test_logical_and(self):
+    """ Test for the && operator"""
+    self.assertTrue(Expression('PASS == PASS && PASS != NOTPASS').evaluate(self.c))
+
+  def test_logical_or(self):
+    """ Test for the || operator"""
+    self.assertTrue(Expression('PASS == NOTPASS || PASS != NOTPASS').evaluate(self.c))
+
+  def test_logical_ops(self):
+    """ Test for the && and || operators precedence"""
+    # Would evaluate to false if precedence was wrong
+    self.assertTrue(Expression('PASS == PASS || PASS != NOTPASS && PASS == NOTPASS').evaluate(self.c))
+
+  def test_defined(self):
+    """ Test for the defined() value"""
+    self.assertTrue(Expression('defined(FAIL)').evaluate(self.c))
+    self.assertTrue(Expression('!defined(PASS)').evaluate(self.c))
+
+
 if __name__ == '__main__':
   mozunit.main()
