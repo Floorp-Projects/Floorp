@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/splitview.css"?>
+<?xml-stylesheet href="chrome://browser/content/splitview.css"?>
+<?xml-stylesheet href="chrome://browser/content/profiler.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <box flex="1" id="profiler-chrome" class="splitview-root">
+    <box class="splitview-controller" width="180px">
+      <box class="splitview-main"></box>
+
+      <box class="splitview-nav-container">
+        <ol class="splitview-nav" id="profiles-list">
+          <!-- Example:
+          <li class="splitview-active" id="profile-1" data-uid="1">
+            <h1 class="profile-name">Profile 1</h1>
+          </li>
+          -->
+        </ol>
+
+        <spacer flex="1"/>
+
+        <toolbar class="devtools-toolbar" mode="full">
+          <toolbarbutton id="profiler-create"
+                         class="devtools-toolbarbutton"
+                         label="New"
+                         disabled="true"/>
+        </toolbar>
+      </box> <!-- splitview-nav-container -->
+    </box> <!-- splitview-controller -->
+
+    <box flex="1">
+      <vbox flex="1" id="profiler-report">
+        <!-- Example:
+        <iframe id="profiler-cleo-1"
+          src="devtools/cleopatra.html" flex="1"></iframe>
+        -->
+      </vbox>
+    </box>
+  </box>
+</window>
