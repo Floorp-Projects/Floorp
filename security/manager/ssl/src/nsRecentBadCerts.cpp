@@ -6,7 +6,9 @@
 
 #include "nsRecentBadCerts.h"
 #include "nsIX509Cert.h"
+#include "nsIObserverService.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Services.h"
 #include "nsSSLStatus.h"
 #include "nsCOMPtr.h"
 #include "nsNSSCertificate.h"
@@ -20,28 +22,22 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRecentBadCertsService, 
-                              nsIRecentBadCertsService)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRecentBadCerts,
+                              nsIRecentBadCerts)
 
-nsRecentBadCertsService::nsRecentBadCertsService()
-:monitor("nsRecentBadCertsService.monitor")
+nsRecentBadCerts::nsRecentBadCerts()
+:monitor("nsRecentBadCerts.monitor")
 ,mNextStorePosition(0)
 {
 }
 
-nsRecentBadCertsService::~nsRecentBadCertsService()
+nsRecentBadCerts::~nsRecentBadCerts()
 {
-}
-
-nsresult
-nsRecentBadCertsService::Init()
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort, 
-                                          nsISSLStatus **aStatus)
+nsRecentBadCerts::GetRecentBadCert(const nsAString & aHostNameWithPort, 
+                                   nsISSLStatus **aStatus)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
   if (!aHostNameWithPort.Length())
@@ -101,7 +97,7 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
 }
 
 NS_IMETHODIMP
-nsRecentBadCertsService::AddBadCert(const nsAString &hostWithPort, 
+nsRecentBadCerts::AddBadCert(const nsAString &hostWithPort, 
                                     nsISSLStatus *aStatus)
 {
   NS_ENSURE_ARG(aStatus);
@@ -144,5 +140,15 @@ nsRecentBadCertsService::AddBadCert(const nsAString &hostWithPort,
     updatedEntry.isUntrusted = isUntrusted;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRecentBadCerts::ResetStoredCerts()
+{
+  for (size_t i = 0; i < const_recently_seen_list_size; ++i) {
+    RecentBadCert &entry = mCerts[i];
+    entry.Clear();
+  }
   return NS_OK;
 }

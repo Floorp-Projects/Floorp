@@ -54,16 +54,14 @@ private:
   RecentBadCert &operator=(const RecentBadCert &other) MOZ_DELETE;
 };
 
-class nsRecentBadCertsService MOZ_FINAL : public nsIRecentBadCertsService
+class nsRecentBadCerts MOZ_FINAL : public nsIRecentBadCerts
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIRECENTBADCERTSSERVICE
+  NS_DECL_NSIRECENTBADCERTS
 
-  nsRecentBadCertsService();
-  ~nsRecentBadCertsService();
-
-  nsresult Init();
+  nsRecentBadCerts();
+  ~nsRecentBadCerts();
 
 protected:
     mozilla::ReentrantMonitor monitor;
