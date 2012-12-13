@@ -663,9 +663,12 @@ protected:
   // - Less common are ones that are reported immediately on allocation.  DMD
   //   must *not* clear the markings of these blocks once it has finished its
   //   analysis.  The |mReportedOnAlloc| field is set for such blocks.
-  const StackTrace* mReportStackTrace;  // nullptr if unreported
-  const char*       mReporterName;      // gUnreportedName if unreported
-  bool              mReportedOnAlloc;   // true if block was reported
+  //
+  // These fields are used as the value in LiveBlock, so it's ok for them to be
+  // |mutable|.
+  mutable const StackTrace* mReportStackTrace;  // nullptr if unreported
+  mutable const char*       mReporterName;      // gUnreportedName if unreported
+  mutable bool              mReportedOnAlloc;   // true if block was reported
 
 public:
   LiveBlockKey(const StackTrace* aAllocStackTrace)
@@ -786,16 +789,19 @@ public:
 // A live heap block.
 class LiveBlock : public LiveBlockKey
 {
-  static const size_t kReqBits = sizeof(size_t) * 8 - 1;    // 31 or 63
+  const void*  mPtr;
 
   // This assumes that we'll never request an allocation of 2 GiB or more on
   // 32-bit platforms.
+  static const size_t kReqBits = sizeof(size_t) * 8 - 1;    // 31 or 63
   const size_t mReqSize:kReqBits; // size requested
   const size_t mSampled:1;        // was this block sampled? (if so, slop == 0)
 
 public:
-  LiveBlock(size_t aReqSize, const StackTrace* aAllocStackTrace, bool aSampled)
+  LiveBlock(const void* aPtr, size_t aReqSize,
+            const StackTrace* aAllocStackTrace, bool aSampled)
     : LiveBlockKey(aAllocStackTrace),
+      mPtr(aPtr),
       mReqSize(aReqSize),
       mSampled(aSampled)
   {
@@ -807,27 +813,41 @@ public:
   size_t ReqSize() const { return mReqSize; }
 
   // Sampled blocks always have zero slop.
-  size_t SlopSize(const void* aPtr) const
+  size_t SlopSize() const
   {
-    return mSampled ? 0 : MallocSizeOf(aPtr) - mReqSize;
+    return mSampled ? 0 : MallocSizeOf(mPtr) - mReqSize;
   }
 
-  size_t UsableSize(const void* aPtr) const
+  size_t UsableSize() const
   {
-    return mSampled ? mReqSize : MallocSizeOf(aPtr);
+    return mSampled ? mReqSize : MallocSizeOf(mPtr);
   }
 
   bool IsSampled() const { return mSampled; }
 
-  void Report(Thread* aT, const void* aPtr, const char* aReporterName,
-              bool aReportedOnAlloc);
+  // This is |const| thanks to the |mutable| fields above.
+  void Report(Thread* aT, const char* aReporterName, bool aReportedOnAlloc)
+       const;
 
-  void UnreportIfNotReportedOnAlloc();
+  void UnreportIfNotReportedOnAlloc() const;
+
+  // Hash policy.
+
+  typedef const void* Lookup;
+
+  static uint32_t hash(const void* const& aPc)
+  {
+    return mozilla::HashGeneric(aPc);
+  }
+
+  static bool match(const LiveBlock& aB, const void* const& aPtr)
+  {
+    return aB.mPtr == aPtr;
+  }
 };
 
 // Nb: js::DefaultHasher<void*> is a high quality hasher.
-typedef js::HashMap<const void*, LiveBlock, js::DefaultHasher<const void*>,
-                    InfallibleAllocPolicy> LiveBlockTable;
+typedef js::HashSet<LiveBlock, LiveBlock, InfallibleAllocPolicy> LiveBlockTable;
 static LiveBlockTable* gLiveBlockTable = nullptr;
 
 //---------------------------------------------------------------------------
@@ -860,12 +880,13 @@ AllocCallback(void* aPtr, size_t aReqSize, Thread* aT)
     if (gSmallBlockActualSizeCounter >= gSampleBelowSize) {
       gSmallBlockActualSizeCounter -= gSampleBelowSize;
 
-      LiveBlock b(gSampleBelowSize, StackTrace::Get(aT), /* sampled */ true);
+      LiveBlock b(aPtr, gSampleBelowSize, StackTrace::Get(aT),
+                  /* sampled */ true);
       (void)gLiveBlockTable->putNew(aPtr, b);
     }
   } else {
     // If this block size is larger than the sample size, record it exactly.
-    LiveBlock b(aReqSize, StackTrace::Get(aT), /* sampled */ false);
+    LiveBlock b(aPtr, aReqSize, StackTrace::Get(aT), /* sampled */ false);
     (void)gLiveBlockTable->putNew(aPtr, b);
   }
 }
@@ -1051,10 +1072,10 @@ public:
 
   bool IsSampled() const { return mSampled; }
 
-  void Add(const void* aPtr, const LiveBlock& aB)
+  void Add(const LiveBlock& aB)
   {
     mReq  += aB.ReqSize();
-    mSlop += aB.SlopSize(aPtr);
+    mSlop += aB.SlopSize();
     mSampled = mSampled || aB.IsSampled();
   }
 
@@ -1096,12 +1117,11 @@ public:
 
   const GroupSize& GroupSize() const { return mGroupSize; }
 
-  // The |const| qualifier is something of a lie, but is necessary so this type
-  // can be used in js::HashSet, and it fits with the |mutable| fields above.
-  void Add(const void* aPtr, const LiveBlock& aB) const
+  // This is |const| thanks to the |mutable| fields above.
+  void Add(const LiveBlock& aB) const
   {
     mNumBlocks++;
-    mGroupSize.Add(aPtr, aB);
+    mGroupSize.Add(aB);
   }
 
   static const char* const kName;   // for PrintSortedGroups
@@ -1264,8 +1284,7 @@ public:
 
   const GroupSize& GroupSize() const { return mGroupSize; }
 
-  // The |const| qualifier is something of a lie, but is necessary so this type
-  // can be used in js::HashSet, and it fits with the |mutable| fields above.
+  // This is |const| thanks to the |mutable| fields above.
   void Add(const LiveBlockGroup& aBg) const
   {
     mNumBlocks += aBg.mNumBlocks;
@@ -1288,7 +1307,7 @@ public:
 
   static const char* const kName;   // for PrintSortedGroups
 
-  // Hash policy
+  // Hash policy.
 
   typedef const void* Lookup;
 
@@ -1564,8 +1583,7 @@ Init(const malloc_table_t* aMallocTable)
 //---------------------------------------------------------------------------
 
 void
-LiveBlock::Report(Thread* aT, const void* aPtr, const char* aReporterName,
-                  bool aOnAlloc)
+LiveBlock::Report(Thread* aT, const char* aReporterName, bool aOnAlloc) const
 {
   if (IsReported()) {
     DoubleReportBlockKey doubleReportKey(mAllocStackTrace,
@@ -1577,7 +1595,7 @@ LiveBlock::Report(Thread* aT, const void* aPtr, const char* aReporterName,
       DoubleReportBlockGroup bg(doubleReportKey);
       (void)gDoubleReportBlockGroupTable->add(p, bg);
     }
-    p->Add(aPtr, *this);
+    p->Add(*this);
 
   } else {
     mReporterName     = aReporterName;
@@ -1587,7 +1605,7 @@ LiveBlock::Report(Thread* aT, const void* aPtr, const char* aReporterName,
 }
 
 void
-LiveBlock::UnreportIfNotReportedOnAlloc()
+LiveBlock::UnreportIfNotReportedOnAlloc() const
 {
   if (!mReportedOnAlloc) {
     mReporterName     = gUnreportedName;
@@ -1608,7 +1626,7 @@ ReportHelper(const void* aPtr, const char* aReporterName, bool aOnAlloc)
   AutoLockState lock;
 
   if (LiveBlockTable::Ptr p = gLiveBlockTable->lookup(aPtr)) {
-    p->value.Report(t, aPtr, aReporterName, aOnAlloc);
+    p->Report(t, aReporterName, aOnAlloc);
   } else {
     // We have no record of the block.  Do nothing.  Either:
     // - We're sampling and we skipped this block.  This is likely.
@@ -1766,7 +1784,7 @@ ClearState()
   for (LiveBlockTable::Range r = gLiveBlockTable->all();
        !r.empty();
        r.popFront()) {
-    r.front().value.UnreportIfNotReportedOnAlloc();
+    r.front().UnreportIfNotReportedOnAlloc();
   }
 
   // Clear errors.
@@ -1805,11 +1823,10 @@ Dump(Writer aWriter)
   for (LiveBlockTable::Range r = gLiveBlockTable->all();
        !r.empty();
        r.popFront()) {
-    const void* pc = r.front().key;
-    const LiveBlock& b = r.front().value;
+    const LiveBlock& b = r.front();
 
     size_t& size = !b.IsReported() ? unreportedUsableSize : reportedUsableSize;
-    size += b.UsableSize(pc);
+    size += b.UsableSize();
 
     LiveBlockGroupTable& table = !b.IsReported()
                                ? unreportedLiveBlockGroupTable
@@ -1819,7 +1836,7 @@ Dump(Writer aWriter)
       LiveBlockGroup bg(b);
       (void)table.add(p, bg);
     }
-    p->Add(pc, b);
+    p->Add(b);
 
     anyBlocksSampled = anyBlocksSampled || b.IsSampled();
   }
