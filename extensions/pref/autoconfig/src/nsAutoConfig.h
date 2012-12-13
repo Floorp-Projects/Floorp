@@ -40,7 +40,7 @@ class nsAutoConfig : public nsIAutoConfig,
         nsresult writeFailoverFile();
         nsresult getEmailAddr(nsACString & emailAddr);
         nsresult PromptForEMailAddress(nsACString &emailAddress);
-        nsCString mBuf, mCurrProfile;
+        nsCString mBuf;
         nsCOMPtr<nsIPrefBranch> mPrefBranch;
         bool mLoaded;
         nsCOMPtr<nsITimer> mTimer;
