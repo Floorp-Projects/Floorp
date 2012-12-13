@@ -1218,7 +1218,7 @@ var NativeWindow = {
             callback: arguments[2]
           };
       } else {
-         return;
+         throw "Incorrect number of parameters";
       }
 
       options.type = "Menu:Add";
