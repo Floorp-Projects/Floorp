@@ -20,6 +20,7 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "mozilla/Preferences.h"
+#include "nsIScriptObjectPrincipal.h"
 
 #include "prlog.h"
 
@@ -58,7 +59,7 @@ public:
     // Content.
     nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(mContext);
     nsCOMPtr<nsIDocShellTreeItem> currentDocShellTreeItem(do_QueryInterface(docShell));
-    if(!currentDocShellTreeItem) {
+    if (!currentDocShellTreeItem) {
         return NS_OK;
     }
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
@@ -70,7 +71,7 @@ public:
     NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
 
 
-    if(mType == eMixedScript) {
+    if (mType == eMixedScript) {
       rootDoc->SetHasMixedActiveContentLoaded(true);
 
       // Update the security UI in the tab with the blocked mixed content
@@ -80,7 +81,7 @@ public:
       }
 
     } else {
-        if(mType == eMixedDisplay) {
+        if (mType == eMixedDisplay) {
           //Do Nothing for now; state will already be set STATE_IS_BROKEN
         }
     }
@@ -267,19 +268,44 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   }
 
   // We need aRequestingLocation to pull out the scheme. If it isn't passed
-  // in, get it from the DOM node.
+  // in, get it from the aRequestingPricipal
   if (!aRequestingLocation) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(aRequestingContext);
-    if (node) {
-      nsCOMPtr<nsIURI> principalUri;
-      node->NodePrincipal()->GetURI(getter_AddRefs(principalUri));
-      aRequestingLocation = principalUri;
+    if (!aRequestPrincipal) {
+      // If we don't have aRequestPrincipal, try getting it from the
+      // DOM node using aRequestingContext
+      nsCOMPtr<nsINode> node = do_QueryInterface(aRequestingContext);
+      if (node) {
+        aRequestPrincipal = node->NodePrincipal();
+      } else {
+        // Try using the window's script object principal if it's not a node.
+        nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrin = do_QueryInterface(aRequestingContext);
+        if (scriptObjPrin) {
+          aRequestPrincipal = scriptObjPrin->GetPrincipal();
+        }
+      }
     }
-    // If we still don't have a requesting location then we can't tell if
-    // this is a mixed content load.  Deny to be safe.
+    if (aRequestPrincipal) {
+      nsCOMPtr<nsIURI> principalUri;
+      nsresult rvalue = aRequestPrincipal->GetURI(getter_AddRefs(principalUri));
+      if (NS_SUCCEEDED(rvalue)) {
+        aRequestingLocation = principalUri;
+      }
+    }
+
     if (!aRequestingLocation) {
-      *aDecision = REJECT_REQUEST;
-      return NS_OK;
+      // If content scripts from an addon are causing this load, they have an
+      // ExpandedPrincipal instead of a Principal. This is pseudo-privileged code, so allow
+      // the load. Or if this is system principal, allow the load.
+      nsCOMPtr<nsIExpandedPrincipal> expanded = do_QueryInterface(aRequestPrincipal);
+      if (expanded || (aRequestPrincipal && nsContentUtils::IsSystemPrincipal(aRequestPrincipal))) {
+        *aDecision = ACCEPT;
+        return NS_OK;
+      } else {
+        // We still don't have a requesting location and there is no Expanded Principal.
+        // We can't tell if this is a mixed content load.  Deny to be safe.
+        *aDecision = REJECT_REQUEST;
+        return NS_OK;
+      }
     }
   }
 
