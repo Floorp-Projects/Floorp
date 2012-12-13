@@ -45,7 +45,9 @@ def main():
     source_files = sys.argv[4:]
     combined_file = 'selfhosted.js'
     replaceErrorMsgs(source_files, messages_file, combined_file)
-    js2c.JS2C([combined_file, macros_file], [output_file], { 'TYPE': 'CORE', 'COMPRESSION': 'off', 'DEBUG':debug })
+    combined_sources = js2c.JS2C([combined_file, macros_file], [output_file], { 'TYPE': 'CORE', 'COMPRESSION': 'off', 'DEBUG':debug })
+    with open(combined_file, 'w') as output:
+        output.write(combined_sources)
 
 if __name__ == "__main__":
     main()
