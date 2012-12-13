@@ -184,6 +184,10 @@ TabTarget.prototype = {
     return this._tab;
   },
 
+  get window() {
+    return this._tab.linkedBrowser.contentWindow;
+  },
+
   get name() {
     return this._tab.linkedBrowser.contentDocument.title;
   },
