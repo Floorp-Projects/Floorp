@@ -15,7 +15,6 @@
 #include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIProfileChangeStatus.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIToolkitChromeRegistry.h"
 
@@ -835,32 +834,6 @@ nsXREDirProvider::DoStartup()
   return NS_OK;
 }
 
-class ProfileChangeStatusImpl MOZ_FINAL : public nsIProfileChangeStatus
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROFILECHANGESTATUS
-  ProfileChangeStatusImpl() { }
-private:
-  ~ProfileChangeStatusImpl() { }
-};
-
-NS_IMPL_ISUPPORTS1(ProfileChangeStatusImpl, nsIProfileChangeStatus)
-
-NS_IMETHODIMP
-ProfileChangeStatusImpl::VetoChange()
-{
-  NS_ERROR("Can't veto change!");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-ProfileChangeStatusImpl::ChangeFailed()
-{
-  NS_ERROR("Profile change cancellation.");
-  return NS_ERROR_FAILURE;
-}
-
 void
 nsXREDirProvider::DoShutdown()
 {
@@ -869,11 +842,10 @@ nsXREDirProvider::DoShutdown()
       mozilla::services::GetObserverService();
     NS_ASSERTION(obsSvc, "No observer service?");
     if (obsSvc) {
-      nsCOMPtr<nsIProfileChangeStatus> cs = new ProfileChangeStatusImpl();
       static const PRUnichar kShutdownPersist[] =
         {'s','h','u','t','d','o','w','n','-','p','e','r','s','i','s','t','\0'};
-      obsSvc->NotifyObservers(cs, "profile-change-net-teardown", kShutdownPersist);
-      obsSvc->NotifyObservers(cs, "profile-change-teardown", kShutdownPersist);
+      obsSvc->NotifyObservers(nullptr, "profile-change-net-teardown", kShutdownPersist);
+      obsSvc->NotifyObservers(nullptr, "profile-change-teardown", kShutdownPersist);
 
       // Phase 2c: Now that things are torn down, force JS GC so that things which depend on
       // resources which are about to go away in "profile-before-change" are destroyed first.
@@ -889,7 +861,7 @@ nsXREDirProvider::DoShutdown()
       }
 
       // Phase 3: Notify observers of a profile change
-      obsSvc->NotifyObservers(cs, "profile-before-change", kShutdownPersist);
+      obsSvc->NotifyObservers(nullptr, "profile-before-change", kShutdownPersist);
     }
     mProfileNotified = false;
   }

@@ -104,7 +104,7 @@ protected:
  *
  * @param aNotifyObservers    If true, will send out profile startup
  *                            notifications when the profile directory is set.
- *                            See nsIProfileChangeStatus.
+ *                            See notifications.txt
  */
  
 nsresult NS_NewProfileDirServiceProvider(bool aNotifyObservers,
