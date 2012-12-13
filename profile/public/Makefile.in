@@ -12,11 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profile
 
-SDK_XPIDLSRCS	= \
-		nsIProfile.idl \
-		nsIProfileChangeStatus.idl \
-		$(NULL)
-
 XPIDLSRCS	= \
 	        nsIProfileUnlocker.idl \
 		$(NULL)

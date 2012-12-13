@@ -1,0 +1,61 @@
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+nsIObserver topics for profile changing. Profile changing happens in phases
+in the order given below. An observer may register separately for each phase
+of the process depending on its needs.
+
+"profile-change-teardown"
+  All async activity must be stopped in this phase. Typically,
+  the application level observer will close all open windows.
+  This is the last phase in which the subject's vetoChange()
+  method may still be called.
+  The next notification will be either
+  profile-change-teardown-veto or profile-before-change.
+
+"profile-before-change"
+  Called before the profile has changed. Use this notification
+  to prepare for the profile going away. If a component is
+  holding any state which needs to be flushed to a profile-relative
+  location, it should be done here.
+
+"profile-do-change"
+  Called after the profile has changed. Do the work to
+  respond to having a new profile. Any change which
+  affects others must be done in this phase.
+
+"profile-after-change"
+  Called after the profile has changed. Use this notification
+  to make changes that are dependent on what some other listener
+  did during its profile-do-change. For example, to respond to
+  new preferences.
+
+"profile-initial-state"
+  Called after all phases of a change have completed. Typically
+  in this phase, an application level observer will open a new window.
+
+Contexts for profile changes. These are passed as the someData param to the
+observer's Observe() method.
+
+"startup"
+  Going from no profile to a profile.
+  The following topics happen in this context:
+      profile-do-change
+      profile-after-change
+
+"shutdown-persist"
+  The user is logging out and whatever data the observer stores
+  for the current profile should be released from memory and
+  saved to disk.
+  The following topics happen in this context:
+      profile-change-net-teardown
+      profile-change-teardown
+      profile-before-change
+
+See https://wiki.mozilla.org/XPCOM_Shutdown for more details about the shutdown
+process.
+
+NOTE: Long ago there was be a "shutdown-cleanse" version of shutdown which was
+intended to clear profile data. This is no longer sent and observer code should
+remove support for it.
