@@ -3099,6 +3099,9 @@ FindCompartmentGroups(JSRuntime *rt)
 }
 
 static void
+ResetGrayList(JSCompartment* comp);
+
+static void
 GetNextCompartmentGroup(JSRuntime *rt)
 {
     rt->gcCurrentCompartmentGroup = rt->gcCurrentCompartmentGroup->nextGroup();
@@ -3106,6 +3109,26 @@ GetNextCompartmentGroup(JSRuntime *rt)
 
     if (!rt->gcIsIncremental)
         ComponentFinder<JSCompartment>::mergeCompartmentGroups(rt->gcCurrentCompartmentGroup);
+
+    if (rt->gcAbortSweepAfterCurrentGroup) {
+        /*
+         * Iterate over all compartments that haven't been swept yet and reset
+         * their state such that ther are no longer being collected.
+         */
+        JS_ASSERT(!rt->gcIsIncremental);
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+            JS_ASSERT(!c->gcNextGraphComponent);
+            JS_ASSERT(c->isGCMarking());
+            c->setNeedsBarrier(false, JSCompartment::UpdateIon);
+            c->setGCState(JSCompartment::NoGC);
+            ArrayBufferObject::resetArrayBufferList(c);
+            ResetGrayList(c);
+            c->gcGrayRoots.clearAndFree();
+        }
+
+        rt->gcAbortSweepAfterCurrentGroup = false;
+        rt->gcCurrentCompartmentGroup = NULL;
+    }
 }
 
 /*
@@ -3294,6 +3317,15 @@ RemoveFromGrayList(RawObject wrapper)
 
     JS_NOT_REACHED("object not found in gray link list");
     return false;
+}
+
+static void
+ResetGrayList(JSCompartment* comp)
+{
+    RawObject src = comp->gcIncomingGrayPointers;
+    while (src)
+        src = NextIncomingCrossCompartmentPointer(src, true);
+    comp->gcIncomingGrayPointers = NULL;
 }
 
 void
@@ -3501,6 +3533,8 @@ BeginSweepPhase(JSRuntime *rt)
      * fail, rather than nest badly and leave the unmarked newborn to be swept.
      */
 
+    JS_ASSERT(!rt->gcAbortSweepAfterCurrentGroup);
+
     ComputeNonIncrementalMarkingForValidation(rt);
 
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP);
@@ -3597,8 +3631,9 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
 
     /*
      * If we found any black->gray edges during marking, we completely clear the
-     * mark bits of all uncollected compartments. This is safe, although it may
-     * prevent the cycle collector from collecting some dead objects.
+     * mark bits of all uncollected compartments, or if a reset has occured,
+     * compartments that will no longer be collected. This is safe, although it
+     * may prevent the cycle collector from collecting some dead objects.
      */
     if (rt->gcFoundBlackGrayEdges) {
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
@@ -3806,11 +3841,11 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         rt->gcMarker.stop();
 
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            if (c->isGCMarking()) {
-                c->setNeedsBarrier(false, JSCompartment::UpdateIon);
-                c->setGCState(JSCompartment::NoGC);
-                ArrayBufferObject::resetArrayBufferList(c);
-            }
+            JS_ASSERT(c->isGCMarking());
+            c->setNeedsBarrier(false, JSCompartment::UpdateIon);
+            c->setGCState(JSCompartment::NoGC);
+            ArrayBufferObject::resetArrayBufferList(c);
+            ResetGrayList(c);
         }
 
         rt->gcIncrementalState = NO_INCREMENTAL;
@@ -3821,21 +3856,13 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
       }
 
       case SWEEP:
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        rt->gcMarker.reset();
+
+        for (CompartmentsIter c(rt); !c.done(); c.next())
             c->scheduledForDestruction = false;
 
-            if (c->isGCMarking() && c->activeAnalysis && !c->gcTypesMarked) {
-                AutoCopyFreeListToArenas copy(rt);
-                gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP);
-                gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_MARK);
-                gcstats::AutoPhase ap3(rt->gcStats, gcstats::PHASE_SWEEP_MARK_TYPES);
-                rt->gcIncrementalState = MARK_ROOTS;
-                c->markTypes(&rt->gcMarker);
-                rt->gcIncrementalState = SWEEP;
-            }
-        }
-
-        /* If we had started sweeping then sweep to completion here. */
+        /* Finish sweeping the current compartment group, then abort. */
+        rt->gcAbortSweepAfterCurrentGroup = true;
         IncrementalCollectSlice(rt, SliceBudget::Unlimited, gcreason::RESET, GC_NORMAL);
 
         {

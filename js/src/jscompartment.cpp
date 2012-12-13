@@ -573,8 +573,6 @@ JSCompartment::markTypes(JSTracer *trc)
         MarkTypeObjectRoot(trc, &type, "mark_types_scan");
         JS_ASSERT(type == i.get<types::TypeObject>());
     }
-
-    gcTypesMarked = true;
 }
 
 void
