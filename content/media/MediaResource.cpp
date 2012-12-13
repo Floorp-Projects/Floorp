@@ -567,6 +567,18 @@ ChannelMediaResource::OpenByteRange(nsIStreamListener** aStreamListener,
   return OpenChannel(aStreamListener);
 }
 
+void
+ChannelMediaResource::CancelByteRangeOpen()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  // Byte range download will be cancelled in |CacheClientSeek|. Here, we only
+  // need to notify the cache to in turn notify any waiting reads.
+  if (mByteRangeDownloads) {
+    mCacheStream.NotifyDownloadCancelled();
+  }
+}
+
 nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
