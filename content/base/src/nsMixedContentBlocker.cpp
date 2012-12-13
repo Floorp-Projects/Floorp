@@ -9,11 +9,19 @@
 #include "nsINode.h"
 #include "nsCOMPtr.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsISecurityEventSink.h"
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
+#include "nsIRequest.h"
+#include "nsIDocument.h"
+#include "nsIContentViewer.h"
+#include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "mozilla/Preferences.h"
+
+#include "prlog.h"
 
 using namespace mozilla;
 
@@ -27,13 +35,10 @@ bool nsMixedContentBlocker::sBlockMixedDisplay = false;
 // Fired at the document that attempted to load mixed content.  The UI could
 // handle this event, for example, by displaying an info bar that offers the
 // choice to reload the page with mixed content permitted.
-//
-// Disabled for now until bug 782654 is fixed
-/*
-class nsMixedContentBlockedEvent : public nsRunnable
+class nsMixedContentEvent : public nsRunnable
 {
 public:
-  nsMixedContentBlockedEvent(nsISupports *aContext, unsigned short aType)
+  nsMixedContentEvent(nsISupports *aContext, MixedContentTypes aType)
     : mContext(aContext), mType(aType)
   {}
 
@@ -47,6 +52,41 @@ public:
     // calling NS_CP_GetDocShellFromContext on the context, and QI'ing to
     // nsISecurityEventSink.
 
+
+    // Mixed content was allowed and is about to load; get the document and
+    // set the approriate flag to true if we are about to load Mixed Active
+    // Content.
+    nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(mContext);
+    nsCOMPtr<nsIDocShellTreeItem> currentDocShellTreeItem(do_QueryInterface(docShell));
+    if(!currentDocShellTreeItem) {
+        return NS_OK;
+    }
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+    currentDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    NS_ASSERTION(sameTypeRoot, "No document shell root tree item from document shell tree item!");
+
+    // now get the document from sameTypeRoot
+    nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
+    NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
+
+
+    if(mType == eMixedScript) {
+      rootDoc->SetHasMixedActiveContentLoaded(true);
+
+      // Update the security UI in the tab with the blocked mixed content
+      nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
+      if (eventSink) {
+        eventSink->OnSecurityChange(mContext, nsIWebProgressListener::STATE_IS_BROKEN);
+      }
+
+    } else {
+        if(mType == eMixedDisplay) {
+          //Do Nothing for now; state will already be set STATE_IS_BROKEN
+        }
+    }
+
+
+
     return NS_OK;
   }
 private:
@@ -54,10 +94,10 @@ private:
   // the document that caused the load.
   nsCOMPtr<nsISupports> mContext;
 
-  // The type of mixed content that was blocked, e.g. active or display
-  unsigned short mType;
+  // The type of mixed content detected, e.g. active or display
+  const MixedContentTypes mType;
 };
-*/
+
 
 nsMixedContentBlocker::nsMixedContentBlocker()
 {
@@ -181,7 +221,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
         // Disabled until bug 782654 is fixed.
         /*
         nsContentUtils::AddScriptRunner(
-          new nsMixedContentBlockedEvent(aRequestingContext, eBlockedMixedScript));
+          new nsMixedContentEvent(aRequestingContext, eMixedScript));
         */
       }
       break;
@@ -199,7 +239,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
         // Disabled until bug 782654 is fixed.
         /*
         nsContentUtils::AddScriptRunner(
-          new nsMixedContentBlockedEvent(aRequestingContext, eBlockedMixedDisplay));
+          new nsMixedContentEvent(aRequestingContext, eMixedDisplay));
         */
       }
       break;
