@@ -40,6 +40,36 @@ GfxOpToCairoOp(CompositionOp op)
       return CAIRO_OPERATOR_DEST_ATOP;
     case OP_XOR:
       return CAIRO_OPERATOR_XOR;
+    case OP_MULTIPLY:
+      return CAIRO_OPERATOR_MULTIPLY;
+    case OP_SCREEN:
+      return CAIRO_OPERATOR_SCREEN;
+    case OP_OVERLAY:
+      return CAIRO_OPERATOR_OVERLAY;
+    case OP_DARKEN:
+      return CAIRO_OPERATOR_DARKEN;
+    case OP_LIGHTEN:
+      return CAIRO_OPERATOR_LIGHTEN;
+    case OP_COLOR_DODGE:
+      return CAIRO_OPERATOR_COLOR_DODGE;
+    case OP_COLOR_BURN:
+      return CAIRO_OPERATOR_COLOR_BURN;
+    case OP_HARD_LIGHT:
+      return CAIRO_OPERATOR_HARD_LIGHT;
+    case OP_SOFT_LIGHT:
+      return CAIRO_OPERATOR_SOFT_LIGHT;
+    case OP_DIFFERENCE:
+      return CAIRO_OPERATOR_DIFFERENCE;
+    case OP_EXCLUSION:
+      return CAIRO_OPERATOR_EXCLUSION;
+    case OP_HUE:
+      return CAIRO_OPERATOR_HSL_HUE;
+    case OP_SATURATION:
+      return CAIRO_OPERATOR_HSL_SATURATION;
+    case OP_COLOR:
+      return CAIRO_OPERATOR_HSL_COLOR;
+    case OP_LUMINOSITY:
+      return CAIRO_OPERATOR_HSL_LUMINOSITY;
     case OP_COUNT:
       break;
   }

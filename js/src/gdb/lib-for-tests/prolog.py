@@ -1,7 +1,11 @@
 import gdb
+import os
 import re
 import sys
 import traceback
+
+# testlibdir is set on the GDB command line, via --eval-command python testlibdir=...
+sys.path[0:0] = [testlibdir]
 
 # Run the C++ fragment named |fragment|, stopping on entry to |function|
 # ('breakpoint', by default) and then select the calling frame.
@@ -58,7 +62,9 @@ gdb.execute('set print pretty off')
 gdb.execute('set width 0')
 
 try:
-    execfile(sys.argv[0])
+    # testscript is set on the GDB command line, via:
+    # --eval-command python testscript=...
+    execfile(testscript)
 except AssertionError as err:
     sys.stderr.write('\nAssertion traceback:\n')
     (t, v, tb) = sys.exc_info()

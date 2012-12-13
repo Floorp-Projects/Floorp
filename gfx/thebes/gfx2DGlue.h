@@ -248,6 +248,36 @@ inline CompositionOp CompositionOpForOp(gfxContext::GraphicsOperator aOp)
     return OP_DEST_ATOP;
   case gfxContext::OPERATOR_XOR:
     return OP_XOR;
+  case gfxContext::OPERATOR_MULTIPLY:
+    return OP_MULTIPLY;
+  case gfxContext::OPERATOR_SCREEN:
+    return OP_SCREEN;
+  case gfxContext::OPERATOR_OVERLAY:
+    return OP_OVERLAY;
+  case gfxContext::OPERATOR_DARKEN:
+    return OP_DARKEN;
+  case gfxContext::OPERATOR_LIGHTEN:
+    return OP_LIGHTEN;
+  case gfxContext::OPERATOR_COLOR_DODGE:
+    return OP_COLOR_DODGE;
+  case gfxContext::OPERATOR_COLOR_BURN:
+    return OP_COLOR_BURN;
+  case gfxContext::OPERATOR_HARD_LIGHT:
+    return OP_HARD_LIGHT;
+  case gfxContext::OPERATOR_SOFT_LIGHT:
+    return OP_SOFT_LIGHT;
+  case gfxContext::OPERATOR_DIFFERENCE:
+    return OP_DIFFERENCE;
+  case gfxContext::OPERATOR_EXCLUSION:
+    return OP_EXCLUSION;
+  case gfxContext::OPERATOR_HUE:
+    return OP_HUE;
+  case gfxContext::OPERATOR_SATURATION:
+    return OP_SATURATION;
+  case gfxContext::OPERATOR_COLOR:
+    return OP_COLOR;
+  case gfxContext::OPERATOR_LUMINOSITY:
+    return OP_LUMINOSITY;
   default:
     return OP_OVER;
   }
@@ -274,6 +304,36 @@ inline gfxContext::GraphicsOperator ThebesOp(CompositionOp aOp)
     return gfxContext::OPERATOR_DEST_ATOP;
   case OP_XOR:
     return gfxContext::OPERATOR_XOR;
+  case OP_MULTIPLY:
+    return gfxContext::OPERATOR_MULTIPLY;
+  case OP_SCREEN:
+    return gfxContext::OPERATOR_SCREEN;
+  case OP_OVERLAY:
+    return gfxContext::OPERATOR_OVERLAY;
+  case OP_DARKEN:
+    return gfxContext::OPERATOR_DARKEN;
+  case OP_LIGHTEN:
+    return gfxContext::OPERATOR_LIGHTEN;
+  case OP_COLOR_DODGE:
+    return gfxContext::OPERATOR_COLOR_DODGE;
+  case OP_COLOR_BURN:
+    return gfxContext::OPERATOR_COLOR_BURN;
+  case OP_HARD_LIGHT:
+    return gfxContext::OPERATOR_HARD_LIGHT;
+  case OP_SOFT_LIGHT:
+    return gfxContext::OPERATOR_SOFT_LIGHT;
+  case OP_DIFFERENCE:
+    return gfxContext::OPERATOR_DIFFERENCE;
+  case OP_EXCLUSION:
+    return gfxContext::OPERATOR_EXCLUSION;
+  case OP_HUE:
+    return gfxContext::OPERATOR_HUE;
+  case OP_SATURATION:
+    return gfxContext::OPERATOR_SATURATION;
+  case OP_COLOR:
+    return gfxContext::OPERATOR_COLOR;
+  case OP_LUMINOSITY:
+    return gfxContext::OPERATOR_LUMINOSITY;
   default:
     return gfxContext::OPERATOR_OVER;
   }

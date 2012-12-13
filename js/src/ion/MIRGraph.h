@@ -390,8 +390,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return loopDepth_;
     }
 
-    bool strictModeCode() const {
-        return info_.script()->strictModeCode;
+    bool strict() const {
+        return info_.script()->strict;
     }
 
     void dumpStack(FILE *fp);

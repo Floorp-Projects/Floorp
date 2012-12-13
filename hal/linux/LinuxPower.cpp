@@ -14,12 +14,14 @@ namespace hal_impl {
 void
 Reboot()
 {
+  sync();
   reboot(RB_AUTOBOOT);
 }
 
 void
 PowerOff()
 {
+  sync();
   reboot(RB_POWER_OFF);
 }
 

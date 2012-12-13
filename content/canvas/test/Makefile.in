@@ -39,13 +39,58 @@ MOCHITEST_FILES = \
 	test_2d.composite.canvas.destination-in.html \
 	test_2d.composite.canvas.source-in.html \
 	test_2d.composite.canvas.source-out.html \
+	test_2d.composite.canvas.multiply.html \
+	test_2d.composite.canvas.screen.html \
+	test_2d.composite.canvas.overlay.html \
+	test_2d.composite.canvas.darken.html \
+	test_2d.composite.canvas.lighten.html \
+	test_2d.composite.canvas.color-dodge.html \
+	test_2d.composite.canvas.color-burn.html \
+	test_2d.composite.canvas.hard-light.html \
+	test_2d.composite.canvas.soft-light.html \
+	test_2d.composite.canvas.difference.html \
+	test_2d.composite.canvas.exclusion.html \
+	test_2d.composite.canvas.hue.html \
+	test_2d.composite.canvas.saturation.html \
+	test_2d.composite.canvas.color.html \
+	test_2d.composite.canvas.luminosity.html \
 	test_2d.composite.image.destination-atop.html \
 	test_2d.composite.image.destination-in.html \
 	test_2d.composite.image.source-in.html \
 	test_2d.composite.image.source-out.html \
+	test_2d.composite.solid.multiply.html \
+	test_2d.composite.solid.screen.html \
+	test_2d.composite.solid.overlay.html \
+	test_2d.composite.solid.darken.html \
+	test_2d.composite.solid.lighten.html \
+	test_2d.composite.solid.color-dodge.html \
+	test_2d.composite.solid.color-burn.html \
+	test_2d.composite.solid.hard-light.html \
+	test_2d.composite.solid.soft-light.html \
+	test_2d.composite.solid.difference.html \
+	test_2d.composite.solid.exclusion.html \
+	test_2d.composite.solid.hue.html \
+	test_2d.composite.solid.saturation.html \
+	test_2d.composite.solid.color.html \
+	test_2d.composite.solid.luminosity.html \
 	test_2d.composite.uncovered.image.destination-in.html \
 	test_2d.composite.uncovered.image.source-in.html \
 	test_2d.composite.uncovered.image.source-out.html \
+	test_2d.composite.uncovered.fill.multiply.html \
+	test_2d.composite.uncovered.fill.screen.html \
+	test_2d.composite.uncovered.fill.overlay.html \
+	test_2d.composite.uncovered.fill.darken.html \
+	test_2d.composite.uncovered.fill.lighten.html \
+	test_2d.composite.uncovered.fill.color-dodge.html \
+	test_2d.composite.uncovered.fill.color-burn.html \
+	test_2d.composite.uncovered.fill.hard-light.html \
+	test_2d.composite.uncovered.fill.soft-light.html \
+	test_2d.composite.uncovered.fill.difference.html \
+	test_2d.composite.uncovered.fill.exclusion.html \
+	test_2d.composite.uncovered.fill.hue.html \
+	test_2d.composite.uncovered.fill.saturation.html \
+	test_2d.composite.uncovered.fill.color.html \
+	test_2d.composite.uncovered.fill.luminosity.html \
 	test_2d.drawImage.zerocanvas.html \
 	test_2d.strokeRect.zero.5.html \
 	test_toBlob.html \
