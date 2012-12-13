@@ -531,6 +531,17 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case OBJOBJHASHMAP: {
+        AutoObjectObjectHashMap::HashMapImpl &map = static_cast<AutoObjectObjectHashMap *>(this)->map;
+        for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
+            RawObject key = e.front().key;
+            MarkObjectRoot(trc, (RawObject *) &e.front().key, "AutoObjectObjectHashMap key");
+            JS_ASSERT(key == e.front().key);
+            MarkObjectRoot(trc, &e.front().value, "AutoObjectObjectHashMap value");
+        }
+        return;
+      }
+
       case PROPDESC: {
         PropDesc::AutoRooter *rooter = static_cast<PropDesc::AutoRooter *>(this);
         MarkValueRoot(trc, &rooter->pd->pd_, "PropDesc::AutoRooter pd");
