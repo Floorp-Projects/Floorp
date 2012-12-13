@@ -20,6 +20,10 @@ function test()
   let resumed = false;
   let testStarted = false;
 
+  // Wait longer for this very simple test that comes first, to make sure that
+  // GC from previous tests does not interfere with the debugger suite.
+  requestLongerTimeout(2);
+
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
