@@ -649,145 +649,8 @@ StackTrace::Get(Thread* aT)
 
 static const char* gUnreportedName = "unreported";
 
-// This is used by both LiveBlocks and LiveBlockGroups.
-class LiveBlockKey
-{
-public:
-  const StackTrace* const mAllocStackTrace;     // never null
-
-protected:
-  // Live blocks can be reported in two ways.
-  // - The most common is via a memory reporter traversal -- the block is
-  //   reported when the reporter runs, causing DMD to mark it as reported,
-  //   and DMD must clear the marking once it has finished its analysis.
-  // - Less common are ones that are reported immediately on allocation.  DMD
-  //   must *not* clear the markings of these blocks once it has finished its
-  //   analysis.  The |mReportedOnAlloc| field is set for such blocks.
-  //
-  // These fields are used as the value in LiveBlock, so it's ok for them to be
-  // |mutable|.
-  mutable const StackTrace* mReportStackTrace;  // nullptr if unreported
-  mutable const char*       mReporterName;      // gUnreportedName if unreported
-  mutable bool              mReportedOnAlloc;   // true if block was reported
-
-public:
-  LiveBlockKey(const StackTrace* aAllocStackTrace)
-    : mAllocStackTrace(aAllocStackTrace),
-      mReportStackTrace(nullptr),
-      mReporterName(gUnreportedName),
-      mReportedOnAlloc(false)
-  {
-    MOZ_ASSERT(IsSane());
-  }
-
-  bool IsSane() const
-  {
-    bool hasReporterName = mReporterName != gUnreportedName;
-    return mAllocStackTrace &&
-           (( mReportStackTrace &&  hasReporterName) ||
-            (!mReportStackTrace && !hasReporterName && !mReportedOnAlloc));
-  }
-
-  bool IsReported() const
-  {
-    MOZ_ASSERT(IsSane());
-    bool isRep = mReporterName != gUnreportedName;
-    return isRep;
-  }
-
-  // Hash policy.
-  //
-  // hash() and match() both assume that identical reporter names have
-  // identical pointers.  In practice this always happens because they are
-  // static strings (as specified in the NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN
-  // macro).  This is true even for multi-reporters.  (If it ever became
-  // untrue, the worst that would happen is that some blocks that should be in
-  // the same block group would end up in separate block groups.)
-
-  typedef LiveBlockKey Lookup;
-
-  static uint32_t hash(const LiveBlockKey& aKey)
-  {
-    return mozilla::HashGeneric(aKey.mAllocStackTrace,
-                                aKey.mReportStackTrace,
-                                aKey.mReporterName);
-  }
-
-  static bool match(const LiveBlockKey& aA, const LiveBlockKey& aB)
-  {
-    return aA.mAllocStackTrace  == aB.mAllocStackTrace &&
-           aA.mReportStackTrace == aB.mReportStackTrace &&
-           aA.mReporterName     == aB.mReporterName;
-  }
-};
-
-// This is used by DoubleReportBlockGroups.
-class DoubleReportBlockKey
-{
-public:
-  const StackTrace* const mAllocStackTrace;     // never null
-
-protected:
-  // When double-reports occur we record (and later print) the stack trace
-  // and reporter name of *both* the reporting locations.
-  const StackTrace* const mReportStackTrace1;   // never null
-  const StackTrace* const mReportStackTrace2;   // never null
-  const char*       const mReporterName1;       // never gUnreportedName
-  const char*       const mReporterName2;       // never gUnreportedName
-
-public:
-  DoubleReportBlockKey(const StackTrace* aAllocStackTrace,
-                       const StackTrace* aReportStackTrace1,
-                       const StackTrace* aReportStackTrace2,
-                       const char* aReporterName1,
-                       const char* aReporterName2)
-    : mAllocStackTrace(aAllocStackTrace),
-      mReportStackTrace1(aReportStackTrace1),
-      mReportStackTrace2(aReportStackTrace2),
-      mReporterName1(aReporterName1),
-      mReporterName2(aReporterName2)
-  {
-    MOZ_ASSERT(IsSane());
-  }
-
-  bool IsSane() const
-  {
-    return mAllocStackTrace &&
-           mReportStackTrace1 &&
-           mReportStackTrace2 &&
-           mReporterName1 != gUnreportedName &&
-           mReporterName2 != gUnreportedName;
-  }
-
-  // Hash policy.
-  //
-  // hash() and match() both assume that identical reporter names have
-  // identical pointers.  See LiveBlockKey for more.
-
-  typedef DoubleReportBlockKey Lookup;
-
-  static uint32_t hash(const DoubleReportBlockKey& aKey)
-  {
-    return mozilla::HashGeneric(aKey.mAllocStackTrace,
-                                aKey.mReportStackTrace1,
-                                aKey.mReportStackTrace2,
-                                aKey.mReporterName1,
-                                aKey.mReporterName2);
-  }
-
-  static bool match(const DoubleReportBlockKey& aA,
-                    const DoubleReportBlockKey& aB)
-  {
-    return aA.mAllocStackTrace   == aB.mAllocStackTrace &&
-           aA.mReportStackTrace1 == aB.mReportStackTrace1 &&
-           aA.mReportStackTrace2 == aB.mReportStackTrace2 &&
-           aA.mReporterName1     == aB.mReporterName1 &&
-           aA.mReporterName2     == aB.mReporterName2;
-  }
-};
-
 // A live heap block.
-class LiveBlock : public LiveBlockKey
+class LiveBlock
 {
   const void*  mPtr;
 
@@ -798,16 +661,48 @@ class LiveBlock : public LiveBlockKey
   const size_t mSampled:1;        // was this block sampled? (if so, slop == 0)
 
 public:
+  const StackTrace* const mAllocStackTrace;     // never null
+
+  // Live blocks can be reported in two ways.
+  // - The most common is via a memory reporter traversal -- the block is
+  //   reported when the reporter runs, causing DMD to mark it as reported,
+  //   and DMD must clear the marking once it has finished its analysis.
+  // - Less common are ones that are reported immediately on allocation.  DMD
+  //   must *not* clear the markings of these blocks once it has finished its
+  //   analysis.  The |mReportedOnAlloc| field is set for such blocks.
+  //
+  // |mPtr| is used as the key in LiveBlockTable, so it's ok for these fields
+  // to be |mutable|.
+private:
+  mutable const StackTrace* mReportStackTrace;  // nullptr if unreported
+  mutable const char*       mReporterName;      // gUnreportedName if unreported
+  mutable bool              mReportedOnAlloc;   // true if block was reported
+                                                //   immediately after alloc
+
+public:
   LiveBlock(const void* aPtr, size_t aReqSize,
             const StackTrace* aAllocStackTrace, bool aSampled)
-    : LiveBlockKey(aAllocStackTrace),
-      mPtr(aPtr),
+    : mPtr(aPtr),
       mReqSize(aReqSize),
-      mSampled(aSampled)
-  {
-    if (mReqSize != aReqSize) {
+      mSampled(aSampled),
+      mAllocStackTrace(aAllocStackTrace),
+      mReportStackTrace(nullptr),
+      mReporterName(gUnreportedName),
+      mReportedOnAlloc(false)
+ {
+    if (mReqSize != aReqSize)
+    {
       MOZ_CRASH();              // overflowed mReqSize
     }
+    MOZ_ASSERT(IsSane());
+  }
+
+  bool IsSane() const
+  {
+    bool hasReporterName = mReporterName != gUnreportedName;
+    return mAllocStackTrace &&
+           (( mReportStackTrace &&  hasReporterName) ||
+            (!mReportStackTrace && !hasReporterName && !mReportedOnAlloc));
   }
 
   size_t ReqSize() const { return mReqSize; }
@@ -824,6 +719,16 @@ public:
   }
 
   bool IsSampled() const { return mSampled; }
+
+  bool IsReported() const
+  {
+    MOZ_ASSERT(IsSane());
+    bool isRep = mReporterName != gUnreportedName;
+    return isRep;
+  }
+
+  const StackTrace* ReportStackTrace() const { return mReportStackTrace; }
+  const char* ReporterName() const { return mReporterName; }
 
   // This is |const| thanks to the |mutable| fields above.
   void Report(Thread* aT, const char* aReporterName, bool aReportedOnAlloc)
@@ -1050,6 +955,128 @@ namespace dmd {
 //---------------------------------------------------------------------------
 // Live and double-report block groups
 //---------------------------------------------------------------------------
+
+class LiveBlockKey
+{
+public:
+  const StackTrace* const mAllocStackTrace;   // never null
+protected:
+  const StackTrace* const mReportStackTrace;  // nullptr if unreported
+  const char*       const mReporterName;      // gUnreportedName if unreported
+
+public:
+  LiveBlockKey(const LiveBlock& aB)
+    : mAllocStackTrace(aB.mAllocStackTrace),
+      mReportStackTrace(aB.ReportStackTrace()),
+      mReporterName(aB.ReporterName())
+  {
+    MOZ_ASSERT(IsSane());
+  }
+
+  bool IsSane() const
+  {
+    bool hasReporterName = mReporterName != gUnreportedName;
+    return mAllocStackTrace &&
+           (( mReportStackTrace &&  hasReporterName) ||
+            (!mReportStackTrace && !hasReporterName));
+  }
+
+  bool IsReported() const
+  {
+    MOZ_ASSERT(IsSane());
+    bool isRep = mReporterName != gUnreportedName;
+    return isRep;
+  }
+
+  // Hash policy.
+  //
+  // hash() and match() both assume that identical reporter names have
+  // identical pointers.  In practice this always happens because they are
+  // static strings (as specified in the NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN
+  // macro).  This is true even for multi-reporters.  (If it ever became
+  // untrue, the worst that would happen is that some blocks that should be in
+  // the same block group would end up in separate block groups.)
+
+  typedef LiveBlockKey Lookup;
+
+  static uint32_t hash(const LiveBlockKey& aKey)
+  {
+    return mozilla::HashGeneric(aKey.mAllocStackTrace,
+                                aKey.mReportStackTrace,
+                                aKey.mReporterName);
+  }
+
+  static bool match(const LiveBlockKey& aA, const LiveBlockKey& aB)
+  {
+    return aA.mAllocStackTrace  == aB.mAllocStackTrace &&
+           aA.mReportStackTrace == aB.mReportStackTrace &&
+           aA.mReporterName     == aB.mReporterName;
+  }
+};
+
+class DoubleReportBlockKey
+{
+public:
+  const StackTrace* const mAllocStackTrace;     // never null
+
+protected:
+  // When double-reports occur we record (and later print) the stack trace
+  // and reporter name of *both* the reporting locations.
+  const StackTrace* const mReportStackTrace1;   // never null
+  const StackTrace* const mReportStackTrace2;   // never null
+  const char*       const mReporterName1;       // never gUnreportedName
+  const char*       const mReporterName2;       // never gUnreportedName
+
+public:
+  DoubleReportBlockKey(const StackTrace* aAllocStackTrace,
+                       const StackTrace* aReportStackTrace1,
+                       const StackTrace* aReportStackTrace2,
+                       const char* aReporterName1,
+                       const char* aReporterName2)
+    : mAllocStackTrace(aAllocStackTrace),
+      mReportStackTrace1(aReportStackTrace1),
+      mReportStackTrace2(aReportStackTrace2),
+      mReporterName1(aReporterName1),
+      mReporterName2(aReporterName2)
+  {
+    MOZ_ASSERT(IsSane());
+  }
+
+  bool IsSane() const
+  {
+    return mAllocStackTrace &&
+           mReportStackTrace1 &&
+           mReportStackTrace2 &&
+           mReporterName1 != gUnreportedName &&
+           mReporterName2 != gUnreportedName;
+  }
+
+  // Hash policy.
+  //
+  // hash() and match() both assume that identical reporter names have
+  // identical pointers.  See LiveBlockKey for more.
+
+  typedef DoubleReportBlockKey Lookup;
+
+  static uint32_t hash(const DoubleReportBlockKey& aKey)
+  {
+    return mozilla::HashGeneric(aKey.mAllocStackTrace,
+                                aKey.mReportStackTrace1,
+                                aKey.mReportStackTrace2,
+                                aKey.mReporterName1,
+                                aKey.mReporterName2);
+  }
+
+  static bool match(const DoubleReportBlockKey& aA,
+                    const DoubleReportBlockKey& aB)
+  {
+    return aA.mAllocStackTrace   == aB.mAllocStackTrace &&
+           aA.mReportStackTrace1 == aB.mReportStackTrace1 &&
+           aA.mReportStackTrace2 == aB.mReportStackTrace2 &&
+           aA.mReporterName1     == aB.mReporterName1 &&
+           aA.mReporterName2     == aB.mReporterName2;
+  }
+};
 
 class GroupSize
 {
@@ -1831,7 +1858,8 @@ Dump(Writer aWriter)
     LiveBlockGroupTable& table = !b.IsReported()
                                ? unreportedLiveBlockGroupTable
                                : reportedLiveBlockGroupTable;
-    LiveBlockGroupTable::AddPtr p = table.lookupForAdd(b);
+    LiveBlockKey liveKey(b);
+    LiveBlockGroupTable::AddPtr p = table.lookupForAdd(liveKey);
     if (!p) {
       LiveBlockGroup bg(b);
       (void)table.add(p, bg);
