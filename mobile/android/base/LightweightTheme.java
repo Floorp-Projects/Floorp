@@ -97,7 +97,6 @@ public class LightweightTheme implements GeckoEventListener {
                                                           mBitmap.getHeight() - height, 
                                                           maxWidth, height);
             mColor = BitmapUtils.getDominantColor(cropped, false);
-            cropped.recycle();
 
             notifyListeners();
         } catch(java.net.MalformedURLException e) {
