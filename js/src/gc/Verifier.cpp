@@ -496,7 +496,7 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
 
     rt->gcVerifyPreData = trc;
     rt->gcIncrementalState = MARK;
-    rt->gcMarker.start(rt);
+    rt->gcMarker.start();
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         PurgeJITCaches(c);
         c->setNeedsBarrier(true, JSCompartment::UpdateIon);
