@@ -9,7 +9,6 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
@@ -55,16 +54,16 @@ public class TabsPanelButton extends ShapedButton {
     // The drawable is constructed as per @drawable/tab_new_button.
     @Override
     public void onLightweightThemeChanged() {
-        Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 34);
+        LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat);
         if (drawable == null)
             return;
 
-        Resources resources = getContext().getResources();
-        LayerDrawable layers = new LayerDrawable(new Drawable[] { resources.getDrawable(R.drawable.tabs_tray_bg_repeat), drawable }); 
+        drawable.setAlpha(34, 34);
 
+        Resources resources = getContext().getResources();
         StateListDrawable stateList = new StateListDrawable();
         stateList.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
-        stateList.addState(new int[] {}, layers);
+        stateList.addState(new int[] {}, drawable);
 
         setBackgroundDrawable(stateList);
     }
