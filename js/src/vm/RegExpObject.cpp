@@ -560,10 +560,9 @@ RegExpCompartment::sweep(JSRuntime *rt)
 }
 
 inline bool
-RegExpCompartment::get(JSContext *cx, JSAtom *keyAtom, JSAtom *source, RegExpFlag flags, Type type,
-                       RegExpGuard *g)
+RegExpCompartment::get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g)
 {
-    Key key(keyAtom, flags, type);
+    Key key(source, flags);
     Map::AddPtr p = map_.lookupForAdd(key);
     if (p) {
         g->init(*p->value);
@@ -596,29 +595,6 @@ RegExpCompartment::get(JSContext *cx, JSAtom *keyAtom, JSAtom *source, RegExpFla
      */
     g->init(*shared.forget());
     return true;
-}
-
-bool
-RegExpCompartment::get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g)
-{
-    return get(cx, source, source, flags, Normal, g);
-}
-
-bool
-RegExpCompartment::getHack(JSContext *cx, JSAtom *source, JSAtom *hackedSource, RegExpFlag flags,
-                           RegExpGuard *g)
-{
-    return get(cx, source, hackedSource, flags, Hack, g);
-}
-
-bool
-RegExpCompartment::lookupHack(JSAtom *source, RegExpFlag flags, JSContext *cx, RegExpGuard *g)
-{
-    if (Map::Ptr p = map_.lookup(Key(source, flags, Hack))) {
-        g->init(*p->value);
-        return true;
-    }
-    return false;
 }
 
 bool
