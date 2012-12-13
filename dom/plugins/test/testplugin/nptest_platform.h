@@ -56,7 +56,7 @@ bool    pluginSupportsAsyncBitmapDrawing();
 /**
  * Returns true if the plugin supports DXGI bitmap drawing.
  */
-static bool    pluginSupportsAsyncDXGIDrawing()
+inline bool    pluginSupportsAsyncDXGIDrawing()
 {
 #ifdef XP_WIN
   return true;
