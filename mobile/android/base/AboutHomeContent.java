@@ -29,7 +29,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.graphics.Path;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -684,10 +683,11 @@ public class AboutHomeContent extends ScrollView
 
     @Override
     public void onLightweightThemeChanged() {
-        final Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 255, 0);
+        LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getColorDrawable(this);
         if (drawable == null)
             return;
 
+         drawable.setAlpha(255, 0);
          setBackgroundDrawable(drawable);
     }
 

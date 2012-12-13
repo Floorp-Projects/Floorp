@@ -13,7 +13,6 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -221,14 +220,12 @@ public class TabsPanel extends LinearLayout
     
     @Override
     public void onLightweightThemeChanged() {
-        Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 255, 0);
+        LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat, true);
         if (drawable == null)
             return;
 
-        drawable.setAlpha(30);
-
-        LayerDrawable layers = new LayerDrawable(new Drawable[] { mContext.getResources().getDrawable(R.drawable.tabs_tray_bg_repeat), drawable });
-        setBackgroundDrawable(layers);
+        drawable.setAlpha(34, 0);
+        setBackgroundDrawable(drawable);
     }
 
     @Override
@@ -291,13 +288,12 @@ public class TabsPanel extends LinearLayout
     
         @Override
         public void onLightweightThemeChanged() {
-            Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 34);
+            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat);
             if (drawable == null)
                 return;
 
-            Resources resources = this.getContext().getResources();
-            LayerDrawable layers = new LayerDrawable(new Drawable[] { resources.getDrawable(R.drawable.tabs_tray_bg_repeat), drawable }); 
-            setBackgroundDrawable(layers);
+            drawable.setAlpha(34, 34);
+            setBackgroundDrawable(drawable);
         }
 
         @Override
