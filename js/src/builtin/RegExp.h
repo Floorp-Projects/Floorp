@@ -10,6 +10,9 @@
 
 #include "jsprvtd.h"
 
+#include "vm/MatchPairs.h"
+#include "vm/RegExpObject.h"
+
 JSObject *
 js_InitRegExpClass(JSContext *cx, js::HandleObject obj);
 
@@ -20,31 +23,39 @@ js_InitRegExpClass(JSContext *cx, js::HandleObject obj);
 
 namespace js {
 
+RegExpRunStatus
+ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
+              MatchConduit &matches);
+
 /*
- * |res| may be null if the |RegExpStatics| are not to be updated.
- * |input| may be null if there is no |JSString| corresponding to
+ * Legacy behavior of ExecuteRegExp(), which is baked into the JSAPI.
+ *
+ * |res| may be NULL if the RegExpStatics are not to be updated.
+ * |input| may be NULL if there is no JSString corresponding to
  * |chars| and |length|.
  */
 bool
-ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
-              Handle<JSStableString*> input, StableCharPtr chars, size_t length,
-              size_t *lastIndex, RegExpExecType type, Value *rval);
+ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
+                    Handle<JSStableString*> input, StableCharPtr chars, size_t length,
+                    size_t *lastIndex, JSBool test, jsval *rval);
+
+/* Translation from MatchPairs to a JS array in regexp_exec()'s output format. */
+bool
+CreateRegExpMatchResult(JSContext *cx, HandleString string, MatchPairs &matches, Value *rval);
 
 bool
-ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpShared &shared,
-              Handle<JSStableString*> input, StableCharPtr chars, size_t length,
-              size_t *lastIndex, RegExpExecType type, Value *rval);
-
-bool
-ExecuteRegExp(JSContext *cx, RegExpExecType execType, HandleObject regexp,
-              HandleString string, MutableHandleValue rval);
+CreateRegExpMatchResult(JSContext *cx, JSString *input_, StableCharPtr chars, size_t length,
+                        MatchPairs &matches, Value *rval);
 
 extern JSBool
 regexp_exec(JSContext *cx, unsigned argc, Value *vp);
+
+bool
+regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, JSBool *result);
 
 extern JSBool
 regexp_test(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 
-#endif
+#endif /* RegExp_h__ */
