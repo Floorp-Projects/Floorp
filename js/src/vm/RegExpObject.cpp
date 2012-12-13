@@ -111,28 +111,96 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other, Handle<RegExpObject *> 
 
 /* MatchPairs */
 
-MatchPairs *
-MatchPairs::create(LifoAlloc &alloc, size_t pairCount, size_t backingPairCount)
+bool
+MatchPairs::initArray(size_t pairCount)
 {
-    void *mem = alloc.alloc(calculateSize(backingPairCount));
-    if (!mem)
-        return NULL;
+    JS_ASSERT(pairCount > 0);
 
-    return new (mem) MatchPairs(pairCount);
+    /* Guarantee adequate space in buffer. */
+    if (!allocOrExpandArray(pairCount))
+        return false;
+
+    /* Initialize all MatchPair objects to invalid locations. */
+    for (size_t i = 0; i < pairCount; i++) {
+        pairs_[i].start = size_t(-1);
+        pairs_[i].limit = size_t(-1);
+    }
+
+    return true;
+}
+
+bool
+MatchPairs::initArrayFrom(MatchPairs &copyFrom)
+{
+    JS_ASSERT(copyFrom.pairCount() > 0);
+
+    if (!allocOrExpandArray(copyFrom.pairCount()))
+        return false;
+
+    for (size_t i = 0; i < pairCount_; i++) {
+        JS_ASSERT(copyFrom[i].check());
+        pairs_[i].start = copyFrom[i].start;
+        pairs_[i].limit = copyFrom[i].limit;
+    }
+
+    return true;
+}
+
+void
+MatchPairs::displace(size_t disp)
+{
+    if (disp == 0)
+        return;
+
+    for (size_t i = 0; i < pairCount_; i++) {
+        JS_ASSERT(pairs_[i].check());
+        pairs_[i].start += (pairs_[i].start < 0) ? 0 : disp;
+        pairs_[i].limit += (pairs_[i].limit < 0) ? 0 : disp;
+    }
 }
 
 inline void
 MatchPairs::checkAgainst(size_t inputLength)
 {
 #if DEBUG
-    for (size_t i = 0; i < pairCount(); ++i) {
-        MatchPair p = pair(i);
-        p.check();
+    for (size_t i = 0; i < pairCount_; i++) {
+        const MatchPair &p = pair(i);
+        JS_ASSERT(p.check());
         if (p.isUndefined())
             continue;
         JS_ASSERT(size_t(p.limit) <= inputLength);
     }
 #endif
+}
+
+bool
+ScopedMatchPairs::allocOrExpandArray(size_t pairCount)
+{
+    /* Array expansion is forbidden, but array reuse is acceptable. */
+    if (pairCount_) {
+        JS_ASSERT(pairs_);
+        JS_ASSERT(pairCount_ == pairCount);
+        return true;
+    }
+
+    JS_ASSERT(!pairs_);
+    pairs_ = (MatchPair *)lifoAlloc_->alloc(sizeof(MatchPair) * pairCount);
+    if (!pairs_)
+        return false;
+
+    pairCount_ = pairCount;
+    return true;
+}
+
+bool
+VectorMatchPairs::allocOrExpandArray(size_t pairCount)
+{
+    if (!vec_.resizeUninitialized(sizeof(MatchPair) * pairCount))
+        return false;
+
+    pairs_ = &vec_[0];
+    pairCount_ = pairCount;
+    return true;
 }
 
 /* RegExpObject */
@@ -289,16 +357,6 @@ RegExpObject::init(JSContext *cx, HandleAtom source, RegExpFlag flags)
     self->setMultiline(flags & MultilineFlag);
     self->setSticky(flags & StickyFlag);
     return true;
-}
-
-RegExpRunStatus
-RegExpObject::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
-                      MatchPairs **output)
-{
-    RegExpGuard g;
-    if (!getShared(cx, &g))
-        return RegExpRunStatus_Error;
-    return g->execute(cx, chars, length, lastIndex, output);
 }
 
 JSFlatString *
@@ -466,36 +524,33 @@ RegExpShared::compileIfNecessary(JSContext *cx)
 }
 
 RegExpRunStatus
-RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
-                      MatchPairs **output)
+RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length,
+                      size_t *lastIndex, MatchPairs &matches)
 {
     /* Compile the code at point-of-use. */
     if (!compileIfNecessary(cx))
         return RegExpRunStatus_Error;
 
-    const size_t origLength = length;
-    size_t backingPairCount = pairCount() * 2;
-
-    LifoAlloc &alloc = cx->tempLifoAlloc();
-    MatchPairs *matchPairs = MatchPairs::create(alloc, pairCount(), backingPairCount);
-    if (!matchPairs)
+    /* Ensure sufficient memory for output vector. */
+    if (!matches.initArray(pairCount()))
         return RegExpRunStatus_Error;
 
     /*
      * |displacement| emulates sticky mode by matching from this offset
      * into the char buffer and subtracting the delta off at the end.
      */
+    size_t origLength = length;
     size_t start = *lastIndex;
     size_t displacement = 0;
 
     if (sticky()) {
-        displacement = *lastIndex;
+        displacement = start;
         chars += displacement;
         length -= displacement;
         start = 0;
     }
 
-    unsigned *outputBuf = (unsigned *)matchPairs->buffer();
+    unsigned *outputBuf = matches.rawBuf();
     unsigned result;
 
 #if ENABLE_YARR_JIT
@@ -507,14 +562,12 @@ RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t 
     result = JSC::Yarr::interpret(bytecode, chars.get(), length, start, outputBuf);
 #endif
 
-    *output = matchPairs;
-
     if (result == JSC::Yarr::offsetNoMatch)
         return RegExpRunStatus_Success_NotFound;
 
-    matchPairs->displace(displacement);
-    matchPairs->checkAgainst(origLength);
-    *lastIndex = matchPairs->pair(0).limit;
+    matches.displace(displacement);
+    matches.checkAgainst(origLength);
+    *lastIndex = matches[0].limit;
     return RegExpRunStatus_Success;
 }
 
