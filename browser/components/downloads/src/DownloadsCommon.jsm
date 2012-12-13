@@ -75,7 +75,7 @@ const kDownloadsStringsRequiringFormatting = {
 };
 
 const kDownloadsStringsRequiringPluralForm = {
-  otherDownloads: true
+  otherDownloads2: true
 };
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
@@ -1860,7 +1860,7 @@ DownloadsSummaryData.prototype = {
       DownloadsCommon.summarizeDownloads(this._dataItemsForSummary());
 
     this._description = DownloadsCommon.strings
-                                       .otherDownloads(summary.numActive);
+                                       .otherDownloads2(summary.numActive);
     this._percentComplete = summary.percentComplete;
 
     // If all downloads are paused, show the progress indicator as paused.
