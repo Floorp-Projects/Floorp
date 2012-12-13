@@ -3076,15 +3076,15 @@ class MRegExpTest
         return new MRegExpTest(regexp, string);
     }
 
-    TypePolicy *typePolicy() {
-        return this;
+    MDefinition *string() const {
+        return getOperand(0);
     }
-
     MDefinition *regexp() const {
         return getOperand(1);
     }
-    MDefinition *string() const {
-        return getOperand(0);
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 

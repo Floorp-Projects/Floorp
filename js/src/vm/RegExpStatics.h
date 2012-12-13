@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ * vim: set ts=4 sw=4 et tw=99 ft=cpp:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -209,6 +209,8 @@ class RegExpStatics
     void getLeftContext(JSSubString *out) const;
     void getRightContext(JSSubString *out) const;
 
+    /* PreserveRegExpStatics helpers. */
+
     class AutoRooter : private AutoGCRooter
     {
       public:
@@ -253,4 +255,4 @@ size_t SizeOfRegExpStaticsData(const JSObject *obj, JSMallocSizeOfFun mallocSize
 
 } /* namespace js */
 
-#endif
+#endif /* RegExpStatics_h__ */
