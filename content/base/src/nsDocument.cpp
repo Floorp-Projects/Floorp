@@ -7945,12 +7945,13 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
   }
 
   uint32_t i, n = mImageMaps->Length(true);
+  nsString name;
   for (i = 0; i < n; ++i) {
     nsIContent* map = mImageMaps->Item(i);
     if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
                          eCaseMatters) ||
-        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
-                         eIgnoreCase)) {
+        (map->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name) &&
+         mapName.Equals(name, nsCaseInsensitiveStringComparator()))) {
       return map->AsElement();
     }
   }
