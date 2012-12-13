@@ -1628,6 +1628,10 @@ MediaCacheStream::NotifyDataStarted(int64_t aOffset)
     // the stream is at least that long.
     mStreamLength = NS_MAX(mStreamLength, mChannelOffset);
   }
+  // Ensure that |mDownloadCancelled| is set to false since we have new data.
+  if (mDownloadCancelled) {
+    mDownloadCancelled = false;
+  }
 }
 
 bool
@@ -1795,6 +1799,24 @@ MediaCacheStream::NotifyDataEnded(nsresult aStatus)
 
   mChannelEnded = true;
   gMediaCache->QueueUpdate();
+}
+
+void
+MediaCacheStream::NotifyDownloadCancelled()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
+
+  MediaCache::ResourceStreamIterator iter(mResourceID);
+  while (MediaCacheStream* stream = iter.Next()) {
+    // The remainder of the download was cancelled; in order to cancel any
+    // waiting reads, assume length is equal to current channel offset.
+    stream->mDownloadCancelled = true;
+  }
+
+  // Wake up waiting streams so they will stop reading.
+  mon.NotifyAll();
 }
 
 MediaCacheStream::~MediaCacheStream()
@@ -2140,6 +2162,11 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         // We may have successfully read some data, but let's just throw
         // that out.
         return NS_ERROR_FAILURE;
+      }
+      // If the download was cancelled, stop reading and return silently.
+      if (mDownloadCancelled) {
+        mDownloadCancelled = false;
+        return NS_OK;
       }
       continue;
     }
