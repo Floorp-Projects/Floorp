@@ -59,6 +59,7 @@ public:
                                            const char* aURL,
                                            uint32_t aLineNo,
                                            uint32_t aVersion,
+                                           bool aIsXBL,
                                            JS::Value* aRetValue,
                                            bool* aIsUndefined);
 
