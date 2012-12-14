@@ -582,6 +582,9 @@
       #
       
       'defines' : [
+      # CPR timers are needed by SIP, but are disabled for now
+      # to avoid the extra timer thread and stale cleanup code
+      #    'CPR_TIMERS_ENABLED',
       ],
 
       'cflags_mozilla': [
