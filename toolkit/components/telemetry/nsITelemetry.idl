@@ -6,6 +6,12 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
+[scriptable,function, uuid(5c25e4b0-398f-11e2-81c1-0800200c9a66)]
+interface nsIReadShutdownTimeCallback : nsISupports
+{
+  void complete();
+};
+
 [scriptable, uuid(420ebbd5-efe3-42f2-8a13-f695e0fdcca0)]
 interface nsITelemetry : nsISupports
 {
@@ -185,4 +191,10 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   readonly attribute jsval addonHistogramSnapshots;
+
+  /**
+   * Read how long the previous run took to shutdown. After the callback is
+   * called the data is available in lastShutdownDuration.
+   */
+  void asyncReadShutdownTime(in nsIReadShutdownTimeCallback aCallback);
 };

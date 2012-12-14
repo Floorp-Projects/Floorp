@@ -444,6 +444,7 @@ function write_fake_shutdown_file() {
 }
 
 function run_test() {
+  do_test_pending();
   try {
     var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfoDebug);
     gfxInfo.spoofVendorID("0xabcd");
@@ -458,7 +459,13 @@ function run_test() {
 
   // Make it look like we've shutdown before.
   write_fake_shutdown_file();
-  
+
+  Telemetry.asyncReadShutdownTime(function () {
+    actualTest();
+  });
+}
+
+function actualTest() {
   // try to make LightweightThemeManager do stuff
   let gInternalManager = Cc["@mozilla.org/addons/integration;1"]
                          .getService(Ci.nsIObserver)
@@ -478,4 +485,5 @@ function run_test() {
   do_test_pending();
   // ensure that test runs to completion
   do_register_cleanup(function () do_check_true(gFinished));
+  do_test_finished();
 }
