@@ -4187,18 +4187,25 @@ if (!obj) {
   return false;
 }
 
-if (js::IsWrapper(obj)) {
-  obj = XPCWrapper::Unwrap(cx, obj, false);
-  if (!obj) {
-    return Throw<%s>(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
-  }
-}
-
+// We have to be careful to leave "obj" in its existing compartment, even
+// while we grab our global from the real underlying object, because we
+// use it for unwrapping the other arguments later.
 nsISupports* global;
 xpc_qsSelfRef globalRef;
 {
   JS::Value val;
-  val.setObjectOrNull(JS_GetGlobalForObject(cx, obj));
+  Maybe<JSAutoCompartment> ac;
+  if (js::IsWrapper(obj)) {
+    JSObject* realObj = XPCWrapper::Unwrap(cx, obj, false);
+    if (!realObj) {
+      return Throw<%s>(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+    }
+    ac.construct(cx, realObj);
+    val.setObject(*JS_GetGlobalForObject(cx, realObj));
+  } else {
+    val.setObject(*JS_GetGlobalForObject(cx, obj));
+  }
+
   nsresult rv = xpc_qsUnwrapArg<nsISupports>(cx, val, &global, &globalRef.ptr,
                                              &val);
   if (NS_FAILED(rv)) {
