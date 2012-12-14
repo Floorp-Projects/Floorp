@@ -5,13 +5,9 @@
 
 Components.utils.import("resource:///modules/MigrationUtils.jsm");
 
-const DOWNLOADS_QUERY = "place:transition=" +
-  Components.interfaces.nsINavHistoryService.TRANSITION_DOWNLOAD +
-  "&sort=" +
-  Components.interfaces.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-
 var PlacesOrganizer = {
   _places: null,
+  _content: null,
 
   // IDs of fields from editBookmarkOverlay that should be hidden when infoBox
   // is minimal. IDs should be kept in sync with the IDs of the elements
@@ -36,9 +32,8 @@ var PlacesOrganizer = {
   },
 
   init: function PO_init() {
-    ContentArea.init();
-
     this._places = document.getElementById("placesList");
+    this._content = document.getElementById("placeContent");
     this._initFolderTree();
 
     var leftPaneSelection = "AllBookmarks"; // default to all-bookmarks
@@ -49,6 +44,12 @@ var PlacesOrganizer = {
     // clear the back-stack
     this._backHistory.splice(0, this._backHistory.length);
     document.getElementById("OrganizerCommand:Back").setAttribute("disabled", true);
+
+    var view = this._content.treeBoxObject.view;
+    if (view.rowCount > 0)
+      view.selection.select(0);
+
+    this._content.focus();
 
     // Set up the search UI.
     PlacesSearchBox.init();
@@ -83,13 +84,6 @@ var PlacesOrganizer = {
 #ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     gPrivateBrowsingListener.init();
 #endif
-
-    // Select the first item in the content area view.
-    let view = ContentArea.currentView;
-    let root = view.result ? view.result.root : null;
-    if (root && root.containerOpen && root.childCount >= 0)
-      view.selectNode(root.getChild(0));
-    ContentArea.focus();
   },
 
   QueryInterface: function PO_QueryInterface(aIID) {
@@ -145,9 +139,9 @@ var PlacesOrganizer = {
 
     if (!this._places.hasSelection) {
       // If no node was found for the given place: uri, just load it directly
-      ContentArea.currentPlace = aLocation;
+      this._content.place = aLocation;
     }
-    this.updateDetailsPane();
+    this.onContentTreeSelect();
 
     // update navigation commands
     if (this._backHistory.length == 0)
@@ -207,8 +201,8 @@ var PlacesOrganizer = {
     // If either the place of the content tree in the right pane has changed or
     // the user cleared the search box, update the place, hide the search UI,
     // and update the back/forward buttons by setting location.
-    if (ContentArea.currentPlace != placeURI || !resetSearchBox) {
-      ContentArea.currentPlace = placeURI;
+    if (this._content.place != placeURI || !resetSearchBox) {
+      this._content.place = placeURI;
       this.location = node.uri;
     }
 
@@ -227,7 +221,8 @@ var PlacesOrganizer = {
 
     PlacesSearchBox.searchFilter.reset();
     this._setSearchScopeForNode(node);
-    this.updateDetailsPane();
+    if (this._places.treeBoxObject.focused)
+      this._fillDetailsPane([node]);
   },
 
   /**
@@ -252,39 +247,50 @@ var PlacesOrganizer = {
   },
 
   /**
-   * Handle clicks on the places list.
+   * Handle clicks on the tree.
    * Single Left click, right click or modified click do not result in any
    * special action, since they're related to selection.
    * @param   aEvent
    *          The mouse event.
    */
-  onPlacesListClick: function PO_onPlacesListClick(aEvent) {
+  onTreeClick: function PO_onTreeClick(aEvent) {
     // Only handle clicks on tree children.
     if (aEvent.target.localName != "treechildren")
       return;
 
-    let node = this._places.selectedNode;
-    if (node) {
-      let middleClick = aEvent.button == 1 && aEvent.detail == 1;
-      if (middleClick && PlacesUtils.nodeIsContainer(node)) {
+    var currentView = aEvent.currentTarget;
+    var selectedNode = currentView.selectedNode;
+    if (selectedNode) {
+      var doubleClickOnFlatList = (aEvent.button == 0 && aEvent.detail == 2 &&
+                                   aEvent.target.parentNode.flatList);
+      var middleClick = (aEvent.button == 1 && aEvent.detail == 1);
+
+      if (PlacesUtils.nodeIsURI(selectedNode) &&
+          (doubleClickOnFlatList || middleClick)) {
+        // Open associated uri in the browser.
+        PlacesOrganizer.openSelectedNode(aEvent);
+      }
+      else if (middleClick &&
+               PlacesUtils.nodeIsContainer(selectedNode)) {
         // The command execution function will take care of seeing if the
         // selection is a folder or a different container type, and will
         // load its contents in tabs.
-        PlacesUIUtils.openContainerNodeInTabs(selectedNode, aEvent, this._places);
+        PlacesUIUtils.openContainerNodeInTabs(selectedNode, aEvent, currentView);
       }
     }
   },
 
   /**
-   * Handle focus changes on the places list and the current content view.
+   * Handle focus changes on the trees.
+   * When moving focus between panes we should update the details pane contents.
+   * @param   aEvent
+   *          The mouse event.
    */
-  updateDetailsPane: function PO_updateDetailsPane() {
-    let view = PlacesUIUtils.getViewForNode(document.activeElement);
-    if (view) {
-      let selectedNodes = view.selectedNode ?
-                          [view.selectedNode] : view.selectedNodes;
-      this._fillDetailsPane(selectedNodes);
-    }
+  onTreeFocus: function PO_onTreeFocus(aEvent) {
+    var currentView = aEvent.currentTarget;
+    var selectedNodes = currentView.selectedNode ? [currentView.selectedNode] :
+                        this._content.selectedNodes;
+    this._fillDetailsPane(selectedNodes);
   },
 
   openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
@@ -294,12 +300,17 @@ var PlacesOrganizer = {
       this._places.selectPlaceURI(aContainer.uri);
   },
 
+  openSelectedNode: function PO_openSelectedNode(aEvent) {
+    PlacesUIUtils.openNodeWithEvent(this._content.selectedNode, aEvent,
+                                    this._content);
+  },
+
   /**
    * Returns the options associated with the query currently loaded in the
    * main places pane.
    */
   getCurrentOptions: function PO_getCurrentOptions() {
-    return PlacesUtils.asQuery(ContentArea.currentView.result.root).queryOptions;
+    return PlacesUtils.asQuery(this._content.result.root).queryOptions;
   },
 
   /**
@@ -307,7 +318,7 @@ var PlacesOrganizer = {
    * main places pane.
    */
   getCurrentQueries: function PO_getCurrentQueries() {
-    return PlacesUtils.asQuery(ContentArea.currentView.result.root).getQueries();
+    return PlacesUtils.asQuery(this._content.result.root).getQueries();
   },
 
   /**
@@ -553,6 +564,11 @@ var PlacesOrganizer = {
     canvas.height = height;
   },
 
+  onContentTreeSelect: function PO_onContentTreeSelect() {
+    if (this._content.treeBoxObject.focused)
+      this._fillDetailsPane(this._content.selectedNodes);
+  },
+
   _fillDetailsPane: function PO__fillDetailsPane(aNodeList) {
     var infoBox = document.getElementById("infoBox");
     var detailsDeck = document.getElementById("detailsDeck");
@@ -655,15 +671,10 @@ var PlacesOrganizer = {
     else {
       detailsDeck.selectedIndex = 0;
       infoBox.hidden = true;
-      let selectItemDesc = document.getElementById("selectItemDescription");
-      let itemsCountLabel = document.getElementById("itemsCountText");
-      let itemsCount = 0;
-      if (ContentArea.currentView.result) {
-        let rootNode = ContentArea.currentView.result.root;
-        if (rootNode.containerOpen)
-          itemsCount = rootNode.childCount;
-      }
-      if (itemsCount == 0) {
+      var selectItemDesc = document.getElementById("selectItemDescription");
+      var itemsCountLabel = document.getElementById("itemsCountText");
+      var rowCount = this._content.treeBoxObject.view.rowCount;
+      if (rowCount == 0) {
         selectItemDesc.hidden = true;
         itemsCountLabel.value = PlacesUIUtils.getString("detailsPane.noItems");
       }
@@ -671,7 +682,7 @@ var PlacesOrganizer = {
         selectItemDesc.hidden = false;
         itemsCountLabel.value =
           PlacesUIUtils.getPluralString("detailsPane.itemsCountLabel",
-                                        itemsCount, [itemsCount]);
+                                        rowCount, [rowCount]);
       }
     }
   },
@@ -768,14 +779,14 @@ var PlacesSearchBox = {
       return;
     }
 
-    let currentView = ContentArea.currentView;
-    let currentOptions = PO.getCurrentOptions();
+    var currentOptions = PO.getCurrentOptions();
+    var content = PO._content;
 
     // Search according to the current scope, which was set by
     // PQB_setScope()
     switch (PlacesSearchBox.filterCollection) {
       case "bookmarks":
-        currentView.applyFilter(filterString, this.folders);
+        content.applyFilter(filterString, this.folders);
         break;
       case "history":
         if (currentOptions.queryType != Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
@@ -786,17 +797,27 @@ var PlacesSearchBox = {
           options.resultType = currentOptions.RESULT_TYPE_URI;
           options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
           options.includeHidden = true;
-          currentView.load([query], options);
+          content.load([query], options);
         }
         else {
-          currentView.applyFilter(filterString, null, true);
+          content.applyFilter(filterString, null, true);
         }
         break;
-      case "downloads":
-        currentView.searchTerm = filterString;
+      case "downloads": {
+          let query = PlacesUtils.history.getNewQuery();
+          query.searchTerms = filterString;
+          query.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD], 1);
+          let options = currentOptions.clone();
+          // Make sure we're getting uri results.
+          options.resultType = currentOptions.RESULT_TYPE_URI;
+          options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
+          options.includeHidden = true;
+          content.load([query], options);
         break;
-      default:
-        throw "Invalid filterCollection on search";
+    }
+    default:
+      throw "Invalid filterCollection on search";
+      break;
     }
 
     // Update the details panel
@@ -1230,94 +1251,3 @@ let gPrivateBrowsingListener = {
   }
 };
 #endif
-
-let ContentArea = {
-  init: function CA_init() {
-    this._deck = document.getElementById("placesViewsDeck");
-    this._specialViews = new Map();
-    ContentTree.init();
-  },
-
-  _shouldUseNewDownloadsView: function CA_shouldUseNewDownloadsView() {
-    try {
-      return Services.prefs.getBoolPref("browser.library.useNewDownloadsView");
-    }
-    catch(ex) { }
-    return false;
-  },
-
-  getContentViewForQueryString:
-  function CA_getContentViewForQueryString(aQueryString) {
-    if (this._specialViews.has(aQueryString))
-      return this._specialViews.get(aQueryString);
-    if (aQueryString == DOWNLOADS_QUERY && this._shouldUseNewDownloadsView()) {
-      let view = new DownloadsPlacesView(document.getElementById("downloadsRichListBox"), aQueryString);
-      this.setContentViewForQueryString(aQueryString, view);
-      return view;
-    }
-    return ContentTree.view;
-  },
-
-  setContentViewForQueryString:
-  function CA_setContentViewForQueryString(aQueryString, aView) {
-    this._specialViews.set(aQueryString, aView);
-  },
-
-  get currentView() PlacesUIUtils.getViewForNode(this._deck.selectedPanel),
-  set currentView(aView) {
-    if (this.currentView != aView)
-      this._deck.selectedPanel = aView.associatedElement;
-    return aView;
-  },
-
-  get currentPlace() this.currentView.place,
-  set currentPlace(aQueryString) {
-    this.currentView = this.getContentViewForQueryString(aQueryString);
-    this.currentView.place = aQueryString;
-    return aQueryString;
-  },
-
-  focus: function() {
-    this._deck.selectedPanel.focus();
-  }
-};
-
-let ContentTree = {
-  init: function CT_init() {
-    this._view = document.getElementById("placeContent");
-  },
-
-  get view() this._view,
-
-  openSelectedNode: function CT_openSelectedNode(aEvent) {
-    let view = this.view;
-    PlacesUIUtils.openNodeWithEvent(view.selectedNode, aEvent, view);
-  },
-
-  onClick: function CT_onClick(aEvent) {
-    // Only handle clicks on tree children.
-    if (aEvent.target.localName != "treechildren")
-      return;
-
-    let node = this.view.selectedNode;
-    if (node) {
-      let doubleClick = aEvent.button == 0 && aEvent.detail == 2;
-      let middleClick = aEvent.button == 1 && aEvent.detail == 1;
-      if (PlacesUtils.nodeIsURI(node) && (doubleClick || middleClick)) {
-        // Open associated uri in the browser.
-        this.openSelectedNode(aEvent);
-      }
-      else if (middleClick && PlacesUtils.nodeIsContainer(node)) {
-        // The command execution function will take care of seeing if the
-        // selection is a folder or a different container type, and will
-        // load its contents in tabs.
-        PlacesUIUtils.openContainerNodeInTabs(node, aEvent, this.view);
-      }
-    }
-  },
-
-  onKeyPress: function CT_onKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
-      this.openSelectedNode(aEvent);
-  }
-};
