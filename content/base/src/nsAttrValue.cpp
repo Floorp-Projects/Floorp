@@ -8,6 +8,9 @@
  * attribute.
  */
 
+#include "mozilla/DebugOnly.h"
+#include "mozilla/HashFunctions.h"
+
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsIAtom.h"
@@ -17,7 +20,6 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
-#include "mozilla/HashFunctions.h"
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsCSSParser.h"
 #include "nsStyledElement.h"

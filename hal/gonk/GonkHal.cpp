@@ -25,6 +25,8 @@
 #include <time.h>
 #include <asm/page.h>
 
+#include "mozilla/DebugOnly.h"
+
 #include "android/log.h"
 #include "cutils/properties.h"
 #include "hardware/hardware.h"

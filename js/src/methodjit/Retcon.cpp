@@ -7,6 +7,8 @@
 
 #ifdef JS_METHODJIT
 
+#include "mozilla/DebugOnly.h"
+
 #include "Retcon.h"
 #include "MethodJIT.h"
 #include "Compiler.h"

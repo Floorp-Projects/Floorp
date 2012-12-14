@@ -5,6 +5,9 @@
 #ifndef mozilla_dom_indexeddb_ipc_indexeddbchild_h__
 #define mozilla_dom_indexeddb_ipc_indexeddbchild_h__
 
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
@@ -15,8 +18,6 @@
 #include "mozilla/dom/indexedDB/PIndexedDBObjectStoreChild.h"
 #include "mozilla/dom/indexedDB/PIndexedDBRequestChild.h"
 #include "mozilla/dom/indexedDB/PIndexedDBTransactionChild.h"
-
-#include "mozilla/Attributes.h"
 
 class nsIAtom;
 

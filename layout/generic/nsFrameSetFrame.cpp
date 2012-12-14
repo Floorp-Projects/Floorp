@@ -5,6 +5,9 @@
 
 /* rendering object for HTML <frameset> elements */
 
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Likely.h"
+
 #include "nsCOMPtr.h"
 #include "nsFrameSetFrame.h"
 #include "nsGenericHTMLElement.h"
@@ -41,7 +44,6 @@
 #include "mozilla/Preferences.h"
 #include "nsHTMLFrameSetElement.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Likely.h"
 #include "nsSubDocumentFrame.h"
 
 using namespace mozilla;
