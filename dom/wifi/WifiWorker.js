@@ -2037,6 +2037,10 @@ function WifiWorker() {
               signalLevel = match[3],
               flags = match[4];
 
+          // Skip ad-hoc networks which aren't supported (bug 811635).
+          if (flags.indexOf("[IBSS]") >= 0)
+            continue;
+
           // If this is the first time that we've seen this SSID in the scan
           // results, add it to the list along with any other information.
           // Also, we use the highest signal strength that we see.
