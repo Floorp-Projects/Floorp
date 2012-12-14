@@ -350,19 +350,27 @@
             Components.utils.reportError(ex);
           }
 
+          aEvent.preventDefault();
+          href = uri ? uri.spec : href;
+
+          // Try handing off the link to the host application, e.g. for
+          // opening it in a tabbed browser.
+          var linkHandled = Components.classes["@mozilla.org/supports-PRBool;1"]
+                                      .createInstance(Components.interfaces.nsISupportsPRBool);
+          linkHandled.data = false;
+          Components.classes["@mozilla.org/observer-service;1"]
+                    .getService(Components.interfaces.nsIObserverService)
+                    .notifyObservers(linkHandled, "handle-xul-text-link", href);
+          if (linkHandled.data)
+            return;
+
           // otherwise, fall back to opening the anchor directly
           var win = window;
           if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
             while (win.opener && !win.opener.closed)
               win = win.opener;
           }
-
-          if (uri)
-            win.open(uri.spec);
-          else
-            win.open(href);
-
-          aEvent.preventDefault();
+          win.open(href);
         ]]>
         </body>
       </method>
