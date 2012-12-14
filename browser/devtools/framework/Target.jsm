@@ -170,7 +170,7 @@ Object.defineProperty(Target.prototype, "version", {
  * be web pages served over http(s), but they don't have to be.
  */
 function TabTarget(tab) {
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
   this._tab = tab;
   this._setupListeners();
 }
@@ -309,7 +309,7 @@ TabWebProgressListener.prototype = {
  * these will have a chrome: URL
  */
 function WindowTarget(window) {
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
   this._window = window;
 }
 
@@ -362,7 +362,7 @@ WindowTarget.prototype = {
  * A RemoteTarget represents a page living in a remote Firefox instance.
  */
 function RemoteTarget(form, client, chrome) {
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
   this._client = client;
   this._form = form;
   this._chrome = chrome;

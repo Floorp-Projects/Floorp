@@ -127,7 +127,7 @@ this.Toolbox = function Toolbox(target, selectedTool, hostType) {
 
   this._host = this._createHost(hostType);
 
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
