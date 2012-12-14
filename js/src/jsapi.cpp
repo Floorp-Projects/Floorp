@@ -956,7 +956,7 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
 #ifdef JS_THREADSAFE
-    if (!sourceCompressorThread.init())
+    if (useHelperThreads() && !sourceCompressorThread.init())
         return false;
 #endif
 
