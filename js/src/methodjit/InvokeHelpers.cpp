@@ -668,12 +668,19 @@ stubs::ScriptDebugPrologue(VMFrame &f)
     switch (status) {
       case JSTRAP_CONTINUE:
         break;
+
       case JSTRAP_RETURN:
+        if (!f.fp()->nativeReturnAddress()) {
+            // ClearAllFrames was called. Resume in the interpreter.
+            f.fp()->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolineScripted));
+        }
         *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromFastCall();
         return;
+
       case JSTRAP_ERROR:
       case JSTRAP_THROW:
         THROW();
+
       default:
         JS_NOT_REACHED("bad ScriptDebugPrologue status");
     }
