@@ -22,7 +22,7 @@
 #include "nsStreamUtils.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
-#include "RasterImage.h"
+#include "ImageFactory.h"
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 
@@ -47,35 +47,33 @@ imgTools::~imgTools()
   /* destructor code */
 }
 
-
 NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
                                         const nsACString& aMimeType,
                                         imgIContainer **aContainer)
 {
+  NS_ABORT_IF_FALSE(*aContainer == nullptr,
+                    "Cannot provide an existing image container to DecodeImageData");
+
+  return DecodeImage(aInStr, aMimeType, aContainer);
+}
+
+NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
+                                    const nsACString& aMimeType,
+                                    imgIContainer **aContainer)
+{
   nsresult rv;
-  RasterImage* image;  // convenience alias for *aContainer
+  nsRefPtr<Image> image;
 
   NS_ENSURE_ARG_POINTER(aInStr);
 
-  // XXX(seth) This needs to be switched over to use ImageFactory, but we need
-  // to be sure that no callers actually provide an existing imgIContainer first.
+  // Create a new image container to hold the decoded data.
+  nsAutoCString mimeType(aMimeType);
+  image = ImageFactory::CreateAnonymousImage(mimeType);
 
-  // If the caller didn't provide an imgIContainer, create one.
-  if (*aContainer) {
-    NS_ABORT_IF_FALSE((*aContainer)->GetType() == imgIContainer::TYPE_RASTER,
-                      "wrong type of imgIContainer for decoding into");
-    image = static_cast<RasterImage*>(*aContainer);
-  } else {
-    *aContainer = image = new RasterImage();
-    NS_ADDREF(image);
-  }
+  if (image->HasError())
+    return NS_ERROR_FAILURE;
 
-  // Initialize the Image. If we're using the one from the caller, we
-  // require that it not be initialized.
-  nsCString mimeType(aMimeType);
-  rv = image->Init(nullptr, mimeType.get(), "<unknown>", Image::INIT_FLAG_NONE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  // Prepare the input stream.
   nsCOMPtr<nsIInputStream> inStream = aInStr;
   if (!NS_InputStreamIsBuffered(aInStr)) {
     nsCOMPtr<nsIInputStream> bufStream;
@@ -84,27 +82,21 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
       inStream = bufStream;
   }
 
-  // Figure out how much data we've been passed
+  // Figure out how much data we've been passed.
   uint64_t length;
   rv = inStream->Available(&length);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(length <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
-  // Send the source data to the Image. WriteToRasterImage always
-  // consumes everything it gets if it doesn't run out of memory.
-  uint32_t bytesRead;
-  rv = inStream->ReadSegments(RasterImage::WriteToRasterImage,
-                              static_cast<void*>(image),
-                              (uint32_t)length, &bytesRead);
+  // Send the source data to the Image.
+  rv = image->OnImageDataAvailable(nullptr, nullptr, inStream, 0, uint32_t(length));
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ABORT_IF_FALSE(bytesRead == length || image->HasError(),
-  "WriteToRasterImage should consume everything or the image must be in error!");
-
-  // Let the Image know we've sent all the data
+  // Let the Image know we've sent all the data.
   rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // All done
+  // All done.
+  NS_ADDREF(*aContainer = image.get());
   return NS_OK;
 }
 
