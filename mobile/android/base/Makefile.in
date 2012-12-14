@@ -573,6 +573,8 @@ RES_DRAWABLE_BASE = \
   res/drawable/validation_arrow.png \
   res/drawable/validation_arrow_inverted.png \
   res/drawable/validation_bg.9.png \
+  res/drawable/bookmarkdefaults_favicon_support.png \
+  res/drawable/bookmarkdefaults_favicon_addons.png \
   res/drawable/handle_end.png \
   res/drawable/handle_middle.png \
   res/drawable/handle_start.png \
