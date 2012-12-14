@@ -24,6 +24,9 @@ function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
 }
 
+// Minimum delay between two progress events while downloading, in ms.
+const MIN_PROGRESS_EVENT_DELAY = 1000;
+
 const WEBAPP_RUNTIME = Services.appinfo.ID == "webapprt@mozilla.org";
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
@@ -1672,6 +1675,8 @@ this.DOMApplicationRegistry = {
           appId: id,
           previousState: aIsUpdate ? "installed" : "pending"
         };
+
+      let lastProgressTime = 0;
       requestChannel.notificationCallbacks = {
         QueryInterface: function notifQI(aIID) {
           if (aIID.equals(Ci.nsISupports)          ||
@@ -1688,11 +1693,14 @@ this.DOMApplicationRegistry = {
                                            aProgress, aProgressMax) {
           debug("onProgress: " + aProgress + "/" + aProgressMax);
           app.progress = aProgress;
-          self.broadcastMessage("Webapps:PackageEvent",
-                                { type: "progress",
-                                  manifestURL: aApp.manifestURL,
-                                  progress: aProgress,
-                                  app: app });
+          let now = Date.now();
+          if (now - lastProgressTime > MIN_PROGRESS_EVENT_DELAY) {
+            self.broadcastMessage("Webapps:PackageEvent",
+                                  { type: "progress",
+                                    manifestURL: aApp.manifestURL,
+                                    app: app });
+            lastProgressTime = now;
+          }
         },
         onStatus: function notifStatus(aRequest, aContext, aStatus, aStatusArg) { },
 
@@ -2265,6 +2273,7 @@ let AppcacheObserver = function(aApp) {
         " - " + aApp.installState);
   this.app = aApp;
   this.startStatus = aApp.installState;
+  this.lastProgressTime = 0;
 };
 
 AppcacheObserver.prototype = {
@@ -2310,8 +2319,14 @@ AppcacheObserver.prototype = {
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING:
       case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED:
-      case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS:
         setStatus(this.startStatus);
+        break;
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS:
+        let now = Date.now();
+        if (now - this.lastProgressTime > MIN_PROGRESS_EVENT_DELAY) {
+          setStatus(this.startStatus);
+          this.lastProgressTime = now;
+        }
         break;
     }
 

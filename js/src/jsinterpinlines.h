@@ -174,15 +174,16 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
 }
 
 inline bool
-NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Shape *shape,
+NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Shape *shapeArg,
           unsigned getHow, MutableHandleValue vp)
 {
-    if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
+    if (shapeArg->isDataDescriptor() && shapeArg->hasDefaultGetter()) {
         /* Fast path for Object instance properties. */
-        JS_ASSERT(shape->hasSlot());
-        vp.set(pobj->nativeGetSlot(shape->slot()));
+        JS_ASSERT(shapeArg->hasSlot());
+        vp.set(pobj->nativeGetSlot(shapeArg->slot()));
     } else {
-        if (!js_NativeGet(cx, obj, pobj, shape, getHow, vp.address()))
+        RootedShape shape(cx, shapeArg);
+        if (!js_NativeGet(cx, obj, pobj, shape, getHow, vp))
             return false;
     }
     return true;

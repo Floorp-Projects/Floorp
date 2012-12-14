@@ -12,6 +12,7 @@
 #include "nsIThreadManager.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
+#include "nsICancelableRunnable.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -260,6 +261,22 @@ public:
 
 protected:
   virtual ~nsRunnable() {
+  }
+};
+
+// This class is designed to be subclassed.
+class NS_COM_GLUE nsCancelableRunnable : public nsICancelableRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSICANCELABLERUNNABLE
+
+  nsCancelableRunnable() {
+  }
+
+protected:
+  virtual ~nsCancelableRunnable() {
   }
 };
 

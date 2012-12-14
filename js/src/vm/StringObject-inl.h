@@ -22,6 +22,7 @@ namespace js {
 inline bool
 StringObject::init(JSContext *cx, HandleString str)
 {
+    AssertCanGC();
     JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
 
     Rooted<StringObject *> self(cx, this);
@@ -31,10 +32,11 @@ StringObject::init(JSContext *cx, HandleString str)
             if (!assignInitialShape(cx))
                 return false;
         } else {
-            Shape *shape = assignInitialShape(cx);
+            RootedShape shape(cx, assignInitialShape(cx));
             if (!shape)
                 return false;
-            EmptyShape::insertInitialShape(cx, shape, self->getProto());
+            RootedObject proto(cx, self->getProto());
+            EmptyShape::insertInitialShape(cx, shape, proto);
         }
     }
 

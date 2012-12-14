@@ -317,7 +317,7 @@ class NewObjectCache
     inline void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj);
 
     /* Invalidate any entries which might produce an object with shape/proto. */
-    void invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto);
+    void invalidateEntriesForShape(JSContext *cx, HandleShape shape, HandleObject proto);
 
   private:
     inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);
@@ -2097,12 +2097,12 @@ SetValueRangeToNull(Value *vec, size_t len)
     SetValueRangeToNull(vec, vec + len);
 }
 
-class AutoObjectVector : public AutoVectorRooter<JSObject *>
+class AutoObjectVector : public AutoVectorRooter<RawObject>
 {
   public:
     explicit AutoObjectVector(JSContext *cx
                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<JSObject *>(cx, OBJVECTOR)
+        : AutoVectorRooter<RawObject>(cx, OBJVECTOR)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2110,12 +2110,12 @@ class AutoObjectVector : public AutoVectorRooter<JSObject *>
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoStringVector : public AutoVectorRooter<JSString *>
+class AutoStringVector : public AutoVectorRooter<RawString>
 {
   public:
     explicit AutoStringVector(JSContext *cx
                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<JSString *>(cx, STRINGVECTOR)
+        : AutoVectorRooter<RawString>(cx, STRINGVECTOR)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2123,12 +2123,12 @@ class AutoStringVector : public AutoVectorRooter<JSString *>
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoShapeVector : public AutoVectorRooter<Shape *>
+class AutoShapeVector : public AutoVectorRooter<RawShape>
 {
   public:
     explicit AutoShapeVector(JSContext *cx
                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<Shape *>(cx, SHAPEVECTOR)
+        : AutoVectorRooter<RawShape>(cx, SHAPEVECTOR)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2138,20 +2138,33 @@ class AutoShapeVector : public AutoVectorRooter<Shape *>
 
 class AutoValueArray : public AutoGCRooter
 {
-    js::Value *start_;
+    RawValue *start_;
     unsigned length_;
     SkipRoot skip;
 
   public:
-    AutoValueArray(JSContext *cx, js::Value *start, unsigned length
+    AutoValueArray(JSContext *cx, RawValue *start, unsigned length
                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, VALARRAY), start_(start), length_(length), skip(cx, start, length)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    Value *start() { return start_; }
+    RawValue *start() { return start_; }
     unsigned length() const { return length_; }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoObjectObjectHashMap : public AutoHashMapRooter<RawObject, RawObject>
+{
+  public:
+    explicit AutoObjectObjectHashMap(JSContext *cx
+                                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoHashMapRooter<RawObject, RawObject>(cx, OBJOBJHASHMAP)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

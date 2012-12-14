@@ -629,7 +629,7 @@
         if (this.lastSelected) {
           lastPane = document.getElementById(this.lastSelected);
           if (!lastPane) {
-            this.lastSelected = null;
+            this.lastSelected = "";
           }
         }
 

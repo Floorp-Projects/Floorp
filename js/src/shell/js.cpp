@@ -2776,8 +2776,8 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
 
     RootedValue value(cx, desc.value);
     objp.set(obj);
-    return !!DefineNativeProperty(cx, obj, id, value, desc.getter, desc.setter,
-                                  desc.attrs, propFlags, desc.shortid);
+    return DefineNativeProperty(cx, obj, id, value, desc.getter, desc.setter,
+                                desc.attrs, propFlags, desc.shortid);
 }
 
 static JSBool
