@@ -49,6 +49,7 @@ webidl_files = \
   HTMLPropertiesCollection.webidl \
   ImageData.webidl \
   Node.webidl \
+  NodeFilter.webidl \
   NodeList.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
