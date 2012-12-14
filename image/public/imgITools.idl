@@ -14,7 +14,7 @@ interface nsIDOMDocument;
 interface imgIScriptedNotificationObserver;
 interface imgINotificationObserver;
 
-[scriptable, uuid(98bd5bf9-87eb-4d92-81b1-4cd10c64f7b2)]
+[scriptable, builtinclass, uuid(98bd5bf9-87eb-4d92-81b1-4cd10c64f7b2)]
 interface imgITools : nsISupports
 {
     /**
