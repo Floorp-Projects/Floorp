@@ -1637,6 +1637,13 @@ BadArg(const char* aArg)
   exit(1);
 }
 
+#ifdef XP_MACOSX
+static void
+NopStackWalkCallback(void* aPc, void* aSp, void* aClosure)
+{
+}
+#endif
+
 // Note that fopen() can allocate.
 static FILE*
 OpenTestOrStressFile(const char* aFilename)
@@ -1728,6 +1735,16 @@ Init(const malloc_table_t* aMallocTable)
   // Finished parsing $DMD.
 
   StatusMsg("DMD is enabled\n");
+
+#ifdef XP_MACOSX
+  // On Mac OS X we need to call StackWalkInitCriticalAddress() very early
+  // (prior to the creation of any mutexes, apparently) otherwise we can get
+  // hangs when getting stack traces (bug 821577).  But
+  // StackWalkInitCriticalAddress() isn't exported from xpcom/, so instead we
+  // just call NS_StackWalk, because that calls StackWalkInitCriticalAddress().
+  // See the comment above StackWalkInitCriticalAddress() for more details.
+  (void)NS_StackWalk(NopStackWalkCallback, 0, nullptr, 0, nullptr);
+#endif
 
   gStateLock = InfallibleAllocPolicy::new_<Mutex>();
 
