@@ -2651,7 +2651,15 @@ RILNetworkInterface.prototype = {
   },
 
   dataCallStateChanged: function dataCallStateChanged(datacall) {
-    if (datacall.apn != this.dataCallSettings["apn"]) {
+    if (this.cid && this.cid != datacall.cid) {
+    // If data call for this connection existed but cid mismatched,
+    // it means this datacall state change is not for us.
+      return;
+    }
+    // If data call for this connection does not exist, it could be state
+    // change for new data call.  We only update data call state change
+    // if APN name matched.
+    if (!this.cid && datacall.apn != this.dataCallSettings["apn"]) {
       return;
     }
     debug("Data call ID: " + datacall.cid + ", interface name: " +
@@ -2675,7 +2683,10 @@ RILNetworkInterface.prototype = {
         this.registeredAsNetworkInterface = true;
       }
     }
-    if (this.cid != datacall.cid) {
+    // In current design, we don't update status of secondary APN if it shares
+    // same APN name with the default APN.  In this condition, this.cid will
+    // not be set and we don't want to update its status.
+    if (this.cid == null) {
       return;
     }
     if (this.state == datacall.state) {
@@ -2695,6 +2706,7 @@ RILNetworkInterface.prototype = {
        this.registeredAsNetworkInterface) {
       gNetworkManager.unregisterNetworkInterface(this);
       this.registeredAsNetworkInterface = false;
+      this.cid = null;
       return;
     }
 
