@@ -2788,6 +2788,8 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     INSTRUCTION_HEADER(Phi)
     static MPhi *New(uint32_t slot);
 
+    void removeOperand(size_t index);
+
     MDefinition *getOperand(size_t index) const {
         return inputs_[index];
     }
@@ -2821,6 +2823,18 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
         return AliasSet::None();
     }
     void computeRange();
+
+    MDefinition *operandIfRedundant() {
+        // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
+        // returns the operand that it will always be equal to (a, in
+        // those two cases).
+        MDefinition *first = getOperand(0);
+        for (size_t i = 1; i < numOperands(); i++) {
+            if (getOperand(i) != first && getOperand(i) != this)
+                return NULL;
+        }
+        return first;
+    }
 };
 
 // The goal of a Beta node is to split a def at a conditionally taken
