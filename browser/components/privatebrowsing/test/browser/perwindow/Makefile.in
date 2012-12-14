@@ -34,6 +34,8 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_openlocation.js \
 		browser_privatebrowsing_openLocationLastURL.js \
 		browser_privatebrowsing_placestitle.js \
+		browser_privatebrowsing_placesTitleNoUpdate.js \
+		browser_privatebrowsing_placesTitleNoUpdate.html \
 		browser_privatebrowsing_popupblocker.js \
 		browser_privatebrowsing_protocolhandler.js \
 		browser_privatebrowsing_protocolhandler_page.html \
