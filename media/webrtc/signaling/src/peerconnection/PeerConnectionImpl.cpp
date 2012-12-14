@@ -480,10 +480,15 @@ PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
     return NS_ERROR_FAILURE;
   }
   // XXX Fix! Get the correct flow for DataChannel. Also error handling.
-  nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(1,false).get();
-  CSFLogDebugS(logTag, "Transportflow[1] = " << flow.get());
-  if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport)) {
-    return NS_ERROR_FAILURE;
+  for (int i = 2; i >= 0; i--) {
+    nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(i,false).get();
+    CSFLogDebugS(logTag, "Transportflow[" << i << "] = " << flow.get());
+    if (flow) {
+      if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport)) {
+        return NS_ERROR_FAILURE;
+      }
+      break;
+    }
   }
   return NS_OK;
 #else
@@ -920,6 +925,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close(bool aIsSynchronous)
 {
+  CSFLogDebugS(logTag, __FUNCTION__);
   PC_AUTO_ENTER_API_CALL(false);
 
   return CloseInt(aIsSynchronous);
@@ -934,8 +940,10 @@ PeerConnectionImpl::CloseInt(bool aIsSynchronous)
   if (mCall != nullptr)
     mCall->endCall();
 #ifdef MOZILLA_INTERNAL_API
-  if (mDataConnection)
-    mDataConnection->CloseAll();
+  if (mDataConnection) {
+    mDataConnection->Destroy();
+    mDataConnection = nullptr; // it may not go away until the runnables are dead
+  }
 #endif
 
   ShutdownMedia(aIsSynchronous);
