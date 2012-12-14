@@ -13,7 +13,6 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsContentUtils.h"
 #include "nsROCSSPrimitiveValue.h"
-#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 
@@ -32,13 +31,10 @@ nsDOMCSSRGBColor::~nsDOMCSSRGBColor(void)
 {
 }
 
-DOMCI_DATA(CSSRGBColor, nsDOMCSSRGBColor)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSRGBColor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMRGBColor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSRGBAColor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSRGBColor)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
