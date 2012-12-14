@@ -244,6 +244,30 @@ VectorImage::OutOfProcessSizeOfDecoded() const
 }
 
 nsresult
+VectorImage::OnImageDataComplete(nsIRequest* aRequest,
+                                 nsISupports* aContext,
+                                 nsresult aStatus)
+{
+  return OnStopRequest(aRequest, aContext, aStatus);
+}
+
+nsresult
+VectorImage::OnImageDataAvailable(nsIRequest* aRequest,
+                                  nsISupports* aContext,
+                                  nsIInputStream* aInStr,
+                                  uint64_t aSourceOffset,
+                                  uint32_t aCount)
+{
+  return OnDataAvailable(aRequest, aContext, aInStr, aSourceOffset, aCount);
+}
+
+nsresult
+VectorImage::OnNewSourceData()
+{
+  return NS_OK;
+}
+
+nsresult
 VectorImage::StartAnimation()
 {
   if (mError)
