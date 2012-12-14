@@ -8,6 +8,7 @@
 #ifndef nsDOMCSSRGBColor_h__
 #define nsDOMCSSRGBColor_h__
 
+#include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIDOMNSRGBAColor.h"
@@ -52,6 +53,14 @@ public:
   {
     return mAlpha;
   }
+
+  nsISupports* GetParentObject() const
+  {
+    return nullptr;
+  }
+
+  virtual JSObject *WrapObject(JSContext *cx, JSObject *aScope, bool *aTried)
+    MOZ_OVERRIDE MOZ_FINAL;
 
 private:
   nsRefPtr<nsROCSSPrimitiveValue> mRed;
