@@ -558,7 +558,7 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
 
   if (aNewURI.IsEmpty() &&
       doc->GetDocumentURI() &&
-      NS_SUCCEEDED(doc->GetDocumentURI()->Equals(imageURI, &equal)) && 
+      NS_SUCCEEDED(doc->GetDocumentURI()->EqualsExceptRef(imageURI, &equal)) &&
       equal)  {
 
     // Loading an embedded img from the same URI as the document URI will not work
