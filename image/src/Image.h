@@ -8,6 +8,7 @@
 
 #include "imgIContainer.h"
 #include "imgStatusTracker.h"
+#include "nsIURI.h"
 #include "nsIRequest.h"
 #include "nsIInputStream.h"
 
@@ -49,7 +50,6 @@ public:
    */
   virtual nsresult Init(imgIDecoderObserver* aObserver,
                         const char* aMimeType,
-                        const char* aURIString,
                         uint32_t aFlags) = 0;
 
   /**
@@ -131,8 +131,10 @@ public:
   bool HasError()    { return mError; }
   void SetHasError() { mError = true; }
 
+  nsIURI* GetURI() { return mURI; }
+
 protected:
-  Image(imgStatusTracker* aStatusTracker);
+  Image(imgStatusTracker* aStatusTracker, nsIURI* aURI);
 
   // Shared functionality for implementors of imgIContainer. Every
   // implementation of attribute animationMode should forward here.
@@ -151,7 +153,8 @@ protected:
   uint64_t mInnerWindowId;
 
   // Member data shared by all implementations of this abstract class
-  nsAutoPtr<imgStatusTracker> mStatusTracker;
+  nsRefPtr<imgStatusTracker>  mStatusTracker;
+  nsCOMPtr<nsIURI>            mURI;
   uint32_t                    mAnimationConsumers;
   uint16_t                    mAnimationMode;   // Enum values in imgIContainer
   bool                        mInitialized:1;   // Have we been initalized?

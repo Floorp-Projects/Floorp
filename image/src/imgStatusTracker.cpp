@@ -6,7 +6,6 @@
 
 #include "imgStatusTracker.h"
 
-#include "imgRequest.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
 #include "Image.h"
@@ -52,7 +51,14 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode()
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStartDecode callback before we've created our image");
 
-  if (mTracker->GetRequest() && !mTracker->GetRequest()->GetMultipart()) {
+  mTracker->RecordStartDecode();
+
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
+  while (iter.HasMore()) {
+    mTracker->SendStartDecode(iter.GetNext());
+  }
+
+  if (mTracker->IsMultipart()) {
     MOZ_ASSERT(!mTracker->mBlockingOnload);
     mTracker->mBlockingOnload = true;
 
@@ -62,15 +68,6 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode()
     while (iter.HasMore()) {
       mTracker->SendBlockOnload(iter.GetNext());
     }
-  }
-
-  /* In the case of streaming jpegs, it is possible to get multiple OnStartDecodes which
-     indicates the beginning of a new decode.
-     The cache entry's size therefore needs to be reset to 0 here.  If we do not do this,
-     the code in imgStatusTrackerObserver::OnStopFrame will continue to increase the data size cumulatively.
-  */
-  if (mTracker->GetRequest()) {
-    mTracker->GetRequest()->ResetCacheEntry();
   }
 
   return NS_OK;
@@ -135,32 +132,12 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopFrame()
   return NS_OK;
 }
 
-static void
-FireFailureNotification(imgRequest* aRequest)
-{
-  // Some kind of problem has happened with image decoding.
-  // Report the URI to net:failed-to-process-uri-conent observers.
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    nsCOMPtr<nsIURI> uri;
-    aRequest->GetURI(getter_AddRefs(uri));
-    os->NotifyObservers(uri, "net:failed-to-process-uri-content", nullptr);
-  }
-}
-
 /* void onStopDecode (in nsresult status); */
 NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(nsresult aStatus)
 {
   LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopDecode");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStopDecode callback before we've created our image");
-
-  // We finished the decode, and thus have the decoded frames. Update the cache
-  // entry size to take this into account.
-  if (mTracker->GetRequest()) {
-    mTracker->GetRequest()->UpdateCacheEntrySize();
-  }
 
   bool preexistingError = mTracker->GetImageStatus() == imgIRequest::STATUS_ERROR;
 
@@ -175,8 +152,8 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(nsresult aStatus)
   // block onload, but then hit an error before we get to our first frame.
   mTracker->MaybeUnblockOnload();
 
-  if (NS_FAILED(aStatus) && !preexistingError && mTracker->GetRequest()) {
-    FireFailureNotification(mTracker->GetRequest());
+  if (NS_FAILED(aStatus) && !preexistingError) {
+    mTracker->FireFailureNotification();
   }
 
   return NS_OK;
@@ -195,11 +172,6 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnDiscard()
                     "OnDiscard callback before we've created our image");
 
   mTracker->RecordDiscard();
-
-  // Update the cache entry size, since we just got rid of frame data
-  if (mTracker->GetRequest()) {
-    mTracker->GetRequest()->UpdateCacheEntrySize();
-  }
 
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
@@ -225,21 +197,21 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnImageIsAnimated()
 
 // imgStatusTracker methods
 
-imgStatusTracker::imgStatusTracker(Image* aImage, imgRequest* aRequest)
+imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
-    mRequest(aRequest),
+    mTrackerObserver(new imgStatusTrackerObserver(this)),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
+    mIsMultipart(false),
     mHadLastPart(false),
-    mBlockingOnload(false),
-    mTrackerObserver(new imgStatusTrackerObserver(this))
+    mBlockingOnload(false)
 {}
 
 imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
   : mImage(aOther.mImage),
-    mRequest(aOther.mRequest),
     mState(aOther.mState),
     mImageStatus(aOther.mImageStatus),
+    mIsMultipart(aOther.mIsMultipart),
     mHadLastPart(aOther.mHadLastPart),
     mBlockingOnload(aOther.mBlockingOnload)
     // Note: we explicitly don't copy mRequestRunnable, because it won't be
@@ -274,22 +246,20 @@ imgStatusTracker::GetImageStatus() const
 class imgRequestNotifyRunnable : public nsRunnable
 {
   public:
-    imgRequestNotifyRunnable(imgRequest* request, imgRequestProxy* requestproxy)
-      : mRequest(request)
+    imgRequestNotifyRunnable(imgStatusTracker* aTracker, imgRequestProxy* aRequestProxy)
+      : mTracker(aTracker)
     {
-      mProxies.AppendElement(requestproxy);
+      mProxies.AppendElement(aRequestProxy);
     }
 
     NS_IMETHOD Run()
     {
-      imgStatusTracker& statusTracker = mRequest->GetStatusTracker();
-
       for (uint32_t i = 0; i < mProxies.Length(); ++i) {
         mProxies[i]->SetNotificationsDeferred(false);
-        statusTracker.SyncNotify(mProxies[i]);
+        mTracker->SyncNotify(mProxies[i]);
       }
 
-      statusTracker.mRequestRunnable = nullptr;
+      mTracker->mRequestRunnable = nullptr;
       return NS_OK;
     }
 
@@ -301,19 +271,22 @@ class imgRequestNotifyRunnable : public nsRunnable
   private:
     friend class imgStatusTracker;
 
-    nsRefPtr<imgRequest> mRequest;
-    nsTArray<nsRefPtr<imgRequestProxy> > mProxies;
+    nsRefPtr<imgStatusTracker> mTracker;
+    nsTArray< nsRefPtr<imgRequestProxy> > mProxies;
 };
 
 void
-imgStatusTracker::Notify(imgRequest* request, imgRequestProxy* proxy)
+imgStatusTracker::Notify(imgRequestProxy* proxy)
 {
 #ifdef PR_LOGGING
-  nsCOMPtr<nsIURI> uri;
-  request->GetURI(getter_AddRefs(uri));
-  nsAutoCString spec;
-  uri->GetSpec(spec);
-  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgStatusTracker::Notify async", "uri", spec.get());
+  if (GetImage() && GetImage()->GetURI()) {
+    nsCOMPtr<nsIURI> uri(GetImage()->GetURI());
+    nsAutoCString spec;
+    uri->GetSpec(spec);
+    LOG_FUNC_WITH_PARAM(GetImgLog(), "imgStatusTracker::Notify async", "uri", spec.get());
+  } else {
+    LOG_FUNC_WITH_PARAM(GetImgLog(), "imgStatusTracker::Notify async", "uri", "<unknown>");
+  }
 #endif
 
   proxy->SetNotificationsDeferred(true);
@@ -322,13 +295,10 @@ imgStatusTracker::Notify(imgRequest* request, imgRequestProxy* proxy)
   // to its list of proxies to be notified. This ensures we don't unnecessarily
   // delay onload.
   imgRequestNotifyRunnable* runnable = static_cast<imgRequestNotifyRunnable*>(mRequestRunnable.get());
-  if (runnable && runnable->mRequest == request) {
+  if (runnable) {
     runnable->AddProxy(proxy);
   } else {
-    // It's okay to overwrite an existing mRequestRunnable, because adding a
-    // new proxy is strictly a performance optimization. The notification will
-    // always happen, regardless of whether we hold a reference to a runnable.
-    mRequestRunnable = new imgRequestNotifyRunnable(request, proxy);
+    mRequestRunnable = new imgRequestNotifyRunnable(this, proxy);
     NS_DispatchToCurrentThread(mRequestRunnable);
   }
 }
@@ -397,6 +367,10 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   // OnStartContainer
   if (mState & stateHasSize)
     proxy->OnStartContainer();
+
+  // OnStartDecode
+  if (mState & stateDecodeStarted)
+    proxy->OnStartDecode();
 
   // BlockOnload
   if (mState & stateBlockingOnload)
@@ -498,8 +472,22 @@ void
 imgStatusTracker::RecordDecoded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordDecoded called before we have an Image");
-  mState |= stateDecodeStopped | stateFrameStopped;
+  mState |= stateDecodeStarted | stateDecodeStopped | stateFrameStopped;
   mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE | imgIRequest::STATUS_DECODE_COMPLETE;
+}
+
+void
+imgStatusTracker::RecordStartDecode()
+{
+  NS_ABORT_IF_FALSE(mImage, "RecordStartDecode without an Image");
+  mState |= stateDecodeStarted;
+}
+
+void
+imgStatusTracker::SendStartDecode(imgRequestProxy* aProxy)
+{
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnStartDecode();
 }
 
 void
@@ -643,6 +631,7 @@ imgStatusTracker::RecordStartRequest()
   mImageStatus &= ~imgIRequest::STATUS_LOAD_COMPLETE;
   mImageStatus &= ~imgIRequest::STATUS_FRAME_COMPLETE;
   mState &= ~stateRequestStarted;
+  mState &= ~stateDecodeStarted;
   mState &= ~stateDecodeStopped;
   mState &= ~stateRequestStopped;
   mState &= ~stateBlockingOnload;
@@ -704,8 +693,8 @@ imgStatusTracker::OnStopRequest(bool aLastPart,
     SendStopRequest(srIter.GetNext(), aLastPart, aStatus);
   }
 
-  if (NS_FAILED(aStatus) && !preexistingError && GetRequest()) {
-    FireFailureNotification(GetRequest());
+  if (NS_FAILED(aStatus) && !preexistingError) {
+    FireFailureNotification();
   }
 }
 
@@ -767,7 +756,15 @@ imgStatusTracker::MaybeUnblockOnload()
 }
 
 void
-imgStatusTracker::ClearRequest()
+imgStatusTracker::FireFailureNotification()
 {
-  mRequest = nullptr;
+  // Some kind of problem has happened with image decoding.
+  // Report the URI to net:failed-to-process-uri-conent observers.
+  nsIURI* uri = GetImage()->GetURI();
+  if (uri) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(uri, "net:failed-to-process-uri-content", nullptr);
+    }
+  }
 }
