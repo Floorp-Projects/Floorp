@@ -43,7 +43,7 @@ public:
 
   // nsISMILAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
-  virtual bool GetTargetAttributeName(PRInt32 *aNamespaceID,
+  virtual bool GetTargetAttributeName(int32_t *aNamespaceID,
                                       nsIAtom **aLocalName) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -119,7 +119,7 @@ nsSVGAnimateTransformElement::AnimationFunction()
 }
 
 bool
-nsSVGAnimateTransformElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
+nsSVGAnimateTransformElement::GetTargetAttributeName(int32_t *aNamespaceID,
                                                      nsIAtom **aLocalName) const
 {
   if (nsSVGAnimateTransformElementBase::GetTargetAttributeName(aNamespaceID,
