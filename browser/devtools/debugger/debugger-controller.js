@@ -927,7 +927,9 @@ StackFrames.prototype = {
         label += " [" + aEnv.object.class + "]";
         break;
       case "function":
-        label += " [" + aEnv.functionName + "]";
+        let f = aEnv.function;
+        label += " [" + (f.name || f.userDisplayName || f.displayName ||
+                         "(anonymous)") + "]";
         break;
     }
     return label;
