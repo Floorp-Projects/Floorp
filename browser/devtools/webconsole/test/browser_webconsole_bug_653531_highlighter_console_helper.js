@@ -63,7 +63,7 @@ function runSelectionTests(aInspector)
 function performTestComparisons()
 {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let inspector = gDevTools.getPanelForTarget("inspector", target);
+  let inspector = gDevTools.getToolbox(target).getPanel("inspector");
   inspector.highlighter.lock();
 
   let isHighlighting =
@@ -116,7 +116,7 @@ function performWebConsoleTests(hud)
       let node = outputNode.querySelector(".webconsole-msg-output");
       isnot(node.textContent.indexOf("bug653531"), -1,
             "correct output for $0.textContent");
-      let inspector = gDevTools.getPanelForTarget("inspector", target);
+      let inspector = gDevTools.getToolbox(target).getPanel("inspector");
       is(inspector.selection.node.textContent, "bug653531",
          "node successfully updated");
 

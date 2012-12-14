@@ -5,7 +5,7 @@
 
 const Cu = Components.utils;
 
-let toolbox;
+let toolbox, target;
 
 let tempScope = {};
 Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
@@ -13,52 +13,57 @@ let TargetFactory = tempScope.TargetFactory;
 
 function test() {
   addTab("about:blank", function(aBrowser, aTab) {
-    loadWebConsole(aTab);
+    target = TargetFactory.forTab(gBrowser.selectedTab);
+    loadWebConsole(aTab).then(function() {
+      console.log('loaded');
+    }, console.error);
   });
 }
 
 function loadWebConsole(aTab) {
   ok(gDevTools, "gDevTools exists");
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  toolbox = gDevTools.openToolbox(target, "bottom", "webconsole");
-  toolbox.once("webconsole-ready", checkToolLoading);
+  return gDevTools.showToolbox(target, "webconsole").then(function(aToolbox) {
+    toolbox = aToolbox;
+    checkToolLoading();
+  }, console.error);
 }
 
 function checkToolLoading() {
   is(toolbox.currentToolId, "webconsole", "The web console is selected");
-  selectAndCheckById("jsdebugger");
-  selectAndCheckById("styleeditor");
-  testToggle();
+  ok(toolbox.isReady, "toolbox is ready")
+
+  selectAndCheckById("jsdebugger").then(function() {
+    selectAndCheckById("styleeditor").then(function() {
+      testToggle();
+    });
+  }, console.error);
 }
 
 function selectAndCheckById(id) {
   let doc = toolbox.frame.contentDocument;
 
-  toolbox.selectTool(id);
-  let tab = doc.getElementById("toolbox-tab-" + id);
-  is(tab.selected, true, "The " + id + " tab is selected");
+  return toolbox.selectTool(id).then(function() {
+    let tab = doc.getElementById("toolbox-tab-" + id);
+    is(tab.selected, true, "The " + id + " tab is selected");
+  });
 }
 
 function testToggle() {
   toolbox.once("destroyed", function() {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    toolbox = gDevTools.openToolbox(target, "bottom", "styleeditor");
-    toolbox.once("styleeditor-ready", checkStyleEditorLoaded);
+    gDevTools.showToolbox(target, "styleeditor").then(function() {
+      is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
+      finishUp();
+    });
   }.bind(this));
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.toggleToolboxForTarget(target);
-}
-
-function checkStyleEditorLoaded() {
-  is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
-  finishUp();
+  toolbox.destroy();
 }
 
 function finishUp() {
   toolbox.destroy();
   toolbox = null;
+  target = null;
   gBrowser.removeCurrentTab();
   finish();
 }

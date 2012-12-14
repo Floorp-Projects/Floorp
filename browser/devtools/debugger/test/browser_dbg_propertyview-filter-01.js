@@ -35,27 +35,31 @@ function testSearchbox()
 {
   ok(!gDebugger.DebuggerView.Variables._searchboxNode,
     "There should not initially be a searchbox available in the variables view.");
-  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should not be found.");
+  ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should not be found.");
 
   gDebugger.DebuggerView.Variables.enableSearch();
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
     "There should be a searchbox available after enabling.");
-  ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should be found.");
+  ok(gDebugger.DebuggerView.Variables._searchboxContainer.hidden,
+    "The searchbox container should be hidden at this point.");
+  ok(gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should be found.");
 
 
   gDebugger.DebuggerView.Variables.disableSearch();
   ok(!gDebugger.DebuggerView.Variables._searchboxNode,
     "There shouldn't be a searchbox available after disabling.");
-  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should not be found.");
+  ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should not be found.");
 
   gDebugger.DebuggerView.Variables.enableSearch();
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
     "There should be a searchbox available after enabling.");
-  ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should be found.");
+  ok(gDebugger.DebuggerView.Variables._searchboxContainer.hidden,
+    "The searchbox container should be hidden at this point.");
+  ok(gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should be found.");
 
   let placeholder = "freshly squeezed mango juice";
 
@@ -67,14 +71,16 @@ function testSearchbox()
   gDebugger.DebuggerView.Variables.disableSearch();
   ok(!gDebugger.DebuggerView.Variables._searchboxNode,
     "There shouldn't be a searchbox available after disabling again.");
-  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should not be found.");
+  ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should not be found.");
 
   gDebugger.DebuggerView.Variables.enableSearch();
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
     "There should be a searchbox available after enabling again.");
-  ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should be found.");
+  ok(gDebugger.DebuggerView.Variables._searchboxContainer.hidden,
+    "The searchbox container should be hidden at this point.");
+  ok(gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should be found.");
 
   ok(gDebugger.DebuggerView.Variables._searchboxNode.getAttribute("placeholder"),
     placeholder, "There correct placeholder should be applied to the searchbox again.");
@@ -83,14 +89,16 @@ function testSearchbox()
   gDebugger.DebuggerView.Variables.searchEnabled = false;
   ok(!gDebugger.DebuggerView.Variables._searchboxNode,
     "There shouldn't be a searchbox available after disabling again.");
-  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should not be found.");
+  ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should not be found.");
 
   gDebugger.DebuggerView.Variables.searchEnabled = true;
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
     "There should be a searchbox available after enabling again.");
-  ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should be found.");
+  ok(gDebugger.DebuggerView.Variables._searchboxContainer.hidden,
+    "The searchbox container should be hidden at this point.");
+  ok(gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should be found.");
 
   ok(gDebugger.DebuggerView.Variables._searchboxNode.getAttribute("placeholder"),
     placeholder, "There correct placeholder should be applied to the searchbox again.");
@@ -98,6 +106,9 @@ function testSearchbox()
 
 function testVariablesFiltering()
 {
+  ok(!gDebugger.DebuggerView.Variables._searchboxContainer.hidden,
+    "The searchbox container should not be hidden at this point.");
+
   function test1()
   {
     write("location");

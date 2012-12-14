@@ -5,62 +5,73 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cu = Components.utils;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 this.EXPORTED_SYMBOLS = ["DebuggerPanel"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
   "resource://gre/modules/devtools/dbg-server.jsm");
 
 function DebuggerPanel(iframeWindow, toolbox) {
+  this.panelWin = iframeWindow;
   this._toolbox = toolbox;
-  this._controller = iframeWindow.DebuggerController;
-  this._view = iframeWindow.DebuggerView;
+
+  this._controller = this.panelWin.DebuggerController;
+  this._view = this.panelWin.DebuggerView;
   this._controller._target = this.target;
   this._bkp = this._controller.Breakpoints;
-  this.panelWin = iframeWindow;
-
-  this._ensureOnlyOneRunningDebugger();
-  if (!this.target.isRemote) {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
-  }
-
-  let onDebuggerLoaded = function () {
-    iframeWindow.removeEventListener("Debugger:Loaded", onDebuggerLoaded, true);
-    this.setReady();
-  }.bind(this);
-
-  let onDebuggerConnected = function () {
-    iframeWindow.removeEventListener("Debugger:Connected",
-      onDebuggerConnected, true);
-    this.emit("connected");
-  }.bind(this);
-
-  iframeWindow.addEventListener("Debugger:Loaded", onDebuggerLoaded, true);
-  iframeWindow.addEventListener("Debugger:Connected",
-    onDebuggerConnected, true);
 
   new EventEmitter(this);
 }
 
 DebuggerPanel.prototype = {
+  /**
+   * open is effectively an asynchronous constructor
+   */
+  open: function DebuggerPanel_open() {
+    let deferred = Promise.defer();
+
+    this._ensureOnlyOneRunningDebugger();
+
+    if (!this.target.isRemote) {
+      if (!DebuggerServer.initialized) {
+        DebuggerServer.init();
+        DebuggerServer.addBrowserActors();
+      }
+    }
+
+    let onDebuggerLoaded = function () {
+      this.panelWin.removeEventListener("Debugger:Loaded",
+                                        onDebuggerLoaded, true);
+      this._isReady = true;
+      this.emit("ready");
+      deferred.resolve(this);
+    }.bind(this);
+
+    let onDebuggerConnected = function () {
+      this.panelWin.removeEventListener("Debugger:Connected",
+                                        onDebuggerConnected, true);
+      this.emit("connected");
+    }.bind(this);
+
+    this.panelWin.addEventListener("Debugger:Loaded", onDebuggerLoaded, true);
+    this.panelWin.addEventListener("Debugger:Connected",
+                                   onDebuggerConnected, true);
+
+    return deferred.promise;
+  },
+
   // DevToolPanel API
   get target() this._toolbox.target,
 
   get isReady() this._isReady,
 
-  setReady: function() {
-    this._isReady = true;
-    this.emit("ready");
-  },
-
   destroy: function() {
+    return Promise.resolve(null);
   },
 
   // DebuggerPanel API

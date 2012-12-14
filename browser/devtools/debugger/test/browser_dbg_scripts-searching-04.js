@@ -86,7 +86,7 @@ function doSearch() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 0,
           "The editor shouldn't have jumped to a matching line yet.");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the scripts are shown after the global search.");
 
         isnot(gSearchView._container._list.childNodes.length, 0,
@@ -120,7 +120,7 @@ function doFirstJump() {
         ok(gEditor.getCaretPosition().line == 4 &&
            gEditor.getCaretPosition().col == 6,
           "The editor didn't jump to the correct line. (1)");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (1)");
 
         doSecondJump();
@@ -147,7 +147,7 @@ function doSecondJump() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 6,
           "The editor didn't jump to the correct line. (2)");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (2)");
 
         doWrapAroundJump();
@@ -174,7 +174,7 @@ function doWrapAroundJump() {
         ok(gEditor.getCaretPosition().line == 4 &&
            gEditor.getCaretPosition().col == 6,
           "The editor didn't jump to the correct line. (3)");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (3)");
 
         doBackwardsWrapAroundJump();
@@ -201,7 +201,7 @@ function doBackwardsWrapAroundJump() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 6,
           "The editor didn't jump to the correct line. (4)");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (4)");
 
         testSearchTokenEmpty();
@@ -228,7 +228,7 @@ function testSearchTokenEmpty() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 6,
           "The editor didn't remain at the correct line. (5)");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (5)");
 
         is(gSearchView._container._list.childNodes.length, 0,
