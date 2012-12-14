@@ -323,7 +323,6 @@ DOMCI_CLASS(WindowUtils)
 DOMCI_CLASS(XSLTProcessor)
 
 // DOM Level 3 XPath objects
-DOMCI_CLASS(XPathEvaluator)
 DOMCI_CLASS(XPathExpression)
 DOMCI_CLASS(XPathNSResolver)
 DOMCI_CLASS(XPathResult)

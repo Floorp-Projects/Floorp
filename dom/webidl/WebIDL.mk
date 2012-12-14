@@ -69,6 +69,7 @@ webidl_files = \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \
   XMLSerializer.webidl \
+  XPathEvaluator.webidl \
   $(NULL)
 
 ifdef MOZ_WEBGL
