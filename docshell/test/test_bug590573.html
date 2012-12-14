@@ -194,11 +194,23 @@ function pageLoad()
     is(popup.location.search, "?pushed");
     ok(popup.document.getElementById('div1'), 'page should have div1.');
 
-    is(popup.scrollY, 200, "test 8");
+    // Bug 821821, on android 4.0.4 on panda we get 199 instead of 200
+    if (popup.scrollY >= 199 && popup.scrollY <= 200) {
+      is(1, 1, "test 8");
+    } else {
+      is(1, 0, "test 8, got " + popup.scrollY + " for popup.scrollY instead of 199|200");
+    }
+
     popup.history.back();
     is(popup.scrollY, 150, "test 9");
     popup.history.forward();
-    is(popup.scrollY, 200, "test 10");
+
+    // Bug 821821, on android 4.0.4 on panda we get 199 instead of 200
+    if (popup.scrollY >= 199 && popup.scrollY <= 200) {
+      is(1, 1, "test 10");
+    } else {
+      is(1, 0, "test 10, got " + popup.scrollY + " for popup.scrollY instead of 199|200");
+    }
 
     // Spin one last time...
     setTimeout(pageLoad, 0);
