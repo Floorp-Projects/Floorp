@@ -711,11 +711,17 @@ nsRefreshDriver::SetHighPrecisionTimersEnabled(bool aEnable)
       NS_ASSERTION(!sDisableHighPrecisionTimersTimer, "We shouldn't have an outstanding disable-high-precision timer !");
 
       nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-      timer.forget(&sDisableHighPrecisionTimersTimer);
-      sDisableHighPrecisionTimersTimer->InitWithFuncCallback(DisableHighPrecisionTimersCallback,
-                                                             nullptr,
-                                                             90 * 1000,
-                                                             nsITimer::TYPE_ONE_SHOT);
+      if (timer) {
+        timer.forget(&sDisableHighPrecisionTimersTimer);
+        sDisableHighPrecisionTimersTimer->InitWithFuncCallback(DisableHighPrecisionTimersCallback,
+                                                               nullptr,
+                                                               90 * 1000,
+                                                               nsITimer::TYPE_ONE_SHOT);
+      } else {
+        // might happen if we're shutting down XPCOM; just drop the time period down
+        // immediately
+        timeEndPeriod(1);
+      }
     }
 #endif
     mRequestedHighPrecision = false;
