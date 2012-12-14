@@ -326,9 +326,6 @@ void ccsnap_device_pre_init () {
     int i = 0;
 
     CCAPP_DEBUG(DEB_F_PREFIX"Entering device_pre_init to clear it out to avoid mem leaks\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_device_pre_init"));
-    if ((g_deviceInfo.name) && (strlen(g_deviceInfo.name) > 0)) {
-        strlib_free(g_deviceInfo.name);
-    }
     if ((g_deviceInfo.not_prompt) && (strlen(g_deviceInfo.not_prompt) > 0)) {
         strlib_free(g_deviceInfo.not_prompt);
     }
@@ -350,7 +347,6 @@ void ccsnap_device_init() {
    ccsnap_device_pre_init();
 
    memset (&g_deviceInfo, 0, sizeof(g_deviceInfo));
-   g_deviceInfo.name =strlib_empty();
    g_deviceInfo.not_prompt =strlib_empty();
 
    g_deviceInfo.not_prompt_prio = 0;
@@ -402,7 +398,6 @@ void ccsnap_gen_deviceEvent(ccapi_device_event_e event, cc_device_handle_t handl
               CCAPP_DEBUG(DEB_F_PREFIX"setting property %s to %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), "FullyRegistered", ((device_info->ins_state == CC_STATE_INS) ? "1" : "0"));
               //intentional follow through to let the debugs get printed.
             default:
-              CCAPP_DEBUG(DEB_F_PREFIX"data->name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->name);
               CCAPP_DEBUG(DEB_F_PREFIX"data->mwi_lamp=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->mwi_lamp);
               CCAPP_DEBUG(DEB_F_PREFIX"data->ins_state=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->ins_state);
               CCAPP_DEBUG(DEB_F_PREFIX"data->cucm_mode=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->cucm_mode);
