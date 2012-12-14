@@ -13,7 +13,7 @@ function test() {
 
   pb.privateBrowsingEnabled = true;
 
-  let win = OpenBrowserWindow({private: PrivateBrowsingUtils.isWindowPrivate(window)});
+  let win = OpenBrowserWindow();
   win.addEventListener("load", function() {
     win.removeEventListener("load", arguments.callee, false);
     executeSoon(function() {

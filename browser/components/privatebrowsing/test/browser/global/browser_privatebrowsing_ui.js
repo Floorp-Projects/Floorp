@@ -40,7 +40,7 @@ function test() {
         Services.obs.removeObserver(observer1, "domwindowopened");
       }, false);
     }, "domwindowopened", false);
-    OpenBrowserWindow({private: PrivateBrowsingUtils.isWindowPrivate(window)});
+    OpenBrowserWindow();
   }
 
   // test the gPrivateBrowsingUI object
