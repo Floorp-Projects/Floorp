@@ -188,10 +188,7 @@ IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
   nsRefPtr<IDBDatabase> db(new IDBDatabase());
 
   db->BindToOwner(aOwnerCache);
-  if (!db->SetScriptOwner(aOwnerCache->GetScriptOwner())) {
-    return nullptr;
-  }
-
+  db->SetScriptOwner(aOwnerCache->GetScriptOwner());
   db->mFactory = aFactory;
   db->mDatabaseId = databaseInfo->id;
   db->mName = databaseInfo->name;

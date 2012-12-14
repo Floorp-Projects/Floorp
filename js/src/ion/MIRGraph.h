@@ -166,9 +166,23 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void replacePredecessor(MBasicBlock *old, MBasicBlock *split);
     void replaceSuccessor(size_t pos, MBasicBlock *split);
 
+    // Removes `pred` from the predecessor list.  `pred` should not be
+    // the final predecessor. If this block defines phis, removes the
+    // entry for `pred` and updates the indices of later entries.
+    // This may introduce redundant phis if the new block has fewer
+    // than two predecessors.
+    void removePredecessor(MBasicBlock *pred);
+
+    // Resets all the dominator info so that it can be recomputed.
+    void clearDominatorInfo();
+
     // Sets a back edge. This places phi nodes and rewrites instructions within
     // the current loop as necessary.
     bool setBackedge(MBasicBlock *block);
+
+    // Resets a LOOP_HEADER block to a NORMAL block.  This is needed when
+    // optimizations remove the backedge.
+    void clearLoopHeader();
 
     // Propagates phis placed in a loop header down to this successor block.
     void inheritPhis(MBasicBlock *header);
@@ -456,9 +470,7 @@ class MIRGraph
     // List of compiled/inlined scripts.
     Vector<JSScript *, 4, IonAllocPolicy> scripts_;
 
-#ifdef DEBUG
     size_t numBlocks_;
-#endif
 
   public:
     MIRGraph(TempAllocator *alloc)
@@ -467,10 +479,8 @@ class MIRGraph
         blockIdGen_(0),
         idGen_(0),
         osrBlock_(NULL),
-        osrStart_(NULL)
-#ifdef DEBUG
-        , numBlocks_(0)
-#endif
+        osrStart_(NULL),
+        numBlocks_(0)
     { }
 
     template <typename T>
@@ -504,9 +514,7 @@ class MIRGraph
     void clearBlockList() {
         blocks_.clear();
         blockIdGen_ = 0;
-#ifdef DEBUG
         numBlocks_ = 0;
-#endif
     }
     void resetInstructionNumber() {
         idGen_ = 0;
@@ -534,20 +542,16 @@ class MIRGraph
     }
     void removeBlock(MBasicBlock *block) {
         blocks_.remove(block);
-#ifdef DEBUG
         numBlocks_--;
-#endif
     }
     void moveBlockToEnd(MBasicBlock *block) {
         JS_ASSERT(block->id());
         blocks_.remove(block);
         blocks_.pushBack(block);
     }
-#ifdef DEBUG
     size_t numBlocks() const {
         return numBlocks_;
     }
-#endif
     uint32_t numBlockIds() const {
         return blockIdGen_;
     }
@@ -567,9 +571,7 @@ class MIRGraph
     void copyIds(const MIRGraph &other) {
         idGen_ = other.idGen_;
         blockIdGen_ = other.blockIdGen_;
-#ifdef DEBUG
         numBlocks_ = other.numBlocks_;
-#endif
     }
 
     void setOsrBlock(MBasicBlock *osrBlock) {

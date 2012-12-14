@@ -339,7 +339,7 @@ def main(argv):
         run_tests(test_list, summary)
         summary.finish()
     except OSError as err:
-        sys.stderr.write("Error running tests: %s\n", (err,))
+        sys.stderr.write("Error running tests: %s\n" % (err,))
         sys.exit(1)
 
     sys.exit(0)

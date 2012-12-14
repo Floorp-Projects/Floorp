@@ -77,15 +77,17 @@ public class LightweightTheme implements GeckoEventListener {
 
     public void setLightweightTheme(String headerURL) {
         try {
-            // Wait till gecko downloads and gives us the file, don't download.
-            if (headerURL.indexOf("http") != -1)
-                return;
-
             // Get the image and convert it to a bitmap.
             URL url = new URL(headerURL);
             InputStream stream = url.openStream();
             mBitmap = BitmapFactory.decodeStream(stream);
             stream.close();
+
+            // The download could be HTTP for previews, so let's be sure we have a bitmap
+            if (mBitmap != null || mBitmap.getWidth() == 0 || mBitmap.getHeight() == 0) {
+                mBitmap = null;
+                return;
+            }
 
             // To find the dominant color only once, take the bottom 25% of pixels.
             DisplayMetrics dm = mApplication.getResources().getDisplayMetrics();
@@ -95,7 +97,6 @@ public class LightweightTheme implements GeckoEventListener {
                                                           mBitmap.getHeight() - height, 
                                                           maxWidth, height);
             mColor = BitmapUtils.getDominantColor(cropped, false);
-            cropped.recycle();
 
             notifyListeners();
         } catch(java.net.MalformedURLException e) {

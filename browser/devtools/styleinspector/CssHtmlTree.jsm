@@ -736,7 +736,7 @@ this.PropertyView = function PropertyView(aTree, aName)
   this.name = aName;
   this.getRTLAttr = aTree.getRTLAttr;
 
-  this.link = "https://developer.mozilla.org/en/CSS/" + aName;
+  this.link = "https://developer.mozilla.org/CSS/" + aName;
 
   this.templateMatchedSelectors = aTree.styleDocument.getElementById("templateMatchedSelectors");
 }
@@ -1257,12 +1257,9 @@ SelectorView.prototype = {
       let target = inspector.target;
 
       if (styleEditorDefinition.isTargetSupported(target)) {
-        let toolbox = gDevTools.getToolboxForTarget(target);
-
-        toolbox.once("styleeditor-selected", function SE_selected(id, styleEditor) {
-          styleEditor.selectStyleSheet(styleSheet, line);
+        gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
+          toolbox.getCurrentPanel().selectStyleSheet(styleSheet, line);
         });
-        toolbox.selectTool("styleeditor");
       }
     } else {
       let href = styleSheet ? styleSheet.href : "";

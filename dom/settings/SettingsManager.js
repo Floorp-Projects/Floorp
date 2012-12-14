@@ -54,7 +54,10 @@ SettingsLock.prototype = {
           req.onerror = function() { Services.DOMRequest.fireError(request, 0) };
           break;
         case "set":
-          for (let key in info.settings) {
+          let keys = Object.getOwnPropertyNames(info.settings);
+          for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            let last = i === keys.length - 1;
             debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + ", type: " + typeof(info.settings[key]));
 
             let checkKeyRequest = store.get(key);
@@ -72,15 +75,19 @@ SettingsLock.prototype = {
               req = store.put({settingName: key, settingValue: obj});
             }
 
-            req.onsuccess = function() { 
-              lock._open = true;
-              Services.DOMRequest.fireSuccess(request, 0);
+            req.onsuccess = function() {
+              if (last && !request.error) {
+                lock._open = true;
+                Services.DOMRequest.fireSuccess(request, 0);
+                lock._open = false;
+              }
               cpmm.sendAsyncMessage("Settings:Changed", { key: key, value: info.settings[key] });
-              lock._open = false;
             };
 
             req.onerror = function() {
-              Services.DOMRequest.fireError(request, 0)
+              if (!request.error) {
+                Services.DOMRequest.fireError(request, req.error.name)
+              }
             };
           }
           break;

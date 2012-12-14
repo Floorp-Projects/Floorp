@@ -7,6 +7,7 @@
 
 #include "nsContainerFrame.h"
 
+#include "nsAbsoluteContainingBlock.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"

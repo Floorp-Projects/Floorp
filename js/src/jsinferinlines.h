@@ -275,6 +275,7 @@ TypeFlagPrimitive(TypeFlags flags)
 inline jsid
 MakeTypeId(JSContext *cx, jsid id)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(!JSID_IS_EMPTY(id));
 
     /*
@@ -546,6 +547,8 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 inline bool
 TrackPropertyTypes(JSContext *cx, HandleObject obj, jsid id)
 {
+    AutoAssertNoGC nogc;
+
     if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
 
@@ -559,6 +562,7 @@ TrackPropertyTypes(JSContext *cx, HandleObject obj, jsid id)
 inline void
 AddTypePropertyId(JSContext *cx, HandleObject obj, jsid id, Type type)
 {
+    AssertCanGC();
     if (cx->typeInferenceEnabled())
         id = MakeTypeId(cx, id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -568,6 +572,7 @@ AddTypePropertyId(JSContext *cx, HandleObject obj, jsid id, Type type)
 inline void
 AddTypePropertyId(JSContext *cx, HandleObject obj, jsid id, const Value &value)
 {
+    AssertCanGC();
     if (cx->typeInferenceEnabled())
         id = MakeTypeId(cx, id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -577,6 +582,7 @@ AddTypePropertyId(JSContext *cx, HandleObject obj, jsid id, const Value &value)
 inline void
 AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, Type type)
 {
+    AssertCanGC();
     if (cx->typeInferenceEnabled() && !obj->unknownProperties())
         obj->addPropertyType(cx, name, type);
 }
@@ -584,6 +590,7 @@ AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, Type type)
 inline void
 AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, const Value &value)
 {
+    AssertCanGC();
     if (cx->typeInferenceEnabled() && !obj->unknownProperties())
         obj->addPropertyType(cx, name, value);
 }
@@ -629,8 +636,9 @@ MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, jsid id)
 
 /* Mark a state change on a particular object. */
 inline void
-MarkObjectStateChange(JSContext *cx, HandleObject obj)
+MarkObjectStateChange(JSContext *cx, RawObject obj)
 {
+    AutoAssertNoGC nogc;
     if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->unknownProperties())
         obj->type()->markStateChange(cx);
 }
@@ -1565,6 +1573,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool own)
 inline HeapTypeSet *
 TypeObject::maybeGetProperty(JSContext *cx, jsid id)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == MakeTypeId(cx, id));
     JS_ASSERT(!unknownProperties());

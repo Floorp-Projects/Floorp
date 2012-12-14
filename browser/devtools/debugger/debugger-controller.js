@@ -637,6 +637,7 @@ StackFrames.prototype = {
       let arrow = L10N.getStr("watchExpressionsSeparatorLabel");
       let scope = DebuggerView.Variables.addScope(label);
       scope.separator = arrow;
+      scope.showDescriptorTooltip = false;
       scope.allowNameInput = true;
       scope.allowDeletion = true;
       scope.contextMenu = "debuggerWatchExpressionsContextMenu";

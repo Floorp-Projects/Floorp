@@ -116,7 +116,7 @@
           <vbox>
             <description id="downloadsSummaryDescription"
                          class="downloadTarget"
-                         style="min-width: &downloadsSummary.minWidth;"/>
+                         style="min-width: &downloadsSummary.minWidth2;"/>
             <progressmeter id="downloadsSummaryProgress"
                            class="downloadProgress"
                            min="0"

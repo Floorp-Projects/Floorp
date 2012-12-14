@@ -20,7 +20,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsITableLayout.h"
 
 #include "nsEditRules.h"
 
@@ -52,6 +51,7 @@ class TypeInState;
 class nsIContentFilter;
 class nsIURL;
 class nsILinkHandler;
+class nsTableOuterFrame;
 struct PropItem;
 
 namespace mozilla {
@@ -441,8 +441,8 @@ protected:
   NS_IMETHOD SetColSpan(nsIDOMElement *aCell, int32_t aColSpan);
   NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, int32_t aRowSpan);
 
-  // Helper used to get nsITableLayout interface for methods implemented in nsTableFrame
-  NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
+  // Helper used to get nsTableOuterFrame for a table.
+  nsTableOuterFrame* GetTableFrame(nsIDOMElement* aTable);
   // Needed to do appropriate deleting when last cell or row is about to be deleted
   // This doesn't count cells that don't start in the given row (are spanning from row above)
   int32_t  GetNumberOfCellsInRow(nsIDOMElement* aTable, int32_t rowIndex);

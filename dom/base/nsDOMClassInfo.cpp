@@ -282,10 +282,8 @@
 #include "nsIDOMMozCSSKeyframeRule.h"
 #include "nsIDOMMozCSSKeyframesRule.h"
 #include "nsIDOMCSSPageRule.h"
-#include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsDOMCSSValueList.h"
 #define MOZ_GENERATED_EVENTS_INCLUDES
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENTS_INCLUDES
@@ -1017,8 +1015,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(ROCSSPrimitiveValue, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // Range classes
   NS_DEFINE_CLASSINFO_DATA(Range, nsDOMGenericSH,
@@ -1069,9 +1065,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CSSRGBColor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(CSSValueList, nsCSSValueListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(ContentList, HTMLCollection,
                                      nsDOMGenericSH,
@@ -3006,14 +2999,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ROCSSPrimitiveValue,
-                                      nsIDOMCSSPrimitiveValue)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSValueList, nsIDOMCSSValueList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSValueList)
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSRect, nsIDOMRect)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRect)
@@ -10073,17 +10058,6 @@ nsStyleSheetListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
   return list->GetItemAt(aIndex);
 }
 
-
-// CSSValueList helper
-
-nsISupports*
-nsCSSValueListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                            nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsDOMCSSValueList* list = nsDOMCSSValueList::FromSupports(aNative);
-
-  return list->GetItemAt(aIndex);
-}
 
 // CSSRuleList scriptable helper
 
