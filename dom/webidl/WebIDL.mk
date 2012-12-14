@@ -56,6 +56,7 @@ webidl_files = \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  RGBColor.webidl \
   Screen.webidl \
   SVGLengthList.webidl \
   SVGNumberList.webidl \
