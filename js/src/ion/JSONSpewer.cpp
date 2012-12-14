@@ -405,9 +405,7 @@ JSONSpewer::spewIntervals(LinearScanAllocator *regalloc)
                     if (live->numRanges()) {
                         beginObject();
                         property("allocation");
-                        fprintf(fp_, "\"");
-                        LAllocation::PrintAllocation(fp_, live->getAllocation());
-                        fprintf(fp_, "\"");
+                        fprintf(fp_, "\"%s\"", live->getAllocation()->toString());
                         beginListProperty("ranges");
 
                         for (size_t j = 0; j < live->numRanges(); j++) {

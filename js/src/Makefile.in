@@ -277,6 +277,7 @@ VPATH +=	$(srcdir)/ion
 VPATH +=	$(srcdir)/ion/shared
 
 CPPSRCS +=	MIR.cpp \
+		BacktrackingAllocator.cpp \
 		Bailouts.cpp \
 		BitSet.cpp \
 		C1Spewer.cpp \
