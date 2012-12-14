@@ -50,9 +50,7 @@ MIRGraph::addBlock(MBasicBlock *block)
     JS_ASSERT(block);
     block->setId(blockIdGen_++);
     blocks_.pushBack(block);
-#ifdef DEBUG
     numBlocks_++;
-#endif
 }
 
 void
@@ -60,9 +58,7 @@ MIRGraph::insertBlockAfter(MBasicBlock *at, MBasicBlock *block)
 {
     block->setId(blockIdGen_++);
     blocks_.insertAfter(at, block);
-#ifdef DEBUG
     numBlocks_++;
-#endif
 }
 
 void
@@ -688,6 +684,13 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
     return predecessors_.append(pred);
 }
 
+void
+MBasicBlock::clearLoopHeader()
+{
+    JS_ASSERT(isLoopHeader());
+    kind_ = NORMAL;
+}
+
 size_t
 MBasicBlock::numSuccessors() const
 {
@@ -727,6 +730,43 @@ MBasicBlock::replacePredecessor(MBasicBlock *old, MBasicBlock *split)
 
             return;
         }
+    }
+
+    JS_NOT_REACHED("predecessor was not found");
+}
+
+void
+MBasicBlock::clearDominatorInfo()
+{
+    setImmediateDominator(NULL);
+    immediatelyDominated_.clear();
+    numDominated_ = 0;
+}
+
+void
+MBasicBlock::removePredecessor(MBasicBlock *pred)
+{
+    JS_ASSERT(numPredecessors() >= 2);
+
+    for (size_t i = 0; i < numPredecessors(); i++) {
+        if (getPredecessor(i) != pred)
+            continue;
+
+        // Adjust phis.  Note that this can leave redundant phis
+        // behind.
+        if (!phisEmpty()) {
+            JS_ASSERT(pred->successorWithPhis());
+            JS_ASSERT(pred->positionInPhiSuccessor() == i);
+            for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++)
+                iter->removeOperand(i);
+            for (size_t j = i+1; j < numPredecessors(); j++)
+                getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
+        }
+
+        // Remove from pred list.
+        MBasicBlock **ptr = predecessors_.begin() + i;
+        predecessors_.erase(ptr);
+        return;
     }
     JS_NOT_REACHED("predecessor was not found");
 }
