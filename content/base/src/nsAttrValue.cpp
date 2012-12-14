@@ -1066,7 +1066,7 @@ nsAttrValue::Equals(const nsAString& aValue,
         nsDependentString dep(static_cast<PRUnichar*>(str->Data()),
                               str->StorageSize()/sizeof(PRUnichar) - 1);
         return aCaseSensitive == eCaseMatters ? aValue.Equals(dep) :
-          nsContentUtils::EqualsIgnoreASCIICase(aValue, dep);
+          aValue.Equals(dep, nsCaseInsensitiveStringComparator());
       }
       return aValue.IsEmpty();
     }
@@ -1074,9 +1074,8 @@ nsAttrValue::Equals(const nsAString& aValue,
       if (aCaseSensitive == eCaseMatters) {
         return static_cast<nsIAtom*>(GetPtr())->Equals(aValue);
       }
-      return nsContentUtils::EqualsIgnoreASCIICase(
-          nsDependentAtomString(static_cast<nsIAtom*>(GetPtr())),
-          aValue);
+      return nsDependentAtomString(static_cast<nsIAtom*>(GetPtr())).
+        Equals(aValue, nsCaseInsensitiveStringComparator());
     default:
       break;
   }
@@ -1084,7 +1083,7 @@ nsAttrValue::Equals(const nsAString& aValue,
   nsAutoString val;
   ToString(val);
   return aCaseSensitive == eCaseMatters ? val.Equals(aValue) :
-    nsContentUtils::EqualsIgnoreASCIICase(val, aValue);
+    val.Equals(aValue, nsCaseInsensitiveStringComparator());
 }
 
 bool
