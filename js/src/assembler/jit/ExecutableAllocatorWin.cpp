@@ -30,12 +30,12 @@
 #include "jswin.h"
 #include "prmjtime.h"
 
-extern void random_setSeed(int64_t *, int64_t);
-extern uint64_t random_next(int64_t *, int);
+extern void random_setSeed(uint64_t *, uint64_t);
+extern uint64_t random_next(uint64_t *, int);
 
 namespace JSC {
 
-int64_t ExecutableAllocator::rngSeed;
+uint64_t ExecutableAllocator::rngSeed;
 
 void ExecutableAllocator::initSeed()
 {
