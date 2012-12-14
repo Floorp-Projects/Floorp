@@ -1342,8 +1342,12 @@ NS_METHOD nsWindow::Move(double aX, double aY)
     return NS_OK;
   }
 
-  int32_t x = NSToIntRound(aX * GetDefaultScale());
-  int32_t y = NSToIntRound(aY * GetDefaultScale());
+  // for top-level windows only, convert coordinates from global display pixels
+  // (the "parent" coordinate space) to the window's device pixel space
+  double scale =
+    (mWindowType <= eWindowType_popup) ? GetDefaultScale() : 1.0;
+  int32_t x = NSToIntRound(aX * scale);
+  int32_t y = NSToIntRound(aY * scale);
 
   mBounds.x = x;
   mBounds.y = y;
@@ -1392,8 +1396,12 @@ NS_METHOD nsWindow::Move(double aX, double aY)
 // Resize this component
 NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-  int32_t width = NSToIntRound(aWidth * GetDefaultScale());
-  int32_t height = NSToIntRound(aHeight * GetDefaultScale());
+  // for top-level windows only, convert coordinates from global display pixels
+  // (the "parent" coordinate space) to the window's device pixel space
+  double scale =
+    (mWindowType <= eWindowType_popup) ? GetDefaultScale() : 1.0;
+  int32_t width = NSToIntRound(aWidth * scale);
+  int32_t height = NSToIntRound(aHeight * scale);
 
   NS_ASSERTION((width >= 0) , "Negative width passed to nsWindow::Resize");
   NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
@@ -1439,7 +1447,10 @@ NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 // Resize this component
 NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint)
 {
-  double scale = GetDefaultScale();
+  // for top-level windows only, convert coordinates from global display pixels
+  // (the "parent" coordinate space) to the window's device pixel space
+  double scale =
+    (mWindowType <= eWindowType_popup) ? GetDefaultScale() : 1.0;
   int32_t x = NSToIntRound(aX * scale);
   int32_t y = NSToIntRound(aY * scale);
   int32_t width = NSToIntRound(aWidth * scale);
