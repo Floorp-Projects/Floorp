@@ -4342,12 +4342,20 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   }
 
   // Get the window which caused the event and ask it to process the message
-  nsWindow *someWindow = WinUtils::GetNSWindowPtr(hWnd);
+  nsWindow *targetWindow = WinUtils::GetNSWindowPtr(hWnd);
+  NS_ASSERTION(targetWindow, "nsWindow* is null!");
+  if (!targetWindow)
+    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 
-  if (someWindow)
-    someWindow->IPCWindowProcHandler(msg, wParam, lParam);
+  // Hold the window for the life of this method, in case it gets
+  // destroyed during processing, unless we're in the dtor already.
+  nsCOMPtr<nsISupports> kungFuDeathGrip;
+  if (!targetWindow->mInDtor)
+    kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)targetWindow);
 
-  // create this here so that we store the last rolled up popup until after
+  targetWindow->IPCWindowProcHandler(msg, wParam, lParam);
+
+  // Create this here so that we store the last rolled up popup until after
   // the event has been processed.
   nsAutoRollup autoRollup;
 
@@ -4355,27 +4363,13 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   if (DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult))
     return popupHandlingResult;
 
-  // XXX This fixes 50208 and we are leaving 51174 open to further investigate
-  // why we are hitting this assert
-  if (nullptr == someWindow) {
-    NS_ASSERTION(someWindow, "someWindow is null, cannot call any CallWindowProc");
-    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
-  }
-
-  // hold on to the window for the life of this method, in case it gets
-  // deleted during processing. yes, it's a double hack, since someWindow
-  // is not really an interface.
-  nsCOMPtr<nsISupports> kungFuDeathGrip;
-  if (!someWindow->mInDtor) // not if we're in the destructor!
-    kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)someWindow);
-
   // Call ProcessMessage
   LRESULT retValue;
-  if (true == someWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
+  if (targetWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
     return retValue;
   }
 
-  LRESULT res = ::CallWindowProcW(someWindow->GetPrevWindowProc(),
+  LRESULT res = ::CallWindowProcW(targetWindow->GetPrevWindowProc(),
                                   hWnd, msg, wParam, lParam);
 
   return res;
