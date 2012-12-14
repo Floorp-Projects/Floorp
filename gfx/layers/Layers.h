@@ -6,6 +6,8 @@
 #ifndef GFX_LAYERS_H
 #define GFX_LAYERS_H
 
+#include "mozilla/DebugOnly.h"
+
 #include "gfxTypes.h"
 #include "gfxASurface.h"
 #include "nsRegion.h"

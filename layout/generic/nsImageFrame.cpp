@@ -5,7 +5,7 @@
 
 /* rendering object for replaced elements with bitmap image data */
 
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 
 #include "nsHTMLParts.h"
 #include "nsCOMPtr.h"
@@ -70,7 +70,6 @@
 #include "ImageContainer.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h" // for DebugOnly
 
 using namespace mozilla;
 

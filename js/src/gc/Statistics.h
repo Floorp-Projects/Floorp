@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 
 #include "jsfriendapi.h"
 #include "jspubtd.h"

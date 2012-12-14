@@ -6,6 +6,8 @@
 #ifndef MOZILLA_LAYERS_SHMEMYCBCRIMAGE_H
 #define MOZILLA_LAYERS_SHMEMYCBCRIMAGE_H
 
+#include "mozilla/DebugOnly.h"
+
 #include "base/basictypes.h"
 #include "Shmem.h"
 #include "gfxPoint.h"

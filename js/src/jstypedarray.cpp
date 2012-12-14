@@ -6,7 +6,9 @@
 
 #include <string.h>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsprf.h"
@@ -27,7 +29,6 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
-#include "mozilla/Util.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
 

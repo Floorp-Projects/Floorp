@@ -10,7 +10,9 @@
 
 #include <stddef.h>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
+
 #include "js/Utility.h"
 #include "jsscript.h"
 

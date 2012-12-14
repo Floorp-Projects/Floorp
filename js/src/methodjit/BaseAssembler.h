@@ -8,6 +8,8 @@
 #if !defined jsjaeger_baseassembler_h__ && defined JS_METHODJIT
 #define jsjaeger_baseassembler_h__
 
+#include "mozilla/DebugOnly.h"
+
 #include "jscntxt.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/MacroAssembler.h"

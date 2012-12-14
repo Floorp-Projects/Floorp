@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#include <string.h>
-#include <stdio.h>
 #include <algorithm>
+#include <stdio.h>
+#include <string.h>
+
+#include "mozilla/DebugOnly.h"
 
 #include "prlink.h"
 #include "prenv.h"
@@ -21,7 +22,6 @@
 #include "gfxUtils.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h" // for DebugOnly
 
 #include "GLTextureImage.h"
 

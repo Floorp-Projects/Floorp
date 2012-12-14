@@ -8,6 +8,9 @@
 /*
  * JS debugging API.
  */
+
+#include "mozilla/DebugOnly.h"
+
 #include <string.h>
 #include "jsprvtd.h"
 #include "jstypes.h"
@@ -45,7 +48,6 @@
 #include "vm/Stack-inl.h"
 
 #include "jsautooplen.h"
-#include "mozilla/Util.h"
 
 using namespace js;
 using namespace js::gc;

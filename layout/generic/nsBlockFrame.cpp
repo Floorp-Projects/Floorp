@@ -9,6 +9,9 @@
  * boxes, also used for various anonymous boxes
  */
 
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Likely.h"
+
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -54,8 +57,6 @@
 #include "nsRenderingContext.h"
 #include "TextOverflow.h"
 #include "nsStyleStructInlines.h"
-#include "mozilla/Util.h" // for DebugOnly
-#include "mozilla/Likely.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"

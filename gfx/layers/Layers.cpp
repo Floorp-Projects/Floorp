@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/Telemetry.h"
@@ -16,7 +18,6 @@
 #include "ReadbackLayer.h"
 #include "gfxUtils.h"
 #include "nsPrintfCString.h"
-#include "mozilla/Util.h"
 #include "LayerSorter.h"
 #include "AnimationCommon.h"
 

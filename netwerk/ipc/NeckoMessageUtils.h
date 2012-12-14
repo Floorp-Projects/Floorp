@@ -6,10 +6,11 @@
 #ifndef mozilla_net_NeckoMessageUtils_h
 #define mozilla_net_NeckoMessageUtils_h
 
+#include "mozilla/DebugOnly.h"
+
 #include "ipc/IPCMessageUtils.h"
 #include "nsStringGlue.h"
 #include "prio.h"
-#include "mozilla/Util.h" // for DebugOnly
 
 namespace IPC {
 

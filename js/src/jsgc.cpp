@@ -8,6 +8,7 @@
 /* JS Mark-and-Sweep Garbage Collector. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 /*

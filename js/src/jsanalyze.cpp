@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "jsanalyze.h"
 #include "jsautooplen.h"
 #include "jscompartment.h"
@@ -12,9 +14,10 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-using mozilla::DebugOnly;
 using namespace js;
 using namespace js::analyze;
+
+using mozilla::DebugOnly;
 
 /////////////////////////////////////////////////////////////////////
 // Bytecode

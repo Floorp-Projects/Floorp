@@ -3,6 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <cmath> // for std::abs(float/double)
+#include <cstdlib> // for std::abs(int/long)
+
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Likely.h"
+
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsPresContext.h"
@@ -57,11 +63,6 @@
 #include "nsTreeBoxObject.h"
 #include "nsRenderingContext.h"
 #include "nsIScriptableRegion.h"
-
-#include "mozilla/Likely.h"
-#include "mozilla/Util.h"
-#include <cstdlib> // for std::abs(int/long)
-#include <cmath> // for std::abs(float/double)
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"

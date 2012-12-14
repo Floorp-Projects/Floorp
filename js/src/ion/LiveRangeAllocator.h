@@ -8,6 +8,8 @@
 #ifndef js_ion_liverangeallocator_h__
 #define js_ion_liverangeallocator_h__
 
+#include "mozilla/DebugOnly.h"
+
 #include "RegisterAllocator.h"
 #include "StackSlotAllocator.h"
 
