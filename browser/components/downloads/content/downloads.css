@@ -54,7 +54,7 @@ richlistitem[type="download"]:not([selected]) button {
                               [state="6"], /* Blocked (parental) */
                               [state="8"], /* Blocked (dirty)    */
                               [state="9"]) /* Blocked (policy)   */)
-                                           .downloadRemoveFromListMenuItem,
+                                           .downloadRemoveFromHistoryMenuItem,
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="5"], /* Starting (queued)  */
