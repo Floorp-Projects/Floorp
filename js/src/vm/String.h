@@ -855,6 +855,7 @@ class AutoNameVector : public AutoVectorRooter<PropertyName *>
 JS_ALWAYS_INLINE const jschar *
 JSString::getChars(JSContext *cx)
 {
+    JS::AutoAssertNoGC nogc;
     if (JSLinearString *str = ensureLinear(cx))
         return str->chars();
     return NULL;
@@ -863,6 +864,7 @@ JSString::getChars(JSContext *cx)
 JS_ALWAYS_INLINE const jschar *
 JSString::getCharsZ(JSContext *cx)
 {
+    JS::AutoAssertNoGC nogc;
     if (JSFlatString *str = ensureFlat(cx))
         return str->chars();
     return NULL;
@@ -871,6 +873,7 @@ JSString::getCharsZ(JSContext *cx)
 JS_ALWAYS_INLINE JSLinearString *
 JSString::ensureLinear(JSContext *cx)
 {
+    JS::AutoAssertNoGC nogc;
     return isLinear()
            ? &asLinear()
            : asRope().flatten(cx);
@@ -879,6 +882,7 @@ JSString::ensureLinear(JSContext *cx)
 JS_ALWAYS_INLINE JSFlatString *
 JSString::ensureFlat(JSContext *cx)
 {
+    JS::AutoAssertNoGC nogc;
     return isFlat()
            ? &asFlat()
            : isDependent()
@@ -889,6 +893,7 @@ JSString::ensureFlat(JSContext *cx)
 JS_ALWAYS_INLINE JSStableString *
 JSString::ensureStable(JSContext *maybecx)
 {
+    JS::AutoAssertNoGC nogc;
     if (isRope()) {
         JSFlatString *flat = asRope().flatten(maybecx);
         if (!flat)

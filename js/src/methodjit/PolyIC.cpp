@@ -189,7 +189,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.relink(pic.slowPathCall, target);
     }
 
-    LookupStatus patchInline(Shape *shape)
+    LookupStatus patchInline(UnrootedShape shape)
     {
         JS_ASSERT(!pic.inlinePathPatched);
         JaegerSpew(JSpew_PICs, "patch setprop inline at %p\n", pic.fastPathStart.executableAddress());
@@ -249,7 +249,7 @@ class SetPropCompiler : public PICStubCompiler
             repatcher.relink(label.jumpAtOffset(secondGuardOffset), cs);
     }
 
-    LookupStatus generateStub(Shape *initialShape, Shape *shape, bool adding)
+    LookupStatus generateStub(UnrootedShape initialShape, UnrootedShape shape, bool adding)
     {
         if (hadGC())
             return Lookup_Uncacheable;
@@ -510,7 +510,7 @@ class SetPropCompiler : public PICStubCompiler
                 proto = proto->getProto();
             }
 
-            Shape *initialShape = obj->lastProperty();
+            RootedShape initialShape(cx, obj->lastProperty());
             uint32_t slots = obj->numDynamicSlots();
 
             unsigned flags = 0;
@@ -521,9 +521,8 @@ class SetPropCompiler : public PICStubCompiler
              * populate the slot to satisfy the method invariant (in case we
              * hit an early return below).
              */
-            shape =
-                obj->putProperty(cx, name, getter, clasp->setProperty,
-                                 SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, flags, 0);
+            shape = JSObject::putProperty(cx, obj, name, getter, clasp->setProperty,
+                                          SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, flags, 0);
             if (!shape)
                 return error();
 
@@ -1016,7 +1015,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
-    LookupStatus patchInline(JSObject *holder, Shape *shape)
+    LookupStatus patchInline(JSObject *holder, UnrootedShape shape)
     {
         spew("patch", "inline");
         Repatcher repatcher(f.chunk());
@@ -1051,7 +1050,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For JSPropertyOp getters. */
-    void generateGetterStub(Assembler &masm, Shape *shape, jsid userid,
+    void generateGetterStub(Assembler &masm, UnrootedShape shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
         AutoAssertNoGC nogc;
@@ -1163,7 +1162,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For getters backed by a JSNative. */
-    void generateNativeGetterStub(Assembler &masm, Shape *shape,
+    void generateNativeGetterStub(Assembler &masm, UnrootedShape shape,
                                   Label start, Vector<Jump, 8> &shapeMismatches)
     {
         AutoAssertNoGC nogc;
@@ -1704,7 +1703,7 @@ class ScopeNameCompiler : public PICStubCompiler
         JS_ASSERT(obj == getprop.holder);
         JS_ASSERT(getprop.holder != &scopeChain->global());
 
-        Shape *shape = getprop.shape;
+        UnrootedShape shape = getprop.shape;
         if (!shape->hasDefaultGetter())
             return disable("unhandled callobj sprop getter");
 
@@ -1833,7 +1832,17 @@ class ScopeNameCompiler : public PICStubCompiler
         Rooted<JSObject*> normalized(cx, obj);
         if (obj->isWith() && !shape->hasDefaultGetter())
             normalized = &obj->asWith().object();
-        NATIVE_GET(cx, normalized, holder, shape, 0, vp.address(), return false);
+        if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
+            /* Fast path for Object instance properties. */
+            JS_ASSERT(shape->slot() != SHAPE_INVALID_SLOT || !shape->hasDefaultSetter());
+            if (shape->slot() != SHAPE_INVALID_SLOT)
+                vp.set(holder->nativeGetSlot(shape->slot()));
+            else
+                vp.setUndefined();
+        } else {
+            if (!js_NativeGet(cx, normalized, holder, shape, 0, vp))
+                return false;
+        }
         return true;
     }
 };
@@ -2402,7 +2411,7 @@ GetElementIC::attachGetProp(VMFrame &f, HandleObject obj, HandleValue v, HandleP
     }
 
     // Load the value.
-    Shape *shape = getprop.shape;
+    RootedShape shape(cx, getprop.shape);
     masm.loadObjProp(holder, holderReg, shape, typeReg, objReg);
 
     Jump done = masm.jump();

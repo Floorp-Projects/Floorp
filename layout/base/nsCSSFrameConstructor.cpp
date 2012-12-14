@@ -11,8 +11,10 @@
 
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
+#include "mozilla/LinkedList.h"
 
 #include "nsCSSFrameConstructor.h"
+#include "nsAbsoluteContainingBlock.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
@@ -697,7 +699,7 @@ private:
 // Structure used to keep track of a list of bindings we need to call
 // AddToAttachedQueue on.  These should be in post-order depth-first
 // flattened tree traversal order.
-struct PendingBinding : public PRCList
+struct PendingBinding : public LinkedListElement<PendingBinding>
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   PendingBinding() {
@@ -861,7 +863,6 @@ public:
       mState(aState),
       mPendingBinding(aState.mCurrentPendingBindingInsertionPoint)
         {
-          NS_PRECONDITION(mPendingBinding, "how did that happen?");
           if (aPendingBinding) {
             aState.mCurrentPendingBindingInsertionPoint = aPendingBinding;
           }
@@ -874,14 +875,18 @@ public:
 
   private:
     nsFrameConstructorState& mState;
-    PRCList* mPendingBinding;
+    PendingBinding* mPendingBinding;
   };
 
   /**
    * Add a new pending binding to the list
    */
   void AddPendingBinding(PendingBinding* aPendingBinding) {
-    PR_INSERT_BEFORE(aPendingBinding, mCurrentPendingBindingInsertionPoint);
+    if (mCurrentPendingBindingInsertionPoint) {
+      mCurrentPendingBindingInsertionPoint->setPrevious(aPendingBinding);
+    } else {
+      mPendingBindings.insertBack(aPendingBinding);
+    }
   }
 
 protected:
@@ -896,9 +901,9 @@ protected:
 
   // Our list of all pending bindings.  When we're done, we need to call
   // AddToAttachedQueue on all of them, in order.
-  PRCList mPendingBindings;
+  LinkedList<PendingBinding> mPendingBindings;
 
-  PRCList* mCurrentPendingBindingInsertionPoint;
+  PendingBinding* mCurrentPendingBindingInsertionPoint;
 };
 
 nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShell,
@@ -925,7 +930,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mCreatingExtraFrames(false),
     mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                       aPresShell->GetDocument()),
-    mCurrentPendingBindingInsertionPoint(&mPendingBindings)
+    mCurrentPendingBindingInsertionPoint(nullptr)
 {
 #ifdef MOZ_XUL
   nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
@@ -934,7 +939,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
   }
 #endif
   MOZ_COUNT_CTOR(nsFrameConstructorState);
-  PR_INIT_CLIST(&mPendingBindings);
 }
 
 nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
@@ -959,7 +963,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mCreatingExtraFrames(false),
     mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                       aPresShell->GetDocument()),
-    mCurrentPendingBindingInsertionPoint(&mPendingBindings)
+    mCurrentPendingBindingInsertionPoint(nullptr)
 {
 #ifdef MOZ_XUL
   nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
@@ -969,7 +973,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
 #endif
   MOZ_COUNT_CTOR(nsFrameConstructorState);
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
-  PR_INIT_CLIST(&mPendingBindings);
 }
 
 nsFrameConstructorState::~nsFrameConstructorState()
@@ -993,15 +996,14 @@ nsFrameConstructorState::~nsFrameConstructorState()
     mGeneratedTextNodesWithInitializer[i]->
       DeleteProperty(nsGkAtoms::genConInitializerProperty);
   }
-  if (!PR_CLIST_IS_EMPTY(&mPendingBindings)) {
+  if (!mPendingBindings.isEmpty()) {
     nsBindingManager* bindingManager = mPresShell->GetDocument()->BindingManager();
     do {
-      PendingBinding* pendingBinding =
-        static_cast<PendingBinding*>(PR_NEXT_LINK(&mPendingBindings));
-      PR_REMOVE_LINK(pendingBinding);
+      nsAutoPtr<PendingBinding> pendingBinding;
+      pendingBinding = mPendingBindings.popFirst();
       bindingManager->AddToAttachedQueue(pendingBinding->mBinding);
-      delete pendingBinding;
-    } while (!PR_CLIST_IS_EMPTY(&mPendingBindings));
+    } while (!mPendingBindings.isEmpty());
+    mCurrentPendingBindingInsertionPoint = nullptr;
   }
 }
 

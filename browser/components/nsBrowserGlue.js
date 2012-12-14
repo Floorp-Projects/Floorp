@@ -281,6 +281,16 @@ BrowserGlue.prototype = {
       case "initial-migration-did-import-default-bookmarks":
         this._initPlaces(true);
         break;
+      case "handle-xul-text-link":
+        let linkHandled = subject.QueryInterface(Ci.nsISupportsPRBool);
+        if (!linkHandled.data) {
+          let win = this.getMostRecentBrowserWindow();
+          if (win) {
+            win.openUILinkIn(data, "tab");
+            linkHandled.data = true;
+          }
+        }
+        break;
     }
   }, 
 
@@ -312,6 +322,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "places-shutdown", false);
     this._isPlacesShutdownObserver = true;
     os.addObserver(this, "defaultURIFixup-using-keyword-pref", false);
+    os.addObserver(this, "handle-xul-text-link", false);
   },
 
   // cleanup (called on application shutdown)
@@ -342,6 +353,7 @@ BrowserGlue.prototype = {
     if (this._isPlacesShutdownObserver)
       os.removeObserver(this, "places-shutdown");
     os.removeObserver(this, "defaultURIFixup-using-keyword-pref");
+    os.removeObserver(this, "handle-xul-text-link");
     UserAgentOverrides.uninit();
     webappsUI.uninit();
     SignInToWebsiteUX.uninit();

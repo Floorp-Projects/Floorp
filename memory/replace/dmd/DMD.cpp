@@ -124,7 +124,7 @@ public:
 
   static char* strdup_(const char* aStr)
   {
-    char* s = (char*) gMallocTable->malloc(strlen(aStr));
+    char* s = (char*) gMallocTable->malloc(strlen(aStr) + 1);
     ExitOnFailure(s);
     strcpy(s, aStr);
     return s;
@@ -148,6 +148,13 @@ public:
 
   static void reportAllocOverflow() { ExitOnFailure(nullptr); }
 };
+
+// This is only needed because of the |const void*| vs |void*| arg mismatch.
+static size_t
+MallocSizeOf(const void* aPtr)
+{
+  return gMallocTable->malloc_usable_size(const_cast<void*>(aPtr));
+}
 
 static void
 StatusMsg(const char* aFmt, ...)
@@ -397,7 +404,13 @@ public:
 
 #ifdef XP_WIN
 
-#error "Windows not supported yet, sorry."
+#define DMD_TLS_INDEX_TYPE              DWORD
+#define DMD_CREATE_TLS_INDEX(i_)        PR_BEGIN_MACRO                        \
+                                          (i_) = TlsAlloc();                  \
+                                        PR_END_MACRO
+#define DMD_DESTROY_TLS_INDEX(i_)       TlsFree((i_))
+#define DMD_GET_TLS_DATA(i_)            TlsGetValue((i_))
+#define DMD_SET_TLS_DATA(i_, v_)        TlsSetValue((i_), (v_))
 
 #else
 
@@ -642,244 +655,111 @@ StackTrace::Get(Thread* aT)
 
 static const char* gUnreportedName = "unreported";
 
-// This is used by both |Block|s and |BlockGroups|.
-class BlockKey
+// A live heap block.
+class LiveBlock
 {
-protected:
-  enum Kind {
-    Live,               // for all live blocks, reported or not
-    DoubleReport        // for blocks that have been double-reported
-  };
+  const void*  mPtr;
 
-  const Kind mKind;
+  // This assumes that we'll never request an allocation of 2 GiB or more on
+  // 32-bit platforms.
+  static const size_t kReqBits = sizeof(size_t) * 8 - 1;    // 31 or 63
+  const size_t mReqSize:kReqBits; // size requested
+  const size_t mSampled:1;        // was this block sampled? (if so, slop == 0)
 
 public:
   const StackTrace* const mAllocStackTrace;     // never null
 
-protected:
-  union
-  {
-    // Blocks can be reported in two ways.
-    // - The most common is via a memory reporter traversal -- the block is
-    //   reported when the reporter runs, causing DMD to mark it as reported,
-    //   and DMD must clear the marking once it has finished its analysis.
-    // - Less common are ones that are reported immediately on allocation.  DMD
-    //   must *not* clear the markings of these blocks once it has finished its
-    //   analysis.  The |mReportedOnAlloc| field is set for such blocks.
-    struct
-    {
-      const StackTrace* mReportStackTrace;  // nullptr if unreported
-      const char*       mReporterName;      // gUnreportedName if unreported
-      bool              mReportedOnAlloc;   // true if block was reported
-    } mLive;                                //   immediately on allocation
-
-    struct
-    {
-      // When double-reports occur we record (and later print) the stack trace
-      // and reporter name of *both* the reporting locations.
-      // Nb: These are really |* const|, but that confuses some compilers.
-      const StackTrace* mReportStackTrace1;   // const, never null
-      const StackTrace* mReportStackTrace2;   // const, never null
-      const char*       mReporterName1;       // const, never gUnreportedName
-      const char*       mReporterName2;       // const, never gUnreportedName
-    } mDoubleReport;
-  };
-
-  // Use these safer accessors where possible instead of raw union accesses.
-
-  #define GETTER(kind, type, name) \
-    type name() const { \
-      MOZ_ASSERT(mKind == kind); \
-      return m##kind.m##name; \
-    }
-  #define GETTER_AND_SETTER(kind, type, name) \
-    GETTER(kind, type, name) \
-    void Set##name(type a##name) { \
-      MOZ_ASSERT(mKind == kind); \
-      m##kind.m##name = a##name; \
-    }
-
-  GETTER_AND_SETTER(Live, const StackTrace*, ReportStackTrace)
-  GETTER_AND_SETTER(Live, const char*,       ReporterName)
-  GETTER_AND_SETTER(Live, bool,              ReportedOnAlloc)
-
-  GETTER(DoubleReport, const StackTrace*, ReportStackTrace1)
-  GETTER(DoubleReport, const StackTrace*, ReportStackTrace2)
-  GETTER(DoubleReport, const char*,       ReporterName1)
-  GETTER(DoubleReport, const char*,       ReporterName2)
-
-  #undef GETTER
-  #undef SETTER
+  // Live blocks can be reported in two ways.
+  // - The most common is via a memory reporter traversal -- the block is
+  //   reported when the reporter runs, causing DMD to mark it as reported,
+  //   and DMD must clear the marking once it has finished its analysis.
+  // - Less common are ones that are reported immediately on allocation.  DMD
+  //   must *not* clear the markings of these blocks once it has finished its
+  //   analysis.  The |mReportedOnAlloc| field is set for such blocks.
+  //
+  // |mPtr| is used as the key in LiveBlockTable, so it's ok for these fields
+  // to be |mutable|.
+private:
+  mutable const StackTrace* mReportStackTrace;  // nullptr if unreported
+  mutable const char*       mReporterName;      // gUnreportedName if unreported
+  mutable bool              mReportedOnAlloc;   // true if block was reported
+                                                //   immediately after alloc
 
 public:
-  // This constructor is used for |Live| Blocks.
-  BlockKey(const StackTrace* aAllocStackTrace)
-    : mKind(Live),
-      mAllocStackTrace(aAllocStackTrace)
-  {
-    mLive.mReportStackTrace = nullptr;
-    mLive.mReporterName = gUnreportedName;
-    mLive.mReportedOnAlloc = false;
-    MOZ_ASSERT(IsSaneLiveBlock());
+  LiveBlock(const void* aPtr, size_t aReqSize,
+            const StackTrace* aAllocStackTrace, bool aSampled)
+    : mPtr(aPtr),
+      mReqSize(aReqSize),
+      mSampled(aSampled),
+      mAllocStackTrace(aAllocStackTrace),
+      mReportStackTrace(nullptr),
+      mReporterName(gUnreportedName),
+      mReportedOnAlloc(false)
+ {
+    if (mReqSize != aReqSize)
+    {
+      MOZ_CRASH();              // overflowed mReqSize
+    }
+    MOZ_ASSERT(IsSane());
   }
 
-  // This constructor is used for |DoubleReport| Blocks.
-  BlockKey(const StackTrace* aAllocStackTrace,
-           const StackTrace* aReportStackTrace1,
-           const StackTrace* aReportStackTrace2,
-           const char* aReporterName1, const char* aReporterName2)
-    : mKind(DoubleReport),
-      mAllocStackTrace(aAllocStackTrace)
+  bool IsSane() const
   {
-    mDoubleReport.mReportStackTrace1 = aReportStackTrace1;
-    mDoubleReport.mReportStackTrace2 = aReportStackTrace2;
-    mDoubleReport.mReporterName1 = aReporterName1;
-    mDoubleReport.mReporterName2 = aReporterName2;
-    MOZ_ASSERT(IsSaneDoubleReportBlock());
+    bool hasReporterName = mReporterName != gUnreportedName;
+    return mAllocStackTrace &&
+           (( mReportStackTrace &&  hasReporterName) ||
+            (!mReportStackTrace && !hasReporterName && !mReportedOnAlloc));
   }
 
-  bool IsSaneLiveBlock() const
+  size_t ReqSize() const { return mReqSize; }
+
+  // Sampled blocks always have zero slop.
+  size_t SlopSize() const
   {
-    bool hasReporterName = ReporterName() != gUnreportedName;
-    return mKind == Live &&
-           mAllocStackTrace &&
-           (( ReportStackTrace() &&  hasReporterName) ||
-            (!ReportStackTrace() && !hasReporterName && !ReportedOnAlloc()));
+    return mSampled ? 0 : MallocSizeOf(mPtr) - mReqSize;
   }
 
-  bool IsSaneDoubleReportBlock() const
+  size_t UsableSize() const
   {
-    return mKind == DoubleReport &&
-           mAllocStackTrace &&
-           ReportStackTrace1() &&
-           ReportStackTrace2() &&
-           ReporterName1() != gUnreportedName &&
-           ReporterName2() != gUnreportedName;
+    return mSampled ? mReqSize : MallocSizeOf(mPtr);
   }
 
-  bool IsLive() const { return mKind == Live; }
+  bool IsSampled() const { return mSampled; }
 
   bool IsReported() const
   {
-    MOZ_ASSERT(IsSaneLiveBlock());  // should only call this on live blocks
-    bool isRep = ReporterName() != gUnreportedName;
+    MOZ_ASSERT(IsSane());
+    bool isRep = mReporterName != gUnreportedName;
     return isRep;
   }
 
-  // Quasi-hash policy (used by BlockGroup's hash policy).
-  //
-  // Hash() and Match() both assume that identical reporter names have
-  // identical pointers.  In practice this always happens because they are
-  // static strings (as specified in the NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN
-  // macro).  This is true even for multi-reporters.  (If it ever became
-  // untrue, the worst that would happen is that some blocks that should be in
-  // the same block group would end up in separate block groups.)
+  const StackTrace* ReportStackTrace() const { return mReportStackTrace; }
+  const char* ReporterName() const { return mReporterName; }
 
-  static uint32_t Hash(const BlockKey& aKey)
+  // This is |const| thanks to the |mutable| fields above.
+  void Report(Thread* aT, const char* aReporterName, bool aReportedOnAlloc)
+       const;
+
+  void UnreportIfNotReportedOnAlloc() const;
+
+  // Hash policy.
+
+  typedef const void* Lookup;
+
+  static uint32_t hash(const void* const& aPc)
   {
-    if (aKey.mKind == Live) {
-      return mozilla::HashGeneric(aKey.mAllocStackTrace,
-                                  aKey.ReportStackTrace(),
-                                  aKey.ReporterName());
-    }
-
-    if (aKey.mKind == DoubleReport) {
-      return mozilla::HashGeneric(aKey.mAllocStackTrace,
-                                  aKey.ReportStackTrace1(),
-                                  aKey.ReportStackTrace2(),
-                                  aKey.ReporterName1(),
-                                  aKey.ReporterName2());
-    }
-
-    MOZ_CRASH();
+    return mozilla::HashGeneric(aPc);
   }
 
-  static bool Match(const BlockKey& aA, const BlockKey& aB)
+  static bool match(const LiveBlock& aB, const void* const& aPtr)
   {
-    if (aA.mKind == Live && aB.mKind == Live) {
-      return aA.mAllocStackTrace   == aB.mAllocStackTrace &&
-             aA.ReportStackTrace() == aB.ReportStackTrace() &&
-             aA.ReporterName()     == aB.ReporterName();
-    }
-
-    if (aA.mKind == DoubleReport && aB.mKind == DoubleReport) {
-      return aA.mAllocStackTrace    == aB.mAllocStackTrace &&
-             aA.ReportStackTrace1() == aB.ReportStackTrace1() &&
-             aA.ReportStackTrace2() == aB.ReportStackTrace2() &&
-             aA.ReporterName1()     == aB.ReporterName1() &&
-             aA.ReporterName2()     == aB.ReporterName2();
-    }
-
-    MOZ_CRASH();  // Nb: aA.mKind should always equal aB.mKind.
+    return aB.mPtr == aPtr;
   }
-};
-
-class BlockSize
-{
-  static const size_t kSlopBits = sizeof(size_t) * 8 - 1;  // 31 or 63
-
-public:
-  size_t mReq;              // size requested
-  size_t mSlop:kSlopBits;   // additional bytes allocated due to rounding up
-  size_t mSampled:1;        // were one or more blocks contributing to this
-                            //   BlockSize sampled?
-  BlockSize()
-    : mReq(0),
-      mSlop(0),
-      mSampled(false)
-  {}
-
-  BlockSize(size_t aReq, size_t aSlop, bool aSampled)
-    : mReq(aReq),
-      mSlop(aSlop),
-      mSampled(aSampled)
-  {}
-
-  size_t Usable() const { return mReq + mSlop; }
-
-  void Add(const BlockSize& aBlockSize)
-  {
-    mReq  += aBlockSize.mReq;
-    mSlop += aBlockSize.mSlop;
-    mSampled = mSampled || aBlockSize.mSampled;
-  }
-
-  static int Cmp(const BlockSize& aA, const BlockSize& aB)
-  {
-    // Primary sort: put bigger usable sizes before smaller usable sizes.
-    if (aA.Usable() > aB.Usable()) return -1;
-    if (aA.Usable() < aB.Usable()) return  1;
-
-    // Secondary sort: put non-sampled groups before sampled groups.
-    if (!aA.mSampled &&  aB.mSampled) return -1;
-    if ( aA.mSampled && !aB.mSampled) return  1;
-
-    return 0;
-  }
-};
-
-// A live heap block.
-class Block : public BlockKey
-{
-public:
-  const BlockSize mBlockSize;
-
-public:
-  Block(size_t aReqSize, size_t aSlopSize, const StackTrace* aAllocStackTrace,
-        bool aIsExact)
-    : BlockKey(aAllocStackTrace),
-      mBlockSize(aReqSize, aSlopSize, aIsExact)
-  {}
-
-  void Report(Thread* aT, const char* aReporterName, bool aReportedOnAlloc);
-
-  void UnreportIfNotReportedOnAlloc();
 };
 
 // Nb: js::DefaultHasher<void*> is a high quality hasher.
-typedef js::HashMap<const void*, Block, js::DefaultHasher<const void*>,
-                    InfallibleAllocPolicy> BlockTable;
-static BlockTable* gLiveBlockTable = nullptr;
+typedef js::HashSet<LiveBlock, LiveBlock, InfallibleAllocPolicy> LiveBlockTable;
+static LiveBlockTable* gLiveBlockTable = nullptr;
 
 //---------------------------------------------------------------------------
 // malloc/free callbacks
@@ -901,7 +781,6 @@ AllocCallback(void* aPtr, size_t aReqSize, Thread* aT)
   AutoBlockIntercepts block(aT);
 
   size_t actualSize = gMallocTable->malloc_usable_size(aPtr);
-  size_t slopSize   = actualSize - aReqSize;
 
   if (actualSize < gSampleBelowSize) {
     // If this allocation is smaller than the sample-below size, increment the
@@ -912,13 +791,13 @@ AllocCallback(void* aPtr, size_t aReqSize, Thread* aT)
     if (gSmallBlockActualSizeCounter >= gSampleBelowSize) {
       gSmallBlockActualSizeCounter -= gSampleBelowSize;
 
-      Block b(gSampleBelowSize, /* slopSize */ 0, StackTrace::Get(aT),
-              /* sampled */ true);
+      LiveBlock b(aPtr, gSampleBelowSize, StackTrace::Get(aT),
+                  /* sampled */ true);
       (void)gLiveBlockTable->putNew(aPtr, b);
     }
   } else {
     // If this block size is larger than the sample size, record it exactly.
-    Block b(aReqSize, slopSize, StackTrace::Get(aT), /* sampled */ false);
+    LiveBlock b(aPtr, aReqSize, StackTrace::Get(aT), /* sampled */ false);
     (void)gLiveBlockTable->putNew(aPtr, b);
   }
 }
@@ -1080,36 +959,219 @@ namespace mozilla {
 namespace dmd {
 
 //---------------------------------------------------------------------------
-// Block groups
+// Live and double-report block groups
 //---------------------------------------------------------------------------
 
-// A group of one or more heap blocks with a common BlockKey.
-class BlockGroup : public BlockKey
+class LiveBlockKey
 {
-  friend class FrameGroup;      // FrameGroups are created from BlockGroups
-
-  // The (inherited) BlockKey is used as the key in BlockGroupTable, and the
-  // other members constitute the value, so it's ok for them to be |mutable|.
-private:
-  mutable uint32_t  mNumBlocks;     // number of blocks with this BlockKey
-  mutable BlockSize mCombinedSize;  // combined size of those blocks
+public:
+  const StackTrace* const mAllocStackTrace;   // never null
+protected:
+  const StackTrace* const mReportStackTrace;  // nullptr if unreported
+  const char*       const mReporterName;      // gUnreportedName if unreported
 
 public:
-  explicit BlockGroup(const BlockKey& aKey)
-    : BlockKey(aKey),
-      mNumBlocks(0),
-      mCombinedSize()
+  LiveBlockKey(const LiveBlock& aB)
+    : mAllocStackTrace(aB.mAllocStackTrace),
+      mReportStackTrace(aB.ReportStackTrace()),
+      mReporterName(aB.ReporterName())
+  {
+    MOZ_ASSERT(IsSane());
+  }
+
+  bool IsSane() const
+  {
+    bool hasReporterName = mReporterName != gUnreportedName;
+    return mAllocStackTrace &&
+           (( mReportStackTrace &&  hasReporterName) ||
+            (!mReportStackTrace && !hasReporterName));
+  }
+
+  bool IsReported() const
+  {
+    MOZ_ASSERT(IsSane());
+    bool isRep = mReporterName != gUnreportedName;
+    return isRep;
+  }
+
+  // Hash policy.
+  //
+  // hash() and match() both assume that identical reporter names have
+  // identical pointers.  In practice this always happens because they are
+  // static strings (as specified in the NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN
+  // macro).  This is true even for multi-reporters.  (If it ever became
+  // untrue, the worst that would happen is that some blocks that should be in
+  // the same block group would end up in separate block groups.)
+
+  typedef LiveBlockKey Lookup;
+
+  static uint32_t hash(const LiveBlockKey& aKey)
+  {
+    return mozilla::HashGeneric(aKey.mAllocStackTrace,
+                                aKey.mReportStackTrace,
+                                aKey.mReporterName);
+  }
+
+  static bool match(const LiveBlockKey& aA, const LiveBlockKey& aB)
+  {
+    return aA.mAllocStackTrace  == aB.mAllocStackTrace &&
+           aA.mReportStackTrace == aB.mReportStackTrace &&
+           aA.mReporterName     == aB.mReporterName;
+  }
+};
+
+class DoubleReportBlockKey
+{
+public:
+  const StackTrace* const mAllocStackTrace;     // never null
+
+protected:
+  // When double-reports occur we record (and later print) the stack trace
+  // and reporter name of *both* the reporting locations.
+  const StackTrace* const mReportStackTrace1;   // never null
+  const StackTrace* const mReportStackTrace2;   // never null
+  const char*       const mReporterName1;       // never gUnreportedName
+  const char*       const mReporterName2;       // never gUnreportedName
+
+public:
+  DoubleReportBlockKey(const StackTrace* aAllocStackTrace,
+                       const StackTrace* aReportStackTrace1,
+                       const StackTrace* aReportStackTrace2,
+                       const char* aReporterName1,
+                       const char* aReporterName2)
+    : mAllocStackTrace(aAllocStackTrace),
+      mReportStackTrace1(aReportStackTrace1),
+      mReportStackTrace2(aReportStackTrace2),
+      mReporterName1(aReporterName1),
+      mReporterName2(aReporterName2)
+  {
+    MOZ_ASSERT(IsSane());
+  }
+
+  bool IsSane() const
+  {
+    return mAllocStackTrace &&
+           mReportStackTrace1 &&
+           mReportStackTrace2 &&
+           mReporterName1 != gUnreportedName &&
+           mReporterName2 != gUnreportedName;
+  }
+
+  // Hash policy.
+  //
+  // hash() and match() both assume that identical reporter names have
+  // identical pointers.  See LiveBlockKey for more.
+
+  typedef DoubleReportBlockKey Lookup;
+
+  static uint32_t hash(const DoubleReportBlockKey& aKey)
+  {
+    return mozilla::HashGeneric(aKey.mAllocStackTrace,
+                                aKey.mReportStackTrace1,
+                                aKey.mReportStackTrace2,
+                                aKey.mReporterName1,
+                                aKey.mReporterName2);
+  }
+
+  static bool match(const DoubleReportBlockKey& aA,
+                    const DoubleReportBlockKey& aB)
+  {
+    return aA.mAllocStackTrace   == aB.mAllocStackTrace &&
+           aA.mReportStackTrace1 == aB.mReportStackTrace1 &&
+           aA.mReportStackTrace2 == aB.mReportStackTrace2 &&
+           aA.mReporterName1     == aB.mReporterName1 &&
+           aA.mReporterName2     == aB.mReporterName2;
+  }
+};
+
+class GroupSize
+{
+  static const size_t kReqBits = sizeof(size_t) * 8 - 1;  // 31 or 63
+
+  size_t mReq;              // size requested
+  size_t mSlop:kReqBits;    // slop bytes
+  size_t mSampled:1;        // were one or more blocks contributing to this
+                            //   GroupSize sampled?
+public:
+  GroupSize()
+    : mReq(0),
+      mSlop(0),
+      mSampled(false)
   {}
 
-  const BlockSize& CombinedSize() const { return mCombinedSize; }
+  size_t Req()    const { return mReq; }
+  size_t Slop()   const { return mSlop; }
+  size_t Usable() const { return mReq + mSlop; }
 
-  // The |const| qualifier is something of a lie, but is necessary so this type
-  // can be used in js::HashSet, and it fits with the |mutable| fields above.
-  void Add(const Block& aB) const
+  bool IsSampled() const { return mSampled; }
+
+  void Add(const LiveBlock& aB)
+  {
+    mReq  += aB.ReqSize();
+    mSlop += aB.SlopSize();
+    mSampled = mSampled || aB.IsSampled();
+  }
+
+  void Add(const GroupSize& aGroupSize)
+  {
+    mReq  += aGroupSize.Req();
+    mSlop += aGroupSize.Slop();
+    mSampled = mSampled || aGroupSize.IsSampled();
+  }
+
+  static int Cmp(const GroupSize& aA, const GroupSize& aB)
+  {
+    // Primary sort: put bigger usable sizes before smaller usable sizes.
+    if (aA.Usable() > aB.Usable()) return -1;
+    if (aA.Usable() < aB.Usable()) return  1;
+
+    // Secondary sort: put non-sampled groups before sampled groups.
+    if (!aA.mSampled &&  aB.mSampled) return -1;
+    if ( aA.mSampled && !aB.mSampled) return  1;
+
+    return 0;
+  }
+};
+
+class BlockGroup
+{
+protected:
+  // {Live,DoubleReport}BlockKey serve as the key in
+  // {Live,DoubleReport}BlockGroupTable.  Thes two fields constitute the value,
+  // so it's ok for them to be |mutable|.
+  mutable uint32_t  mNumBlocks;     // number of blocks with this LiveBlockKey
+  mutable GroupSize mGroupSize;     // combined size of those blocks
+
+public:
+  BlockGroup()
+    : mNumBlocks(0),
+      mGroupSize()
+  {}
+
+  const GroupSize& GroupSize() const { return mGroupSize; }
+
+  // This is |const| thanks to the |mutable| fields above.
+  void Add(const LiveBlock& aB) const
   {
     mNumBlocks++;
-    mCombinedSize.Add(aB.mBlockSize);
+    mGroupSize.Add(aB);
   }
+
+  static const char* const kName;   // for PrintSortedGroups
+};
+
+const char* const BlockGroup::kName = "block";
+
+// A group of one or more live heap blocks with a common LiveBlockKey.
+class LiveBlockGroup : public LiveBlockKey, public BlockGroup
+{
+  friend class FrameGroup;      // FrameGroups are created from LiveBlockGroups
+
+public:
+  explicit LiveBlockGroup(const LiveBlockKey& aKey)
+    : LiveBlockKey(aKey),
+      BlockGroup()
+  {}
 
   void Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
              const char* aStr, const char* astr,
@@ -1118,42 +1180,25 @@ public:
 
   static int QsortCmp(const void* aA, const void* aB)
   {
-    const BlockGroup* const a = *static_cast<const BlockGroup* const*>(aA);
-    const BlockGroup* const b = *static_cast<const BlockGroup* const*>(aB);
+    const LiveBlockGroup* const a =
+      *static_cast<const LiveBlockGroup* const*>(aA);
+    const LiveBlockGroup* const b =
+      *static_cast<const LiveBlockGroup* const*>(aB);
 
-    return BlockSize::Cmp(a->mCombinedSize, b->mCombinedSize);
-  }
-
-  static const char* const kName;   // for PrintSortedGroups
-
-  // Hash policy
-
-  typedef BlockKey Lookup;
-
-  static uint32_t hash(const BlockKey& aKey)
-  {
-    return BlockKey::Hash(aKey);
-  }
-
-  static bool match(const BlockGroup& aBg, const BlockKey& aKey)
-  {
-    return BlockKey::Match(aBg, aKey);
+    return GroupSize::Cmp(a->mGroupSize, b->mGroupSize);
   }
 };
 
-const char* const BlockGroup::kName = "block";
-
-typedef js::HashSet<BlockGroup, BlockGroup, InfallibleAllocPolicy>
-        BlockGroupTable;
-BlockGroupTable* gDoubleReportBlockGroupTable = nullptr;
+typedef js::HashSet<LiveBlockGroup, LiveBlockGroup, InfallibleAllocPolicy>
+        LiveBlockGroupTable;
 
 void
-BlockGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
-                  const char* aStr, const char* astr,
-                  size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-                  size_t aTotalUsableSize) const
+LiveBlockGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
+                      const char* aStr, const char* astr,
+                      size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
+                      size_t aTotalUsableSize) const
 {
-  bool showTilde = mCombinedSize.mSampled;
+  bool showTilde = mGroupSize.IsSampled();
 
   W("%s: %s block%s in block group %s of %s\n",
     aStr,
@@ -1162,39 +1207,87 @@ BlockGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
     Show(aN, gBuf3, kBufLen));
 
   W(" %s bytes (%s requested / %s slop)\n",
-    Show(mCombinedSize.Usable(), gBuf1, kBufLen, showTilde),
-    Show(mCombinedSize.mReq,     gBuf2, kBufLen, showTilde),
-    Show(mCombinedSize.mSlop,    gBuf3, kBufLen, showTilde));
+    Show(mGroupSize.Usable(), gBuf1, kBufLen, showTilde),
+    Show(mGroupSize.Req(),    gBuf2, kBufLen, showTilde),
+    Show(mGroupSize.Slop(),   gBuf3, kBufLen, showTilde));
 
-  if (mKind == BlockKey::Live) {
-    W(" %4.2f%% of the heap (%4.2f%% cumulative); "
-      " %4.2f%% of %s (%4.2f%% cumulative)\n",
-      Percent(mCombinedSize.Usable(), aTotalUsableSize),
-      Percent(aCumulativeUsableSize, aTotalUsableSize),
-      Percent(mCombinedSize.Usable(), aCategoryUsableSize),
-      astr,
-      Percent(aCumulativeUsableSize, aCategoryUsableSize));
-  }
+  W(" %4.2f%% of the heap (%4.2f%% cumulative); "
+    " %4.2f%% of %s (%4.2f%% cumulative)\n",
+    Percent(mGroupSize.Usable(), aTotalUsableSize),
+    Percent(aCumulativeUsableSize, aTotalUsableSize),
+    Percent(mGroupSize.Usable(), aCategoryUsableSize),
+    astr,
+    Percent(aCumulativeUsableSize, aCategoryUsableSize));
 
   W(" Allocated at\n");
   mAllocStackTrace->Print(aWriter);
 
-  if (mKind == BlockKey::Live) {
-    if (IsReported()) {
-      W("\n Reported by '%s' at\n", ReporterName());
-      ReportStackTrace()->Print(aWriter);
-    }
-
-  } else if (mKind == BlockKey::DoubleReport) {
-    W("\n Previously reported by '%s' at\n", ReporterName1());
-    ReportStackTrace1()->Print(aWriter);
-
-    W("\n Now reported by '%s' at\n", ReporterName2());
-    ReportStackTrace2()->Print(aWriter);
-
-  } else {
-    MOZ_NOT_REACHED();
+  if (IsReported()) {
+    W("\n Reported by '%s' at\n", mReporterName);
+    mReportStackTrace->Print(aWriter);
   }
+
+  W("\n");
+}
+
+// A group of one or more double-reported heap blocks with a common
+// DoubleReportBlockKey.
+class DoubleReportBlockGroup : public DoubleReportBlockKey, public BlockGroup
+{
+public:
+  explicit DoubleReportBlockGroup(const DoubleReportBlockKey& aKey)
+    : DoubleReportBlockKey(aKey),
+      BlockGroup()
+  {}
+
+  void Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
+             const char* aStr, const char* astr,
+             size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
+             size_t aTotalUsableSize) const;
+
+  static int QsortCmp(const void* aA, const void* aB)
+  {
+    const DoubleReportBlockGroup* const a =
+      *static_cast<const DoubleReportBlockGroup* const*>(aA);
+    const DoubleReportBlockGroup* const b =
+      *static_cast<const DoubleReportBlockGroup* const*>(aB);
+
+    return GroupSize::Cmp(a->mGroupSize, b->mGroupSize);
+  }
+};
+
+typedef js::HashSet<DoubleReportBlockGroup, DoubleReportBlockGroup,
+                    InfallibleAllocPolicy> DoubleReportBlockGroupTable;
+DoubleReportBlockGroupTable* gDoubleReportBlockGroupTable = nullptr;
+
+void
+DoubleReportBlockGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
+                              const char* aStr, const char* astr,
+                              size_t aCategoryUsableSize,
+                              size_t aCumulativeUsableSize,
+                              size_t aTotalUsableSize) const
+{
+  bool showTilde = mGroupSize.IsSampled();
+
+  W("%s: %s block%s in block group %s of %s\n",
+    aStr,
+    Show(mNumBlocks, gBuf1, kBufLen, showTilde), Plural(mNumBlocks),
+    Show(aM, gBuf2, kBufLen),
+    Show(aN, gBuf3, kBufLen));
+
+  W(" %s bytes (%s requested / %s slop)\n",
+    Show(mGroupSize.Usable(), gBuf1, kBufLen, showTilde),
+    Show(mGroupSize.Req(),    gBuf2, kBufLen, showTilde),
+    Show(mGroupSize.Slop(),   gBuf3, kBufLen, showTilde));
+
+  W(" Allocated at\n");
+  mAllocStackTrace->Print(aWriter);
+
+  W("\n Previously reported by '%s' at\n", mReporterName1);
+  mReportStackTrace1->Print(aWriter);
+
+  W("\n Now reported by '%s' at\n", mReporterName2);
+  mReportStackTrace2->Print(aWriter);
 
   W("\n");
 }
@@ -1212,25 +1305,24 @@ class FrameGroup
   const void* const mPc;
   mutable size_t    mNumBlocks;
   mutable size_t    mNumBlockGroups;
-  mutable BlockSize mCombinedSize;
+  mutable GroupSize mGroupSize;
 
 public:
   explicit FrameGroup(const void* aPc)
     : mPc(aPc),
       mNumBlocks(0),
       mNumBlockGroups(0),
-      mCombinedSize()
+      mGroupSize()
   {}
 
-  const BlockSize& CombinedSize() const { return mCombinedSize; }
+  const GroupSize& GroupSize() const { return mGroupSize; }
 
-  // The |const| qualifier is something of a lie, but is necessary so this type
-  // can be used in js::HashSet, and it fits with the |mutable| fields above.
-  void Add(const BlockGroup& aBg) const
+  // This is |const| thanks to the |mutable| fields above.
+  void Add(const LiveBlockGroup& aBg) const
   {
     mNumBlocks += aBg.mNumBlocks;
     mNumBlockGroups++;
-    mCombinedSize.Add(aBg.mCombinedSize);
+    mGroupSize.Add(aBg.mGroupSize);
   }
 
   void Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
@@ -1243,21 +1335,21 @@ public:
     const FrameGroup* const a = *static_cast<const FrameGroup* const*>(aA);
     const FrameGroup* const b = *static_cast<const FrameGroup* const*>(aB);
 
-    return BlockSize::Cmp(a->mCombinedSize, b->mCombinedSize);
+    return GroupSize::Cmp(a->mGroupSize, b->mGroupSize);
   }
 
   static const char* const kName;   // for PrintSortedGroups
 
-  // Hash policy
+  // Hash policy.
 
   typedef const void* Lookup;
 
-  static uint32_t hash(const Lookup& aPc)
+  static uint32_t hash(const void* const& aPc)
   {
     return mozilla::HashGeneric(aPc);
   }
 
-  static bool match(const FrameGroup& aFg, const Lookup& aPc)
+  static bool match(const FrameGroup& aFg, const void* const& aPc)
   {
     return aFg.mPc == aPc;
   }
@@ -1276,7 +1368,7 @@ FrameGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
 {
   (void)aCumulativeUsableSize;
 
-  bool showTilde = mCombinedSize.mSampled;
+  bool showTilde = mGroupSize.IsSampled();
 
   nsCodeAddressDetails details;
   PcInfo(mPc, &details);
@@ -1289,13 +1381,13 @@ FrameGroup::Print(const Writer& aWriter, uint32_t aM, uint32_t aN,
     Show(aN, gBuf4, kBufLen));
 
   W(" %s bytes (%s requested / %s slop)\n",
-    Show(mCombinedSize.Usable(), gBuf1, kBufLen, showTilde),
-    Show(mCombinedSize.mReq,     gBuf2, kBufLen, showTilde),
-    Show(mCombinedSize.mSlop,    gBuf3, kBufLen, showTilde));
+    Show(mGroupSize.Usable(), gBuf1, kBufLen, showTilde),
+    Show(mGroupSize.Req(),    gBuf2, kBufLen, showTilde),
+    Show(mGroupSize.Slop(),   gBuf3, kBufLen, showTilde));
 
   W(" %4.2f%% of the heap;  %4.2f%% of %s\n",
-    Percent(mCombinedSize.Usable(), aTotalUsableSize),
-    Percent(mCombinedSize.Usable(), aCategoryUsableSize),
+    Percent(mGroupSize.Usable(), aTotalUsableSize),
+    Percent(mGroupSize.Usable(), aCategoryUsableSize),
     astr);
 
   W(" PC is\n");
@@ -1484,10 +1576,11 @@ Init(const malloc_table_t* aMallocTable)
   gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>();
   gStackTraceTable->init(8192);
 
-  gLiveBlockTable = InfallibleAllocPolicy::new_<BlockTable>();
+  gLiveBlockTable = InfallibleAllocPolicy::new_<LiveBlockTable>();
   gLiveBlockTable->init(8192);
 
-  gDoubleReportBlockGroupTable = InfallibleAllocPolicy::new_<BlockGroupTable>();
+  gDoubleReportBlockGroupTable =
+    InfallibleAllocPolicy::new_<DoubleReportBlockGroupTable>();
   gDoubleReportBlockGroupTable->init(0);
 
   if (gMode == Test) {
@@ -1522,42 +1615,34 @@ Init(const malloc_table_t* aMallocTable)
 // DMD reporting and unreporting
 //---------------------------------------------------------------------------
 
-static void
-AddBlockToBlockGroupTable(BlockGroupTable& aTable, const BlockKey& aKey,
-                          const Block& aBlock)
-{
-  BlockGroupTable::AddPtr p = aTable.lookupForAdd(aKey);
-  if (!p) {
-    BlockGroup bg(aKey);
-    (void)aTable.add(p, bg);
-  }
-  p->Add(aBlock);
-}
-
 void
-Block::Report(Thread* aT, const char* aReporterName, bool aOnAlloc)
+LiveBlock::Report(Thread* aT, const char* aReporterName, bool aOnAlloc) const
 {
-  MOZ_ASSERT(mKind == BlockKey::Live);
   if (IsReported()) {
-    BlockKey doubleReportKey(mAllocStackTrace,
-                             ReportStackTrace(), StackTrace::Get(aT),
-                             ReporterName(), aReporterName);
-    AddBlockToBlockGroupTable(*gDoubleReportBlockGroupTable,
-                              doubleReportKey, *this);
+    DoubleReportBlockKey doubleReportKey(mAllocStackTrace,
+                                         mReportStackTrace, StackTrace::Get(aT),
+                                         mReporterName, aReporterName);
+    DoubleReportBlockGroupTable::AddPtr p =
+      gDoubleReportBlockGroupTable->lookupForAdd(doubleReportKey);
+    if (!p) {
+      DoubleReportBlockGroup bg(doubleReportKey);
+      (void)gDoubleReportBlockGroupTable->add(p, bg);
+    }
+    p->Add(*this);
+
   } else {
-    SetReporterName(aReporterName);
-    SetReportStackTrace(StackTrace::Get(aT));
-    SetReportedOnAlloc(aOnAlloc);
+    mReporterName     = aReporterName;
+    mReportStackTrace = StackTrace::Get(aT);
+    mReportedOnAlloc  = aOnAlloc;
   }
 }
 
 void
-Block::UnreportIfNotReportedOnAlloc()
+LiveBlock::UnreportIfNotReportedOnAlloc() const
 {
-  MOZ_ASSERT(mKind == BlockKey::Live);
-  if (!ReportedOnAlloc()) {
-    SetReporterName(gUnreportedName);
-    SetReportStackTrace(nullptr);
+  if (!mReportedOnAlloc) {
+    mReporterName     = gUnreportedName;
+    mReportStackTrace = nullptr;
   }
 }
 
@@ -1573,8 +1658,8 @@ ReportHelper(const void* aPtr, const char* aReporterName, bool aOnAlloc)
   AutoBlockIntercepts block(t);
   AutoLockState lock;
 
-  if (BlockTable::Ptr p = gLiveBlockTable->lookup(aPtr)) {
-    p->value.Report(t, aReporterName, aOnAlloc);
+  if (LiveBlockTable::Ptr p = gLiveBlockTable->lookup(aPtr)) {
+    p->Report(t, aReporterName, aOnAlloc);
   } else {
     // We have no record of the block.  Do nothing.  Either:
     // - We're sampling and we skipped this block.  This is likely.
@@ -1599,7 +1684,7 @@ ReportOnAlloc(const void* aPtr, const char* aReporterName)
 // DMD output
 //---------------------------------------------------------------------------
 
-// This works for both BlockGroups and FrameGroups.
+// This works for LiveBlockGroups, DoubleReportBlockGroups and FrameGroups.
 template <class TGroup>
 static void
 PrintSortedGroups(const Writer& aWriter, const char* aStr, const char* astr,
@@ -1638,7 +1723,7 @@ PrintSortedGroups(const Writer& aWriter, const char* aStr, const char* astr,
   size_t cumulativeUsableSize = 0;
   for (uint32_t i = 0; i < numTGroups; i++) {
     const TGroup* tg = tgArray[i];
-    cumulativeUsableSize += tg->CombinedSize().Usable();
+    cumulativeUsableSize += tg->GroupSize().Usable();
     if (i < MaxTGroups) {
       tg->Print(aWriter, i+1, numTGroups, aStr, astr, aCategoryUsableSize,
                 cumulativeUsableSize, aTotalUsableSize);
@@ -1655,12 +1740,12 @@ PrintSortedGroups(const Writer& aWriter, const char* aStr, const char* astr,
 static void
 PrintSortedBlockAndFrameGroups(const Writer& aWriter,
                                const char* aStr, const char* astr,
-                               const BlockGroupTable& aBlockGroupTable,
+                               const LiveBlockGroupTable& aLiveBlockGroupTable,
                                size_t aCategoryUsableSize,
                                size_t aTotalUsableSize)
 {
-  PrintSortedGroups(aWriter, aStr, astr, aBlockGroupTable, aCategoryUsableSize,
-                    aTotalUsableSize);
+  PrintSortedGroups(aWriter, aStr, astr, aLiveBlockGroupTable,
+                    aCategoryUsableSize, aTotalUsableSize);
 
   // Frame groups are totally dependent on vagaries of stack traces, so we
   // can't show them in test mode.
@@ -1670,12 +1755,11 @@ PrintSortedBlockAndFrameGroups(const Writer& aWriter,
 
   FrameGroupTable frameGroupTable;
   frameGroupTable.init(2048);
-  for (BlockGroupTable::Range r = aBlockGroupTable.all();
+  for (LiveBlockGroupTable::Range r = aLiveBlockGroupTable.all();
        !r.empty();
        r.popFront()) {
-    const BlockGroup& bg = r.front();
+    const LiveBlockGroup& bg = r.front();
     const StackTrace* st = bg.mAllocStackTrace;
-    MOZ_ASSERT(bg.IsLive());
 
     // A single PC can appear multiple times in a stack trace.  We ignore
     // duplicates by first sorting and then ignoring adjacent duplicates.
@@ -1699,13 +1783,6 @@ PrintSortedBlockAndFrameGroups(const Writer& aWriter,
   }
   PrintSortedGroups(aWriter, aStr, astr, frameGroupTable, kNoSize,
                     aTotalUsableSize);
-}
-
-// This is only needed because of the |const void*| vs |void*| arg mismatch.
-static size_t
-MallocSizeOf(const void* aPtr)
-{
-  return gMallocTable->malloc_usable_size(const_cast<void*>(aPtr));
 }
 
 // Note that, unlike most SizeOf* functions, this function does not take a
@@ -1737,8 +1814,10 @@ ClearState()
 {
   // Unreport all blocks, except those that were reported on allocation,
   // because they need to keep their reported marking.
-  for (BlockTable::Range r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
-    r.front().value.UnreportIfNotReportedOnAlloc();
+  for (LiveBlockTable::Range r = gLiveBlockTable->all();
+       !r.empty();
+       r.popFront()) {
+    r.front().UnreportIfNotReportedOnAlloc();
   }
 
   // Clear errors.
@@ -1764,26 +1843,36 @@ Dump(Writer aWriter)
 
   StatusMsg("  gathering live block groups...\n");
 
-  BlockGroupTable unreportedBlockGroupTable;
-  (void)unreportedBlockGroupTable.init(1024);
+  LiveBlockGroupTable unreportedLiveBlockGroupTable;
+  (void)unreportedLiveBlockGroupTable.init(1024);
   size_t unreportedUsableSize = 0;
 
-  BlockGroupTable reportedBlockGroupTable;
-  (void)reportedBlockGroupTable.init(1024);
+  LiveBlockGroupTable reportedLiveBlockGroupTable;
+  (void)reportedLiveBlockGroupTable.init(1024);
   size_t reportedUsableSize = 0;
 
   bool anyBlocksSampled = false;
 
-  for (BlockTable::Range r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
-    const Block& b = r.front().value;
-    if (!b.IsReported()) {
-      unreportedUsableSize += b.mBlockSize.Usable();
-      AddBlockToBlockGroupTable(unreportedBlockGroupTable, b, b);
-    } else {
-      reportedUsableSize += b.mBlockSize.Usable();
-      AddBlockToBlockGroupTable(reportedBlockGroupTable, b, b);
+  for (LiveBlockTable::Range r = gLiveBlockTable->all();
+       !r.empty();
+       r.popFront()) {
+    const LiveBlock& b = r.front();
+
+    size_t& size = !b.IsReported() ? unreportedUsableSize : reportedUsableSize;
+    size += b.UsableSize();
+
+    LiveBlockGroupTable& table = !b.IsReported()
+                               ? unreportedLiveBlockGroupTable
+                               : reportedLiveBlockGroupTable;
+    LiveBlockKey liveKey(b);
+    LiveBlockGroupTable::AddPtr p = table.lookupForAdd(liveKey);
+    if (!p) {
+      LiveBlockGroup bg(b);
+      (void)table.add(p, bg);
     }
-    anyBlocksSampled = anyBlocksSampled || b.mBlockSize.mSampled;
+    p->Add(b);
+
+    anyBlocksSampled = anyBlocksSampled || b.IsSampled();
   }
   size_t totalUsableSize = unreportedUsableSize + reportedUsableSize;
 
@@ -1795,11 +1884,11 @@ Dump(Writer aWriter)
                     *gDoubleReportBlockGroupTable, kNoSize, kNoSize);
 
   PrintSortedBlockAndFrameGroups(aWriter, "Unreported", "unreported",
-                                 unreportedBlockGroupTable,
+                                 unreportedLiveBlockGroupTable,
                                  unreportedUsableSize, totalUsableSize);
 
   PrintSortedBlockAndFrameGroups(aWriter, "Reported", "reported",
-                                 reportedBlockGroupTable,
+                                 reportedLiveBlockGroupTable,
                                  reportedUsableSize, totalUsableSize);
 
   bool showTilde = anyBlocksSampled;
@@ -1845,18 +1934,18 @@ Dump(Writer aWriter)
       Show(gDoubleReportBlockGroupTable->count(),    gBuf3, kBufLen));
 
     size_t unreportedSize =
-      unreportedBlockGroupTable.sizeOfIncludingThis(MallocSizeOf);
+      unreportedLiveBlockGroupTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Unreported table:    %10s bytes (%s entries, %s used)\n",
-      Show(unreportedSize,                       gBuf1, kBufLen),
-      Show(unreportedBlockGroupTable.capacity(), gBuf2, kBufLen),
-      Show(unreportedBlockGroupTable.count(),    gBuf3, kBufLen));
+      Show(unreportedSize,                           gBuf1, kBufLen),
+      Show(unreportedLiveBlockGroupTable.capacity(), gBuf2, kBufLen),
+      Show(unreportedLiveBlockGroupTable.count(),    gBuf3, kBufLen));
 
     size_t reportedSize =
-      reportedBlockGroupTable.sizeOfIncludingThis(MallocSizeOf);
+      reportedLiveBlockGroupTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Reported table:      %10s bytes (%s entries, %s used)\n",
-      Show(reportedSize,                       gBuf1, kBufLen),
-      Show(reportedBlockGroupTable.capacity(), gBuf2, kBufLen),
-      Show(reportedBlockGroupTable.count(),    gBuf3, kBufLen));
+      Show(reportedSize,                           gBuf1, kBufLen),
+      Show(reportedLiveBlockGroupTable.capacity(), gBuf2, kBufLen),
+      Show(reportedLiveBlockGroupTable.count(),    gBuf3, kBufLen));
 
     W("\n");
   }

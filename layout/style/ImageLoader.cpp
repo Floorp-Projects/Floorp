@@ -341,7 +341,7 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet)
     nsIFrame* frame = aFrameSet->ElementAt(i);
 
     if (frame->GetStyleVisibility()->IsVisible()) {
-      FrameLayerBuilder::IterateVisibleRetainedDataFor(frame, InvalidateImagesCallback);
+      FrameLayerBuilder::IterateRetainedDataFor(frame, InvalidateImagesCallback);
     }
   }
 }

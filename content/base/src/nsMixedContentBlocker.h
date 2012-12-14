@@ -12,14 +12,14 @@
 { 0xdaf1461b, 0xbf29, 0x4f88, \
   { 0x8d, 0x0e, 0x4b, 0xcd, 0xf3, 0x32, 0xc8, 0x62 } }
 
-// This enum defines type of content that is blocked when an
-// nsMixedContentBlockedEvent fires
-enum MixedContentBlockedTypes {
+// This enum defines type of content that is detected when an
+// nsMixedContentEvent fires
+enum MixedContentTypes {
   // "Active" content, such as fonts, plugin content, JavaScript, stylesheets,
   // iframes, WebSockets, and XHR
-  eBlockedMixedScript,
+  eMixedScript,
   // "Display" content, such as images, audio, video, and <a ping>
-  eBlockedMixedDisplay
+  eMixedDisplay
 };
 
 #include "nsIContentPolicy.h"

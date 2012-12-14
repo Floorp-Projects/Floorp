@@ -149,7 +149,7 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 }
 
 static bool
-IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, const Shape *shape)
+IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, UnrootedShape shape)
 {
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -161,7 +161,7 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, const Shape *shape)
 }
 
 static bool
-IsCacheableNoProperty(JSObject *obj, JSObject *holder, const Shape *shape, jsbytecode *pc,
+IsCacheableNoProperty(JSObject *obj, JSObject *holder, UnrootedShape shape, jsbytecode *pc,
                       const TypedOrValueRegister &output)
 {
     if (shape)
@@ -212,7 +212,7 @@ IsCacheableNoProperty(JSObject *obj, JSObject *holder, const Shape *shape, jsbyt
 }
 
 static bool
-IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, const Shape *shape)
+IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, UnrootedShape shape)
 {
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -225,7 +225,7 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, const Shape *shape
 }
 
 static bool
-IsCacheableGetPropCallPropertyOp(JSObject *obj, JSObject *holder, const Shape *shape)
+IsCacheableGetPropCallPropertyOp(JSObject *obj, JSObject *holder, UnrootedShape shape)
 {
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -243,7 +243,7 @@ struct GetNativePropertyStub
     CodeOffsetLabel stubCodePatchOffset;
 
     void generateReadSlot(JSContext *cx, MacroAssembler &masm, JSObject *obj, PropertyName *propName,
-                          JSObject *holder, const Shape *shape, Register object, TypedOrValueRegister output,
+                          JSObject *holder, HandleShape shape, Register object, TypedOrValueRegister output,
                           RepatchLabel *failures, Label *nonRepatchFailures = NULL)
     {
         // If there's a single jump to |failures|, we can patch the shape guard
@@ -354,7 +354,7 @@ struct GetNativePropertyStub
     }
 
     bool generateCallGetter(JSContext *cx, MacroAssembler &masm, JSObject *obj,
-                            PropertyName *propName, JSObject *holder, const Shape *shape,
+                            PropertyName *propName, JSObject *holder, HandleShape shape,
                             RegisterSet &liveRegs, Register object, TypedOrValueRegister output,
                             void *returnAddr, jsbytecode *pc,
                             RepatchLabel *failures, Label *nonRepatchFailures = NULL)
@@ -619,7 +619,7 @@ struct GetNativePropertyStub
 
 bool
 IonCacheGetProperty::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                                    const Shape *shape)
+                                    HandleShape shape)
 {
     MacroAssembler masm;
     RepatchLabel failures;
@@ -654,9 +654,10 @@ IonCacheGetProperty::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj
 
 bool
 IonCacheGetProperty::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj,
-                                      JSObject *holder, const Shape *shape,
+                                      JSObject *holder, HandleShape shape,
                                       const SafepointIndex *safepointIndex, void *returnAddr)
 {
+    AssertCanGC();
     MacroAssembler masm;
     RepatchLabel failures;
 
@@ -1136,8 +1137,8 @@ IonCacheSetProperty::attachSetterCall(JSContext *cx, IonScript *ion,
 
 bool
 IonCacheSetProperty::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
-                                        const Shape *oldShape, const Shape *newShape,
-                                        const Shape *propShape)
+                                        HandleShape oldShape, HandleShape newShape,
+                                        HandleShape propShape)
 {
     MacroAssembler masm;
 
@@ -1156,7 +1157,7 @@ IonCacheSetProperty::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject 
     JSObject *proto = obj->getProto();
     Register protoReg = object();
     while (proto) {
-        Shape *protoShape = proto->lastProperty();
+        UnrootedShape protoShape = proto->lastProperty();
 
         // load next prototype
         masm.loadPtr(Address(protoReg, JSObject::offsetOfType()), protoReg);
@@ -1248,7 +1249,7 @@ IsPropertyInlineable(JSObject *obj, IonCacheSetProperty &cache)
 static bool
 IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHandleShape pshape)
 {
-    Shape *shape = obj->nativeLookup(cx, id);
+    UnrootedShape shape = obj->nativeLookup(cx, id);
 
     if (!shape)
         return false;
@@ -1299,7 +1300,7 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSl
     if (pShape.get())
         return false;
 
-    Shape *shape = obj->nativeLookup(cx, id);
+    RootedShape shape(cx, obj->nativeLookup(cx, id));
     if (!shape || shape->inDictionary() || !shape->hasSlot() || !shape->hasDefaultSetter())
         return false;
 
@@ -1319,7 +1320,7 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSl
             return false;
 
         // if prototype defines this property in a non-plain way, don't optimize
-        const Shape *protoShape = proto->nativeLookup(cx, id);
+        UnrootedShape protoShape = proto->nativeLookup(cx, id);
         if (protoShape && !protoShape->hasDefaultSetter())
             return false;
 
@@ -1376,7 +1377,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
     }
 
     uint32_t oldSlots = obj->numDynamicSlots();
-    const Shape *oldShape = obj->lastProperty();
+    RootedShape oldShape(cx, obj->lastProperty());
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
     if (!SetProperty(cx, obj, name, value, cache.strict(), isSetName))
@@ -1385,7 +1386,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
     // The property did not exists before, now we can try again to inline the
     // procedure which is adding the property.
     if (inlinable && IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape)) {
-        const Shape *newShape = obj->lastProperty();
+        RootedShape newShape(cx, obj->lastProperty());
         cache.incrementStubCount();
         if (!cache.attachNativeAdding(cx, ion, obj, oldShape, newShape, shape))
             return false;
@@ -1619,7 +1620,7 @@ IonCacheBindName::attachGlobal(JSContext *cx, IonScript *ion, JSObject *scopeCha
 
 static inline void
 GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
-                        Register scopeObjReg, Shape *shape, Label *failures)
+                        Register scopeObjReg, UnrootedShape shape, Label *failures)
 {
     AutoAssertNoGC nogc;
     if (scopeObj->isCall()) {
@@ -1789,8 +1790,10 @@ js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain
 }
 
 bool
-IonCacheName::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject holder, Shape *shape)
+IonCacheName::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject holder,
+                     HandleShape shape)
 {
+    AssertCanGC();
     MacroAssembler masm;
     Label failures;
 

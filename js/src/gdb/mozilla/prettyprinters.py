@@ -311,3 +311,22 @@ class Pointer(object):
 
     def summary(self):
         raise NotImplementedError
+
+field_enum_value = None
+
+# Given |t|, a gdb.Type instance representing an enum type, return the
+# numeric value of the enum value named |name|.
+#
+# Pre-2012-4-18 versions of GDB store the value of an enum member on the
+# gdb.Field's 'bitpos' attribute; later versions store it on the 'enumval'
+# attribute. This function retrieves the value from either.
+def enum_value(t, name):
+    global field_enum_value
+    f = t[name]
+    # Monkey-patching is a-okay in polyfills! Just because.
+    if not field_enum_value:
+        if hasattr(f, 'enumval'):
+            field_enum_value = lambda f: f.enumval
+        else:
+            field_enum_value = lambda f: f.bitpos
+    return field_enum_value(f)
