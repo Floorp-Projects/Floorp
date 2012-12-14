@@ -404,7 +404,13 @@ public:
 
 #ifdef XP_WIN
 
-#error "Windows not supported yet, sorry."
+#define DMD_TLS_INDEX_TYPE              DWORD
+#define DMD_CREATE_TLS_INDEX(i_)        PR_BEGIN_MACRO                        \
+                                          (i_) = TlsAlloc();                  \
+                                        PR_END_MACRO
+#define DMD_DESTROY_TLS_INDEX(i_)       TlsFree((i_))
+#define DMD_GET_TLS_DATA(i_)            TlsGetValue((i_))
+#define DMD_SET_TLS_DATA(i_, v_)        TlsSetValue((i_), (v_))
 
 #else
 
