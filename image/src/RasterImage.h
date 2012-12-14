@@ -162,7 +162,6 @@ public:
   // Methods inherited from Image
   nsresult Init(imgIDecoderObserver* aObserver,
                 const char* aMimeType,
-                const char* aURIString,
                 uint32_t aFlags);
   virtual void  GetCurrentFrameRect(nsIntRect& aRect) MOZ_OVERRIDE;
 
@@ -733,7 +732,7 @@ private: // data
   bool StoringSourceData() const;
 
 protected:
-  RasterImage(imgStatusTracker* aStatusTracker = nullptr);
+  RasterImage(imgStatusTracker* aStatusTracker = nullptr, nsIURI* aURI = nullptr);
 
   bool ShouldAnimate();
 
