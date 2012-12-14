@@ -92,8 +92,8 @@ LinearScanAllocator::allocateRegisters()
             return false;
 
         CodePosition position = current->start();
-        Requirement *req = current->requirement();
-        Requirement *hint = current->hint();
+        const Requirement *req = current->requirement();
+        const Requirement *hint = current->hint();
 
         IonSpew(IonSpew_RegAlloc, "Processing %d = [%u, %u] (pri=%d)",
                 current->hasVreg() ? current->vreg() : 0, current->start().pos(),
@@ -775,18 +775,6 @@ LinearScanAllocator::assign(LAllocation allocation)
     return true;
 }
 
-#ifdef JS_NUNBOX32
-LinearScanVirtualRegister *
-LinearScanAllocator::otherHalfOfNunbox(VirtualRegister *vreg)
-{
-    signed offset = OffsetToOtherHalfOfNunbox(vreg->type());
-    LinearScanVirtualRegister *other = &vregs[vreg->def()->virtualRegister() + offset];
-    AssertTypesFormANunbox(vreg->type(), other->type());
-    return other;
-}
-#endif
-
-
 uint32_t
 LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
 {
@@ -991,7 +979,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     }
 
     // Assign the register suggested by the hint if it's free.
-    Requirement *hint = current->hint();
+    const Requirement *hint = current->hint();
     if (hint->kind() == Requirement::FIXED && hint->allocation().isRegister()) {
         AnyRegister hintReg = hint->allocation().toRegister();
         if (freeUntilPos[hintReg.code()] > hint->pos())
@@ -1110,28 +1098,6 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
     if (aa->isRegister() && ba->isRegister() && aa->toRegister() == ba->toRegister())
         return a->intersect(b) == CodePosition::MIN;
     return true;
-}
-
-bool
-LinearScanAllocator::addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to)
-{
-    if (*from->getAllocation() == *to->getAllocation())
-        return true;
-    return moves->add(from->getAllocation(), to->getAllocation());
-}
-
-bool
-LinearScanAllocator::moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to)
-{
-    LMoveGroup *moves = getInputMoveGroup(pos);
-    return addMove(moves, from, to);
-}
-
-bool
-LinearScanAllocator::moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to)
-{
-    LMoveGroup *moves = getMoveGroupAfter(pos);
-    return addMove(moves, from, to);
 }
 
 #ifdef DEBUG

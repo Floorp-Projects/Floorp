@@ -2848,6 +2848,8 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
 void
 TypeCompartment::print(JSContext *cx, bool force)
 {
+    gc::AutoSuppressGC suppressGC(cx);
+
     JSCompartment *compartment = this->compartment();
     AutoEnterAnalysis enter(compartment);
 

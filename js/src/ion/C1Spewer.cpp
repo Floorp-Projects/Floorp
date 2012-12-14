@@ -117,7 +117,7 @@ C1Spewer::spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *i
             LiveInterval *live = vreg->getInterval(i);
             if (live->numRanges()) {
                 fprintf(fp, "%d object \"", (i == 0) ? vreg->id() : int32_t(nextId++));
-                LAllocation::PrintAllocation(fp, live->getAllocation());
+                fprintf(fp, "%s", live->getAllocation()->toString());
                 fprintf(fp, "\" %d -1", vreg->id());
                 for (size_t j = 0; j < live->numRanges(); j++) {
                     fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(),

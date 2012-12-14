@@ -7,6 +7,7 @@
 
 #include "LiveRangeAllocator.h"
 
+#include "BacktrackingAllocator.h"
 #include "LinearScan.h"
 
 using namespace js;
@@ -31,6 +32,43 @@ Requirement::priority() const
         JS_NOT_REACHED("Unknown requirement kind.");
         return -1;
     }
+}
+
+bool
+LiveInterval::Range::contains(const Range *other) const
+{
+    Range pre, inside, post;
+    intersect(other, &pre, &inside, &post);
+    return inside.from == other->from && inside.to == other->to;
+}
+
+void
+LiveInterval::Range::intersect(const Range *other, Range *pre, Range *inside, Range *post) const
+{
+    JS_ASSERT(pre->empty() && inside->empty() && post->empty());
+
+    CodePosition innerFrom = from;
+    if (from < other->from) {
+        if (to < other->from) {
+            *pre = Range(from, to);
+            return;
+        }
+        *pre = Range(from, other->from);
+        innerFrom = other->from;
+    }
+
+    CodePosition innerTo = to;
+    if (to > other->to) {
+        if (from >= other->to) {
+            *post = Range(from, to);
+            return;
+        }
+        *post = Range(other->to, to);
+        innerTo = other->to;
+    }
+
+    if (innerFrom != innerTo)
+        *inside = Range(innerFrom, innerTo);
 }
 
 bool
@@ -316,8 +354,11 @@ VirtualRegister::getFirstInterval()
 void
 EnsureLiveRangeAllocatorInstantiation(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph)
 {
-    LiveRangeAllocator<LinearScanVirtualRegister> allocator(mir, lir, graph);
-    allocator.buildLivenessInfo();
+    LiveRangeAllocator<LinearScanVirtualRegister> lsra(mir, lir, graph, true);
+    lsra.buildLivenessInfo();
+
+    LiveRangeAllocator<BacktrackingVirtualRegister> backtracking(mir, lir, graph, false);
+    backtracking.buildLivenessInfo();
 }
 
 #ifdef DEBUG
@@ -499,8 +540,21 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
             // Calls may clobber registers, so force a spill and reload around the callsite.
             if (ins->isCall()) {
                 for (AnyRegisterIterator iter(allRegisters_); iter.more(); iter++) {
-                    if (!addFixedRangeAtHead(*iter, inputOf(*ins), outputOf(*ins)))
-                        return false;
+                    if (forLSRA) {
+                        if (!addFixedRangeAtHead(*iter, inputOf(*ins), outputOf(*ins)))
+                            return false;
+                    } else {
+                        bool found = false;
+                        for (size_t i = 0; i < ins->numDefs(); i++) {
+                            if (ins->getDef(i)->isPreset() &&
+                                *ins->getDef(i)->output() == LAllocation(*iter)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found && !addFixedRangeAtHead(*iter, outputOf(*ins), outputOf(*ins).next()))
+                            return false;
+                    }
                 }
             }
 
@@ -509,7 +563,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                     LDefinition *def = ins->getDef(i);
 
                     CodePosition from;
-                    if (def->policy() == LDefinition::PRESET && def->output()->isRegister()) {
+                    if (def->policy() == LDefinition::PRESET && def->output()->isRegister() && forLSRA) {
                         // The fixed range covers the current instruction so the
                         // interval for the virtual register starts at the next
                         // instruction. If the next instruction has a fixed use,
@@ -523,7 +577,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                             return false;
                         from = outputOf(*ins).next();
                     } else {
-                        from = inputOf(*ins);
+                        from = forLSRA ? inputOf(*ins) : outputOf(*ins);
                     }
 
                     if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
@@ -555,17 +609,22 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                 LDefinition *temp = ins->getTemp(i);
                 if (temp->isBogusTemp())
                     continue;
-                if (ins->isCall()) {
-                    JS_ASSERT(temp->isPreset());
-                    continue;
-                }
 
-                if (temp->policy() == LDefinition::PRESET) {
-                    AnyRegister reg = temp->output()->toRegister();
-                    if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
-                        return false;
+                if (forLSRA) {
+                    if (temp->policy() == LDefinition::PRESET) {
+                        if (ins->isCall())
+                            continue;
+                        AnyRegister reg = temp->output()->toRegister();
+                        if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
+                            return false;
+                    } else {
+                        JS_ASSERT(!ins->isCall());
+                        if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), outputOf(*ins)))
+                            return false;
+                    }
                 } else {
-                    if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), outputOf(*ins)))
+                    CodePosition to = ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
+                    if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), to))
                         return false;
                 }
             }
@@ -613,18 +672,30 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                         continue;
 
                     CodePosition to;
-                    if (use->isFixedRegister()) {
-                        JS_ASSERT(!use->usedAtStart());
-                        AnyRegister reg = GetFixedRegister(vregs[use].def(), use);
-                        if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
-                            return false;
-                        to = inputOf(*ins);
+                    if (forLSRA) {
+                        if (use->isFixedRegister()) {
+                            JS_ASSERT(!use->usedAtStart());
+                            AnyRegister reg = GetFixedRegister(vregs[use].def(), use);
+                            if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
+                                return false;
+                            to = inputOf(*ins);
+                        } else {
+                            to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
+                        }
                     } else {
-                        to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
+                        to = (use->usedAtStart() || ins->isCall()) ? inputOf(*ins) : outputOf(*ins);
+                        if (use->isFixedRegister()) {
+                            LAllocation reg(AnyRegister::FromCode(use->registerCode()));
+                            for (size_t i = 0; i < ins->numDefs(); i++) {
+                                LDefinition *def = ins->getDef(i);
+                                if (def->policy() == LDefinition::PRESET && *def->output() == reg)
+                                    to = inputOf(*ins);
+                            }
+                        }
                     }
 
                     LiveInterval *interval = vregs[use].getInterval(0);
-                    if (!interval->addRangeAtHead(inputOf(block->firstId()), to))
+                    if (!interval->addRangeAtHead(inputOf(block->firstId()), forLSRA ? to : to.next()))
                         return false;
                     interval->addUse(new UsePosition(use, to));
 

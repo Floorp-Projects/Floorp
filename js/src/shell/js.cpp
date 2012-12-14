@@ -4849,6 +4849,8 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
             ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_LSRA;
+        else if (strcmp(str, "backtracking") == 0)
+            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_Backtracking;
         else if (strcmp(str, "stupid") == 0)
             ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_Stupid;
         else
@@ -5080,7 +5082,8 @@ main(int argc, char **argv, char **envp)
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
                                "  lsra: Linear Scan register allocation (default)\n"
-                               "  stupid: Simple greedy register allocation")
+                               "  backtracking: Priority based backtracking register allocation\n"
+                               "  stupid: Simple block local register allocation")
         || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods")
 #ifdef JS_THREADSAFE
         || !op.addStringOption('\0', "ion-parallel-compile", "on/off",

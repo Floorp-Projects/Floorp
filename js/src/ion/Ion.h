@@ -22,6 +22,7 @@ class TempAllocator;
 // Possible register allocators which may be used.
 enum IonRegisterAllocator {
     RegisterAllocator_LSRA,
+    RegisterAllocator_Backtracking,
     RegisterAllocator_Stupid
 };
 
