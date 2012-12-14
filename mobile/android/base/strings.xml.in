@@ -209,14 +209,12 @@
        profile/bookmarks.inc. Don't expose the URLs to L10N. -->
   <string name="bookmarkdefaults_title_aboutfirefox">@bookmarks_aboutBrowser@</string>
   <string name="bookmarkdefaults_url_aboutfirefox">about:firefox</string>
-  <string name="bookmarkdefaults_favicon_aboutfirefox">chrome/chrome/content/branding/favicon64.png</string>
 
   <string name="bookmarkdefaults_title_addons">@bookmarks_addons@</string>
   <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/android/</string>
 
   <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
   <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/mobile</string>
-  <string name="bookmarkdefaults_favicon_abouthome">chrome/chrome/content/branding/favicon64.png</string>
 
   <string name="bookmarkdefaults_title_abouthome">@bookmarks_aboutHome@</string>
   <string name="bookmarkdefaults_url_abouthome">about:home</string>
