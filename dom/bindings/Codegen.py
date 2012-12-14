@@ -1148,9 +1148,14 @@ class MethodDefiner(PropertyDefiner):
         # FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=772822
         #       We should be able to check for special operations without an
         #       identifier. For now we check if the name starts with __
-        methods = [m for m in descriptor.interface.members if
-                   m.isMethod() and m.isStatic() == static and
-                   not m.isIdentifierLess()]
+
+        # Ignore non-static methods for callback interfaces
+        if not descriptor.interface.isCallback() or static:
+            methods = [m for m in descriptor.interface.members if
+                       m.isMethod() and m.isStatic() == static and
+                       not m.isIdentifierLess()]
+        else:
+            methods = []
         self.chrome = []
         self.regular = []
         for m in methods:
@@ -1232,9 +1237,13 @@ class AttrDefiner(PropertyDefiner):
         assert not (static and unforgeable)
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        attributes = [m for m in descriptor.interface.members if
-                      m.isAttr() and m.isStatic() == static and
-                      m.isUnforgeable() == unforgeable]
+        # Ignore non-static attributes for callback interfaces
+        if not descriptor.interface.isCallback() or static:
+            attributes = [m for m in descriptor.interface.members if
+                          m.isAttr() and m.isStatic() == static and
+                          m.isUnforgeable() == unforgeable]
+        else:
+            attributes = []
         self.chrome = [m for m in attributes if isChromeOnly(m)]
         self.regular = [m for m in attributes if not isChromeOnly(m)]
         self.static = static
