@@ -484,9 +484,9 @@
               label="&cmd.cancel.label;"
               accesskey="&cmd.cancel.accesskey;"/>
     <menuitem command="cmd_delete"
-              class="downloadRemoveFromListMenuItem"
-              label="&cmd.removeFromList.label;"
-              accesskey="&cmd.removeFromList.accesskey;"/>
+              class="downloadRemoveFromHistoryMenuItem"
+              label="&cmd.removeFromHistory.label;"
+              accesskey="&cmd.removeFromHistory.accesskey;"/>
     <menuitem command="downloadsCmd_show"
               class="downloadShowMenuItem"
 #ifdef XP_MACOSX

@@ -60,8 +60,8 @@
 <!ENTITY cmd.goToDownloadPage.accesskey   "G">
 <!ENTITY cmd.copyDownloadLink.label       "Copy Download Link">
 <!ENTITY cmd.copyDownloadLink.accesskey   "L">
-<!ENTITY cmd.removeFromList.label         "Remove From List">
-<!ENTITY cmd.removeFromList.accesskey     "e">
+<!ENTITY cmd.removeFromHistory.label      "Remove From History">
+<!ENTITY cmd.removeFromHistory.accesskey  "e">
 <!ENTITY cmd.clearList.label              "Clear List">
 <!ENTITY cmd.clearList.accesskey          "a">
 
