@@ -159,9 +159,6 @@ DOMCI_CLASS(CSSRect)
 // DOM Chrome Window class, almost identical to Window
 DOMCI_CLASS(ChromeWindow)
 
-// RGBColor object used by getComputedStyle
-DOMCI_CLASS(CSSRGBColor)
-
 // ContentList object used for various live NodeLists
 DOMCI_CLASS(ContentList)
   
