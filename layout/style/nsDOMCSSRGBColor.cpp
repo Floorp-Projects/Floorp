@@ -32,8 +32,6 @@ nsDOMCSSRGBColor::~nsDOMCSSRGBColor(void)
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSRGBColor)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMRGBColor)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSRGBAColor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
@@ -48,39 +46,3 @@ nsDOMCSSRGBColor::WrapObject(JSContext *aCx, JSObject *aScope, bool *aTried)
   return dom::RGBColorBinding::Wrap(aCx, aScope, this, aTried);
 }
 
-
-NS_IMETHODIMP
-nsDOMCSSRGBColor::GetRed(nsIDOMCSSPrimitiveValue** aRed)
-{
-  NS_ENSURE_TRUE(mRed, NS_ERROR_NOT_INITIALIZED);
-  *aRed = mRed;
-  NS_ADDREF(*aRed);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMCSSRGBColor::GetGreen(nsIDOMCSSPrimitiveValue** aGreen)
-{
-  NS_ENSURE_TRUE(mGreen, NS_ERROR_NOT_INITIALIZED);
-  *aGreen = mGreen;
-  NS_ADDREF(*aGreen);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMCSSRGBColor::GetBlue(nsIDOMCSSPrimitiveValue** aBlue)
-{
-  NS_ENSURE_TRUE(mBlue, NS_ERROR_NOT_INITIALIZED);
-  *aBlue = mBlue;
-  NS_ADDREF(*aBlue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMCSSRGBColor::GetAlpha(nsIDOMCSSPrimitiveValue** aAlpha)
-{
-  NS_ENSURE_TRUE(mAlpha, NS_ERROR_NOT_INITIALIZED);
-  *aAlpha = mAlpha;
-  NS_ADDREF(*aAlpha);
-  return NS_OK;
-}
