@@ -4285,8 +4285,8 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
 bool
 IonBuilder::jsop_initelem()
 {
-    RootedScript scriptRoot(cx, script());
-    if (oracle->propertyWriteCanSpecialize(scriptRoot, pc)) {
+    if (oracle->propertyWriteCanSpecialize(script(), pc)) {
+        RootedScript scriptRoot(cx, script());
         if (oracle->elementWriteIsDenseArray(scriptRoot, pc))
             return jsop_initelem_dense();
     }
@@ -5457,7 +5457,8 @@ bool
 IonBuilder::jsop_setelem()
 {
     if (oracle->propertyWriteCanSpecialize(script(), pc)) {
-        if (oracle->elementWriteIsDenseArray(script(), pc))
+        RootedScript scriptRoot(cx, script());
+        if (oracle->elementWriteIsDenseArray(scriptRoot, pc))
             return jsop_setelem_dense();
 
         int arrayType = TypedArray::TYPE_MAX;
@@ -6868,7 +6869,8 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
 bool
 IonBuilder::jsop_in()
 {
-    if (oracle->inObjectIsDenseArray(script(), pc))
+    RootedScript scriptRoot(cx, script());
+    if (oracle->inObjectIsDenseArray(scriptRoot, pc))
         return jsop_in_dense();
 
     MDefinition *obj = current->pop();
