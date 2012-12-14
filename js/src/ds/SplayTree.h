@@ -18,7 +18,8 @@ namespace js {
  * remove are all amortized O(log n).
  *
  * T indicates the type of tree elements, C must have a static
- * compare(const T&, const T&) method ordering the elements.
+ * compare(const T&, const T&) method ordering the elements. As for LifoAlloc
+ * objects, T objects stored in the tree will not be explicitly destroyed.
  */
 template <class T, class C>
 class SplayTree
@@ -167,7 +168,6 @@ class SplayTree
 
     void freeNode(Node *node)
     {
-        node->item.~T();
         node->left = freeList;
         freeList = node;
     }
