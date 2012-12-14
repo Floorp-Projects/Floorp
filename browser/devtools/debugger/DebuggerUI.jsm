@@ -536,9 +536,7 @@ ChromeDebuggerProcess.prototype = {
   _create: function RDP__create() {
     this.globalUI._chromeDebugger = this;
 
-    let file = FileUtils.getFile("CurProcD",
-      [Services.appinfo.OS == "WINNT" ? "firefox.exe"
-                                      : "firefox-bin"]);
+    let file = Services.dirsvc.get("XREExeF", Ci.nsIFile);
 
     let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(file);
