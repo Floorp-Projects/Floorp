@@ -46,7 +46,7 @@ function testCommands(dbg, cmd) {
                         });
 
                         let target = TargetFactory.forTab(gBrowser.selectedTab);
-                        ok(!gDevTools.getToolboxForTarget(target),
+                        ok(!gDevTools.getToolbox(target),
                           "Debugger was closed.");
                         finish();
                       });
@@ -68,16 +68,22 @@ function testCommands(dbg, cmd) {
 }
 
 function testDbgCmd() {
-  DeveloperToolbarTest.exec({
+  let output = DeveloperToolbarTest.exec({
     typed: "dbg open",
-    blankOutput: true
+    blankOutput: true,
+    completed: false,
   });
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolboxForTarget(target);
+  output.onChange.add(onOpenComplete);
+}
 
-  toolbox.once("jsdebugger-ready", function dbgReady() {
-    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+function onOpenComplete(ev) {
+  let output = ev.output;
+  output.onChange.remove(onOpenComplete);
+
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  gDevTools.showToolbox(target, "jsdebugger").then(function(toolbox) {
+    let dbg = toolbox.getCurrentPanel();
     ok(dbg, "DebuggerPanel exists");
 
     function cmd(aTyped, aCallback) {

@@ -13,7 +13,7 @@
  */
 
 #chrome-globals, #sources {
-  min-width: 150px;
+  width: 200px;
 }
 
 /**
@@ -52,6 +52,11 @@
 
 #globalsearch {
   background-color: white;
+  min-height: 10px;
+}
+
+#globalsearch > vbox:not(:empty) {
+  min-height: 10px;
   max-height: 150px;
 }
 
@@ -109,6 +114,10 @@
   transform: scale(1.75, 1.75);
 }
 
+/**
+ * Searchbox panel
+ */
+
 #searchbox-panel .description {
   margin: -6px 0 8px 0;
 }
@@ -123,6 +132,50 @@
 #searchbox-panel label.operator {
   -moz-padding-start: 6px;
   padding-bottom: 1px;
+}
+
+/**
+ * Filtered sources panel
+ */
+
+#filtered-sources-panel {
+  padding: 4px;
+}
+
+.dbg-source-item {
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+  border-top-color: #fff;
+}
+
+.dbg-source-item.selected {
+  background: #cddae5;
+}
+
+.dbg-source-item:first-of-type {
+  border-top-color: #ddd;
+  border-radius: 4px 4px 0 0;
+}
+
+.dbg-source-item:last-of-type {
+  border-radius: 0 0 4px 4px;
+}
+
+.dbg-source-item:only-of-type {
+  border-radius: 4px 4px 4px 4px;
+}
+
+.dbg-source-item:not(:hover) {
+  text-shadow: 0 1px #fff;
+}
+
+.dbg-source-item-name {
+  color: #333;
+  font-weight: 600;
+}
+
+.dbg-source-item-details {
+  color: #888;
 }
 
 /**
@@ -402,7 +455,7 @@
  * Variables and properties searching
  */
 
-#variables .devtools-searchinput {
+.variables-searchinput.devtools-searchinput {
   min-height: 24px;
 }
 

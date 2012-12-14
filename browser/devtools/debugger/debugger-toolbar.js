@@ -713,7 +713,7 @@ FilterView.prototype = {
    */
   clearSearch: function DVF_clearSearch() {
     this._searchbox.value = "";
-    this._onSearch();
+    this._searchboxPanel.hidePopup();
   },
 
   /**
@@ -754,6 +754,7 @@ FilterView.prototype = {
           if (!found) {
             found = true;
             view.selectedItem = item;
+            view.refresh();
           }
         }
         // Item not matched, hide the corresponding node.
@@ -766,6 +767,9 @@ FilterView.prototype = {
         view.setUnavailable();
       }
     }
+    // Synchronize with the view's filtered sources container.
+    DebuggerView.FilteredSources.syncFileSearch();
+
     this._prevSearchedFile = aFile;
   },
 
@@ -778,8 +782,12 @@ FilterView.prototype = {
    */
   _performLineSearch: function DVF__performLineSearch(aLine) {
     // Don't search for lines if the input hasn't changed.
-    if (this._prevSearchedLine != aLine && aLine > 0) {
+    if (this._prevSearchedLine != aLine && aLine) {
       DebuggerView.editor.setCaretPosition(aLine - 1);
+    }
+    // Can't search for lines and tokens at the same time.
+    if (this._prevSearchedToken && !aLine) {
+      this._target.refresh();
     }
     this._prevSearchedLine = aLine;
   },
@@ -793,12 +801,16 @@ FilterView.prototype = {
    */
   _performTokenSearch: function DVF__performTokenSearch(aToken) {
     // Don't search for tokens if the input hasn't changed.
-    if (this._prevSearchedToken != aToken && aToken.length > 0) {
+    if (this._prevSearchedToken != aToken && aToken) {
       let editor = DebuggerView.editor;
       let offset = editor.find(aToken, { ignoreCase: true });
       if (offset > -1) {
         editor.setSelection(offset, offset + aToken.length)
       }
+    }
+    // Can't search for tokens and lines at the same time.
+    if (this._prevSearchedLine && !aToken) {
+      this._target.refresh();
     }
     this._prevSearchedToken = aToken;
   },
@@ -821,6 +833,7 @@ FilterView.prototype = {
     // or hide the corresponding pane otherwise.
     if (isGlobal) {
       DebuggerView.GlobalSearch.scheduleSearch(token);
+      this._prevSearchedToken = token;
       return;
     }
 
@@ -828,6 +841,7 @@ FilterView.prototype = {
     // variables view instance.
     if (isVariable) {
       DebuggerView.Variables.scheduleSearch(token);
+      this._prevSearchedToken = token;
       return;
     }
 
@@ -845,8 +859,15 @@ FilterView.prototype = {
     e.char = String.fromCharCode(e.charCode);
 
     let [file, line, token, isGlobal, isVariable] = this.searchboxInfo;
-    let isDifferentToken, isReturnKey, action = -1;
+    let isFileSearch, isLineSearch, isDifferentToken, isReturnKey;
+    let action = -1;
 
+    if (file && !line && !token) {
+      isFileSearch = true;
+    }
+    if (line && !token) {
+      isLineSearch = true;
+    }
     if (this._prevSearchedToken != token) {
       isDifferentToken = true;
     }
@@ -881,12 +902,26 @@ FilterView.prototype = {
       DebuggerView.editor.focus();
       return;
     }
-    if (action == -1 || (token.length == 0 && line == 0)) {
+    if (action == -1 || (!file && !line && !token)) {
+      DebuggerView.FilteredSources.hidden = true;
       return;
     }
 
     e.preventDefault();
     e.stopPropagation();
+
+    // Select the next or previous file search entry.
+    if (isFileSearch) {
+      if (isReturnKey) {
+        DebuggerView.FilteredSources.hidden = true;
+        DebuggerView.editor.focus();
+        this.clearSearch();
+      } else {
+        DebuggerView.FilteredSources[["focusNext", "focusPrev"][action]]();
+      }
+      this._prevSearchedFile = file;
+      return;
+    }
 
     // Perform a global search based on the specified operator.
     if (isGlobal) {
@@ -903,6 +938,7 @@ FilterView.prototype = {
     if (isVariable) {
       if (isReturnKey && isDifferentToken) {
         DebuggerView.Variables.performSearch(token);
+      } else {
         DebuggerView.Variables.expandFirstSearchResults();
       }
       this._prevSearchedToken = token;
@@ -910,7 +946,7 @@ FilterView.prototype = {
     }
 
     // Increment or decrement the specified line.
-    if (!isReturnKey && token.length == 0 && line > 0) {
+    if (isLineSearch && !isReturnKey) {
       line += action == 0 ? 1 : -1;
       let lineCount = DebuggerView.editor.getLineCount();
       let lineTarget = line < 1 ? 1 : line > lineCount ? lineCount : line;
@@ -1011,6 +1047,168 @@ FilterView.prototype = {
 };
 
 /**
+ * Functions handling the filtered sources UI.
+ */
+function FilteredSourcesView() {
+  MenuContainer.call(this);
+  this._onClick = this._onClick.bind(this);
+}
+
+create({ constructor: FilteredSourcesView, proto: MenuContainer.prototype }, {
+  /**
+   * Initialization function, called when the debugger is started.
+   */
+  initialize: function DVFS_initialize() {
+    dumpn("Initializing the FilteredSourcesView");
+
+    let panel = this._panel = document.createElement("panel");
+    panel.id = "filtered-sources-panel";
+    panel.setAttribute("noautofocus", "true");
+    panel.setAttribute("position", FILTERED_SOURCES_POPUP_POSITION);
+    document.documentElement.appendChild(panel);
+
+    this._searchbox = document.getElementById("searchbox");
+    this._container = new StackList(panel);
+
+    this._container.itemFactory = this._createItemView;
+    this._container.itemType = "vbox";
+    this._container.addEventListener("click", this._onClick, false);
+  },
+
+  /**
+   * Destruction function, called when the debugger is closed.
+   */
+  destroy: function DVFS_destroy() {
+    dumpn("Destroying the FilteredSourcesView");
+    document.documentElement.removeChild(this._panel);
+    this._container.removeEventListener("click", this._onClick, false);
+  },
+
+  /**
+   * Sets the files container hidden or visible. It's hidden by default.
+   * @param boolean aFlag
+   */
+  set hidden(aFlag) {
+    if (aFlag) {
+      this._container._parent.hidePopup();
+    } else {
+      this._container._parent.openPopup(this._searchbox);
+    }
+  },
+
+  /**
+   * Updates the list of sources displayed in this container.
+   */
+  syncFileSearch: function DVFS_syncFileSearch() {
+    this.empty();
+
+    // If there's no currently searched file, or there are no matches found,
+    // hide the popup.
+    if (!DebuggerView.Filtering.searchedFile ||
+        !DebuggerView.Sources.visibleItems.length) {
+      this.hidden = true;
+      return;
+    }
+
+    // Get the currently visible items in the sources container.
+    let visibleItems = DebuggerView.Sources.visibleItems;
+    let displayedItems = visibleItems.slice(0, FILTERED_SOURCES_MAX_RESULTS);
+
+    for (let item of displayedItems) {
+      // Append a location item item to this container.
+      let trimmedLabel = SourceUtils.trimUrlLength(item.label);
+      let trimmedValue = SourceUtils.trimUrlLength(item.value);
+
+      let locationItem = this.push(trimmedLabel, trimmedValue, {
+        forced: true,
+        relaxed: true,
+        unsorted: true,
+        attachment: {
+          fullLabel: item.label,
+          fullValue: item.value
+        }
+      });
+
+      let element = locationItem.target;
+      element.className = "dbg-source-item list-item";
+      element.labelNode.className = "dbg-source-item-name plain";
+      element.valueNode.className = "dbg-source-item-details plain";
+    }
+
+    this._updateSelection(this.getItemAtIndex(0));
+    this.hidden = false;
+  },
+
+  /**
+   * Focuses the next found match in this container.
+   */
+  focusNext: function DVFS_focusNext() {
+    let nextIndex = this.selectedIndex + 1;
+    if (nextIndex >= this.totalItems) {
+      nextIndex = 0;
+    }
+    this._updateSelection(this.getItemAtIndex(nextIndex));
+  },
+
+  /**
+   * Focuses the previously found match in this container.
+   */
+  focusPrev: function DVFS_focusPrev() {
+    let prevIndex = this.selectedIndex - 1;
+    if (prevIndex < 0) {
+      prevIndex = this.totalItems - 1;
+    }
+    this._updateSelection(this.getItemAtIndex(prevIndex));
+  },
+
+  /**
+   * The click listener for this container.
+   */
+  _onClick: function DVFS__onClick(e) {
+    let locationItem = this.getItemForElement(e.target);
+    if (locationItem) {
+      this._updateSelection(locationItem);
+    }
+  },
+
+  /**
+   * Updates the selected item in this container and other views.
+   *
+   * @param MenuItem aItem
+   *        The item associated with the element to select.
+   */
+  _updateSelection: function DVFS__updateSelection(aItem) {
+    this.selectedItem = aItem;
+    DebuggerView.Filtering._target.selectedValue = aItem.attachment.fullValue;
+  },
+
+  /**
+   * Customization function for creating an item's UI.
+   *
+   * @param string aLabel
+   *        The item's label.
+   * @param string aValue
+   *        The item's value.
+   */
+  _createItemView: function DVFS__createItemView(aElementNode, aLabel, aValue) {
+    let labelNode = document.createElement("label");
+    let valueNode = document.createElement("label");
+
+    labelNode.setAttribute("value", aLabel);
+    valueNode.setAttribute("value", aValue);
+
+    aElementNode.appendChild(labelNode);
+    aElementNode.appendChild(valueNode);
+
+    aElementNode.labelNode = labelNode;
+    aElementNode.valueNode = valueNode;
+  },
+
+  _panel: null,
+  _searchbox: null
+});
+
+/**
  * Preliminary setup for the DebuggerView object.
  */
 DebuggerView.Toolbar = new ToolbarView();
@@ -1018,3 +1216,4 @@ DebuggerView.Options = new OptionsView();
 DebuggerView.ChromeGlobals = new ChromeGlobalsView();
 DebuggerView.Sources = new SourcesView();
 DebuggerView.Filtering = new FilterView();
+DebuggerView.FilteredSources = new FilteredSourcesView();

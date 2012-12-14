@@ -32,17 +32,8 @@ gcli.addCommand({
     let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
     let target = TargetFactory.forTab(gBrowser.selectedTab);
 
-    let node = args.selector;
-
-    let inspector = gDevTools.getPanelForTarget("inspector", target);
-    if (inspector && inspector.isReady) {
-      inspector.selection.setNode(node, "gcli");
-    } else {
-      let toolbox = gDevTools.openToolboxForTab(target, "inspector");
-      toolbox.once("inspector-ready", function(event, panel) {
-        let inspector = gDevTools.getPanelForTarget("inspector", target);
-        inspector.selection.setNode(node, "gcli");
-      }.bind(this));
-    }
+    return gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
+      toolbox.getCurrentPanel().selection.setNode(args.selector, "gcli");
+    }.bind(this));
   }
 });

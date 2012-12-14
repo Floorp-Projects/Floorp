@@ -25,7 +25,6 @@ function test()
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.panelWin;
-    gDebugger.SourceResults.prototype.alwaysExpand = false;
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
@@ -50,6 +49,7 @@ function test()
 }
 
 function testScriptSearching() {
+  let noMatchingScripts = gDebugger.L10N.getStr("noMatchingScriptsText");
   var token;
 
   gDebugger.DebuggerController.activeThread.resume(function() {
@@ -135,37 +135,87 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (6)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     write(":13#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (7)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     write(":#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (8)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     write("::#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (9)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     write(":::#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (10)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
+
+
+    write("#" + token + ":bogus");
+    ok(gEditor.getCaretPosition().line == 8 &&
+       gEditor.getCaretPosition().col == 2 + token.length,
+      "The editor didn't jump to the correct token. (6)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
+
+    write("#" + token + ":13");
+    ok(gEditor.getCaretPosition().line == 8 &&
+       gEditor.getCaretPosition().col == 2 + token.length,
+      "The editor didn't jump to the correct token. (7)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
+
+    write("#" + token + ":");
+    ok(gEditor.getCaretPosition().line == 8 &&
+       gEditor.getCaretPosition().col == 2 + token.length,
+      "The editor didn't jump to the correct token. (8)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
+
+    write("#" + token + "::");
+    ok(gEditor.getCaretPosition().line == 8 &&
+       gEditor.getCaretPosition().col == 2 + token.length,
+      "The editor didn't jump to the correct token. (9)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
+
+    write("#" + token + ":::");
+    ok(gEditor.getCaretPosition().line == 8 &&
+       gEditor.getCaretPosition().col == 2 + token.length,
+      "The editor didn't jump to the correct token. (10)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
 
     write(":i am not a number");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't remain at the correct token. (11)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     write("#__i do not exist__");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't remain at the correct token. (12)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
 
     token = "debugger";
@@ -173,17 +223,23 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (12.1)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     clear();
     EventUtils.sendKey("RETURN");
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor shouldn't jump to another token. (12.2)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     EventUtils.sendKey("ENTER");
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor shouldn't jump to another token. (12.3)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
 
     write(":1:2:3:a:b:c:::12");
@@ -195,7 +251,6 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (14)");
-
 
     EventUtils.sendKey("DOWN");
     ok(gEditor.getCaretPosition().line == 8 &&
@@ -227,8 +282,10 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 19 &&
        gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't remain at the correct token. (19)");
-    is(gScripts.visibleItems, 1,
+    is(gScripts.visibleItems.length, 1,
       "Not all the scripts are shown after the search. (20)");
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice that matches are found.");
 
     closeDebuggerAndFinish();
   });

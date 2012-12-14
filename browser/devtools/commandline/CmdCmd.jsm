@@ -124,6 +124,6 @@ gcli.addCommand({
   get hidden() { return !prefBranch.prefHasUserValue(PREF_DIR); },
   exec: function Command_cmdRefresh(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
-    GcliCommands.refreshAutoCommands(chromeWindow);
+    CmdCommands.refreshAutoCommands(chromeWindow);
   }
 });

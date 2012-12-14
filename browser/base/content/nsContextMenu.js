@@ -421,17 +421,11 @@ nsContextMenu.prototype = {
     let gBrowser = this.browser.ownerDocument.defaultView.gBrowser;
     let imported = {};
     Cu.import("resource:///modules/devtools/Target.jsm", imported);
-    var target = imported.TargetFactory.forTab(gBrowser.selectedTab);
-    let inspector = gDevTools.getPanelForTarget("inspector", target);
-    if (inspector && inspector.isReady) {
-      inspector.selection.setNode(this.target);
-    } else {
-      let toolbox = gDevTools.openToolboxForTab(target, "inspector");
-      toolbox.once("inspector-ready", function(event, panel) {
-        let inspector = gDevTools.getPanelForTarget("inspector", target);
-        inspector.selection.setNode(this.target, "browser-context-menu");
-      }.bind(this));
-    }
+    let tt = imported.TargetFactory.forTab(gBrowser.selectedTab);
+    return gDevTools.showToolbox(tt, "inspector").then(function(toolbox) {
+      let inspector = toolbox.getCurrentPanel();
+      inspector.selection.setNode(this.target, "browser-context-menu");
+    }.bind(this));
   },
 
   // Set various context menu attributes based on the state of the world.
