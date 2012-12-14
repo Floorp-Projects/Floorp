@@ -180,8 +180,8 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_RGBCOLOR :
       {
         NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
+        ErrorResult error;
         NS_NAMED_LITERAL_STRING(comma, ", ");
-        nsCOMPtr<nsIDOMCSSPrimitiveValue> colorCSSValue;
         nsAutoString colorValue;
         if (mValue.mColor->HasAlpha())
           tmpStr.AssignLiteral("rgba(");
@@ -189,39 +189,27 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
           tmpStr.AssignLiteral("rgb(");
 
         // get the red component
-        result = mValue.mColor->GetRed(getter_AddRefs(colorCSSValue));
-        if (NS_FAILED(result))
-          break;
-        result = colorCSSValue->GetCssText(colorValue);
-        if (NS_FAILED(result))
+        mValue.mColor->Red()->GetCssText(colorValue, error);
+        if (error.Failed())
           break;
         tmpStr.Append(colorValue + comma);
 
         // get the green component
-        result = mValue.mColor->GetGreen(getter_AddRefs(colorCSSValue));
-        if (NS_FAILED(result))
-          break;
-        result = colorCSSValue->GetCssText(colorValue);
-        if (NS_FAILED(result))
+        mValue.mColor->Green()->GetCssText(colorValue, error);
+        if (error.Failed())
           break;
         tmpStr.Append(colorValue + comma);
 
         // get the blue component
-        result = mValue.mColor->GetBlue(getter_AddRefs(colorCSSValue));
-        if (NS_FAILED(result))
-          break;
-        result = colorCSSValue->GetCssText(colorValue);
-        if (NS_FAILED(result))
+        mValue.mColor->Blue()->GetCssText(colorValue, error);
+        if (error.Failed())
           break;
         tmpStr.Append(colorValue);
 
         if (mValue.mColor->HasAlpha()) {
           // get the alpha component
-          result = mValue.mColor->GetAlpha(getter_AddRefs(colorCSSValue));
-          if (NS_FAILED(result))
-            break;
-          result = colorCSSValue->GetCssText(colorValue);
-          if (NS_FAILED(result))
+          mValue.mColor->Alpha()->GetCssText(colorValue, error);
+          if (error.Failed())
             break;
           tmpStr.Append(comma + colorValue);
         }
