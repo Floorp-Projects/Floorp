@@ -192,6 +192,7 @@ private:
   bool mSizeDecode;
   bool mInFrame;
   bool mIsAnimated;
+  bool mFirstWrite;
 };
 
 } // namespace image
