@@ -19,6 +19,7 @@
 #include "nsThreadUtils.h"
 #include "nsStringBuffer.h"
 #include "ScopedNSSTypes.h"
+#include "SharedSSLState.h"
 
 #include "nspr.h"
 #include "pk11pub.h"
@@ -27,6 +28,7 @@
 #include "ssl.h" // For SSL_ClearSessionCache
 
 using namespace mozilla;
+using mozilla::psm::SharedSSLState;
 
 static const char kCertOverrideFileName[] = "cert_override.txt";
 
@@ -128,6 +130,7 @@ nsCertOverrideService::Init()
     Observe(nullptr, "profile-do-change", nullptr);
   }
 
+  SharedSSLState::NoteCertOverrideServiceInstantiated();
   return NS_OK;
 }
 
