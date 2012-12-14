@@ -8,10 +8,7 @@
 
 interface nsIInterfaceRequestor;
 
-%{ C++
-#include "mozilla/net/DNS.h"
-%}
-native NetAddr(mozilla::net::NetAddr);
+native PRNetAddr(union PRNetAddr);
 
 /**
  * nsISocketTransport
@@ -23,7 +20,7 @@ native NetAddr(mozilla::net::NetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(A8318027-0DDC-4E60-A89B-D81AFE3B5020)]
+[scriptable, uuid(91ca3523-fc52-4dea-b167-ef8f56473dde)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -40,13 +37,13 @@ interface nsISocketTransport : nsITransport
      * Returns the IP address of the socket connection peer. This
      * attribute is defined only once a connection has been established.
      */
-    [noscript] NetAddr getPeerAddr();
+    [noscript] PRNetAddr getPeerAddr();
 
     /** 
      * Returns the IP address of the initiating end. This attribute
      * is defined only once a connection has been established.
      */
-    [noscript] NetAddr getSelfAddr();
+    [noscript] PRNetAddr getSelfAddr();
 
     /** 
      * Returns a scriptable version of getPeerAddr. This attribute is defined
