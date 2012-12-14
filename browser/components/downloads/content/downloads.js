@@ -46,10 +46,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
                                   "resource:///modules/DownloadsCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsPanel
@@ -339,7 +335,7 @@ const DownloadsPanel = {
         return;
       }
 
-      let uri = NetUtil.newURI(url);
+      let uri = Services.io.newURI(url, null, null);
       saveURL(uri.spec, name || uri.spec, null, true, true,
               undefined, document);
     } catch (ex) {}
@@ -1243,7 +1239,6 @@ DownloadsViewItemController.prototype = {
     cmd_delete: function DVIC_cmd_delete()
     {
       this.dataItem.remove();
-      PlacesUtils.bhistory.removePage(NetUtil.newURI(this.dataItem.uri));
     },
 
     downloadsCmd_cancel: function DVIC_downloadsCmd_cancel()
