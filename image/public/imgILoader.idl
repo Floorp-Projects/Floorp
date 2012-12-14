@@ -27,7 +27,7 @@ interface nsIChannelPolicy;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(278c4c8e-934f-4364-b49b-081cd8b1d595)]
+[scriptable, builtinclass, uuid(278c4c8e-934f-4364-b49b-081cd8b1d595)]
 interface imgILoader : nsISupports
 {
   // Extra flags to pass to loadImage if you want a load to use CORS

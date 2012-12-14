@@ -12,7 +12,7 @@
  * internal state of imgContainers. This lets us test
  * things like animation.
  */
-[scriptable, uuid(52cbb839-6e63-4a70-b21a-1db4ca706c49)]
+[scriptable, builtinclass, uuid(52cbb839-6e63-4a70-b21a-1db4ca706c49)]
 interface imgIContainerDebug : nsISupports
 {
   /**
