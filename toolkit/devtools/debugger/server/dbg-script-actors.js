@@ -1507,9 +1507,27 @@ update(ObjectActor.prototype, {
    * Returns a grip for this actor for returning in a protocol message.
    */
   grip: function OA_grip() {
-    return { "type": "object",
-             "class": this.obj.class,
-             "actor": this.actorID };
+    let g = { "type": "object",
+              "class": this.obj.class,
+              "actor": this.actorID };
+
+    // Add additional properties for functions.
+    if (this.obj.class === "Function") {
+      if (this.obj.name) {
+        g.name = this.obj.name;
+      } else if (this.obj.displayName) {
+        g.displayName = this.obj.displayName;
+      }
+
+      // Check if the developer has added a de-facto standard displayName
+      // property for us to use.
+      let desc = this.obj.getOwnPropertyDescriptor("displayName");
+      if (desc && desc.value && typeof desc.value == "string") {
+        g.userDisplayName = this.threadActor.createValueGrip(desc.value);
+      }
+    }
+
+    return g;
   },
 
   /**
