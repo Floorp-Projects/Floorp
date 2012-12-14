@@ -18,7 +18,6 @@
 #include "base/compiler_specific.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/net/DNS.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -174,8 +173,8 @@ class StartRequestEvent : public ChannelEvent
                     const uint32_t& cacheExpirationTime,
                     const nsCString& cachedCharset,
                     const nsCString& securityInfoSerialization,
-                    const NetAddr& selfAddr,
-                    const NetAddr& peerAddr)
+                    const PRNetAddr& selfAddr,
+                    const PRNetAddr& peerAddr)
   : mChild(child)
   , mResponseHead(responseHead)
   , mRequestHeaders(requestHeaders)
@@ -206,8 +205,8 @@ class StartRequestEvent : public ChannelEvent
   uint32_t mCacheExpirationTime;
   nsCString mCachedCharset;
   nsCString mSecurityInfoSerialization;
-  NetAddr mSelfAddr;
-  NetAddr mPeerAddr;
+  PRNetAddr mSelfAddr;
+  PRNetAddr mPeerAddr;
 };
 
 bool 
@@ -219,8 +218,8 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const uint32_t& cacheExpirationTime,
                                      const nsCString& cachedCharset,
                                      const nsCString& securityInfoSerialization,
-                                     const NetAddr& selfAddr,
-                                     const NetAddr& peerAddr)
+                                     const PRNetAddr& selfAddr,
+                                     const PRNetAddr& peerAddr)
 {
   if (mEventQ.ShouldEnqueue()) {
     mEventQ.Enqueue(new StartRequestEvent(this, responseHead, useResponseHead,
@@ -246,8 +245,8 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                  const uint32_t& cacheExpirationTime,
                                  const nsCString& cachedCharset,
                                  const nsCString& securityInfoSerialization,
-                                 const NetAddr& selfAddr,
-                                 const NetAddr& peerAddr)
+                                 const PRNetAddr& selfAddr,
+                                 const PRNetAddr& peerAddr)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
