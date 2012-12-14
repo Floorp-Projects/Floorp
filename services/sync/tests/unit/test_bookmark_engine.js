@@ -293,17 +293,17 @@ add_test(function test_restorePromptsReupload() {
   }
 });
 
+function FakeRecord(constructor, r) {
+  constructor.call(this, "bookmarks", r.id);
+  for (let x in r) {
+    this[x] = r[x];
+  }
+}
+
 // Bug 632287.
 add_test(function test_mismatched_types() {
   _("Ensure that handling a record that changes type causes deletion " +
     "then re-adding.");
-
-  function FakeRecord(constructor, r) {
-    constructor.call(this, "bookmarks", r.id);
-    for (let x in r) {
-      this[x] = r[x];
-    }
-  }
 
   let oldRecord = {
     "id": "l1nZZXfB8nC7",
@@ -468,13 +468,73 @@ add_test(function test_bookmark_tag_but_no_uri() {
   run_next_test();
 });
 
+add_test(function test_misreconciled_root() {
+  _("Ensure that we don't reconcile an arbitrary record with a root.");
+
+  new SyncTestingInfrastructure();
+
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
+  // Log real hard for this test.
+  store._log.trace = store._log.debug;
+  engine._log.trace = engine._log.debug;
+
+  engine._syncStartup();
+
+  // Let's find out where the toolbar is right now.
+  let toolbarBefore = store.createRecord("toolbar", "bookmarks");
+  let toolbarIDBefore = store.idForGUID("toolbar");
+  do_check_neq(-1, toolbarIDBefore);
+
+  let parentGUIDBefore = toolbarBefore.parentid;
+  let parentIDBefore = store.idForGUID(parentGUIDBefore);
+  do_check_neq(-1, parentIDBefore);
+  do_check_eq("string", typeof(parentGUIDBefore));
+
+  _("Current parent: " + parentGUIDBefore + " (" + parentIDBefore + ").");
+
+  let to_apply = {
+    id: "zzzzzzzzzzzz",
+    type: "folder",
+    title: "Bookmarks Toolbar",
+    description: "Now you're for it.",
+    parentName: "",
+    parentid: "mobile",   // Why not?
+    children: [],
+  };
+
+  let rec = new FakeRecord(BookmarkFolder, to_apply);
+  let encrypted = encryptPayload(rec.cleartext);
+  encrypted.decrypt = function () {
+    for (let x in rec) {
+      encrypted[x] = rec[x];
+    }
+  };
+
+  _("Applying record.");
+  engine._processIncoming({
+    get: function () {
+      this.recordHandler(encrypted);
+      return {success: true}
+    },
+  });
+
+  // Ensure that afterwards, toolbar is still there.
+  // As of 2012-12-05, this only passes because Places doesn't use "toolbar" as
+  // the real GUID, instead using a generated one. Sync does the translation.
+  let toolbarAfter = store.createRecord("toolbar", "bookmarks");
+  let parentGUIDAfter = toolbarAfter.parentid;
+  let parentIDAfter = store.idForGUID(parentGUIDAfter);
+  do_check_eq(store.GUIDForId(toolbarIDBefore), "toolbar");
+  do_check_eq(parentGUIDBefore, parentGUIDAfter);
+  do_check_eq(parentIDBefore, parentIDAfter);
+
+  run_next_test();
+});
+
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level  = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level   = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Tracker.Bookmarks").level = Log4Moz.Level.Trace;
-
   generateNewKeys(Service.collectionKeys);
-
   run_next_test();
 }
