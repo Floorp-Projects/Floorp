@@ -711,7 +711,22 @@ function onLoad() {
     showEmptySectionMessage("histograms-section");
   }
 
+  // Show addon histogram data
+  histograms = Telemetry.addonHistogramSnapshots;
+  if (Object.keys(histograms).length) {
+    let addonDiv = document.getElementById("addon-histograms");
+    for (let [name, hgram] of Iterator(histograms)) {
+      Histogram.render(addonDiv, "ADDON_" + name, hgram);
+    }
+  } else {
+    showEmptySectionMessage("addon-histograms-section");
+  }
+
   // Get the Telemetry Ping payload
+  Telemetry.asyncReadShutdownTime(displayPingData);
+}
+
+function displayPingData(ping) {
   let ping = TelemetryPing.getPayload();
 
   // Show simple measurements
@@ -726,17 +741,6 @@ function onLoad() {
     KeyValueTable.render("system-info-table", ping.info);
   } else {
     showEmptySectionMessage("system-info-section");
-  }
-
-  // Show addon histogram data
-  histograms = Telemetry.addonHistogramSnapshots;
-  if (Object.keys(histograms).length) {
-    let addonDiv = document.getElementById("addon-histograms");
-    for (let [name, hgram] of Iterator(histograms)) {
-      Histogram.render(addonDiv, "ADDON_" + name, hgram);
-    }
-  } else {
-    showEmptySectionMessage("addon-histograms-section");
   }
 }
 
