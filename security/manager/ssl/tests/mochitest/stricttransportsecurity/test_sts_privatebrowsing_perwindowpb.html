@@ -1,0 +1,229 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>opens additional content that should be converted to https</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+  <script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const STSPATH = "/tests/security/ssl/stricttransportsecurity";
+  const NUM_TEST_FRAMES = 4;
+  const CONTENT_PAGE =
+    "http://mochi.test:8888/chrome/security/ssl/stricttransportsecurity/page_blank.html";
+
+  // This is how many sub-tests (testframes) in each round.
+  // When the round begins, this will be initialized.
+  var testsleftinround = 0;
+  var currentround = "";
+  var mainWindow =
+    window.QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).
+    rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIDOMWindow);
+
+  var testframes = {
+    'samedom':
+      {'url':     "http://example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'SECURE',
+                     'subdom': 'SECURE',
+                     'nosts': 'INSECURE'}},
+    'subdom':
+      {'url':     "http://test1.example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'INSECURE',
+                     'subdom': 'SECURE',
+                     'nosts': 'INSECURE'}},
+    'otherdom':
+      {'url':     "http://example.org" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'INSECURE',
+                     'subdom': 'INSECURE',
+                     'nosts': 'INSECURE'}},
+    'alreadysecure':
+      {'url':     "https://test2.example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'SECURE',
+                     'subdom': 'SECURE',
+                     'nosts': 'SECURE'}},
+  };
+
+  function testOnWindow(aIsPrivate, aCallback) {
+    var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+    win.addEventListener("load", function onLoad() {
+      win.removeEventListener("load", onLoad, false);
+      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        if (win.content.location.href == "about:privatebrowsing") {
+          win.gBrowser.loadURI(CONTENT_PAGE);
+          return;
+        }
+        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+        SimpleTest.executeSoon(function() { aCallback(win); });
+      }, true);
+      win.gBrowser.loadURI(CONTENT_PAGE);
+    }, true);
+  }
+
+  function startRound(win, isPrivate, round) {
+    currentround = round;
+    testsleftinround = NUM_TEST_FRAMES;
+    SimpleTest.info("TESTS LEFT IN ROUND " + currentround + ": " + testsleftinround);
+    var frame = win.content.document.createElement("iframe");
+    frame.setAttribute('id', 'ifr_bootstrap');
+    frame.setAttribute('src', "https://example.com" + STSPATH + "/" + round + "_bootstrap.html");
+    frame.addEventListener("load", function() {
+      onMessageReceived(win, isPrivate, "BOOTSTRAP " + round);
+    });
+    win.content.document.body.appendChild(frame);
+  }
+
+  function loadVerifyFrames(win, isPrivate, round) {
+    loadVerifyFrame(win, isPrivate, testframes.samedom, 'samedom', function() {
+      loadVerifyFrame(win, isPrivate, testframes.subdom, 'subdom', function() {
+        loadVerifyFrame(win, isPrivate, testframes.otherdom, 'otherdom', function() {
+          loadVerifyFrame(win, isPrivate, testframes.alreadysecure, 'alreadysecure');
+        });
+      });
+    });
+  }
+
+  function loadVerifyFrame(win, isPrivate, test, testName, aCallback) {
+    var frame = win.content.document.createElement("iframe");
+    frame.setAttribute('id', 'ifr_' + testName);
+    frame.setAttribute('src', test.url + '?id=' + testName);
+    frame.addEventListener("load", function() {
+      if (frame.contentDocument.location.protocol === 'https:') {
+        onMessageReceived(win, isPrivate, "SECURE " + testName);
+      } else {
+        onMessageReceived(win, isPrivate, "INSECURE " + testName);
+      }
+      if (aCallback)
+        aCallback();
+    });
+    win.content.document.body.appendChild(frame);
+  }
+
+  /**
+   * Messages received are in this format:
+   *  (BOOTSTRAP|SECURE|INSECURE) testid
+   * For example: "BOOTSTRAP subdom"
+   *          or: "INSECURE otherdom"
+   */
+  function onMessageReceived(win, isPrivate, data) {
+    // otherwise, it's a test result
+    var result = data.split(/\s+/);
+    if (result.length != 2) {
+      SimpleTest.ok(false, data);
+      return;
+    }
+
+    if (result[0] === "BOOTSTRAP") {
+      loadVerifyFrames(win, isPrivate, currentround);
+      return;
+    }
+
+    // check if the result (SECURE/INSECURE) is expected for this round/test
+    // combo
+    dump_STSState(isPrivate);
+    SimpleTest.is(result[0], testframes[result[1]].expected[currentround],
+                             "in ROUND " + currentround +
+                             ", test " + result[1]);
+    testsleftinround--;
+
+    // if this round is complete...
+    if (testsleftinround < 1) {
+      SimpleTest.info("DONE WITH ROUND " + currentround);
+      // remove all the iframes in the document
+      win.content.document.body.removeChild(
+        win.content.document.getElementById('ifr_bootstrap'));
+      for (var test in testframes)
+        win.content.document.body.removeChild(
+          win.content.document.getElementById('ifr_' + test));
+      currentround = "";
+
+      if (!isPrivate)
+        clean_up_sts_state(isPrivate);
+      // Close test window.
+      win.close();
+      // And advance to the next test.
+      // Defer this so it doesn't muck with the stack too much.
+      SimpleTest.executeSoon(nextTest);
+    }
+  }
+
+  function test_sts_before_private_mode() {
+    testOnWindow(false, function(win) {
+      SimpleTest.info("In public window");
+      dump_STSState(false);
+      startRound(win, false, 'plain');
+    });
+  }
+
+  function test_sts_in_private_mode() {
+    testOnWindow(true, function(win) {
+      SimpleTest.info("In private window");
+      dump_STSState(true);
+      startRound(win, true, 'subdom');
+    });
+  }
+
+  function test_sts_after_exiting_private_mode() {
+    testOnWindow(false, function(win) {
+      SimpleTest.info("In a new public window");
+      dump_STSState(false);
+      startRound(win, false, 'nosts');
+    });
+  }
+
+  function clean_up_sts_state(isPrivate) {
+    // erase all signs that this test ran.
+    SimpleTest.info("Cleaning up STS data");
+    var ios =
+      Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var thehost = ios.newURI("http://example.com", null, null);
+    var stss =
+      Cc["@mozilla.org/stsservice;1"].
+        getService(Ci.nsIStrictTransportSecurityService);
+    var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    stss.removeStsState(thehost, flags);
+    dump_STSState(isPrivate);
+  }
+
+  function dump_STSState(isPrivate) {
+    var stss =
+      Cc["@mozilla.org/stsservice;1"].
+        getService(Ci.nsIStrictTransportSecurityService);
+    var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    SimpleTest.info("State of example.com: " + stss.isStsHost("example.com", flags));
+  }
+
+  // These are executed in the order presented.
+  // 0.  test that STS works before entering private browsing mode.
+  //     (load sts-bootstrapped "plain" tests)
+  //  ... clear any STS data ...
+  // 1.  test that STS works in private browsing mode
+  //     (load sts-bootstrapped "subdomain" tests)
+  // 2.  test that after exiting private browsing, STS data is forgotten
+  //     (verified with non-sts-bootstrapped pages)
+  //  ... clear any STS data ...
+  var tests = [
+    test_sts_before_private_mode,
+    test_sts_in_private_mode,
+    test_sts_after_exiting_private_mode
+  ];
+
+  function nextTest() {
+    SimpleTest.executeSoon(tests.length ? tests.shift() : SimpleTest.finish);
+  }
+  window.addEventListener('load', nextTest, false);
+  </script>
+</head>
+
+<body>
+  This test will load some iframes and do some tests.
+</body>
+</html>
