@@ -11,20 +11,25 @@ relativesrcdir	= security/ssl/stricttransportsecurity
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
-	plain_bootstrap.html \
-	plain_bootstrap.html^headers^ \
-	subdom_bootstrap.html \
-	subdom_bootstrap.html^headers^ \
-	nosts_bootstrap.html \
-	nosts_bootstrap.html^headers^ \
-	verify.sjs \
-	test_stricttransportsecurity.html \
-	$(NULL)
+  plain_bootstrap.html \
+  plain_bootstrap.html^headers^ \
+  subdom_bootstrap.html \
+  subdom_bootstrap.html^headers^ \
+  nosts_bootstrap.html \
+  nosts_bootstrap.html^headers^ \
+  verify.sjs \
+  test_stricttransportsecurity.html \
+  $(NULL)
 
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_CHROME_FILES += \
+  test_sts_privatebrowsing_perwindowpb.html \
+  page_blank.html \
+  $(NULL)
+else
 MOCHITEST_FILES += \
-        test_sts_privatebrowsing.html \
-        $(NULL)
+  test_sts_privatebrowsing.html \
+  $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
