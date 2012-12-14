@@ -41,6 +41,7 @@ class CompilerRoot : public CompilerRootNode
 
   public:
     operator T () const { return static_cast<T>(ptr); }
+    operator Unrooted<T> () const { return static_cast<T>(ptr); }
     T operator ->() const { return static_cast<T>(ptr); }
 
   private:
@@ -49,9 +50,11 @@ class CompilerRoot : public CompilerRootNode
     CompilerRoot<T> &operator =(const CompilerRoot<T> &) MOZ_DELETE;
 };
 
-typedef CompilerRoot<JSObject*>   CompilerRootObject;
+typedef CompilerRoot<JSObject*> CompilerRootObject;
 typedef CompilerRoot<JSFunction*> CompilerRootFunction;
+typedef CompilerRoot<JSScript*> CompilerRootScript;
 typedef CompilerRoot<PropertyName*> CompilerRootPropertyName;
+typedef CompilerRoot<Shape*> CompilerRootShape;
 typedef CompilerRoot<Value> CompilerRootValue;
 
 } // namespace ion

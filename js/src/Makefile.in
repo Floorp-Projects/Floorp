@@ -310,6 +310,7 @@ CPPSRCS +=	MIR.cpp \
 		RangeAnalysis.cpp \
 		VMFunctions.cpp \
 		AliasAnalysis.cpp \
+		UnreachableCodeElimination.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

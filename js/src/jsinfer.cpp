@@ -807,20 +807,22 @@ HeapTypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target)
 }
 
 /* If id is a normal slotful 'own' property of an object, get its shape. */
-static inline Shape *
-GetSingletonShape(JSContext *cx, HandleObject obj, jsid id)
+static inline UnrootedShape
+GetSingletonShape(JSContext *cx, RawObject obj, RawId id)
 {
+    AssertCanGC();
     if (!obj->isNative())
-        return NULL;
-    Shape *shape = obj->nativeLookup(cx, id);
+        return UnrootedShape(NULL);
+    UnrootedShape shape = DropUnrooted(obj)->nativeLookup(cx, DropUnrooted(id));
     if (shape && shape->hasDefaultGetter() && shape->hasSlot())
         return shape;
-    return NULL;
+    return UnrootedShape(NULL);
 }
 
 void
 ScriptAnalysis::pruneTypeBarriers(JSContext *cx, uint32_t offset)
 {
+    AssertCanGC();
     TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
     while (*pbarrier) {
         TypeBarrier *barrier = *pbarrier;
@@ -831,8 +833,7 @@ ScriptAnalysis::pruneTypeBarriers(JSContext *cx, uint32_t offset)
         }
         if (barrier->singleton) {
             JS_ASSERT(barrier->type.isPrimitive(JSVAL_TYPE_UNDEFINED));
-            RootedObject barrierSingleton(cx, barrier->singleton);
-            Shape *shape = GetSingletonShape(cx, barrierSingleton, barrier->singletonId);
+            UnrootedShape shape = GetSingletonShape(cx, barrier->singleton, barrier->singletonId);
             if (shape && !barrier->singleton->nativeGetSlot(shape->slot()).isUndefined()) {
                 /*
                  * When we analyzed the script the singleton had an 'own'
@@ -1674,6 +1675,7 @@ class TypeConstraintFreezeObjectFlags : public TypeConstraint
 
     void newObjectState(JSContext *cx, TypeObject *object, bool force)
     {
+        AutoAssertNoGC nogc;
         if (!marked && (object->hasAnyFlags(flags) || (!flags && force))) {
             marked = true;
             cx->compartment->types.addPendingRecompile(cx, info);
@@ -2548,6 +2550,7 @@ TypeCompartment::nukeTypes(FreeOp *fop)
 void
 TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 {
+    AutoAssertNoGC nogc;
     CompilerOutput *co = info.compilerOutput(cx);
 
     if (co->pendingRecompilation)
@@ -3027,13 +3030,14 @@ struct types::ObjectTableKey
                          ((uint32_t)obj->getTaggedProto().toWord() >> 2));
     }
 
-    static inline bool match(const ObjectTableKey &v, JSObject *obj) {
+    static inline bool match(const ObjectTableKey &v, RawObject obj) {
         if (obj->slotSpan() != v.nslots ||
             obj->numFixedSlots() != v.nfixed ||
             obj->getTaggedProto() != v.proto) {
             return false;
         }
-        Shape *shape = obj->lastProperty();
+        UnrootedShape shape = obj->lastProperty();
+        obj = NULL;
         while (!shape->isEmptyShape()) {
             if (shape->propid() != v.ids[shape->slot()])
                 return false;
@@ -3075,7 +3079,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
         return;
 
     ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.get());
-    Shape *baseShape = obj->lastProperty();
+    RootedShape baseShape(cx, obj->lastProperty());
 
     if (p) {
         /* The lookup ensures the shape matches, now check that the types match. */
@@ -3086,7 +3090,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
                 if (NumberTypes(ntype, types[i])) {
                     if (types[i].isPrimitive(JSVAL_TYPE_INT32)) {
                         types[i] = Type::DoubleType();
-                        Shape *shape = baseShape;
+                        RootedShape shape(cx, baseShape);
                         while (!shape->isEmptyShape()) {
                             if (shape->slot() == i) {
                                 Type type = Type::DoubleType();
@@ -3127,7 +3131,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
             return;
         }
 
-        Shape *shape = baseShape;
+        RootedShape shape(cx, baseShape);
         while (!shape->isEmptyShape()) {
             ids[shape->slot()] = shape->propid();
             types[shape->slot()] = GetValueTypeForTable(cx, obj->getSlot(shape->slot()));
@@ -3194,7 +3198,7 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
 }
 
 static inline void
-UpdatePropertyType(JSContext *cx, TypeSet *types, HandleObject obj, Shape *shape, bool force)
+UpdatePropertyType(JSContext *cx, TypeSet *types, RawObject obj, UnrootedShape shape, bool force)
 {
     types->setOwnProperty(cx, false);
     if (!shape->writable())
@@ -3239,14 +3243,14 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
         RootedObject rSingleton(cx, singleton);
         if (JSID_IS_VOID(id)) {
             /* Go through all shapes on the object to get integer-valued properties. */
-            Shape *shape = singleton->lastProperty();
+            UnrootedShape shape = singleton->lastProperty();
             while (!shape->isEmptyShape()) {
                 if (JSID_IS_VOID(MakeTypeId(cx, shape->propid())))
                     UpdatePropertyType(cx, &base->types, rSingleton, shape, true);
                 shape = shape->previous();
             }
         } else if (!JSID_IS_EMPTY(id) && singleton->isNative()) {
-            Shape *shape = singleton->nativeLookup(cx, id);
+            UnrootedShape shape = singleton->nativeLookup(cx, id);
             if (shape)
                 UpdatePropertyType(cx, &base->types, rSingleton, shape, false);
         }
@@ -3278,7 +3282,7 @@ TypeObject::addDefiniteProperties(JSContext *cx, HandleObject obj)
     /* Mark all properties of obj as definite properties of this type. */
     AutoEnterTypeInference enter(cx);
 
-    Shape *shape = obj->lastProperty();
+    RootedShape shape(cx, obj->lastProperty());
     while (!shape->isEmptyShape()) {
         jsid id = MakeTypeId(cx, shape->propid());
         if (!JSID_IS_VOID(id) && obj->isFixedSlot(shape->slot()) &&
@@ -3306,7 +3310,7 @@ TypeObject::matchDefiniteProperties(HandleObject obj)
             unsigned slot = prop->types.definiteSlot();
 
             bool found = false;
-            Shape *shape = obj->lastProperty();
+            UnrootedShape shape = obj->lastProperty();
             while (!shape->isEmptyShape()) {
                 if (shape->slot() == slot && shape->propid() == prop->id) {
                     found = true;
@@ -3325,6 +3329,7 @@ TypeObject::matchDefiniteProperties(HandleObject obj)
 inline void
 InlineAddTypeProperty(JSContext *cx, TypeObject *obj, jsid id, Type type)
 {
+    AssertCanGC();
     JS_ASSERT(id == MakeTypeId(cx, id));
 
     AutoEnterTypeInference enter(cx);
@@ -3353,6 +3358,7 @@ TypeObject::addPropertyType(JSContext *cx, jsid id, const Value &value)
 void
 TypeObject::addPropertyType(JSContext *cx, const char *name, Type type)
 {
+    AssertCanGC();
     jsid id = JSID_VOID;
     if (name) {
         JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -3387,6 +3393,8 @@ TypeObject::markPropertyConfigured(JSContext *cx, jsid id)
 void
 TypeObject::markStateChange(JSContext *cx)
 {
+    AutoAssertNoGC nogc;
+
     if (unknownProperties())
         return;
 
@@ -5020,6 +5028,8 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
         return;
     }
 
+    AutoAssertNoGC nogc;
+
     type->newScript->fun = fun;
     type->newScript->allocKind = kind;
     type->newScript->shape = baseobj->lastProperty();
@@ -5828,6 +5838,7 @@ JSObject::setNewTypeUnknown(JSContext *cx)
 TypeObject *
 JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, JSFunction *fun_, bool isDOM)
 {
+    AssertCanGC();
     JS_ASSERT_IF(fun_, proto_.isObject());
     JS_ASSERT_IF(proto_.isObject(), cx->compartment == proto_.toObject()->compartment());
 

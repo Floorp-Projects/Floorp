@@ -11,6 +11,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
+#include "nsAbsoluteContainingBlock.h"
 #include "nsBlockReflowContext.h"
 #include "nsBlockReflowState.h"
 #include "nsBulletFrame.h"

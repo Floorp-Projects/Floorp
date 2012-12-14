@@ -263,7 +263,7 @@ TypeInferenceOracle::propertyReadAccessGetter(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::inObjectIsDenseArray(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::inObjectIsDenseArray(HandleScript script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 1);
@@ -397,7 +397,7 @@ TypeInferenceOracle::elementReadGeneric(JSScript *script, jsbytecode *pc, bool *
 }
 
 bool
-TypeInferenceOracle::elementWriteIsDenseArray(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteIsDenseArray(HandleScript script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
@@ -496,7 +496,7 @@ TypeInferenceOracle::canInlineCalls()
 }
 
 bool
-TypeInferenceOracle::propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::propertyWriteCanSpecialize(UnrootedScript script, jsbytecode *pc)
 {
     return !script->analysis()->getCode(pc).monitoredTypes;
 }

@@ -272,7 +272,7 @@ JSObject::dynamicSlotIndex(size_t slot)
 }
 
 inline void
-JSObject::setLastPropertyInfallible(js::Shape *shape)
+JSObject::setLastPropertyInfallible(js::UnrootedShape shape)
 {
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(shape->compartment() == compartment());
@@ -288,7 +288,8 @@ JSObject::removeLastProperty(JSContext *cx)
 {
     JS_ASSERT(canRemoveLastProperty());
     js::RootedObject self(cx, this);
-    JS_ALWAYS_TRUE(setLastProperty(cx, self, lastProperty()->previous()));
+    js::RootedShape prev(cx, lastProperty()->previous());
+    JS_ALWAYS_TRUE(setLastProperty(cx, self, prev));
 }
 
 inline bool
@@ -302,7 +303,7 @@ JSObject::canRemoveLastProperty()
      * converted to dictionary mode instead. See BaseShape comment in jsscope.h
      */
     JS_ASSERT(!inDictionaryMode());
-    js::Shape *previous = lastProperty()->previous();
+    js::UnrootedShape previous = lastProperty()->previous().get();
     return previous->getObjectParent() == lastProperty()->getObjectParent()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
@@ -1522,7 +1523,8 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj)
     if (!obj)
         return NULL;
 
-    if (!JSObject::setLastProperty(cx, obj, baseobj->lastProperty()))
+    RootedShape lastProp(cx, baseobj->lastProperty());
+    if (!JSObject::setLastProperty(cx, obj, lastProp))
         return NULL;
 
     return obj;
@@ -1558,7 +1560,7 @@ GuessArrayGCKind(size_t numSlots)
  * may or may not need dynamic slots.
  */
 inline bool
-PreallocateObjectDynamicSlots(JSContext *cx, Shape *shape, HeapSlot **slots)
+PreallocateObjectDynamicSlots(JSContext *cx, UnrootedShape shape, HeapSlot **slots)
 {
     if (size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
         *slots = cx->pod_malloc<HeapSlot>(count);
@@ -1673,10 +1675,10 @@ js_InitClass(JSContext *cx, js::HandleObject obj, JSObject *parent_proto,
  * (i.e., obj has ever been on a prototype or parent chain).
  */
 extern bool
-js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
+js_PurgeScopeChainHelper(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
 inline bool
-js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
+js_PurgeScopeChain(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
 {
     if (obj->isDelegate())
         return js_PurgeScopeChainHelper(cx, obj, id);

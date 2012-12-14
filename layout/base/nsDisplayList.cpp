@@ -49,6 +49,7 @@
 #include "nsIViewManager.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
+#include "nsCanvasFrame.h"
 
 #include "mozilla/StandardInteger.h"
 
@@ -1548,8 +1549,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
     }
 
     // Check if this background layer is attachment-fixed
-    if (!mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty() &&
-        mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
+    if (mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
       aBuilder->SetHasFixedItems();
     }
   }
@@ -1593,11 +1593,29 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   aList->AppendNewToTop(
       new (aBuilder) nsDisplayBackgroundColor(aBuilder, aFrame, bg,
                                               drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0)));
+
+  if (isThemed) {
+    nsDisplayBackgroundImage* bgItem =
+      new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, 0, isThemed, nullptr);
+    nsresult rv = aList->AppendNewToTop(bgItem);
+    if (rv != NS_OK) {
+      return rv;
+    }
+    *aBackground = bgItem;
+    return NS_OK;
+  }
+
+  if (!bg) {
+    return NS_OK;
+  }
  
   // Passing bg == nullptr in this macro will result in one iteration with
   // i = 0.
   bool backgroundSet = !aBackground;
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+    if (bg->mLayers[i].mImage.IsEmpty()) {
+      continue;
+    }
     nsDisplayBackgroundImage* bgItem =
       new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, isThemed, bg);
     nsresult rv = aList->AppendNewToTop(bgItem);
@@ -2001,10 +2019,6 @@ nsDisplayBackgroundImage::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aCo
     *aColor = NS_RGBA(0,0,0,0);
     return true;
   }
-  if (mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty()) {
-    *aColor = NS_RGBA(0,0,0,0);
-    return true;
-  }
   return false;
 }
 
@@ -2083,14 +2097,22 @@ static void CheckForBorderItem(nsDisplayItem *aItem, uint32_t& aFlags)
 void
 nsDisplayBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx) {
+  PaintInternal(aBuilder, aCtx, mVisibleRect, nullptr);
+}
 
+void
+nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
+                                        nsRenderingContext* aCtx, const nsRect& aBounds,
+                                        nsRect* aClipRect) {
   nsPoint offset = ToReferenceFrame();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   CheckForBorderItem(this, flags);
+
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
-                                  mVisibleRect,
+                                  aBounds,
                                   nsRect(offset, mFrame->GetSize()),
-                                  flags, nullptr, mLayer);
+                                  flags, aClipRect, mLayer);
+
 }
 
 void nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
@@ -2149,6 +2171,10 @@ nsDisplayBackgroundImage::GetBoundsInternal() {
   }
 
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
+    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
+    borderBox = frame->CanvasArea() + ToReferenceFrame();
+  }
   const nsStyleBackground::Layer& layer = mBackgroundStyle->mLayers[mLayer];
   return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
                                                 borderBox, *mBackgroundStyle, layer);

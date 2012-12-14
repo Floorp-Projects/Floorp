@@ -5,6 +5,7 @@
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
+#include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsTablePainter.h"
 #include "nsStyleContext.h"

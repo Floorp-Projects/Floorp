@@ -132,7 +132,7 @@ WatchpointMap::triggerWatchpoint(JSContext *cx, HandleObject obj, HandleId id, M
     Value old;
     old.setUndefined();
     if (obj->isNative()) {
-        if (Shape *shape = obj->nativeLookup(cx, id)) {
+        if (UnrootedShape shape = obj->nativeLookup(cx, id)) {
             if (shape->hasSlot())
                 old = obj->nativeGetSlot(shape->slot());
         }

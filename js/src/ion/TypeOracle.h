@@ -75,7 +75,7 @@ class TypeOracle
         *barrier = NULL;
         return NULL;
     }
-    virtual bool inObjectIsDenseArray(JSScript *script, jsbytecode *pc) {
+    virtual bool inObjectIsDenseArray(HandleScript script, jsbytecode *pc) {
         return false;
     }
     virtual bool inArrayIsPacked(JSScript *script, jsbytecode *pc) {
@@ -100,7 +100,7 @@ class TypeOracle
     virtual bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc) {
         return true;
     }
-    virtual bool elementWriteIsDenseArray(JSScript *script, jsbytecode *pc) {
+    virtual bool elementWriteIsDenseArray(HandleScript script, jsbytecode *pc) {
         return false;
     }
     virtual bool elementWriteIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType) {
@@ -109,7 +109,7 @@ class TypeOracle
     virtual bool elementWriteIsPacked(JSScript *script, jsbytecode *pc) {
         return false;
     }
-    virtual bool propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc) {
+    virtual bool propertyWriteCanSpecialize(UnrootedScript script, jsbytecode *pc) {
         return true;
     }
     virtual bool propertyWriteNeedsBarrier(JSScript *script, jsbytecode *pc, jsid id) {
@@ -227,18 +227,18 @@ class TypeInferenceOracle : public TypeOracle
     types::StackTypeSet *getCallTarget(JSScript *caller, uint32_t argc, jsbytecode *pc);
     types::StackTypeSet *getCallArg(JSScript *caller, uint32_t argc, uint32_t arg, jsbytecode *pc);
     types::StackTypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
-    bool inObjectIsDenseArray(JSScript *script, jsbytecode *pc);
+    bool inObjectIsDenseArray(HandleScript script, jsbytecode *pc);
     bool inArrayIsPacked(JSScript *script, jsbytecode *pc);
     bool elementReadIsDenseArray(JSScript *script, jsbytecode *pc);
     bool elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *atype);
     bool elementReadIsString(JSScript *script, jsbytecode *pc);
     bool elementReadIsPacked(JSScript *script, jsbytecode *pc);
     void elementReadGeneric(JSScript *script, jsbytecode *pc, bool *cacheable, bool *monitorResult);
-    bool elementWriteIsDenseArray(JSScript *script, jsbytecode *pc);
+    bool elementWriteIsDenseArray(HandleScript script, jsbytecode *pc);
     bool elementWriteIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType);
     bool elementWriteIsPacked(JSScript *script, jsbytecode *pc);
     bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc);
-    bool propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc);
+    bool propertyWriteCanSpecialize(UnrootedScript script, jsbytecode *pc);
     bool propertyWriteNeedsBarrier(JSScript *script, jsbytecode *pc, jsid id);
     bool elementWriteNeedsBarrier(JSScript *script, jsbytecode *pc);
     MIRType elementWrite(JSScript *script, jsbytecode *pc);

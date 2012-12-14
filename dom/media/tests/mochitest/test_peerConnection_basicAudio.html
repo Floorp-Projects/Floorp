@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=796892
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Basic audio-only peer connection</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=796888">Basic audio-only peer connection</a>
+<p id="display"></p>
+<div id="content" style="">
+  <audio id="audioPCLocal" controls></audio>
+  <audio id="audioPCRemote" controls></audio>
+  <audio id="audioLocal" controls></audio>
+</div>
+<pre id="test">
+<script type="application/javascript">
+  var audioLocal;
+  var audioPCLocal;
+  var audioPCRemote;
+
+  var pcLocal;
+  var pcRemote;
+
+  var test_data = {
+    pcLocal: { audio: [], video: []},
+    pcRemote: { audio: [], video: []}
+  };
+
+  runTest(function () {
+    audioLocal = document.getElementById("audioLocal");
+    audioPCLocal = document.getElementById("audioPCLocal");
+    audioPCRemote = document.getElementById("audioPCRemote");
+
+    pcLocal = new mozRTCPeerConnection();
+    pcRemote = new mozRTCPeerConnection();
+
+    pcLocal.onaddstream = function (aObj) {
+      test_data.pcLocal[aObj.type].push(aObj.stream);
+
+      if (aObj.type === "audio") {
+        audioPCRemote.mozSrcObject = aObj.stream;
+        audioPCRemote.play();
+      }
+    };
+
+    pcRemote.onaddstream = function (aObj) {
+      test_data.pcRemote[aObj.type].push(aObj.stream);
+
+      if (aObj.type === "audio") {
+        audioPCLocal.mozSrcObject = aObj.stream;
+        audioPCLocal.play();
+      }
+    };
+
+    navigator.mozGetUserMedia({audio: true, fake: true}, function onSuccess(aLocalInputStream) {
+      pcLocal.addStream(aLocalInputStream);
+
+      navigator.mozGetUserMedia({audio: true, fake: true}, function onSuccess(aRemoteInputStream) {
+        pcRemote.addStream(aRemoteInputStream);
+
+        audioLocal.mozSrcObject = aLocalInputStream;
+        audioLocal.play();
+
+        PeerConnection.handShake(pcLocal, pcRemote, function () {
+          is(pcLocal.localStreams.length, 1,
+             "A single local stream has been attached to the local peer");
+          is(pcRemote.localStreams.length, 1,
+             "A single local stream has been attached to the remote peer");
+
+          // Bug 816780 - onaddstream() gets called twice even if only audio or audio is requested
+          is(test_data.pcLocal.audio.length, 1,
+             "A remote audio stream has been attached to the local peer");
+          todo_is(test_data.pcLocal.video.length, 0,
+                  "No remote video stream has been attached to the local peer");
+          is(test_data.pcRemote.audio.length, 1,
+             "A remote audio stream has been attached to the remote peer");
+          todo_is(test_data.pcRemote.video.length, 0,
+                  "No remote video stream has been attached to the remote peer");
+
+          is(test_data.pcLocal.audio[0], pcLocal.remoteStreams[0],
+             "Remote stream for local peer is accessible");
+          is(test_data.pcRemote.audio[0], pcRemote.remoteStreams[0],
+             "Remote stream for remote peer is accessible");
+
+          info("For now simply disconnect. We will add checks for media in a follow-up bug");
+          disconnect();
+        });
+      }, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish);
+  });
+
+  function disconnect() {
+    pcLocal.close();
+    pcRemote.close();
+
+    info("We can't run any checks and clean-up code due to a crash (see bug 820072)");
+
+    SimpleTest.finish();
+  }
+</script>
+</pre>
+</body>
+</html>

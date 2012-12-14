@@ -1520,7 +1520,7 @@ let RIL = {
       if (DEBUG) debug("PLMN Selector: Process PLMN Selector");
 
       let length = Buf.readUint32();
-      this.iccInfoPrivate.PLMN = this.readPLMNEntries(length/6);
+      this.iccInfoPrivate.PLMN = this.readPLMNEntries(length/3);
       Buf.readStringDelimiter(length);
 
       if (DEBUG) debug("PLMN Selector: " + JSON.stringify(this.iccInfoPrivate.PLMN));
@@ -1570,7 +1570,7 @@ let RIL = {
           continue;
         case SPDI_TAG_PLMN_LIST:
           // This PLMN list is what we want.
-          this.iccInfoPrivate.SPDI = readPLMNEntries(tlvLen/6);
+          this.iccInfoPrivate.SPDI = this.readPLMNEntries(tlvLen/3);
           readLen += tlvLen;
           endLoop = true;
           break;
@@ -2317,7 +2317,7 @@ let RIL = {
             plmn[1] != 0xFF &&
             plmn[2] != 0xFF) {
           let semiOctets = [];
-          for (let i = 0; i < plmn.length; i++) {
+          for (let idx = 0; idx < plmn.length; idx++) {
             semiOctets.push((plmn[idx] & 0xF0) >> 4);
             semiOctets.push(plmn[idx] & 0x0F);
           }
@@ -3855,6 +3855,7 @@ let RIL = {
           case ICC_EF_MBDN:
           case ICC_EF_PLMNsel:
           case ICC_EF_SPN:
+          case ICC_EF_SPDI:
           case ICC_EF_SST:
           case ICC_EF_CBMI:
           case ICC_EF_CBMIR:

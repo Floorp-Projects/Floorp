@@ -17,6 +17,7 @@ MOCHITEST_FILES = \
   test_getUserMedia_exceptions.html \
   head.js \
   mediaStreamPlayback.js \
+  pc.js \
   $(NULL)
 
 # The following tests are leaking and cannot be run by default yet
@@ -24,6 +25,8 @@ ifdef MOZ_WEBRTC_LEAKING_TESTS
 MOCHITEST_FILES += \
   test_getUserMedia_basicAudio.html \
   test_getUserMedia_basicVideoAudio.html \
+  test_peerConnection_basicAudio.html \
+  test_peerConnection_basicVideo.html \
   $(NULL)
 endif
 

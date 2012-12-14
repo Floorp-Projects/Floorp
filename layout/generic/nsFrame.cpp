@@ -20,6 +20,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsStyleContext.h"
+#include "nsTableOuterFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
@@ -53,7 +54,6 @@
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
 #include "nsRange.h"
-#include "nsITableLayout.h"    //selection necessity
 #include "nsITableCellLayout.h"//  "
 #include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
@@ -2502,8 +2502,8 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
       // If not a cell, check for table
       // This will happen when starting frame is the table or child of a table,
       //  such as a row (we were inbetween cells or in table border)
-      nsITableLayout *tableElement = do_QueryFrame(frame);
-      if (tableElement)
+      nsTableOuterFrame *tableFrame = do_QueryFrame(frame);
+      if (tableFrame)
       {
         foundTable = true;
         //TODO: How can we select row when along left table edge
@@ -4881,7 +4881,7 @@ void
 nsIFrame::InvalidateFrameSubtree(uint32_t aDisplayItemKey)
 {
   bool hasDisplayItem = 
-    !aDisplayItemKey || FrameLayerBuilder::HasVisibleRetainedDataFor(this, aDisplayItemKey);
+    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   InvalidateFrame(aDisplayItemKey);
 
   if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT) || !hasDisplayItem) {
@@ -4927,7 +4927,7 @@ void
 nsIFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
   bool hasDisplayItem = 
-    !aDisplayItemKey || FrameLayerBuilder::HasVisibleRetainedDataFor(this, aDisplayItemKey);
+    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   InvalidateFrameInternal(this, hasDisplayItem);
 }
 
@@ -4935,7 +4935,7 @@ void
 nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 {
   bool hasDisplayItem = 
-    !aDisplayItemKey || FrameLayerBuilder::HasVisibleRetainedDataFor(this, aDisplayItemKey);
+    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   bool alreadyInvalid = false;
   if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
     InvalidateFrameInternal(this, hasDisplayItem);

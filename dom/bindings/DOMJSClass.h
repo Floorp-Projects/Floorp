@@ -133,7 +133,7 @@ struct DOMClass
 {
   // A list of interfaces that this object implements, in order of decreasing
   // derivedness.
-  const prototypes::ID mInterfaceChain[prototypes::id::_ID_Count];
+  const prototypes::ID mInterfaceChain[MAX_PROTOTYPE_CHAIN_LENGTH];
 
   // We store the DOM object in reserved slot with index DOM_OBJECT_SLOT or in
   // the proxy private if we use a proxy object.
