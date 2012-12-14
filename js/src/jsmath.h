@@ -96,6 +96,9 @@ js_math_floor_impl(double x);
 namespace js {
 
 extern JSBool
+math_imul(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern JSBool
 math_log(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern double
