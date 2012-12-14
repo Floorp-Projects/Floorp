@@ -68,7 +68,7 @@ function test()
   function performTest()
   {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let panel = gDevTools.getPanelForTarget("inspector", target);
+    let panel = gDevTools.getToolbox(target).getPanel("inspector");
     let container = panel.panelDoc.getElementById("inspector-breadcrumbs");
     let buttonsLabelIds = nodes[cursor].result.split(" ");
 

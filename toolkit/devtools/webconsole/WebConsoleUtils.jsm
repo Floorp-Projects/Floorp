@@ -521,10 +521,14 @@ this.WebConsoleUtils = {
       result.value = this.createValueGrip(descriptor.value, aObjectWrapper);
     }
     else if (descriptor.get) {
+      let gotValue = false;
       if (this.isNativeFunction(descriptor.get)) {
-        result.value = this.createValueGrip(aObject[aProperty], aObjectWrapper);
+        try {
+          result.value = this.createValueGrip(aObject[aProperty], aObjectWrapper);
+          gotValue = true;
+        } catch (e) {}
       }
-      else {
+      if (!gotValue) {
         result.get = this.createValueGrip(descriptor.get, aObjectWrapper);
         result.set = this.createValueGrip(descriptor.set, aObjectWrapper);
       }
@@ -1572,10 +1576,11 @@ this.JSTermHelpers = function JSTermHelpers(aOwner)
       try {
         let window = aOwner.chromeWindow();
         let target = TargetFactory.forTab(window.gBrowser.selectedTab);
-        let panel = gDevTools.getPanelForTarget("inspector", target);
-        if (panel) {
-          return panel.selection.node;
-        }
+        let toolbox = gDevTools.getToolbox(target);
+
+        return toolbox == null ?
+            undefined :
+            toolbox.getPanel("inspector").selection.node;
       }
       catch (ex) {
         aOwner.window.console.error(ex.message);

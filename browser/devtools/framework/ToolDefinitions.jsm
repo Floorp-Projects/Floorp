@@ -66,7 +66,8 @@ let webConsoleDefinition = {
     return true;
   },
   build: function(iframeWindow, toolbox) {
-    return new WebConsolePanel(iframeWindow, toolbox);
+    let panel = new WebConsolePanel(iframeWindow, toolbox);
+    return panel.open();
   }
 };
 
@@ -86,7 +87,8 @@ let debuggerDefinition = {
   },
 
   build: function(iframeWindow, toolbox) {
-    return new DebuggerPanel(iframeWindow, toolbox);
+    let panel = new DebuggerPanel(iframeWindow, toolbox);
+    return panel.open();
   }
 };
 
@@ -105,7 +107,8 @@ let inspectorDefinition = {
   },
 
   build: function(iframeWindow, toolbox) {
-    return new InspectorPanel(iframeWindow, toolbox);
+    let panel = new InspectorPanel(iframeWindow, toolbox);
+    return panel.open();
   }
 };
 
@@ -123,7 +126,8 @@ let styleEditorDefinition = {
   },
 
   build: function(iframeWindow, toolbox) {
-    return new StyleEditorPanel(iframeWindow, toolbox);
+    let panel = new StyleEditorPanel(iframeWindow, toolbox);
+    return panel.open();
   }
 };
 

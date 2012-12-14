@@ -13,25 +13,19 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+
   gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
     gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    openToolbox();
+    gDevTools.showToolbox(target).then(testRegister);
   }, true);
 
   content.location = "data:text/html,test for dynamically registering and unregistering tools";
 }
 
-function openToolbox()
+function testRegister(aToolbox)
 {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  toolbox = gDevTools.openToolbox(target);
-
-  toolbox.once("ready", testRegister);
-}
-
-
-function testRegister()
-{
+  toolbox = aToolbox
   gDevTools.once("tool-registered", toolRegistered);
 
   gDevTools.registerTool({

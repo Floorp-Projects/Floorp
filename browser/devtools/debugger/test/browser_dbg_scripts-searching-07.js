@@ -182,7 +182,7 @@ function testClickLineToJump(scriptResults, callbacks) {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 4,
           "The editor didn't jump to the correct line. (1)");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (1)");
 
         callbacks[0](scriptResults, callbacks.slice(1));
@@ -217,7 +217,7 @@ function testClickMatchToJump(scriptResults, callbacks) {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 5,
           "The editor didn't jump to the correct line. (1)");
-        is(gScripts.visibleItems, 2,
+        is(gScripts.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (1)");
 
         callbacks[0]();

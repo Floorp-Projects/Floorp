@@ -25,16 +25,16 @@ function createDocument()
     '</div>';
   doc.title = "Inspector Initialization Test";
 
-  openInspector(startInspectorTests);
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
+    startInspectorTests(toolbox);
+  }).then(null, console.error);
 }
 
-function startInspectorTests()
+function startInspectorTests(toolbox)
 {
+  let inspector = toolbox.getCurrentPanel();
   ok(true, "Inspector started, and notification received.");
-
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  let inspector = gDevTools.getPanelForTarget("inspector", target);
 
   ok(inspector, "Inspector instance is accessible");
   ok(inspector.isReady, "Inspector instance is ready");
@@ -58,11 +58,10 @@ function startInspectorTests()
   testMarkupView(span);
   testBreadcrumbs(span);
 
-  let toolbox = gDevTools.getToolboxForTarget(target);
   toolbox.once("destroyed", function() {
     ok("true", "'destroyed' notification received.");
-    let toolbox = gDevTools.getToolboxForTarget(target);
-    ok(!toolbox, "Toolbox destroyed.");
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");
     executeSoon(runContextMenuTest);
   });
   toolbox.destroy();
@@ -94,14 +93,13 @@ function _clickOnInspectMenuItem(node) {
   document.popupNode = node;
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
-  contextMenu.inspectNode();
+  return contextMenu.inspectNode();
 }
 
 function runContextMenuTest()
 {
   salutation = doc.getElementById("salutation");
-  _clickOnInspectMenuItem(salutation);
-  gDevTools.once("inspector-ready", testInitialNodeIsSelected);
+  _clickOnInspectMenuItem(salutation).then(testInitialNodeIsSelected);
 }
 
 function testInitialNodeIsSelected() {

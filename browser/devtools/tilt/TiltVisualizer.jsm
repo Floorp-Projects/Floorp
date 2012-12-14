@@ -175,9 +175,9 @@ TiltVisualizer.prototype = {
                              false);
 
     let target = TargetFactory.forTab(aTab);
-    let inspector = gDevTools.getPanelForTarget("inspector", target);
-    if (inspector) {
-      this.inspector = inspector;
+    let toolbox = gDevTools.getToolbox(target);
+    if (toolbox) {
+      this.inspector = toolbox.getPanel("inspector");
       this.inspector.selection.on("new-node", this.onNewNodeFromInspector);
       this.inspector.selection.on("detached", this.onNewNodeFromInspector);
       this.onNewNodeFromInspector();
