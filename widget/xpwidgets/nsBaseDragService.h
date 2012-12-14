@@ -61,11 +61,12 @@ protected:
    * that are relative to the upper-left corner of the window.
    *
    * aScreenX and aScreenY should be the screen coordinates of the mouse click
-   * for the drag.
+   * for the drag. These are in global display pixels.
    *
    * On return, aScreenDragRect will contain the screen coordinates of the
    * area being dragged. This is used by the platform-specific part of the
-   * drag service to determine the drag feedback.
+   * drag service to determine the drag feedback. This rect will be in the
+   * device pixels of the presContext.
    *
    * If there is no drag image, the returned surface will be null, but
    * aScreenDragRect will still be set to the drag area.
