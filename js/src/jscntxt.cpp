@@ -9,11 +9,13 @@
  * JS execution context.
  */
 
-#include <limits.h> /* make sure that <features.h> is included and we can use
-                       __GLIBC__ to detect glibc presence */
+#include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mozilla/DebugOnly.h"
+
 #ifdef ANDROID
 # include <android/log.h>
 # include <fstream>

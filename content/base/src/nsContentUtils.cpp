@@ -6,6 +6,7 @@
 
 /* A namespace class for static layout utilities. */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 

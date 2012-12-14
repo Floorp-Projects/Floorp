@@ -9,6 +9,7 @@
 #define GlobalObject_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 
 #include "jsarray.h"
 #include "jsbool.h"

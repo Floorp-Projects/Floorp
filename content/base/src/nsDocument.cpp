@@ -8,6 +8,7 @@
  * Base class for all our document implementations.
  */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 
