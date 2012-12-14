@@ -12,6 +12,7 @@ interface nsIX509Cert3;
 interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIZipReader;
+interface nsIRecentBadCerts;
 
 %{C++
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
@@ -29,7 +30,7 @@ interface nsIOpenSignedJARFileCallback : nsISupports
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(735d0363-e219-4387-b5c6-72e800c3ea0b)]
+[scriptable, uuid(a18df2a5-84a9-46cd-9140-3fdb3879d9ff)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -263,6 +264,16 @@ interface nsIX509CertDB : nsISupports {
    *  @return The new certificate object.
    */
   nsIX509Cert constructX509FromBase64(in string base64);
+
+  /*
+   *  Obtain a reference to the appropriate service for recent
+   *  bad certificates. May only be called on the main thread.
+   *
+   *  @param isPrivate True if the service for certs for private connections
+   *                   is desired, false otherwise.
+   *  @return The requested service.
+   */
+  nsIRecentBadCerts getRecentBadCerts(in boolean isPrivate);
 
   /**
    *  Verifies the signature on the given JAR file to verify that it has a
