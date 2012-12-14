@@ -43,6 +43,13 @@ var screenBright = {"screen.brightness": 0.7};
 var wifiNetworks0 = { "wifi.networks[0]": { ssid: "myfreenetwork", mac: "01:23:45:67:89:ab", passwd: "secret"}};
 var wifiNetworks1 = { "wifi.networks[1]": { ssid: "myfreenetwork2", mac: "01:23:45:67:89:ab", passwd: "secret2"}};
 
+var combination = {
+  "wifi.enabled": false,
+  "screen.brightness": 0.7,
+  "wifi.networks[0]": { ssid: "myfreenetwork", mac: "01:23:45:67:89:ab", passwd: "secret" },
+  "test.test": true
+}
+
 function equals(o1, o2) {
   var k1 = Object.keys(o1).sort();
   var k2 = Object.keys(o2).sort();
@@ -600,6 +607,36 @@ var steps = [
       }
     }
     SimpleTest.executeSoon(cb);
+  },
+  function() {
+    ok(true, "Clear DB");
+    var lock = mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Set with multiple arguments");
+    var lock = mozSettings.createLock();
+    req = lock.set(combination);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "request argument from multiple set");
+    var lock = mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      check(req.result["screen.brightness"], 0.7, "get done");
+      next();
+    }
+    req.onerror = onFailure;
   },
   function() {
     ok(true, "Clear DB");
