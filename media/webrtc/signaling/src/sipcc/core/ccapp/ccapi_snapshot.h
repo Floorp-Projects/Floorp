@@ -63,7 +63,6 @@ typedef struct cc_call_server_t_ {
 
 typedef struct cc_device_info_t_ {
   cc_uint32_t     ref_count;
-  cc_string_t     name;
   cc_string_t     not_prompt;
   char            registration_ip_addr[MAX_IPADDR_STR_LEN];
   cc_int32_t      not_prompt_prio;
