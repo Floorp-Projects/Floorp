@@ -77,7 +77,7 @@ TextEncoder::Encode(JSContext* aCx,
 
   // If the internal streaming flag is not set, then reset
   // the encoding algorithm state to the default values for encoding.
-  if (!aOptions.mStream) {
+  if (!aOptions.stream) {
     int32_t finishLen = maxLen - dstLen;
     rv = mEncoder->Finish(buf + dstLen, &finishLen);
     if (NS_SUCCEEDED(rv)) {
