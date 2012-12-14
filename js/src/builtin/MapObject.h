@@ -81,6 +81,8 @@ typedef OrderedHashSet<HashableValue,
 
 class MapObject : public JSObject {
   public:
+    enum IteratorKind { Keys, Values, Entries };
+
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static Class class_;
   private:
@@ -94,6 +96,8 @@ class MapObject : public JSObject {
 
     static bool is(const Value &v);
 
+    static bool iterator_impl(JSContext *cx, CallArgs args, IteratorKind kind);
+
     static bool size_impl(JSContext *cx, CallArgs args);
     static JSBool size(JSContext *cx, unsigned argc, Value *vp);
     static bool get_impl(JSContext *cx, CallArgs args);
@@ -104,8 +108,12 @@ class MapObject : public JSObject {
     static JSBool set(JSContext *cx, unsigned argc, Value *vp);
     static bool delete_impl(JSContext *cx, CallArgs args);
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
-    static bool iterator_impl(JSContext *cx, CallArgs args);
-    static JSBool iterator(JSContext *cx, unsigned argc, Value *vp);
+    static bool keys_impl(JSContext *cx, CallArgs args);
+    static JSBool keys(JSContext *cx, unsigned argc, Value *vp);
+    static bool values_impl(JSContext *cx, CallArgs args);
+    static JSBool values(JSContext *cx, unsigned argc, Value *vp);
+    static bool entries_impl(JSContext *cx, CallArgs args);
+    static JSBool entries(JSContext *cx, unsigned argc, Value *vp);
     static bool clear_impl(JSContext *cx, CallArgs args);
     static JSBool clear(JSContext *cx, unsigned argc, Value *vp);
 };
