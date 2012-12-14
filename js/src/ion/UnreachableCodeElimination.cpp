@@ -84,16 +84,14 @@ UnreachableCodeElimination::prunePointlessBranchesAndMarkReachableBlocks()
             MDefinition *v = testIns->getOperand(0);
             if (v->isConstant()) {
                 const Value &val = v->toConstant()->value();
-                if (val.isBoolean()) {
-                    BranchDirection bdir = (val.isTrue() ? TRUE_BRANCH : FALSE_BRANCH);
-                    MBasicBlock *succ = testIns->branchSuccessor(bdir);
-                    MGoto *gotoIns = MGoto::New(succ);
-                    block->discardLastIns();
-                    block->end(gotoIns);
-                    MBasicBlock *successorWithPhis = block->successorWithPhis();
-                    if (successorWithPhis && successorWithPhis != succ)
-                        block->setSuccessorWithPhis(NULL, 0);
-                }
+                BranchDirection bdir = ToBoolean(val) ? TRUE_BRANCH : FALSE_BRANCH;
+                MBasicBlock *succ = testIns->branchSuccessor(bdir);
+                MGoto *gotoIns = MGoto::New(succ);
+                block->discardLastIns();
+                block->end(gotoIns);
+                MBasicBlock *successorWithPhis = block->successorWithPhis();
+                if (successorWithPhis && successorWithPhis != succ)
+                    block->setSuccessorWithPhis(NULL, 0);
             }
         }
 
