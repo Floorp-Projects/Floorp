@@ -88,7 +88,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_breakpoint-new-script.js \
 	browser_dbg_bug737803_editor_actual_location.js \
 	browser_dbg_progress-listener-bug.js \
-	browser_dbg_chrome-debugging.js \
+	$(filter disabled-for-intermittent-crashes--bug-821701, browser_dbg_chrome-debugging.js) \
 	$(filter disabled-for-intermittent-failures--bug-753225, browser_dbg_createRemote.js) \
 	head.js \
 	$(NULL)
