@@ -1678,6 +1678,11 @@ var NativeWindow = {
         }
       };
       let data = JSON.parse(sendMessageToJava(msg));
+      if (data.button == -1) {
+        // prompt was cancelled
+        return;
+      }
+
       let selectedId = itemArray[data.button].id;
       let selectedItem = this._getMenuItemForId(selectedId);
 
