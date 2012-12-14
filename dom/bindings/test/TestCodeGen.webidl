@@ -451,6 +451,9 @@ interface TestInterface {
   // If you add things here, add them to TestExampleGen as well
 };
 
+interface TestChildInterface : TestInterface {
+};
+
 interface TestNonWrapperCacheInterface {
 };
 
