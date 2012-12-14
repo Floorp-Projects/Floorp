@@ -11,12 +11,11 @@
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
-#include "nsIDOMNSRGBAColor.h"
 #include "nsWrapperCache.h"
 
 class nsROCSSPrimitiveValue;
 
-class nsDOMCSSRGBColor : public nsIDOMNSRGBAColor,
+class nsDOMCSSRGBColor : public nsISupports,
                          public nsWrapperCache
 {
 public:
@@ -29,8 +28,6 @@ public:
   virtual ~nsDOMCSSRGBColor(void);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMRGBCOLOR
-  NS_DECL_NSIDOMNSRGBACOLOR
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCSSRGBColor)
 
