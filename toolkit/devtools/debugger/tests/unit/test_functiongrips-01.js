@@ -32,10 +32,9 @@ function test_named_function()
     do_check_eq(args[0].name, "stopMe");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getSignature(function(aResponse) {
-      do_check_eq(aResponse.name, "stopMe");
-      do_check_eq(aResponse.parameters.length, 1);
-      do_check_eq(aResponse.parameters[0], "arg1");
+    objClient.getParameterNames(function(aResponse) {
+      do_check_eq(aResponse.parameterNames.length, 1);
+      do_check_eq(aResponse.parameterNames[0], "arg1");
 
       gThreadClient.resume(test_inferred_name_function);
     });
@@ -55,12 +54,11 @@ function test_inferred_name_function() {
     do_check_eq(args[0].displayName, "o.m");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getSignature(function(aResponse) {
-      do_check_eq(aResponse.name, null);
-      do_check_eq(aResponse.parameters.length, 3);
-      do_check_eq(aResponse.parameters[0], "foo");
-      do_check_eq(aResponse.parameters[1], "bar");
-      do_check_eq(aResponse.parameters[2], "baz");
+    objClient.getParameterNames(function(aResponse) {
+      do_check_eq(aResponse.parameterNames.length, 3);
+      do_check_eq(aResponse.parameterNames[0], "foo");
+      do_check_eq(aResponse.parameterNames[1], "bar");
+      do_check_eq(aResponse.parameterNames[2], "baz");
 
       gThreadClient.resume(test_anonymous_function);
     });
@@ -79,12 +77,11 @@ function test_anonymous_function() {
     do_check_eq(args[0].displayName, undefined);
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getSignature(function(aResponse) {
-      do_check_eq(aResponse.name, null);
-      do_check_eq(aResponse.parameters.length, 3);
-      do_check_eq(aResponse.parameters[0], "foo");
-      do_check_eq(aResponse.parameters[1], "bar");
-      do_check_eq(aResponse.parameters[2], "baz");
+    objClient.getParameterNames(function(aResponse) {
+      do_check_eq(aResponse.parameterNames.length, 3);
+      do_check_eq(aResponse.parameterNames[0], "foo");
+      do_check_eq(aResponse.parameterNames[1], "bar");
+      do_check_eq(aResponse.parameterNames[2], "baz");
 
       gThreadClient.resume(function() {
         finishClient(gClient);
