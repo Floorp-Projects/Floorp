@@ -87,7 +87,11 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             // analysis.
             uint32_t maxDefinition = 0;
             for (MUseDefIterator uses(*ins); uses; uses++) {
-                if (uses.def()->block() != *block || uses.def()->isBox() || uses.def()->isPassArg()) {
+                if (uses.def()->block() != *block ||
+                    uses.def()->isBox() ||
+                    uses.def()->isPassArg() ||
+                    uses.def()->isPhi())
+                {
                     maxDefinition = UINT32_MAX;
                     break;
                 }
