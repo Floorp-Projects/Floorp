@@ -43,7 +43,8 @@ protected:
   void *cb_arg_;
 };
 
-NS_IMPL_ISUPPORTS1(nrappkitTimerCallback, nsITimerCallback)
+// We're going to release ourself in the callback, so we need to be threadsafe
+NS_IMPL_THREADSAFE_ISUPPORTS1(nrappkitTimerCallback, nsITimerCallback)
 
 NS_IMETHODIMP nrappkitTimerCallback::Notify(nsITimer *timer) {
   r_log(LOG_GENERIC, LOG_DEBUG, "Timer callback fired");
@@ -79,6 +80,9 @@ int NR_async_timer_set(int timeout, NR_async_cb cb, void *arg, char *func,
 
   if (handle)
     *handle = timer.get();
+  // Bug 818806: if we have no handle to the timer, we have no way to avoid
+  // it leaking (though not the callback object) if it never fires (or if
+  // we exit before it fires).
 
   return 0;
 }
