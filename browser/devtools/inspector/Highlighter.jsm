@@ -84,7 +84,7 @@ this.Highlighter = function Highlighter(aTarget, aInspector, aToolbox)
   this.chromeWin = this.chromeDoc.defaultView;
   this.inspector = aInspector
 
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 
   this._init();
 }
