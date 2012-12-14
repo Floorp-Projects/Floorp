@@ -32,8 +32,7 @@ public:
     nsresult    GetOutputStream(uint32_t offset, nsIOutputStream ** outputStream);
 
     nsresult    CloseOutputStream(nsDiskCacheOutputStream * outputStream);
-    nsresult    CloseOutputStreamInternal(nsDiskCacheOutputStream * outputStream);
-        
+
     nsresult    Write( const char * buffer,
                        uint32_t     count,
                        uint32_t *   bytesWritten);

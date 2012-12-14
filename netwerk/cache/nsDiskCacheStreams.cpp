@@ -11,7 +11,6 @@
 #include "nsDiskCacheStreams.h"
 #include "nsCacheService.h"
 #include "mozilla/FileUtils.h"
-#include "nsIDiskCacheStreamInternal.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -184,7 +183,6 @@ nsDiskCacheInputStream::IsNonBlocking(bool * nonBlocking)
  *  nsDiskCacheOutputStream
  *****************************************************************************/
 class nsDiskCacheOutputStream : public nsIOutputStream
-                              , public nsIDiskCacheStreamInternal
 {
 public:
     nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent);
@@ -192,7 +190,6 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
-    NS_DECL_NSIDISKCACHESTREAMINTERNAL
 
     void ReleaseStreamIO() { NS_IF_RELEASE(mStreamIO); }
 
@@ -202,9 +199,8 @@ private:
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsDiskCacheOutputStream,
-                              nsIOutputStream,
-                              nsIDiskCacheStreamInternal)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDiskCacheOutputStream,
+                              nsIOutputStream)
 
 nsDiskCacheOutputStream::nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent)
     : mStreamIO(parent)
@@ -238,29 +234,6 @@ nsDiskCacheOutputStream::Close()
         id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD;
     else
         id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE;
-
-    mozilla::Telemetry::AccumulateTimeDelta(id, start);
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsDiskCacheOutputStream::CloseInternal()
-{
-    nsresult rv = NS_OK;
-    mozilla::TimeStamp start = mozilla::TimeStamp::Now();
-
-    if (!mClosed) {
-        mClosed = true;
-        // tell parent streamIO we are closing
-        rv = mStreamIO->CloseOutputStreamInternal(this);
-    }
-
-    mozilla::Telemetry::ID id;
-    if (NS_IsMainThread())
-        id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL_MAIN_THREAD;
-    else
-        id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL;
 
     mozilla::Telemetry::AccumulateTimeDelta(id, start);
 
@@ -465,20 +438,14 @@ nsresult
 nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
 {
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHESTREAMIO_CLOSEOUTPUTSTREAM)); // grab service lock
-    return CloseOutputStreamInternal(outputStream);
-}
 
-nsresult
-nsDiskCacheStreamIO::CloseOutputStreamInternal(
-    nsDiskCacheOutputStream * outputStream)
-{
     nsresult   rv;
 
     if (outputStream != mOutStream) {
         NS_WARNING("mismatched output streams");
         return NS_ERROR_UNEXPECTED;
     }
-    
+
     // output stream is closing
     if (!mBinding) {    // if we're severed, just clear member variables
         NS_ASSERTION(!mBufDirty, "oops");
