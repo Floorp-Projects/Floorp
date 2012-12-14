@@ -205,6 +205,36 @@
 
 PR_BEGIN_EXTERN_C
 
+/*
+** Starting in NSPR 4.9.5, NSPR's exact-width integer types should match
+** the exact-width integer types defined in <stdint.h>. This allows sloppy
+** code to use PRInt{N} and int{N}_t interchangeably.
+**
+** The 8-bit and 16-bit integer types can only be defined using char and
+** short. All platforms define the 32-bit integer types using int. So only
+** the 64-bit integer types could be defined differently.
+**
+** NSPR's original strategy was to use the "shortest" 64-bit integer type:
+** if long is 64-bit, then prefer it over long long. This strategy is also
+** used by Linux/glibc, FreeBSD, and NetBSD.
+**
+** Other platforms use a different strategy: simply define the 64-bit
+** integer types using long long. We define the PR_ALTERNATE_INT64_TYPEDEF
+** macro on these platforms. Note that PR_ALTERNATE_INT64_TYPEDEF is for
+** internal use by NSPR headers only. Do not define or test this macro in
+** your code.
+**
+** NOTE: NSPR can't use <stdint.h> because C99 requires C++ code to define
+** __STDC_LIMIT_MACROS and __STDC_CONSTANT_MACROS to make all the macros
+** defined in <stdint.h> available. This strange requirement is gone in
+** C11. When most platforms ignore this C99 requirement, NSPR will be able
+** to use <stdint.h>. A patch to do that is in NSPR bug 634793.
+*/
+
+#if defined(__APPLE__) || defined(__ANDROID__) || defined(__OpenBSD__)
+#define PR_ALTERNATE_INT64_TYPEDEF
+#endif
+
 /************************************************************************
 ** TYPES:       PRUint8
 **              PRInt8
@@ -331,12 +361,7 @@ typedef long PRInt32;
 ************************************************************************/
 #ifdef HAVE_LONG_LONG
 /* Keep this in sync with prlong.h. */
-/*
- * On 64-bit Mac OS X, uint64 needs to be defined as unsigned long long to
- * match uint64_t, otherwise our uint64 typedef conflicts with the uint64
- * typedef in cssmconfig.h, which CoreServices.h includes indirectly.
- */
-#if PR_BYTES_PER_LONG == 8 && !defined(__APPLE__)
+#if PR_BYTES_PER_LONG == 8 && !defined(PR_ALTERNATE_INT64_TYPEDEF)
 typedef long PRInt64;
 typedef unsigned long PRUint64;
 #define PR_INT64(x)  x ## L
