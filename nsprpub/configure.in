@@ -15,7 +15,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=9
-MOD_PATCH_VERSION=4
+MOD_PATCH_VERSION=5
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=

@@ -736,7 +736,7 @@ test "$host_alias" != "$target_alias" &&
 
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=9
-MOD_PATCH_VERSION=4
+MOD_PATCH_VERSION=5
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -6582,7 +6582,7 @@ s%\[%\\&%g
 s%\]%\\&%g
 s%\$%$$%g
 EOF
-DEFS=`sed -f conftest.defs confdefs.h | tr '\012' ' ' | tr '\015' ' '` # Manually modified for MKS support.
+DEFS=`sed -f conftest.defs confdefs.h | tr '\012' ' '`
 rm -f conftest.defs
 
 
