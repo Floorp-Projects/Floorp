@@ -78,7 +78,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcGrayRoots(),
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
-    rngState(0),
     watchpointMap(NULL),
     scriptCountsMap(NULL),
     debugScriptMap(NULL),
@@ -126,9 +125,6 @@ JSCompartment::init(JSContext *cx)
 
     if (!regExps.init(cx))
         return false;
-
-    if (cx)
-        InitRandom(cx->runtime, &rngState);
 
 #ifdef JSGC_GENERATIONAL
     /*
