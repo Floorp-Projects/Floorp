@@ -369,9 +369,9 @@ BookmarksEngine.prototype = {
     this._store._childrenToOrder = {};
   },
 
-  _processIncoming: function _processIncoming() {
+  _processIncoming: function (newitems) {
     try {
-      SyncEngine.prototype._processIncoming.call(this);
+      SyncEngine.prototype._processIncoming.call(this, newitems);
     } finally {
       // Reorder children.
       this._tracker.ignoreAll = true;
@@ -392,19 +392,27 @@ BookmarksEngine.prototype = {
   },
 
   _createRecord: function _createRecord(id) {
-    // Create the record like normal but mark it as having dupes if necessary
+    // Create the record as usual, but mark it as having dupes if necessary.
     let record = SyncEngine.prototype._createRecord.call(this, id);
     let entry = this._mapDupe(record);
-    if (entry != null && entry.hasDupe)
+    if (entry != null && entry.hasDupe) {
       record.hasDupe = true;
+    }
     return record;
   },
 
   _findDupe: function _findDupe(item) {
-    // Don't bother finding a dupe if the incoming item has duplicates
-    if (item.hasDupe)
+    this._log.trace("Finding dupe for " + item.id +
+                    " (already duped: " + item.hasDupe + ").");
+
+    // Don't bother finding a dupe if the incoming item has duplicates.
+    if (item.hasDupe) {
+      this._log.trace(item.id + " already a dupe: not finding one.");
       return;
-    return this._mapDupe(item);
+    }
+    let mapped = this._mapDupe(item);
+    this._log.debug(item.id + " mapped to " + mapped);
+    return mapped;
   }
 };
 
@@ -485,6 +493,7 @@ BookmarksStore.prototype = {
   },
   
   applyIncoming: function BStore_applyIncoming(record) {
+    this._log.debug("Applying record " + record.id);
     let isSpecial = record.id in kSpecialIds;
 
     if (record.deleted) {
@@ -521,12 +530,14 @@ BookmarksStore.prototype = {
     if (!parentGUID) {
       throw "Record " + record.id + " has invalid parentid: " + parentGUID;
     }
+    this._log.debug("Local parent is " + parentGUID);
 
     let parentId = this.idForGUID(parentGUID);
     if (parentId > 0) {
       // Save the parent id for modifying the bookmark later
       record._parent = parentId;
       record._orphan = false;
+      this._log.debug("Record " + record.id + " is not an orphan.");
     } else {
       this._log.trace("Record " + record.id +
                       " is an orphan: could not find parent " + parentGUID);
