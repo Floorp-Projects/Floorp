@@ -31,7 +31,7 @@ enum Scale {
 };
 
 static inline Scale
-ScaleFromShift(int shift)
+ScaleFromElemWidth(int shift)
 {
     switch (shift) {
       case 1:
