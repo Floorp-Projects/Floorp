@@ -474,6 +474,8 @@ static void nr_ice_srvrflx_stun_finished_cb(NR_SOCKET sock, int how, void *cb_ar
     int _status;
     nr_ice_candidate *cand=cb_arg;
 
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): %s for %s",cand->ctx->label,__FUNCTION__,cand->label);
+
     /* Deregister to suppress duplicates */
     if(cand->u.srvrflx.stun_handle){ /* This test because we might have failed before CB registered */
       nr_ice_socket_deregister(cand->isock,cand->u.srvrflx.stun_handle);

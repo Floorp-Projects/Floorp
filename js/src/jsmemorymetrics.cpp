@@ -197,7 +197,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
     }
     case JSTRACE_SHAPE:
     {
-        Shape *shape = static_cast<Shape*>(thing);
+        UnrootedShape shape = static_cast<RawShape>(thing);
         size_t propTableSize, kidsSize;
         shape->sizeOfExcludingThis(rtStats->mallocSizeOf, &propTableSize, &kidsSize);
         if (shape->inDictionary()) {

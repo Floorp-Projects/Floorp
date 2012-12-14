@@ -130,6 +130,6 @@ function finishUp()
   });
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolboxForTarget(target);
+  let toolbox = gDevTools.getToolbox(target);
   toolbox.destroy();
 }

@@ -478,11 +478,18 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     if ((r=nr_stun_message_create2(&ctx->response, msg, len)))
         ABORT(r);
 
-    if ((r=nr_stun_decode_message(ctx->response, nr_stun_client_get_password, password)))
+    if ((r=nr_stun_decode_message(ctx->response, nr_stun_client_get_password, password))) {
+        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): error decoding message",ctx->label);
         ABORT(r);
+    }
 
-    if ((r=nr_stun_receive_message(ctx->request, ctx->response)))
+    if ((r=nr_stun_receive_message(ctx->request, ctx->response))) {
+        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): error receiving message",ctx->label);
         ABORT(r);
+    }
+
+    r_log(NR_LOG_STUN,LOG_DEBUG,
+          "STUN-CLIENT(%s): successfully received message; processing",ctx->label);
 
 /* TODO: !nn! currently using password!=0 to mean that auth is required,
  * TODO: !nn! but we should probably pass that in explicitly via the
@@ -511,6 +518,8 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
             ABORT(R_FAILED);
         }
     }
+
+    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Successfully parsed mode=%d",ctx->label,ctx->mode);
 
 /* TODO: !nn! this should be moved to individual message receive/processing sections */
     switch (ctx->mode) {

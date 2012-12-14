@@ -992,10 +992,12 @@ function test23() {
 
   // Reload plugin (this may need RunSoon() in the future when plugins change state asynchronously)
   pluginNode.type = null;
-  pluginNode.src = pluginNode.src; // We currently don't properly change state just on type change, bug 767631
+  // We currently don't properly change state just on type change,
+  // so rebind the plugin to tree. bug 767631
+  pluginNode.parentNode.appendChild(pluginNode);
   is(objLoadingContent.displayedType, Ci.nsIObjectLoadingContent.TYPE_NULL, "Test 23, plugin should be unloaded");
   pluginNode.type = "application/x-test";
-  pluginNode.src = pluginNode.src;
+  pluginNode.parentNode.appendChild(pluginNode);
   is(objLoadingContent.displayedType, Ci.nsIObjectLoadingContent.TYPE_NULL, "Test 23, Plugin should not have activated");
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 23, Plugin should be click-to-play");
   ok(!pluginNode.activated, "Test 23, plugin node should not be activated");

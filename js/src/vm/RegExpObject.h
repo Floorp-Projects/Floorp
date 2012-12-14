@@ -405,7 +405,7 @@ class RegExpObject : public JSObject
      * encoding their initial properties. Return the shape after
      * changing this regular expression object's last property to it.
      */
-    Shape *assignInitialShape(JSContext *cx);
+    UnrootedShape assignInitialShape(JSContext *cx);
 
     inline bool init(JSContext *cx, HandleAtom source, RegExpFlag flags);
 

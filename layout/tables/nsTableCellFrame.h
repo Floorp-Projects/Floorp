@@ -6,10 +6,10 @@
 #define nsTableCellFrame_h__
 
 #include "mozilla/Attributes.h"
+#include "celldata.h"
 #include "nsITableCellLayout.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
-#include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 #include "nsStyleContext.h"
 #include "nsIPercentHeightObserver.h"
 #include "nsGkAtoms.h"

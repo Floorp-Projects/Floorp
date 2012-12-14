@@ -9,6 +9,8 @@ const TEST_HOST = 'mochi.test:8888';
 let tempScope = {};
 Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
 let TargetFactory = tempScope.TargetFactory;
+Components.utils.import("resource:///modules/devtools/Console.jsm", tempScope);
+let console = tempScope.console;
 
 let gChromeWindow;               //StyleEditorChrome window
 let cache = Cc["@mozilla.org/network/cache-service;1"]
@@ -35,26 +37,15 @@ function launchStyleEditorChrome(aCallback, aSheet, aLine, aCol)
 function launchStyleEditorChromeFromWindow(aWindow, aCallback, aSheet, aLine, aCol)
 {
   let target = TargetFactory.forTab(aWindow.gBrowser.selectedTab);
-
-  let panel = aWindow.gDevTools.getPanelForTarget("styleeditor", target);
-  if (panel && panel.isReady) {
+  gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
+    let panel = toolbox.getCurrentPanel();
     gChromeWindow = panel._panelWin;
     gChromeWindow.styleEditorChrome._alwaysDisableAnimations = true;
     if (aSheet) {
       panel.selectStyleSheet(aSheet, aLine, aCol);
     }
     aCallback(gChromeWindow.styleEditorChrome);
-  } else {
-    let toolbox = aWindow.gDevTools.openToolboxForTab(target, "styleeditor");
-    toolbox.once("styleeditor-ready", function(event, panel) {
-      gChromeWindow = panel._panelWin;
-      gChromeWindow.styleEditorChrome._alwaysDisableAnimations = true;
-      if (aSheet) {
-        panel.selectStyleSheet(aSheet, aLine, aCol);
-      }
-      aCallback(gChromeWindow.styleEditorChrome);
-    });
-  }
+  });
 }
 
 function addTabAndLaunchStyleEditorChromeWhenLoaded(aCallback, aSheet, aLine, aCol)

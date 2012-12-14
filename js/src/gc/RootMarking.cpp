@@ -532,6 +532,17 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case OBJOBJHASHMAP: {
+        AutoObjectObjectHashMap::HashMapImpl &map = static_cast<AutoObjectObjectHashMap *>(this)->map;
+        for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
+            RawObject key = e.front().key;
+            MarkObjectRoot(trc, (RawObject *) &e.front().key, "AutoObjectObjectHashMap key");
+            JS_ASSERT(key == e.front().key);
+            MarkObjectRoot(trc, &e.front().value, "AutoObjectObjectHashMap value");
+        }
+        return;
+      }
+
       case PROPDESC: {
         PropDesc::AutoRooter *rooter = static_cast<PropDesc::AutoRooter *>(this);
         MarkValueRoot(trc, &rooter->pd->pd_, "PropDesc::AutoRooter pd");
@@ -799,15 +810,20 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     if (JSTraceDataOp op = rt->gcBlackRootsTraceOp)
         (*op)(trc, rt->gcBlackRootsData);
 
-    /* During GC, this buffers up the gray roots and doesn't mark them. */
+    /* During GC, we don't mark gray roots at this stage. */
     if (JSTraceDataOp op = rt->gcGrayRootsTraceOp) {
-        if (IS_GC_MARKING_TRACER(trc)) {
-            GCMarker *gcmarker = static_cast<GCMarker *>(trc);
-            gcmarker->startBufferingGrayRoots();
+        if (!IS_GC_MARKING_TRACER(trc))
             (*op)(trc, rt->gcGrayRootsData);
-            gcmarker->endBufferingGrayRoots();
-        } else {
-            (*op)(trc, rt->gcGrayRootsData);
-        }
+    }
+}
+
+void
+js::gc::BufferGrayRoots(GCMarker *gcmarker)
+{
+    JSRuntime *rt = gcmarker->runtime;
+    if (JSTraceDataOp op = rt->gcGrayRootsTraceOp) {
+        gcmarker->startBufferingGrayRoots();
+        (*op)(gcmarker, rt->gcGrayRootsData);
+        gcmarker->endBufferingGrayRoots();
     }
 }

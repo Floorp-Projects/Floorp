@@ -314,6 +314,7 @@ CPPSRCS +=	MIR.cpp \
 		RangeAnalysis.cpp \
 		VMFunctions.cpp \
 		AliasAnalysis.cpp \
+		UnreachableCodeElimination.cpp \
 		BaselineCompiler-shared.cpp \
 		$(NULL)
 endif #ENABLE_ION

@@ -191,6 +191,16 @@ nsresult WebMReader::ResetDecode()
   mVideoPackets.Reset();
   mAudioPackets.Reset();
 
+#ifdef MOZ_DASH
+  LOG(PR_LOG_DEBUG, ("Resetting DASH seek vars"));
+  mSwitchingCluster = -1;
+  mNextReader = nullptr;
+  mSeekToCluster = -1;
+  mCurrentOffset = -1;
+  mPushVideoPacketToNextReader = false;
+  mReachedSwitchAccessPoint = false;
+#endif
+
   return res;
 }
 
@@ -381,20 +391,24 @@ nsresult WebMReader::ReadMetadata(VideoInfo* aInfo,
                    NS_ERROR_ALREADY_INITIALIZED);
     int clusterNum = 0;
     bool done = false;
+    uint64_t timestamp;
     do {
       mClusterByteRanges.AppendElement();
       r = nestegg_get_cue_point(mContext, clusterNum, maxOffset,
                                 &(mClusterByteRanges[clusterNum].mStart),
-                                &(mClusterByteRanges[clusterNum].mEnd));
+                                &(mClusterByteRanges[clusterNum].mEnd),
+                                &timestamp);
       if (r != 0) {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
       LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: Cluster [%d]: "
-                         "start [%d] end [%d]",
+                         "start [%lld] end [%lld], timestamp [%.2llfs]",
                          this, mDecoder, clusterNum,
                          mClusterByteRanges[clusterNum].mStart,
-                         mClusterByteRanges[clusterNum].mEnd));
+                         mClusterByteRanges[clusterNum].mEnd,
+                         timestamp/NS_PER_S));
+      mClusterByteRanges[clusterNum].mStartTime = timestamp/NS_PER_USEC;
       // Last cluster will have '-1' as end value
       if (mClusterByteRanges[clusterNum].mEnd == -1) {
         mClusterByteRanges[clusterNum].mEnd = (mCuesByteRange.mStart-1);
@@ -409,7 +423,8 @@ nsresult WebMReader::ReadMetadata(VideoInfo* aInfo,
   // We can't seek in buffered regions if we have no cues.
   bool haveCues;
   int64_t dummy = -1;
-  haveCues = nestegg_get_cue_point(mContext, 0, -1, &dummy, &dummy) == 0;
+  haveCues = nestegg_get_cue_point(mContext, 0, -1, &dummy, &dummy,
+                                   (uint64_t*)&dummy) == 0;
   mDecoder->SetMediaSeekable(haveCues);
 
   *aInfo = mInfo;
@@ -922,6 +937,25 @@ void WebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_
 }
 
 #ifdef MOZ_DASH
+int64_t
+WebMReader::GetSubsegmentForSeekTime(int64_t aSeekToTime)
+{
+  NS_ENSURE_TRUE(0 <= aSeekToTime, -1);
+  // Check the first n-1 subsegments. End time is the start time of the next
+  // subsegment.
+  for (uint32_t i = 1; i < (mClusterByteRanges.Length()); i++) {
+    if (aSeekToTime < mClusterByteRanges[i].mStartTime) {
+      return i-1;
+    }
+  }
+  // Check the last subsegment. End time is the end time of the file.
+  NS_ASSERTION(mDecoder, "Decoder should not be null!");
+  if (aSeekToTime <= mDecoder->GetMediaDuration()) {
+    return mClusterByteRanges.Length()-1;
+  }
+
+  return (-1);
+}
 nsresult
 WebMReader::GetSubsegmentByteRanges(nsTArray<MediaByteRange>& aByteRanges)
 {
@@ -930,7 +964,10 @@ WebMReader::GetSubsegmentByteRanges(nsTArray<MediaByteRange>& aByteRanges)
   NS_ENSURE_FALSE(mClusterByteRanges.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_FALSE(mCuesByteRange.IsNull(), NS_ERROR_NOT_INITIALIZED);
 
-  aByteRanges = mClusterByteRanges;
+  for (uint32_t i = 0; i < mClusterByteRanges.Length(); i++) {
+    aByteRanges.AppendElement();
+    aByteRanges[i] = mClusterByteRanges[i];
+  }
 
   return NS_OK;
 }
@@ -949,6 +986,7 @@ WebMReader::RequestSwitchAtSubsegment(int32_t aSubsegmentIdx,
   }
   NS_ENSURE_TRUE((uint32_t)aSubsegmentIdx < mClusterByteRanges.Length(), );
   mSwitchingCluster = aSubsegmentIdx;
+  NS_ENSURE_TRUE(aNextReader, );
   NS_ENSURE_TRUE(aNextReader != this, );
   mNextReader = static_cast<WebMReader*>(aNextReader);
 }
@@ -1027,5 +1065,3 @@ WebMReader::HasReachedSubsegment(uint32_t aSubsegmentIndex)
 #endif /* MOZ_DASH */
 
 } // namespace mozilla
-
-

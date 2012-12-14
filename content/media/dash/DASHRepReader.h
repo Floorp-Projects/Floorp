@@ -41,6 +41,9 @@ public:
   // Sets range for index frame bytes; used by DASH.
   virtual void SetIndexByteRange(MediaByteRange &aByteRange) = 0;
 
+  // Returns the index of the subsegment which contains the seek time (usecs).
+  virtual int64_t GetSubsegmentForSeekTime(int64_t aSeekToTime) = 0;
+
   // Returns list of ranges for index frame start/end offsets. Used by DASH.
   virtual nsresult GetSubsegmentByteRanges(nsTArray<MediaByteRange>& aByteRanges) = 0;
 

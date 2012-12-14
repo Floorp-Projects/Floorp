@@ -99,6 +99,36 @@ class AssemblerX86Shared
         DoubleLessThanOrEqualOrUnordered = BelowOrEqual
     };
 
+    enum NaNCond {
+        NaN_Unexpected,
+        NaN_IsTrue,
+        NaN_IsFalse
+    };
+
+    static inline NaNCond NaNCondFromDoubleCondition(DoubleCondition cond) {
+        switch (cond) {
+          case DoubleOrdered:
+          case DoubleEqual:
+          case DoubleNotEqual:
+          case DoubleGreaterThan:
+          case DoubleGreaterThanOrEqual:
+          case DoubleLessThan:
+          case DoubleLessThanOrEqual:
+            return NaN_IsFalse;
+          case DoubleUnordered:
+          case DoubleEqualOrUnordered:
+          case DoubleNotEqualOrUnordered:
+          case DoubleGreaterThanOrUnordered:
+          case DoubleGreaterThanOrEqualOrUnordered:
+          case DoubleLessThanOrUnordered:
+          case DoubleLessThanOrEqualOrUnordered:
+            return NaN_IsTrue;
+        }
+
+        JS_NOT_REACHED("Unknown double condition");
+        return NaN_Unexpected;
+    }
+
     static void staticAsserts() {
         // DoubleConditionBits should not interfere with x86 condition codes.
         JS_STATIC_ASSERT(!((Equal | NotEqual | Above | AboveOrEqual | Below |

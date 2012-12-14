@@ -1,0 +1,25 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=799419
+-->
+<head>
+  <meta charset="utf-8">
+  <title>2 Peer Connections Create and Close + Fake Video</title>
+  <script type="application/javascript">
+    function boom() {
+      var v0 = mozRTCPeerConnection();
+      var v1 = mozRTCPeerConnection();
+      var v2 = document.getElementById("pc1video");
+      var v3 = document.getElementById("pc2video");
+      navigator.mozGetUserMedia({video:true, fake: true},
+        function(stream) {}, function() {});
+      v0.close();
+      v1.close();
+    }
+  </script>
+<body onload="boom()">
+<video id="pc1video" width="100" height="100" controls></video>
+<video id="pc2video" width="100" height="100" controls></video>
+</body>
+</html>
