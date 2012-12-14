@@ -121,6 +121,8 @@ public:
 
     static int32_t   CacheCompressionLevel();
 
+    static bool      GetClearingEntries();
+
     /**
      * Methods called by any cache classes
      */
@@ -284,10 +286,9 @@ private:
 
     nsresult         ProcessPendingRequests(nsCacheEntry * entry);
 
-    void             ClearPendingRequests(nsCacheEntry * entry);
     void             ClearDoomList(void);
-    void             ClearActiveEntries(void);
     void             DoomActiveEntries(DoomCheckFn check);
+    void             CloseAllStreams();
 
     static
     PLDHashOperator  GetActiveEntries(PLDHashTable *    table,

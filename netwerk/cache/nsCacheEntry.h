@@ -191,16 +191,17 @@ public:
                                nsCacheAccessMode          accessGranted,
                                nsICacheEntryDescriptor ** result);
 
-    //    nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);
-    //    nsresult AsyncOpen(nsCacheRequest *request);
     bool     RemoveRequest( nsCacheRequest * request);
-    bool     RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
-    
+    bool     RemoveDescriptor( nsCacheEntryDescriptor * descriptor,
+                               bool                   * doomEntry);
+
+    void     GetDescriptors(nsTArray<nsRefPtr<nsCacheEntryDescriptor> > &outDescriptors);
+
 private:
     friend class nsCacheEntryHashTable;
     friend class nsCacheService;
 
-    void     DetachDescriptors(void);
+    void     DetachDescriptors();
 
     // internal methods
     void MarkDoomed()          { mFlags |=  eDoomedMask; }
