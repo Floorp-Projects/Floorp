@@ -185,7 +185,7 @@ nsHostRecord::~nsHostRecord()
 }
 
 bool
-nsHostRecord::Blacklisted(NetAddr *aQuery)
+nsHostRecord::Blacklisted(PRNetAddr *aQuery)
 {
     // must call locked
     LOG(("Checking blacklist for host [%s], host record [%p].\n", host, this));
@@ -195,8 +195,8 @@ nsHostRecord::Blacklisted(NetAddr *aQuery)
         return false;
     }
 
-    char buf[kIPv6CStrBufSize];
-    if (!NetAddrToString(aQuery, buf, sizeof(buf))) {
+    char buf[64];
+    if (PR_NetAddrToString(aQuery, buf, sizeof(buf)) != PR_SUCCESS) {
         return false;
     }
     nsDependentCString strQuery(buf);
@@ -212,13 +212,13 @@ nsHostRecord::Blacklisted(NetAddr *aQuery)
 }
 
 void
-nsHostRecord::ReportUnusable(NetAddr *aAddress)
+nsHostRecord::ReportUnusable(PRNetAddr *aAddress)
 {
     // must call locked
     LOG(("Adding address to blacklist for host [%s], host record [%p].\n", host, this));
 
-    char buf[kIPv6CStrBufSize];
-    if (NetAddrToString(aAddress, buf, sizeof(buf))) {
+    char buf[64];
+    if (PR_NetAddrToString(aAddress, buf, sizeof(buf)) == PR_SUCCESS) {
         LOG(("Successfully adding address [%s] to blacklist for host [%s].\n", buf, host));
         mBlacklistedItems.AppendElement(nsCString(buf));
     }
@@ -281,10 +281,14 @@ HostDB_ClearEntry(PLDHashTable *table,
         int32_t now = (int32_t) NowInMinutes();
         int32_t diff = (int32_t) he->rec->expiration - now;
         LOG(("Record for [%s] expires in %d minute(s).\n", he->rec->host, diff));
-        NetAddrElement *addrElement;
-        char buf[kIPv6CStrBufSize];
-        while ((addrElement = he->rec->addr_info->mAddresses.popLast())) {
-            NetAddrToString(&addrElement->mAddress, buf, sizeof(buf));
+        void *iter = nullptr;
+        PRNetAddr addr;
+        char buf[64];
+        for (;;) {
+            iter = PR_EnumerateAddrInfo(iter, he->rec->addr_info, 0, &addr);
+            if (!iter)
+                break;
+            PR_NetAddrToString(&addr, buf, sizeof(buf));
             LOG(("  [%s]\n", buf));
         }
     }
@@ -502,10 +506,10 @@ nsHostResolver::ResolveHost(const char            *host,
         if (mShutdown)
             rv = NS_ERROR_NOT_INITIALIZED;
         else {
-            // Used to try to parse to an IP address literal.
             PRNetAddr tempAddr;
-            // Unfortunately, PR_StringToNetAddr does not properly initialize
-            // the output buffer in the case of IPv6 input. See bug 223145.
+
+            // unfortunately, PR_StringToNetAddr does not properly initialize
+            // the output buffer in the case of IPv6 input.  see bug 223145.
             memset(&tempAddr, 0, sizeof(PRNetAddr));
             
             // check to see if there is already an entry for this |host|
@@ -568,8 +572,11 @@ nsHostResolver::ResolveHost(const char            *host,
             else if (PR_StringToNetAddr(host, &tempAddr) == PR_SUCCESS) {
                 // ok, just copy the result into the host record, and be done
                 // with it! ;-)
-                he->rec->addr = new NetAddr();
-                PRNetAddrToNetAddr(&tempAddr, he->rec->addr);
+                he->rec->addr = (PRNetAddr *) malloc(sizeof(PRNetAddr));
+                if (!he->rec->addr)
+                    status = NS_ERROR_OUT_OF_MEMORY;
+                else
+                    memcpy(he->rec->addr, &tempAddr, sizeof(PRNetAddr));
                 // put reference to host record on stack...
                 Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2,
                                       METHOD_LITERAL);
@@ -813,7 +820,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
 }
 
 void
-nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, AddrInfo *result)
+nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo *result)
 {
     // get the list of pending callbacks for this lookup, and notify
     // them that the lookup is complete.
@@ -827,15 +834,15 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, AddrInfo *r
 
         // update record fields.  We might have a rec->addr_info already if a
         // previous lookup result expired and we're reresolving it..
-        AddrInfo  *old_addr_info;
+        PRAddrInfo  *old_addr_info;
         {
             MutexAutoLock lock(rec->addr_info_lock);
             old_addr_info = rec->addr_info;
             rec->addr_info = result;
             rec->addr_info_gencnt++;
         }
-        delete old_addr_info;
-
+        if (old_addr_info)
+            PR_FreeAddrInfo(old_addr_info);
         rec->expiration = NowInMinutes();
         if (result) {
             rec->expiration += mMaxCacheLifetime;
@@ -951,7 +958,7 @@ nsHostResolver::ThreadFunc(void *arg)
 #endif
     nsHostResolver *resolver = (nsHostResolver *)arg;
     nsHostRecord *rec;
-    PRAddrInfo *prai = nullptr;
+    PRAddrInfo *ai;
     while (resolver->GetHostToLookup(&rec)) {
         LOG(("Calling getaddrinfo for host [%s].\n", rec->host));
 
@@ -961,21 +968,18 @@ nsHostResolver::ThreadFunc(void *arg)
 
         TimeStamp startTime = TimeStamp::Now();
 
-        prai = PR_GetAddrInfoByName(rec->host, rec->af, flags);
+        ai = PR_GetAddrInfoByName(rec->host, rec->af, flags);
 #if defined(RES_RETRY_ON_FAILURE)
-        if (!prai && rs.Reset())
-            prai = PR_GetAddrInfoByName(rec->host, rec->af, flags);
+        if (!ai && rs.Reset())
+            ai = PR_GetAddrInfoByName(rec->host, rec->af, flags);
 #endif
 
         TimeDuration elapsed = TimeStamp::Now() - startTime;
         uint32_t millis = static_cast<uint32_t>(elapsed.ToMilliseconds());
 
-        // convert error code to nsresult
+        // convert error code to nsresult.
         nsresult status;
-        AddrInfo *ai = nullptr;
-        if (prai) {
-            ai = new AddrInfo(rec->host, prai);
-
+        if (ai) {
             status = NS_OK;
 
             Telemetry::Accumulate(!rec->addr_info_gencnt ?
@@ -1028,44 +1032,44 @@ PLDHashOperator
 CacheEntryEnumerator(PLDHashTable *table, PLDHashEntryHdr *entry,
                      uint32_t number, void *arg)
 {
-    // We don't pay attention to address literals, only resolved domains.
-    // Also require a host.
-    nsHostRecord *rec = static_cast<nsHostDBEnt*>(entry)->rec;
-    if (!rec->addr_info || !rec->host) {
-        return PL_DHASH_NEXT;
-    }
+    nsHostDBEnt *ent = static_cast<nsHostDBEnt *> (entry);
+    nsTArray<DNSCacheEntries> *args =
+        static_cast<nsTArray<DNSCacheEntries> *> (arg);
+    nsHostRecord *rec = ent->rec;
+    // Without addr_info, there is no meaning of adding this entry
+    if (rec->addr_info) {
+        DNSCacheEntries info;
+        const char *hostname;
+        PRNetAddr addr;
 
-    DNSCacheEntries info;
-    info.hostname = rec->host;
-    info.family = rec->af;
-    info.expiration = ((int64_t)rec->expiration - NowInMinutes()) * 60;
-    if (info.expiration <= 0) {
+        if (rec->host)
+            hostname = rec->host;
+        else // No need to add this entry if no host name is there
+            return PL_DHASH_NEXT;
+
+        uint32_t now = NowInMinutes();
+        info.expiration = ((int64_t) rec->expiration - now) * 60;
+
         // We only need valid DNS cache entries
-        return PL_DHASH_NEXT;
-    }
+        if (info.expiration <= 0)
+            return PL_DHASH_NEXT;
 
-    {
-        MutexAutoLock lock(rec->addr_info_lock);
+        info.family = rec->af;
+        info.hostname = hostname;
 
-        NetAddr *addr = nullptr;
-        NetAddrElement *addrElement = rec->addr_info->mAddresses.getFirst();
-        if (addrElement) {
-            addr = &addrElement->mAddress;
-        }
-        while (addr) {
-            char buf[kIPv6CStrBufSize];
-            if (NetAddrToString(addr, buf, sizeof(buf))) {
-                info.hostaddr.AppendElement(buf);
-            }
-            addrElement = addrElement->getNext();
-            if (addrElement) {
-                addr = &addrElement->mAddress;
+        {
+            MutexAutoLock lock(rec->addr_info_lock);
+            void *ptr = PR_EnumerateAddrInfo(nullptr, rec->addr_info, 0, &addr);
+            while (ptr) {
+                char buf[64];
+                if (PR_NetAddrToString(&addr, buf, sizeof(buf)) == PR_SUCCESS)
+                    info.hostaddr.AppendElement(buf);
+                ptr = PR_EnumerateAddrInfo(ptr, rec->addr_info, 0, &addr);
             }
         }
-    }
 
-    nsTArray<DNSCacheEntries> *args = static_cast<nsTArray<DNSCacheEntries> *>(arg);
-    args->AppendElement(info);
+        args->AppendElement(info);
+    }
 
     return PL_DHASH_NEXT;
 }

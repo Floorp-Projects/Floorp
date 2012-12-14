@@ -27,10 +27,9 @@ XPIDLSRCS = \
   $(NULL)
 
 CPPSRCS = \
-  DNS.cpp \
   nsIDNService.cpp \
-  nsHostResolver.cpp \
   nsDNSService2.cpp \
+  nsHostResolver.cpp \
   nsEffectiveTLDService.cpp \
   $(NULL)
 
@@ -39,12 +38,6 @@ CSRCS = \
   nameprep.c \
   punycode.c \
   $(NULL)
-
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net = \
-  DNS.h \
-  $(null)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
