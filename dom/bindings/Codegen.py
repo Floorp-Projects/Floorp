@@ -4388,11 +4388,10 @@ class CGGenericSetter(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-                "JS::Value* argv = JS_ARGV(cx, vp);\n"
-                "JS::Value undef = JS::UndefinedValue();\n"
                 "if (argc == 0) {\n"
-                "  argv = &undef;\n"
+                '  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s attribute setter");\n'
                 "}\n"
+                "JS::Value* argv = JS_ARGV(cx, vp);\n"
                 "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
                 "MOZ_ASSERT(info->type == JSJitInfo::Setter);\n"
                 "JSJitPropertyOp setter = info->op;\n"
@@ -4400,7 +4399,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
                 "  return false;\n"
                 "}\n"
                 "*vp = JSVAL_VOID;\n"
-                "return true;"))
+                "return true;" % self.descriptor.interface.identifier.name))
 
 class CGSpecializedSetter(CGAbstractStaticMethod):
     """
