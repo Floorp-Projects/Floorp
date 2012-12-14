@@ -39,7 +39,7 @@ public:
   virtual already_AddRefed<mozilla::dom::CSSValue>
   GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
     MOZ_OVERRIDE;
-  using nsIDOMCSSStyleDeclaration::GetPropertyCSSValue;
+  using nsICSSDeclaration::GetPropertyCSSValue;
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
 
   enum StyleType {
