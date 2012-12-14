@@ -22,4 +22,5 @@ public interface Assert {
 
     // robocop-specific asserts
     void ispixel(int actual, int r, int g, int b, String name);
+    void isnotpixel(int actual, int r, int g, int b, String name);
 }
