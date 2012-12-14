@@ -1673,20 +1673,19 @@ update(ObjectActor.prototype, {
   }),
 
   /**
-   * Handle a protocol request to provide the name and parameters of a function.
+   * Handle a protocol request to provide the parameters of a function.
    *
    * @param aRequest object
    *        The protocol request object.
    */
-  onNameAndParameters: PauseScopedActor.withPaused(function OA_onNameAndParameters(aRequest) {
+  onParameterNames: PauseScopedActor.withPaused(function OA_onParameterNames(aRequest) {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
-               message: "nameAndParameters request is only valid for object " +
+               message: "'parameterNames' request is only valid for object " +
                         "grips with a 'Function' class." };
     }
 
-    return { name: this.obj.name || null,
-             parameters: this.obj.parameterNames };
+    return { parameterNames: this.obj.parameterNames };
   }),
 
   /**
@@ -1719,7 +1718,7 @@ update(ObjectActor.prototype, {
 });
 
 ObjectActor.prototype.requestTypes = {
-  "nameAndParameters": ObjectActor.prototype.onNameAndParameters,
+  "parameterNames": ObjectActor.prototype.onParameterNames,
   "prototypeAndProperties": ObjectActor.prototype.onPrototypeAndProperties,
   "prototype": ObjectActor.prototype.onPrototype,
   "property": ObjectActor.prototype.onProperty,
