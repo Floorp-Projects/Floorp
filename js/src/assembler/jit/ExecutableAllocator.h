@@ -267,7 +267,7 @@ private:
     static size_t pageSize;
     static size_t largeAllocSize;
 #if WTF_OS_WINDOWS
-    static int64_t rngSeed;
+    static uint64_t rngSeed;
 #endif
 
     static const size_t OVERSIZE_ALLOCATION = size_t(-1);

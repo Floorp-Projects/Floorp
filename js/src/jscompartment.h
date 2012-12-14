@@ -470,6 +470,9 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
 
     js::DtoaCache dtoaCache;
 
+    /* Random number generator state, used by jsmath.cpp. */
+    uint64_t rngState;
+
   private:
     /*
      * Weak reference to each global in this compartment that is a debuggee.
