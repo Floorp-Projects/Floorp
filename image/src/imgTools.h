@@ -8,11 +8,11 @@
 #include "gfxContext.h"
 
 #define NS_IMGTOOLS_CID \
-{ /* fd9a9e8a-a77b-496a-b7bb-263df9715149 */         \
-     0xfd9a9e8a,                                     \
-     0xa77b,                                         \
-     0x496a,                                         \
-    {0xb7, 0xbb, 0x26, 0x3d, 0xf9, 0x71, 0x51, 0x49} \
+{ /* 4c2383a4-931c-484d-8c4a-973590f66e3f */         \
+     0x4c2383a4,                                     \
+     0x931c,                                         \
+     0x484d,                                         \
+    {0x8c, 0x4a, 0x97, 0x35, 0x90, 0xf6, 0x6e, 0x3f} \
 }
 
 class imgTools : public imgITools
