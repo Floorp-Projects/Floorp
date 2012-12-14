@@ -1093,11 +1093,6 @@ var SocialSidebar = {
 
     let sbrowser = document.getElementById("social-sidebar-browser");
 
-    if (Social.provider)
-      sbrowser.setAttribute("origin", Social.provider.origin);
-    else
-      sbrowser.removeAttribute("origin");
-
     if (hideSidebar) {
       sbrowser.removeEventListener("load", SocialSidebar._loadListener, true);
       this.setSidebarVisibilityState(false);
@@ -1113,6 +1108,7 @@ var SocialSidebar = {
         );
       }
     } else {
+      sbrowser.setAttribute("origin", Social.provider.origin);
       if (Social.provider.errorState == "frameworker-error") {
         SocialSidebar.setSidebarErrorMessage("frameworker-error");
         return;
