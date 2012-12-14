@@ -88,42 +88,16 @@ OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
     return codegen->visitOutOfLineBailout(this);
 }
 
-static inline NaNCond
-NaNCondFromDoubleCondition(Assembler::DoubleCondition cond)
-{
-    switch (cond) {
-      case Assembler::DoubleOrdered:
-      case Assembler::DoubleEqual:
-      case Assembler::DoubleNotEqual:
-      case Assembler::DoubleGreaterThan:
-      case Assembler::DoubleGreaterThanOrEqual:
-      case Assembler::DoubleLessThan:
-      case Assembler::DoubleLessThanOrEqual:
-        return NaN_IsFalse;
-      case Assembler::DoubleUnordered:
-      case Assembler::DoubleEqualOrUnordered:
-      case Assembler::DoubleNotEqualOrUnordered:
-      case Assembler::DoubleGreaterThanOrUnordered:
-      case Assembler::DoubleGreaterThanOrEqualOrUnordered:
-      case Assembler::DoubleLessThanOrUnordered:
-      case Assembler::DoubleLessThanOrEqualOrUnordered:
-        return NaN_IsTrue;
-    }
-
-    JS_NOT_REACHED("Unknown double condition");
-    return NaN_Unexpected;
-}
-
 void
 CodeGeneratorX86Shared::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue,
-                                   MBasicBlock *mirFalse, NaNCond ifNaN)
+                                   MBasicBlock *mirFalse, Assembler::NaNCond ifNaN)
 {
     LBlock *ifTrue = mirTrue->lir();
     LBlock *ifFalse = mirFalse->lir();
 
-    if (ifNaN == NaN_IsFalse)
+    if (ifNaN == Assembler::NaN_IsFalse)
         masm.j(Assembler::Parity, ifFalse->label());
-    else if (ifNaN == NaN_IsTrue)
+    else if (ifNaN == Assembler::NaN_IsTrue)
         masm.j(Assembler::Parity, ifTrue->label());
 
     if (isNextBlock(ifFalse)) {
@@ -168,7 +142,8 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
 }
 
 void
-CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest, NaNCond ifNaN)
+CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest,
+                                Assembler::NaNCond ifNaN)
 {
     if (GeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
         // If the register we're defining is a single byte register,
@@ -176,10 +151,10 @@ CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest,
         masm.setCC(cond, dest);
         masm.movzxbl(dest, dest);
 
-        if (ifNaN != NaN_Unexpected) {
+        if (ifNaN != Assembler::NaN_Unexpected) {
             Label noNaN;
             masm.j(Assembler::NoParity, &noNaN);
-            if (ifNaN == NaN_IsTrue)
+            if (ifNaN == Assembler::NaN_IsTrue)
                 masm.movl(Imm32(1), dest);
             else
                 masm.xorl(dest, dest);
@@ -189,11 +164,11 @@ CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest,
         Label end;
         Label ifFalse;
 
-        if (ifNaN == NaN_IsFalse)
+        if (ifNaN == Assembler::NaN_IsFalse)
             masm.j(Assembler::Parity, &ifFalse);
         masm.movl(Imm32(1), dest);
         masm.j(cond, &end);
-        if (ifNaN == NaN_IsTrue)
+        if (ifNaN == Assembler::NaN_IsTrue)
             masm.j(Assembler::Parity, &end);
         masm.bind(&ifFalse);
         masm.xorl(dest, dest);
@@ -244,7 +219,7 @@ CodeGeneratorX86Shared::visitCompareD(LCompareD *comp)
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(cond, lhs, rhs);
     emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()),
-            NaNCondFromDoubleCondition(cond));
+            Assembler::NaNCondFromDoubleCondition(cond));
     return true;
 }
 
@@ -263,7 +238,7 @@ CodeGeneratorX86Shared::visitNotD(LNotD *ins)
 
     masm.xorpd(ScratchFloatReg, ScratchFloatReg);
     masm.compareDouble(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
-    emitSet(Assembler::Equal, ToRegister(ins->output()), NaN_IsTrue);
+    emitSet(Assembler::Equal, ToRegister(ins->output()), Assembler::NaN_IsTrue);
     return true;
 }
 
@@ -276,7 +251,7 @@ CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(cond, lhs, rhs);
     emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse(),
-               NaNCondFromDoubleCondition(cond));
+               Assembler::NaNCondFromDoubleCondition(cond));
     return true;
 }
 
