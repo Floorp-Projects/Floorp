@@ -902,6 +902,19 @@ struct SliceBudget {
 
 static const size_t MARK_STACK_LENGTH = 32768;
 
+struct GrayRoot {
+    void *thing;
+    JSGCTraceKind kind;
+#ifdef DEBUG
+    JSTraceNamePrinter debugPrinter;
+    const void *debugPrintArg;
+    size_t debugPrintIndex;
+#endif
+
+    GrayRoot(void *thing, JSGCTraceKind kind)
+        : thing(thing), kind(kind) {}
+};
+
 struct GCMarker : public JSTracer {
   private:
     /*
@@ -1002,15 +1015,16 @@ struct GCMarker : public JSTracer {
      * Gray marking must be done after all black marking is complete. However,
      * we do not have write barriers on XPConnect roots. Therefore, XPConnect
      * roots must be accumulated in the first slice of incremental GC. We
-     * accumulate these roots in the GrayRootMarker and then mark them later,
-     * after black marking is complete. This accumulation can fail, but in that
-     * case we switch to non-incremental GC.
+     * accumulate these roots in the each compartment's gcGrayRoots vector and
+     * then mark them later, after black marking is complete for each
+     * compartment. This accumulation can fail, but in that case we switch to
+     * non-incremental GC.
      */
     bool hasBufferedGrayRoots() const;
     void startBufferingGrayRoots();
     void endBufferingGrayRoots();
-    void markBufferedGrayRoots();
-    void markBufferedGrayRootCompartmentsAlive();
+    void resetBufferedGrayRoots();
+    void markBufferedGrayRoots(JSCompartment *comp);
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
 
@@ -1070,21 +1084,7 @@ struct GCMarker : public JSTracer {
     /* Count of arenas that are currently in the stack. */
     mozilla::DebugOnly<size_t> markLaterArenas;
 
-    struct GrayRoot {
-        void *thing;
-        JSGCTraceKind kind;
-#ifdef DEBUG
-        JSTraceNamePrinter debugPrinter;
-        const void *debugPrintArg;
-        size_t debugPrintIndex;
-#endif
-
-        GrayRoot(void *thing, JSGCTraceKind kind)
-          : thing(thing), kind(kind) {}
-    };
-
     bool grayFailed;
-    Vector<GrayRoot, 0, SystemAllocPolicy> grayRoots;
 };
 
 void

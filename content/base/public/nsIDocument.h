@@ -79,8 +79,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xcc604bdc, 0xd55e, 0x4918, \
- { 0xaa, 0x82, 0xb2, 0xde, 0xbf, 0x01, 0x09, 0x5d } }
+{ 0xcb362f1b, 0x8a05, 0x4d4f, \
+  { 0x90, 0x63, 0xf2, 0x5f, 0x8b, 0x8c, 0xb2, 0xe1 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -398,6 +398,22 @@ public:
   void SetBidiOptions(uint32_t aBidiOptions)
   {
     mBidiOptions = aBidiOptions;
+  }
+
+  /**
+   * Get the has mixed active content loaded flag for this document.
+   */
+  bool GetHasMixedActiveContentLoaded()
+  {
+    return mHasMixedActiveContentLoaded;
+  }
+
+  /**
+   * Set the has mixed active content loaded flag for this document.
+   */
+  void SetHasMixedActiveContentLoaded(bool aHasMixedActiveContentLoaded)
+  {
+    mHasMixedActiveContentLoaded = aHasMixedActiveContentLoaded;
   }
 
 
@@ -1898,6 +1914,9 @@ protected:
 
   // True if a DOMMutationObserver is perhaps attached to a node in the document.
   bool mMayHaveDOMMutationObservers;
+
+  // True if a document has loaded Mixed Active Script (see nsMixedContentBlocker.cpp)
+  bool mHasMixedActiveContentLoaded;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the

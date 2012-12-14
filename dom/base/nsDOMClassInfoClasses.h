@@ -128,7 +128,6 @@ DOMCI_CLASS(CSSGroupRuleRuleList)
 DOMCI_CLASS(MediaList)
 DOMCI_CLASS(StyleSheetList)
 DOMCI_CLASS(CSSStyleSheet)
-DOMCI_CLASS(ROCSSPrimitiveValue)
 
 // Range classes
 DOMCI_CLASS(Range)
@@ -162,10 +161,6 @@ DOMCI_CLASS(ChromeWindow)
 
 // RGBColor object used by getComputedStyle
 DOMCI_CLASS(CSSRGBColor)
-
-// CSSValueList object that represents an nsIDOMCSSValueList, used
-// by DOM CSS
-DOMCI_CLASS(CSSValueList)
 
 // ContentList object used for various live NodeLists
 DOMCI_CLASS(ContentList)

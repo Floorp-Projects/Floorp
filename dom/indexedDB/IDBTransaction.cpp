@@ -103,10 +103,7 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
   nsRefPtr<IDBTransaction> transaction = new IDBTransaction();
 
   transaction->BindToOwner(aDatabase);
-  if (!transaction->SetScriptOwner(aDatabase->GetScriptOwner())) {
-    return nullptr;
-  }
-
+  transaction->SetScriptOwner(aDatabase->GetScriptOwner());
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
   transaction->mDatabaseInfo = aDatabase->Info();

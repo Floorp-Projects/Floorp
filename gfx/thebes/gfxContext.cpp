@@ -207,18 +207,9 @@ gfxContext::Restore()
 
     mStateStack.RemoveElementAt(mStateStack.Length() - 1);
 
-    if ((mPathBuilder || mPath || mPathIsRect) && !mTransformChanged) {
-      // Support here isn't fully correct if the path is continued -after-
-      // the restore. We don't currently have users that do this and we should
-      // make sure there will not be any. Sadly we can't assert this easily.
-      mTransformChanged = true;
-      mPathTransform = mTransform;
-    }
-
     mDT = CurrentState().drawTarget;
 
-    mTransform = CurrentState().transform;
-    mDT->SetTransform(GetDTTransform());
+    ChangeTransform(CurrentState().transform, false);
   }
 }
 
@@ -290,6 +281,8 @@ gfxContext::Stroke()
   } else {
     AzureState &state = CurrentState();
     if (mPathIsRect) {
+      MOZ_ASSERT(!mTransformChanged);
+
       mDT->StrokeRect(mRect, GeneralPattern(this),
                       state.strokeOptions,
                       DrawOptions(1.0f, GetOp(), state.aaMode));
@@ -474,10 +467,10 @@ gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels)
       mPathIsRect = true;
       mRect = rec;
       return;
-    } else if (!mPathBuilder) {
-      EnsurePathBuilder();
     }
-    
+
+    EnsurePathBuilder();
+
     mPathBuilder->MoveTo(rec.TopLeft());
     mPathBuilder->LineTo(rec.TopRight());
     mPathBuilder->LineTo(rec.BottomRight());
@@ -1138,7 +1131,9 @@ gfxContext::Clip()
   if (mCairo) {
     cairo_clip_preserve(mCairo);
   } else {
-    if (mPathIsRect && !mTransformChanged) {
+    if (mPathIsRect) {
+      MOZ_ASSERT(!mTransformChanged);
+
       AzureState::PushedClip clip = { NULL, mRect, mTransform };
       CurrentState().pushedClips.AppendElement(clip);
       mDT->PushClipRect(mRect);
@@ -1950,33 +1945,50 @@ gfxContext::EnsurePath()
 void
 gfxContext::EnsurePathBuilder()
 {
-  if (mPathBuilder) {
+  if (mPathBuilder && !mTransformChanged) {
     return;
   }
 
   if (mPath) {
-    mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
-    mPath = NULL;
+    if (!mTransformChanged) {
+      mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
+      mPath = NULL;
+    } else {
+      Matrix invTransform = mTransform;
+      invTransform.Invert();
+      Matrix toNewUS = mPathTransform * invTransform;
+      mPathBuilder = mPath->TransformedCopyToBuilder(toNewUS, CurrentState().fillRule);
+    }
+    return;
   }
 
-  mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
+  DebugOnly<PathBuilder*> oldPath = mPathBuilder.get();
 
-  if (mPathIsRect && !mTransformChanged) {
-    mPathBuilder->MoveTo(mRect.TopLeft());
-    mPathBuilder->LineTo(mRect.TopRight());
-    mPathBuilder->LineTo(mRect.BottomRight());
-    mPathBuilder->LineTo(mRect.BottomLeft());
-    mPathBuilder->Close();
-  } else if (mPathIsRect) {
-    mTransformChanged = false;
-    Matrix mat = mTransform;
-    mat.Invert();
-    mat = mPathTransform * mat;
-    mPathBuilder->MoveTo(mat * mRect.TopLeft());
-    mPathBuilder->LineTo(mat * mRect.TopRight());
-    mPathBuilder->LineTo(mat * mRect.BottomRight());
-    mPathBuilder->LineTo(mat * mRect.BottomLeft());
-    mPathBuilder->Close();
+  if (!mPathBuilder) {
+    mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
+
+    if (mPathIsRect) {
+      mPathBuilder->MoveTo(mRect.TopLeft());
+      mPathBuilder->LineTo(mRect.TopRight());
+      mPathBuilder->LineTo(mRect.BottomRight());
+      mPathBuilder->LineTo(mRect.BottomLeft());
+      mPathBuilder->Close();
+    }
+  }
+
+  if (mTransformChanged) {
+    // This could be an else if since this should never happen when
+    // mPathBuilder is NULL and mPath is NULL. But this way we can assert
+    // if all the state is as expected.
+    MOZ_ASSERT(oldPath);
+    MOZ_ASSERT(!mPathIsRect);
+
+    Matrix invTransform = mTransform;
+    invTransform.Invert();
+    Matrix toNewUS = mPathTransform * invTransform;
+
+    RefPtr<Path> path = mPathBuilder->Finish();
+    mPathBuilder = path->TransformedCopyToBuilder(toNewUS, CurrentState().fillRule);
   }
 
   mPathIsRect = false;
@@ -1989,7 +2001,9 @@ gfxContext::FillAzure(Float aOpacity)
 
   CompositionOp op = GetOp();
 
-  if (mPathIsRect && !mTransformChanged) {
+  if (mPathIsRect) {
+    MOZ_ASSERT(!mTransformChanged);
+
     if (state.opIsClear) {
       mDT->ClearRect(mRect);
     } else if (op == OP_SOURCE) {
@@ -2069,31 +2083,36 @@ gfxContext::GetOp()
 /* SVG font code can change the transform after having set the pattern on the
  * context. When the pattern is set it is in user space, if the transform is
  * changed after doing so the pattern needs to be converted back into userspace.
- * We just store the old pattern here so that we only do the work needed here
- * if the pattern is actually used.
+ * We just store the old pattern transform here so that we only do the work
+ * needed here if the pattern is actually used.
+ * We need to avoid doing this when this ChangeTransform comes from a restore,
+ * since the current pattern and the current transform are both part of the
+ * state we know the new CurrentState()'s values are valid. But if we assume
+ * a change they might become invalid since patternTransformChanged is part of
+ * the state and might be false for the restored AzureState.
  */
 void
-gfxContext::ChangeTransform(const Matrix &aNewMatrix)
+gfxContext::ChangeTransform(const Matrix &aNewMatrix, bool aUpdatePatternTransform)
 {
   AzureState &state = CurrentState();
 
-  if ((state.pattern || state.sourceSurface)
+  if (aUpdatePatternTransform && (state.pattern || state.sourceSurface)
       && !state.patternTransformChanged) {
     state.patternTransform = mTransform;
     state.patternTransformChanged = true;
   }
 
-  if (mPathBuilder || mPathIsRect) {
+  if (mPathIsRect) {
     Matrix invMatrix = aNewMatrix;
     
     invMatrix.Invert();
 
     Matrix toNewUS = mTransform * invMatrix;
 
-    if (toNewUS.IsRectilinear() && mPathIsRect) {
+    if (toNewUS.IsRectilinear()) {
       mRect = toNewUS.TransformBounds(mRect);
       mRect.NudgeToIntegers();
-    } else if (mPathIsRect) {
+    } else {
       mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
       
       mPathBuilder->MoveTo(toNewUS * mRect.TopLeft());
@@ -2101,13 +2120,15 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix)
       mPathBuilder->LineTo(toNewUS * mRect.BottomRight());
       mPathBuilder->LineTo(toNewUS * mRect.BottomLeft());
       mPathBuilder->Close();
-    } else {
-      RefPtr<Path> path = mPathBuilder->Finish();
-      // Create path in device space.
-      mPathBuilder = path->TransformedCopyToBuilder(toNewUS);
+
+      mPathIsRect = false;
     }
+
     // No need to consider the transform changed now!
     mTransformChanged = false;
+  } else if ((mPath || mPathBuilder) && !mTransformChanged) {
+    mTransformChanged = true;
+    mPathTransform = mTransform;
   }
 
   mTransform = aNewMatrix;

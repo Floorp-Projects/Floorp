@@ -70,8 +70,13 @@ struct IonOptions
 
     // Toggles whether Range Analysis is used.
     //
-    // Default: false
+    // Default: true
     bool rangeAnalysis;
+
+    // Toggles whether Unreachable Code Elimination is performed.
+    //
+    // Default: true
+    bool uce;
 
     // Toggles whether compilation occurs off the main thread.
     //
@@ -178,6 +183,7 @@ struct IonOptions
         inlining(true),
         edgeCaseAnalysis(true),
         rangeAnalysis(true),
+        uce(true),
         parallelCompilation(false),
         usesBeforeCompile(10240),
         usesBeforeCompileNoJaeger(40),

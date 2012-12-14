@@ -6,7 +6,13 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
-[scriptable, uuid(de54f594-4c20-4968-a27a-83b38ff952b9)]
+[scriptable,function, uuid(5c25e4b0-398f-11e2-81c1-0800200c9a66)]
+interface nsIReadShutdownTimeCallback : nsISupports
+{
+  void complete();
+};
+
+[scriptable, uuid(420ebbd5-efe3-42f2-8a13-f695e0fdcca0)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -35,6 +41,12 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   readonly attribute jsval histogramSnapshots;
+
+  /**
+   * The amount of time, in milliseconds, that the last session took
+   * to shutdown.  Reads as 0 to indicate failure.
+   */
+  readonly attribute uint32_t lastShutdownDuration;
 
   /*
    * An object containing information about slow SQL statements.
@@ -179,4 +191,10 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   readonly attribute jsval addonHistogramSnapshots;
+
+  /**
+   * Read how long the previous run took to shutdown. After the callback is
+   * called the data is available in lastShutdownDuration.
+   */
+  void asyncReadShutdownTime(in nsIReadShutdownTimeCallback aCallback);
 };

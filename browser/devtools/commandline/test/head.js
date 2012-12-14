@@ -11,6 +11,18 @@ let console = (function() {
   return tempScope.console;
 })();
 
+let TargetFactory = (function() {
+  let tempScope = {};
+  Components.utils.import("resource:///modules/devtools/Target.jsm", tempScope);
+  return tempScope.TargetFactory;
+})();
+
+let Promise = (function() {
+  let tempScope = {};
+  Components.utils.import("resource://gre/modules/commonjs/promise/core.js", tempScope);
+  return tempScope.Promise;
+})();
+
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 
@@ -26,17 +38,28 @@ function addTab(aURL, aCallback)
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  content.location = aURL;
+  if (aURL != null) {
+    content.location = aURL;
+  }
+
+  let deferred = Promise.defer();
 
   let tab = gBrowser.selectedTab;
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
   let browser = gBrowser.getBrowserForTab(tab);
 
   function onTabLoad() {
     browser.removeEventListener("load", onTabLoad, true);
-    aCallback(browser, tab, browser.contentDocument);
+
+    if (aCallback != null) {
+      aCallback(browser, tab, browser.contentDocument);
+    }
+
+    deferred.resolve({ browser: browser, tab: tab, target: target });
   }
 
   browser.addEventListener("load", onTabLoad, true);
+  return deferred.promise;
 }
 
 registerCleanupFunction(function tearDown() {

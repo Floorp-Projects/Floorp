@@ -18,8 +18,8 @@ namespace a11y {
 class ChildrenEnumVariant MOZ_FINAL : public IEnumVARIANT
 {
 public:
-  ChildrenEnumVariant(AccessibleWrap* aAnchor) : mAnchorAcc(aAnchor),
-    mCurAcc(mAnchorAcc->GetChildAt(0)), mCurIndex(0), mRefCnt(0) { }
+  ChildrenEnumVariant(AccessibleWrap* aAnchor) : mRefCnt(0), mAnchorAcc(aAnchor),
+    mCurAcc(mAnchorAcc->GetChildAt(0)), mCurIndex(0) { }
 
   // IUnknown
   DECL_IUNKNOWN
@@ -43,8 +43,8 @@ private:
   ChildrenEnumVariant& operator =(const ChildrenEnumVariant&) MOZ_DELETE;
 
   ChildrenEnumVariant(const ChildrenEnumVariant& aEnumVariant) :
-    mAnchorAcc(aEnumVariant.mAnchorAcc), mCurAcc(aEnumVariant.mCurAcc),
-    mCurIndex(aEnumVariant.mCurIndex), mRefCnt(0) { }
+    mRefCnt(0), mAnchorAcc(aEnumVariant.mAnchorAcc), mCurAcc(aEnumVariant.mCurAcc),
+    mCurIndex(aEnumVariant.mCurIndex) { }
   virtual ~ChildrenEnumVariant() { }
 
 protected:

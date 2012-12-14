@@ -7,6 +7,7 @@
 
 interface nsISimpleEnumerator;
 interface nsIRunnable;
+interface nsICancelableRunnable;
 
 /*
  * Memory reporters measure Firefox's memory usage.  They are mainly used to
@@ -226,7 +227,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute int64_t explicitNonHeap;
 };
 
-[scriptable, builtinclass, uuid(8b670411-ea2a-44c2-a36b-529db0670821)]
+[scriptable, builtinclass, uuid(0baaa958-3112-4952-b557-2a0c57eabb8f)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -296,9 +297,9 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * Run a series of GC/CC's in an attempt to minimize the application's memory
    * usage.  When we're finished, we invoke the given runnable if it's not
-   * null.
+   * null.  Returns a reference to the runnable used for carrying out the task.
    */
-  void minimizeMemoryUsage(in nsIRunnable callback);
+  nsICancelableRunnable minimizeMemoryUsage(in nsIRunnable callback);
 };
 
 %{C++

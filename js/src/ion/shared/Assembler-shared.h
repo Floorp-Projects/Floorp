@@ -98,6 +98,12 @@ struct ImmGCPtr
 
     explicit ImmGCPtr(const gc::Cell *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
     { }
+
+    // ImmGCPtr is rooted so we can convert safely directly from Unrooted<T>.
+    template <typename T>
+    explicit ImmGCPtr(Unrooted<T> ptr)
+      : value(reinterpret_cast<uintptr_t>(static_cast<T>(ptr)))
+    { }
 };
 
 // Specifies a hardcoded, absolute address.

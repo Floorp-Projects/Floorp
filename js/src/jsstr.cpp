@@ -3241,13 +3241,13 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-Shape *
+UnrootedShape
 StringObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(nativeEmpty());
 
-    return addDataProperty(cx, NameToId(cx->names().length),
-                           LENGTH_SLOT, JSPROP_PERMANENT | JSPROP_READONLY);
+    RootedId lengthid(cx, NameToId(cx->names().length));
+    return addDataProperty(cx, lengthid, LENGTH_SLOT, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 JSObject *

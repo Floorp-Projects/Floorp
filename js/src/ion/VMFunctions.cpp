@@ -142,7 +142,7 @@ InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue v
 
     if (name == cx->names().proto)
         return baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, false);
-    return !!DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
+    return DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
 }
 
 template<bool Equal>
@@ -358,6 +358,19 @@ ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObje
     if (!js::array_concat(cx, 1, argv))
         return NULL;
     return &argv[0].toObject();
+}
+
+bool
+CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code)
+{
+    JS_ASSERT(index < str->length());
+
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return false;
+
+    *code = chars[index];
+    return true;
 }
 
 JSFlatString *

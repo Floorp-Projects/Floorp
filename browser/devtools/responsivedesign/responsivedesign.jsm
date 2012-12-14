@@ -164,7 +164,7 @@ function ResponsiveUI(aWindow, aTab)
   this.checkMenus();
 
   let target = TargetFactory.forTab(this.tab);
-  this.toolboxWasOpen = !!gDevTools.getToolboxForTarget(target);
+  this.toolboxWasOpen = !!gDevTools.getToolbox(target);
 
   try {
     if (Services.prefs.getBoolPref("devtools.responsiveUI.rotate")) {
@@ -249,7 +249,7 @@ ResponsiveUI.prototype = {
       // We let the toolbox close first.
 
       let target = TargetFactory.forTab(this.tab);
-      let isToolboxOpen =  !!gDevTools.getToolboxForTarget(target);
+      let isToolboxOpen =  !!gDevTools.getToolbox(target);
       if (this.toolboxWasOpen || !isToolboxOpen) {
         aEvent.preventDefault();
         aEvent.stopPropagation();
@@ -608,8 +608,8 @@ ResponsiveUI.prototype = {
     this._resizing = true;
     this.stack.setAttribute("notransition", "true");
 
-    this.lastClientX = aEvent.clientX;
-    this.lastClientY = aEvent.clientY;
+    this.lastScreenX = aEvent.screenX;
+    this.lastScreenY = aEvent.screenY;
 
     this.ignoreY = (aEvent.target === this.resizeBar);
 
@@ -622,8 +622,8 @@ ResponsiveUI.prototype = {
    * @param aEvent
    */
   onDrag: function RUI_onDrag(aEvent) {
-    let deltaX = aEvent.clientX - this.lastClientX;
-    let deltaY = aEvent.clientY - this.lastClientY;
+    let deltaX = aEvent.screenX - this.lastScreenX;
+    let deltaY = aEvent.screenY - this.lastScreenY;
 
     if (this.ignoreY)
       deltaY = 0;
@@ -634,13 +634,13 @@ ResponsiveUI.prototype = {
     if (width < MIN_WIDTH) {
         width = MIN_WIDTH;
     } else {
-        this.lastClientX = aEvent.clientX;
+        this.lastScreenX = aEvent.screenX;
     }
 
     if (height < MIN_HEIGHT) {
         height = MIN_HEIGHT;
     } else {
-        this.lastClientY = aEvent.clientY;
+        this.lastScreenY = aEvent.screenY;
     }
 
     this.setSize(width, height);

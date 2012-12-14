@@ -28,10 +28,29 @@ function doTest(finishcb) {
        "toggle command should be " + (shouldBeShown ? "checked" : "unchecked"));
     is(sidebar.hidden, !shouldBeShown,
        "sidebar should be " + (shouldBeShown ? "visible" : "hidden"));
-    is(Services.prefs.getBoolPref("social.sidebar.open"), shouldBeShown,
-       "sidebar open pref should be " + shouldBeShown);
-    if (shouldBeShown)
+    // The sidebar.open pref only reflects the actual state of the sidebar
+    // when social is enabled.
+    if (Social.enabled)
+      is(Services.prefs.getBoolPref("social.sidebar.open"), shouldBeShown,
+         "sidebar open pref should be " + shouldBeShown);
+    if (shouldBeShown) {
       is(browser.getAttribute('src'), Social.provider.sidebarURL, "sidebar url should be set");
+      // We don't currently check docShellIsActive as this is only set
+      // after load event fires, and the tests below explicitly wait for this
+      // anyway.
+    }
+    else {
+      ok(!browser.docShellIsActive, "sidebar should have an inactive docshell");
+      // sidebar will only be immediately unloaded (and thus set to
+      // about:blank) when canShow is false.
+      if (SocialSidebar.canShow) {
+        // should not have unloaded so will still be the provider URL.
+        is(browser.getAttribute('src'), Social.provider.sidebarURL, "sidebar url should be set");
+      } else {
+        // should have been an immediate unload.
+        is(browser.getAttribute('src'), "about:blank", "sidebar url should be blank");
+      }
+    }
   }
 
   // First check the the sidebar is initially visible, and loaded
@@ -47,6 +66,18 @@ function doTest(finishcb) {
       browser.removeEventListener("socialFrameShow", sidebarshow);
 
       checkShown(true);
+
+      // Set Social.enabled = false and check everything is as expected.
+      Social.enabled = false;
+      checkShown(false);
+
+      Social.enabled = true;
+      checkShown(true);
+
+      // And an edge-case - disable social and reset the provider.
+      Social.provider = null;
+      Social.enabled = false;
+      checkShown(false);
 
       // Finish the test
       finishcb();

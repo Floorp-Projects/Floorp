@@ -1429,6 +1429,48 @@ nsCocoaWindow::GetDefaultScaleInternal()
   return BackingScaleFactor();
 }
 
+static CGFloat
+GetBackingScaleFactor(NSWindow* aWindow)
+{
+  NSRect frame = [aWindow frame];
+  if (frame.size.width > 0 && frame.size.height > 0) {
+    return nsCocoaUtils::GetBackingScaleFactor(aWindow);
+  }
+
+  // For windows with zero width or height, the backingScaleFactor method
+  // is broken - it will always return 2 on a retina macbook, even when
+  // the window position implies it's on a non-hidpi external display
+  // (to the extent that a zero-area window can be said to be "on" a
+  // display at all!)
+  // And to make matters worse, Cocoa even fires a
+  // windowDidChangeBackingProperties notification with the
+  // NSBackingPropertyOldScaleFactorKey key when a window on an
+  // external display is resized to/from zero height, even though it hasn't
+  // really changed screens.
+
+  // This causes us to handle popup window sizing incorrectly when the
+  // popup is resized to zero height (bug 820327) - nsXULPopupManager
+  // becomes (incorrectly) convinced the popup has been explicitly forced
+  // to a non-default size and needs to have size attributes attached.
+
+  // Workaround: instead of asking the window, we'll find the screen it is on
+  // and ask that for *its* backing scale factor.
+
+  // First, expand the rect so that it actually has a measurable area,
+  // for FindTargetScreenForRect to use.
+  if (frame.size.width == 0) {
+    frame.size.width = 1;
+  }
+  if (frame.size.height == 0) {
+    frame.size.height = 1;
+  }
+
+  // Then identify the screen it belongs to, and return its scale factor.
+  NSScreen *screen =
+    FindTargetScreenForRect(nsCocoaUtils::CocoaRectToGeckoRect(frame));
+  return nsCocoaUtils::GetBackingScaleFactor(screen);
+}
+
 CGFloat
 nsCocoaWindow::BackingScaleFactor()
 {
@@ -1438,14 +1480,14 @@ nsCocoaWindow::BackingScaleFactor()
   if (!mWindow) {
     return 1.0;
   }
-  mBackingScaleFactor = nsCocoaUtils::GetBackingScaleFactor(mWindow);
+  mBackingScaleFactor = GetBackingScaleFactor(mWindow);
   return mBackingScaleFactor;
 }
 
 void
 nsCocoaWindow::BackingScaleFactorChanged()
 {
-  CGFloat newScale = nsCocoaUtils::GetBackingScaleFactor(mWindow);
+  CGFloat newScale = GetBackingScaleFactor(mWindow);
 
   // ignore notification if it hasn't really changed (or maybe we have
   // disabled HiDPI mode via prefs)
@@ -2377,7 +2419,7 @@ GetDPI(NSWindow* aWindow)
 
   // Account for HiDPI mode where Cocoa's "points" do not correspond to real
   // device pixels
-  CGFloat backingScale = nsCocoaUtils::GetBackingScaleFactor(aWindow);
+  CGFloat backingScale = GetBackingScaleFactor(aWindow);
 
   return dpi * backingScale;
 }
