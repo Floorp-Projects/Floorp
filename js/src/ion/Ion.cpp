@@ -21,6 +21,7 @@
 #include "jsworkers.h"
 #include "IonCompartment.h"
 #include "CodeGenerator.h"
+#include "BacktrackingAllocator.h"
 #include "StupidAllocator.h"
 #include "UnreachableCodeElimination.h"
 
@@ -996,6 +997,19 @@ CompileBackEnd(MIRGenerator *mir)
 #endif
 
         IonSpewPass("Allocate Registers [LSRA]", &regalloc);
+        break;
+      }
+
+      case RegisterAllocator_Backtracking: {
+        integrity.record();
+
+        BacktrackingAllocator regalloc(mir, &lirgen, *lir);
+        if (!regalloc.go())
+            return NULL;
+        if (!integrity.check(true))
+            return NULL;
+
+        IonSpewPass("Allocate Registers [Backtracking]");
         break;
       }
 

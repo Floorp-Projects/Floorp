@@ -57,8 +57,15 @@ struct AllocationIntegrityState
     struct InstructionInfo {
         Vector<uint32_t, 2, SystemAllocPolicy> inputs;
         Vector<uint32_t, 1, SystemAllocPolicy> outputs;
-        InstructionInfo() {}
-        InstructionInfo(const InstructionInfo &o) {
+        uint32_t reusedInput;
+
+        InstructionInfo()
+          : reusedInput(UINT32_MAX)
+        {}
+
+        InstructionInfo(const InstructionInfo &o)
+          : reusedInput(o.reusedInput)
+        {
             for (size_t i = 0; i < o.inputs.length(); i++)
                 inputs.append(o.inputs[i]);
             for (size_t i = 0; i < o.outputs.length(); i++)
@@ -116,7 +123,6 @@ struct AllocationIntegrityState
                         bool populateSafepoints);
     bool addPredecessor(LBlock *block, uint32_t vreg, LAllocation alloc);
 
-    void check(bool cond, const char *msg);
     void dump();
 };
 
