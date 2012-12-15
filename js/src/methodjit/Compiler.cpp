@@ -3052,8 +3052,13 @@ mjit::Compiler::generateMethod()
             frame.pop();
           END_CASE(JSOP_INITPROP)
 
+          BEGIN_CASE(JSOP_INITELEM_ARRAY)
+            jsop_initelem_array();
+          END_CASE(JSOP_INITELEM_ARRAY)
+
           BEGIN_CASE(JSOP_INITELEM)
-            jsop_initelem();
+            prepareStubCall(Uses(3));
+            INLINE_STUBCALL(stubs::InitElem, REJOIN_FALLTHROUGH);
             frame.popn(2);
           END_CASE(JSOP_INITELEM)
 
@@ -6939,9 +6944,7 @@ mjit::Compiler::jsop_newinit()
         INLINE_STUBCALL(stub, REJOIN_FALLTHROUGH);
         frame.pushSynced(knownPushedType(0));
 
-        frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
         frame.extra(frame.peek(-1)).initObject = baseobj;
-
         return true;
     }
 
@@ -6968,9 +6971,7 @@ mjit::Compiler::jsop_newinit()
 
     stubcc.rejoin(Changes(1));
 
-    frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
     frame.extra(frame.peek(-1)).initObject = baseobj;
-
     return true;
 }
 
