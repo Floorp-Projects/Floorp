@@ -135,18 +135,19 @@ final class ThumbnailHelper {
             return;
         }
 
-        GeckoEvent e = GeckoEvent.createScreenshotEvent(
-                tab.getId(),
-                0, 0, 0, 0, // sx, sy, sw, sh
-                0, 0, mWidth, mHeight, // dx, dy, dw, dh
-                mWidth, mHeight, // bw, bh
-                ScreenshotHandler.SCREENSHOT_THUMBNAIL,
-                mBuffer);
+        GeckoEvent e = GeckoEvent.createThumbnailEvent(tab.getId(), mWidth, mHeight, mBuffer);
         GeckoAppShell.sendEventToGecko(e);
     }
 
-    /* This method is invoked by Gecko once the thumbnail data is ready. */
-    void handleThumbnailData(Tab tab, ByteBuffer data) {
+    /* This method is invoked by JNI once the thumbnail data is ready. */
+    public static void notifyThumbnail(ByteBuffer data, int tabId) {
+        Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab != null) {
+            ThumbnailHelper.getInstance().handleThumbnailData(tab, data);
+        }
+    }
+
+    private void handleThumbnailData(Tab tab, ByteBuffer data) {
         if (data != mBuffer) {
             // This should never happen, but log it and recover gracefully
             Log.e(LOGTAG, "handleThumbnailData called with an unexpected ByteBuffer!");

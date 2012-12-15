@@ -26,10 +26,6 @@ public class ScreenshotLayer extends SingleTileLayer {
     private boolean mHasImage;
     private static String LOGTAG = "GeckoScreenshot";
 
-    public static int getMaxNumPixels() {
-        return SCREENSHOT_SIZE_LIMIT;
-    }
-
     public void reset() {
         mHasImage = false;
     }

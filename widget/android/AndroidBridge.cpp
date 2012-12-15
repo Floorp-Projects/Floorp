@@ -175,9 +175,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jLockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "lockScreenOrientation", "(I)V");
     jUnlockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "unlockScreenOrientation", "()V");
 
-    jScreenshotHandlerClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/ScreenshotHandler"));
-    jNotifyScreenShot = jEnv->GetStaticMethodID(jScreenshotHandlerClass, "notifyScreenShot", "(Ljava/nio/ByteBuffer;IIIIIIII)V");
-    jNotifyPaintedRect = jEnv->GetStaticMethodID(jScreenshotHandlerClass, "notifyPaintedRect", "(FFFF)V");
+    jThumbnailHelperClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/ThumbnailHelper"));
+    jNotifyThumbnail = jEnv->GetStaticMethodID(jThumbnailHelperClass, "notifyThumbnail", "(Ljava/nio/ByteBuffer;I)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -2437,7 +2436,7 @@ jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
 
-nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, int32_t srcX, int32_t srcY, int32_t srcW, int32_t srcH, int32_t dstX, int32_t dstY, int32_t dstW, int32_t dstH, int32_t bufW, int32_t bufH, int32_t tabId, int32_t token, jobject buffer)
+nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, jobject buffer)
 {
     nsresult rv;
     float scale = 1.0;
@@ -2446,37 +2445,37 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, int32_t srcX, int32
         return NS_OK;
 
     // take a screenshot, as wide as possible, proportional to the destination size
-    if (!srcW && !srcH) {
-        nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-        if (!utils)
-            return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
+    if (!utils)
+        return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsIDOMClientRect> rect;
-        rv = utils->GetRootBounds(getter_AddRefs(rect));
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (!rect)
-            return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMClientRect> rect;
+    rv = utils->GetRootBounds(getter_AddRefs(rect));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!rect)
+        return NS_ERROR_FAILURE;
 
-        float left, top, width, height;
-        rect->GetLeft(&left);
-        rect->GetTop(&top);
-        rect->GetWidth(&width);
-        rect->GetHeight(&height);
+    float left, top, width, height;
+    rect->GetLeft(&left);
+    rect->GetTop(&top);
+    rect->GetWidth(&width);
+    rect->GetHeight(&height);
 
-        if (width == 0 || height == 0)
-            return NS_ERROR_FAILURE;
+    if (width == 0 || height == 0)
+        return NS_ERROR_FAILURE;
 
-        float aspectRatio = ((float) dstW) / dstH;
-        if (width / aspectRatio < height) {
-            srcW = width;
-            srcH = width / aspectRatio;
-        } else {
-            srcW = height * aspectRatio;
-            srcH = height;
-        }
+    int32_t srcX = left;
+    int32_t srcY = top;
+    int32_t srcW;
+    int32_t srcH;
 
-        srcX = left;
-        srcY = top;
+    float aspectRatio = ((float) bufW) / bufH;
+    if (width / aspectRatio < height) {
+        srcW = width;
+        srcH = width / aspectRatio;
+    } else {
+        srcW = height * aspectRatio;
+        srcH = height;
     }
 
     JNIEnv* env = GetJNIEnv();
@@ -2516,16 +2515,14 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, int32_t srcX, int32
         return NS_ERROR_FAILURE;
     }
     nsRefPtr<gfxContext> context = new gfxContext(surf);
-    gfxPoint pt(dstX, dstY);
+    gfxPoint pt(0, 0);
     context->Translate(pt);
-    context->Scale(scale * dstW / srcW, scale * dstH / srcH);
+    context->Scale(scale * bufW / srcW, scale * bufH / srcH);
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     NS_ENSURE_SUCCESS(rv, rv);
-    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jScreenshotHandlerClass,
-                              AndroidBridge::Bridge()->jNotifyScreenShot,
-                              buffer, tabId,
-                              dstX, dstY, dstX + dstW, dstY + dstH,
-                              bufW, bufH, token);
+    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jThumbnailHelperClass,
+                              AndroidBridge::Bridge()->jNotifyThumbnail,
+                              buffer, tabId);
     return NS_OK;
 }
 
@@ -2555,19 +2552,6 @@ AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const
         return false;
 
     return client->ProgressiveUpdateCallback(aHasPendingNewThebesContent, aDisplayPort, aDisplayResolution, aDrawingCritical, aViewport, aScaleX, aScaleY);
-}
-
-void
-AndroidBridge::NotifyPaintedRect(float top, float left, float bottom, float right)
-{
-    JNIEnv* env = GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jScreenshotHandlerClass,
-                              AndroidBridge::Bridge()->jNotifyPaintedRect,
-                              top, left, bottom, right);
 }
 
 void
