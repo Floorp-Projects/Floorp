@@ -1375,9 +1375,6 @@ struct JSContext : js::ContextFriendFields,
     /* True if generating an error, to prevent runaway recursion. */
     bool                generatingError;
 
-    /* The current compartment. */
-    JSCompartment       *compartment;
-
     inline void setCompartment(JSCompartment *c) { compartment = c; }
 
     /*

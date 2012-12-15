@@ -1099,7 +1099,6 @@ JSContext::JSContext(JSRuntime *rt)
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
-    compartment(NULL),
     enterCompartmentDepth_(0),
     savedFrameChains_(),
     defaultCompartmentObject_(NULL),
@@ -1129,6 +1128,9 @@ JSContext::JSContext(JSRuntime *rt)
 #endif
     activeCompilations(0)
 {
+    JS_ASSERT(static_cast<ContextFriendFields*>(this) ==
+              ContextFriendFields::get(this));
+
 #ifdef JSGC_ROOT_ANALYSIS
     PodArrayZero(thingGCRooters);
 #if defined(JS_GC_ZEAL) && defined(DEBUG) && !defined(JS_THREADSAFE)
