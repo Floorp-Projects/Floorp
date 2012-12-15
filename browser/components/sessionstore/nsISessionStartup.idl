@@ -10,9 +10,15 @@
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(170c6857-7f71-46ce-bc9b-185723b1c3a8)]
+[scriptable, uuid(35235b39-7098-4b3b-8e28-cd004a88b06f)]
 interface nsISessionStartup: nsISupports
 {
+  /**
+   * Return a promise that is resolved once initialization
+   * is complete.
+   */
+  readonly attribute jsval onceInitialized;
+
   // Get session state
   readonly attribute jsval state;
 
