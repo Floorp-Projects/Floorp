@@ -68,7 +68,7 @@
       <emItem  blockID="i238" id="/^pink@.*\.info$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                              <versionRange  minVersion="18.0" maxVersion="*" />
                           </targetApplication>
                     </versionRange>
                   </emItem>
