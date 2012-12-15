@@ -2722,13 +2722,9 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (!StoringSourceData())
     return NS_OK;
 
-  // If we've already got a full decoder running, we'll spend a bit of time
-  // decoding because the caller want's an image soon.
-  if (mDecoder && !mDecoder->IsSizeDecode()) {
-    if (!mDecoded && !mInDecoder && mHasSourceData && aDecodeType == SOMEWHAT_SYNCHRONOUS) {
-      SAMPLE_LABEL_PRINTF("RasterImage", "DecodeABitOf", "%s", GetURIString());
-      DecodeWorker::Singleton()->DecodeABitOf(this);
-    }
+  // If we've already got a full decoder running, and have already
+  // decoded some bytes, we have nothing to do
+  if (mDecoder && !mDecoder->IsSizeDecode() && mBytesDecoded) {
     return NS_OK;
   }
 
