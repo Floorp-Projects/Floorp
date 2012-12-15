@@ -75,18 +75,14 @@ const TAB_EVENTS = [
 #define BROKEN_WM_Z_ORDER
 #endif
 
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 // debug.js adds NS_ASSERT. cf. bug 669196
-Cu.import("resource://gre/modules/debug.js", this);
-Cu.import("resource:///modules/TelemetryTimestamps.jsm", this);
-Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
-Cu.import("resource://gre/modules/osfile.jsm", this);
-Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
-Cu.import("resource://gre/modules/commonjs/promise/core.js", this);
-
-XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
-  "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
+Cu.import("resource://gre/modules/debug.js");
+Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -96,8 +92,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
   "resource:///modules/sessionstore/DocumentUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
-  "resource:///modules/sessionstore/_SessionFile.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -296,11 +290,8 @@ let SessionStoreInternal = {
   // session
   _lastSessionState: null,
 
-  // A promise resolved once initialization is complete
-  _promiseInitialization: Promise.defer(),
-
-  // Whether session has been initialized
-  _sessionInitialized: false,
+  // Whether we've been initialized
+  _initialized: false,
 
   // The original "sessionstore.resume_session_once" preference value before it
   // was modified by saveState.  saveState will set the
@@ -335,9 +326,6 @@ let SessionStoreInternal = {
    * Initialize the component
    */
   initService: function ssi_initService() {
-    if (this._sessionInitialized) {
-      return;
-    }
     TelemetryTimestamps.add("sessionRestoreInitialized");
     OBSERVING.forEach(function(aTopic) {
       Services.obs.addObserver(this, aTopic, true);
@@ -370,13 +358,15 @@ let SessionStoreInternal = {
       this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
     this._prefBranch.addObserver("sessionstore.restore_pinned_tabs_on_demand", this, true);
 
-    gSessionStartup.onceInitialized.then(
-      this.initSession.bind(this)
-    );
-  },
+    // get file references
+    this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    this._sessionFileBackup = this._sessionFile.clone();
+    this._sessionFile.append("sessionstore.js");
+    this._sessionFileBackup.append("sessionstore.bak");
 
-  initSession: function ssi_initSession() {
-    let ss = gSessionStartup;
+    // get string containing session state
+    var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
+             getService(Ci.nsISessionStartup);
     try {
       if (ss.doRestore() ||
           ss.sessionType == Ci.nsISessionStartup.DEFER_SESSION)
@@ -447,11 +437,14 @@ let SessionStoreInternal = {
     }
 
     if (this._resume_from_crash) {
-      // Launch background copy of the session file. Note that we do
-      // not have race conditions here as _SessionFile guarantees
-      // that any I/O operation is completed before proceeding to
-      // the next I/O operation.
-      _SessionFile.createBackupCopy();
+      // create a backup if the session data file exists
+      try {
+        if (this._sessionFileBackup.exists())
+          this._sessionFileBackup.remove(false);
+        if (this._sessionFile.exists())
+          this._sessionFile.copyTo(null, this._sessionFileBackup.leafName);
+      }
+      catch (ex) { Cu.reportError(ex); } // file was write-locked?
     }
 
     // at this point, we've as good as resumed the session, so we can
@@ -462,9 +455,7 @@ let SessionStoreInternal = {
 
     this._initEncoding();
 
-    // Session is ready.
-    this._sessionInitialized = true;
-    this._promiseInitialization.resolve();
+    this._initialized = true;
   },
 
   _initEncoding : function ssi_initEncoding() {
@@ -504,7 +495,16 @@ let SessionStoreInternal = {
     });
   },
 
-  _initWindow: function ssi_initWindow(aWindow) {
+  /**
+   * Start tracking a window.
+   * This function also initializes the component if it's not already
+   * initialized.
+   */
+  init: function ssi_init(aWindow) {
+    // Initialize the service if needed.
+    if (!this._initialized)
+      this.initService();
+
     if (!aWindow || this._loadState == STATE_RUNNING) {
       // make sure that all browser windows which try to initialize
       // SessionStore are really tracked by it
@@ -525,29 +525,12 @@ let SessionStoreInternal = {
   },
 
   /**
-   * Start tracking a window.
-   *
-   * This function also initializes the component if it is not
-   * initialized yet.
-   */
-  init: function ssi_init(aWindow) {
-    let self = this;
-    this.initService();
-    this._promiseInitialization.promise.then(
-      function onSuccess() {
-        self._initWindow(aWindow);
-      }
-    );
-  },
-
-  /**
    * Called on application shutdown, after notifications:
    * quit-application-granted, quit-application
    */
   _uninit: function ssi_uninit() {
     // save all data for session resuming
-    if (this._sessionInitialized)
-      this.saveState(true);
+    this.saveState(true);
 
     // clear out _tabsToRestore in case it's still holding refs
     this._tabsToRestore.priority = null;
@@ -1015,7 +998,7 @@ let SessionStoreInternal = {
    */
   onPurgeSessionHistory: function ssi_onPurgeSessionHistory() {
     var _this = this;
-    _SessionFile.wipe();
+    this._clearDisk();
     // If the browser is shutting down, simply return after clearing the
     // session data on disk as this notification fires after the
     // quit-application notification so the browser is about to exit.
@@ -1156,7 +1139,7 @@ let SessionStoreInternal = {
         // either create the file with crash recovery information or remove it
         // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
         if (!this._resume_from_crash)
-          _SessionFile.wipe();
+          this._clearDisk();
         this.saveState(true);
         break;
       case "sessionstore.restore_on_demand":
@@ -3784,36 +3767,39 @@ let SessionStoreInternal = {
    */
   _saveStateObject: function ssi_saveStateObject(aStateObj) {
     TelemetryStopwatch.start("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
-    let data = this._toJSONString(aStateObj);
+    var stateString = Cc["@mozilla.org/supports-string;1"].
+                        createInstance(Ci.nsISupportsString);
+    stateString.data = this._toJSONString(aStateObj);
     TelemetryStopwatch.finish("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
 
-    let stateString = this._createSupportsString(data);
     Services.obs.notifyObservers(stateString, "sessionstore-state-write", "");
-    data = stateString.data;
 
-    // Don't touch the file if an observer has deleted all state data.
-    if (!data) {
-      return;
-    }
+    // don't touch the file if an observer has deleted all state data
+    if (stateString.data)
+      this._writeFile(this._sessionFile, stateString.data);
 
-    let self = this;
-    _SessionFile.write(data).then(
-      function onSuccess() {
-        self._lastSaveTime = Date.now();
-        Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
+    this._lastSaveTime = Date.now();
+  },
+
+  /**
+   * delete session datafile and backup
+   */
+  _clearDisk: function ssi_clearDisk() {
+    if (this._sessionFile.exists()) {
+      try {
+        this._sessionFile.remove(false);
       }
-    );
+      catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
+    }
+    if (this._sessionFileBackup.exists()) {
+      try {
+        this._sessionFileBackup.remove(false);
+      }
+      catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
+    }
   },
 
   /* ........ Auxiliary Functions .............. */
-
-  // Wrap a string as a nsISupports
-  _createSupportsString: function ssi_createSupportsString(aData) {
-    let string = Cc["@mozilla.org/supports-string;1"]
-                   .createInstance(Ci.nsISupportsString);
-    string.data = aData;
-    return string;
-  },
 
   /**
    * call a callback for all currently opened browser windows
@@ -4508,6 +4494,33 @@ let SessionStoreInternal = {
                             removeSHistoryListener(browser.__SS_shistoryListener);
       delete browser.__SS_shistoryListener;
     }
+  },
+
+  /**
+   * write file to disk
+   * @param aFile
+   *        nsIFile
+   * @param aData
+   *        String data
+   */
+  _writeFile: function ssi_writeFile(aFile, aData) {
+    let refObj = {};
+    TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
+    let path = aFile.path;
+    let encoded = this._writeFileEncoder.encode(aData);
+    let promise = OS.File.writeAtomic(path, encoded, {tmpPath: path + ".tmp"});
+
+    promise.then(
+      function onSuccess() {
+        TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
+        Services.obs.notifyObservers(null,
+                                      "sessionstore-state-write-complete",
+                                      "");
+      },
+      function onFailure(reason) {
+        TelemetryStopwatch.cancel("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
+        Components.reportError("ssi_writeFile failure " + reason);
+      });
   }
 };
 
