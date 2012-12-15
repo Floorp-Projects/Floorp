@@ -953,12 +953,6 @@ nsPluginHost::InstantiatePluginInstance(const char *aMimeType, nsIURI* aURL,
     return NS_ERROR_FAILURE;
   }
 
-  bool isJava = false;
-  nsPluginTag* pluginTag = FindPluginForType(aMimeType, true);
-  if (pluginTag) {
-    isJava = pluginTag->mIsJavaPlugin;
-  }
-
   rv = SetUpPluginInstance(aMimeType, aURL, instanceOwner);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
