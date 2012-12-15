@@ -149,7 +149,6 @@ FENNEC_JAVA_FILES = \
   gfx/CairoGLInfo.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
-  gfx/CheckerboardImage.java \
   gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
   gfx/DrawTimingQueue.java \
@@ -169,7 +168,6 @@ FENNEC_JAVA_FILES = \
   gfx/PointUtils.java \
   gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
-  gfx/ScreenshotLayer.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
   gfx/TextLayer.java \

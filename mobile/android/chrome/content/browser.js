@@ -295,14 +295,6 @@ var BrowserApp = {
       }
     });
 
-    // after gecko has loaded, set the checkerboarding pref once at startup (for testing only)
-    sendMessageToJava({
-      gecko: {
-        "type": "Checkerboard:Toggle",
-        "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
-      }
-    });
-
 #ifdef MOZ_SAFE_BROWSING
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
     setTimeout(function() { SafeBrowsing.init(); }, 5000);
