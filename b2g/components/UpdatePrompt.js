@@ -22,6 +22,9 @@ const PREF_APPLY_PROMPT_TIMEOUT = "b2g.update.apply-prompt-timeout";
 const PREF_APPLY_IDLE_TIMEOUT   = "b2g.update.apply-idle-timeout";
 
 const NETWORK_ERROR_OFFLINE = 111;
+const FILE_ERROR_TOO_BIG = 112;
+
+const STATE_DOWNLOADING = 'downloading';
 
 XPCOMUtils.defineLazyServiceGetter(Services, "aus",
                                    "@mozilla.org/updates/update-service;1",
@@ -272,8 +275,17 @@ UpdatePrompt.prototype = {
       }
     }
 
-    Services.aus.downloadUpdate(aUpdate, true);
-    Services.aus.addDownloadListener(this);
+    let status = Services.aus.downloadUpdate(aUpdate, true);
+    if (status == STATE_DOWNLOADING) {
+      Services.aus.addDownloadListener(this);
+      return;
+    }
+
+    log("Error downloading update " + aUpdate.name + ": " + aUpdate.errorCode);
+    if (aUpdate.errorCode == FILE_ERROR_TOO_BIG) {
+      aUpdate.statusText = "file-too-big";
+    }
+    this.showUpdateError(aUpdate);
   },
 
   handleDownloadCancel: function UP_handleDownloadCancel() {
