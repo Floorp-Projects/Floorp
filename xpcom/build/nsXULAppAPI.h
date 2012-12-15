@@ -124,6 +124,14 @@
 #define XRE_UPDATE_ROOT_DIR "UpdRootD"
 
 /**
+ * A directory service key which provides an alternate location 
+ * to UpdRootD to  to store large files. This key is currently 
+ * only implemented in the Gonk directory service provider. 
+ */
+
+#define XRE_UPDATE_ARCHIVE_DIR "UpdArchD"
+
+/**
  * A directory service key which provides the directory where an OS update is
 *  applied.
  * At present this is supported only in Gonk.
