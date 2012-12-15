@@ -198,6 +198,12 @@ GetRuntime(const JSContext *cx)
     return ContextFriendFields::get(cx)->runtime;
 }
 
+inline JSCompartment *
+GetContextCompartment(const JSContext *cx)
+{
+    return ContextFriendFields::get(cx)->compartment;
+}
+
 typedef bool
 (* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
 
@@ -681,9 +687,6 @@ GetOwnerThread(const JSContext *cx);
 JS_FRIEND_API(bool)
 ContextHasOutstandingRequests(const JSContext *cx);
 #endif
-
-JS_FRIEND_API(JSCompartment *)
-GetContextCompartment(const JSContext *cx);
 
 JS_FRIEND_API(bool)
 HasUnrootedGlobal(const JSContext *cx);
