@@ -12,6 +12,8 @@
 namespace mozilla {
 namespace system {
 
+class nsVolumeService;
+
 /***************************************************************************
 * The nsVolumeServiceIOThread is a companion class to the nsVolumeService
 * class, but whose methods are called from IOThread.
@@ -21,7 +23,7 @@ class VolumeServiceIOThread : public VolumeManager::StateObserver,
                               public RefCounted<VolumeServiceIOThread>
 {
 public:
-  VolumeServiceIOThread();
+  VolumeServiceIOThread(nsVolumeService *aVolumeService);
   ~VolumeServiceIOThread();
 
 private:
@@ -30,9 +32,10 @@ private:
   virtual void Notify(const VolumeManager::StateChangedEvent &aEvent);
   virtual void Notify(Volume * const &aVolume);
 
+  RefPtr<nsVolumeService>   mVolumeService;
 };
 
-void InitVolumeServiceIOThread();
+void InitVolumeServiceIOThread(nsVolumeService * const &aVolumeService);
 void ShutdownVolumeServiceIOThread();
 
 } // system

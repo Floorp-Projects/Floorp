@@ -30,6 +30,7 @@
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/unused.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsIMemoryInfoDumper.h"
@@ -101,6 +102,7 @@
 #include "AudioChannelService.h"
 
 using namespace base;
+using namespace mozilla;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
@@ -1083,14 +1085,24 @@ ContentChild::RecvFilePathUpdate(const nsString& type, const nsString& path, con
 }
 
 bool
-ContentChild::RecvFileSystemUpdate(const nsString& aFsName, const nsString& aName, const int32_t &aState)
+ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
+                                   const nsString& aName,
+                                   const int32_t& aState,
+                                   const int32_t& aMountGeneration)
 {
 #ifdef MOZ_WIDGET_GONK
-    nsRefPtr<nsVolume> volume = new nsVolume(aFsName, aName, aState);
+    nsRefPtr<nsVolume> volume = new nsVolume(aFsName, aName, aState,
+                                             aMountGeneration);
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     nsString stateStr(NS_ConvertUTF8toUTF16(volume->StateStr()));
     obs->NotifyObservers(volume, NS_VOLUME_STATE_CHANGED, stateStr.get());
+#else
+    // Remove warnings about unused arguments
+    unused << aFsName;
+    unused << aName;
+    unused << aState;
+    unused << aMountGeneration;
 #endif
     return true;
 }
