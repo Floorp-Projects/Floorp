@@ -14,6 +14,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PermissionsTable.jsm");
 
 var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
@@ -67,9 +68,31 @@ PermissionSettings.prototype = {
     }
   },
 
-  set: function set(aPermName, aPermValue, aManifestURL, aOrigin, aBrowserFlag) {
-    debug("Set called with: " + aPermName + ", " + aManifestURL + ", " + aOrigin + ",  " + aPermValue + ", " + aBrowserFlag);
+  isExplicit: function isExplicit(aPermName, aManifestURL, aOrigin,
+                                  aBrowserFlag) {
+    debug("isExplicit: " + aPermName + ", " + aManifestURL + ", " + aOrigin);
+    let uri = Services.io.newURI(aOrigin, null, null);
+    let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
+    let principal = secMan.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
+
+    return isExplicitInPermissionsTable(aPermName, principal.appStatus);
+  },
+
+  set: function set(aPermName, aPermValue, aManifestURL, aOrigin,
+                    aBrowserFlag) {
+    debug("Set called with: " + aPermName + ", " + aManifestURL + ", " +
+          aOrigin + ",  " + aPermValue + ", " + aBrowserFlag); 
     let action;
+    // Check for invalid calls so that we throw an exception rather than get
+    // killed by parent process
+    if (aPermValue === "unknown" ||
+        !this.isExplicit(aPermName, aManifestURL, aOrigin, aBrowserFlag)) {
+      let errorMsg = "PermissionSettings.js: '" + aPermName + "'" +
+                     " is an implicit permission for '" + aManifestURL+"'";
+      Cu.reportError(errorMsg);
+      throw new Components.Exception(errorMsg);
+    }
+
     cpm.sendSyncMessage("PermissionSettings:AddPermission", {
       type: aPermName,
       origin: aOrigin,
