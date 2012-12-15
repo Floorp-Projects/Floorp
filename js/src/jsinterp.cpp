@@ -3073,53 +3073,20 @@ END_CASE(JSOP_INITPROP);
 BEGIN_CASE(JSOP_INITELEM_INC)
 BEGIN_CASE(JSOP_INITELEM)
 {
-    /* Pop the element's value into rval. */
     JS_ASSERT(regs.stackDepth() >= 3);
-    HandleValue rref = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+    HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+    MutableHandleValue id = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
 
     RootedObject &obj = rootObject0;
+    obj = &regs.sp[-3].toObject();
 
-    /* Find the object being initialized at top of stack. */
-    const Value &lref = regs.sp[-3];
-    JS_ASSERT(lref.isObject());
-    obj = &lref.toObject();
+    if (!InitElemOperation(cx, regs.pc, obj, id, val))
+        goto error;
 
-    /* Fetch id now that we have obj. */
-    RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(obj, -2, id);
-
-    /*
-     * If rref is a hole, do not call JSObject::defineProperty. In this case,
-     * obj must be an array, so if the current op is the last element
-     * initialiser, set the array length to one greater than id.
-     */
-    if (rref.isMagic(JS_ARRAY_HOLE)) {
-        JS_ASSERT(obj->isArray());
-        JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        JSOp next = JSOp(*(regs.pc + GetBytecodeLength(regs.pc)));
-        if ((next == JSOP_ENDINIT && op == JSOP_INITELEM) ||
-            (next == JSOP_POP && op == JSOP_INITELEM_INC))
-        {
-            if (!SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
-                goto error;
-        }
-    } else {
-        if (!JSObject::defineGeneric(cx, obj, id, rref, NULL, NULL, JSPROP_ENUMERATE))
-            goto error;
-    }
-    if (op == JSOP_INITELEM_INC) {
-        JS_ASSERT(obj->isArray());
-        if (JSID_TO_INT(id) == INT32_MAX) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_SPREAD_TOO_LARGE);
-            goto error;
-        }
-        regs.sp[-2].setInt32(JSID_TO_INT(id) + 1);
-        regs.sp--;
-    } else {
+    if (JSOp(*regs.pc) == JSOP_INITELEM)
         regs.sp -= 2;
-    }
+    else
+        regs.sp--;
 }
 END_CASE(JSOP_INITELEM)
 

@@ -879,6 +879,52 @@ TypeOfOperation(JSContext *cx, HandleValue v)
     return TypeName(type, cx);
 }
 
+static JS_ALWAYS_INLINE bool
+InitElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, MutableHandleValue idval,
+                  HandleValue val)
+{
+    JSOp op = JSOp(*pc);
+    JS_ASSERT(op == JSOP_INITELEM || op == JSOP_INITELEM_INC);
+
+    RootedId id(cx);
+    if (!FetchElementId(cx, obj, idval, id.address(), idval))
+        return false;
+
+    /*
+     * If val is a hole, do not call JSObject::defineProperty. In this case,
+     * obj must be an array, so if the current op is the last element
+     * initialiser, set the array length to one greater than id.
+     */
+    if (val.isMagic(JS_ARRAY_HOLE)) {
+        JS_ASSERT(obj->isArray());
+        JS_ASSERT(JSID_IS_INT(id));
+        JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
+
+        JSOp next = JSOp(*GetNextPc(pc));
+        if ((op == JSOP_INITELEM && next == JSOP_ENDINIT) ||
+            (op == JSOP_INITELEM_INC && next == JSOP_POP))
+        {
+            if (!SetLengthProperty(cx, obj, uint32_t(JSID_TO_INT(id) + 1)))
+                return false;
+        }
+    } else {
+        if (!JSObject::defineGeneric(cx, obj, id, val, NULL, NULL, JSPROP_ENUMERATE))
+            return false;
+    }
+
+    if (op == JSOP_INITELEM_INC) {
+        JS_ASSERT(obj->isArray());
+        if (JSID_TO_INT(id) == INT32_MAX) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_SPREAD_TOO_LARGE);
+            return false;
+        }
+        idval.setInt32(JSID_TO_INT(id) + 1);
+    }
+
+    return true;
+}
+
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         RootedValue lvalRoot(cx, lhs), rvalRoot(cx, rhs);                     \
