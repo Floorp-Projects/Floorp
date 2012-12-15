@@ -3499,7 +3499,7 @@ function OpenBrowserWindow(options)
 
   var extraFeatures = "";
 #ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-  if (typeof options == "object" && options.private) {
+  if (options && options.private) {
 #else
   if (gPrivateBrowsingUI.privateBrowsingEnabled) {
 #endif
