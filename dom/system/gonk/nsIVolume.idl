@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIVolumeStat.idl"
 
-[scriptable, uuid(3c9cae8d-9da2-4aa1-b8bf-4db8c8620808)]
+[scriptable, uuid(1134f267-7b81-42f2-b64a-6edb91286576)]
 interface nsIVolume : nsISupports
 {
   // These MUST match the states from android's system/vold/Volume.h header
@@ -20,11 +20,30 @@ interface nsIVolume : nsISupports
   const long STATE_SHARED      = 7;
   const long STATE_SHAREDMNT   = 8;
 
+  // The name of the volume. Often there is only one volume, called sdcard.
+  // But some phones support multiple volumes.
   readonly attribute DOMString name;
 
+  // The mount point is the path on the system where the volume is mounted
+  // and is only valid when state == STATE_MOUNTED.
   readonly attribute DOMString mountPoint;
 
+  // Reflects the current state of the volume, using STATE_xxx constants
+  // from above.
   readonly attribute long state;
+
+  // mountGeneration is a unique number which is used distinguish between
+  // periods of time that a volume is in the mounted state. Each time a
+  // volume transitions to the mounted state, the mountGeneration will
+  // be different from the last time it transitioned to the mounted state.
+  readonly attribute long mountGeneration;
+
+  // While a volume is mounted, it can be locked, preventing it from being
+  // shared with the PC. To lock a volume, acquire an nsIDOMMozWakeLock
+  // using the name of this attribute. Note that mountLockName changes
+  // every time the mountGeneration changes, so you'll need to reacquire
+  // the wakelock every time the volume becomes mounted.
+  readonly attribute DOMString mountLockName;
 
   nsIVolumeStat getStats();
 };

@@ -42,7 +42,9 @@ public:
   // (i.e. path that leads to the files stored on the volume).
   const nsCString &MountPoint() const { return mMountPoint; }
 
-  bool MediaPresent() const     { return mMediaPresent; }
+  int32_t MountGeneration() const     { return mMountGeneration; }
+  bool IsMountLocked() const          { return mMountLocked; }
+  bool MediaPresent() const           { return mMediaPresent; }
 
   typedef mozilla::Observer<Volume *>     EventObserver;
   typedef mozilla::ObserverList<Volume *> EventObserverList;
@@ -53,6 +55,7 @@ public:
 
 private:
   friend class AutoMounter;         // Calls StartXxx
+  friend class nsVolume;            // Calls UpdateMountLock
   friend class VolumeManager;       // Calls HandleVoldResponse
   friend class VolumeListCallback;  // Calls SetMountPoint, SetState
 
@@ -71,10 +74,16 @@ private:
 
   void HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer &aTokenizer);
 
+  static void UpdateMountLock(const nsACString &aVolumeName,
+                              const int32_t &aMountGeneration,
+                              const bool &aMountLocked);
+
   bool              mMediaPresent;
   STATE             mState;
   const nsCString   mName;
   nsCString         mMountPoint;
+  int32_t           mMountGeneration;
+  bool              mMountLocked;
 
   static EventObserverList mEventObserverList;
 };
