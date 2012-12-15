@@ -334,6 +334,8 @@ private:
 
     virtual bool RecvAudioChannelChangedNotification();
 
+    virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
+
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     GeckoChildProcessHost* mSubprocess;

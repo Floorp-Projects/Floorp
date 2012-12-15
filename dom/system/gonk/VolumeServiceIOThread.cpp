@@ -12,7 +12,8 @@
 namespace mozilla {
 namespace system {
 
-VolumeServiceIOThread::VolumeServiceIOThread()
+VolumeServiceIOThread::VolumeServiceIOThread(nsVolumeService *aVolumeService)
+  : mVolumeService(aVolumeService)
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
@@ -35,7 +36,7 @@ VolumeServiceIOThread::Notify(Volume * const &aVolume)
   if (VolumeManager::State() != VolumeManager::VOLUMES_READY) {
     return;
   }
-  nsVolumeService::UpdateVolumeIOThread(aVolume);
+  mVolumeService->UpdateVolumeIOThread(aVolume);
 }
 
 void
@@ -57,17 +58,17 @@ VolumeServiceIOThread::UpdateAllVolumes()
 
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
     RefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
-    nsVolumeService::UpdateVolumeIOThread(vol);
+    mVolumeService->UpdateVolumeIOThread(vol);
   }
 }
 
-static RefPtr<VolumeServiceIOThread> sVolumeServiceIOThread;
+static StaticRefPtr<VolumeServiceIOThread> sVolumeServiceIOThread;
 
 void
-InitVolumeServiceIOThread()
+InitVolumeServiceIOThread(nsVolumeService * const &aVolumeService)
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
-  sVolumeServiceIOThread = new VolumeServiceIOThread();
+  sVolumeServiceIOThread = new VolumeServiceIOThread(aVolumeService);
 }
 
 void

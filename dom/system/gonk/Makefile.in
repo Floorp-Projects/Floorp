@@ -39,6 +39,7 @@ XPIDLSRCS = \
   nsINetworkManager.idl \
   nsIRadioInterfaceLayer.idl \
   nsIVolume.idl \
+  nsIVolumeMountLock.idl \
   nsIVolumeService.idl \
   nsIVolumeStat.idl \
   nsIWorkerHolder.idl \
@@ -63,6 +64,7 @@ CPPSRCS += \
   GonkGPSGeolocationProvider.cpp \
   AudioChannelManager.cpp \
   nsVolume.cpp \
+  nsVolumeMountLock.cpp \
   nsVolumeService.cpp \
   nsVolumeStat.cpp \
   TimeZoneSettingObserver.cpp \
@@ -75,8 +77,8 @@ CPPSRCS += \
 # for our local copy of AudioSystem.h
 LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src
 EXPORTS = \
-  nsVolume.h \
   GonkGPSGeolocationProvider.h \
+  nsVolume.h \
   $(NULL)
 endif
 
