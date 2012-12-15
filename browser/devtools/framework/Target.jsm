@@ -201,6 +201,10 @@ TabTarget.prototype = {
     return false;
   },
 
+  get isLocalTab() {
+    return true;
+  },
+
   /**
    * Listen to the different tabs events.
    */
@@ -329,6 +333,10 @@ WindowTarget.prototype = {
     return false;
   },
 
+  get isLocalTab() {
+    return false;
+  },
+
   /**
    * Target is not alive anymore.
    */
@@ -383,6 +391,8 @@ RemoteTarget.prototype = {
   get client() this._client,
 
   get form() this._form,
+
+  get isLocalTab() false,
 
   /**
    * Target is not alive anymore.
