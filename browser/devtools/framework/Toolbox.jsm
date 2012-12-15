@@ -270,6 +270,10 @@ Toolbox.prototype = {
       dockBox.removeChild(dockBox.firstChild);
     }
 
+    if (!this._target.isLocalTab) {
+      return;
+    }
+
     let sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
 
     for each (let position in this.HostType) {
@@ -473,6 +477,10 @@ Toolbox.prototype = {
    */
   switchHost: function TBOX_switchHost(hostType) {
     if (hostType == this._host.type) {
+      return;
+    }
+
+    if (!this._target.isLocalTab) {
       return;
     }
 
