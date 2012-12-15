@@ -1154,11 +1154,6 @@ abstract public class GeckoApp
                     return;
 
                 ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab);
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createStartPaintListentingEvent(tab.getId()));
-                    ScreenshotHandler.screenshotWholePage(tab);
-                }
-
             }
         }, 500);
     }

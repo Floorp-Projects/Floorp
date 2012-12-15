@@ -126,21 +126,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         "    gl_FragColor = texture2D(sTexture, vTexCoord);\n" +
         "}\n";
 
-    public void setCheckerboardBitmap(ByteBuffer data, int width, int height, RectF pageRect, Rect copyRect) {
-        try {
-            mScreenshotLayer.setBitmap(data, width, height, copyRect);
-        } catch (IllegalArgumentException ex) {
-            Log.e(LOGTAG, "error setting bitmap: ", ex);
-        }
-        mScreenshotLayer.beginTransaction();
-        try {
-            mScreenshotLayer.setPosition(RectUtils.round(pageRect));
-            mScreenshotLayer.invalidate();
-        } finally {
-            mScreenshotLayer.endTransaction();
-        }
-    }
-
     public void resetCheckerboard() {
         mScreenshotLayer.reset();
     }
