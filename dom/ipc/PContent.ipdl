@@ -327,7 +327,8 @@ child:
 
     FilePathUpdate(nsString type, nsString filepath, nsCString reasons);
 
-    FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState);
+    FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
+                     int32_t mountGeneration);
 
 parent:
     /**
@@ -446,6 +447,9 @@ parent:
     async FilePathUpdateNotify(nsString aType,
                                nsString aFilepath,
                                nsCString aReason);
+    // get nsIVolumeService to broadcast volume information
+    async BroadcastVolume(nsString volumeName);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);
 };
