@@ -6,10 +6,12 @@
 
 interface nsIDOMDOMRequest;
 
-[scriptable, uuid(18390770-02ab-11e2-a21f-0800200c9a66)]
+[scriptable, uuid(b3e3894e-b24e-4174-9c80-08115709615b)]
 interface nsIDOMPermissionSettings : nsISupports
 {
   DOMString get(in DOMString permission, in DOMString manifestURI, in DOMString origin, in bool browserFlag);
 
   void set(in DOMString permission, in DOMString value, in DOMString manifestURI, in DOMString origin, in bool browserFlag);
+
+  bool isExplicit(in DOMString permission, in DOMString manifestURI, in DOMString origin, in bool browserFlag);
 };
