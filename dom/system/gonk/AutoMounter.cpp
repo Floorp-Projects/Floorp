@@ -398,8 +398,16 @@ AutoMounter::UpdateState()
     RefPtr<Volume>  vol = mAutoVolume[volIndex];
     Volume::STATE   volState = vol->State();
 
-    LOG("UpdateState: Volume %s is %s and %s", vol->NameStr(), vol->StateStr(),
-        vol->MediaPresent() ? "inserted" : "missing");
+    if (vol->State() == nsIVolume::STATE_MOUNTED) {
+      LOG("UpdateState: Volume %s is %s and %s @ %s gen %d locked %d",
+          vol->NameStr(), vol->StateStr(),
+          vol->MediaPresent() ? "inserted" : "missing",
+          vol->MountPoint().get(), vol->MountGeneration(),
+          (int)vol->IsMountLocked());
+    } else {
+      LOG("UpdateState: Volume %s is %s and %s", vol->NameStr(), vol->StateStr(),
+          vol->MediaPresent() ? "inserted" : "missing");
+    }
     if (!vol->MediaPresent()) {
       // No media - nothing we can do
       continue;
@@ -409,17 +417,24 @@ AutoMounter::UpdateState()
       // We're going to try to unmount and share the volumes
       switch (volState) {
         case nsIVolume::STATE_MOUNTED: {
+          if (vol->IsMountLocked()) {
+            // The volume is currently locked, so leave it in the mounted
+            // state.
+            DBG("UpdateState: Mounted volume %s is locked, leaving",
+                vol->NameStr());
+            break;
+          }
           // Volume is mounted, we need to unmount before
           // we can share.
           DBG("UpdateState: Unmounting %s", vol->NameStr());
           vol->StartUnmount(mResponseCallback);
-          return;
+          return; // UpdateState will be called again when the Unmount command completes
         }
         case nsIVolume::STATE_IDLE: {
           // Volume is unmounted. We can go ahead and share.
           DBG("UpdateState: Sharing %s", vol->NameStr());
           vol->StartShare(mResponseCallback);
-          return;
+          return; // UpdateState will be called again when the Share command completes
         }
         default: {
           // Not in a state that we can do anything about.
@@ -433,14 +448,14 @@ AutoMounter::UpdateState()
           // Volume is shared. We can go ahead and unshare.
           DBG("UpdateState: Unsharing %s", vol->NameStr());
           vol->StartUnshare(mResponseCallback);
-          return;
+          return; // UpdateState will be called again when the Unshare command completes
         }
         case nsIVolume::STATE_IDLE: {
           // Volume is unmounted, try to mount.
 
           DBG("UpdateState: Mounting %s", vol->NameStr());
           vol->StartMount(mResponseCallback);
-          return;
+          return; // UpdateState will be called again when Mount command completes
         }
         default: {
           // Not in a state that we can do anything about.
