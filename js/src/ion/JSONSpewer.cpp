@@ -260,7 +260,7 @@ JSONSpewer::spewMDef(MDefinition *def)
         Sprinter sp(GetIonContext()->cx);
         sp.init();
         def->range()->print(sp);
-        stringProperty("type", "%s : %s", sp.string());
+        stringProperty("type", "%s : %s", sp.string(), StringFromMIRType(def->type()));
     } else {
         stringProperty("type", "%s", StringFromMIRType(def->type()));
     }
