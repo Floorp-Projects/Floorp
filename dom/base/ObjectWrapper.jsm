@@ -43,7 +43,7 @@ this.ObjectWrapper = {
                             { name: aObject.name,
                               type: aObject.type });
     } else if (kind == "blob") {
-      return new aCtxt.Blob([aObject]);
+      return new aCtxt.Blob([aObject], { type: aObject.type });
     } else if (kind == "primitive") {
       return aObject;
     }
