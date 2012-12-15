@@ -2563,37 +2563,22 @@ mjit::Compiler::jsop_initprop()
 }
 
 void
-mjit::Compiler::jsop_initelem()
+mjit::Compiler::jsop_initelem_array()
 {
-    FrameEntry *obj = frame.peek(-3);
-    FrameEntry *id = frame.peek(-2);
+    FrameEntry *obj = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
 
-    /*
-     * The initialized index is always a constant, but we won't remember which
-     * constant if there are branches inside the code computing the initializer
-     * expression (e.g. the expression uses the '?' operator).  Slow path those
-     * cases, as well as those where INITELEM is used on an object initializer
-     * or a non-fast array initializer.
-     */
-    if (!id->isConstant() || !frame.extra(obj).initArray) {
-        JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
-
-        prepareStubCall(Uses(3));
-        masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
-        INLINE_STUBCALL(stubs::InitElem, REJOIN_FALLTHROUGH);
-        return;
-    }
-
-    int32_t idx = id->getValue().toInt32();
+    uint32_t index = GET_UINT24(PC);
 
     RegisterID objReg = frame.copyDataIntoReg(obj);
     masm.loadPtr(Address(objReg, JSObject::offsetOfElements()), objReg);
 
     /* Update the initialized length. */
-    masm.store32(Imm32(idx + 1), Address(objReg, ObjectElements::offsetOfInitializedLength()));
+    masm.store32(Imm32(index + 1), Address(objReg, ObjectElements::offsetOfInitializedLength()));
 
     /* Perform the store. */
-    frame.storeTo(fe, Address(objReg, idx * sizeof(Value)));
+    frame.storeTo(fe, Address(objReg, index * sizeof(Value)));
     frame.freeReg(objReg);
+
+    frame.pop();
 }

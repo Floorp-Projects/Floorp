@@ -921,8 +921,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_newobject(baseObj);
       }
 
-      case JSOP_INITELEM:
-        return jsop_initelem();
+      case JSOP_INITELEM_ARRAY:
+        return jsop_initelem_array();
 
       case JSOP_INITPROP:
       {
@@ -4283,23 +4283,13 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
 }
 
 bool
-IonBuilder::jsop_initelem()
-{
-    if (oracle->propertyWriteCanSpecialize(script(), pc)) {
-        RootedScript scriptRoot(cx, script());
-        if (oracle->elementWriteIsDenseArray(scriptRoot, pc))
-            return jsop_initelem_dense();
-    }
-
-    return abort("NYI: JSOP_INITELEM supports for non dense objects/arrays.");
-}
-
-bool
-IonBuilder::jsop_initelem_dense()
+IonBuilder::jsop_initelem_array()
 {
     MDefinition *value = current->pop();
-    MDefinition *id = current->pop();
     MDefinition *obj = current->peek(-1);
+
+    MConstant *id = MConstant::New(Int32Value(GET_UINT24(pc)));
+    current->add(id);
 
     // Get the elements vector.
     MElements *elements = MElements::New(obj);

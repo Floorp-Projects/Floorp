@@ -2211,8 +2211,7 @@ FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
      * adjacent initializer elements:
      *
      * endinit (for previous initializer)
-     * initelem (for previous initializer)
-     * integer (index for following initializer)
+     * initelem_array (for previous initializer)
      * newarray
      */
 
@@ -2220,23 +2219,7 @@ FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
         return NULL;
 
     jsbytecode *last = PreviousOpcode(script, initpc);
-    if (!last)
-        return NULL;
-
-    switch (*last) {
-      case JSOP_ZERO:
-      case JSOP_ONE:
-      case JSOP_INT8:
-      case JSOP_INT32:
-      case JSOP_UINT16:
-      case JSOP_UINT24:
-        break;
-      default:
-        return NULL;
-    }
-
-    last = PreviousOpcode(script, last);
-    if (!last || *last != JSOP_INITELEM)
+    if (!last || *last != JSOP_INITELEM_ARRAY)
         return NULL;
 
     last = PreviousOpcode(script, last);
@@ -4216,8 +4199,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
 
       case JSOP_INITELEM:
       case JSOP_INITELEM_INC:
+      case JSOP_INITELEM_ARRAY:
       case JSOP_SPREAD: {
-        const SSAValue &objv = poppedValue(pc, 2);
+        const SSAValue &objv = poppedValue(pc, (op == JSOP_INITELEM_ARRAY) ? 1 : 2);
         jsbytecode *initpc = script_->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);
 
@@ -4233,6 +4217,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
                 if (!types)
                     return false;
                 if (state.hasGetSet) {
+                    JS_ASSERT(op != JSOP_INITELEM_ARRAY);
                     types->addType(cx, Type::UnknownType());
                 } else if (state.hasHole) {
                     if (!initializer->unknownProperties())

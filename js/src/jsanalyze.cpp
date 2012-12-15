@@ -553,6 +553,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_ENDINIT:
           case JSOP_INITPROP:
           case JSOP_INITELEM:
+          case JSOP_INITELEM_ARRAY:
           case JSOP_SETPROP:
           case JSOP_IN:
           case JSOP_INSTANCEOF:
@@ -1463,6 +1464,10 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           case JSOP_SPREAD:
           case JSOP_INITELEM_INC:
             stack[stackDepth - 2].v = code->poppedValues[2];
+            break;
+
+          case JSOP_INITELEM_ARRAY:
+            stack[stackDepth - 1].v = code->poppedValues[1];
             break;
 
           case JSOP_INITELEM:

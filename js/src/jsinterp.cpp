@@ -1348,7 +1348,6 @@ ADD_EMPTY_CASE(JSOP_UNUSED10)
 ADD_EMPTY_CASE(JSOP_UNUSED11)
 ADD_EMPTY_CASE(JSOP_UNUSED12)
 ADD_EMPTY_CASE(JSOP_UNUSED13)
-ADD_EMPTY_CASE(JSOP_UNUSED15)
 ADD_EMPTY_CASE(JSOP_UNUSED17)
 ADD_EMPTY_CASE(JSOP_UNUSED18)
 ADD_EMPTY_CASE(JSOP_UNUSED19)
@@ -3070,7 +3069,6 @@ BEGIN_CASE(JSOP_INITPROP)
 }
 END_CASE(JSOP_INITPROP);
 
-BEGIN_CASE(JSOP_INITELEM_INC)
 BEGIN_CASE(JSOP_INITELEM)
 {
     JS_ASSERT(regs.stackDepth() >= 3);
@@ -3080,15 +3078,47 @@ BEGIN_CASE(JSOP_INITELEM)
     RootedObject &obj = rootObject0;
     obj = &regs.sp[-3].toObject();
 
-    if (!InitElemOperation(cx, regs.pc, obj, id, val))
+    if (!InitElemOperation(cx, obj, id, val))
         goto error;
 
-    if (JSOp(*regs.pc) == JSOP_INITELEM)
-        regs.sp -= 2;
-    else
-        regs.sp--;
+    regs.sp -= 2;
 }
 END_CASE(JSOP_INITELEM)
+
+BEGIN_CASE(JSOP_INITELEM_ARRAY)
+{
+    JS_ASSERT(regs.stackDepth() >= 2);
+    HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    RootedObject &obj = rootObject0;
+    obj = &regs.sp[-2].toObject();
+
+    JS_ASSERT(obj->isDenseArray());
+
+    uint32_t index = GET_UINT24(regs.pc);
+    if (!InitArrayElemOperation(cx, regs.pc, obj, index, val))
+        goto error;
+
+    regs.sp--;
+}
+END_CASE(JSOP_INITELEM_ARRAY)
+
+BEGIN_CASE(JSOP_INITELEM_INC)
+{
+    JS_ASSERT(regs.stackDepth() >= 3);
+    HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    RootedObject &obj = rootObject0;
+    obj = &regs.sp[-3].toObject();
+
+    uint32_t index = regs.sp[-2].toInt32();
+    if (!InitArrayElemOperation(cx, regs.pc, obj, index, val))
+        goto error;
+
+    regs.sp[-2].setInt32(index + 1);
+    regs.sp--;
+}
+END_CASE(JSOP_INITELEM_INC)
 
 BEGIN_CASE(JSOP_SPREAD)
 {
