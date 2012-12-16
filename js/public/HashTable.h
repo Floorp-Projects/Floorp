@@ -580,17 +580,13 @@ class HashMapEntry
 
 namespace mozilla {
 
-template <class T>
-struct IsPod<js::detail::HashTableEntry<T> >
-{
-    static const bool value = IsPod<T>::value;
-};
+template <typename T>
+struct IsPod<js::detail::HashTableEntry<T> > : IsPod<T> {};
 
-template <class K, class V>
+template <typename K, typename V>
 struct IsPod<js::HashMapEntry<K, V> >
-{
-    static const bool value = IsPod<K>::value && IsPod<V>::value;
-};
+  : IntegralConstant<bool, IsPod<K>::value && IsPod<V>::value>
+{};
 
 } // namespace mozilla
 
