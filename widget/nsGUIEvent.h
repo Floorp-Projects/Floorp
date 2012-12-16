@@ -114,11 +114,6 @@ enum nsEventStructType {
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
-// When an event is synthesized for testing, this flag will be set.
-// Note that this is currently used only with mouse events, because this
-// flag is not needed on other events now.  It could be added to other
-// events.
-#define NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT 0x1000
 
 // Use this flag if the event should be dispatched only to chrome.
 #define NS_EVENT_FLAG_ONLY_CHROME_DISPATCH 0x2000
@@ -541,6 +536,9 @@ public:
   // If mDispatchedAtLeastOnce is true, the event has been dispatched
   // as a DOM event and the dispatch has been completed.
   bool    mDispatchedAtLeastOnce : 1;
+  // If mIsSynthesizedForTests is true, the event has been synthesized for
+  // automated tests or something hacky approach of an add-on.
+  bool    mIsSynthesizedForTests : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const

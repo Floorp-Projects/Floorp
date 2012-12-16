@@ -5700,8 +5700,8 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
   NS_ASSERTION(aFrame, "null frame");
 
   if (mIsDestroying ||
-      (sDisableNonTestMouseEvents && NS_IS_MOUSE_EVENT(aEvent) &&
-       !(aEvent->flags & NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT))) {
+      (sDisableNonTestMouseEvents && !aEvent->mFlags.mIsSynthesizedForTests &&
+       NS_IS_MOUSE_EVENT(aEvent))) {
     return NS_OK;
   }
 
