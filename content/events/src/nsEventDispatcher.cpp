@@ -450,7 +450,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 {
   SAMPLE_LABEL("nsEventDispatcher", "Dispatch");
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
-  NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(aEvent),
+  NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_ILLEGAL_VALUE);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
 
@@ -569,7 +569,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->originalTarget);
   bool isInAnon = (content && content->IsInAnonymousSubtree());
 
-  NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
+  aEvent->mFlags.mIsBeingDispatched = true;
 
   // Create visitor object and start event dispatching.
   // PreHandleEvent for the original target.
@@ -645,7 +645,8 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   nsEventTargetChainItem::Destroy(pool.GetPool(), targetEtci);
   targetEtci = nullptr;
 
-  NS_MARK_EVENT_DISPATCH_DONE(aEvent);
+  aEvent->mFlags.mIsBeingDispatched = false;
+  aEvent->mFlags.mDispatchedAtLeastOnce = true;
 
   if (!externalDOMEvent && preVisitor.mDOMEvent) {
     // An nsDOMEvent was created while dispatching the event.
@@ -675,7 +676,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
     NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
     bool dontResetTrusted = false;
-    if (innerEvent->flags & NS_EVENT_DISPATCHED) {
+    if (innerEvent->mFlags.mDispatchedAtLeastOnce) {
       innerEvent->target = nullptr;
       innerEvent->originalTarget = nullptr;
     } else {
