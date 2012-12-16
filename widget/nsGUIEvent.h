@@ -113,8 +113,6 @@ enum nsEventStructType {
 #define NS_EVENT_FLAG_CAPTURE             0x0004
 #define NS_EVENT_FLAG_STOP_DISPATCH       0x0008
 #define NS_EVENT_FLAG_NO_DEFAULT          0x0010
-#define NS_EVENT_FLAG_CANT_CANCEL         0x0020
-#define NS_EVENT_FLAG_CANT_BUBBLE         0x0040
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
@@ -522,6 +520,12 @@ public:
   bool    mInBubblingPhase : 1;
   // If mInCapturePhase is true, the event is in capture phase or target phase.
   bool    mInCapturePhase : 1;
+  // If mCancelable is true, the event can be consumed.  I.e., calling
+  // nsDOMEvent::PreventDefault() can prevent the default action.
+  bool    mCancelable : 1;
+  // If mBubbles is true, the event can bubble.  Otherwise, cannot be handled
+  // in bubbling phase.
+  bool    mBubbles : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const
@@ -582,6 +586,8 @@ protected:
   {
     MOZ_COUNT_CTOR(nsEvent);
     mFlags.mIsTrusted = isTrusted;
+    mFlags.mCancelable = true;
+    mFlags.mBubbles = true;
   }
 
   nsEvent()
@@ -601,6 +607,8 @@ public:
   {
     MOZ_COUNT_CTOR(nsEvent);
     mFlags.mIsTrusted = isTrusted;
+    mFlags.mCancelable = true;
+    mFlags.mBubbles = true;
   }
 
   ~nsEvent()
@@ -912,11 +920,12 @@ protected:
   {
     switch (msg) {
       case NS_MOUSE_MOVE:
-        flags |= NS_EVENT_FLAG_CANT_CANCEL;
+        mFlags.mCancelable = false;
         break;
       case NS_MOUSEENTER:
       case NS_MOUSELEAVE:
-        flags |= (NS_EVENT_FLAG_CANT_CANCEL & NS_EVENT_FLAG_CANT_BUBBLE);
+        mFlags.mBubbles = false;
+        mFlags.mCancelable = false;
         break;
       default:
         break;
@@ -933,11 +942,12 @@ public:
   {
     switch (msg) {
       case NS_MOUSE_MOVE:
-        flags |= NS_EVENT_FLAG_CANT_CANCEL;
+        mFlags.mCancelable = false;
         break;
       case NS_MOUSEENTER:
       case NS_MOUSELEAVE:
-        flags |= (NS_EVENT_FLAG_CANT_CANCEL | NS_EVENT_FLAG_CANT_BUBBLE);
+        mFlags.mBubbles = false;
+        mFlags.mCancelable = false;
         break;
       case NS_CONTEXTMENU:
         button = (context == eNormal) ? eRightButton : eLeftButton;
@@ -982,11 +992,10 @@ public:
     : nsMouseEvent(isTrusted, msg, w, NS_DRAG_EVENT, eReal),
       userCancelled(false)
   {
-    if (msg == NS_DRAGDROP_EXIT_SYNTH ||
-        msg == NS_DRAGDROP_LEAVE_SYNTH ||
-        msg == NS_DRAGDROP_END) {
-      flags |= NS_EVENT_FLAG_CANT_CANCEL;
-    }
+    mFlags.mCancelable =
+      (msg != NS_DRAGDROP_EXIT_SYNTH &&
+       msg != NS_DRAGDROP_LEAVE_SYNTH &&
+       msg != NS_DRAGDROP_END);
   }
 
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
@@ -1209,7 +1218,7 @@ public:
     // XXX compositionstart is cancelable in draft of DOM3 Events.
     //     However, it doesn't make sense for us, we cannot cancel composition
     //     when we send compositionstart event.
-    flags |= NS_EVENT_FLAG_CANT_CANCEL;
+    mFlags.mCancelable = false;
   }
 
   nsString data;

@@ -330,7 +330,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
       aVisitor.mEvent->target = newTarget;
     }
 
-    if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE) || newTarget) {
+    if (aVisitor.mEvent->mFlags.mBubbles || newTarget) {
       if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
            item->ForceContentDispatch()) &&
           !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
