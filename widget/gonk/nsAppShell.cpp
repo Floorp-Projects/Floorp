@@ -138,8 +138,7 @@ sendMouseEvent(uint32_t msg, uint64_t timeMs, int x, int y, bool forwardToChildr
     if (msg != NS_MOUSE_MOVE)
         event.clickCount = 1;
 
-    if (!forwardToChildren)
-        event.flags |= NS_EVENT_FLAG_DONT_FORWARD_CROSS_PROCESS;
+    event.mFlags.mNoCrossProcessBoundaryForwarding = !forwardToChildren;
 
     nsWindow::DispatchInputEvent(event);
 }
