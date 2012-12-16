@@ -114,9 +114,6 @@ enum nsEventStructType {
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
-// Event has been dispatched at least once
-#define NS_EVENT_DISPATCHED               0x0400
-#define NS_EVENT_FLAG_DISPATCHING         0x0800
 // When an event is synthesized for testing, this flag will be set.
 // Note that this is currently used only with mouse events, because this
 // flag is not needed on other events now.  It could be added to other
@@ -538,6 +535,12 @@ public:
   // the first <label> element is clicked, that one may set this true.
   // Then, the second <label> element won't handle the event.
   bool    mMultipleActionsPrevented : 1;
+  // If mIsBeingDispatched is true, the DOM event created from the event is
+  // dispatching into the DOM tree and not completed.
+  bool    mIsBeingDispatched : 1;
+  // If mDispatchedAtLeastOnce is true, the event has been dispatched
+  // as a DOM event and the dispatch has been completed.
+  bool    mDispatchedAtLeastOnce : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const
@@ -1827,20 +1830,6 @@ enum nsDragDropEventStatus {
 #define NS_IS_NON_RETARGETED_PLUGIN_EVENT(evnt) \
        (NS_IS_PLUGIN_EVENT(evnt) && \
         !(static_cast<nsPluginEvent*>(evnt)->retargetToFocusedDocument))
-
-// Mark an event as being dispatching.
-#define NS_MARK_EVENT_DISPATCH_STARTED(event) \
-  (event)->flags |= NS_EVENT_FLAG_DISPATCHING;
-
-#define NS_IS_EVENT_IN_DISPATCH(event) \
-  (((event)->flags & NS_EVENT_FLAG_DISPATCHING) != 0)
-
-// Mark an event as being done dispatching.
-#define NS_MARK_EVENT_DISPATCH_DONE(event) \
-  NS_ASSERTION(NS_IS_EVENT_IN_DISPATCH(event), \
-               "Event never got marked for dispatch!"); \
-  (event)->flags &= ~NS_EVENT_FLAG_DISPATCHING; \
-  (event)->flags |= NS_EVENT_DISPATCHED;
 
 // Be aware the query content events and the selection events are a part of IME
 // processing.  So, you shouldn't use NS_IS_IME_EVENT macro directly in most

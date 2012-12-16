@@ -53,7 +53,7 @@ nsDOMDataContainerEvent::SetData(const nsAString& aKey, nsIVariant *aData)
   NS_ENSURE_ARG(aData);
 
   // Make sure this event isn't already being dispatched.
-  NS_ENSURE_STATE(!(NS_IS_EVENT_IN_DISPATCH(mEvent)));
+  NS_ENSURE_STATE(!mEvent->mFlags.mIsBeingDispatched);
   NS_ENSURE_STATE(mData.IsInitialized());
   mData.Put(aKey, aData);
   return NS_OK;
