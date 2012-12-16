@@ -32,7 +32,7 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(nsPresContext* aPresContext,
     mEvent->time = PR_Now();
   }
 
-  mEvent->flags |= NS_EVENT_FLAG_CANT_CANCEL;
+  mEvent->mFlags.mCancelable = false;
 
   // We must store the "Previous" and "New" values before this event is
   // dispatched. Reading the values from the root 'svg' element after we've

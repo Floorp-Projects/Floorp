@@ -1819,7 +1819,7 @@ public:
     }
 
     nsEvent inputEvent(mIsTrusted, NS_FORM_INPUT);
-    inputEvent.flags |= NS_EVENT_FLAG_CANT_CANCEL;
+    inputEvent.mFlags.mCancelable = false;
     inputEvent.time = static_cast<uint64_t>(PR_Now() / 1000);
     nsEventStatus status = nsEventStatus_eIgnore;
     nsresult rv =

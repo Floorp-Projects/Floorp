@@ -1862,7 +1862,7 @@ public:
   NS_IMETHOD Run()
   {
     nsFocusEvent event(true, mType);
-    event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+    event.mFlags.mBubbles = false;
     event.fromRaise = mWindowRaised;
     event.isRefocus = mIsRefocus;
     return nsEventDispatcher::Dispatch(mTarget, mContext, &event);

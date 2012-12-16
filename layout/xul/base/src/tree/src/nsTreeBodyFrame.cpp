@@ -4439,7 +4439,7 @@ nsTreeBodyFrame::FireScrollEvent()
   mScrollEvent.Forget();
   nsScrollbarEvent event(true, NS_SCROLL_EVENT, nullptr);
   // scroll events fired at elements don't bubble
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  event.mFlags.mBubbles = false;
   nsEventDispatcher::Dispatch(GetContent(), PresContext(), &event);
 }
 
