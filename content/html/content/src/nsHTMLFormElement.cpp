@@ -584,7 +584,7 @@ nsHTMLFormElement::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
        aVisitor.mEvent->message == NS_FORM_RESET) &&
       aVisitor.mEvent->mFlags.mInBubblingPhase &&
       aVisitor.mEvent->originalTarget != static_cast<nsIContent*>(this)) {
-    aVisitor.mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+    aVisitor.mEvent->mFlags.mPropagationStopped = true;
   }
   return NS_OK;
 }

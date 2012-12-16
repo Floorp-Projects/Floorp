@@ -164,7 +164,7 @@ public:
     if (WantsWillHandleEvent()) {
       mTarget->WillHandleEvent(aVisitor);
     }
-    if (aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+    if (aVisitor.mEvent->mFlags.mPropagationStopped) {
       return NS_OK;
     }
     if (!mManager) {
@@ -279,7 +279,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   while (item->mChild) {
     if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
          item->ForceContentDispatch()) &&
-        !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+        !aVisitor.mEvent->mFlags.mPropagationStopped) {
       item->HandleEvent(aVisitor, aFlags & NS_EVENT_CAPTURE_MASK,
                         aMayHaveNewListenerManagers ||
                         createdELMs != nsEventListenerManager::sCreatedCount,
@@ -304,7 +304,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
 
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
-  if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
+  if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
       (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
        item->ForceContentDispatch())) {
     // FIXME Should use aFlags & NS_EVENT_BUBBLE_MASK because capture phase
@@ -333,7 +333,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     if (aVisitor.mEvent->mFlags.mBubbles || newTarget) {
       if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
            item->ForceContentDispatch()) &&
-          !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+          !aVisitor.mEvent->mFlags.mPropagationStopped) {
         item->HandleEvent(aVisitor, aFlags & NS_EVENT_BUBBLE_MASK,
                           createdELMs != nsEventListenerManager::sCreatedCount,
                           aPusher);
@@ -349,8 +349,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   if (!(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
     // Dispatch to the system event group.  Make sure to clear the
     // STOP_DISPATCH flag since this resets for each event group.
-    aVisitor.mEvent->flags &=
-      ~(NS_EVENT_FLAG_STOP_DISPATCH | NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY);
+    aVisitor.mEvent->mFlags.mPropagationStopped = false;
+    aVisitor.mEvent->mFlags.mImmediatePropagationStopped = false;
 
     // Setting back the original target of the event.
     aVisitor.mEvent->target = aVisitor.mEvent->originalTarget;
@@ -372,8 +372,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
 
     // After dispatch, clear all the propagation flags so that
     // system group listeners don't affect to the event.
-    aVisitor.mEvent->flags &=
-      ~(NS_EVENT_FLAG_STOP_DISPATCH | NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY);
+    aVisitor.mEvent->mFlags.mPropagationStopped = false;
+    aVisitor.mEvent->mFlags.mImmediatePropagationStopped = false;
   }
 
   return NS_OK;

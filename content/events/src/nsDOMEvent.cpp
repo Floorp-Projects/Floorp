@@ -361,15 +361,15 @@ nsDOMEvent::GetTimeStamp(uint64_t* aTimeStamp)
 NS_IMETHODIMP
 nsDOMEvent::StopPropagation()
 {
-  mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+  mEvent->mFlags.mPropagationStopped = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::StopImmediatePropagation()
 {
-  mEvent->flags |=
-    (NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY | NS_EVENT_FLAG_STOP_DISPATCH);
+  mEvent->mFlags.mPropagationStopped = true;
+  mEvent->mFlags.mImmediatePropagationStopped = true;
   return NS_OK;
 }
 
@@ -813,7 +813,7 @@ nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 NS_IMETHODIMP_(bool)
 nsDOMEvent::IsDispatchStopped()
 {
-  return !!(mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH);
+  return mEvent->mFlags.mPropagationStopped;
 }
 
 NS_IMETHODIMP_(nsEvent*)
