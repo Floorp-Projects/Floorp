@@ -549,7 +549,7 @@ nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 {
   MOZ_ASSERT(aEvent->eventStructType == NS_COMPOSITION_EVENT ||
              aEvent->eventStructType == NS_TEXT_EVENT);
-  if (!NS_IS_TRUSTED_EVENT(aEvent) ||
+  if (!aEvent->mFlags.mIsTrusted ||
       (aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) != 0) {
     return;
   }

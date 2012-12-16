@@ -1595,7 +1595,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   NS_PRECONDITION(aSourceEvent, "Must have source event");
   NS_PRECONDITION(aStatus, "Null out param?");
 
-  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aSourceEvent), NS_MOUSE_CLICK,
+  nsMouseEvent event(aSourceEvent->mFlags.mIsTrusted, NS_MOUSE_CLICK,
                      aSourceEvent->widget, nsMouseEvent::eReal);
   event.refPoint = aSourceEvent->refPoint;
   uint32_t clickCount = 1;
@@ -2311,7 +2311,7 @@ Element::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
                                               nsIURI** aURI) const
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
-      (!NS_IS_TRUSTED_EVENT(aVisitor.mEvent) &&
+      (!aVisitor.mEvent->mFlags.mIsTrusted &&
        (aVisitor.mEvent->message != NS_MOUSE_CLICK) &&
        (aVisitor.mEvent->message != NS_KEY_PRESS) &&
        (aVisitor.mEvent->message != NS_UI_ACTIVATE)) ||
@@ -2446,7 +2446,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
       if (shell) {
         // single-click
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+        nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
                            NS_UI_ACTIVATE, 1);
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
@@ -2463,7 +2463,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         nsAutoString target;
         GetLinkTarget(target);
         nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                    true, true, NS_IS_TRUSTED_EVENT(aVisitor.mEvent));
+                                    true, true,
+                                    aVisitor.mEvent->mFlags.mIsTrusted);
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
     }

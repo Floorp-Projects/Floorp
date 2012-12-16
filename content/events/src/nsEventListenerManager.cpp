@@ -958,7 +958,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
       if ((ls->mFlags & aFlags & ~NS_EVENT_FLAG_SYSTEM_EVENT) &&
           (ls->mFlags & NS_EVENT_FLAG_SYSTEM_EVENT) ==
           (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-          (NS_IS_TRUSTED_EVENT(aEvent) ||
+          (aEvent->mFlags.mIsTrusted ||
            ls->mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED)) {
         if (!*aDOMEvent) {
           nsEventDispatcher::CreateEvent(aPresContext, aEvent,

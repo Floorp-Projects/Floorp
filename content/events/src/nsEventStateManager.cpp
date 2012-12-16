@@ -957,7 +957,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 #endif
   // Store last known screenPoint and clientPoint so pointer lock
   // can use these values as constants.
-  if (NS_IS_TRUSTED_EVENT(aEvent) &&
+  if (aEvent->mFlags.mIsTrusted &&
       ((NS_IS_MOUSE_EVENT_STRUCT(aEvent) &&
        IsMouseEventReal(aEvent)) ||
        aEvent->eventStructType == NS_WHEEL_EVENT)) {
@@ -969,7 +969,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   // Do not take account NS_MOUSE_ENTER/EXIT so that loading a page
   // when user is not active doesn't change the state to active.
-  if (NS_IS_TRUSTED_EVENT(aEvent) &&
+  if (aEvent->mFlags.mIsTrusted &&
       ((aEvent->eventStructType == NS_MOUSE_EVENT  &&
         IsMouseEventReal(aEvent) &&
         aEvent->message != NS_MOUSE_ENTER &&
@@ -1117,7 +1117,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_WHEEL_WHEEL:
     {
-      NS_ASSERTION(NS_IS_TRUSTED_EVENT(aEvent),
+      NS_ASSERTION(aEvent->mFlags.mIsTrusted,
                    "Untrusted wheel event shouldn't be here");
 
       nsIContent* content = GetFocusedContent();
@@ -1243,7 +1243,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_COMPOSITION_START:
-    if (NS_IS_TRUSTED_EVENT(aEvent)) {
+    if (aEvent->mFlags.mIsTrusted) {
       // If the event is trusted event, set the selected text to data of
       // composition event.
       nsCompositionEvent *compositionEvent =
@@ -1437,10 +1437,9 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
   if (mAccessKeys.Count() > 0 &&
       aModifierMask == GetAccessModifierMask(pcContainer)) {
     // Someone registered an accesskey.  Find and activate it.
-    bool isTrusted = NS_IS_TRUSTED_EVENT(aEvent);
     nsAutoTArray<uint32_t, 10> accessCharCodes;
     nsContentUtils::GetAccessKeyCandidates(aEvent, accessCharCodes);
-    if (ExecuteAccessKey(accessCharCodes, isTrusted)) {
+    if (ExecuteAccessKey(accessCharCodes, aEvent->mFlags.mIsTrusted)) {
       *aStatus = nsEventStatus_eConsumeNoDefault;
       return;
     }
@@ -1752,7 +1751,7 @@ nsEventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
                                           nsIFrame* inDownFrame,
                                           nsGUIEvent* inMouseDownEvent)
 {
-  if (!NS_IS_TRUSTED_EVENT(inMouseDownEvent))
+  if (!inMouseDownEvent->mFlags.mIsTrusted)
     return;
 
   // just to be anal (er, safe)
@@ -2105,10 +2104,12 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
 
       // get the widget from the target frame
-      nsDragEvent startEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_START, widget);
+      nsDragEvent startEvent(aEvent->mFlags.mIsTrusted,
+                             NS_DRAGDROP_START, widget);
       FillInEventFromGestureDown(&startEvent);
 
-      nsDragEvent gestureEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_GESTURE, widget);
+      nsDragEvent gestureEvent(aEvent->mFlags.mIsTrusted,
+                               NS_DRAGDROP_GESTURE, widget);
       FillInEventFromGestureDown(&gestureEvent);
 
       startEvent.dataTransfer = gestureEvent.dataTransfer = dataTransfer;
@@ -2654,7 +2655,7 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
     targetContent = targetContent->GetParent();
   }
 
-  nsMouseScrollEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_SCROLL,
+  nsMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_SCROLL,
                            aEvent->widget);
   if (*aStatus == nsEventStatus_eConsumeNoDefault) {
     event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
@@ -2690,7 +2691,7 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
     targetContent = targetContent->GetParent();
   }
 
-  nsMouseScrollEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_PIXEL_SCROLL,
+  nsMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_PIXEL_SCROLL,
                            aEvent->widget);
   if (*aStatus == nsEventStatus_eConsumeNoDefault) {
     event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
@@ -3307,7 +3308,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_WHEEL_WHEEL:
     {
-      MOZ_ASSERT(NS_IS_TRUSTED_EVENT(aEvent));
+      MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
 
       if (*aStatus == nsEventStatus_eConsumeNoDefault) {
         break;
@@ -3471,7 +3472,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                            getter_AddRefs(targetContent));
 
         nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
-        nsDragEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_DRAGDROP, widget);
+        nsDragEvent event(aEvent->mFlags.mIsTrusted,
+                          NS_DRAGDROP_DRAGDROP, widget);
 
         nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
         event.refPoint = mouseEvent->refPoint;
@@ -3906,7 +3908,7 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, uint32_t aMessage,
 
   SAMPLE_LABEL("Input", "DispatchMouseEvent");
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), aMessage, aEvent->widget,
+  nsMouseEvent event(aEvent->mFlags.mIsTrusted, aMessage, aEvent->widget,
                      nsMouseEvent::eReal);
   event.refPoint = aEvent->refPoint;
   event.modifiers = ((nsMouseEvent*)aEvent)->modifiers;
@@ -4368,7 +4370,7 @@ nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
                                          nsWeakFrame& aTargetFrame)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsDragEvent event(NS_IS_TRUSTED_EVENT(aEvent), aMsg, aEvent->widget);
+  nsDragEvent event(aEvent->mFlags.mIsTrusted, aMsg, aEvent->widget);
   event.refPoint = aEvent->refPoint;
   event.modifiers = ((nsMouseEvent*)aEvent)->modifiers;
   event.buttons = ((nsMouseEvent*)aEvent)->buttons;
@@ -4522,8 +4524,8 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
         sLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
     }
 
-    nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_CLICK, aEvent->widget,
-                       nsMouseEvent::eReal);
+    nsMouseEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_CLICK,
+                       aEvent->widget, nsMouseEvent::eReal);
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
     event.modifiers = aEvent->modifiers;
@@ -4541,7 +4543,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
                                              mouseContent, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
         //fire double click
-        nsMouseEvent event2(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_DOUBLECLICK,
+        nsMouseEvent event2(aEvent->mFlags.mIsTrusted, NS_MOUSE_DOUBLECLICK,
                             aEvent->widget, nsMouseEvent::eReal);
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;

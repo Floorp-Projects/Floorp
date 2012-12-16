@@ -78,6 +78,8 @@ class nsPluginEvent;
 namespace mozilla {
 namespace widget {
 
+struct EventFlags;
+
 class WheelEvent;
 
 // All modifier keys should be defined here.  This is used for managing

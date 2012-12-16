@@ -89,7 +89,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
     case NS_MOUSE_ENTER_SYNTH:
       if (IsActivatedOnHover()) {
         StartRepeat();
-        mTrustedEvent = NS_IS_TRUSTED_EVENT(aEvent);
+        mTrustedEvent = aEvent->mFlags.mIsTrusted;
       }
       break;
 
@@ -119,7 +119,7 @@ nsAutoRepeatBoxFrame::HandlePress(nsPresContext* aPresContext,
 {
   if (!IsActivatedOnHover()) {
     StartRepeat();
-    mTrustedEvent = NS_IS_TRUSTED_EVENT(aEvent);
+    mTrustedEvent = aEvent->mFlags.mIsTrusted;
     DoMouseClick(aEvent, mTrustedEvent);
   }
 

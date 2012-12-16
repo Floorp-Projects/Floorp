@@ -109,7 +109,6 @@ enum nsEventStructType {
 // listener flags and event flags, but only some of them. You've been
 // warned!
 #define NS_EVENT_FLAG_NONE                0x0000
-#define NS_EVENT_FLAG_TRUSTED             0x0001
 #define NS_EVENT_FLAG_BUBBLE              0x0002
 #define NS_EVENT_FLAG_CAPTURE             0x0004
 #define NS_EVENT_FLAG_STOP_DISPATCH       0x0008
@@ -510,6 +509,50 @@ enum nsWindowZ {
   nsWindowZRelative   // just below some specified widget
 };
 
+namespace mozilla {
+namespace widget {
+struct EventFlags
+{
+public:
+  // If mIsTrusted is true, the event is a trusted event.  Otherwise, it's
+  // an untrusted event.
+  bool    mIsTrusted : 1;
+
+  EventFlags()
+  {
+    Clear();
+  }
+  inline void Clear()
+  {
+    SetRawFlags(0);
+  }
+  inline EventFlags operator|(const EventFlags& aOther) const
+  {
+    EventFlags flags;
+    flags.SetRawFlags(GetRawFlags() | aOther.GetRawFlags());
+    return flags;
+  }
+  inline EventFlags& operator|=(const EventFlags& aOther)
+  {
+    SetRawFlags(GetRawFlags() | aOther.GetRawFlags());
+    return *this;
+  }
+
+private:
+  inline void SetRawFlags(uint32_t aRawFlags)
+  {
+    memcpy(this, &aRawFlags, sizeof(EventFlags));
+  }
+  inline uint32_t GetRawFlags() const
+  {
+    uint32_t result = 0;
+    memcpy(&result, this, sizeof(EventFlags));
+    return result;
+  }
+};
+} // namespace widget
+} // namespace mozilla
+
 /**
  * General event
  */
@@ -523,10 +566,11 @@ protected:
       refPoint(0, 0),
       lastRefPoint(0, 0),
       time(0),
-      flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
+      flags(NS_EVENT_FLAG_NONE),
       userType(0)
   {
     MOZ_COUNT_CTOR(nsEvent);
+    mFlags.mIsTrusted = isTrusted;
   }
 
   nsEvent()
@@ -541,10 +585,11 @@ public:
       refPoint(0, 0),
       lastRefPoint(0, 0),
       time(0),
-      flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
+      flags(NS_EVENT_FLAG_NONE),
       userType(0)
   {
     MOZ_COUNT_CTOR(nsEvent);
+    mFlags.mIsTrusted = isTrusted;
   }
 
   ~nsEvent()
@@ -573,6 +618,10 @@ public:
   // Flags to hold event flow stage and capture/bubble cancellation
   // status. This is used also to indicate whether the event is trusted.
   uint32_t    flags;
+
+  // See EventFlags definition for the detail.
+  mozilla::widget::EventFlags mFlags;
+
   // Additional type info for user defined events
   nsCOMPtr<nsIAtom>     userType;
   // Event targets, needed by DOM Events
@@ -1592,7 +1641,7 @@ public:
   }
 
   nsSimpleGestureEvent(const nsSimpleGestureEvent& other)
-    : nsMouseEvent_base((other.flags & NS_EVENT_FLAG_TRUSTED) != 0,
+    : nsMouseEvent_base(other.mFlags.mIsTrusted,
                         other.message, other.widget, NS_SIMPLE_GESTURE_EVENT),
       direction(other.direction), delta(other.delta), clickCount(0)
   {
@@ -1746,9 +1795,6 @@ enum nsDragDropEventStatus {
 #define NS_IS_NON_RETARGETED_PLUGIN_EVENT(evnt) \
        (NS_IS_PLUGIN_EVENT(evnt) && \
         !(static_cast<nsPluginEvent*>(evnt)->retargetToFocusedDocument))
-
-#define NS_IS_TRUSTED_EVENT(event) \
-  (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
 
 // Mark an event as being dispatching.
 #define NS_MARK_EVENT_DISPATCH_STARTED(event) \
