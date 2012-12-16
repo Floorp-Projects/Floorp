@@ -477,7 +477,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     }
   }
 
-  if (aEvent->flags & NS_EVENT_FLAG_ONLY_CHROME_DISPATCH) {
+  if (aEvent->mFlags.mOnlyChromeDispatch) {
     nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
     if (!node) {
       nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aTarget);

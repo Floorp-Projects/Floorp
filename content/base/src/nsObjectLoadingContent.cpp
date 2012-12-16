@@ -245,7 +245,7 @@ nsPluginCrashedEvent::Run()
 
   event->InitEvent(NS_LITERAL_STRING("PluginCrashed"), true, true);
   event->SetTrusted(true);
-  event->GetInternalNSEvent()->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
 
   nsCOMPtr<nsIWritableVariant> variant;
 

@@ -114,10 +114,6 @@ enum nsEventStructType {
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
-
-// Use this flag if the event should be dispatched only to chrome.
-#define NS_EVENT_FLAG_ONLY_CHROME_DISPATCH 0x2000
-
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
@@ -550,6 +546,8 @@ public:
   // can handle the event if they add event listeners to the window or the
   // document.
   bool    mNoContentDispatch : 1;
+  // If mOnlyChromeDispatch is true, the event is dispatched to only chrome.
+  bool    mOnlyChromeDispatch : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const
@@ -605,7 +603,6 @@ protected:
       refPoint(0, 0),
       lastRefPoint(0, 0),
       time(0),
-      flags(NS_EVENT_FLAG_NONE),
       userType(0)
   {
     MOZ_COUNT_CTOR(nsEvent);
@@ -626,7 +623,6 @@ public:
       refPoint(0, 0),
       lastRefPoint(0, 0),
       time(0),
-      flags(NS_EVENT_FLAG_NONE),
       userType(0)
   {
     MOZ_COUNT_CTOR(nsEvent);
@@ -658,10 +654,6 @@ public:
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
   uint64_t    time;
-  // Flags to hold event flow stage and capture/bubble cancellation
-  // status. This is used also to indicate whether the event is trusted.
-  uint32_t    flags;
-
   // See EventFlags definition for the detail.
   mozilla::widget::EventFlags mFlags;
 

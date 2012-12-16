@@ -9096,7 +9096,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
     if (fireMozStorageChanged) {
       nsEvent *internalEvent = event->GetInternalNSEvent();
-      internalEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+      internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
     if (IsFrozen()) {
