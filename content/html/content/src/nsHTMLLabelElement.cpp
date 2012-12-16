@@ -147,7 +147,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       !aVisitor.mPresContext ||
       // Don't handle the event if it's already been handled by another label
-      (aVisitor.mEvent->flags & NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS)) {
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
     return NS_OK;
   }
 
@@ -220,13 +220,15 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           nsEventStatus status = aVisitor.mEventStatus;
           // Ok to use aVisitor.mEvent as parameter because DispatchClickEvent
           // will actually create a new event.
+          widget::EventFlags eventFlags;
+          eventFlags.Clear();
+          eventFlags.mMultipleActionsPrevented = true;
           DispatchClickEvent(aVisitor.mPresContext,
                              static_cast<nsInputEvent*>(aVisitor.mEvent),
-                             content, false,
-                             NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS, &status);
+                             content, false, &eventFlags, &status);
           // Do we care about the status this returned?  I don't think we do...
           // Don't run another <label> off of this click
-          aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
+          aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
         }
         break;
     }
