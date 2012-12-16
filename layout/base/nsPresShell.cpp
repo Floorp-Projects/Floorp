@@ -6387,7 +6387,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           // handler from stopping all loads in the document, which
           // would cause <video> loads to stop.
           aEvent->mFlags.mDefaultPrevented = true;
-          aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+          aEvent->mFlags.mOnlyChromeDispatch = true;
 
           if (aEvent->message == NS_KEY_UP) {
              // ESC key released while in DOM full-screen mode.
@@ -6493,7 +6493,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           bool onlyChromeDrop = false;
           session->GetOnlyChromeDrop(&onlyChromeDrop);
           if (onlyChromeDrop) {
-            aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+            aEvent->mFlags.mOnlyChromeDispatch = true;
           }
         }
         break;
@@ -6510,7 +6510,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         return NS_OK;
       }
       if (me->IsShift()) {
-        aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+        aEvent->mFlags.mOnlyChromeDispatch = true;
         aEvent->mFlags.mRetargetToNonNativeAnonymous = true;
       }
     }
@@ -6586,7 +6586,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
                     (last &&
                      nsContentUtils::ContentIsDescendantOf(last,
                                                            possibleFormElement))) {
-                  aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+                  aEvent->mFlags.mOnlyChromeDispatch = true;
                 }
               }
             }
