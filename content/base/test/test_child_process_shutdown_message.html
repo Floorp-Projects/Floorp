@@ -112,10 +112,6 @@ function setUp() {
   SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", true);
   SpecialPowers.addPermission("browser", true, window.document);
   SpecialPowers.addPermission("embed-apps", true, window.document);
-
-  // TODO: remove in bug 820712
-  SpecialPowers.setBoolPref("network.disable.ipc.security", true);
-
   runNextTest();
 }
 
@@ -140,10 +136,6 @@ function makeKillTest(isApp) function testKill() {
 function tearDown() {
   SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
   SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
-
-  // TODO: remove in bug 820712
-  SpecialPowers.clearUserPref("network.disable.ipc.security");
-
   SimpleTest.finish();
 }
 
