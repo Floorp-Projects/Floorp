@@ -304,8 +304,9 @@ aClass::RemoveSystemEventListener(const nsAString& aType, \
   if (!listenerManager) { \
     return NS_OK; \
   } \
-  uint32_t flags = NS_EVENT_FLAG_SYSTEM_EVENT; \
-  flags |= aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE; \
+  mozilla::dom::EventListenerFlags flags; \
+  flags.mInSystemGroup = true; \
+  flags.mCapture = aUseCapture; \
   listenerManager->RemoveEventListenerByType(aListener, aType, flags); \
   return NS_OK; \
 }

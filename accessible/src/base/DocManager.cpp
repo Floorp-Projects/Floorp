@@ -30,6 +30,7 @@
 #include "nsIWebNavigation.h"
 #include "nsServiceManagerUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,7 +330,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
   nsIDOMEventTarget *target = window->GetChromeEventHandler();
   nsEventListenerManager* elm = target->GetListenerManager(true);
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                              NS_EVENT_FLAG_CAPTURE);
+                              dom::TrustedEventsAtCapture());
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate))
@@ -338,7 +339,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
 
   if (aAddDOMContentLoadedListener) {
     elm->AddEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
-                                NS_EVENT_FLAG_CAPTURE);
+                                dom::TrustedEventsAtCapture());
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocCreate))
       logging::Text("added 'DOMContentLoaded' listener");
