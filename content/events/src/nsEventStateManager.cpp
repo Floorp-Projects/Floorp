@@ -2658,7 +2658,7 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   nsMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_SCROLL,
                            aEvent->widget);
   if (*aStatus == nsEventStatus_eConsumeNoDefault) {
-    event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    event.mFlags.mDefaultPrevented = true;
   }
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
@@ -2694,7 +2694,7 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   nsMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_PIXEL_SCROLL,
                            aEvent->widget);
   if (*aStatus == nsEventStatus_eConsumeNoDefault) {
-    event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    event.mFlags.mDefaultPrevented = true;
   }
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
@@ -3449,7 +3449,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         if (aEvent->message == NS_DRAGDROP_OVER && !isChromeDoc) {
           // Someone has called preventDefault(), check whether is was content.
           dragSession->SetOnlyChromeDrop(
-            !(aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT));
+            !aEvent->mFlags.mDefaultPreventedByContent);
         }
       } else if (aEvent->message == NS_DRAGDROP_OVER && !isChromeDoc) {
         // No one called preventDefault(), so handle drop only in chrome.

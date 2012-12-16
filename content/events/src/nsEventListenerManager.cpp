@@ -938,7 +938,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 {
   //Set the value of the internal PreventDefault flag properly based on aEventStatus
   if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
-    aEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    aEvent->mFlags.mDefaultPrevented = true;
   }
 
   nsAutoTObserverArray<nsListenerStruct, 2>::EndLimitedIterator iter(mListeners);
@@ -1006,7 +1006,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     mNoListenerForEventAtom = aEvent->userType;
   }
 
-  if (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) {
+  if (aEvent->mFlags.mDefaultPrevented) {
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
   }
 }
