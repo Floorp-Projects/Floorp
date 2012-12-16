@@ -647,7 +647,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
   event.inputSource = aInputSourceArg;
   event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
-  event.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+  event.mFlags.mIsSynthesizedForTests = true;
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext)
@@ -1654,7 +1654,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
     compositionEvent.data = aData;
   }
 
-  compositionEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+  compositionEvent.mFlags.mIsSynthesizedForTests = true;
 
   nsEventStatus status;
   nsresult rv = widget->DispatchEvent(&compositionEvent, status);
@@ -1733,7 +1733,7 @@ nsDOMWindowUtils::SendTextEvent(const nsAString& aCompositionString,
   textEvent.rangeCount = textRanges.Length();
   textEvent.rangeArray = textRanges.Elements();
 
-  textEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+  textEvent.mFlags.mIsSynthesizedForTests = true;
 
   nsEventStatus status;
   nsresult rv = widget->DispatchEvent(&textEvent, status);
