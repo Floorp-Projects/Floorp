@@ -2338,8 +2338,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     nsEventListenerManager* manager = eventTarget->GetListenerManager(true);
     manager->AddEventListenerByType(new nsXHRParseEndListener(this),
                                     NS_LITERAL_STRING("DOMContentLoaded"),
-                                    NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT);
+                                    dom::TrustedEventsAtSystemGroupBubble());
     return NS_OK;
   }
   // We might have been sent non-XML data. If that was the case,
