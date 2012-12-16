@@ -340,6 +340,9 @@ gfxPlatform::Init()
 
     gPlatform->mWorkAroundDriverBugs = Preferences::GetBool("gfx.work-around-driver-bugs", true);
 
+    mozilla::Preferences::AddBoolVarCache(&gPlatform->mWidgetUpdateFlashing,
+                                          "nglayout.debug.widget_update_flashing");
+
     mozilla::gl::GLContext::PlatformStartup();
 
 #ifdef MOZ_WIDGET_ANDROID
